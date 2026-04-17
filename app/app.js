@@ -656,7 +656,7 @@ const EMOJI_SHORTCODES = {
   'star_and_crescent':'☪️','peace':'☮️','menorah':'🕎','six_pointed_star':'🔯',
   'aries':'♈','taurus':'♉','gemini':'♊','cancer':'♋','leo':'♌','virgo':'♍',
   'libra':'♎','scorpius':'♏','sagittarius':'♐','capricorn':'♑','aquarius':'♒',
-  'pisces':'♓','id':'🆔','atom':'⚛️','new':'🆕','up2':'🆙','cool':'🆒','free':'🆓',
+  'pisces':'♓','id':'🆔','atom':'⚛️','new':'🆕','up2':'🆙','cool_icon':'🆒','free':'🆓',
   'ng':'🆖','sos2':'🆘','information_source':'ℹ️','zero':'0️⃣','one':'1️⃣','two':'2️⃣',
   'three':'3️⃣','four':'4️⃣','five':'5️⃣','six':'6️⃣','seven':'7️⃣','eight':'8️⃣',
   'nine':'9️⃣','ten':'🔟','capital_abcd':'🔠','abcd':'🔡','symbols':'🔣','abc':'🔤',
@@ -812,7 +812,7 @@ async function saveUser(immediate) {
   });
 }
 // Verified badge SVG helper
-function _verifiedBadge(size) { const s=size||16; return `<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:3px;flex-shrink:0;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
+function _verifiedBadge(size) { const s=size||16; return `<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:3px;flex-shrink:0;"><circle cx="24" cy="24" r="20" fill="#fff93e"/><path d="M15 25l6 6 12-12" stroke="#13161d" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
 // Sync a local bastion's data to the global bastions collection
 async function _syncBastionToGlobal(bastionIdx) {
   try {
@@ -6117,53 +6117,58 @@ function addReactionUI(eOrMsgId, msgIdOrCtx, contextOrNone) {
   _openReactionEmojiPicker(x, y, msgId, context);
 }
 function _openReactionEmojiPicker(x, y, msgId, context) {
-  document.getElementById('reaction-emoji-picker')?.remove();
-  const panel = document.createElement('div');
-  panel.id = 'reaction-emoji-picker';
-  panel.className = 'reaction-picker-v2';
-  // Quick reactions row
-  const quickEmojis = ['👍','❤️','😂','😮','😢','🔥','✨','👀','🎉','💯'];
-  let html = '<div class="rpv-quick">';
-  quickEmojis.forEach(em => {
-    html += `<button class="rpv-quick-btn" onclick="toggleReaction('${escapeHTML(msgId)}','${em}','${context}');document.getElementById('reaction-emoji-picker')?.remove()">${em}</button>`;
-  });
-  html += '</div>';
-  // Search
-  html += '<div class="rpv-search-wrap"><input class="rpv-search" id="reaction-emoji-search" placeholder="Search emojis…" oninput="_filterReactionEmojis(this.value)"></div>';
-  // Category tabs
-  const cats = EMOJI_PICKER_TABS.filter(t => t.emojis && t.emojis.length);
-  html += '<div class="rpv-categories">';
-  cats.forEach((cat, i) => {
-    html += `<button class="rpv-cat-btn ${i===0?'active':''}" data-cat-idx="${i}" onclick="_scrollReactionCat(${i},this)" data-tip="${escapeHTML(cat.label||'')}"><img src="${emojiToTwemojiUrl(cat.emojis[0]||'😀')}" alt="${cat.emojis[0]||'😀'}" style="width:18px;height:18px;object-fit:contain;" onerror="this.outerHTML='${cat.emojis[0]||'😀'}'"></button>`;
-  });
-  html += '</div>';
-  // Emoji grid
-  html += '<div id="reaction-emoji-grid" class="rpv-grid">';
-  cats.forEach((cat, catIdx) => {
-    cat.emojis.forEach(em => {
-      html += `<button class="rpv-emoji-btn reaction-em-btn" data-emoji="${em}" data-cat="${catIdx}" onclick="toggleReaction('${escapeHTML(msgId)}','${em}','${context}');document.getElementById('reaction-emoji-picker')?.remove()" onmouseenter="_previewReactionEmoji(this,'${em}')"><img src="${emojiToTwemojiUrl(em)}" alt="${em}" style="width:22px;height:22px;object-fit:contain;" onerror="this.outerHTML='${em}'"></button>`;
-    });
-  });
-  html += '</div>';
-  // Preview bar
-  html += `<div class="rpv-preview" id="rpv-preview"><span class="rpv-preview-emoji"><img src="${emojiToTwemojiUrl('😀')}" style="width:28px;height:28px;object-fit:contain;"></span><span class="rpv-preview-name">Hover an emoji to preview</span></div>`;
-  panel.innerHTML = html;
-  document.body.appendChild(panel);
-  // Position
-  const PW = 420, PH = 440;
+  // Reuse the EXACT SAME chatbar emoji picker — just flip it into reaction mode.
+  // Clicking an emoji fires toggleReaction(msgId, emoji, context, _reactionSuperMode).
+  document.getElementById('giphy-picker')?.remove();
+  document.getElementById('sticker-picker')?.remove();
+  _emojiPickerMode = 'react';
+  _reactionContext = { msgId, context };
+  _reactionSuperMode = false;
+
+  const panel = document.getElementById('emoji-picker');
+  if (!panel) return;
+  buildEmojiPicker();
+  // Inject a super-reaction toggle into the footer
+  const hoverLabel = panel.querySelector('#epp-hover-label');
+  if (hoverLabel) {
+    const footer = hoverLabel.parentElement;
+    if (footer && !footer.querySelector('.epp-super-toggle')) {
+      const toggle = document.createElement('button');
+      toggle.className = 'epp-super-toggle';
+      toggle.type = 'button';
+      toggle.id = 'epp-super-toggle';
+      toggle.title = 'Toggle super-reaction (any emoji)';
+      toggle.style.cssText = 'margin-left:8px;background:none;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.55);cursor:pointer;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:10px;letter-spacing:.04em;text-transform:uppercase;transition:all .12s;';
+      toggle.innerHTML = '<span style="color:var(--accent);margin-right:3px;">★</span> Super';
+      toggle.onclick = () => {
+        _reactionSuperMode = !_reactionSuperMode;
+        toggle.style.background = _reactionSuperMode ? 'var(--accent-dim)' : 'none';
+        toggle.style.borderColor = _reactionSuperMode ? 'var(--accent)' : 'rgba(255,255,255,.08)';
+        toggle.style.color = _reactionSuperMode ? 'var(--accent)' : 'rgba(255,255,255,.55)';
+      };
+      footer.appendChild(toggle);
+    }
+  }
+  // Position at (x, y) — try to appear above
+  const PW = 460, PH = 440;
   let left = x, top = y - PH - 8;
   if (top < 8) top = y + 8;
   if (left + PW > window.innerWidth - 8) left = window.innerWidth - PW - 8;
   if (top + PH > window.innerHeight - 8) top = window.innerHeight - PH - 8;
-  panel.style.left = Math.max(8, left) + 'px';
-  panel.style.top = Math.max(8, top) + 'px';
-  // Focus search
-  setTimeout(() => document.getElementById('reaction-emoji-search')?.focus(), 50);
-  // Close on outside click
+  panel.style.cssText = `left:${Math.max(8,left)}px;top:${Math.max(8,top)}px;bottom:auto;`;
+  panel.classList.add('show');
+  setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
+  // Close on outside click resets mode
   setTimeout(() => {
-    function _close(e) { if (!panel.contains(e.target)) { panel.remove(); document.removeEventListener('mousedown', _close); } }
+    function _close(e) {
+      if (!panel.contains(e.target)) {
+        panel.classList.remove('show');
+        _emojiPickerMode = 'insert'; _reactionContext = null; _reactionSuperMode = false;
+        document.removeEventListener('mousedown', _close);
+      }
+    }
     document.addEventListener('mousedown', _close);
-  }, 10);
+  }, 50);
 }
 function _previewReactionEmoji(btn, emoji) {
   const preview = document.getElementById('rpv-preview');
@@ -6190,14 +6195,16 @@ function _filterReactionEmojis(query) {
     btn.style.display = (!q || btn.dataset.emoji.includes(q)) ? '' : 'none';
   });
 }
-async function toggleReaction(msgId, emoji, context) {
+async function toggleReaction(msgId, emoji, context, isSuper) {
   if (!CU?.username) return;
   _trackReactionEmoji(emoji);
   const me = CU.username.toLowerCase();
+  // Super-reaction: store with a prefix marker so the UI can render it larger.
+  const reactionKey = isSuper ? '\u2605' + emoji : emoji;
 
   try {
     // Use Supabase to toggle reactions instead of Firebase
-    const reactionResult = await FortizedSocial.toggleReaction(msgId, emoji, context, me);
+    const reactionResult = await FortizedSocial.toggleReaction(msgId, reactionKey, context, me);
     if (!reactionResult) {
       toast('Could not react here', 'error');
       return;
@@ -6215,7 +6222,7 @@ async function toggleReaction(msgId, emoji, context) {
     }
 
     // Update the UI locally
-    updateReactionUI(msgId, emoji, users, context);
+    updateReactionUI(msgId, reactionKey, users, context);
 
     // Broadcast reaction via Socket.io for real-time sync
     const rType = context === 'dm' ? 'dm' : context === 'gc' ? 'gc' : 'bastion';
@@ -6223,7 +6230,7 @@ async function toggleReaction(msgId, emoji, context) {
     if (rType === 'dm') { rid1 = me; rid2 = curDM; }
     else if (rType === 'gc') { rid1 = curGC; }
     else { const rb = CU.bastions?.[curBastion]; const rch = rb?.channels?.[curChannel]; rid1 = rb?.globalId||rb?.name; rid2 = rch?.name||'general'; }
-    FortizedSocial.socketEmit('reaction:toggle', { type: rType, id1: rid1, id2: rid2, messageId: msgId, emoji });
+    FortizedSocial.socketEmit('reaction:toggle', { type: rType, id1: rid1, id2: rid2, messageId: msgId, emoji: reactionKey });
   } catch (err) {
     console.error('Reaction error:', err);
     toast('Failed to react. Please try again.', 'error');
@@ -12873,6 +12880,12 @@ let _favEmojis = JSON.parse(localStorage.getItem('ftz_fav_emojis')||'[]');
 let _emojiPickerTab = 'smileys';
 let _emojiScrollSpySuspend = false;
 let _emojiScrollSpyObserver = null;
+// Reaction mode state — when openReactionPicker is called, the chatbar emoji
+// picker is reused but clicking an emoji will fire a reaction instead of
+// inserting text. _reactionSuperMode toggles super-reactions for ANY emoji.
+let _emojiPickerMode = 'insert';
+let _reactionContext = null;
+let _reactionSuperMode = false;
 
 
 function toggleFavEmoji(emoji) {
@@ -12913,10 +12926,9 @@ function buildEmojiSidebar() {
   const bastions = CU?.bastions || [];
   let html = '';
   const btn = (id, title, iconHtml) => `<button class="epp-sidebar-btn${_emojiPickerTab===id?' active':''}" id="etab-${id}" title="${escapeHTML(title)}" aria-label="${escapeHTML(title)}" onclick="setEmojiTab('${id}')">${iconHtml}</button>`;
+  html += btn('frequent', 'Frequently used', _EMOJI_CATEGORY_SVGS.frequent);
   html += btn('favorites', 'Favorites', _EMOJI_CATEGORY_SVGS.favorites);
   html += btn('ftz', 'Fortized Guide', _EMOJI_CATEGORY_SVGS.ftz);
-  html += btn('frequent', 'Frequently used', _EMOJI_CATEGORY_SVGS.frequent);
-  html += btn('personal', 'My Emojis', _EMOJI_CATEGORY_SVGS.personal);
   if (bastions.length) {
     html += '<div class="epp-sidebar-sep"></div>';
     if (_hasActiveRadiance()) {
@@ -12991,9 +13003,6 @@ function buildEmojiPicker() {
   if (!panel) return;
 
   panel.innerHTML = `
-    <div class="epp-sidebar" id="epp-sidebar">
-      ${buildEmojiSidebar()}
-    </div>
     <div class="epp-main">
       ${_pickerTopTabs('emoji')}
       <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;">
@@ -13007,6 +13016,9 @@ function buildEmojiPicker() {
         <span id="epp-hover-label">Select an emoji</span>
         <button onclick="_showEmojiInfo()" style="background:none;border:none;color:rgba(255,255,255,.15);cursor:pointer;font-size:12px;padding:2px;" title="Emoji Info">ℹ</button>
       </div>
+    </div>
+    <div class="epp-sidebar" id="epp-sidebar">
+      ${buildEmojiSidebar()}
     </div>
   `;
   renderEmojiGrid();
@@ -13121,35 +13133,11 @@ function renderEmojiGrid() {
 
   // 3) Fortized custom emojis
   html += sectionHdr('ftz', 'Fortized');
-  html += gridOpen(6);
+  html += gridOpen(8);
   html += FORTIZED_EMOJIS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('');
   html += gridClose;
 
-  // 4) Personal (Radiance)
-  html += sectionHdr('personal', 'My Custom Emojis' + (isRadiance ? ` (${(CU?.personalEmojis||[]).length}/${typeof PERSONAL_EMOJI_LIMIT!=='undefined'?PERSONAL_EMOJI_LIMIT:50})` : ''));
-  if (!isRadiance) {
-    html += `<div class="epp-empty" style="padding:16px;">
-      <div style="font-size:20px;margin-bottom:4px;opacity:.3;">✨</div>
-      <div style="font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">Radiance required</div>
-      <div style="font-size:11.5px;color:rgba(255,255,255,.25);line-height:1.45;margin-bottom:10px;">Personal emojis are available with Radiance.</div>
-      <button onclick="showView('atelier')" class="settings-save-btn" style="padding:7px 16px;font-size:11px;">Get Radiance</button>
-    </div>`;
-  } else {
-    const pe = CU?.personalEmojis || [];
-    const limit = typeof PERSONAL_EMOJI_LIMIT !== 'undefined' ? PERSONAL_EMOJI_LIMIT : 50;
-    html += gridOpen(6);
-    html += pe.map((e,i) => `
-      <div onclick="insertFortizedEmoji('${escapeHTML(e.name)}','${escapeHTML(e.data)}')"
-           onmouseenter="_emojiHover(':${escapeHTML(e.name)}:',null,'${escapeHTML(e.data)}',true)"
-           oncontextmenu="event.preventDefault();showCustomConfirm('Delete :${escapeHTML(e.name)}:?',function(){deletePersonalEmoji(${i})})"
-           title=":${escapeHTML(e.name)}:" class="emoji-cell emoji-cell-custom">
-        <img src="${escapeHTML(e.data)}" alt=":${escapeHTML(e.name)}:" style="width:100%;height:100%;object-fit:contain;">
-      </div>`).join('');
-    if (pe.length < limit) {
-      html += `<div onclick="openPersonalEmojiUpload()" class="emoji-add-btn" title="Upload a personal emoji">+</div>`;
-    }
-    html += gridClose;
-  }
+  // Personal (user-custom) emoji section removed — users no longer have custom emojis.
 
   // 5) Each bastion as its own section (custom emojis)
   bastions.forEach((b, bi) => {
@@ -13157,7 +13145,7 @@ function renderEmojiGrid() {
     if (!custom.length) return;
     const locked = !isRadiance && bi !== curBastion; // must be in-bastion or have Radiance to use
     html += sectionHdr('bastion-' + bi, b.name || ('Bastion ' + (bi+1)), locked ? ' <span class="epp-lock">RADIANCE</span>' : '');
-    html += gridOpen(6);
+    html += gridOpen(8);
     html += custom.map(ce => `
       <div onclick="${(!locked) ? "insertFortizedEmoji('"+escapeHTML(ce.name)+"','"+escapeHTML(ce.data)+"')" : "toast('Radiance required to use this bastion\\'s emojis outside the bastion','error')"}"
            onmouseenter="_emojiHover(':${escapeHTML(ce.name)}:','${escapeHTML(b.name||'')}','${escapeHTML(ce.data)}',true)"
@@ -13317,6 +13305,8 @@ function _showEmojiTooltip(emoji, el) {
 // Event delegation: left-click any emoji in chat → show tooltip
 // Only for user-input emojis (messages, about me, forum posts) — not platform/UI emojis
 document.addEventListener('click', function(e) {
+  const sticker = e.target.closest('.msg-sticker');
+  if (sticker) { e.stopPropagation(); _showStickerTooltip(sticker); return; }
   const img = e.target.closest('.msg-emoji, .msg-emoji-native, .emoji');
   if (!img) return;
   // Only show tooltip for emojis inside user-generated content areas
@@ -13324,6 +13314,68 @@ document.addEventListener('click', function(e) {
   const emoji = img.dataset?.emoji || img.alt || img.textContent?.trim();
   if (emoji) { e.stopPropagation(); _showEmojiTooltip(emoji, img); }
 });
+
+// Sticker tooltip — same visual language as emoji tooltip, but for stickers.
+function _showStickerTooltip(el) {
+  document.querySelector('.emoji-tooltip')?.remove();
+  const url = el.dataset?.stickerUrl || el.getAttribute('src') || '';
+  // Find metadata by matching URL across bastions
+  let name = 'sticker';
+  let fromBastion = null;
+  let isPersonal = false;
+  try {
+    (CU?.bastions || []).some(b => {
+      const st = (b.stickers || []).find(s => s.url === url || s.data === url);
+      if (st) { name = st.name || 'sticker'; fromBastion = b; return true; }
+      return false;
+    });
+    if (!fromBastion) {
+      const ps = (CU?.personalStickers || []).find(s => s.url === url || s.data === url);
+      if (ps) { name = ps.name || 'sticker'; isPersonal = true; }
+    }
+  } catch {}
+  const originLabel = fromBastion ? 'Bastion Sticker' : (isPersonal ? 'Personal Sticker' : 'Sticker');
+  const originColor = fromBastion ? 'rgba(88,191,255,.85)' : 'rgba(255,249,62,.85)';
+  const detailLine = fromBastion
+    ? ('From: ' + escapeHTML(fromBastion.name || 'Bastion'))
+    : (isPersonal ? 'Uploaded by you — available everywhere' : 'Sticker');
+
+  const tip = document.createElement('div');
+  tip.className = 'emoji-tooltip';
+  tip.innerHTML = `
+    <div class="et-header">
+      <div class="et-big" style="width:64px;height:64px;border-radius:14px;"><img src="${escapeHTML(url)}" style="width:56px;height:56px;object-fit:contain;"></div>
+      <div>
+        <div class="et-name">${escapeHTML(':' + name + ':')}</div>
+        <div class="et-origin" style="font-size:10px;font-weight:600;color:${originColor};margin-top:2px;">${originLabel}</div>
+      </div>
+    </div>
+    <div class="et-cat">${detailLine}</div>`;
+
+  document.body.appendChild(tip);
+  const rect = el.getBoundingClientRect();
+  const tipRect = tip.getBoundingClientRect();
+  let top = rect.top - tipRect.height - 8;
+  let left = rect.left + rect.width/2 - tipRect.width/2;
+  if (top < 8) top = rect.bottom + 8;
+  if (left < 8) left = 8;
+  if (left + tipRect.width > window.innerWidth - 8) left = window.innerWidth - tipRect.width - 8;
+  tip.style.top = top + 'px';
+  tip.style.left = left + 'px';
+
+  const close = (e) => {
+    if (!tip.contains(e.target)) {
+      tip.remove();
+      document.removeEventListener('click', close);
+      document.removeEventListener('scroll', close, true);
+    }
+  };
+  setTimeout(() => {
+    document.addEventListener('click', close);
+    document.addEventListener('scroll', close, true);
+  }, 10);
+  setTimeout(() => tip.remove(), 5000);
+}
 
 function renderEmojiCell(emoji) {
   const safe = escapeHTML(emoji);
@@ -13339,11 +13391,11 @@ function renderEmojiCell(emoji) {
   const shortcode = Object.entries(EMOJI_SHORTCODES).find(([,em]) => em === emoji)?.[0] || '';
   const displayName = shortcode ? ':' + shortcode + ':' : label;
   const isFav = _favEmojis.includes(emoji);
-  return `<div onclick="insertEmoji('${safe}')" oncontextmenu="event.preventDefault();toggleFavEmoji('${safe}')" data-tip="${escapeHTML(displayName)}${isFav ? ' ★ (Right-click to unfavorite)' : ' (Right-click to favorite)'}"
-    onmouseenter="document.getElementById('epp-hover-label').textContent='${escapeHTML(displayName)}${isFav ? ' ★' : ''}'"
-    class="emoji-cell" style="width:38px;height:38px;position:relative;">
+  return `<div onclick="insertEmoji('${safe}')" oncontextmenu="event.preventDefault();toggleFavEmoji('${safe}')"
+    onmouseenter="document.getElementById('epp-hover-label').innerHTML='${escapeHTML(displayName)}${isFav ? ' \u2605' : ''}'"
+    class="emoji-cell emoji-cell-custom" style="position:relative;">
     <img src="${url}" style="width:26px;height:26px;object-fit:contain;" loading="lazy" onerror="this.outerHTML='<span style=\\'font-size:22px;\\'>${emoji}</span>'">
-    ${isFav ? '<span style="position:absolute;top:2px;right:2px;font-size:12px;color:var(--accent);">★</span>' : ''}
+    ${isFav ? '<span style="position:absolute;top:2px;right:2px;font-size:11px;color:var(--accent);">★</span>' : ''}
   </div>`;
 }
 
@@ -13386,10 +13438,6 @@ function searchEmojis(q) {
       if (ce.name && ce.name.toLowerCase().includes(ql)) matches.push({type:'ftz',name:ce.name,url:ce.data,from:b.name||''});
     });
   });
-  (CU?.personalEmojis||[]).forEach(pe => {
-    if (pe.name && pe.name.toLowerCase().includes(ql)) matches.push({type:'ftz',name:pe.name,url:pe.data});
-  });
-
   if (!matches.length) {
     grid.innerHTML = '<div class="epp-empty" style="padding:20px;">No results for "'+escapeHTML(q)+'"</div>';
     return;
@@ -13412,6 +13460,18 @@ function searchEmojis(q) {
 function setEmojiCat(idx) { setEmojiTab(EMOJI_PICKER_TABS[idx]?.id || 'smileys'); }
 
 function insertEmoji(emoji) {
+  // Reaction mode — the picker was opened to react to a message, so dispatch
+  // the click as a reaction (or super-reaction) instead of inserting text.
+  if (_emojiPickerMode === 'react' && _reactionContext) {
+    const { msgId, context } = _reactionContext;
+    toggleReaction(msgId, emoji, context, _reactionSuperMode);
+    document.getElementById('emoji-picker').classList.remove('show');
+    _emojiPickerMode = 'insert'; _reactionContext = null; _reactionSuperMode = false;
+    _recentEmojis = [emoji, ..._recentEmojis.filter(e=>e!==emoji)].slice(0,24);
+    localStorage.setItem('ftz_recent_emojis', JSON.stringify(_recentEmojis));
+    _trackEmojiFrequency(emoji);
+    return;
+  }
   const ta = document.getElementById(activeEmojiTarget);
   if (!ta) return;
   const pos = ta.selectionStart;
@@ -13437,6 +13497,16 @@ function _hasActiveRadiance() {
 // Non-Radiance users cannot access emoji/sticker reactions.
 
 function insertFortizedEmoji(name, url) {
+  if (_emojiPickerMode === 'react' && _reactionContext) {
+    const { msgId, context } = _reactionContext;
+    // Use the custom-emoji name as the reaction key, so the rendering layer
+    // can resolve it back to the Fortized / bastion image.
+    toggleReaction(msgId, ':' + name + ':', context, _reactionSuperMode);
+    document.getElementById('emoji-picker').classList.remove('show');
+    _emojiPickerMode = 'insert'; _reactionContext = null; _reactionSuperMode = false;
+    _trackEmojiFrequency(name);
+    return;
+  }
   const ta = document.getElementById(activeEmojiTarget);
   if (!ta) return;
   const token = ':' + name + ':';
@@ -15076,7 +15146,7 @@ async function viewUserProfile(username) {
       <!-- Name -->
       <div class="up-left-info">
         <div class="up-left-name" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">
-          ${escapeHTML(u.displayName||u.username)}${u.verified ? _verifiedBadge(18) : ''}
+          ${escapeHTML(u.displayName||u.username)}
         </div>
         <div class="up-left-uname">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.25);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
       </div>
@@ -15612,7 +15682,6 @@ function handleContextMenu(e) {
     e.preventDefault();
     const groups = [
       { items: [
-        { icon: _ctxSvg('home'), label: 'Go Home', action: () => showView('home') },
         { icon: _ctxSvg('search'), label: 'Search', action: () => { const s = document.querySelector('.topbar-search input'); if (s) { s.focus(); s.click(); } else { toast('Search coming soon', 'info'); } } },
         { icon: _ctxSvg('settings'), label: 'Settings', action: () => showView('profile') },
         { icon: _ctxSvg('switchAcct'), label: 'Switch Account', action: () => toggleAccountSwitcher() },
@@ -15661,14 +15730,12 @@ function handleContextMenu(e) {
     return;
   }
 
-  // ── 7) Fallback — generic context menu ──
-  const fallbackItems = [
-    { icon: _ctxSvg('home'), label: 'Go Home', action: () => showView('home') },
-  ];
+  // ── 7) Fallback — generic context menu (only when a selection exists) ──
   if (window.getSelection()?.toString()) {
-    fallbackItems.unshift({ icon: _ctxSvg('copy'), label: 'Copy Selection', action: () => navigator.clipboard.writeText(window.getSelection().toString()), copyFeedback: true });
+    showCtxMenu(e.clientX, e.clientY, [{ items: [
+      { icon: _ctxSvg('copy'), label: 'Copy Selection', action: () => navigator.clipboard.writeText(window.getSelection().toString()), copyFeedback: true },
+    ] }]);
   }
-  showCtxMenu(e.clientX, e.clientY, [{ items: fallbackItems }]);
 }
 
 // ════════════════════════════════════════════
@@ -20800,10 +20867,11 @@ function parseMD(s) {
     const gifId = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16) || ('gif-' + Math.random().toString(36).slice(2,8));
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
-  // 0a. Sticker token from sticker picker
+  // 0a. Sticker token from sticker picker — click shows a tooltip (like emoji),
+  //     not the media lightbox. Stickers behave as "big emojis".
   s = s.replace(/\[FTZSTICKER:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
-    return `<div style="margin:6px 0;max-width:180px;display:inline-block;cursor:pointer;background:rgba(0,0,0,.2);border-radius:8px;padding:4px;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:180px;object-fit:contain;display:block;background:rgba(0,0,0,.15);" loading="lazy" draggable="false"></div>`;
+    return `<img src="${safe}" class="msg-sticker" data-sticker-url="${safe}" style="max-width:160px;max-height:160px;object-fit:contain;display:block;margin:6px 0;cursor:pointer;" loading="lazy" draggable="false">`;
   });
   // 0aa. :emoji_name: shortcodes → actual emoji / Fortized emoji / bastion custom emoji / personal emoji
   // Permission rules:
@@ -20815,22 +20883,18 @@ function parseMD(s) {
     if (unicode) return unicode;
     // Check global Fortized emojis (always available)
     const ftz = FORTIZED_EMOJI_MAP[name];
-    if (ftz) return `<img src="${escapeHTML(ftz)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="ftz" draggable="false" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
-    // Check user's personal custom emojis (always available for the owner)
-    const personalEmojis = CU?.personalEmojis || [];
-    const pe = personalEmojis.find(e => e.name === name);
-    if (pe) return `<img src="${escapeHTML(pe.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="personal" draggable="false" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
+    if (ftz) return `<img src="${escapeHTML(ftz)}" alt=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="ftz" draggable="false" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
     // Check bastion custom emojis — search current bastion first, then ALL bastions
     // All users can VIEW emojis from any bastion they're in (Radiance only gates USING them in picker)
     if (curBastion !== null) {
       const ce = (CU?.bastions?.[curBastion]?.customEmojis||[]).find(e => e.name === name);
-      if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="bastion" data-bastion-idx="${curBastion}" draggable="false" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
+      if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="bastion" data-bastion-idx="${curBastion}" draggable="false" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
     }
     // Search ALL bastions the user is in for the emoji (so cross-bastion emojis render for everyone)
     for (let bi = 0; bi < (CU?.bastions||[]).length; bi++) {
       if (bi === curBastion) continue; // already checked
       const ce = (CU.bastions[bi]?.customEmojis||[]).find(e => e.name === name);
-      if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="bastion" data-bastion-idx="${bi}" draggable="false" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
+      if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="bastion" data-bastion-idx="${bi}" draggable="false" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
     }
     return match; // keep original if unknown
   });
@@ -29479,6 +29543,7 @@ async function _forumViewThread(threadId) {
               <div class="forum-reply-compose-actions">
                 <input id="forum-post-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumPostImagePreview(event)">
                 <button class="forum-img-btn" onclick="document.getElementById('forum-post-image-upload').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Add Image</button>
+                <button class="forum-img-btn" onclick="toggleEmojiPicker('forum-post-text')" title="Add emoji"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Emoji</button>
                 <span class="forum-file-label" id="forum-post-file-label">No image selected</span>
                 <button class="forum-submit-btn" onclick="_forumCreatePost('${threadId}')">Post Reply</button>
               </div>
@@ -29529,9 +29594,10 @@ function _forumShowCreatePost(preselectedCategory) {
               <div class="fnp-hint"><span id="fnp-title-count">0</span>/100</div>
             </div>
 
-            <div class="fnp-card">
+            <div class="fnp-card" style="position:relative;">
               <label class="fnp-label" for="forum-new-content">Content</label>
               <textarea id="forum-new-content" class="fnp-textarea" placeholder="Write out your post... Share details, context, and what you're looking for."></textarea>
+              <button type="button" onclick="toggleEmojiPicker('forum-new-content')" class="emoji-insert-btn" style="position:absolute;bottom:10px;right:10px;" title="Add emoji">😀</button>
             </div>
 
             <div class="fnp-card">
@@ -32698,7 +32764,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     </div>
     <!-- Identity -->
     <div class="mpp-identity">
-      <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}${u.verified ? _verifiedBadge(16) : ''}</div>
+      <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
       <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.2);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
     </div>
     <!-- Status -->

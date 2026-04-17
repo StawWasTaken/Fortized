@@ -4983,7 +4983,6 @@ function loadChatChannel(idx) {
         <div class="new-messages-bar" id="ch-new-msgs-bar-${idx}"><span id="ch-new-msgs-text-${idx}">1 new message</span><button onclick="markChannelRead(${idx})">Mark as Read</button></div>
         ${bannerSafe ? `<div style="width:100%;height:140px;position:relative;flex-shrink:0;overflow:hidden;margin-top:-20px;">
           <img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'">
-          <div style="position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to top,var(--channel),transparent);pointer-events:none;"></div>
           <div style="position:absolute;bottom:14px;left:18px;display:flex;align-items:center;gap:10px;">
             ${b.icon?`<img src="${escapeHTML(b.icon)}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,255,255,.15);box-shadow:0 2px 8px rgba(0,0,0,.4);" onerror="this.style.display='none'">`:''}
             <span style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 4px rgba(0,0,0,.4);letter-spacing:-.01em;">${escapeHTML(b.name||'')}${b.verified?_verifiedBadge(14):''}</span>
@@ -9131,7 +9130,6 @@ function renderBastionHub() {
   main.innerHTML = `
     ${bannerSafe ? `<div style="width:100%;height:140px;position:relative;border-radius:0 0 18px 18px;overflow:hidden;margin-bottom:16px;flex-shrink:0;">
       <img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.display='none'">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,var(--channel));"></div>
     </div>` : ''}
 
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;${bannerSafe?'margin-top:-40px;position:relative;z-index:2;padding:0 8px;':''}">
@@ -18207,35 +18205,20 @@ function _listenStaffChanges() {
 }
 
 function _syncAdminRailButton() {
-  const rail = document.getElementById('rail');
+  // Admin opener no longer lives on the left rail — it's in the topbar
+  // (#tb-admin-btn) and via Ctrl+Shift+A. Remove any pre-existing rail
+  // button so old sessions that already injected it get cleaned up.
   const existingBtn = document.getElementById('admin-rail-btn');
-  const existingSep = existingBtn?.previousElementSibling;
-  if (hasStaffAccess()) {
-    if (!existingBtn && rail) {
-      const role = getStaffRole(CU.username);
-      const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
-      const btn = document.createElement('div');
-      btn.id = 'admin-rail-btn'; btn.className = 'rail-btn';
-      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Staff Console</span>`;
-      btn.dataset.tip = roleLabel + ' Panel';
-      btn.style.cssText = 'border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);margin-top:6px;background:rgba(248,113,113,.04);';
-      btn.onclick = tryOpenAdmin;
-      const sep = document.createElement('div');
-      sep.className = 'rail-sep'; sep.style.margin = '8px 12px'; sep.id = 'admin-rail-sep';
-      const createBtn = rail.querySelector('[onclick*="modal-create-bastion"]');
-      if (createBtn) { rail.insertBefore(sep, createBtn); rail.insertBefore(btn, createBtn); }
-      else rail.appendChild(btn);
-    }
-  } else {
-    if (existingBtn) existingBtn.remove();
-    if (existingSep && existingSep.id === 'admin-rail-sep') existingSep.remove();
-    if (_currentView === 'admin') {
-      adminAuthed = false;
-      _closeAdminPanel();
-      toast('Your staff access has been revoked.', 'error');
-    }
+  const existingSep = document.getElementById('admin-rail-sep');
+  if (existingBtn) existingBtn.remove();
+  if (existingSep) existingSep.remove();
+  // Revoke in-memory admin session if staff access was revoked.
+  if (!hasStaffAccess() && _currentView === 'admin') {
     adminAuthed = false;
+    _closeAdminPanel();
+    toast('Your staff access has been revoked.', 'error');
   }
+  if (!hasStaffAccess()) adminAuthed = false;
 }
 
 // Poll for force-refresh signal from admin

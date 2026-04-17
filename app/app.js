@@ -2700,32 +2700,104 @@ function renderHomePanel() {
     }
   }
 
-  // Realm Friends — horizontal avatar scroll
-  const realmF = document.getElementById('realm-friends');
-  const realmOC = document.getElementById('realm-online-count');
-  if (realmF) {
-    if (!friends0.length) {
-      realmF.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:8px 4px;">
-        <div style="font-size:13px;color:var(--muted);">No friends yet — click <strong style="color:rgba(255,255,255,.5);">+ Add Friend</strong> to get started!</div>
-        <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:11px;padding:6px 14px;">+ Add Friend</button>
-      </div>`;
-    } else {
-      realmF.innerHTML = '<div style="padding:8px 4px;display:flex;gap:8px;"><div class="pl-spinner" style="width:18px;height:18px;border-width:2px;"></div></div>';
-      _loadRealmFriends(friends0, realmF, realmOC);
-    }
-  }
-
   // Render home ads
   _renderHomeAds();
 
-  // Load friend activity feed
-  setTimeout(loadFriendActivity, 100);
+  // Trending forum posts (replacing friend activity)
+  setTimeout(_renderTrendingForumPosts, 100);
 
-  // Render Active Now sidebar for Home
+  // Render sidebar: friends online today + trending fortshop items
   setTimeout(() => renderActiveNowSidebar('home-active-now-list'), 150);
+  setTimeout(_renderTrendingItems, 180);
 
   // Check for new announcements
   setTimeout(_checkForAnnouncements, 500);
+}
+
+// ── Trending forum posts (top-3 by upvotes / reactions) ──
+async function _renderTrendingForumPosts() {
+  const el = document.getElementById('home-trending-forum');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:12px;">Loading trending posts…</div>';
+  try {
+    const categoryIds = (typeof FORUM_CATEGORIES !== 'undefined' && FORUM_CATEGORIES) ? FORUM_CATEGORIES.map(c => c.id) : ['general','bugs','suggestions','showcase','offtopic','announcements'];
+    const all = (await Promise.all(categoryIds.map(c => FortizedSocial.getForumThreads(c, 50, 0).catch(()=>[])))).flat();
+    const score = t => {
+      const likes = Array.isArray(t.likes) ? t.likes.length : (t.likes || 0);
+      const views = t.views || 0;
+      const replies = t.reply_count || 0;
+      return likes * 3 + replies * 2 + views * 0.05;
+    };
+    const top = [...all].sort((a, b) => score(b) - score(a)).slice(0, 3);
+    if (!top.length) {
+      el.innerHTML = `<div class="trending-empty">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">No forum activity yet — start the conversation!</div>
+        <button class="btn-a" onclick="showView('forum')" style="font-size:11px;padding:6px 14px;">Browse Forum</button>
+      </div>`;
+      return;
+    }
+    el.innerHTML = top.map(t => {
+      const cat = (typeof FORUM_CATEGORIES !== 'undefined' && FORUM_CATEGORIES || []).find(c => c.id === t.category) || {name:'', color:'#fff', icon:''};
+      const likes = Array.isArray(t.likes) ? t.likes.length : (t.likes || 0);
+      return `<div class="trending-post" onclick="showView('forum');setTimeout(()=>_forumViewThread('${escapeHTML(t.id)}'),50)">
+        <div class="trending-post-rank" style="color:${cat.color};">${cat.icon || '●'}</div>
+        <div class="trending-post-info">
+          <div class="trending-post-title">${escapeHTML(t.title || '')}</div>
+          <div class="trending-post-meta">
+            <span>by ${escapeHTML(t.author || 'unknown')}</span>
+            <span class="tpm-sep"></span>
+            <span>${likes} ▲</span>
+            <span class="tpm-sep"></span>
+            <span>${t.reply_count || 0} replies</span>
+            <span class="tpm-sep"></span>
+            <span class="trending-post-cat" style="color:${cat.color};">${escapeHTML(cat.name || '')}</span>
+          </div>
+        </div>
+        <div class="trending-post-arrow">›</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.warn('[Home] Trending forum load failed:', e);
+    el.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:12px;">Failed to load trending posts.</div>';
+  }
+}
+
+// ── Trending fortshop items ──
+async function _renderTrendingItems() {
+  const el = document.getElementById('home-trending-items');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:10px 12px;color:var(--muted);font-size:11px;">Loading…</div>';
+  try {
+    // Try to pull fortshop items; gracefully degrade if API missing
+    let items = [];
+    try {
+      if (typeof FortizedSocial.getFortshopTrending === 'function') {
+        items = await FortizedSocial.getFortshopTrending(6);
+      } else if (typeof FortizedSocial.getFortshopItems === 'function') {
+        items = await FortizedSocial.getFortshopItems({ sort: 'trending', limit: 6 });
+      } else if (typeof getFortshopTrendingItems === 'function') {
+        items = await getFortshopTrendingItems(6);
+      }
+    } catch(e) { /* fall through */ }
+    if (!items || !items.length) {
+      el.innerHTML = `<div class="trending-items-empty">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">No trending items right now.</div>
+        <button class="btn-a" onclick="showView('fortshop')" style="font-size:10.5px;padding:5px 10px;">Open Fortshop</button>
+      </div>`;
+      return;
+    }
+    el.innerHTML = items.slice(0,6).map(it => `
+      <div class="trending-item" onclick="showView('fortshop')" title="${escapeHTML(it.name || '')}">
+        <div class="trending-item-img"><img src="${escapeHTML(it.thumb || it.image || '/fortshop_placeholder.png')}" onerror="this.style.display='none'"></div>
+        <div class="trending-item-meta">
+          <div class="trending-item-name">${escapeHTML(it.name || 'Item')}</div>
+          <div class="trending-item-price">${it.price != null ? (it.price + ' Onyx') : 'Free'}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="padding:10px 12px;color:var(--muted);font-size:11px;">Fortshop unavailable.</div>';
+  }
 }
 
 // ── Home Ads ──
@@ -2748,13 +2820,51 @@ function _pickWeightedAd(ads, ratioFilter) {
   for (const w of weighted) { r -= w.weight; if (r <= 0) return w.ad; }
   return weighted[weighted.length - 1].ad;
 }
+function _adIsInternal(link) {
+  if (!link) return false;
+  try { return link.startsWith('/') || link.startsWith(location.origin); } catch(e) { return false; }
+}
+function _adIsBastionInvite(ad) {
+  // Either no customLink (implicit bastion invite) or an internal link pointing to /app/bastion?...
+  if (!ad) return false;
+  if (!ad.customLink) return !!(ad.bastionId || ad.bastionName);
+  if (!_adIsInternal(ad.customLink)) return false;
+  const path = ad.customLink.replace(location.origin, '');
+  return /^\/app\/bastion\b/.test(path);
+}
 function _adClickAction(ad) {
   if (ad.customLink) {
-    // Fortized internal links open in same page, external links open in new tab
-    if (ad.customLink.startsWith('/') || ad.customLink.startsWith(location.origin)) {
-      window.location.href = ad.customLink;
+    const link = ad.customLink;
+    if (_adIsInternal(link)) {
+      const path = link.replace(location.origin, '').replace(/\/+$/, '') || '/app';
+      // Bastion invite via URL
+      const bm = path.match(/^\/app\/bastion\?([^/]+)(?:\/(.+))?/);
+      if (bm) {
+        const bId = decodeURIComponent(bm[1] || '');
+        const idx = (CU?.bastions || []).findIndex(b => b.globalId === bId);
+        if (idx >= 0) {
+          try { openBastion(idx); } catch(e) {}
+          return;
+        }
+        // Not joined yet → use invite flow
+        try { promptJoinPublicBastion(bId); } catch(e) { window.location.href = link; }
+        return;
+      }
+      // Known views — soft-nav via router, no reload
+      const viewMap = {
+        '/app': 'home',
+        '/app/messages': 'dms',
+        '/app/discover': 'discover',
+        '/app/atelier': 'atelier',
+        '/app/forum': 'forum',
+        '/app/fortshop': 'fortshop'
+      };
+      const view = viewMap[path];
+      if (view) { try { showView(view); return; } catch(e) {} }
+      // Unknown internal path — fall back to hard nav
+      window.location.href = link;
     } else {
-      window.open(ad.customLink, '_blank', 'noopener');
+      window.open(link, '_blank', 'noopener');
     }
   } else {
     promptJoinPublicBastion(ad.bastionId || ad.bastionName || '');
@@ -2772,36 +2882,33 @@ function _renderAdHTML(ad, size) {
   const isBanner = size === 'banner';
   const adKey = '_ad_' + Math.random().toString(36).slice(2,6);
   window[adKey] = ad;
+  const isBastionInvite = _adIsBastionInvite(ad);
+  // Prefer the ad's own title; only show bastion name/icon for actual bastion invites
+  const label = ad.title || (isBastionInvite ? ad.bastionName : '') || 'Sponsored';
+  const showBastionIcon = isBastionInvite && ad.bastionIcon;
+  const meta = `<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 2px 0;">
+          <div style="display:flex;align-items:center;gap:5px;min-width:0;">
+            ${showBastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:13px;height:13px;border-radius:4px;flex-shrink:0;">`:''}
+            <span style="font-size:10px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(label)} · Sponsored</span>
+          </div>
+          <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(isBastionInvite?(ad.bastionName||''):'')}')">Report ad</span>
+        </div>`;
   if (isBanner) {
-    // Banner: 728x90 ratio, centered, actual proportions, max-width capped
     return `<div style="text-align:center;padding:4px 0 2px;">
       <div style="max-width:728px;margin:0 auto;">
         <a style="display:block;cursor:pointer;border-radius:10px;overflow:hidden;" onclick="_adClickAction(window['${adKey}'])">
           <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:100%;aspect-ratio:728/90;object-fit:cover;display:block;border-radius:10px;" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
         </a>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 2px 0;">
-          <div style="display:flex;align-items:center;gap:5px;min-width:0;">
-            ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:13px;height:13px;border-radius:4px;flex-shrink:0;">`:''}
-            <span style="font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.bastionName||ad.title||'')} · Sponsored</span>
-          </div>
-          <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(ad.bastionName||'')}')">Report ad</span>
-        </div>
+        ${meta}
       </div>
     </div>`;
   } else {
-    // Rectangle: 300x250, centered
     return `<div style="text-align:center;padding:6px 0;">
       <div style="width:300px;margin:0 auto;">
         <a style="display:block;cursor:pointer;border-radius:10px;overflow:hidden;" onclick="_adClickAction(window['${adKey}'])">
           <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:300px;height:250px;object-fit:cover;display:block;border-radius:10px;" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
         </a>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 2px 0;">
-          <div style="display:flex;align-items:center;gap:5px;min-width:0;">
-            ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:13px;height:13px;border-radius:4px;flex-shrink:0;">`:''}
-            <span style="font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.bastionName||ad.title||'')} · Sponsored</span>
-          </div>
-          <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(ad.bastionName||'')}')">Report ad</span>
-        </div>
+        ${meta}
       </div>
     </div>`;
   }
@@ -4205,7 +4312,6 @@ async function showGCMemberPanel(meta) {
         if (nameEl) {
           if (ud.displayFont && ud.displayFont !== 'default') nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont);
           if (ud.displayColor && ud.displayColor !== '#fff') nameEl.style.cssText += _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor);
-          if (ud.verified && !nameEl.querySelector('svg')) nameEl.insertAdjacentHTML('beforeend', _verifiedBadge(14));
         }
         if (ud.pfp) {
           const avWrap = entry.querySelector('.gc-ml-av');
@@ -4232,7 +4338,7 @@ function _buildGCMemberEntry(m, meta, isOwner, statusMap) {
     <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30,pfpCrop)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${st}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(st, 10)}</span></div>
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:4px;">
-        <div class="ml-name" style="color:${isGCOwner?'var(--accent)':'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}${(isMe ? CU.verified : _verifiedCache[m]) ? _verifiedBadge(12) : ''}</div>
+        <div class="ml-name" style="color:${isGCOwner?'var(--accent)':'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
         ${isGCOwner?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);padding:1px 5px;border-radius:4px;flex-shrink:0;">OWNER</span>':''}
       </div>
     </div>
@@ -5551,15 +5657,6 @@ function appendMessage(container, msg, context, prevAuthor) {
           const effectCSS = _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor);
           authorEl.style.cssText += effectCSS;
         }
-        // Verified badge — inserted AFTER the author span, not inside it, so
-        // the name color/effect styles above don't recolor the checkmark.
-        if (u.verified && !authorEl.parentElement?.querySelector('.msg-verified-badge')) {
-          const badge = document.createElement('span');
-          badge.className = 'msg-verified-badge';
-          badge.style.display = 'inline-flex';
-          badge.innerHTML = _verifiedBadge(14);
-          authorEl.insertAdjacentElement('afterend', badge);
-        }
       }
     }).catch(()=>{});
   } else {
@@ -6475,9 +6572,6 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         const nameEl = entry.querySelector('.ml-name');
         if (nameEl && ud.displayName) {
           nameEl.textContent = ud.displayName;
-          if (ud.verified) nameEl.insertAdjacentHTML('beforeend', _verifiedBadge(14));
-        } else if (nameEl && ud.verified && !nameEl.querySelector('svg')) {
-          nameEl.insertAdjacentHTML('beforeend', _verifiedBadge(14));
         }
         // Apply display name styles (font, effect, color) for other users
         if (nameEl) {
@@ -6506,11 +6600,8 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
             }
           }
         }
-        const badgesEl = entry.querySelector('.ml-badges');
-        if (badgesEl && typeof getUserBadges === 'function') {
-          const badges = getUserBadges(ud).slice(0, 3);
-          if (badges.length) badgesEl.innerHTML = badges.map(b => `<img src="${b.img}" title="${escapeHTML(b.tooltip||'')}" style="width:14px;height:14px;object-fit:contain;">`).join('');
-        }
+        // Badges removed from member list — only visible in profile cards/previews
+
         const csEl = entry.querySelector('.ml-custom-status');
         if (csEl) {
           if (ud.gameActivity?._spotify) {
@@ -6543,7 +6634,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
     </div>
     <div class="ml-info" style="min-width:0;flex:1;">
       <div style="display:flex;align-items:center;gap:4px;">
-        <div class="ml-name" style="color:${primaryRole?.color||'rgba(255,255,255,.55)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}${(isMe ? CU.verified : _verifiedCache[u]) ? _verifiedBadge(14) : ''}</div>
+        <div class="ml-name" style="color:${primaryRole?.color||'rgba(255,255,255,.55)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
         <span class="ml-badges">${staffBadge}</span>
       </div>
       <div class="ml-custom-status"></div>
@@ -20802,6 +20893,43 @@ function insertGif(embedUrl, targetInputId) {
 
 
 // ════════════════════════════════════════════════════════
+// FORMATTING TOOLBAR — shared by chat bars & forum composer
+// ════════════════════════════════════════════════════════
+function _fmtWrap(inputId, left, right) {
+  right = right || left;
+  const ta = document.getElementById(inputId);
+  if (!ta) return;
+  const start = ta.selectionStart || 0;
+  const end = ta.selectionEnd || 0;
+  const v = ta.value;
+  const sel = v.slice(start, end);
+  const replacement = left + sel + right;
+  ta.value = v.slice(0, start) + replacement + v.slice(end);
+  ta.focus();
+  // Keep the inserted text selected so users can chain toolbars
+  const newStart = start + left.length;
+  ta.setSelectionRange(newStart, newStart + sel.length);
+  // Trigger input event for autoResize / char counters
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+}
+function buildFormatToolbarHTML(inputId, opts) {
+  opts = opts || {};
+  const size = opts.compact ? 'padding:3px 6px;' : '';
+  return `<div class="fmt-toolbar" style="${size}">
+    <button type="button" class="fmt-btn fmt-btn--b" title="Bold (**text**)" onclick="_fmtWrap('${inputId}','**')">B</button>
+    <button type="button" class="fmt-btn fmt-btn--i" title="Italic (*text*)" onclick="_fmtWrap('${inputId}','*')">I</button>
+    <button type="button" class="fmt-btn fmt-btn--s" title="Strikethrough (~~text~~)" onclick="_fmtWrap('${inputId}','~~')">S</button>
+    <span class="fmt-divider"></span>
+    <button type="button" class="fmt-btn" title="Code (\`text\`)" onclick="_fmtWrap('${inputId}','\`')">&lt;/&gt;</button>
+    <button type="button" class="fmt-btn" title="Spoiler (||text||)" onclick="_fmtWrap('${inputId}','||')">▮</button>
+    <button type="button" class="fmt-btn" title="Highlight (==text==)" onclick="_fmtWrap('${inputId}','==')">H</button>
+    <span class="fmt-divider"></span>
+    <button type="button" class="fmt-btn" title="Title (/text/)" onclick="_fmtWrap('${inputId}','/')">T1</button>
+    <button type="button" class="fmt-btn" title="Subtitle (///text///)" onclick="_fmtWrap('${inputId}','///')">T2</button>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
 // CHAT INPUT BAR BUILDER — shared by DM, GC, Channel
 // ════════════════════════════════════════════════════════
 function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
@@ -20828,10 +20956,12 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           </div>
           <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
         </div>
+        <div class="chat-fmt-pop" id="${inputId}-fmtpop" style="display:none;border-bottom:1px solid rgba(255,255,255,.05);">${buildFormatToolbarHTML(inputId, {compact:true})}</div>
         <div class="chat-input-row">
           <button class="cit-attach" onclick="openFileUpload('${inputId}')" title="Attach File">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
+          <button class="cit-attach" onclick="(function(){const p=document.getElementById('${inputId}-fmtpop');if(p)p.style.display=p.style.display==='none'?'block':'none';})()" title="Formatting" data-tooltip="Formatting" style="font-weight:800;font-size:12px;font-family:Georgia,serif;">Aa</button>
           <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
             onkeydown="${keydown}"
             oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}')"
@@ -29289,6 +29419,29 @@ let _forumThreadImageData = null;
 let _forumPostImageData = null;
 let _forumAllThreadsCache = [];
 
+// Per-category last-visit timestamps for "new posts" indicators
+function _forumGetLastVisits() {
+  try { return JSON.parse(localStorage.getItem('ftz_forum_visits') || '{}'); } catch(e) { return {}; }
+}
+function _forumSaveLastVisit(catId) {
+  try {
+    const v = _forumGetLastVisits();
+    v[catId] = Date.now();
+    localStorage.setItem('ftz_forum_visits', JSON.stringify(v));
+  } catch(e) {}
+}
+function _forumCanPostInCategory(catId) {
+  if (catId === 'announcements') return isAdmin();
+  return true;
+}
+function _forumCanPin() { return isSuperAdmin(); }
+function _forumCountNewInCategory(threads, catId) {
+  const visits = _forumGetLastVisits();
+  const last = visits[catId] || 0;
+  if (!last) return 0; // Never visited — don't flood with "new" everywhere; only mark after first visit
+  return (threads || []).filter(t => (t.updated_at || t.created_at) > last).length;
+}
+
 function _forumTimeAgo(ts) {
   const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
   if (s < 60) return 'just now';
@@ -29419,17 +29572,26 @@ async function _forumInit() {
                     <span class="forum-group-col-label">Replies</span>
                   </div>
                 </div>
-                ${g.cats.map(cat => `
+                ${g.cats.map((cat, ci) => {
+                  const threadsForCat = allThreads[FORUM_CATEGORIES.indexOf(cat)] || [];
+                  const newCount = _forumCountNewInCategory(threadsForCat, cat.id);
+                  const lockIcon = cat.id === 'announcements' && !isAdmin()
+                    ? '<svg class="forum-cat-lock" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" title="Staff-only"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+                    : '';
+                  const newBadge = newCount > 0
+                    ? `<span class="forum-cat-new" title="${newCount} new since your last visit">${newCount} new</span>`
+                    : '';
+                  return `
                   <div class="forum-cat-entry" style="--cat-color:${cat.color}" onclick="_forumOpenCategory('${cat.id}')">
                     <div class="forum-cat-icon" style="background:${cat.color}18;color:${cat.color};">${cat.icon}</div>
                     <div class="forum-cat-info">
-                      <div class="forum-cat-name">${cat.name}</div>
+                      <div class="forum-cat-name">${cat.name} ${lockIcon} ${newBadge}</div>
                       <div class="forum-cat-desc">${escapeHTML(cat.desc)}</div>
                     </div>
                     <div class="forum-cat-count">${_forumFormatCount(catCounts[cat.id]?.threads || 0)}</div>
                     <div class="forum-cat-count">${_forumFormatCount(catCounts[cat.id]?.posts || 0)}</div>
                   </div>
-                `).join('')}
+                `;}).join('')}
               </div>
             `).join('')}
           </div>
@@ -29462,6 +29624,7 @@ async function _forumRenderAd() {
 
 async function _forumOpenCategory(catId) {
   _forumCurrentCategory = catId;
+  _forumSaveLastVisit(catId);
   const content = document.getElementById('forum-page-content');
   if (!content) { const root = document.getElementById('forum-root'); if (!root) return; await _forumInit(); return; }
   const cat = FORUM_CATEGORIES.find(c => c.id === catId) || FORUM_CATEGORIES[0];
@@ -29480,7 +29643,7 @@ async function _forumOpenCategory(catId) {
             <svg class="forum-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input class="forum-search-input" placeholder="Search in ${escapeHTML(cat.name)}..." oninput="_forumSearchInCategory(this.value)">
           </div>
-          <button class="forum-new-btn" onclick="_forumShowCreatePost('${catId}')">+ New Post</button>
+          ${_forumCanPostInCategory(catId) ? `<button class="forum-new-btn" onclick="_forumShowCreatePost('${catId}')">+ New Post</button>` : `<button class="forum-new-btn" disabled style="opacity:.45;cursor:not-allowed;" title="Only admins can post announcements">Staff-only</button>`}
         </div>
       </div>
       <div class="forum-threadlist-body">
@@ -29508,7 +29671,14 @@ async function _forumLoadThreads() {
     }
 
     const cat = FORUM_CATEGORIES.find(c => c.id === _forumCurrentCategory) || FORUM_CATEGORIES[0];
-    container.innerHTML = threads.map(th => `
+    // Pinned first, then newest first
+    const sorted = [...threads].sort((a, b) => {
+      if (!!b.pinned - !!a.pinned) return (!!b.pinned) - (!!a.pinned);
+      return (b.updated_at || b.created_at) - (a.updated_at || a.created_at);
+    });
+    const canPin = _forumCanPin();
+    const pinnedInCat = sorted.filter(t => t.pinned).length;
+    container.innerHTML = sorted.map(th => `
       <div class="forum-thread-row${th.pinned ? ' forum-thread-pinned' : ''}" onclick="_forumViewThread('${th.id}')">
         <img class="forum-thread-avatar" src="${escapeHTML(th.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
         <div class="forum-thread-info">
@@ -29522,6 +29692,7 @@ async function _forumLoadThreads() {
           </div>
         </div>
         <div class="forum-thread-right">
+          ${canPin ? `<button class="forum-pin-btn${th.pinned?' forum-pin-btn--on':''}" title="${th.pinned?'Unpin':(pinnedInCat>=3?'Pin cap reached (3)':'Pin to top')}" onclick="event.stopPropagation();_forumTogglePin('${th.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="${th.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.5-3.5a4 4 0 0 1-.5-2V6H7v5.5a4 4 0 0 1-.5 2L5 17z"/></svg></button>` : ''}
           <div class="forum-thread-time">${_forumTimeAgo(th.updated_at || th.created_at)}</div>
           <span class="forum-thread-cat-badge" style="background:${cat.color}18;color:${cat.color};">${cat.icon} ${cat.name}</span>
         </div>
@@ -29530,6 +29701,27 @@ async function _forumLoadThreads() {
   } catch(e) {
     console.error('[Forum] Load failed:', e);
     container.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load posts</p></div>';
+  }
+}
+
+async function _forumTogglePin(threadId) {
+  if (!_forumCanPin()) { toast('Only superadmins can pin posts.', 'error'); return; }
+  try {
+    const thread = await FortizedSocial.getForumThread(threadId);
+    if (!thread) return;
+    const catId = thread.category;
+    if (!thread.pinned) {
+      // Enforce 3-per-category cap
+      const threadsInCat = await FortizedSocial.getForumThreads(catId, 200, 0);
+      const pinned = threadsInCat.filter(t => t.pinned).length;
+      if (pinned >= 3) { toast('Pin cap reached (3 per category). Unpin one first.', 'error'); return; }
+    }
+    await FortizedSocial.updateForumThread(threadId, { pinned: !thread.pinned });
+    toast(thread.pinned ? 'Unpinned.' : 'Pinned to top.', 'success');
+    await _forumLoadThreads();
+  } catch(e) {
+    console.error('[Forum] Pin failed:', e);
+    toast('Failed to update pin state', 'error');
   }
 }
 
@@ -29572,11 +29764,11 @@ async function _forumViewThread(threadId) {
               <img class="forum-op-avatar" src="${escapeHTML(author?.pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
               <div class="forum-op-content">
                 <div class="forum-op-author">
-                  <strong>${escapeHTML(thread.author)}</strong>
-                  ${author?.verified ? '<span class="verified-badge">✓ Verified</span>' : ''}
+                  <strong>${escapeHTML(author?.displayName || thread.author)}</strong>
+                  <span class="forum-op-handle">@${escapeHTML(thread.author)}</span>
                 </div>
                 <div class="forum-op-date">${new Date(thread.created_at).toLocaleString()}</div>
-                <div class="forum-op-text">${escapeHTML(thread.content || '')}</div>
+                <div class="forum-op-text">${parseMD(escapeHTML(thread.content || ''))}</div>
                 ${thread.image ? `<img class="forum-op-image" src="${escapeHTML(thread.image)}">` : ''}
               </div>
             </div>
@@ -29588,8 +29780,8 @@ async function _forumViewThread(threadId) {
                 <div class="forum-reply-card">
                   <img class="forum-reply-avatar" src="${escapeHTML(post.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
                   <div class="forum-reply-content">
-                    <div class="frc-meta">${escapeHTML(post.author)} <span class="frc-time">${_forumTimeAgo(post.created_at)}</span></div>
-                    <div class="frc-body">${escapeHTML(post.content || '')}</div>
+                    <div class="frc-meta">${escapeHTML(post.author_displayName || post.author)} <span class="frc-handle">@${escapeHTML(post.author)}</span> <span class="frc-time">${_forumTimeAgo(post.created_at)}</span></div>
+                    <div class="frc-body">${parseMD(escapeHTML(post.content || ''))}</div>
                     ${post.image ? `<img src="${escapeHTML(post.image)}" style="max-width:100%;max-height:300px;border-radius:10px;margin-top:8px;">` : ''}
                   </div>
                   ${post.author === CU?.username ? `<button class="forum-reply-delete" onclick="event.stopPropagation();_forumDeletePost('${post.id}','${threadId}')">✕</button>` : ''}
@@ -29599,7 +29791,8 @@ async function _forumViewThread(threadId) {
 
             <div class="forum-reply-compose">
               <div class="forum-reply-compose-title">Reply to this post</div>
-              <textarea id="forum-post-text" placeholder="Share your thoughts..."></textarea>
+              ${buildFormatToolbarHTML('forum-post-text')}
+              <textarea id="forum-post-text" placeholder="Share your thoughts... Markdown supported."></textarea>
               <div class="forum-reply-compose-actions">
                 <input id="forum-post-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumPostImagePreview(event)">
                 <button class="forum-img-btn" onclick="document.getElementById('forum-post-image-upload').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Add Image</button>
@@ -29622,7 +29815,11 @@ async function _forumViewThread(threadId) {
 function _forumShowCreatePost(preselectedCategory) {
   const content = document.getElementById('forum-page-content');
   if (!content) return;
-  const defaultCat = preselectedCategory || _forumCurrentCategory || 'general';
+  let defaultCat = preselectedCategory || _forumCurrentCategory || 'general';
+  if (!_forumCanPostInCategory(defaultCat)) {
+    toast('Only admins can post in Announcements.', 'error');
+    defaultCat = 'general';
+  }
   const cat = FORUM_CATEGORIES.find(c => c.id === defaultCat) || FORUM_CATEGORIES[0];
 
   content.innerHTML = `
@@ -29656,8 +29853,10 @@ function _forumShowCreatePost(preselectedCategory) {
 
             <div class="fnp-card" style="position:relative;">
               <label class="fnp-label" for="forum-new-content">Content</label>
-              <textarea id="forum-new-content" class="fnp-textarea" placeholder="Write out your post... Share details, context, and what you're looking for."></textarea>
+              ${buildFormatToolbarHTML('forum-new-content')}
+              <textarea id="forum-new-content" class="fnp-textarea" placeholder="Write out your post... Share details, context, and what you're looking for. Markdown is supported."></textarea>
               <button type="button" onclick="toggleEmojiPicker('forum-new-content')" class="emoji-insert-btn" style="position:absolute;bottom:10px;right:10px;" title="Add emoji">😀</button>
+              <div class="fnp-hint" style="margin-top:6px;opacity:.7;">Supports <strong>**bold**</strong>, <em>*italic*</em>, <code>\`code\`</code>, ~~strike~~, ||spoiler||, ==highlight==, /title/, ///subtitle///.</div>
             </div>
 
             <div class="fnp-card">
@@ -29735,8 +29934,11 @@ function _forumThreadImagePreview(e) {
   const reader = new FileReader();
   reader.onload = ev => {
     _forumThreadImageData = ev.target.result;
-    document.getElementById('forum-thread-file-label').textContent = file.name;
-    document.getElementById('forum-thread-image-preview').innerHTML = `<img src="${_forumThreadImageData}" style="max-width:100%;max-height:150px;border-radius:8px;">`;
+    const lbl = document.getElementById('forum-thread-file-label');
+    if (lbl) lbl.textContent = file.name;
+    const prev = document.getElementById('forum-thread-image-preview');
+    if (prev) prev.innerHTML = `<img src="${_forumThreadImageData}" style="max-width:100%;max-height:240px;border-radius:10px;border:1px solid var(--line);">
+      <button type="button" class="fnp-img-remove" onclick="_forumThreadImageData=null;document.getElementById('forum-thread-image-preview').innerHTML='';document.getElementById('forum-thread-image-upload').value='';">Remove</button>`;
   };
   reader.readAsDataURL(file);
 }
@@ -29747,8 +29949,11 @@ function _forumPostImagePreview(e) {
   const reader = new FileReader();
   reader.onload = ev => {
     _forumPostImageData = ev.target.result;
-    document.getElementById('forum-post-file-label').textContent = file.name;
-    document.getElementById('forum-post-image-preview').innerHTML = `<img src="${_forumPostImageData}" style="max-width:100%;max-height:150px;border-radius:8px;">`;
+    const lbl = document.getElementById('forum-post-file-label');
+    if (lbl) lbl.textContent = file.name;
+    const prev = document.getElementById('forum-post-image-preview');
+    if (prev) prev.innerHTML = `<img src="${_forumPostImageData}" style="max-width:100%;max-height:240px;border-radius:10px;border:1px solid var(--line);">
+      <button type="button" class="fnp-img-remove" onclick="_forumPostImageData=null;document.getElementById('forum-post-image-preview').innerHTML='';document.getElementById('forum-post-image-upload').value='';">Remove</button>`;
   };
   reader.readAsDataURL(file);
 }
@@ -29758,6 +29963,7 @@ async function _forumCreateThread(e) {
   const content = document.getElementById('forum-new-content')?.value?.trim();
   const category = document.getElementById('forum-new-category')?.value || 'general';
 
+  if (!_forumCanPostInCategory(category)) { toast('Only admins can post in Announcements.', 'error'); return; }
   if (!title) { toast('Enter a thread title', 'error'); return; }
   if (!content) { toast('Enter a description', 'error'); return; }
 

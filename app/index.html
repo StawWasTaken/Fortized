@@ -419,26 +419,74 @@ window._cdnReady.then(() => {
           <!-- HOMEPAGE FEED -->
           <div class="home-main-scroll" style="padding:12px 0 48px;">
             <div id="home-dyk-strip" style="padding:0 28px;"></div>
-            <!-- Banner ad (placeholder if empty) just below DYK -->
+            <!-- 1) Banner ad emplacement (card placeholder if empty) -->
             <div class="realm-section" style="margin-top:4px;">
-              <div id="home-ads" class="home-banner-ad"></div>
+              <div id="home-ads" class="home-banner-ad home-banner-card"></div>
             </div>
-            <!-- Friends Online today + Trending Items (stacked in main column) -->
+            <!-- 2) Who's Online Today — online friends, no cards, just clean chips -->
             <div class="realm-section">
-              <div class="realm-section-title">Who's online today? <span class="rst-sub" style="color:var(--muted);font-weight:700;">FRIENDS</span> <a href="#" onclick="event.preventDefault();showView('friends')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">View all friends ›</a></div>
-              <div id="home-friends-today" class="home-friends-today"></div>
+              <div class="realm-section-title">Who's Online Today? <a href="#" onclick="event.preventDefault();showView('friends')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">View all friends ›</a></div>
+              <div id="home-friends-today" class="home-friends-online"></div>
             </div>
+            <!-- 3) What are people buying — rectangular CARD with 6 item cards inside -->
             <div class="realm-section">
-              <div class="realm-section-title">What are people buying? <span class="rst-sub" style="color:var(--muted);font-weight:700;">TRENDING ITEMS</span> <a href="#" onclick="event.preventDefault();showView('fortshop')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Fortshop ›</a></div>
-              <div id="home-trending-items" class="home-trending-items-row"></div>
+              <div class="realm-section-title">What are People Buying? <a href="#" onclick="event.preventDefault();showView('fortshop')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Fortshop ›</a></div>
+              <div id="home-trending-items" class="home-buying-card"></div>
             </div>
+            <!-- 4) What's happening — 4 top forum posts -->
+            <div class="realm-section">
+              <div class="realm-section-title">What's Happening? <a href="#" onclick="event.preventDefault();showView('forum')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Forum ›</a></div>
+              <div id="home-trending-forum"></div>
+            </div>
+            <!-- 5) Feedback section — "A place where..." card + regular feedback card -->
+            <div class="realm-section">
+              <div class="realm-section-title">Feedback</div>
+              <div class="home-feedback-row">
+                <div class="home-feedback-card home-fb-place">
+                  <div class="home-fb-hdr">
+                    <span class="home-fb-title">A place where…</span>
+                    <span class="home-fb-hint">Finish the sentence</span>
+                  </div>
+                  <div class="home-fb-user" id="home-fb-user"></div>
+                  <div class="home-fb-compose">
+                    <span class="home-fb-prefix">A place where</span>
+                    <input id="home-fb-place-input" class="home-fb-input" maxlength="180" placeholder="…everyone feels at home." autocomplete="off">
+                  </div>
+                  <div class="home-fb-actions">
+                    <label class="home-fb-anon"><input id="home-fb-anon" type="checkbox"> Stay anonymous</label>
+                    <button class="home-fb-send" onclick="submitPlaceFeedback()">
+                      <span class="home-fb-shine"></span>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                      Send
+                    </button>
+                  </div>
+                </div>
+                <div class="home-feedback-card home-fb-regular">
+                  <div class="home-fb-hdr">
+                    <span class="home-fb-title">Regular feedback</span>
+                    <span class="home-fb-hint">Tell us what's on your mind</span>
+                  </div>
+                  <textarea id="home-fb-regular-text" class="home-fb-textarea" maxlength="500" placeholder="Bugs, ideas, polish… anything goes."></textarea>
+                  <div class="home-fb-actions">
+                    <select id="home-fb-regular-cat" class="home-fb-select">
+                      <option value="suggestion">Suggestion</option>
+                      <option value="bug">Bug report</option>
+                      <option value="question">Question</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <button class="home-fb-send" onclick="submitRegularFeedback()">
+                      <span class="home-fb-shine"></span>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Bastions (kept but lower priority) -->
             <div class="realm-section">
               <div class="realm-section-title">Your Bastions</div>
               <div class="realm-scroll" id="realm-bastions"></div>
-            </div>
-            <div class="realm-section">
-              <div class="realm-section-title">🔥 Trending Forum Posts <span class="rst-sub" style="color:var(--muted);font-weight:700;">MOST UPVOTED</span></div>
-              <div id="home-trending-forum"></div>
             </div>
           </div>
         </div>

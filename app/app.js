@@ -2719,23 +2719,104 @@ function renderHomePanel() {
   // Render home ads (with placeholder fallback when empty)
   _renderHomeAds();
 
-  // Friends online today (new main-column horizontal strip)
+  // Friends online today (main column — no cards, just chips)
   setTimeout(_renderHomeFriendsToday, 100);
 
-  // Trending fortshop items (new main-column horizontal strip)
-  setTimeout(_renderTrendingItems, 140);
+  // What are people buying (rectangular card with 6 item cards)
+  setTimeout(_renderWhatArePeopleBuying, 140);
 
-  // Trending forum posts (replacing Friend Activity)
-  setTimeout(_renderTrendingForumPosts, 170);
+  // What's happening (top 4 forum posts by score + recency)
+  setTimeout(_renderWhatsHappening, 170);
+
+  // Populate feedback user header & bind shine
+  setTimeout(_renderFeedbackUser, 200);
 
   // Keep the legacy Active Now right sidebar as-is
-  setTimeout(() => renderActiveNowSidebar('home-active-now-list'), 200);
+  setTimeout(() => renderActiveNowSidebar('home-active-now-list'), 220);
 
   // Check for new announcements
   setTimeout(_checkForAnnouncements, 500);
 }
 
-// ── Home Friends today (horizontal strip in main column) ──
+// ── Feedback: "A place where…" + regular ──
+function _renderFeedbackUser() {
+  const el = document.getElementById('home-fb-user');
+  if (!el || !CU) return;
+  const pfp = CU.pfp || _defaultPfpUrl(CU.username);
+  el.innerHTML = `<img class="home-fb-pfp" src="${escapeHTML(pfp)}" onerror="this.src='${_defaultPfpUrl(CU.username)}'">
+    <span class="home-fb-name">${escapeHTML(CU.displayName||CU.username)} <span class="home-fb-handle">@${escapeHTML(CU.username)}</span></span>`;
+}
+async function submitPlaceFeedback() {
+  const inp = document.getElementById('home-fb-place-input');
+  const anonEl = document.getElementById('home-fb-anon');
+  if (!inp) return;
+  const text = (inp.value||'').trim();
+  if (!text) { toast('Finish the sentence first', 'error'); return; }
+  if (text.length < 3) { toast('A bit longer, please', 'error'); return; }
+  const anon = !!(anonEl && anonEl.checked);
+  const entry = {
+    id: 'pf_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    kind: 'place_where',
+    text: 'A place where ' + text,
+    sentence: text,
+    anonymous: anon,
+    username: anon ? null : (CU?.username || null),
+    displayName: anon ? null : (CU?.displayName || CU?.username || null),
+    pfp: anon ? null : (CU?.pfp || null),
+    at: Date.now(),
+    status: 'open',
+  };
+  try {
+    if (typeof FortizedSocial.submitPlaceFeedback === 'function') {
+      await FortizedSocial.submitPlaceFeedback(entry);
+    } else {
+      // Fallback: stash in localStorage queue that admins can see
+      const q = JSON.parse(localStorage.getItem('ftz_place_feedback_queue')||'[]');
+      q.push(entry);
+      localStorage.setItem('ftz_place_feedback_queue', JSON.stringify(q));
+    }
+    inp.value = '';
+    toast('Thanks — sent to Fortized!', 'success');
+  } catch(e) {
+    console.warn('[Feedback] Place submit failed', e);
+    toast('Send failed', 'error');
+  }
+}
+async function submitRegularFeedback() {
+  const ta = document.getElementById('home-fb-regular-text');
+  const sel = document.getElementById('home-fb-regular-cat');
+  if (!ta) return;
+  const text = (ta.value||'').trim();
+  if (!text) { toast('Write something first', 'error'); return; }
+  const category = sel?.value || 'other';
+  try {
+    if (typeof FortizedSocial.adminSubmitSupportTicket === 'function') {
+      await FortizedSocial.adminSubmitSupportTicket({
+        id: 'fb_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+        username: CU?.username,
+        displayName: CU?.displayName || CU?.username,
+        email: CU?.email || null,
+        category,
+        subject: 'Homepage feedback',
+        body: text,
+        status: 'open',
+        submittedAt: new Date().toISOString(),
+      });
+    } else {
+      // Fallback: queue for admins
+      const q = JSON.parse(localStorage.getItem('ftz_support_tickets_queue')||'[]');
+      q.push({ username: CU?.username, category, subject: 'Homepage feedback', body: text, submittedAt: new Date().toISOString() });
+      localStorage.setItem('ftz_support_tickets_queue', JSON.stringify(q));
+    }
+    ta.value = '';
+    toast('Feedback sent!', 'success');
+  } catch(e) {
+    console.warn('[Feedback] Regular submit failed', e);
+    toast('Send failed', 'error');
+  }
+}
+
+// ── Home Friends today (clean chip row in main column — no cards) ──
 async function _renderHomeFriendsToday() {
   const el = document.getElementById('home-friends-today');
   if (!el) return;
@@ -2752,18 +2833,16 @@ async function _renderHomeFriendsToday() {
     const presence = await FortizedSocial.queryPresence(friends);
     const DAY = 24 * 60 * 60 * 1000;
     const cutoff = Date.now() - DAY;
-    // "Online today" = currently online/away/dnd OR last-seen within 24h
     const active = friends.filter(u => {
       const p = presence?.[u]; if (!p) return false;
       const isUp = p.status === 'online' || p.status === 'away' || p.status === 'dnd';
       const lastSeen = p.lastSeen || p.last_seen || 0;
       return isUp || lastSeen > cutoff;
-    }).slice(0, 12);
+    }).slice(0, 14);
     if (!active.length) {
       el.innerHTML = `<div class="home-empty-strip" style="font-size:12.5px;color:var(--muted);">Get right back in the action — no friends online today.</div>`;
       return;
     }
-    // Fetch user cards
     const users = await Promise.all(active.map(u => FortizedSocial.getUserByName(u).catch(() => null)));
     el.innerHTML = active.map((u, i) => {
       const ud = users[i] || {};
@@ -2771,12 +2850,12 @@ async function _renderHomeFriendsToday() {
       const dn = ud.displayName || u;
       const status = presence?.[u]?.status || 'offline';
       const statusColor = (typeof FtzStatus !== 'undefined') ? FtzStatus.color(status) : (status==='online'?'#3ecf6e':status==='away'?'#f59e0b':status==='dnd'?'#f87171':'rgba(255,255,255,.15)');
-      return `<div class="hft-card" onclick="openDMWith('${escapeHTML(u)}')">
-        <div class="hft-av-wrap">
-          <img class="hft-av" src="${escapeHTML(pfp)}" onerror="this.src='${_defaultPfpUrl(u)}'">
-          <span class="hft-dot" style="background:${statusColor};"></span>
-        </div>
-        <div class="hft-name">${escapeHTML(dn)}</div>
+      return `<div class="home-online-chip" onclick="openDMWith('${escapeHTML(u)}')" title="${escapeHTML(dn)}">
+        <span class="hoc-av-wrap">
+          <img class="hoc-av" src="${escapeHTML(pfp)}" onerror="this.src='${_defaultPfpUrl(u)}'">
+          <span class="hoc-dot" style="background:${statusColor};"></span>
+        </span>
+        <span class="hoc-name">${escapeHTML(dn)}</span>
       </div>`;
     }).join('');
   } catch(e) {
@@ -2785,87 +2864,144 @@ async function _renderHomeFriendsToday() {
   }
 }
 
-// ── Trending forum posts (top-3 by upvotes / reactions) ──
-async function _renderTrendingForumPosts() {
+// ── What's Happening — top 4 forum posts (upvotes+recency mix) ──
+async function _renderWhatsHappening() {
   const el = document.getElementById('home-trending-forum');
   if (!el) return;
-  el.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:12px;">Loading trending posts…</div>';
+  el.innerHTML = '<div class="home-whats-card"><div style="padding:14px;color:var(--muted);font-size:12px;">Loading…</div></div>';
   try {
     const categoryIds = (typeof FORUM_CATEGORIES !== 'undefined' && FORUM_CATEGORIES) ? FORUM_CATEGORIES.map(c => c.id) : ['general','bugs','suggestions','showcase','offtopic','announcements'];
     const all = (await Promise.all(categoryIds.map(c => FortizedSocial.getForumThreads(c, 50, 0).catch(()=>[])))).flat();
+    const NOW = Date.now();
+    const HOUR = 3600000;
     const score = t => {
       const likes = Array.isArray(t.likes) ? t.likes.length : (t.likes || 0);
-      const views = t.views || 0;
+      const dislikes = Array.isArray(t.dislikes) ? t.dislikes.length : 0;
       const replies = t.reply_count || 0;
-      return likes * 3 + replies * 2 + views * 0.05;
+      const ageHours = Math.max(1, (NOW - (t.updated_at || t.created_at || NOW)) / HOUR);
+      const net = likes - dislikes;
+      // weighted: upvotes dominate, recency boost
+      return (net * 5) + (replies * 2) + (120 / ageHours);
     };
-    const top = [...all].sort((a, b) => score(b) - score(a)).slice(0, 3);
+    const top = [...all].sort((a, b) => score(b) - score(a)).slice(0, 4);
     if (!top.length) {
-      el.innerHTML = `<div class="trending-empty">
+      el.innerHTML = `<div class="home-whats-card"><div class="home-whats-empty">
         <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">No forum activity yet — start the conversation!</div>
         <button class="btn-a" onclick="showView('forum')" style="font-size:11px;padding:6px 14px;">Browse Forum</button>
-      </div>`;
+      </div></div>`;
       return;
     }
-    el.innerHTML = top.map(t => {
+    el.innerHTML = `<div class="home-whats-card">` + top.map(t => {
       const cat = (typeof FORUM_CATEGORIES !== 'undefined' && FORUM_CATEGORIES || []).find(c => c.id === t.category) || {name:'', color:'#fff', icon:''};
       const likes = Array.isArray(t.likes) ? t.likes.length : (t.likes || 0);
-      return `<div class="trending-post" onclick="showView('forum');setTimeout(()=>_forumViewThread('${escapeHTML(t.id)}'),50)">
-        <div class="trending-post-rank" style="color:${cat.color};">${cat.icon || '●'}</div>
-        <div class="trending-post-info">
-          <div class="trending-post-title">${escapeHTML(t.title || '')}</div>
-          <div class="trending-post-meta">
-            <span>by ${escapeHTML(t.author || 'unknown')}</span>
-            <span class="tpm-sep"></span>
-            <span>${likes} ▲</span>
-            <span class="tpm-sep"></span>
-            <span>${t.reply_count || 0} replies</span>
-            <span class="tpm-sep"></span>
-            <span class="trending-post-cat" style="color:${cat.color};">${escapeHTML(cat.name || '')}</span>
-          </div>
+      const dislikes = Array.isArray(t.dislikes) ? t.dislikes.length : 0;
+      const net = likes - dislikes;
+      return `<div class="home-whats-row" onclick="showView('forum');setTimeout(()=>_forumViewThread('${escapeHTML(t.id)}'),50)">
+        <div class="hwr-cat" style="color:${cat.color};background:${cat.color}18;">${cat.icon||'●'} ${escapeHTML(cat.name||'')}</div>
+        <div class="hwr-body">
+          <div class="hwr-title">${escapeHTML(t.title || '')}</div>
+          <div class="hwr-meta">by ${escapeHTML(t.author || 'unknown')} · ${_forumTimeAgo(t.updated_at||t.created_at)}</div>
         </div>
-        <div class="trending-post-arrow">›</div>
+        <div class="hwr-stats">
+          <span class="hwr-stat"><span class="hwr-stat-ico">👏</span> ${net.toLocaleString()}</span>
+          <span class="hwr-stat hwr-stat-replies">💬 ${t.reply_count||0}</span>
+        </div>
       </div>`;
-    }).join('');
+    }).join('') + `</div>`;
   } catch(e) {
-    console.warn('[Home] Trending forum load failed:', e);
-    el.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:12px;">Failed to load trending posts.</div>';
+    console.warn('[Home] Whats happening failed:', e);
+    el.innerHTML = '<div class="home-whats-card"><div style="padding:14px;color:var(--muted);font-size:12px;">Failed to load.</div></div>';
   }
 }
 
-// ── Trending fortshop items (horizontal strip in main column) ──
-async function _renderTrendingItems() {
+// ── What are people buying? — rectangular card, 6 item sub-cards ──
+// Priority: I. most bought, II. most recent. Fill to 6 with fakes when real < 6.
+async function _renderWhatArePeopleBuying() {
   const el = document.getElementById('home-trending-items');
   if (!el) return;
-  el.innerHTML = '<div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:8px 6px;"></div>';
+  el.innerHTML = `<div class="home-buying-inner"><div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:14px;"></div></div>`;
   try {
-    let items = [];
+    // Collect real purchase/item data, prefer most bought then most recent
+    let bought = [];
+    let recent = [];
     try {
-      if (typeof FortizedSocial.getFortshopTrending === 'function') {
-        items = await FortizedSocial.getFortshopTrending(8);
-      } else if (typeof FortizedSocial.getFortshopItems === 'function') {
-        items = await FortizedSocial.getFortshopItems({ sort: 'trending', limit: 8 });
-      } else if (typeof getFortshopTrendingItems === 'function') {
-        items = await getFortshopTrendingItems(8);
+      if (typeof FortizedSocial.getFortshopMostBought === 'function') {
+        bought = await FortizedSocial.getFortshopMostBought(6).catch(()=>[]);
       }
-    } catch(e) { /* fall through */ }
-    if (!items || !items.length) {
-      el.innerHTML = `<div class="home-empty-strip">
-        <div style="font-size:12.5px;color:var(--muted);">No trending items right now — check the Fortshop.</div>
-        <button class="btn-a" onclick="showView('fortshop')" style="font-size:11px;padding:6px 14px;">Open Fortshop</button>
-      </div>`;
-      return;
+      if (typeof FortizedSocial.getFortshopRecent === 'function') {
+        recent = await FortizedSocial.getFortshopRecent(12).catch(()=>[]);
+      } else if (typeof FortizedSocial.getFortshopItems === 'function') {
+        recent = await FortizedSocial.getFortshopItems({ sort: 'recent', limit: 12 }).catch(()=>[]);
+      }
+    } catch(_) {}
+    // Dedupe by id
+    const seen = new Set();
+    const picks = [];
+    const push = (arr) => {
+      for (const it of (arr || [])) {
+        const id = it?.id || it?.name; if (!id) continue;
+        if (seen.has(id)) continue;
+        seen.add(id); picks.push(it);
+        if (picks.length >= 6) break;
+      }
+    };
+    push(bought); push(recent);
+    const realCount = picks.length;
+    // Top up with fakes if needed. If 0 real: all fake. Else fill to 6 with fakes.
+    if (realCount < 6) {
+      const fakes = _fortshopFakeItems(6 - realCount, seen);
+      for (const f of fakes) picks.push(f);
     }
-    el.innerHTML = items.slice(0,8).map(it => `
-      <div class="hti-card" onclick="showView('fortshop')" title="${escapeHTML(it.name || '')}">
-        <div class="hti-img"><img src="${escapeHTML(it.thumb || it.image || '/fortshop_placeholder.png')}" onerror="this.style.display='none'"></div>
-        <div class="hti-name">${escapeHTML(it.name || 'Item')}</div>
-        <div class="hti-price"><span class="hti-onyx">◆</span> ${it.price != null ? it.price.toLocaleString() : 'Free'}</div>
-      </div>
-    `).join('');
+    el.innerHTML = `<div class="home-buying-inner">` + picks.slice(0, 6).map(it => {
+      const name = it.name || 'Item';
+      const price = it.price != null ? Number(it.price).toLocaleString() : '—';
+      const img = it.thumb || it.image || it.src || '/fortshop_placeholder.png';
+      return `<div class="home-buy-card" onclick="showView('fortshop')" title="${escapeHTML(name)}">
+        <div class="hbc-img"><img src="${escapeHTML(img)}" onerror="this.style.opacity='.25';this.src='/fortshop_placeholder.png'"></div>
+        <div class="hbc-name">${escapeHTML(name)}</div>
+        <div class="hbc-price"><img class="hbc-onyx" src="/Onyx.png" onerror="this.style.display='none'"><span>${price}</span></div>
+      </div>`;
+    }).join('') + `</div>`;
   } catch(e) {
-    el.innerHTML = '<div class="home-empty-strip" style="font-size:12.5px;color:var(--muted);">Fortshop unavailable.</div>';
+    console.warn('[Home] What buying failed:', e);
+    el.innerHTML = `<div class="home-buying-inner"><div class="home-empty-strip" style="font-size:12.5px;color:var(--muted);">Fortshop unavailable.</div></div>`;
   }
+}
+
+// Fake items drawn from bundled shop data so they look real; filtered to not duplicate real ids.
+function _fortshopFakeItems(n, excludeSet) {
+  try {
+    const pool = [
+      ...(typeof PROFILE_DECORATIONS !== 'undefined' ? PROFILE_DECORATIONS : []),
+      ...(typeof SHOP_APPEARANCES_ALL !== 'undefined' ? SHOP_APPEARANCES_ALL : []),
+    ];
+    const filtered = pool.filter(p => !excludeSet || !excludeSet.has(p.id));
+    // Shuffle deterministically based on current day for stable rendering during a session
+    const seed = new Date().toDateString();
+    const rand = _mulberry32(_strHash(seed));
+    for (let i = filtered.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+    }
+    return filtered.slice(0, n).map(it => ({
+      id: it.id, name: it.name, price: it.price,
+      thumb: it.thumb || it.src || it.previewBg || null,
+      image: it.image || it.src || null,
+    }));
+  } catch(_) {
+    // As a last resort, fabricate filler cards
+    const filler = ['Stellar Mask','Onyx Cloak','Emberglow Hat','Deep Sea Aura','Sunset Ring','Golden Crown'];
+    return filler.slice(0, n).map((name, i) => ({ id: 'filler_'+i, name, price: 100 + i*75 }));
+  }
+}
+function _strHash(s) { let h = 0; for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) | 0; return h >>> 0; }
+function _mulberry32(a) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
 }
 
 // ── Home Ads ──
@@ -5248,12 +5384,17 @@ async function _loadAnnouncementRoom(wrap, b, ch, idx) {
   const isOwner = b.owner === CU.username;
   const canPost = isOwner || hasPerm('administrator') || hasPerm('manage_channels') || hasPerm('manage_messages');
 
+  const subKey = (b.globalId || b.name) + '::' + ch.name;
+  const subscribed = _isAnnouncementSubscribed(subKey);
   wrap.innerHTML = `<div class="ann-room">
     <div class="room-topbar">
       <div class="rt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
       <span class="rt-name">${escapeHTML(ch.name)}</span>
       ${ch.desc ? `<span class="rt-desc">— ${escapeHTML(ch.desc)}</span>` : ''}
-      <span class="rt-badge">Announcements</span>
+      <span class="rt-badge">News</span>
+      <button id="ann-sub-btn" class="ann-sub-btn ${subscribed?'on':''}" onclick="_toggleAnnouncementSub('${escapeHTML(subKey)}')">
+        ${_svgIcon('bell',13)} <span class="ann-sub-lbl">${subscribed?'Subscribed':'Subscribe'}</span>
+      </button>
     </div>
     <div class="ann-feed" id="ann-feed-${idx}">
       <div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">Loading announcements...</div>
@@ -5342,6 +5483,35 @@ function _loadAnnAvatar(username, mid) {
       if (el) el.innerHTML = buildAvatarHTML(u.pfp, username, 36);
     }
   }).catch(() => {});
+}
+
+function _isAnnouncementSubscribed(subKey) {
+  try {
+    if (!CU) return false;
+    if (!Array.isArray(CU.announcementSubs)) CU.announcementSubs = [];
+    return CU.announcementSubs.includes(subKey);
+  } catch(e) { return false; }
+}
+
+async function _toggleAnnouncementSub(subKey) {
+  if (!CU) return;
+  if (!Array.isArray(CU.announcementSubs)) CU.announcementSubs = [];
+  const idx = CU.announcementSubs.indexOf(subKey);
+  if (idx >= 0) {
+    CU.announcementSubs.splice(idx, 1);
+    toast('Unsubscribed from announcements', 'info');
+  } else {
+    CU.announcementSubs.push(subKey);
+    toast('Subscribed — you\u2019ll be notified', 'success');
+  }
+  try { await saveUser?.(); } catch(e) {}
+  const btn = document.getElementById('ann-sub-btn');
+  if (btn) {
+    const on = CU.announcementSubs.includes(subKey);
+    btn.classList.toggle('on', on);
+    const lbl = btn.querySelector('.ann-sub-lbl');
+    if (lbl) lbl.textContent = on ? 'Subscribed' : 'Subscribe';
+  }
 }
 
 async function _sendAnnouncement(idx) {
@@ -16660,7 +16830,8 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   else if (tab === 'reports' || tab === 'bans' || tab === 'suspensions' || tab === 'nsfw_queue') { await _loadAdminModeration(main, tab); return; }
   else if (tab === 'users' || tab === 'all_users') { await _loadAdminMembers(main, tab); return; }
   else if (tab === 'bastions' || tab === 'economy' || tab === 'broadcast' || tab === 'scheduled_actions' || tab === 'audit' || tab === 'network_monitor' || tab === 'analytics' || tab === 'backup_restore' || tab === 'settings' || tab === 'staff' || tab === 'ads') { await _loadAdminPlatform(main, tab); return; }
-  else if (tab === 'support_tickets') { await _loadAdminFeedback(main, tab); return; }
+  else if (tab === 'support_tickets' || tab === 'place_where') { await _loadAdminFeedback(main, tab); return; }
+  else if (tab === '_place_where') { await _loadAdminPlaceFeedback(); return; }
   // ── Legacy tab rendering (called by consolidated tabs) ──
   else if (tab === '_reports') {
     const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
@@ -17858,11 +18029,82 @@ async function _loadAdminFeedback(main, subTab) {
   const tickets = await FortizedSocial.adminGetSupportTickets().catch(()=>({}));
   localStorage.setItem('ftz_support_tickets', JSON.stringify(tickets));
   const openTickets = Object.values(tickets).filter(t=>t.status==='open').length;
+  const place = await _getPlaceFeedback();
+  const openPlace = place.filter(p=>p.status!=='archived').length;
   const tabs = [
     {id:'support_tickets', label:'Inbox & Tickets', badge:openTickets},
+    {id:'place_where', label:'"A place where…"', badge:openPlace},
   ];
   main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'feedback') + '<div id="adm-sub-content"></div></div>';
   await _loadAdminPage('_' + active);
+}
+
+// Fetch "A place where…" submissions (Supabase if available, else localStorage queue)
+async function _getPlaceFeedback() {
+  try {
+    if (typeof FortizedSocial.getPlaceFeedback === 'function') {
+      const remote = await FortizedSocial.getPlaceFeedback();
+      if (Array.isArray(remote)) return remote;
+    }
+  } catch(_) {}
+  try {
+    const q = JSON.parse(localStorage.getItem('ftz_place_feedback_queue')||'[]');
+    return Array.isArray(q) ? q : [];
+  } catch(_) { return []; }
+}
+
+async function _loadAdminPlaceFeedback() {
+  const el = document.getElementById('adm-sub-content');
+  if (!el) return;
+  el.innerHTML = `<div style="padding:12px 0;"><div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:14px;"></div></div>`;
+  try {
+    const items = (await _getPlaceFeedback()).sort((a,b) => (b.at||0) - (a.at||0));
+    if (!items.length) {
+      el.innerHTML = `<div class="ftz-empty" style="padding:32px;text-align:center;">
+        <div class="ftz-empty-icon">💬</div>
+        <div class="ftz-empty-title">No "A place where…" submissions yet</div>
+        <div class="ftz-empty-text">Homepage entries land here — short, sweet, anonymous optional.</div>
+      </div>`;
+      return;
+    }
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;padding-top:6px;">` +
+      items.map((it) => {
+        const isAnon = !!it.anonymous;
+        const name = isAnon ? 'Anonymous' : (it.displayName || it.username || 'User');
+        const handle = isAnon ? '' : (it.username ? '@' + it.username : '');
+        const pfp = isAnon ? null : (it.pfp || (it.username ? _defaultPfpUrl(it.username) : null));
+        const time = it.at ? new Date(it.at).toLocaleString() : '';
+        return `<div class="apw-row" style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;">
+          ${pfp
+            ? `<img src="${escapeHTML(pfp)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--panel2);" onerror="this.style.opacity='.3'">`
+            : `<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">🕶</div>`}
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.9);">${escapeHTML(name)} ${handle?`<span style="color:var(--muted);font-weight:500;">${escapeHTML(handle)}</span>`:''}</div>
+            <div style="font-size:13.5px;color:#fff;margin-top:4px;line-height:1.45;"><em style="color:var(--accent);">A place where</em> ${escapeHTML(it.sentence || (it.text||'').replace(/^A place where\s*/i,''))}</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:5px;">${escapeHTML(time)}</div>
+          </div>
+          <button onclick="_archivePlaceFeedback('${escapeHTML(it.id||'')}')" style="padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;flex-shrink:0;">Archive</button>
+        </div>`;
+      }).join('') + `</div>`;
+  } catch(e) {
+    console.error('[AdminFeedback] place load failed', e);
+    el.innerHTML = '<div class="ftz-empty" style="padding:30px;"><div class="ftz-empty-text">Failed to load.</div></div>';
+  }
+}
+
+async function _archivePlaceFeedback(id) {
+  try {
+    if (typeof FortizedSocial.archivePlaceFeedback === 'function') {
+      await FortizedSocial.archivePlaceFeedback(id);
+    } else {
+      // Local fallback: remove from queue
+      const q = JSON.parse(localStorage.getItem('ftz_place_feedback_queue')||'[]');
+      const next = q.filter(x => x.id !== id);
+      localStorage.setItem('ftz_place_feedback_queue', JSON.stringify(next));
+    }
+    toast('Archived', 'success');
+    _loadAdminPage('_place_where');
+  } catch(_) { toast('Archive failed', 'error'); }
 }
 
 function resolveReport(idx, action) {
@@ -28539,7 +28781,13 @@ function renderAtelierTopNav() {
 function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
   if (type === 'appearance') {
     const owned = ownedApps.includes(item.id);
-    return '<div class="shop-item-card" style="background:'+item.gradient+';border-color:'+item.borderColor+';" onmouseover="this.style.borderColor=\''+item.hoverBorder+'\'" onmouseout="this.style.borderColor=\''+item.borderColor+'\'">'
+    const onWL = (typeof isOnWishlist==='function') && isOnWishlist(item.id);
+    return '<div class="shop-item-card" style="position:relative;background:'+item.gradient+';border-color:'+item.borderColor+';" onmouseover="this.style.borderColor=\''+item.hoverBorder+'\'" onmouseout="this.style.borderColor=\''+item.borderColor+'\'">'
+      + '<div class="sic-quick">'
+      + '<button class="sic-qb '+(onWL?'on':'')+'" title="'+(onWL?'Remove from wishlist':'Add to wishlist')+'" onclick="event.stopPropagation();toggleWishlist(\''+item.id+'\')">'+_svgIcon('heart',12)+'</button>'
+      + '<button class="sic-qb" title="Gift to a friend" onclick="event.stopPropagation();openGiftModal(\''+item.id+'\')">'+_svgIcon('gift',12)+'</button>'
+      + (owned && item.rare ? '<button class="sic-qb" title="List for resale" onclick="event.stopPropagation();promptListResale(\''+item.id+'\')">'+_svgIcon('tag',12)+'</button>' : '')
+      + '</div>'
       + '<div class="sic-preview" style="background:'+item.previewBg+';">'
       + '<div class="sic-sidebar" style="background:'+item.sidebarBg+';"></div>'
       + '<div class="sic-content"><div style="height:4px;background:var(--accent);border-radius:var(--radius-pill);width:40%;margin-bottom:5px;"></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:var(--radius-pill);width:60%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.03);border-radius:var(--radius-pill);width:45%;"></div></div>'
@@ -28555,7 +28803,13 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
     const pfp = CU?.pfp;
     const initLetter = (CU?.displayName||'U')[0].toUpperCase();
     const avatarInner = pfp ? '<img src="'+pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '<div style="width:100%;height:100%;background:'+item.color+'22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:var(--font-display);font-weight:800;color:'+item.color+';">'+initLetter+'</div>';
-    return '<div class="shop-item-card" style="background:rgba(255,255,255,.02);border-color:'+(equipped?item.color+'44':'rgba(255,255,255,.05)')+';text-align:center;" onmouseover="this.style.borderColor=\''+item.color+'44\'" onmouseout="this.style.borderColor=\''+(equipped?item.color+'44':'rgba(255,255,255,.05)')+'\'">'
+    const onWL = (typeof isOnWishlist==='function') && isOnWishlist(item.id);
+    return '<div class="shop-item-card" style="position:relative;background:rgba(255,255,255,.02);border-color:'+(equipped?item.color+'44':'rgba(255,255,255,.05)')+';text-align:center;" onmouseover="this.style.borderColor=\''+item.color+'44\'" onmouseout="this.style.borderColor=\''+(equipped?item.color+'44':'rgba(255,255,255,.05)')+'\'">'
+      + '<div class="sic-quick">'
+      + '<button class="sic-qb '+(onWL?'on':'')+'" title="'+(onWL?'Remove from wishlist':'Add to wishlist')+'" onclick="event.stopPropagation();toggleWishlist(\''+item.id+'\')">'+_svgIcon('heart',12)+'</button>'
+      + '<button class="sic-qb" title="Gift to a friend" onclick="event.stopPropagation();openGiftModal(\''+item.id+'\')">'+_svgIcon('gift',12)+'</button>'
+      + (owned && item.rare ? '<button class="sic-qb" title="List for resale" onclick="event.stopPropagation();promptListResale(\''+item.id+'\')">'+_svgIcon('tag',12)+'</button>' : '')
+      + '</div>'
       + '<div style="padding:20px 12px 10px;"><div style="position:relative;width:68px;height:68px;margin:0 auto 10px;"><div style="width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;box-shadow:0 4px 16px '+item.color+'15;">'+avatarInner+'</div>'
       + '<img src="'+item.src+'" style="position:absolute;inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px);object-fit:contain;pointer-events:none;" onerror="this.style.display=\'none\'"></div></div>'
       + '<div style="padding:0 14px 16px;">'
@@ -28901,10 +29155,13 @@ function renderAtelierTab(tab) {
 
     el.innerHTML = `<div class="atelier-content-inner">
 
-      <!-- Shop Header with Tabs and Balance -->
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;">
+      <!-- Shop Header with Tabs, Actions and Balance -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
         ${['featured','browse'].map(t=>
           '<button class="quest-tab-chip'+(shopTab===t?' active':'')+'" onclick="setShopTab(\''+t+'\')" id="stab-'+t+'" style="padding:9px 22px;border-radius:12px;font-size:13px;font-weight:700;letter-spacing:.01em;">'+(t==='featured'?'Featured Items':'Browse All')+'</button>').join('')}
+        <button class="quest-tab-chip" onclick="showWishlistModal()" style="padding:9px 16px;border-radius:12px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">${_svgIcon('heart',13)} My Wishlist</button>
+        <button class="quest-tab-chip" onclick="openMarketplace()" style="padding:9px 16px;border-radius:12px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">${_svgIcon('tag',13)} Marketplace</button>
+        <button class="quest-tab-chip" onclick="openTradeModal()" style="padding:9px 16px;border-radius:12px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">${_svgIcon('swap',13)} Trade</button>
         <div style="flex:1;"></div>
         <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,rgba(255,249,62,.055),rgba(255,249,62,.025));border:1px solid rgba(255,249,62,.12);border-radius:12px;">
           <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(255,249,62,.2));">
@@ -29662,8 +29919,9 @@ async function _forumInit() {
             <div class="forum-activity-card">
               ${recentThreads.length ? recentThreads.map(th => {
                 const cat = FORUM_CATEGORIES.find(c => c.id === th.category) || FORUM_CATEGORIES[0];
+                const pfpF = _defaultPfpUrl(th.author || '');
                 return `<div class="forum-activity-item" onclick="_forumViewThread('${th.id}')">
-                  <img class="forum-activity-avatar" src="${escapeHTML(th.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
+                  <img class="forum-activity-avatar" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
                   <div class="forum-activity-info">
                     <div class="forum-activity-title"><span class="fa-cat-dot" style="background:${cat.color}"></span>${escapeHTML(th.title)}</div>
                     <div class="forum-activity-meta">${escapeHTML(th.author)} · ${_forumTimeAgo(th.updated_at || th.created_at)}</div>
@@ -29813,9 +30071,11 @@ async function _forumLoadThreads() {
     });
     const canPin = _forumCanPin();
     const pinnedInCat = sorted.filter(t => t.pinned).length;
-    container.innerHTML = sorted.map(th => `
+    container.innerHTML = sorted.map(th => {
+      const pfpF = _defaultPfpUrl(th.author || '');
+      return `
       <div class="forum-thread-row${th.pinned ? ' forum-thread-pinned' : ''}" onclick="_forumViewThread('${th.id}')">
-        <img class="forum-thread-avatar" src="${escapeHTML(th.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
+        <img class="forum-thread-avatar" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
         <div class="forum-thread-info">
           <div class="forum-thread-title">${th.pinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="color:var(--accent);vertical-align:middle;margin-right:4px;"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg> ' : ''}${escapeHTML(th.title)}</div>
           <div class="forum-thread-meta">
@@ -29832,7 +30092,8 @@ async function _forumLoadThreads() {
           <span class="forum-thread-cat-badge" style="background:${cat.color}18;color:${cat.color};">${cat.icon} ${cat.name}</span>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   } catch(e) {
     console.error('[Forum] Load failed:', e);
     container.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load posts</p></div>';
@@ -29860,9 +30121,10 @@ async function _forumTogglePin(threadId) {
   }
 }
 
-async function _forumViewThread(threadId) {
+async function _forumViewThread(threadId, opts) {
   const content = document.getElementById('forum-page-content');
   if (!content) return;
+  const skipViewInc = !!(opts && opts.skipViewInc);
 
   try {
     const thread = await FortizedSocial.getForumThread(threadId);
@@ -29870,7 +30132,12 @@ async function _forumViewThread(threadId) {
     const author = await FortizedSocial.getUserByName(thread.author);
     const cat = FORUM_CATEGORIES.find(c => c.id === thread.category) || FORUM_CATEGORIES[0];
 
-    await FortizedSocial.updateForumThread(threadId, { views: (thread.views || 0) + 1 });
+    // Only increment views on first/real open, never on in-thread refresh (vote, edit, delete)
+    if (!skipViewInc && _forumViewedThreads !== threadId) {
+      await FortizedSocial.updateForumThread(threadId, { views: (thread.views || 0) + 1 });
+      _forumViewedThreads = threadId;
+      thread.views = (thread.views || 0) + 1;
+    }
     _forumCurrentThread = threadId;
     _forumCurrentPosts = posts;
 
@@ -29901,12 +30168,7 @@ async function _forumViewThread(threadId) {
         <div class="forum-detail-body">
           <div class="forum-detail-inner">
             <div class="forum-op-card">
-              <div class="forum-vote-col">
-                <button class="forum-vote-btn up ${opUpvoted?'active':''}" onclick="_forumVote('thread','${thread.id}',1)" title="Upvote">▲</button>
-                <div class="forum-vote-score ${opScore>0?'pos':opScore<0?'neg':''}">${opScore}</div>
-                <button class="forum-vote-btn down ${opDownvoted?'active':''}" onclick="_forumVote('thread','${thread.id}',-1)" title="Downvote">▼</button>
-              </div>
-              <img class="forum-op-avatar" src="${escapeHTML(author?.pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
+              <img class="forum-op-avatar" src="${escapeHTML(author?.pfp || _defaultPfpUrl(thread.author))}" onerror="this.src='${_defaultPfpUrl(thread.author)}'">
               <div class="forum-op-content">
                 <div class="forum-op-author">
                   <strong>${escapeHTML(author?.displayName || thread.author)}</strong>
@@ -29916,8 +30178,13 @@ async function _forumViewThread(threadId) {
                 <div class="forum-op-text" id="forum-op-text">${_forumRenderBody(thread.content || '')}</div>
                 ${thread.image ? `<img class="forum-op-image" src="${escapeHTML(thread.image)}">` : ''}
                 <div class="forum-post-actions">
-                  ${_forumCanEditPost(thread) ? `<button class="forum-pa-btn" onclick="_forumEditThread('${thread.id}')">✎ Edit</button>` : ''}
-                  ${_forumCanDeleteThread(thread) ? `<button class="forum-pa-btn danger" onclick="_forumDeleteThreadConfirm('${thread.id}')">🗑 Delete</button>` : ''}
+                  <div class="forum-vote-group">
+                    <button class="forum-vote-btn up ${opUpvoted?'active':''}" onclick="_forumVote('thread','${thread.id}',1)" title="Upvote"><span class="fvb-icon">👏</span></button>
+                    <div class="forum-vote-score ${opScore>0?'pos':opScore<0?'neg':''}">${opScore.toLocaleString()}</div>
+                    <button class="forum-vote-btn down ${opDownvoted?'active':''}" onclick="_forumVote('thread','${thread.id}',-1)" title="Downvote"><span class="fvb-icon">👎</span></button>
+                  </div>
+                  ${_forumCanEditPost(thread) ? `<button class="forum-pa-btn" onclick="_forumEditThread('${thread.id}')">${_svgIcon('pencil')} Edit</button>` : ''}
+                  ${_forumCanDeleteThread(thread) ? `<button class="forum-pa-btn danger" onclick="_forumDeleteThreadConfirm('${thread.id}')">${_svgIcon('trash')} Delete</button>` : ''}
                 </div>
               </div>
             </div>
@@ -29956,6 +30223,7 @@ async function _forumViewThread(threadId) {
 // ── Forum: post card renderer, vote helpers, permissions ──
 let _forumCurrentPosts = [];
 let _forumPendingQuote = null;
+let _forumViewedThreads = null; // tracks which thread had its view already incremented this session
 
 function _forumRenderPostCard(post, threadId) {
   const score = _forumNetScore(post);
@@ -29968,26 +30236,47 @@ function _forumRenderPostCard(post, threadId) {
       <div class="fqb-author">↩ @${escapeHTML(post.quote_author)}</div>
       <div class="fqb-text">${_forumRenderBody((post.quote_text||'').slice(0, 280))}</div>
     </div>` : '';
+  const pfpFallback = _defaultPfpUrl(post.author || '');
   return `
     <div class="forum-reply-card" id="fp-${post.id}">
-      <div class="forum-vote-col">
-        <button class="forum-vote-btn up ${up?'active':''}" onclick="_forumVote('post','${post.id}',1)" title="Upvote">▲</button>
-        <div class="forum-vote-score ${score>0?'pos':score<0?'neg':''}">${score}</div>
-        <button class="forum-vote-btn down ${dn?'active':''}" onclick="_forumVote('post','${post.id}',-1)" title="Downvote">▼</button>
-      </div>
-      <img class="forum-reply-avatar" src="${escapeHTML(post.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
+      <img class="forum-reply-avatar" src="${escapeHTML(post.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
       <div class="forum-reply-content">
         <div class="frc-meta">${escapeHTML(post.author_displayName || post.author)} <span class="frc-handle">@${escapeHTML(post.author)}</span> <span class="frc-time">${_forumTimeAgo(post.created_at)}${post.edited_at?` · <span class="forum-edited" title="Edited ${new Date(post.edited_at).toLocaleString()}">edited</span>`:''}</span></div>
         ${quoteBlock}
         <div class="frc-body" id="fp-body-${post.id}">${_forumRenderBody(post.content || '')}</div>
         ${post.image ? `<img src="${escapeHTML(post.image)}" style="max-width:100%;max-height:300px;border-radius:10px;margin-top:8px;">` : ''}
         <div class="forum-post-actions">
-          <button class="forum-pa-btn" onclick="_forumQuoteReply('${post.id}')">❝ Quote</button>
-          ${canEdit ? `<button class="forum-pa-btn" onclick="_forumEditPost('${post.id}')">✎ Edit</button>` : ''}
-          ${canDel ? `<button class="forum-pa-btn danger" onclick="_forumDeletePostConfirm('${post.id}','${threadId}')">🗑 Delete</button>` : ''}
+          <div class="forum-vote-group">
+            <button class="forum-vote-btn up ${up?'active':''}" onclick="_forumVote('post','${post.id}',1)" title="Upvote"><span class="fvb-icon">👏</span></button>
+            <div class="forum-vote-score ${score>0?'pos':score<0?'neg':''}">${score.toLocaleString()}</div>
+            <button class="forum-vote-btn down ${dn?'active':''}" onclick="_forumVote('post','${post.id}',-1)" title="Downvote"><span class="fvb-icon">👎</span></button>
+          </div>
+          <button class="forum-pa-btn" onclick="_forumQuoteReply('${post.id}')">${_svgIcon('quote')} Quote</button>
+          ${canEdit ? `<button class="forum-pa-btn" onclick="_forumEditPost('${post.id}')">${_svgIcon('pencil')} Edit</button>` : ''}
+          ${canDel ? `<button class="forum-pa-btn danger" onclick="_forumDeletePostConfirm('${post.id}','${threadId}')">${_svgIcon('trash')} Delete</button>` : ''}
         </div>
       </div>
     </div>`;
+}
+
+// Shared inline SVG icons for forum UI (NOT emojis)
+function _svgIcon(name, size=13) {
+  const s = size;
+  switch(name) {
+    case 'pencil': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
+    case 'trash': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>`;
+    case 'quote': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;"><path d="M7 7h4v4H7c0 2 1 3 3 3v2c-4 0-6-2-6-5V7zm9 0h4v4h-4c0 2 1 3 3 3v2c-4 0-6-2-6-5V7z"/></svg>`;
+    case 'pin': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-2-4V5a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v8l-2 4z"/></svg>`;
+    case 'send': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+    case 'bell': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+    case 'gift': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>`;
+    case 'heart': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+    case 'swap': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`;
+    case 'tag': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`;
+    case 'calendar': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+    case 'mic': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>`;
+    default: return '';
+  }
 }
 
 function _forumNetScore(obj) {
@@ -30035,7 +30324,7 @@ async function _forumVote(kind, id, dir) {
       }
       await FortizedSocial.updateForumPost(id, { likes: [...liSet], dislikes: [...diSet] });
     }
-    await _forumViewThread(_forumCurrentThread);
+    await _forumViewThread(_forumCurrentThread, {skipViewInc:true});
   } catch(e) {
     console.error('[Forum] Vote failed:', e);
     toast('Vote failed', 'error');
@@ -30123,7 +30412,7 @@ async function _forumSavePostEdit(postId) {
   try {
     await FortizedSocial.updateForumPost(postId, { content: newText, edited_at: Date.now(), edit_history: history });
     toast('Edited', 'success');
-    await _forumViewThread(_forumCurrentThread);
+    await _forumViewThread(_forumCurrentThread, {skipViewInc:true});
   } catch(e) {
     console.error('[Forum] Edit post failed:', e);
     toast('Edit failed', 'error');
@@ -30152,7 +30441,7 @@ async function _forumSaveThreadEdit(threadId) {
     history.push({ content: t.content, at: Date.now() });
     await FortizedSocial.updateForumThread(threadId, { content: v, edited_at: Date.now(), edit_history: history });
     toast('Edited', 'success');
-    await _forumViewThread(threadId);
+    await _forumViewThread(threadId, {skipViewInc:true});
   } catch(e) {
     console.error('[Forum] Edit thread failed:', e);
     toast('Edit failed', 'error');
@@ -30163,7 +30452,7 @@ function _forumDeletePostConfirm(postId, threadId) {
     try {
       await FortizedSocial.deleteForumPost(postId);
       toast('Reply deleted', 'success');
-      await _forumViewThread(threadId);
+      await _forumViewThread(threadId, {skipViewInc:true});
     } catch(e) { toast('Delete failed', 'error'); }
   });
 }
@@ -30193,8 +30482,9 @@ async function _forumMentionInput(ta) {
     if (!names.length) { popup.style.display = 'none'; return; }
     popup.innerHTML = names.map(n => {
       const u = users[n];
+      const f = _defaultPfpUrl(n);
       return `<div class="fmn-item" onclick="_forumMentionPick('${n}')">
-        <img src="${escapeHTML(u.pfp||'/default pfp.png')}" onerror="this.src='/default pfp.png'">
+        <img src="${escapeHTML(u.pfp||f)}" onerror="this.src='${f}'">
         <span><strong>${escapeHTML(u.displayName||n)}</strong> <span style="color:var(--muted);">@${escapeHTML(n)}</span></span>
       </div>`;
     }).join('');
@@ -30436,7 +30726,7 @@ async function _forumCreatePost(threadId) {
     document.getElementById('forum-post-file-label').textContent = 'No image selected';
     toast('Reply posted!', 'success');
     _forumPendingQuote = null;
-    await _forumViewThread(threadId);
+    await _forumViewThread(threadId, {skipViewInc:true});
   } catch(e) {
     console.error('[Forum] Post failed:', e);
     toast('Failed to post reply', 'error');
@@ -30461,8 +30751,9 @@ async function _forumGlobalSearch(query) {
       </div>
       ${results.map(th => {
         const cat = FORUM_CATEGORIES.find(c => c.id === th.category) || FORUM_CATEGORIES[0];
+        const pfpF = _defaultPfpUrl(th.author||'');
         return `<div class="forum-thread-row" onclick="_forumViewThread('${th.id}')">
-          <img class="forum-thread-avatar" src="${escapeHTML(th.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
+          <img class="forum-thread-avatar" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
           <div class="forum-thread-info">
             <div class="forum-thread-title">${escapeHTML(th.title)}</div>
             <div class="forum-thread-meta">
@@ -30499,9 +30790,11 @@ async function _forumSearchInCategory(query) {
       return;
     }
     const cat = FORUM_CATEGORIES.find(c => c.id === _forumCurrentCategory) || FORUM_CATEGORIES[0];
-    container.innerHTML = filtered.map(th => `
+    container.innerHTML = filtered.map(th => {
+      const pfpF = _defaultPfpUrl(th.author||'');
+      return `
       <div class="forum-thread-row" onclick="_forumViewThread('${th.id}')">
-        <img class="forum-thread-avatar" src="${escapeHTML(th.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
+        <img class="forum-thread-avatar" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
         <div class="forum-thread-info">
           <div class="forum-thread-title">${escapeHTML(th.title)}</div>
           <div class="forum-thread-meta">
@@ -30517,7 +30810,8 @@ async function _forumSearchInCategory(query) {
           <span class="forum-thread-cat-badge" style="background:${cat.color}18;color:${cat.color};">${cat.icon} ${cat.name}</span>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   } catch(e) {
     console.error('[Forum] Search failed:', e);
     container.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Search failed</p></div>';
@@ -30528,7 +30822,7 @@ async function _forumDeletePost(postId, threadId) {
   try {
     await FortizedSocial.deleteForumPost(postId);
     toast('Reply deleted', 'success');
-    await _forumViewThread(threadId);
+    await _forumViewThread(threadId, {skipViewInc:true});
   } catch(e) {
     console.error('[Forum] Delete post failed:', e);
     toast('Failed to delete reply', 'error');
@@ -36184,6 +36478,36 @@ async function getMarketplaceListings() {
     const raw = await FortizedSocial.sb?.from('marketplace_listings')?.select('*')?.order('created_at', { ascending: false });
     return raw?.data || [];
   } catch(_) { return []; }
+}
+async function promptListResale(itemId) {
+  const item = _getShopItemById(itemId);
+  if (!item) { toast('Item not found', 'error'); return; }
+  if (!item.rare && !item.seasonal) { toast('Only rare/seasonal items can be resold', 'error'); return; }
+  showCustomInput('List for Resale', `Ask price in Onyx for "${item.name||itemId}"?`, async (val) => {
+    const p = parseInt(val||'0', 10);
+    if (!p || p < 1) { toast('Invalid price', 'error'); return; }
+    await listForResale(itemId, p);
+    try { renderAtelierTab('shop'); } catch(_){}
+  }, String(item.price || 100));
+}
+async function openMarketplace() {
+  const listings = await getMarketplaceListings().catch(()=>[]);
+  const avail = listings.filter(l => !l.sold);
+  openSimpleModal(`
+    <div class="mkt-modal">
+      <div class="wl-hdr"><h3>${_svgIcon('tag',14)} Marketplace — Rare Resales</h3></div>
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px;">Only rare/seasonal items may be resold. All sales taxed 30%.</div>
+      <div class="wl-items" style="max-height:60vh;overflow:auto;">
+        ${avail.length ? avail.map(l => {
+          const it = _getShopItemById(l.item_id) || {};
+          return `<div class="wl-card">
+            <div class="wl-name">${escapeHTML(it.name || l.item_id)} <span style="font-weight:500;color:var(--muted);font-size:11px;">by @${escapeHTML(l.seller||'?')}</span></div>
+            <div class="wl-price">${l.price} ⬡</div>
+            <button class="wl-gift-btn" onclick="buyListing('${escapeHTML(l.id)}').then(()=>{closeSimpleModal();openMarketplace();});">Buy</button>
+          </div>`;
+        }).join('') : '<p style="text-align:center;color:var(--muted);padding:24px;">No active listings.</p>'}
+      </div>
+    </div>`);
 }
 async function listForResale(itemId, askPrice) {
   const item = _getShopItemById(itemId);

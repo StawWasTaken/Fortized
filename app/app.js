@@ -6105,18 +6105,19 @@ async function forwardToDM(username) {
 }
 function addReactionUI(eOrMsgId, msgIdOrCtx, contextOrNone) {
   // Support both (event, msgId, context) and (msgId, context) signatures
-  let x, y, msgId, context;
-  if (typeof eOrMsgId === 'object' && eOrMsgId.clientX !== undefined) {
+  let x, y, msgId, context, trigger = null;
+  if (eOrMsgId && typeof eOrMsgId === 'object' && eOrMsgId.clientX !== undefined) {
+    try { eOrMsgId.stopPropagation(); } catch {}
     x = eOrMsgId.clientX; y = eOrMsgId.clientY;
+    trigger = eOrMsgId.currentTarget || eOrMsgId.target || null;
     msgId = msgIdOrCtx; context = contextOrNone;
   } else {
     x = window.innerWidth / 2 - 100; y = window.innerHeight / 2 - 100;
     msgId = eOrMsgId; context = msgIdOrCtx;
   }
-  // Show full emoji reaction picker panel
-  _openReactionEmojiPicker(x, y, msgId, context);
+  _openReactionEmojiPicker(x, y, msgId, context, trigger);
 }
-function _openReactionEmojiPicker(x, y, msgId, context) {
+function _openReactionEmojiPicker(x, y, msgId, context, trigger) {
   // Reuse the EXACT SAME chatbar emoji picker — just flip it into reaction mode.
   // Clicking an emoji fires toggleReaction(msgId, emoji, context, _reactionSuperMode).
   document.getElementById('giphy-picker')?.remove();
@@ -6124,9 +6125,11 @@ function _openReactionEmojiPicker(x, y, msgId, context) {
   _emojiPickerMode = 'react';
   _reactionContext = { msgId, context };
   _reactionSuperMode = false;
+  activeEmojiTarget = null;
 
   const panel = document.getElementById('emoji-picker');
   if (!panel) return;
+  panel.classList.remove('show');
   buildEmojiPicker();
   // Inject a super-reaction toggle into the footer
   const hoverLabel = panel.querySelector('#epp-hover-label');
@@ -6149,26 +6152,35 @@ function _openReactionEmojiPicker(x, y, msgId, context) {
       footer.appendChild(toggle);
     }
   }
-  // Position at (x, y) — try to appear above
+  // Position relative to the trigger button if we have one; otherwise the click point
   const PW = 460, PH = 440;
-  let left = x, top = y - PH - 8;
-  if (top < 8) top = y + 8;
-  if (left + PW > window.innerWidth - 8) left = window.innerWidth - PW - 8;
-  if (top + PH > window.innerHeight - 8) top = window.innerHeight - PH - 8;
+  let left, top;
+  if (trigger && trigger.getBoundingClientRect) {
+    const r = trigger.getBoundingClientRect();
+    left = Math.min(Math.max(8, r.right - PW), window.innerWidth - PW - 8);
+    top = r.top - PH - 8;
+    if (top < 8) top = Math.min(r.bottom + 8, window.innerHeight - PH - 8);
+  } else {
+    left = x; top = y - PH - 8;
+    if (top < 8) top = y + 8;
+    if (left + PW > window.innerWidth - 8) left = window.innerWidth - PW - 8;
+    if (top + PH > window.innerHeight - 8) top = window.innerHeight - PH - 8;
+  }
   panel.style.cssText = `left:${Math.max(8,left)}px;top:${Math.max(8,top)}px;bottom:auto;`;
   panel.classList.add('show');
   setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
-  // Close on outside click resets mode
+  // Close on outside click — use click (not mousedown) and a longer delay so the
+  // click that opened us never reaches this handler.
   setTimeout(() => {
     function _close(e) {
       if (!panel.contains(e.target)) {
         panel.classList.remove('show');
         _emojiPickerMode = 'insert'; _reactionContext = null; _reactionSuperMode = false;
-        document.removeEventListener('mousedown', _close);
+        document.removeEventListener('click', _close, true);
       }
     }
-    document.addEventListener('mousedown', _close);
-  }, 50);
+    document.addEventListener('click', _close, true);
+  }, 200);
 }
 function _previewReactionEmoji(btn, emoji) {
   const preview = document.getElementById('rpv-preview');
@@ -6199,12 +6211,10 @@ async function toggleReaction(msgId, emoji, context, isSuper) {
   if (!CU?.username) return;
   _trackReactionEmoji(emoji);
   const me = CU.username.toLowerCase();
-  // Super-reaction: store with a prefix marker so the UI can render it larger.
-  const reactionKey = isSuper ? '\u2605' + emoji : emoji;
 
   try {
     // Use Supabase to toggle reactions instead of Firebase
-    const reactionResult = await FortizedSocial.toggleReaction(msgId, reactionKey, context, me);
+    const reactionResult = await FortizedSocial.toggleReaction(msgId, emoji, context, me);
     if (!reactionResult) {
       toast('Could not react here', 'error');
       return;
@@ -6222,7 +6232,14 @@ async function toggleReaction(msgId, emoji, context, isSuper) {
     }
 
     // Update the UI locally
-    updateReactionUI(msgId, reactionKey, users, context);
+    updateReactionUI(msgId, emoji, users, context);
+
+    // Super reaction: trigger the firework animation on the new pill (local only).
+    if (isSuper && users.includes(me)) {
+      const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+      const pill = row?.querySelector(`[data-emoji="${CSS.escape(emoji)}"], [data-r-emoji="${CSS.escape(emoji)}"]`);
+      if (pill) triggerSuperReaction(pill, emoji);
+    }
 
     // Broadcast reaction via Socket.io for real-time sync
     const rType = context === 'dm' ? 'dm' : context === 'gc' ? 'gc' : 'bastion';
@@ -6230,7 +6247,7 @@ async function toggleReaction(msgId, emoji, context, isSuper) {
     if (rType === 'dm') { rid1 = me; rid2 = curDM; }
     else if (rType === 'gc') { rid1 = curGC; }
     else { const rb = CU.bastions?.[curBastion]; const rch = rb?.channels?.[curChannel]; rid1 = rb?.globalId||rb?.name; rid2 = rch?.name||'general'; }
-    FortizedSocial.socketEmit('reaction:toggle', { type: rType, id1: rid1, id2: rid2, messageId: msgId, emoji: reactionKey });
+    FortizedSocial.socketEmit('reaction:toggle', { type: rType, id1: rid1, id2: rid2, messageId: msgId, emoji: emoji });
   } catch (err) {
     console.error('Reaction error:', err);
     toast('Failed to react. Please try again.', 'error');
@@ -12936,7 +12953,18 @@ function buildEmojiSidebar() {
     }
     bastions.forEach((b, i) => {
       const active = _emojiPickerTab === 'bastion-' + i;
-      const emblem = b.emblem ? `<img src="${escapeHTML(b.emblem)}" alt="${escapeHTML(b.name||'')}">` : `<span style="font-size:12px;font-weight:700;">${escapeHTML((b.name||'B').slice(0,2).toUpperCase())}</span>`;
+      const initials = escapeHTML((b.name||'B').slice(0,2).toUpperCase());
+      const fallback = `<span style="font-size:11px;font-weight:700;letter-spacing:.5px;">${initials}</span>`;
+      let emblem;
+      if (b.icon) {
+        emblem = `<img src="${escapeHTML(b.icon)}" alt="${escapeHTML(b.name||'')}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+      } else if (b.emblem && !/^https?:|^data:/.test(b.emblem)) {
+        emblem = `<span style="font-size:18px;line-height:1;">${escapeHTML(b.emblem)}</span>`;
+      } else if (b.emblem) {
+        emblem = `<img src="${escapeHTML(b.emblem)}" alt="${escapeHTML(b.name||'')}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+      } else {
+        emblem = fallback;
+      }
       html += `<button class="epp-sidebar-btn${active?' active':''}" id="etab-bastion-${i}" title="${escapeHTML(b.name||'Bastion')}" aria-label="${escapeHTML(b.name||'Bastion')}" onclick="setEmojiTab('bastion-${i}')">${emblem}</button>`;
     });
   }
@@ -12960,20 +12988,49 @@ function _getChatInputRight() {
   return window.innerWidth - 20;
 }
 function toggleEmojiPicker(targetId) {
+  // Reset mode to 'insert' — reactions use a separate flow.
+  _emojiPickerMode = 'insert';
+  _reactionContext = null;
+  _reactionSuperMode = false;
   activeEmojiTarget = targetId;
   document.getElementById('giphy-picker')?.remove();
   document.getElementById('sticker-picker')?.remove();
   document.getElementById('botcmd-picker')?.remove();
   const panel = document.getElementById('emoji-picker');
+  if (!panel) return;
   if (panel.classList.contains('show')) { panel.classList.remove('show'); return; }
   buildEmojiPicker();
 
-  // Position exactly like the GIF picker: right-aligned with chatbar
+  // Position relative to the input target (works for chat, bio, forum composer, etc.)
   const refEl = document.getElementById(targetId);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
-  const rect = outerEl ? outerEl.getBoundingClientRect() : (refEl ? refEl.getBoundingClientRect() : {right:400, top:300});
-  const emojiLeft = Math.max(8, _getChatInputRight() - 460);
-  panel.style.cssText = `left:${emojiLeft}px;bottom:${window.innerHeight - rect.top + 8}px;`;
+  const PW = 460, PH = 440;
+  let left, top = null, bottom = null;
+  if (outerEl) {
+    // Chatbar mode: right-aligned with the input, popping up above
+    const rect = outerEl.getBoundingClientRect();
+    left = Math.max(8, _getChatInputRight() - PW);
+    bottom = window.innerHeight - rect.top + 8;
+  } else if (refEl) {
+    // Generic mode: anchor above the input's right edge
+    const rect = refEl.getBoundingClientRect();
+    left = Math.min(Math.max(8, rect.right - PW), window.innerWidth - PW - 8);
+    if (rect.top - 8 > PH) {
+      // Fits above
+      top = Math.max(8, rect.top - PH - 8);
+    } else {
+      // Drop below
+      top = Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
+    }
+  } else {
+    left = Math.max(8, window.innerWidth - PW - 20);
+    top = Math.max(8, (window.innerHeight - PH) / 2);
+  }
+  if (bottom !== null) {
+    panel.style.cssText = `left:${left}px;bottom:${bottom}px;top:auto;`;
+  } else {
+    panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;`;
+  }
   panel.classList.add('show');
   setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
 }
@@ -13101,13 +13158,16 @@ function renderEmojiGrid() {
   const sectionHdr = (id, title, extra) => `<div class="epp-section" data-section="${id}">${escapeHTML(title)}${extra||''}</div>`;
   const gridOpen = (cols) => `<div class="epp-section-grid" style="grid-template-columns:repeat(${cols},1fr);">`;
   const gridClose = `</div>`;
-  const ftzCell = (name, url, fromBastion) => `
+  const ftzCell = (name, url, fromBastion) => {
+    if (!url) return '';
+    return `
     <div onclick="insertFortizedEmoji('${escapeHTML(name)}','${escapeHTML(url)}')"
          onmouseenter="_emojiHover(':${escapeHTML(name)}:',${fromBastion?`'${escapeHTML(fromBastion)}'`:'null'},'${escapeHTML(url)}',true)"
          title=":${escapeHTML(name)}:${fromBastion?' from '+escapeHTML(fromBastion):''}"
          class="emoji-cell emoji-cell-custom">
-      <img src="${escapeHTML(url)}" alt=":${escapeHTML(name)}:" style="width:100%;height:100%;object-fit:contain;">
+      <img src="${escapeHTML(url)}" alt=":${escapeHTML(name)}:" style="width:100%;height:100%;object-fit:contain;" onerror="this.closest('.emoji-cell').style.display='none'">
     </div>`;
+  };
 
   let html = '';
 
@@ -13132,7 +13192,7 @@ function renderEmojiGrid() {
   }
 
   // 3) Fortized custom emojis
-  html += sectionHdr('ftz', 'Fortized');
+  html += sectionHdr('ftz', 'Fortized Guide');
   html += gridOpen(8);
   html += FORTIZED_EMOJIS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('');
   html += gridClose;
@@ -13146,11 +13206,11 @@ function renderEmojiGrid() {
     const locked = !isRadiance && bi !== curBastion; // must be in-bastion or have Radiance to use
     html += sectionHdr('bastion-' + bi, b.name || ('Bastion ' + (bi+1)), locked ? ' <span class="epp-lock">RADIANCE</span>' : '');
     html += gridOpen(8);
-    html += custom.map(ce => `
+    html += custom.filter(ce => ce && ce.name && ce.data).map(ce => `
       <div onclick="${(!locked) ? "insertFortizedEmoji('"+escapeHTML(ce.name)+"','"+escapeHTML(ce.data)+"')" : "toast('Radiance required to use this bastion\\'s emojis outside the bastion','error')"}"
            onmouseenter="_emojiHover(':${escapeHTML(ce.name)}:','${escapeHTML(b.name||'')}','${escapeHTML(ce.data)}',true)"
            title=":${escapeHTML(ce.name)}:" class="emoji-cell emoji-cell-custom" style="${locked?'opacity:.4;filter:grayscale(.5);':''}">
-        <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
+        <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;" onerror="this.closest('.emoji-cell').style.display='none'">
       </div>`).join('');
     html += gridClose;
   });

@@ -2916,6 +2916,16 @@ async function _renderWhatsHappening() {
 
 // ── What are people buying? — rectangular card, 6 item sub-cards ──
 // Priority: I. most bought, II. most recent. Fill to 6 with fakes when real < 6.
+function _openFortshop() {
+  try {
+    showView('atelier');
+    setTimeout(() => {
+      const btn = document.getElementById('atnav-shop');
+      if (typeof switchAtelierTab === 'function') switchAtelierTab('shop', btn);
+    }, 50);
+  } catch(e) { console.warn('[Home] openFortshop failed:', e); }
+}
+
 async function _renderWhatArePeopleBuying() {
   const el = document.getElementById('home-trending-items');
   if (!el) return;
@@ -2952,14 +2962,19 @@ async function _renderWhatArePeopleBuying() {
       const fakes = _fortshopFakeItems(6 - realCount, seen);
       for (const f of fakes) picks.push(f);
     }
+    // Hydrate buyer pfps after render
+    setTimeout(() => { try { _forumHydratePfps(el); } catch(_){} }, 30);
     el.innerHTML = `<div class="home-buying-inner">` + picks.slice(0, 6).map(it => {
       const name = it.name || 'Item';
       const price = it.price != null ? Number(it.price).toLocaleString() : '—';
       const img = it.thumb || it.image || it.src || '/fortshop_placeholder.png';
-      return `<div class="home-buy-card" onclick="showView('fortshop')" title="${escapeHTML(name)}">
+      const buyers = Array.isArray(it.buyers) ? it.buyers.slice(0,3) : [];
+      const buyersHtml = buyers.length ? `<div class="hbc-pfps">${buyers.map(b => `<img class="hbc-pfp" data-forum-author="${escapeHTML(b)}" src="${escapeHTML(_defaultPfpUrl(b))}" onerror="this.src='${_defaultPfpUrl(b)}'" title="${escapeHTML(b)}">`).join('')}${(it.buyerCount && it.buyerCount > buyers.length) ? `<span class="hbc-pfp-more">+${it.buyerCount - buyers.length}</span>` : ''}</div>` : '';
+      return `<div class="home-buy-card" onclick="_openFortshop()" title="${escapeHTML(name)}">
         <div class="hbc-img"><img src="${escapeHTML(img)}" onerror="this.style.opacity='.25';this.src='/fortshop_placeholder.png'"></div>
         <div class="hbc-name">${escapeHTML(name)}</div>
         <div class="hbc-price"><img class="hbc-onyx" src="/Onyx.png" onerror="this.style.display='none'"><span>${price}</span></div>
+        ${buyersHtml}
       </div>`;
     }).join('') + `</div>`;
   } catch(e) {
@@ -3077,8 +3092,10 @@ function _adClickAction(ad) {
 async function _getAllActiveAds() {
   let ads = [];
   try { ads = await FortizedSocial.getGlobalAds(); } catch(e) {}
-  const localAds = (CU?.ads||[]).filter(a => a.status==='active' && new Date(a.expiresAt) > new Date());
-  const allAds = [...ads];
+  let blocked = new Set();
+  try { blocked = await FortizedSocial.getTakenDownAdIds?.() || new Set(); } catch(e) {}
+  const localAds = (CU?.ads||[]).filter(a => a.status==='active' && new Date(a.expiresAt) > new Date() && !blocked.has(a.id));
+  const allAds = ads.filter(a => !blocked.has(a.id));
   localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
   return allAds;
 }
@@ -15671,6 +15688,29 @@ async function viewUserProfile(username) {
               ${games.map(g=>`<div class="game-col-item"><span style="font-size:17px;">${g.coverUrl ? `<img src='${escapeHTML(g.coverUrl)}' style='width:24px;height:32px;border-radius:4px;object-fit:cover;'>` : (g.icon||ftzIcon('gamepad','15'))}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</span></div>`).join('')}
             </div>
           </div>` : ''}
+          ${(() => {
+            const wl = Array.isArray(u.wishlist) ? u.wishlist : [];
+            const priv = !!u.wishlistPrivate;
+            if (!isOwn && priv) return '';
+            if (!isOwn && !wl.length) return '';
+            const items = wl.map(id => ({ id, it: (typeof _getShopItemById==='function' ? _getShopItemById(id) : null) })).filter(x => x.it);
+            return `<div class="up-right-section" id="up-wishlist-section">
+              <div class="up-right-section-title" style="display:flex;align-items:center;gap:8px;">
+                <span>Wishlist</span>
+                ${isOwn ? `<label style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--muted);cursor:pointer;">
+                  <input type="checkbox" ${priv?'checked':''} onchange="setWishlistPrivacy(this.checked)" style="accent-color:var(--accent);"> Private
+                </label>` : `<span style="margin-left:auto;font-size:10px;color:var(--muted);font-weight:600;">Public</span>`}
+              </div>
+              ${items.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:8px;margin-top:8px;">
+                ${items.map(({id, it}) => `<div class="up-wl-card" style="padding:8px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(it.name||id)}</div>
+                  <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:10px;height:10px;">${it.price||'—'}</div>
+                  ${isOwn ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}'),60);" style="background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:4px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
+                  : `<button onclick="openGiftModal('${escapeHTML(id)}','${escapeHTML(u.username)}')" style="background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.2);border-radius:6px;padding:4px 8px;font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;justify-content:center;">${_svgIcon('gift',10)} Gift</button>`}
+                </div>`).join('')}
+              </div>` : `<div style="padding:14px;text-align:center;font-size:11.5px;color:var(--muted);">${isOwn ? 'Your wishlist is empty. Heart items in the Fortshop to add them.' : 'Wishlist is empty.'}</div>`}
+            </div>`;
+          })()}
         </div>
         <!-- Activity tab: current game activity -->
         <div id="up-tab-activity-detail" style="display:none;">${_activityContent.join('')}</div>
@@ -18005,15 +18045,19 @@ async function _adminAdTakedown(adId) {
     if (!reason) { toast('Reason required', 'error'); return; }
     try {
       const ads = await FortizedSocial.getGlobalAds();
-      const ad = ads.find(a => a.id === adId);
-      if (ad) {
-        ad.status = 'cancelled';
-        ad.takedownBy = CU?.username;
-        ad.takedownReason = reason;
-        ad.takedownAt = new Date().toISOString();
-        await FortizedSocial.upsertGlobalAd(ad);
+      let ad = ads.find(a => a.id === adId);
+      if (!ad) { ad = { id: adId, owner: '?' }; }
+      ad.status = 'taken_down';
+      ad.takedownBy = CU?.username;
+      ad.takedownReason = reason;
+      ad.takedownAt = new Date().toISOString();
+      // Persist the taken-down record so it acts as a blocklist for all clients
+      await FortizedSocial.upsertGlobalAd(ad);
+      // Also clear from the current user's local ads array if they were the owner (self-takedown)
+      if (Array.isArray(CU?.ads)) {
+        const i = CU.ads.findIndex(a => a.id === adId);
+        if (i >= 0) { CU.ads[i].status = 'taken_down'; CU.ads[i].takedownAt = ad.takedownAt; try { await saveUser?.(); } catch(_){} }
       }
-      await FortizedSocial.removeGlobalAd(adId);
       logAudit('ad_takedown', adId, `owner=${ad?.owner||'?'} reason=${reason}`);
       toast('Ad taken down', 'success');
       const main = document.getElementById('adm-sub-content') || document.getElementById('adm-content');
@@ -29157,10 +29201,11 @@ function renderAtelierTab(tab) {
 
       <!-- Shop Header with Tabs, Actions and Balance -->
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
-        ${['featured','browse'].map(t=>
-          '<button class="quest-tab-chip'+(shopTab===t?' active':'')+'" onclick="setShopTab(\''+t+'\')" id="stab-'+t+'" style="padding:9px 22px;border-radius:12px;font-size:13px;font-weight:700;letter-spacing:.01em;">'+(t==='featured'?'Featured Items':'Browse All')+'</button>').join('')}
-        <button class="quest-tab-chip" onclick="showWishlistModal()" style="padding:9px 16px;border-radius:12px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">${_svgIcon('heart',13)} My Wishlist</button>
-        <button class="quest-tab-chip" onclick="openMarketplace()" style="padding:9px 16px;border-radius:12px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">${_svgIcon('tag',13)} Marketplace</button>
+        ${['featured','browse','marketplace'].map(t=> {
+          const label = t==='featured'?'Featured':t==='browse'?'Browse All':`${_svgIcon('tag',13)} Marketplace`;
+          return '<button class="quest-tab-chip'+(shopTab===t?' active':'')+'" onclick="setShopTab(\''+t+'\')" id="stab-'+t+'" style="padding:9px 22px;border-radius:12px;font-size:13px;font-weight:700;letter-spacing:.01em;display:inline-flex;align-items:center;gap:6px;">'+label+'</button>';
+        }).join('')}
+        <button class="quest-tab-chip" onclick="viewUserProfile(CU.username)" style="padding:9px 16px;border-radius:12px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;" title="Your wishlist now lives in your profile card">${_svgIcon('heart',13)} My Wishlist</button>
         <button class="quest-tab-chip" onclick="openTradeModal()" style="padding:9px 16px;border-radius:12px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">${_svgIcon('swap',13)} Trade</button>
         <div style="flex:1;"></div>
         <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,rgba(255,249,62,.055),rgba(255,249,62,.025));border:1px solid rgba(255,249,62,.12);border-radius:12px;">
@@ -29390,10 +29435,25 @@ function renderAtelierTab(tab) {
               }).join('')}
             </div>` : ''}
           </div>`}
+      ${shopTab==='marketplace'?`
+        <div id="shop-marketplace-page" style="margin-bottom:32px;">
+          <div class="atel-section-hdr" style="margin-bottom:14px;"><span>${_svgIcon('tag',14)} Rare & Seasonal Marketplace</span></div>
+          <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:18px;max-width:640px;line-height:1.55;">
+            Owners of <strong style="color:var(--accent);">rare</strong> and <strong style="color:var(--accent);">seasonal</strong> items can list them for resale here. All sales are taxed 30%. List your own rare/seasonal items from the <em>Browse</em> tab or any shop card.
+          </div>
+          <div id="shop-marketplace-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+            <div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">
+              <div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto 10px;"></div>
+              Loading listings...
+            </div>
+          </div>
+        </div>
+      `:''}
       </div>`;
 
     el._shopTab = shopTab;
     el._shopCat = shopCat;
+    if (shopTab === 'marketplace') setTimeout(() => _loadShopMarketplace(), 30);
   }
 
   // ── CREATOR ──────────────────────────────────────────────
@@ -29694,6 +29754,8 @@ function _switchCreatorSub(sub) {
   });
   const el = document.getElementById('atelier-content');
   if (el) el._creatorSub = sub;
+  if (sub === 'marketplace') { try { _loadMktBots?.(); } catch(_){} }
+  if (sub === 'creations') { try { _switchCreationsSub(el?._creationsSub || 'ads'); } catch(_){} }
 }
 function _switchCreationsSub(sub) {
   ['ads','bots','templates'].forEach(t => {
@@ -29702,6 +29764,8 @@ function _switchCreationsSub(sub) {
     if (sec) sec.style.display = t===sub?'':'none';
     if (btn) { btn.style.background = t===sub?'rgba(255,249,62,.1)':'transparent'; btn.style.color = t===sub?'var(--accent)':'var(--muted-light)'; btn.style.borderColor = t===sub?'rgba(255,249,62,.2)':'var(--border)'; btn.style.fontWeight = t===sub?'700':'600'; }
   });
+  const el = document.getElementById('atelier-content');
+  if (el) el._creationsSub = sub;
 }
 
 function _switchMktTab(tab) {
@@ -29921,7 +29985,7 @@ async function _forumInit() {
                 const cat = FORUM_CATEGORIES.find(c => c.id === th.category) || FORUM_CATEGORIES[0];
                 const pfpF = _defaultPfpUrl(th.author || '');
                 return `<div class="forum-activity-item" onclick="_forumViewThread('${th.id}')">
-                  <img class="forum-activity-avatar" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
+                  <img class="forum-activity-avatar" data-forum-author="${escapeHTML(th.author||'')}" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
                   <div class="forum-activity-info">
                     <div class="forum-activity-title"><span class="fa-cat-dot" style="background:${cat.color}"></span>${escapeHTML(th.title)}</div>
                     <div class="forum-activity-meta">${escapeHTML(th.author)} · ${_forumTimeAgo(th.updated_at || th.created_at)}</div>
@@ -29993,6 +30057,7 @@ async function _forumInit() {
     </div>
   `;
   _forumRenderAd();
+  _forumHydratePfps(document.getElementById('forum-page-content'));
 }
 
 let _forumAdTimer = null;
@@ -30075,7 +30140,7 @@ async function _forumLoadThreads() {
       const pfpF = _defaultPfpUrl(th.author || '');
       return `
       <div class="forum-thread-row${th.pinned ? ' forum-thread-pinned' : ''}" onclick="_forumViewThread('${th.id}')">
-        <img class="forum-thread-avatar" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
+        <img class="forum-thread-avatar" data-forum-author="${escapeHTML(th.author||'')}" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
         <div class="forum-thread-info">
           <div class="forum-thread-title">${th.pinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="color:var(--accent);vertical-align:middle;margin-right:4px;"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg> ' : ''}${escapeHTML(th.title)}</div>
           <div class="forum-thread-meta">
@@ -30094,6 +30159,7 @@ async function _forumLoadThreads() {
       </div>
     `;
     }).join('');
+    _forumHydratePfps(container);
   } catch(e) {
     console.error('[Forum] Load failed:', e);
     container.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load posts</p></div>';
@@ -30277,6 +30343,29 @@ function _svgIcon(name, size=13) {
     case 'mic': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>`;
     default: return '';
   }
+}
+
+const _forumPfpCache = new Map();
+async function _forumHydratePfps(root) {
+  try {
+    const scope = (typeof root === 'string') ? document.querySelector(root) : (root || document);
+    if (!scope) return;
+    const imgs = scope.querySelectorAll('img[data-forum-author]');
+    const authors = new Set();
+    imgs.forEach(i => { const a = i.getAttribute('data-forum-author'); if (a) authors.add(a); });
+    await Promise.all([...authors].map(async a => {
+      if (_forumPfpCache.has(a)) return;
+      try {
+        const u = await FortizedSocial.getUserByName(a);
+        _forumPfpCache.set(a, u?.pfp || '');
+      } catch(_) { _forumPfpCache.set(a, ''); }
+    }));
+    imgs.forEach(i => {
+      const a = i.getAttribute('data-forum-author');
+      const pfp = _forumPfpCache.get(a);
+      if (pfp) i.src = pfp;
+    });
+  } catch(e) { console.warn('[Forum] pfp hydrate failed:', e); }
 }
 
 function _forumNetScore(obj) {
@@ -36387,29 +36476,83 @@ async function confirmGift(itemId) {
 async function openTradeModal(targetUsername) {
   const target = targetUsername ? await FortizedSocial.getUserByName(targetUsername) : null;
   const owned = (CU?.unlockedAppearances||[]).concat(CU?.ownedDecorations||[]);
+  const myPfp = CU?.pfp || _defaultPfpUrl(CU?.username||'');
+  const myName = CU?.displayName || CU?.username || 'You';
+  const friends = (CU?.friends || []).slice(0, 60);
   openSimpleModal(`
-    <div class="trade-modal">
-      <h3>🤝 New Trade ${target ? '— with @'+escapeHTML(target.username) : ''}</h3>
-      <label class="gift-label">Trade with</label>
-      <input id="trade-partner" class="gift-input" placeholder="username" value="${target?escapeHTML(target.username):''}">
-      <label class="gift-label">Your offer (Onyx)</label>
-      <input id="trade-my-onyx" class="gift-input" type="number" min="0" placeholder="0">
-      <label class="gift-label">Your offer (items)</label>
-      <select id="trade-my-items" class="gift-input" multiple>
-        ${owned.map(id => {
-          const it = _getShopItemById(id);
-          if (!it || it.rare) return '';
-          return `<option value="${escapeHTML(id)}">${escapeHTML(it.name||id)}</option>`;
-        }).join('')}
-      </select>
-      <label class="gift-label">You request (Onyx)</label>
-      <input id="trade-their-onyx" class="gift-input" type="number" min="0" placeholder="0">
-      <div class="trade-note">Rare/seasonal items cannot be traded. All trades are taxed 30%.</div>
+    <div class="trade-modal ftz-trade-v2">
+      <div class="ftz-trade-hdr">
+        <div class="ftz-trade-title">${_svgIcon('swap',16)} New Trade Offer</div>
+        <div class="ftz-trade-sub">Rare &amp; seasonal items can't be traded — use the Marketplace instead. All trades are taxed 30%.</div>
+      </div>
+      <div class="ftz-trade-parties">
+        <!-- My side -->
+        <div class="ftz-trade-col">
+          <div class="ftz-trade-party">
+            <img class="ftz-trade-pfp" src="${escapeHTML(myPfp)}" onerror="this.src='${_defaultPfpUrl(CU?.username||'')}'">
+            <div class="ftz-trade-who">
+              <div class="ftz-trade-name">${escapeHTML(myName)}</div>
+              <div class="ftz-trade-handle">@${escapeHTML(CU?.username||'')}</div>
+            </div>
+          </div>
+          <label class="ftz-trade-label">Your Onyx offer</label>
+          <div class="ftz-trade-onyx-row">
+            <img src="/Onyx.png" style="width:14px;height:14px;">
+            <input id="trade-my-onyx" type="number" min="0" max="${CU?.onyx||0}" placeholder="0" oninput="_tradeUpdateTotals()">
+            <span class="ftz-trade-bal">of ${(CU?.onyx||0).toLocaleString()} available</span>
+          </div>
+          <label class="ftz-trade-label">Your item offer</label>
+          <select id="trade-my-items" multiple size="5" class="ftz-trade-items" onchange="_tradeUpdateTotals()">
+            ${owned.length ? owned.map(id => {
+              const it = _getShopItemById(id);
+              if (!it || it.rare || it.seasonal) return '';
+              return `<option value="${escapeHTML(id)}">${escapeHTML(it.name||id)}${it.price?` · ${it.price} Onyx`:''}</option>`;
+            }).join('') : '<option disabled>You have no tradable items.</option>'}
+          </select>
+          <div class="ftz-trade-hint">Hold Ctrl/Cmd to select multiple.</div>
+        </div>
+        <div class="ftz-trade-swap-indicator">${_svgIcon('swap',22)}</div>
+        <!-- Their side -->
+        <div class="ftz-trade-col">
+          <div class="ftz-trade-party">
+            <div class="ftz-trade-pfp ftz-trade-pfp-ph">${target ? `<img src="${escapeHTML(target.pfp||_defaultPfpUrl(target.username))}">` : '?'}</div>
+            <div class="ftz-trade-who">
+              <input id="trade-partner" class="ftz-trade-partner-input" placeholder="username" value="${target?escapeHTML(target.username):''}" list="trade-friends-list">
+              <datalist id="trade-friends-list">${friends.map(f => `<option value="${escapeHTML(f)}">`).join('')}</datalist>
+              <div class="ftz-trade-handle">Partner</div>
+            </div>
+          </div>
+          <label class="ftz-trade-label">Request Onyx</label>
+          <div class="ftz-trade-onyx-row">
+            <img src="/Onyx.png" style="width:14px;height:14px;">
+            <input id="trade-their-onyx" type="number" min="0" placeholder="0" oninput="_tradeUpdateTotals()">
+            <span class="ftz-trade-bal">From partner</span>
+          </div>
+          <label class="ftz-trade-label">Request items</label>
+          <textarea id="trade-their-items" class="ftz-trade-textarea" rows="3" placeholder="Describe which items you want (partner can counter-offer)."></textarea>
+        </div>
+      </div>
+      <div class="ftz-trade-summary">
+        <div class="ftz-trade-net"><span>Your net (after 30% tax):</span><strong id="trade-net-me">0 Onyx</strong></div>
+        <div class="ftz-trade-net"><span>Partner net (after 30% tax):</span><strong id="trade-net-them">0 Onyx</strong></div>
+      </div>
       <div class="gift-actions">
         <button class="btn-b" onclick="closeSimpleModal()">Cancel</button>
-        <button class="btn-a" onclick="sendTradeOffer()">Send Offer</button>
+        <button class="btn-a" onclick="sendTradeOffer()">${_svgIcon('send',12)} Send Offer</button>
       </div>
     </div>`);
+  setTimeout(() => _tradeUpdateTotals(), 30);
+}
+
+function _tradeUpdateTotals() {
+  const myO = parseInt(document.getElementById('trade-my-onyx')?.value||'0', 10) || 0;
+  const thO = parseInt(document.getElementById('trade-their-onyx')?.value||'0', 10) || 0;
+  const netMe = Math.round((thO - myO) * 0.7);
+  const netThem = Math.round((myO - thO) * 0.7);
+  const meEl = document.getElementById('trade-net-me');
+  const themEl = document.getElementById('trade-net-them');
+  if (meEl) { meEl.textContent = (netMe>=0?'+':'') + netMe.toLocaleString() + ' Onyx'; meEl.style.color = netMe>0?'var(--green)':netMe<0?'var(--red)':'var(--muted)'; }
+  if (themEl) { themEl.textContent = (netThem>=0?'+':'') + netThem.toLocaleString() + ' Onyx'; themEl.style.color = netThem>0?'var(--green)':netThem<0?'var(--red)':'var(--muted)'; }
 }
 async function sendTradeOffer() {
   const partner = (document.getElementById('trade-partner')?.value||'').trim();
@@ -36491,23 +36634,53 @@ async function promptListResale(itemId) {
   }, String(item.price || 100));
 }
 async function openMarketplace() {
-  const listings = await getMarketplaceListings().catch(()=>[]);
-  const avail = listings.filter(l => !l.sold);
-  openSimpleModal(`
-    <div class="mkt-modal">
-      <div class="wl-hdr"><h3>${_svgIcon('tag',14)} Marketplace — Rare Resales</h3></div>
-      <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px;">Only rare/seasonal items may be resold. All sales taxed 30%.</div>
-      <div class="wl-items" style="max-height:60vh;overflow:auto;">
-        ${avail.length ? avail.map(l => {
-          const it = _getShopItemById(l.item_id) || {};
-          return `<div class="wl-card">
-            <div class="wl-name">${escapeHTML(it.name || l.item_id)} <span style="font-weight:500;color:var(--muted);font-size:11px;">by @${escapeHTML(l.seller||'?')}</span></div>
-            <div class="wl-price">${l.price} ⬡</div>
-            <button class="wl-gift-btn" onclick="buyListing('${escapeHTML(l.id)}').then(()=>{closeSimpleModal();openMarketplace();});">Buy</button>
-          </div>`;
-        }).join('') : '<p style="text-align:center;color:var(--muted);padding:24px;">No active listings.</p>'}
-      </div>
-    </div>`);
+  // Marketplace is now a subtab of the shop
+  try {
+    showView('atelier');
+    setTimeout(() => {
+      if (typeof switchAtelierTab === 'function') switchAtelierTab('shop', document.getElementById('atnav-shop'));
+      setTimeout(() => { setShopTab('marketplace'); }, 60);
+    }, 60);
+  } catch(e) { console.warn('[Marketplace] open failed', e); }
+}
+
+async function _loadShopMarketplace() {
+  const grid = document.getElementById('shop-marketplace-grid');
+  if (!grid) return;
+  try {
+    const listings = await getMarketplaceListings().catch(()=>[]);
+    const avail = listings.filter(l => !l.sold);
+    if (!avail.length) {
+      grid.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);font-size:12.5px;grid-column:1/-1;">
+        <div style="opacity:.4;margin-bottom:10px;">${_svgIcon('tag',32)}</div>
+        <div style="font-weight:700;margin-bottom:6px;">No active listings</div>
+        <div style="font-size:11.5px;opacity:.8;">Be the first to list a rare or seasonal item for resale.</div>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = avail.map(l => {
+      const it = _getShopItemById(l.item_id) || {};
+      const rarity = it.rare ? 'Rare' : it.seasonal ? 'Seasonal' : 'Item';
+      const rarityColor = it.rare ? 'rgba(255,249,62,.85)' : 'rgba(167,139,250,.85)';
+      return `<div style="padding:14px;background:var(--panel);border:1.5px solid var(--border);border-radius:14px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:${rarityColor};">${rarity}</div>
+          <div style="font-size:10.5px;color:var(--muted);">by @${escapeHTML(l.seller||'?')}</div>
+        </div>
+        <div style="font-size:14px;font-weight:800;color:#fff;">${escapeHTML(it.name || l.item_id)}</div>
+        ${it.desc ? `<div style="font-size:11.5px;color:var(--muted-light);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHTML(it.desc)}</div>` : ''}
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px;border-top:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:5px;font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--accent);">
+            <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;"> ${l.price}
+          </div>
+          <button onclick="buyListing('${escapeHTML(l.id)}').then(()=>{ _loadShopMarketplace(); })" style="padding:8px 16px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all .15s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">Buy</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.warn('[Marketplace] load failed', e);
+    grid.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);grid-column:1/-1;">Couldn't load marketplace.</div>`;
+  }
 }
 async function listForResale(itemId, askPrice) {
   const item = _getShopItemById(itemId);

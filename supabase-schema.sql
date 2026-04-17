@@ -328,7 +328,10 @@ CREATE TABLE IF NOT EXISTS forum_threads (
   last_reply_at BIGINT,
   pinned BOOLEAN DEFAULT false,
   locked BOOLEAN DEFAULT false,
-  likes JSONB DEFAULT '[]'::jsonb
+  likes JSONB DEFAULT '[]'::jsonb,
+  dislikes JSONB DEFAULT '[]'::jsonb,
+  edited_at BIGINT,
+  edit_history JSONB DEFAULT '[]'::jsonb
 );
 CREATE INDEX IF NOT EXISTS idx_forum_threads_cat ON forum_threads(category);
 CREATE INDEX IF NOT EXISTS idx_forum_threads_author ON forum_threads(author);
@@ -341,12 +344,23 @@ CREATE TABLE IF NOT EXISTS forum_posts (
   image TEXT,
   created_at BIGINT,
   edited BOOLEAN DEFAULT false,
+  edited_at BIGINT,
+  edit_history JSONB DEFAULT '[]'::jsonb,
   likes JSONB DEFAULT '[]'::jsonb,
+  dislikes JSONB DEFAULT '[]'::jsonb,
   quote_id TEXT,
   quote_author TEXT,
   quote_text TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_forum_posts_thread ON forum_posts(thread_id);
+
+-- Backfill for existing installs: add missing columns if the tables pre-date this schema
+ALTER TABLE forum_threads ADD COLUMN IF NOT EXISTS dislikes JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE forum_threads ADD COLUMN IF NOT EXISTS edited_at BIGINT;
+ALTER TABLE forum_threads ADD COLUMN IF NOT EXISTS edit_history JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE forum_posts   ADD COLUMN IF NOT EXISTS dislikes JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE forum_posts   ADD COLUMN IF NOT EXISTS edited_at BIGINT;
+ALTER TABLE forum_posts   ADD COLUMN IF NOT EXISTS edit_history JSONB DEFAULT '[]'::jsonb;
 
 -- ── Enable Realtime for tables that need live updates ──
 -- Use DO block to safely add tables that may already be members

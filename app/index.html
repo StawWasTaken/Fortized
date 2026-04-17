@@ -425,12 +425,12 @@ window._cdnReady.then(() => {
             </div>
             <!-- 2) Who's Online Today — online friends, no cards, just clean chips -->
             <div class="realm-section">
-              <div class="realm-section-title">Who's Online Today? <a href="#" onclick="event.preventDefault();showView('friends')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">View all friends ›</a></div>
+              <div class="realm-section-title">Who's Online Today? <a href="#" onclick="event.preventDefault();showView('dms');setTimeout(()=>{try{showDMFriendsHome();}catch(_){}},80);" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">View all friends ›</a></div>
               <div id="home-friends-today" class="home-friends-online"></div>
             </div>
             <!-- 3) What are people buying — rectangular CARD with 6 item cards inside -->
             <div class="realm-section">
-              <div class="realm-section-title">What are People Buying? <a href="#" onclick="event.preventDefault();showView('fortshop')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Fortshop ›</a></div>
+              <div class="realm-section-title">What are People Buying? <a href="#" onclick="event.preventDefault();_openFortshop()" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Fortshop ›</a></div>
               <div id="home-trending-items" class="home-buying-card"></div>
             </div>
             <!-- 4) What's happening — 4 top forum posts -->
@@ -483,19 +483,13 @@ window._cdnReady.then(() => {
                 </div>
               </div>
             </div>
-            <!-- Bastions (kept but lower priority) -->
-            <div class="realm-section">
-              <div class="realm-section-title">Your Bastions</div>
-              <div class="realm-scroll" id="realm-bastions"></div>
-            </div>
           </div>
         </div>
 
-        <!-- Active Now right sidebar (original) -->
+        <!-- Active Now right sidebar (no ad) -->
         <div class="active-now-sidebar" id="home-active-now">
           <div class="active-now-header">Active Now</div>
           <div class="active-now-list" id="home-active-now-list"></div>
-          <div id="home-sidebar-ad" style="margin-top:12px;"></div>
         </div>
       </div>
     </div>

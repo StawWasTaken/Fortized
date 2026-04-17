@@ -1918,6 +1918,12 @@ const FortizedSocial = (() => {
       }).filter(a => a && new Date(a.expiresAt) > new Date());
     } catch(e) { console.warn('[Ads] getGlobalAds failed:', e?.message); return []; }
   }
+  async function getTakenDownAdIds() {
+    try {
+      const { data } = await sb.from('global_ads').select('id').in('status', ['taken_down','cancelled']);
+      return new Set((data||[]).map(r => r.id));
+    } catch(e) { return new Set(); }
+  }
   async function upsertGlobalAd(ad) {
     if (!ad?.id) return;
     try {
@@ -1963,8 +1969,19 @@ const FortizedSocial = (() => {
   }
   async function updateForumThread(threadId, updates) {
     try {
-      await sb.from('forum_threads').update(updates).eq('id', threadId);
-    } catch(e) { console.warn('[Forum] updateForumThread failed:', e?.message); }
+      const { error } = await sb.from('forum_threads').update(updates).eq('id', threadId);
+      if (error) {
+        const msg = (error.message || '') + '';
+        const m = msg.match(/column\s+"?(\w+)"?\s+of\s+relation|Could not find the '(\w+)' column/i);
+        const unknown = m && (m[1] || m[2]);
+        if (unknown && (unknown in updates)) {
+          const retry = { ...updates }; delete retry[unknown];
+          console.warn('[Forum] updateForumThread: column "' + unknown + '" missing, retrying without it. Run supabase-schema.sql to enable.');
+          const r = await sb.from('forum_threads').update(retry).eq('id', threadId);
+          if (r.error) throw r.error;
+        } else { throw error; }
+      }
+    } catch(e) { console.warn('[Forum] updateForumThread failed:', e?.message); throw e; }
   }
   async function deleteForumThread(threadId) {
     try {
@@ -1987,8 +2004,18 @@ const FortizedSocial = (() => {
   async function updateForumPost(postId, updates) {
     try {
       const { error } = await sb.from('forum_posts').update(updates).eq('id', postId);
-      if (error) throw error;
-    } catch(e) { console.warn('[Forum] updateForumPost failed:', e?.message); }
+      if (error) {
+        const msg = (error.message || '') + '';
+        const m = msg.match(/column\s+"?(\w+)"?\s+of\s+relation|Could not find the '(\w+)' column/i);
+        const unknown = m && (m[1] || m[2]);
+        if (unknown && (unknown in updates)) {
+          const retry = { ...updates }; delete retry[unknown];
+          console.warn('[Forum] updateForumPost: column "' + unknown + '" missing, retrying without it. Run supabase-schema.sql to enable.');
+          const r = await sb.from('forum_posts').update(retry).eq('id', postId);
+          if (r.error) throw r.error;
+        } else { throw error; }
+      }
+    } catch(e) { console.warn('[Forum] updateForumPost failed:', e?.message); throw e; }
   }
   async function deleteForumPost(postId) {
     try {
@@ -2027,7 +2054,7 @@ const FortizedSocial = (() => {
     getDMMessages, sendDMMessage, editMessage, deleteMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,
     getGlobalBastions, saveGlobalBastion, getGlobalBastion, deleteGlobalBastion, clearBastionCache,
-    getGlobalAds, upsertGlobalAd, removeGlobalAd,
+    getGlobalAds, upsertGlobalAd, removeGlobalAd, getTakenDownAdIds,
     getAnnouncements, saveAnnouncements,
     getBastionMembers, addBastionMember, removeBastionMember,
     getInvite, saveInvite, incrementInviteUses,

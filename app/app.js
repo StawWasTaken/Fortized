@@ -1661,7 +1661,7 @@ function updateSidebar(v) {
   scroll.innerHTML = '';
 
   // Views that use the secondary sidebar
-  const ctxViews = ['home','dms','friends','discover','atelier','bastion'];
+  const ctxViews = ['home','dms','friends','discover','atelier','bastion','forum'];
   const ctxVisible = ctxViews.includes(v);
   if (ctx) ctx.style.display = ctxVisible ? 'flex' : 'none';
   updateUserbarWidth();
@@ -1696,6 +1696,13 @@ function updateSidebar(v) {
     if (hdrTitle) hdrTitle.textContent = 'Atelier';
     if (hdrActs) hdrActs.innerHTML = '';
     renderAtelierSidebar(scroll);
+  } else if (v==='forum') {
+    if (hdr) hdr.style.display = '';
+    if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
+    if (hdrActs) hdrActs.innerHTML = `
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" class="sidebar-hdr-btn" title="New DM">${ftzIcon('pencil','14')}</button>
+      <button onclick="openModal('modal-add-friend')" class="sidebar-hdr-btn" title="Add Friend">${ftzIcon('addUser','14')}</button>`;
+    renderDMSidebar(scroll);
   } else if (v==='bastion') {
     // Header hidden — bastion sidebar renders its own hero banner
     renderBastionSidebar(scroll);
@@ -2699,6 +2706,8 @@ function _pickWeightedAd(ads, ratioFilter) {
     if (role === 'superadmin') w = 5;
     else if (role === 'admin') w = 3;
     else if (a.ownerVerified) w = 2;
+    const boost = Math.max(0.1, Math.min(10, Number(a.adminBoost) || 1));
+    w = w * boost;
     return { ad: a, weight: w };
   });
   const total = weighted.reduce((s, w) => s + w.weight, 0);
@@ -16268,7 +16277,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   // ── Old tab IDs redirect to new consolidated tabs ──
   else if (tab === 'reports' || tab === 'bans' || tab === 'suspensions' || tab === 'nsfw_queue') { await _loadAdminModeration(main, tab); return; }
   else if (tab === 'users' || tab === 'all_users') { await _loadAdminMembers(main, tab); return; }
-  else if (tab === 'bastions' || tab === 'economy' || tab === 'broadcast' || tab === 'scheduled_actions' || tab === 'audit' || tab === 'network_monitor' || tab === 'analytics' || tab === 'backup_restore' || tab === 'settings' || tab === 'staff') { await _loadAdminPlatform(main, tab); return; }
+  else if (tab === 'bastions' || tab === 'economy' || tab === 'broadcast' || tab === 'scheduled_actions' || tab === 'audit' || tab === 'network_monitor' || tab === 'analytics' || tab === 'backup_restore' || tab === 'settings' || tab === 'staff' || tab === 'ads') { await _loadAdminPlatform(main, tab); return; }
   else if (tab === 'support_tickets') { await _loadAdminFeedback(main, tab); return; }
   // ── Legacy tab rendering (called by consolidated tabs) ──
   else if (tab === '_reports') {
@@ -16594,6 +16603,10 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         </div>`).join('')}
       </div>`:''}
     </div>`;
+  }
+  else if (tab === '_ads' && isAdmin()) {
+    await _loadAdminAds(main);
+    return;
   }
   else if (tab === '_bastions') {
     main.innerHTML = `<div style="padding:28px 32px;">
@@ -17244,6 +17257,7 @@ async function _loadAdminPlatform(main, subTab) {
     ...(isSuperAdmin()?[{id:'settings', label:'Configuration'}]:[]),
     ...(isAdmin()?[{id:'economy', label:'Economy'}]:[]),
     {id:'bastions', label:'Bastions'},
+    ...(isAdmin()?[{id:'ads', label:'Ads'}]:[]),
     ...(isSuperAdmin()?[{id:'broadcast', label:'Broadcast'}]:[]),
     ...(isAdmin()?[{id:'audit', label:'Activity Log'}]:[]),
     ...(isAdmin()?[{id:'scheduled_actions', label:'Scheduled'}]:[]),
@@ -17258,6 +17272,162 @@ async function _loadAdminPlatform(main, subTab) {
   localStorage.setItem('ftz_audit_log', JSON.stringify(auditLog));
   main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'platform') + '<div id="adm-sub-content"></div></div>';
   await _loadAdminPage('_' + active);
+}
+
+// ─────────── ADS MANAGEMENT (ADMIN) ───────────
+let _adAdminRefreshTimer = null;
+async function _loadAdminAds(main) {
+  if (!main) return;
+  if (_adAdminRefreshTimer) { clearInterval(_adAdminRefreshTimer); _adAdminRefreshTimer = null; }
+  await _renderAdminAds(main);
+  _adAdminRefreshTimer = setInterval(() => {
+    if (adminTab !== 'ads' || !document.getElementById('adm-ads-table')) {
+      clearInterval(_adAdminRefreshTimer); _adAdminRefreshTimer = null; return;
+    }
+    _renderAdminAds(main, true).catch(()=>{});
+  }, 5000);
+}
+
+async function _renderAdminAds(main, silent) {
+  if (!main) return;
+  let ads = [];
+  try { ads = await FortizedSocial.getGlobalAds(); } catch(e) {}
+  // Sort by effective weight (highest priority first)
+  const withMeta = ads.map(a => {
+    const role = getStaffRole(a.owner || '');
+    let baseW = 1;
+    if (role === 'superadmin') baseW = 5;
+    else if (role === 'admin') baseW = 3;
+    else if (a.ownerVerified) baseW = 2;
+    const boost = Math.max(0.1, Math.min(10, Number(a.adminBoost) || 1));
+    const effW = baseW * boost;
+    return { ad: a, role, baseW, boost, effW };
+  }).sort((a, b) => b.effW - a.effW);
+
+  const bannerCount = ads.filter(a => (a.ratio || 'banner') === 'banner').length;
+  const rectCount = ads.filter(a => a.ratio === 'rectangle').length;
+  const totalWeight = withMeta.reduce((s, m) => s + m.effW, 0);
+
+  const html = `
+    <div class="adm-ads-wrap">
+      <div class="adm-ads-header">
+        <div>
+          <h2 class="adm-ads-title">Ad Emplacements</h2>
+          <p class="adm-ads-sub">Live view of every ad in rotation. Priority weight determines how often an ad shows within its format.</p>
+        </div>
+        <div class="adm-ads-stats">
+          <div class="adm-ads-stat"><div class="adm-ads-stat-num">${ads.length}</div><div class="adm-ads-stat-label">Active</div></div>
+          <div class="adm-ads-stat"><div class="adm-ads-stat-num">${bannerCount}</div><div class="adm-ads-stat-label">Banner</div></div>
+          <div class="adm-ads-stat"><div class="adm-ads-stat-num">${rectCount}</div><div class="adm-ads-stat-label">Rectangle</div></div>
+          <div class="adm-ads-stat"><div class="adm-ads-stat-num">${totalWeight.toFixed(1)}</div><div class="adm-ads-stat-label">Total weight</div></div>
+        </div>
+      </div>
+      <div class="adm-ads-legend">
+        <span class="adm-ads-dot" style="background:#fff93e"></span> Superadmin (×5)
+        <span class="adm-ads-dot" style="background:#60a5fa"></span> Admin (×3)
+        <span class="adm-ads-dot" style="background:#4ecdc4"></span> Verified (×2)
+        <span class="adm-ads-dot" style="background:#9ca3af"></span> Regular (×1)
+        <span style="margin-left:auto;color:var(--muted);font-size:11px;">Auto-refresh · 5s · rotation every 75s</span>
+      </div>
+      ${withMeta.length ? `<div class="adm-ads-table" id="adm-ads-table">
+        ${withMeta.map(m => _renderAdminAdRow(m, totalWeight)).join('')}
+      </div>` : `<div class="adm-ads-empty">No active ads right now.</div>`}
+    </div>
+  `;
+  if (silent) {
+    const existing = main.querySelector('.adm-ads-wrap');
+    if (existing) { existing.outerHTML = html; return; }
+  }
+  main.innerHTML = html;
+}
+
+function _renderAdminAdRow(m, totalWeight) {
+  const ad = m.ad;
+  const share = totalWeight > 0 ? ((m.effW / totalWeight) * 100) : 0;
+  const ratio = ad.ratio || 'banner';
+  const img = ad.image || ad.bastionIcon || '/Fortized banner.png';
+  const target = ad.customLink || (ad.bastionName ? `@${ad.bastionName}` : (ad.bastionId || '—'));
+  const roleColor = m.role === 'superadmin' ? '#fff93e' : m.role === 'admin' ? '#60a5fa' : ad.ownerVerified ? '#4ecdc4' : '#9ca3af';
+  const expires = ad.expiresAt ? new Date(ad.expiresAt) : null;
+  const expiresLabel = expires ? expires.toLocaleDateString() : '—';
+  const adId = ad.id || '';
+  return `
+    <div class="adm-ads-row" data-ad-id="${escapeHTML(adId)}">
+      <div class="adm-ads-preview"><img src="${escapeHTML(img)}" alt="" onerror="this.style.opacity='.2';this.src='/Fortized banner.png';"></div>
+      <div class="adm-ads-info">
+        <div class="adm-ads-row-title">${escapeHTML(ad.title || ad.bastionName || 'Untitled ad')}</div>
+        <div class="adm-ads-row-meta">
+          <span class="adm-ads-ratio adm-ads-ratio--${ratio}">${ratio === 'rectangle' ? 'Rectangle 300×250' : 'Banner 728×90'}</span>
+          <span class="adm-ads-owner" style="color:${roleColor};">${escapeHTML(ad.owner || 'unknown')}${m.role !== 'user' ? ` · ${m.role}` : ''}${ad.ownerVerified && m.role === 'user' ? ' · verified' : ''}</span>
+        </div>
+        <div class="adm-ads-row-target">→ ${escapeHTML(target)}</div>
+      </div>
+      <div class="adm-ads-weight">
+        <div class="adm-ads-weight-num">${m.effW.toFixed(2)}</div>
+        <div class="adm-ads-weight-label">base ×${m.baseW} · boost ×${m.boost.toFixed(2)}</div>
+        <div class="adm-ads-share-bar"><div class="adm-ads-share-fill" style="width:${share.toFixed(1)}%;background:${roleColor};"></div></div>
+        <div class="adm-ads-share-label">${share.toFixed(1)}% of rotation</div>
+      </div>
+      <div class="adm-ads-expires">
+        <div class="adm-ads-expires-label">Expires</div>
+        <div class="adm-ads-expires-date">${expiresLabel}</div>
+      </div>
+      <div class="adm-ads-actions">
+        <button class="adm-ads-btn adm-ads-btn--boost" onclick="_adminAdSetBoost('${escapeHTML(adId)}')" title="Set priority boost">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Boost
+        </button>
+        <button class="adm-ads-btn adm-ads-btn--down" onclick="_adminAdTakedown('${escapeHTML(adId)}')" title="Take down this ad">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          Take down
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+async function _adminAdSetBoost(adId) {
+  if (!adId) return;
+  showCustomInput('Set priority boost', 'Enter a multiplier between 0.1 and 10 (1 = normal, 2 = show twice as often, 0.5 = show half as often):', async (val) => {
+    const num = parseFloat(val);
+    if (isNaN(num) || num < 0.1 || num > 10) { toast('Boost must be between 0.1 and 10', 'error'); return; }
+    try {
+      const ads = await FortizedSocial.getGlobalAds();
+      const ad = ads.find(a => a.id === adId);
+      if (!ad) { toast('Ad not found', 'error'); return; }
+      ad.adminBoost = num;
+      ad.adminBoostBy = CU?.username;
+      ad.adminBoostAt = new Date().toISOString();
+      await FortizedSocial.upsertGlobalAd(ad);
+      logAudit('ad_boost', adId, `boost=${num} owner=${ad.owner}`);
+      toast(`Boost set to ×${num.toFixed(2)}`, 'success');
+      const main = document.getElementById('adm-sub-content') || document.getElementById('adm-content');
+      if (main) await _renderAdminAds(main);
+    } catch(e) { console.error('[AdAdmin] boost failed', e); toast('Failed to set boost', 'error'); }
+  }, '1');
+}
+
+async function _adminAdTakedown(adId) {
+  if (!adId) return;
+  showCustomInput('Take down ad', 'Reason for takedown (shown in audit log):', async (reason) => {
+    if (!reason) { toast('Reason required', 'error'); return; }
+    try {
+      const ads = await FortizedSocial.getGlobalAds();
+      const ad = ads.find(a => a.id === adId);
+      if (ad) {
+        ad.status = 'cancelled';
+        ad.takedownBy = CU?.username;
+        ad.takedownReason = reason;
+        ad.takedownAt = new Date().toISOString();
+        await FortizedSocial.upsertGlobalAd(ad);
+      }
+      await FortizedSocial.removeGlobalAd(adId);
+      logAudit('ad_takedown', adId, `owner=${ad?.owner||'?'} reason=${reason}`);
+      toast('Ad taken down', 'success');
+      const main = document.getElementById('adm-sub-content') || document.getElementById('adm-content');
+      if (main) await _renderAdminAds(main);
+    } catch(e) { console.error('[AdAdmin] takedown failed', e); toast('Failed to take down ad', 'error'); }
+  }, '');
 }
 
 async function _loadAdminFeedback(main, subTab) {
@@ -28879,12 +29049,18 @@ function _crDeleteBot(idx) {
 
 // ── Forum System ──────────────────────────────────────────
 const _forumSvg = {
-  megaphone: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>',
-  chat: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-  bug: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="m19 7-3 2"/><path d="m5 7 3 2"/><path d="m19 19-3-2"/><path d="m5 19 3-2"/><path d="M20 13h-4"/><path d="M4 13h4"/><path d="m10 4 1 2"/><path d="m14 4-1 2"/></svg>',
-  lightbulb: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>',
-  sparkles: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>',
-  offtopic: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg>',
+  // svgrepo 348575 - announcement (filled megaphone with sound waves)
+  megaphone: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21 4.3a1 1 0 0 0-1.4-.92L9 7.3H5a3 3 0 0 0-3 3v2.4a3 3 0 0 0 3 3h.4l1.9 4.72a1 1 0 0 0 1.85-.75L7.47 15.7H9l10.6 3.92A1 1 0 0 0 21 18.7V4.3zm-2 13L10 14V9l9-3.32v11.62z"/><path d="M22.6 9.42a1 1 0 0 0-1.42 1.42 1.5 1.5 0 0 1 0 2.12 1 1 0 0 0 1.42 1.42 3.5 3.5 0 0 0 0-4.96z"/></svg>',
+  // svgrepo 438449 - discussion (two overlapping speech bubbles)
+  chat: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M15 3H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h.5v2.8c0 .85 1 1.3 1.65.72L9.7 15H15a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" opacity=".55"/><path d="M20 8h-2v5a3 3 0 0 1-3 3H9v1a2 2 0 0 0 2 2h3.3l3.55 3.52c.65.58 1.65.13 1.65-.72V19h.5a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2z"/></svg>',
+  // svgrepo 525705 - bug (filled bug with legs)
+  bug: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 8h-2.81a5.99 5.99 0 0 0-1.82-1.96l1.68-1.68a1 1 0 0 0-1.42-1.42l-2.02 2.03a5.97 5.97 0 0 0-3.22 0L8.37 2.94a1 1 0 1 0-1.42 1.42l1.68 1.68A5.99 5.99 0 0 0 6.81 8H4a1 1 0 0 0 0 2h2.09A6 6 0 0 0 6 11v1H4a1 1 0 0 0 0 2h2v1a6 6 0 0 0 .09 1H4a1 1 0 0 0 0 2h2.81a6 6 0 0 0 10.38 0H20a1 1 0 0 0 0-2h-2.09A6 6 0 0 0 18 15v-1h2a1 1 0 0 0 0-2h-2v-1a6 6 0 0 0-.09-1H20a1 1 0 0 0 0-2zm-7 10.92V11a1 1 0 0 0-2 0v7.92A4 4 0 0 1 8 15v-4a4 4 0 0 1 8 0v4a4 4 0 0 1-3 3.92z"/></svg>',
+  // svgrepo 465291 - idea (lightbulb with rays)
+  lightbulb: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-4 12.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26A7 7 0 0 0 12 2zm2 15h-4v-1.43l.57-.34A5 5 0 1 1 17 11a4.97 4.97 0 0 1-3.57 4.81l-.43.25V17z"/><path d="M10 20h4a1 1 0 0 1 0 2h-4a1 1 0 0 1 0-2zM2.5 11h-1a1 1 0 1 1 0-2h1a1 1 0 1 1 0 2zm20 0h-1a1 1 0 1 1 0-2h1a1 1 0 1 1 0 2zm-18.88-6.3a1 1 0 0 1 1.42-1.4l.7.7a1 1 0 0 1-1.4 1.42l-.72-.72zm14.84 0 .7-.7a1 1 0 0 1 1.42 1.4l-.7.72a1 1 0 0 1-1.42-1.42zM11 3.5v-1a1 1 0 1 1 2 0v1a1 1 0 1 1-2 0z"/></svg>',
+  // svgrepo 445043-esque help/question bubble (used for showcase→swapped to sparkle)
+  sparkles: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.39 6.96L22 10.8l-5.76 4.62L18.18 23 12 18.56 5.82 23l1.94-7.58L2 10.8l7.61-1.84L12 2z"/></svg>',
+  // svgrepo 445043 - comment-help-solid (speech bubble with question mark)
+  offtopic: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h3v3.3a.7.7 0 0 0 1.17.52L13 19h7a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-8 14a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4zm1.4-5.3c-.27.16-.4.3-.4.58V12a1 1 0 0 1-2 0v-.72c0-1.07.62-1.76 1.4-2.22.5-.3.6-.5.6-.8a1.4 1.4 0 1 0-2.8 0 1 1 0 0 1-2 0 3.4 3.4 0 0 1 6.8 0c0 1.2-.72 2.03-1.6 2.44z"/></svg>',
 };
 const FORUM_CATEGORIES = [
   { id: 'announcements', name: 'Announcements', icon: _forumSvg.megaphone, color: '#ff6b6b', desc: 'Official announcements from Fortized', group: 'announcements' },

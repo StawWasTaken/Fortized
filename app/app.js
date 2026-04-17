@@ -1446,6 +1446,11 @@ const _ftzRouter = {
   parseRoute: function() {
     const path = window.location.pathname.replace(/\/+$/, '') || '/app';
     const search = window.location.search;
+    // Vanity URL: /b/:slug → bastion lookup
+    const vanityMatch = path.match(/^\/b\/([a-zA-Z0-9_-]+)$/);
+    if (vanityMatch) {
+      return { view: 'bastion', vanity: vanityMatch[1], bastionId: null, roomId: null };
+    }
     const view = this.routes[path] || this.routes[path + '/'] || 'home';
     let bastionId = null, roomId = null;
     if (view === 'bastion' && search) {
@@ -1478,8 +1483,19 @@ const _ftzRouter = {
     history.replaceState({ view, params: params || {} }, '', url);
   },
   // Navigate to initial view based on URL or _initialView (called after init)
-  applyInitialRoute: function() {
-    const { view: urlView, bastionId, roomId } = this.parseRoute();
+  applyInitialRoute: async function() {
+    const parsed = this.parseRoute();
+    const { view: urlView, vanity, roomId } = parsed;
+    let { bastionId } = parsed;
+    // Vanity URL resolution: look up bastion by vanity slug
+    if (vanity) {
+      try {
+        const all = await FortizedSocial.getGlobalBastions();
+        const match = (all || []).find(b => (b.vanity || '').toLowerCase() === vanity.toLowerCase());
+        if (match) bastionId = match.globalId;
+      } catch(_){}
+      if (!bastionId) { showView('home'); return; }
+    }
     // Use _initialView from the subpage HTML if the URL is just /app/ or /app
     const view = (urlView === 'home' && window._initialView && window._initialView !== 'home') ? window._initialView : urlView;
     if (view === 'bastion' && bastionId) {
@@ -2700,18 +2716,73 @@ function renderHomePanel() {
     }
   }
 
-  // Render home ads
+  // Render home ads (with placeholder fallback when empty)
   _renderHomeAds();
 
-  // Trending forum posts (replacing friend activity)
-  setTimeout(_renderTrendingForumPosts, 100);
+  // Friends online today (new main-column horizontal strip)
+  setTimeout(_renderHomeFriendsToday, 100);
 
-  // Render sidebar: friends online today + trending fortshop items
-  setTimeout(() => renderActiveNowSidebar('home-active-now-list'), 150);
-  setTimeout(_renderTrendingItems, 180);
+  // Trending fortshop items (new main-column horizontal strip)
+  setTimeout(_renderTrendingItems, 140);
+
+  // Trending forum posts (replacing Friend Activity)
+  setTimeout(_renderTrendingForumPosts, 170);
+
+  // Keep the legacy Active Now right sidebar as-is
+  setTimeout(() => renderActiveNowSidebar('home-active-now-list'), 200);
 
   // Check for new announcements
   setTimeout(_checkForAnnouncements, 500);
+}
+
+// ── Home Friends today (horizontal strip in main column) ──
+async function _renderHomeFriendsToday() {
+  const el = document.getElementById('home-friends-today');
+  if (!el) return;
+  const friends = CU?.friends || [];
+  if (!friends.length) {
+    el.innerHTML = `<div class="home-empty-strip">
+      <div style="font-size:12.5px;color:var(--muted);">No friends yet — add some to see who's around today.</div>
+      <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:11px;padding:6px 14px;">+ Add Friend</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML = '<div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:8px 6px;"></div>';
+  try {
+    const presence = await FortizedSocial.queryPresence(friends);
+    const DAY = 24 * 60 * 60 * 1000;
+    const cutoff = Date.now() - DAY;
+    // "Online today" = currently online/away/dnd OR last-seen within 24h
+    const active = friends.filter(u => {
+      const p = presence?.[u]; if (!p) return false;
+      const isUp = p.status === 'online' || p.status === 'away' || p.status === 'dnd';
+      const lastSeen = p.lastSeen || p.last_seen || 0;
+      return isUp || lastSeen > cutoff;
+    }).slice(0, 12);
+    if (!active.length) {
+      el.innerHTML = `<div class="home-empty-strip" style="font-size:12.5px;color:var(--muted);">Get right back in the action — no friends online today.</div>`;
+      return;
+    }
+    // Fetch user cards
+    const users = await Promise.all(active.map(u => FortizedSocial.getUserByName(u).catch(() => null)));
+    el.innerHTML = active.map((u, i) => {
+      const ud = users[i] || {};
+      const pfp = ud.pfp || _pfpCache[u] || _defaultPfpUrl(u);
+      const dn = ud.displayName || u;
+      const status = presence?.[u]?.status || 'offline';
+      const statusColor = (typeof FtzStatus !== 'undefined') ? FtzStatus.color(status) : (status==='online'?'#3ecf6e':status==='away'?'#f59e0b':status==='dnd'?'#f87171':'rgba(255,255,255,.15)');
+      return `<div class="hft-card" onclick="openDMWith('${escapeHTML(u)}')">
+        <div class="hft-av-wrap">
+          <img class="hft-av" src="${escapeHTML(pfp)}" onerror="this.src='${_defaultPfpUrl(u)}'">
+          <span class="hft-dot" style="background:${statusColor};"></span>
+        </div>
+        <div class="hft-name">${escapeHTML(dn)}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.warn('[Home] Friends today failed:', e);
+    el.innerHTML = `<div class="home-empty-strip" style="font-size:12.5px;color:var(--muted);">Unable to load presence right now.</div>`;
+  }
 }
 
 // ── Trending forum posts (top-3 by upvotes / reactions) ──
@@ -2762,41 +2833,38 @@ async function _renderTrendingForumPosts() {
   }
 }
 
-// ── Trending fortshop items ──
+// ── Trending fortshop items (horizontal strip in main column) ──
 async function _renderTrendingItems() {
   const el = document.getElementById('home-trending-items');
   if (!el) return;
-  el.innerHTML = '<div style="padding:10px 12px;color:var(--muted);font-size:11px;">Loading…</div>';
+  el.innerHTML = '<div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:8px 6px;"></div>';
   try {
-    // Try to pull fortshop items; gracefully degrade if API missing
     let items = [];
     try {
       if (typeof FortizedSocial.getFortshopTrending === 'function') {
-        items = await FortizedSocial.getFortshopTrending(6);
+        items = await FortizedSocial.getFortshopTrending(8);
       } else if (typeof FortizedSocial.getFortshopItems === 'function') {
-        items = await FortizedSocial.getFortshopItems({ sort: 'trending', limit: 6 });
+        items = await FortizedSocial.getFortshopItems({ sort: 'trending', limit: 8 });
       } else if (typeof getFortshopTrendingItems === 'function') {
-        items = await getFortshopTrendingItems(6);
+        items = await getFortshopTrendingItems(8);
       }
     } catch(e) { /* fall through */ }
     if (!items || !items.length) {
-      el.innerHTML = `<div class="trending-items-empty">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">No trending items right now.</div>
-        <button class="btn-a" onclick="showView('fortshop')" style="font-size:10.5px;padding:5px 10px;">Open Fortshop</button>
+      el.innerHTML = `<div class="home-empty-strip">
+        <div style="font-size:12.5px;color:var(--muted);">No trending items right now — check the Fortshop.</div>
+        <button class="btn-a" onclick="showView('fortshop')" style="font-size:11px;padding:6px 14px;">Open Fortshop</button>
       </div>`;
       return;
     }
-    el.innerHTML = items.slice(0,6).map(it => `
-      <div class="trending-item" onclick="showView('fortshop')" title="${escapeHTML(it.name || '')}">
-        <div class="trending-item-img"><img src="${escapeHTML(it.thumb || it.image || '/fortshop_placeholder.png')}" onerror="this.style.display='none'"></div>
-        <div class="trending-item-meta">
-          <div class="trending-item-name">${escapeHTML(it.name || 'Item')}</div>
-          <div class="trending-item-price">${it.price != null ? (it.price + ' Onyx') : 'Free'}</div>
-        </div>
+    el.innerHTML = items.slice(0,8).map(it => `
+      <div class="hti-card" onclick="showView('fortshop')" title="${escapeHTML(it.name || '')}">
+        <div class="hti-img"><img src="${escapeHTML(it.thumb || it.image || '/fortshop_placeholder.png')}" onerror="this.style.display='none'"></div>
+        <div class="hti-name">${escapeHTML(it.name || 'Item')}</div>
+        <div class="hti-price"><span class="hti-onyx">◆</span> ${it.price != null ? it.price.toLocaleString() : 'Free'}</div>
       </div>
     `).join('');
   } catch(e) {
-    el.innerHTML = '<div style="padding:10px 12px;color:var(--muted);font-size:11px;">Fortshop unavailable.</div>';
+    el.innerHTML = '<div class="home-empty-strip" style="font-size:12.5px;color:var(--muted);">Fortshop unavailable.</div>';
   }
 }
 
@@ -2925,13 +2993,14 @@ async function _renderHomeAds() {
     const rectAd = _pickWeightedAd(allAds, 'rectangle');
     if (bannerAd) {
       if (bannerEl) { bannerEl.innerHTML = _renderAdHTML(bannerAd, 'banner'); bannerEl.onclick = () => _adClickAction(bannerAd); }
-      if (sidebarEl) sidebarEl.innerHTML = '';
-    } else if (rectAd) {
-      if (bannerEl) bannerEl.innerHTML = '';
+    } else {
+      // Show a subtle placeholder (same vibe as the forum ad slot) so the space feels intentional
+      if (bannerEl) { bannerEl.innerHTML = '<div class="ad-empty ad-empty-banner">Ad</div>'; bannerEl.onclick = null; }
+    }
+    if (rectAd) {
       if (sidebarEl) { sidebarEl.innerHTML = _renderAdHTML(rectAd, 'rectangle'); sidebarEl.onclick = () => _adClickAction(rectAd); }
     } else {
-      if (bannerEl) bannerEl.innerHTML = '';
-      if (sidebarEl) sidebarEl.innerHTML = '';
+      if (sidebarEl) { sidebarEl.innerHTML = '<div class="ad-empty">Ad</div>'; sidebarEl.onclick = null; }
     }
   }
   await _rotateHomeAd();
@@ -9940,6 +10009,12 @@ function renderBSettingsMain(tab) {
           <input class="field-input" id="bs-tagline" value="${escapeHTML(b.tagline||'')}" placeholder="A short slogan for your bastion…" maxlength="60" style="margin-bottom:8px;">
           <div class="settings-title">Description</div>
           <input class="field-input" id="bs-desc" value="${escapeHTML(b.desc||'')}">
+          <div class="settings-title" style="margin-top:8px;">Vanity URL <span style="font-size:11px;color:var(--muted);font-weight:400;">— <code>/b/yourslug</code></span></div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <span style="color:var(--muted);font-size:12px;">fortized.com/b/</span>
+            <input class="field-input" id="bs-vanity" value="${escapeHTML(b.vanity||'')}" placeholder="coolname" maxlength="32" pattern="[a-zA-Z0-9_-]+" style="flex:1;">
+          </div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:4px;">Letters, numbers, dashes, underscores. Must be unique.</div>
         </div>
       </div>
       <div class="settings-title">Visibility</div>
@@ -11632,6 +11707,19 @@ async function saveBastionOverview() {
   b.name = document.getElementById('bs-name')?.value?.trim() || b.name;
   b.tagline = document.getElementById('bs-tagline')?.value?.trim() || '';
   b.desc = document.getElementById('bs-desc')?.value?.trim() || '';
+  const vanityRaw = (document.getElementById('bs-vanity')?.value || '').trim().toLowerCase();
+  if (vanityRaw) {
+    if (!/^[a-z0-9_-]{2,32}$/.test(vanityRaw)) { toast('Invalid vanity URL', 'error'); return; }
+    // Check uniqueness
+    try {
+      const all = await FortizedSocial.getGlobalBastions();
+      const taken = (all || []).find(x => (x.vanity||'').toLowerCase() === vanityRaw && x.globalId !== b.globalId);
+      if (taken) { toast('That vanity URL is taken', 'error'); return; }
+    } catch(_){}
+    b.vanity = vanityRaw;
+  } else if (b.vanity) {
+    delete b.vanity;
+  }
   await saveUser();
   _syncBastionToGlobal(curBastion);
   renderRailBastions();
@@ -11923,50 +12011,100 @@ async function banMemberByName() {
   renderMemberList();
   toast(`${username} banned`,'success');
 }
-async function distributeOnyxRevenue(cost) {
-  if (cost <= 0) return;
-  const stawShare = Math.floor(cost * 0.25);
-  const fortizedShare = Math.floor(cost * 0.15);
-  const staffPool = Math.floor(cost * 0.40);
-  // 20% is burned (removed from circulation), plus any rounding remainder
-  // Get all staff members
+// ════════════════════════════════════════════════════════
+// FORTIZED TAX SYSTEM
+// ────────────────────────────────────────────────────────
+// Every transaction is taxed 30% of the price. The 30% tax
+// is split into 3 equal buckets:
+//   • BURN    — removed from circulation (deflationary)
+//   • FOUNDERS — 50/50 Fortized/Staw owner accounts
+//   • STAFF    — 50/50 admins/mods pools, each shared equally
+// Remaining 70% of price goes to the seller. For direct shop
+// purchases (no seller = Team Fortized), the 70% goes to the
+// "fortized" account.
+// ════════════════════════════════════════════════════════
+const FORTIZED_TAX = {
+  RATE: 0.30,
+  SPLIT_BURN: 1/3,
+  SPLIT_FOUNDERS: 1/3,
+  SPLIT_STAFF: 1/3,
+  FOUNDER_FORTIZED: 0.5,
+  FOUNDER_STAW: 0.5,
+  STAFF_ADMINS: 0.5,
+  STAFF_MODS: 0.5,
+};
+
+function computeTaxBreakdown(price) {
+  price = Math.max(0, Math.floor(price || 0));
+  const tax = Math.floor(price * FORTIZED_TAX.RATE);
+  const burn = Math.floor(tax * FORTIZED_TAX.SPLIT_BURN);
+  const founders = Math.floor(tax * FORTIZED_TAX.SPLIT_FOUNDERS);
+  const staff = tax - burn - founders;
+  const fortized = Math.floor(founders * FORTIZED_TAX.FOUNDER_FORTIZED);
+  const staw = founders - fortized;
+  const adminPool = Math.floor(staff * FORTIZED_TAX.STAFF_ADMINS);
+  const modPool = staff - adminPool;
+  const net = price - tax;
+  return { price, tax, burn, founders, staff, fortized, staw, adminPool, modPool, net };
+}
+
+function _taxEventLog(entry) {
+  try {
+    const log = JSON.parse(localStorage.getItem('ftz_tax_log') || '[]');
+    log.push({ ...entry, at: Date.now() });
+    while (log.length > 200) log.shift();
+    localStorage.setItem('ftz_tax_log', JSON.stringify(log));
+  } catch(_){}
+}
+
+async function applyTax(price, context) {
+  price = Math.max(0, Math.floor(price || 0));
+  if (price <= 0) return { price:0, tax:0, burn:0, founders:0, staff:0, fortized:0, staw:0, adminPool:0, modPool:0, net:0 };
+  const b = computeTaxBreakdown(price);
   const staff = JSON.parse(localStorage.getItem('ftz_staff') || '{}');
-  const allStaff = [...new Set([...SUPER_ADMINS, ...(staff.admins || []), ...(staff.moderators || [])])];
-  const perStaff = allStaff.length > 0 ? Math.floor(staffPool / allStaff.length) : 0;
-  // Send shares to recipients via Firebase
-  const sends = [];
-  if (stawShare > 0) {
-    sends.push((async () => {
-      try {
-        const u = await FortizedSocial.getUserByName('staw');
-        if (u) await FortizedSocial.adminUpdateUserField('staw', 'onyx', (u.onyx || 0) + stawShare);
-      } catch(e) { console.warn('[Revenue] Staw share failed:', e?.message); }
-    })());
+  const admins = (staff.admins || []).filter(Boolean);
+  const mods = (staff.moderators || []).filter(Boolean);
+  const perAdmin = admins.length ? Math.floor(b.adminPool / admins.length) : 0;
+  const perMod = mods.length ? Math.floor(b.modPool / mods.length) : 0;
+
+  const payouts = [];
+  if (b.fortized > 0) payouts.push({ u: 'fortized', amt: b.fortized, kind: 'founder' });
+  if (b.staw > 0) payouts.push({ u: 'staw', amt: b.staw, kind: 'founder' });
+  admins.forEach(u => { if (perAdmin > 0) payouts.push({ u, amt: perAdmin, kind: 'admin' }); });
+  mods.forEach(u => { if (perMod > 0) payouts.push({ u, amt: perMod, kind: 'mod' }); });
+
+  const seller = context?.seller || null;
+  if (seller && b.net > 0) {
+    payouts.push({ u: seller, amt: b.net, kind: 'seller' });
+  } else if (!seller && b.net > 0) {
+    // Direct shop purchase: 70% to Team Fortized
+    payouts.push({ u: 'fortized', amt: b.net, kind: 'shop' });
   }
-  if (fortizedShare > 0) {
-    sends.push((async () => {
-      try {
-        const u = await FortizedSocial.getUserByName('fortized');
-        if (u) await FortizedSocial.adminUpdateUserField('fortized', 'onyx', (u.onyx || 0) + fortizedShare);
-      } catch(e) { console.warn('[Revenue] Fortized share failed:', e?.message); }
-    })());
-  }
-  if (perStaff > 0) {
-    for (const member of allStaff) {
-      sends.push((async () => {
-        try {
-          const u = await FortizedSocial.getUserByName(member);
-          if (u) await FortizedSocial.adminUpdateUserField(member, 'onyx', (u.onyx || 0) + perStaff);
-        } catch(e) { console.warn('[Revenue] Staff share failed for', member, e?.message); }
-      })());
-    }
-  }
-  await Promise.all(sends);
-  // Refresh current user if they are staff (their onyx may have changed)
-  if (allStaff.includes(CU.username) || CU.username === 'staw' || CU.username === 'fortized') {
+
+  // Aggregate by user for fewer writes
+  const agg = {};
+  payouts.forEach(p => { agg[p.u] = (agg[p.u] || 0) + p.amt; });
+
+  await Promise.all(Object.entries(agg).map(async ([u, amt]) => {
+    try {
+      const user = await FortizedSocial.getUserByName(u);
+      if (user) await FortizedSocial.adminUpdateUserField(u, 'onyx', (user.onyx || 0) + amt);
+    } catch(e) { console.warn('[Tax] Payout failed:', u, e?.message); }
+  }));
+
+  _taxEventLog({ price, tax: b.tax, burn: b.burn, seller, payer: CU?.username || null, reason: context?.reason || 'transaction' });
+
+  const beneficiaries = new Set(Object.keys(agg));
+  if (CU?.username && beneficiaries.has(CU.username)) {
     await refreshCU();
     updateOnyxDisplay();
   }
+  return b;
+}
+
+// Back-compat wrapper — existing callers pass full price, no seller (shop purchases)
+async function distributeOnyxRevenue(cost, context) {
+  return applyTax(cost, context || {});
 }
 async function boostBastion(level, cost) {
   if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
@@ -20895,7 +21033,7 @@ function insertGif(embedUrl, targetInputId) {
 // ════════════════════════════════════════════════════════
 // FORMATTING TOOLBAR — shared by chat bars & forum composer
 // ════════════════════════════════════════════════════════
-function _fmtWrap(inputId, left, right) {
+function _fmtWrapInput(inputId, left, right) {
   right = right || left;
   const ta = document.getElementById(inputId);
   if (!ta) return;
@@ -20906,26 +21044,24 @@ function _fmtWrap(inputId, left, right) {
   const replacement = left + sel + right;
   ta.value = v.slice(0, start) + replacement + v.slice(end);
   ta.focus();
-  // Keep the inserted text selected so users can chain toolbars
   const newStart = start + left.length;
   ta.setSelectionRange(newStart, newStart + sel.length);
-  // Trigger input event for autoResize / char counters
   ta.dispatchEvent(new Event('input', { bubbles: true }));
 }
 function buildFormatToolbarHTML(inputId, opts) {
   opts = opts || {};
   const size = opts.compact ? 'padding:3px 6px;' : '';
   return `<div class="fmt-toolbar" style="${size}">
-    <button type="button" class="fmt-btn fmt-btn--b" title="Bold (**text**)" onclick="_fmtWrap('${inputId}','**')">B</button>
-    <button type="button" class="fmt-btn fmt-btn--i" title="Italic (*text*)" onclick="_fmtWrap('${inputId}','*')">I</button>
-    <button type="button" class="fmt-btn fmt-btn--s" title="Strikethrough (~~text~~)" onclick="_fmtWrap('${inputId}','~~')">S</button>
+    <button type="button" class="fmt-btn fmt-btn--b" title="Bold (**text**)" onclick="_fmtWrapInput('${inputId}','**')">B</button>
+    <button type="button" class="fmt-btn fmt-btn--i" title="Italic (*text*)" onclick="_fmtWrapInput('${inputId}','*')">I</button>
+    <button type="button" class="fmt-btn fmt-btn--s" title="Strikethrough (~~text~~)" onclick="_fmtWrapInput('${inputId}','~~')">S</button>
     <span class="fmt-divider"></span>
-    <button type="button" class="fmt-btn" title="Code (\`text\`)" onclick="_fmtWrap('${inputId}','\`')">&lt;/&gt;</button>
-    <button type="button" class="fmt-btn" title="Spoiler (||text||)" onclick="_fmtWrap('${inputId}','||')">▮</button>
-    <button type="button" class="fmt-btn" title="Highlight (==text==)" onclick="_fmtWrap('${inputId}','==')">H</button>
+    <button type="button" class="fmt-btn" title="Code (\`text\`)" onclick="_fmtWrapInput('${inputId}','\`')">&lt;/&gt;</button>
+    <button type="button" class="fmt-btn" title="Spoiler (||text||)" onclick="_fmtWrapInput('${inputId}','||')">▮</button>
+    <button type="button" class="fmt-btn" title="Highlight (==text==)" onclick="_fmtWrapInput('${inputId}','==')">H</button>
     <span class="fmt-divider"></span>
-    <button type="button" class="fmt-btn" title="Title (/text/)" onclick="_fmtWrap('${inputId}','/')">T1</button>
-    <button type="button" class="fmt-btn" title="Subtitle (///text///)" onclick="_fmtWrap('${inputId}','///')">T2</button>
+    <button type="button" class="fmt-btn" title="Title (/text/)" onclick="_fmtWrapInput('${inputId}','/')">T1</button>
+    <button type="button" class="fmt-btn" title="Subtitle (///text///)" onclick="_fmtWrapInput('${inputId}','///')">T2</button>
   </div>`;
 }
 
@@ -20956,12 +21092,10 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           </div>
           <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
         </div>
-        <div class="chat-fmt-pop" id="${inputId}-fmtpop" style="display:none;border-bottom:1px solid rgba(255,255,255,.05);">${buildFormatToolbarHTML(inputId, {compact:true})}</div>
         <div class="chat-input-row">
           <button class="cit-attach" onclick="openFileUpload('${inputId}')" title="Attach File">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <button class="cit-attach" onclick="(function(){const p=document.getElementById('${inputId}-fmtpop');if(p)p.style.display=p.style.display==='none'?'block':'none';})()" title="Formatting" data-tooltip="Formatting" style="font-weight:800;font-size:12px;font-family:Georgia,serif;">Aa</button>
           <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
             onkeydown="${keydown}"
             oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}')"
@@ -29466,8 +29600,9 @@ async function _forumInit() {
 
   let totalThreads = 0, totalPosts = 0;
   const catCounts = {};
+  let allThreads = [];
   try {
-    const allThreads = await Promise.all(FORUM_CATEGORIES.map(c => FortizedSocial.getForumThreads(c.id, 200, 0)));
+    allThreads = await Promise.all(FORUM_CATEGORIES.map(c => FortizedSocial.getForumThreads(c.id, 200, 0)));
     _forumAllThreadsCache = allThreads.flat();
     FORUM_CATEGORIES.forEach((c, i) => {
       const threads = allThreads[i] || [];
@@ -29476,7 +29611,7 @@ async function _forumInit() {
       totalThreads += threads.length;
       totalPosts += threads.length + replies;
     });
-  } catch(e) { console.error('[Forum] Stats load:', e); }
+  } catch(e) { console.error('[Forum] Stats load:', e); allThreads = FORUM_CATEGORIES.map(() => []); }
 
   const recentThreads = [..._forumAllThreadsCache].sort((a, b) => (b.updated_at || b.created_at) - (a.updated_at || a.created_at)).slice(0, 12);
   const myThreads = _forumAllThreadsCache.filter(t => t.author === CU?.username).sort((a, b) => b.created_at - a.created_at).slice(0, 8);
@@ -29737,10 +29872,15 @@ async function _forumViewThread(threadId) {
 
     await FortizedSocial.updateForumThread(threadId, { views: (thread.views || 0) + 1 });
     _forumCurrentThread = threadId;
+    _forumCurrentPosts = posts;
 
     const backAction = _forumCurrentCategory
       ? `_forumOpenCategory('${_forumCurrentCategory}')`
       : `_forumInit()`;
+
+    const opScore = _forumNetScore(thread);
+    const opUpvoted = _forumIsUpvoted(thread);
+    const opDownvoted = _forumIsDownvoted(thread);
 
     content.innerHTML = `
       <div style="display:flex;flex-direction:column;flex:1;min-height:0;">
@@ -29761,38 +29901,39 @@ async function _forumViewThread(threadId) {
         <div class="forum-detail-body">
           <div class="forum-detail-inner">
             <div class="forum-op-card">
+              <div class="forum-vote-col">
+                <button class="forum-vote-btn up ${opUpvoted?'active':''}" onclick="_forumVote('thread','${thread.id}',1)" title="Upvote">▲</button>
+                <div class="forum-vote-score ${opScore>0?'pos':opScore<0?'neg':''}">${opScore}</div>
+                <button class="forum-vote-btn down ${opDownvoted?'active':''}" onclick="_forumVote('thread','${thread.id}',-1)" title="Downvote">▼</button>
+              </div>
               <img class="forum-op-avatar" src="${escapeHTML(author?.pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
               <div class="forum-op-content">
                 <div class="forum-op-author">
                   <strong>${escapeHTML(author?.displayName || thread.author)}</strong>
                   <span class="forum-op-handle">@${escapeHTML(thread.author)}</span>
                 </div>
-                <div class="forum-op-date">${new Date(thread.created_at).toLocaleString()}</div>
-                <div class="forum-op-text">${parseMD(escapeHTML(thread.content || ''))}</div>
+                <div class="forum-op-date">${new Date(thread.created_at).toLocaleString()}${thread.edited_at ? ` <span class="forum-edited" title="Edited ${new Date(thread.edited_at).toLocaleString()}">(edited)</span>` : ''}</div>
+                <div class="forum-op-text" id="forum-op-text">${_forumRenderBody(thread.content || '')}</div>
                 ${thread.image ? `<img class="forum-op-image" src="${escapeHTML(thread.image)}">` : ''}
+                <div class="forum-post-actions">
+                  ${_forumCanEditPost(thread) ? `<button class="forum-pa-btn" onclick="_forumEditThread('${thread.id}')">✎ Edit</button>` : ''}
+                  ${_forumCanDeleteThread(thread) ? `<button class="forum-pa-btn danger" onclick="_forumDeleteThreadConfirm('${thread.id}')">🗑 Delete</button>` : ''}
+                </div>
               </div>
             </div>
 
             <div class="forum-replies-divider"><span>${posts.length} ${posts.length === 1 ? 'Reply' : 'Replies'}</span></div>
 
             <div id="forum-posts-list">
-              ${posts.map(post => `
-                <div class="forum-reply-card">
-                  <img class="forum-reply-avatar" src="${escapeHTML(post.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
-                  <div class="forum-reply-content">
-                    <div class="frc-meta">${escapeHTML(post.author_displayName || post.author)} <span class="frc-handle">@${escapeHTML(post.author)}</span> <span class="frc-time">${_forumTimeAgo(post.created_at)}</span></div>
-                    <div class="frc-body">${parseMD(escapeHTML(post.content || ''))}</div>
-                    ${post.image ? `<img src="${escapeHTML(post.image)}" style="max-width:100%;max-height:300px;border-radius:10px;margin-top:8px;">` : ''}
-                  </div>
-                  ${post.author === CU?.username ? `<button class="forum-reply-delete" onclick="event.stopPropagation();_forumDeletePost('${post.id}','${threadId}')">✕</button>` : ''}
-                </div>
-              `).join('')}
+              ${posts.map(post => _forumRenderPostCard(post, threadId)).join('')}
             </div>
 
             <div class="forum-reply-compose">
               <div class="forum-reply-compose-title">Reply to this post</div>
+              <div id="forum-quote-preview" style="display:none;"></div>
               ${buildFormatToolbarHTML('forum-post-text')}
-              <textarea id="forum-post-text" placeholder="Share your thoughts... Markdown supported."></textarea>
+              <textarea id="forum-post-text" placeholder="Share your thoughts... Markdown supported. Use @ to mention someone." oninput="_forumMentionInput(this)"></textarea>
+              <div id="forum-mention-popup" class="forum-mention-popup" style="display:none;"></div>
               <div class="forum-reply-compose-actions">
                 <input id="forum-post-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumPostImagePreview(event)">
                 <button class="forum-img-btn" onclick="document.getElementById('forum-post-image-upload').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Add Image</button>
@@ -29810,6 +29951,268 @@ async function _forumViewThread(threadId) {
     console.error('[Forum] View thread failed:', e);
     content.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load thread</p></div>';
   }
+}
+
+// ── Forum: post card renderer, vote helpers, permissions ──
+let _forumCurrentPosts = [];
+let _forumPendingQuote = null;
+
+function _forumRenderPostCard(post, threadId) {
+  const score = _forumNetScore(post);
+  const up = _forumIsUpvoted(post);
+  const dn = _forumIsDownvoted(post);
+  const canEdit = _forumCanEditPost(post);
+  const canDel = _forumCanDeletePost(post);
+  const quoteBlock = (post.quote_author && post.quote_text) ? `
+    <div class="forum-quote-block" onclick="_forumJumpToPost('${escapeHTML(post.quote_id||'')}')">
+      <div class="fqb-author">↩ @${escapeHTML(post.quote_author)}</div>
+      <div class="fqb-text">${_forumRenderBody((post.quote_text||'').slice(0, 280))}</div>
+    </div>` : '';
+  return `
+    <div class="forum-reply-card" id="fp-${post.id}">
+      <div class="forum-vote-col">
+        <button class="forum-vote-btn up ${up?'active':''}" onclick="_forumVote('post','${post.id}',1)" title="Upvote">▲</button>
+        <div class="forum-vote-score ${score>0?'pos':score<0?'neg':''}">${score}</div>
+        <button class="forum-vote-btn down ${dn?'active':''}" onclick="_forumVote('post','${post.id}',-1)" title="Downvote">▼</button>
+      </div>
+      <img class="forum-reply-avatar" src="${escapeHTML(post.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
+      <div class="forum-reply-content">
+        <div class="frc-meta">${escapeHTML(post.author_displayName || post.author)} <span class="frc-handle">@${escapeHTML(post.author)}</span> <span class="frc-time">${_forumTimeAgo(post.created_at)}${post.edited_at?` · <span class="forum-edited" title="Edited ${new Date(post.edited_at).toLocaleString()}">edited</span>`:''}</span></div>
+        ${quoteBlock}
+        <div class="frc-body" id="fp-body-${post.id}">${_forumRenderBody(post.content || '')}</div>
+        ${post.image ? `<img src="${escapeHTML(post.image)}" style="max-width:100%;max-height:300px;border-radius:10px;margin-top:8px;">` : ''}
+        <div class="forum-post-actions">
+          <button class="forum-pa-btn" onclick="_forumQuoteReply('${post.id}')">❝ Quote</button>
+          ${canEdit ? `<button class="forum-pa-btn" onclick="_forumEditPost('${post.id}')">✎ Edit</button>` : ''}
+          ${canDel ? `<button class="forum-pa-btn danger" onclick="_forumDeletePostConfirm('${post.id}','${threadId}')">🗑 Delete</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function _forumNetScore(obj) {
+  const ups = Array.isArray(obj.likes) ? obj.likes.length : 0;
+  const dns = Array.isArray(obj.dislikes) ? obj.dislikes.length : 0;
+  return ups - dns;
+}
+function _forumIsUpvoted(obj) {
+  return Array.isArray(obj.likes) && obj.likes.includes(CU?.username);
+}
+function _forumIsDownvoted(obj) {
+  return Array.isArray(obj.dislikes) && obj.dislikes.includes(CU?.username);
+}
+async function _forumVote(kind, id, dir) {
+  if (!CU?.username) { toast('Sign in to vote', 'error'); return; }
+  const me = CU.username;
+  try {
+    if (kind === 'thread') {
+      const t = await FortizedSocial.getForumThread(id);
+      const likes = Array.isArray(t.likes) ? t.likes.slice() : [];
+      const dislikes = Array.isArray(t.dislikes) ? t.dislikes.slice() : [];
+      const liSet = new Set(likes);
+      const diSet = new Set(dislikes);
+      if (dir === 1) {
+        if (liSet.has(me)) liSet.delete(me);
+        else { liSet.add(me); diSet.delete(me); }
+      } else {
+        if (diSet.has(me)) diSet.delete(me);
+        else { diSet.add(me); liSet.delete(me); }
+      }
+      await FortizedSocial.updateForumThread(id, { likes: [...liSet], dislikes: [...diSet] });
+    } else {
+      const p = _forumCurrentPosts.find(x => x.id === id);
+      if (!p) return;
+      const likes = Array.isArray(p.likes) ? p.likes.slice() : [];
+      const dislikes = Array.isArray(p.dislikes) ? p.dislikes.slice() : [];
+      const liSet = new Set(likes);
+      const diSet = new Set(dislikes);
+      if (dir === 1) {
+        if (liSet.has(me)) liSet.delete(me);
+        else { liSet.add(me); diSet.delete(me); }
+      } else {
+        if (diSet.has(me)) diSet.delete(me);
+        else { diSet.add(me); liSet.delete(me); }
+      }
+      await FortizedSocial.updateForumPost(id, { likes: [...liSet], dislikes: [...diSet] });
+    }
+    await _forumViewThread(_forumCurrentThread);
+  } catch(e) {
+    console.error('[Forum] Vote failed:', e);
+    toast('Vote failed', 'error');
+  }
+}
+
+function _forumAuthorRole(u) {
+  if (!u) return 'user';
+  try {
+    if (SUPER_ADMINS.includes(u)) return 'superadmin';
+    const staff = JSON.parse(localStorage.getItem('ftz_staff') || '{}');
+    if ((staff.admins || []).includes(u)) return 'admin';
+    if ((staff.moderators || []).includes(u)) return 'moderator';
+  } catch(_){}
+  return 'user';
+}
+function _forumCanEditPost(obj) {
+  return CU?.username && obj.author === CU.username;
+}
+function _forumCanDeletePost(obj) {
+  if (!CU?.username) return false;
+  if (obj.author === CU.username) return true;
+  if (isSuperAdmin()) return true;
+  if ((isAdmin() || isModerator()) && _forumAuthorRole(obj.author) !== 'superadmin') return true;
+  return false;
+}
+function _forumCanDeleteThread(obj) { return _forumCanDeletePost(obj); }
+
+function _forumRenderBody(text) {
+  // Render @mentions before markdown so they're styled links
+  let s = escapeHTML(text || '');
+  s = s.replace(/@([a-zA-Z0-9_]{2,32})/g, (m, n) => `<span class="forum-mention" onclick="viewUserProfile('${n}')">@${n}</span>`);
+  return parseMD(s);
+}
+
+function _forumQuoteReply(postId) {
+  const p = _forumCurrentPosts.find(x => x.id === postId);
+  if (!p) return;
+  _forumPendingQuote = { id: p.id, author: p.author, text: (p.content||'').slice(0, 500) };
+  const box = document.getElementById('forum-quote-preview');
+  if (box) {
+    box.style.display = '';
+    box.innerHTML = `<div class="forum-quote-block">
+      <button class="fqb-clear" onclick="_forumClearQuote()" title="Remove quote">×</button>
+      <div class="fqb-author">❝ Replying to @${escapeHTML(p.author)}</div>
+      <div class="fqb-text">${_forumRenderBody(p.content.slice(0,280))}</div>
+    </div>`;
+  }
+  const ta = document.getElementById('forum-post-text');
+  if (ta) ta.focus();
+}
+function _forumClearQuote() {
+  _forumPendingQuote = null;
+  const box = document.getElementById('forum-quote-preview');
+  if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+}
+
+function _forumJumpToPost(pid) {
+  const el = document.getElementById('fp-' + pid);
+  if (el) { el.scrollIntoView({behavior:'smooth', block:'center'}); el.classList.add('frc-flash'); setTimeout(()=>el.classList.remove('frc-flash'), 1400); }
+}
+
+async function _forumEditPost(postId) {
+  const p = _forumCurrentPosts.find(x => x.id === postId);
+  if (!p) return;
+  const bodyEl = document.getElementById('fp-body-' + postId);
+  if (!bodyEl) return;
+  const current = p.content || '';
+  bodyEl.innerHTML = `
+    <textarea id="fp-edit-${postId}" class="fp-edit-area" rows="4">${escapeHTML(current)}</textarea>
+    <div class="fp-edit-actions">
+      <button class="forum-pa-btn" onclick="_forumSavePostEdit('${postId}')">Save</button>
+      <button class="forum-pa-btn" onclick="_forumViewThread('${_forumCurrentThread}')">Cancel</button>
+    </div>`;
+  document.getElementById('fp-edit-' + postId)?.focus();
+}
+async function _forumSavePostEdit(postId) {
+  const ta = document.getElementById('fp-edit-' + postId);
+  if (!ta) return;
+  const newText = ta.value.trim();
+  if (!newText) { toast('Cannot be empty', 'error'); return; }
+  const p = _forumCurrentPosts.find(x => x.id === postId);
+  const history = Array.isArray(p?.edit_history) ? p.edit_history.slice() : [];
+  history.push({ content: p.content, at: Date.now() });
+  try {
+    await FortizedSocial.updateForumPost(postId, { content: newText, edited_at: Date.now(), edit_history: history });
+    toast('Edited', 'success');
+    await _forumViewThread(_forumCurrentThread);
+  } catch(e) {
+    console.error('[Forum] Edit post failed:', e);
+    toast('Edit failed', 'error');
+  }
+}
+async function _forumEditThread(threadId) {
+  const t = await FortizedSocial.getForumThread(threadId);
+  const bodyEl = document.getElementById('forum-op-text');
+  if (!bodyEl) return;
+  bodyEl.innerHTML = `
+    <textarea id="ft-edit-${threadId}" class="fp-edit-area" rows="6">${escapeHTML(t.content||'')}</textarea>
+    <div class="fp-edit-actions">
+      <button class="forum-pa-btn" onclick="_forumSaveThreadEdit('${threadId}')">Save</button>
+      <button class="forum-pa-btn" onclick="_forumViewThread('${threadId}')">Cancel</button>
+    </div>`;
+  document.getElementById('ft-edit-' + threadId)?.focus();
+}
+async function _forumSaveThreadEdit(threadId) {
+  const ta = document.getElementById('ft-edit-' + threadId);
+  if (!ta) return;
+  const v = ta.value.trim();
+  if (!v) { toast('Cannot be empty', 'error'); return; }
+  try {
+    const t = await FortizedSocial.getForumThread(threadId);
+    const history = Array.isArray(t.edit_history) ? t.edit_history.slice() : [];
+    history.push({ content: t.content, at: Date.now() });
+    await FortizedSocial.updateForumThread(threadId, { content: v, edited_at: Date.now(), edit_history: history });
+    toast('Edited', 'success');
+    await _forumViewThread(threadId);
+  } catch(e) {
+    console.error('[Forum] Edit thread failed:', e);
+    toast('Edit failed', 'error');
+  }
+}
+function _forumDeletePostConfirm(postId, threadId) {
+  showCustomConfirm('Delete this reply permanently?', async () => {
+    try {
+      await FortizedSocial.deleteForumPost(postId);
+      toast('Reply deleted', 'success');
+      await _forumViewThread(threadId);
+    } catch(e) { toast('Delete failed', 'error'); }
+  });
+}
+function _forumDeleteThreadConfirm(threadId) {
+  showCustomConfirm('Delete this entire thread permanently?', async () => {
+    try {
+      await FortizedSocial.deleteForumThread(threadId);
+      toast('Thread deleted', 'success');
+      _forumInit();
+    } catch(e) { toast('Delete failed', 'error'); }
+  });
+}
+
+// Mention autocomplete in forum compose
+async function _forumMentionInput(ta) {
+  const popup = document.getElementById('forum-mention-popup');
+  if (!popup) return;
+  const val = ta.value;
+  const pos = ta.selectionStart;
+  const before = val.slice(0, pos);
+  const m = before.match(/@([a-zA-Z0-9_]{0,32})$/);
+  if (!m) { popup.style.display = 'none'; return; }
+  const q = m[1].toLowerCase();
+  try {
+    const users = await FortizedSocial.getAllUsers();
+    const names = Object.keys(users || {}).filter(u => u.toLowerCase().includes(q)).slice(0, 6);
+    if (!names.length) { popup.style.display = 'none'; return; }
+    popup.innerHTML = names.map(n => {
+      const u = users[n];
+      return `<div class="fmn-item" onclick="_forumMentionPick('${n}')">
+        <img src="${escapeHTML(u.pfp||'/default pfp.png')}" onerror="this.src='/default pfp.png'">
+        <span><strong>${escapeHTML(u.displayName||n)}</strong> <span style="color:var(--muted);">@${escapeHTML(n)}</span></span>
+      </div>`;
+    }).join('');
+    popup.style.display = '';
+  } catch(_) { popup.style.display = 'none'; }
+}
+function _forumMentionPick(name) {
+  const ta = document.getElementById('forum-post-text');
+  if (!ta) return;
+  const pos = ta.selectionStart;
+  const before = ta.value.slice(0, pos);
+  const after = ta.value.slice(pos);
+  const replaced = before.replace(/@([a-zA-Z0-9_]{0,32})$/, '@' + name + ' ');
+  ta.value = replaced + after;
+  ta.focus();
+  const newPos = replaced.length;
+  ta.setSelectionRange(newPos, newPos);
+  document.getElementById('forum-mention-popup').style.display = 'none';
 }
 
 function _forumShowCreatePost(preselectedCategory) {
@@ -30001,18 +30404,23 @@ async function _forumCreatePost(threadId) {
   const text = document.getElementById('forum-post-text')?.value?.trim();
   if (!text) { toast('Write something to post', 'error'); return; }
 
+  const q = _forumPendingQuote || null;
   const post = {
     id: 'post_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
     thread_id: threadId,
     author: CU.username,
+    author_displayName: CU.displayName || CU.username,
+    author_pfp: CU.pfp || null,
     content: text,
     image: _forumPostImageData || null,
     created_at: Date.now(),
-    edited: false,
+    edited_at: null,
+    edit_history: [],
     likes: [],
-    quote_id: null,
-    quote_author: null,
-    quote_text: null
+    dislikes: [],
+    quote_id: q ? q.id : null,
+    quote_author: q ? q.author : null,
+    quote_text: q ? q.text : null
   };
 
   try {
@@ -30027,6 +30435,7 @@ async function _forumCreatePost(threadId) {
     document.getElementById('forum-post-image-preview').innerHTML = '';
     document.getElementById('forum-post-file-label').textContent = 'No image selected';
     toast('Reply posted!', 'success');
+    _forumPendingQuote = null;
     await _forumViewThread(threadId);
   } catch(e) {
     console.error('[Forum] Post failed:', e);
@@ -31424,8 +31833,8 @@ function _updateLivePreview(ta) {
   if (!el) return;
   const val = ta.value;
   if (!val) { el.innerHTML = ''; ta.style.color = ''; return; }
-  // Check if there's any formatting syntax — if not, don't show overlay
-  if (!/[*~`|=@#\[]/.test(val)) { el.innerHTML = ''; ta.style.color = ''; return; }
+  // Check if there's any formatting/emoji/mention syntax — if not, don't show overlay
+  if (!/[*~`|=@#\[:]|\p{Extended_Pictographic}/u.test(val)) { el.innerHTML = ''; ta.style.color = ''; return; }
   // Apply live formatting
   const html = _liveFormatPreview(val);
   // Only use overlay if formatting was actually applied
@@ -31443,27 +31852,40 @@ function _updateLivePreview(ta) {
 
 function _liveFormatPreview(text) {
   let s = escapeHTML(text);
-  // Block code ``` ... ``` — render as code style
-  s = s.replace(/```([^`]*?)```/g, '<span class="ci-code">```$1```</span>');
-  // Inline code
-  s = s.replace(/`([^`\n]+?)`/g, '<span class="ci-code">`$1`</span>');
-  // Bold italic ***text***
-  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<span class="ci-bold ci-italic">***$1***</span>');
-  // Bold **text**
-  s = s.replace(/\*\*(.+?)\*\*/g, '<span class="ci-bold">**$1**</span>');
-  // Italic *text*
-  s = s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<span class="ci-italic">*$1*</span>');
-  // Strikethrough ~~text~~
-  s = s.replace(/~~(.+?)~~/g, '<span class="ci-strike">~~$1~~</span>');
-  // Spoiler ||text||
-  s = s.replace(/\|\|(.+?)\|\|/g, '<span class="ci-spoiler">||$1||</span>');
-  // Highlight ==text==
-  s = s.replace(/==(.+?)==/g, '<span class="ci-highlight">==$1==</span>');
-  // Small text --text--
-  s = s.replace(/--([^-]+?)--/g, '<span class="ci-smalltext">--$1--</span>');
-  // @mentions
+  s = s.replace(/```([^`]*?)```/g, '<span class="ci-marker">```</span><span class="ci-code">$1</span><span class="ci-marker">```</span>');
+  s = s.replace(/`([^`\n]+?)`/g, '<span class="ci-marker">`</span><span class="ci-code">$1</span><span class="ci-marker">`</span>');
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<span class="ci-marker">***</span><span class="ci-bold ci-italic">$1</span><span class="ci-marker">***</span>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<span class="ci-marker">**</span><span class="ci-bold">$1</span><span class="ci-marker">**</span>');
+  s = s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<span class="ci-marker">*</span><span class="ci-italic">$1</span><span class="ci-marker">*</span>');
+  s = s.replace(/~~(.+?)~~/g, '<span class="ci-marker">~~</span><span class="ci-strike">$1</span><span class="ci-marker">~~</span>');
+  s = s.replace(/\|\|(.+?)\|\|/g, '<span class="ci-marker">||</span><span class="ci-spoiler">$1</span><span class="ci-marker">||</span>');
+  s = s.replace(/==(.+?)==/g, '<span class="ci-marker">==</span><span class="ci-highlight">$1</span><span class="ci-marker">==</span>');
+  s = s.replace(/~([^~\n]+?)~/g, '<span class="ci-marker">~</span><span class="ci-smalltext">$1</span><span class="ci-marker">~</span>');
+  // Emoji shortcodes → Twemoji / Fortmoji images
+  s = s.replace(/:([a-zA-Z0-9_+-]+):/g, (match, name) => {
+    try {
+      if (typeof FORTIZED_EMOJI_MAP !== 'undefined' && FORTIZED_EMOJI_MAP[name]) {
+        return `<img class="ci-emoji" src="${FORTIZED_EMOJI_MAP[name]}" alt=":${name}:">`;
+      }
+      if (typeof EMOJI_SHORTCODES !== 'undefined' && EMOJI_SHORTCODES[name]) {
+        const u = EMOJI_SHORTCODES[name];
+        if (typeof emojiToTwemojiUrl === 'function') {
+          return `<img class="ci-emoji" src="${emojiToTwemojiUrl(u)}" alt="${u}">`;
+        }
+        return u;
+      }
+    } catch(_){}
+    return match;
+  });
+  // Unicode emoji → Twemoji images
+  try {
+    if (typeof emojiToTwemojiUrl === 'function') {
+      s = s.replace(/(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/gu, (m) => {
+        return `<img class="ci-emoji" src="${emojiToTwemojiUrl(m)}" alt="${m}">`;
+      });
+    }
+  } catch(_){}
   s = s.replace(/@(\w+)/g, '<span class="ci-mention">@$1</span>');
-  // #room references
   s = s.replace(/#(\w[\w-]*)/g, '<span class="ci-room-ref">#$1</span>');
   return s;
 }
@@ -35535,5 +35957,296 @@ async function _ensureFortizedAccount() {
       if (needsUpdate) await FortizedSocial.saveUserObject(fortizedUser);
     }
   } catch(e) { console.warn('[System] Fortized account init failed', e); }
+}
+
+// ════════════════════════════════════════════════════════
+// FORTSHOP — GIFTING · WISHLIST · TRADING · MARKETPLACE
+// ────────────────────────────────────────────────────────
+// Team Fortized creates all items. Resale = rare/seasonal only.
+// Trading = onyx-only + non-rare items. All taxed via applyTax.
+// ════════════════════════════════════════════════════════
+
+function _getShopItemById(id) {
+  const all = [
+    ...(typeof PROFILE_DECORATIONS !== 'undefined' ? PROFILE_DECORATIONS : []),
+    ...(typeof SHOP_APPEARANCES_ALL !== 'undefined' ? SHOP_APPEARANCES_ALL : []),
+  ];
+  return all.find(i => i.id === id) || null;
+}
+
+// ── Wishlist ───────────────────────────────────────────
+function isOnWishlist(itemId) {
+  return Array.isArray(CU?.wishlist) && CU.wishlist.includes(itemId);
+}
+async function toggleWishlist(itemId) {
+  if (!CU) return;
+  CU.wishlist = Array.isArray(CU.wishlist) ? CU.wishlist.slice() : [];
+  const i = CU.wishlist.indexOf(itemId);
+  if (i >= 0) { CU.wishlist.splice(i, 1); toast('Removed from wishlist', 'info'); }
+  else { CU.wishlist.push(itemId); toast('Added to wishlist', 'success'); }
+  await saveUser(true);
+  try { renderAtelierTab('shop'); } catch(_){}
+}
+async function setWishlistPrivacy(isPrivate) {
+  if (!CU) return;
+  CU.wishlistPrivate = !!isPrivate;
+  await saveUser(true);
+  toast(isPrivate ? 'Wishlist set to private' : 'Wishlist set to public', 'success');
+}
+async function showWishlistModal(username) {
+  const isOwn = !username || username === CU?.username;
+  const target = isOwn ? CU : await FortizedSocial.getUserByName(username);
+  if (!target) { toast('User not found', 'error'); return; }
+  const wl = Array.isArray(target.wishlist) ? target.wishlist : [];
+  const priv = !!target.wishlistPrivate;
+  if (!isOwn && priv) { toast('This wishlist is private', 'error'); return; }
+  openSimpleModal(`
+    <div class="wl-modal">
+      <div class="wl-hdr">
+        <h3>${isOwn ? 'Your' : escapeHTML(target.displayName||target.username)+'\'s'} Wishlist</h3>
+        ${isOwn ? `<div class="wl-privacy">
+          <label><input type="checkbox" ${priv?'checked':''} onchange="setWishlistPrivacy(this.checked)"> Private</label>
+        </div>` : ''}
+      </div>
+      <div class="wl-items">
+        ${wl.length ? wl.map(id => {
+          const it = _getShopItemById(id);
+          if (!it) return '';
+          return `<div class="wl-card">
+            <div class="wl-name">${escapeHTML(it.name || id)}</div>
+            <div class="wl-price">${it.price || '—'} ⬡</div>
+            ${!isOwn ? `<button class="wl-gift-btn" onclick="openGiftModal('${id}','${escapeHTML(target.username)}');">🎁 Gift</button>` : ''}
+            ${isOwn ? `<button class="wl-rm-btn" onclick="toggleWishlist('${id}');">Remove</button>` : ''}
+          </div>`;
+        }).join('') : '<p style="text-align:center;color:var(--muted);padding:24px;">No items yet.</p>'}
+      </div>
+    </div>`);
+}
+
+// ── Gifting ────────────────────────────────────────────
+async function openGiftModal(itemId, recipientHint) {
+  const item = _getShopItemById(itemId);
+  if (!item) { toast('Item not found', 'error'); return; }
+  const friends = (CU?.friends || []).slice(0, 80);
+  const bal = CU?.onyx || 0;
+  const price = item.price || 0;
+  openSimpleModal(`
+    <div class="gift-modal">
+      <h3>🎁 Gift "${escapeHTML(item.name||itemId)}"</h3>
+      <div class="gift-price">${price} ⬡ · Your balance: ${bal} ⬡</div>
+      <label class="gift-label">Recipient</label>
+      <input id="gift-recipient" class="gift-input" placeholder="username" value="${escapeHTML(recipientHint||'')}" list="gift-friends-list">
+      <datalist id="gift-friends-list">
+        ${friends.map(f => `<option value="${escapeHTML(f)}">`).join('')}
+      </datalist>
+      <label class="gift-label">Message (optional)</label>
+      <textarea id="gift-msg" class="gift-input" rows="2" maxlength="180" placeholder="Enjoy!"></textarea>
+      <div class="gift-actions">
+        <button class="btn-b" onclick="closeSimpleModal()">Cancel</button>
+        <button class="btn-a" onclick="confirmGift('${itemId}')">Send Gift</button>
+      </div>
+    </div>`);
+}
+async function confirmGift(itemId) {
+  const recInp = document.getElementById('gift-recipient');
+  const msgInp = document.getElementById('gift-msg');
+  const recipient = (recInp?.value || '').trim();
+  const msg = (msgInp?.value || '').trim();
+  if (!recipient) { toast('Pick a recipient', 'error'); return; }
+  if (recipient === CU?.username) { toast('Can\'t gift to yourself', 'error'); return; }
+  const item = _getShopItemById(itemId);
+  if (!item) return;
+  const price = item.price || 0;
+  const bal = CU?.onyx || 0;
+  if (bal < price) { toast('Not enough Onyx', 'error'); return; }
+  try {
+    const recUser = await FortizedSocial.getUserByName(recipient);
+    if (!recUser) { toast('Recipient not found', 'error'); return; }
+    // Deduct full price from gifter
+    CU.onyx = bal - price;
+    await saveUser(true); updateOnyxDisplay();
+    // Grant item to recipient (appearance vs decoration)
+    const field = item.kind === 'decoration' ? 'ownedDecorations' : 'unlockedAppearances';
+    const owned = Array.isArray(recUser[field]) ? recUser[field].slice() : [];
+    if (!owned.includes(itemId)) { owned.push(itemId); await FortizedSocial.adminUpdateUserField(recipient, field, owned); }
+    // Tax distribution (no seller — shop item; gifter pays full, tax applied normally)
+    await applyTax(price, { reason: 'gift', seller: null });
+    // Notify recipient
+    try {
+      await FortizedSocial.addNotification(recipient, {
+        type: 'gift',
+        from: CU.username,
+        text: `🎁 ${CU.displayName||CU.username} sent you ${item.name||itemId}${msg?' — "'+msg+'"':''}`,
+        at: Date.now(),
+        read: false,
+      });
+    } catch(_){}
+    closeSimpleModal();
+    toast('Gift sent!', 'success');
+  } catch(e) {
+    console.error('[Gift] failed', e);
+    toast('Gift failed', 'error');
+  }
+}
+
+// ── Trading (no rares, onyx-only, taxed) ──────────────
+async function openTradeModal(targetUsername) {
+  const target = targetUsername ? await FortizedSocial.getUserByName(targetUsername) : null;
+  const owned = (CU?.unlockedAppearances||[]).concat(CU?.ownedDecorations||[]);
+  openSimpleModal(`
+    <div class="trade-modal">
+      <h3>🤝 New Trade ${target ? '— with @'+escapeHTML(target.username) : ''}</h3>
+      <label class="gift-label">Trade with</label>
+      <input id="trade-partner" class="gift-input" placeholder="username" value="${target?escapeHTML(target.username):''}">
+      <label class="gift-label">Your offer (Onyx)</label>
+      <input id="trade-my-onyx" class="gift-input" type="number" min="0" placeholder="0">
+      <label class="gift-label">Your offer (items)</label>
+      <select id="trade-my-items" class="gift-input" multiple>
+        ${owned.map(id => {
+          const it = _getShopItemById(id);
+          if (!it || it.rare) return '';
+          return `<option value="${escapeHTML(id)}">${escapeHTML(it.name||id)}</option>`;
+        }).join('')}
+      </select>
+      <label class="gift-label">You request (Onyx)</label>
+      <input id="trade-their-onyx" class="gift-input" type="number" min="0" placeholder="0">
+      <div class="trade-note">Rare/seasonal items cannot be traded. All trades are taxed 30%.</div>
+      <div class="gift-actions">
+        <button class="btn-b" onclick="closeSimpleModal()">Cancel</button>
+        <button class="btn-a" onclick="sendTradeOffer()">Send Offer</button>
+      </div>
+    </div>`);
+}
+async function sendTradeOffer() {
+  const partner = (document.getElementById('trade-partner')?.value||'').trim();
+  const myOnyx = parseInt(document.getElementById('trade-my-onyx')?.value||'0', 10) || 0;
+  const theirOnyx = parseInt(document.getElementById('trade-their-onyx')?.value||'0', 10) || 0;
+  const myItemsEl = document.getElementById('trade-my-items');
+  const myItems = myItemsEl ? Array.from(myItemsEl.selectedOptions).map(o=>o.value) : [];
+  if (!partner || partner === CU?.username) { toast('Invalid partner', 'error'); return; }
+  if ((CU?.onyx||0) < myOnyx) { toast('Not enough Onyx', 'error'); return; }
+  for (const id of myItems) {
+    const it = _getShopItemById(id);
+    if (it?.rare) { toast('Cannot trade rare items', 'error'); return; }
+  }
+  const offer = {
+    id: 'trade_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    from: CU.username,
+    to: partner,
+    myOnyx, myItems,
+    theirOnyx, theirItems: [],
+    status: 'pending',
+    created_at: Date.now(),
+  };
+  try {
+    await FortizedSocial.addNotification(partner, {
+      type: 'trade_offer',
+      from: CU.username,
+      text: `🤝 ${CU.displayName||CU.username} sent you a trade offer`,
+      data: offer,
+      at: Date.now(),
+      read: false,
+    });
+    closeSimpleModal();
+    toast('Trade offer sent', 'success');
+  } catch(e) { toast('Trade failed', 'error'); }
+}
+async function acceptTradeOffer(offer) {
+  try {
+    const sender = await FortizedSocial.getUserByName(offer.from);
+    if (!sender) { toast('Sender missing', 'error'); return; }
+    if ((CU?.onyx||0) < (offer.theirOnyx||0)) { toast('Not enough Onyx', 'error'); return; }
+    // Settle: sender -> receiver: myOnyx (taxed), myItems transferred
+    //         receiver -> sender: theirOnyx (taxed), theirItems transferred
+    if (offer.myOnyx > 0) await applyTax(offer.myOnyx, { seller: CU.username, reason: 'trade' });
+    if (offer.theirOnyx > 0) await applyTax(offer.theirOnyx, { seller: offer.from, reason: 'trade' });
+    // Transfer items
+    const field = 'unlockedAppearances';
+    const senderItems = (sender[field]||[]).filter(i => !offer.myItems.includes(i));
+    await FortizedSocial.adminUpdateUserField(offer.from, field, senderItems);
+    const myItems = (CU[field]||[]).slice();
+    offer.myItems.forEach(id => { if (!myItems.includes(id)) myItems.push(id); });
+    CU[field] = myItems;
+    await saveUser(true);
+    CU.onyx = (CU.onyx||0) - (offer.theirOnyx||0) + (offer.myOnyx||0);
+    await saveUser(true); updateOnyxDisplay();
+    toast('Trade accepted', 'success');
+  } catch(e) {
+    console.error('[Trade] accept failed', e);
+    toast('Trade failed', 'error');
+  }
+}
+
+// ── Marketplace resale (rare/seasonal only, price-follower) ──
+// Price follower = auto-adjust listing price to match average of other listings
+async function getMarketplaceListings() {
+  try {
+    const raw = await FortizedSocial.sb?.from('marketplace_listings')?.select('*')?.order('created_at', { ascending: false });
+    return raw?.data || [];
+  } catch(_) { return []; }
+}
+async function listForResale(itemId, askPrice) {
+  const item = _getShopItemById(itemId);
+  if (!item) { toast('Item not found', 'error'); return; }
+  if (!item.rare && !item.seasonal) { toast('Only rare/seasonal items can be resold', 'error'); return; }
+  if (!(CU?.unlockedAppearances||[]).includes(itemId) && !(CU?.ownedDecorations||[]).includes(itemId)) {
+    toast('You don\'t own this item', 'error'); return;
+  }
+  const listing = {
+    id: 'listing_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    item_id: itemId,
+    seller: CU.username,
+    price: Math.max(1, Math.floor(askPrice || item.price || 0)),
+    follow_price: false,
+    created_at: Date.now(),
+    sold: false,
+  };
+  try {
+    await FortizedSocial.sb?.from('marketplace_listings')?.insert(listing);
+    toast('Listed for resale', 'success');
+  } catch(e) { toast('Listing failed', 'error'); }
+}
+async function buyListing(listingId) {
+  const listings = await getMarketplaceListings();
+  const l = listings.find(x => x.id === listingId);
+  if (!l || l.sold) { toast('No longer available', 'error'); return; }
+  if ((CU?.onyx||0) < l.price) { toast('Not enough Onyx', 'error'); return; }
+  try {
+    await FortizedSocial.sb?.from('marketplace_listings')?.update({ sold: true, buyer: CU.username, sold_at: Date.now() })?.eq('id', listingId);
+    CU.onyx -= l.price;
+    // Grant item to buyer
+    const item = _getShopItemById(l.item_id);
+    const field = item?.kind === 'decoration' ? 'ownedDecorations' : 'unlockedAppearances';
+    const owned = (CU[field]||[]).slice();
+    if (!owned.includes(l.item_id)) owned.push(l.item_id);
+    CU[field] = owned;
+    // Remove from seller
+    const seller = await FortizedSocial.getUserByName(l.seller);
+    if (seller) {
+      const sOwn = (seller[field]||[]).filter(i => i !== l.item_id);
+      await FortizedSocial.adminUpdateUserField(l.seller, field, sOwn);
+    }
+    await saveUser(true); updateOnyxDisplay();
+    // Apply 30% tax — seller gets 70%
+    await applyTax(l.price, { seller: l.seller, reason: 'resale' });
+    toast('Purchased!', 'success');
+  } catch(e) { console.error('[Marketplace] buy failed', e); toast('Purchase failed', 'error'); }
+}
+
+// ── Minimal modal helpers for the above (reuse ftzModal if present) ──
+function openSimpleModal(html) {
+  closeSimpleModal();
+  const m = document.createElement('div');
+  m.className = 'simple-modal-wrap';
+  m.id = 'simple-modal';
+  m.innerHTML = `<div class="simple-modal-card">
+    <button class="simple-modal-close" onclick="closeSimpleModal()">×</button>
+    ${html}
+  </div>`;
+  m.onclick = (e) => { if (e.target === m) closeSimpleModal(); };
+  document.body.appendChild(m);
+}
+function closeSimpleModal() {
+  document.getElementById('simple-modal')?.remove();
 }
 

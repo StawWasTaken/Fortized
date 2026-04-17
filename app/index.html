@@ -416,28 +416,37 @@ window._cdnReady.then(() => {
 
           <!-- QUICK ACTIONS -->
           <div id="home-quick-actions" style="padding:12px 28px 0;"></div>
-          <!-- HOMEPAGE FEED (redesigned) -->
+          <!-- HOMEPAGE FEED -->
           <div class="home-main-scroll" style="padding:12px 0 48px;">
             <div id="home-dyk-strip" style="padding:0 28px;"></div>
-            <!-- Banner ad moved just below DYK -->
-            <div id="home-ads" style="margin:8px 0 6px;"></div>
+            <!-- Banner ad (placeholder if empty) just below DYK -->
+            <div class="realm-section" style="margin-top:4px;">
+              <div id="home-ads" class="home-banner-ad"></div>
+            </div>
+            <!-- Friends Online today + Trending Items (stacked in main column) -->
+            <div class="realm-section">
+              <div class="realm-section-title">Who's online today? <span class="rst-sub" style="color:var(--muted);font-weight:700;">FRIENDS</span> <a href="#" onclick="event.preventDefault();showView('friends')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">View all friends ›</a></div>
+              <div id="home-friends-today" class="home-friends-today"></div>
+            </div>
+            <div class="realm-section">
+              <div class="realm-section-title">What are people buying? <span class="rst-sub" style="color:var(--muted);font-weight:700;">TRENDING ITEMS</span> <a href="#" onclick="event.preventDefault();showView('fortshop')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Fortshop ›</a></div>
+              <div id="home-trending-items" class="home-trending-items-row"></div>
+            </div>
             <div class="realm-section">
               <div class="realm-section-title">Your Bastions</div>
               <div class="realm-scroll" id="realm-bastions"></div>
             </div>
             <div class="realm-section">
-              <div class="realm-section-title">🔥 Trending Forum Posts</div>
+              <div class="realm-section-title">🔥 Trending Forum Posts <span class="rst-sub" style="color:var(--muted);font-weight:700;">MOST UPVOTED</span></div>
               <div id="home-trending-forum"></div>
             </div>
           </div>
         </div>
 
-        <!-- Home right sidebar: Friends today + Trending Items -->
+        <!-- Active Now right sidebar (original) -->
         <div class="active-now-sidebar" id="home-active-now">
-          <div class="active-now-header">Who's online today? <span style="opacity:.55;font-weight:600;font-size:10px;">FRIENDS</span></div>
+          <div class="active-now-header">Active Now</div>
           <div class="active-now-list" id="home-active-now-list"></div>
-          <div class="active-now-header" style="margin-top:18px;">🛒 Trending Items</div>
-          <div class="home-trending-items" id="home-trending-items"></div>
           <div id="home-sidebar-ad" style="margin-top:12px;"></div>
         </div>
       </div>

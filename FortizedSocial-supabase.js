@@ -1984,6 +1984,12 @@ const FortizedSocial = (() => {
       return data;
     } catch(e) { console.warn('[Forum] createForumPost failed:', e?.message); return null; }
   }
+  async function updateForumPost(postId, updates) {
+    try {
+      const { error } = await sb.from('forum_posts').update(updates).eq('id', postId);
+      if (error) throw error;
+    } catch(e) { console.warn('[Forum] updateForumPost failed:', e?.message); }
+  }
   async function deleteForumPost(postId) {
     try {
       await sb.from('forum_posts').delete().eq('id', postId);
@@ -2045,7 +2051,7 @@ const FortizedSocial = (() => {
     adminGetFeedback, adminPushFeedback,
     adminInvalidateCache,
     getForumThreads, getForumThread, createForumThread, updateForumThread, deleteForumThread,
-    getForumPosts, createForumPost, deleteForumPost, searchForumThreads,
+    getForumPosts, createForumPost, updateForumPost, deleteForumPost, searchForumThreads,
     uploadFile,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,

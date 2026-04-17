@@ -9269,14 +9269,20 @@ function renderOverviewRoom() {
 
   // ── Owner Management Hub ──
   if (isOwner) {
+    const _mhSvg = (k)=>({
+      gear:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+      members:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+      roles:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>',
+      invite:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+    })[k];
     html += `<div style="padding:14px 16px;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));border:1px solid rgba(255,249,62,.15);border-radius:12px;margin-bottom:18px;">
       <div style="font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-        <span style="font-size:16px;">⚙️</span> Management Hub
+        ${_mhSvg('gear')} Management Hub
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('members');closeModal('modal-overview')">👥 Members</button>
-        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('roles');closeModal('modal-overview')">🎭 Roles</button>
-        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('invites');closeModal('modal-overview')">🔗 Invites</button>
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="openBastionSettings('members');closeModal('modal-overview')">${_mhSvg('members')} Members</button>
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="openBastionSettings('roles');closeModal('modal-overview')">${_mhSvg('roles')} Roles</button>
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="openBastionSettings('invites');closeModal('modal-overview')">${_mhSvg('invite')} Invites</button>
         <button class="btn-a" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1/-1;" onclick="openBastionSettings('boost');closeModal('modal-overview')">${_boostSvg('13')} Boost Bastion</button>
       </div>
     </div>`;
@@ -9788,11 +9794,13 @@ function renderBSettingsMain(tab) {
       <div class="settings-title">Visibility</div>
       <div class="vis-toggle" style="margin-bottom:20px;">
         <div class="vis-opt ${b.public!==false?'active':''}" onclick="setBastionVis(true)">
-          <div style="font-size:22px;">🌍</div><div style="font-size:13px;font-weight:700;">Public</div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <div style="font-size:13px;font-weight:700;">Public</div>
           <div style="font-size:11px;color:var(--muted-light);">Anyone can discover & join</div>
         </div>
         <div class="vis-opt ${b.public===false?'active':''}" onclick="setBastionVis(false)">
-          <div style="font-size:22px;">🔒</div><div style="font-size:13px;font-weight:700;">Private</div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div style="font-size:13px;font-weight:700;">Private</div>
           <div style="font-size:11px;color:var(--muted-light);">Invite only</div>
         </div>
       </div>
@@ -14414,7 +14422,7 @@ function buildProfileView(tab) {
         </div>
       ` : `
         <div style="background:rgba(255,255,255,.015);border:1.5px dashed rgba(254,248,61,.1);border-radius:18px;padding:36px 24px;text-align:center;margin-bottom:32px;">
-          <div style="font-size:32px;margin-bottom:12px;opacity:.4;">🎨</div>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;opacity:.4;"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.65-.75 1.65-1.69 0-.44-.18-.83-.44-1.12-.29-.29-.44-.66-.44-1.12a1.64 1.64 0 0 1 1.67-1.67h1.99c3.05 0 5.56-2.5 5.56-5.55C21.97 6.01 17.46 2 12 2z"/></svg>
           <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:rgba(255,255,255,.6);margin-bottom:6px;">No owned appearances yet</div>
           <div style="font-size:12.5px;color:rgba(255,255,255,.3);max-width:300px;margin:0 auto 18px;line-height:1.55;">Visit the Atelier Shop to browse and purchase exclusive appearances with Onyx.</div>
           <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:var(--rail);border:none;border-radius:14px;font-family:var(--font-display);font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);">Browse the Atelier Shop</button>
@@ -24984,7 +24992,7 @@ function _renderStickers(stickers) {
   if (!grid) return;
   if (!stickers.length) {
     grid.innerHTML = `<div class="spp-empty">
-      <div style="font-size:28px;margin-bottom:8px;opacity:.4;">🎨</div>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:.4;"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21 12a9 9 0 0 0-9-9v9h9z"/></svg>
       No stickers available yet.<br>
       <span style="font-size:11px;color:rgba(255,255,255,.2);">Bastion owners can upload stickers in Bastion Settings.</span>
     </div>`;
@@ -27347,7 +27355,7 @@ function renderActivityCard(activity) {
 
 function renderAllActivitiesInProfile(activities) {
   if (!activities || activities.length === 0) {
-    return '<div style="text-align:center;padding:30px 20px;color:rgba(255,255,255,.15);"><div style="font-size:24px;margin-bottom:8px;">🎮</div><div style="font-size:12px;">No active activities</div></div>';
+    return '<div style="text-align:center;padding:30px 20px;color:rgba(255,255,255,.15);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:.6;"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg><div style="font-size:12px;">No active activities</div></div>';
   }
 
   const sorted = activities.sort((a, b) => (b.priority || 2) - (a.priority || 2));

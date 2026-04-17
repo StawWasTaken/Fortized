@@ -424,6 +424,36 @@ body.is-desktop-app .topbar{padding-right:0;}
 .active-now-empty .an-empty-text{font-size:12px;color:rgba(255,255,255,.25);line-height:1.6;}
 .active-now-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 
+/* Home banner ad placeholder (main column, below DYK) */
+.home-banner-ad{margin:0 28px;border-radius:14px;overflow:hidden;min-height:94px;}
+.home-banner-ad .ad-empty-banner{width:100%;min-height:94px;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:14px;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;}
+
+/* Home friends-today horizontal strip (main column) */
+.home-friends-today{padding:4px 28px 2px;display:flex;gap:10px;overflow-x:auto;scrollbar-width:thin;}
+.home-friends-today::-webkit-scrollbar{height:6px;}
+.home-friends-today::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px;}
+.hft-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:12px;min-width:80px;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.hft-card:hover{background:rgba(255,249,62,.04);border-color:rgba(255,249,62,.18);transform:translateY(-1px);}
+.hft-av-wrap{position:relative;width:46px;height:46px;}
+.hft-av{width:46px;height:46px;border-radius:50%;object-fit:cover;background:var(--panel2);}
+.hft-dot{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;border:2px solid var(--channel);}
+.hft-name{font-size:11.5px;font-weight:700;color:rgba(255,255,255,.85);max-width:78px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
+
+/* Home trending items horizontal strip (main column) */
+.home-trending-items-row{padding:4px 28px 2px;display:flex;gap:12px;overflow-x:auto;scrollbar-width:thin;}
+.home-trending-items-row::-webkit-scrollbar{height:6px;}
+.home-trending-items-row::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px;}
+.hti-card{display:flex;flex-direction:column;gap:6px;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px;min-width:128px;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.hti-card:hover{background:rgba(255,249,62,.04);border-color:rgba(255,249,62,.18);transform:translateY(-1px);}
+.hti-img{aspect-ratio:1/1;background:var(--panel2);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.hti-img img{width:100%;height:100%;object-fit:cover;}
+.hti-name{font-size:12px;font-weight:700;color:rgba(255,255,255,.88);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hti-price{font-size:11.5px;font-weight:800;color:var(--accent);display:flex;align-items:center;gap:4px;}
+.hti-onyx{color:var(--accent);}
+
+/* Home empty strip shared */
+.home-empty-strip{margin:0 28px;padding:14px 16px;background:var(--panel);border:1px dashed var(--border);border-radius:12px;display:flex;align-items:center;gap:12px;}
+
 /* Home trending forum posts */
 #home-trending-forum{padding:6px 28px 0;display:flex;flex-direction:column;gap:8px;}
 .trending-post{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .15s;}
@@ -961,6 +991,8 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .ci-preview .ci-smalltext{font-size:10.5px;opacity:.6;}
 .ci-preview .ci-mention{color:var(--blue);font-weight:600;}
 .ci-preview .ci-room-ref{color:var(--purple);font-weight:600;}
+.ci-preview .ci-marker{opacity:.28;font-weight:400;font-style:normal;color:rgba(255,255,255,.35);}
+.ci-preview .ci-emoji{display:inline-block;width:1.25em;height:1.25em;vertical-align:-0.25em;margin:0 1px;}
 /* ── Atelier ─────────────────────────────────────── */
 .atelier-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;background:transparent;}
 .atelier-scroll{flex:1;overflow-y:auto;padding:0;scroll-behavior:smooth;}
@@ -2219,6 +2251,53 @@ body.is-desktop-app .notif-panel{top:0;}
 .forum-reply-delete { position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;opacity:0;transition:opacity .15s,color .12s; }
 .forum-reply-card:hover .forum-reply-delete { opacity:.5; }
 .forum-reply-delete:hover { opacity:1!important;color:var(--red)!important; }
+
+/* Vote column (upvote/downvote) */
+.forum-vote-col { display:flex;flex-direction:column;align-items:center;gap:3px;padding:2px 0;min-width:32px;flex-shrink:0; }
+.forum-vote-btn { background:none;border:none;color:rgba(255,255,255,.35);font-size:14px;line-height:1;cursor:pointer;padding:3px 6px;border-radius:6px;transition:all .12s; }
+.forum-vote-btn:hover { background:rgba(255,255,255,.05);color:rgba(255,255,255,.75); }
+.forum-vote-btn.up.active { color:#ff9c4a;background:rgba(255,156,74,.12); }
+.forum-vote-btn.down.active { color:#6db7ff;background:rgba(109,183,255,.12); }
+.forum-vote-score { font-size:12px;font-weight:700;color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums;min-width:22px;text-align:center; }
+.forum-vote-score.pos { color:#ff9c4a; }
+.forum-vote-score.neg { color:#6db7ff; }
+
+/* Post actions row */
+.forum-post-actions { display:flex;gap:6px;margin-top:10px;flex-wrap:wrap; }
+.forum-pa-btn { background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.55);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;font-family:var(--font-ui); }
+.forum-pa-btn:hover { background:rgba(255,255,255,.07);color:rgba(255,255,255,.85);border-color:rgba(255,255,255,.12); }
+.forum-pa-btn.danger:hover { background:rgba(248,113,113,.08);color:var(--red);border-color:rgba(248,113,113,.2); }
+
+/* Edit-in-place area */
+.fp-edit-area { width:100%;min-height:80px;padding:8px 10px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12.5px;font-family:var(--font-ui);resize:vertical; }
+.fp-edit-area:focus { outline:none;border-color:rgba(255,249,62,.25); }
+.fp-edit-actions { display:flex;gap:6px;margin-top:6px; }
+
+/* Edited badge */
+.forum-edited { color:rgba(255,255,255,.35);font-size:10.5px;font-style:italic;cursor:help; }
+
+/* Quote block */
+.forum-quote-block { border-left:3px solid rgba(255,249,62,.35);background:rgba(255,249,62,.04);padding:8px 10px;border-radius:0 8px 8px 0;margin-bottom:8px;position:relative;cursor:pointer;transition:background .12s; }
+.forum-quote-block:hover { background:rgba(255,249,62,.07); }
+.fqb-author { font-size:10.5px;font-weight:700;color:rgba(255,249,62,.75);margin-bottom:3px; }
+.fqb-text { font-size:11.5px;color:rgba(255,255,255,.55);line-height:1.45;overflow:hidden;max-height:60px; }
+.fqb-clear { position:absolute;top:4px;right:4px;background:none;border:none;color:rgba(255,255,255,.4);font-size:14px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px; }
+.fqb-clear:hover { color:#fff;background:rgba(255,255,255,.08); }
+
+/* Mention in post body */
+.forum-mention { color:var(--blue);font-weight:600;cursor:pointer;background:rgba(116,169,255,.08);padding:1px 4px;border-radius:4px;transition:background .12s; }
+.forum-mention:hover { background:rgba(116,169,255,.18); }
+
+/* Mention autocomplete popup */
+.forum-mention-popup { position:absolute;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.4);padding:4px;max-width:260px;z-index:100;margin-top:4px; }
+.fmn-item { display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .1s; }
+.fmn-item:hover { background:rgba(255,255,255,.05); }
+.fmn-item img { width:22px;height:22px;border-radius:50%;object-fit:cover; }
+.fmn-item span { font-size:12px; }
+
+/* Flash highlight on jump-to-post */
+.frc-flash { animation:frcFlash 1.4s ease-out; }
+@keyframes frcFlash { 0%,20%{box-shadow:0 0 0 2px rgba(255,249,62,.6);} 100%{box-shadow:0 0 0 0 rgba(255,249,62,0);} }
 
 /* Reply compose */
 .forum-reply-compose { margin-top:24px;padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:14px; }
@@ -5819,5 +5898,26 @@ select:focus-visible {
 .opacity-50 { opacity: 0.5; }
 .opacity-75 { opacity: 0.75; }
 .hidden-visually { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+
+/* ── Simple modal (gift/wishlist/trade) ── */
+.simple-modal-wrap { position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:10000;display:flex;align-items:center;justify-content:center;animation:sm-fade .15s ease-out; }
+@keyframes sm-fade { from{opacity:0;} to{opacity:1;} }
+.simple-modal-card { background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:440px;width:92%;max-height:86vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5); }
+.simple-modal-close { position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px; }
+.simple-modal-close:hover { color:#fff;background:rgba(255,255,255,.08); }
+.gift-modal h3, .wl-modal h3, .trade-modal h3 { font-family:var(--font-display);font-size:18px;font-weight:900;margin:0 0 14px;color:#fff; }
+.gift-modal .gift-price, .gift-label { font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;letter-spacing:.05em;text-transform:uppercase; }
+.gift-input { width:100%;padding:9px 12px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:var(--font-ui);margin-bottom:12px; }
+.gift-input:focus { outline:none;border-color:rgba(255,249,62,.25); }
+.gift-actions { display:flex;gap:8px;justify-content:flex-end;margin-top:12px; }
+.wl-hdr { display:flex;justify-content:space-between;align-items:center;margin-bottom:16px; }
+.wl-privacy label { font-size:11px;color:var(--muted);cursor:pointer; }
+.wl-items { display:flex;flex-direction:column;gap:8px; }
+.wl-card { display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px; }
+.wl-name { flex:1;font-size:13px;font-weight:600;color:#fff; }
+.wl-price { font-size:12px;color:var(--accent);font-weight:700;margin-right:8px; }
+.wl-gift-btn, .wl-rm-btn { padding:5px 10px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.18);border-radius:6px;color:var(--accent);font-size:10.5px;font-weight:700;cursor:pointer; }
+.wl-rm-btn { background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);color:var(--red); }
+.trade-note { font-size:11px;color:var(--muted);padding:8px 10px;background:rgba(255,249,62,.04);border-left:2px solid var(--accent);margin:8px 0;border-radius:4px; }
 
 </style>

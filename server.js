@@ -428,6 +428,8 @@ app.get('/app/messages', (_req, res) => res.sendFile(path.join(__dirname, 'app',
 app.get('/app/discover', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'discover', 'index.html')));
 app.get('/app/atelier', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'atelier', 'index.html')));
 app.get('/app/bastion', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'bastion', 'index.html')));
+app.get('/app/forum', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'forum', 'index.html')));
+app.get('/app/forum/{*rest}', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'forum', 'index.html')));
 // SPA-style fallback for /app, /login, etc.
 ['app', 'login', 'signup', 'blog', 'support', 'download', 'privacy', 'terms', 'legal'].forEach(route => {
   app.get(`/${route}`, (_req, res) => res.sendFile(path.join(__dirname, route, 'index.html')));

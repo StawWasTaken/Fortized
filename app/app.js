@@ -1470,7 +1470,7 @@ const _ftzRouter = {
       showView('dms');
       return;
     }
-    if (view === 'discover' || view === 'atelier') {
+    if (view === 'discover' || view === 'atelier' || view === 'forum') {
       showView(view);
       return;
     }
@@ -28879,12 +28879,12 @@ function _crDeleteBot(idx) {
 
 // ── Forum System ──────────────────────────────────────────
 const _forumSvg = {
-  megaphone: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2a1 1 0 0 1 1 1v3.757l-2 2V4.413L11 8.318V15.682l3.735 1.953L13 19.37V21a1 1 0 0 1-1.504.864l-4.89-2.934H4a3 3 0 0 1-3-3V8.07a3 3 0 0 1 3-3h2.606L20 2zM8 6.07H4a1 1 0 0 0-1 1V15.93a1 1 0 0 0 1 1h4V6.07zm3 .248v11.364l-1-.523V6.841l1-.523zm10.293 2.39l1.414 1.414L20.414 12.414l2.293 2.293-1.414 1.414L19 13.828l-2.293 2.293-1.414-1.414L17.586 12.414 15.293 10.121l1.414-1.414L19 11l2.293-2.293z"/></svg>',
-  chat: '<svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor"><path d="M12 4C6.486 4 2 7.589 2 12c0 2.908 1.898 5.515 5 7.313V24a1 1 0 0 0 1.554.832L12.698 22H12c0 0 0 0 0 0h6c5.514 0 10-3.589 10-8s-4.486-8-10-8h-6zm14 8c0 3.309-3.589 6-8 6h-6.384l-2.17 1.447.004-2.964-.892-.467C5.871 14.592 4 12.398 4 12c0-3.309 3.589-6 8-6h6c4.411 0 8 2.691 8 6z"/><path d="M22 10h-2v4h-4v2h4v4h2v-4h4v-2h-4z" opacity="0"/></svg>',
-  bug: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.56 3.85a4.75 4.75 0 0 1 6.88 0l.47.492a4.75 4.75 0 0 1 1.34 3.316V8h1.48a.75.75 0 0 1 0 1.5H17.25v.84l2.76 1.38a.75.75 0 0 1-.67 1.34L17.25 12.01V13c0 .69-.074 1.362-.214 2.008l2.224 1.112a.75.75 0 0 1-.67 1.34l-1.824-.911A7.252 7.252 0 0 1 12 20.25a7.252 7.252 0 0 1-4.766-4.701l-1.824.911a.75.75 0 0 1-.67-1.34l2.224-1.112A7.248 7.248 0 0 1 6.75 13v-.99L4.66 13.06a.75.75 0 0 1-.67-1.34L6.75 10.34V9.5H5.25a.75.75 0 0 1 0-1.5h1.5v-.342a4.75 4.75 0 0 1 1.34-3.316l.47-.492zm5.81 1.06a3.25 3.25 0 0 0-4.74 0l-.47.492A3.25 3.25 0 0 0 8.25 7.658V13a3.75 3.75 0 0 0 7.5 0V7.658a3.25 3.25 0 0 0-.91-2.256l-.47-.492z"/></svg>',
-  lightbulb: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-4.5 12.37V17a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-2.63A7 7 0 0 0 12 2zm2.5 15h-5v-1h5v1zm.16-3.16l-.66.43V16h-4v-1.73l-.66-.43A5 5 0 1 1 17 9a4.98 4.98 0 0 1-2.34 4.84zM9 20h6a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2z"/></svg>',
-  sparkles: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1l2.42 7.372L22 10.814l-6.168 4.486L18.064 23 12 18.528 5.936 23l2.232-7.7L2 10.814l7.58-2.442z"/></svg>',
-  offtopic: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.038 2 11c0 2.727 1.37 5.189 3.594 6.87L4 22l5.34-2.326C10.22 19.89 11.1 20 12 20c5.514 0 10-4.038 10-9S17.514 2 12 2zm.75 13h-1.5v-1.5h1.5V15zm0-3h-1.5V7h1.5v5z"/></svg>',
+  megaphone: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>',
+  chat: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  bug: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="m19 7-3 2"/><path d="m5 7 3 2"/><path d="m19 19-3-2"/><path d="m5 19 3-2"/><path d="M20 13h-4"/><path d="M4 13h4"/><path d="m10 4 1 2"/><path d="m14 4-1 2"/></svg>',
+  lightbulb: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>',
+  sparkles: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>',
+  offtopic: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg>',
 };
 const FORUM_CATEGORIES = [
   { id: 'announcements', name: 'Announcements', icon: _forumSvg.megaphone, color: '#ff6b6b', desc: 'Official announcements from Fortized', group: 'announcements' },
@@ -29237,85 +29237,98 @@ function _forumShowCreatePost(preselectedCategory) {
   const cat = FORUM_CATEGORIES.find(c => c.id === defaultCat) || FORUM_CATEGORIES[0];
 
   content.innerHTML = `
-    <div style="display:flex;flex-direction:column;flex:1;min-height:0;">
-      <div style="flex:1;overflow-y:auto;padding:28px 36px 40px;">
-        <div style="max-width:720px;margin:0 auto;">
-          <!-- Breadcrumb -->
-          <div style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:24px;flex-wrap:wrap;">
-            <a href="#" onclick="event.preventDefault();_forumInit()" style="color:var(--blue);font-weight:600;text-decoration:none;">Forum</a>
-            <span style="color:var(--muted);">/</span>
-            <a href="#" onclick="event.preventDefault();_forumOpenCategory('${defaultCat}')" style="color:var(--blue);font-weight:600;text-decoration:none;">${escapeHTML(cat.name)}</a>
-            <span style="color:var(--muted);">/</span>
-            <span style="color:var(--text);font-weight:600;">New Post</span>
+    <div class="fnp-wrap">
+      <div class="fnp-inner">
+        <!-- Breadcrumb -->
+        <div class="fnp-breadcrumb">
+          <a href="#" onclick="event.preventDefault();_forumInit()">Forum</a>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <a href="#" onclick="event.preventDefault();_forumOpenCategory('${defaultCat}')">${escapeHTML(cat.name)}</a>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="fnp-breadcrumb-current">New Post</span>
+        </div>
+
+        <div class="fnp-grid">
+          <!-- Main form column -->
+          <div class="fnp-main">
+            <div class="fnp-header">
+              <div class="fnp-header-icon" style="background:${cat.color}22;color:${cat.color};">${cat.icon}</div>
+              <div class="fnp-header-text">
+                <div class="fnp-kicker">Posting in</div>
+                <div class="fnp-header-title">${escapeHTML(cat.name)}</div>
+              </div>
+            </div>
+
+            <div class="fnp-card">
+              <label class="fnp-label" for="forum-new-title">Title</label>
+              <input id="forum-new-title" class="fnp-input" type="text" placeholder="Give your post a clear, descriptive title" maxlength="100" oninput="document.getElementById('fnp-title-count').textContent=this.value.length">
+              <div class="fnp-hint"><span id="fnp-title-count">0</span>/100</div>
+            </div>
+
+            <div class="fnp-card">
+              <label class="fnp-label" for="forum-new-content">Content</label>
+              <textarea id="forum-new-content" class="fnp-textarea" placeholder="Write out your post... Share details, context, and what you're looking for."></textarea>
+            </div>
+
+            <div class="fnp-card">
+              <label class="fnp-label">Attachments</label>
+              <input id="forum-thread-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumThreadImagePreview(event)">
+              <div class="fnp-upload" onclick="document.getElementById('forum-thread-image-upload').click()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                <div>
+                  <div class="fnp-upload-title">Click to add an image</div>
+                  <div class="fnp-upload-sub">PNG, JPG, GIF — optional</div>
+                </div>
+              </div>
+              <div id="forum-thread-image-preview" style="margin-top:10px;"></div>
+            </div>
+
+            <input id="forum-new-category" type="hidden" value="${defaultCat}">
+
+            <div class="fnp-footer">
+              <button class="fnp-cancel" onclick="_forumOpenCategory('${defaultCat}')">Cancel</button>
+              <button class="fnp-submit" onclick="_forumCreateThread(event)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+                Publish post
+              </button>
+            </div>
           </div>
 
-          <!-- Title -->
-          <input id="forum-new-title" type="text" placeholder="Title" maxlength="100" style="width:100%;padding:12px 16px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:var(--font-ui);margin-bottom:12px;transition:border-color .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='var(--border)'">
-
-          <!-- Content -->
-          <textarea id="forum-new-content" placeholder="Content" style="width:100%;height:200px;padding:12px 16px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:var(--font-ui);resize:vertical;margin-bottom:16px;transition:border-color .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-
-          <!-- Image upload (hidden) -->
-          <input id="forum-thread-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumThreadImagePreview(event)">
-          <div id="forum-thread-image-preview" style="margin-bottom:12px;"></div>
-          <input id="forum-new-category" type="hidden" value="${defaultCat}">
-
-          <!-- ToS Warning + Create button row -->
-          <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
-            <div style="flex:1;min-width:240px;">
-              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-light);margin-bottom:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--accent);"><path d="M12 8v4"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="10"/></svg>
-                Before posting, please make sure your post content follows the <a href="https://fortized.com/legal/" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:600;">Terms of Service &amp; Terms of Use</a> or you may be banned.
+          <!-- Guidelines sidebar -->
+          <aside class="fnp-side">
+            <div class="fnp-side-card fnp-side-card--tos">
+              <div class="fnp-side-head">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 9 9 9s9-4 9-9V7l-9-5z"/></svg>
+                <span>Before you post</span>
               </div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-light);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--blue);"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                Additionally, we have some additional forum rules that you must keep in mind:
-              </div>
+              <p>Your post must follow the <a href="https://fortized.com/legal/" target="_blank" rel="noopener">Terms of Service &amp; Terms of Use</a>. Violations may result in content removal, warnings, suspensions, or permanent bans.</p>
+              <p class="fnp-side-note"><strong>Every user is equal under these rules</strong> — regular users, verified members, moderators, and administrators. Only <strong>Superadmins</strong> are exempt.</p>
             </div>
-            <div style="display:flex;gap:8px;flex-shrink:0;align-items:center;">
-              <button class="forum-img-btn" onclick="document.getElementById('forum-thread-image-upload').click()" style="padding:8px 14px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Image</button>
-              <button class="forum-submit-btn" onclick="_forumCreateThread(event)">Create</button>
-            </div>
-          </div>
 
-          <!-- Collapsible Forum Rules -->
-          <details style="background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-            <summary style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--text);user-select:none;list-style:none;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--muted-light);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              Forum rules
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:auto;transition:transform .2s;"><polyline points="6 9 12 15 18 9"/></svg>
-            </summary>
-            <div style="padding:0 16px 16px;font-size:12.5px;color:var(--muted-light);line-height:1.7;">
-              <div style="margin-bottom:14px;">
-                <strong style="color:var(--text);font-size:13px;">Do not post personal attacks</strong><br>
-                Personal attacks are not welcome here. A personal attack is defined as a post or comment that is intended to insult, demean, or otherwise harass another user. This includes, but is not limited to, name-calling, threats, and deliberately inflammatory comments. In short, do not talk about other users in a negative way. If you have a problem with another user, please use the report feature or contact an administrator or a moderator.
+            <div class="fnp-side-card">
+              <div class="fnp-side-head">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span>Forum rules</span>
               </div>
-              <div style="margin-bottom:14px;">
-                <strong style="color:var(--text);font-size:13px;">No spamming</strong><br>
-                Only post content that is relevant to the forum. Spamming is defined as posting the same content multiple times, posting irrelevant or off-topic content, or posting excessively large or small amounts of content. Check twice before you hit the submit button to make sure that your post is actually relevant to the current discussion.
-              </div>
-              <div style="margin-bottom:14px;">
-                <strong style="color:var(--text);font-size:13px;">No swearing or attempting to bypass the profanity filter</strong><br>
-                The profanity filter is in place for a reason - to keep the forum clean and family-friendly. Do not attempt to bypass the filter by misspelling words or using creative substitutions. If you feel that a certain word does not need to be filtered, please contact an administrator or a moderator.
-              </div>
-              <div style="margin-bottom:14px;">
-                <strong style="color:var(--text);font-size:13px;">No advertising and off-site links</strong><br>
-                Advertising or posting any off-site links without permission is strictly forbidden. We only allow a limited number of exceptions for links to resources that are directly related to the topic of discussion. Remember that the link you are posting must be appropriate and relevant to the discussion. If you want to post a link that is not on this list, please contact an administrator or a moderator and get permission first.
-              </div>
-              <div style="margin-bottom:14px;">
-                <strong style="color:var(--text);font-size:13px;">Don't post about your moderation</strong><br>
-                If you have been warned, suspended, or banned from the forums, do not post about it. If you do, your post will be removed and you may be subject to further action. If you have a problem with a moderation decision, please contact an administrator or a moderator.
-              </div>
-              <div style="margin-bottom:14px;">
-                <strong style="color:var(--text);font-size:13px;">Be respectful and constructive</strong><br>
-                We want everyone to feel welcome here, so please be respectful of other users. This includes, but is not limited to, refraining from making derogatory comments about race, ethnicity, national origin, religion, gender, sexual orientation, or disability. If you disagree with someone, please do so in a constructive way. Remember that everyone is entitled to their own opinion.
-              </div>
-              <div>
-                <strong style="color:var(--text);font-size:13px;">Do not try to find loopholes in the rules</strong><br>
-                The rules are in place for a reason. Do not try to find loopholes or exploit technicalities. If you are unsure whether something is allowed, ask a moderator before posting. The spirit of the rules is more important than the letter.
-              </div>
+              <div class="fnp-rule"><strong>Respect everyone</strong><p>No harassment, bullying, threats, or intimidation — this echoes §4.1 of our Terms. Disagreements are fine; personal attacks are not.</p></div>
+              <div class="fnp-rule"><strong>No illegal or harmful content</strong><p>Do not post anything illegal, defamatory, or that infringes on someone else's rights. Illegal content may be reported to the authorities.</p></div>
+              <div class="fnp-rule"><strong>No spam, scams, or malware</strong><p>Don't flood the forum, repost the same content, or spread unsolicited promotions, phishing links, or malicious files.</p></div>
+              <div class="fnp-rule"><strong>No impersonation</strong><p>Don't pretend to be other users, Swiftaw staff, or public figures. Misrepresenting who you are is a Terms violation.</p></div>
+              <div class="fnp-rule"><strong>No bypassing safeguards</strong><p>Don't bypass the profanity filter, rate limits, bans, or security measures. Don't use bots or scrapers without written permission.</p></div>
+              <div class="fnp-rule"><strong>Stay on-topic</strong><p>Use the right category and keep discussions relevant. Off-topic content belongs in <em>Off-Topic</em>.</p></div>
+              <div class="fnp-rule"><strong>No unauthorized advertising</strong><p>Off-site links and promotions require permission. Links must be safe, relevant, and add value to the discussion.</p></div>
+              <div class="fnp-rule"><strong>Don't post about moderation</strong><p>If you've been warned, suspended, or banned, don't make a post about it. Contact an administrator through proper channels.</p></div>
+              <div class="fnp-rule"><strong>Don't look for loopholes</strong><p>The spirit of the rules matters more than the letter. If you're unsure, ask before posting.</p></div>
             </div>
-          </details>
+
+            <div class="fnp-side-card fnp-side-card--note">
+              <div class="fnp-side-head">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span>Rule enforcement</span>
+              </div>
+              <p>Moderators and administrators enforce the rules but are <strong>equally bound by them</strong> — they have no special posting privileges. Only <strong>Superadmins</strong> (platform owners) are exempt from the forum rules &amp; ToS/ToU.</p>
+            </div>
+          </aside>
         </div>
       </div>
     </div>

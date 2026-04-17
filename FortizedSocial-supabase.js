@@ -282,16 +282,78 @@ const FortizedSocial = (() => {
     };
   }
 
+  // Protected accounts: writes must never clobber profile data (pfp/banner/bio/
+  // friends/radiance/etc) with empty values. Only badges + admin perms (role,
+  // isAdmin, isModerator, forceLogoutAt, banned, banReason, suspension) may be
+  // freely changed. Everything else is non-destructively merged against the
+  // existing DB row so stale/partial saves can't erase data.
+  const _PROTECTED_ACCOUNTS_HARD = new Set(['staw', 'fortized', 'joyster']);
+  // Admin/moderation fields that ARE allowed to change freely (even to empty).
+  const _PROTECTED_WRITABLE_FIELDS = new Set([
+    'badges', 'role', 'isAdmin', 'isModerator', 'isSuperAdmin',
+    'forceLogoutAt', 'banned', 'banReason', 'suspension', 'suspendedUntil',
+    'activeWarning', 'lastSeen', 'status', 'customStatus', 'gameActivity',
+    'onyx', 'password', // password changes must flow through
+  ]);
+  const _PROTECTED_WRITABLE_COLS = new Set([
+    'badges', 'banned', 'ban_reason', 'suspension', 'suspended_until',
+    'active_warning', 'last_seen', 'status', 'custom_status', 'game_activity',
+    'onyx', 'password', 'raw',
+  ]);
+
+  function _isHardProtected(username) {
+    return _PROTECTED_ACCOUNTS_HARD.has(norm(username));
+  }
+
+  // Given incoming row + existing DB row for a protected account, return a
+  // merged row where empty/null fields in the new row fall back to existing
+  // values. Fields in _PROTECTED_WRITABLE_COLS are always taken from the new
+  // row. For `raw` JSONB, we shallow-merge so admin fields in raw can update
+  // without erasing unrelated extras.
+  function _mergeProtectedRow(newRow, existingRow) {
+    if (!existingRow) return newRow;
+    const out = { ...existingRow, ...newRow };
+    for (const col of Object.keys(newRow)) {
+      if (_PROTECTED_WRITABLE_COLS.has(col)) continue;
+      const nv = newRow[col];
+      const ev = existingRow[col];
+      const isEmpty = nv == null
+        || (Array.isArray(nv) && nv.length === 0 && Array.isArray(ev) && ev.length > 0)
+        || (typeof nv === 'string' && nv === '' && typeof ev === 'string' && ev !== '')
+        || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && ev && typeof ev === 'object' && Object.keys(ev).length > 0);
+      if (isEmpty) out[col] = ev;
+    }
+    // Shallow merge raw JSONB so protected extras survive partial saves.
+    if (existingRow.raw && typeof existingRow.raw === 'object') {
+      out.raw = { ...existingRow.raw, ...(newRow.raw || {}) };
+    }
+    // username always from new row (normalized)
+    out.username = newRow.username;
+    return out;
+  }
+
   async function saveUserObject(user) {
     if (!user?.username) return;
     _cacheDel('user:' + norm(user.username));
     _cacheDel('userEnf:' + norm(user.username));
-    const row = _userToRow(user);
+    let row = _userToRow(user);
+    if (_isHardProtected(user.username)) {
+      try {
+        const { data: existing } = await sb.from('users').select('*').eq('username', norm(user.username)).maybeSingle();
+        if (existing) {
+          row = _mergeProtectedRow(row, existing);
+          console.debug('[saveUserObject] Protected account merge applied for', user.username);
+        }
+      } catch (e) {
+        console.warn('[saveUserObject] Protected merge lookup failed, aborting write to avoid data loss:', e?.message);
+        return;
+      }
+    }
     console.debug('[saveUserObject] Saving user:', {
       username: user.username,
-      pfp: user.pfp ? 'set' : 'null',
-      banner: user.banner ? 'set' : 'null',
-      onyx: user.onyx
+      pfp: row.pfp ? 'set' : 'null',
+      banner: row.banner ? 'set' : 'null',
+      onyx: row.onyx
     });
     const { data, error } = await sb.from('users').upsert(row, { onConflict: 'username' });
     if (error) {

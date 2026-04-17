@@ -879,6 +879,28 @@ async function refreshCU() {
     if (fresh?.username) {
       _dbg('[refreshCU] Fresh data from DB:', { username: fresh.username, pfp: fresh.pfp ? 'set' : 'null', friends: fresh.friends?.length || 0 });
 
+      // Hard-protected accounts: never let a refresh clobber profile data.
+      // If the DB returned a falsy/empty value, keep whatever the local CU has.
+      // Only badges + admin/moderation fields are allowed to change freely.
+      if (SUPER_ADMINS.includes((fresh.username || '').toLowerCase())) {
+        const protectFields = [
+          'pfp','banner','bio','displayName','friends','friendRequestsSent','friendRequestsReceived',
+          'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme','activeDecoration',
+          'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
+          'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
+          'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
+          'onyxBadge','onyxBadgeSpent','createdAt','customStatus'
+        ];
+        for (const k of protectFields) {
+          const nv = fresh[k], lv = CU[k];
+          const isEmpty = nv == null
+            || (Array.isArray(nv) && nv.length === 0 && Array.isArray(lv) && lv.length > 0)
+            || (typeof nv === 'string' && nv === '' && typeof lv === 'string' && lv !== '')
+            || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && lv && typeof lv === 'object' && Object.keys(lv).length > 0);
+          if (isEmpty && lv != null) fresh[k] = lv;
+        }
+      }
+
       // Preserve radiance data if DB returned null but local had active values
       if(!fresh.radianceUntil && prevRad && new Date(prevRad)>new Date()) fresh.radianceUntil=prevRad;
       if(!fresh.radiancePlus && prevPlus && new Date(prevPlus)>new Date()) fresh.radiancePlus=prevPlus;
@@ -4114,7 +4136,7 @@ async function showGCMemberPanel(meta) {
   let membersHtml = '';
   // Owner section (always shown at top)
   if (ownerOnline) {
-    membersHtml += `<div class="ml-role-header" style="margin-top:4px;"><span style="font-size:12px;opacity:.6;">👑</span> Owner</div>`;
+    membersHtml += `<div class="ml-role-header" style="margin-top:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="opacity:.6;vertical-align:-2px;margin-right:4px;"><path d="M2 18l3-10 5 5 2-6 2 6 5-5 3 10H2zm0 2h20v2H2z"/></svg> Owner</div>`;
     membersHtml += _buildGCMemberEntry(meta.owner, meta, isOwner, _gcStatusMap);
   }
   // Online members
@@ -4624,7 +4646,7 @@ function renderBastionSidebar(scroll) {
   html+=`<div class="bastion-identity${bannerSrc?' ':' no-banner '}" style="position:relative;">
     ${bannerSrc?'':`<div class="bastion-emblem">${emblemHTML}</div>`}
     <div class="bastion-meta">
-      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''} ${boostLv>0?`<span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:5px;background:linear-gradient(135deg,${boostLv===1?'#60a5fa':boostLv===2?'#a78bfa':'#fbbf24'},${boostLv===1?'#60a5fa99':boostLv===2?'#a78bfa99':'#fbbf2499'});color:#fff;letter-spacing:.03em;">${boostLv===1?'🟦 T1':boostLv===2?'🟪 T2':'👑 T3'}</span>`:'<span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);">🔓 Boost</span>'} <span class="bm-chevron">▼</span></div>
+      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''} ${boostLv>0?`<span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:5px;background:linear-gradient(135deg,${boostLv===1?'#60a5fa':boostLv===2?'#a78bfa':'#fbbf24'},${boostLv===1?'#60a5fa99':boostLv===2?'#a78bfa99':'#fbbf2499'});color:#fff;letter-spacing:.03em;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1 2-5z"/></svg>T${boostLv}</span>`:'<span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>Boost</span>'} <span class="bm-chevron">▼</span></div>
       ${b.tagline?`<div class="bm-tagline">${escapeHTML(b.tagline)}</div>`:''}
     </div>
     <div id="bastion-name-dd-anchor"></div>
@@ -6331,7 +6353,7 @@ async function renderMemberList() {
   const ownerOnline = ownerList.filter(u => isOnlineStatus(statusMap[u]));
   const ownerOffline = ownerList.filter(u => !isOnlineStatus(statusMap[u]));
   if (ownerOnline.length) {
-    html += `<div class="ml-role-header"><span style="font-size:12px;opacity:.6;">👑</span> Owner</div>`;
+    html += `<div class="ml-role-header"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="opacity:.6;vertical-align:-2px;margin-right:4px;"><path d="M2 18l3-10 5 5 2-6 2 6 5-5 3 10H2zm0 2h20v2H2z"/></svg> Owner</div>`;
     ownerOnline.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u]));
   }
   // Role-grouped sections (online members)
@@ -8126,7 +8148,7 @@ function initFortizedUXResilience() {
     }catch{}
   },1000);
 
-  setInterval(async()=>{try{await updateNotifBadge();}catch{}},120000); // Reduced to 2min (was 30s) — egress emergency
+  setInterval(async()=>{try{await updateNotifBadge();}catch{}},300000); // 5min (was 2min) — egress reduction
   // Real-time notification listener
   try {
     // Notification listeners are now handled via Socket.IO in initCrossDeviceSync()
@@ -12825,38 +12847,47 @@ function toggleFavEmoji(emoji) {
   }
 }
 
+// SVG icons for emoji categories (replaces unicode emoji icons)
+const _EMOJI_CATEGORY_SVGS = {
+  favorites:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.1L21.5 9l-5 4.8 1.3 7-5.8-3.2-5.8 3.2 1.3-7-5-4.8 6.6-.9L12 2z"/></svg>',
+  ftz:        '<img src="/Fortized icon.png" width="22" height="22" style="object-fit:contain;border-radius:6px;" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{innerHTML:\'<svg width=18 height=18 viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=2><path d=\\\'M3 21h18M5 21V7l7-4 7 4v14M9 10h2M13 10h2M9 14h2M13 14h2\\\'/></svg>\'}))">',
+  frequent:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  personal:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.65-.75 1.65-1.69 0-.44-.18-.83-.44-1.12-.29-.29-.44-.66-.44-1.12a1.64 1.64 0 0 1 1.67-1.67h1.99c3.05 0 5.56-2.5 5.56-5.55C21.97 6.01 17.46 2 12 2z"/></svg>',
+  bastions:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V9l2-2 2 2v12M10 21V6l2-2 2 2v15M15 21V9l2-2 2 2v12"/></svg>',
+  smileys:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  people:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  nature:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 8c0 3 3 4 7 4s7-1 7-4-3-4-7-4-7 1-7 4zM5 16c0 3 3 4 7 4s7-1 7-4"/></svg>',
+  food:       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+  travel:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>',
+  activities: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>',
+  hearts:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.8 4.6c-1.9-1.9-5-1.9-6.9 0L12 6.5l-1.9-1.9c-1.9-1.9-5-1.9-6.9 0s-1.9 5 0 6.9l8.8 8.8 8.8-8.8c1.9-1.9 1.9-5 0-6.9z"/></svg>',
+  symbols:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  flags:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+};
+
 function buildEmojiSidebar() {
-  // Build sidebar with: Favorites, Fortized icon, separator, bastion icons, separator, category icons
+  // Sidebar order: Favorites, Fortized, Frequent, Personal, [bastions], [categories]
   const bastions = CU?.bastions || [];
   let html = '';
-  // Favorites
-  html += `<button class="epp-sidebar-btn${_emojiPickerTab==='favorites'?' active':''}" id="etab-favorites" title="Favorites" onclick="setEmojiTab('favorites')"><span style="font-size:16px;">⭐</span></button>`;
-  // Fortized global emojis
-  html += `<button class="epp-sidebar-btn${_emojiPickerTab==='ftz'?' active':''}" id="etab-ftz" title="Fortized Guide" onclick="setEmojiTab('ftz')"><img src="/Fortized icon.png" width="22" height="22" style="object-fit:contain;" onerror="this.outerHTML='🏰'"></button>`;
-  // Frequently used
-  html += `<button class="epp-sidebar-btn${_emojiPickerTab==='frequent'?' active':''}" id="etab-frequent" title="Frequently used" onclick="setEmojiTab('frequent')"><span style="font-size:16px;">🔥</span></button>`;
-  // Personal emojis
-  html += `<button class="epp-sidebar-btn${_emojiPickerTab==='personal'?' active':''}" id="etab-personal" title="My Emojis" onclick="setEmojiTab('personal')"><span style="font-size:16px;">🎨</span></button>`;
-  // Separator before bastions
+  const btn = (id, title, iconHtml) => `<button class="epp-sidebar-btn${_emojiPickerTab===id?' active':''}" id="etab-${id}" title="${escapeHTML(title)}" aria-label="${escapeHTML(title)}" onclick="setEmojiTab('${id}')">${iconHtml}</button>`;
+  html += btn('favorites', 'Favorites', _EMOJI_CATEGORY_SVGS.favorites);
+  html += btn('ftz', 'Fortized Guide', _EMOJI_CATEGORY_SVGS.ftz);
+  html += btn('frequent', 'Frequently used', _EMOJI_CATEGORY_SVGS.frequent);
+  html += btn('personal', 'My Emojis', _EMOJI_CATEGORY_SVGS.personal);
   if (bastions.length) {
     html += '<div class="epp-sidebar-sep"></div>';
-    const isRadiance = _hasActiveRadiance();
-    if (isRadiance) {
-      // Show unified "All Bastions" button for Radiance users
-      html += `<button class="epp-sidebar-btn${_emojiPickerTab==='bastions'?' active':''}" id="etab-bastions" title="All Bastion Emojis" onclick="setEmojiTab('bastions')"><span style="font-size:14px;">🏰</span></button>`;
+    if (_hasActiveRadiance()) {
+      html += btn('bastions', 'All Bastion Emojis', _EMOJI_CATEGORY_SVGS.bastions);
     }
-    // Show individual bastion buttons
     bastions.forEach((b, i) => {
       const active = _emojiPickerTab === 'bastion-' + i;
       const emblem = b.emblem ? `<img src="${escapeHTML(b.emblem)}" alt="${escapeHTML(b.name||'')}">` : `<span style="font-size:12px;font-weight:700;">${escapeHTML((b.name||'B').slice(0,2).toUpperCase())}</span>`;
-      html += `<button class="epp-sidebar-btn${active?' active':''}" id="etab-bastion-${i}" title="${escapeHTML(b.name||'Bastion')}" onclick="setEmojiTab('bastion-${i}')">${emblem}</button>`;
+      html += `<button class="epp-sidebar-btn${active?' active':''}" id="etab-bastion-${i}" title="${escapeHTML(b.name||'Bastion')}" aria-label="${escapeHTML(b.name||'Bastion')}" onclick="setEmojiTab('bastion-${i}')">${emblem}</button>`;
     });
   }
-  // Separator before unicode categories
   html += '<div class="epp-sidebar-sep"></div>';
-  const cats = [{id:'smileys',icon:'😀'},{id:'people',icon:'👋'},{id:'nature',icon:'🌿'},{id:'food',icon:'🍔'},{id:'travel',icon:'✈️'},{id:'activities',icon:'🎮'},{id:'hearts',icon:'❤️'},{id:'symbols',icon:'⚡'},{id:'flags',icon:'🏁'}];
-  cats.forEach(c => {
-    html += `<button class="epp-sidebar-btn${_emojiPickerTab===c.id?' active':''}" id="etab-${c.id}" title="${c.id}" onclick="setEmojiTab('${c.id}')"><span style="font-size:16px;">${c.icon}</span></button>`;
+  ['smileys','people','nature','food','travel','activities','hearts','symbols','flags'].forEach(id => {
+    html += btn(id, id.charAt(0).toUpperCase()+id.slice(1), _EMOJI_CATEGORY_SVGS[id]);
   });
   return html;
 }
@@ -14129,6 +14160,7 @@ function buildProfileView(tab) {
   }
 
   else if (tab === 'appearance') {
+    const currentTheme = (typeof _appearanceKey === 'function' ? (localStorage.getItem(_appearanceKey()) || 'fortized_classic') : 'fortized_classic');
     const unlocked = CU?.unlockedAppearances || [];
     const allThemes = [
       {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#13161d', sidebar:'#181a1f', channel:'#15171e', panel:'#1b1e25', accent:'#fef83d', border:'#252b3a', muted:'#4e5a6f', bodyGrad:'', free:true},
@@ -16155,7 +16187,8 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
 
     // Threat level calculation
     const threatScore = pending * 3 + nsfwQueue.length * 2 + bans.length + openTickets;
-    const threat = threatScore > 20 ? {level:'CRITICAL',cls:'critical',icon:'🔴'} : threatScore > 10 ? {level:'HIGH',cls:'high',icon:'🟠'} : threatScore > 3 ? {level:'MODERATE',cls:'medium',icon:'🟡'} : {level:'LOW',cls:'low',icon:'🟢'};
+    const _threatDot = (col) => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};box-shadow:0 0 6px ${col}99;vertical-align:1px;margin-right:5px;"></span>`;
+    const threat = threatScore > 20 ? {level:'CRITICAL',cls:'critical',icon:_threatDot('#f87171')} : threatScore > 10 ? {level:'HIGH',cls:'high',icon:_threatDot('#fb923c')} : threatScore > 3 ? {level:'MODERATE',cls:'medium',icon:_threatDot('#fbbf24')} : {level:'LOW',cls:'low',icon:_threatDot('#3ecf6e')};
     const activeNow = onlineCount + awayCount + dndCount;
     const uptime = '99.9%'; // placeholder
 
@@ -18175,7 +18208,7 @@ function _listenForceRefresh() {
         }
       }
     } catch (e) { _dbg('[Admin] force refresh poll failed', e); }
-  }, 30000);
+  }, 120000); // 2 min (was 30s) — egress reduction
 }
 
 // Poll for session-clear signal from admin
@@ -18197,7 +18230,7 @@ function _listenClearSessions() {
         }
       }
     } catch (e) { _dbg('[Admin] clear sessions poll failed', e); }
-  }, 30000);
+  }, 120000); // 2 min (was 30s) — egress reduction
 }
 
 // Real-time bastion data sync — listens for changes to bastions the user belongs to
@@ -18235,8 +18268,8 @@ function _listenBastionUpdates() {
       } catch(e) { /* poll fail — ignore */ }
     }
   }
-  _bastionPollInterval = setInterval(_pollBastionSync, 30000); // every 30s
-  setTimeout(_pollBastionSync, 3000); // first poll after 3s
+  _bastionPollInterval = setInterval(_pollBastionSync, 90000); // 90s (was 30s) — egress reduction
+  setTimeout(_pollBastionSync, 5000); // first poll after 5s
 }
 
 // Real-time DM list sync — updates DM sidebar when group chat members change or new DMs arrive
@@ -23838,7 +23871,7 @@ async function _disconnectSpotify() {
 }
 
 // Auto-poll Spotify every 60 seconds if connected (reduced from 30s)
-setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 5000);
+setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 15000); // 15s (was 5s) — reduce write frequency
 
 async function _removeGameFromCollection(gameName) {
   if (!CU.gameCollection) return;
@@ -27213,6 +27246,9 @@ function updatePrimaryActivity() {
     return bPri - aPri;
   });
   activityState.primary = sorted[0] || null;
+  // Keep legacy _gameActivity mirror in sync with the current playing activity.
+  const game = activityState.activities.find(a => a.id === 'game' || a.type === 'playing');
+  _gameActivity = game ? { name: game.name, icon: game.icon, coverUrl: game.metadata?.coverUrl, coverThumb: game.metadata?.coverThumb, _manual: !!game._manual } : null;
 }
 
 function broadcastIfChanged() {
@@ -27325,6 +27361,7 @@ const KNOWN_GAMES = [
   {name:'Discord', icon:'💬', keywords:['discord']},
 ];
 
+let _gameActivity = null;
 let _gameActivityInterval = null;
 let _autoActivityPoller = null;
 let _userCustomApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
@@ -34983,7 +35020,7 @@ function _updateLastSeen() {
   try { firebase.database().ref('users/' + CU.username + '/lastSeen').set(now); } catch(e) { _dbg('[LastSeen] write failed', e); }
 }
 // Update last seen every 2 minutes
-if (typeof window !== 'undefined') setInterval(_updateLastSeen, 120000);
+if (typeof window !== 'undefined') setInterval(_updateLastSeen, 300000); // 5 min (was 2 min) — egress reduction
 
 // ════════════════════════════════════════════
 // INIT NEW FEATURES ON APP LOAD

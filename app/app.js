@@ -13377,14 +13377,16 @@ function toggleBotPerm(idx, perm, el) {
 }
 
 function addBotCommand(idx) {
-  const name = prompt('Command name (without !):');
-  if (!name || !name.trim()) return;
-  const desc = prompt('Command description (optional):') || '';
-  const bot = CU.bots?.[idx]; if (!bot) return;
-  if (!bot.commands) bot.commands = [];
-  bot.commands.push({name: name.trim().toLowerCase().replace(/\s+/g,'_'), desc: desc.trim()});
-  saveUser();
-  openBotEditor(idx);
+  showCustomInput('New Bot Command', 'Command name (without !):', (name) => {
+    if (!name || !name.trim()) return;
+    showCustomInput('Command Description', 'Description (optional):', (desc) => {
+      const bot = CU.bots?.[idx]; if (!bot) return;
+      if (!bot.commands) bot.commands = [];
+      bot.commands.push({name: name.trim().toLowerCase().replace(/\s+/g,'_'), desc: (desc||'').trim()});
+      saveUser();
+      openBotEditor(idx);
+    });
+  });
 }
 
 function removeBotCommand(idx, cmdIdx) {
@@ -13689,9 +13691,10 @@ function adminListAllBots() {
 }
 
 function adminConvertToBot() {
-  const username = prompt('Username to convert to BOT:');
-  if (!username || !username.trim()) return;
-  toast(`Account @${username.trim()} flagged as BOT. This takes effect on next login.`, 'success');
+  showCustomInput('Convert to Bot Account', 'Username to convert to BOT:', (username) => {
+    if (!username || !username.trim()) return;
+    toast(`Account @${username.trim()} flagged as BOT. This takes effect on next login.`, 'success');
+  });
 }
 
 // ════════════════════════════════════════════
@@ -17531,7 +17534,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
         <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Suspensions</div>
-        <button onclick="adminActionUser(prompt('Username to suspend:'),'suspend')" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#a855f7;font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;">+ Suspend User</button>
+        <button onclick="showCustomInput('Suspend User','Username to suspend:',(u)=>{if(u&&u.trim())adminActionUser(u.trim(),'suspend');})" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#a855f7;font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;">+ Suspend User</button>
       </div>
       <div id="admin-suspensions-list" style="color:rgba(255,255,255,.3);text-align:center;padding:20px;">Loading suspensions...</div>
     </div>`;
@@ -18155,9 +18158,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div class="hq-panel-head"><h3>Deployment Actions</h3></div>
           <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
             <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_syncAdminData().then(()=>{toast('Full sync complete','success')})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync Data</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--yellow);border-color:rgba(245,158,11,.2);" onclick="if(confirm('Force refresh all connected users?')){_forceRefreshAllUsers();}">Force Refresh All Users</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(248,113,113,.2);" onclick="if(confirm('Reset ALL user sessions? Users will be logged out.')){_resetAllSessions();}">Reset All Sessions</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="if(confirm('Purge soft-deleted messages from database?')){_purgeDeletedMessages();}">Purge Deleted Messages</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--yellow);border-color:rgba(245,158,11,.2);" onclick="showCustomConfirm('Force refresh all connected users?',()=>_forceRefreshAllUsers())">Force Refresh All Users</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(248,113,113,.2);" onclick="showCustomConfirm('Reset ALL user sessions? Users will be logged out.',()=>_resetAllSessions())">Reset All Sessions</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="showCustomConfirm('Purge soft-deleted messages from database?',()=>_purgeDeletedMessages())">Purge Deleted Messages</button>
           </div>
         </div>
       </div>
@@ -18909,8 +18912,9 @@ function _showScheduleActionModal() {
   });
 }
 async function _cancelScheduledAction(key) {
-  if (!confirm('Cancel this scheduled action?')) return;
-  try { const acts = await FortizedSocial.adminGetScheduledActions(); acts.splice(key, 1); await FortizedSocial.adminSaveScheduledActions(acts); toast('Action cancelled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Something went wrong. Please try again.','error'); }
+  showCustomConfirm('Cancel this scheduled action?', async () => {
+    try { const acts = await FortizedSocial.adminGetScheduledActions(); acts.splice(key, 1); await FortizedSocial.adminSaveScheduledActions(acts); toast('Action cancelled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Something went wrong. Please try again.','error'); }
+  });
 }
 
 async function _resetAllSessions() {
@@ -18922,17 +18926,16 @@ async function deleteReportForever(idx) {
   const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
   if (!reports[idx]) return;
   const reportId = reports[idx].id;
-  if (!confirm('Permanently delete this report? This cannot be undone.')) return;
-  // Remove from localStorage
-  reports.splice(idx, 1);
-  localStorage.setItem('ftz_reports', JSON.stringify(reports));
-  // Sync updated reports to Supabase
-  try {
-    for (const r of reports) { await FortizedSocial.adminSaveReport(r); }
-  } catch(e) { console.warn('Report sync failed:', e); }
-  logAudit('report_deleted', reportId||'unknown', 'Permanently deleted by super admin');
-  toast('Report permanently deleted', 'success');
-  _loadAdminPage(adminTab);
+  showCustomConfirm('Permanently delete this report? This cannot be undone.', async () => {
+    reports.splice(idx, 1);
+    localStorage.setItem('ftz_reports', JSON.stringify(reports));
+    try {
+      for (const r of reports) { await FortizedSocial.adminSaveReport(r); }
+    } catch(e) { console.warn('Report sync failed:', e); }
+    logAudit('report_deleted', reportId||'unknown', 'Permanently deleted by super admin');
+    toast('Report permanently deleted', 'success');
+    _loadAdminPage(adminTab);
+  });
 }
 
 async function loadAllReportsFromServer() {
@@ -19752,11 +19755,12 @@ function adminActionUser(username, action) {
       adminSearchUser();
     });
   } else if (action === 'force_logout') {
-    if (!confirm(`Force logout ${username}? They will be logged out on their next page load.`)) return;
-    FortizedSocial.adminForceLogout(username).then(() => {
-      logAudit('force_logout', username, 'Forced logout by admin');
-      toast(`${username} will be logged out on next load`, 'success');
-    }).catch(() => toast('Failed to force logout', 'error'));
+    showCustomConfirm(`Force logout ${username}? They will be logged out on their next page load.`, () => {
+      FortizedSocial.adminForceLogout(username).then(() => {
+        logAudit('force_logout', username, 'Forced logout by admin');
+        toast(`${username} will be logged out on next load`, 'success');
+      }).catch(() => toast('Failed to force logout', 'error'));
+    });
   }
 }
 

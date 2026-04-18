@@ -4281,7 +4281,7 @@ async function loadDMMessages(username) {
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         appendMessage(el,msg,'dm',null); _notifyNewMsg('dm-msgs');
-        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
+        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', username)) playNotifSound('message');
       }
     });
   } catch(e){_wrn('DM load',e);}
@@ -4326,8 +4326,45 @@ async function sendDM() {
     _trackSendMsgQuest();
   } catch (e) {
     console.error('[sendDM Error]', e.message);
-    toast('Failed to send message: ' + e.message, 'error');
+    _markMessageFailed(msgsEl, msg.id, { kind: 'dm', target: curDM, text, replyTo: rep });
+    toast('Message failed to send — tap to retry', 'error');
   }
+}
+
+function _markMessageFailed(msgsEl, localId, payload) {
+  if (!msgsEl || !localId) return;
+  const row = msgsEl.querySelector('[data-msgid="'+CSS.escape(localId)+'"]');
+  if (!row) return;
+  row.classList.add('msg-row--failed');
+  row.dataset.failedPayload = JSON.stringify(payload || {});
+  if (!row.querySelector('.msg-retry-btn')) {
+    const btn = document.createElement('button');
+    btn.className = 'msg-retry-btn';
+    btn.type = 'button';
+    btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 116.64 5.64"/></svg> Retry';
+    btn.onclick = (ev) => { ev.stopPropagation(); _retryFailedMessage(row); };
+    const bubble = row.querySelector('.msg-bubble') || row;
+    bubble.appendChild(btn);
+  }
+}
+async function _retryFailedMessage(row) {
+  try {
+    const p = JSON.parse(row.dataset.failedPayload || '{}');
+    if (!p || !p.text) return;
+    row.classList.remove('msg-row--failed');
+    row.querySelector('.msg-retry-btn')?.remove();
+    if (p.kind === 'dm') {
+      try {
+        const savedMsg = await FortizedSocial.sendDMMessage(CU.username, p.target, p.text);
+        if (savedMsg?.id) row.dataset.msgid = savedMsg.id;
+        FortizedSocial.socketEmit('message:send', { type:'dm', id1: CU.username, id2: p.target, message: savedMsg || { from: CU.username, text: p.text, timestamp: new Date().toISOString() } });
+        toast('Message sent', 'success');
+      } catch (e) {
+        _markMessageFailed(row.parentElement, row.dataset.msgid, p);
+        toast('Still failed — check your connection', 'error');
+      }
+    }
+  } catch(_) {}
 }
 
 // ════════════════════════════════════════════════════
@@ -4688,7 +4725,7 @@ async function loadGCMessages(gcId) {
       const echoKey = 'gc|'+msg.from+'|'+(msg.text||'');
       appendMessage(el, msg, 'gc', null);
       _notifyNewMsg('gc-msgs');
-      if (msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
+      if (msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('gc', gcId)) playNotifSound('message');
     });
     _gcListener = () => ref.off('child_added', handler);
     // Attach live edit/remove listeners for GC
@@ -5293,6 +5330,72 @@ async function leaveBastion(idx) {
   toast('Left '+b.name,'info');
 }
 
+// ── Bastion member moderation (owner-only) ──
+async function _kickBastionMember(username) {
+  if (curBastion === null) return;
+  const b = CU.bastions?.[curBastion];
+  if (!b || b.owner !== CU.username) { toast('Only the owner can kick members','error'); return; }
+  if (username === CU.username) { toast("You can't kick yourself",'error'); return; }
+  showCustomConfirm('Kick ' + username + ' from ' + b.name + '?', async () => {
+    const gid = b.globalId || b.name;
+    try {
+      await FortizedSocial.removeBastionMember(gid, username);
+      if (b.memberRoles) delete b.memberRoles[username];
+      try { FortizedSocial.socketEmit?.('bastion:kick', { bastionId: gid, username }); } catch(_){}
+      try {
+        if (typeof _currentBastionMembers !== 'undefined' && Array.isArray(_currentBastionMembers)) {
+          const _i = _currentBastionMembers.indexOf(username.toLowerCase());
+          if (_i >= 0) _currentBastionMembers.splice(_i, 1);
+        }
+      } catch(_){}
+      if (typeof renderMemberPanel === 'function') renderMemberPanel();
+      toast(username + ' kicked from ' + b.name, 'success');
+    } catch(e) {
+      console.warn('[Bastion] Kick failed:', e?.message);
+      toast('Failed to kick ' + username, 'error');
+    }
+  });
+}
+
+function _getBastionBanList(gid) {
+  try { return JSON.parse(localStorage.getItem('ftz_bastion_bans_' + gid) || '[]'); } catch { return []; }
+}
+function _saveBastionBanList(gid, list) {
+  localStorage.setItem('ftz_bastion_bans_' + gid, JSON.stringify([...new Set(list)]));
+}
+function isBastionBanned(gid, username) {
+  return _getBastionBanList(gid).includes((username||'').toLowerCase());
+}
+async function _banBastionMember(username) {
+  if (curBastion === null) return;
+  const b = CU.bastions?.[curBastion];
+  if (!b || b.owner !== CU.username) { toast('Only the owner can ban members','error'); return; }
+  if (username === CU.username) { toast("You can't ban yourself",'error'); return; }
+  showCustomConfirm('Ban ' + username + ' from ' + b.name + '? They will not be able to rejoin.', async () => {
+    const gid = b.globalId || b.name;
+    const u = username.toLowerCase();
+    try {
+      await FortizedSocial.removeBastionMember(gid, username);
+      if (b.memberRoles) delete b.memberRoles[username];
+      const bans = _getBastionBanList(gid);
+      if (!bans.includes(u)) bans.push(u);
+      _saveBastionBanList(gid, bans);
+      try { FortizedSocial.socketEmit?.('bastion:ban', { bastionId: gid, username }); } catch(_){}
+      try {
+        if (typeof _currentBastionMembers !== 'undefined' && Array.isArray(_currentBastionMembers)) {
+          const _i = _currentBastionMembers.indexOf(u);
+          if (_i >= 0) _currentBastionMembers.splice(_i, 1);
+        }
+      } catch(_){}
+      if (typeof renderMemberPanel === 'function') renderMemberPanel();
+      toast(username + ' banned from ' + b.name, 'success');
+    } catch(e) {
+      console.warn('[Bastion] Ban failed:', e?.message);
+      toast('Failed to ban ' + username, 'error');
+    }
+  });
+}
+
 // ════════════════════════════════════════════
 // CHANNEL SELECTION & NSFW GATE
 // ════════════════════════════════════════════
@@ -5469,7 +5572,7 @@ async function loadChannelMessages(idx) {
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         appendMessage(el,msg,'ch',null);
         _notifyNewMsg('ch-msgs-'+idx);
-        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
+        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
       }
     });
     // Start polling to enable real-time message sync across sessions.
@@ -7244,12 +7347,13 @@ async function sendFriendRequest(){
   const succ=document.getElementById('friend-success');
   const btn=document.getElementById('friend-send-btn');
   if(!inp)return;
+  if(btn && btn.disabled) return;
   const username=inp.value.trim().toLowerCase();
   if(!username){if(err)err.textContent='Enter a username';return;}
   if(username===CU.username){if(err)err.textContent="Can't add yourself";return;}
   if(isUserBlocked(username)){if(err)err.textContent="Can't send friend requests to blocked users";return;}
   if(err)err.textContent='';if(succ)succ.textContent='';
-  if(btn)btn.classList.add('btn-loading');
+  if(btn){ btn.disabled = true; btn.classList.add('btn-loading'); }
   try{
     const r=await FortizedSocial.sendFriendRequest(CU.username, username);
     if(r.ok){
@@ -7263,7 +7367,7 @@ async function sendFriendRequest(){
       if(err) err.textContent=r.msg||'Failed';
     }
   } catch(e){ console.error(e); if(err) err.textContent='Connection error'; }
-  finally { if(btn) btn.classList.remove('btn-loading'); }
+  finally { if(btn){ btn.disabled = false; btn.classList.remove('btn-loading'); } }
 }
 async function acceptFriend(username){
   try{
@@ -8122,7 +8226,7 @@ function initFortizedUXResilience() {
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'dm', lastAuthor);
                 scrollBottom('dm-msgs');
-                if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) { playNotifSound('message'); _showBrowserNotif(msg.from, (msg.text||'').slice(0,100), 'dm-'+msg.from); }
+                if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', msg.from)) { playNotifSound('message'); _showBrowserNotif(msg.from, (msg.text||'').slice(0,100), 'dm-'+msg.from); }
               }
             }
           }
@@ -8140,7 +8244,7 @@ function initFortizedUXResilience() {
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'gc', lastAuthor);
                 scrollBottom('gc-msgs');
-                if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) { playNotifSound('message'); _showBrowserNotif(msg.from, (msg.text||'').slice(0,100), 'gc-'+msg.from); }
+                if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('gc', curGC)) { playNotifSound('message'); _showBrowserNotif(msg.from, (msg.text||'').slice(0,100), 'gc-'+msg.from); }
               }
             }
           }
@@ -8162,7 +8266,7 @@ function initFortizedUXResilience() {
                   const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                   appendMessage(msgsEl, msg, 'ch', lastAuthor);
                   scrollBottom('ch-msgs-' + curChannel);
-                  if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) { const isMention = (msg.text||'').includes('@'+CU.username); playNotifSound(isMention ? 'mention' : 'message'); }
+                  if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from)) { const isMention = (msg.text||'').includes('@'+CU.username); playNotifSound(isMention ? 'mention' : 'message'); }
                 }
               }
             }
@@ -16266,10 +16370,10 @@ function handleContextMenu(e) {
     if (inBastion && !isMe) {
       const bastionItems = [];
       bastionItems.push({ icon: _ctxSvg('roles'), label: 'View Roles', action: () => viewUserProfile(username) });
-      bastionItems.push({ icon: _ctxSvg('mute'), label: 'Mute', action: () => toast('User muted', 'success') });
+      bastionItems.push({ icon: _ctxSvg('mute'), label: isUserMutedLocal(username) ? 'Unmute' : 'Mute', action: () => toggleMuteUserLocal(username) });
       if (isOwner) {
-        bastionItems.push({ icon: _ctxSvg('kick'), label: 'Kick', action: () => toast('User kicked', 'success'), danger: true });
-        bastionItems.push({ icon: _ctxSvg('ban'), label: 'Ban', action: () => toast('User banned', 'success'), danger: true });
+        bastionItems.push({ icon: _ctxSvg('kick'), label: 'Kick', action: () => _kickBastionMember(username), danger: true });
+        bastionItems.push({ icon: _ctxSvg('ban'), label: 'Ban', action: () => _banBastionMember(username), danger: true });
       }
       groups.push({ label: 'Bastion', items: bastionItems });
     }
@@ -16388,9 +16492,9 @@ function handleContextMenu(e) {
       ];
       if (!isMe && inBastion && isOwner) {
         groups.push({ label: 'Moderation', items: [
-          { icon: _ctxSvg('mute'), label: 'Mute', action: () => toast('User muted', 'success') },
-          { icon: _ctxSvg('kick'), label: 'Kick', danger: true, action: () => toast('User kicked', 'success') },
-          { icon: _ctxSvg('ban'), label: 'Ban', danger: true, action: () => toast('User banned', 'success') },
+          { icon: _ctxSvg('mute'), label: isUserMutedLocal(memberName) ? 'Unmute' : 'Mute', action: () => toggleMuteUserLocal(memberName) },
+          { icon: _ctxSvg('kick'), label: 'Kick', danger: true, action: () => _kickBastionMember(memberName) },
+          { icon: _ctxSvg('ban'), label: 'Ban', danger: true, action: () => _banBastionMember(memberName) },
         ]});
       }
       showCtxMenu(e.clientX, e.clientY, groups);
@@ -20648,7 +20752,7 @@ function showDMCtxMenu(e, username) {
       { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { document.querySelectorAll('.friend-item').forEach(fi => { fi.style.fontWeight=''; fi.classList.remove('dm-unread'); const badge = fi.querySelector('.dm-unread-badge'); if(badge) badge.remove(); }); markAllRead(); toast('All conversations marked as read!', 'success'); } },
     ]},
     { items: [
-      { icon: _ctxSvg('mute'), label: 'Mute Conversation', action: () => toast('Conversation muted', 'info') },
+      { icon: _ctxSvg('mute'), label: isConvoMuted('dm', username) ? 'Unmute Conversation' : 'Mute Conversation', action: () => toggleMuteConvo('dm', username) },
       { icon: _ctxSvg('copy'), label: 'Copy Username', action: () => navigator.clipboard.writeText(username), copyFeedback: true },
     ]},
     { items: [
@@ -23216,6 +23320,61 @@ function _unblockUser(username) {
 
 function isUserBlocked(username) {
   return _getBlockedList().includes(username);
+}
+
+// ── Conversation mute (silences notifications, keeps messages visible) ──
+function _getMutedConvos() {
+  try { return JSON.parse(localStorage.getItem('ftz_muted_convos') || '[]'); } catch { return []; }
+}
+function _saveMutedConvos(arr) {
+  localStorage.setItem('ftz_muted_convos', JSON.stringify([...new Set(arr)]));
+}
+function isConvoMuted(kind, id) {
+  if (!id) return false;
+  return _getMutedConvos().includes(kind + ':' + id);
+}
+function toggleMuteConvo(kind, id) {
+  if (!id) return false;
+  const key = kind + ':' + id;
+  const list = _getMutedConvos();
+  const idx = list.indexOf(key);
+  if (idx >= 0) {
+    list.splice(idx, 1);
+    _saveMutedConvos(list);
+    toast('Notifications unmuted for ' + id, 'success');
+    return false;
+  }
+  list.push(key);
+  _saveMutedConvos(list);
+  toast('Notifications muted for ' + id, 'info');
+  return true;
+}
+
+// ── Local per-user mute (silences notifications + messages from a user) ──
+function _getMutedUsers() {
+  try { return JSON.parse(localStorage.getItem('ftz_muted_users') || '[]'); } catch { return []; }
+}
+function _saveMutedUsers(arr) {
+  localStorage.setItem('ftz_muted_users', JSON.stringify([...new Set(arr)]));
+}
+function isUserMutedLocal(username) {
+  return !!username && _getMutedUsers().includes(username.toLowerCase());
+}
+function toggleMuteUserLocal(username) {
+  if (!username) return false;
+  const u = username.toLowerCase();
+  const list = _getMutedUsers();
+  const idx = list.indexOf(u);
+  if (idx >= 0) {
+    list.splice(idx, 1);
+    _saveMutedUsers(list);
+    toast(username + ' unmuted', 'success');
+    return false;
+  }
+  list.push(u);
+  _saveMutedUsers(list);
+  toast(username + ' muted — you won\'t hear notifications from them', 'info');
+  return true;
 }
 
 // Apply/remove blur to all visible messages from a user

@@ -6257,4 +6257,31 @@ select:focus-visible {
 .rep-protected--admin{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.14);color:rgba(248,113,113,.75);}
 .rep-protected--mod{background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.14);color:rgba(96,165,250,.75);}
 .up-wl-card:hover{border-color:rgba(255,249,62,.2) !important;}
+
+/* ── Failed-message state + retry ─────────────────────── */
+.msg-row--failed{opacity:.72;}
+.msg-row--failed .msg-bubble{
+  border:1px dashed rgba(248,113,113,.32) !important;
+  background:rgba(248,113,113,.04) !important;
+}
+.msg-row--failed .msg-bubble::after{
+  content:'Failed to send';
+  display:block;
+  font-size:10.5px;color:#f87171;
+  margin-top:4px;font-weight:600;letter-spacing:.02em;
+}
+.msg-retry-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  margin-top:6px;
+  padding:4px 10px;
+  background:rgba(248,113,113,.08);
+  border:1px solid rgba(248,113,113,.22);
+  border-radius:8px;
+  color:#f87171;
+  font-family:inherit;font-size:11px;font-weight:700;
+  cursor:pointer;
+  transition:all .12s;
+}
+.msg-retry-btn:hover{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.35);}
+.msg-retry-btn svg{flex-shrink:0;}
 </style>

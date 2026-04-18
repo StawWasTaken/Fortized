@@ -2979,6 +2979,8 @@ async function _renderWhatArePeopleBuying() {
     // Hydrate buyer pfps after render
     setTimeout(() => { try { _forumHydratePfps(el); } catch(_){} }, 30);
     const myPfp = (CU?.pfp) || _defaultPfpUrl(CU?.username || 'me');
+    const ownedDecos = new Set(CU?.ownedDecorations || []);
+    const unlockedApps = new Set(CU?.unlockedAppearances || []);
     el.innerHTML = `<div class="home-buying-inner">` + picks.slice(0, 6).map(it => {
       const name = it.name || 'Item';
       const price = it.price != null ? Number(it.price).toLocaleString() : '—';
@@ -2987,9 +2989,11 @@ async function _renderWhatArePeopleBuying() {
       const buyersHtml = buyers.length ? `<div class="hbc-pfps">${buyers.map(b => `<img class="hbc-pfp" data-forum-author="${escapeHTML(b)}" src="${escapeHTML(_defaultPfpUrl(b))}" onerror="this.src='${_defaultPfpUrl(b)}'" title="${escapeHTML(b)}">`).join('')}${(it.buyerCount && it.buyerCount > buyers.length) ? `<span class="hbc-pfp-more">+${it.buyerCount - buyers.length}</span>` : ''}</div>` : '';
       const isDeco = it.kind === 'decoration' && (it.decoSrc || it.image || it.thumb);
       const pfpPreview = isDeco ? `<img class="hbc-pfp-preview" src="${escapeHTML(myPfp)}" onerror="this.src='${_defaultPfpUrl(CU?.username || 'me')}'" alt="">` : '';
-      const cardClass = 'home-buy-card' + (isDeco ? ' has-deco-preview' : '');
+      const owned = !!(it.id && ((it.kind === 'decoration' && ownedDecos.has(it.id)) || (it.kind !== 'decoration' && unlockedApps.has(it.id))));
+      const ownedBadge = owned ? `<span class="hbc-owned" title="You already own this">Owned</span>` : '';
+      const cardClass = 'home-buy-card' + (isDeco ? ' has-deco-preview' : '') + (owned ? ' is-owned' : '');
       return `<div class="${cardClass}" onclick="_openFortshop()" title="${escapeHTML(name)}">
-        <div class="hbc-img">${pfpPreview}<img class="hbc-deco" src="${escapeHTML(img)}" onerror="this.style.opacity='.25';this.src='/fortshop_placeholder.png'"></div>
+        <div class="hbc-img">${pfpPreview}<img class="hbc-deco" src="${escapeHTML(img)}" onerror="this.style.opacity='.25';this.src='/fortshop_placeholder.png'">${ownedBadge}</div>
         <div class="hbc-name">${escapeHTML(name)}</div>
         <div class="hbc-price"><img class="hbc-onyx" src="/Onyx.png" onerror="this.style.display='none'"><span>${price}</span></div>
         ${buyersHtml}
@@ -3078,32 +3082,47 @@ function _adClickAction(ad) {
   if (ad.customLink) {
     const link = ad.customLink;
     if (_adIsInternal(link)) {
-      const path = link.replace(location.origin, '').replace(/\/+$/, '') || '/app';
-      // Bastion invite via URL
-      const bm = path.match(/^\/app\/bastion\?([^/]+)(?:\/(.+))?/);
-      if (bm) {
-        const bId = decodeURIComponent(bm[1] || '');
+      // Split query for atelier tab / friends sub
+      const [rawPath, rawQuery] = link.replace(location.origin, '').split('?');
+      const path = (rawPath || '').replace(/\/+$/, '') || '/app';
+      const query = rawQuery || '';
+      // Bastion invite via URL: /app/bastion?GLOBALID[/CHANNELIDX]
+      if (path === '/app/bastion' && query) {
+        const parts = query.split('/');
+        const bId = decodeURIComponent(parts[0] || '');
         const idx = (CU?.bastions || []).findIndex(b => b.globalId === bId);
         if (idx >= 0) {
           try { openBastion(idx); } catch(e) {}
           return;
         }
-        // Not joined yet → use invite flow
         try { promptJoinPublicBastion(bId); } catch(e) { window.location.href = link; }
         return;
       }
-      // Known views — soft-nav via router, no reload
+      // Atelier with sub-tab
+      if (path === '/app/atelier') {
+        const tabMatch = query.match(/tab=([\w-]+)/);
+        const tab = tabMatch ? tabMatch[1] : 'radiance';
+        const allowed = ['radiance','quests','shop','creator','inventory'];
+        window._atelierPendingTab = allowed.includes(tab) ? tab : 'radiance';
+        try { showView('atelier'); return; } catch(e) {}
+      }
+      // Friends sub-view inside DMs
+      if (path === '/app/messages' && /friends=1/.test(query)) {
+        try {
+          showView('dms');
+          setTimeout(() => { try { showDMFriendsHome(); } catch(_){} }, 80);
+          return;
+        } catch(e) {}
+      }
       const viewMap = {
         '/app': 'home',
         '/app/messages': 'dms',
         '/app/discover': 'discover',
         '/app/atelier': 'atelier',
         '/app/forum': 'forum',
-        '/app/fortshop': 'fortshop'
       };
       const view = viewMap[path];
       if (view) { try { showView(view); return; } catch(e) {} }
-      // Unknown internal path — fall back to hard nav
       window.location.href = link;
     } else {
       window.open(link, '_blank', 'noopener');
@@ -3138,11 +3157,11 @@ function _renderAdHTML(ad, size) {
           <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(isBastionInvite?(ad.bastionName||''):'')}')">Report ad</span>
         </div>`;
   if (isBanner) {
-    return `<div style="display:flex;flex-direction:column;width:100%;">
-      <a style="display:block;cursor:pointer;width:100%;" onclick="_adClickAction(window['${adKey}'])">
-        <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:100%;aspect-ratio:728/90;object-fit:cover;display:block;" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
+    return `<div class="ad-banner-inner">
+      <a style="display:block;cursor:pointer;width:100%;border-radius:10px;overflow:hidden;" onclick="_adClickAction(window['${adKey}'])">
+        <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:100%;aspect-ratio:728/90;object-fit:cover;display:block;border-radius:10px;" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
       </a>
-      <div style="padding:8px 12px 8px;">${meta.replace('<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 2px 0;">','<div style="display:flex;align-items:center;justify-content:space-between;">')}</div>
+      ${meta.replace('<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 2px 0;">','<div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;">')}
     </div>`;
   } else {
     return `<div style="text-align:center;padding:6px 0;">
@@ -11223,13 +11242,17 @@ function renderBSettingsMain(tab) {
             <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Custom Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
             <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="document.getElementById('cm-ad-custom-link').style.display=this.value==='custom'?'':'none';if(this.value!=='custom')document.getElementById('cm-ad-custom-link').value=this.value==='bastion'?'':this.value;">
               <option value="bastion">Default — Join Bastion</option>
-              <option value="/">Home</option>
-              <option value="/app">App</option>
-              <option value="/app/forum">Forum</option>
-              <option value="/blog">Blog</option>
-              <option value="/download">Download</option>
-              <option value="/support">Support</option>
-              <option value="/legal">Legal</option>
+              <optgroup label="In-app pages">
+                <option value="/app">Home</option>
+                <option value="/app/messages">Direct Messages</option>
+                <option value="/app/messages?friends=1">Friends</option>
+                <option value="/app/discover">Discover</option>
+                <option value="/app/forum">Forum</option>
+                <option value="/app/atelier?tab=radiance">Radiance Dwelling</option>
+                <option value="/app/atelier?tab=quests">Quests</option>
+                <option value="/app/atelier?tab=shop">Fortshop</option>
+                <option value="/app/atelier?tab=creator">Creator</option>
+              </optgroup>
               <option value="custom">Custom URL (opens in browser)</option>
             </select>
             <input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">
@@ -11287,7 +11310,7 @@ function renderBSettingsMain(tab) {
               </div>
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                 <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;${isActive?'color:var(--green);background:rgba(62,207,110,.1);':'color:var(--red);background:rgba(248,113,113,.1);'}">${isActive?daysLeft+'d left':'Expired'}</span>
-                ${isActive?`<button class="btn-g" style="font-size:10px;padding:3px 8px;color:var(--red);" onclick="_cmCancelAd(${i})">Cancel (5 Onyx)</button>`:`<button class="btn-g" style="font-size:10px;padding:3px 8px;" onclick="_cmRenewAd(${i})">Renew (15 Onyx)</button>`}
+                ${isActive?`<div style="display:flex;gap:4px;"><button class="btn-g" style="font-size:10px;padding:3px 8px;" onclick="_cmEditAd(${i})">Edit (5 Onyx)</button><button class="btn-g" style="font-size:10px;padding:3px 8px;color:var(--red);" onclick="_cmCancelAd(${i})">Cancel (5 Onyx)</button></div>`:`<button class="btn-g" style="font-size:10px;padding:3px 8px;" onclick="_cmRenewAd(${i})">Renew (15 Onyx)</button>`}
               </div>
             </div>`;
           }).join('') : `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No ads yet. Create your first ad above!</div>`}
@@ -11550,6 +11573,110 @@ async function _cmRenewAd(adIdx) {
     switchAtelierTab('creator');
     setTimeout(() => _switchCreatorSub('creations'), 50);
   });
+}
+async function _cmEditAd(adIdx) {
+  const ad = CU.ads?.[adIdx];
+  if (!ad) { toast('Ad not found', 'error'); return; }
+  if ((CU.onyx||0) < 5) { toast('Editing costs 5 Onyx. Not enough!', 'error'); return; }
+  const myBastions = (CU.bastions||[]).filter(b => b.owner === CU.username);
+  if (!myBastions.length) { toast('You need a bastion to own ads', 'error'); return; }
+  const isSuper = isSuperAdmin();
+  const curLink = ad.customLink || 'bastion';
+  const linkOptions = [
+    { v: 'bastion', l: 'Default — Join Bastion' },
+    { g: 'In-app pages', opts: [
+      { v: '/app', l: 'Home' },
+      { v: '/app/messages', l: 'Direct Messages' },
+      { v: '/app/messages?friends=1', l: 'Friends' },
+      { v: '/app/discover', l: 'Discover' },
+      { v: '/app/forum', l: 'Forum' },
+      { v: '/app/atelier?tab=radiance', l: 'Radiance Dwelling' },
+      { v: '/app/atelier?tab=quests', l: 'Quests' },
+      { v: '/app/atelier?tab=shop', l: 'Fortshop' },
+      { v: '/app/atelier?tab=creator', l: 'Creator' },
+    ]},
+    { v: 'custom', l: 'Custom URL (opens in browser)' },
+  ];
+  const renderLinkSelect = () => {
+    const optHtml = linkOptions.map(o => {
+      if (o.opts) {
+        return `<optgroup label="${escapeHTML(o.g)}">${o.opts.map(x => `<option value="${escapeHTML(x.v)}" ${x.v===curLink?'selected':''}>${escapeHTML(x.l)}</option>`).join('')}</optgroup>`;
+      }
+      const sel = (o.v === 'bastion' && !ad.customLink) || o.v === curLink ? 'selected' : '';
+      return `<option value="${escapeHTML(o.v)}" ${sel}>${escapeHTML(o.l)}</option>`;
+    }).join('');
+    return optHtml;
+  };
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'modal-edit-ad';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="max-width:440px;width:100%;border-radius:20px;background:var(--panel);border:1px solid var(--border);padding:22px 24px;">
+      <div style="font-size:16px;font-weight:800;margin-bottom:4px;">Edit Ad</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Change the name${isSuper?', link,':''} or target bastion. Costs 5 Onyx.</div>
+      <div style="margin-bottom:12px;">
+        <div class="settings-title">Ad Name</div>
+        <input id="ea-title" class="field-input" maxlength="60" value="${escapeHTML(ad.title||'')}" style="padding:10px 14px;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="settings-title">Target Bastion</div>
+        <select id="ea-bastion" class="field-input" style="padding:10px 14px;">
+          ${myBastions.map(bst => {
+            const idx = (CU.bastions||[]).indexOf(bst);
+            return `<option value="${idx}" ${idx===ad.bastionIdx?'selected':''}>${escapeHTML(bst.name)}</option>`;
+          }).join('')}
+        </select>
+      </div>
+      ${isSuper ? `
+      <div style="margin-bottom:12px;">
+        <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
+        <select id="ea-link-type" class="field-input" style="padding:10px 14px;margin-bottom:8px;" onchange="document.getElementById('ea-custom-link').style.display=this.value==='custom'?'':'none';">${renderLinkSelect()}</select>
+        <input id="ea-custom-link" class="field-input" placeholder="https://..." maxlength="500" value="${curLink && curLink!=='bastion' && !linkOptions.some(o=>(o.opts||[]).some(x=>x.v===curLink) || o.v===curLink) ? escapeHTML(curLink) : ''}" style="display:${curLink==='custom' || (curLink && curLink!=='bastion' && !linkOptions.some(o=>(o.opts||[]).some(x=>x.v===curLink) || o.v===curLink))?'':'none'};">
+      </div>
+      ` : ''}
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
+        <button class="btn-g" onclick="document.getElementById('modal-edit-ad').remove()" style="padding:8px 16px;font-size:12.5px;">Cancel</button>
+        <button class="btn-a" onclick="_cmEditAdSave('${ad.id}')" style="padding:8px 16px;font-size:12.5px;">Save (5 Onyx)</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+async function _cmEditAdSave(adId) {
+  const adIdx = (CU.ads||[]).findIndex(a => a.id === adId);
+  const ad = CU.ads?.[adIdx];
+  if (!ad) { toast('Ad not found', 'error'); return; }
+  if ((CU.onyx||0) < 5) { toast('Not enough Onyx (5 required)', 'error'); return; }
+  const newTitle = (document.getElementById('ea-title')?.value || '').trim();
+  if (!newTitle) { toast('Enter an ad name', 'error'); return; }
+  const newBstIdx = parseInt(document.getElementById('ea-bastion')?.value);
+  const newBst = CU.bastions?.[newBstIdx];
+  if (!newBst) { toast('Select a bastion', 'error'); return; }
+  let newCustomLink = ad.customLink;
+  if (isSuperAdmin()) {
+    const linkType = document.getElementById('ea-link-type')?.value || 'bastion';
+    if (linkType === 'bastion') newCustomLink = undefined;
+    else if (linkType === 'custom') newCustomLink = (document.getElementById('ea-custom-link')?.value || '').trim() || undefined;
+    else newCustomLink = linkType;
+  }
+  CU.onyx = (CU.onyx||0) - 5;
+  ad.title = newTitle;
+  ad.bastionIdx = newBstIdx;
+  ad.bastionId = newBst.globalId || newBst.name;
+  ad.bastionName = newBst.name;
+  ad.bastionIcon = newBst.icon || '';
+  ad.customLink = newCustomLink;
+  ad.editedAt = new Date().toISOString();
+  saveLocal();
+  try { await saveUser(); } catch(_){}
+  try { await FortizedSocial.upsertGlobalAd(ad); } catch(e) { console.warn('[Ads] Edit sync failed:', e); }
+  document.getElementById('modal-edit-ad')?.remove();
+  toast('Ad updated.', 'success');
+  updateOnyxDisplay?.();
+  if (_currentView === 'atelier' && _atelierTab === 'creator') {
+    switchAtelierTab('creator');
+    setTimeout(() => _switchCreatorSub('creations'), 50);
+  }
 }
 const AD_REPORT_REASONS = ['Inappropriate content','Misleading or scam','Offensive imagery','Spam','Impersonation','Other'];
 function _reportAd(adId, adTitle, adBastion) {
@@ -26308,7 +26435,10 @@ function openForumPost(chIdx, postIdx) {
     const canDeleteReply = r.author === CU?.username || isOwner;
     return '<div class="forum-reply-card">'
       +'<div style="flex-shrink:0;">'+buildAvatarHTML(null,r.author,30)+'</div>'
-      +'<div style="flex:1;min-width:0;"><div class="frc-meta">'+escapeHTML(r.author)+' <span class="frc-time">'+ftzTimeAgo(new Date(r.createdAt))+'</span></div>'
+      +'<div style="flex:1;min-width:0;"><div class="frc-meta">'
+        +'<span class="frc-author">'+escapeHTML(r.author)+'</span>'
+        +'<span class="frc-time">'+_svgIcon('clock',12)+'<span>'+ftzTimeAgo(new Date(r.createdAt))+'</span></span>'
+      +'</div>'
       +'<div class="frc-body">'+parseMD(escapeHTML(r.body||''))+'</div>'
       +'</div>'
       +(canDeleteReply ? '<button class="forum-reply-delete" onclick="event.stopPropagation();deleteForumReply('+chIdx+','+postIdx+','+ri+')">×</button>' : '')
@@ -29579,23 +29709,23 @@ function renderAtelierTab(tab) {
               <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Custom Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
               <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="document.getElementById('cm-ad-custom-link').style.display=this.value==='custom'?'':'none';if(this.value!=='custom')document.getElementById('cm-ad-custom-link').value=this.value==='bastion'?'':this.value;">
                 <option value="bastion">Default — Join Bastion (opens in app)</option>
+                <optgroup label="In-app pages">
+                  <option value="/app">Home</option>
+                  <option value="/app/messages">Direct Messages</option>
+                  <option value="/app/messages?friends=1">Friends</option>
+                  <option value="/app/discover">Discover</option>
+                  <option value="/app/forum">Forum</option>
+                  <option value="/app/atelier?tab=radiance">Radiance Dwelling</option>
+                  <option value="/app/atelier?tab=quests">Quests</option>
+                  <option value="/app/atelier?tab=shop">Fortshop</option>
+                  <option value="/app/atelier?tab=creator">Creator</option>
+                </optgroup>
                 <optgroup label="Fortized Web (opens in browser)">
-                  <option value="https://fortized.com/">Home</option>
+                  <option value="https://fortized.com/">Home (web)</option>
                   <option value="https://fortized.com/blog">Blog</option>
                   <option value="https://fortized.com/support">Support</option>
                   <option value="https://fortized.com/legal">Legal</option>
                   <option value="https://fortized.com/download">Download</option>
-                </optgroup>
-                <optgroup label="Fortized App (opens in app)">
-                  <option value="/app">Home</option>
-                  <option value="/app/messages">Direct Messages</option>
-                  <option value="/app/discover">Discover</option>
-                  <option value="/app/forum">Forum</option>
-                  <option value="/app/atelier">Atelier</option>
-                  <option value="/app/atelier?tab=shop">Atelier — Shop</option>
-                  <option value="/app/atelier?tab=quests">Atelier — Quests</option>
-                  <option value="/app/atelier?tab=inventory">Atelier — Inventory</option>
-                  <option value="/app/atelier?tab=creator">Atelier — Creator</option>
                 </optgroup>
                 <option value="custom">Custom URL</option>
               </select>
@@ -29644,6 +29774,7 @@ function renderAtelierTab(tab) {
                   </div>
                 </div>
                 ${isActive?`
+                  <button onclick="_cmEditAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--muted-light);cursor:pointer;">Edit (5 Onyx)</button>
                   <button onclick="_cmRenewAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;">Renew</button>
                   <button onclick="_cmCancelAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:#f87171;cursor:pointer;">Cancel</button>
                 `:''}
@@ -30328,7 +30459,12 @@ function _forumRenderPostCard(post, threadId) {
     <div class="forum-reply-card" id="fp-${post.id}">
       <img class="forum-reply-avatar" src="${escapeHTML(post.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
       <div class="forum-reply-content">
-        <div class="frc-meta">${escapeHTML(post.author_displayName || post.author)} <span class="frc-handle">@${escapeHTML(post.author)}</span> <span class="frc-time">${_forumTimeAgo(post.created_at)}${post.edited_at?` · <span class="forum-edited" title="Edited ${new Date(post.edited_at).toLocaleString()}">edited</span>`:''}</span></div>
+        <div class="frc-meta">
+          <span class="frc-author">${escapeHTML(post.author_displayName || post.author)}</span>
+          <span class="frc-handle">@${escapeHTML(post.author)}</span>
+          <span class="frc-time">${_svgIcon('clock', 12)}<span>${_forumTimeAgo(post.created_at)}</span></span>
+          ${post.edited_at?`<span class="forum-edited" title="Edited ${new Date(post.edited_at).toLocaleString()}">edited</span>`:''}
+        </div>
         ${quoteBlock}
         <div class="frc-body" id="fp-body-${post.id}">${_forumRenderBody(post.content || '')}</div>
         ${post.image ? `<img src="${escapeHTML(post.image)}" style="max-width:100%;max-height:300px;border-radius:10px;margin-top:8px;">` : ''}
@@ -30362,6 +30498,7 @@ function _svgIcon(name, size=13) {
     case 'tag': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`;
     case 'calendar': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
     case 'mic': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>`;
+    case 'clock': return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-2px;flex-shrink:0;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.7"/><path d="M12 8V12L14.5 14.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     default: return '';
   }
 }

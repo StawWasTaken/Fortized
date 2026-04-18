@@ -68,7 +68,7 @@ window._cdnReady.then(function() {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css">
+<link rel="stylesheet" href="/app/styles.css?v=20260418d">
 <style id="radiance-font-style"></style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous" async></script>
 <body>
@@ -390,7 +390,7 @@ window._cdnReady.then(function() {
   <!-- CONTENT VIEWS -->
   <div class="content">
 
-    <!-- HOME VIEW -->
+        <!-- HOME VIEW -->
     <div class="view" id="view-home">
       <div class="home-wrap">
         <div class="home-feed">
@@ -420,6 +420,8 @@ window._cdnReady.then(function() {
                   Create
                 </button>
               </div>
+              <!-- Micro-status strip (live stats) -->
+              <div class="hero-status-strip" id="hero-status-strip"></div>
             </div>
             <!-- Joyster character (right side) -->
             <div class="hero-joyster-wrap" id="hero-joyster-wrap">
@@ -428,33 +430,86 @@ window._cdnReady.then(function() {
             <div class="joyster-bubble" id="joyster-bubble"></div>
           </div>
 
-          <!-- REALM FEED -->
-          <div class="home-main-scroll" style="padding:24px 0 48px;">
+          <!-- QUICK ACTIONS -->
+          <div id="home-quick-actions" style="padding:12px 28px 0;"></div>
+          <!-- HOMEPAGE FEED -->
+          <div class="home-main-scroll" style="padding:12px 0 48px;">
             <div id="home-dyk-strip" style="padding:0 28px;"></div>
-            <div class="realm-section">
-              <div class="realm-section-title">Friends Online <span class="rst-sub" id="realm-online-count"></span></div>
-              <div class="realm-scroll" id="realm-friends"></div>
+            <!-- 1) Banner ad emplacement (card placeholder if empty) -->
+            <div class="realm-section" style="margin-top:4px;">
+              <div id="home-ads" class="home-banner-ad home-banner-card"></div>
             </div>
+            <!-- 2) Who's Online Today — online friends, no cards, just clean chips -->
             <div class="realm-section">
-              <div class="realm-section-title">Your Bastions</div>
-              <div class="realm-scroll" id="realm-bastions"></div>
+              <div class="realm-section-title">Who's Online Today? <a href="#" onclick="event.preventDefault();showView('dms');setTimeout(()=>{try{showDMFriendsHome();}catch(_){}},80);" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">View all friends ›</a></div>
+              <div id="home-friends-today" class="home-friends-online"></div>
             </div>
+            <!-- 3) What are people buying — rectangular CARD with 6 item cards inside -->
             <div class="realm-section">
-              <div class="realm-section-title">Friend Activity</div>
-              <div id="activity-feed"></div>
+              <div class="realm-section-title">What are People Buying? <a href="#" onclick="event.preventDefault();_openFortshop()" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Fortshop ›</a></div>
+              <div id="home-trending-items" class="home-buying-card"></div>
+            </div>
+            <!-- 4) What's happening — 4 top forum posts -->
+            <div class="realm-section">
+              <div class="realm-section-title">What's Happening? <a href="#" onclick="event.preventDefault();showView('forum')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Forum ›</a></div>
+              <div id="home-trending-forum"></div>
+            </div>
+            <!-- 5) Feedback section — "A place where..." card + regular feedback card -->
+            <div class="realm-section">
+              <div class="realm-section-title">Feedback</div>
+              <div class="home-feedback-row">
+                <div class="home-feedback-card home-fb-place">
+                  <div class="home-fb-hdr">
+                    <span class="home-fb-title">A place where…</span>
+                    <span class="home-fb-hint">Finish the sentence</span>
+                  </div>
+                  <div class="home-fb-user" id="home-fb-user"></div>
+                  <div class="home-fb-compose">
+                    <span class="home-fb-prefix">A place where</span>
+                    <input id="home-fb-place-input" class="home-fb-input" maxlength="180" placeholder="…everyone feels at home." autocomplete="off">
+                  </div>
+                  <div class="home-fb-actions">
+                    <label class="home-fb-anon"><input id="home-fb-anon" type="checkbox"> Stay anonymous</label>
+                    <button class="home-fb-send" onclick="submitPlaceFeedback()">
+                      <span class="home-fb-shine"></span>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                      Send
+                    </button>
+                  </div>
+                </div>
+                <div class="home-feedback-card home-fb-regular">
+                  <div class="home-fb-hdr">
+                    <span class="home-fb-title">Regular feedback</span>
+                    <span class="home-fb-hint">Tell us what's on your mind</span>
+                  </div>
+                  <textarea id="home-fb-regular-text" class="home-fb-textarea" maxlength="500" placeholder="Bugs, ideas, polish… anything goes."></textarea>
+                  <div class="home-fb-actions">
+                    <select id="home-fb-regular-cat" class="home-fb-select">
+                      <option value="suggestion">Suggestion</option>
+                      <option value="bug">Bug report</option>
+                      <option value="question">Question</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <button class="home-fb-send" onclick="submitRegularFeedback()">
+                      <span class="home-fb-shine"></span>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Active Now right sidebar -->
+        <!-- Active Now right sidebar (no ad) -->
         <div class="active-now-sidebar" id="home-active-now">
           <div class="active-now-header">Active Now</div>
           <div class="active-now-list" id="home-active-now-list"></div>
         </div>
       </div>
     </div>
-
-    <!-- DMs VIEW -->
+<!-- DMs VIEW -->
     <div class="view" id="view-dms">
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
       </div>
@@ -950,7 +1005,7 @@ window._cdnReady.then(function() {
 </div>
 
 
-<script src="/app/app.js"></script>
+<script src="/app/app.js?v=20260418d"></script>
 <script>
 if (typeof twemoji !== 'undefined') {
   twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });

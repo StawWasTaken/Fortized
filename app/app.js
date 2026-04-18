@@ -1354,6 +1354,7 @@ async function logAudit(action, target, note='') {
 // ════════════════════════════════════════════
 // TOAST
 // ════════════════════════════════════════════
+let _lastToast = { key: '', at: 0, el: null, count: 0 };
 function toast(msg, type='info') {
   const container = document.getElementById('toast-container') || (() => {
     const c = document.createElement('div');
@@ -1362,12 +1363,24 @@ function toast(msg, type='info') {
     document.body.appendChild(c);
     return c;
   })();
+  const key = (type||'info') + '|' + (typeof msg === 'string' ? msg : '');
+  const now = Date.now();
+  // Dedupe: same toast within 2.5s updates a counter on the existing toast instead of stacking
+  if (_lastToast.key === key && now - _lastToast.at < 2500 && _lastToast.el && _lastToast.el.isConnected) {
+    _lastToast.count += 1;
+    _lastToast.at = now;
+    const badge = _lastToast.el.querySelector('.ftz-toast-count');
+    if (badge) badge.textContent = '×' + (_lastToast.count + 1);
+    else _lastToast.el.insertAdjacentHTML('beforeend', '<span class="ftz-toast-count" style="margin-left:6px;opacity:.6;font-size:11px;font-weight:700;">×2</span>');
+    return;
+  }
   const el = document.createElement('div');
   const icons = {success:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',error:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',info:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',warning:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'};
   el.className = 'ftz-toast ' + (type || 'info');
   el.style.setProperty('--toast-duration', '3s');
   el.innerHTML = `<span style="flex-shrink:0;display:flex;">${icons[type]||icons.info}</span><span>${typeof msg==='string'?msg.replace(/</g,'&lt;'):msg}</span>`;
   container.appendChild(el);
+  _lastToast = { key, at: now, el, count: 0 };
   setTimeout(() => el.remove(), 3500);
 }
 
@@ -5137,7 +5150,7 @@ function renderBastionSidebar(scroll) {
   const lb=document.getElementById('leave-confirm-btn');
   if (lv) lv.textContent='Leave '+b.name+'?';
   if (ls) ls.textContent=b.owner===CU.username?'You are the owner. Leaving may delete this bastion.':'You\'ll need an invite to rejoin.';
-  if (lb) lb.onclick=()=>leaveBastion(curBastion);
+  if (lb) lb.onclick=()=>_leaveBastionDirect(curBastion);
 
   const boostLv=b.boostLevel||0;
   const bannerSrc=b.banner||b.icon||'';
@@ -5362,12 +5375,14 @@ function closeBastionNameDD() {
   document.getElementById('bastion-name-toggle')?.classList.remove('open');
 }
 
-async function leaveBastion(idx) {
+// Direct leave action — no confirm (called by the modal-leave-bastion confirm button,
+// which is itself the confirmation step). Public leaveBastion() at line ~21598 shows
+// a showCustomConfirm before calling this.
+async function _leaveBastionDirect(idx) {
   const b=CU.bastions?.[idx];
   if (!b) return;
   closeModal('modal-leave-bastion');
   try{await FortizedSocial.removeBastionMember(b.globalId||b.name,CU.username);}catch(e){console.warn('[Bastion] Leave failed:',e?.message);}
-  // Clean local memberRoles so member list doesn't ghost
   if(b.memberRoles) delete b.memberRoles[CU.username];
   CU.bastions.splice(idx,1);
   await saveUser();
@@ -10769,8 +10784,8 @@ function renderBSettingsMain(tab) {
       <div class="bs-section-title">Bans</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:16px;">${bans.length} banned member${bans.length!==1?'s':''}</div>
       ${isOwner?`<div style="display:flex;gap:8px;margin-bottom:18px;">
-        <input class="field-input" id="ban-username-input" placeholder="Username to ban" style="flex:1;">
-        <input class="field-input" id="ban-reason-input" placeholder="Reason (optional)" style="flex:1;">
+        <input class="field-input" id="ban-username-input" placeholder="Username to ban" style="flex:1;" onkeydown="if(event.key==='Enter')banMemberByName()">
+        <input class="field-input" id="ban-reason-input" placeholder="Reason (optional)" style="flex:1;" onkeydown="if(event.key==='Enter')banMemberByName()">
         <button class="btn-d" style="font-size:13px;padding:8px 14px;flex-shrink:0;" onclick="banMemberByName()">Ban</button>
       </div>`:''}
       ${bans.length ? bans.map((ban,i)=>`

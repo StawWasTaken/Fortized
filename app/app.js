@@ -897,7 +897,7 @@ async function refreshCU() {
           'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
           'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
           'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
-          'onyxBadge','onyxBadgeSpent','createdAt','customStatus','verified','appearance','personalStickers'
+          'onyxBadge','onyxBadgeSpent','createdAt','customStatus','verified','appearance'
         ];
         for (const k of protectFields) {
           const nv = fresh[k], lv = CU[k];
@@ -14315,23 +14315,18 @@ function _showStickerTooltip(el) {
   // Find metadata by matching URL across bastions
   let name = 'sticker';
   let fromBastion = null;
-  let isPersonal = false;
   try {
     (CU?.bastions || []).some(b => {
       const st = (b.stickers || []).find(s => s.url === url || s.data === url);
       if (st) { name = st.name || 'sticker'; fromBastion = b; return true; }
       return false;
     });
-    if (!fromBastion) {
-      const ps = (CU?.personalStickers || []).find(s => s.url === url || s.data === url);
-      if (ps) { name = ps.name || 'sticker'; isPersonal = true; }
-    }
   } catch {}
-  const originLabel = fromBastion ? 'Bastion Sticker' : (isPersonal ? 'Personal Sticker' : 'Sticker');
+  const originLabel = fromBastion ? 'Bastion Sticker' : 'Sticker';
   const originColor = fromBastion ? 'rgba(88,191,255,.85)' : 'rgba(255,249,62,.85)';
   const detailLine = fromBastion
     ? ('From: ' + escapeHTML(fromBastion.name || 'Bastion'))
-    : (isPersonal ? 'Uploaded by you — available everywhere' : 'Sticker');
+    : 'Sticker';
 
   const tip = document.createElement('div');
   tip.className = 'emoji-tooltip';
@@ -14467,10 +14462,28 @@ function insertEmoji(emoji) {
   }
   const ta = document.getElementById(activeEmojiTarget);
   if (!ta) return;
-  const pos = ta.selectionStart;
-  ta.value = ta.value.slice(0, pos) + emoji + ta.value.slice(ta.selectionEnd);
-  ta.selectionStart = ta.selectionEnd = pos + emoji.length;
-  ta.focus();
+  if (ta.isContentEditable) {
+    _initRichInput(ta);
+    ta.focus();
+    // Insert a Twemoji image node directly so the picker pick shows as image
+    const url = emojiToTwemojiUrl(emoji);
+    const tpl = document.createElement('template');
+    tpl.innerHTML = '<img class="rci-emoji" data-emoji-uni="' + escapeHTML(emoji) + '" src="' + escapeHTML(url) + '" alt="' + escapeHTML(emoji) + '" draggable="false" contenteditable="false" onerror="this.replaceWith(document.createTextNode(this.alt))">';
+    const node = tpl.content.firstChild;
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount && ta.contains(sel.anchorNode)) {
+      const r = sel.getRangeAt(0); r.deleteContents(); r.insertNode(node); r.setStartAfter(node); r.collapse(true); sel.removeAllRanges(); sel.addRange(r);
+    } else {
+      ta.appendChild(node);
+      const r = document.createRange(); r.setStartAfter(node); r.collapse(true); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    }
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+  } else {
+    const pos = ta.selectionStart;
+    ta.value = ta.value.slice(0, pos) + emoji + ta.value.slice(ta.selectionEnd);
+    ta.selectionStart = ta.selectionEnd = pos + emoji.length;
+    ta.focus();
+  }
   document.getElementById('emoji-picker').classList.remove('show');
   // Add to recent
   _recentEmojis = [emoji, ..._recentEmojis.filter(e=>e!==emoji)].slice(0,24);
@@ -14502,11 +14515,16 @@ function insertFortizedEmoji(name, url) {
   }
   const ta = document.getElementById(activeEmojiTarget);
   if (!ta) return;
-  const token = ':' + name + ':';
-  const pos = ta.selectionStart;
-  ta.value = ta.value.slice(0, pos) + token + ta.value.slice(ta.selectionEnd);
-  ta.selectionStart = ta.selectionEnd = pos + token.length;
-  ta.focus();
+  if (ta.isContentEditable) {
+    _initRichInput(ta);
+    _richInsertEmojiAtCaret(ta, name);
+  } else {
+    const token = ':' + name + ':';
+    const pos = ta.selectionStart;
+    ta.value = ta.value.slice(0, pos) + token + ta.value.slice(ta.selectionEnd);
+    ta.selectionStart = ta.selectionEnd = pos + token.length;
+    ta.focus();
+  }
   document.getElementById('emoji-picker').classList.remove('show');
   // Track frequency
   _trackEmojiFrequency(name);
@@ -21931,6 +21949,295 @@ function buildFormatToolbarHTML(inputId, opts) {
 }
 
 // ════════════════════════════════════════════════════════
+// RICH CHAT INPUT — contenteditable that renders unicode/Fortized/bastion
+// emojis as inline Twemoji images, Discord-style. Provides .value /
+// .selectionStart / .selectionEnd shims so existing textarea callers work
+// unchanged.
+// ════════════════════════════════════════════════════════
+function _richEmojiHTML(name) {
+  const uni = (typeof EMOJI_SHORTCODES !== 'undefined') ? EMOJI_SHORTCODES[name] : null;
+  if (uni) {
+    const url = emojiToTwemojiUrl(uni);
+    return '<img class="rci-emoji" data-emoji-uni="' + escapeHTML(uni) + '" data-emoji-name="' + escapeHTML(name) + '" src="' + escapeHTML(url) + '" alt="' + escapeHTML(uni) + '" draggable="false" contenteditable="false">';
+  }
+  const ftz = (typeof FORTIZED_EMOJI_MAP !== 'undefined') ? FORTIZED_EMOJI_MAP[name] : null;
+  if (ftz) {
+    return '<img class="rci-emoji" data-emoji-name="' + escapeHTML(name) + '" src="' + escapeHTML(ftz) + '" alt=":' + escapeHTML(name) + ':" draggable="false" contenteditable="false">';
+  }
+  if (typeof curBastion !== 'undefined' && curBastion !== null) {
+    const ce = (CU?.bastions?.[curBastion]?.customEmojis || []).find(e => e.name === name);
+    if (ce) return '<img class="rci-emoji" data-emoji-name="' + escapeHTML(name) + '" src="' + escapeHTML(ce.data) + '" alt=":' + escapeHTML(name) + ':" draggable="false" contenteditable="false">';
+  }
+  for (let bi = 0; bi < (CU?.bastions || []).length; bi++) {
+    if (bi === curBastion) continue;
+    const ce = (CU.bastions[bi]?.customEmojis || []).find(e => e.name === name);
+    if (ce) return '<img class="rci-emoji" data-emoji-name="' + escapeHTML(name) + '" src="' + escapeHTML(ce.data) + '" alt=":' + escapeHTML(name) + ':" draggable="false" contenteditable="false">';
+  }
+  return null;
+}
+
+// Detect a single grapheme cluster as an emoji codepoint (rough heuristic).
+function _isEmojiCodepoint(cp) {
+  return (
+    (cp >= 0x1F300 && cp <= 0x1FAFF) ||
+    (cp >= 0x2600  && cp <= 0x27BF)  ||
+    (cp >= 0x2300  && cp <= 0x23FF)  ||
+    (cp >= 0x2B00  && cp <= 0x2BFF)
+  );
+}
+
+// Plain text → contenteditable HTML (escapes everything except emoji tokens
+// and unicode emojis, which become <img class="rci-emoji">).
+function _richTextToHTML(text) {
+  if (!text) return '';
+  let html = '';
+  let i = 0;
+  while (i < text.length) {
+    const rest = text.slice(i);
+    const m = rest.match(/^:([a-zA-Z0-9_]+):/);
+    if (m) {
+      const eh = _richEmojiHTML(m[1]);
+      if (eh) { html += eh; i += m[0].length; continue; }
+    }
+    const cp = text.codePointAt(i);
+    const ch = String.fromCodePoint(cp);
+    const adv = ch.length;
+    if (_isEmojiCodepoint(cp)) {
+      // Consume optional VS16 + ZWJ sequences for compound emoji
+      let end = i + adv;
+      while (end < text.length) {
+        const nextCp = text.codePointAt(end);
+        if (nextCp === 0xFE0F) { end += 1; continue; }
+        if (nextCp === 0x200D) {
+          end += 1;
+          const after = text.codePointAt(end);
+          if (after && _isEmojiCodepoint(after)) { end += String.fromCodePoint(after).length; continue; }
+          break;
+        }
+        // Skin tone modifiers
+        if (nextCp >= 0x1F3FB && nextCp <= 0x1F3FF) { end += String.fromCodePoint(nextCp).length; continue; }
+        break;
+      }
+      const cluster = text.slice(i, end);
+      const url = emojiToTwemojiUrl(cluster);
+      const safe = escapeHTML(cluster);
+      html += '<img class="rci-emoji" data-emoji-uni="' + safe + '" src="' + escapeHTML(url) + '" alt="' + safe + '" draggable="false" contenteditable="false" onerror="this.replaceWith(document.createTextNode(this.alt))">';
+      i = end;
+      continue;
+    }
+    if (ch === '\n') html += '<br>';
+    else if (ch === '<') html += '&lt;';
+    else if (ch === '>') html += '&gt;';
+    else if (ch === '&') html += '&amp;';
+    else if (ch === '"') html += '&quot;';
+    else html += ch;
+    i += adv;
+  }
+  return html;
+}
+
+// Walk a contenteditable element and produce the plain-text representation
+// (emoji <img>s become unicode chars or :name: tokens).
+function _richHTMLToText(el) {
+  let out = '';
+  function walk(n) {
+    if (!n) return;
+    if (n.nodeType === 3) { out += n.nodeValue; return; }
+    if (n.nodeType !== 1) return;
+    const tag = n.tagName;
+    if (tag === 'BR') { out += '\n'; return; }
+    if (tag === 'IMG') {
+      const uni = n.getAttribute('data-emoji-uni');
+      const name = n.getAttribute('data-emoji-name');
+      if (uni) { out += uni; return; }
+      if (name) { out += ':' + name + ':'; return; }
+      return;
+    }
+    const isBlock = (tag === 'DIV' || tag === 'P');
+    if (isBlock && out.length && !out.endsWith('\n')) out += '\n';
+    n.childNodes.forEach(walk);
+  }
+  el.childNodes.forEach(walk);
+  return out;
+}
+
+// Compute the plain-text offset for a (node, offset) selection point.
+function _richOffsetAt(el, targetNode, targetOffset) {
+  let offset = 0;
+  let found = false;
+  function consumeNode(n) {
+    if (n.nodeType === 3) { offset += n.nodeValue.length; return; }
+    if (n.nodeType !== 1) return;
+    const tag = n.tagName;
+    if (tag === 'BR') { offset += 1; return; }
+    if (tag === 'IMG') {
+      const uni = n.getAttribute('data-emoji-uni');
+      const name = n.getAttribute('data-emoji-name');
+      if (uni) { offset += uni.length; return; }
+      if (name) { offset += name.length + 2; return; }
+      return;
+    }
+    const isBlock = (tag === 'DIV' || tag === 'P');
+    if (isBlock && offset > 0) offset += 1;
+    n.childNodes.forEach(walk);
+  }
+  function walk(n) {
+    if (found) return;
+    if (n === targetNode) {
+      if (n.nodeType === 3) { offset += targetOffset; found = true; return; }
+      if (n.nodeType === 1) {
+        for (let i = 0; i < targetOffset && i < n.childNodes.length; i++) {
+          consumeNode(n.childNodes[i]);
+        }
+        found = true;
+        return;
+      }
+    }
+    consumeNode(n);
+  }
+  el.childNodes.forEach(walk);
+  return offset;
+}
+
+// Place the caret at the given plain-text offset.
+function _richSetCaret(el, plainOffset) {
+  let cur = 0;
+  let result = null;
+  function visit(n) {
+    if (result) return;
+    if (n.nodeType === 3) {
+      const len = n.nodeValue.length;
+      if (cur + len >= plainOffset) { result = [n, plainOffset - cur]; return; }
+      cur += len;
+      return;
+    }
+    if (n.nodeType !== 1) return;
+    const tag = n.tagName;
+    if (tag === 'BR') {
+      if (cur === plainOffset) {
+        const parent = n.parentNode;
+        result = [parent, Array.prototype.indexOf.call(parent.childNodes, n)];
+        return;
+      }
+      cur += 1;
+      return;
+    }
+    if (tag === 'IMG') {
+      const uni = n.getAttribute('data-emoji-uni');
+      const name = n.getAttribute('data-emoji-name');
+      const len = uni ? uni.length : (name ? name.length + 2 : 0);
+      if (cur + len >= plainOffset) {
+        const parent = n.parentNode;
+        const idx = Array.prototype.indexOf.call(parent.childNodes, n);
+        result = [parent, plainOffset === cur ? idx : idx + 1];
+        return;
+      }
+      cur += len;
+      return;
+    }
+    const isBlock = (tag === 'DIV' || tag === 'P');
+    if (isBlock && cur > 0) cur += 1;
+    n.childNodes.forEach(visit);
+  }
+  el.childNodes.forEach(visit);
+  const sel = window.getSelection();
+  if (!sel) return;
+  const range = document.createRange();
+  try {
+    if (result) {
+      range.setStart(result[0], Math.min(result[1], (result[0].nodeType === 3) ? result[0].nodeValue.length : result[0].childNodes.length));
+    } else {
+      range.selectNodeContents(el);
+      range.collapse(false);
+    }
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  } catch {}
+}
+
+// Insert an emoji image at the current caret in a rich input.
+function _richInsertEmojiAtCaret(el, name) {
+  const eh = _richEmojiHTML(name);
+  if (!eh) return false;
+  el.focus();
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || !el.contains(sel.anchorNode)) {
+    el.insertAdjacentHTML('beforeend', eh);
+    _richSetCaret(el, _richHTMLToText(el).length);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    return true;
+  }
+  const range = sel.getRangeAt(0);
+  range.deleteContents();
+  const tpl = document.createElement('template');
+  tpl.innerHTML = eh;
+  const node = tpl.content.firstChild;
+  range.insertNode(node);
+  // Place caret after inserted node
+  range.setStartAfter(node);
+  range.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  return true;
+}
+
+function _initRichInput(el) {
+  if (!el || el._richInit) return;
+  el._richInit = true;
+  Object.defineProperty(el, 'value', {
+    configurable: true,
+    get() { return _richHTMLToText(el); },
+    set(v) {
+      el.innerHTML = _richTextToHTML(v || '');
+      _richSetCaret(el, (v || '').length);
+    }
+  });
+  Object.defineProperty(el, 'selectionStart', {
+    configurable: true,
+    get() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return 0;
+      const r = sel.getRangeAt(0);
+      if (!el.contains(r.startContainer)) return 0;
+      return _richOffsetAt(el, r.startContainer, r.startOffset);
+    },
+    set(v) { _richSetCaret(el, v); }
+  });
+  Object.defineProperty(el, 'selectionEnd', {
+    configurable: true,
+    get() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return 0;
+      const r = sel.getRangeAt(0);
+      if (!el.contains(r.endContainer)) return 0;
+      return _richOffsetAt(el, r.endContainer, r.endOffset);
+    },
+    set(v) { _richSetCaret(el, v); }
+  });
+  // Plain-text paste only — strip HTML, run through rich text→HTML
+  el.addEventListener('paste', (e) => {
+    const items = e.clipboardData?.items ? [...e.clipboardData.items] : [];
+    if (items.some(i => i.type.startsWith('image/'))) return; // image paste handled by handlePaste
+    e.preventDefault();
+    const text = e.clipboardData?.getData('text/plain') || '';
+    if (!text) return;
+    const html = _richTextToHTML(text);
+    document.execCommand('insertHTML', false, html);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  // Shift+Enter inserts <br> (default contenteditable behavior is browser-specific)
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      document.execCommand('insertLineBreak');
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════
 // CHAT INPUT BAR BUILDER — shared by DM, GC, Channel
 // ════════════════════════════════════════════════════════
 function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
@@ -21961,11 +22268,10 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           <button class="cit-attach" onclick="openFileUpload('${inputId}')" title="Attach File">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
+          <div id="${inputId}" class="chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="${placeholder}" spellcheck="true"
             onkeydown="${keydown}"
-            oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}');_updateChatInputEmojiPreview('${inputId}')"
-            onpaste="handlePaste(event,'${inputId}')"></textarea>
-          <div id="${inputId}-emoji-preview" class="chat-input-emoji-preview" style="display:none;"></div>
+            oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}')"
+            onpaste="handlePaste(event,'${inputId}')"></div>
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">
             <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF" data-tooltip="GIFs">
@@ -21984,63 +22290,6 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
         </div>
       </div>
     </div>`;
-}
-
-// Live preview strip that shows rendered :shortcode: emojis & Fortized emojis
-// as the user types. Textareas can't show inline images, so we mirror the
-// resolved emoji row above the input — Discord-style "what people will see".
-function _updateChatInputEmojiPreview(inputId) {
-  const ta = document.getElementById(inputId);
-  const strip = document.getElementById(inputId + '-emoji-preview');
-  if (!ta || !strip) return;
-  const raw = ta.value || '';
-  // Cheap bail-out: only work when at least one :shortcode: is present
-  if (!/:[a-zA-Z0-9_]+:/.test(raw)) {
-    strip.style.display = 'none';
-    strip.innerHTML = '';
-    return;
-  }
-  let hasResolved = false;
-  // Escape first so any user-typed HTML in the preview is inert. Colons survive
-  // escapeHTML, so the :shortcode: token replace still matches after escaping.
-  const escaped = escapeHTML(raw);
-  const rendered = escaped.replace(/:([a-zA-Z0-9_]+):/g, (match, name) => {
-    const uni = EMOJI_SHORTCODES?.[name];
-    if (uni) {
-      hasResolved = true;
-      const url = emojiToTwemojiUrl(uni);
-      return '<img src="' + escapeHTML(url) + '" alt="' + escapeHTML(uni) + '" class="cip-emoji" draggable="false" onerror="this.replaceWith(document.createTextNode(\'' + uni.replace(/'/g, "\\'") + '\'))">';
-    }
-    const ftz = FORTIZED_EMOJI_MAP?.[name];
-    if (ftz) {
-      hasResolved = true;
-      return '<img src="' + escapeHTML(ftz) + '" alt=":' + escapeHTML(name) + ':" class="cip-emoji" draggable="false">';
-    }
-    if (curBastion !== null) {
-      const ce = (CU?.bastions?.[curBastion]?.customEmojis || []).find(e => e.name === name);
-      if (ce) {
-        hasResolved = true;
-        return '<img src="' + escapeHTML(ce.data) + '" alt=":' + escapeHTML(name) + ':" class="cip-emoji" draggable="false">';
-      }
-    }
-    for (let bi = 0; bi < (CU?.bastions || []).length; bi++) {
-      if (bi === curBastion) continue;
-      const ce = (CU.bastions[bi]?.customEmojis || []).find(e => e.name === name);
-      if (ce) {
-        hasResolved = true;
-        return '<img src="' + escapeHTML(ce.data) + '" alt=":' + escapeHTML(name) + ':" class="cip-emoji" draggable="false">';
-      }
-    }
-    return match; // already escaped
-  });
-  if (!hasResolved) {
-    strip.style.display = 'none';
-    strip.innerHTML = '';
-    return;
-  }
-  // Strip leading/trailing plain text, keep compact — only a preview of emojis in context
-  strip.innerHTML = '<span class="cip-label">Preview</span><span class="cip-body">' + rendered + '</span>';
-  strip.style.display = 'flex';
 }
 
 function updateCharCount(inputId) {
@@ -26256,9 +26505,10 @@ function insertGifById(id, inputId, url) {
 
 // ════════════════════════════════════════════
 // STICKER PICKER — bastion-uploaded stickers
+// (Stickers are sent as [FTZSTICKER:url] tokens, never as :name: shortcodes,
+//  so they can never collide with the :emoji: shortcode syntax.)
 // ════════════════════════════════════════════
 let _stickerInput = 'ch-input';
-const PERSONAL_STICKER_LIMIT = 50;
 function openStickerPicker(inputId) {
   _stickerInput = inputId || 'ch-input';
   document.getElementById('sticker-picker')?.remove();
@@ -26276,22 +26526,13 @@ function openStickerPicker(inputId) {
   const stickerBottom = Math.max(60, window.innerHeight - (rect.top || window.innerHeight - 80) + 6);
   picker.style.cssText = `left:${stickerLeft}px;bottom:${stickerBottom}px;`;
 
-  // Gather stickers: personal + current bastion + other bastions (Radiance only)
+  // Gather stickers from all bastions the user is in
   const allStickers = [];
   const bastionNames = {};
-  const isRadiance = _hasActiveRadiance();
-
-  // Personal stickers first (always available)
-  const personalStickers = CU?.personalStickers || [];
-  personalStickers.forEach(s => {
-    allStickers.push({...s, bastionName: 'My Stickers', bastionIdx: 'personal'});
-  });
-  if (personalStickers.length) bastionNames['personal'] = 'My Stickers';
 
   if (CU?.bastions) {
     Object.entries(CU.bastions).forEach(([idx, b]) => {
       const stickers = b.stickers || b.customStickers || [];
-      // Show stickers from ALL bastions the user is in
       stickers.forEach(s => {
         allStickers.push({...s, bastionName: b.name || 'Unknown', bastionIdx: idx});
       });
@@ -26313,9 +26554,8 @@ function openStickerPicker(inputId) {
     </div>
     ${bastionTabsHTML ? `<div class="spp-tabs"><button class="spp-tab active" onclick="_filterStickerBastion('all', event)">All</button>${bastionTabsHTML}</div>` : ''}
     <div class="spp-grid" id="sticker-grid"></div>
-    <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-      <span style="font-size:10px;color:rgba(255,255,255,.15);">${personalStickers.length}/${PERSONAL_STICKER_LIMIT} personal stickers</span>
-      <button onclick="openPersonalStickerUpload()" class="sticker-upload-btn">+ Upload</button>
+    <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);display:flex;justify-content:center;align-items:center;flex-shrink:0;">
+      <span style="font-size:10px;color:rgba(255,255,255,.25);">Stickers come from bastions you're in.</span>
     </div>
   `;
 
@@ -26393,46 +26633,6 @@ function _stickerOutsideClose(e) {
   if (!picker.contains(e.target)) { picker.remove(); return; }
   document.addEventListener('mousedown', _stickerOutsideClose, {once:true, capture:true});
 }
-
-// Upload a personal sticker: pick a PNG/GIF/WebP, compress via existing
-// avatar pipeline, and save to CU.personalStickers.
-function openPersonalStickerUpload() {
-  const used = (CU?.personalStickers || []).length;
-  if (used >= PERSONAL_STICKER_LIMIT) {
-    toast(`Personal sticker limit reached (${PERSONAL_STICKER_LIMIT})`, 'error');
-    return;
-  }
-  const inp = document.createElement('input');
-  inp.type = 'file';
-  inp.accept = 'image/png,image/gif,image/webp,image/jpeg';
-  inp.style.display = 'none';
-  document.body.appendChild(inp);
-  inp.onchange = async () => {
-    const f = inp.files && inp.files[0];
-    inp.remove();
-    if (!f) return;
-    if (f.size > 2 * 1024 * 1024) { toast('Sticker too large (2MB max)', 'error'); return; }
-    try {
-      const dataUrl = await new Promise((res, rej) => {
-        const fr = new FileReader();
-        fr.onload = () => res(fr.result);
-        fr.onerror = () => rej(new Error('read failed'));
-        fr.readAsDataURL(f);
-      });
-      const name = (f.name || 'sticker').replace(/\.[^.]+$/, '').slice(0, 40);
-      CU.personalStickers = CU.personalStickers || [];
-      CU.personalStickers.push({ url: dataUrl, name, addedAt: Date.now() });
-      try { await saveUser(true); } catch {}
-      toast('Sticker added!', 'success');
-      document.getElementById('sticker-picker')?.remove();
-      openStickerPicker(_stickerInput);
-    } catch (e) {
-      toast('Upload failed', 'error');
-    }
-  };
-  inp.click();
-}
-
 
 // ════════════════════════════════════════════
 // BOT COMMAND SHORTCUT PANEL
@@ -32501,6 +32701,10 @@ let _acStartPos = -1;
 function setupEmojiAutocomplete(inputId) {
   const ta = document.getElementById(inputId);
   if (!ta || ta._emojiAcBound) return;
+  // If this is a rich (contenteditable) input, install the value/selection
+  // shims so the rest of this function can read .value / .selectionStart
+  // exactly like a textarea.
+  if (ta.isContentEditable) _initRichInput(ta);
   ta._emojiAcBound = true;
 
   ta.addEventListener('input', () => {
@@ -32537,7 +32741,10 @@ function handleEmojiAutocomplete(ta) {
   const val = ta.value;
   const pos = ta.selectionStart;
 
-  // Auto-replace completed :shortcode: patterns
+  // Auto-replace completed :shortcode: patterns. Unicode shortcodes are
+  // replaced with the actual emoji char; Fortized & bastion custom emojis
+  // are kept as :name: tokens (the rich-input .value setter renders them
+  // as inline images via _richTextToHTML).
   const completedMatch = val.slice(0, pos).match(/:([a-zA-Z0-9_]+):$/);
   if (completedMatch) {
     const name = completedMatch[1].toLowerCase();
@@ -32547,6 +32754,25 @@ function handleEmojiAutocomplete(ta) {
       const after = val.slice(pos);
       ta.value = before + emoji + after;
       ta.selectionStart = ta.selectionEnd = before.length + emoji.length;
+      hideEmojiAc();
+      return;
+    }
+    // Custom (Fortized / bastion) emoji — token stays as :name: but the rich
+    // input will render it as an image once the value is reassigned.
+    let isCustom = !!FORTIZED_EMOJI_MAP?.[name];
+    if (!isCustom && curBastion !== null) {
+      isCustom = (CU?.bastions?.[curBastion]?.customEmojis || []).some(e => e.name === name);
+    }
+    if (!isCustom) {
+      for (let bi = 0; bi < (CU?.bastions || []).length; bi++) {
+        if ((CU.bastions[bi]?.customEmojis || []).some(e => e.name === name)) { isCustom = true; break; }
+      }
+    }
+    if (isCustom && ta.isContentEditable) {
+      // Force a value rebuild so the contenteditable re-renders the token as an <img>
+      const cursorOffset = pos;
+      ta.value = val;
+      ta.selectionStart = ta.selectionEnd = cursorOffset;
       hideEmojiAc();
       return;
     }
@@ -32671,6 +32897,8 @@ function applyEmojiAc(result, ta) {
   } else {
     insert = ':' + result.name + ': ';
   }
+  // For rich inputs the .value setter rebuilds the contenteditable, which
+  // converts :name: tokens and unicode emojis into Twemoji <img> nodes.
   ta.value = before + insert + after;
   ta.selectionStart = ta.selectionEnd = _acStartPos + insert.length;
   ta.focus();

@@ -7456,8 +7456,15 @@ async function promptJoinPublicBastion(bastionId){
     if((b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
     const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[],moodDisabled:b.moodDisabled||false,moodLocked:b.moodLocked||false,lockedMood:b.lockedMood||'',customMood:b.customMood||null,memberCount:b.memberCount||1};
     CU.bastions=[...(CU.bastions||[]),localB];
-    await saveUser();
+    // Persist user record immediately (skip 300ms debounce) so a refresh
+    // right after join doesn't lose the membership, and verify the row
+    // actually made it to the DB before broadcasting the join.
+    await saveUser(true);
     await FortizedSocial.addBastionMember(gid,CU.username);
+    // Safety re-save: if any realtime sync clobbered CU.bastions between
+    // the first save and addBastionMember, this forces our local state
+    // (which includes the new bastion) back onto the row.
+    try { if (!(CU.bastions||[]).some(x=>x.globalId===gid)) CU.bastions=[...(CU.bastions||[]),localB]; await saveUser(true); } catch(_){}
     // Update member count in global
     try{
       const members=await FortizedSocial.getBastionMembers(gid)||[];
@@ -11803,9 +11810,36 @@ async function _submitAdReport(adId) {
   const context = document.getElementById('ad-report-context')?.value?.trim();
   const errEl = document.getElementById('ad-report-error');
   if (!reason) { if (errEl) errEl.textContent = 'Please select a reason.'; return; }
+  let adSnap = null;
   try {
-    await FortizedSocial.submitReport({ type:'ad', adId, reason, context, reporter:CU?.username, reportedAt:new Date().toISOString() });
-  } catch(e) { console.warn('[Report] Ad report failed:', e); }
+    const ads = await FortizedSocial.getGlobalAds();
+    adSnap = (ads || []).find(a => a && (a.id === adId || a.adId === adId)) || null;
+  } catch(_){}
+  const now = new Date().toISOString();
+  const report = {
+    id: 'rpt_' + Date.now(),
+    type: 'ad',
+    adId,
+    adTitle: adSnap?.title || adSnap?.name || '',
+    adImage: adSnap?.image || adSnap?.imageUrl || adSnap?.media || '',
+    adTarget: adSnap?.link || adSnap?.target || adSnap?.url || '',
+    adBastion: adSnap?.bastion || adSnap?.bastionName || '',
+    adOwner: adSnap?.owner || adSnap?.createdBy || adSnap?.author || '',
+    username: adSnap?.owner || adSnap?.createdBy || adSnap?.author || '',
+    reason,
+    context,
+    reporter: CU?.username,
+    reportedAt: now,
+    createdAt: now,
+    status: 'pending'
+  };
+  try { await FortizedSocial.adminSaveReport(report); }
+  catch(e) { console.warn('[Report] Ad report save failed:', e); }
+  try {
+    const existing = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+    if (!existing.find(r => r.id === report.id)) existing.push(report);
+    localStorage.setItem('ftz_reports', JSON.stringify(existing));
+  } catch(_){}
   document.getElementById('modal-report-ad')?.remove();
   toast('Ad reported. Our Safety team will review it.', 'success');
 }
@@ -17145,107 +17179,140 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         .trim();
     };
     const _isPending = (r) => r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned';
-    const _statusColor = (r) => _isPending(r) ? '#f87171' : r.status==='dismissed' ? '#9ca3af' : r.status==='warned' ? '#f59e0b' : '#3ecf6e';
-    const _statusBg = (r) => _isPending(r) ? 'rgba(248,113,113,.1)' : r.status==='dismissed' ? 'rgba(255,255,255,.06)' : r.status==='warned' ? 'rgba(245,158,11,.1)' : 'rgba(62,207,110,.1)';
-    const _targetUser = (r) => r.username || r.msgFrom || null;
+    const _targetUser = (r) => r.username || r.msgFrom || r.adOwner || null;
+    const _repType = (r) => r.type === 'ad' ? 'ad' : (r.type === 'message' ? 'message' : 'user');
     const _renderReportCard = (r, i) => {
-      const media = _extractMedia(r.msgText);
+      const type = _repType(r);
       const target = _targetUser(r);
       const isPend = _isPending(r);
       const timeFull = r.createdAt ? new Date(r.createdAt).toLocaleString() : '–';
       const timeAgo = r.createdAt ? _relTime(r.createdAt) : '';
       const reportedAtFull = r.reportedAt ? new Date(r.reportedAt).toLocaleString() : '';
-      return `<div style="background:var(--panel,#1b1e25);border:1px solid ${isPend?'rgba(248,113,113,.15)':'rgba(255,255,255,.06)'};border-radius:14px;overflow:hidden;${isPend?'box-shadow:0 0 0 1px rgba(248,113,113,.06),0 2px 12px rgba(248,113,113,.04);':''}">
-        <!-- Report header bar -->
-        <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;background:${isPend?'rgba(248,113,113,.04)':'rgba(255,255,255,.02)'};border-bottom:1px solid rgba(255,255,255,.04);">
-          <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:var(--radius-pill);background:${_statusBg(r)};color:${_statusColor(r)};text-transform:uppercase;letter-spacing:.5px;">${r.status||'pending'}</span>
-          <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:var(--radius-pill);background:${r.type==='message'?'rgba(96,165,250,.1)':'rgba(168,85,247,.1)'};color:${r.type==='message'?'#60a5fa':'#a855f7'};">${r.type==='message'?ftzIcon('chat','10')+' Message':ftzIcon('users','10')+' User'}</span>
-          <div style="flex:1;"></div>
-          <span style="font-size:10.5px;color:rgba(255,255,255,.25);font-family:monospace;" title="${escapeHTML(timeFull)}">${escapeHTML(timeAgo)}</span>
-          <span style="font-size:10px;color:rgba(255,255,255,.15);font-family:monospace;">${escapeHTML(r.id||'')}</span>
-        </div>
-        <div style="padding:16px 18px;">
-          <!-- Reason -->
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-            <div>
-              <div style="font-size:15px;font-weight:800;font-family:var(--font-display);">${escapeHTML(r.reason||'No reason')}</div>
-            </div>
+
+      const outcome = r.resolution || r.status || 'pending';
+      const statusPillCls =
+        isPend ? 'rep-pill--pend'
+        : outcome === 'warned' ? 'rep-pill--warned'
+        : outcome === 'dismissed' ? 'rep-pill--dismissed'
+        : 'rep-pill--resolved';
+      const statusLabel = escapeHTML(isPend ? 'pending' : outcome);
+
+      const typePillCls = type === 'ad' ? 'rep-pill--ad' : type === 'message' ? 'rep-pill--msg' : 'rep-pill--user';
+      const typeLabel = type === 'ad' ? 'Ad Report' : type === 'message' ? 'Message Report' : 'User Report';
+      const typeIcon = type === 'ad'
+        ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
+        : type === 'message'
+        ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+        : '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+
+      // Content block varies by type
+      let contentBlock = '';
+      if (type === 'ad') {
+        const title = r.adTitle || 'Untitled ad';
+        const img = r.adImage || '';
+        const tgt = r.adTarget || '';
+        const bastion = r.adBastion || '';
+        const owner = r.adOwner || '';
+        contentBlock = `<div class="rep-ad-preview">
+          ${img ? `<img class="rep-ad-preview__img" src="${escapeHTML(img)}" alt="" onerror="this.style.display='none'">` : ''}
+          <div class="rep-ad-preview__body">
+            <div class="rep-ad-preview__title">${escapeHTML(title)}</div>
+            ${tgt ? `<div class="rep-ad-preview__target">↗ ${escapeHTML(tgt)}</div>` : ''}
+            <div class="rep-ad-preview__meta">${owner ? 'by <strong>'+escapeHTML(owner)+'</strong>' : 'owner unknown'}${bastion ? ' · '+escapeHTML(bastion) : ''} · ad id <code style="opacity:.6;font-size:10.5px;">${escapeHTML(r.adId||'—')}</code></div>
           </div>
-          <!-- People involved -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
-              <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Reporter</div>
-              <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.8);">${escapeHTML(r.reporter||'Anonymous')}</div>
-            </div>
-            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
-              <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">${r.type==='message'?'Message Author':'Reported User'}</div>
-              <div style="font-size:13px;font-weight:600;color:${target?'#f87171':'rgba(255,255,255,.3)'};">${target?escapeHTML(target):'Unknown'}</div>
-            </div>
-          </div>
-          <!-- Timestamps & metadata -->
-          <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;font-size:11px;color:rgba(255,255,255,.3);">
-            <span title="When the report was submitted" style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Created: <strong style="color:rgba(255,255,255,.5);">${escapeHTML(timeFull)}</strong></span>
-            ${reportedAtFull?`<span title="When the reported action occurred" style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Occurred: <strong style="color:rgba(255,255,255,.5);">${escapeHTML(reportedAtFull)}</strong></span>`:''}
-            ${r.bastionId?`<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Bastion: <strong style="color:rgba(255,255,255,.5);">${escapeHTML(r.bastionId)}</strong></span>`:''}
-            ${r.msgId?`<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Msg ID: <strong style="color:rgba(255,255,255,.4);font-family:monospace;font-size:10px;">${escapeHTML(r.msgId)}</strong></span>`:''}
-          </div>
-          <!-- Reported message content (full) -->
-          ${r.msgText?`<div style="margin-bottom:14px;">
-            <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Reported Message</div>
-            ${_stripMediaTokens(r.msgText)?`<div style="padding:12px 14px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);border-left:3px solid #f87171;border-radius:8px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;word-break:break-word;white-space:pre-wrap;">${escapeHTML(_stripMediaTokens(r.msgText))}</div>`:''}
-          </div>`:''}
-          <!-- Media preview -->
-          ${media.length>0?`<div style="margin-bottom:14px;">
-            <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.49"/></svg> Media Attachments (${media.length})</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;">
-              ${media.map(m => { if(m.type==='video'){ const _vp='rpvid-'+Math.random().toString(36).slice(2); return `<div style="display:inline-block;max-width:320px;"><div class="ftz-vp" id="${_vp}-wrap" style="border-radius:10px;"><video id="${_vp}" src="${escapeHTML(m.url)}" style="max-width:320px;max-height:240px;display:block;cursor:pointer;" preload="metadata" crossorigin="anonymous" onclick="ftzVideoToggle('${_vp}')" ontimeupdate="ftzVideoTick('${_vp}')" onloadedmetadata="ftzVideoMeta('${_vp}')" onended="ftzVideoEnd('${_vp}')" onerror="ftzVideoError('${_vp}')"></video><div class="ftz-vp-overlay" id="${_vp}-overlay" onclick="ftzVideoToggle('${_vp}')"><div class="ftz-vp-overlay-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div></div>${m.name?`<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;">${escapeHTML(m.name)}</div>`:''}</div>`; } if(m.type==='audio'){ const _ap='rpaud-'+Math.random().toString(36).slice(2); return `<div class="ftz-embed" style="--embed-color:#fef83d;max-width:300px;margin:0;"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-ap"><button class="ftz-ap-btn" id="${_ap}-btn" onclick="ftzAudioToggle('${_ap}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><div class="ftz-ap-body"><div class="ftz-ap-name">${m.name?escapeHTML(m.name):'Audio'}</div><div class="ftz-ap-progress" onclick="ftzAudioSeek('${_ap}',event)"><div class="ftz-ap-prog-fill" id="${_ap}-prog" style="width:0%;"></div></div><div class="ftz-ap-meta"><span class="ftz-ap-time"><span id="${_ap}-cur">0:00</span> / <span id="${_ap}-dur">--:--</span></span></div></div></div><audio id="${_ap}" src="${escapeHTML(m.url)}" preload="metadata" crossorigin="anonymous" style="display:none;" ontimeupdate="ftzAudioTick('${_ap}')" onloadedmetadata="ftzAudioMeta('${_ap}')" onended="ftzAudioEnd('${_ap}')" onerror="console.warn('[Audio] Load error:',this.src)"></audio></div></div></div>`; } return `<img src="${escapeHTML(m.url)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="console.warn('[Image] Load error:',this.src);this.style.display='none'">`; }).join('')}
-            </div>
-          </div>`:''}
-          <!-- Additional context -->
-          ${r.context?`<div style="margin-bottom:14px;">
-            <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Additional Context</div>
-            <div style="padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-left:2px solid rgba(255,255,255,.15);border-radius:8px;font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.5;white-space:pre-wrap;">${escapeHTML(r.context)}</div>
-          </div>`:''}
-          <!-- Resolution info (if resolved) -->
-          ${!isPend?`<div style="padding:10px 14px;background:rgba(62,207,110,.03);border:1px solid rgba(62,207,110,.08);border-radius:8px;margin-bottom:12px;">
-            <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Resolution</div>
-            <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;">
-              <span>Action: <strong style="color:${_statusColor(r)};">${escapeHTML(r.resolution||r.status||'–')}</strong></span>
-              <span>By: <strong style="color:rgba(255,255,255,.6);">${escapeHTML(r.resolvedBy||'admin')}</strong></span>
-              ${r.resolvedAt?`<span>On: <strong style="color:rgba(255,255,255,.5);">${new Date(r.resolvedAt).toLocaleString()}</strong></span>`:''}
-            </div>
-            ${r.resolutionNote?`<div style="margin-top:6px;font-size:12px;color:rgba(255,255,255,.4);font-style:italic;">Note: "${escapeHTML(r.resolutionNote)}"</div>`:''}
-          </div>`:''}
-          <!-- Actions (hierarchical: superadmins untouchable, admins only by superadmins, mods by admins+) -->
-          ${(()=>{
-            const targetRole = target ? getStaffRole(target) : null;
-            const canAct = isPend && (
-              targetRole === 'superadmin' ? false :
-              targetRole === 'admin' ? isSuperAdmin() :
-              targetRole === 'moderator' ? isAdmin() :
-              true
-            );
-            const protectedMsg = targetRole === 'superadmin' ? '<div style="padding:10px 14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:rgba(255,249,62,.7);font-size:12px;font-weight:600;">🛡️ This user is a Superadmin and cannot be actioned by anyone.</div>'
-              : (targetRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:rgba(248,113,113,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
-              : (targetRole === 'moderator' && !isAdmin()) ? '<div style="padding:10px 14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.12);border-radius:8px;color:rgba(96,165,250,.7);font-size:12px;font-weight:600;">🔒 This user is a Moderator — only Admins and Superadmins can take action.</div>'
-              : '';
-            if (isPend && !canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
-            if (isPend && canAct) return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
-            <button onclick="resolveReport(${i},'dismissed')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">Dismiss</button>
-            <button onclick="resolveReport(${i},'warned')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
-            ${target?`<button onclick="resolveReport(${i},'suspended')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">⏳ Suspend</button>`:''}
-            ${target?`<button onclick="resolveReport(${i},'banned')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
-            <div style="flex:1;"></div>
-            ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:var(--blue);font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
-            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
-          </div>`;
-            return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
-            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
-          </div>`;
-          })()}
-        </div>
+        </div>`;
+      } else if (type === 'message' && r.msgText) {
+        const cleanText = _stripMediaTokens(r.msgText);
+        const media = _extractMedia(r.msgText);
+        contentBlock = (cleanText ? `<div class="rep-content"><span class="rep-content__label">Reported message</span>${escapeHTML(cleanText)}</div>` : '')
+          + (media.length ? `<div class="rep-media">${media.map(m => {
+              if (m.type === 'video') {
+                const _vp = 'rpvid-'+Math.random().toString(36).slice(2);
+                return `<div class="ftz-vp" id="${_vp}-wrap"><video id="${_vp}" src="${escapeHTML(m.url)}" preload="metadata" crossorigin="anonymous" onclick="ftzVideoToggle('${_vp}')" ontimeupdate="ftzVideoTick('${_vp}')" onloadedmetadata="ftzVideoMeta('${_vp}')" onended="ftzVideoEnd('${_vp}')" onerror="ftzVideoError('${_vp}')"></video><div class="ftz-vp-overlay" id="${_vp}-overlay" onclick="ftzVideoToggle('${_vp}')"><div class="ftz-vp-overlay-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div></div>`;
+              }
+              if (m.type === 'audio') {
+                return `<audio src="${escapeHTML(m.url)}" controls preload="metadata" crossorigin="anonymous" style="width:260px;"></audio>`;
+              }
+              return `<img src="${escapeHTML(m.url)}" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="this.style.display='none'">`;
+            }).join('')}</div>` : '');
+      }
+
+      // Actors row
+      const reporter = escapeHTML(r.reporter || 'Anonymous');
+      const targetDisplay = target ? escapeHTML(target) : (type === 'ad' ? 'unknown owner' : 'unknown');
+      const actorsRow = `<div class="rep-card__actors">
+        <span class="rep-card__actor"><span class="rc-ava">${reporter.slice(0,1).toUpperCase()}</span>${reporter}</span>
+        <span class="rep-card__arrow">→</span>
+        <span class="rep-card__actor rep-card__actor--target"><span class="rc-ava">${target ? escapeHTML(target).slice(0,1).toUpperCase() : '?'}</span>${targetDisplay}</span>
+        ${r.bastionId ? `<span class="rep-card__loc">${escapeHTML(r.bastionId)}</span>` : ''}
       </div>`;
+
+      // Meta row
+      const metaRow = `<div class="rep-meta-row">
+        <span title="${escapeHTML(timeFull)}">Created <strong>${escapeHTML(timeAgo)}</strong></span>
+        ${reportedAtFull ? `<span>Occurred <strong>${escapeHTML(reportedAtFull)}</strong></span>` : ''}
+        ${r.msgId ? `<span>Msg <strong>${escapeHTML(r.msgId)}</strong></span>` : ''}
+      </div>`;
+
+      // Resolution block
+      const resolutionBlock = !isPend ? `<div class="rep-resolution${r.status==='warned'?' rep-resolution--warned':''}${r.status==='dismissed'?' rep-resolution--dismissed':''}">
+        <strong style="color:rgba(255,255,255,.75);">${escapeHTML(r.resolution || r.status || '—')}</strong>
+        <span style="color:rgba(255,255,255,.45);"> by ${escapeHTML(r.resolvedBy || 'admin')}${r.resolvedAt ? ' · '+new Date(r.resolvedAt).toLocaleString() : ''}</span>
+        ${r.resolutionNote ? `<div style="margin-top:6px;color:rgba(255,255,255,.5);font-style:italic;">Note: "${escapeHTML(r.resolutionNote)}"</div>` : ''}
+      </div>` : '';
+
+      // Actions block
+      const targetRole = target ? getStaffRole(target) : null;
+      const canAct = isPend && (
+        targetRole === 'superadmin' ? false :
+        targetRole === 'admin' ? isSuperAdmin() :
+        targetRole === 'moderator' ? isAdmin() :
+        true
+      );
+      let protectedMsg = '';
+      if (targetRole === 'superadmin') protectedMsg = '<div class="rep-protected rep-protected--super">🛡 Superadmin — cannot be actioned.</div>';
+      else if (targetRole === 'admin' && !isSuperAdmin()) protectedMsg = '<div class="rep-protected rep-protected--admin">🔒 Admin — only Superadmins can act.</div>';
+      else if (targetRole === 'moderator' && !isAdmin()) protectedMsg = '<div class="rep-protected rep-protected--mod">🔒 Moderator — only Admins & Superadmins can act.</div>';
+
+      let actionsBlock = '';
+      if (isPend && canAct) {
+        const actBtns = [];
+        actBtns.push(`<button class="rep-btn" onclick="resolveReport(${i},'dismissed')">Dismiss</button>`);
+        actBtns.push(`<button class="rep-btn rep-btn--warn" onclick="resolveReport(${i},'warned')">Warn</button>`);
+        if (type === 'ad') {
+          actBtns.push(`<button class="rep-btn rep-btn--takedown" onclick="resolveReport(${i},'takedown')">Takedown ad</button>`);
+        }
+        if (target) {
+          actBtns.push(`<button class="rep-btn rep-btn--suspend" onclick="resolveReport(${i},'suspended')">Suspend ${escapeHTML(target)}</button>`);
+          actBtns.push(`<button class="rep-btn rep-btn--ban" onclick="resolveReport(${i},'banned')">Ban ${escapeHTML(target)}</button>`);
+          actBtns.push(`<button class="rep-btn rep-btn--inspect" onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);">Inspect</button>`);
+        }
+        if (isSuperAdmin()) actBtns.push(`<button class="rep-btn rep-btn--delete" onclick="deleteReportForever(${i})">Delete</button>`);
+        actionsBlock = `<div class="rep-actions">${actBtns.join('')}</div>`;
+      } else if (isPend && !canAct) {
+        actionsBlock = isSuperAdmin() ? `<div class="rep-actions"><button class="rep-btn rep-btn--delete" onclick="deleteReportForever(${i})">Delete</button></div>` : '';
+      } else if (isSuperAdmin()) {
+        actionsBlock = `<div class="rep-actions"><button class="rep-btn rep-btn--delete" onclick="deleteReportForever(${i})">Delete</button></div>`;
+      }
+
+      return `<article class="rep-card${isPend?' rep-card--pending':''}">
+        <header class="rep-card__head">
+          <span class="rep-pill ${statusPillCls}">${statusLabel}</span>
+          <span class="rep-pill ${typePillCls}">${typeIcon} ${typeLabel}</span>
+          <span class="rep-card__time" title="${escapeHTML(timeFull)}">${escapeHTML(timeAgo)}</span>
+          <span class="rep-card__id">${escapeHTML(r.id || '')}</span>
+        </header>
+        <div class="rep-card__body">
+          <h3 class="rep-card__reason">${escapeHTML(r.reason || 'No reason given')}</h3>
+          ${actorsRow}
+          ${contentBlock}
+          ${r.context ? `<div class="rep-context">${escapeHTML(r.context)}</div>` : ''}
+          ${metaRow}
+          ${resolutionBlock}
+          ${protectedMsg}
+          ${actionsBlock}
+        </div>
+      </article>`;
     };
     // Relative time helper
     const _relTime = (iso) => {
@@ -18403,6 +18470,23 @@ function resolveReport(idx, action) {
     // Delete the reported message and replace with moderation notice
     if (report.type === 'message' && report.msgId && report.bastionId && action !== 'dismissed') {
       try { await _deleteAndReplaceReportedMessage(report); } catch(e) { console.warn('Message replacement failed:', e); }
+    }
+
+    // Takedown ad: remove from global ads + log
+    if (action === 'takedown' && report.type === 'ad' && report.adId) {
+      try {
+        if (typeof FortizedSocial.adminRemoveGlobalAd === 'function') {
+          await FortizedSocial.adminRemoveGlobalAd(report.adId);
+        } else if (typeof FortizedSocial.removeGlobalAd === 'function') {
+          await FortizedSocial.removeGlobalAd(report.adId);
+        } else if (typeof FortizedSocial.getGlobalAds === 'function' && typeof FortizedSocial.setGlobalAds === 'function') {
+          const ads = (await FortizedSocial.getGlobalAds()) || [];
+          const next = ads.filter(a => a && a.id !== report.adId && a.adId !== report.adId);
+          await FortizedSocial.setGlobalAds(next);
+        }
+      } catch(e) { console.warn('[Report] Ad takedown failed:', e); }
+      logAudit('ad_takedown', report.adOwner || target || '?', report.adId);
+      toast('Ad taken down', 'success');
     }
 
     // Execute the action on the reported user
@@ -20891,8 +20975,9 @@ async function joinBastionById(bastionId, hasInvite) {
   if(!hasInvite && (b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
   const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[],moodDisabled:b.moodDisabled||false,moodLocked:b.moodLocked||false,lockedMood:b.lockedMood||'',customMood:b.customMood||null,memberCount:b.memberCount||1};
   CU.bastions=[...(CU.bastions||[]),localB];
-  await saveUser();
+  await saveUser(true);
   await FortizedSocial.addBastionMember(gid,CU.username);
+  try { if (!(CU.bastions||[]).some(x=>x.globalId===gid)) CU.bastions=[...(CU.bastions||[]),localB]; await saveUser(true); } catch(_){}
   try{const members=await FortizedSocial.getBastionMembers(gid)||[];const _gb=await FortizedSocial.getGlobalBastion(gid);if(_gb){_gb.memberCount=members.length;await FortizedSocial.saveGlobalBastion(gid,_gb);}}catch{}
   renderRailBastions();
   toast('Joined '+b.name+'!','success');
@@ -26975,12 +27060,16 @@ function vcSignalPath(a, b) {
 async function startVoiceCall(partner) {
   if (_vc.pc) { toast('Already in a call','error'); return; }
   _vc.partner = partner; _vc.isCaller = true;
-  await _vcSetup(true);
+  try { await _vcSetup(true); }
+  catch (e) { _vc.partner = null; _vc.isCaller = false; return; }
   _startRingtone();
   const offer = await _vc.pc.createOffer();
   await _vc.pc.setLocalDescription(offer);
   const path = vcSignalPath(CU.username, partner);
   _vc.sigRef = path;
+  // Clear any stale signal on this path so old `ended`/`declined` flags
+  // from previous sessions don't poison the new call.
+  try { await firebase.database().ref(path).remove(); } catch(_){}
   await firebase.database().ref(path).set({ type:'offer', from:CU.username, sdp:offer.sdp, ts:Date.now() });
   
   // Show "calling..." screen (Discord-style) - NOT the call room yet
@@ -27124,7 +27213,13 @@ async function answerVoiceCall(partner, offerSdp) {
   _stopRingtone();
   if (_vc.pc) endVoiceCall();
   _vc.partner = partner; _vc.isCaller = false;
-  await _vcSetup(false);
+  try { await _vcSetup(false); }
+  catch (e) {
+    _vc.partner = null; _vc.isCaller = false;
+    // Tell the caller we can't join so their UI doesn't hang on "calling…"
+    try { const p = vcSignalPath(partner, CU.username); await firebase.database().ref(p).update({ declined:true, by:CU.username, ts:Date.now() }); } catch(_){}
+    return;
+  }
   await _vc.pc.setRemoteDescription({type:'offer',sdp:offerSdp});
   const answer = await _vc.pc.createAnswer();
   await _vc.pc.setLocalDescription(answer);
@@ -27136,7 +27231,12 @@ async function answerVoiceCall(partner, offerSdp) {
 
 async function _vcSetup(isCaller) {
   _vc.localStream = await navigator.mediaDevices.getUserMedia({audio:true,video:false}).catch(()=>null);
-  if (!_vc.localStream) { toast('Could not access microphone','error'); }
+  if (!_vc.localStream) {
+    // Without a mic the peer will never hear us — bail early rather than
+    // letting the call "connect" silently with no audio in either direction.
+    toast('Microphone access denied — cannot start call', 'error');
+    throw new Error('no-microphone');
+  }
   _vc.pc = new RTCPeerConnection({iceServers:[
     {urls:'stun:stun.l.google.com:19302'},
     {urls:'stun:stun1.l.google.com:19302'},
@@ -27614,7 +27714,24 @@ function startVCListener(myUsername) {
     const path = snap.key;
     if (!path.includes(myUsername)) return;
     const data = snap.val();
-    if (!data||data.ended||data.declined||data.cancelled) return;
+    if (!data) return;
+    // End/cancel MUST be handled before any stale-signal filter so hangups
+    // always propagate — otherwise a callee leaving the call leaves the
+    // caller stuck on the "connected" screen forever.
+    if (data.ended && data.endedBy && data.endedBy !== myUsername) {
+      if (_vc.pc) { endVoiceCall(); toast('Call ended by '+escapeHTML(data.endedBy),'info'); }
+      _stopRingtone();
+      _closeEl('incoming-call-modal');
+      _closeEl('calling-screen-modal');
+      return;
+    }
+    if (data.cancelled && data.from && data.from !== myUsername) {
+      _stopRingtone();
+      _closeEl('incoming-call-modal');
+      toast(escapeHTML(data.from||'User') + ' cancelled the call', 'info');
+      return;
+    }
+    if (data.declined) return;
     // Ignore signals older than 60s (stale from previous sessions)
     if (data.ts && (Date.now() - data.ts) > 60000) return;
     if (data.type==='offer' && data.from!==myUsername && !_vc.pc) {
@@ -27632,15 +27749,6 @@ function startVCListener(myUsername) {
         _vc.watchingTogether=true; _vc.watchYtUrl=latest.vid;
         _showWatchInRoom(latest.vid);
       }
-    }
-    if (data.ended && data.endedBy && data.endedBy!==myUsername && _vc.pc) {
-      endVoiceCall(); toast('Call ended by '+escapeHTML(data.endedBy),'info');
-    }
-    if (data.cancelled && data.from && data.from!==myUsername) {
-      // Caller cancelled the outgoing call
-      _stopRingtone();
-      _closeEl('incoming-call-modal');
-      toast(escapeHTML(data.from||'User') + ' cancelled the call', 'info');
     }
   };
   ref.on('child_added', _vcHandler);

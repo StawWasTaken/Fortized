@@ -1287,7 +1287,6 @@ function _formatElapsed(startIso) {
   const m = Math.floor((diff%3600)/60);
   return h + 'h ' + (m > 0 ? m + 'm' : '');
 }
-function handleSearch(q) {}
 function attachFile(inputId) { openFileUpload(inputId || 'ch-input'); }
 
 // ── Role System ──
@@ -1392,11 +1391,12 @@ document.addEventListener('keydown', function(e) {
   // ── Quick Navigation Shortcuts (only when not typing) ──
   if (isTyping) return;
 
-  // Ctrl+K = Focus search bar
-  if (e.ctrlKey && e.key === 'k') {
+  // Ctrl+K / Cmd+K = Open advanced search (the topbar input is readonly and
+  // just opens the modal on click — the shortcut should match that behavior
+  // rather than focusing an input that does nothing).
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
     e.preventDefault();
-    const searchInput = document.querySelector('.tb-search input') || document.querySelector('#global-search');
-    if (searchInput) searchInput.focus();
+    if (typeof openAdvancedSearch === 'function') openAdvancedSearch();
     return;
   }
   // Ctrl+Shift+M = Go to Messages/DMs
@@ -1590,6 +1590,9 @@ function showView(v, _skipPush) {
   if (_mtb) _mtb.style.display = '';
   // Stop admin polling when leaving admin view
   if (v !== 'admin' && _reportPollInterval) { clearInterval(_reportPollInterval); _reportPollInterval = null; }
+  // Leave chat subscriptions when navigating away from their views
+  if (v !== 'dms') { _leaveActiveDM(); _leaveActiveGC(); }
+  if (v !== 'bastion') { _leaveActiveChannel(); }
   // Stop Joyster bubbles when leaving home — Joyster only lives on the homepage
   if (v !== 'home' && typeof _stopJoysterBubbles === 'function') _stopJoysterBubbles();
   // Clean up GC panel when leaving DMs view
@@ -4080,6 +4083,8 @@ function _debouncedActiveNowRefresh() {
 }
 
 function showDMFriendsHome() {
+  _leaveActiveDM();
+  _leaveActiveGC();
   curDM = null;
   curGC = null;
   _currentGCMeta = null;
@@ -4124,6 +4129,28 @@ function showDMFriendsHome() {
   renderActiveNowSidebar('dm-active-now-list');
 }
 
+// ── Active chat subscription tracker ────────────────────────────────────────
+// Prevents polling intervals and socket rooms from accumulating when users
+// switch between DMs / GCs / channels / views. Every opener routes through
+// the _leaveActive* helpers before registering its own subscriptions so we
+// never leak a second room or polling timer for the same surface.
+window._activeSubs = window._activeSubs || { dmKey: null, dmRoom: null, gcRoom: null, chKey: null, chRoom: null };
+function _leaveActiveDM() {
+  const s = window._activeSubs;
+  if (s.dmKey) { try { FortizedSocial.stopDMPolling && FortizedSocial.stopDMPolling(s.dmKey); } catch(_){} s.dmKey = null; }
+  if (s.dmRoom) { try { FortizedSocial.leaveRoom && FortizedSocial.leaveRoom('dm', s.dmRoom.id1, s.dmRoom.id2); } catch(_){} s.dmRoom = null; }
+}
+function _leaveActiveGC() {
+  const s = window._activeSubs;
+  if (s.gcRoom) { try { FortizedSocial.leaveRoom && FortizedSocial.leaveRoom('gc', s.gcRoom); } catch(_){} s.gcRoom = null; }
+}
+function _leaveActiveChannel() {
+  const s = window._activeSubs;
+  if (s.chKey) { try { FortizedSocial.stopChannelPolling && FortizedSocial.stopChannelPolling(s.chKey); } catch(_){} s.chKey = null; }
+  if (s.chRoom) { try { FortizedSocial.leaveRoom && FortizedSocial.leaveRoom('bastion', s.chRoom.id1, s.chRoom.id2); } catch(_){} s.chRoom = null; }
+}
+function _leaveAllActiveChats() { _leaveActiveDM(); _leaveActiveGC(); _leaveActiveChannel(); }
+
 let _dmListener = null;
 function openDMView(username) {
   if (!username) return;
@@ -4136,6 +4163,10 @@ function openDMView(username) {
   try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', username).then(()=>updateNotifBadge()).catch(e => console.warn('[Notif] Clear DM read failed:', e?.message)); } catch(e) { console.warn('[Notif]', e?.message); }
   // Auto-unhide conversation when opening it
   unhideDMConversation('dm_' + username);
+  // Leave any prior DM / GC / channel subscription before wiring this one
+  _leaveActiveDM();
+  _leaveActiveGC();
+  _leaveActiveChannel();
   curDM = username;
   curGC = null;
   _currentGCMeta = null;
@@ -4186,9 +4217,11 @@ function openDMView(username) {
   ensureDMExists(username).catch(e => console.warn('[DM] Failed to ensure DM:', e?.message));
   // Join Socket.io room for DM real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('dm', CU.username, username);
+  window._activeSubs.dmRoom = { id1: CU.username, id2: username };
   // Start polling for instant message delivery
   const dmKey = [CU.username.toLowerCase(), username.toLowerCase()].sort().join('__');
   if (FortizedSocial.startDMPolling) FortizedSocial.startDMPolling(dmKey);
+  window._activeSubs.dmKey = dmKey;
   _listenTyping(username);
 }
 function openDMChat(u) { openDMView(u); }
@@ -4418,6 +4451,10 @@ async function openGroupChatView(gcId) {
   try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', null).then(()=>updateNotifBadge()).catch(e => console.warn('[Notif] Clear GC read failed:', e?.message)); } catch(e) { console.warn('[Notif]', e?.message); }
   // Auto-unhide group chat when opening it
   unhideDMConversation('gc_' + gcId);
+  // Leave any prior DM / GC / channel subscription before wiring this one
+  _leaveActiveDM();
+  _leaveActiveGC();
+  _leaveActiveChannel();
   curGC = gcId;
   curDM = null;  // clear 1-on-1 DM
   showView('dms');
@@ -4621,6 +4658,7 @@ async function loadGCMessages(gcId) {
   if (_gcListener) { try{_gcListener();}catch(e){_dbg('[GC] Listener cleanup:',e?.message);} _gcListener=null; }
   // Join Socket.io room for GC real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('gc', gcId);
+  window._activeSubs.gcRoom = gcId;
   try {
     const snap = await firebase.database().ref('groupChats/'+gcId+'/messages').orderByKey().get();
     const msgs = snap.exists() ? Object.values(snap.val()) : [];
@@ -5422,9 +5460,15 @@ async function loadChannelMessages(idx) {
         if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
       }
     });
-    // Start polling to enable real-time message sync across sessions
+    // Start polling to enable real-time message sync across sessions.
+    // Stop any prior channel polling so we don't accumulate intervals.
+    _leaveActiveChannel();
     const channelKey = 'bastion:' + (b.globalId||b.name) + ':' + ch.name;
     FortizedSocial.startChannelPolling(channelKey);
+    window._activeSubs.chKey = channelKey;
+    window._activeSubs.chRoom = { id1: (b.globalId||b.name), id2: ch.name };
+    // Make sure we're actually joined in the room for real-time events
+    try { FortizedSocial.joinRoom('bastion', (b.globalId||b.name), ch.name); } catch(_){}
   } catch(e){_wrn('Channel load',e);}
 }
 

@@ -5696,6 +5696,11 @@ async function _loadAnnouncementRoom(wrap, b, ch, idx) {
     el.scrollTop = el.scrollHeight;
     // Load avatar
     _loadAnnAvatar(msg.from, mid);
+    // Notification sound (parity with DM/GC/channel) — respect mute/block
+    if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('bastion', b.globalId||b.name)) {
+      const isMention = (msg.text||'').includes('@'+CU.username);
+      playNotifSound(isMention ? 'mention' : 'message');
+    }
   });
 }
 

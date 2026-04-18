@@ -108,6 +108,13 @@ function setFaviconNotif(hasNotif) {
   const el = document.getElementById('favicon');
   if (el) el.href = hasNotif ? '/Fortized icon notif.png' : '/Fortized icon.png';
 }
+// Re-check unread badge (and favicon) whenever the tab regains focus/visibility
+if (!window._faviconFocusHooked) {
+  window._faviconFocusHooked = true;
+  const _refreshBadge = () => { try { if (typeof updateNotifBadge === 'function' && window.CU) updateNotifBadge(); } catch(_) {} };
+  window.addEventListener('focus', _refreshBadge);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) _refreshBadge(); });
+}
 
 // ════════════════════════════════════════════
 // GLOBAL STATE
@@ -1287,6 +1294,17 @@ function formatTimeAgo(iso) {
   if (diff < 3600) return Math.floor(diff/60) + 'm ago';
   if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
   return Math.floor(diff/86400) + 'd ago';
+}
+function timeAgoHTML(iso){ if(!iso) return ''; return `<span class="time-ago" data-ts="${escapeHTML(String(iso))}">${formatTimeAgo(iso)}</span>`; }
+if (!window._timeAgoTicker) {
+  window._timeAgoTicker = setInterval(() => {
+    try {
+      document.querySelectorAll('.time-ago[data-ts]').forEach(el => {
+        const v = formatTimeAgo(el.getAttribute('data-ts'));
+        if (el.textContent !== v) el.textContent = v;
+      });
+    } catch(_) {}
+  }, 60000);
 }
 function _formatElapsed(startIso) {
   if (!startIso) return '';
@@ -4510,8 +4528,9 @@ async function openGroupChatView(gcId) {
   if (curDM) { const _el = document.getElementById('dm-msgs'); if (_el) _saveChatScroll('dm:'+curDM, _el); }
   if (curGC && curGC !== gcId) { const _el = document.getElementById('gc-msgs'); if (_el) _saveChatScroll('gc:'+curGC, _el); }
   if (curBastion !== null && curChannel !== null && curChannel !== 'overview') { const _el = document.getElementById('ch-msgs-'+curChannel); if (_el) _saveChatScroll('ch:'+curBastion+':'+curChannel, _el); }
-  // Auto-clear notifications from this group chat
-  try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', null).then(()=>updateNotifBadge()).catch(e => console.warn('[Notif] Clear GC read failed:', e?.message)); } catch(e) { console.warn('[Notif]', e?.message); }
+  // Auto-clear GC-related mentions (GCs don't have their own notif rows, so scope to mention type only)
+  // Note: we intentionally do NOT pass type='dm' here — that would erase all DM unread flags.
+  // (GC mentions aren't currently keyed by GC id, so we skip clearing until that index exists.)
   // Auto-unhide group chat when opening it
   unhideDMConversation('gc_' + gcId);
   // Leave any prior DM / GC / channel subscription before wiring this one
@@ -15819,7 +15838,7 @@ async function buildNotifList() {
     return '<div class="np-item '+(n.read?'':'unread')+'" onclick="'+clickAction+'" style="cursor:'+(clickAction?'pointer':'default')+';">'
       +iconHtml
       +'<div class="np-text"><p>'+text+'</p>'
-      +'<div class="np-time">'+formatTimeAgo(n.time||'')+'</div>'+actions+'</div></div>';
+      +'<div class="np-time">'+timeAgoHTML(n.time||'')+'</div>'+actions+'</div></div>';
   }).join('');
   } catch(err) {
     console.error('[inbox] buildNotifList error:', err);
@@ -16662,13 +16681,13 @@ function showCustomConfirm(message,callback){
 // ════════════════════════════════════════════
 function openModal(id){
   if (id === 'modal-new-dm') { setTimeout(() => switchNewDMTab('dm'), 10); }
-  const el=document.getElementById(id);if(el){el.classList.add('open');_trapFocusInOverlay(el);}}
-function closeModal(id){const el=document.getElementById(id);if(el){el.classList.remove('open');_releaseFocusTrap(el);if(id==='modal-settings')clearSettingsDirty();}}
-document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay')){e.target.classList.remove('open');_releaseFocusTrap(e.target);if(e.target.id==='modal-settings')clearSettingsDirty();}});
+  const el=document.getElementById(id);if(el){el._returnFocus=document.activeElement;el.classList.add('open');_trapFocusInOverlay(el);}}
+function closeModal(id){const el=document.getElementById(id);if(el){el.classList.remove('open');_releaseFocusTrap(el);if(id==='modal-settings')clearSettingsDirty();try{el._returnFocus?.focus?.();}catch(_){};el._returnFocus=null;}}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay')){e.target.classList.remove('open');_releaseFocusTrap(e.target);if(e.target.id==='modal-settings')clearSettingsDirty();try{e.target._returnFocus?.focus?.();}catch(_){};e.target._returnFocus=null;}});
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const top = [...document.querySelectorAll('.modal-overlay.open')].pop();
-  if (top) { top.classList.remove('open'); _releaseFocusTrap(top); if(top.id==='modal-settings')clearSettingsDirty(); }
+  if (top) { top.classList.remove('open'); _releaseFocusTrap(top); if(top.id==='modal-settings')clearSettingsDirty(); try{top._returnFocus?.focus?.();}catch(_){};top._returnFocus=null; }
 });
 
 function _trapFocusInOverlay(overlay){
@@ -17940,7 +17959,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
                   ${f.context?`<span style="font-size:9px;color:rgba(255,255,255,.2);margin-left:4px;">${escapeHTML(f.context)}</span>`:''}
                 </div>
                 <span style="font-size:10px;color:${rColor};font-weight:700;text-transform:uppercase;">${f.rating||''}</span>
-                <span style="font-size:10px;color:var(--muted);">${f.ts?formatTimeAgo(f.ts):''}</span>
+                <span style="font-size:10px;color:var(--muted);">${f.ts?timeAgoHTML(f.ts):''}</span>
               </div>
               ${f.comment?`<div style="margin-top:6px;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:8px;border-left:2px solid ${rColor};margin-left:24px;"><span style="font-size:11px;color:rgba(255,255,255,.5);">${escapeHTML(f.comment)}</span></div>`:''}
             </div>`;

@@ -12517,7 +12517,9 @@ async function updateBastionIcon(e) {
   reader.onload = async ev => {
     const fileData = ev.target.result;
     showCropModal(fileData, 1, async (cropped) => {
-      CU.bastions[curBastion].icon = cropped;
+      const b = CU?.bastions?.[curBastion];
+      if (!b) return;
+      b.icon = cropped;
       await saveUser();
       _syncBastionToGlobal(curBastion);
       renderRailBastions();
@@ -12550,20 +12552,26 @@ async function deleteChannel(chIdx) {
   });
 }
 function toggleAM(key, el) {
-  const b = CU.bastions[curBastion];
+  const b = CU?.bastions?.[curBastion];
+  if (!b) return;
   b.automod = b.automod || {};
   b.automod[key] = !b.automod[key];
   el.classList.toggle('on', b.automod[key]);
 }
 async function addKeyword() {
   const inp = document.getElementById('new-kw'); if(!inp||!inp.value.trim()) return;
-  const b = CU.bastions[curBastion]; b.automod=b.automod||{}; b.automod.keywords=b.automod.keywords||[];
+  const b = CU?.bastions?.[curBastion];
+  if (!b) return;
+  b.automod = b.automod||{};
+  b.automod.keywords = b.automod.keywords||[];
   b.automod.keywords.push(inp.value.trim()); inp.value='';
   await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('automod');
 }
 async function removeKeyword(i) {
   showCustomConfirm('Remove this keyword?', async () => {
-    CU.bastions[curBastion].automod.keywords.splice(i,1);
+    const b = CU?.bastions?.[curBastion];
+    if (!b?.automod?.keywords) return;
+    b.automod.keywords.splice(i,1);
     await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('automod');
     toast('Keyword removed', 'info');
   });
@@ -12572,13 +12580,17 @@ async function saveAutoMod() {
   const ml = parseInt(document.getElementById('mention-limit')?.value)||10;
   const btn=document.querySelector('[onclick*="saveAutoMod"]');
   if(btn){btn.classList.add('btn-loading');btn.disabled=true;}
-  CU.bastions[curBastion].automod.mentionLimit = ml;
+  const b = CU?.bastions?.[curBastion];
+  if (!b) { if(btn){btn.classList.remove('btn-loading');btn.disabled=false;} return; }
+  b.automod = b.automod || {};
+  b.automod.mentionLimit = ml;
   await saveUser(); _syncBastionToGlobal(curBastion);
   if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}
   toast('AutoMod saved!', 'success');
 }
 async function generateInvite() {
-  const b = CU.bastions[curBastion];
+  const b = CU?.bastions?.[curBastion];
+  if (!b) { toast('No bastion selected', 'error'); return; }
   const _bPrefix = (b.name||'b').replace(/[^a-zA-Z0-9]/g,'').slice(0,4).toLowerCase();
   const code = _bPrefix + '-' + CU.username.slice(0,4) + '-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
   const expiryHours=parseInt(document.getElementById('invite-expiry')?.value)||0;
@@ -12618,7 +12630,9 @@ function copyInvite(code) {
   }
 }
 async function revokeInvite(i) {
-  CU.bastions[curBastion].invites.splice(i,1);
+  const b = CU?.bastions?.[curBastion];
+  if (!b?.invites) return;
+  b.invites.splice(i,1);
   await saveUser(); renderBSettingsMain('invites'); toast('Invite revoked','info');
 }
 async function loadBastionMembersList() {
@@ -12664,8 +12678,10 @@ async function kickMember(username) {
   });
 }
 async function unbanMember(i) {
-  CU.bastions[curBastion].bans=CU.bastions[curBastion].bans||[];
-  CU.bastions[curBastion].bans.splice(i,1);
+  const b = CU?.bastions?.[curBastion];
+  if (!b) return;
+  b.bans = b.bans || [];
+  b.bans.splice(i,1);
   await saveUser(); renderBSettingsMain('bans'); toast('Member unbanned','success');
 }
 function filterBSettingsMembers(q) {
@@ -12787,8 +12803,10 @@ async function distributeOnyxRevenue(cost, context) {
 async function boostBastion(level, cost) {
   if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
   showCustomConfirm(`Boost to Level ${level} for ${cost} Onyx?`, async ()=>{
+    const b = CU?.bastions?.[curBastion];
+    if (!b) return;
     CU.onyx=(CU.onyx||0)-cost;
-    CU.bastions[curBastion].boostLevel=level;
+    b.boostLevel=level;
     await saveUser(); updateOnyxDisplay(); openBoostModal();
     distributeOnyxRevenue(cost);
     toast('Boosted to Level '+level+'!','success');
@@ -12953,9 +12971,11 @@ async function saveRole() {
 async function deleteCurrentRole() {
   if(!('_idx' in currentRoleEditing)) return;
   showCustomConfirm('Delete this role?', async ()=>{
-    CU.bastions[curBastion].roles.splice(currentRoleEditing._idx,1);
+    const b = CU?.bastions?.[curBastion];
+    if (!b?.roles) return;
+    b.roles.splice(currentRoleEditing._idx,1);
     await saveUser(); _syncBastionToGlobal(curBastion); closeModal('modal-role-editor'); renderBSettingsMain('roles');
-    FortizedSocial.socketEmit('bastion:update', { bastionId: CU.bastions[curBastion]?.globalId, field: 'roles' });
+    FortizedSocial.socketEmit('bastion:update', { bastionId: b?.globalId, field: 'roles' });
     toast('Role deleted','info');
   });
 }
@@ -13021,7 +13041,8 @@ async function processEmojiUpload(e) {
     const cleanName=name.trim().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
     const r=new FileReader();
     r.onload=async ev=>{
-      const b=CU.bastions[curBastion];
+      const b=CU?.bastions?.[curBastion];
+      if (!b) return;
       b.customEmojis=[...(b.customEmojis||[]),{name:cleanName,data:ev.target.result,type:'img',animated:file.type==='image/gif'}];
       await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('emojis'); toast(`:${cleanName}: added!`,'success');
     };
@@ -13030,7 +13051,9 @@ async function processEmojiUpload(e) {
 }
 async function deleteCustomEmoji(i) {
   showCustomConfirm('Delete this custom emoji?',async()=>{
-    CU.bastions[curBastion].customEmojis.splice(i,1);
+    const b = CU?.bastions?.[curBastion];
+    if (!b?.customEmojis) return;
+    b.customEmojis.splice(i,1);
     await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('emojis'); toast('Emoji removed','info');
   });
 }
@@ -25786,7 +25809,9 @@ async function updateBastionBanner(e) {
   reader.onload = async ev => {
     const fileData = ev.target.result;
     showCropModal(fileData, 16/5, async (cropped) => {
-      CU.bastions[curBastion].banner = cropped;
+      const b = CU?.bastions?.[curBastion];
+      if (!b) return;
+      b.banner = cropped;
       await saveUser();
       _syncBastionToGlobal(curBastion);
       renderBSettingsMain('overview');

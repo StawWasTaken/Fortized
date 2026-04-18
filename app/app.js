@@ -453,7 +453,7 @@ const FtzStatus = (() => {
     });
 
     // If companion is running, use system-level idle detection too
-    companionPing().then(online => { if (online) _startCompanionIdlePoll(); });
+    companionPing().then(online => { if (online) _startCompanionIdlePoll(); }).catch(e => _dbg('[Companion] ping failed:', e?.message));
 
     // Use Firebase onDisconnect as a backup to set offline status when tab closes
     // (Primary offline detection is via Socket.IO disconnect + sendBeacon to Supabase)
@@ -1133,7 +1133,7 @@ function scrollBottom(id, instant) {
     // Update state if tracked
     if (_chatAutoScroll[el.id]) _chatAutoScroll[el.id].atBottom = true;
     // Re-scroll after images/embeds load to stay at bottom
-    requestAnimationFrame(() => { if (el) el.scrollTop = el.scrollHeight; });
+    requestAnimationFrame(() => { if (el && document.contains(el)) el.scrollTop = el.scrollHeight; });
     // Hide new messages bar when scrolling to present
     const newMsgBar = id.includes('dm') ? 'dm-new-msgs-bar' : id.includes('gc') ? 'gc-new-msgs-bar' : null;
     if (newMsgBar) document.getElementById(newMsgBar)?.classList.remove('show');
@@ -1186,6 +1186,16 @@ function _initChatScroll(msgsEl){
   if(!msgsEl)return;
   const id=msgsEl.id;
   _chatAutoScroll[id]={atBottom:true,newCount:0,newBarInserted:false};
+  // Guard against re-attaching duplicate listeners when the same element is
+  // re-initialised (e.g. switching between DMs keeps #dm-msgs mounted).
+  if(msgsEl.dataset.chatScrollInit==='1'){
+    if(_chatObservers[id]){try{_chatObservers[id].disconnect();}catch{}}
+    const obs=new MutationObserver(()=>{if(_chatAutoScroll[id]?.atBottom) msgsEl.scrollTop=msgsEl.scrollHeight;});
+    obs.observe(msgsEl,{childList:true,subtree:true});
+    _chatObservers[id]=obs;
+    return;
+  }
+  msgsEl.dataset.chatScrollInit='1';
   msgsEl.addEventListener('scroll',()=>{
     // Debounce scroll calculations to avoid jank
     if(_chatScrollDebounce[id]) return;
@@ -4139,6 +4149,8 @@ function _leaveActiveDM() {
   const s = window._activeSubs;
   if (s.dmKey) { try { FortizedSocial.stopDMPolling && FortizedSocial.stopDMPolling(s.dmKey); } catch(_){} s.dmKey = null; }
   if (s.dmRoom) { try { FortizedSocial.leaveRoom && FortizedSocial.leaveRoom('dm', s.dmRoom.id1, s.dmRoom.id2); } catch(_){} s.dmRoom = null; }
+  if (typeof _typingListenerOff === 'function') { try { _typingListenerOff(); } catch(_){} _typingListenerOff = null; }
+  const _tb = document.getElementById('dm-typing-bar'); if (_tb) _tb.style.opacity = '0';
 }
 function _leaveActiveGC() {
   const s = window._activeSubs;
@@ -26071,7 +26083,6 @@ function openFileUpload(context) {
 function _closeEl(id){const e=document.getElementById(id);if(e)e.remove();}
 function _closeWTPlayer(){_closeEl('wt-player-overlay');if(_vc)_vc.watchingTogether=false;}
 
-function _clearAttachment(){const b=document.getElementById("attach-preview-bar");if(b)b.remove();window._pendingAttachment=null;}
 function showAttachmentPreview(name, type, dataUrl, size, context) {
   document.getElementById('attach-preview-bar')?.remove();
   const isImage = type.startsWith('image/');
@@ -26183,7 +26194,6 @@ async function handleChatSend(context, chIdx) {
       inp.value = (existing ? existing+' ' : '') + token;
     }
     _clearAttachment();
-    window._pendingAttachment = null;
   }
   if (context==='dm') sendDM();
   else if (context==='gc') sendGCMessage();

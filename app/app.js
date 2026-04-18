@@ -1149,22 +1149,26 @@ function scrollBottom(id, instant) {
 
 function markDMRead() {
   document.getElementById('dm-new-msgs-bar')?.classList.remove('show');
-  if (curDM) FortizedSocial.markNotificationReadBySource('dm:'+curDM);
+  if (curDM && CU?.username) {
+    FortizedSocial.markNotificationReadBySource(CU.username, 'dm', curDM)
+      .then(()=>updateNotifBadge()).catch(()=>{});
+  }
 }
 
 function markGCRead() {
   document.getElementById('gc-new-msgs-bar')?.classList.remove('show');
-  if (typeof curGC !== 'undefined' && curGC) FortizedSocial.markNotificationReadBySource('gc:'+curGC);
+  if (typeof curGC !== 'undefined' && curGC && CU?.username) {
+    FortizedSocial.markNotificationReadBySource(CU.username, 'gc', curGC)
+      .then(()=>updateNotifBadge()).catch(()=>{});
+  }
 }
 
 function markChannelRead(bastionIdx) {
   const bar = document.getElementById(`ch-new-msgs-bar-${bastionIdx}`);
   if (bar) bar.classList.remove('show');
-  const b = CU?.bastions?.[bastionIdx];
-  if (b && curChannel !== null) {
-    const ch = b.channels?.[curChannel];
-    if (ch) FortizedSocial.markNotificationReadBySource(`ch:${b.globalId||b.name}:${ch.name}`);
-  }
+  // Channel unread tracking is per-message-id (not per-notification), so there's
+  // no per-channel notification filter. Badge refresh covers visual state.
+  updateNotifBadge().catch(()=>{});
 }
 
 function showNewMessagesBar(chatType, count = 1) {
@@ -7992,7 +7996,7 @@ function initFortizedUXResilience() {
   if (!CU.bastions)CU.bastions=[];
   if (!CU.friends)CU.friends=[];
   if (CU.onyx===undefined)CU.onyx=0;
-  notifSettings=CU.notifSettings||notifSettings;
+  notifSettings=Object.assign({}, notifSettings, CU.notifSettings||{});
 
   // Apply this user's appearance from DB (cross-device sync). localStorage
   // was already applied earlier as a fast cache; reconcile with the DB value
@@ -12482,7 +12486,9 @@ async function updateBastionIcon(e) {
   reader.readAsDataURL(file);
 }
 async function toggleNSFW(chIdx) {
-  const ch = CU.bastions[curBastion].channels[chIdx];
+  const b = CU?.bastions?.[curBastion];
+  const ch = b?.channels?.[chIdx];
+  if (!ch) return;
   ch.nsfw = !ch.nsfw;
   await saveUser();
   _syncBastionToGlobal(curBastion);
@@ -12491,7 +12497,9 @@ async function toggleNSFW(chIdx) {
 }
 async function deleteChannel(chIdx) {
   showCustomConfirm('Delete this channel? All messages will be lost.', async () => {
-    CU.bastions[curBastion].channels.splice(chIdx, 1);
+    const b = CU?.bastions?.[curBastion];
+    if (!b?.channels?.[chIdx]) return;
+    b.channels.splice(chIdx, 1);
     await saveUser();
     _syncBastionToGlobal(curBastion);
     renderBSettingsMain('channels');
@@ -15723,15 +15731,19 @@ async function buyRadiancePlus(days, cost) {
 // ════════════════════════════════════════════
 // NOTIFICATIONS
 // ════════════════════════════════════════════
+let _notifBadgeSeq = 0;
 async function updateNotifBadge() {
+  const seq = ++_notifBadgeSeq;
   const badge=document.getElementById('notif-badge');
   const tbBadge=document.getElementById('tb-notif-badge');
   let unread = 0;
   try { unread = await FortizedSocial.getUnreadCount(CU.username) || 0; } catch (e) { _dbg('[Notif] unread count failed', e); }
+  // Discard stale overlapping calls so a late-resolving older fetch can't
+  // overwrite a fresher count in the DOM.
+  if (seq !== _notifBadgeSeq) return;
   if(badge){badge.textContent=unread;badge.style.display=unread>0?'flex':'none';}
   if(tbBadge){tbBadge.textContent=unread;tbBadge.style.display=unread>0?'block':'none';}
   setFaviconNotif(unread>0);
-  // Also clear bastion rail notification badges if no unread
   if (unread === 0) {
     document.querySelectorAll('.rail-notif-badge').forEach(b=>b.remove());
   }
@@ -33113,6 +33125,20 @@ let _supabaseUserChannel = null; // Supabase real-time subscription
 
 function initCrossDeviceSync() {
   if (!CU?.username) return;
+
+  // Idempotency: remove any prior Supabase channel + Socket.IO listeners so
+  // reconnect loops (CHANNEL_ERROR/CLOSED) don't stack duplicate handlers that
+  // fire N times per event.
+  if (_supabaseUserChannel) {
+    try { supabase.removeChannel(_supabaseUserChannel); } catch(_){}
+    _supabaseUserChannel = null;
+  }
+  if (window.socket) {
+    ['profile:updated','presence:update','activity:changed','friend:request',
+     'friend:accepted','notification:new','bastion:updated','bastion:update',
+     'bastion:kick','bastion:ban','announcement:new']
+      .forEach(ev => { try { socket.off(ev); } catch(_){} });
+  }
 
   // 1. SUPABASE REAL-TIME: Listen for direct database changes (table editor, etc)
   // This catches changes made outside of Socket.IO (direct Supabase edits)

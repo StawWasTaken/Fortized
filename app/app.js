@@ -4188,13 +4188,7 @@ function openDMView(username) {
   FortizedSocial.joinRoom('dm', CU.username, username);
   // Start polling for instant message delivery
   const dmKey = [CU.username.toLowerCase(), username.toLowerCase()].sort().join('__');
-  console.log('[DMPolling] Starting for dmKey:', dmKey);
-  if (FortizedSocial.startDMPolling) {
-    FortizedSocial.startDMPolling(dmKey);
-    console.log('[DMPolling] ✓ Polling started for DM conversation');
-  } else {
-    console.error('[DMPolling] startDMPolling function not found!');
-  }
+  if (FortizedSocial.startDMPolling) FortizedSocial.startDMPolling(dmKey);
   _listenTyping(username);
 }
 function openDMChat(u) { openDMView(u); }
@@ -4273,6 +4267,9 @@ async function sendDM() {
     const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
     appendMessage(msgsEl, msg, 'dm', lastAuthor);
     scrollBottom('dm-msgs');
+    // Register the optimistic row so the server echo reconciles by content instead of spawning a duplicate
+    const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
+    _registerPendingSend('dm:'+[CU.username, curDM].sort().join('__'), CU.username, text, _optimRow);
   }
   try {
     const savedMsg = await FortizedSocial.sendDMMessage(CU.username, curDM, text);
@@ -4691,6 +4688,8 @@ async function sendGCMessage() {
     const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
     appendMessage(gcMsgsEl, msg, 'gc', lastAuthor);
     scrollBottom('gc-msgs');
+    const _optimRow = gcMsgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
+    _registerPendingSend('gc:'+curGC, CU.username, text, _optimRow);
   }
   _trackSendMsgQuest();
   try {
@@ -5637,6 +5636,8 @@ async function sendChannelMsg(idx) {
     const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
     appendMessage(msgsEl, msg, 'ch', lastAuthor);
     scrollBottom('ch-msgs-'+idx);
+    const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
+    _registerPendingSend('bastion:'+(b.globalId||b.name)+':'+ch.name, CU.username, text, _optimRow);
   }
   // Award message reputation
   awardMessageRep(b.globalId||b.name, CU.username);
@@ -5649,7 +5650,6 @@ async function sendChannelMsg(idx) {
       if (localRow) localRow.dataset.msgid = savedMsg.id;
     }
     FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: savedMsg || msg });
-    console.log('[RT-DEBUG] Bastion send. emitResult:', emitResult, 'room:', 'bastion:'+(b.globalId||b.name)+':'+ch.name, 'msgId:', (savedMsg||msg).id);
   } catch { toast('Failed to send message. Check your connection.','error'); }
   // Bot command handling — trigger deployed bots with ! prefix
   if (text.startsWith('!')) {
@@ -5842,6 +5842,37 @@ function _getLastAuthor(container) {
   if (!rows.length) return null;
   return rows[rows.length - 1].dataset.from || null;
 }
+
+// ── Pending-send reconciliation (fixes DM/GC/channel duplication) ────────────
+// When we optimistically render a message, we tag it with a local- prefixed id.
+// The server-emitted echo may arrive before we've swapped the id → dedupe by
+// content instead: (domain, from, text) within a 30s window.
+window._pendingSends = window._pendingSends || [];
+function _registerPendingSend(domain, from, text, row) {
+  if (!row) return;
+  const now = Date.now();
+  window._pendingSends.push({ domain, from, text: text || '', ts: now, row });
+  if (window._pendingSends.length > 60) window._pendingSends.splice(0, window._pendingSends.length - 60);
+  const cutoff = now - 30000;
+  window._pendingSends = window._pendingSends.filter(e => e.ts > cutoff && e.row && e.row.isConnected);
+}
+function _reconcilePendingSend(domain, incoming) {
+  if (!incoming || !incoming.from || incoming.text == null) return false;
+  const now = Date.now();
+  for (let i = 0; i < window._pendingSends.length; i++) {
+    const e = window._pendingSends[i];
+    if (!e || e.domain !== domain) continue;
+    if (e.from !== incoming.from) continue;
+    if ((e.text || '') !== (incoming.text || '')) continue;
+    if (now - e.ts > 30000) continue;
+    if (!e.row || !e.row.isConnected) { window._pendingSends.splice(i, 1); return false; }
+    if (incoming.id != null) e.row.dataset.msgid = String(incoming.id);
+    window._pendingSends.splice(i, 1);
+    return true;
+  }
+  return false;
+}
+
 function appendMessage(container, msg, context, prevAuthor) {
   // If prevAuthor not provided, infer from last message in container
   if (prevAuthor === null && container) prevAuthor = _getLastAuthor(container);
@@ -7233,7 +7264,6 @@ async function loadDiscover(){
     statsEl.innerHTML=`<div class="disc-stat"><strong>${publicCount}</strong> communities</div><div class="disc-stat"><strong>${totalMembers}</strong> total members</div>`;
   }
   _renderDiscoverFeatured(discoverData);
-  _renderDiscoverAds();
   renderDiscoverGrid(discoverData);
 }
 function _renderDiscoverFeatured(bastions){
@@ -7254,25 +7284,7 @@ function _renderDiscoverFeatured(bastions){
     </div>`;
   }).join('')}</div>`;
 }
-let _discoverAdTimer = null;
-async function _renderDiscoverAds() {
-  if (_discoverAdTimer) { clearInterval(_discoverAdTimer); _discoverAdTimer = null; }
-  async function _rotateDiscoverAd() {
-    const el = document.getElementById('disc-ads');
-    if (!el) return;
-    const allAds = await _getAllActiveAds();
-    const ad = _pickWeightedAd(allAds, 'banner') || _pickWeightedAd(allAds, 'rectangle');
-    if (ad) {
-      el.innerHTML = _renderAdHTML(ad, (ad.ratio||'banner') === 'rectangle' ? 'rectangle' : 'banner');
-      el.onclick = () => _adClickAction(ad);
-    } else {
-      el.innerHTML = '<div class="ad-empty ad-empty-banner">Ad</div>';
-      el.onclick = null;
-    }
-  }
-  await _rotateDiscoverAd();
-  _discoverAdTimer = setInterval(_rotateDiscoverAd, 75000);
-}
+// Discover ad emplacement removed by request.
 function renderDiscoverGrid(bastions){
   const grid=document.getElementById('discover-grid');
   if(!grid)return;
@@ -8031,6 +8043,8 @@ function initFortizedUXResilience() {
       onMessage: function(room, msg) {
         if (!room || !msg) return;
         _dbg('[Socket.IO] Received message:new event', { room, msgId: msg.id, from: msg.from });
+        // Reconcile our own optimistic-render first (fixes duplication when server echo arrives)
+        if (msg.from === CU.username && _reconcilePendingSend(room, msg)) return;
         // Handle DM messages
         if (room.startsWith('dm:') && curDM) {
           const expectedRoom = 'dm:' + [CU.username, curDM].sort().join('__');
@@ -8074,14 +8088,11 @@ function initFortizedUXResilience() {
           const ch = b?.channels?.[curChannel];
           if (b && ch) {
             const expectedRoom = 'bastion:' + (b.globalId || b.name) + ':' + ch.name;
-            console.log('[RT-DEBUG] Bastion msg received. room:', room, 'expected:', expectedRoom, 'match:', room===expectedRoom);
             if (room === expectedRoom) {
               const msgsEl = document.getElementById('ch-msgs-' + curChannel);
-              console.log('[RT-DEBUG] Container:', 'ch-msgs-'+curChannel, 'found:', !!msgsEl);
               if (msgsEl) {
                 const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
                 const exists = !!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`);
-                console.log('[RT-DEBUG] msgId:', mid, 'already exists:', exists);
                 if (!exists) {
                   _dbg('[onMessage] Adding bastion message to display', { id: mid, from: msg.from });
                   const lastRows = msgsEl.querySelectorAll('.msg-row');
@@ -32347,114 +32358,37 @@ setTimeout(_initFmtPanel, 500);
 // ════════════════════════════════════════════════════════
 // LIVE FORMATTING PREVIEW IN CHAT INPUT
 // ════════════════════════════════════════════════════════
+// Live-preview overlay has been REMOVED. The overlay caused two persistent
+// problems: (1) emoji <img> tags are wider than unicode glyphs, so the
+// overlay and the transparent textarea never aligned, producing a "two
+// texts" visual bug; (2) in certain timing windows the overlay HTML could
+// bleed into sent messages. The textarea now renders user input directly —
+// unicode emoji work natively, and markdown is shown in-source while
+// typing, then rendered in the message bubble after send (Discord parity).
 function _setupLivePreview(ta) {
-  if (ta._livePreviewInit) return;
-  ta._livePreviewInit = true;
-  // Wrap textarea in a relative container if not already
-  const parent = ta.parentNode;
-  if (!parent.classList.contains('ci-preview-wrap')) {
-    const wrap = document.createElement('div');
-    wrap.className = 'ci-preview-wrap';
-    wrap.style.cssText = 'position:relative;flex:1;min-width:0;display:flex;';
-    parent.insertBefore(wrap, ta);
-    wrap.appendChild(ta);
-    // Create overlay div
-    const preview = document.createElement('div');
-    preview.className = 'ci-preview';
-    wrap.appendChild(preview);
-    ta._previewEl = preview;
-  }
-  // Sync on input
-  ta.addEventListener('input', () => _updateLivePreview(ta));
-  ta.addEventListener('scroll', () => { if (ta._previewEl) ta._previewEl.scrollTop = ta.scrollTop; });
-  // Initial render
-  _updateLivePreview(ta);
+  if (!ta) return;
+  // Best-effort cleanup if a stale overlay already exists from a prior build
+  if (ta._previewEl) { try { ta._previewEl.remove(); } catch(_){} ta._previewEl = null; }
+  ta.style.color = '';
+  ta.style.caretColor = '';
 }
-
 function _updateLivePreview(ta) {
-  const el = ta._previewEl;
-  if (!el) return;
-  const val = ta.value;
-  if (!val) { el.innerHTML = ''; ta.style.color = ''; return; }
-  // Check if there's any formatting/emoji/mention syntax — if not, don't show overlay
-  if (!/[*~`|=@#\[:]|\p{Extended_Pictographic}/u.test(val)) { el.innerHTML = ''; ta.style.color = ''; return; }
-  // Apply live formatting
-  const html = _liveFormatPreview(val);
-  // Only use overlay if formatting was actually applied
-  if (html !== escapeHTML(val)) {
-    el.innerHTML = html;
-    ta.style.color = 'transparent';
-    ta.style.caretColor = 'var(--text)';
-    // Sync scroll
-    el.scrollTop = ta.scrollTop;
-  } else {
-    el.innerHTML = '';
-    ta.style.color = '';
-  }
+  if (!ta) return;
+  ta.style.color = '';
+  ta.style.caretColor = '';
 }
-
-function _liveFormatPreview(text) {
-  let s = escapeHTML(text);
-  s = s.replace(/```([^`]*?)```/g, '<span class="ci-marker">```</span><span class="ci-code">$1</span><span class="ci-marker">```</span>');
-  s = s.replace(/`([^`\n]+?)`/g, '<span class="ci-marker">`</span><span class="ci-code">$1</span><span class="ci-marker">`</span>');
-  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<span class="ci-marker">***</span><span class="ci-bold ci-italic">$1</span><span class="ci-marker">***</span>');
-  s = s.replace(/\*\*(.+?)\*\*/g, '<span class="ci-marker">**</span><span class="ci-bold">$1</span><span class="ci-marker">**</span>');
-  s = s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<span class="ci-marker">*</span><span class="ci-italic">$1</span><span class="ci-marker">*</span>');
-  s = s.replace(/~~(.+?)~~/g, '<span class="ci-marker">~~</span><span class="ci-strike">$1</span><span class="ci-marker">~~</span>');
-  s = s.replace(/\|\|(.+?)\|\|/g, '<span class="ci-marker">||</span><span class="ci-spoiler">$1</span><span class="ci-marker">||</span>');
-  s = s.replace(/==(.+?)==/g, '<span class="ci-marker">==</span><span class="ci-highlight">$1</span><span class="ci-marker">==</span>');
-  s = s.replace(/~([^~\n]+?)~/g, '<span class="ci-marker">~</span><span class="ci-smalltext">$1</span><span class="ci-marker">~</span>');
-  // Emoji shortcodes → Twemoji / Fortmoji images (alt="" + onerror to avoid alt-text bleed-through if CDN fails)
-  s = s.replace(/:([a-zA-Z0-9_+-]+):/g, (match, name) => {
-    try {
-      if (typeof FORTIZED_EMOJI_MAP !== 'undefined' && FORTIZED_EMOJI_MAP[name]) {
-        return `<img class="ci-emoji" src="${FORTIZED_EMOJI_MAP[name]}" alt="" title=":${name}:" onerror="this.style.display='none'">`;
-      }
-      if (typeof EMOJI_SHORTCODES !== 'undefined' && EMOJI_SHORTCODES[name]) {
-        const u = EMOJI_SHORTCODES[name];
-        if (typeof emojiToTwemojiUrl === 'function') {
-          return `<img class="ci-emoji" src="${emojiToTwemojiUrl(u)}" alt="" title="${u}" onerror="this.style.display='none'">`;
-        }
-        return u;
-      }
-    } catch(_){}
-    return match;
-  });
-  // Unicode emoji → Twemoji images
+function _liveFormatPreview(text) { return escapeHTML(text || ''); }
+// One-time sweep to remove any existing overlays left over from a prior session render
+setTimeout(() => {
   try {
-    if (typeof emojiToTwemojiUrl === 'function') {
-      s = s.replace(/(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/gu, (m) => {
-        return `<img class="ci-emoji" src="${emojiToTwemojiUrl(m)}" alt="" title="${m}" onerror="this.style.display='none'">`;
-      });
-    }
-  } catch(_){}
-  s = s.replace(/@(\w+)/g, '<span class="ci-mention">@$1</span>');
-  s = s.replace(/#(\w[\w-]*)/g, '<span class="ci-room-ref">#$1</span>');
-  return s;
-}
-
-// Hook into buildChatInputBar — after textarea is inserted, setup live preview
-const _origAutoResize = typeof autoResize === 'function' ? autoResize : null;
-let _livePreviewObserver = null;
-function _hookLivePreviewOnInput() {
-  // Disconnect previous observer to prevent duplicates
-  if (_livePreviewObserver) { _livePreviewObserver.disconnect(); _livePreviewObserver = null; }
-  // Observe DOM for new textareas in chat-input-row
-  const observer = _livePreviewObserver = new MutationObserver(mutations => {
-    mutations.forEach(m => {
-      m.addedNodes.forEach(n => {
-        if (n.nodeType !== 1) return;
-        const tas = n.querySelectorAll ? n.querySelectorAll('.chat-input-row textarea') : [];
-        tas.forEach(ta => _setupLivePreview(ta));
-        if (n.matches && n.matches('.chat-input-row textarea')) _setupLivePreview(n);
-      });
+    document.querySelectorAll('.ci-preview').forEach(el => el.remove());
+    document.querySelectorAll('.chat-input-row textarea').forEach(ta => {
+      ta.style.color = '';
+      ta.style.caretColor = '';
+      ta._previewEl = null;
     });
-  });
-  observer.observe(document.body, {childList:true, subtree:true});
-  // Also setup existing textareas
-  document.querySelectorAll('.chat-input-row textarea').forEach(ta => _setupLivePreview(ta));
-}
-setTimeout(_hookLivePreviewOnInput, 800);
+  } catch(_){}
+}, 200);
 
 
 // ════════════════════════════════════════════════════════

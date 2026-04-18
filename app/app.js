@@ -1079,6 +1079,7 @@ function _showLeavingFortizedModal(url, domain) {
   if (visitBtn) { visitBtn.onmouseenter = () => { visitBtn.style.background='rgba(255,249,62,.15)'; visitBtn.style.boxShadow='0 0 16px rgba(255,249,62,.15)'; }; visitBtn.onmouseleave = () => { visitBtn.style.background='rgba(255,249,62,.08)'; visitBtn.style.boxShadow='none'; }; }
 }
 function autoResize(el) {
+  if (el.isContentEditable && !el._richInit) _initRichInput(el);
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 200) + 'px';
   // Sync live preview overlay height
@@ -1089,7 +1090,7 @@ function autoResize(el) {
   const outer = el.closest('.chat-input-outer');
   if (outer) {
     const sendBtn = outer.querySelector('.chat-send-btn');
-    if (sendBtn) sendBtn.classList.toggle('visible', el.value.trim().length > 0);
+    if (sendBtn) sendBtn.classList.toggle('visible', (el.value || '').trim().length > 0);
   }
 }
 // Clear chat input properly — resets value, height, and live preview overlay
@@ -4262,7 +4263,7 @@ function openDMView(username) {
     </div>`;
   loadDMMessages(username);
   setTimeout(() => { if (window.innerWidth > 768) showDMUserPanel(username); _initChatScroll(document.getElementById('dm-msgs')); }, 80);
-  setTimeout(() => setupEmojiAutocomplete('dm-input'), 100);
+  setupEmojiAutocomplete('dm-input');
   ensureDMExists(username).catch(e => console.warn('[DM] Failed to ensure DM:', e?.message));
   // Join Socket.io room for DM real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('dm', CU.username, username);
@@ -4623,7 +4624,8 @@ async function openGroupChatView(gcId) {
   // Load messages
   loadGCMessages(gcId);
   listenGCTyping(gcId, meta.members||[]);
-  setTimeout(() => { setupEmojiAutocomplete('gc-input'); _initChatScroll(document.getElementById('gc-msgs')); }, 100);
+  setupEmojiAutocomplete('gc-input');
+  setTimeout(() => _initChatScroll(document.getElementById('gc-msgs')), 100);
 }
 
 async function showGCMemberPanel(meta) {
@@ -5607,7 +5609,8 @@ function loadChatChannel(idx) {
   }
   loadChannelMessages(idx);
   renderMemberList();
-  setTimeout(() => { setupEmojiAutocomplete('ch-input'); _initChatScroll(document.getElementById('ch-msgs-'+idx)); }, 100);
+  setupEmojiAutocomplete('ch-input');
+  setTimeout(() => _initChatScroll(document.getElementById('ch-msgs-'+idx)), 100);
 }
 
 // ════════════════════════════════════════════
@@ -22235,6 +22238,20 @@ function _initRichInput(el) {
       el.dispatchEvent(new Event('input', { bubbles: true }));
     }
   });
+  // Copy gives plain text: <img data-emoji-uni="😄"> → "😄", <img data-emoji-name="custom"> → ":custom:"
+  el.addEventListener('copy', (e) => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (!el.contains(range.commonAncestorContainer)) return;
+    const frag = range.cloneContents();
+    const container = document.createElement('div');
+    container.appendChild(frag);
+    const text = _richHTMLToText(container);
+    if (!text) return;
+    e.clipboardData.setData('text/plain', text);
+    e.preventDefault();
+  });
 }
 
 // ════════════════════════════════════════════════════════
@@ -22296,7 +22313,8 @@ function updateCharCount(inputId) {
   const ta = document.getElementById(inputId);
   const counter = document.getElementById(inputId+'-charcount');
   if (!ta || !counter) return;
-  const len = ta.value.length;
+  if (ta.isContentEditable && !ta._richInit) _initRichInput(ta);
+  const len = (ta.value || '').length;
   if (len > 1800) {
     counter.textContent = (2000-len)+' left';
     counter.style.display = 'inline';

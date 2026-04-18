@@ -21963,8 +21963,9 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           </button>
           <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
             onkeydown="${keydown}"
-            oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}')"
+            oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}');_updateChatInputEmojiPreview('${inputId}')"
             onpaste="handlePaste(event,'${inputId}')"></textarea>
+          <div id="${inputId}-emoji-preview" class="chat-input-emoji-preview" style="display:none;"></div>
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">
             <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF" data-tooltip="GIFs">
@@ -21983,6 +21984,63 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
         </div>
       </div>
     </div>`;
+}
+
+// Live preview strip that shows rendered :shortcode: emojis & Fortized emojis
+// as the user types. Textareas can't show inline images, so we mirror the
+// resolved emoji row above the input — Discord-style "what people will see".
+function _updateChatInputEmojiPreview(inputId) {
+  const ta = document.getElementById(inputId);
+  const strip = document.getElementById(inputId + '-emoji-preview');
+  if (!ta || !strip) return;
+  const raw = ta.value || '';
+  // Cheap bail-out: only work when at least one :shortcode: is present
+  if (!/:[a-zA-Z0-9_]+:/.test(raw)) {
+    strip.style.display = 'none';
+    strip.innerHTML = '';
+    return;
+  }
+  let hasResolved = false;
+  // Escape first so any user-typed HTML in the preview is inert. Colons survive
+  // escapeHTML, so the :shortcode: token replace still matches after escaping.
+  const escaped = escapeHTML(raw);
+  const rendered = escaped.replace(/:([a-zA-Z0-9_]+):/g, (match, name) => {
+    const uni = EMOJI_SHORTCODES?.[name];
+    if (uni) {
+      hasResolved = true;
+      const url = emojiToTwemojiUrl(uni);
+      return '<img src="' + escapeHTML(url) + '" alt="' + escapeHTML(uni) + '" class="cip-emoji" draggable="false" onerror="this.replaceWith(document.createTextNode(\'' + uni.replace(/'/g, "\\'") + '\'))">';
+    }
+    const ftz = FORTIZED_EMOJI_MAP?.[name];
+    if (ftz) {
+      hasResolved = true;
+      return '<img src="' + escapeHTML(ftz) + '" alt=":' + escapeHTML(name) + ':" class="cip-emoji" draggable="false">';
+    }
+    if (curBastion !== null) {
+      const ce = (CU?.bastions?.[curBastion]?.customEmojis || []).find(e => e.name === name);
+      if (ce) {
+        hasResolved = true;
+        return '<img src="' + escapeHTML(ce.data) + '" alt=":' + escapeHTML(name) + ':" class="cip-emoji" draggable="false">';
+      }
+    }
+    for (let bi = 0; bi < (CU?.bastions || []).length; bi++) {
+      if (bi === curBastion) continue;
+      const ce = (CU.bastions[bi]?.customEmojis || []).find(e => e.name === name);
+      if (ce) {
+        hasResolved = true;
+        return '<img src="' + escapeHTML(ce.data) + '" alt=":' + escapeHTML(name) + ':" class="cip-emoji" draggable="false">';
+      }
+    }
+    return match; // already escaped
+  });
+  if (!hasResolved) {
+    strip.style.display = 'none';
+    strip.innerHTML = '';
+    return;
+  }
+  // Strip leading/trailing plain text, keep compact — only a preview of emojis in context
+  strip.innerHTML = '<span class="cip-label">Preview</span><span class="cip-body">' + rendered + '</span>';
+  strip.style.display = 'flex';
 }
 
 function updateCharCount(inputId) {
@@ -29016,41 +29074,124 @@ function refreshGameActivityBar() {
   }
 }
 
+// Recent activities persisted in localStorage (up to 8, most-recent-first)
+function _loadRecentActivities() {
+  try { return JSON.parse(localStorage.getItem('ftz_recent_activities') || '[]').filter(e => e && e.name); }
+  catch { return []; }
+}
+function _recordRecentActivity(name, icon) {
+  if (!name) return;
+  try {
+    const list = _loadRecentActivities().filter(e => e.name !== name);
+    list.unshift({ name, icon: icon || '🎮', ts: Date.now() });
+    localStorage.setItem('ftz_recent_activities', JSON.stringify(list.slice(0, 8)));
+  } catch {}
+}
+
 async function openGameActivityPicker() {
   _closeEl('game-activity-modal');
   _userCustomApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
+  const isDesktop = !!window.fortizedDesktop?.isDesktopApp;
+  const recents = _loadRecentActivities();
   const modal = document.createElement('div');
   modal.id = 'game-activity-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.8);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
   const box = document.createElement('div');
-  box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;width:400px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7);';
-  box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0;">'
+  box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:22px;width:420px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7);';
+
+  const iconChoices = ['🎮','🕹️','🎯','🎲','🏆','⚔️','🛡️','🔫','🏎️','⚽','🏀','🎧','🎨','📺','📚','💻','🖥️','🧩','🪄','🎬','🎤','🪐'];
+
+  const currentBanner = (activityState.primary?.type === 'playing')
+    ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:12px;margin-bottom:14px;flex-shrink:0;"><span>'+activityState.primary.icon+'</span><span style="font-size:13px;font-weight:700;">'+escapeHTML(activityState.primary.name)+'</span><button id="ga-stop-btn" style="margin-left:auto;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:var(--red);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;">Stop</button></div>'
+    : '';
+
+  const manualSection =
+      '<div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;flex-shrink:0;">Set activity manually</div>'
+    + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-shrink:0;">'
+    + '<button id="ga-icon-btn" type="button" title="Pick icon" style="width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--panel2);font-size:20px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">🎮</button>'
+    + '<input id="ga-manual-name" class="field-input" placeholder="What are you playing or doing?" maxlength="60" style="font-size:13px;flex:1;">'
+    + '<button id="ga-manual-set" class="btn-primary" style="flex-shrink:0;padding:9px 14px;font-size:12px;font-weight:700;border-radius:10px;">Set</button>'
+    + '</div>'
+    + '<div id="ga-icon-pop" style="display:none;flex-wrap:wrap;gap:4px;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;flex-shrink:0;">'
+    + iconChoices.map(ic => '<button type="button" data-ic="'+ic+'" style="width:32px;height:32px;border:none;background:transparent;font-size:18px;cursor:pointer;border-radius:7px;">'+ic+'</button>').join('')
+    + '</div>';
+
+  const recentSection = recents.length
+    ? '<div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:4px 0 8px;flex-shrink:0;">Recent</div>'
+      + '<div id="ga-recents" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;flex-shrink:0;">'
+      + recents.map(r => '<button type="button" class="ga-recent-chip" data-game-name="'+escapeHTML(r.name).replace(/"/g,'&quot;')+'" data-game-icon="'+escapeHTML(r.icon||'🎮')+'" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:var(--panel2);border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:12px;color:#fff;"><span>'+(r.icon||'🎮')+'</span><span>'+escapeHTML(r.name)+'</span></button>').join('')
+      + '</div>'
+    : '';
+
+  const procSection = isDesktop
+    ? '<div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;flex-shrink:0;">Running on your PC</div>'
+      + '<input id="ga-search" class="field-input" placeholder="Search running apps…" style="font-size:12.5px;margin-bottom:8px;flex-shrink:0;">'
+      + '<div id="ga-proc-list" style="flex:1;overflow-y:auto;min-height:80px;">'
+      + '<div style="text-align:center;padding:20px;"><div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto;"></div><div style="font-size:11px;color:var(--muted);margin-top:6px;">Scanning…</div></div>'
+      + '</div>'
+    : '<div style="padding:10px 12px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);border-radius:10px;font-size:11px;color:rgba(255,255,255,.6);flex-shrink:0;">Tip: install the Fortized desktop app to auto-detect running games.</div>';
+
+  box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0;">'
     +'<div style="font-family:var(--font-display);font-size:16px;font-weight:800;">🎮 Game Activity</div>'
     +'<button id="ga-close" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;">✕</button>'
     +'</div>'
-    +((activityState.primary?.type === 'playing') ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:12px;margin-bottom:14px;flex-shrink:0;"><span>'+activityState.primary.icon+'</span><span style="font-size:13px;font-weight:700;">'+escapeHTML(activityState.primary.name)+'</span><button id="ga-stop-btn" style="margin-left:auto;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:var(--red);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;">Stop</button></div>' : '')
-    +'<div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;flex-shrink:0;">Running on your PC</div>'
-    +'<input id="ga-search" class="field-input" placeholder="Search…" style="font-size:12.5px;margin-bottom:10px;flex-shrink:0;">'
-    +'<div id="ga-proc-list" style="flex:1;overflow-y:auto;min-height:100px;">'
-    +'<div style="text-align:center;padding:24px;"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;"></div><div style="font-size:11px;color:var(--muted);margin-top:8px;">Scanning…</div></div>'
-    +'</div>';
+    + currentBanner
+    + manualSection
+    + recentSection
+    + procSection;
   modal.appendChild(box);
   document.body.appendChild(modal);
   document.getElementById('ga-close').onclick = () => _closeEl('game-activity-modal');
   modal.addEventListener('click', e => { if (e.target === modal) _closeEl('game-activity-modal'); });
   document.getElementById('ga-stop-btn')?.addEventListener('click', () => { setGameActivity(null); _closeEl('game-activity-modal'); });
 
-  // Fetch running processes via Electron native detection
+  // Manual entry wiring
+  let chosenIcon = '🎮';
+  const iconBtn = document.getElementById('ga-icon-btn');
+  const iconPop = document.getElementById('ga-icon-pop');
+  const nameInput = document.getElementById('ga-manual-name');
+  const setBtn = document.getElementById('ga-manual-set');
+  iconBtn.onclick = () => { iconPop.style.display = iconPop.style.display === 'flex' ? 'none' : 'flex'; };
+  iconPop.addEventListener('click', e => {
+    const b = e.target.closest('[data-ic]');
+    if (!b) return;
+    chosenIcon = b.dataset.ic;
+    iconBtn.textContent = chosenIcon;
+    iconPop.style.display = 'none';
+    nameInput.focus();
+  });
+  function commitManual() {
+    const n = (nameInput.value || '').trim();
+    if (!n) { nameInput.focus(); return; }
+    setGameActivity(n, chosenIcon);
+    _recordRecentActivity(n, chosenIcon);
+    _closeEl('game-activity-modal');
+  }
+  setBtn.onclick = commitManual;
+  nameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); commitManual(); }
+    else if (e.key === 'Escape') { _closeEl('game-activity-modal'); }
+  });
+  nameInput.focus();
+
+  // Recent chips
+  document.getElementById('ga-recents')?.addEventListener('click', e => {
+    const chip = e.target.closest('[data-game-name]');
+    if (!chip) return;
+    setGameActivity(chip.dataset.gameName, chip.dataset.gameIcon || '🎮');
+    _recordRecentActivity(chip.dataset.gameName, chip.dataset.gameIcon || '🎮');
+    _closeEl('game-activity-modal');
+  });
+
+  if (!isDesktop) return;
+
+  // Fetch running processes via desktop native detection
   const listEl = document.getElementById('ga-proc-list');
   let appEntries = [];
   try {
-    if (!window.fortizedDesktop?.isDesktopApp) {
-      listEl.innerHTML = '<div style="text-align:center;padding:24px;"><div style="font-size:28px;margin-bottom:8px;color:rgba(255,255,255,.3);">'+ftzIcon('warning','28')+'</div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">Desktop app required</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Game detection requires the Fortized desktop app.</div></div>';
-      return;
-    }
     const procs = await window.fortizedDesktop.getProcesses();
     if (!procs || !procs.length) {
-      listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">No running apps found.</div>';
+      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">No running apps found.</div>';
       return;
     }
     const systemProcs = new Set(['system','idle','svchost','csrss','wininit','winlogon','services','lsass','smss','dwm','conhost','explorer','taskhostw','runtimebroker','sihost','fontdrvhost','ctfmon','dllhost','searchhost','startmenuexperiencehost','shellexperiencehost','textinputhost','widgetservice','securityhealthsystray','systemsettings','applicationframehost','lockapp','searchui','cortana','registry','memory compression','system idle process','kernel_task','launchd','loginwindow','windowserver','systemuiserver','dock','finder','spotlight','mds','mds_stores','distnoted','cfprefsd','pboard','init','systemd','dbus-daemon','polkitd','rsyslogd','cron','atd','agetty','login','bash','sh','zsh','fish','Xorg','gnome-shell','plasmashell','pipewire','pulseaudio','wireplumber','dconf-service','gvfsd','xdg-desktop-portal','at-spi-bus-launcher','xdg-document-portal','xdg-permission-store','evolution-data-server','goa-daemon','goa-identity-service','gnome-keyring-d','agent','gpg-agent','ssh-agent','nm-applet','tracker-miner-fs','gsd-','evolution-calendar','evolution-addressbook']);
@@ -29063,7 +29204,7 @@ async function openGameActivityPicker() {
       return { procName: name, displayName: known ? known.name : name, icon: known ? known.icon : '🖥️' };
     });
   } catch {
-    listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Could not scan apps.</div>';
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Could not scan apps.</div>';
     return;
   }
 
@@ -29097,6 +29238,7 @@ async function openGameActivityPicker() {
     const tile = e.target.closest('[data-game-name]');
     if (tile) {
       setGameActivity(tile.dataset.gameName, tile.dataset.gameIcon);
+      _recordRecentActivity(tile.dataset.gameName, tile.dataset.gameIcon);
       _closeEl('game-activity-modal');
     }
   });

@@ -728,6 +728,11 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .chat-input-outer{background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border:1.5px solid var(--glass-border);border-radius:12px;overflow:visible;transition:border-color .18s, box-shadow .18s;display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(0,0,0,.2);position:relative;}
 .chat-input-outer:focus-within{border-color:rgba(255,255,255,.12);box-shadow:0 6px 24px rgba(0,0,0,.28);}
 .chat-input-outer, .chat-input-row, .chat-input-row textarea, .ci-preview-wrap, .ci-preview-wrap textarea{outline:none!important;}
+.chat-input-emoji-preview{display:none;align-items:center;gap:8px;padding:4px 12px 6px;border-top:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.18);font-size:12px;color:rgba(255,255,255,.55);overflow-x:auto;scrollbar-width:none;}
+.chat-input-emoji-preview::-webkit-scrollbar{display:none;}
+.chat-input-emoji-preview .cip-label{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.28);flex-shrink:0;}
+.chat-input-emoji-preview .cip-body{display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;line-height:1.4;color:rgba(255,255,255,.72);white-space:pre-wrap;word-break:break-word;}
+.chat-input-emoji-preview .cip-emoji{width:1.25em;height:1.25em;object-fit:contain;vertical-align:-.2em;display:inline-block;}
 .chat-input-row textarea:focus, .chat-input-row textarea:focus-visible{outline:none!important;box-shadow:none!important;}
 .chat-input-toolbar{display:none;}
 .cit-btn{background:transparent;border:none;color:rgba(255,255,255,.32);cursor:pointer;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.22,1,.36,1);flex-shrink:0;position:relative;}

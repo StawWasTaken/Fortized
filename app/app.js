@@ -4351,6 +4351,7 @@ async function _retryFailedMessage(row) {
   try {
     const p = JSON.parse(row.dataset.failedPayload || '{}');
     if (!p || !p.text) return;
+    const parent = row.parentElement;
     row.classList.remove('msg-row--failed');
     row.querySelector('.msg-retry-btn')?.remove();
     if (p.kind === 'dm') {
@@ -4360,7 +4361,20 @@ async function _retryFailedMessage(row) {
         FortizedSocial.socketEmit('message:send', { type:'dm', id1: CU.username, id2: p.target, message: savedMsg || { from: CU.username, text: p.text, timestamp: new Date().toISOString() } });
         toast('Message sent', 'success');
       } catch (e) {
-        _markMessageFailed(row.parentElement, row.dataset.msgid, p);
+        _markMessageFailed(parent, row.dataset.msgid, p);
+        toast('Still failed — check your connection', 'error');
+      }
+    } else if (p.kind === 'gc' && p.target) {
+      try {
+        const ref = firebase.database().ref('groupChats/'+p.target+'/messages').push();
+        const now = new Date();
+        const msg = { id: ref.key, from: CU.username, text: p.text, time: now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}), timestamp: now.toISOString(), ...(p.replyTo?{replyTo:p.replyTo}:{}) };
+        await ref.set(msg);
+        row.dataset.msgid = msg.id;
+        FortizedSocial.socketEmit('message:send', { type:'gc', id1: p.target, message: msg });
+        toast('Message sent', 'success');
+      } catch (e) {
+        _markMessageFailed(parent, row.dataset.msgid, p);
         toast('Still failed — check your connection', 'error');
       }
     }
@@ -4782,7 +4796,10 @@ async function sendGCMessage() {
   try {
     await msgRef.set(msg);
     FortizedSocial.socketEmit('message:send', { type: 'gc', id1: curGC, message: msg });
-  } catch { toast('Failed to send message. Check your connection.','error'); }
+  } catch {
+    _markMessageFailed(gcMsgsEl, msg.id, { kind: 'gc', target: curGC, text, replyTo: rep });
+    toast('Message failed to send — tap to retry','error');
+  }
 }
 
 // ── GC Typing ──────────────────────────────────────
@@ -8726,7 +8743,21 @@ function initFortizedUXResilience() {
   document.querySelectorAll('.modal-overlay').forEach(overlay=>{
     overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open');});
   });
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')_closeCtxMenu();if(e.ctrlKey&&e.shiftKey&&e.key==='A')tryOpenAdmin();});
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      _closeCtxMenu();
+      // Close the topmost open modal if any
+      const overlays = Array.from(document.querySelectorAll('.modal-overlay.open, .modal-overlay.show'));
+      if (overlays.length) {
+        const top = overlays[overlays.length - 1];
+        if (top.classList.contains('open')) top.classList.remove('open');
+        else if (top.classList.contains('show')) top.classList.remove('show');
+        // dynamically-created modals use .remove() on overlay click — mirror that if no class left
+        if (!top.classList.contains('open') && !top.classList.contains('show') && top.dataset.dynamic === '1') top.remove();
+      }
+    }
+    if(e.ctrlKey&&e.shiftKey&&e.key==='A')tryOpenAdmin();
+  });
 
   // Background refresh
   setTimeout(async()=>{
@@ -15534,7 +15565,7 @@ async function updatePfp(e) {
         await saveUser();
         updateUserbar();
         buildProfileView('myprofile');
-        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: result.gifData, pfpCrop: result.crop, field: 'pfp' }); } catch(e){}
+        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: result.gifData, pfpCrop: result.crop, field: 'pfp' }); } catch(e){}
         toast('Animated avatar updated! ✓', 'success');
       });
       // Set the GIF flag on _cropData after showCropModal initializes it
@@ -15549,7 +15580,7 @@ async function updatePfp(e) {
         await saveUser();
         updateUserbar();
         buildProfileView('myprofile');
-        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: cropped, pfpCrop: null, field: 'pfp' }); } catch(e){}
+        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: cropped, pfpCrop: null, field: 'pfp' }); } catch(e){}
         _saveRecentAvatar(cropped);
         toast('Avatar updated! ✓', 'success');
       });
@@ -33115,7 +33146,15 @@ function initCrossDeviceSync() {
 
   // 1. Profile updates from any device
   socket.on('profile:updated', (data) => {
-    if (data.username !== CU.username) return;
+    // Cross-user avatar refresh: if another user changes their pfp, update all <img> we render for them
+    if (data.username && data.username !== CU.username) {
+      if (data.pfp) {
+        document.querySelectorAll(`[data-av-user="${data.username}"] img, .msg-row[data-from="${data.username}"] .msg-av-inner img`).forEach(img => {
+          if (img.src !== data.pfp) img.src = data.pfp;
+        });
+      }
+      return;
+    }
     if (data.pfp && data.pfp !== CU.pfp) {
       CU.pfp = data.pfp;
       updateUserbar();
@@ -33203,6 +33242,17 @@ function initCrossDeviceSync() {
         } catch(e) { _dbg('[Notif] failed', e); }
       }
       playNotifSound('message');
+      // Refresh CU + friends UI so the pending request appears without a reload
+      try {
+        FortizedSocial.getUserByUsername(CU.username).then(u => {
+          if (u) {
+            if (u.friendRequestsReceived) CU.friendRequestsReceived = u.friendRequestsReceived;
+            if (u.friends) CU.friends = u.friends;
+            try { saveLocal?.(); } catch(_){}
+            try { renderFriendsList?.(); } catch(_){}
+          }
+        }).catch(()=>{});
+      } catch(_){}
     }
   });
 
@@ -33262,6 +33312,46 @@ function initCrossDeviceSync() {
     }
     // Also bust discover cache so next visit shows updated data
     try { FortizedSocial.clearBastionCache(); } catch(e) {}
+  });
+
+  // Bastion kick — if we're the target, leave locally; if we're a member, refresh member list
+  socket.on('bastion:kick', (data) => {
+    if (!data?.bastionId || !CU?.bastions) return;
+    const idx = CU.bastions.findIndex(b => (b.globalId || b.name) === data.bastionId);
+    if (idx < 0) return;
+    const b = CU.bastions[idx];
+    if (data.username === CU.username) {
+      if (b.memberRoles) delete b.memberRoles[CU.username];
+      CU.bastions.splice(idx, 1);
+      try { saveUser?.(true); } catch(_){}
+      if (curBastion === idx) { curBastion = null; curChannel = null; showView('home'); }
+      else if (curBastion !== null && curBastion > idx) curBastion -= 1;
+      renderRailBastions();
+      toast('You were kicked from ' + (b.name || 'this bastion'), 'error');
+    } else {
+      if (b.memberRoles) delete b.memberRoles[data.username];
+      try { if (curBastion === idx && typeof renderMemberPanel === 'function') renderMemberPanel(); } catch(_){}
+    }
+  });
+
+  // Bastion ban — same as kick but also blocks re-entry via invite UI
+  socket.on('bastion:ban', (data) => {
+    if (!data?.bastionId || !CU?.bastions) return;
+    const idx = CU.bastions.findIndex(b => (b.globalId || b.name) === data.bastionId);
+    if (idx < 0) return;
+    const b = CU.bastions[idx];
+    if (data.username === CU.username) {
+      if (b.memberRoles) delete b.memberRoles[CU.username];
+      CU.bastions.splice(idx, 1);
+      try { saveUser?.(true); } catch(_){}
+      if (curBastion === idx) { curBastion = null; curChannel = null; showView('home'); }
+      else if (curBastion !== null && curBastion > idx) curBastion -= 1;
+      renderRailBastions();
+      toast('You were banned from ' + (b.name || 'this bastion'), 'error');
+    } else {
+      if (b.memberRoles) delete b.memberRoles[data.username];
+      try { if (curBastion === idx && typeof renderMemberPanel === 'function') renderMemberPanel(); } catch(_){}
+    }
   });
 
   // 8. Announcement broadcasts

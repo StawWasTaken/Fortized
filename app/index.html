@@ -820,7 +820,7 @@ window._cdnReady.then(() => {
       </div>
       <!-- Group Chat pane -->
       <div id="ndm-pane-gc" style="display:none;">
-        <input class="modal-input" id="gc-name-input" placeholder="Group name…" style="margin-bottom:10px;">
+        <input class="modal-input" id="gc-name-input" placeholder="Group name…" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')createGroupChat()">
         <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Select Friends</div>
         <div id="gc-friend-picker" style="max-height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:12px;"></div>
         <div id="gc-selected-preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:24px;"></div>

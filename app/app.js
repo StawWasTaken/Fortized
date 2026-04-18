@@ -7266,7 +7266,8 @@ async function _renderDiscoverAds() {
       el.innerHTML = _renderAdHTML(ad, (ad.ratio||'banner') === 'rectangle' ? 'rectangle' : 'banner');
       el.onclick = () => _adClickAction(ad);
     } else {
-      el.innerHTML = '';
+      el.innerHTML = '<div class="ad-empty ad-empty-banner">Ad</div>';
+      el.onclick = null;
     }
   }
   await _rotateDiscoverAd();
@@ -32403,16 +32404,16 @@ function _liveFormatPreview(text) {
   s = s.replace(/\|\|(.+?)\|\|/g, '<span class="ci-marker">||</span><span class="ci-spoiler">$1</span><span class="ci-marker">||</span>');
   s = s.replace(/==(.+?)==/g, '<span class="ci-marker">==</span><span class="ci-highlight">$1</span><span class="ci-marker">==</span>');
   s = s.replace(/~([^~\n]+?)~/g, '<span class="ci-marker">~</span><span class="ci-smalltext">$1</span><span class="ci-marker">~</span>');
-  // Emoji shortcodes → Twemoji / Fortmoji images
+  // Emoji shortcodes → Twemoji / Fortmoji images (alt="" + onerror to avoid alt-text bleed-through if CDN fails)
   s = s.replace(/:([a-zA-Z0-9_+-]+):/g, (match, name) => {
     try {
       if (typeof FORTIZED_EMOJI_MAP !== 'undefined' && FORTIZED_EMOJI_MAP[name]) {
-        return `<img class="ci-emoji" src="${FORTIZED_EMOJI_MAP[name]}" alt=":${name}:">`;
+        return `<img class="ci-emoji" src="${FORTIZED_EMOJI_MAP[name]}" alt="" title=":${name}:" onerror="this.style.display='none'">`;
       }
       if (typeof EMOJI_SHORTCODES !== 'undefined' && EMOJI_SHORTCODES[name]) {
         const u = EMOJI_SHORTCODES[name];
         if (typeof emojiToTwemojiUrl === 'function') {
-          return `<img class="ci-emoji" src="${emojiToTwemojiUrl(u)}" alt="${u}">`;
+          return `<img class="ci-emoji" src="${emojiToTwemojiUrl(u)}" alt="" title="${u}" onerror="this.style.display='none'">`;
         }
         return u;
       }
@@ -32423,7 +32424,7 @@ function _liveFormatPreview(text) {
   try {
     if (typeof emojiToTwemojiUrl === 'function') {
       s = s.replace(/(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/gu, (m) => {
-        return `<img class="ci-emoji" src="${emojiToTwemojiUrl(m)}" alt="${m}">`;
+        return `<img class="ci-emoji" src="${emojiToTwemojiUrl(m)}" alt="" title="${m}" onerror="this.style.display='none'">`;
       });
     }
   } catch(_){}

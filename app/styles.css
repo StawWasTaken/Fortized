@@ -431,6 +431,9 @@ body.is-desktop-app .topbar{padding-right:0;}
 .home-banner-ad .ad-banner-inner{display:flex;flex-direction:column;gap:8px;width:100%;}
 .home-banner-ad img,.home-banner-ad picture,.home-banner-ad .ad-banner-img{width:100%;display:block;object-fit:cover;border-radius:10px;}
 .home-banner-ad .ad-empty-banner,.home-banner-ad .ad-empty{width:100%;min-height:90px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.55;border-radius:10px;background:rgba(255,255,255,.02);border:1px dashed var(--border);}
+/* Generic ad-empty placeholder (sidebar, discover, anywhere an ad slot is rendered empty) */
+.ad-empty{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.55;border-radius:10px;background:rgba(255,255,255,.02);border:1px dashed var(--border);min-height:100px;}
+.ad-empty-banner{min-height:100px;}
 
 /* Home friends-today horizontal strip (main column) */
 .home-friends-today{padding:4px 28px 2px;display:flex;gap:10px;overflow-x:auto;scrollbar-width:thin;}
@@ -722,8 +725,10 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .typing-dots span:nth-child(3){animation-delay:.4s;}
 @keyframes typingBounce{0%,70%,100%{transform:translateY(0);opacity:.4;}35%{transform:translateY(-4px);opacity:1;}}
 /* Chat input redesign — inline layout */
-.chat-input-outer{background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border:1.5px solid var(--glass-border);border-radius:12px;overflow:visible;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(0,0,0,.2);position:relative;}
-.chat-input-outer:focus-within{border-color:rgba(255,249,62,.2);box-shadow:0 0 0 2px rgba(255,249,62,.04),0 6px 28px rgba(0,0,0,.3);}
+.chat-input-outer{background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border:1.5px solid var(--glass-border);border-radius:12px;overflow:visible;transition:border-color .18s, box-shadow .18s;display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(0,0,0,.2);position:relative;}
+.chat-input-outer:focus-within{border-color:rgba(255,255,255,.12);box-shadow:0 6px 24px rgba(0,0,0,.28);}
+.chat-input-outer, .chat-input-row, .chat-input-row textarea, .ci-preview-wrap, .ci-preview-wrap textarea{outline:none!important;}
+.chat-input-row textarea:focus, .chat-input-row textarea:focus-visible{outline:none!important;box-shadow:none!important;}
 .chat-input-toolbar{display:none;}
 .cit-btn{background:transparent;border:none;color:rgba(255,255,255,.32);cursor:pointer;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.22,1,.36,1);flex-shrink:0;position:relative;}
 .cit-btn:hover{background:rgba(255,249,62,.1);color:var(--accent);transform:scale(1.08);}

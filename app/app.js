@@ -1629,7 +1629,16 @@ function showView(v, _skipPush) {
   if (rBtn) rBtn.classList.add('active');
 
   // Post-show callbacks
-  if (v === 'atelier') { _atelierTab = 'radiance'; renderAtelierTab('radiance'); setTimeout(() => { refreshCU().then(()=>{ switchAtelierTab('radiance'); refreshDailyBtn(); }).catch(()=>{ switchAtelierTab('radiance'); refreshDailyBtn(); }); }, 0); }
+  if (v === 'atelier') {
+    const target = window._atelierPendingTab || 'radiance';
+    window._atelierPendingTab = null;
+    _atelierTab = target;
+    renderAtelierTab(target);
+    setTimeout(() => {
+      const _go = () => { switchAtelierTab(target); refreshDailyBtn(); };
+      refreshCU().then(_go).catch(_go);
+    }, 0);
+  }
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'discover') setTimeout(() => loadDiscover(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
@@ -2635,6 +2644,13 @@ function toggleBastionDropdown(e, idx) {
 // HOME PANEL
 // ════════════════════════════════════════════
 function renderHomePanel() {
+  // Pull fresh CU in the background so subsequent re-renders show latest data
+  try { if (typeof refreshCU === 'function') refreshCU().then(() => { try { _renderHomeFriendsToday(); _renderWhatArePeopleBuying(); _renderWhatsHappening(); renderActiveNowSidebar('home-active-now-list'); } catch(_){} }).catch(()=>{}); } catch(_){}
+  // Eagerly clear stale section containers so old data isn't shown while async re-renders
+  ['home-friends-today','home-trending-items','home-trending-forum','home-active-now-list'].forEach(id => {
+    const _el = document.getElementById(id);
+    if (_el) _el.innerHTML = '<div style="padding:10px;text-align:center;"><div class="pl-spinner" style="width:16px;height:16px;border-width:2px;margin:0 auto;"></div></div>';
+  });
   // Hero username
   const heroName = document.getElementById('hero-username');
   if (heroName) heroName.textContent = CU?.displayName || CU?.username || '';
@@ -2918,12 +2934,44 @@ async function _renderWhatsHappening() {
 // Priority: I. most bought, II. most recent. Fill to 6 with fakes when real < 6.
 function _openFortshop() {
   try {
+    window._atelierPendingTab = 'shop';
     showView('atelier');
-    setTimeout(() => {
-      const btn = document.getElementById('atnav-shop');
-      if (typeof switchAtelierTab === 'function') switchAtelierTab('shop', btn);
-    }, 50);
   } catch(e) { console.warn('[Home] openFortshop failed:', e); }
+}
+
+// Hover preview for "What Are People Buying" — shows current user's avatar wearing the decoration
+function _showDecoPreview(cardEl) {
+  try {
+    if (!cardEl) return;
+    _hideDecoPreview();
+    const decoSrc = cardEl.getAttribute('data-deco-src');
+    const name = cardEl.getAttribute('data-item-name') || '';
+    if (!decoSrc) return;
+    const pfp = (CU?.pfp) || _defaultPfpUrl(CU?.username || 'me');
+    const pop = document.createElement('div');
+    pop.id = '_deco-preview-pop';
+    pop.className = 'deco-preview-pop';
+    pop.innerHTML = `<div class="dpp-stage">
+        <img class="dpp-pfp" src="${escapeHTML(pfp)}" onerror="this.src='${_defaultPfpUrl(CU?.username || 'me')}'">
+        <img class="dpp-deco" src="${escapeHTML(decoSrc)}" alt="">
+      </div>
+      <div class="dpp-label">${escapeHTML(name)}</div>
+      <div class="dpp-hint">You wearing it</div>`;
+    document.body.appendChild(pop);
+    const r = cardEl.getBoundingClientRect();
+    const popW = 180, popH = 220;
+    let left = r.left + (r.width / 2) - (popW / 2);
+    let top = r.top - popH - 12;
+    if (top < 8) top = r.bottom + 12;
+    left = Math.max(8, Math.min(left, window.innerWidth - popW - 8));
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    requestAnimationFrame(() => pop.classList.add('show'));
+  } catch(e) { /* silent */ }
+}
+function _hideDecoPreview() {
+  const ex = document.getElementById('_deco-preview-pop');
+  if (ex) ex.remove();
 }
 
 async function _renderWhatArePeopleBuying() {
@@ -2970,7 +3018,10 @@ async function _renderWhatArePeopleBuying() {
       const img = it.thumb || it.image || it.src || '/fortshop_placeholder.png';
       const buyers = Array.isArray(it.buyers) ? it.buyers.slice(0,3) : [];
       const buyersHtml = buyers.length ? `<div class="hbc-pfps">${buyers.map(b => `<img class="hbc-pfp" data-forum-author="${escapeHTML(b)}" src="${escapeHTML(_defaultPfpUrl(b))}" onerror="this.src='${_defaultPfpUrl(b)}'" title="${escapeHTML(b)}">`).join('')}${(it.buyerCount && it.buyerCount > buyers.length) ? `<span class="hbc-pfp-more">+${it.buyerCount - buyers.length}</span>` : ''}</div>` : '';
-      return `<div class="home-buy-card" onclick="_openFortshop()" title="${escapeHTML(name)}">
+      const isDeco = it.kind === 'decoration' && (it.decoSrc || it.image || it.thumb);
+      const decoSrc = isDeco ? (it.decoSrc || it.image || it.thumb) : '';
+      const previewAttrs = isDeco ? ` data-deco-src="${escapeHTML(decoSrc)}" data-item-name="${escapeHTML(name)}" onmouseenter="_showDecoPreview(this)" onmouseleave="_hideDecoPreview()"` : '';
+      return `<div class="home-buy-card" onclick="_openFortshop()" title="${escapeHTML(name)}"${previewAttrs}>
         <div class="hbc-img"><img src="${escapeHTML(img)}" onerror="this.style.opacity='.25';this.src='/fortshop_placeholder.png'"></div>
         <div class="hbc-name">${escapeHTML(name)}</div>
         <div class="hbc-price"><img class="hbc-onyx" src="/Onyx.png" onerror="this.style.display='none'"><span>${price}</span></div>
@@ -2998,11 +3049,16 @@ function _fortshopFakeItems(n, excludeSet) {
       const j = Math.floor(rand() * (i + 1));
       [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
     }
-    return filtered.slice(0, n).map(it => ({
-      id: it.id, name: it.name, price: it.price,
-      thumb: it.thumb || it.src || it.previewBg || null,
-      image: it.image || it.src || null,
-    }));
+    return filtered.slice(0, n).map(it => {
+      const isDeco = !!(typeof PROFILE_DECORATIONS !== 'undefined' && PROFILE_DECORATIONS.find(d => d.id === it.id));
+      return {
+        id: it.id, name: it.name, price: it.price,
+        thumb: it.thumb || it.src || it.previewBg || null,
+        image: it.image || it.src || null,
+        kind: isDeco ? 'decoration' : (it.kind || 'appearance'),
+        decoSrc: isDeco ? (it.src || null) : null,
+      };
+    });
   } catch(_) {
     // As a last resort, fabricate filler cards
     const filler = ['Stellar Mask','Onyx Cloak','Emberglow Hat','Deep Sea Aura','Sunset Ring','Golden Crown'];
@@ -3115,8 +3171,8 @@ function _renderAdHTML(ad, size) {
           <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(isBastionInvite?(ad.bastionName||''):'')}')">Report ad</span>
         </div>`;
   if (isBanner) {
-    return `<div style="text-align:center;padding:4px 0 2px;">
-      <div style="max-width:728px;margin:0 auto;">
+    return `<div style="text-align:center;padding:0;width:100%;">
+      <div style="width:100%;margin:0 auto;">
         <a style="display:block;cursor:pointer;border-radius:10px;overflow:hidden;" onclick="_adClickAction(window['${adKey}'])">
           <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:100%;aspect-ratio:728/90;object-fit:cover;display:block;border-radius:10px;" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
         </a>
@@ -30414,6 +30470,7 @@ async function _forumVote(kind, id, dir) {
       await FortizedSocial.updateForumPost(id, { likes: [...liSet], dislikes: [...diSet] });
     }
     await _forumViewThread(_forumCurrentThread, {skipViewInc:true});
+    try { if (typeof window._twemojiReparse === 'function') window._twemojiReparse(document.getElementById('forum-thread-view') || document.body); } catch(_){}
   } catch(e) {
     console.error('[Forum] Vote failed:', e);
     toast('Vote failed', 'error');

@@ -49,7 +49,7 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css">
+<link rel="stylesheet" href="/app/styles.css?v=20260418b">
 <style id="radiance-font-style"></style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous" async></script>
 <body>
@@ -1110,9 +1110,9 @@ window._cdnReady.then(() => {
   </div>
 </div>
 
-<script src="/app/app.js"></script>
-<script src="/app/joy-system.js"></script>
-<script src="/app/chronicle-games.js"></script>
+<script src="/app/app.js?v=20260418b"></script>
+<script src="/app/joy-system.js?v=20260418b"></script>
+<script src="/app/chronicle-games.js?v=20260418b"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -1120,15 +1120,46 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script>
-if (typeof twemoji !== 'undefined') {
-  twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });
-  const _twemojiObs = new MutationObserver(muts => {
-    muts.forEach(m => m.addedNodes.forEach(n => {
-      if (n.nodeType === 1) twemoji.parse(n, { folder: 'svg', ext: '.svg' });
-    }));
-  });
-  _twemojiObs.observe(document.body, { childList: true, subtree: true });
-}
+(function _ftzTwemojiBoot() {
+  let _scheduled = false;
+  let _pendingNodes = new Set();
+  function _flushParse() {
+    _scheduled = false;
+    if (typeof twemoji === 'undefined') return;
+    if (!_pendingNodes.size) return;
+    const nodes = [..._pendingNodes];
+    _pendingNodes.clear();
+    nodes.forEach(n => {
+      if (n && n.nodeType === 1 && n.isConnected) {
+        try { twemoji.parse(n, { folder: 'svg', ext: '.svg' }); } catch(_){}
+      }
+    });
+  }
+  function _scheduleParse(node) {
+    if (!node) return;
+    _pendingNodes.add(node);
+    if (_scheduled) return;
+    _scheduled = true;
+    requestAnimationFrame(_flushParse);
+  }
+  window._twemojiReparse = function(scope) {
+    const root = scope || document.body;
+    _scheduleParse(root);
+  };
+  function _setup() {
+    if (typeof twemoji === 'undefined') { setTimeout(_setup, 80); return; }
+    try { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); } catch(_){}
+    const obs = new MutationObserver(muts => {
+      muts.forEach(m => {
+        m.addedNodes.forEach(n => { if (n.nodeType === 1) _scheduleParse(n); });
+        // catch innerHTML replacements: target itself may now contain raw emoji again
+        if (m.type === 'childList' && m.target && m.target.nodeType === 1) _scheduleParse(m.target);
+      });
+    });
+    obs.observe(document.body, { childList: true, subtree: true, characterData: false });
+  }
+  _setup();
+})();
 </script>
 </body>
 </html>

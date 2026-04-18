@@ -4178,6 +4178,7 @@ function _leaveActiveChannel() {
   const s = window._activeSubs;
   if (s.chKey) { try { FortizedSocial.stopChannelPolling && FortizedSocial.stopChannelPolling(s.chKey); } catch(_){} s.chKey = null; }
   if (s.chRoom) { try { FortizedSocial.leaveRoom && FortizedSocial.leaveRoom('bastion', s.chRoom.id1, s.chRoom.id2); } catch(_){} s.chRoom = null; }
+  if (_annListener) { try { _annListener(); } catch(_){} _annListener = null; }
 }
 function _leaveAllActiveChats() { _leaveActiveDM(); _leaveActiveGC(); _leaveActiveChannel(); }
 
@@ -4390,6 +4391,16 @@ async function _retryFailedMessage(row) {
         await ref.set(msg);
         row.dataset.msgid = msg.id;
         FortizedSocial.socketEmit('message:send', { type:'gc', id1: p.target, message: msg });
+        toast('Message sent', 'success');
+      } catch (e) {
+        _markMessageFailed(parent, row.dataset.msgid, p);
+        toast('Still failed — check your connection', 'error');
+      }
+    } else if (p.kind === 'ch' && p.bastion && p.channel) {
+      try {
+        const savedMsg = await FortizedSocial.sendBastionChannelMessage(p.bastion, p.channel, CU.username, p.text);
+        if (savedMsg?.id) row.dataset.msgid = savedMsg.id;
+        FortizedSocial.socketEmit('message:send', { type:'bastion', id1: p.bastion, id2: p.channel, message: savedMsg || { from: CU.username, text: p.text, timestamp: new Date().toISOString() } });
         toast('Message sent', 'success');
       } catch (e) {
         _markMessageFailed(parent, row.dataset.msgid, p);
@@ -5608,7 +5619,7 @@ async function loadChannelMessages(idx) {
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         appendMessage(el,msg,'ch',null);
         _notifyNewMsg('ch-msgs-'+idx);
-        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
+        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('bastion',b.globalId||b.name)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
       }
     });
     // Start polling to enable real-time message sync across sessions.
@@ -5845,7 +5856,11 @@ async function sendChannelMsg(idx) {
       if (localRow) localRow.dataset.msgid = savedMsg.id;
     }
     FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: savedMsg || msg });
-  } catch { toast('Failed to send message. Check your connection.','error'); }
+  } catch (e) {
+    console.error('[sendChannelMsg Error]', e?.message);
+    _markMessageFailed(msgsEl, msg.id, { kind: 'ch', bastion: b.globalId||b.name, channel: ch.name, text, replyTo: rep });
+    toast('Message failed to send — tap to retry', 'error');
+  }
   // Bot command handling — trigger deployed bots with ! prefix
   if (text.startsWith('!')) {
     const msgsEl=document.getElementById('ch-msgs-'+idx);

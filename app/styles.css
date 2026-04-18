@@ -424,12 +424,12 @@ body.is-desktop-app .topbar{padding-right:0;}
 .active-now-empty .an-empty-text{font-size:12px;color:rgba(255,255,255,.25);line-height:1.6;}
 .active-now-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 
-/* Home banner ad placeholder (main column, below DYK) — card styled like forum rect ad but banner-sized */
-.home-banner-ad{margin:0 28px;border-radius:12px;display:flex;justify-content:center;}
-.home-banner-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;min-height:108px;width:100%;max-width:480px;padding:8px 10px 6px;display:flex;align-items:center;justify-content:center;transition:border-color .18s;cursor:pointer;overflow:visible;box-sizing:border-box;}
+/* Home banner ad placeholder (main column, below DYK) — mirrors forum-ad-slot at 728x90 */
+.home-banner-ad{margin:0 28px;display:flex;justify-content:center;}
+.home-banner-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;width:100%;max-width:728px;min-height:130px;margin:0 auto;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;cursor:pointer;transition:border-color .18s;}
 .home-banner-card:hover{border-color:rgba(255,249,62,.12);}
-.home-banner-ad img,.home-banner-ad picture,.home-banner-ad .ad-banner-img{width:100%;max-width:100%;display:block;object-fit:contain;}
-.home-banner-ad .ad-empty-banner,.home-banner-ad .ad-empty{width:100%;height:88px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.55;}
+.home-banner-ad img,.home-banner-ad picture,.home-banner-ad .ad-banner-img{width:100%;display:block;object-fit:cover;}
+.home-banner-ad .ad-empty-banner,.home-banner-ad .ad-empty{width:100%;min-height:130px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.55;}
 
 /* Home friends-today horizontal strip (main column) */
 .home-friends-today{padding:4px 28px 2px;display:flex;gap:10px;overflow-x:auto;scrollbar-width:thin;}
@@ -5965,14 +5965,12 @@ select:focus-visible {
 .hbc-pfp:first-child{margin-left:0;}
 .hbc-pfp-more{margin-left:4px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.02em;}
 
-/* Decoration hover preview popover (homepage What Are People Buying) */
-.deco-preview-pop{position:fixed;z-index:9999;width:180px;background:var(--panel);border:1px solid rgba(255,249,62,.18);border-radius:14px;padding:14px 12px 10px;box-shadow:0 14px 40px rgba(0,0,0,.55);pointer-events:none;opacity:0;transform:translateY(4px) scale(.98);transition:opacity .14s ease,transform .14s ease;}
-.deco-preview-pop.show{opacity:1;transform:translateY(0) scale(1);}
-.deco-preview-pop .dpp-stage{position:relative;width:120px;height:120px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;}
-.deco-preview-pop .dpp-pfp{width:96px;height:96px;border-radius:50%;object-fit:cover;background:#23283a;}
-.deco-preview-pop .dpp-deco{position:absolute;inset:-12px;width:calc(100% + 24px);height:calc(100% + 24px);object-fit:contain;pointer-events:none;}
-.deco-preview-pop .dpp-label{text-align:center;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.92);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.deco-preview-pop .dpp-hint{text-align:center;font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:2px;}
+/* Decoration hover preview — user's PFP appears inside the existing card image area */
+.home-buy-card .hbc-img{position:relative;}
+.home-buy-card.has-deco-preview .hbc-pfp-preview{position:absolute;top:50%;left:50%;width:64%;height:64%;transform:translate(-50%,-50%) scale(.8);border-radius:50%;object-fit:cover;opacity:0;transition:opacity .16s ease,transform .16s ease;pointer-events:none;z-index:1;background:#23283a;}
+.home-buy-card.has-deco-preview:hover .hbc-pfp-preview{opacity:1;transform:translate(-50%,-50%) scale(1);}
+.home-buy-card.has-deco-preview .hbc-deco{position:relative;z-index:2;transition:transform .16s ease;}
+.home-buy-card.has-deco-preview:hover .hbc-deco{transform:scale(1.02);}
 
 /* What's Happening — container card with 4 rows */
 .home-whats-card{margin:0 28px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:4px;}

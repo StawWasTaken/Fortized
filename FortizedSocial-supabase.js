@@ -1650,6 +1650,14 @@ const FortizedSocial = (() => {
     // Stop all polling intervals
     stopFriendRequestPolling();
     stopVoiceRoomPolling();
+    // Stop DM + channel polling too — otherwise they keep burning egress
+    // after logout / session teardown.
+    _dmPollingIntervals.forEach((interval) => { try { clearInterval(interval); } catch(_){} });
+    _dmPollingIntervals.clear();
+    _lastDmTimestamp.clear();
+    _channelPollingIntervals.forEach((interval) => { try { clearInterval(interval); } catch(_){} });
+    _channelPollingIntervals.clear();
+    _lastChannelTimestamp.clear();
     console.log('[Fortized] Supabase real-time subscriptions stopped');
   }
 

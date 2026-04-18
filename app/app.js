@@ -1302,6 +1302,7 @@ function formatTimeAgo(iso) {
 function timeAgoHTML(iso){ if(!iso) return ''; return `<span class="time-ago" data-ts="${escapeHTML(String(iso))}">${formatTimeAgo(iso)}</span>`; }
 if (!window._timeAgoTicker) {
   window._timeAgoTicker = setInterval(() => {
+    if (document.hidden) return;
     try {
       document.querySelectorAll('.time-ago[data-ts]').forEach(el => {
         const v = formatTimeAgo(el.getAttribute('data-ts'));
@@ -6152,6 +6153,7 @@ function appendMessage(container, msg, context, prevAuthor) {
   row.dataset.text=msg.text||'';
   row.dataset.timestamp=msg.timestamp||'';
   row.dataset.from=msg.from||'';
+  if (msg.edited) row.dataset.edited='1';
   // Role accent stripe
   const roleColor=getMsgRoleColor(msg.from,context);
   if(roleColor)row.style.position='relative';
@@ -6421,36 +6423,76 @@ function cancelReply(context) {
   const oldBar = document.getElementById(context+'-reply-bar');
   if (oldBar) oldBar.classList.remove('show');
 }
+// File-token strip: when editing a message that contains attachments we hide
+// the raw [FTZIMG:name|url] tokens from the textarea so the URLs can't be
+// grabbed by copying from edit mode. Tokens are stashed on the row and
+// re-appended verbatim on save.
+const _FTZ_FILE_TOKEN_RE = /\[FTZ(?:IMG|VID|AUD|FILE|GIF|STICKER):[^\]]*\]/g;
+function _splitFileTokens(text) {
+  const tokens = (text||'').match(_FTZ_FILE_TOKEN_RE) || [];
+  const stripped = (text||'').replace(_FTZ_FILE_TOKEN_RE, '').replace(/[ \t]+/g,' ').trim();
+  return { stripped, tokens };
+}
 function editMsg(msgId) {
   const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
   if (!row) return;
   const original=row.dataset.text||'';
+  const { stripped, tokens } = _splitFileTokens(original);
+  // Stash full original + tokens so save/cancel can restore them.
+  row.dataset.editOriginal = original;
+  row.dataset.editTokens = JSON.stringify(tokens);
   const textEl=row.querySelector('.msg-text');
   if (!textEl) return;
-  textEl.innerHTML=`<textarea style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--accent-mid);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:6px 10px;resize:none;outline:none;box-sizing:border-box;" rows="2" id="edit-ta">${escapeHTML(original)}</textarea>
+  const hint = tokens.length
+    ? `<div style="font-size:11px;color:var(--muted-light);margin-top:4px;opacity:.7;display:flex;align-items:center;gap:5px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg> ${tokens.length} attached file${tokens.length>1?'s':''} preserved</div>`
+    : '';
+  const ph = tokens.length ? 'Add a caption…' : 'Edit message…';
+  textEl.innerHTML=`<textarea style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--accent-mid);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:6px 10px;resize:none;outline:none;box-sizing:border-box;" rows="2" id="edit-ta" placeholder="${ph}">${escapeHTML(stripped)}</textarea>
+    ${hint}
     <div style="display:flex;gap:6px;margin-top:4px;font-size:12px;">
       <button class="btn-a" style="padding:4px 12px;font-size:12px;" onclick="saveEdit('${escapeHTML(msgId)}')">Save</button>
-      <button class="btn-g" style="padding:4px 12px;font-size:12px;" onclick="cancelEdit('${escapeHTML(msgId)}','${escapeHTML(original)}')">Cancel</button>
+      <button class="btn-g" style="padding:4px 12px;font-size:12px;" onclick="cancelEdit('${escapeHTML(msgId)}')">Cancel</button>
     </div>`;
+  const ta = document.getElementById('edit-ta');
+  if (ta) {
+    ta.focus();
+    try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch(_){}
+    ta.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); cancelEdit(msgId); }
+      else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(msgId); }
+    });
+  }
 }
-function cancelEdit(msgId, original) {
+function cancelEdit(msgId) {
   const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-  const textEl=row?.querySelector('.msg-text');
-  if (textEl) textEl.innerHTML=parseMD(escapeHTML(original));
+  if (!row) return;
+  const original = row.dataset.editOriginal || row.dataset.text || '';
+  const textEl = row.querySelector('.msg-text');
+  const edited = row.dataset.edited === '1' ? '<span class="msg-edited">(edited)</span>' : '';
+  if (textEl) textEl.innerHTML = parseMD(escapeHTML(original)) + edited;
+  delete row.dataset.editOriginal;
+  delete row.dataset.editTokens;
 }
 async function saveEdit(msgId) {
   const ta=document.getElementById('edit-ta');
   if (!ta) return;
-  const newText=ta.value.trim();
+  const caption=ta.value.trim();
+  const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  let tokens=[];
+  try { tokens = JSON.parse(row?.dataset.editTokens || '[]'); } catch(_){}
+  // Re-append preserved file tokens so the message body keeps its attachments.
+  const newText = (caption ? caption : '') + (tokens.length ? (caption ? ' ' : '') + tokens.join(' ') : '');
   if (!newText) {
-    // Empty message — offer to delete
-    const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-    if (row) { cancelEdit(msgId, row.dataset.text||''); }
+    if (row) { cancelEdit(msgId); }
     deleteMsg(msgId);
     return;
   }
-  const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-  if (row) row.dataset.text=newText;
+  if (row) {
+    row.dataset.text=newText;
+    row.dataset.edited='1';
+    delete row.dataset.editOriginal;
+    delete row.dataset.editTokens;
+  }
   const textEl=row?.querySelector('.msg-text');
   if (textEl) textEl.innerHTML=parseMD(escapeHTML(newText))+'<span class="msg-edited">(edited)</span>';
   // Persist edit to Supabase
@@ -8405,6 +8447,7 @@ function initFortizedUXResilience() {
         const textEl = row.querySelector('.msg-text');
         if (textEl && data.newText) {
           row.dataset.text = data.newText;
+          row.dataset.edited = '1';
           textEl.innerHTML = parseMD(escapeHTML(data.newText)) + '<span class="msg-edited">(edited)</span>';
         }
       },
@@ -35414,7 +35457,7 @@ function openAdvancedSearch() {
           <button onclick="_closeEl('adv-search-panel');_closeEl('adv-search-overlay')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='var(--muted)'">✕</button>
         </div>
       </div>
-      <input id="adv-search-input" placeholder="Search messages, members, files…" oninput="_runAdvSearch(this.value)" autofocus>
+      <input id="adv-search-input" placeholder="Search messages, members, files…" oninput="_runAdvSearch(this.value)" onkeydown="if(event.key==='Escape'){closeAdvancedSearch?.();}else if(event.key==='Enter'){event.preventDefault();_runAdvSearch(this.value);}" autofocus>
       <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
         <div style="font-size:10px;color:rgba(255,255,255,.2);">Scope:</div>
         <div style="font-size:10px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-mid);padding:2px 8px;border-radius:6px;font-weight:600;">${escapeHTML(scopeLabel)}</div>

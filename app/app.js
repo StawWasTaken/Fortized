@@ -8730,6 +8730,7 @@ function initFortizedUXResilience() {
   let _wasSuspended = !!(CU.suspension || CU.suspendedUntil);
   try {
     setInterval(async () => {
+      if (document.hidden) return; // skip when tab hidden — cut egress
       try {
         const u = await FortizedSocial.getUserByName(CU.username, { columns: 'username,banned,ban_reason,suspension,suspended_until,active_warning,raw' });
         if (!u) return;
@@ -8840,7 +8841,7 @@ function initFortizedUXResilience() {
     }catch{}
   },1000);
 
-  setInterval(async()=>{try{await updateNotifBadge();}catch{}},300000); // 5min (was 2min) — egress reduction
+  setInterval(async()=>{if(document.hidden)return;try{await updateNotifBadge();}catch{}},300000); // 5min (was 2min) — egress reduction; skip when tab hidden
   // Real-time notification listener
   try {
     // Notification listeners are now handled via Socket.IO in initCrossDeviceSync()
@@ -17081,6 +17082,7 @@ function _setupAdminLiveSync() {
   _teardownAdminLiveSync();
   // Poll Supabase for admin data updates (reduced from 10s to 60s to limit egress)
   _adminLiveSyncInterval = setInterval(async () => {
+    if (document.hidden) return; // skip when tab hidden — cut egress
     try {
       await _syncAdminData();
       if (typeof adminTab !== 'undefined' && adminTab) {
@@ -19153,6 +19155,7 @@ let _globalSettingsInterval = null;
 function _listenGlobalSettingsConsolidated() {
   if (_globalSettingsInterval) clearInterval(_globalSettingsInterval);
   _globalSettingsInterval = setInterval(async () => {
+    if (document.hidden) return; // skip when tab hidden — cut egress
     try {
       const gs = await FortizedSocial.adminGetGlobalSettings();
       // Maintenance mode check
@@ -19293,6 +19296,7 @@ let _staffPollInterval = null;
 function _listenStaffChanges() {
   if (_staffPollInterval) clearInterval(_staffPollInterval);
   _staffPollInterval = setInterval(async () => {
+    if (document.hidden) return; // skip when tab hidden — cut egress
     try {
       const staffData = await FortizedSocial.adminGetStaff(); // Reduced from 20s to 60s
       if (staffData && (staffData.admins || staffData.moderators)) {
@@ -19327,6 +19331,7 @@ let _forceRefreshInterval = null;
 function _listenForceRefresh() {
   if (_forceRefreshInterval) clearInterval(_forceRefreshInterval);
   _forceRefreshInterval = setInterval(async () => {
+    if (document.hidden) return; // skip when tab hidden — cut egress
     try {
       const ts = await FortizedSocial.adminGetSignal('force_refresh');
       if (!ts) return;
@@ -19347,6 +19352,7 @@ let _clearSessionsInterval = null;
 function _listenClearSessions() {
   if (_clearSessionsInterval) clearInterval(_clearSessionsInterval);
   _clearSessionsInterval = setInterval(async () => {
+    if (document.hidden) return; // skip when tab hidden — cut egress
     try {
       const ts = await FortizedSocial.adminGetSignal('clear_sessions');
       if (!ts) return;
@@ -19371,6 +19377,7 @@ function _listenBastionUpdates() {
   if (!CU?.bastions) return;
   // Poll bastion updates periodically via Supabase
   async function _pollBastionSync() {
+    if (document.hidden) return; // skip when tab hidden — cut egress
     if (!CU?.bastions) return;
     for (let idx = 0; idx < CU.bastions.length; idx++) {
       const b = CU.bastions[idx];

@@ -1341,6 +1341,13 @@ const FortizedSocial = (() => {
   let _subscriptions = [];
   let _callbacks = {};
 
+  // Tab-visibility gate: when the tab is hidden, skip polling bodies
+  // entirely. Socket.io still delivers pushes if/when it reconnects, but
+  // we don't burn Supabase egress on a background tab.
+  function _tabHidden() {
+    try { return typeof document !== 'undefined' && document.hidden === true; } catch(_) { return false; }
+  }
+
   let _dmPollingIntervals = new Map(); // Track polling intervals per DM conversation
   let _lastDmTimestamp = new Map(); // Track last seen message timestamp per conversation
 
@@ -1348,6 +1355,7 @@ const FortizedSocial = (() => {
     if (_dmPollingIntervals.has(dmKey)) return;
 
     const pollInterval = setInterval(async () => {
+      if (_tabHidden()) return;
       try {
         const { data, error } = await sb.from('dms')
           .select('id,from,text,time,timestamp,edited,reactions')
@@ -1381,7 +1389,7 @@ const FortizedSocial = (() => {
         _lastPollIds.set('dm:'+dmKey, currentIds);
         if (data.length > 0) _lastDmTimestamp.set(dmKey, new Date(data[data.length-1].timestamp).getTime());
       } catch(e) { /* silently skip */ }
-    }, 1500); // Poll every 1.5s
+    }, 4000); // Poll every 4s (reduced from 1.5s to cut Supabase egress; socket.io handles live delivery)
 
     _dmPollingIntervals.set(dmKey, pollInterval);
   }
@@ -1411,6 +1419,7 @@ const FortizedSocial = (() => {
     if (!bastionId || !channelId) return;
 
     const pollInterval = setInterval(async () => {
+      if (_tabHidden()) return;
       try {
         const { data, error } = await sb.from('bastion_msgs')
           .select('id,from,text,time,timestamp,edited,reactions')
@@ -1450,7 +1459,7 @@ const FortizedSocial = (() => {
           if (data.length > 0) _lastChannelTimestamp.set(channelKey, new Date(data[data.length-1].timestamp).getTime());
         }
       } catch (err) { /* silently skip */ }
-    }, 1500); // Poll every 1.5s
+    }, 4000); // Poll every 4s (reduced from 1.5s to cut Supabase egress; socket.io handles live delivery)
 
     _channelPollingIntervals.set(channelKey, pollInterval);
   }
@@ -1479,6 +1488,7 @@ const FortizedSocial = (() => {
     console.log('[FriendRequestPolling] ✓ Starting polling for:', username);
 
     _friendRequestPollingInterval = setInterval(async () => {
+      if (_tabHidden()) return;
       try {
         const { data, error } = await sb.from('users')
           .select('friend_requests_sent,friend_requests_received')
@@ -1508,7 +1518,7 @@ const FortizedSocial = (() => {
       } catch (e) {
         console.error('[FriendRequestPolling] Error:', e?.message);
       }
-    }, 4000); // Poll every 4 seconds
+    }, 15000); // Poll every 15s (reduced from 4s to cut egress; socket events handle real-time)
   }
 
   function stopFriendRequestPolling() {
@@ -1533,6 +1543,7 @@ const FortizedSocial = (() => {
     console.log('[VoiceRoomPolling] ✓ Starting polling for:', username);
 
     _voiceRoomPollingInterval = setInterval(async () => {
+      if (_tabHidden()) return;
       try {
         // Get user's bastion list
         const { data: userData, error: userErr } = await sb.from('users')
@@ -1588,7 +1599,7 @@ const FortizedSocial = (() => {
       } catch (e) {
         console.error('[VoiceRoomPolling] Error:', e?.message);
       }
-    }, 4000); // Poll every 4 seconds
+    }, 12000); // Poll every 12s (reduced from 4s to cut egress; voice events push via socket)
   }
 
   function stopVoiceRoomPolling() {

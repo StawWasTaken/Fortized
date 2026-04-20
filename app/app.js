@@ -31491,7 +31491,7 @@ async function _forumViewThread(threadId, opts) {
 
         <div class="forum-detail-body">
           <div class="forum-detail-inner">
-            <div class="forum-op-card">
+            <div class="forum-op-card" id="fp-${escapeHTML(thread.id)}">
               <img class="forum-op-avatar" data-forum-author="${escapeHTML(thread.author||'')}" src="${escapeHTML(author?.pfp || _defaultPfpUrl(thread.author))}" onerror="this.src='${_defaultPfpUrl(thread.author)}'">
               <div class="forum-op-content">
                 <div class="forum-op-author">
@@ -31633,10 +31633,23 @@ async function _forumHydratePfps(root) {
   } catch(e) { console.warn('[Forum] pfp hydrate failed:', e); }
 }
 
-function _forumNetScore(obj) {
+// Staff get a visible upvote multiplier on their own posts: superadmins +10%,
+// admins +5%. Computed at render time so it tracks the live `likes` array.
+function _forumStaffBoost(author) {
+  const role = _forumAuthorRole(author);
+  if (role === 'superadmin') return 0.10;
+  if (role === 'admin') return 0.05;
+  return 0;
+}
+function _forumBoostedUpvotes(obj) {
   const ups = Array.isArray(obj.likes) ? obj.likes.length : 0;
+  const boost = _forumStaffBoost(obj.author);
+  if (!boost || !ups) return ups;
+  return ups + Math.round(ups * boost);
+}
+function _forumNetScore(obj) {
   const dns = Array.isArray(obj.dislikes) ? obj.dislikes.length : 0;
-  return ups - dns;
+  return _forumBoostedUpvotes(obj) - dns;
 }
 function _forumIsUpvoted(obj) {
   return Array.isArray(obj.likes) && obj.likes.includes(CU?.username);
@@ -31689,10 +31702,17 @@ async function _forumVote(kind, id, dir) {
 function _forumAuthorRole(u) {
   if (!u) return 'user';
   try {
-    if (SUPER_ADMINS.includes(u)) return 'superadmin';
-    const staff = JSON.parse(localStorage.getItem('ftz_staff') || '{}');
-    if ((staff.admins || []).includes(u)) return 'admin';
-    if ((staff.moderators || []).includes(u)) return 'moderator';
+    if (typeof _roleListHas === 'function') {
+      if (_roleListHas(SUPER_ADMINS, u)) return 'superadmin';
+      const staff = JSON.parse(localStorage.getItem('ftz_staff') || '{}');
+      if (_roleListHas(staff.admins || [], u)) return 'admin';
+      if (_roleListHas(staff.moderators || [], u)) return 'moderator';
+    } else {
+      if (SUPER_ADMINS.includes(u)) return 'superadmin';
+      const staff = JSON.parse(localStorage.getItem('ftz_staff') || '{}');
+      if ((staff.admins || []).includes(u)) return 'admin';
+      if ((staff.moderators || []).includes(u)) return 'moderator';
+    }
   } catch(_){}
   return 'user';
 }
@@ -32063,7 +32083,15 @@ async function _forumCreatePost(threadId) {
   const text = document.getElementById('forum-post-text')?.value?.trim();
   if (!text) { toast('Write something to post', 'error'); return; }
 
-  const q = _forumPendingQuote || null;
+  // Every reply auto-quotes whatever it's replying to. Falls back to quoting
+  // the OP when the user didn't pick a specific reply to quote.
+  let q = _forumPendingQuote || null;
+  if (!q) {
+    try {
+      const thread = await FortizedSocial.getForumThread(threadId);
+      if (thread) q = { id: thread.id, author: thread.author, text: (thread.content || '').slice(0, 500) };
+    } catch(_) {}
+  }
   const post = {
     id: 'post_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
     thread_id: threadId,

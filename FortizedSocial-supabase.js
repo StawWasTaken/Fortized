@@ -245,9 +245,8 @@ const FortizedSocial = (() => {
     for (const k of Object.keys(u)) {
       if (!known.has(k)) raw[k] = u[k];
     }
-    return {
+    const row = {
       username: norm(u.username),
-      password: u.password || 'system',
       email: u.email || '',
       display_name: u.displayName || u.username,
       pfp: u.pfp || null,
@@ -280,6 +279,14 @@ const FortizedSocial = (() => {
       created_at: u.createdAt || null,
       raw: Object.keys(raw).length ? raw : null,
     };
+    // Only include password if we actually have one. NEVER emit a fallback like
+    // 'system' here — with upsert+merge semantics that would silently overwrite
+    // the user's real password whenever a partial in-memory object (missing the
+    // password field) is saved.
+    if (typeof u.password === 'string' && u.password.length > 0) {
+      row.password = u.password;
+    }
+    return row;
   }
 
   // Protected accounts: writes must never clobber profile data (pfp/banner/bio/
@@ -323,6 +330,10 @@ const FortizedSocial = (() => {
         || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && ev && typeof ev === 'object' && Object.keys(ev).length > 0);
       if (isEmpty) out[col] = ev;
     }
+    // Password is special: even though it's in the writable set, we never want
+    // to accept a falsy new value (null/''/undefined) over a real existing one.
+    // This is the last line of defence against the 'system'-password bug.
+    if (!newRow.password && existingRow.password) out.password = existingRow.password;
     // Shallow merge raw JSONB so protected extras survive partial saves.
     if (existingRow.raw && typeof existingRow.raw === 'object') {
       out.raw = { ...existingRow.raw, ...(newRow.raw || {}) };

@@ -31366,22 +31366,12 @@ async function _forumLoadThreads() {
         if (scored[0].s > 0) topReply = scored[0].p;
       }
       const topReplyBlock = topReply ? `
-        <div class="forum-thread-topreply" onclick="event.stopPropagation();_forumViewThread('${th.id}')">
-          <div class="ftr-badge">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10v12h10V10l-5-7-5 7z"/></svg>
-            Top reply
-          </div>
+        <div class="forum-thread-topreply" onclick="event.stopPropagation();_forumViewThread('${th.id}')" title="View thread">
+          <span class="ftr-label">★ Top reply</span>
           <img class="ftr-avatar" data-forum-author="${escapeHTML(topReply.author||'')}" src="${escapeHTML(topReply.author_pfp || _defaultPfpUrl(topReply.author||''))}" onerror="this.src='${_defaultPfpUrl(topReply.author||'')}'">
-          <div class="ftr-body">
-            <div class="ftr-meta">
-              <strong>${escapeHTML(topReply.author_displayName || topReply.author)}</strong>
-              <span class="ftr-handle">@${escapeHTML(topReply.author)}</span>
-              <span class="ftr-dot"></span>
-              <span class="ftr-time">${_forumTimeAgo(topReply.created_at)}</span>
-              <span class="ftr-score">▲ ${_forumNetScore(topReply)}</span>
-            </div>
-            <div class="ftr-text">${_forumRenderBody((topReply.content || '').slice(0, 240))}</div>
-          </div>
+          <span class="ftr-handle">@${escapeHTML(topReply.author)}</span>
+          <span class="ftr-snippet">${_forumRenderInline((topReply.content || '').slice(0, 180))}</span>
+          <span class="ftr-score">▲ ${_forumNetScore(topReply)}</span>
         </div>` : '';
 
       return `
@@ -31502,7 +31492,7 @@ async function _forumViewThread(threadId, opts) {
         <div class="forum-detail-body">
           <div class="forum-detail-inner">
             <div class="forum-op-card">
-              <img class="forum-op-avatar" src="${escapeHTML(author?.pfp || _defaultPfpUrl(thread.author))}" onerror="this.src='${_defaultPfpUrl(thread.author)}'">
+              <img class="forum-op-avatar" data-forum-author="${escapeHTML(thread.author||'')}" src="${escapeHTML(author?.pfp || _defaultPfpUrl(thread.author))}" onerror="this.src='${_defaultPfpUrl(thread.author)}'">
               <div class="forum-op-content">
                 <div class="forum-op-author">
                   <strong>${escapeHTML(author?.displayName || thread.author)}</strong>
@@ -31548,6 +31538,7 @@ async function _forumViewThread(threadId, opts) {
         </div>
       </div>
     `;
+    _forumHydratePfps(content);
   } catch(e) {
     console.error('[Forum] View thread failed:', e);
     content.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load thread</p></div>';
@@ -31573,7 +31564,7 @@ function _forumRenderPostCard(post, threadId) {
   const pfpFallback = _defaultPfpUrl(post.author || '');
   return `
     <div class="forum-reply-card" id="fp-${post.id}">
-      <img class="forum-reply-avatar" src="${escapeHTML(post.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
+      <img class="forum-reply-avatar" data-forum-author="${escapeHTML(post.author||'')}" src="${escapeHTML(post.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
       <div class="forum-reply-content">
         <div class="frc-meta">
           <span class="frc-author">${escapeHTML(post.author_displayName || post.author)}</span>
@@ -31722,6 +31713,20 @@ function _forumRenderBody(text) {
   let s = escapeHTML(text || '');
   s = s.replace(/@([a-zA-Z0-9_]{2,32})/g, (m, n) => `<span class="forum-mention" onclick="viewUserProfile('${n}')">@${n}</span>`);
   return parseMD(s);
+}
+
+// Plain-text inline render for compact previews (top-reply chips, etc.): strip newlines,
+// drop markdown markers, no block elements.
+function _forumRenderInline(text) {
+  return escapeHTML((text || '')
+    .replace(/\r?\n+/g, ' ')
+    .replace(/`{1,3}([^`]+)`{1,3}/g, '$1')
+    .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+    .replace(/_{1,2}([^_]+)_{1,2}/g, '$1')
+    .replace(/~~([^~]+)~~/g, '$1')
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .trim());
 }
 
 function _forumQuoteReply(postId) {

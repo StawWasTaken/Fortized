@@ -1324,26 +1324,39 @@ function _formatElapsed(startIso) {
 function attachFile(inputId) { openFileUpload(inputId || 'ch-input'); }
 
 // ── Role System ──
-function isSuperAdmin() { return CU?.username && SUPER_ADMINS.includes(CU.username); }
+// Role membership is stored lowercase (addStaff normalises on insert, SUPER_ADMINS
+// is declared lowercase). Compare case-insensitively so that a user whose
+// current username happens to be mixed-case ("Staw") still matches the
+// lowercase entry ("staw") — otherwise granted rights look broken after refresh.
+function _normRoleName(u) { return (u || '').toString().trim().toLowerCase(); }
+function _roleListHas(list, username) {
+  if (!username || !Array.isArray(list)) return false;
+  const n = _normRoleName(username);
+  for (let i = 0; i < list.length; i++) {
+    if (_normRoleName(list[i]) === n) return true;
+  }
+  return false;
+}
+function isSuperAdmin() { return !!CU?.username && _roleListHas(SUPER_ADMINS, CU.username); }
 function _getStaffData() {
   try { return JSON.parse(localStorage.getItem('ftz_staff')||'{}'); } catch(e) { console.warn('[Staff] Parse failed:', e); return {admins:[], moderators:[]}; }
 }
 function isAdmin() {
   if (isSuperAdmin()) return true;
   const staff = _getStaffData();
-  return CU?.username && (staff.admins||[]).includes(CU.username);
+  return !!CU?.username && _roleListHas(staff.admins, CU.username);
 }
 function isModerator() {
   if (isAdmin()) return true;
   const staff = _getStaffData();
-  return CU?.username && (staff.moderators||[]).includes(CU.username);
+  return !!CU?.username && _roleListHas(staff.moderators, CU.username);
 }
 function getStaffRole(username) {
   if (!username) return null;
-  if (SUPER_ADMINS.includes(username)) return 'superadmin';
+  if (_roleListHas(SUPER_ADMINS, username)) return 'superadmin';
   const staff = _getStaffData();
-  if ((staff.admins||[]).includes(username)) return 'admin';
-  if ((staff.moderators||[]).includes(username)) return 'moderator';
+  if (_roleListHas(staff.admins, username)) return 'admin';
+  if (_roleListHas(staff.moderators, username)) return 'moderator';
   return null;
 }
 function hasStaffAccess() { return isModerator(); } // any staff role
@@ -2936,7 +2949,7 @@ async function _renderWhatsHappening() {
   if (!el) return;
   el.innerHTML = '<div class="home-whats-card"><div style="padding:14px;color:var(--muted);font-size:12px;">Loading…</div></div>';
   try {
-    const categoryIds = (typeof FORUM_CATEGORIES !== 'undefined' && FORUM_CATEGORIES) ? FORUM_CATEGORIES.map(c => c.id) : ['general','bugs','suggestions','showcase','offtopic','announcements'];
+    const categoryIds = (typeof FORUM_CATEGORIES !== 'undefined' && FORUM_CATEGORIES) ? FORUM_CATEGORIES.map(c => c.id) : ['general','bugs','suggestions','showcase','offtopic','announcements','event-records'];
     const all = (await Promise.all(categoryIds.map(c => FortizedSocial.getForumThreads(c, 50, 0).catch(()=>[])))).flat();
     const NOW = Date.now();
     const HOUR = 3600000;
@@ -20013,17 +20026,28 @@ function addStaff(role) {
   const inputId = role === 'admin' ? 'new-admin-input' : 'new-mod-input';
   const username = document.getElementById(inputId)?.value?.trim()?.toLowerCase();
   if (!username) { toast('Enter a username', 'error'); return; }
-  if (SUPER_ADMINS.includes(username)) { toast('Already a super admin', 'error'); return; }
+  if (_roleListHas(SUPER_ADMINS, username)) { toast('Already a super admin', 'error'); return; }
   const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
   if (!staff.admins) staff.admins = [];
   if (!staff.moderators) staff.moderators = [];
-  if (staff.admins.includes(username) || staff.moderators.includes(username)) { toast('Already a staff member', 'error'); return; }
+  if (_roleListHas(staff.admins, username) || _roleListHas(staff.moderators, username)) { toast('Already a staff member', 'error'); return; }
   const roleLabel = role === 'admin' ? 'Admin' : 'Moderator';
-  showCustomConfirm(`Make ${username} a platform ${roleLabel}?`, () => {
+  showCustomConfirm(`Make ${username} a platform ${roleLabel}?`, async () => {
     if (role === 'admin') staff.admins.push(username);
     else staff.moderators.push(username);
+    // Persist to server FIRST so we can surface a real error if it fails —
+    // otherwise the toast says "success" but the DB row was never written
+    // and the entry disappears on the next refresh.
+    try {
+      await FortizedSocial.adminSaveStaff(staff);
+    } catch(e) {
+      console.error('[Staff] adminSaveStaff failed:', e);
+      toast('Failed to save staff — changes not persisted: ' + (e?.message || 'unknown error'), 'error');
+      return;
+    }
     localStorage.setItem('ftz_staff', JSON.stringify(staff));
-    _saveStaffToServer(staff);
+    // Poke the newly-granted user so their clients pick up the change
+    FortizedSocial.adminSetSignal('staff_granted_' + username, Date.now()).catch(()=>{});
     logAudit('add_'+role, username, 'Added by super admin');
     toast(`${username} is now a ${roleLabel}`, 'success');
     _loadAdminPage('platform');
@@ -20038,12 +20062,18 @@ function removeStaff(role, idx) {
   const username = list[idx];
   if (!username) return;
   const roleLabel = role === 'admin' ? 'Admin' : 'Moderator';
-  showCustomConfirm(`Remove ${username} from ${roleLabel}s?`, () => {
+  showCustomConfirm(`Remove ${username} from ${roleLabel}s?`, async () => {
     list.splice(idx, 1);
     if (role === 'admin') staff.admins = list;
     else staff.moderators = list;
+    try {
+      await FortizedSocial.adminSaveStaff(staff);
+    } catch(e) {
+      console.error('[Staff] adminSaveStaff failed:', e);
+      toast('Failed to save staff — changes not persisted: ' + (e?.message || 'unknown error'), 'error');
+      return;
+    }
     localStorage.setItem('ftz_staff', JSON.stringify(staff));
-    _saveStaffToServer(staff);
     FortizedSocial.adminSetSignal('staff_revoked_' + username, Date.now()).catch(()=>{});
     logAudit('remove_'+role, username, 'Removed by super admin');
     toast(`${username} removed from ${roleLabel}s`, 'success');
@@ -30882,13 +30912,18 @@ const _forumSvg = {
   lightbulb: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M15.79,8.34a6.07,6.07,0,0,0-5.06-1.21A6,6,0,0,0,6.1,11.88a5.92,5.92,0,0,0,1.21,4.84A3.08,3.08,0,0,1,8,18.62V20a2,2,0,0,0,2,2h4a2,2,0,0,0,2-2V18.62a3,3,0,0,1,.66-1.87A5.86,5.86,0,0,0,18,13,6,6,0,0,0,15.79,8.34Z"/><path d="M18.36,7.64a1,1,0,0,1-.7-.3,1,1,0,0,1,0-1.41l.7-.71a1,1,0,1,1,1.42,1.42l-.71.7A1,1,0,0,1,18.36,7.64Zm-12.72,0a1,1,0,0,1-.71-.3l-.71-.7A1,1,0,0,1,5.64,5.22l.7.71a1,1,0,0,1,0,1.41A1,1,0,0,1,5.64,7.64ZM12,5a1,1,0,0,1-1-1V3a1,1,0,0,1,2,0V4A1,1,0,0,1,12,5Z" opacity=".55"/></svg>',
   media: '<svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M13,1 C14.1046,1 15,1.89543 15,3 L15,13 C15,14.1046 14.1046,15 13,15 L3,15 C1.89543,15 1,14.1046 1,13 L1,3 C1,1.89543 1.89543,1 3,1 L13,1 Z M13,3 L3,3 L3,13 L13,13 L13,3 Z M9.5,8 L12,10.8571 L12,12 L4,12 L4,10.8 L5.5,9 L7.02439,10.8293 L9.5,8 Z M6.5,5 C7.32843,5 8,5.67157 8,6.5 C8,7.32843 7.32843,8 6.5,8 C5.67157,8 5,7.32843 5,6.5 C5,5.67157 5.67157,5 6.5,5 Z"/></svg>',
   offtopic: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h3v3.3a.7.7 0 0 0 1.17.52L13 19h7a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-8 14a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4zm1.4-5.3c-.27.16-.4.3-.4.58V12a1 1 0 0 1-2 0v-.72c0-1.07.62-1.76 1.4-2.22.5-.3.6-.5.6-.8a1.4 1.4 0 1 0-2.8 0 1 1 0 0 1-2 0 3.4 3.4 0 0 1 6.8 0c0 1.2-.72 2.03-1.6 2.44z"/></svg>',
+  trophy: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M19 4h-2V3a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v1H5a2 2 0 0 0-2 2v2a4 4 0 0 0 4 4h.28A5 5 0 0 0 11 14.9V17H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.1A5 5 0 0 0 16.72 12H17a4 4 0 0 0 4-4V6a2 2 0 0 0-2-2zM7 10a2 2 0 0 1-2-2V6h2v3c0 .34.03.67.08 1H7zm12-2a2 2 0 0 1-2 2h-.08c.05-.33.08-.66.08-1V6h2v2z"/></svg>',
 };
 const FORUM_CATEGORIES = [
+  // ── Announcements: official staff-only posts ──
   { id: 'announcements', name: 'Announcements', icon: _forumSvg.megaphone, color: '#ff6b6b', desc: 'Official announcements from Fortized', group: 'announcements' },
+  { id: 'event-records', name: 'Event Records', icon: _forumSvg.trophy, color: '#fbbf24', desc: 'Records of past Fortized events. Only admins & superadmins can post here.', group: 'announcements' },
+  // ── Fortized: platform-related community discussion ──
   { id: 'general', name: 'Fortized General', icon: _forumSvg.chat, color: '#4ecdc4', desc: 'Talk about anything related to Fortized.', group: 'fortized' },
   { id: 'bugs', name: 'Bugs & Troubleshooting', icon: _forumSvg.bug, color: '#f87171', desc: 'Found a bug? Need help? Ask here — you may not be alone.', group: 'fortized' },
   { id: 'suggestions', name: 'Suggestions', icon: _forumSvg.lightbulb, color: '#ffd93e', desc: 'Have a suggestion for Fortized? Post it here!', group: 'fortized' },
-  { id: 'showcase', name: 'Showcase', icon: _forumSvg.media, color: '#a78bfa', desc: 'Made something cool? Show it off to the community!', group: 'fortized' },
+  // ── Community: user-created content & casual talk ──
+  { id: 'showcase', name: 'Showcase', icon: _forumSvg.media, color: '#a78bfa', desc: 'Made something cool? Show it off to the community!', group: 'community' },
   { id: 'offtopic', name: 'Off-Topic', icon: _forumSvg.offtopic, color: '#64748b', desc: 'Anything that doesn\'t fit into the other categories.', group: 'community' },
 ];
 
@@ -30910,7 +30945,7 @@ function _forumSaveLastVisit(catId) {
   } catch(e) {}
 }
 function _forumCanPostInCategory(catId) {
-  if (catId === 'announcements') return isAdmin();
+  if (catId === 'announcements' || catId === 'event-records') return isAdmin();
   return true;
 }
 function _forumCanPin() { return isSuperAdmin(); }
@@ -31125,7 +31160,7 @@ async function _forumOpenCategory(catId) {
             <svg class="forum-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input class="forum-search-input" placeholder="Search in ${escapeHTML(cat.name)}..." oninput="_forumSearchInCategory(this.value)">
           </div>
-          ${_forumCanPostInCategory(catId) ? `<button class="forum-new-btn" onclick="_forumShowCreatePost('${catId}')">+ New Post</button>` : `<button class="forum-new-btn" disabled style="opacity:.45;cursor:not-allowed;" title="Only admins can post announcements">Staff-only</button>`}
+          ${_forumCanPostInCategory(catId) ? `<button class="forum-new-btn" onclick="_forumShowCreatePost('${catId}')">+ New Post</button>` : `<button class="forum-new-btn" disabled style="opacity:.45;cursor:not-allowed;" title="${catId === 'event-records' ? 'Only admins & superadmins can post here' : 'Only admins can post announcements'}">Staff-only</button>`}
         </div>
       </div>
       <div class="forum-threadlist-body">
@@ -31644,7 +31679,7 @@ function _forumShowCreatePost(preselectedCategory) {
   if (!content) return;
   let defaultCat = preselectedCategory || _forumCurrentCategory || 'general';
   if (!_forumCanPostInCategory(defaultCat)) {
-    toast('Only admins can post in Announcements.', 'error');
+    toast(defaultCat === 'event-records' ? 'Only admins & superadmins can post in Event Records.' : 'Only admins can post in Announcements.', 'error');
     defaultCat = 'general';
   }
   const cat = FORUM_CATEGORIES.find(c => c.id === defaultCat) || FORUM_CATEGORIES[0];
@@ -31790,7 +31825,7 @@ async function _forumCreateThread(e) {
   const content = document.getElementById('forum-new-content')?.value?.trim();
   const category = document.getElementById('forum-new-category')?.value || 'general';
 
-  if (!_forumCanPostInCategory(category)) { toast('Only admins can post in Announcements.', 'error'); return; }
+  if (!_forumCanPostInCategory(category)) { toast(category === 'event-records' ? 'Only admins & superadmins can post in Event Records.' : 'Only admins can post in Announcements.', 'error'); return; }
   if (!title) { toast('Enter a thread title', 'error'); return; }
   if (!content) { toast('Enter a description', 'error'); return; }
 

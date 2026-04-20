@@ -1007,15 +1007,43 @@ window._cdnReady.then(function() {
 
 <script src="/app/app.js?v=20260418d"></script>
 <script>
-if (typeof twemoji !== 'undefined') {
-  twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });
-  const _twemojiObs = new MutationObserver(muts => {
-    muts.forEach(m => m.addedNodes.forEach(n => {
-      if (n.nodeType === 1) twemoji.parse(n, { folder: 'svg', ext: '.svg' });
-    }));
-  });
-  _twemojiObs.observe(document.body, { childList: true, subtree: true });
-}
+// twemoji is loaded async, so on a fresh refresh the forum view renders
+// vote buttons before twemoji is defined. The old one-shot check silently
+// no-op'd and the observer never got installed, leaving 👍/👎 as the OS
+// default emoji. Retry until twemoji lands, then parse + observe + expose
+// window._twemojiReparse so app.js can poke us after renders.
+(function _ftzForumTwemojiBoot() {
+  let _scheduled = false;
+  const _pending = new Set();
+  function _flush() {
+    _scheduled = false;
+    if (typeof twemoji === 'undefined' || !_pending.size) return;
+    const nodes = [..._pending];
+    _pending.clear();
+    nodes.forEach(n => {
+      if (n && n.nodeType === 1 && n.isConnected) {
+        try { twemoji.parse(n, { folder: 'svg', ext: '.svg' }); } catch(_){}
+      }
+    });
+  }
+  function _schedule(node) {
+    if (!node) return;
+    _pending.add(node);
+    if (_scheduled) return;
+    _scheduled = true;
+    requestAnimationFrame(_flush);
+  }
+  window._twemojiReparse = function(scope) { _schedule(scope || document.body); };
+  function _setup() {
+    if (typeof twemoji === 'undefined') { setTimeout(_setup, 80); return; }
+    try { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); } catch(_){}
+    const obs = new MutationObserver(muts => {
+      muts.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) _schedule(n); }));
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+  }
+  _setup();
+})();
 </script>
 </body>
 </html>

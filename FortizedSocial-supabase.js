@@ -2015,10 +2015,30 @@ const FortizedSocial = (() => {
   async function getGlobalAds() {
     try {
       const { data } = await sb.from('global_ads').select('*').eq('status', 'active');
+      const now = Date.now();
       return (data||[]).map(r => {
         try { return typeof r.data === 'string' ? JSON.parse(r.data) : r.data; } catch { return r; }
-      }).filter(a => a && new Date(a.expiresAt) > new Date());
+      }).filter(a => {
+        if (!a) return false;
+        // Superadmin (and anyone else flagged never-expire) ads have a null
+        // expiresAt and should always be considered in rotation.
+        if (!a.expiresAt) return true;
+        const t = new Date(a.expiresAt).getTime();
+        return !isNaN(t) && t > now;
+      });
     } catch(e) { console.warn('[Ads] getGlobalAds failed:', e?.message); return []; }
+  }
+  // Return EVERY ad owned by a user, regardless of status or expiry. Used by
+  // the Creator panel so the user can always see their full ad history
+  // (active, expired, cancelled, taken_down) across devices.
+  async function getAdsByOwner(username) {
+    if (!username) return [];
+    try {
+      const { data } = await sb.from('global_ads').select('*').eq('owner', username);
+      return (data||[]).map(r => {
+        try { return typeof r.data === 'string' ? JSON.parse(r.data) : r.data; } catch { return r; }
+      }).filter(Boolean);
+    } catch(e) { console.warn('[Ads] getAdsByOwner failed:', e?.message); return []; }
   }
   async function getTakenDownAdIds() {
     try {
@@ -2189,7 +2209,7 @@ const FortizedSocial = (() => {
     getDMMessages, sendDMMessage, editMessage, deleteMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,
     getGlobalBastions, saveGlobalBastion, getGlobalBastion, deleteGlobalBastion, clearBastionCache,
-    getGlobalAds, upsertGlobalAd, removeGlobalAd, getTakenDownAdIds,
+    getGlobalAds, getAdsByOwner, upsertGlobalAd, removeGlobalAd, getTakenDownAdIds,
     getAnnouncements, saveAnnouncements,
     getBastionMembers, addBastionMember, removeBastionMember,
     getInvite, saveInvite, incrementInviteUses,

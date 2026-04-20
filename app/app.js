@@ -31013,11 +31013,62 @@ function renderAtelierTab(tab) {
     </div>`;
 
     el._creatorSub = creatorSub;
+    // Hydrate from Supabase so ads created on other devices / legacy entries
+    // that aren't in the local CU.ads cache still show up. Merge DB rows into
+    // CU.ads then re-render the Your Ads list.
+    setTimeout(() => { _hydrateMyAdsAndRender().catch(()=>{}); }, 20);
   }
 
   else {
     el.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3></div>`;
   }
+}
+
+// Fetch every ad owned by the current user from global_ads, merge into
+// CU.ads, and re-render the Creator "Your Ads" list if anything changed.
+async function _hydrateMyAdsAndRender() {
+  if (!CU?.username) return;
+  let remote = [];
+  try { remote = await FortizedSocial.getAdsByOwner(CU.username); } catch(_) { return; }
+  if (!Array.isArray(remote)) return;
+  const local = Array.isArray(CU.ads) ? CU.ads : [];
+  const byId = new Map();
+  // Start with local (preserves ads that haven't synced yet), then overlay
+  // remote which is the source of truth for status/stats/expiresAt.
+  local.forEach(a => { if (a?.id) byId.set(a.id, a); });
+  remote.forEach(a => { if (a?.id) byId.set(a.id, { ...(byId.get(a.id) || {}), ...a }); });
+  const merged = [...byId.values()];
+  // Only reassign if something actually changed to avoid spurious re-renders
+  const changed = merged.length !== local.length
+    || merged.some((a,i) => (a?.id || '') !== (local[i]?.id || '') || (a?.status||'') !== (local[i]?.status||''));
+  if (!changed) return;
+  CU.ads = merged;
+  try { saveLocal(); } catch(_) {}
+  const list = document.getElementById('cr-ads-list');
+  if (!list) return;
+  list.innerHTML = merged.length ? merged.map((ad,i) => {
+    const neverExpires = _isAdOwnerSuperadmin(ad);
+    const isActive = _isAdLive(ad);
+    const expired = !neverExpires && (ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date()));
+    const statusLabel = ad.status==='cancelled'?'Cancelled':ad.status==='taken_down'?'Taken down':neverExpires?'Permanent':expired?'Expired':isActive?'Active':'Inactive';
+    const statusColor = isActive?'#3ecf6e':(ad.status==='cancelled'||ad.status==='taken_down')?'#f87171':'#6b7280';
+    return `<div style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
+      ${ad.image?`<img src="${escapeHTML(ad.image)}" style="width:48px;height:${ad.ratio==='rectangle'?'40px':'28px'};object-fit:cover;border-radius:6px;flex-shrink:0;">`:''}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.title||'Untitled')}</div>
+        <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;margin-top:2px;">
+          <span style="color:${statusColor};font-weight:700;">${statusLabel}</span>
+          <span>${ad.ratio==='rectangle'?'Rectangle':'Banner'}</span>
+          <span>${ad.clicks||0} clicks</span>
+        </div>
+      </div>
+      ${isActive?`
+        <button onclick="_cmEditAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--muted-light);cursor:pointer;">Edit (5 Onyx)</button>
+        <button onclick="_cmRenewAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;">Renew</button>
+        <button onclick="_cmCancelAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:#f87171;cursor:pointer;">Cancel</button>
+      `:''}
+    </div>`;
+  }).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">No ads created yet.</div>';
 }
 
 // ── Creator tab helpers ────────────────────────────────
@@ -31590,7 +31641,7 @@ async function _forumViewThread(threadId, opts) {
             <div class="forum-replies-divider"><span>${posts.length} ${posts.length === 1 ? 'Reply' : 'Replies'}</span></div>
 
             <div id="forum-posts-list">
-              ${posts.map(post => _forumRenderPostCard(post, threadId)).join('')}
+              ${posts.map(post => _forumRenderPostCard(post, threadId, thread)).join('')}
             </div>
 
             <div class="forum-reply-compose">
@@ -31624,16 +31675,25 @@ let _forumCurrentPosts = [];
 let _forumPendingQuote = null;
 let _forumViewedThreads = null; // tracks which thread had its view already incremented this session
 
-function _forumRenderPostCard(post, threadId) {
+function _forumRenderPostCard(post, threadId, thread) {
   const score = _forumNetScore(post);
   const up = _forumIsUpvoted(post);
   const dn = _forumIsDownvoted(post);
   const canEdit = _forumCanEditPost(post);
   const canDel = _forumCanDeletePost(post);
-  const quoteBlock = (post.quote_author && post.quote_text) ? `
-    <div class="forum-quote-block" onclick="_forumJumpToPost('${escapeHTML(post.quote_id||'')}')">
-      <div class="fqb-author">↩ @${escapeHTML(post.quote_author)}</div>
-      <div class="fqb-text">${_forumRenderBody((post.quote_text||'').slice(0, 280))}</div>
+  // Every reply shows a quote block. If the post has its own stored quote use
+  // it; otherwise synthesize one from the thread OP so legacy replies (posted
+  // before auto-quote landed) still render with context.
+  let qId = post.quote_id, qAuthor = post.quote_author, qText = post.quote_text;
+  if ((!qAuthor || !qText) && thread) {
+    qId = thread.id;
+    qAuthor = thread.author;
+    qText = (thread.content || '').slice(0, 500);
+  }
+  const quoteBlock = (qAuthor && qText) ? `
+    <div class="forum-quote-block" onclick="_forumJumpToPost('${escapeHTML(qId||'')}')">
+      <div class="fqb-author">↩ @${escapeHTML(qAuthor)}</div>
+      <div class="fqb-text">${_forumRenderBody((qText||'').slice(0, 280))}</div>
     </div>` : '';
   const pfpFallback = _defaultPfpUrl(post.author || '');
   return `
@@ -31655,7 +31715,6 @@ function _forumRenderPostCard(post, threadId) {
             <div class="forum-vote-score ${score>0?'pos':score<0?'neg':''}">${score.toLocaleString()}</div>
             <button class="forum-vote-btn down ${dn?'active':''}" onclick="_forumVote('post','${post.id}',-1)" title="Downvote"><span class="fvb-icon">👎</span></button>
           </div>
-          <button class="forum-pa-btn" onclick="_forumQuoteReply('${post.id}')">${_svgIcon('quote')} Quote</button>
           ${canEdit ? `<button class="forum-pa-btn" onclick="_forumEditPost('${post.id}')">${_svgIcon('pencil')} Edit</button>` : ''}
           ${canDel ? `<button class="forum-pa-btn danger" onclick="_forumDeletePostConfirm('${post.id}','${threadId}')">${_svgIcon('trash')} Delete</button>` : ''}
         </div>
@@ -32160,15 +32219,12 @@ async function _forumCreatePost(threadId) {
   const text = document.getElementById('forum-post-text')?.value?.trim();
   if (!text) { toast('Write something to post', 'error'); return; }
 
-  // Every reply auto-quotes whatever it's replying to. Falls back to quoting
-  // the OP when the user didn't pick a specific reply to quote.
-  let q = _forumPendingQuote || null;
-  if (!q) {
-    try {
-      const thread = await FortizedSocial.getForumThread(threadId);
-      if (thread) q = { id: thread.id, author: thread.author, text: (thread.content || '').slice(0, 500) };
-    } catch(_) {}
-  }
+  // Every reply auto-quotes the thread OP.
+  let q = null;
+  try {
+    const thread = await FortizedSocial.getForumThread(threadId);
+    if (thread) q = { id: thread.id, author: thread.author, text: (thread.content || '').slice(0, 500) };
+  } catch(_) {}
   const post = {
     id: 'post_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
     thread_id: threadId,

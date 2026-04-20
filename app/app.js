@@ -2981,7 +2981,7 @@ async function _renderHomeFriendsToday() {
   }
 }
 
-// ── What's Happening — top 4 forum posts (upvotes+recency mix) ──
+// ── What's Happening — top 4 forum posts (boosted upvotes, then recency) ──
 async function _renderWhatsHappening() {
   const el = document.getElementById('home-trending-forum');
   if (!el) return;
@@ -2989,18 +2989,12 @@ async function _renderWhatsHappening() {
   try {
     const categoryIds = (typeof FORUM_CATEGORIES !== 'undefined' && FORUM_CATEGORIES) ? FORUM_CATEGORIES.map(c => c.id) : ['general','bugs','suggestions','showcase','offtopic','announcements','event-records'];
     const all = (await Promise.all(categoryIds.map(c => FortizedSocial.getForumThreads(c, 50, 0).catch(()=>[])))).flat();
-    const NOW = Date.now();
-    const HOUR = 3600000;
-    const score = t => {
-      const likes = Array.isArray(t.likes) ? t.likes.length : (t.likes || 0);
-      const dislikes = Array.isArray(t.dislikes) ? t.dislikes.length : 0;
-      const replies = t.reply_count || 0;
-      const ageHours = Math.max(1, (NOW - (t.updated_at || t.created_at || NOW)) / HOUR);
-      const net = likes - dislikes;
-      // weighted: upvotes dominate, recency boost
-      return (net * 5) + (replies * 2) + (120 / ageHours);
-    };
-    const top = [...all].sort((a, b) => score(b) - score(a)).slice(0, 4);
+    // Priority: I. most upvotes (with staff boost), II. most recent
+    const top = [...all].sort((a, b) => {
+      const sb = _forumNetScore(b), sa = _forumNetScore(a);
+      if (sb !== sa) return sb - sa;
+      return (b.updated_at || b.created_at || 0) - (a.updated_at || a.created_at || 0);
+    }).slice(0, 4);
     if (!top.length) {
       el.innerHTML = `<div class="home-whats-card"><div class="home-whats-empty">
         <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">No forum activity yet — start the conversation!</div>
@@ -3010,9 +3004,7 @@ async function _renderWhatsHappening() {
     }
     el.innerHTML = `<div class="home-whats-card">` + top.map(t => {
       const cat = (typeof FORUM_CATEGORIES !== 'undefined' && FORUM_CATEGORIES || []).find(c => c.id === t.category) || {name:'', color:'#fff', icon:''};
-      const likes = Array.isArray(t.likes) ? t.likes.length : (t.likes || 0);
-      const dislikes = Array.isArray(t.dislikes) ? t.dislikes.length : 0;
-      const net = likes - dislikes;
+      const net = _forumNetScore(t);
       return `<div class="home-whats-row" onclick="_homeOpenForumThread('${escapeHTML(t.id)}')">
         <div class="hwr-cat" style="color:${cat.color};background:${cat.color}18;">${cat.icon||'●'} ${escapeHTML(cat.name||'')}</div>
         <div class="hwr-body">
@@ -31390,6 +31382,16 @@ async function _forumInit() {
   `;
   _forumRenderAd();
   _forumHydratePfps(document.getElementById('forum-page-content'));
+
+  // If something (e.g. "What's happening" on the homepage) asked us to open a
+  // specific thread, do it now that the forum shell is rendered. Doing it
+  // here avoids the race where a poll-based caller renders the thread and
+  // then _forumInit's awaited render wipes it out.
+  if (window._forumPendingThread) {
+    const tid = window._forumPendingThread;
+    window._forumPendingThread = null;
+    try { await _forumViewThread(tid); } catch(e) { console.warn('[Forum] pending open failed:', e); }
+  }
 }
 
 let _forumAdTimer = null;
@@ -31560,14 +31562,12 @@ async function _forumTogglePin(threadId) {
 // asynchronously, so we wait for its content container to exist before
 // dispatching the thread render.
 async function _homeOpenForumThread(threadId) {
+  // Ask _forumInit to jump straight to this thread after it finishes rendering
+  // the category shell. Racing the two renderers (init vs. viewThread) would
+  // leave the user on the category list because init awaits then overwrites
+  // forum-root, clobbering viewThread's render.
+  window._forumPendingThread = threadId;
   showView('forum');
-  const deadline = Date.now() + 3000;
-  while (Date.now() < deadline) {
-    if (document.getElementById('forum-page-content')) {
-      return _forumViewThread(threadId);
-    }
-    await new Promise(r => setTimeout(r, 40));
-  }
 }
 
 async function _forumViewThread(threadId, opts) {

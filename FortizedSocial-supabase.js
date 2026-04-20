@@ -1872,6 +1872,70 @@ const FortizedSocial = (() => {
   async function adminSaveSupportTickets(tickets) {
     await _adminKVSet('support_tickets', tickets);
   }
+  // Append a single ticket into the support_tickets map keyed by id. This is
+  // the ONE write path from user-facing "Send feedback" / "Contact support"
+  // flows — previously the client used `FortizedSocial.adminSubmitSupportTicket`
+  // which didn't exist, so the code always fell into a localStorage-only
+  // fallback and the admin console never saw the tickets.
+  async function adminSubmitSupportTicket(ticket) {
+    if (!ticket || !ticket.id) throw new Error('Ticket requires an id');
+    _cacheDel('akv:support_tickets');
+    const current = (await _adminKVGet('support_tickets')) || {};
+    current[ticket.id] = ticket;
+    await _adminKVSet('support_tickets', current);
+    return ticket;
+  }
+
+  // -- "A place where…" homepage feedback --
+  async function getPlaceFeedback() {
+    return (await _adminKVGet('place_feedback')) || [];
+  }
+  async function submitPlaceFeedback(entry) {
+    if (!entry || !entry.id) throw new Error('Feedback requires an id');
+    _cacheDel('akv:place_feedback');
+    const list = (await _adminKVGet('place_feedback')) || [];
+    list.push(entry);
+    // Keep the last 500; homepage feedback is high-volume, low-retention.
+    await _adminKVSet('place_feedback', list.slice(-500));
+    return entry;
+  }
+  async function archivePlaceFeedback(id) {
+    if (!id) return;
+    _cacheDel('akv:place_feedback');
+    const list = (await _adminKVGet('place_feedback')) || [];
+    const next = list.map(it => (it.id === id ? { ...it, status: 'archived' } : it));
+    await _adminKVSet('place_feedback', next);
+  }
+
+  // -- Onboarding interest stats --
+  // Aggregate: { total: N, counts: { interest_id: N, … }, perUser: { username: [ids] } }
+  // perUser lets us re-aggregate later if interest IDs ever get renamed, and
+  // lets the admin console show who picked what without touching user rows.
+  async function getOnboardingInterestStats() {
+    return (await _adminKVGet('onboarding_stats')) || { total: 0, counts: {}, perUser: {} };
+  }
+  async function submitOnboardingInterests(username, interests) {
+    _cacheDel('akv:onboarding_stats');
+    const stats = (await _adminKVGet('onboarding_stats')) || { total: 0, counts: {}, perUser: {} };
+    const key = (username || 'anon_' + Date.now()).toString().toLowerCase();
+    const prev = Array.isArray(stats.perUser[key]) ? stats.perUser[key] : null;
+    // If the user already submitted, subtract their previous picks before
+    // applying the new ones so counts reflect current picks, not lifetime clicks.
+    if (prev) {
+      for (const id of prev) {
+        if (stats.counts[id] > 0) stats.counts[id] -= 1;
+      }
+    } else {
+      stats.total = (stats.total || 0) + 1;
+    }
+    const picked = Array.isArray(interests) ? interests.filter(Boolean) : [];
+    for (const id of picked) {
+      stats.counts[id] = (stats.counts[id] || 0) + 1;
+    }
+    stats.perUser[key] = picked;
+    await _adminKVSet('onboarding_stats', stats);
+    return stats;
+  }
 
   // -- Scheduled actions --
   async function adminGetScheduledActions() {
@@ -1923,6 +1987,8 @@ const FortizedSocial = (() => {
     _cacheDel('akv:support_tickets');
     _cacheDel('akv:scheduled_actions');
     _cacheDel('akv:feedback');
+    _cacheDel('akv:place_feedback');
+    _cacheDel('akv:onboarding_stats');
     _cacheDel('globalSettings');
   }
 
@@ -2107,7 +2173,9 @@ const FortizedSocial = (() => {
     adminGetGlobalSettings, adminSaveGlobalSettings,
     adminGetNsfwBannedHashes, adminSaveNsfwBannedHashes,
     adminUpdateUserField,
-    adminGetSupportTickets, adminSaveSupportTickets,
+    adminGetSupportTickets, adminSaveSupportTickets, adminSubmitSupportTicket,
+    getPlaceFeedback, submitPlaceFeedback, archivePlaceFeedback,
+    getOnboardingInterestStats, submitOnboardingInterests,
     adminGetScheduledActions, adminSaveScheduledActions,
     adminPushNsfwAIFeedback, adminSaveNsfwSafeHash,
     adminSetSignal, adminGetSignal,

@@ -2877,6 +2877,9 @@ async function submitRegularFeedback() {
         email: CU?.email || null,
         category,
         subject: 'Homepage feedback',
+        // The admin ticket list renders `t.message`; keep `body` too so older
+        // consumers (and localStorage fallback) don't break.
+        message: text,
         body: text,
         status: 'open',
         submittedAt: new Date().toISOString(),
@@ -2884,7 +2887,7 @@ async function submitRegularFeedback() {
     } else {
       // Fallback: queue for admins
       const q = JSON.parse(localStorage.getItem('ftz_support_tickets_queue')||'[]');
-      q.push({ username: CU?.username, category, subject: 'Homepage feedback', body: text, submittedAt: new Date().toISOString() });
+      q.push({ username: CU?.username, category, subject: 'Homepage feedback', message: text, body: text, submittedAt: new Date().toISOString() });
       localStorage.setItem('ftz_support_tickets_queue', JSON.stringify(q));
     }
     ta.value = '';
@@ -17438,8 +17441,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   else if (tab === 'reports' || tab === 'bans' || tab === 'suspensions' || tab === 'nsfw_queue') { await _loadAdminModeration(main, tab); return; }
   else if (tab === 'users' || tab === 'all_users') { await _loadAdminMembers(main, tab); return; }
   else if (tab === 'bastions' || tab === 'economy' || tab === 'broadcast' || tab === 'scheduled_actions' || tab === 'audit' || tab === 'network_monitor' || tab === 'analytics' || tab === 'backup_restore' || tab === 'settings' || tab === 'staff' || tab === 'ads') { await _loadAdminPlatform(main, tab); return; }
-  else if (tab === 'support_tickets' || tab === 'place_where') { await _loadAdminFeedback(main, tab); return; }
+  else if (tab === 'support_tickets' || tab === 'place_where' || tab === 'onboarding') { await _loadAdminFeedback(main, tab); return; }
   else if (tab === '_place_where') { await _loadAdminPlaceFeedback(); return; }
+  else if (tab === '_onboarding') { await _loadAdminOnboardingStats(); return; }
   // ── Legacy tab rendering (called by consolidated tabs) ──
   else if (tab === '_reports') {
     const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
@@ -18679,6 +18683,7 @@ async function _loadAdminFeedback(main, subTab) {
   const tabs = [
     {id:'support_tickets', label:'Inbox & Tickets', badge:openTickets},
     {id:'place_where', label:'"A place where…"', badge:openPlace},
+    {id:'onboarding', label:'Personalize Stats'},
   ];
   main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'feedback') + '<div id="adm-sub-content"></div></div>';
   await _loadAdminPage('_' + active);
@@ -18750,6 +18755,96 @@ async function _archivePlaceFeedback(id) {
     toast('Archived', 'success');
     _loadAdminPage('_place_where');
   } catch(_) { toast('Archive failed', 'error'); }
+}
+
+// "Personalize Your Experience" stats — visualises the interest picks from
+// onboarding as a bar chart + donut with %s. Totals are counted per-user
+// (not per-click) so duplicate renders of the same user don't skew the chart.
+async function _loadAdminOnboardingStats() {
+  const el = document.getElementById('adm-sub-content');
+  if (!el) return;
+  el.innerHTML = `<div style="padding:12px 0;"><div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:14px;"></div></div>`;
+  let stats = { total: 0, counts: {}, perUser: {} };
+  try {
+    if (typeof FortizedSocial?.getOnboardingInterestStats === 'function') {
+      stats = await FortizedSocial.getOnboardingInterestStats();
+    }
+  } catch(e) {
+    console.error('[AdminOnboarding] stats fetch failed', e);
+    el.innerHTML = '<div class="ftz-empty" style="padding:30px;"><div class="ftz-empty-text">Failed to load onboarding stats.</div></div>';
+    return;
+  }
+  const total = stats.total || 0;
+  if (!total) {
+    el.innerHTML = `<div class="ftz-empty" style="padding:32px;text-align:center;">
+      <div class="ftz-empty-icon">📊</div>
+      <div class="ftz-empty-title">No onboarding responses yet</div>
+      <div class="ftz-empty-text">When users complete "Personalize Your Experience", their picks land here as a bar chart + donut.</div>
+    </div>`;
+    return;
+  }
+  const list = (typeof ONBOARDING_INTERESTS !== 'undefined' ? ONBOARDING_INTERESTS : [])
+    .map(i => ({ id: i.id, label: i.label, count: (stats.counts || {})[i.id] || 0 }))
+    .sort((a, b) => b.count - a.count);
+  const maxCount = Math.max(1, ...list.map(x => x.count));
+  const totalPicks = list.reduce((s, x) => s + x.count, 0) || 1;
+  const PALETTE = ['#ffd93e','#a78bfa','#4ecdc4','#38bdf8','#f87171','#3ecf6e','#fb923c','#ec4899','#818cf8','#64748b'];
+  // Donut via conic-gradient — one slice per interest, rendered in sorted order.
+  let conicParts = [];
+  let acc = 0;
+  list.forEach((x, i) => {
+    if (x.count <= 0) return;
+    const pct = (x.count / totalPicks) * 100;
+    const color = PALETTE[i % PALETTE.length];
+    conicParts.push(`${color} ${acc.toFixed(3)}% ${(acc + pct).toFixed(3)}%`);
+    acc += pct;
+  });
+  if (!conicParts.length) conicParts.push('rgba(255,255,255,.08) 0% 100%');
+  const conicValue = conicParts.join(', ');
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:start;padding-top:6px;">
+      <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px 18px;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:14px;font-weight:800;">Interests picked</div>
+          <div style="font-size:11px;color:var(--muted);">${total} ${total === 1 ? 'user' : 'users'} · ${totalPicks} ${totalPicks === 1 ? 'pick' : 'picks'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${list.map((x, i) => {
+            const color = PALETTE[i % PALETTE.length];
+            const pctOfUsers = total ? Math.round((x.count / total) * 100) : 0;
+            const w = Math.max(2, (x.count / maxCount) * 100);
+            return `<div>
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                <span style="color:rgba(255,255,255,.9);font-weight:600;">${escapeHTML(x.label)}</span>
+                <span style="color:var(--muted);font-variant-numeric:tabular-nums;">${x.count} <span style="opacity:.55;margin-left:4px;">${pctOfUsers}%</span></span>
+              </div>
+              <div style="height:8px;background:rgba(255,255,255,.05);border-radius:999px;overflow:hidden;">
+                <div style="width:${w}%;height:100%;background:${color};border-radius:999px;transition:width .4s ease;"></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:14px;font-weight:800;align-self:flex-start;margin-bottom:12px;">Pick share</div>
+        <div style="position:relative;width:180px;height:180px;border-radius:50%;background:conic-gradient(${conicValue});display:flex;align-items:center;justify-content:center;">
+          <div style="width:108px;height:108px;border-radius:50%;background:var(--panel,#1b1e25);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="font-size:22px;font-weight:800;">${total}</div>
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.5px;">RESPONSES</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:14px;justify-content:center;">
+          ${list.filter(x => x.count > 0).map((x, i) => {
+            const color = PALETTE[i % PALETTE.length];
+            const pct = Math.round((x.count / totalPicks) * 100);
+            return `<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.78);">
+              <span style="width:8px;height:8px;border-radius:50%;background:${color};"></span>
+              ${escapeHTML(x.label)} <span style="color:var(--muted);">${pct}%</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
 }
 
 function resolveReport(idx, action) {
@@ -20222,6 +20317,15 @@ function skipOnboarding() {
 function completeOnboarding() {
   document.getElementById('onboarding-overlay')?.remove();
   saveUser(true).catch(()=>{});
+  // Push the user's interest picks into the shared aggregate so the admin
+  // console's feedback page can render a real schema (bars + donut) of what
+  // the community is actually into. Fire-and-forget — failure here shouldn't
+  // gate the welcome UX.
+  try {
+    if (typeof FortizedSocial?.submitOnboardingInterests === 'function') {
+      FortizedSocial.submitOnboardingInterests(CU?.username, Array.isArray(CU?.onboardingInterests) ? CU.onboardingInterests : []).catch(()=>{});
+    }
+  } catch(_) {}
   toast('✨ Welcome to Fortized!', 'success');
 }
 

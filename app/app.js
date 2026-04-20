@@ -3237,7 +3237,7 @@ async function _getAllActiveAds() {
   try { ads = await FortizedSocial.getGlobalAds(); } catch(e) {}
   let blocked = new Set();
   try { blocked = await FortizedSocial.getTakenDownAdIds?.() || new Set(); } catch(e) {}
-  const localAds = (CU?.ads||[]).filter(a => a.status==='active' && new Date(a.expiresAt) > new Date() && !blocked.has(a.id));
+  const localAds = (CU?.ads||[]).filter(a => _isAdLive(a) && !blocked.has(a.id));
   const allAds = ads.filter(a => !blocked.has(a.id));
   localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
   return allAds;
@@ -8187,6 +8187,7 @@ function initFortizedUXResilience() {
   initFortizedUXResilience();
 
   try { saveCurrentToAccounts(); } catch(e) { console.warn('[init] saveCurrentToAccounts:', e); }
+  try { _autoRenewAds(); } catch(e) { _wrn('[init] _autoRenewAds:', e); }
   try { updateUserbar(); } catch(e) { _wrn('[init] updateUserbar:', e); }
   try { renderRailBastions(); } catch(e) { _wrn('[init] renderRailBastions:', e); }
   try { if(typeof startVCListener==='function') startVCListener(CU.username); } catch(e) { _wrn('[init] startVCListener:', e); }
@@ -11677,10 +11678,11 @@ function renderBSettingsMain(tab) {
         <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Your Ads</div>
         <div id="cm-ads-list">
           ${myAds.length ? myAds.map((ad,i) => {
-            const isActive = ad.status==='active' && new Date(ad.expiresAt) > new Date();
-            const expired = ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date());
+            const neverExpires = _isAdOwnerSuperadmin(ad);
+            const isActive = _isAdLive(ad);
+            const expired = !neverExpires && (ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date()));
             const status = expired ? 'expired' : (ad.status||'pending');
-            const daysLeft = isActive ? Math.max(0, Math.ceil((new Date(ad.expiresAt) - new Date()) / 86400000)) : 0;
+            const daysLeft = neverExpires ? Infinity : (isActive ? Math.max(0, Math.ceil((new Date(ad.expiresAt) - new Date()) / 86400000)) : 0);
             const targetBst = (CU.bastions||[])[ad.bastionIdx];
             return `
             <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--panel);border:1px solid ${isActive?'rgba(62,207,110,.2)':expired?'rgba(248,113,113,.15)':'var(--border)'};border-radius:12px;margin-bottom:8px;">
@@ -11696,7 +11698,7 @@ function renderBSettingsMain(tab) {
                 </div>
               </div>
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;${isActive?'color:var(--green);background:rgba(62,207,110,.1);':'color:var(--red);background:rgba(248,113,113,.1);'}">${isActive?daysLeft+'d left':'Expired'}</span>
+                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;${isActive?'color:var(--green);background:rgba(62,207,110,.1);':'color:var(--red);background:rgba(248,113,113,.1);'}">${neverExpires?'Never expires':isActive?daysLeft+'d left':'Expired'}</span>
                 ${isActive?`<div style="display:flex;gap:4px;"><button class="btn-g" style="font-size:10px;padding:3px 8px;" onclick="_cmEditAd(${i})">Edit (5 Onyx)</button><button class="btn-g" style="font-size:10px;padding:3px 8px;color:var(--red);" onclick="_cmCancelAd(${i})">Cancel (5 Onyx)</button></div>`:`<button class="btn-g" style="font-size:10px;padding:3px 8px;" onclick="_cmRenewAd(${i})">Renew (15 Onyx)</button>`}
               </div>
             </div>`;
@@ -11881,6 +11883,7 @@ async function _cmCreateAd() {
     if (linkType === 'custom') customLink = document.getElementById('cm-ad-custom-link')?.value?.trim() || '';
     else if (linkType !== 'bastion') customLink = linkType;
   }
+  const ownerIsSuper = isSuperAdmin();
   showCustomConfirm(`Create ad "${title}" for ${escapeHTML(bst.name)}? This costs 15 Onyx.`, async () => {
     CU.onyx = (CU.onyx||0) - 15;
     CU.ads = CU.ads || [];
@@ -11897,8 +11900,9 @@ async function _cmCreateAd() {
       ownerVerified: !!CU.verified,
       status: 'active',
       createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now()+4*86400000).toISOString(),
-      autoRefund: autoRefund,
+      // Superadmin ads never expire.
+      expiresAt: ownerIsSuper ? null : new Date(Date.now()+4*86400000).toISOString(),
+      autoRefund: ownerIsSuper ? false : autoRefund,
       clicks: 0,
       impressions: 0,
       owner: CU.username
@@ -11907,11 +11911,62 @@ async function _cmCreateAd() {
     saveLocal();
     await saveUser();
     try { await FortizedSocial.upsertGlobalAd(ad); } catch(e) { console.warn('[Ads] Sync failed:', e); }
-    toast('Ad created! Broadcasting for 4 days.', 'success');
+    toast(ownerIsSuper ? 'Ad created! Broadcasting permanently.' : 'Ad created! Broadcasting for 4 days.', 'success');
     switchAtelierTab('creator');
     setTimeout(() => _switchCreatorSub('creations'), 50);
   });
 }
+// True if the ad was posted by a superadmin. Superadmin ads don't expire and
+// can only be taken down by another superadmin.
+function _isAdOwnerSuperadmin(ad) {
+  const owner = ad?.owner || '';
+  if (!owner) return false;
+  if (typeof _roleListHas === 'function') return _roleListHas(SUPER_ADMINS, owner);
+  return SUPER_ADMINS.includes((owner + '').trim().toLowerCase());
+}
+
+// True if the ad is currently running (not expired, not cancelled, not taken down).
+// Superadmin ads are always considered active regardless of expiresAt.
+function _isAdLive(ad) {
+  if (!ad) return false;
+  if (ad.status === 'cancelled' || ad.status === 'taken_down' || ad.status === 'expired') return false;
+  if (ad.status !== 'active') return false;
+  if (_isAdOwnerSuperadmin(ad)) return true;
+  if (!ad.expiresAt) return false;
+  return new Date(ad.expiresAt) > new Date();
+}
+
+// Auto-renew any expired ads that have autoRefund enabled, as long as the owner
+// has at least 15 Onyx. Runs on app boot. Superadmin ads never hit this path
+// because _isAdLive treats them as non-expiring.
+async function _autoRenewAds() {
+  if (!CU?.ads?.length) return;
+  const now = Date.now();
+  const renewed = [];
+  for (const ad of CU.ads) {
+    if (!ad?.autoRefund) continue;
+    if (ad.status === 'cancelled' || ad.status === 'taken_down') continue;
+    if (_isAdOwnerSuperadmin(ad)) continue;
+    if (!ad.expiresAt) continue;
+    const exp = new Date(ad.expiresAt).getTime();
+    if (exp > now) continue;
+    if ((CU.onyx || 0) < 15) { ad.status = 'expired'; continue; }
+    CU.onyx = (CU.onyx || 0) - 15;
+    ad.status = 'active';
+    ad.expiresAt = new Date(now + 4 * 86400000).toISOString();
+    ad.clicks = 0;
+    ad.impressions = 0;
+    ad.lastRenewedAt = new Date(now).toISOString();
+    try { await FortizedSocial.upsertGlobalAd(ad); } catch(_) {}
+    renewed.push(ad);
+  }
+  if (renewed.length) {
+    saveLocal();
+    try { await saveUser(); } catch(_) {}
+    try { toast(`Auto-renewed ${renewed.length} ad${renewed.length>1?'s':''} (–${renewed.length*15} Onyx)`, 'success'); } catch(_) {}
+  }
+}
+
 async function _cmCancelAd(adIdx) {
   const ad = CU.ads?.[adIdx];
   if (!ad) return;
@@ -18630,7 +18685,7 @@ function _renderAdminAdRow(m, totalWeight) {
   const target = ad.customLink || (ad.bastionName ? `@${ad.bastionName}` : (ad.bastionId || '—'));
   const roleColor = m.role === 'superadmin' ? '#fff93e' : m.role === 'admin' ? '#60a5fa' : ad.ownerVerified ? '#4ecdc4' : '#9ca3af';
   const expires = ad.expiresAt ? new Date(ad.expiresAt) : null;
-  const expiresLabel = expires ? expires.toLocaleDateString() : '—';
+  const expiresLabel = _isAdOwnerSuperadmin(ad) ? 'Never' : (expires ? expires.toLocaleDateString() : '—');
   const adId = ad.id || '';
   return `
     <div class="adm-ads-row" data-ad-id="${escapeHTML(adId)}">
@@ -18690,12 +18745,24 @@ async function _adminAdSetBoost(adId) {
 
 async function _adminAdTakedown(adId) {
   if (!adId) return;
+  // Gate: superadmin ads can only be taken down by another superadmin.
+  try {
+    const preview = (await FortizedSocial.getGlobalAds()).find(a => a.id === adId);
+    if (preview && _isAdOwnerSuperadmin(preview) && !isSuperAdmin()) {
+      toast('Only superadmins can take down superadmin ads.', 'error');
+      return;
+    }
+  } catch(_){}
   showCustomInput('Take down ad', 'Reason for takedown (shown in audit log):', async (reason) => {
     if (!reason) { toast('Reason required', 'error'); return; }
     try {
       const ads = await FortizedSocial.getGlobalAds();
       let ad = ads.find(a => a.id === adId);
       if (!ad) { ad = { id: adId, owner: '?' }; }
+      if (_isAdOwnerSuperadmin(ad) && !isSuperAdmin()) {
+        toast('Only superadmins can take down superadmin ads.', 'error');
+        return;
+      }
       ad.status = 'taken_down';
       ad.takedownBy = CU?.username;
       ad.takedownReason = reason;
@@ -18929,21 +18996,27 @@ function resolveReport(idx, action) {
       try { await _deleteAndReplaceReportedMessage(report); } catch(e) { console.warn('Message replacement failed:', e); }
     }
 
-    // Takedown ad: remove from global ads + log
+    // Takedown ad: remove from global ads + log. Superadmin-owned ads can
+    // only be taken down by another superadmin.
     if (action === 'takedown' && report.type === 'ad' && report.adId) {
-      try {
-        if (typeof FortizedSocial.adminRemoveGlobalAd === 'function') {
-          await FortizedSocial.adminRemoveGlobalAd(report.adId);
-        } else if (typeof FortizedSocial.removeGlobalAd === 'function') {
-          await FortizedSocial.removeGlobalAd(report.adId);
-        } else if (typeof FortizedSocial.getGlobalAds === 'function' && typeof FortizedSocial.setGlobalAds === 'function') {
-          const ads = (await FortizedSocial.getGlobalAds()) || [];
-          const next = ads.filter(a => a && a.id !== report.adId && a.adId !== report.adId);
-          await FortizedSocial.setGlobalAds(next);
-        }
-      } catch(e) { console.warn('[Report] Ad takedown failed:', e); }
-      logAudit('ad_takedown', report.adOwner || target || '?', report.adId);
-      toast('Ad taken down', 'success');
+      const ownerIsSuper = _isAdOwnerSuperadmin({ owner: report.adOwner || '' });
+      if (ownerIsSuper && !isSuperAdmin()) {
+        toast('Only superadmins can take down superadmin ads.', 'error');
+      } else {
+        try {
+          if (typeof FortizedSocial.adminRemoveGlobalAd === 'function') {
+            await FortizedSocial.adminRemoveGlobalAd(report.adId);
+          } else if (typeof FortizedSocial.removeGlobalAd === 'function') {
+            await FortizedSocial.removeGlobalAd(report.adId);
+          } else if (typeof FortizedSocial.getGlobalAds === 'function' && typeof FortizedSocial.setGlobalAds === 'function') {
+            const ads = (await FortizedSocial.getGlobalAds()) || [];
+            const next = ads.filter(a => a && a.id !== report.adId && a.adId !== report.adId);
+            await FortizedSocial.setGlobalAds(next);
+          }
+        } catch(e) { console.warn('[Report] Ad takedown failed:', e); }
+        logAudit('ad_takedown', report.adOwner || target || '?', report.adId);
+        toast('Ad taken down', 'success');
+      }
     }
 
     // Execute the action on the reported user
@@ -30809,9 +30882,10 @@ function renderAtelierTab(tab) {
           <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Your Ads</div>
           <div id="cr-ads-list">
             ${myAds.length ? myAds.map((ad,i) => {
-              const isActive = ad.status==='active' && new Date(ad.expiresAt) > new Date();
-              const expired = ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date());
-              const statusLabel = ad.status==='cancelled'?'Cancelled':expired?'Expired':isActive?'Active':'Inactive';
+              const neverExpires = _isAdOwnerSuperadmin(ad);
+              const isActive = _isAdLive(ad);
+              const expired = !neverExpires && (ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date()));
+              const statusLabel = ad.status==='cancelled'?'Cancelled':neverExpires?'Permanent':expired?'Expired':isActive?'Active':'Inactive';
               const statusColor = isActive?'#3ecf6e':ad.status==='cancelled'?'#f87171':'#6b7280';
               return `<div style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
                 ${ad.image?`<img src="${escapeHTML(ad.image)}" style="width:48px;height:${ad.ratio==='rectangle'?'40px':'28px'};object-fit:cover;border-radius:6px;flex-shrink:0;">`:''}
@@ -31645,7 +31719,10 @@ function _forumBoostedUpvotes(obj) {
   const ups = Array.isArray(obj.likes) ? obj.likes.length : 0;
   const boost = _forumStaffBoost(obj.author);
   if (!boost || !ups) return ups;
-  return ups + Math.round(ups * boost);
+  // Round up so the bonus is always at least +1 when a staff post has any
+  // upvotes — otherwise small counts (1-5 ups) would round to 0 and look
+  // like the boost isn't applied.
+  return ups + Math.max(1, Math.ceil(ups * boost));
 }
 function _forumNetScore(obj) {
   const dns = Array.isArray(obj.dislikes) ? obj.dislikes.length : 0;

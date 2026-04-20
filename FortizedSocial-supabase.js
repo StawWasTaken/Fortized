@@ -334,6 +334,12 @@ const FortizedSocial = (() => {
     // to accept a falsy new value (null/''/undefined) over a real existing one.
     // This is the last line of defence against the 'system'-password bug.
     if (!newRow.password && existingRow.password) out.password = existingRow.password;
+    // created_at is IMMUTABLE for protected accounts once set. Even if a new
+    // row carries a fresh ISO date (e.g. from _ensureJoysterAccount falling
+    // into its "create" branch after a transient fetch miss), the real join
+    // date in the DB wins. Only adopt the new value if there truly is none
+    // stored yet.
+    if (existingRow.created_at) out.created_at = existingRow.created_at;
     // Shallow merge raw JSONB so protected extras survive partial saves.
     if (existingRow.raw && typeof existingRow.raw === 'object') {
       out.raw = { ...existingRow.raw, ...(newRow.raw || {}) };

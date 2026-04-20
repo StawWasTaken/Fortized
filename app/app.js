@@ -2962,7 +2962,7 @@ async function _renderWhatsHappening() {
       const likes = Array.isArray(t.likes) ? t.likes.length : (t.likes || 0);
       const dislikes = Array.isArray(t.dislikes) ? t.dislikes.length : 0;
       const net = likes - dislikes;
-      return `<div class="home-whats-row" onclick="showView('forum');setTimeout(()=>_forumViewThread('${escapeHTML(t.id)}'),50)">
+      return `<div class="home-whats-row" onclick="_homeOpenForumThread('${escapeHTML(t.id)}')">
         <div class="hwr-cat" style="color:${cat.color};background:${cat.color}18;">${cat.icon||'●'} ${escapeHTML(cat.name||'')}</div>
         <div class="hwr-body">
           <div class="hwr-title">${escapeHTML(t.title || '')}</div>
@@ -3929,7 +3929,10 @@ async function renderDMFriendsHome() {
     html += '<div style="height:12px;"></div>';
   }
 
-  html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">${filter==='online'?'ONLINE':'ALL FRIENDS'} — ${friends.length}</div>`;
+  // Online count is resolved async below once presence lands; for the 'online'
+  // filter, show a placeholder until then so we don't lie with the total count.
+  const initialCount = filter === 'online' ? '…' : friends.length;
+  html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">${filter==='online'?'ONLINE':'ALL FRIENDS'} — <span id="dm-friends-header-count">${initialCount}</span></div>`;
 
   friends.forEach(f => {
     html += `<div class="dm-friend-row" data-user="${escapeHTML(f)}" style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-radius:12px;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;border:1px solid transparent;background:transparent;" onclick="openDMView('${escapeHTML(f)}')">
@@ -3976,7 +3979,7 @@ async function renderDMFriendsHome() {
   } catch(e) { console.warn('[Friends] Home profile fetch failed:', e?.message); }
 
   let _onlineCount = 0;
-  allUsers.forEach(async f => {
+  await Promise.all(allUsers.map(async f => {
     try {
       const u = _homeProfileMap[f] || _homeProfileMap[f.toLowerCase()] || null;
       if (!u) return;
@@ -4029,13 +4032,22 @@ async function renderDMFriendsHome() {
         const sob = document.getElementById('dm-stat-online');
         if (sob) sob.textContent = _onlineCount;
       }
+      // Keep the section header count in sync with what's actually visible.
+      const hdr = document.getElementById('dm-friends-header-count');
+      if (hdr) {
+        hdr.textContent = filter === 'online' ? _onlineCount : friends.length;
+      }
       // If filtering online and user is offline, hide row
       if (filter === 'online' && !FtzStatus.isPresent(st)) {
         const row = document.querySelector(`.dm-friend-row[data-user="${CSS.escape(f)}"]`);
         if (row) row.style.display = 'none';
       }
     } catch (e) { _dbg('[DM] friend status update failed', e); }
-  });
+  }));
+  // After all presence resolutions settle, ensure the header reflects reality
+  // even if some friends returned null and short-circuited inside the loop.
+  const finalHdr = document.getElementById('dm-friends-header-count');
+  if (finalHdr) finalHdr.textContent = filter === 'online' ? _onlineCount : friends.length;
 }
 
 function dmFriendsFilter(filter, btn) {
@@ -31196,6 +31208,20 @@ async function _forumTogglePin(threadId) {
   } catch(e) {
     console.error('[Forum] Pin failed:', e);
     toast('Failed to update pin state', 'error');
+  }
+}
+
+// Navigate to forum then open a specific thread. The forum view initialises
+// asynchronously, so we wait for its content container to exist before
+// dispatching the thread render.
+async function _homeOpenForumThread(threadId) {
+  showView('forum');
+  const deadline = Date.now() + 3000;
+  while (Date.now() < deadline) {
+    if (document.getElementById('forum-page-content')) {
+      return _forumViewThread(threadId);
+    }
+    await new Promise(r => setTimeout(r, 40));
   }
 }
 

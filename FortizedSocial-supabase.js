@@ -2064,10 +2064,22 @@ const FortizedSocial = (() => {
   }
   async function createForumThread(thread) {
     try {
-      const { data, error } = await sb.from('forum_threads').insert(thread);
-      if (error) throw error;
-      return data;
-    } catch(e) { console.warn('[Forum] createForumThread failed:', e?.message); return null; }
+      let payload = { ...thread };
+      for (let i = 0; i < 5; i++) {
+        const { data, error } = await sb.from('forum_threads').insert(payload);
+        if (!error) return data;
+        const msg = (error.message || '') + '';
+        const m = msg.match(/column\s+"?(\w+)"?\s+of\s+relation|Could not find the '(\w+)' column/i);
+        const unknown = m && (m[1] || m[2]);
+        if (unknown && (unknown in payload)) {
+          console.warn('[Forum] createForumThread: column "' + unknown + '" missing, retrying without it. Run supabase-schema.sql to enable.');
+          delete payload[unknown];
+          continue;
+        }
+        throw error;
+      }
+      return null;
+    } catch(e) { console.warn('[Forum] createForumThread failed:', e?.message); throw e; }
   }
   async function updateForumThread(threadId, updates) {
     try {
@@ -2098,10 +2110,31 @@ const FortizedSocial = (() => {
   }
   async function createForumPost(post) {
     try {
-      const { data, error } = await sb.from('forum_posts').insert(post);
-      if (error) throw error;
-      return data;
-    } catch(e) { console.warn('[Forum] createForumPost failed:', e?.message); return null; }
+      let payload = { ...post };
+      for (let i = 0; i < 5; i++) {
+        const { data, error } = await sb.from('forum_posts').insert(payload);
+        if (!error) return data;
+        const msg = (error.message || '') + '';
+        const m = msg.match(/column\s+"?(\w+)"?\s+of\s+relation|Could not find the '(\w+)' column/i);
+        const unknown = m && (m[1] || m[2]);
+        if (unknown && (unknown in payload)) {
+          console.warn('[Forum] createForumPost: column "' + unknown + '" missing, retrying without it. Run supabase-schema.sql to enable.');
+          delete payload[unknown];
+          continue;
+        }
+        throw error;
+      }
+      return null;
+    } catch(e) { console.warn('[Forum] createForumPost failed:', e?.message); throw e; }
+  }
+  async function getForumPostsForThreads(threadIds) {
+    if (!Array.isArray(threadIds) || !threadIds.length) return {};
+    try {
+      const { data } = await sb.from('forum_posts').select('*').in('thread_id', threadIds);
+      const grouped = {};
+      (data || []).forEach(p => { (grouped[p.thread_id] = grouped[p.thread_id] || []).push(p); });
+      return grouped;
+    } catch(e) { console.warn('[Forum] getForumPostsForThreads failed:', e?.message); return {}; }
   }
   async function updateForumPost(postId, updates) {
     try {
@@ -2182,7 +2215,7 @@ const FortizedSocial = (() => {
     adminGetFeedback, adminPushFeedback,
     adminInvalidateCache,
     getForumThreads, getForumThread, createForumThread, updateForumThread, deleteForumThread,
-    getForumPosts, createForumPost, updateForumPost, deleteForumPost, searchForumThreads,
+    getForumPosts, getForumPostsForThreads, createForumPost, updateForumPost, deleteForumPost, searchForumThreads,
     uploadFile,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,

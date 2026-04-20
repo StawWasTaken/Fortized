@@ -340,6 +340,8 @@ CREATE TABLE IF NOT EXISTS forum_posts (
   id TEXT PRIMARY KEY,
   thread_id TEXT NOT NULL REFERENCES forum_threads(id) ON DELETE CASCADE,
   author TEXT NOT NULL,
+  author_displayName TEXT,
+  author_pfp TEXT,
   content TEXT,
   image TEXT,
   created_at BIGINT,
@@ -358,9 +360,13 @@ CREATE INDEX IF NOT EXISTS idx_forum_posts_thread ON forum_posts(thread_id);
 ALTER TABLE forum_threads ADD COLUMN IF NOT EXISTS dislikes JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE forum_threads ADD COLUMN IF NOT EXISTS edited_at BIGINT;
 ALTER TABLE forum_threads ADD COLUMN IF NOT EXISTS edit_history JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE forum_threads ADD COLUMN IF NOT EXISTS author_pfp TEXT;
+ALTER TABLE forum_threads ADD COLUMN IF NOT EXISTS author_displayName TEXT;
 ALTER TABLE forum_posts   ADD COLUMN IF NOT EXISTS dislikes JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE forum_posts   ADD COLUMN IF NOT EXISTS edited_at BIGINT;
 ALTER TABLE forum_posts   ADD COLUMN IF NOT EXISTS edit_history JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE forum_posts   ADD COLUMN IF NOT EXISTS author_pfp TEXT;
+ALTER TABLE forum_posts   ADD COLUMN IF NOT EXISTS author_displayName TEXT;
 
 -- ── Enable Realtime for tables that need live updates ──
 -- Use DO block to safely add tables that may already be members

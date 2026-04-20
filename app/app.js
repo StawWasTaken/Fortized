@@ -31336,37 +31336,84 @@ async function _forumLoadThreads() {
     }
 
     const cat = FORUM_CATEGORIES.find(c => c.id === _forumCurrentCategory) || FORUM_CATEGORIES[0];
-    // Pinned first, then newest first
     const sorted = [...threads].sort((a, b) => {
       if (!!b.pinned - !!a.pinned) return (!!b.pinned) - (!!a.pinned);
       return (b.updated_at || b.created_at) - (a.updated_at || a.created_at);
     });
     const canPin = _forumCanPin();
     const pinnedInCat = sorted.filter(t => t.pinned).length;
+
+    // Batch-fetch posts for all visible threads so we can surface a YouTube-style top reply.
+    let postsByThread = {};
+    try {
+      postsByThread = await FortizedSocial.getForumPostsForThreads(sorted.map(t => t.id));
+    } catch(_) { postsByThread = {}; }
+
     container.innerHTML = sorted.map(th => {
       const pfpF = _defaultPfpUrl(th.author || '');
+      const score = _forumNetScore(th);
+      const scoreClass = score > 0 ? 'pos' : score < 0 ? 'neg' : '';
+      const scoreLabel = score > 0 ? '+' + score : (score === 0 ? '0' : String(score));
+      const posts = (postsByThread[th.id] || []);
+      // Pick the highest-net-score reply; tiebreak on recency, and only surface if it has positive net support.
+      let topReply = null;
+      if (posts.length) {
+        const scored = posts.map(p => ({ p, s: _forumNetScore(p) }));
+        scored.sort((a, b) => {
+          if (b.s !== a.s) return b.s - a.s;
+          return (b.p.created_at || 0) - (a.p.created_at || 0);
+        });
+        if (scored[0].s > 0) topReply = scored[0].p;
+      }
+      const topReplyBlock = topReply ? `
+        <div class="forum-thread-topreply" onclick="event.stopPropagation();_forumViewThread('${th.id}')">
+          <div class="ftr-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10v12h10V10l-5-7-5 7z"/></svg>
+            Top reply
+          </div>
+          <img class="ftr-avatar" data-forum-author="${escapeHTML(topReply.author||'')}" src="${escapeHTML(topReply.author_pfp || _defaultPfpUrl(topReply.author||''))}" onerror="this.src='${_defaultPfpUrl(topReply.author||'')}'">
+          <div class="ftr-body">
+            <div class="ftr-meta">
+              <strong>${escapeHTML(topReply.author_displayName || topReply.author)}</strong>
+              <span class="ftr-handle">@${escapeHTML(topReply.author)}</span>
+              <span class="ftr-dot"></span>
+              <span class="ftr-time">${_forumTimeAgo(topReply.created_at)}</span>
+              <span class="ftr-score">▲ ${_forumNetScore(topReply)}</span>
+            </div>
+            <div class="ftr-text">${_forumRenderBody((topReply.content || '').slice(0, 240))}</div>
+          </div>
+        </div>` : '';
+
       return `
-      <div class="forum-thread-row${th.pinned ? ' forum-thread-pinned' : ''}" onclick="_forumViewThread('${th.id}')">
-        <img class="forum-thread-avatar" data-forum-author="${escapeHTML(th.author||'')}" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
-        <div class="forum-thread-info">
-          <div class="forum-thread-title">${th.pinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="color:var(--accent);vertical-align:middle;margin-right:4px;"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg> ' : ''}${escapeHTML(th.title)}</div>
-          <div class="forum-thread-meta">
-            <span>by <strong style="color:var(--text);">${escapeHTML(th.author)}</strong></span>
-            <span class="forum-thread-meta-sep"></span>
-            <span>${th.views || 0} views</span>
-            <span class="forum-thread-meta-sep"></span>
-            <span>${th.reply_count || 0} replies</span>
+      <div class="forum-thread-card${th.pinned ? ' forum-thread-card--pinned' : ''}" onclick="_forumViewThread('${th.id}')">
+        <div class="forum-thread-row">
+          <div class="forum-thread-score" title="Net votes">
+            <div class="forum-thread-score-num ${scoreClass}">${scoreLabel}</div>
+            <div class="forum-thread-score-lbl">votes</div>
+          </div>
+          <img class="forum-thread-avatar" data-forum-author="${escapeHTML(th.author||'')}" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
+          <div class="forum-thread-info">
+            <div class="forum-thread-title">${th.pinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="color:var(--accent);vertical-align:middle;margin-right:4px;"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg> ' : ''}${escapeHTML(th.title)}</div>
+            <div class="forum-thread-meta">
+              <span>by <strong style="color:var(--text);">${escapeHTML(th.author)}</strong></span>
+              <span class="forum-thread-meta-sep"></span>
+              <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${th.views || 0}</span>
+              <span class="forum-thread-meta-sep"></span>
+              <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${th.reply_count || 0}</span>
+            </div>
+          </div>
+          <div class="forum-thread-right">
+            ${canPin ? `<button class="forum-pin-btn${th.pinned?' forum-pin-btn--on':''}" title="${th.pinned?'Unpin':(pinnedInCat>=3?'Pin cap reached (3)':'Pin to top')}" onclick="event.stopPropagation();_forumTogglePin('${th.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="${th.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.5-3.5a4 4 0 0 1-.5-2V6H7v5.5a4 4 0 0 1-.5 2L5 17z"/></svg></button>` : ''}
+            <div class="forum-thread-time">${_forumTimeAgo(th.updated_at || th.created_at)}</div>
+            <span class="forum-thread-cat-badge" style="background:${cat.color}18;color:${cat.color};">${cat.icon} ${cat.name}</span>
           </div>
         </div>
-        <div class="forum-thread-right">
-          ${canPin ? `<button class="forum-pin-btn${th.pinned?' forum-pin-btn--on':''}" title="${th.pinned?'Unpin':(pinnedInCat>=3?'Pin cap reached (3)':'Pin to top')}" onclick="event.stopPropagation();_forumTogglePin('${th.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="${th.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.5-3.5a4 4 0 0 1-.5-2V6H7v5.5a4 4 0 0 1-.5 2L5 17z"/></svg></button>` : ''}
-          <div class="forum-thread-time">${_forumTimeAgo(th.updated_at || th.created_at)}</div>
-          <span class="forum-thread-cat-badge" style="background:${cat.color}18;color:${cat.color};">${cat.icon} ${cat.name}</span>
-        </div>
+        ${topReplyBlock}
       </div>
     `;
     }).join('');
     _forumHydratePfps(container);
+    try { if (typeof window._twemojiReparse === 'function') window._twemojiReparse(container); } catch(_){}
   } catch(e) {
     console.error('[Forum] Load failed:', e);
     container.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load posts</p></div>';
@@ -32032,8 +32079,10 @@ async function _forumCreatePost(threadId) {
 
   try {
     await FortizedSocial.createForumPost(post);
+    const freshPosts = await FortizedSocial.getForumPosts(threadId);
     await FortizedSocial.updateForumThread(threadId, {
-      reply_count: (await FortizedSocial.getForumPosts(threadId)).length + 1,
+      reply_count: freshPosts.length,
+      updated_at: Date.now(),
       last_reply_by: CU.username,
       last_reply_at: Date.now()
     });
@@ -32046,7 +32095,7 @@ async function _forumCreatePost(threadId) {
     await _forumViewThread(threadId, {skipViewInc:true});
   } catch(e) {
     console.error('[Forum] Post failed:', e);
-    toast('Failed to post reply', 'error');
+    toast('Failed to post reply: ' + (e?.message || 'unknown error'), 'error');
   }
 }
 

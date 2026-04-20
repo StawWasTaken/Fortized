@@ -20085,69 +20085,69 @@ async function showOnboarding() {
 
   const overlay = document.createElement('div');
   overlay.id = 'onboarding-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.98);backdrop-filter:blur(32px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.className = 'ftz-onboarding-overlay';
 
   const container = document.createElement('div');
-  container.style.cssText = 'width:100%;max-width:640px;background:rgba(19,22,29,.96);border:1px solid #252b3a;border-radius:28px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.8);';
+  container.className = 'ftz-onboarding-card';
 
   // Step 1: Welcome & Interests
   const step1 = document.createElement('div');
   step1.id = 'onboarding-step-1';
-  step1.style.cssText = 'padding:48px 40px;text-align:center;';
+  step1.className = 'ftz-onboarding-step';
   step1.innerHTML = `
-    <div style="height:4px;background:linear-gradient(90deg,#fff93e,#667eea,#764ba2);position:absolute;top:0;left:0;right:0;"></div>
-    <div style="width:48px;height:48px;margin:0 auto 16px;color:var(--accent);display:flex;align-items:center;justify-content:center;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15 8H22V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V8H9L12 2Z"/><circle cx="12" cy="14" r="1.5" fill="currentColor"/></svg>
-    </div>
-    <div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:#fff;margin-bottom:8px;">Let's Personalize Your Experience!</div>
-    <div style="font-size:14.5px;color:var(--muted-light);line-height:1.7;margin-bottom:32px;">Choose what interests you most on Fortized. You can update these anytime.</div>
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:32px;text-align:center;">
-      ${ONBOARDING_INTERESTS.map(interest => `
-        <button onclick="toggleInterest('${interest.id}')"
-          class="interest-btn"
-          data-interest="${interest.id}"
-          style="background:rgba(255,255,255,.04);border:2px solid var(--border);border-radius:14px;padding:14px 12px;cursor:pointer;transition:all .2s;font-size:12px;color:var(--muted-light);display:flex;flex-direction:column;align-items:center;">
-          <div style="width:32px;height:32px;margin-bottom:10px;color:var(--accent);display:flex;align-items:center;justify-content:center;">${interest.svg}</div>
-          <div style="font-weight:600;color:#fff;margin-bottom:3px;line-height:1.3;">${interest.label}</div>
-          <div style="font-size:10px;color:var(--muted);">${interest.desc}</div>
+    <div class="ftz-onboarding-bar"></div>
+    <div class="ftz-onboarding-body">
+      <div class="ftz-onboarding-eyebrow">STEP 1 OF 2</div>
+      <div class="ftz-onboarding-title">Personalize Your Experience</div>
+      <div class="ftz-onboarding-sub">Pick what you're into on Fortized. You can change this anytime.</div>
+      <div class="ftz-onboarding-grid">
+        ${ONBOARDING_INTERESTS.map(interest => `
+          <button onclick="toggleInterest('${interest.id}')" class="ftz-interest-btn" data-interest="${interest.id}">
+            <span class="ftz-interest-icon">${interest.svg}</span>
+            <span class="ftz-interest-label">${interest.label}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="ftz-onboarding-btns">
+        <button onclick="skipOnboarding()" class="ftz-ob-btn ftz-ob-skip">Skip</button>
+        <button onclick="proceedOnboarding()" class="ftz-ob-btn ftz-ob-next">Next
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
-      `).join('')}
-    </div>
-
-    <div style="display:flex;gap:12px;">
-      <button onclick="skipOnboarding()" style="flex:1;padding:12px 20px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--muted-light);font-weight:600;cursor:pointer;">Skip</button>
-      <button onclick="proceedOnboarding()" style="flex:1;padding:12px 20px;background:var(--accent);border:none;border-radius:10px;color:var(--rail);font-weight:700;cursor:pointer;">Next →</button>
+      </div>
     </div>
   `;
 
   // Step 2: Welcome Message
   const step2 = document.createElement('div');
   step2.id = 'onboarding-step-2';
-  step2.style.cssText = 'display:none;padding:48px 40px;text-align:center;';
+  step2.className = 'ftz-onboarding-step';
+  step2.style.display = 'none';
   step2.innerHTML = `
-    <div style="height:4px;background:linear-gradient(90deg,#fff93e,#667eea,#764ba2);position:absolute;top:0;left:0;right:0;"></div>
-    <div style="width:56px;height:56px;margin:0 auto 20px;color:var(--accent);display:flex;align-items:center;justify-content:center;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M9 10h.01M13 10h.01M17 10h.01"/></svg>
+    <div class="ftz-onboarding-bar"></div>
+    <div class="ftz-onboarding-hero">
+      <img src="/Fortized logo.png" alt="Fortized" onerror="this.src='/Fortized icon.png'">
     </div>
-    <div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:#fff;margin-bottom:12px;">Welcome to Fortized</div>
-    <div style="font-size:14px;color:var(--muted-light);line-height:1.8;margin-bottom:24px;">
-      You're now part of a global community. Create bastions, connect with friends, and build together.
-    </div>
-
-    <div style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:14px;padding:18px 16px;margin-bottom:32px;text-align:left;">
-      <div style="font-weight:700;color:var(--accent);margin-bottom:10px;">Pro Tips:</div>
-      <ul style="list-style:none;padding:0;margin:0;font-size:13px;color:var(--muted-light);line-height:2;">
-        <li>💬 Start a DM to chat one-on-one</li>
-        <li>🏰 Create a Bastion for your community</li>
-        <li>🎙 Join voice channels for real-time chat</li>
-        <li>⭐ Customize your profile with widgets</li>
-      </ul>
-    </div>
-
-    <div style="border-top:1px solid var(--border);padding-top:20px;">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Welcome to Fortized from<br><strong style="color:#fff;">Team Fortized at Swiftaw</strong></div>
-      <button onclick="completeOnboarding()" style="padding:12px 32px;background:var(--accent);border:none;border-radius:10px;color:var(--rail);font-weight:700;cursor:pointer;font-size:14px;">Let's Go! →</button>
+    <div class="ftz-onboarding-body" style="padding-top:4px;">
+      <div class="ftz-onboarding-eyebrow">WELCOME</div>
+      <div class="ftz-onboarding-title">Welcome to Fortized, from Team Fortized at Swiftaw.</div>
+      <div class="ftz-onboarding-sub">You're now part of a global community. Create bastions, connect with friends, and build together.</div>
+      <div class="ftz-onboarding-tips">
+        <div class="ftz-tips-head">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+          Pro Tips
+        </div>
+        <ul>
+          <li><span class="ftz-tip-dot"></span>Start a DM to chat one-on-one</li>
+          <li><span class="ftz-tip-dot"></span>Create a Bastion for your community</li>
+          <li><span class="ftz-tip-dot"></span>Join voice channels for real-time chat</li>
+          <li><span class="ftz-tip-dot"></span>Customize your profile with widgets</li>
+        </ul>
+      </div>
+      <div class="ftz-onboarding-btns single">
+        <button onclick="completeOnboarding()" class="ftz-ob-btn ftz-ob-next">Let's Go
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
     </div>
   `;
 
@@ -20155,22 +20155,13 @@ async function showOnboarding() {
   container.appendChild(step2);
   overlay.appendChild(container);
   document.body.appendChild(overlay);
+  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('visible')));
 }
 
 function toggleInterest(id) {
   const btn = document.querySelector(`[data-interest="${id}"]`);
   if (!btn) return;
   btn.classList.toggle('interest-selected');
-  const isSelected = btn.classList.contains('interest-selected');
-  if (isSelected) {
-    btn.style.background = 'rgba(255,249,62,.12)';
-    btn.style.borderColor = 'rgba(255,249,62,.3)';
-    btn.style.color = 'var(--accent)';
-  } else {
-    btn.style.background = 'rgba(255,255,255,.04)';
-    btn.style.borderColor = 'var(--border)';
-    btn.style.color = 'var(--muted-light)';
-  }
 }
 
 function proceedOnboarding() {

@@ -34293,8 +34293,11 @@ function _showDailyQuestPopup() {
   overlay.className = 'quest-popup-overlay';
   overlay.innerHTML = `
     <div class="quest-popup-card" style="position:relative;">
+      <div class="quest-popup-bar"></div>
       <div class="quest-popup-shimmer"></div>
-      <img src="/Fortized Conquer.png" class="quest-popup-img" alt="Fortized Conquer">
+      <div class="quest-popup-hero">
+        <img src="/Fortized Conquer.png" class="quest-popup-img" alt="Fortized Conquer">
+      </div>
       <div class="quest-popup-body">
         <div class="quest-popup-label">DAILY QUEST</div>
         <div class="quest-popup-title">Hearken, Hearken!<br>A new quest is available to you!</div>
@@ -34305,7 +34308,7 @@ function _showDailyQuestPopup() {
         </div>
         <div class="quest-popup-btns">
           <button class="qp-btn qp-close" onclick="_dismissDailyPopup(false)">Complete Later</button>
-          <button class="qp-btn qp-claim" onclick="_dismissDailyPopup(true)">Claim Now</button>
+          <button class="qp-btn qp-claim" onclick="_dismissDailyPopup(true)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>Claim Now</button>
         </div>
       </div>
     </div>`;

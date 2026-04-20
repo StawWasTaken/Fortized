@@ -859,11 +859,22 @@ window._cdnReady.then(() => {
       <div style="padding:0 24px 24px;border-top:1px solid rgba(255,255,255,.05);">
         <div style="padding-top:16px;">
           <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">Other Places to Make Friends</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:12px;">Don't have a username on hand? Check out our public bastions that include everything from gaming to music, art and more.</div>
-          <div onclick="closeModal('modal-add-friend');showView('discover')" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.15)';this.style.background='rgba(255,249,62,.03)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.02)'">
-            <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,249,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg></div>
-            <div style="flex:1;font-size:13px;font-weight:600;color:rgba(255,255,255,.7);">Explore Discoverable Bastions</div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:12px;">Meet people in public bastions or jump into community threads — plenty of ways to find your crew.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="afr-place" onclick="closeModal('modal-add-friend');showView('discover')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.15)';this.style.background='rgba(255,249,62,.03)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.02)'">
+              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,249,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent);"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" stroke="none"><path d="M8 9C8.55229 9 9 8.55229 9 8C9 7.44772 8.55229 7 8 7C7.44772 7 7 7.44772 7 8C7 8.55229 7.44772 9 8 9Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8ZM6 6L4 11L5 12L10 10L12 5L11 4L6 6Z"/></svg></div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12.5px;font-weight:700;color:#fff;line-height:1.2;">Discover</div>
+                <div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.3;margin-top:2px;">Browse public bastions</div>
+              </div>
+            </div>
+            <div class="afr-place" onclick="closeModal('modal-add-friend');showView('forum')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.15)';this.style.background='rgba(255,249,62,.03)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.02)'">
+              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,249,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent);"><svg width="14" height="14" viewBox="-0.5 0 19 19" fill="currentColor" stroke="none"><path d="M5.57 7.532v3.356l-2.248 1.403c-.222.138-.403.038-.403-.223V10.68H1.852a.476.476 0 0 1-.475-.475V3.643a.476.476 0 0 1 .475-.475h9.39a.476.476 0 0 1 .475.475v2.305H7.154A1.585 1.585 0 0 0 5.57 7.532zm11.449 0v6.563a.476.476 0 0 1-.475.475h-1.049v1.436c0 .261-.18.362-.403.224l-2.605-1.626a.54.54 0 0 1-.048-.034H7.154a.476.476 0 0 1-.475-.475V7.532a.477.477 0 0 1 .475-.475h9.39a.476.476 0 0 1 .475.475z"/></svg></div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12.5px;font-weight:700;color:#fff;line-height:1.2;">Forum</div>
+                <div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.3;margin-top:2px;">Join the conversation</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

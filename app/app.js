@@ -1512,7 +1512,7 @@ const _ftzRouter = {
       return { view: 'bastion', vanity: vanityMatch[1], bastionId: null, roomId: null };
     }
     const view = this.routes[path] || this.routes[path + '/'] || 'home';
-    let bastionId = null, roomId = null;
+    let bastionId = null, roomId = null, dmTarget = null;
     if (view === 'bastion' && search) {
       // Format: /app/bastion?[bastionGlobalId]/[roomIdx]
       const raw = search.substring(1); // strip leading ?
@@ -1520,7 +1520,14 @@ const _ftzRouter = {
       bastionId = decodeURIComponent(parts[0] || '');
       roomId = parts[1] ? decodeURIComponent(parts[1]) : null;
     }
-    return { view, bastionId, roomId };
+    if (view === 'dms' && search) {
+      // Format: /app/messages?u=<username>
+      try {
+        const u = new URLSearchParams(search).get('u');
+        if (u) dmTarget = decodeURIComponent(u).toLowerCase();
+      } catch(_) {}
+    }
+    return { view, bastionId, roomId, dmTarget };
   },
   // Push a new URL without reloading
   pushState: function(view, params) {
@@ -1528,6 +1535,9 @@ const _ftzRouter = {
     if (view === 'bastion' && params?.bastionId) {
       url = '/app/bastion?' + encodeURIComponent(params.bastionId);
       if (params.roomId != null) url += '/' + encodeURIComponent(params.roomId);
+    }
+    if (view === 'dms' && params?.dmTarget) {
+      url = '/app/messages?u=' + encodeURIComponent(params.dmTarget);
     }
     if (window.location.pathname + window.location.search !== url) {
       history.pushState({ view, params: params || {} }, '', url);
@@ -1540,12 +1550,15 @@ const _ftzRouter = {
       url = '/app/bastion?' + encodeURIComponent(params.bastionId);
       if (params.roomId != null) url += '/' + encodeURIComponent(params.roomId);
     }
+    if (view === 'dms' && params?.dmTarget) {
+      url = '/app/messages?u=' + encodeURIComponent(params.dmTarget);
+    }
     history.replaceState({ view, params: params || {} }, '', url);
   },
   // Navigate to initial view based on URL or _initialView (called after init)
   applyInitialRoute: async function() {
     const parsed = this.parseRoute();
-    const { view: urlView, vanity, roomId } = parsed;
+    const { view: urlView, vanity, roomId, dmTarget } = parsed;
     let { bastionId } = parsed;
     // Vanity URL resolution: look up bastion by vanity slug
     if (vanity) {
@@ -1576,6 +1589,14 @@ const _ftzRouter = {
       // Bastion not found — fall through to home
     }
     if (view === 'dms' || view === 'friends') {
+      // If the URL carries a ?u=<username> (from a prior session / reload),
+      // open that DM instead of the friends home.
+      if (dmTarget && view === 'dms') {
+        showView('dms');
+        // Defer so view-dms is mounted before openDMView inserts into dm-chat-wrap.
+        setTimeout(() => { try { openDMView(dmTarget); } catch(e) { console.warn('[Route] openDM failed:', e?.message); } }, 0);
+        return;
+      }
       showView('dms');
       return;
     }
@@ -1592,10 +1613,15 @@ window.addEventListener('popstate', function(e) {
   const state = e.state;
   if (!state || !state.view) {
     // No state — parse from URL
-    const { view, bastionId, roomId } = _ftzRouter.parseRoute();
+    const { view, bastionId, roomId, dmTarget } = _ftzRouter.parseRoute();
     if (view === 'bastion' && bastionId) {
       const idx = (CU.bastions || []).findIndex(b => b.globalId === bastionId);
       if (idx >= 0) { openBastion(idx); return; }
+    }
+    if (view === 'dms' && dmTarget) {
+      showView('dms', true);
+      setTimeout(() => { try { openDMView(dmTarget); } catch(_){} }, 0);
+      return;
     }
     showView(view || 'home', true);
     return;
@@ -1611,6 +1637,11 @@ window.addEventListener('popstate', function(e) {
       }
       return;
     }
+  }
+  if (state.view === 'dms' && state.params?.dmTarget) {
+    showView('dms', true);
+    setTimeout(() => { try { openDMView(state.params.dmTarget); } catch(_){} }, 0);
+    return;
   }
   showView(state.view || 'home', true);
 });
@@ -1639,8 +1670,12 @@ function showView(v, _skipPush) {
   _currentView = v;
   // Update URL (skip for bastion — openBastion handles that)
   if (!_skipPush && v !== 'bastion' && typeof _ftzRouter !== 'undefined') {
-    if (_ftzRouter._initialLoad) _ftzRouter.replaceState(v);
-    else _ftzRouter.pushState(v);
+    // For DMs, carry the currently-open target into the URL so the in-flight
+    // navigation doesn't strip ?u=<username> and leave a naked /app/messages
+    // history entry between two DM switches.
+    const routeParams = (v === 'dms' && typeof curDM === 'string' && curDM) ? { dmTarget: curDM } : undefined;
+    if (_ftzRouter._initialLoad) _ftzRouter.replaceState(v, routeParams);
+    else _ftzRouter.pushState(v, routeParams);
   }
   // Close mobile sidebars on navigation
   if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
@@ -4163,6 +4198,13 @@ function showDMFriendsHome() {
   curDM = null;
   curGC = null;
   _currentGCMeta = null;
+  // Drop the ?u=<username> from the URL so reloading from the friends home
+  // doesn't re-open whichever DM was last in the URL.
+  try {
+    if (typeof _ftzRouter !== 'undefined' && /^\/app\/messages/.test(window.location.pathname) && window.location.search) {
+      _ftzRouter.replaceState('dms');
+    }
+  } catch(_) {}
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
   // Hide user panel when returning to friends home
@@ -4250,6 +4292,8 @@ function openDMView(username) {
   _currentGCMeta = null;
   document.getElementById('gc-member-panel')?.remove();
   closeModal('modal-new-dm');
+  // curDM is set above, so showView('dms') → pushState picks up the target
+  // automatically and the URL becomes /app/messages?u=<username>.
   showView('dms');
   // Update title: Fortized | @username
   document.title = 'Fortized | @' + username;

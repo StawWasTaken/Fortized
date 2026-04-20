@@ -748,7 +748,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .chat-input-row .chat-input-rich{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-ui);font-size:14.5px;max-height:160px;min-height:28px;line-height:1.55;padding:6px 4px;position:relative;z-index:2;overflow-y:auto;overflow-x:hidden;word-wrap:break-word;white-space:pre-wrap;cursor:text;}
 .chat-input-row .chat-input-rich:empty::before{content:attr(data-placeholder);color:rgba(255,255,255,.2);pointer-events:none;}
 .chat-input-row .chat-input-rich:focus{outline:none;}
-.chat-input-row .chat-input-rich .rci-emoji{width:1.4em;height:1.4em;object-fit:contain;vertical-align:-.27em;display:inline-block;user-select:none;-webkit-user-select:none;margin:0 1px;}
+.chat-input-row .chat-input-rich .rci-emoji{width:1.4em;height:1.4em;object-fit:contain;vertical-align:-.27em;display:inline-block;user-select:text;-webkit-user-select:text;margin:0 1px;}
 .chat-input-row .chat-input-rich br{line-height:1.55;}
 .chat-input-actions{display:flex;align-items:center;gap:4px;flex-shrink:0;padding:0 4px;}
 .chat-send-btn{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e6e034);border:none;color:#13161d;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 8px rgba(255,249,62,.15);}

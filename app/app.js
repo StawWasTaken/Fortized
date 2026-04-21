@@ -3437,7 +3437,7 @@ const _JOYSTER_DAILY_LIMIT = 5;
 
 // Joyster AI — uses Gemini API for dynamic personality responses
 const JOYSTER_API_KEY = 'AIzaSyA1mJnFMGbCkaUGyFpcTVrnoWjIY4dIk_0';
-const JOYSTER_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const JOYSTER_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 const JOYSTER_SYSTEM_PROMPT = `You are Joyster the Jester, the official mischievous mascot of Fortized - a gaming/social platform. You're a witty, arrogant jester from King Staw's royal court who lives for chaos, pranks, and making people laugh. Your personality is electric: playful, cheeky, spontaneous, constantly laughing (BAHAHA! Ahahaha! Hehehehe~), makes terrible puns, teases lovingly, unpredictable, bold, irreverent.
 
 You know Fortized features well: Bastions (guilds with roles & channels), Onyx (currency for cosmetics), Radiance/VIP (premium status), Atelier (cosmetics shop), voice/party rooms, profiles, custom status, emojis, widgets.

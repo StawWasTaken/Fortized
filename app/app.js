@@ -15404,7 +15404,7 @@ function buildProfileView(tab) {
                 <div style="font-size:14px;font-weight:700;color:#fff;">Avatar Decoration</div>
                 <span style="font-size:9px;font-weight:700;background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.15);border-radius:5px;padding:2px 7px;">ATELIER</span>
               </div>
-              <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" class="settings-save-btn">Change Decoration</button>
+              <button onclick="_openDecorationPicker()" class="settings-save-btn">Change Decoration</button>
             </div>
             ${sep}
 
@@ -33266,6 +33266,108 @@ async function equipDecoration(decoId) {
   await saveUser();
   toast(decoId ? 'Decoration equipped!' : 'Decoration removed', 'success');
 }
+
+// ── Decoration picker modal (opens over settings) ──
+function _openDecorationPicker() {
+  const existing = document.getElementById('deco-picker-modal');
+  if (existing) existing.remove();
+  const owned = new Set(CU?.ownedDecorations || []);
+  const ownedDecos = PROFILE_DECORATIONS.filter(d => owned.has(d.id));
+  const unowned = PROFILE_DECORATIONS.filter(d => !owned.has(d.id));
+  const selectedId = CU?.activeDecoration || '';
+  const initialLetter = ((CU?.displayName || CU?.username || '?')[0] || '?').toUpperCase();
+  const pfpHTML = CU?.pfp
+    ? `<img src="${escapeHTML(CU.pfp)}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<span style="font-family:var(--font-display);font-weight:800;font-size:58px;color:var(--accent);">${escapeHTML(initialLetter)}</span>`;
+
+  const tile = (d, isSel) => `<div class="deco-tile" data-deco-id="${escapeHTML(d.id)}" onclick="_selectDeco('${escapeHTML(d.id)}')" title="${escapeHTML(d.name)}" style="aspect-ratio:1/1;border-radius:12px;background:rgba(255,255,255,.03);border:2px solid ${isSel?'var(--accent)':'rgba(255,255,255,.08)'};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;">
+    <img src="${escapeHTML(d.src)}" style="width:70%;height:70%;object-fit:contain;" draggable="false">
+  </div>`;
+
+  const lockedTile = (d) => `<div onclick="document.getElementById('deco-picker-modal').remove();switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" title="${escapeHTML(d.name)} - visit the Shop to unlock" style="aspect-ratio:1/1;border-radius:12px;background:rgba(255,255,255,.02);border:2px solid rgba(255,255,255,.04);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.04)';this.style.borderColor='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.02)';this.style.borderColor='rgba(255,255,255,.04)'">
+    <img src="${escapeHTML(d.src)}" style="width:68%;height:68%;object-fit:contain;opacity:.45;filter:grayscale(.35);" draggable="false">
+    <div style="position:absolute;top:5px;right:5px;width:18px;height:18px;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </div>
+  </div>`;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay open';
+  modal.id = 'deco-picker-modal';
+  modal.dataset.pending = selectedId;
+  modal.innerHTML = `<div class="modal" style="max-width:640px;width:92vw;">
+    <div class="modal-bar"></div>
+    <div class="modal-body" style="padding:22px 22px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Change Avatar Decoration</div>
+        <button onclick="document.getElementById('deco-picker-modal').remove()" aria-label="Close" style="background:transparent;border:none;color:rgba(255,255,255,.4);cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='rgba(255,255,255,.4)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 200px;gap:20px;align-items:start;">
+        <div style="max-height:60vh;overflow-y:auto;padding-right:4px;">
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Your Decorations</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:${unowned.length?'18px':'0'};">
+            <div class="deco-tile" data-deco-id="" onclick="_selectDeco('')" style="aspect-ratio:1/1;border-radius:12px;background:rgba(255,255,255,.03);border:2px solid ${!selectedId?'var(--accent)':'rgba(255,255,255,.08)'};cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .15s;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="5" y1="5" x2="19" y2="19"/></svg>
+              <div style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,.75);">None</div>
+            </div>
+            <div onclick="document.getElementById('deco-picker-modal').remove();switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="aspect-ratio:1/1;border-radius:12px;background:rgba(255,249,62,.04);border:2px solid rgba(255,249,62,.18);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.08)';this.style.borderColor='rgba(255,249,62,.32)'" onmouseout="this.style.background='rgba(255,249,62,.04)';this.style.borderColor='rgba(255,249,62,.18)'">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M3 9h18l-2 10H5L3 9z"/><path d="M8 9V6a4 4 0 118 0v3"/></svg>
+              <div style="font-size:10.5px;font-weight:700;color:var(--accent);">Shop</div>
+            </div>
+            ${ownedDecos.map(d => tile(d, selectedId === d.id)).join('')}
+          </div>
+          ${unowned.length ? `
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">See What's in Shop</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+              ${unowned.map(d => lockedTile(d)).join('')}
+            </div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;padding-top:4px;">
+          <div style="position:relative;width:170px;height:170px;">
+            <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;">
+              ${pfpHTML}
+            </div>
+            <img id="deco-preview-overlay" src="${selectedId ? escapeHTML(getDecorationSrc(selectedId) || '') : ''}" style="position:absolute;inset:-14px;width:calc(100% + 28px);height:calc(100% + 28px);object-fit:contain;pointer-events:none;${selectedId ? '' : 'display:none;'}" onerror="this.style.display='none'">
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06);">
+        <button class="btn-g" style="padding:8px 22px;" onclick="document.getElementById('deco-picker-modal').remove()">Cancel</button>
+        <button class="btn-a" style="padding:8px 22px;" onclick="_applyDecorationFromPicker()">Apply</button>
+      </div>
+    </div>
+  </div>`;
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+function _selectDeco(id) {
+  const modal = document.getElementById('deco-picker-modal');
+  if (!modal) return;
+  modal.dataset.pending = id || '';
+  modal.querySelectorAll('.deco-tile').forEach(t => {
+    const match = (t.dataset.decoId || '') === (id || '');
+    t.style.borderColor = match ? 'var(--accent)' : 'rgba(255,255,255,.08)';
+  });
+  const ov = document.getElementById('deco-preview-overlay');
+  if (ov) {
+    const src = id ? (getDecorationSrc(id) || '') : '';
+    if (src) { ov.src = src; ov.style.display = ''; } else { ov.style.display = 'none'; }
+  }
+}
+
+async function _applyDecorationFromPicker() {
+  const modal = document.getElementById('deco-picker-modal');
+  if (!modal) return;
+  const pending = modal.dataset.pending || '';
+  await equipDecoration(pending || null);
+  modal.remove();
+  try { if (typeof buildProfileView === 'function') buildProfileView('myprofile'); } catch(_){}
+  try { if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay(); } catch(_){}
+}
+
 function _getOnyxTier(onyxSpent) {
   let tier = ONYX_TIERS[0];
   for (const t of ONYX_TIERS) { if (onyxSpent >= t.min) tier = t; }

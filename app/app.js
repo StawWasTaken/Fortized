@@ -3020,7 +3020,7 @@ async function _renderHomeFriendsToday() {
       const dn = ud.displayName || u;
       const status = presence?.[u]?.status || 'offline';
       const statusColor = (typeof FtzStatus !== 'undefined') ? FtzStatus.color(status) : (status==='online'?'#3ecf6e':status==='away'?'#f59e0b':status==='dnd'?'#f87171':'rgba(255,255,255,.15)');
-      return `<div class="home-online-chip" onclick="openDMWith('${escapeHTML(u)}')" title="${escapeHTML(dn)}">
+      return `<div class="home-online-chip" onclick="openDMView('${escapeHTML(u)}')" title="${escapeHTML(dn)}">
         <span class="hoc-av-wrap">
           <img class="hoc-av" src="${escapeHTML(pfp)}" onerror="this.src='${_defaultPfpUrl(u)}'">
           <span class="hoc-dot" style="background:${statusColor};"></span>
@@ -3470,7 +3470,7 @@ let _joysterLastTip = -1;
 const _JOYSTER_DAILY_LIMIT = 5;
 
 // Joyster AI — uses Gemini API for dynamic personality responses
-const JOYSTER_API_KEY = 'AIzaSyARHuqX0uWrWv_GZaXOeFgFZNaOnpILRU4';
+const JOYSTER_API_KEY = 'AIzaSyARHuqX0uWrWv_GZaXOeFgFZNaOnplLRU4';
 const JOYSTER_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 const JOYSTER_SYSTEM_PROMPT = `You are Joyster the Jester, the official mischievous mascot of Fortized - a gaming/social platform. You're a witty, cocky jester from King Staw's royal court who lives for chaos, pranks, and making people laugh. Personality: playful, arrogant, cheeky, spontaneous, constantly laughing (BAHAHA! Ahahaha! Hehehehe~), terrible puns, teases lovingly, unpredictable, bold, irreverent.
 

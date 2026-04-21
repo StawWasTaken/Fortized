@@ -6936,7 +6936,8 @@ function _openReactionEmojiPicker(x, y, msgId, context, trigger) {
     }
   }
   // Position relative to the trigger button if we have one; otherwise the click point
-  const PW = 460, PH = 440;
+  const PW = Math.min(540, window.innerWidth - 16);
+  const PH = 440;
   let left, top;
   if (trigger && trigger.getBoundingClientRect) {
     const r = trigger.getBoundingClientRect();
@@ -13994,7 +13995,7 @@ function toggleFavEmoji(emoji) {
 // SVG icons for emoji categories (replaces unicode emoji icons)
 const _EMOJI_CATEGORY_SVGS = {
   favorites:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.1L21.5 9l-5 4.8 1.3 7-5.8-3.2-5.8 3.2 1.3-7-5-4.8 6.6-.9L12 2z"/></svg>',
-  ftz:        '<img src="/Fortized logo.png" width="22" height="22" style="object-fit:contain;border-radius:6px;" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{innerHTML:\'<svg width=18 height=18 viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=2><path d=\\\'M3 21h18M5 21V7l7-4 7 4v14M9 10h2M13 10h2M9 14h2M13 14h2\\\'/></svg>\'}))">',
+  ftz:        '<span class="epp-ftz-icon" aria-hidden="true"></span>',
   frequent:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
   personal:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.65-.75 1.65-1.69 0-.44-.18-.83-.44-1.12-.29-.29-.44-.66-.44-1.12a1.64 1.64 0 0 1 1.67-1.67h1.99c3.05 0 5.56-2.5 5.56-5.55C21.97 6.01 17.46 2 12 2z"/></svg>',
   bastions:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V9l2-2 2 2v12M10 21V6l2-2 2 2v15M15 21V9l2-2 2 2v12"/></svg>',
@@ -14087,7 +14088,9 @@ function toggleEmojiPicker(targetId) {
   // Position relative to the input target (works for chat, bio, forum composer, etc.)
   const refEl = document.getElementById(targetId);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
-  const PW = 540, PH = 440;
+  // Clamp panel width to viewport so the sidebar is never clipped off-screen.
+  const PW = Math.min(540, window.innerWidth - 16);
+  const PH = 440;
   let left, top = null, bottom = null;
   if (outerEl) {
     // Chatbar mode: right-aligned with the input, popping up above
@@ -14248,7 +14251,7 @@ function renderEmojiGrid() {
          onmouseenter="_emojiHover(':${escapeHTML(name)}:',${fromBastion?`'${escapeHTML(fromBastion)}'`:'null'},'${escapeHTML(url)}',true)"
          title=":${escapeHTML(name)}:${fromBastion?' from '+escapeHTML(fromBastion):''}"
          class="emoji-cell emoji-cell-custom">
-      <img src="${escapeHTML(url)}" alt=":${escapeHTML(name)}:" style="width:100%;height:100%;object-fit:contain;" onerror="this.closest('.emoji-cell').style.display='none'">
+      <img src="${escapeHTML(url)}" alt=":${escapeHTML(name)}:" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:contain;" onerror="this.closest('.emoji-cell').style.display='none'">
     </div>`;
   };
 
@@ -14277,7 +14280,7 @@ function renderEmojiGrid() {
   // 3) Fortized custom emojis — characters first, textmojis always last.
   // Uses a tighter grid class so the hand-drawn emojis sit closer together.
   html += sectionHdr('ftz', 'Fortized Guide');
-  html += `<div class="epp-section-grid epp-section-grid-tight" style="grid-template-columns:repeat(9,1fr);">`;
+  html += `<div class="epp-section-grid epp-section-grid-tight" style="grid-template-columns:repeat(8,1fr);">`;
   html += FORTIZED_CHARACTERS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('');
   html += FORTIZED_TEXTMOJIS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('');
   html += gridClose;
@@ -14538,7 +14541,7 @@ function renderEmojiCell(emoji) {
   return `<div onclick="insertEmoji('${safe}')" oncontextmenu="event.preventDefault();toggleFavEmoji('${safe}')"
     onmouseenter="document.getElementById('epp-hover-label').innerHTML='${escapeHTML(displayName)}${isFav ? ' \u2605' : ''}'"
     class="emoji-cell emoji-cell-custom" style="position:relative;">
-    <img src="${url}" style="width:26px;height:26px;object-fit:contain;" loading="lazy" onerror="this.outerHTML='<span style=\\'font-size:22px;\\'>${emoji}</span>'">
+    <img src="${url}" style="width:26px;height:26px;object-fit:contain;" loading="lazy" decoding="async" onerror="this.outerHTML='<span style=\\'font-size:22px;\\'>${emoji}</span>'">
     ${isFav ? '<span style="position:absolute;top:2px;right:2px;font-size:11px;color:var(--accent);">★</span>' : ''}
   </div>`;
 }

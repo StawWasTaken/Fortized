@@ -1578,7 +1578,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .vc-btn.muted-btn.active{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);}
 .vc-btn.disc-btn{background:var(--red);color:#fff;}
 /* ── Emoji Picker 3.0 ─────────────────────────── */
-.emoji-picker-panel{position:fixed;width:540px;max-height:520px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:18px;padding:0;z-index:9000;box-shadow:0 30px 90px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04),0 12px 44px rgba(0,0,0,.28);display:none;flex-direction:row;overflow:hidden;font-family:var(--font-ui);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:pickerSlideIn .26s cubic-bezier(.22,1,.36,1);}
+.emoji-picker-panel{position:fixed;width:540px;max-width:calc(100vw - 16px);max-height:520px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:18px;padding:0;z-index:9000;box-shadow:0 30px 90px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04),0 12px 44px rgba(0,0,0,.28);display:none;flex-direction:row;overflow:hidden;font-family:var(--font-ui);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:pickerSlideIn .26s cubic-bezier(.22,1,.36,1);}
 .emoji-picker-panel.show{display:flex;}
 /* Emoji picker sidebar — labelled rows with emblem + category name, scrolls
    independently from the main grid. */
@@ -1590,9 +1590,20 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .epp-sidebar-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
 .epp-sidebar-btn.active{background:rgba(255,249,62,.14);color:var(--accent);}
 .epp-sidebar-btn.active::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0;box-shadow:0 0 10px rgba(255,249,62,.45);}
-.epp-sidebar-emblem{width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:7px;overflow:hidden;}
+.epp-sidebar-emblem{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:7px;overflow:hidden;color:inherit;}
+.epp-sidebar-emblem svg{color:inherit;}
 .epp-sidebar-emblem img{width:22px;height:22px;border-radius:6px;object-fit:cover;}
-.epp-sidebar-label{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;}
+.epp-sidebar-label{flex:1;min-width:0;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;color:inherit;}
+/* Fortized logo rendered as a mask so it inherits currentColor from the
+   sidebar button — matches the other stroke-SVG category icons exactly. */
+.epp-ftz-icon{
+  display:inline-block;
+  width:22px;
+  height:22px;
+  background-color:currentColor;
+  -webkit-mask:url('/Fortized logo.png') center/contain no-repeat;
+          mask:url('/Fortized logo.png') center/contain no-repeat;
+}
 .epp-sidebar-sep{width:calc(100% - 12px);height:1px;background:rgba(255,255,255,.06);margin:6px 6px;flex-shrink:0;}
 .epp-main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 @keyframes emojiPanelIn{from{opacity:0;transform:translateY(8px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
@@ -5251,6 +5262,11 @@ button[style*="background: var(--accent)"]:active {
   display: grid;
   gap: 1px;
   padding: 2px 0 8px;
+  /* Discord-style: skip painting sections that aren't visible, letting the
+     browser allocate layout slots without actually rendering 1000+ cells at
+     once. Massively reduces first-paint cost for the emoji picker. */
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 240px;
 }
 /* Tighter variant — used for the Fortized Guide so the hand-drawn emojis
    sit shoulder-to-shoulder instead of feeling scattered. */

@@ -2809,9 +2809,10 @@ function renderHomePanel() {
   // Initialize hero particles & floating items
   _initHeroEffects();
 
-  // Start Joyster idle speech bubbles & pre-fetch AI responses
+  // Start Joyster idle speech bubbles. We no longer prefetch AI lines —
+  // burns the free Gemini quota for nothing when most bubbles use the
+  // hardcoded quips fallback anyway.
   _startJoysterBubbles();
-  if (_joysterAICache.length < 2) _prefetchJoysterAI();
 
   // DYK strip with rotating content
   const dykEl = document.getElementById('home-dyk-strip');
@@ -3529,7 +3530,28 @@ function _buildJoysterUserContext() {
   };
 }
 
+// Quota safety: keep AI usage well under the Gemini free tier.
+// - Daily cap (per browser, persisted) so a long session can't burn the day
+// - Min interval so a quick navigate-spree can't fire 10 calls in a minute
+const _JOYSTER_AI_DAILY_CAP = 30;
+const _JOYSTER_AI_MIN_INTERVAL_MS = 90 * 1000;
 let _joysterAIDisabledUntil = 0;
+let _joysterAILastCallTs = 0;
+function _joysterAIDailyCount() {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const stored = JSON.parse(localStorage.getItem('joyster_ai_daily') || '{}');
+    return stored.date === today ? (stored.count || 0) : 0;
+  } catch { return 0; }
+}
+function _joysterAIIncDaily() {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const stored = JSON.parse(localStorage.getItem('joyster_ai_daily') || '{}');
+    const count = (stored.date === today ? stored.count || 0 : 0) + 1;
+    localStorage.setItem('joyster_ai_daily', JSON.stringify({ date: today, count }));
+  } catch {}
+}
 async function _joysterFetch(bodyObj) {
   return fetch(JOYSTER_API_URL + '?key=' + JOYSTER_API_KEY, {
     method: 'POST',
@@ -3539,6 +3561,10 @@ async function _joysterFetch(bodyObj) {
 }
 async function _getJoysterAIResponse(context) {
   if (Date.now() < _joysterAIDisabledUntil) return null;
+  if (Date.now() - _joysterAILastCallTs < _JOYSTER_AI_MIN_INTERVAL_MS) return null;
+  if (_joysterAIDailyCount() >= _JOYSTER_AI_DAILY_CAP) return null;
+  _joysterAILastCallTs = Date.now();
+  _joysterAIIncDaily();
   try {
     const userCtx = _buildJoysterUserContext();
     const promptText = `user_context = ${JSON.stringify(userCtx)}
@@ -3569,8 +3595,16 @@ Pick ONE specific detail from user_context and make it the core of your comment.
     }
 
     if (!res.ok) {
-      // Cool off on 4xx — retrying in a tight loop just hammers Google with 400s.
-      if (res.status >= 400 && res.status < 500) {
+      if (res.status === 429) {
+        // Quota exhausted. Free-tier Gemini resets daily — back off until the
+        // next UTC day so we don't keep poking the API.
+        const ms = (24 * 60 * 60 * 1000);
+        _joysterAIDisabledUntil = Date.now() + ms;
+        if (!window._joysterWarned) {
+          window._joysterWarned = true;
+          console.warn('[Joyster] AI quota exhausted (429) — sleeping 24h');
+        }
+      } else if (res.status >= 400 && res.status < 500) {
         _joysterAIDisabledUntil = Date.now() + 15 * 60 * 1000; // 15m
         if (!window._joysterWarned) {
           window._joysterWarned = true;
@@ -3752,16 +3786,15 @@ async function _showJoysterBubble() {
   const bubble = document.getElementById('joyster-bubble');
   if (!bubble) return;
 
-  // Prefer a fresh AI response so the comment can reference what the user
-  // just did (hovered button, new friend, status change, Onyx delta).
-  // Fall back to pre-cached AI lines, then to hardcoded quips.
-  if (Date.now() >= _joysterAIDisabledUntil) {
+  // Try AI on ~25% of bubbles. The actual call is gated by daily cap +
+  // min interval inside _getJoysterAIResponse, so even at 100% roll the
+  // free tier stays safe. Cache + hardcoded quips fill the rest.
+  if (Math.random() < 0.25 && Date.now() >= _joysterAIDisabledUntil) {
     const fresh = await _getJoysterAIResponse('Roast the user using ONE specific detail from user_context. Keep Joyster energy.');
     if (fresh) { _renderJoysterBubble(fresh); return; }
   }
   if (_joysterAICache.length > 0) {
     _renderJoysterBubble(_joysterAICache.shift());
-    if (_joysterAICache.length < 2) _prefetchJoysterAI();
     return;
   }
   _renderJoysterBubble(_pickJoysterFallback());

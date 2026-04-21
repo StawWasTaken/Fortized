@@ -6530,7 +6530,7 @@ function editMsg(msgId) {
     ? `<div style="font-size:11px;color:var(--muted-light);margin-top:4px;opacity:.7;display:flex;align-items:center;gap:5px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg> ${tokens.length} attached file${tokens.length>1?'s':''} preserved</div>`
     : '';
   const ph = tokens.length ? 'Add a caption…' : 'Edit message…';
-  textEl.innerHTML=`<textarea style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--accent-mid);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:6px 10px;resize:none;outline:none;box-sizing:border-box;" rows="2" id="edit-ta" placeholder="${ph}">${escapeHTML(stripped)}</textarea>
+  textEl.innerHTML=`<div class="edit-rich-input" id="edit-ta" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="${ph}" style="width:100%;min-height:32px;background:rgba(255,255,255,.05);border:1px solid var(--accent-mid);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:6px 10px;outline:none;box-sizing:border-box;white-space:pre-wrap;word-break:break-word;"></div>
     ${hint}
     <div style="display:flex;gap:6px;margin-top:4px;font-size:12px;align-items:center;">
       <button class="btn-a" style="padding:4px 12px;font-size:12px;" onclick="saveEdit('${escapeHTML(msgId)}')">Save</button>
@@ -6539,8 +6539,17 @@ function editMsg(msgId) {
     </div>`;
   const ta = document.getElementById('edit-ta');
   if (ta) {
+    _initRichInput(ta);
+    ta.innerHTML = _richTextToHTML(stripped);
     ta.focus();
-    try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch(_){}
+    try {
+      const range = document.createRange();
+      range.selectNodeContents(ta);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch(_){}
     ta.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { e.preventDefault(); cancelEdit(msgId); }
       else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(msgId); }
@@ -14627,6 +14636,16 @@ function _emojiShortcodeCache() {
 function renderEmojiCell(emoji) {
   const safe = escapeHTML(emoji);
   const isFav = _favEmojis.includes(emoji);
+  // Fortized-branded overrides (money_bag, money_mouth, money_with_wings)
+  // must render as their custom PNG even in the picker — native system
+  // fonts don't know about them. Everything else stays native text.
+  const override = (typeof EMOJI_URL_OVERRIDES !== 'undefined') ? EMOJI_URL_OVERRIDES[emoji] : null;
+  if (override) {
+    return `<div class="emoji-cell emoji-cell-unicode${isFav?' is-fav':''}" data-ue="${safe}">`
+      + `<img src="${escapeHTML(override)}" alt="${safe}" loading="lazy" decoding="async" style="width:26px;height:26px;object-fit:contain;pointer-events:none;">`
+      + (isFav ? '<span class="emoji-fav-star">★</span>' : '')
+      + `</div>`;
+  }
   // Native text glyph — no <img>, no network request. The whole picker renders
   // 1400+ cells without pulling a single Twemoji SVG, which is what made
   // opening the panel lag. Modern OS emoji fonts handle rendering.
@@ -17775,7 +17794,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
               if (m.type === 'audio') {
                 return `<audio src="${escapeHTML(m.url)}" controls preload="metadata" crossorigin="anonymous" style="width:260px;"></audio>`;
               }
-              return `<img src="${escapeHTML(m.url)}" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="this.style.display='none'">`;
+              return `<img src="${escapeHTML(m.url)}" onclick="_openLightboxFromImg(this)" loading="lazy" onerror="this.style.display='none'">`;
             }).join('')}</div>` : '');
       }
 
@@ -18105,7 +18124,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             ${mediaSrc?`<div style="margin-bottom:14px;">
               <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.49"/></svg> Flagged Content</div>
               <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                ${(()=>{ if(item.type==='video'){ const _vp='nsfwvid-'+Math.random().toString(36).slice(2); return `<div style="display:inline-block;max-width:320px;"><div class="ftz-vp" id="${_vp}-wrap" style="border-radius:10px;"><video id="${_vp}" src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;display:block;cursor:pointer;" preload="metadata" crossorigin="anonymous" onclick="ftzVideoToggle('${_vp}')" ontimeupdate="ftzVideoTick('${_vp}')" onloadedmetadata="ftzVideoMeta('${_vp}')" onended="ftzVideoEnd('${_vp}')" onerror="ftzVideoError('${_vp}')"></video><div class="ftz-vp-overlay" id="${_vp}-overlay" onclick="ftzVideoToggle('${_vp}')"><div class="ftz-vp-overlay-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div></div></div>`; } return `<img src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="console.warn('[Image] Load error:',this.src);this.style.display='none'">`; })()}
+                ${(()=>{ if(item.type==='video'){ const _vp='nsfwvid-'+Math.random().toString(36).slice(2); return `<div style="display:inline-block;max-width:320px;"><div class="ftz-vp" id="${_vp}-wrap" style="border-radius:10px;"><video id="${_vp}" src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;display:block;cursor:pointer;" preload="metadata" crossorigin="anonymous" onclick="ftzVideoToggle('${_vp}')" ontimeupdate="ftzVideoTick('${_vp}')" onloadedmetadata="ftzVideoMeta('${_vp}')" onended="ftzVideoEnd('${_vp}')" onerror="ftzVideoError('${_vp}')"></video><div class="ftz-vp-overlay" id="${_vp}-overlay" onclick="ftzVideoToggle('${_vp}')"><div class="ftz-vp-overlay-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div></div></div>`; } return `<img src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openLightboxFromImg(this)" loading="lazy" onerror="console.warn('[Image] Load error:',this.src);this.style.display='none'">`; })()}
               </div>
             </div>`:''}
             <!-- AI Feedback -->
@@ -22715,21 +22734,175 @@ function preprocessMessageText(text) {
   });
 }
 // ═══════ Media Lightbox (Discord-style image/GIF preview) ═══════
-function _openMediaLightbox(src) {
+// Extract author/timestamp/filename context from the clicked element so the
+// lightbox header can show who posted the image and when. Used everywhere a
+// chat/forum image is opened.
+function _lightboxMetaFromEl(el) {
+  const meta = {};
+  if (!el) return meta;
+  if (el.tagName === 'IMG') {
+    meta.filename = (el.alt && el.alt !== el.src && !el.alt.startsWith('http')) ? el.alt : null;
+    meta.naturalWidth = el.naturalWidth || 0;
+    meta.naturalHeight = el.naturalHeight || 0;
+  }
+  const row = el.closest?.('.msg-row');
+  if (row) {
+    meta.author = row.dataset.from || '';
+    const authorEl = row.querySelector('.msg-author');
+    meta.displayName = authorEl?.textContent?.trim() || meta.author;
+    const tsEl = row.querySelector('.msg-timestamp');
+    meta.timestamp = tsEl?.getAttribute('data-tip') || tsEl?.textContent?.replace(/^·\s*/, '').trim() || '';
+    const avImg = row.querySelector('.msg-av-inner img');
+    meta.pfp = avImg?.src || '';
+  }
+  return meta;
+}
+window._openLightboxFromImg = function(imgEl) {
+  if (!imgEl) return;
+  _openMediaLightbox(imgEl.src || imgEl.getAttribute('src') || '', _lightboxMetaFromEl(imgEl));
+};
+function _mlbFmtBytes(n) {
+  if (!n || n < 0) return '';
+  if (n < 1024) return n + ' B';
+  if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+  return (n/(1024*1024)).toFixed(2) + ' MB';
+}
+function _openMediaLightbox(src, meta) {
   if (!src) return;
   document.querySelector('.media-lightbox')?.remove();
+  const m = meta || {};
   const lb = document.createElement('div');
   lb.className = 'media-lightbox';
-  lb.innerHTML = `<button class="media-lightbox-close" title="Close">✕</button>`
-    + `<img src="${escapeHTML(src)}" draggable="false">`
-    + `<div class="media-lightbox-actions">`
-    + `<button onclick="event.stopPropagation();window.open('${escapeHTML(src)}','_blank')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Open Original</button>`
-    + `<button onclick="event.stopPropagation();_downloadLightboxImg('${escapeHTML(src)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Save</button>`
-    + `</div>`;
-  lb.querySelector('.media-lightbox-close').onclick = (e) => { e.stopPropagation(); _closeMediaLightbox(); };
-  lb.onclick = (e) => { if (e.target === lb) _closeMediaLightbox(); };
+
+  const headerHTML = (m.displayName || m.author || m.timestamp || m.pfp)
+    ? `<div class="mlb-header">
+         ${m.pfp ? `<img src="${escapeHTML(m.pfp)}" class="mlb-pfp" alt="" onerror="this.style.display='none'">` : `<div class="mlb-pfp-fallback">${escapeHTML((m.displayName||m.author||'?').charAt(0).toUpperCase())}</div>`}
+         <div class="mlb-meta">
+           ${m.displayName ? `<div class="mlb-name">${escapeHTML(m.displayName)}</div>` : ''}
+           ${m.timestamp ? `<div class="mlb-time">${escapeHTML(m.timestamp)}</div>` : ''}
+         </div>
+       </div>`
+    : '';
+
+  const ic = (path, fill) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="${fill||'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+
+  lb.innerHTML = `
+    <button class="media-lightbox-close" title="Close (Esc)" aria-label="Close">${ic('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>')}</button>
+    <div class="mlb-stage">
+      ${headerHTML}
+      <div class="mlb-image-wrap">
+        <img src="${escapeHTML(src)}" class="mlb-image" draggable="false" alt="">
+      </div>
+      <div class="mlb-toolbar" role="toolbar" aria-label="Image actions">
+        <button class="mlb-btn" data-act="zin" title="Zoom in">${ic('<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>')}</button>
+        <button class="mlb-btn" data-act="zout" title="Zoom out">${ic('<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>')}</button>
+        <span class="mlb-sep"></span>
+        <button class="mlb-btn" data-act="forward" title="Forward">${ic('<polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/>')}</button>
+        <button class="mlb-btn" data-act="save" title="Save">${ic('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>')}</button>
+        <button class="mlb-btn" data-act="open" title="Open in browser">${ic('<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>')}</button>
+        <div class="mlb-more-wrap">
+          <button class="mlb-btn" data-act="more" title="More" aria-haspopup="menu">${ic('<circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/>')}</button>
+          <div class="mlb-menu" role="menu" hidden>
+            <button data-act="copy" role="menuitem">${ic('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>')} Copy image</button>
+            <button data-act="details" role="menuitem">${ic('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>')} View details</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mlb-details" hidden></div>
+  `;
+
   document.body.appendChild(lb);
   requestAnimationFrame(() => lb.classList.add('show'));
+
+  // ── Behavior ──
+  const img = lb.querySelector('.mlb-image');
+  const wrap = lb.querySelector('.mlb-image-wrap');
+  const moreBtn = lb.querySelector('[data-act="more"]');
+  const menu = lb.querySelector('.mlb-menu');
+  const details = lb.querySelector('.mlb-details');
+
+  let zoom = 1, tx = 0, ty = 0;
+  let isPanning = false, panX = 0, panY = 0, startX = 0, startY = 0;
+  function applyTransform() {
+    img.style.transform = `translate(${tx}px, ${ty}px) scale(${zoom})`;
+    img.style.cursor = zoom > 1 ? (isPanning ? 'grabbing' : 'grab') : 'zoom-in';
+  }
+  function setZoom(next, ox, oy) {
+    const clamped = Math.max(0.25, Math.min(6, next));
+    // Zoom about cursor position if provided
+    if (ox != null && oy != null) {
+      const rect = img.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const k = clamped / zoom;
+      tx = ox - (ox - (cx + tx)) * k - cx;
+      ty = oy - (oy - (cy + ty)) * k - cy;
+    }
+    zoom = clamped;
+    if (zoom <= 1) { tx = 0; ty = 0; }
+    applyTransform();
+  }
+  applyTransform();
+  img.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = -Math.sign(e.deltaY) * 0.18;
+    setZoom(zoom * (1 + delta), e.clientX, e.clientY);
+  }, { passive: false });
+  img.addEventListener('mousedown', (e) => {
+    if (zoom <= 1) return;
+    isPanning = true; panX = tx; panY = ty; startX = e.clientX; startY = e.clientY;
+    applyTransform();
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', function _mm(e){
+    if (!isPanning) return;
+    tx = panX + (e.clientX - startX);
+    ty = panY + (e.clientY - startY);
+    applyTransform();
+  });
+  window.addEventListener('mouseup', function _mu(){ if (isPanning) { isPanning = false; applyTransform(); } });
+
+  // Toggle between 1x and 2x on click (only when zoom <= 1)
+  img.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (zoom <= 1) setZoom(2, e.clientX, e.clientY);
+    else setZoom(1);
+  });
+
+  lb.querySelector('.media-lightbox-close').onclick = (e) => { e.stopPropagation(); _closeMediaLightbox(); };
+  // Clicking outside the image/toolbar closes the lightbox
+  lb.addEventListener('click', (e) => {
+    if (e.target === lb || e.target.classList?.contains('mlb-stage')) _closeMediaLightbox();
+  });
+
+  // Toolbar actions
+  lb.querySelectorAll('.mlb-toolbar [data-act]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const act = btn.dataset.act;
+      if (act === 'zin') return setZoom(zoom * 1.25);
+      if (act === 'zout') return setZoom(zoom / 1.25);
+      if (act === 'save') return _downloadLightboxImg(src, m.filename);
+      if (act === 'open') return window.open(src, '_blank', 'noopener');
+      if (act === 'forward') return _lightboxForward(src, m);
+      if (act === 'more') { menu.hidden = !menu.hidden; return; }
+    });
+  });
+  menu.querySelectorAll('[data-act]').forEach(item => {
+    item.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      menu.hidden = true;
+      const act = item.dataset.act;
+      if (act === 'copy') return _lightboxCopy(src);
+      if (act === 'details') return _lightboxToggleDetails(details, img, src, m);
+    });
+  });
+  document.addEventListener('click', function _outside(e){
+    if (!lb.isConnected) { document.removeEventListener('click', _outside); return; }
+    if (!moreBtn.contains(e.target) && !menu.contains(e.target)) menu.hidden = true;
+  });
+
   document.addEventListener('keydown', _lightboxEscHandler);
 }
 function _closeMediaLightbox() {
@@ -22740,10 +22913,58 @@ function _closeMediaLightbox() {
   setTimeout(() => lb.remove(), 160);
 }
 function _lightboxEscHandler(e) { if (e.key === 'Escape') _closeMediaLightbox(); }
-function _downloadLightboxImg(src) {
+function _downloadLightboxImg(src, filename) {
   const a = document.createElement('a');
-  a.href = src; a.download = 'image'; a.style.display = 'none';
+  a.href = src;
+  a.download = filename || (src.split('/').pop()?.split('?')[0] || 'image');
+  a.style.display = 'none';
   document.body.appendChild(a); a.click(); a.remove();
+}
+async function _lightboxCopy(src) {
+  try {
+    const res = await fetch(src, { mode: 'cors' });
+    const blob = await res.blob();
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+      if (typeof toast === 'function') toast('Image copied', 'success');
+      return;
+    }
+  } catch(_) {}
+  try {
+    await navigator.clipboard.writeText(src);
+    if (typeof toast === 'function') toast('Image URL copied', 'success');
+  } catch(_) {
+    if (typeof toast === 'function') toast('Copy failed', 'error');
+  }
+}
+function _lightboxForward(src, meta) {
+  if (typeof openForwardPicker === 'function') {
+    try { openForwardPicker(src, meta); return; } catch(_){}
+  }
+  // Fallback: copy URL so the user can paste into a DM
+  navigator.clipboard?.writeText(src).then(() => {
+    if (typeof toast === 'function') toast('Image URL copied — paste to forward', 'success');
+  });
+}
+function _lightboxToggleDetails(box, img, src, meta) {
+  if (!box.hidden) { box.hidden = true; box.innerHTML = ''; return; }
+  const w = img.naturalWidth || meta.naturalWidth || '?';
+  const h = img.naturalHeight || meta.naturalHeight || '?';
+  const filename = meta.filename || src.split('/').pop()?.split('?')[0] || 'image';
+  box.innerHTML = `<div class="mlb-details-row"><span>File</span><strong>${escapeHTML(filename)}</strong></div>
+    <div class="mlb-details-row"><span>Dimensions</span><strong>${w} × ${h}</strong></div>
+    <div class="mlb-details-row"><span>Source</span><a href="${escapeHTML(src)}" target="_blank" rel="noopener">Open original</a></div>`;
+  box.hidden = false;
+  // Try to enrich with byte size via HEAD
+  fetch(src, { method: 'HEAD' }).then(r => {
+    const sz = r.headers.get('content-length');
+    if (sz && !box.hidden) {
+      const row = document.createElement('div');
+      row.className = 'mlb-details-row';
+      row.innerHTML = `<span>Size</span><strong>${_mlbFmtBytes(+sz)}</strong>`;
+      box.insertBefore(row, box.children[2] || null);
+    }
+  }).catch(()=>{});
 }
 // Legacy compat
 window._zoomImg = _openMediaLightbox;
@@ -22822,7 +23043,7 @@ function parseMD(s) {
         + '</div>';
     }
     return '<div style="margin:5px 0;display:inline-block;border-radius:10px;padding:0;overflow:hidden;">'
-      + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openMediaLightbox(this.src)">'
+      + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">'
       + '</div>';
   });
   // 0b. Video attachments — full-featured video player
@@ -23124,7 +23345,7 @@ function parseMD(s) {
   // 5h. Direct image URLs (PNG, JPG, WebP, SVG, etc.) — render as clickable images
   s = s.replace(/(?<![='"(/])(https?:\/\/[^\s<>"'()]+\.(?:png|jpe?g|webp|svg|bmp)(?:\?[^\s<>"'()]*)?)/gi, url => {
     const safe = escapeHTML(url);
-    return `<div style="margin:5px 0;display:inline-block;background:rgba(0,0,0,.2);border-radius:10px;padding:3px;"><img src="${safe}" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;background:rgba(0,0,0,.15);" loading="lazy" onclick="_openMediaLightbox(this.src)" onerror="this.style.display='none'"></div>`;
+    return `<div style="margin:5px 0;display:inline-block;background:rgba(0,0,0,.2);border-radius:10px;padding:3px;"><img src="${safe}" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;background:rgba(0,0,0,.15);" loading="lazy" onclick="_openLightboxFromImg(this)" onerror="this.style.display='none'"></div>`;
   });
   // 5i. Direct video URLs (MP4, WebM, etc.) — render as clickable videos
   s = s.replace(/(?<![='"(/])(https?:\/\/[^\s<>"'()]+\.(?:mp4|webm|mov|ogg|mkv)(?:\?[^\s<>"'()]*)?)/gi, url => {

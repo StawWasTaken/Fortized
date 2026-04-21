@@ -11853,21 +11853,10 @@ function renderBSettingsMain(tab) {
             </div>
           </div>
 
-          <!-- Target Bastion -->
-          <div style="margin-bottom:14px;">
-            <div class="settings-title">Target Bastion</div>
-            <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
-              ${(CU.bastions||[]).filter(bst=>_canAdvertiseBastion(bst)).map((bst,i)=>{
-                const idx=(CU.bastions||[]).indexOf(bst);
-                return `<option value="${idx}" ${idx===curBastion?'selected':''}>${escapeHTML(bst.name)}</option>`;
-              }).join('')}
-            </select>
-          </div>
-
           <!-- Link target -->
           <div style="margin-bottom:14px;">
             <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Link ${isSuperAdmin() ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span>' : ''}</div>
-            <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="var el=document.getElementById('cm-ad-custom-link');if(el){el.style.display=this.value==='custom'?'':'none';if(this.value!=='custom')el.value=this.value==='bastion'?'':this.value;}">
+            <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="_cmOnAdLinkTypeChange()">
               <option value="bastion">Default - Join Bastion</option>
               <optgroup label="In-app pages">
                 <option value="/app">Home</option>
@@ -11884,6 +11873,19 @@ function renderBSettingsMain(tab) {
             </select>
             ${isSuperAdmin() ? '<input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">' : ''}
             <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">${isSuperAdmin() ? 'Fortized pages open in-app. External URLs open in the user\'s browser.' : 'In-app pages only. External URLs are reserved for Fortized staff.'}</div>
+          </div>
+
+          <!-- Target Bastion -->
+          <div style="margin-bottom:14px;" id="cm-ad-bastion-wrap">
+            <div class="settings-title" id="cm-ad-bastion-label">Target Bastion</div>
+            <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
+              <option value="">- None -</option>
+              ${(CU.bastions||[]).map((bst,i)=>{
+                const idx=i;
+                return `<option value="${idx}" ${idx===curBastion?'selected':''}>${escapeHTML(bst.name)}</option>`;
+              }).join('')}
+            </select>
+            <div id="cm-ad-bastion-hint" style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Required - the ad links to this bastion's invite.</div>
           </div>
 
           <div style="margin-bottom:16px;">
@@ -12074,15 +12076,35 @@ function _cmAdImagePreview(e) {
   };
   reader.readAsDataURL(file);
 }
+// Toggle the Target Bastion wrapper between required/optional as the user
+// picks different link types. Called from the Link select's onchange.
+function _cmOnAdLinkTypeChange() {
+  const sel = document.getElementById('cm-ad-link-type');
+  if (!sel) return;
+  const customEl = document.getElementById('cm-ad-custom-link');
+  if (customEl) {
+    customEl.style.display = sel.value === 'custom' ? '' : 'none';
+    if (sel.value !== 'custom') customEl.value = sel.value === 'bastion' ? '' : sel.value;
+  }
+  const label = document.getElementById('cm-ad-bastion-label');
+  const hint = document.getElementById('cm-ad-bastion-hint');
+  const isBastionLink = sel.value === 'bastion';
+  if (label) label.textContent = isBastionLink ? 'Target Bastion' : 'Sponsor Bastion (optional)';
+  if (hint) hint.textContent = isBastionLink
+    ? "Required - the ad links to this bastion's invite."
+    : 'Optional - shown as the ad\'s sponsor. Leave as None to use your own profile.';
+  _cmUpdateAdPreview();
+}
 function _cmUpdateAdPreview() {
   const livePreview = document.getElementById('cm-ad-live-preview');
   if (!livePreview) return;
   const imageData = _cmAdImageData;
   const title = document.getElementById('cm-ad-title')?.value?.trim() || '';
-  const bastionIdx = parseInt(document.getElementById('cm-ad-bastion')?.value);
-  const bst = CU.bastions?.[bastionIdx];
-  const bastionName = bst?.name || 'Your Bastion';
-  const bastionIcon = bst?.icon || '';
+  const rawBstVal = document.getElementById('cm-ad-bastion')?.value;
+  const bastionIdx = rawBstVal === '' || rawBstVal == null ? -1 : parseInt(rawBstVal);
+  const bst = bastionIdx >= 0 ? CU.bastions?.[bastionIdx] : null;
+  const bastionName = bst?.name || CU?.username || 'Sponsor';
+  const bastionIcon = bst?.icon || CU?.pfp || '';
   const ratio = document.querySelector('input[name="cm-ad-ratio"]:checked')?.value || 'banner';
   const isBanner = ratio === 'banner';
   const imgW = isBanner ? '100%' : '300px';
@@ -12109,14 +12131,19 @@ async function _cmCreateAd() {
   if (onyxBal < 15) { toast('Not enough Onyx! You need 15 Onyx.', 'error'); return; }
   const title = document.getElementById('cm-ad-title')?.value?.trim();
   if (!title) { toast('Enter an ad title', 'error'); return; }
-  const bastionIdx = parseInt(document.getElementById('cm-ad-bastion')?.value);
-  const bst = CU.bastions?.[bastionIdx];
-  if (!bst) { toast('Select a bastion', 'error'); return; }
-  const image = _cmAdImageData || (bst.banner||bst.icon||'');
+  const linkType = document.getElementById('cm-ad-link-type')?.value || 'bastion';
+  const rawBstVal = document.getElementById('cm-ad-bastion')?.value;
+  const bastionIdx = rawBstVal === '' || rawBstVal == null ? -1 : parseInt(rawBstVal);
+  const bst = bastionIdx >= 0 ? CU.bastions?.[bastionIdx] : null;
+  // Bastion is only required when the ad links to a bastion invite.
+  if (linkType === 'bastion') {
+    if (!bst) { toast('Select a bastion to advertise, or pick a different link type.', 'error'); return; }
+    if (!_canAdvertiseBastion(bst)) { toast("You can only advertise a bastion you own or help manage.", 'error'); return; }
+  }
+  const image = _cmAdImageData || (bst?.banner || bst?.icon || CU?.pfp || '');
   const autoRefund = document.getElementById('cm-ad-autorefund')?.checked || false;
   const ratio = document.querySelector('input[name="cm-ad-ratio"]:checked')?.value || 'banner';
   let customLink = '';
-  const linkType = document.getElementById('cm-ad-link-type')?.value || 'bastion';
   if (linkType === 'custom') {
     if (!isSuperAdmin()) { toast('Only Fortized staff can set custom URLs.', 'error'); return; }
     customLink = document.getElementById('cm-ad-custom-link')?.value?.trim() || '';
@@ -12126,15 +12153,16 @@ async function _cmCreateAd() {
     customLink = linkType;
   }
   const ownerIsSuper = isSuperAdmin();
-  showCustomConfirm(`Create ad "${title}" for ${escapeHTML(bst.name)}? This costs 15 Onyx.`, async () => {
+  const sponsorName = bst?.name || CU?.username || 'Sponsor';
+  showCustomConfirm(`Create ad "${title}"${bst?' for '+escapeHTML(bst.name):''}? This costs 15 Onyx.`, async () => {
     CU.onyx = (CU.onyx||0) - 15;
     CU.ads = CU.ads || [];
     const ad = {
       id: 'ad_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
-      bastionIdx: bastionIdx,
-      bastionId: bst.globalId || bst.name,
-      bastionName: bst.name,
-      bastionIcon: bst.icon||'',
+      bastionIdx: bastionIdx >= 0 ? bastionIdx : null,
+      bastionId: bst ? (bst.globalId || bst.name) : null,
+      bastionName: sponsorName,
+      bastionIcon: bst?.icon || CU?.pfp || '',
       image: image,
       title: title,
       ratio: ratio,
@@ -12278,8 +12306,7 @@ async function _cmEditAd(adIdx) {
   const ad = CU.ads?.[adIdx];
   if (!ad) { toast('Ad not found', 'error'); return; }
   if ((CU.onyx||0) < 5) { toast('Editing costs 5 Onyx. Not enough!', 'error'); return; }
-  const myBastions = (CU.bastions||[]).filter(b => _canAdvertiseBastion(b));
-  if (!myBastions.length) { toast('You need a bastion to own ads', 'error'); return; }
+  const myBastions = (CU.bastions||[]);
   const isSuper = isSuperAdmin();
   const curLink = ad.customLink || 'bastion';
   const linkOptions = [
@@ -12322,11 +12349,12 @@ async function _cmEditAd(adIdx) {
       <div style="margin-bottom:12px;">
         <div class="settings-title">Target Bastion</div>
         <select id="ea-bastion" class="field-input" style="padding:10px 14px;">
-          ${myBastions.map(bst => {
-            const idx = (CU.bastions||[]).indexOf(bst);
+          <option value="" ${ad.bastionIdx==null?'selected':''}>- None -</option>
+          ${myBastions.map((bst,idx) => {
             return `<option value="${idx}" ${idx===ad.bastionIdx?'selected':''}>${escapeHTML(bst.name)}</option>`;
           }).join('')}
         </select>
+        <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Required only when linking to a bastion invite.</div>
       </div>
       <div style="margin-bottom:12px;">
         <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Link ${isSuper ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span>' : ''}</div>
@@ -12347,12 +12375,16 @@ async function _cmEditAdSave(adId) {
   if ((CU.onyx||0) < 5) { toast('Not enough Onyx (5 required)', 'error'); return; }
   const newTitle = (document.getElementById('ea-title')?.value || '').trim();
   if (!newTitle) { toast('Enter an ad name', 'error'); return; }
-  const newBstIdx = parseInt(document.getElementById('ea-bastion')?.value);
-  const newBst = CU.bastions?.[newBstIdx];
-  if (!newBst) { toast('Select a bastion', 'error'); return; }
+  const rawNewBst = document.getElementById('ea-bastion')?.value;
+  const newBstIdx = rawNewBst === '' || rawNewBst == null ? -1 : parseInt(rawNewBst);
+  const newBst = newBstIdx >= 0 ? CU.bastions?.[newBstIdx] : null;
   let newCustomLink = ad.customLink;
   const linkType = document.getElementById('ea-link-type')?.value || 'bastion';
-  if (linkType === 'bastion') newCustomLink = undefined;
+  if (linkType === 'bastion') {
+    if (!newBst) { toast('Select a bastion to advertise, or pick a different link type.', 'error'); return; }
+    if (!_canAdvertiseBastion(newBst)) { toast("You can only advertise a bastion you own or help manage.", 'error'); return; }
+    newCustomLink = undefined;
+  }
   else if (linkType === 'custom') {
     if (!isSuperAdmin()) { toast('Only Fortized staff can set custom URLs.', 'error'); return; }
     newCustomLink = (document.getElementById('ea-custom-link')?.value || '').trim() || undefined;
@@ -12362,10 +12394,10 @@ async function _cmEditAdSave(adId) {
   }
   CU.onyx = (CU.onyx||0) - 5;
   ad.title = newTitle;
-  ad.bastionIdx = newBstIdx;
-  ad.bastionId = newBst.globalId || newBst.name;
-  ad.bastionName = newBst.name;
-  ad.bastionIcon = newBst.icon || '';
+  ad.bastionIdx = newBst ? newBstIdx : null;
+  ad.bastionId = newBst ? (newBst.globalId || newBst.name) : null;
+  ad.bastionName = newBst?.name || CU?.username || 'Sponsor';
+  ad.bastionIcon = newBst?.icon || CU?.pfp || '';
   ad.customLink = newCustomLink;
   ad.editedAt = new Date().toISOString();
   saveLocal();
@@ -31585,18 +31617,8 @@ function renderAtelierTab(tab) {
             </div>
 
             <div style="margin-bottom:14px;">
-              <div class="settings-title">Target Bastion</div>
-              <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
-                ${(CU.bastions||[]).filter(bst=>_canAdvertiseBastion(bst)).map((bst,i)=>{
-                  const idx=(CU.bastions||[]).indexOf(bst);
-                  return `<option value="${idx}">${escapeHTML(bst.name)}</option>`;
-                }).join('')}
-              </select>
-            </div>
-
-            <div style="margin-bottom:14px;">
               <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Link ${isSuperAdmin() ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span>' : ''}</div>
-              <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="var el=document.getElementById('cm-ad-custom-link');if(el){el.style.display=this.value==='custom'?'':'none';if(this.value!=='custom')el.value=this.value==='bastion'?'':this.value;}">
+              <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="_cmOnAdLinkTypeChange()">
                 <option value="bastion">Default - Join Bastion (opens in app)</option>
                 <optgroup label="In-app pages">
                   <option value="/app">Home</option>
@@ -31622,6 +31644,17 @@ function renderAtelierTab(tab) {
               </select>
               ${isSuperAdmin() ? '<input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">' : ''}
               <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">${isSuperAdmin() ? 'Web pages open in browser. App pages and bastion links open in-app.' : 'In-app pages only. External URLs are reserved for Fortized staff.'}</div>
+            </div>
+
+            <div style="margin-bottom:14px;" id="cm-ad-bastion-wrap">
+              <div class="settings-title" id="cm-ad-bastion-label">Target Bastion</div>
+              <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
+                <option value="">- None -</option>
+                ${(CU.bastions||[]).map((bst,i)=>{
+                  return `<option value="${i}">${escapeHTML(bst.name)}</option>`;
+                }).join('')}
+              </select>
+              <div id="cm-ad-bastion-hint" style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Required - the ad links to this bastion's invite.</div>
             </div>
 
             <div style="margin-bottom:16px;">

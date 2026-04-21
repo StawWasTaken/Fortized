@@ -31514,7 +31514,7 @@ async function _forumLoadThreads() {
             <div class="forum-thread-meta">
               <span>by <strong style="color:var(--text);">${escapeHTML(th.author)}</strong></span>
               <span class="forum-thread-meta-sep"></span>
-              <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${th.views || 0}</span>
+              <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${_forumBoostedViews(th)}</span>
               <span class="forum-thread-meta-sep"></span>
               <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${th.reply_count || 0}</span>
             </div>
@@ -31605,7 +31605,7 @@ async function _forumViewThread(threadId, opts) {
           <div style="flex:1;min-width:0;">
             <div class="forum-detail-title">${escapeHTML(thread.title)}</div>
             <div class="forum-detail-stats">
-              <span>${thread.views || 0} views</span>
+              <span>${_forumBoostedViews(thread)} views</span>
               <span>·</span>
               <span>${posts.length} replies</span>
               <span>·</span>
@@ -31782,6 +31782,14 @@ function _forumBoostedUpvotes(obj) {
   // upvotes — otherwise small counts (1-5 ups) would round to 0 and look
   // like the boost isn't applied.
   return ups + Math.max(1, Math.ceil(ups * boost));
+}
+// Same boost logic applied to view counts so staff posts show a visibly
+// higher view number at render time without touching the stored value.
+function _forumBoostedViews(obj) {
+  const v = Number(obj?.views) || 0;
+  const boost = _forumStaffBoost(obj?.author);
+  if (!boost || !v) return v;
+  return v + Math.max(1, Math.ceil(v * boost));
 }
 function _forumNetScore(obj) {
   const dns = Array.isArray(obj.dislikes) ? obj.dislikes.length : 0;
@@ -32291,7 +32299,7 @@ async function _forumGlobalSearch(query) {
             <div class="forum-thread-meta">
               <span>by <strong style="color:var(--text);">${escapeHTML(th.author)}</strong></span>
               <span class="forum-thread-meta-sep"></span>
-              <span>${th.views || 0} views</span>
+              <span>${_forumBoostedViews(th)} views</span>
               <span class="forum-thread-meta-sep"></span>
               <span>${th.reply_count || 0} replies</span>
             </div>
@@ -32332,7 +32340,7 @@ async function _forumSearchInCategory(query) {
           <div class="forum-thread-meta">
             <span>by <strong style="color:var(--text);">${escapeHTML(th.author)}</strong></span>
             <span class="forum-thread-meta-sep"></span>
-            <span>${th.views || 0} views</span>
+            <span>${_forumBoostedViews(th)} views</span>
             <span class="forum-thread-meta-sep"></span>
             <span>${th.reply_count || 0} replies</span>
           </div>

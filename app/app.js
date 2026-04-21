@@ -350,6 +350,7 @@ const FtzStatus = (() => {
   function set(status) {
     if (!CU?.username) return;
     status = sanitize(status);
+    const prev = _manualStatus;
     _manualStatus = status;
     _autoAway = false;
     CU.status = status;
@@ -359,6 +360,9 @@ const FtzStatus = (() => {
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     updateUserbar();
     refreshCustomStatusBubble();
+    if (prev !== status && typeof _logJoysterEvent === 'function') {
+      _logJoysterEvent(`changed status to "${status}"`);
+    }
   }
 
   // Restore the user's manually chosen status on login
@@ -519,6 +523,9 @@ const FtzStatus = (() => {
     } catch(e) { console.warn('[Status] Custom status write failed:', e?.message); }
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     refreshCustomStatusBubble();
+    if (typeof _logJoysterEvent === 'function') {
+      _logJoysterEvent(`set custom status ${cs.emoji || ''} "${text}"`);
+    }
   }
 
   function clearCustom() {
@@ -2268,12 +2275,19 @@ function _mobileSettingsNav(tab) {
   showView('profile');
   setTimeout(() => buildProfileView(tab), 100);
 }
+let _lastOnyxSeen = null;
 function updateOnyxDisplay() {
   const bal = CU?.onyx || 0;
   ['onyx-val','atelier-balance'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
+  if (_lastOnyxSeen !== null && bal !== _lastOnyxSeen && typeof _logJoysterEvent === 'function') {
+    const delta = bal - _lastOnyxSeen;
+    if (delta <= -5) _logJoysterEvent(`spent ${Math.abs(delta)} Onyx (now ${bal})`);
+    else if (delta >= 5) _logJoysterEvent(`gained ${delta} Onyx (now ${bal})`);
+  }
+  _lastOnyxSeen = bal;
 }
 function updateAtelierSidebar() {
   if (!CU) return;
@@ -3456,42 +3470,82 @@ let _joysterLastTip = -1;
 const _JOYSTER_DAILY_LIMIT = 5;
 
 // Joyster AI — uses Gemini API for dynamic personality responses
-const JOYSTER_API_KEY = 'AIzaSyA1mJnFMGbCkaUGyFpcTVrnoWjIY4dIk_0';
+const JOYSTER_API_KEY = 'AIzaSyARHuqX0uWrWv_GZaXOeFgFZNaOnpILRU4';
 const JOYSTER_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-const JOYSTER_SYSTEM_PROMPT = `You are Joyster the Jester, the official mischievous mascot of Fortized - a gaming/social platform. You're a witty, arrogant jester from King Staw's royal court who lives for chaos, pranks, and making people laugh. Your personality is electric: playful, cheeky, spontaneous, constantly laughing (BAHAHA! Ahahaha! Hehehehe~), makes terrible puns, teases lovingly, unpredictable, bold, irreverent.
+const JOYSTER_SYSTEM_PROMPT = `You are Joyster the Jester, the official mischievous mascot of Fortized - a gaming/social platform. You're a witty, cocky jester from King Staw's royal court who lives for chaos, pranks, and making people laugh. Personality: playful, arrogant, cheeky, spontaneous, constantly laughing (BAHAHA! Ahahaha! Hehehehe~), terrible puns, teases lovingly, unpredictable, bold, irreverent.
 
-You know Fortized features well: Bastions (guilds with roles & channels), Onyx (currency for cosmetics), Radiance/VIP (premium status), Atelier (cosmetics shop), voice/party rooms, profiles, custom status, emojis, widgets.
+You know Fortized features: Bastions (guilds with roles/channels), Onyx (currency), Radiance/VIP (premium), Atelier (cosmetics shop), voice/party rooms, profiles, custom status.
 
-Response rules (CRITICAL - follow exactly):
-- 1-2 sentences MAX, punchy and snappy - NO ESSAYS
-- Always stay in character - you're a jester, not a bot
-- Vary your laugh: BAHAHA!, Ahahaha!, Hehehehe~, etc.
-- Make wordplay & terrible puns when possible
-- Be unpredictable - surprise them
-- Reference specific Fortized features contextually
-- NO markdown, NO bullets, NO explanations
-- Energy level 9/10 - always excited about something
+CRITICAL response rules:
+- 1-2 sentences MAX, punchy and snappy — NO essays
+- Each response, pick exactly ONE specific detail from the user_context JSON and roast them about it personally (their hovered button, new friend, status change, recent purchase, Onyx balance, etc.). Make it feel like you were WATCHING them.
+- Your signature catchphrase is "go touch grass!" — include it in roughly 1 out of every 3 responses, as a closer or punchline
+- Stay in character — you're a cocky jester, not a bot
+- Vary your laugh: BAHAHA!, Ahahaha!, Hehehehe~
+- Energy 9/10, terrible puns welcome
+- NO markdown, NO bullets, NO explanations, NO meta-commentary
 
-Examples of YOUR VOICE:
-"BAHAHA! Your Onyx wallet is looking sad... let me fix that for you~"
-"Hehehehe~ I DARE you to customize your profile before I judge you!"
-"Ahahaha! You haven't checked the Atelier? There's SHINY things waiting!"
-"PSST! Your Bastion needs you... or it's gonna get lonely and cry!"
-"Ahahaha! Voice chat is live - time to hear my absolutely TERRIBLE singing~"`;
+Example voice (note how they reference a specific thing and sometimes sign off with "go touch grass"):
+"BAHAHA! Hovering the Atelier button like it owes you Onyx — just BUY the shiny thing already, cheapskate! Or go touch grass!"
+"Hehehe~ New friend? Finally! Your friend count went from tragic to merely sad~"
+"Ahahaha! 3 Onyx?! I've seen beggars with fuller pockets. Go touch grass and rethink your life choices!"
+"PSST! Changed your status to 'away'? We ALL know you're just watching cat videos~"`;
 let _joysterAICache = [];
 let _joysterContexts = []; // Track shown contexts to avoid repetition
+
+// ── Joyster live-context tracking ──
+// Rolling log of recent user-observable events so the AI can roast specifics.
+const _joysterEvents = [];
+function _logJoysterEvent(event) {
+  _joysterEvents.push({ event: String(event).slice(0, 80), t: Date.now() });
+  if (_joysterEvents.length > 8) _joysterEvents.shift();
+}
+let _joysterHoverLabel = null;
+if (typeof document !== 'undefined') {
+  document.addEventListener('mouseover', (e) => {
+    const el = e.target instanceof Element
+      ? e.target.closest('button, .btn, [role="button"], .sidebar-btn, .nav-item, a.btn')
+      : null;
+    if (!el) return;
+    const raw = el.getAttribute('aria-label') || el.title || el.textContent || '';
+    const label = raw.replace(/\s+/g, ' ').trim().slice(0, 50);
+    if (label) _joysterHoverLabel = label;
+  }, { passive: true, capture: true });
+}
+function _buildJoysterUserContext() {
+  const cs = CU?.customStatus;
+  const csText = cs?.text || (typeof cs === 'string' ? cs : '');
+  return {
+    username: CU?.username || null,
+    onyx: CU?.onyx ?? 0,
+    radiance: !!(CU?.vip || CU?.radiance),
+    status: CU?.status || 'unknown',
+    customStatus: csText || null,
+    friendCount: (CU?.friends || []).length,
+    bastionCount: (CU?.bastions || []).length,
+    recentHoverButton: _joysterHoverLabel,
+    recentEvents: _joysterEvents.slice(-5).map(e => e.event),
+    localTimeHour: new Date().getHours(),
+  };
+}
 
 let _joysterAIDisabledUntil = 0;
 async function _getJoysterAIResponse(context) {
   if (Date.now() < _joysterAIDisabledUntil) return null;
   try {
+    const userCtx = _buildJoysterUserContext();
+    const promptText = `user_context = ${JSON.stringify(userCtx)}
+
+Directive: ${context || 'Bubble a cocky, personal jester comment for this user.'}
+
+Pick ONE specific detail from user_context and make it the core of your comment. 1-2 sentences, in-character, punchy.`;
     const res = await fetch(JOYSTER_API_URL + '?key=' + JOYSTER_API_KEY, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         systemInstruction: {parts:[{text: JOYSTER_SYSTEM_PROMPT}]},
-        contents: [{role:'user', parts:[{text: context || 'Say something funny and unpredictable to a Fortized user. 1-2 short sentences, full jester energy!'}]}],
-        generationConfig: {maxOutputTokens: 85, temperature: 0.95}
+        contents: [{role:'user', parts:[{text: promptText}]}],
+        generationConfig: {maxOutputTokens: 120, temperature: 1.0}
       })
     });
     if (!res.ok) {
@@ -3507,7 +3561,7 @@ async function _getJoysterAIResponse(context) {
     }
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    return text ? text.trim().slice(0, 200) : null;
+    return text ? text.trim().replace(/^["']|["']$/g, '').slice(0, 260) : null;
   } catch { return null; }
 }
 
@@ -3640,49 +3694,56 @@ function _stopJoysterBubbles() {
   if (bubble) bubble.classList.remove('show');
 }
 
-function _showJoysterBubble() {
+function _renderJoysterBubble(text) {
   const bubble = document.getElementById('joyster-bubble');
   if (!bubble) return;
+  bubble.textContent = text;
+  if (window._joysterBubbleHideTimer) clearTimeout(window._joysterBubbleHideTimer);
+  bubble.classList.add('show');
+  window._joysterBubbleHideTimer = setTimeout(() => bubble.classList.remove('show'), 12000);
+}
 
-  // 30% chance to use AI-generated response if available
-  if (_joysterAICache.length > 0 && Math.random() < 0.3) {
-    const aiText = _joysterAICache.shift();
-    bubble.textContent = aiText;
-    if (window._joysterBubbleHideTimer) clearTimeout(window._joysterBubbleHideTimer);
-    bubble.classList.add('show');
-    window._joysterBubbleHideTimer = setTimeout(() => bubble.classList.remove('show'), 12000);
-    // Refill cache in background
-    if (_joysterAICache.length < 2) _prefetchJoysterAI();
-    return;
-  }
-
-  let text;
+function _pickJoysterFallback() {
   const roll = Math.random();
-  if (roll < 0.2) {
-    text = _getJoysterStatusJoke();
-  } else if (roll < 0.3 && (CU?.onyx || 0) < 50) {
+  if (roll < 0.2) return _getJoysterStatusJoke();
+  if (roll < 0.3 && (CU?.onyx || 0) < 50) {
     const brokeJokes = [
       "Your Onyx balance is looking a bit... sad. Haha!",
       `${CU?.onyx || 0} Onyx? That's not even enough for a sticker. Ahahaha!`,
       "Claim your daily Onyx! I'm begging you! Your wallet is crying!",
     ];
-    text = brokeJokes[Math.floor(Math.random() * brokeJokes.length)];
-  } else if (roll < 0.4 && (CU?.bastions || []).length === 0) {
+    return brokeJokes[Math.floor(Math.random() * brokeJokes.length)];
+  }
+  if (roll < 0.4 && (CU?.bastions || []).length === 0) {
     const noBastionJokes = [
       "Zero Bastions? That's bold. Create one already!",
       "No Bastions? What is this, a social app with no socializing?",
     ];
-    text = noBastionJokes[Math.floor(Math.random() * noBastionJokes.length)];
-  } else {
-    let idx;
-    do { idx = Math.floor(Math.random() * JOYSTER_QUIPS.length); } while (idx === _joysterLastTip && JOYSTER_QUIPS.length > 1);
-    _joysterLastTip = idx;
-    text = JOYSTER_QUIPS[idx];
+    return noBastionJokes[Math.floor(Math.random() * noBastionJokes.length)];
   }
-  bubble.textContent = text;
-  if (window._joysterBubbleHideTimer) clearTimeout(window._joysterBubbleHideTimer);
-  bubble.classList.add('show');
-  window._joysterBubbleHideTimer = setTimeout(() => bubble.classList.remove('show'), 12000);
+  let idx;
+  do { idx = Math.floor(Math.random() * JOYSTER_QUIPS.length); } while (idx === _joysterLastTip && JOYSTER_QUIPS.length > 1);
+  _joysterLastTip = idx;
+  return JOYSTER_QUIPS[idx];
+}
+
+async function _showJoysterBubble() {
+  const bubble = document.getElementById('joyster-bubble');
+  if (!bubble) return;
+
+  // Prefer a fresh AI response so the comment can reference what the user
+  // just did (hovered button, new friend, status change, Onyx delta).
+  // Fall back to pre-cached AI lines, then to hardcoded quips.
+  if (Date.now() >= _joysterAIDisabledUntil) {
+    const fresh = await _getJoysterAIResponse('Roast the user using ONE specific detail from user_context. Keep Joyster energy.');
+    if (fresh) { _renderJoysterBubble(fresh); return; }
+  }
+  if (_joysterAICache.length > 0) {
+    _renderJoysterBubble(_joysterAICache.shift());
+    if (_joysterAICache.length < 2) _prefetchJoysterAI();
+    return;
+  }
+  _renderJoysterBubble(_pickJoysterFallback());
 }
 
 function _joysterSay(text, duration) {
@@ -7912,6 +7973,7 @@ async function acceptFriend(username){
     await FortizedSocial.acceptFriendRequest(CU.username, username);
     await refreshCU();
     toast('Now friends with '+username+'!','success');
+    if (typeof _logJoysterEvent === 'function') _logJoysterEvent(`added friend "${username}"`);
     showFeedbackToast('adding a friend', 'friend_accept');
     renderFriendsList();
     renderDMSidebar(document.getElementById('sidebar-scroll'));

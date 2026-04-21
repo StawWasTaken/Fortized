@@ -16269,7 +16269,7 @@ function _showAvatarPickerMenu(event) {
 }
 
 function _showAvatarPickerModal() {
-  const recentAvatars = JSON.parse(localStorage.getItem('ftz_recent_avatars_'+CU.username)||'[]');
+  const recentAvatars = JSON.parse(localStorage.getItem('ftz_recent_avatars_'+CU.username)||'[]').slice(0,5);
   const ov = document.createElement('div');
   ov.className = 'ftz-confirm-overlay';
   ov.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;padding:0;overflow:hidden;">
@@ -16282,41 +16282,206 @@ function _showAvatarPickerModal() {
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.5);">Upload Image</span>
       </div>
-      <div onclick="this.closest('.ftz-confirm-overlay').remove();_pickGifAsAvatar();" style="padding:32px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .15s;position:relative;" onmouseover="this.style.borderColor='rgba(255,249,62,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">
+      <div onclick="this.closest('.ftz-confirm-overlay').remove();_openAvatarGifPicker();" style="padding:32px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .15s;position:relative;" onmouseover="this.style.borderColor='rgba(255,249,62,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">
         <span style="position:absolute;top:8px;right:8px;font-size:9px;font-weight:800;padding:2px 6px;background:rgba(255,255,255,.1);border-radius:4px;color:rgba(255,255,255,.4);">GIF</span>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h3m-3 0v4h3m3-8v8m4-8h-3v3h2"/></svg>
+        <svg width="34" height="28" viewBox="0 0 40 28" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="36" height="22" rx="3"/>
+          <text x="20" y="19" text-anchor="middle" font-family="'Inter','Helvetica',sans-serif" font-size="10" font-weight="800" fill="rgba(255,255,255,.55)" stroke="none" letter-spacing=".5">GIF</text>
+        </svg>
         <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.5);">Choose GIF</span>
       </div>
     </div>
     ${recentAvatars.length ? `<div style="padding:0 24px 20px;">
       <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">Recent Avatars</div>
-      <div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-bottom:10px;">Access your 6 most recent avatar uploads.</div>
+      <div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-bottom:10px;">Access your 5 most recent avatar uploads.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        ${recentAvatars.slice(0,6).map(url => `<div onclick="CU.pfp='${escapeHTML(url)}';saveUser();updateUserbar();buildProfileView('myprofile');this.closest('.ftz-confirm-overlay').remove();toast('Avatar updated!','success');" style="width:48px;height:48px;border-radius:50%;overflow:hidden;cursor:pointer;border:2px solid rgba(255,255,255,.08);transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'"><img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:cover;"></div>`).join('')}
+        ${recentAvatars.map(url => `<div class="ftz-recent-av" style="position:relative;width:48px;height:48px;" data-av-url="${escapeHTML(url)}">
+          <div onclick="_pickRecentAvatar('${escapeHTML(url)}')" style="width:48px;height:48px;border-radius:50%;overflow:hidden;cursor:pointer;border:2px solid rgba(255,255,255,.08);transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'"><img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:cover;" draggable="false"></div>
+          <button class="ftz-recent-av-rm" onclick="event.stopPropagation();_removeRecentAvatar('${escapeHTML(url)}')" data-tip="Remove" title="Remove" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#f87171;border:2px solid var(--panel,#12141b);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.35);">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>`).join('')}
       </div>
     </div>` : ''}
     <div style="padding:12px 24px 16px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:rgba(255,255,255,.25);">Upload a PNG, JPG or GIF under 8 MB. Images should be at least 128×128.</div>
   </div>`;
   document.body.appendChild(ov);
   ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  // Show remove button on hover
+  ov.querySelectorAll('.ftz-recent-av').forEach(el => {
+    const btn = el.querySelector('.ftz-recent-av-rm');
+    if (!btn) return;
+    el.addEventListener('mouseenter', () => { btn.style.display = 'flex'; });
+    el.addEventListener('mouseleave', () => { btn.style.display = 'none'; });
+  });
 }
 
-function _pickGifAsAvatar() {
-  // Open GIF picker and use the selected GIF as avatar
-  toast('Search for a GIF and click it to use as your avatar!', 'info');
-  // Trigger the GIF picker with a special callback
-  window._gifAvatarMode = true;
-  const btn = document.querySelector('.cit-gif');
-  if (btn) btn.click();
+function _pickRecentAvatar(url) {
+  CU.pfp = url;
+  _saveRecentAvatar(url);
+  saveUser();
+  try { updateUserbar(); } catch(_){}
+  try { buildProfileView('myprofile'); } catch(_){}
+  document.querySelector('.ftz-confirm-overlay')?.remove();
+  toast('Avatar updated!', 'success');
 }
 
-// Save recent avatar to localStorage
-function _saveRecentAvatar(url) {
-  if (!url || url.startsWith('data:')) return; // don't save base64 (too large)
+function _removeRecentAvatar(url) {
   const key = 'ftz_recent_avatars_' + CU.username;
-  const recent = JSON.parse(localStorage.getItem(key)||'[]');
-  if (!recent.includes(url)) recent.unshift(url);
-  localStorage.setItem(key, JSON.stringify(recent.slice(0,6)));
+  const recent = JSON.parse(localStorage.getItem(key)||'[]').filter(u => u !== url);
+  localStorage.setItem(key, JSON.stringify(recent));
+  document.querySelector('.ftz-confirm-overlay')?.remove();
+  _showAvatarPickerModal();
+}
+
+// ── Avatar GIF picker (centered modal, uses Klipy) ──
+function _openAvatarGifPicker() {
+  document.querySelector('.ftz-gif-avatar-overlay')?.remove();
+  const categories = [
+    {id:'trending',label:'Trending GIFs',trending:true},
+    {id:'hello',label:'hello'},
+    {id:'lol',label:'lol'},
+    {id:'love',label:'love'},
+    {id:'happy birthday',label:'happy birthday'},
+    {id:'thank you',label:'thank you'},
+    {id:'excited',label:'excited'},
+    {id:'yes',label:'yes'},
+    {id:'no',label:'no'},
+    {id:'sorry',label:'sorry'},
+    {id:'please',label:'please'},
+    {id:'hug',label:'hug'},
+  ];
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay ftz-gif-avatar-overlay';
+  ov.innerHTML = `<div class="ftz-confirm-card" style="max-width:560px;width:92vw;padding:0;overflow:hidden;max-height:85vh;display:flex;flex-direction:column;">
+    <div style="padding:18px 22px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-family:var(--font-display);font-size:17px;font-weight:800;">Choose GIF</div>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" aria-label="Close" style="background:transparent;border:none;cursor:pointer;color:rgba(255,255,255,.4);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='rgba(255,255,255,.4)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div style="padding:12px 16px 4px;flex-shrink:0;">
+      <div style="position:relative;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="avgif-search-input" placeholder="Search Klipy" autocomplete="off" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;" oninput="_handleAvatarGifSearch(this.value)">
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:12px 16px 16px;">
+      <div id="avgif-collections" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        ${categories.map(c=>`<div onclick="_avGifCategoryPick('${escapeHTML(c.id)}')" style="position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;cursor:pointer;background:var(--panel2,#1a1d28);">
+          <img data-avgif-cat="${escapeHTML(c.id)}" alt="" style="width:100%;height:100%;object-fit:cover;opacity:.85;">
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55) 0%,rgba(0,0,0,.1) 60%,transparent);"></div>
+          <div style="position:absolute;bottom:8px;left:10px;right:10px;color:#fff;font-weight:800;font-size:13px;text-shadow:0 1px 3px rgba(0,0,0,.6);display:flex;align-items:center;gap:6px;">
+            ${c.trending?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>':''}
+            ${escapeHTML(c.label)}
+          </div>
+        </div>`).join('')}
+      </div>
+      <div id="avgif-grid" style="display:none;columns:2;column-gap:6px;"></div>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  _loadAvatarGifCategoryPreviews();
+}
+
+async function _loadAvatarGifCategoryPreviews() {
+  const imgs = document.querySelectorAll('img[data-avgif-cat]');
+  for (const img of imgs) {
+    const cat = img.dataset.avgifCat;
+    try {
+      const cid = CU?.username || 'anon';
+      const path = cat === 'trending'
+        ? '/gifs/trending?per_page=1'
+        : '/gifs/search?q=' + encodeURIComponent(cat) + '&per_page=1';
+      const res = await fetch(KLIPY_BASE + path + '&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+      const data = await res.json();
+      const items = data.data?.data || data.data || [];
+      if (items[0]) {
+        const url = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
+        if (url) img.src = url;
+      }
+    } catch(_){}
+  }
+}
+
+function _handleAvatarGifSearch(q) {
+  const coll = document.getElementById('avgif-collections');
+  const grid = document.getElementById('avgif-grid');
+  clearTimeout(window._avGifSearchTimer);
+  window._avGifSearchTimer = setTimeout(() => {
+    if (!q.trim()) {
+      if (coll) coll.style.display = 'grid';
+      if (grid) grid.style.display = 'none';
+      return;
+    }
+    if (coll) coll.style.display = 'none';
+    if (grid) { grid.style.display = ''; grid.innerHTML = '<div style="column-span:all;text-align:center;padding:20px;color:var(--muted);">Searching…</div>'; }
+    _avGifSearchQuery(q);
+  }, 260);
+}
+
+async function _avGifCategoryPick(category) {
+  const coll = document.getElementById('avgif-collections');
+  const grid = document.getElementById('avgif-grid');
+  if (!grid) return;
+  if (coll) coll.style.display = 'none';
+  grid.style.display = '';
+  grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Loading…</div>';
+  try {
+    const cid = CU?.username || 'anon';
+    const path = category === 'trending'
+      ? '/gifs/trending?per_page=30'
+      : '/gifs/search?q=' + encodeURIComponent(category) + '&per_page=30';
+    const res = await fetch(KLIPY_BASE + path + '&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+    const data = await res.json();
+    const items = data.data?.data || data.data || [];
+    _renderAvatarGifResults(items);
+  } catch { grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Failed to load</div>'; }
+}
+
+async function _avGifSearchQuery(q) {
+  const grid = document.getElementById('avgif-grid');
+  if (!grid) return;
+  try {
+    const cid = CU?.username || 'anon';
+    const res = await fetch(KLIPY_BASE + '/gifs/search?q=' + encodeURIComponent(q) + '&per_page=30&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+    const data = await res.json();
+    const items = data.data?.data || data.data || [];
+    _renderAvatarGifResults(items);
+  } catch { grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Failed to load</div>'; }
+}
+
+function _renderAvatarGifResults(items) {
+  const grid = document.getElementById('avgif-grid');
+  if (!grid) return;
+  if (!items.length) { grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">No GIFs found</div>'; return; }
+  grid.innerHTML = items.map(g => {
+    const thumb = _klipyGifUrl(g, 'sm') || _klipyGifUrl(g, 'xs');
+    const full  = _klipyGifUrl(g, 'hd') || _klipyGifUrl(g, 'md') || thumb;
+    if (!thumb || !full) return '';
+    return '<div style="break-inside:avoid;margin-bottom:6px;border-radius:8px;overflow:hidden;cursor:pointer;background:var(--panel2,#1a1d28);" onclick="_applyGifAvatar(\''+escapeHTML(full)+'\')"><img src="'+escapeHTML(thumb)+'" loading="lazy" style="width:100%;display:block;"></div>';
+  }).join('');
+}
+
+async function _applyGifAvatar(url) {
+  if (!url) return;
+  CU.pfp = url;
+  _saveRecentAvatar(url);
+  await saveUser();
+  try { updateUserbar(); } catch(_){}
+  try { buildProfileView('myprofile'); } catch(_){}
+  document.querySelectorAll('.ftz-confirm-overlay').forEach(el => el.remove());
+  toast('Avatar updated!', 'success');
+}
+
+// Save recent avatar to localStorage (most-recent first, capped at 5)
+function _saveRecentAvatar(url) {
+  if (!url || url.startsWith('data:')) return;
+  const key = 'ftz_recent_avatars_' + CU.username;
+  const recent = JSON.parse(localStorage.getItem(key)||'[]').filter(u => u !== url);
+  recent.unshift(url);
+  localStorage.setItem(key, JSON.stringify(recent.slice(0,5)));
 }
 
 async function updatePfp(e) {
@@ -30927,8 +31092,8 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
       + '<button class="sic-qb" title="Gift to a friend" onclick="event.stopPropagation();openGiftModal(\''+item.id+'\')">'+_svgIcon('gift',12)+'</button>'
       + (owned && item.rare ? '<button class="sic-qb" title="List for resale" onclick="event.stopPropagation();promptListResale(\''+item.id+'\')">'+_svgIcon('tag',12)+'</button>' : '')
       + '</div>'
-      + '<div style="padding:20px 12px 10px;"><div style="position:relative;width:68px;height:68px;margin:0 auto 10px;"><div class="sic-deco-img" style="width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;box-shadow:0 4px 16px '+item.color+'15;position:relative;">'+avatarInner+'</div>'
-      + '<img src="'+item.src+'" style="position:absolute;inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px);object-fit:contain;pointer-events:none;" onerror="this.style.display=\'none\'"></div></div>'
+      + '<div style="padding:20px 12px 10px;"><div class="sic-deco-wrap" style="position:relative;width:82px;height:82px;margin:0 auto 10px;overflow:hidden;border-radius:50%;"><div style="position:absolute;top:7px;left:7px;width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;box-shadow:0 4px 16px '+item.color+'15;">'+avatarInner+'</div>'
+      + '<img src="'+item.src+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;" onerror="this.style.display=\'none\'"></div></div>'
       + '<div style="padding:0 14px 16px;">'
       + '<div class="sic-name">'+item.name+'</div>'
       + '<div class="sic-type">Decoration</div>'

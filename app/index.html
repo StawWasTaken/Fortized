@@ -49,7 +49,7 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=20260421c">
+<link rel="stylesheet" href="/app/styles.css?v=20260421d">
 <style id="radiance-font-style"></style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous" async></script>
 <body>
@@ -1120,9 +1120,9 @@ window._cdnReady.then(() => {
   </div>
 </div>
 
-<script src="/app/app.js?v=20260421c"></script>
-<script src="/app/joy-system.js?v=20260421c"></script>
-<script src="/app/chronicle-games.js?v=20260421c"></script>
+<script src="/app/app.js?v=20260421d"></script>
+<script src="/app/joy-system.js?v=20260421d"></script>
+<script src="/app/chronicle-games.js?v=20260421d"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -1153,11 +1153,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let _scheduled = false;
   let _pendingNodes = new Set();
   function _isSkipped(node) {
-    // Emoji picker grid renders cells as native unicode text on purpose —
-    // converting those to <img> nukes scroll performance. Also skip anything
-    // explicitly opted out of twemoji conversion.
+    // Emoji picker renders cells as native unicode text on purpose — letting
+    // twemoji walk into it rebuilds every cell as <img> and nukes opening
+    // performance. Also skip anything explicitly opted out.
     if (!node || !node.closest) return false;
-    return !!(node.closest('#epp-grid') || node.closest('[data-no-twemoji]'));
+    return !!(node.closest('#epp-grid') || node.closest('.emoji-picker-panel') || node.closest('[data-no-twemoji]'));
   }
   function _flushParse() {
     _scheduled = false;
@@ -1166,11 +1166,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const nodes = [..._pendingNodes];
     _pendingNodes.clear();
     const opts = _tweOpts();
+    // Detach the emoji picker (if open) so whole-body parses can't walk into
+    // its 1400+ native-text cells. We reattach immediately after.
+    const picker = document.querySelector('.emoji-picker-panel');
+    let pickerHost = null, pickerAnchor = null;
     nodes.forEach(n => {
-      if (n && n.nodeType === 1 && n.isConnected && !_isSkipped(n)) {
-        try { twemoji.parse(n, opts); } catch(_){}
+      if (!n || n.nodeType !== 1 || !n.isConnected || _isSkipped(n)) return;
+      const containsPicker = picker && n !== picker && n.contains(picker);
+      if (containsPicker && !pickerHost) {
+        pickerHost = picker.parentNode;
+        pickerAnchor = picker.nextSibling;
+        pickerHost.removeChild(picker);
       }
+      try { twemoji.parse(n, opts); } catch(_){}
     });
+    if (pickerHost) {
+      pickerHost.insertBefore(picker, pickerAnchor);
+    }
   }
   function _scheduleParse(node) {
     if (!node) return;

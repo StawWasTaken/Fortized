@@ -1577,25 +1577,25 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .vc-btn.muted-btn{background:rgba(255,255,255,.08);color:var(--text);}
 .vc-btn.muted-btn.active{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);}
 .vc-btn.disc-btn{background:var(--red);color:#fff;}
-/* ── Emoji Picker 3.0 ─────────────────────────── */
-.emoji-picker-panel{position:fixed;width:540px;max-width:calc(100vw - 16px);max-height:520px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:18px;padding:0;z-index:9000;box-shadow:0 30px 90px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04),0 12px 44px rgba(0,0,0,.28);display:none;flex-direction:row;overflow:hidden;font-family:var(--font-ui);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:pickerSlideIn .26s cubic-bezier(.22,1,.36,1);}
+/* ── Emoji Picker 4.0 — professional, icon-only sidebar ─────────── */
+.emoji-picker-panel{position:fixed;width:448px;max-width:calc(100vw - 16px);max-height:520px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:14px;padding:0;z-index:9000;box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.035);display:none;flex-direction:row;overflow:hidden;font-family:var(--font-ui);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
 .emoji-picker-panel.show{display:flex;}
-/* Emoji picker sidebar — labelled rows with emblem + category name, scrolls
-   independently from the main grid. */
-.epp-sidebar{width:150px;background:var(--panel2,rgba(0,0,0,.2));border-left:1px solid var(--border,rgba(255,255,255,.04));display:flex;flex-direction:column;align-items:stretch;padding:8px 6px;gap:2px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;flex-shrink:0;}
-.epp-sidebar::-webkit-scrollbar{width:5px;}
-.epp-sidebar::-webkit-scrollbar-track{background:transparent;}
-.epp-sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
-.epp-sidebar-btn{position:relative;width:100%;min-height:32px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;justify-content:flex-start;background:transparent;color:rgba(255,255,255,.55);transition:background .14s ease,color .14s ease;flex-shrink:0;padding:4px 8px;text-align:left;}
-.epp-sidebar-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
-.epp-sidebar-btn.active{background:rgba(255,249,62,.14);color:var(--accent);}
-.epp-sidebar-btn.active::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0;box-shadow:0 0 10px rgba(255,249,62,.45);}
-.epp-sidebar-emblem{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:7px;overflow:hidden;color:inherit;}
+/* Icon-only right sidebar — Discord-style, 48px wide. No text labels; the
+   button's title attribute provides an on-hover native tooltip. */
+.epp-sidebar{width:48px;background:rgba(0,0,0,.22);border-left:1px solid rgba(255,255,255,.03);display:flex;flex-direction:column;align-items:center;padding:6px 4px;gap:2px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;flex-shrink:0;}
+.epp-sidebar::-webkit-scrollbar{width:0;height:0;}
+.epp-sidebar-btn{position:relative;width:36px;height:36px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:transparent;color:rgba(255,255,255,.48);transition:background .14s ease,color .14s ease,transform .14s ease;flex-shrink:0;padding:0;}
+.epp-sidebar-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.92);}
+.epp-sidebar-btn.active{background:rgba(255,249,62,.12);color:var(--accent);}
+.epp-sidebar-btn.active::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0;}
+.epp-sidebar-emblem{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:6px;overflow:hidden;color:inherit;}
 .epp-sidebar-emblem svg{color:inherit;}
 .epp-sidebar-emblem img{width:22px;height:22px;border-radius:6px;object-fit:cover;}
-.epp-sidebar-label{flex:1;min-width:0;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;color:inherit;}
-/* Fortized logo rendered as a mask so it inherits currentColor from the
-   sidebar button — matches the other stroke-SVG category icons exactly. */
+/* Legacy label class kept hidden — the icon-only sidebar never renders it
+   but old nodes still in the DOM shouldn't leak text. */
+.epp-sidebar-label{display:none!important;}
+/* Fortized logo rendered as a mask so it inherits currentColor — matches the
+   other stroke-SVG category icons exactly. */
 .epp-ftz-icon{
   display:inline-block;
   width:22px;
@@ -1604,7 +1604,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
   -webkit-mask:url('/Fortized logo.png') center/contain no-repeat;
           mask:url('/Fortized logo.png') center/contain no-repeat;
 }
-.epp-sidebar-sep{width:calc(100% - 12px);height:1px;background:rgba(255,255,255,.06);margin:6px 6px;flex-shrink:0;}
+.epp-sidebar-sep{width:24px;height:1px;background:rgba(255,255,255,.08);margin:6px auto;flex-shrink:0;}
 .epp-main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 @keyframes emojiPanelIn{from{opacity:0;transform:translateY(8px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
 /* Emoji autocomplete dropdown */
@@ -5228,66 +5228,79 @@ button[style*="background: var(--accent)"]:active {
 .ftz-close-btn:hover { color: rgba(255,255,255,.6); }
 .ftz-close-btn:active { color: rgba(255,255,255,.8); }
 
-/* ── Emoji cell hover (emoji picker grid items) ── */
+/* ── Emoji cells (picker grid items) — corporate-clean ──────── */
 .emoji-cell {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all .12s;
   padding: 3px;
   border-radius: 8px;
+  overflow: hidden;
+  transition: background .12s ease;
 }
-.emoji-cell:hover { background: rgba(255,255,255,.07); transform: scale(1.15); }
+.emoji-cell:hover { background: rgba(255,255,255,.06); }
+.emoji-cell:active { background: rgba(255,255,255,.1); }
+.emoji-cell img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  pointer-events: none;
+  transition: transform .12s ease;
+}
+.emoji-cell:hover img { transform: scale(1.12); }
+.emoji-fav-star {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--accent, #fff93e);
+  text-shadow: 0 0 4px rgba(255,249,62,.6);
+  pointer-events: none;
+}
 
-/* ── Discord-style continuous emoji picker ── */
+/* ── Section headers + grid layout ── */
 .epp-section {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: rgba(20,20,22,.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(20,20,22,.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .08em;
-  color: rgba(255,255,255,.45);
-  padding: 10px 6px 6px;
+  color: rgba(255,255,255,.48);
+  padding: 10px 8px 6px;
   display: flex;
   align-items: center;
   gap: 6px;
+  border-bottom: 1px solid rgba(255,255,255,.02);
 }
 .epp-section-grid {
   display: grid;
-  gap: 1px;
-  padding: 2px 0 8px;
-  /* Discord-style: skip painting sections that aren't visible, letting the
-     browser allocate layout slots without actually rendering 1000+ cells at
-     once. Massively reduces first-paint cost for the emoji picker. */
+  gap: 2px;
+  padding: 4px 4px 10px;
+  /* Discord-style: skip painting sections that aren't in view, letting the
+     browser lay out slots without actually rendering 1000+ cells at once.
+     Massively reduces first-paint cost for the emoji picker. */
   content-visibility: auto;
   contain-intrinsic-size: 1px 240px;
 }
-/* Tighter variant — used for the Fortized Guide so the hand-drawn emojis
-   sit shoulder-to-shoulder instead of feeling scattered. */
 .epp-section-grid-tight {
   gap: 0;
-  padding: 1px 0 6px;
+  padding: 2px 4px 8px;
 }
-.epp-section-grid-tight .emoji-cell-custom {
-  padding: 1px;
-  border-radius: 6px;
-}
-.epp-section-grid-tight .emoji-cell-custom img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
+.epp-section-grid-tight .emoji-cell-custom { padding: 2px; border-radius: 6px; }
+.epp-section-grid-tight .emoji-cell-custom img { width: 100%; height: 100%; }
 .epp-empty {
   grid-column: 1 / -1;
   text-align: center;
   padding: 14px 10px;
-  color: rgba(255,255,255,.4);
+  color: rgba(255,255,255,.35);
   font-size: 11.5px;
 }
 .epp-lock {
@@ -5310,9 +5323,11 @@ button[style*="background: var(--accent)"]:active {
   align-items: center;
   justify-content: center;
   padding: 3px;
-  transition: background .12s, transform .12s;
+  overflow: hidden;
+  transition: background .12s ease;
 }
-.emoji-cell-custom:hover { background: rgba(255,255,255,.07); transform: scale(1.08); }
+.emoji-cell-custom:hover { background: rgba(255,255,255,.06); }
+.emoji-cell-custom:active { background: rgba(255,255,255,.1); }
 #emoji-picker.epp-searching .epp-sidebar { display: none !important; }
 
 /* ── Emoji upload add button ── */

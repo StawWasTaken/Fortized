@@ -6936,7 +6936,7 @@ function _openReactionEmojiPicker(x, y, msgId, context, trigger) {
     }
   }
   // Position relative to the trigger button if we have one; otherwise the click point
-  const PW = Math.min(540, window.innerWidth - 16);
+  const PW = Math.min(448, window.innerWidth - 16);
   const PH = 440;
   let left, top;
   if (trigger && trigger.getBoundingClientRect) {
@@ -14011,16 +14011,15 @@ const _EMOJI_CATEGORY_SVGS = {
 };
 
 function buildEmojiSidebar() {
-  // Sidebar order: Frequent, Favorites, Fortized, [bastions with emojis], [categories]
-  // Each button renders as an emblem tile + a readable label next to it.
+  // Icon-only sidebar (Discord-style). Labels are shown as browser tooltips
+  // on hover; the emblem itself is all that's rendered. Order:
+  //   Frequent, Favorites, Fortized Guide, [bastions…], [unicode categories]
   const bastions = CU?.bastions || [];
-  // Filter bastions that actually have at least one usable custom emoji —
-  // bastions with no emojis should not appear in the picker sidebar.
   const visibleBastions = bastions
     .map((b, i) => ({ b, i }))
     .filter(({ b }) => Array.isArray(b?.customEmojis) && b.customEmojis.some(ce => ce && ce.name && ce.data));
   let html = '';
-  const btn = (id, title, iconHtml) => `<button class="epp-sidebar-btn${_emojiPickerTab===id?' active':''}" id="etab-${id}" title="${escapeHTML(title)}" aria-label="${escapeHTML(title)}" onclick="setEmojiTab('${id}')"><span class="epp-sidebar-emblem">${iconHtml}</span><span class="epp-sidebar-label">${escapeHTML(title)}</span></button>`;
+  const btn = (id, title, iconHtml) => `<button class="epp-sidebar-btn${_emojiPickerTab===id?' active':''}" id="etab-${id}" data-epp-tab="${id}" title="${escapeHTML(title)}" aria-label="${escapeHTML(title)}"><span class="epp-sidebar-emblem">${iconHtml}</span></button>`;
   html += btn('frequent', 'Frequently used', _EMOJI_CATEGORY_SVGS.frequent);
   html += btn('favorites', 'Favorites', _EMOJI_CATEGORY_SVGS.favorites);
   html += btn('ftz', 'Fortized Guide', _EMOJI_CATEGORY_SVGS.ftz);
@@ -14044,14 +14043,14 @@ function buildEmojiSidebar() {
       } else {
         emblem = fallback;
       }
-      html += `<button class="epp-sidebar-btn${active?' active':''}" id="etab-bastion-${i}" title="${escapeHTML(name)}" aria-label="${escapeHTML(name)}" onclick="setEmojiTab('bastion-${i}')"><span class="epp-sidebar-emblem">${emblem}</span><span class="epp-sidebar-label">${escapeHTML(name)}</span></button>`;
+      html += `<button class="epp-sidebar-btn${active?' active':''}" id="etab-bastion-${i}" data-epp-tab="bastion-${i}" title="${escapeHTML(name)}" aria-label="${escapeHTML(name)}"><span class="epp-sidebar-emblem">${emblem}</span></button>`;
     });
   }
   html += '<div class="epp-sidebar-sep"></div>';
   const catLabels = {
-    smileys: 'Faces', people: 'People', nature: 'Nature',
-    food: 'Food', travel: 'Travel', activities: 'Activities',
-    hearts: 'Hearts', symbols: 'Symbols', flags: 'Flags',
+    smileys: 'Faces & Expressions', people: 'People & Hands', nature: 'Nature & Animals',
+    food: 'Food & Drinks', travel: 'Travel & Places', activities: 'Fun & Activities',
+    hearts: 'Hearts & Love', symbols: 'Symbols & Signs', flags: 'Flags',
   };
   ['smileys','people','nature','food','travel','activities','hearts','symbols','flags'].forEach(id => {
     html += btn(id, catLabels[id] || (id.charAt(0).toUpperCase()+id.slice(1)), _EMOJI_CATEGORY_SVGS[id]);
@@ -14089,7 +14088,7 @@ function toggleEmojiPicker(targetId) {
   const refEl = document.getElementById(targetId);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
   // Clamp panel width to viewport so the sidebar is never clipped off-screen.
-  const PW = Math.min(540, window.innerWidth - 16);
+  const PW = Math.min(448, window.innerWidth - 16);
   const PH = 440;
   let left, top = null, bottom = null;
   if (outerEl) {
@@ -14167,6 +14166,69 @@ function buildEmojiPicker() {
   renderEmojiGrid();
   // After initial render, wire the intersection observer for auto-highlight
   _wireEmojiScrollSpy();
+  _wireEmojiGridDelegation();
+  _wireEmojiSidebarDelegation();
+}
+
+// One delegated listener on the grid handles click / contextmenu / mouseover
+// for every cell. Massively faster than attaching hundreds of inline handlers
+// during HTML construction, and keeps the rendered markup tiny.
+function _wireEmojiGridDelegation() {
+  const grid = document.getElementById('epp-grid');
+  if (!grid || grid._eppDelegated) return;
+  grid._eppDelegated = true;
+  grid.addEventListener('click', (e) => {
+    const cell = e.target.closest('.emoji-cell');
+    if (!cell || !grid.contains(cell)) return;
+    if (cell.dataset.ftzLocked === '1') {
+      toast("Radiance required to use this bastion's emojis outside the bastion", 'error');
+      return;
+    }
+    if (cell.dataset.ftz) {
+      insertFortizedEmoji(cell.dataset.ftz, cell.dataset.ftzUrl || '');
+      return;
+    }
+    if (cell.dataset.ue) {
+      insertEmoji(cell.dataset.ue);
+      return;
+    }
+  });
+  grid.addEventListener('contextmenu', (e) => {
+    const cell = e.target.closest('.emoji-cell');
+    if (!cell || !cell.dataset.ue) return;
+    e.preventDefault();
+    toggleFavEmoji(cell.dataset.ue);
+  });
+  // Hover preview — update the bottom status bar with the emoji name. Using
+  // mouseover (which bubbles) + data attributes is an order of magnitude
+  // cheaper than wiring onmouseenter on every cell.
+  grid.addEventListener('mouseover', (e) => {
+    const cell = e.target.closest('.emoji-cell');
+    if (!cell) return;
+    if (cell.dataset.ftz) {
+      _emojiHover(':' + cell.dataset.ftz + ':', cell.dataset.ftzFrom || null, cell.dataset.ftzUrl || '', true);
+      return;
+    }
+    if (cell.dataset.ue) {
+      const emoji = cell.dataset.ue;
+      const cache = _emojiShortcodeCache();
+      const shortcode = cache[emoji];
+      const label = shortcode ? ':' + shortcode + ':' : (EMOJI_NAMES[emoji] || emoji);
+      const el = document.getElementById('epp-hover-label');
+      if (el) el.textContent = label + (_favEmojis.includes(emoji) ? ' ★' : '');
+    }
+  });
+}
+
+function _wireEmojiSidebarDelegation() {
+  const sb = document.getElementById('epp-sidebar');
+  if (!sb || sb._eppDelegated) return;
+  sb._eppDelegated = true;
+  sb.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-epp-tab]');
+    if (!btn) return;
+    setEmojiTab(btn.getAttribute('data-epp-tab'));
+  });
 }
 
 function setEmojiTab(tabId) {
@@ -14246,13 +14308,13 @@ function renderEmojiGrid() {
   const gridClose = `</div>`;
   const ftzCell = (name, url, fromBastion) => {
     if (!url) return '';
-    return `
-    <div onclick="insertFortizedEmoji('${escapeHTML(name)}','${escapeHTML(url)}')"
-         onmouseenter="_emojiHover(':${escapeHTML(name)}:',${fromBastion?`'${escapeHTML(fromBastion)}'`:'null'},'${escapeHTML(url)}',true)"
-         title=":${escapeHTML(name)}:${fromBastion?' from '+escapeHTML(fromBastion):''}"
-         class="emoji-cell emoji-cell-custom">
-      <img src="${escapeHTML(url)}" alt=":${escapeHTML(name)}:" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:contain;" onerror="this.closest('.emoji-cell').style.display='none'">
-    </div>`;
+    const safeName = escapeHTML(name);
+    const safeUrl = escapeHTML(url);
+    const safeFrom = fromBastion ? escapeHTML(fromBastion) : '';
+    const titleStr = `:${safeName}:${safeFrom?' from '+safeFrom:''}`;
+    return `<div class="emoji-cell emoji-cell-custom" data-ftz="${safeName}" data-ftz-url="${safeUrl}"${safeFrom?` data-ftz-from="${safeFrom}"`:''} title="${titleStr}">`
+      + `<img src="${safeUrl}" alt=":${safeName}:" loading="lazy" decoding="async">`
+      + `</div>`;
   };
 
   let html = '';
@@ -14294,12 +14356,16 @@ function renderEmojiGrid() {
     const locked = !isRadiance && bi !== curBastion; // must be in-bastion or have Radiance to use
     html += sectionHdr('bastion-' + bi, b.name || ('Bastion ' + (bi+1)), locked ? ' <span class="epp-lock">RADIANCE</span>' : '');
     html += gridOpen(8);
-    html += custom.filter(ce => ce && ce.name && ce.data).map(ce => `
-      <div onclick="${(!locked) ? "insertFortizedEmoji('"+escapeHTML(ce.name)+"','"+escapeHTML(ce.data)+"')" : "toast('Radiance required to use this bastion\\'s emojis outside the bastion','error')"}"
-           onmouseenter="_emojiHover(':${escapeHTML(ce.name)}:','${escapeHTML(b.name||'')}','${escapeHTML(ce.data)}',true)"
-           title=":${escapeHTML(ce.name)}:" class="emoji-cell emoji-cell-custom" style="${locked?'opacity:.4;filter:grayscale(.5);':''}">
-        <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;" onerror="this.closest('.emoji-cell').style.display='none'">
-      </div>`).join('');
+    html += custom.filter(ce => ce && ce.name && ce.data).map(ce => {
+      const safeName = escapeHTML(ce.name);
+      const safeData = escapeHTML(ce.data);
+      const safeBas = escapeHTML(b.name||'');
+      const lockAttrs = locked ? ' data-ftz-locked="1"' : '';
+      const lockStyle = locked ? 'opacity:.4;filter:grayscale(.5);' : '';
+      return `<div class="emoji-cell emoji-cell-custom" data-ftz="${safeName}" data-ftz-url="${safeData}" data-ftz-from="${safeBas}"${lockAttrs} title=":${safeName}:"${lockStyle?` style="${lockStyle}"`:''}>`
+        + `<img src="${safeData}" alt=":${safeName}:" loading="lazy" decoding="async">`
+        + `</div>`;
+    }).join('');
     html += gridClose;
   });
 
@@ -14323,8 +14389,16 @@ function emojiToTwemojiUrl(emoji) {
   if (typeof EMOJI_URL_OVERRIDES !== 'undefined' && EMOJI_URL_OVERRIDES[emoji]) {
     return EMOJI_URL_OVERRIDES[emoji];
   }
-  // Convert emoji char to codepoint(s) for Twemoji URL
-  const codePoints = [...emoji].map(c => c.codePointAt(0).toString(16)).filter(c => c !== 'fe0f').join('-');
+  // Convert emoji char to codepoint(s) for Twemoji URL. Twemoji's filename
+  // convention strips the FE0F variation selector for simple emojis (❤️ →
+  // 2764.svg) but KEEPS it for ZWJ sequences (❤️‍🔥 → 2764-fe0f-200d-1f525.svg,
+  // 🐻‍❄️ → 1f43b-200d-2744-fe0f.svg). Stripping FE0F unconditionally — which
+  // we used to do — broke every ZWJ-compound emoji.
+  const hasZWJ = emoji.indexOf('‍') >= 0;
+  const codePoints = [...emoji]
+    .map(c => c.codePointAt(0).toString(16))
+    .filter(c => hasZWJ || c !== 'fe0f')
+    .join('-');
   return 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/' + codePoints + '.svg';
 }
 
@@ -14524,30 +14598,34 @@ function _showStickerTooltip(el) {
   setTimeout(() => tip.remove(), 5000);
 }
 
+// Reverse shortcode cache — built lazily so we aren't scanning
+// EMOJI_SHORTCODES hundreds of times per picker render.
+let _EMOJI_TO_SHORTCODE = null;
+function _emojiShortcodeCache() {
+  if (_EMOJI_TO_SHORTCODE) return _EMOJI_TO_SHORTCODE;
+  _EMOJI_TO_SHORTCODE = {};
+  for (const [code, em] of Object.entries(EMOJI_SHORTCODES)) {
+    if (!_EMOJI_TO_SHORTCODE[em]) _EMOJI_TO_SHORTCODE[em] = code;
+  }
+  return _EMOJI_TO_SHORTCODE;
+}
+
 function renderEmojiCell(emoji) {
   const safe = escapeHTML(emoji);
   const url = emojiToTwemojiUrl(emoji);
-  // Look up a readable name: EMOJI_NAMES first, then reverse EMOJI_SHORTCODES
-  let label = EMOJI_NAMES[emoji] || '';
-  if (!label) {
-    for (const [code, em] of Object.entries(EMOJI_SHORTCODES)) {
-      if (em === emoji) { label = code.replace(/_/g, ' '); break; }
-    }
-  }
-  if (!label) label = emoji;
-  const shortcode = Object.entries(EMOJI_SHORTCODES).find(([,em]) => em === emoji)?.[0] || '';
-  const displayName = shortcode ? ':' + shortcode + ':' : label;
   const isFav = _favEmojis.includes(emoji);
-  return `<div onclick="insertEmoji('${safe}')" oncontextmenu="event.preventDefault();toggleFavEmoji('${safe}')"
-    onmouseenter="document.getElementById('epp-hover-label').innerHTML='${escapeHTML(displayName)}${isFav ? ' \u2605' : ''}'"
-    class="emoji-cell emoji-cell-custom" style="position:relative;">
-    <img src="${url}" style="width:26px;height:26px;object-fit:contain;" loading="lazy" decoding="async" onerror="this.outerHTML='<span style=\\'font-size:22px;\\'>${emoji}</span>'">
-    ${isFav ? '<span style="position:absolute;top:2px;right:2px;font-size:11px;color:var(--accent);">★</span>' : ''}
-  </div>`;
+  // Lean cell — no inline onclick / onmouseenter. A single delegated handler
+  // on #epp-grid (wired in _wireEmojiGridDelegation) services every cell,
+  // keeping the HTML small and removing per-element listener overhead.
+  return `<div class="emoji-cell emoji-cell-custom${isFav?' is-fav':''}" data-ue="${safe}">`
+    + `<img src="${url}" alt="${safe}" loading="lazy" decoding="async">`
+    + (isFav ? '<span class="emoji-fav-star">★</span>' : '')
+    + `</div>`;
 }
 
 function wireEmojiHover(grid) {
-  // Done via inline handlers in renderEmojiCell
+  // Hover + click handling is done via a delegated listener on the grid
+  // — see _wireEmojiGridDelegation.
 }
 
 function searchEmojis(q) {
@@ -31299,8 +31377,8 @@ async function _forumInit() {
   const myThreads = _forumAllThreadsCache.filter(t => t.author === CU?.username).sort((a, b) => b.created_at - a.created_at).slice(0, 8);
 
   const groups = {
-    announcements: { label: 'Announcements', cats: FORUM_CATEGORIES.filter(c => c.group === 'announcements') },
-    fortized: { label: 'Fortized', cats: FORUM_CATEGORIES.filter(c => c.group === 'fortized') },
+    announcements: { label: 'Official', cats: FORUM_CATEGORIES.filter(c => c.group === 'announcements') },
+    fortized: { label: 'Main', cats: FORUM_CATEGORIES.filter(c => c.group === 'fortized') },
     community: { label: 'Community', cats: FORUM_CATEGORIES.filter(c => c.group === 'community') },
   };
 

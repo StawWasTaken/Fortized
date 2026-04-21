@@ -14305,6 +14305,59 @@ function renderEmojiTab(_tabId) { renderEmojiGrid(); }
 // Build ONE continuous grid containing every section back-to-back with sticky
 // headers, Discord-style. The sidebar jumps to sections; it does NOT switch
 // categories.
+//
+// Sections are emitted as empty shells with a reserved height, then hydrated
+// on-demand via IntersectionObserver as the user scrolls. Only the first few
+// sections are rendered up-front — the rest stay as cheap placeholders until
+// they come near the viewport. This keeps initial paint fast even with
+// thousands of emojis in total.
+function _isValidBastionEmoji(ce) {
+  if (!ce || typeof ce !== 'object') return false;
+  if (ce.deleted || ce.removed) return false;
+  if (!ce.name || typeof ce.name !== 'string') return false;
+  if (!ce.data || typeof ce.data !== 'string') return false;
+  // Must be a usable URL/data URI, not empty, null-string, placeholder, etc.
+  const d = ce.data.trim();
+  if (!d) return false;
+  if (d === 'null' || d === 'undefined' || d === 'deleted') return false;
+  if (!/^(https?:|data:|blob:|\/)/i.test(d)) return false;
+  return true;
+}
+
+// Hydrate a single section shell by replacing its empty inner HTML with the
+// full grid cells for that section. Idempotent — hydrating an already-filled
+// shell is a no-op.
+function _hydrateEmojiSection(shell) {
+  if (!shell || !shell.classList.contains('epp-lazy')) return;
+  const grid = shell.closest('#epp-grid');
+  const spec = grid?._eppSectionSpec?.[shell.getAttribute('data-section-id')];
+  if (!spec) return;
+  shell.innerHTML = spec.build();
+  shell.classList.remove('epp-lazy');
+}
+
+function _wireEmojiLazyHydrator() {
+  const grid = document.getElementById('epp-grid');
+  if (!grid) return;
+  if (grid._eppLazyObs) { try { grid._eppLazyObs.disconnect(); } catch {} }
+  const shells = Array.from(grid.querySelectorAll('.epp-section-grid.epp-lazy'));
+  if (!shells.length) return;
+  // Hydrate the first 2 shells immediately so the picker isn't blank on open.
+  shells.slice(0, 2).forEach(_hydrateEmojiSection);
+  const remaining = shells.filter(s => s.classList.contains('epp-lazy'));
+  if (!remaining.length) return;
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        _hydrateEmojiSection(e.target);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { root: grid, rootMargin: '400px 0px', threshold: 0 });
+  remaining.forEach(s => obs.observe(s));
+  grid._eppLazyObs = obs;
+}
+
 function renderEmojiGrid() {
   const grid = document.getElementById('epp-grid');
   if (!grid) return;
@@ -14314,8 +14367,6 @@ function renderEmojiGrid() {
   const freqList = Object.entries(freqData).sort((a,b) => b[1]-a[1]).slice(0,48).map(([e]) => e);
 
   const sectionHdr = (id, title, extra) => `<div class="epp-section" data-section="${id}">${escapeHTML(title)}${extra||''}</div>`;
-  const gridOpen = (cols) => `<div class="epp-section-grid" style="grid-template-columns:repeat(${cols},1fr);">`;
-  const gridClose = `</div>`;
   const ftzCell = (name, url, fromBastion) => {
     if (!url) return '';
     const safeName = escapeHTML(name);
@@ -14327,71 +14378,97 @@ function renderEmojiGrid() {
       + `</div>`;
   };
 
-  let html = '';
+  // Build a spec list for every section: header + empty shell + a build() fn
+  // that produces the cells for that section. Shells get a reserved height
+  // so the scrollbar is sized correctly before hydration.
+  //
+  //   cols  = grid columns
+  //   rows  = approximate number of rows (used for intrinsic-size)
+  const sections = [];
 
-  // 1) Frequently used (quick-access row)
+  // 1) Frequently used
   if (freqList.length || _recentEmojis.length) {
     const rows = (freqList.length ? freqList : _recentEmojis.slice(0,24));
-    html += sectionHdr('frequent', 'Frequently used');
-    html += gridOpen(8);
-    html += rows.map(e => {
-      if (FORTIZED_EMOJI_MAP[e]) return ftzCell(e, FORTIZED_EMOJI_MAP[e]);
-      return renderEmojiCell(e);
-    }).join('');
-    html += gridClose;
+    sections.push({
+      id: 'frequent', title: 'Frequently used', extra: '', cols: 8, rowCount: Math.ceil(rows.length/8), tight: false,
+      build: () => rows.map(e => FORTIZED_EMOJI_MAP[e] ? ftzCell(e, FORTIZED_EMOJI_MAP[e]) : renderEmojiCell(e)).join(''),
+    });
   }
 
   // 2) Favorites
-  html += sectionHdr('favorites', 'Favorites');
-  if (_favEmojis.length) {
-    html += gridOpen(8) + _favEmojis.map(e => renderEmojiCell(e)).join('') + gridClose;
-  } else {
-    html += `<div class="epp-empty">Right-click any emoji to favorite it.</div>`;
-  }
+  sections.push({
+    id: 'favorites', title: 'Favorites', extra: '', cols: 8,
+    rowCount: Math.max(1, Math.ceil(_favEmojis.length/8)), tight: false,
+    build: () => _favEmojis.length
+      ? _favEmojis.map(e => renderEmojiCell(e)).join('')
+      : `<div class="epp-empty">Right-click any emoji to favorite it.</div>`,
+  });
 
-  // 3) Fortized custom emojis — characters first, textmojis always last.
-  // Uses a tighter grid class so the hand-drawn emojis sit closer together.
-  html += sectionHdr('ftz', 'Fortized Guide');
-  html += `<div class="epp-section-grid epp-section-grid-tight" style="grid-template-columns:repeat(8,1fr);">`;
-  html += FORTIZED_CHARACTERS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('');
-  html += FORTIZED_TEXTMOJIS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('');
-  html += gridClose;
+  // 3) Fortized Guide (tight grid)
+  const ftzCount = FORTIZED_CHARACTERS.length + FORTIZED_TEXTMOJIS.length;
+  sections.push({
+    id: 'ftz', title: 'Fortized Guide', extra: '', cols: 8,
+    rowCount: Math.ceil(ftzCount/8), tight: true,
+    build: () =>
+      FORTIZED_CHARACTERS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('') +
+      FORTIZED_TEXTMOJIS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join(''),
+  });
 
-  // Personal (user-custom) emoji section removed — users no longer have custom emojis.
-
-  // 5) Each bastion as its own section (custom emojis)
+  // 4) Bastion custom emojis — skip bastions with zero *valid* emojis so that
+  // deleted/removed emojis don't leave ghost sections behind.
   bastions.forEach((b, bi) => {
-    const custom = b.customEmojis || [];
-    if (!custom.length) return;
-    const locked = !isRadiance && bi !== curBastion; // must be in-bastion or have Radiance to use
-    html += sectionHdr('bastion-' + bi, b.name || ('Bastion ' + (bi+1)), locked ? ' <span class="epp-lock">RADIANCE</span>' : '');
-    html += gridOpen(8);
-    html += custom.filter(ce => ce && ce.name && ce.data).map(ce => {
-      const safeName = escapeHTML(ce.name);
-      const safeData = escapeHTML(ce.data);
-      const safeBas = escapeHTML(b.name||'');
-      const lockAttrs = locked ? ' data-ftz-locked="1"' : '';
-      const lockStyle = locked ? 'opacity:.4;filter:grayscale(.5);' : '';
-      return `<div class="emoji-cell emoji-cell-custom" data-ftz="${safeName}" data-ftz-url="${safeData}" data-ftz-from="${safeBas}"${lockAttrs} title=":${safeName}:"${lockStyle?` style="${lockStyle}"`:''}>`
-        + `<img src="${safeData}" alt=":${safeName}:" loading="lazy" decoding="async">`
-        + `</div>`;
-    }).join('');
-    html += gridClose;
+    const validEmojis = (b.customEmojis || []).filter(_isValidBastionEmoji);
+    if (!validEmojis.length) return;
+    const locked = !isRadiance && bi !== curBastion;
+    const safeBas = escapeHTML(b.name||'');
+    sections.push({
+      id: 'bastion-' + bi,
+      title: b.name || ('Bastion ' + (bi+1)),
+      extra: locked ? ' <span class="epp-lock">RADIANCE</span>' : '',
+      cols: 8, rowCount: Math.ceil(validEmojis.length/8), tight: false,
+      build: () => validEmojis.map(ce => {
+        const safeName = escapeHTML(ce.name);
+        const safeData = escapeHTML(ce.data);
+        const lockAttrs = locked ? ' data-ftz-locked="1"' : '';
+        const lockStyle = locked ? 'opacity:.4;filter:grayscale(.5);' : '';
+        // onerror: a bastion emoji URL that 404s after load (e.g. the
+        // underlying image was purged from storage) self-destructs its cell
+        // so the picker never displays a broken image.
+        return `<div class="emoji-cell emoji-cell-custom" data-ftz="${safeName}" data-ftz-url="${safeData}" data-ftz-from="${safeBas}"${lockAttrs} title=":${safeName}:"${lockStyle?` style="${lockStyle}"`:''}>`
+          + `<img src="${safeData}" alt=":${safeName}:" loading="lazy" decoding="async" onerror="this.closest('.emoji-cell')?.remove()">`
+          + `</div>`;
+      }).join(''),
+    });
   });
 
-  // 6) Unicode category sections
+  // 5) Unicode category sections
   EMOJI_PICKER_TABS.forEach(tab => {
-    if (!tab.emojis) return; // skip 'recent' / 'ftz' which have no list
-    html += sectionHdr(tab.id, tab.label || (tab.id.charAt(0).toUpperCase() + tab.id.slice(1)));
-    html += gridOpen(8);
-    html += tab.emojis.map(e => renderEmojiCell(e)).join('');
-    html += gridClose;
+    if (!tab.emojis) return;
+    sections.push({
+      id: tab.id,
+      title: tab.label || (tab.id.charAt(0).toUpperCase() + tab.id.slice(1)),
+      extra: '', cols: 8, rowCount: Math.ceil(tab.emojis.length/8), tight: false,
+      build: () => tab.emojis.map(e => renderEmojiCell(e)).join(''),
+    });
   });
 
-  // 7) Hearts (curated)
-  // (already covered by EMOJI_PICKER_TABS 'hearts' entry)
-
+  // Emit shells. Each shell is an empty grid with a reserved intrinsic size
+  // so the scrollbar is sized correctly before hydration — otherwise
+  // hydrating a mid-scroll section would shift content beneath the user.
+  //
+  // Row height ≈ 38px for the tight (Fortized) grid, 36px for normal grids.
+  let html = '';
+  for (const s of sections) {
+    const rowH = s.tight ? 40 : 38;
+    const intrinsicH = Math.max(48, s.rowCount * rowH + 14);
+    const cls = 'epp-section-grid' + (s.tight ? ' epp-section-grid-tight' : '') + ' epp-lazy';
+    html += sectionHdr(s.id, s.title, s.extra);
+    html += `<div class="${cls}" data-section-id="${s.id}" style="grid-template-columns:repeat(${s.cols},1fr);contain-intrinsic-size: 1px ${intrinsicH}px;"></div>`;
+  }
   grid.innerHTML = html;
+  grid._eppSectionSpec = {};
+  sections.forEach(s => { grid._eppSectionSpec[s.id] = s; });
+  _wireEmojiLazyHydrator();
 }
 
 function emojiToTwemojiUrl(emoji) {
@@ -14534,17 +14611,21 @@ function _showEmojiTooltip(emoji, el) {
   tip.style.top = top + 'px';
   tip.style.left = left + 'px';
 
-  // Close on click outside or scroll
+  // Close on any click outside the tooltip, scroll, or Escape. Uses capture
+  // phase so other handlers that stopPropagation (e.g. the message emoji
+  // click delegator) can't keep the tooltip alive.
   const close = (e) => {
-    if (!tip.contains(e.target)) {
-      tip.remove();
-      document.removeEventListener('click', close);
-      document.removeEventListener('scroll', close, true);
-    }
+    if (e && e.type === 'click' && tip.contains(e.target)) return;
+    tip.remove();
+    document.removeEventListener('click', close, true);
+    document.removeEventListener('scroll', close, true);
+    document.removeEventListener('keydown', onKey, true);
   };
+  const onKey = (e) => { if (e.key === 'Escape') close(e); };
   setTimeout(() => {
-    document.addEventListener('click', close);
+    document.addEventListener('click', close, true);
     document.addEventListener('scroll', close, true);
+    document.addEventListener('keydown', onKey, true);
   }, 10);
 
   // Auto-close after 5s
@@ -14608,14 +14689,13 @@ function _showStickerTooltip(el) {
   tip.style.left = left + 'px';
 
   const close = (e) => {
-    if (!tip.contains(e.target)) {
-      tip.remove();
-      document.removeEventListener('click', close);
-      document.removeEventListener('scroll', close, true);
-    }
+    if (e && e.type === 'click' && tip.contains(e.target)) return;
+    tip.remove();
+    document.removeEventListener('click', close, true);
+    document.removeEventListener('scroll', close, true);
   };
   setTimeout(() => {
-    document.addEventListener('click', close);
+    document.addEventListener('click', close, true);
     document.addEventListener('scroll', close, true);
   }, 10);
   setTimeout(() => tip.remove(), 5000);

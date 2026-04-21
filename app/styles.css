@@ -8,11 +8,29 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 ::selection{background:rgba(255,249,62,.2);}
 *{scrollbar-width:thin;scrollbar-color:rgba(255,249,62,.12) transparent;}
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,249,62,.12);border-radius:var(--radius-pill);border:1px solid rgba(255,249,62,.06);}::-webkit-scrollbar-thumb:hover{background:rgba(255,249,62,.22);}
-/* Performance: lazy-render off-screen elements */
+/* Performance: lazy-render off-screen elements.
+   The `auto` keyword in contain-intrinsic-size tells the browser to REMEMBER
+   the last rendered size of each element and reuse it as the intrinsic size
+   when the element goes off-screen again. The <estimate> value is only used
+   until the element has been rendered once — after that, the browser
+   self-tunes. We vary the estimate per content class so first paint is
+   already close to the real height, which eliminates scrollbar jitter. */
 .msg-row{content-visibility:auto;contain-intrinsic-size:auto 52px;animation:msgFadeIn .18s ease;}
 .msg-row.msg-first{contain-intrinsic-size:auto 72px;}
+.msg-row.msg-has-reactions{contain-intrinsic-size:auto 80px;}
+.msg-row.msg-has-reactions.msg-first{contain-intrinsic-size:auto 100px;}
+.msg-row.msg-has-code{contain-intrinsic-size:auto 140px;}
+.msg-row.msg-has-code.msg-first{contain-intrinsic-size:auto 160px;}
+.msg-row.msg-has-embed{contain-intrinsic-size:auto 180px;}
+.msg-row.msg-has-embed.msg-first{contain-intrinsic-size:auto 200px;}
+.msg-row.msg-has-media{contain-intrinsic-size:auto 260px;}
+.msg-row.msg-has-media.msg-first{contain-intrinsic-size:auto 300px;}
+/* System join/leave rows are always tiny. */
+.msg-row.msg-system{contain-intrinsic-size:auto 32px;}
 @keyframes msgFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .embed-link-card,.embed-x-card,.embed-invite-card,.embed-spotify-card{content-visibility:auto;contain-intrinsic-size:auto 120px;}
+/* Member list rows — same trick, uniform ~40px height. */
+.ml-entry{content-visibility:auto;contain-intrinsic-size:auto 40px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
 .sidebar{width:72px;min-width:72px;background:var(--glass-heavy);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;align-items:center;border-right:none;position:relative;}
 .sidebar-logo{display:none;}

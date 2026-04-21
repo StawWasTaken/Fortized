@@ -6034,10 +6034,65 @@ function _executeBotScript(script, ctx) {
 // ════════════════════════════════════════════
 // MESSAGE RENDERING
 // ════════════════════════════════════════════
+// Render a batch of messages into the container, continuing from optional
+// carry-state so we can split a single msgs array across multiple rAF ticks
+// without breaking date-div placement or author-grouping ("isFirst" / "isCont"
+// logic). Mutates and returns `state`.
+function _renderMsgBatch(container, msgs, context, state) {
+  if (!state) {
+    state = { lastDate: null, lastAuthor: null, lastTimestamp: null };
+    const lastRow = container.querySelector('.msg-row:last-child');
+    if (lastRow) {
+      state.lastAuthor = lastRow.dataset.from || null;
+      state.lastTimestamp = lastRow.dataset.timestamp || null;
+    }
+    const dateDivs = container.querySelectorAll('.date-div');
+    const lastDateDiv = dateDivs[dateDivs.length - 1];
+    if (lastDateDiv) state.lastDate = lastDateDiv.textContent?.trim() || null;
+  }
+  for (const msg of msgs) {
+    const d = msg.timestamp ? new Date(msg.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : 'Today';
+    if (d !== state.lastDate) {
+      const div = document.createElement('div');
+      div.className = 'date-div';
+      div.innerHTML = '<span>' + escapeHTML(d) + '</span>';
+      container.appendChild(div);
+      state.lastDate = d;
+      state.lastAuthor = null;
+      state.lastTimestamp = null;
+    }
+    let effectivePrevAuthor = state.lastAuthor;
+    if (state.lastAuthor === msg.from && state.lastTimestamp && msg.timestamp) {
+      const gap = Math.abs(new Date(msg.timestamp) - new Date(state.lastTimestamp));
+      if (gap >= 20 * 60 * 1000) effectivePrevAuthor = null;
+    }
+    appendMessage(container, msg, context, effectivePrevAuthor);
+    state.lastAuthor = msg.from;
+    state.lastTimestamp = msg.timestamp;
+  }
+  return state;
+}
+
+// Discord-style "trickle render": render the first 25 messages synchronously
+// so the viewport is painted immediately, then schedule the rest in
+// requestAnimationFrame chunks of 15 so the main thread can process input
+// events between batches. If the user starts scrolling mid-trickle we flush
+// the remaining chunks synchronously so their scroll doesn't fight the
+// rAF queue.
+//
+// Sticky-bottom: if the user was at the bottom when a chunk lands, we
+// re-pin them to the bottom after the chunk so appending older messages
+// (chronologically older relative to what they've already seen) doesn't
+// appear to "push" them up.
 function renderMessages(container, msgs, context) {
-  container.querySelectorAll('.msg-row,.date-div,.load-more-bar').forEach(el=>el.remove());
+  // Abort any prior trickle for this container.
+  if (container._trickleCtrl) {
+    container._trickleCtrl.aborted = true;
+    try { container._trickleCleanup?.(); } catch {}
+  }
+  container.querySelectorAll('.msg-row,.date-div,.load-more-bar').forEach(el => el.remove());
   if (!msgs.length) return;
-  // Add "Load More" button at top if we got a full page of messages
+
   if (msgs.length >= 100) {
     const loadMore = document.createElement('div');
     loadMore.className = 'load-more-bar';
@@ -6046,25 +6101,55 @@ function renderMessages(container, msgs, context) {
     loadMore.dataset.offset = '100';
     container.appendChild(loadMore);
   }
-  let lastDate=null, lastAuthor=null, lastTimestamp=null;
-  msgs.forEach(msg=>{
-    const d=msg.timestamp?new Date(msg.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'Today';
-    if (d!==lastDate) {
-      const div=document.createElement('div');
-      div.className='date-div'; div.innerHTML='<span>'+escapeHTML(d)+'</span>';
-      container.appendChild(div);
-      lastDate=d; lastAuthor=null; lastTimestamp=null;
-    }
-    // Discord-style: show header again if same author but 5+ minute gap
-    let effectivePrevAuthor = lastAuthor;
-    if (lastAuthor === msg.from && lastTimestamp && msg.timestamp) {
-      const gap = Math.abs(new Date(msg.timestamp) - new Date(lastTimestamp));
-      if (gap >= 20 * 60 * 1000) effectivePrevAuthor = null; // force new header after 20 min gap
-    }
-    appendMessage(container,msg,context,effectivePrevAuthor);
-    lastAuthor=msg.from;
-    lastTimestamp=msg.timestamp;
-  });
+
+  // Small lists: render synchronously — the rAF overhead outweighs the gain.
+  if (msgs.length <= 40) {
+    _renderMsgBatch(container, msgs, context);
+    return;
+  }
+
+  const FIRST = 25;
+  const CHUNK = 15;
+  const state = _renderMsgBatch(container, msgs.slice(0, FIRST), context);
+
+  const rest = msgs.slice(FIRST);
+  const ctrl = { aborted: false, idx: 0 };
+  container._trickleCtrl = ctrl;
+
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    container.removeEventListener('wheel', breakout, { passive: true });
+    container.removeEventListener('touchstart', breakout, { passive: true });
+    container.removeEventListener('keydown', breakout, true);
+  };
+  const flushRest = () => {
+    if (ctrl.aborted) return;
+    const remaining = rest.slice(ctrl.idx);
+    ctrl.aborted = true;
+    cleanup();
+    if (remaining.length) _renderMsgBatch(container, remaining, context, state);
+  };
+  const breakout = () => flushRest();
+  container._trickleCleanup = cleanup;
+
+  container.addEventListener('wheel', breakout, { passive: true });
+  container.addEventListener('touchstart', breakout, { passive: true });
+  container.addEventListener('keydown', breakout, true);
+
+  const step = () => {
+    if (ctrl.aborted) return;
+    const wasAtBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 80;
+    const chunk = rest.slice(ctrl.idx, ctrl.idx + CHUNK);
+    if (!chunk.length) { cleanup(); return; }
+    _renderMsgBatch(container, chunk, context, state);
+    ctrl.idx += CHUNK;
+    if (wasAtBottom) container.scrollTop = container.scrollHeight;
+    if (ctrl.idx < rest.length) requestAnimationFrame(step);
+    else cleanup();
+  };
+  requestAnimationFrame(step);
 }
 
 async function _loadOlderMessages(btn) {
@@ -6361,6 +6446,22 @@ function appendMessage(container, msg, context, prevAuthor) {
     if (rawText.length > 0 && rawText.length <= 60 && (emojiRegex.test(stripped) || isShortcodesOnly || /^(\s*[\p{Emoji}\p{Extended_Pictographic}][\uFE0F\u200D\p{Emoji_Modifier}]*\s*)+$/u.test(rawText))) {
       textEl.classList.add('emoji-only');
     }
+  }
+  // Stamp content classes so CSS can hand the browser a better
+  // contain-intrinsic-size estimate. Without these, content-visibility:auto
+  // reserves only the fallback 52px per row, which makes the scrollbar
+  // jitter as heavy rows paint for the first time. Cheap DOM queries only.
+  if (row.querySelector('img,video,.ftz-gif,.ftz-sticker,.ftz-video-player,.ftz-audio-player,.msg-image,.msg-video')) {
+    row.classList.add('msg-has-media');
+  }
+  if (row.querySelector('.ftz-embed, [class^="embed-"], [class*=" embed-"], .msg-embed')) {
+    row.classList.add('msg-has-embed');
+  }
+  if (row.querySelector('pre, pre code, .code-block')) {
+    row.classList.add('msg-has-code');
+  }
+  if (row.querySelector('.msg-reactions')) {
+    row.classList.add('msg-has-reactions');
   }
 }
 
@@ -7219,16 +7320,49 @@ async function renderMemberList() {
   const allOffline = [...ownerOffline];
   sortedGroups.forEach(g => { allOffline.push(...g.members.filter(u => !isOnlineStatus(statusMap[u]))); });
   allOffline.push(...noRole.filter(u => !isOnlineStatus(statusMap[u])));
-  if (allOffline.length) {
-    html += `<div class="ml-role-header" style="margin-top:8px;opacity:.5;">Offline <span class="ml-role-count">— ${allOffline.length}</span></div>`;
-    allOffline.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u], true));
+  const offlineHeader = allOffline.length
+    ? `<div class="ml-role-header" style="margin-top:8px;opacity:.5;">Offline <span class="ml-role-count">— ${allOffline.length}</span></div>`
+    : '';
+  const botsHeaderAndRows = deployedBots.length
+    ? `<div class="ml-role-header"><img src="/fortized badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>`
+      + deployedBots.map(buildBotMemberEntry).join('')
+    : '';
+
+  // Chunk-render the offline section when it's large. Small bastions get
+  // the fast synchronous path; big ones paint online members immediately
+  // and then trickle offline rows in requestAnimationFrame batches so the
+  // member panel is interactive within a frame instead of blocking on a
+  // multi-hundred-row innerHTML.
+  const LARGE_OFFLINE = 60;
+  if (allOffline.length >= LARGE_OFFLINE) {
+    ml.innerHTML = html + offlineHeader;
+    // Abort any prior trickle
+    if (ml._mlTrickle) ml._mlTrickle.aborted = true;
+    const ctrl = { aborted: false, idx: 0 };
+    ml._mlTrickle = ctrl;
+    const CHUNK = 40;
+    const step = () => {
+      if (ctrl.aborted) return;
+      if (ctrl.idx >= allOffline.length) {
+        if (botsHeaderAndRows) ml.insertAdjacentHTML('beforeend', botsHeaderAndRows);
+        return;
+      }
+      const slice = allOffline.slice(ctrl.idx, ctrl.idx + CHUNK);
+      const frag = slice.map(u => buildMemberEntry(u, roles, memberRoles, statusMap[u], true)).join('');
+      ml.insertAdjacentHTML('beforeend', frag);
+      ctrl.idx += CHUNK;
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    return;
   }
 
-  // Bots section
-  if (deployedBots.length) {
-    html += `<div class="ml-role-header"><img src="/fortized badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>`;
-    deployedBots.forEach(bot => html += buildBotMemberEntry(bot));
+  // Small/medium bastion — synchronous single-pass render
+  if (allOffline.length) {
+    html += offlineHeader;
+    allOffline.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u], true));
   }
+  if (botsHeaderAndRows) html += botsHeaderAndRows;
   ml.innerHTML = html;
 }
 // Debounced member list re-sort when status changes in real-time

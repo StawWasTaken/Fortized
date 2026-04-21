@@ -8419,8 +8419,22 @@ function initFortizedUXResilience() {
       window.location.href='/login?error=auth_failed';
       return;
     }
-    // Always cache the fresh data
-    localStorage.setItem('ftz_user_'+username,JSON.stringify(CU));
+    // Always cache the fresh data. Wrap in try/catch so a full localStorage
+    // (typically a huge data:-URL avatar pushing past the ~5 MB quota) can't
+    // kill init — the in-memory CU is already populated from the server.
+    try {
+      localStorage.setItem('ftz_user_'+username, JSON.stringify(CU));
+    } catch (e) {
+      console.warn('[Init] User cache write skipped:', e?.name || e?.message);
+      // Best-effort: try again with the heaviest field (pfp data URL) stripped
+      // so we still get a cached profile on next load.
+      try {
+        const trimmed = { ...CU };
+        if (typeof trimmed.pfp === 'string' && trimmed.pfp.startsWith('data:') && trimmed.pfp.length > 200_000) delete trimmed.pfp;
+        if (typeof trimmed.banner === 'string' && trimmed.banner.startsWith('data:') && trimmed.banner.length > 200_000) delete trimmed.banner;
+        localStorage.setItem('ftz_user_'+username, JSON.stringify(trimmed));
+      } catch(_) { /* give up, init continues from in-memory CU */ }
+    }
   }
 
   // Set defaults
@@ -16598,6 +16612,9 @@ async function _applyGifAvatar(url) {
 // Save recent avatar to localStorage (most-recent first, capped at 5)
 function _saveRecentAvatar(url) {
   if (!url) return;
+  // Skip very large data-URLs (big animated GIFs) so we don't compete with
+  // the main user cache for the ~5 MB localStorage quota.
+  if (typeof url === 'string' && url.startsWith('data:') && url.length > 400_000) return;
   const key = 'ftz_recent_avatars_' + CU.username;
   const recent = JSON.parse(localStorage.getItem(key)||'[]').filter(u => u !== url);
   recent.unshift(url);
@@ -16606,6 +16623,7 @@ function _saveRecentAvatar(url) {
   } catch(_) {
     // Quota exceeded — trim harder and retry
     try { localStorage.setItem(key, JSON.stringify(recent.slice(0,3))); } catch(_){}
+    try { localStorage.setItem(key, JSON.stringify(recent.slice(0,1))); } catch(_){}
   }
 }
 

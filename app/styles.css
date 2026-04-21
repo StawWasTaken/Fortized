@@ -1176,7 +1176,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .ftz-onboarding-overlay.visible .ftz-onboarding-card{transform:scale(1) translateY(0);}
 .ftz-onboarding-bar{height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
 .ftz-onboarding-hero{padding:20px 40px 0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center top,rgba(255,249,62,.06),transparent 70%);}
-.ftz-onboarding-hero img{height:56px;width:auto;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(255,249,62,.15));}
+.ftz-onboarding-hero img{height:56px;width:auto;object-fit:contain;filter:brightness(0) saturate(100%) invert(92%) sepia(56%) saturate(2300%) hue-rotate(4deg) brightness(104%) contrast(102%) drop-shadow(0 4px 18px rgba(255,249,62,.35));}
 .ftz-onboarding-body{padding:24px 26px 22px;text-align:center;}
 .ftz-onboarding-eyebrow{font-size:9.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,249,62,.55);margin-bottom:10px;}
 .ftz-onboarding-title{font-family:var(--font-display);font-size:26px;font-weight:900;color:#fff;margin-bottom:10px;line-height:1.18;letter-spacing:-.018em;}

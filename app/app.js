@@ -32461,7 +32461,49 @@ let _forumCurrentCategory = null;
 let _forumCurrentThread = null;
 let _forumThreadImageData = null;
 let _forumPostImageData = null;
+let _forumThreadAttachments = [];
+let _forumPostAttachments = [];
+let _forumLivePreviewTimer = null;
 let _forumAllThreadsCache = [];
+
+const _FORUM_ATT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB per file
+
+function _forumClassifyAttachment(file) {
+  const mime = (file.type || '').toLowerCase();
+  if (mime === 'image/gif') return 'gif';
+  if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('image/')) return 'image';
+  return null;
+}
+
+function _forumRenderAttachmentsHTML(list, opts) {
+  if (!Array.isArray(list) || !list.length) return '';
+  const maxH = (opts && opts.compact) ? 220 : 360;
+  return list.map(a => {
+    const safeUrl = escapeHTML(a.url || '');
+    if (a.type === 'video') {
+      return `<video controls playsinline preload="metadata" class="forum-att-media forum-att-video" style="max-height:${maxH}px;" src="${safeUrl}"></video>`;
+    }
+    return `<img class="forum-att-media forum-att-image" src="${safeUrl}" style="max-height:${maxH}px;" alt="${escapeHTML(a.name || 'attachment')}">`;
+  }).join('');
+}
+
+function _forumMediaBadgesHTML(item) {
+  const atts = Array.isArray(item?.attachments) ? item.attachments : [];
+  const hasLegacy = !!(item && item.image);
+  if (!atts.length && !hasLegacy) return '';
+  const hasVid = atts.some(a => a.type === 'video');
+  const hasGif = atts.some(a => a.type === 'gif');
+  const imgCount = atts.filter(a => a.type === 'image').length + (hasLegacy ? 1 : 0);
+  const badges = [];
+  if (hasVid) badges.push('<span class="forum-media-badge" title="Contains video"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>Video</span>');
+  if (hasGif) badges.push('<span class="forum-media-badge" title="Contains GIF"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" ry="2"/><path d="M7 9v6M11 9v6M14 9h3M14 12h2M20 9v6"/></svg>GIF</span>');
+  if (imgCount) {
+    const lbl = imgCount > 1 ? `Images · ${imgCount}` : 'Image';
+    badges.push(`<span class="forum-media-badge" title="Contains image">${'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>'}${lbl}</span>`);
+  }
+  return badges.join('');
+}
 
 // Per-category last-visit timestamps for "new posts" indicators
 function _forumGetLastVisits() {
@@ -32782,6 +32824,7 @@ async function _forumLoadThreads() {
               <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${_forumBoostedViews(th)}</span>
               <span class="forum-thread-meta-sep"></span>
               <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${th.reply_count || 0}</span>
+              ${_forumMediaBadgesHTML(th) ? `<span class="forum-thread-meta-sep"></span><span class="forum-thread-badges">${_forumMediaBadgesHTML(th)}</span>` : ''}
             </div>
           </div>
           <div class="forum-thread-right">
@@ -32891,6 +32934,7 @@ async function _forumViewThread(threadId, opts) {
                 <div class="forum-op-date">${new Date(thread.created_at).toLocaleString()}${thread.edited_at ? ` <span class="forum-edited" title="Edited ${new Date(thread.edited_at).toLocaleString()}">(edited)</span>` : ''}</div>
                 <div class="forum-op-text" id="forum-op-text">${_forumRenderBody(thread.content || '')}</div>
                 ${thread.image ? `<img class="forum-op-image" src="${escapeHTML(thread.image)}">` : ''}
+                ${Array.isArray(thread.attachments) && thread.attachments.length ? `<div class="forum-att-grid">${_forumRenderAttachmentsHTML(thread.attachments)}</div>` : ''}
                 <div class="forum-post-actions">
                   <div class="forum-vote-group">
                     <button class="forum-vote-btn up ${opUpvoted?'active':''}" onclick="_forumVote('thread','${thread.id}',1)" title="Upvote"><span class="fvb-icon">👏</span></button>
@@ -32916,10 +32960,10 @@ async function _forumViewThread(threadId, opts) {
               <textarea id="forum-post-text" placeholder="Share your thoughts... Markdown supported. Use @ to mention someone." oninput="_forumMentionInput(this)"></textarea>
               <div id="forum-mention-popup" class="forum-mention-popup" style="display:none;"></div>
               <div class="forum-reply-compose-actions">
-                <input id="forum-post-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumPostImagePreview(event)">
-                <button class="forum-img-btn" onclick="document.getElementById('forum-post-image-upload').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Add Image</button>
+                <input id="forum-post-image-upload" type="file" accept="image/*,video/*" multiple style="display:none;" onchange="_forumPostAttachmentsAdd(event)">
+                <button class="forum-img-btn" onclick="document.getElementById('forum-post-image-upload').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Add Media</button>
                 <button class="forum-img-btn" onclick="toggleEmojiPicker('forum-post-text')" title="Add emoji"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Emoji</button>
-                <span class="forum-file-label" id="forum-post-file-label">No image selected</span>
+                <span class="forum-file-label" id="forum-post-file-label">No attachment selected</span>
                 <button class="forum-submit-btn" onclick="_forumCreatePost('${threadId}')">Post Reply</button>
               </div>
               <div id="forum-post-image-preview" style="margin-top:10px;"></div>
@@ -32929,6 +32973,9 @@ async function _forumViewThread(threadId, opts) {
       </div>
     `;
     _forumHydratePfps(content);
+    _forumPostAttachments = [];
+    _forumPostImageData = null;
+    _forumRenderPostAttachmentsEdit();
   } catch(e) {
     console.error('[Forum] View thread failed:', e);
     content.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load thread</p></div>';
@@ -32974,6 +33021,7 @@ function _forumRenderPostCard(post, threadId, thread) {
         ${quoteBlock}
         <div class="frc-body" id="fp-body-${post.id}">${_forumRenderBody(post.content || '')}</div>
         ${post.image ? `<img src="${escapeHTML(post.image)}" style="max-width:100%;max-height:300px;border-radius:10px;margin-top:8px;">` : ''}
+        ${Array.isArray(post.attachments) && post.attachments.length ? `<div class="forum-att-grid">${_forumRenderAttachmentsHTML(post.attachments, {compact:true})}</div>` : ''}
         <div class="forum-post-actions">
           <div class="forum-vote-group">
             <button class="forum-vote-btn up ${up?'active':''}" onclick="_forumVote('post','${post.id}',1)" title="Upvote"><span class="fvb-icon">👏</span></button>
@@ -33338,29 +33386,29 @@ function _forumShowCreatePost(preselectedCategory) {
 
             <div class="fnp-card">
               <label class="fnp-label" for="forum-new-title">Title</label>
-              <input id="forum-new-title" class="fnp-input" type="text" placeholder="Give your post a clear, descriptive title" maxlength="100" oninput="document.getElementById('fnp-title-count').textContent=this.value.length">
+              <input id="forum-new-title" class="fnp-input" type="text" placeholder="Give your post a clear, descriptive title" maxlength="100" oninput="document.getElementById('fnp-title-count').textContent=this.value.length;_forumScheduleLivePreview()">
               <div class="fnp-hint"><span id="fnp-title-count">0</span>/100</div>
             </div>
 
             <div class="fnp-card" style="position:relative;">
               <label class="fnp-label" for="forum-new-content">Content</label>
               ${buildFormatToolbarHTML('forum-new-content')}
-              <textarea id="forum-new-content" class="fnp-textarea" placeholder="Write out your post... Share details, context, and what you're looking for. Markdown is supported."></textarea>
+              <textarea id="forum-new-content" class="fnp-textarea" placeholder="Write out your post... Share details, context, and what you're looking for. Markdown is supported." oninput="_forumScheduleLivePreview()"></textarea>
               <button type="button" onclick="toggleEmojiPicker('forum-new-content')" class="emoji-insert-btn" style="position:absolute;bottom:10px;right:10px;" title="Add emoji">😀</button>
               <div class="fnp-hint" style="margin-top:6px;opacity:.7;">Supports <strong>**bold**</strong>, <em>*italic*</em>, <code>\`code\`</code>, ~~strike~~, ||spoiler||, ==highlight==, /title/, ///subtitle///.</div>
             </div>
 
             <div class="fnp-card">
               <label class="fnp-label">Attachments</label>
-              <input id="forum-thread-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumThreadImagePreview(event)">
+              <input id="forum-thread-image-upload" type="file" accept="image/*,video/*" multiple style="display:none;" onchange="_forumThreadAttachmentsAdd(event)">
               <div class="fnp-upload" onclick="document.getElementById('forum-thread-image-upload').click()">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                 <div>
-                  <div class="fnp-upload-title">Click to add an image</div>
-                  <div class="fnp-upload-sub">PNG, JPG, GIF — optional</div>
+                  <div class="fnp-upload-title">Click to add images, GIFs or videos</div>
+                  <div class="fnp-upload-sub">PNG, JPG, GIF, WEBP, MP4, WEBM — up to 10 MB each · optional</div>
                 </div>
               </div>
-              <div id="forum-thread-image-preview" style="margin-top:10px;"></div>
+              <div id="forum-thread-image-preview" class="forum-att-edit-grid" style="margin-top:10px;"></div>
             </div>
 
             <input id="forum-new-category" type="hidden" value="${defaultCat}">
@@ -33371,6 +33419,14 @@ function _forumShowCreatePost(preselectedCategory) {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
                 Publish post
               </button>
+            </div>
+
+            <div class="fnp-card fnp-preview-card">
+              <div class="fnp-label" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <span>Live preview</span>
+                <span class="fnp-hint" style="margin:0;opacity:.6;">This is how your post will look</span>
+              </div>
+              <div id="forum-thread-live-preview" class="forum-live-preview-host"></div>
             </div>
           </div>
 
@@ -33413,40 +33469,153 @@ function _forumShowCreatePost(preselectedCategory) {
       </div>
     </div>
   `;
+  _forumThreadAttachments = [];
+  _forumThreadImageData = null;
+  _forumRenderThreadAttachmentsEdit();
+  _forumRenderThreadLivePreview();
 }
 
 function _forumShowCreateThread(preselectedCategory) {
   _forumShowCreatePost(preselectedCategory);
 }
 
+function _forumReadFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = ev => resolve(ev.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function _forumThreadAttachmentsAdd(e) {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  for (const f of files) {
+    const type = _forumClassifyAttachment(f);
+    if (!type) { toast(`Skipped "${f.name}" — unsupported file type.`, 'error'); continue; }
+    if (f.size > _FORUM_ATT_MAX_BYTES) { toast(`Skipped "${f.name}" — over 10 MB.`, 'error'); continue; }
+    try {
+      const url = await _forumReadFileAsDataURL(f);
+      _forumThreadAttachments.push({ type, url, name: f.name, size: f.size });
+    } catch(_) { toast(`Failed to read "${f.name}".`, 'error'); }
+  }
+  e.target.value = '';
+  _forumRenderThreadAttachmentsEdit();
+  _forumRenderThreadLivePreview();
+}
+
+function _forumThreadAttachmentRemove(idx) {
+  if (idx < 0 || idx >= _forumThreadAttachments.length) return;
+  _forumThreadAttachments.splice(idx, 1);
+  _forumRenderThreadAttachmentsEdit();
+  _forumRenderThreadLivePreview();
+}
+
+function _forumRenderThreadAttachmentsEdit() {
+  const prev = document.getElementById('forum-thread-image-preview');
+  if (!prev) return;
+  if (!_forumThreadAttachments.length) { prev.innerHTML = ''; return; }
+  prev.innerHTML = _forumThreadAttachments.map((a, i) => {
+    const media = a.type === 'video'
+      ? `<video muted playsinline preload="metadata" src="${escapeHTML(a.url)}"></video>`
+      : `<img src="${escapeHTML(a.url)}" alt="${escapeHTML(a.name)}">`;
+    const typeLabel = a.type === 'video' ? 'VIDEO' : (a.type === 'gif' ? 'GIF' : 'IMAGE');
+    return `<div class="forum-att-chip">
+      ${media}
+      <span class="forum-att-chip-type">${typeLabel}</span>
+      <button type="button" class="forum-att-chip-x" onclick="_forumThreadAttachmentRemove(${i})" title="Remove">×</button>
+    </div>`;
+  }).join('');
+}
+
+function _forumScheduleLivePreview() {
+  clearTimeout(_forumLivePreviewTimer);
+  _forumLivePreviewTimer = setTimeout(_forumRenderThreadLivePreview, 140);
+}
+
+function _forumRenderThreadLivePreview() {
+  const host = document.getElementById('forum-thread-live-preview');
+  if (!host) return;
+  const title = document.getElementById('forum-new-title')?.value?.trim() || '';
+  const body = document.getElementById('forum-new-content')?.value || '';
+  const author = (typeof CU !== 'undefined' && CU) ? (CU.displayName || CU.username || 'You') : 'You';
+  const handle = (typeof CU !== 'undefined' && CU && CU.username) ? CU.username : 'you';
+  const pfp = (typeof CU !== 'undefined' && CU && CU.pfp) ? CU.pfp : _defaultPfpUrl(handle);
+  const hasAny = title || body.trim() || _forumThreadAttachments.length;
+  if (!hasAny) {
+    host.innerHTML = `<div class="forum-live-empty">Start writing — your post will preview here.</div>`;
+    return;
+  }
+  host.innerHTML = `
+    <div class="forum-live-title">${escapeHTML(title || '(untitled)')}</div>
+    <div class="forum-op-card" style="margin:0;">
+      <img class="forum-op-avatar" src="${escapeHTML(pfp)}" onerror="this.src='${_defaultPfpUrl(handle)}'">
+      <div class="forum-op-content">
+        <div class="forum-op-author">
+          <strong>${escapeHTML(author)}</strong>
+          <span class="forum-op-handle">@${escapeHTML(handle)}</span>
+        </div>
+        <div class="forum-op-date">just now</div>
+        <div class="forum-op-text">${body.trim() ? _forumRenderBody(body) : '<span style="opacity:.5;">(no content yet)</span>'}</div>
+        ${_forumThreadAttachments.length ? `<div class="forum-att-grid">${_forumRenderAttachmentsHTML(_forumThreadAttachments)}</div>` : ''}
+      </div>
+    </div>`;
+  try { if (typeof window._twemojiReparse === 'function') window._twemojiReparse(host); } catch(_){}
+}
+
+// Legacy shim (still referenced by older paths) — delegates to the new handler.
 function _forumThreadImagePreview(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    _forumThreadImageData = ev.target.result;
-    const lbl = document.getElementById('forum-thread-file-label');
-    if (lbl) lbl.textContent = file.name;
-    const prev = document.getElementById('forum-thread-image-preview');
-    if (prev) prev.innerHTML = `<img src="${_forumThreadImageData}" style="max-width:100%;max-height:240px;border-radius:10px;border:1px solid var(--line);">
-      <button type="button" class="fnp-img-remove" onclick="_forumThreadImageData=null;document.getElementById('forum-thread-image-preview').innerHTML='';document.getElementById('forum-thread-image-upload').value='';">Remove</button>`;
-  };
-  reader.readAsDataURL(file);
+  return _forumThreadAttachmentsAdd(e);
+}
+
+async function _forumPostAttachmentsAdd(e) {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  for (const f of files) {
+    const type = _forumClassifyAttachment(f);
+    if (!type) { toast(`Skipped "${f.name}" — unsupported file type.`, 'error'); continue; }
+    if (f.size > _FORUM_ATT_MAX_BYTES) { toast(`Skipped "${f.name}" — over 10 MB.`, 'error'); continue; }
+    try {
+      const url = await _forumReadFileAsDataURL(f);
+      _forumPostAttachments.push({ type, url, name: f.name, size: f.size });
+    } catch(_) { toast(`Failed to read "${f.name}".`, 'error'); }
+  }
+  e.target.value = '';
+  _forumRenderPostAttachmentsEdit();
+}
+
+function _forumPostAttachmentRemove(idx) {
+  if (idx < 0 || idx >= _forumPostAttachments.length) return;
+  _forumPostAttachments.splice(idx, 1);
+  _forumRenderPostAttachmentsEdit();
+}
+
+function _forumRenderPostAttachmentsEdit() {
+  const prev = document.getElementById('forum-post-image-preview');
+  const label = document.getElementById('forum-post-file-label');
+  if (label) {
+    label.textContent = _forumPostAttachments.length
+      ? `${_forumPostAttachments.length} attachment${_forumPostAttachments.length > 1 ? 's' : ''}`
+      : 'No attachment selected';
+  }
+  if (!prev) return;
+  if (!_forumPostAttachments.length) { prev.innerHTML = ''; return; }
+  prev.innerHTML = `<div class="forum-att-edit-grid">${_forumPostAttachments.map((a, i) => {
+    const media = a.type === 'video'
+      ? `<video muted playsinline preload="metadata" src="${escapeHTML(a.url)}"></video>`
+      : `<img src="${escapeHTML(a.url)}" alt="${escapeHTML(a.name)}">`;
+    const typeLabel = a.type === 'video' ? 'VIDEO' : (a.type === 'gif' ? 'GIF' : 'IMAGE');
+    return `<div class="forum-att-chip">
+      ${media}
+      <span class="forum-att-chip-type">${typeLabel}</span>
+      <button type="button" class="forum-att-chip-x" onclick="_forumPostAttachmentRemove(${i})" title="Remove">×</button>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function _forumPostImagePreview(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    _forumPostImageData = ev.target.result;
-    const lbl = document.getElementById('forum-post-file-label');
-    if (lbl) lbl.textContent = file.name;
-    const prev = document.getElementById('forum-post-image-preview');
-    if (prev) prev.innerHTML = `<img src="${_forumPostImageData}" style="max-width:100%;max-height:240px;border-radius:10px;border:1px solid var(--line);">
-      <button type="button" class="fnp-img-remove" onclick="_forumPostImageData=null;document.getElementById('forum-post-image-preview').innerHTML='';document.getElementById('forum-post-image-upload').value='';">Remove</button>`;
-  };
-  reader.readAsDataURL(file);
+  return _forumPostAttachmentsAdd(e);
 }
 
 async function _forumCreateThread(e) {
@@ -33458,13 +33627,16 @@ async function _forumCreateThread(e) {
   if (!title) { toast('Enter a thread title', 'error'); return; }
   if (!content) { toast('Enter a description', 'error'); return; }
 
+  const atts = Array.isArray(_forumThreadAttachments) ? _forumThreadAttachments.slice() : [];
+  const firstImage = atts.find(a => a.type === 'image' || a.type === 'gif');
   const thread = {
     id: 'thread_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
     category: category,
     title: title,
     author: CU.username,
     content: content,
-    image: _forumThreadImageData || null,
+    image: (firstImage ? firstImage.url : null) || _forumThreadImageData || null,
+    attachments: atts,
     created_at: Date.now(),
     updated_at: Date.now(),
     views: 0,
@@ -33481,6 +33653,7 @@ async function _forumCreateThread(e) {
     document.querySelector('.overview-modal')?.remove();
     toast('Post created!', 'success');
     _forumThreadImageData = null;
+    _forumThreadAttachments = [];
     await _forumOpenCategory(category);
   } catch(e) {
     console.error('[Forum] Create failed:', e);
@@ -33498,6 +33671,8 @@ async function _forumCreatePost(threadId) {
     const thread = await FortizedSocial.getForumThread(threadId);
     if (thread) q = { id: thread.id, author: thread.author, text: (thread.content || '').slice(0, 500) };
   } catch(_) {}
+  const atts = Array.isArray(_forumPostAttachments) ? _forumPostAttachments.slice() : [];
+  const firstImage = atts.find(a => a.type === 'image' || a.type === 'gif');
   const post = {
     id: 'post_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
     thread_id: threadId,
@@ -33505,7 +33680,8 @@ async function _forumCreatePost(threadId) {
     author_displayName: CU.displayName || CU.username,
     author_pfp: CU.pfp || null,
     content: text,
-    image: _forumPostImageData || null,
+    image: (firstImage ? firstImage.url : null) || _forumPostImageData || null,
+    attachments: atts,
     created_at: Date.now(),
     edited_at: null,
     edit_history: [],
@@ -33527,8 +33703,9 @@ async function _forumCreatePost(threadId) {
     });
     document.getElementById('forum-post-text').value = '';
     _forumPostImageData = null;
-    document.getElementById('forum-post-image-preview').innerHTML = '';
-    document.getElementById('forum-post-file-label').textContent = 'No image selected';
+    _forumPostAttachments = [];
+    const prevBox = document.getElementById('forum-post-image-preview'); if (prevBox) prevBox.innerHTML = '';
+    const lbl = document.getElementById('forum-post-file-label'); if (lbl) lbl.textContent = 'No attachment selected';
     toast('Reply posted!', 'success');
     _forumPendingQuote = null;
     await _forumViewThread(threadId, {skipViewInc:true});

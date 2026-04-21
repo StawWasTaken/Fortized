@@ -733,7 +733,7 @@ const FortizedSocial = (() => {
         .limit(max);
 
       // If that fails or returns empty, try new schema with from/username columns
-      if ((error || !data || data.length === 0) && u1 && u2) {
+      if ((error || !data || data.length === 0) && u1 && u2 && !window._dmSchemaBroken) {
         console.debug('[getDMMessages] Trying new schema with from/username columns');
         // Query both directions: (from=u1 AND username=u2) OR (from=u2 AND username=u1)
         const res1 = await sb.from('dms')
@@ -759,6 +759,12 @@ const FortizedSocial = (() => {
           error = null;
         } else {
           error = res1.error || res2.error;
+          // If the new schema is missing expected columns, permanently disable
+          // this fallback for the rest of the session so every DM thread
+          // doesn't hammer Supabase with doomed 400s.
+          if (/column .* does not exist/i.test(error?.message || '')) {
+            window._dmSchemaBroken = true;
+          }
         }
       }
 
@@ -1585,7 +1591,12 @@ const FortizedSocial = (() => {
         const bastions = userData.bastions;
 
         // Check each bastion for voice room changes
-        for (const bastionId of bastions) {
+        for (const rawBastion of bastions) {
+          // `bastions` may be an array of strings (legacy) or objects ({id,name,...}).
+          // Coerce to the canonical string id so the Supabase filter doesn't URL-encode
+          // the whole object as "[object Object]" and 400.
+          const bastionId = typeof rawBastion === 'string' ? rawBastion : (rawBastion?.id || rawBastion?.globalId || rawBastion?.name);
+          if (!bastionId || typeof bastionId !== 'string') continue;
           const { data: bastionData, error: bastionErr } = await sb.from('global_bastions')
             .select('voice_channels')
             .eq('id', bastionId)

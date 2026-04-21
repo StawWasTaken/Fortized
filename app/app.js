@@ -21331,9 +21331,9 @@ async function showOnboarding() {
       <img src="/Fortized logo.png" alt="Fortized" onerror="this.src='/Fortized icon.png'">
     </div>
     <div class="ftz-onboarding-body" style="padding-top:4px;">
-      <div class="ftz-onboarding-eyebrow">WELCOME</div>
-      <div class="ftz-onboarding-title">Welcome to Fortized, from Team Fortized at Swiftaw.</div>
-      <div class="ftz-onboarding-sub">You're now part of a global community. Create bastions, connect with friends, and build together.</div>
+      <div class="ftz-onboarding-eyebrow">FROM SWIFTAW</div>
+      <div class="ftz-onboarding-title">Welcome to Fortized.</div>
+      <div class="ftz-onboarding-sub">You're now part of a global community. Create Bastions, connect with friends, and build together.</div>
       <div class="ftz-onboarding-tips">
         <div class="ftz-tips-head">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>

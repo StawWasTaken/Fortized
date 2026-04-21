@@ -472,18 +472,16 @@ const FtzStatus = (() => {
         firebase.database().ref('statuses/' + CU.username).onDisconnect().set('offline');
       } catch(e) { console.warn('[Status] onDisconnect setup failed:', e?.message); }
     }
-    // Mark offline ONLY when the tab is actually closed (not on navigation/refresh)
-    // Socket.IO disconnect on the server handles the real offline transition
+    // Mark offline ONLY when the tab is actually closed (not on navigation/refresh).
+    // Socket.IO disconnect on the server (see server.js) is the source of truth —
+    // the old sendBeacon('/api/presence/offline') was a belt-and-braces fallback
+    // but the proxy (Cloudflare) returns 405 for POST on that path, so we rely
+    // on socket disconnect alone.
     window.addEventListener('pagehide', (e) => {
       if (!CU?.username) return;
       _stopCompanionIdlePoll();
       if (typeof _stopAutoActivityDetection === 'function') _stopAutoActivityDetection();
       stopCrossDeviceSync();
-      // Only send offline beacon if the page is NOT being cached (actual close, not bfcache)
-      if (!e.persisted && navigator.sendBeacon) {
-        navigator.sendBeacon('/api/presence/offline',
-          new Blob([JSON.stringify({ username: CU.username })], { type: 'application/json' }));
-      }
     });
   }
 

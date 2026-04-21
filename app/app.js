@@ -11857,19 +11857,18 @@ function renderBSettingsMain(tab) {
           <div style="margin-bottom:14px;">
             <div class="settings-title">Target Bastion</div>
             <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
-              ${(CU.bastions||[]).filter(bst=>bst.owner===CU.username).map((bst,i)=>{
+              ${(CU.bastions||[]).filter(bst=>_canAdvertiseBastion(bst)).map((bst,i)=>{
                 const idx=(CU.bastions||[]).indexOf(bst);
                 return `<option value="${idx}" ${idx===curBastion?'selected':''}>${escapeHTML(bst.name)}</option>`;
               }).join('')}
             </select>
           </div>
 
-          ${isSuperAdmin() ? `
-          <!-- Custom Link (Superadmin only) -->
+          <!-- Link target -->
           <div style="margin-bottom:14px;">
-            <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Custom Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
-            <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="document.getElementById('cm-ad-custom-link').style.display=this.value==='custom'?'':'none';if(this.value!=='custom')document.getElementById('cm-ad-custom-link').value=this.value==='bastion'?'':this.value;">
-              <option value="bastion">Default — Join Bastion</option>
+            <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Link ${isSuperAdmin() ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span>' : ''}</div>
+            <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="var el=document.getElementById('cm-ad-custom-link');if(el){el.style.display=this.value==='custom'?'':'none';if(this.value!=='custom')el.value=this.value==='bastion'?'':this.value;}">
+              <option value="bastion">Default - Join Bastion</option>
               <optgroup label="In-app pages">
                 <option value="/app">Home</option>
                 <option value="/app/messages">Direct Messages</option>
@@ -11881,12 +11880,11 @@ function renderBSettingsMain(tab) {
                 <option value="/app/atelier?tab=shop">Fortshop</option>
                 <option value="/app/atelier?tab=creator">Creator</option>
               </optgroup>
-              <option value="custom">Custom URL (opens in browser)</option>
+              ${isSuperAdmin() ? '<option value="custom">Custom URL (opens in browser)</option>' : ''}
             </select>
-            <input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">
-            <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Fortized pages open in-app. External URLs open in the user's browser.</div>
+            ${isSuperAdmin() ? '<input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">' : ''}
+            <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">${isSuperAdmin() ? 'Fortized pages open in-app. External URLs open in the user\'s browser.' : 'In-app pages only. External URLs are reserved for Fortized staff.'}</div>
           </div>
-          ` : ''}
 
           <div style="margin-bottom:16px;">
             <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted-light);cursor:pointer;">
@@ -12118,10 +12116,14 @@ async function _cmCreateAd() {
   const autoRefund = document.getElementById('cm-ad-autorefund')?.checked || false;
   const ratio = document.querySelector('input[name="cm-ad-ratio"]:checked')?.value || 'banner';
   let customLink = '';
-  if (isSuperAdmin()) {
-    const linkType = document.getElementById('cm-ad-link-type')?.value || 'bastion';
-    if (linkType === 'custom') customLink = document.getElementById('cm-ad-custom-link')?.value?.trim() || '';
-    else if (linkType !== 'bastion') customLink = linkType;
+  const linkType = document.getElementById('cm-ad-link-type')?.value || 'bastion';
+  if (linkType === 'custom') {
+    if (!isSuperAdmin()) { toast('Only Fortized staff can set custom URLs.', 'error'); return; }
+    customLink = document.getElementById('cm-ad-custom-link')?.value?.trim() || '';
+  } else if (linkType !== 'bastion') {
+    // Non-superadmins: only accept pre-defined in-app paths.
+    if (!isSuperAdmin() && !_AD_INAPP_PATHS.includes(linkType)) { toast('That link target isn\'t allowed.', 'error'); return; }
+    customLink = linkType;
   }
   const ownerIsSuper = isSuperAdmin();
   showCustomConfirm(`Create ad "${title}" for ${escapeHTML(bst.name)}? This costs 15 Onyx.`, async () => {
@@ -12156,6 +12158,22 @@ async function _cmCreateAd() {
     setTimeout(() => _switchCreatorSub('creations'), 50);
   });
 }
+// Returns true if CU can advertise a given bastion: superadmin, owner, or
+// admin-level member (administrator / manage_channels perm via roles).
+function _canAdvertiseBastion(bst) {
+  if (!bst || !CU?.username) return false;
+  if (typeof isSuperAdmin === 'function' && isSuperAdmin()) return true;
+  if (bst.owner === CU.username) return true;
+  const memberRoles = (bst.memberRoles||{})[CU.username] || [];
+  return memberRoles.some(rid => {
+    const r = (bst.roles||[]).find(r => r.id === rid);
+    if (!r) return false;
+    const perms = r.permissions || [];
+    return perms.includes('administrator') || perms.includes('manage_channels');
+  });
+}
+// In-app page targets an ad can link to (safe for any advertiser).
+const _AD_INAPP_PATHS = ['/app','/app/messages','/app/messages?friends=1','/app/discover','/app/forum','/app/atelier?tab=radiance','/app/atelier?tab=quests','/app/atelier?tab=shop','/app/atelier?tab=creator'];
 // True if the ad was posted by a superadmin. Superadmin ads don't expire and
 // can only be taken down by another superadmin.
 function _isAdOwnerSuperadmin(ad) {
@@ -12260,12 +12278,12 @@ async function _cmEditAd(adIdx) {
   const ad = CU.ads?.[adIdx];
   if (!ad) { toast('Ad not found', 'error'); return; }
   if ((CU.onyx||0) < 5) { toast('Editing costs 5 Onyx. Not enough!', 'error'); return; }
-  const myBastions = (CU.bastions||[]).filter(b => b.owner === CU.username);
+  const myBastions = (CU.bastions||[]).filter(b => _canAdvertiseBastion(b));
   if (!myBastions.length) { toast('You need a bastion to own ads', 'error'); return; }
   const isSuper = isSuperAdmin();
   const curLink = ad.customLink || 'bastion';
   const linkOptions = [
-    { v: 'bastion', l: 'Default — Join Bastion' },
+    { v: 'bastion', l: 'Default - Join Bastion' },
     { g: 'In-app pages', opts: [
       { v: '/app', l: 'Home' },
       { v: '/app/messages', l: 'Direct Messages' },
@@ -12277,7 +12295,7 @@ async function _cmEditAd(adIdx) {
       { v: '/app/atelier?tab=shop', l: 'Fortshop' },
       { v: '/app/atelier?tab=creator', l: 'Creator' },
     ]},
-    { v: 'custom', l: 'Custom URL (opens in browser)' },
+    ...(isSuper ? [{ v: 'custom', l: 'Custom URL (opens in browser)' }] : []),
   ];
   const renderLinkSelect = () => {
     const optHtml = linkOptions.map(o => {
@@ -12296,7 +12314,7 @@ async function _cmEditAd(adIdx) {
   overlay.innerHTML = `
     <div style="max-width:440px;width:100%;border-radius:20px;background:var(--panel);border:1px solid var(--border);padding:22px 24px;">
       <div style="font-size:16px;font-weight:800;margin-bottom:4px;">Edit Ad</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Change the name${isSuper?', link,':''} or target bastion. Costs 5 Onyx.</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Change the name, link, or target bastion. Costs 5 Onyx.</div>
       <div style="margin-bottom:12px;">
         <div class="settings-title">Ad Name</div>
         <input id="ea-title" class="field-input" maxlength="60" value="${escapeHTML(ad.title||'')}" style="padding:10px 14px;">
@@ -12310,13 +12328,11 @@ async function _cmEditAd(adIdx) {
           }).join('')}
         </select>
       </div>
-      ${isSuper ? `
       <div style="margin-bottom:12px;">
-        <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
-        <select id="ea-link-type" class="field-input" style="padding:10px 14px;margin-bottom:8px;" onchange="document.getElementById('ea-custom-link').style.display=this.value==='custom'?'':'none';">${renderLinkSelect()}</select>
-        <input id="ea-custom-link" class="field-input" placeholder="https://..." maxlength="500" value="${curLink && curLink!=='bastion' && !linkOptions.some(o=>(o.opts||[]).some(x=>x.v===curLink) || o.v===curLink) ? escapeHTML(curLink) : ''}" style="display:${curLink==='custom' || (curLink && curLink!=='bastion' && !linkOptions.some(o=>(o.opts||[]).some(x=>x.v===curLink) || o.v===curLink))?'':'none'};">
+        <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Link ${isSuper ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span>' : ''}</div>
+        <select id="ea-link-type" class="field-input" style="padding:10px 14px;margin-bottom:8px;" onchange="var el=document.getElementById('ea-custom-link');if(el){el.style.display=this.value==='custom'?'':'none';}">${renderLinkSelect()}</select>
+        ${isSuper ? `<input id="ea-custom-link" class="field-input" placeholder="https://..." maxlength="500" value="${curLink && curLink!=='bastion' && !linkOptions.some(o=>(o.opts||[]).some(x=>x.v===curLink) || o.v===curLink) ? escapeHTML(curLink) : ''}" style="display:${curLink==='custom' || (curLink && curLink!=='bastion' && !linkOptions.some(o=>(o.opts||[]).some(x=>x.v===curLink) || o.v===curLink))?'':'none'};">` : ''}
       </div>
-      ` : ''}
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
         <button class="btn-g" onclick="document.getElementById('modal-edit-ad').remove()" style="padding:8px 16px;font-size:12.5px;">Cancel</button>
         <button class="btn-a" onclick="_cmEditAdSave('${ad.id}')" style="padding:8px 16px;font-size:12.5px;">Save (5 Onyx)</button>
@@ -12335,11 +12351,14 @@ async function _cmEditAdSave(adId) {
   const newBst = CU.bastions?.[newBstIdx];
   if (!newBst) { toast('Select a bastion', 'error'); return; }
   let newCustomLink = ad.customLink;
-  if (isSuperAdmin()) {
-    const linkType = document.getElementById('ea-link-type')?.value || 'bastion';
-    if (linkType === 'bastion') newCustomLink = undefined;
-    else if (linkType === 'custom') newCustomLink = (document.getElementById('ea-custom-link')?.value || '').trim() || undefined;
-    else newCustomLink = linkType;
+  const linkType = document.getElementById('ea-link-type')?.value || 'bastion';
+  if (linkType === 'bastion') newCustomLink = undefined;
+  else if (linkType === 'custom') {
+    if (!isSuperAdmin()) { toast('Only Fortized staff can set custom URLs.', 'error'); return; }
+    newCustomLink = (document.getElementById('ea-custom-link')?.value || '').trim() || undefined;
+  } else {
+    if (!isSuperAdmin() && !_AD_INAPP_PATHS.includes(linkType)) { toast('That link target isn\'t allowed.', 'error'); return; }
+    newCustomLink = linkType;
   }
   CU.onyx = (CU.onyx||0) - 5;
   ad.title = newTitle;
@@ -31568,18 +31587,17 @@ function renderAtelierTab(tab) {
             <div style="margin-bottom:14px;">
               <div class="settings-title">Target Bastion</div>
               <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
-                ${(CU.bastions||[]).filter(bst=>bst.owner===CU.username).map((bst,i)=>{
+                ${(CU.bastions||[]).filter(bst=>_canAdvertiseBastion(bst)).map((bst,i)=>{
                   const idx=(CU.bastions||[]).indexOf(bst);
                   return `<option value="${idx}">${escapeHTML(bst.name)}</option>`;
                 }).join('')}
               </select>
             </div>
 
-            ${isSuperAdmin() ? `
             <div style="margin-bottom:14px;">
-              <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Custom Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
-              <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="document.getElementById('cm-ad-custom-link').style.display=this.value==='custom'?'':'none';if(this.value!=='custom')document.getElementById('cm-ad-custom-link').value=this.value==='bastion'?'':this.value;">
-                <option value="bastion">Default — Join Bastion (opens in app)</option>
+              <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Link ${isSuperAdmin() ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span>' : ''}</div>
+              <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="var el=document.getElementById('cm-ad-custom-link');if(el){el.style.display=this.value==='custom'?'':'none';if(this.value!=='custom')el.value=this.value==='bastion'?'':this.value;}">
+                <option value="bastion">Default - Join Bastion (opens in app)</option>
                 <optgroup label="In-app pages">
                   <option value="/app">Home</option>
                   <option value="/app/messages">Direct Messages</option>
@@ -31591,6 +31609,7 @@ function renderAtelierTab(tab) {
                   <option value="/app/atelier?tab=shop">Fortshop</option>
                   <option value="/app/atelier?tab=creator">Creator</option>
                 </optgroup>
+                ${isSuperAdmin() ? `
                 <optgroup label="Fortized Web (opens in browser)">
                   <option value="https://fortized.com/">Home (web)</option>
                   <option value="https://fortized.com/blog">Blog</option>
@@ -31599,11 +31618,11 @@ function renderAtelierTab(tab) {
                   <option value="https://fortized.com/download">Download</option>
                 </optgroup>
                 <option value="custom">Custom URL</option>
+                ` : ''}
               </select>
-              <input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">
-              <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Web pages open in browser. App pages and bastion links open in-app.</div>
+              ${isSuperAdmin() ? '<input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">' : ''}
+              <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">${isSuperAdmin() ? 'Web pages open in browser. App pages and bastion links open in-app.' : 'In-app pages only. External URLs are reserved for Fortized staff.'}</div>
             </div>
-            ` : ''}
 
             <div style="margin-bottom:16px;">
               <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted-light);cursor:pointer;">

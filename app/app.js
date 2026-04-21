@@ -799,11 +799,33 @@ const REPORT_REASONS = ['Harassment','Hate Speech','NSFW / Explicit Content','Sp
 const AGE_TIERS = {CHILD:'child',TEEN:'teen',ADULT:'adult'};
 
 // ── Helpers ──────────────────────────────────────────────────
+function _trimCUForStorage(cu) {
+  const t = { ...cu };
+  if (typeof t.pfp === 'string' && t.pfp.startsWith('data:') && t.pfp.length > 200_000) delete t.pfp;
+  if (typeof t.banner === 'string' && t.banner.startsWith('data:') && t.banner.length > 200_000) delete t.banner;
+  if (typeof t.backgroundImage === 'string' && t.backgroundImage.startsWith('data:') && t.backgroundImage.length > 200_000) delete t.backgroundImage;
+  return t;
+}
 function saveLocal() {
   if (!CU?.username) return;
-  localStorage.setItem('ftz_current', CU.username);
-  localStorage.setItem('fortized_current_user', CU.username);
-  try { localStorage.setItem('ftz_user_' + CU.username, JSON.stringify(CU)); } catch(e) { console.warn('localStorage save failed:', e); }
+  try {
+    localStorage.setItem('ftz_current', CU.username);
+    localStorage.setItem('fortized_current_user', CU.username);
+  } catch {}
+  try {
+    localStorage.setItem('ftz_user_' + CU.username, JSON.stringify(CU));
+  } catch (e) {
+    // Full quota — usually a massive data-URL avatar or banner. Trim and retry.
+    try {
+      localStorage.setItem('ftz_user_' + CU.username, JSON.stringify(_trimCUForStorage(CU)));
+    } catch {
+      // Still too big; give up silently — the server is the source of truth.
+      if (!window._saveLocalQuotaWarned) {
+        window._saveLocalQuotaWarned = true;
+        console.warn('localStorage save failed (quota): profile too large to cache locally');
+      }
+    }
+  }
 }
 let _saveUserTimer = null;
 let _saveUserPromise = null;

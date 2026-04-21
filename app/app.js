@@ -602,7 +602,7 @@ const EMOJI_SHORTCODES = {
   'drooling_face':'🤤','sleeping':'😴','mask':'😷','face_with_thermometer':'🤒',
   'face_with_head_bandage':'🤕','nauseated_face':'🤢','sneezing_face':'🤧','hot_face':'🥵',
   'cold_face':'🥶','woozy_face':'🥴','dizzy_face':'😵','exploding_head':'🤯',
-  'cowboy_hat_face':'🤠','partying_face':'🥳','sunglasses':'😎','nerd_face':'🤓',
+  'partying_face':'🥳','sunglasses':'😎','nerd_face':'🤓',
   'monocle_face':'🧐','confused':'😕','worried':'😟','slightly_frowning_face':'🙁',
   'frowning_face':'☹️','open_mouth':'😮','hushed':'😯','astonished':'😲','flushed':'😳',
   'pleading_face':'🥺','anguished':'😧','fearful':'😨','cold_sweat':'😰','disappointed_relieved':'😥',
@@ -642,7 +642,7 @@ const EMOJI_SHORTCODES = {
   'file_folder':'📁','open_file_folder':'📂','card_box':'🗃️','memo':'📝','pencil':'✏️',
   'pen_ballpoint':'🖊️','pen_fountain':'🖋️','black_nib':'✒️','scissors':'✂️','paperclip':'📎',
   'link':'🔗','pushpin':'📌','triangular_flag_on_post':'🚩','white_flag':'🏳️','checkered_flag':'🏁',
-  'crossed_flags':'🎌','rainbow_flag':'🏳️‍🌈','hammer':'🔨','axe':'🪓','wrench':'🔧',
+  'crossed_flags':'🎌','hammer':'🔨','axe':'🪓','wrench':'🔧',
   'screwdriver':'🪛','nut_and_bolt':'🔩','gear':'⚙️','chains':'⛓️','gun':'🔫',
   'bomb':'💣','knife':'🔪','dagger':'🗡️','sword':'⚔️','shield':'🛡️','smoking':'🚬',
   'coffin':'⚰️','urn':'⚱️','amphora':'🏺','crystal_ball':'🔮','mag':'🔍','mag_right':'🔎',
@@ -731,10 +731,8 @@ const EMOTICON_MAP = {
 const FTZ_EMOJI_BASE = 'https://cdn.jsdelivr.net/gh/StawWasTaken/Fortized@main/fortized%20emojis/';
 // Exact filenames from the Fortized emojis GitHub folder
 // Format: [name, extension] — .gif for animated, .png for static
-const FORTIZED_EMOJIS_DATA = [
-  ['cool',            'png'],
-  ['fort',            'png'],
-  ['ily',             'png'],
+// Character-style emojis (mascots with expressions)
+const FORTIZED_CHARACTER_EMOJIS = [
   ['joyster_laugh',   'png'],
   ['joyster_smirk',   'png'],
   ['knight_angry',    'png'],
@@ -749,6 +747,12 @@ const FORTIZED_EMOJIS_DATA = [
   ['leafen_stunned',  'png'],
   ['leafen_weary',    'png'],
   ['leafen_wink',     'png'],
+];
+// Textmojis (typographic/word emojis) — always rendered AFTER characters
+const FORTIZED_TEXTMOJI_EMOJIS = [
+  ['cool',            'png'],
+  ['fort',            'png'],
+  ['ily',             'png'],
   ['lmao',            'png'],
   ['ohno',            'png'],
   ['ohya',            'png'],
@@ -756,11 +760,23 @@ const FORTIZED_EMOJIS_DATA = [
   ['ty',              'png'],
   ['yeah',            'png'],
 ];
+const FORTIZED_EMOJIS_DATA = [...FORTIZED_CHARACTER_EMOJIS, ...FORTIZED_TEXTMOJI_EMOJIS];
+const FORTIZED_CHARACTERS = FORTIZED_CHARACTER_EMOJIS.map(d => d[0]);
+const FORTIZED_TEXTMOJIS = FORTIZED_TEXTMOJI_EMOJIS.map(d => d[0]);
 const FORTIZED_EMOJIS = FORTIZED_EMOJIS_DATA.map(d => d[0]);
 const FORTIZED_EMOJI_MAP = {};
 FORTIZED_EMOJIS_DATA.forEach(([name, ext]) => {
   FORTIZED_EMOJI_MAP[name] = FTZ_EMOJI_BASE + name + '.' + ext;
 });
+
+// Custom money emoji overrides — live in a SEPARATE repo folder so the
+// "fortized emojis" folder stays reserved for Fortized Guide content.
+const FTZ_CUSTOM_EMOJI_BASE = 'https://cdn.jsdelivr.net/gh/StawWasTaken/Fortized@main/custom-emojis/';
+const EMOJI_URL_OVERRIDES = {
+  '\u{1F4B0}': FTZ_CUSTOM_EMOJI_BASE + 'moneybag.png',            // 💰 money_bag
+  '\u{1F911}': FTZ_CUSTOM_EMOJI_BASE + 'money%20mouth.png',        // 🤑 money_mouth_face
+  '\u{1F4B8}': FTZ_CUSTOM_EMOJI_BASE + 'money%20with%20wings.png', // 💸 money_with_wings
+};
 
 // Onboarding interests categories with SVG icons
 const ONBOARDING_INTERESTS = [
@@ -13936,15 +13952,15 @@ function adminConvertToBot() {
 const EMOJI_PICKER_TABS = [
   {id:'recent', icon:'🕐', label:'Recent'},
   {id:'ftz',    icon:'🏰', label:'Fortized'},
-  {id:'smileys',icon:'😀', label:'Faces & Expressions', emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','🥹','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊']},
-  {id:'people', icon:'👋', label:'People & Hands', emojis:['👋','🤚','🖐️','✋','🖖','🫱','🫲','🫳','🫴','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','🫵','👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🫀','🫁','🧠','🦷','🦴','👀','👁️','👅','👄','🫦','💋','🩸','👶','🧒','👦','👧','🧑','👱','👨','🧔','👩','🧓','👴','👵','💃','🕺','👯','🧖','🧗','🤸','🏌️','🏇','🏋️','🤼','🤽','🤾','🤺','🏄','🚣','🏊','🚴','🚵','🤹','🧘']},
-  {id:'nature', icon:'🌿', label:'Nature & Animals', emojis:['🐶','🐕','🦮','🐕‍🦺','🐩','🐺','🦊','🦝','🐱','🐈','🐈‍⬛','🦁','🐯','🐅','🐆','🐴','🫎','🫏','🐎','🦄','🦓','🦌','🦬','🐮','🐂','🐃','🐄','🐷','🐖','🐗','🐽','🐏','🐑','🐐','🐪','🐫','🦙','🦒','🐘','🦣','🦏','🦛','🐭','🐁','🐀','🐹','🐰','🐇','🐿️','🦫','🦔','🦇','🐻','🐻‍❄️','🐨','🐼','🦥','🦦','🦨','🦘','🦡','🐾','🦃','🐔','🐓','🐣','🐤','🐥','🐦','🐧','🕊️','🦅','🦆','🦢','🦉','🦤','🪶','🦩','🦚','🦜','🪽','🐦‍⬛','🪿','🐸','🐊','🐢','🦎','🐍','🐲','🐉','🦕','🦖','🐳','🐋','🐬','🦭','🐟','🐠','🐡','🦈','🐙','🐚','🪸','🐌','🦋','🐛','🐜','🐝','🪲','🐞','🦗','🪳','🕷️','🕸️','🦂','🦟','🪰','🪱','🦠','💐','🌸','💮','🪷','🏵️','🌹','🥀','🌺','🌻','🌼','🌷','🪻','🌱','🪴','🌲','🌳','🌴','🌵','🌾','🌿','☘️','🍀','🍁','🍂','🍃','🪹','🪺','🍄','🌰','🌍','🌎','🌏','🌕','🌖','🌗','🌘','🌑','🌒','🌓','🌔','🌙','🌚','🌛','🌜','☀️','🌝','🌞','⭐','🌟','🌠','🌌','☁️','⛅','⛈️','🌤️','🌥️','🌦️','🌧️','🌨️','🌩️','🌪️','🌫️','🌬️','🌈','☂️','☔','⚡','❄️','☃️','⛄','🔥','💧','🌊']},
-  {id:'food',   icon:'🍔', label:'Food & Drinks', emojis:['🍇','🍈','🍉','🍊','🍋','🍌','🍍','🥭','🍎','🍏','🍐','🍑','🍒','🍓','🫐','🥝','🍅','🫒','🥥','🥑','🍆','🥔','🥕','🌽','🌶️','🫑','🥒','🥬','🥦','🧄','🧅','🥜','🫘','🌰','🫚','🫛','🍞','🥐','🥖','🫓','🥨','🥯','🥞','🧇','🧀','🍖','🍗','🥩','🥓','🍔','🍟','🍕','🌭','🥪','🌮','🌯','🫔','🥙','🧆','🥚','🍳','🥘','🍲','🫕','🥣','🥗','🍿','🧈','🧂','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍣','🍤','🍥','🥮','🍡','🥟','🥠','🥡','🦀','🦞','🦐','🦑','🦪','🍦','🍧','🍨','🍩','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍼','🥛','☕','🫖','🍵','🍶','🍾','🍷','🍸','🍹','🍺','🍻','🥂','🥃','🫗','🥤','🧋','🧃','🧉','🧊']},
-  {id:'travel', icon:'✈️', label:'Travel & Places', emojis:['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🏍️','🛵','🦽','🦼','🛺','🚲','🛴','🛹','🛼','🚏','🛣️','🛤️','⛽','🚨','🚥','🚦','🛑','🚧','⚓','🛟','⛵','🛶','🚤','🛳️','⛴️','🛥️','🚢','✈️','🛩️','🛫','🛬','🪂','💺','🚁','🚟','🚠','🚡','🛰️','🚀','🛸','🌍','🌎','🌏','🗺️','🧭','🏔️','⛰️','🌋','🗻','🏕️','🏖️','🏜️','🏝️','🏞️','🏟️','🏛️','🏗️','🧱','🪨','🪵','🛖','🏘️','🏚️','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','🛕','🕍','⛩️','🕋','⛲','⛺','🌁','🌃','🏙️','🌄','🌅','🌆','🌇','🌉','🎠','🛝','🎡','🎢','💈','🎪','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞']},
-  {id:'activities',icon:'🎮', label:'Fun & Activities', emojis:['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤸','🤼','🤽','🤾','🤺','🏄','🏊','🚴','🏇','🎮','🕹️','🎲','🎯','🎳','🎰','🧩','♟️','🎭','🎨','🖼️','🧵','🪡','🧶','🪢','🎬','🎤','🎧','🎵','🎶','🎼','🎸','🎹','🥁','🪘','🎷','🎺','🎻','🪕','🎪','🎁','🎀','🎊','🎉','🎈','🏆','🥇','🥈','🥉','🏅','🎖️','🎗️','🧸','🪆'],},
-  {id:'hearts', icon:'❤️', label:'Hearts & Love', emojis:['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','❤️‍🔥','❤️‍🩹','🩷','🩵','🩶','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','💌','💐','🌹','🥰','😍','😘','😻','💑','💏','👩‍❤️‍👨','💒','💍','♥️']},
-  {id:'symbols',icon:'⚡', label:'Symbols & Signs', emojis:['⚡','🔥','❄️','🌊','🌪️','🌈','⭐','💫','✨','💥','💯','💢','💤','🔔','🔕','🎵','🎶','❗','❕','❓','❔','‼️','⁉️','⚠️','✅','❌','⭕','🛑','⛔','🚫','📛','♻️','🔰','⚜️','🔱','📣','📢','🔊','🔇','💡','🔦','🔋','🔌','💻','📱','⌨️','🖥️','📷','🎬','💰','💳','💵','📈','📉','📊','🔒','🔓','🔑','🗝️','🔍','📝','✏️','📌','📎','✂️','🗑️','📅','📋','📁','🔗','⚙️','🔧','🔨','⚔️','🛡️','☮️','☯️','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🏳️','🏴','🏁','🏳️‍🌈','🏳️‍⚧️','🚩','🏴‍☠️','🔴','🟠','🟡','🟢','🔵','🟣','🟤','⚫','⚪','🔶','🔷','🔸','🔹','🔺','🔻','💠','🔘','🔲','🔳','♾️','💲','🔱','📛']},
-  {id:'flags',  icon:'🏁', label:'Flags', emojis:['🏁','🚩','🎌','🏴','🏳️','🏳️‍🌈','🏳️‍⚧️','🏴‍☠️','🇺🇸','🇬🇧','🇫🇷','🇩🇪','🇮🇹','🇪🇸','🇵🇹','🇧🇷','🇯🇵','🇰🇷','🇨🇳','🇮🇳','🇷🇺','🇨🇦','🇦🇺','🇲🇽','🇦🇷','🇨🇴','🇹🇷','🇸🇦','🇪🇬','🇳🇬','🇿🇦','🇰🇪','🇮🇩','🇹🇭','🇻🇳','🇵🇭','🇲🇾','🇸🇬','🇳🇿','🇮🇪','🇳🇱','🇧🇪','🇨🇭','🇦🇹','🇸🇪','🇳🇴','🇩🇰','🇫🇮','🇵🇱','🇨🇿','🇬🇷','🇺🇦','🇷🇴','🇭🇺','🇮🇱','🇦🇪','🇶🇦','🇰🇼','🇯🇴','🇱🇧','🇮🇶','🇮🇷','🇵🇰','🇧🇩','🇹🇼','🇭🇰','🇨🇱','🇵🇪','🇪🇨','🇻🇪','🇨🇺','🇯🇲','🇩🇴','🇵🇷','🇲🇦','🇩🇿','🇹🇳','🇪🇹','🇹🇿','🇬🇭','🇨🇩','🇨🇲','🇫🇯','🇮🇸','🇱🇺','🇲🇹','🇲🇩','🇦🇱','🇧🇦','🇷🇸','🇭🇷','🇸🇰','🇧🇬','🇱🇹','🇱🇻','🇪🇪','🇬🇪','🇦🇲']},
+  {id:'smileys',icon:'😀', label:'Faces & Expressions', emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','🫠','😉','😊','😇','🥰','😍','🤩','😘','😗','☺️','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🫢','🫣','🤫','🤔','🫡','🤐','🤨','😐','😑','😶','🫥','😶‍🌫️','😏','😒','🙄','😬','😮‍💨','🤥','🙂‍↔️','🙂‍↕️','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥴','😵','😵‍💫','🤯','🥳','🥸','😎','🤓','🧐','😕','🫤','😟','🙁','☹️','😮','😯','😲','😳','🥺','🥹','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊']},
+  {id:'people', icon:'👋', label:'People & Hands', emojis:['👋','🤚','🖐️','✋','🖖','🫱','🫲','🫳','🫴','🫷','🫸','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','🫵','👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🫀','🫁','🧠','🦷','🦴','👀','👁️','👅','👄','🫦','💋','🩸','👶','🧒','👦','👧','🧑','👱','👨','🧔','🧔‍♂️','🧔‍♀️','👨‍🦰','👨‍🦱','👨‍🦳','👨‍🦲','👩','👩‍🦰','🧑‍🦰','👩‍🦱','🧑‍🦱','👩‍🦳','🧑‍🦳','👩‍🦲','🧑‍🦲','👱‍♀️','👱‍♂️','🧓','👴','👵','🙍','🙍‍♂️','🙍‍♀️','🙎','🙎‍♂️','🙎‍♀️','🙅','🙅‍♂️','🙅‍♀️','🙆','🙆‍♂️','🙆‍♀️','💁','💁‍♂️','💁‍♀️','🙋','🙋‍♂️','🙋‍♀️','🧏','🧏‍♂️','🧏‍♀️','🙇','🙇‍♂️','🙇‍♀️','🤦','🤦‍♂️','🤦‍♀️','🤷','🤷‍♂️','🤷‍♀️','🧑‍⚕️','👨‍⚕️','👩‍⚕️','🧑‍🎓','👨‍🎓','👩‍🎓','🧑‍🏫','👨‍🏫','👩‍🏫','🧑‍⚖️','👨‍⚖️','👩‍⚖️','🧑‍🌾','👨‍🌾','👩‍🌾','🧑‍🍳','👨‍🍳','👩‍🍳','🧑‍🔧','👨‍🔧','👩‍🔧','🧑‍🏭','👨‍🏭','👩‍🏭','🧑‍💼','👨‍💼','👩‍💼','🧑‍🔬','👨‍🔬','👩‍🔬','🧑‍💻','👨‍💻','👩‍💻','🧑‍🎤','👨‍🎤','👩‍🎤','🧑‍🎨','👨‍🎨','👩‍🎨','🧑‍✈️','👨‍✈️','👩‍✈️','🧑‍🚀','👨‍🚀','👩‍🚀','🧑‍🚒','👨‍🚒','👩‍🚒','👮','👮‍♂️','👮‍♀️','🕵️','🕵️‍♂️','🕵️‍♀️','💂','💂‍♂️','💂‍♀️','🥷','👷','👷‍♂️','👷‍♀️','🫅','🤴','👸','👳','👳‍♂️','👳‍♀️','👲','🧕','🤵','🤵‍♂️','🤵‍♀️','👰','👰‍♂️','👰‍♀️','🤰','🤱','👼','🎅','🤶','🧑‍🎄','🦸','🦸‍♂️','🦸‍♀️','🦹','🦹‍♂️','🦹‍♀️','🧙','🧙‍♂️','🧙‍♀️','🧚','🧚‍♂️','🧚‍♀️','🧛','🧛‍♂️','🧛‍♀️','🧜','🧜‍♂️','🧜‍♀️','🧝','🧝‍♂️','🧝‍♀️','🧞','🧞‍♂️','🧞‍♀️','🧟','🧟‍♂️','🧟‍♀️','🧌','💆','💆‍♂️','💆‍♀️','💇','💇‍♂️','💇‍♀️','🚶','🚶‍♂️','🚶‍♀️','🚶‍➡️','🧍','🧍‍♂️','🧍‍♀️','🧎','🧎‍♂️','🧎‍♀️','🏃','🏃‍♂️','🏃‍♀️','💃','🕺','🕴️','👯','👯‍♂️','👯‍♀️','🧖','🧖‍♂️','🧖‍♀️','🧗','🧗‍♂️','🧗‍♀️','🤸','🤸‍♂️','🤸‍♀️','🏌️','🏌️‍♂️','🏌️‍♀️','🏇','🏋️','🏋️‍♂️','🏋️‍♀️','🤼','🤽','🤾','🤺','🏄','🏄‍♂️','🏄‍♀️','🚣','🚣‍♂️','🚣‍♀️','🏊','🏊‍♂️','🏊‍♀️','🚴','🚴‍♂️','🚴‍♀️','🚵','🚵‍♂️','🚵‍♀️','🤹','🤹‍♂️','🤹‍♀️','🧘','🧘‍♂️','🧘‍♀️','🛀','🛌','🫂','👭','👫','👬','👨‍👩‍👦','👨‍👩‍👧','👨‍👩‍👧‍👦','👨‍👩‍👦‍👦','👨‍👩‍👧‍👧','🗣️','👤','👥']},
+  {id:'nature', icon:'🌿', label:'Nature & Animals', emojis:['🐶','🐕','🦮','🐕‍🦺','🐩','🐺','🦊','🦝','🐱','🐈','🐈‍⬛','🦁','🐯','🐅','🐆','🐴','🐎','🦄','🦓','🦌','🫎','🫏','🦬','🐮','🐂','🐃','🐄','🐷','🐖','🐗','🐽','🐏','🐑','🐐','🐪','🐫','🦙','🦒','🐘','🦣','🦏','🦛','🐭','🐁','🐀','🐹','🐰','🐇','🐿️','🦫','🦔','🦇','🐻','🐻‍❄️','🐨','🐼','🦥','🦦','🦨','🦘','🦡','🐾','🦃','🐔','🐓','🐣','🐤','🐥','🐦','🐧','🕊️','🦅','🦆','🦢','🦉','🦤','🪶','🦩','🦚','🦜','🪽','🐦‍⬛','🪿','🐦‍🔥','🐸','🐊','🐢','🦎','🐍','🐲','🐉','🦕','🦖','🐳','🐋','🐬','🦭','🐟','🐠','🐡','🦈','🐙','🐚','🪸','🪼','🐌','🦋','🐛','🐜','🐝','🪲','🐞','🦗','🪳','🕷️','🕸️','🦂','🦟','🪰','🪱','🦠','💐','🌸','💮','🪷','🏵️','🌹','🥀','🌺','🌻','🌼','🌷','🪻','🌱','🪴','🌲','🌳','🌴','🌵','🌾','🌿','☘️','🍀','🍁','🍂','🍃','🪹','🪺','🍄','🍄‍🟫','🌰','🌍','🌎','🌏','🌕','🌖','🌗','🌘','🌑','🌒','🌓','🌔','🌙','🌚','🌛','🌜','☀️','🌝','🌞','🪐','⭐','🌟','🌠','🌌','☁️','⛅','⛈️','🌤️','🌥️','🌦️','🌧️','🌨️','🌩️','🌪️','🌫️','🌬️','☂️','☔','⚡','❄️','☃️','⛄','🔥','💧','🌊']},
+  {id:'food',   icon:'🍔', label:'Food & Drinks', emojis:['🍇','🍈','🍉','🍊','🍋','🍋‍🟩','🍌','🍍','🥭','🍎','🍏','🍐','🍑','🍒','🍓','🫐','🥝','🍅','🫒','🥥','🥑','🍆','🥔','🥕','🌽','🌶️','🫑','🥒','🥬','🥦','🧄','🧅','🥜','🫘','🫚','🫛','🌰','🍞','🥐','🥖','🫓','🥨','🥯','🥞','🧇','🧀','🍖','🍗','🥩','🥓','🍔','🍟','🍕','🌭','🥪','🌮','🌯','🫔','🥙','🧆','🥚','🍳','🥘','🍲','🫕','🥣','🥗','🍿','🧈','🧂','🥫','🫙','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍣','🍤','🍥','🥮','🍡','🥟','🥠','🥡','🦀','🦞','🦐','🦑','🦪','🍦','🍧','🍨','🍩','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍼','🥛','🫗','☕','🫖','🍵','🍶','🍾','🍷','🍸','🍹','🍺','🍻','🥂','🥃','🥤','🧋','🧃','🧉','🧊','🥢','🍽️','🍴','🥄','🔪','🏺']},
+  {id:'travel', icon:'✈️', label:'Travel & Places', emojis:['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🏍️','🛵','🦽','🦼','🛺','🚲','🛴','🛹','🛼','🛞','🚏','🛣️','🛤️','⛽','🛢️','🚨','🚥','🚦','🛑','🚧','⚓','🛟','⛵','🛶','🚤','🛳️','⛴️','🛥️','🚢','✈️','🛩️','🛫','🛬','🪂','💺','🚁','🚟','🚠','🚡','🛰️','🚀','🛸','🌍','🌎','🌏','🗺️','🧭','🏔️','⛰️','🌋','🗻','🏕️','🏖️','🏜️','🏝️','🏞️','🏟️','🏛️','🏗️','🧱','🪨','🪵','🛖','🏘️','🏚️','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','🛕','🕍','⛩️','🕋','⛲','⛺','🌁','🌃','🏙️','🌄','🌅','🌆','🌇','🌉','🎠','🛝','🎡','🎢','💈','🎪','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞','🚋','🚍','🗿','🪧']},
+  {id:'activities',icon:'🎮', label:'Fun & Activities', emojis:['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤸','🤼','🤽','🤾','🤺','🏄','🏊','🚴','🏇','🎮','🕹️','🎲','🎯','🎳','🎰','🧩','♟️','🎭','🎨','🖼️','🧵','🪡','🧶','🪢','🎬','🎤','🎧','🎵','🎶','🎼','🎸','🎹','🥁','🪘','🎷','🎺','🎻','🪕','🪗','🪈','📯','🎪','🎟️','🎫','🎁','🎀','🎊','🎉','🎈','🪩','🪭','🎄','🎋','🎍','🎎','🎏','🎐','🧨','🧧','🏆','🥇','🥈','🥉','🏅','🎖️','🎗️','🧸','🪆','🪅','🪇']},
+  {id:'hearts', icon:'❤️', label:'Hearts & Love', emojis:['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','❤️‍🔥','❤️‍🩹','🩷','🩵','🩶','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','💌','💐','🌹','🥰','😍','😘','😻','💑','👩‍❤️‍👨','💏','💒','💍','♥️']},
+  {id:'symbols',icon:'⚡', label:'Symbols & Signs', emojis:['⚡','🔥','❄️','🌊','🌪️','🌈','⭐','💫','✨','💥','💯','💢','💤','🔔','🔕','🎵','🎶','❗','❕','❓','❔','‼️','⁉️','⚠️','✅','❌','⭕','🛑','⛔','🚫','🚷','🚯','🚳','🚱','🔞','📵','🚭','📛','♻️','🔰','⚜️','🔱','📣','📢','🔊','🔇','🔈','🔉','💡','🔦','🏮','🪔','🔋','🪫','🔌','💻','📱','⌨️','🖥️','🖨️','📷','📸','📹','📼','🎬','💰','🪙','💳','💵','💴','💶','💷','💸','💹','📈','📉','📊','🔒','🔓','🔐','🔏','🔑','🗝️','🔍','🔎','📝','✏️','🖊️','🖋️','📌','📍','📎','🖇️','✂️','🗑️','📅','📆','📋','📁','📂','🔗','⛓️','⛓️‍💥','⚙️','🔧','🪛','🔨','⚒️','🛠️','⛏️','🪚','🪓','⚔️','🛡️','🪬','🧰','🧲','⚗️','🧪','🧫','🧬','🔬','🔭','📡','☝️','☮️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆎','🆑','🆒','🆓','🆔','🆕','🆖','🆗','🆘','🆙','🆚','🈁','🈂️','🈷️','🈶','🈯','🉐','🈹','🈚','🈲','🉑','🈸','🈴','🈳','㊗️','㊙️','🈺','🈵','🔝','🔙','🔛','🔜','🔚','↖️','⬆️','↗️','➡️','↘️','⬇️','↙️','⬅️','↔️','↕️','↪️','↩️','⤴️','⤵️','🔃','🔄','⏩','⏪','⏫','⏬','⏸️','⏹️','⏺️','⏭️','⏮️','⏯️','⏏️','🔀','🔁','🔂','▶️','◀️','🔴','🟠','🟡','🟢','🔵','🟣','🟤','⚫','⚪','🟥','🟧','🟨','🟩','🟦','🟪','🟫','⬛','⬜','🔶','🔷','🔸','🔹','🔺','🔻','💠','🔘','🔲','🔳','♾️','💲','🏁','🏴','🏳️','🚩','🏴‍☠️']},
+  {id:'flags',  icon:'🏁', label:'Flags', emojis:['🏁','🚩','🎌','🏴','🏳️','🏴‍☠️','🇺🇸','🇬🇧','🇫🇷','🇩🇪','🇮🇹','🇪🇸','🇵🇹','🇧🇷','🇯🇵','🇰🇷','🇨🇳','🇮🇳','🇷🇺','🇨🇦','🇦🇺','🇲🇽','🇦🇷','🇨🇴','🇹🇷','🇸🇦','🇪🇬','🇳🇬','🇿🇦','🇰🇪','🇮🇩','🇹🇭','🇻🇳','🇵🇭','🇲🇾','🇸🇬','🇳🇿','🇮🇪','🇳🇱','🇧🇪','🇨🇭','🇦🇹','🇸🇪','🇳🇴','🇩🇰','🇫🇮','🇵🇱','🇨🇿','🇬🇷','🇺🇦','🇷🇴','🇭🇺','🇮🇱','🇦🇪','🇶🇦','🇰🇼','🇯🇴','🇱🇧','🇮🇶','🇮🇷','🇵🇰','🇧🇩','🇹🇼','🇭🇰','🇨🇱','🇵🇪','🇪🇨','🇻🇪','🇨🇺','🇯🇲','🇩🇴','🇵🇷','🇲🇦','🇩🇿','🇹🇳','🇪🇹','🇹🇿','🇬🇭','🇨🇩','🇨🇲','🇫🇯','🇮🇸','🇱🇺','🇲🇹','🇲🇩','🇦🇱','🇧🇦','🇷🇸','🇭🇷','🇸🇰','🇧🇬','🇱🇹','🇱🇻','🇪🇪','🇬🇪','🇦🇲','🇦🇿','🇰🇿','🇰🇬','🇹🇯','🇹🇲','🇺🇿','🇲🇳','🇳🇵','🇱🇰','🇧🇹','🇲🇲','🇰🇭','🇱🇦','🇧🇳','🇲🇻','🇦🇫','🇾🇪','🇴🇲','🇧🇭','🇵🇸','🇸🇾','🇭🇳','🇬🇹','🇸🇻','🇳🇮','🇨🇷','🇵🇦','🇵🇾','🇺🇾','🇧🇴','🇬🇾','🇸🇷','🇧🇿','🇧🇸','🇧🇧','🇻🇨','🇬🇩','🇹🇹','🇭🇹','🇸🇳','🇲🇱','🇲🇷','🇳🇪','🇹🇩','🇨🇫','🇬🇦','🇨🇬','🇧🇮','🇷🇼','🇺🇬','🇸🇴','🇸🇸','🇸🇩','🇪🇷','🇩🇯','🇲🇬','🇲🇺','🇸🇨','🇿🇼','🇿🇲','🇲🇼','🇲🇿','🇦🇴','🇳🇦','🇧🇼','🇱🇸','🇸🇿','🇧🇫','🇧🇯','🇹🇬','🇨🇮','🇬🇳','🇬🇼','🇸🇱','🇱🇷','🇰🇾','🇧🇲','🇬🇮','🇫🇴','🇬🇱','🇻🇦','🇸🇲','🇲🇨','🇱🇮','🇦🇩','🇲🇰','🇽🇰','🇦🇶','🇵🇬','🇸🇧','🇻🇺','🇼🇸','🇹🇴','🇨🇰','🇳🇺','🇵🇼','🇫🇲','🇲🇭','🇰🇮','🇹🇻','🇳🇷','🇬🇺','🇻🇮','🇲🇵','🇦🇸','🇦🇼','🇨🇼','🇸🇽']},
 ];
 
 let _recentEmojis = JSON.parse(localStorage.getItem('ftz_recent_emojis')||'[]');
@@ -13978,7 +13994,7 @@ function toggleFavEmoji(emoji) {
 // SVG icons for emoji categories (replaces unicode emoji icons)
 const _EMOJI_CATEGORY_SVGS = {
   favorites:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.1L21.5 9l-5 4.8 1.3 7-5.8-3.2-5.8 3.2 1.3-7-5-4.8 6.6-.9L12 2z"/></svg>',
-  ftz:        '<img src="/Fortized icon.png" width="22" height="22" style="object-fit:contain;border-radius:6px;" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{innerHTML:\'<svg width=18 height=18 viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=2><path d=\\\'M3 21h18M5 21V7l7-4 7 4v14M9 10h2M13 10h2M9 14h2M13 14h2\\\'/></svg>\'}))">',
+  ftz:        '<img src="/Fortized logo.png" width="22" height="22" style="object-fit:contain;border-radius:6px;" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{innerHTML:\'<svg width=18 height=18 viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=2><path d=\\\'M3 21h18M5 21V7l7-4 7 4v14M9 10h2M13 10h2M9 14h2M13 14h2\\\'/></svg>\'}))">',
   frequent:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
   personal:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.65-.75 1.65-1.69 0-.44-.18-.83-.44-1.12-.29-.29-.44-.66-.44-1.12a1.64 1.64 0 0 1 1.67-1.67h1.99c3.05 0 5.56-2.5 5.56-5.55C21.97 6.01 17.46 2 12 2z"/></svg>',
   bastions:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V9l2-2 2 2v12M10 21V6l2-2 2 2v15M15 21V9l2-2 2 2v12"/></svg>',
@@ -13994,38 +14010,50 @@ const _EMOJI_CATEGORY_SVGS = {
 };
 
 function buildEmojiSidebar() {
-  // Sidebar order: Favorites, Fortized, Frequent, Personal, [bastions], [categories]
+  // Sidebar order: Frequent, Favorites, Fortized, [bastions with emojis], [categories]
+  // Each button renders as an emblem tile + a readable label next to it.
   const bastions = CU?.bastions || [];
+  // Filter bastions that actually have at least one usable custom emoji —
+  // bastions with no emojis should not appear in the picker sidebar.
+  const visibleBastions = bastions
+    .map((b, i) => ({ b, i }))
+    .filter(({ b }) => Array.isArray(b?.customEmojis) && b.customEmojis.some(ce => ce && ce.name && ce.data));
   let html = '';
-  const btn = (id, title, iconHtml) => `<button class="epp-sidebar-btn${_emojiPickerTab===id?' active':''}" id="etab-${id}" title="${escapeHTML(title)}" aria-label="${escapeHTML(title)}" onclick="setEmojiTab('${id}')">${iconHtml}</button>`;
+  const btn = (id, title, iconHtml) => `<button class="epp-sidebar-btn${_emojiPickerTab===id?' active':''}" id="etab-${id}" title="${escapeHTML(title)}" aria-label="${escapeHTML(title)}" onclick="setEmojiTab('${id}')"><span class="epp-sidebar-emblem">${iconHtml}</span><span class="epp-sidebar-label">${escapeHTML(title)}</span></button>`;
   html += btn('frequent', 'Frequently used', _EMOJI_CATEGORY_SVGS.frequent);
   html += btn('favorites', 'Favorites', _EMOJI_CATEGORY_SVGS.favorites);
   html += btn('ftz', 'Fortized Guide', _EMOJI_CATEGORY_SVGS.ftz);
-  if (bastions.length) {
+  if (visibleBastions.length) {
     html += '<div class="epp-sidebar-sep"></div>';
     if (_hasActiveRadiance()) {
-      html += btn('bastions', 'All Bastion Emojis', _EMOJI_CATEGORY_SVGS.bastions);
+      html += btn('bastions', 'All Bastions', _EMOJI_CATEGORY_SVGS.bastions);
     }
-    bastions.forEach((b, i) => {
+    visibleBastions.forEach(({ b, i }) => {
       const active = _emojiPickerTab === 'bastion-' + i;
-      const initials = escapeHTML((b.name||'B').slice(0,2).toUpperCase());
+      const name = b.name || 'Bastion';
+      const initials = escapeHTML(name.slice(0,2).toUpperCase());
       const fallback = `<span style="font-size:11px;font-weight:700;letter-spacing:.5px;">${initials}</span>`;
       let emblem;
       if (b.icon) {
-        emblem = `<img src="${escapeHTML(b.icon)}" alt="${escapeHTML(b.name||'')}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+        emblem = `<img src="${escapeHTML(b.icon)}" alt="${escapeHTML(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
       } else if (b.emblem && !/^https?:|^data:/.test(b.emblem)) {
         emblem = `<span style="font-size:18px;line-height:1;">${escapeHTML(b.emblem)}</span>`;
       } else if (b.emblem) {
-        emblem = `<img src="${escapeHTML(b.emblem)}" alt="${escapeHTML(b.name||'')}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+        emblem = `<img src="${escapeHTML(b.emblem)}" alt="${escapeHTML(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
       } else {
         emblem = fallback;
       }
-      html += `<button class="epp-sidebar-btn${active?' active':''}" id="etab-bastion-${i}" title="${escapeHTML(b.name||'Bastion')}" aria-label="${escapeHTML(b.name||'Bastion')}" onclick="setEmojiTab('bastion-${i}')">${emblem}</button>`;
+      html += `<button class="epp-sidebar-btn${active?' active':''}" id="etab-bastion-${i}" title="${escapeHTML(name)}" aria-label="${escapeHTML(name)}" onclick="setEmojiTab('bastion-${i}')"><span class="epp-sidebar-emblem">${emblem}</span><span class="epp-sidebar-label">${escapeHTML(name)}</span></button>`;
     });
   }
   html += '<div class="epp-sidebar-sep"></div>';
+  const catLabels = {
+    smileys: 'Faces', people: 'People', nature: 'Nature',
+    food: 'Food', travel: 'Travel', activities: 'Activities',
+    hearts: 'Hearts', symbols: 'Symbols', flags: 'Flags',
+  };
   ['smileys','people','nature','food','travel','activities','hearts','symbols','flags'].forEach(id => {
-    html += btn(id, id.charAt(0).toUpperCase()+id.slice(1), _EMOJI_CATEGORY_SVGS[id]);
+    html += btn(id, catLabels[id] || (id.charAt(0).toUpperCase()+id.slice(1)), _EMOJI_CATEGORY_SVGS[id]);
   });
   return html;
 }
@@ -14059,7 +14087,7 @@ function toggleEmojiPicker(targetId) {
   // Position relative to the input target (works for chat, bio, forum composer, etc.)
   const refEl = document.getElementById(targetId);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
-  const PW = 460, PH = 440;
+  const PW = 540, PH = 440;
   let left, top = null, bottom = null;
   if (outerEl) {
     // Chatbar mode: right-aligned with the input, popping up above
@@ -14246,10 +14274,12 @@ function renderEmojiGrid() {
     html += `<div class="epp-empty">Right-click any emoji to favorite it.</div>`;
   }
 
-  // 3) Fortized custom emojis
+  // 3) Fortized custom emojis — characters first, textmojis always last.
+  // Uses a tighter grid class so the hand-drawn emojis sit closer together.
   html += sectionHdr('ftz', 'Fortized Guide');
-  html += gridOpen(8);
-  html += FORTIZED_EMOJIS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('');
+  html += `<div class="epp-section-grid epp-section-grid-tight" style="grid-template-columns:repeat(9,1fr);">`;
+  html += FORTIZED_CHARACTERS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('');
+  html += FORTIZED_TEXTMOJIS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('');
   html += gridClose;
 
   // Personal (user-custom) emoji section removed — users no longer have custom emojis.
@@ -14286,6 +14316,10 @@ function renderEmojiGrid() {
 }
 
 function emojiToTwemojiUrl(emoji) {
+  // Honor custom overrides first (e.g. Fortized money emojis replace twemoji)
+  if (typeof EMOJI_URL_OVERRIDES !== 'undefined' && EMOJI_URL_OVERRIDES[emoji]) {
+    return EMOJI_URL_OVERRIDES[emoji];
+  }
   // Convert emoji char to codepoint(s) for Twemoji URL
   const codePoints = [...emoji].map(c => c.codePointAt(0).toString(16)).filter(c => c !== 'fe0f').join('-');
   return 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/' + codePoints + '.svg';

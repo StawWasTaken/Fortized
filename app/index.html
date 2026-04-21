@@ -49,7 +49,7 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=20260421b">
+<link rel="stylesheet" href="/app/styles.css?v=20260421c">
 <style id="radiance-font-style"></style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous" async></script>
 <body>
@@ -1120,9 +1120,9 @@ window._cdnReady.then(() => {
   </div>
 </div>
 
-<script src="/app/app.js?v=20260421b"></script>
-<script src="/app/joy-system.js?v=20260421b"></script>
-<script src="/app/chronicle-games.js?v=20260421b"></script>
+<script src="/app/app.js?v=20260421c"></script>
+<script src="/app/joy-system.js?v=20260421c"></script>
+<script src="/app/chronicle-games.js?v=20260421c"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -1152,6 +1152,13 @@ document.addEventListener('DOMContentLoaded', () => {
   window._ftzEmojiOverrides = FTZ_EMOJI_OVERRIDES;
   let _scheduled = false;
   let _pendingNodes = new Set();
+  function _isSkipped(node) {
+    // Emoji picker grid renders cells as native unicode text on purpose —
+    // converting those to <img> nukes scroll performance. Also skip anything
+    // explicitly opted out of twemoji conversion.
+    if (!node || !node.closest) return false;
+    return !!(node.closest('#epp-grid') || node.closest('[data-no-twemoji]'));
+  }
   function _flushParse() {
     _scheduled = false;
     if (typeof twemoji === 'undefined') return;
@@ -1160,13 +1167,14 @@ document.addEventListener('DOMContentLoaded', () => {
     _pendingNodes.clear();
     const opts = _tweOpts();
     nodes.forEach(n => {
-      if (n && n.nodeType === 1 && n.isConnected) {
+      if (n && n.nodeType === 1 && n.isConnected && !_isSkipped(n)) {
         try { twemoji.parse(n, opts); } catch(_){}
       }
     });
   }
   function _scheduleParse(node) {
     if (!node) return;
+    if (_isSkipped(node)) return;
     _pendingNodes.add(node);
     if (_scheduled) return;
     _scheduled = true;

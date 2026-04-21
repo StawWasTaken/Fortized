@@ -1588,9 +1588,13 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .epp-sidebar-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.92);}
 .epp-sidebar-btn.active{background:rgba(255,249,62,.12);color:var(--accent);}
 .epp-sidebar-btn.active::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0;}
-.epp-sidebar-emblem{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:6px;overflow:hidden;color:inherit;}
+.epp-sidebar-emblem{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:inherit;}
 .epp-sidebar-emblem svg{color:inherit;}
-.epp-sidebar-emblem img{width:22px;height:22px;border-radius:6px;object-fit:cover;}
+.epp-sidebar-emblem img{width:22px;height:22px;object-fit:contain;}
+/* Fortized logo: never round. The PNG already has its own silhouette. */
+.epp-sidebar-btn .epp-ftz-icon,
+.epp-sidebar-btn.is-ftz .epp-sidebar-emblem,
+.epp-sidebar-btn.is-ftz .epp-sidebar-emblem img{border-radius:0!important;}
 /* Legacy label class kept hidden — the icon-only sidebar never renders it
    but old nodes still in the DOM shouldn't leak text. */
 .epp-sidebar-label{display:none!important;}
@@ -1804,9 +1808,10 @@ body.is-desktop-app .sys-announce-bar{padding-right:140px;}
 .emoji-tooltip .et-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 .emoji-tooltip .et-big{width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .emoji-tooltip .et-big img{width:36px;height:36px;object-fit:contain;}
-.emoji-tooltip .et-name{font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;}
+.emoji-tooltip .et-name{font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;word-break:break-word;overflow-wrap:anywhere;max-width:200px;line-height:1.25;}
+.emoji-tooltip .et-header > div:last-child{min-width:0;flex:1;}
 .emoji-tooltip .et-code{font-size:11px;color:rgba(255,255,255,.3);font-family:'SF Mono','Cascadia Code',monospace;margin-top:2px;}
-.emoji-tooltip .et-cat{font-size:10.5px;color:rgba(255,249,62,.45);font-weight:600;margin-top:6px;}
+.emoji-tooltip .et-cat{font-size:10.5px;color:rgba(255,249,62,.45);font-weight:600;margin-top:6px;word-break:break-word;overflow-wrap:anywhere;}
 .msg-text .msg-emoji,.msg-text .msg-emoji-native,.msg-reply-ref .msg-emoji,.up-left-section-body .msg-emoji,.ann-body .msg-emoji,.forum-detail-content .msg-emoji,.frc-body .msg-emoji{cursor:pointer;transition:transform .1s;border-radius:3px;}
 /* Protect internal Fortized images from right-click save/copy */
 .msg-emoji[data-emoji-type],.ftz-embed img,.ftz-embed video,.ftz-embed-gif img,.epp-emoji-grid img,.epp-custom-emoji img,.invite-avatar img,.invite-right-logo img,.rail-avatar img,.bastion-banner-img,.bastion-icon-img{-webkit-user-drag:none;-webkit-touch-callout:none;user-select:none;pointer-events:auto;}
@@ -5250,6 +5255,18 @@ button[style*="background: var(--accent)"]:active {
   transition: transform .12s ease;
 }
 .emoji-cell:hover img { transform: scale(1.12); }
+/* Native-text unicode cell — no <img>, no network request. Dramatically
+   faster to render than thousands of Twemoji SVGs. */
+.emoji-cell-unicode { aspect-ratio: 1; }
+.emoji-cell-glyph {
+  font-size: 24px;
+  line-height: 1;
+  font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Twemoji Mozilla",sans-serif;
+  pointer-events: none;
+  transition: transform .12s ease;
+  user-select: none;
+}
+.emoji-cell-unicode:hover .emoji-cell-glyph { transform: scale(1.18); }
 .emoji-fav-star {
   position: absolute;
   top: 1px;

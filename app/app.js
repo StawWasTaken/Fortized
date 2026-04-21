@@ -6532,9 +6532,10 @@ function editMsg(msgId) {
   const ph = tokens.length ? 'Add a caption…' : 'Edit message…';
   textEl.innerHTML=`<textarea style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--accent-mid);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:6px 10px;resize:none;outline:none;box-sizing:border-box;" rows="2" id="edit-ta" placeholder="${ph}">${escapeHTML(stripped)}</textarea>
     ${hint}
-    <div style="display:flex;gap:6px;margin-top:4px;font-size:12px;">
+    <div style="display:flex;gap:6px;margin-top:4px;font-size:12px;align-items:center;">
       <button class="btn-a" style="padding:4px 12px;font-size:12px;" onclick="saveEdit('${escapeHTML(msgId)}')">Save</button>
       <button class="btn-g" style="padding:4px 12px;font-size:12px;" onclick="cancelEdit('${escapeHTML(msgId)}')">Cancel</button>
+      <button type="button" title="Emoji" aria-label="Insert emoji" onclick="toggleEmojiPicker('edit-ta')" style="margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);cursor:pointer;padding:0;transition:color .12s,background .12s;" onmouseover="this.style.color='rgba(255,255,255,.95)';this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.color='rgba(255,255,255,.55)';this.style.background='rgba(255,255,255,.05)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
     </div>`;
   const ta = document.getElementById('edit-ta');
   if (ta) {
@@ -14019,10 +14020,10 @@ function buildEmojiSidebar() {
     .map((b, i) => ({ b, i }))
     .filter(({ b }) => Array.isArray(b?.customEmojis) && b.customEmojis.some(ce => ce && ce.name && ce.data));
   let html = '';
-  const btn = (id, title, iconHtml) => `<button class="epp-sidebar-btn${_emojiPickerTab===id?' active':''}" id="etab-${id}" data-epp-tab="${id}" title="${escapeHTML(title)}" aria-label="${escapeHTML(title)}"><span class="epp-sidebar-emblem">${iconHtml}</span></button>`;
+  const btn = (id, title, iconHtml, extraClass) => `<button class="epp-sidebar-btn${_emojiPickerTab===id?' active':''}${extraClass?' '+extraClass:''}" id="etab-${id}" data-epp-tab="${id}" title="${escapeHTML(title)}" aria-label="${escapeHTML(title)}"><span class="epp-sidebar-emblem">${iconHtml}</span></button>`;
   html += btn('frequent', 'Frequently used', _EMOJI_CATEGORY_SVGS.frequent);
   html += btn('favorites', 'Favorites', _EMOJI_CATEGORY_SVGS.favorites);
-  html += btn('ftz', 'Fortized Guide', _EMOJI_CATEGORY_SVGS.ftz);
+  html += btn('ftz', 'Fortized Guide', _EMOJI_CATEGORY_SVGS.ftz, 'is-ftz');
   if (visibleBastions.length) {
     html += '<div class="epp-sidebar-sep"></div>';
     if (_hasActiveRadiance()) {
@@ -14385,6 +14386,19 @@ function renderEmojiGrid() {
 }
 
 function emojiToTwemojiUrl(emoji) {
+  if (!emoji) return '';
+  // :name: shortcodes — resolve Fortized Guide / bastion custom emoji image.
+  // Lets reaction pills, status pickers, etc. transparently render Fortized
+  // emojis using the same rendering path as unicode emojis.
+  if (typeof emoji === 'string' && emoji.length > 2 && emoji.charCodeAt(0) === 58 && emoji.charCodeAt(emoji.length-1) === 58) {
+    const name = emoji.slice(1, -1);
+    if (typeof FORTIZED_EMOJI_MAP !== 'undefined' && FORTIZED_EMOJI_MAP[name]) return FORTIZED_EMOJI_MAP[name];
+    const bastions = (typeof CU !== 'undefined' && CU?.bastions) || [];
+    for (const b of bastions) {
+      const ce = (b?.customEmojis || []).find(e => e && e.name === name);
+      if (ce?.data) return ce.data;
+    }
+  }
   // Honor custom overrides first (e.g. Fortized money emojis replace twemoji)
   if (typeof EMOJI_URL_OVERRIDES !== 'undefined' && EMOJI_URL_OVERRIDES[emoji]) {
     return EMOJI_URL_OVERRIDES[emoji];
@@ -14612,13 +14626,12 @@ function _emojiShortcodeCache() {
 
 function renderEmojiCell(emoji) {
   const safe = escapeHTML(emoji);
-  const url = emojiToTwemojiUrl(emoji);
   const isFav = _favEmojis.includes(emoji);
-  // Lean cell — no inline onclick / onmouseenter. A single delegated handler
-  // on #epp-grid (wired in _wireEmojiGridDelegation) services every cell,
-  // keeping the HTML small and removing per-element listener overhead.
-  return `<div class="emoji-cell emoji-cell-custom${isFav?' is-fav':''}" data-ue="${safe}">`
-    + `<img src="${url}" alt="${safe}" loading="lazy" decoding="async">`
+  // Native text glyph — no <img>, no network request. The whole picker renders
+  // 1400+ cells without pulling a single Twemoji SVG, which is what made
+  // opening the panel lag. Modern OS emoji fonts handle rendering.
+  return `<div class="emoji-cell emoji-cell-unicode${isFav?' is-fav':''}" data-ue="${safe}">`
+    + `<span class="emoji-cell-glyph">${safe}</span>`
     + (isFav ? '<span class="emoji-fav-star">★</span>' : '')
     + `</div>`;
 }
@@ -14670,11 +14683,12 @@ function searchEmojis(q) {
   let html = `<div class="epp-section-grid" style="grid-template-columns:repeat(8,1fr);">`;
   html += matches.slice(0,128).map(m => {
     if (m.type === 'ftz') {
-      return `<div onclick="insertFortizedEmoji('${escapeHTML(m.name)}','${escapeHTML(m.url)}')"
-               onmouseenter="_emojiHover(':${escapeHTML(m.name)}:',${m.from?`'${escapeHTML(m.from)}'`:'null'},'${escapeHTML(m.url)}',true)"
-               title=":${escapeHTML(m.name)}:" class="emoji-cell emoji-cell-custom">
-              <img src="${escapeHTML(m.url)}" alt=":${escapeHTML(m.name)}:" style="width:100%;height:100%;object-fit:contain;">
-            </div>`;
+      const sn = escapeHTML(m.name);
+      const su = escapeHTML(m.url);
+      const sf = m.from ? escapeHTML(m.from) : '';
+      return `<div class="emoji-cell emoji-cell-custom" data-ftz="${sn}" data-ftz-url="${su}"${sf?` data-ftz-from="${sf}"`:''} title=":${sn}:">`
+        + `<img src="${su}" alt=":${sn}:" loading="lazy" decoding="async">`
+        + `</div>`;
     }
     return renderEmojiCell(m.emoji);
   }).join('');
@@ -22734,8 +22748,25 @@ function _downloadLightboxImg(src) {
 // Legacy compat
 window._zoomImg = _openMediaLightbox;
 
+// Auto-augment EMOJI_SHORTCODES with slugified EMOJI_NAMES so common emojis
+// whose handwritten shortcode entries are missing (e.g. `:smiling_face_with_sunglasses:`)
+// still resolve to the real character. Runs once.
+let _emojiShortcodeAugmented = false;
+function _augmentShortcodes() {
+  if (_emojiShortcodeAugmented || typeof EMOJI_NAMES === 'undefined') return;
+  _emojiShortcodeAugmented = true;
+  for (const [emoji, name] of Object.entries(EMOJI_NAMES)) {
+    const slug = String(name).toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+    if (slug && !EMOJI_SHORTCODES[slug]) EMOJI_SHORTCODES[slug] = emoji;
+  }
+  _EMOJI_TO_SHORTCODE = null; // invalidate reverse cache
+}
+
 function parseMD(s) {
   if (!s) return '';
+  _augmentShortcodes();
   // 0. GIF token from sendGifDirectly — unified GIF embed
   s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);

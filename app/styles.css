@@ -6220,28 +6220,35 @@ select:focus-visible {
 /* Decoration hover preview — user's PFP appears inside the existing card image area */
 .home-buy-card .hbc-img{position:relative;}
 
-/* ── Ambient shimmer sheen that periodically sweeps across item images ── */
-@keyframes item-sheen{
-  0%{transform:translateX(-140%) skewX(-18deg);}
-  55%{transform:translateX(140%) skewX(-18deg);}
-  100%{transform:translateX(140%) skewX(-18deg);}
+/* ── Periodic shine on item images (same shape as .home-fb-shine) ── */
+@keyframes ftz-img-shine{
+  0%   {left:-60%;}
+  12%  {left:120%;}
+  100% {left:120%;}
 }
+.shop-item-card .sic-preview,
+.shop-item-card .sic-deco-img,
+.home-buy-card .hbc-img{position:relative;}
+.shop-item-card .sic-deco-img{overflow:hidden;}
 .shop-item-card .sic-preview::before,
+.shop-item-card .sic-deco-img::before,
 .home-buy-card .hbc-img::before{
-  content:"";position:absolute;top:0;bottom:0;left:0;width:60%;
-  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.16) 45%,rgba(255,255,255,.28) 50%,rgba(255,255,255,.16) 55%,transparent 100%);
-  transform:translateX(-140%) skewX(-18deg);
-  animation:item-sheen 6s ease-in-out infinite;
+  content:"";position:absolute;top:0;left:-60%;width:50%;height:100%;
+  background:linear-gradient(110deg,transparent 0%,rgba(255,255,255,.55) 45%,transparent 90%);
+  transform:skewX(-18deg);
   pointer-events:none;
   z-index:3;
-  mix-blend-mode:screen;
+  animation:ftz-img-shine 4.5s ease-in-out infinite;
 }
-.shop-item-card:nth-child(even) .sic-preview::before{animation-delay:2.2s;}
-.shop-item-card:nth-child(3n) .sic-preview::before{animation-delay:4s;animation-duration:7s;}
-.home-buy-card:nth-child(even) .hbc-img::before{animation-delay:2.4s;}
-.home-buy-card:nth-child(3n) .hbc-img::before{animation-delay:4.2s;animation-duration:7s;}
+.shop-item-card:nth-child(even) .sic-preview::before,
+.shop-item-card:nth-child(even) .sic-deco-img::before{animation-delay:1.4s;}
+.shop-item-card:nth-child(3n) .sic-preview::before,
+.shop-item-card:nth-child(3n) .sic-deco-img::before{animation-delay:2.8s;animation-duration:5.5s;}
+.home-buy-card:nth-child(even) .hbc-img::before{animation-delay:1.6s;}
+.home-buy-card:nth-child(3n) .hbc-img::before{animation-delay:3s;animation-duration:5.5s;}
 @media (prefers-reduced-motion: reduce){
   .shop-item-card .sic-preview::before,
+  .shop-item-card .sic-deco-img::before,
   .home-buy-card .hbc-img::before{animation:none;display:none;}
 }
 

@@ -16264,7 +16264,7 @@ function _showAvatarPickerMenu(event) {
   event.stopPropagation();
   showCtxMenu(event.clientX, event.clientY, [{items:[
     {icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', label:'Change Avatar', action:()=>_showAvatarPickerModal()},
-    {icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>', label:'Change Decoration', action:()=>{closeModal('modal-settings');switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier');}},
+    {icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>', label:'Change Decoration', action:()=>_openDecorationPicker()},
   ]}]);
 }
 
@@ -30927,7 +30927,7 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
       + '<button class="sic-qb" title="Gift to a friend" onclick="event.stopPropagation();openGiftModal(\''+item.id+'\')">'+_svgIcon('gift',12)+'</button>'
       + (owned && item.rare ? '<button class="sic-qb" title="List for resale" onclick="event.stopPropagation();promptListResale(\''+item.id+'\')">'+_svgIcon('tag',12)+'</button>' : '')
       + '</div>'
-      + '<div style="padding:20px 12px 10px;"><div style="position:relative;width:68px;height:68px;margin:0 auto 10px;"><div style="width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;box-shadow:0 4px 16px '+item.color+'15;">'+avatarInner+'</div>'
+      + '<div style="padding:20px 12px 10px;"><div style="position:relative;width:68px;height:68px;margin:0 auto 10px;"><div class="sic-deco-img" style="width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;box-shadow:0 4px 16px '+item.color+'15;position:relative;">'+avatarInner+'</div>'
       + '<img src="'+item.src+'" style="position:absolute;inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px);object-fit:contain;pointer-events:none;" onerror="this.style.display=\'none\'"></div></div>'
       + '<div style="padding:0 14px 16px;">'
       + '<div class="sic-name">'+item.name+'</div>'

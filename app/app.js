@@ -16272,6 +16272,8 @@ function _showAvatarPickerMenu(event) {
 }
 
 function _showAvatarPickerModal() {
+  // Ensure current pfp is part of the recent list so users always see their latest
+  if (CU?.pfp) _saveRecentAvatar(CU.pfp);
   const recentAvatars = JSON.parse(localStorage.getItem('ftz_recent_avatars_'+CU.username)||'[]').slice(0,5);
   const ov = document.createElement('div');
   ov.className = 'ftz-confirm-overlay';
@@ -16524,11 +16526,16 @@ async function _applyGifAvatar(url) {
 
 // Save recent avatar to localStorage (most-recent first, capped at 5)
 function _saveRecentAvatar(url) {
-  if (!url || url.startsWith('data:')) return;
+  if (!url) return;
   const key = 'ftz_recent_avatars_' + CU.username;
   const recent = JSON.parse(localStorage.getItem(key)||'[]').filter(u => u !== url);
   recent.unshift(url);
-  localStorage.setItem(key, JSON.stringify(recent.slice(0,5)));
+  try {
+    localStorage.setItem(key, JSON.stringify(recent.slice(0,5)));
+  } catch(_) {
+    // Quota exceeded — trim harder and retry
+    try { localStorage.setItem(key, JSON.stringify(recent.slice(0,3))); } catch(_){}
+  }
 }
 
 async function updatePfp(e) {
@@ -16550,6 +16557,7 @@ async function updatePfp(e) {
         updateUserbar();
         buildProfileView('myprofile');
         try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: result.gifData, pfpCrop: result.crop, field: 'pfp' }); } catch(e){}
+        _saveRecentAvatar(result.gifData);
         toast('Animated avatar updated! ✓', 'success');
       });
       // Set the GIF flag on _cropData after showCropModal initializes it

@@ -3461,18 +3461,30 @@ Examples of YOUR VOICE:
 let _joysterAICache = [];
 let _joysterContexts = []; // Track shown contexts to avoid repetition
 
+let _joysterAIDisabledUntil = 0;
 async function _getJoysterAIResponse(context) {
+  if (Date.now() < _joysterAIDisabledUntil) return null;
   try {
     const res = await fetch(JOYSTER_API_URL + '?key=' + JOYSTER_API_KEY, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        system_instruction: {parts:[{text: JOYSTER_SYSTEM_PROMPT}]},
-        contents: [{parts:[{text: context || 'Say something funny and unpredictable to a Fortized user. 1-2 short sentences, full jester energy!'}]}],
+        systemInstruction: {parts:[{text: JOYSTER_SYSTEM_PROMPT}]},
+        contents: [{role:'user', parts:[{text: context || 'Say something funny and unpredictable to a Fortized user. 1-2 short sentences, full jester energy!'}]}],
         generationConfig: {maxOutputTokens: 85, temperature: 0.95}
       })
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // Cool off on 4xx — retrying in a tight loop just hammers Google with 400s.
+      if (res.status >= 400 && res.status < 500) {
+        _joysterAIDisabledUntil = Date.now() + 15 * 60 * 1000; // 15m
+        if (!window._joysterWarned) {
+          window._joysterWarned = true;
+          console.warn('[Joyster] AI disabled for 15m after', res.status);
+        }
+      }
+      return null;
+    }
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     return text ? text.trim().slice(0, 200) : null;
@@ -38788,8 +38800,15 @@ async function renderFriendsSorted(mode) {
 // ════════════════════════════════════════════
 // FAVOURITES / QUICK ACCESS
 // ════════════════════════════════════════════
-function _getFavourites() { return JSON.parse(localStorage.getItem('ftz_favourites_' + CU.username) || '[]'); }
-function _saveFavourites(favs) { localStorage.setItem('ftz_favourites_' + CU.username, JSON.stringify(favs)); }
+function _getFavourites() {
+  if (!CU || !CU.username) return [];
+  try { return JSON.parse(localStorage.getItem('ftz_favourites_' + CU.username) || '[]'); }
+  catch { return []; }
+}
+function _saveFavourites(favs) {
+  if (!CU || !CU.username) return;
+  try { localStorage.setItem('ftz_favourites_' + CU.username, JSON.stringify(favs)); } catch {}
+}
 function _toggleFavourite(type, id, label) {
   const favs = _getFavourites();
   const idx = favs.findIndex(f => f.type === type && f.id === id);

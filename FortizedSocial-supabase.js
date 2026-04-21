@@ -722,51 +722,14 @@ const FortizedSocial = (() => {
     const cached = _cacheGet(cacheKey);
     if (cached !== undefined) return cached;
     try {
-      // Parse users from dmKey (format: "user1__user2")
-      const [u1, u2] = key.split('__');
-
-      // Try old schema first with dm_key column
-      let { data, error } = await sb.from('dms')
+      // Canonical schema: dm_key + timestamp. The old "from/username/time"
+      // fallback is permanently removed — those columns don't exist in this
+      // project, and concurrent lookups hammered Supabase with 400s.
+      const { data, error } = await sb.from('dms')
         .select('*')
         .eq('dm_key', key)
         .order('timestamp', { ascending: false })
         .limit(max);
-
-      // If that fails or returns empty, try new schema with from/username columns
-      if ((error || !data || data.length === 0) && u1 && u2 && !window._dmSchemaBroken) {
-        console.debug('[getDMMessages] Trying new schema with from/username columns');
-        // Query both directions: (from=u1 AND username=u2) OR (from=u2 AND username=u1)
-        const res1 = await sb.from('dms')
-          .select('*')
-          .eq('from', u1)
-          .eq('username', u2)
-          .order('time', { ascending: false })
-          .limit(Math.ceil(max / 2));
-
-        const res2 = await sb.from('dms')
-          .select('*')
-          .eq('from', u2)
-          .eq('username', u1)
-          .order('time', { ascending: false })
-          .limit(Math.ceil(max / 2));
-
-        if (!res1.error && !res2.error) {
-          data = [...(res1.data || []), ...(res2.data || [])].sort((a, b) => {
-            const timeA = a.time || a.timestamp || 0;
-            const timeB = b.time || b.timestamp || 0;
-            return new Date(timeB) - new Date(timeA);
-          }).slice(0, max);
-          error = null;
-        } else {
-          error = res1.error || res2.error;
-          // If the new schema is missing expected columns, permanently disable
-          // this fallback for the rest of the session so every DM thread
-          // doesn't hammer Supabase with doomed 400s.
-          if (/column .* does not exist/i.test(error?.message || '')) {
-            window._dmSchemaBroken = true;
-          }
-        }
-      }
 
       if (error) {
         // Demote the common "column does not exist" schema-mismatch to a
@@ -1565,10 +1528,15 @@ const FortizedSocial = (() => {
   // ── Voice Room Polling ──
   let _voiceRoomPollingInterval = null;
   let _lastVoiceRoomState = new Map();
+  let _voiceSchemaBroken = false;
 
   async function startVoiceRoomPolling(username) {
     if (_voiceRoomPollingInterval) {
       console.log('[VoiceRoomPolling] Already polling');
+      return;
+    }
+    if (_voiceSchemaBroken) {
+      console.log('[VoiceRoomPolling] Skipped — voice_channels column missing from this project');
       return;
     }
 
@@ -1577,6 +1545,7 @@ const FortizedSocial = (() => {
 
     _voiceRoomPollingInterval = setInterval(async () => {
       if (_tabHidden()) return;
+      if (_voiceSchemaBroken) { stopVoiceRoomPolling(); return; }
       try {
         // Get user's bastion list
         const { data: userData, error: userErr } = await sb.from('users')
@@ -1602,7 +1571,18 @@ const FortizedSocial = (() => {
             .eq('id', bastionId)
             .maybeSingle();
 
-          if (bastionErr || !bastionData || !bastionData.voice_channels) {
+          if (bastionErr) {
+            // If the column doesn't exist in this project, stop polling entirely
+            // — otherwise we 400 every 12s forever for each bastion.
+            if (/column .* does not exist/i.test(bastionErr.message || '')) {
+              _voiceSchemaBroken = true;
+              console.warn('[VoiceRoomPolling] voice_channels column missing — disabling polling for this session');
+              stopVoiceRoomPolling();
+              return;
+            }
+            continue;
+          }
+          if (!bastionData || !bastionData.voice_channels) {
             continue;
           }
 

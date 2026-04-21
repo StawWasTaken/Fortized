@@ -7303,6 +7303,79 @@ function _reactionIntensityEnd() {
 // ════════════════════════════════════════════
 // MEMBER LIST
 // ════════════════════════════════════════════
+// ════════════════════════════════════════════
+// MEMBER LIST  (virtualized via IntersectionObserver)
+// ════════════════════════════════════════════
+
+// Module-level state for the member-list virtualizer.
+const _mlFetchedProfiles = new Set();   // usernames whose deferred profile fetch has already run this session
+let   _mlItems = [];                    // current render schedule (one entry per row/header)
+let   _mlIO = null;                     // IntersectionObserver reused across renders
+let   _mlRoles = [];                    // cached role array for the current bastion
+let   _mlMemberRoles = {};              // cached memberRoles map for the current bastion
+let   _mlStatusMap = {};                // cached status map for the current bastion
+let   _mlFilterQuery = '';              // active search filter
+
+// Row heights (kept in sync with CSS). Slight overestimates are fine.
+const _MLH_TOP      = 41;   // .ml-header
+const _MLH_SEARCH   = 46;   // .ml-search
+const _MLH_ROLE     = 30;   // .ml-role-header
+const _MLH_ENTRY    = 46;   // .ml-entry
+const _MLH_OFFL_GAP = 38;   // .ml-role-header with top margin (offline divider)
+
+function _mlRenderItem(idx) {
+  const it = _mlItems[idx];
+  if (!it) return '';
+  if (it.type === 'top-header') {
+    return `<div class="ml-header"><span class="ml-header-title">Members</span><span class="ml-header-count">${it.onlineCount} online · ${it.totalCount}</span></div>`;
+  }
+  if (it.type === 'search') {
+    return `<div class="ml-search"><svg class="ml-search-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" value="${escapeHTML(_mlFilterQuery||'')}" placeholder="Search members..." oninput="_filterMemberList(this.value)"></div>`;
+  }
+  if (it.type === 'role-header') return it.html;
+  if (it.type === 'member')      return buildMemberEntry(it.u, _mlRoles, _mlMemberRoles, _mlStatusMap[it.u], it.isOffline);
+  if (it.type === 'bot')         return buildBotMemberEntry(it.bot);
+  return '';
+}
+
+function _mlEnsureObserver(container) {
+  if (_mlIO) return _mlIO;
+  _mlIO = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      const row = e.target;
+      const idx = +row.dataset.idx;
+      const type = row.dataset.type;
+      if (e.isIntersecting) {
+        if (!row._mlFilled) {
+          row.innerHTML = _mlRenderItem(idx);
+          row._mlFilled = true;
+        }
+      } else if (row._mlFilled) {
+        // Never tear down the sticky top header or search box — losing the
+        // search input would wipe any in-flight query and steal focus.
+        if (type === 'top-header' || type === 'search' || type === 'role-header') continue;
+        row.innerHTML = '';
+        row._mlFilled = false;
+      }
+    }
+  }, { root: container, rootMargin: '400px 0px' });
+  return _mlIO;
+}
+
+function _mlEnsureDelegation(container) {
+  if (container._mlDelegated) return;
+  container._mlDelegated = true;
+  container.addEventListener('click', (e) => {
+    const memberEl = e.target.closest('.ml-entry[data-member]');
+    if (memberEl && !memberEl.classList.contains('bot-entry')) {
+      showMiniProfilePreview(memberEl.dataset.member, memberEl);
+      return;
+    }
+    const botEl = e.target.closest('.bot-entry[data-bot-id]');
+    if (botEl) showBotProfilePreview(botEl.dataset.botId, botEl);
+  });
+}
+
 async function renderMemberList() {
   const ml = document.getElementById('member-list');
   if (!ml) return;
@@ -7367,90 +7440,81 @@ async function renderMemberList() {
   Object.values(roleGroups).forEach(g => sortByStatus(g.members));
   sortByStatus(noRole);
 
-  // Count online/offline
   const onlineCount = members.filter(u => isOnlineStatus(statusMap[u])).length;
-  const offlineCount = members.length - onlineCount;
 
-  let html = '';
-  html += `<div class="ml-header"><span class="ml-header-title">Members</span><span class="ml-header-count">${onlineCount} online · ${totalCount}</span></div>`;
-  html += `<div class="ml-search"><svg class="ml-search-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search members..." oninput="_filterMemberList(this.value)"></div>`;
+  // ── Build flat render schedule ──
+  const items = [];
+  items.push({ type:'top-header', height:_MLH_TOP, onlineCount, totalCount });
+  items.push({ type:'search',     height:_MLH_SEARCH });
 
-  // --- ONLINE SECTION ---
-  // Owner section (online only)
-  const ownerOnline = ownerList.filter(u => isOnlineStatus(statusMap[u]));
+  const ownerOnline  = ownerList.filter(u => isOnlineStatus(statusMap[u]));
   const ownerOffline = ownerList.filter(u => !isOnlineStatus(statusMap[u]));
+
   if (ownerOnline.length) {
-    html += `<div class="ml-role-header"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="opacity:.6;vertical-align:-2px;margin-right:4px;"><path d="M2 18l3-10 5 5 2-6 2 6 5-5 3 10H2zm0 2h20v2H2z"/></svg> Owner</div>`;
-    ownerOnline.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u]));
+    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="opacity:.6;vertical-align:-2px;margin-right:4px;"><path d="M2 18l3-10 5 5 2-6 2 6 5-5 3 10H2zm0 2h20v2H2z"/></svg> Owner</div>` });
+    ownerOnline.forEach(u => items.push({ type:'member', height:_MLH_ENTRY, u, isOffline:false }));
   }
-  // Role-grouped sections (online members)
-  const sortedGroups = Object.values(roleGroups).sort((a,b) => {
-    const aIdx = roles.indexOf(a.role);
-    const bIdx = roles.indexOf(b.role);
-    return aIdx - bIdx;
-  });
+
+  const sortedGroups = Object.values(roleGroups).sort((a,b) => roles.indexOf(a.role) - roles.indexOf(b.role));
   sortedGroups.forEach(g => {
     const online = g.members.filter(u => isOnlineStatus(statusMap[u]));
     if (online.length) {
-      html += `<div class="ml-role-header"><span style="width:6px;height:6px;border-radius:50%;background:${g.role.color||'var(--muted)'};flex-shrink:0;"></span> ${escapeHTML(g.role.name)} <span class="ml-role-count">— ${online.length}</span></div>`;
-      online.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u]));
+      items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><span style="width:6px;height:6px;border-radius:50%;background:${g.role.color||'var(--muted)'};flex-shrink:0;"></span> ${escapeHTML(g.role.name)} <span class="ml-role-count">— ${online.length}</span></div>` });
+      online.forEach(u => items.push({ type:'member', height:_MLH_ENTRY, u, isOffline:false }));
     }
   });
-  // No-role online members
+
   const noRoleOnline = noRole.filter(u => isOnlineStatus(statusMap[u]));
   if (noRoleOnline.length) {
-    html += `<div class="ml-role-header">Online <span class="ml-role-count">— ${noRoleOnline.length}</span></div>`;
-    noRoleOnline.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u]));
+    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header">Online <span class="ml-role-count">— ${noRoleOnline.length}</span></div>` });
+    noRoleOnline.forEach(u => items.push({ type:'member', height:_MLH_ENTRY, u, isOffline:false }));
   }
 
-  // --- OFFLINE SECTION ---
   const allOffline = [...ownerOffline];
   sortedGroups.forEach(g => { allOffline.push(...g.members.filter(u => !isOnlineStatus(statusMap[u]))); });
   allOffline.push(...noRole.filter(u => !isOnlineStatus(statusMap[u])));
-  const offlineHeader = allOffline.length
-    ? `<div class="ml-role-header" style="margin-top:8px;opacity:.5;">Offline <span class="ml-role-count">— ${allOffline.length}</span></div>`
-    : '';
-  const botsHeaderAndRows = deployedBots.length
-    ? `<div class="ml-role-header"><img src="/fortized badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>`
-      + deployedBots.map(buildBotMemberEntry).join('')
-    : '';
-
-  // Chunk-render the offline section when it's large. Small bastions get
-  // the fast synchronous path; big ones paint online members immediately
-  // and then trickle offline rows in requestAnimationFrame batches so the
-  // member panel is interactive within a frame instead of blocking on a
-  // multi-hundred-row innerHTML.
-  const LARGE_OFFLINE = 60;
-  if (allOffline.length >= LARGE_OFFLINE) {
-    ml.innerHTML = html + offlineHeader;
-    // Abort any prior trickle
-    if (ml._mlTrickle) ml._mlTrickle.aborted = true;
-    const ctrl = { aborted: false, idx: 0 };
-    ml._mlTrickle = ctrl;
-    const CHUNK = 40;
-    const step = () => {
-      if (ctrl.aborted) return;
-      if (ctrl.idx >= allOffline.length) {
-        if (botsHeaderAndRows) ml.insertAdjacentHTML('beforeend', botsHeaderAndRows);
-        return;
-      }
-      const slice = allOffline.slice(ctrl.idx, ctrl.idx + CHUNK);
-      const frag = slice.map(u => buildMemberEntry(u, roles, memberRoles, statusMap[u], true)).join('');
-      ml.insertAdjacentHTML('beforeend', frag);
-      ctrl.idx += CHUNK;
-      requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-    return;
-  }
-
-  // Small/medium bastion — synchronous single-pass render
   if (allOffline.length) {
-    html += offlineHeader;
-    allOffline.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u], true));
+    items.push({ type:'role-header', height:_MLH_OFFL_GAP, html:`<div class="ml-role-header" style="margin-top:8px;opacity:.5;">Offline <span class="ml-role-count">— ${allOffline.length}</span></div>` });
+    allOffline.forEach(u => items.push({ type:'member', height:_MLH_ENTRY, u, isOffline:true }));
   }
-  if (botsHeaderAndRows) html += botsHeaderAndRows;
-  ml.innerHTML = html;
+
+  if (deployedBots.length) {
+    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><img src="/fortized badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>` });
+    deployedBots.forEach(bot => items.push({ type:'bot', height:_MLH_ENTRY, bot }));
+  }
+
+  // Snapshot into module state so the IO callback can resolve items by idx
+  _mlItems       = items;
+  _mlRoles       = roles;
+  _mlMemberRoles = memberRoles;
+  _mlStatusMap   = statusMap;
+
+  // Emit placeholder rows — empty, with reserved height
+  const filter = (_mlFilterQuery || '').toLowerCase();
+  const filterActive = !!filter;
+  let skeleton = '';
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    let hidden = '';
+    if (filterActive && it.type === 'member' && !it.u.toLowerCase().includes(filter)) hidden = 'display:none;';
+    skeleton += `<div class="ml-row" data-idx="${i}" data-type="${it.type}"${it.type==='member'?` data-member-key="${escapeHTML(it.u)}"`:''} style="min-height:${it.height}px;${hidden}"></div>`;
+  }
+  ml.innerHTML = skeleton;
+
+  _mlEnsureDelegation(ml);
+  // Re-create the observer per render so it tracks the fresh row set
+  if (_mlIO) { try { _mlIO.disconnect(); } catch(_){} _mlIO = null; }
+  const io = _mlEnsureObserver(ml);
+  const rows = ml.querySelectorAll('.ml-row');
+  // Pre-fill the first screenful synchronously so the panel isn't blank before
+  // the observer fires its initial callback (IO is async).
+  const INITIAL_FILL = Math.min(rows.length, 30);
+  for (let i = 0; i < INITIAL_FILL; i++) {
+    const row = rows[i];
+    row.innerHTML = _mlRenderItem(+row.dataset.idx);
+    row._mlFilled = true;
+  }
+  rows.forEach(row => io.observe(row));
 }
 // Debounced member list re-sort when status changes in real-time
 let _memberResortTimer = null;
@@ -7462,10 +7526,13 @@ function _debouncedMemberListResort() {
   }, 150);
 }
 function _filterMemberList(query) {
-  const q = query.toLowerCase().trim();
-  document.querySelectorAll('.ml-entry').forEach(entry => {
-    const name = (entry.dataset.member || entry.textContent || '').toLowerCase();
-    entry.style.display = !q || name.includes(q) ? '' : 'none';
+  _mlFilterQuery = (query || '').toLowerCase().trim();
+  const ml = document.getElementById('member-list');
+  if (!ml) return;
+  // Hide/show rows directly by data-member-key so we don't need to re-run the full render.
+  ml.querySelectorAll('.ml-row[data-type="member"]').forEach(row => {
+    const key = (row.dataset.memberKey || '').toLowerCase();
+    row.style.display = !_mlFilterQuery || key.includes(_mlFilterQuery) ? '' : 'none';
   });
 }
 
@@ -7477,8 +7544,11 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
   const pfpSrc = isMe ? CU.pfp : (_pfpCache[u] || null);
   const pfpCrop = isMe ? CU.pfpCrop : (_pfpCropCache[u] || null);
   const status = knownStatus || (isMe ? (CU.status||'online') : 'online');
-  // Deferred fetch for profile data (status already live via Socket.IO onStatusChange)
-  if (!isMe) {
+  // Deferred fetch for profile data (status already live via Socket.IO onStatusChange).
+  // Fire at most once per user per session so rows that pop in/out of the virtualized
+  // viewport don't re-spam getUserByName.
+  if (!isMe && !_mlFetchedProfiles.has(u)) {
+    _mlFetchedProfiles.add(u);
     setTimeout(() => {
       FortizedSocial.getUserByName(u).then(ud => {
         if (!ud) return;
@@ -7547,7 +7617,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
   const staffBadge = staffRole ? `<img src="/fortized badges/${staffRole === 'superadmin' ? 'superadmin' : staffRole === 'admin' ? 'admin' : 'moderator'}.png" style="width:14px;height:14px;object-fit:contain;" title="${staffRole}">` : '';
   const dimStyle = isOffline ? 'opacity:.4;' : '';
 
-  return `<div class="ml-entry" data-member="${escapeHTML(u)}" data-status="${status}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)" style="${dimStyle}">
+  return `<div class="ml-entry" data-member="${escapeHTML(u)}" data-status="${status}" style="${dimStyle}">
     <div class="ml-av-wrap profile-decoration-wrap" style="position:relative;display:inline-flex;flex-shrink:0;">
       ${buildAvatarHTML(pfpSrc, displayN, 34, pfpCrop)}
       <span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${status}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;z-index:3;">${FtzStatus.dotSvg(status, 14)}</span>
@@ -7566,7 +7636,8 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
 function buildBotMemberEntry(bot) {
   const emblem = bot.emblem || '<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
   const name = bot.name || 'Bot';
-  return `<div class="ml-entry bot-entry" onclick="showBotProfilePreview('${escapeHTML(bot.id||bot.name)}',this)">
+  const botId = bot.id || bot.name || '';
+  return `<div class="ml-entry bot-entry" data-bot-id="${escapeHTML(botId)}">
     <div style="position:relative;display:inline-flex;flex-shrink:0;">
       <div style="width:30px;height:30px;border-radius:50%;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">${emblem}</div>
       <span style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#60a5fa;border:2px solid var(--channel);"></span>

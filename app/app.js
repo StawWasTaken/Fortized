@@ -171,6 +171,9 @@ let _globalSettings = (() => { try { return JSON.parse(localStorage.getItem('ftz
 function saveGlobalSettings() { localStorage.setItem('ftz_global_settings', JSON.stringify(_globalSettings)); }
 let replyingTo = null;
 let forwardMsgText = '';
+// Optional origin payload for the current forward-picker session.
+// { author, displayName, pfp, timestamp, context } — see _forwardOriginFromRow.
+let _forwardOrigin = null;
 let activeEmojiTarget = null;
 let currentRoleEditing = null;
 let assignRoleBastion = null;
@@ -6276,6 +6279,55 @@ function _reconcilePendingSend(domain, incoming) {
   return false;
 }
 
+// Discord-style forwarded-message card. When the incoming message carries
+// a `forwardedFrom` payload (original author + pfp + timestamp + context)
+// we render a rich card with the origin info. Legacy messages that only
+// have { forwarded: true, forwardedBy } still get the compact badge.
+function _renderForwardedCard(msg) {
+  const ff = msg.forwardedFrom;
+  const forwardedBy = msg.forwardedBy && msg.forwardedBy !== msg.from ? msg.forwardedBy : '';
+  const iconSVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>';
+  if (!ff || (!ff.author && !ff.context)) {
+    // Minimal legacy badge.
+    return `<div class="msg-fwd-min">
+      ${iconSVG}
+      <span>Forwarded${forwardedBy?` by ${escapeHTML(forwardedBy)}`:''}</span>
+    </div>`;
+  }
+  const authorName = ff.displayName || ff.author || '';
+  const rawPfp = ff.pfp || (ff.author && typeof _pfpCache !== 'undefined' ? _pfpCache[ff.author] : '') || '';
+  const time = ff.timestamp ? (() => {
+    try { return new Date(ff.timestamp).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); } catch { return ''; }
+  })() : '';
+  let contextLabel = '';
+  if (ff.context?.type === 'bastion') {
+    const b = ff.context.bastionName, c = ff.context.channelName;
+    if (b && c) contextLabel = `${escapeHTML(b)} · #${escapeHTML(c)}`;
+    else if (c) contextLabel = `#${escapeHTML(c)}`;
+  } else if (ff.context?.type === 'dm') {
+    contextLabel = 'Direct Message';
+  } else if (ff.context?.type === 'gc') {
+    contextLabel = 'Group Chat';
+  }
+  const initial = (authorName || '?').charAt(0).toUpperCase();
+  const pfpHTML = rawPfp
+    ? `<img src="${escapeHTML(rawPfp)}" class="msg-fwd-pfp" alt="" onerror="this.onerror=null;this.outerHTML='<span class=&quot;msg-fwd-pfp msg-fwd-pfp-fb&quot;>${escapeHTML(initial)}</span>'">`
+    : `<span class="msg-fwd-pfp msg-fwd-pfp-fb">${escapeHTML(initial)}</span>`;
+  return `<div class="msg-fwd-card">
+    <div class="msg-fwd-badge">
+      ${iconSVG}
+      <span class="msg-fwd-label">Forwarded</span>
+      ${contextLabel?`<span class="msg-fwd-ctx">from ${contextLabel}</span>`:''}
+      ${forwardedBy?`<span class="msg-fwd-by">· by ${escapeHTML(forwardedBy)}</span>`:''}
+    </div>
+    ${authorName?`<div class="msg-fwd-origin">
+      ${pfpHTML}
+      <span class="msg-fwd-name">${escapeHTML(authorName)}</span>
+      ${time?`<span class="msg-fwd-time">${escapeHTML(time)}</span>`:''}
+    </div>`:''}
+  </div>`;
+}
+
 function appendMessage(container, msg, context, prevAuthor) {
   // If prevAuthor not provided, infer from last message in container
   if (prevAuthor === null && container) prevAuthor = _getLastAuthor(container);
@@ -6322,15 +6374,17 @@ function appendMessage(container, msg, context, prevAuthor) {
   row.dataset.timestamp=msg.timestamp||'';
   row.dataset.from=msg.from||'';
   if (msg.edited) row.dataset.edited='1';
+  // Stash forward origin on the row so the lightbox / forwarded-card
+  // renderers can read it without re-lookup.
+  if (msg.forwardedFrom) {
+    try { row.dataset.forwardedFrom = JSON.stringify(msg.forwardedFrom); } catch {}
+  }
   // Role accent stripe
   const roleColor=getMsgRoleColor(msg.from,context);
   if(roleColor)row.style.position='relative';
 
   const replyHTML=msg.replyTo?`<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;opacity:.5;"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg> <strong>${escapeHTML(msg.replyTo.from||'')}</strong><span style="opacity:.6;">: ${escapeHTML((msg.replyTo.text||'').slice(0,60))}</span></div>`:'';
-  const fwdHTML=msg.forwarded?`<div style="display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.025);border-left:2px solid rgba(255,255,255,.1);border-radius:0 6px 6px 0;margin-bottom:5px;font-size:11.5px;color:rgba(255,255,255,.3);">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15,17 20,12 15,7"/><path d="M4,18v-2a4,4,0,0,1,4-4h12"/></svg>
-    <span style="font-weight:600;">Forwarded</span>${msg.forwardedBy&&msg.forwardedBy!==msg.from?` <span style="opacity:.6;">by ${escapeHTML(msg.forwardedBy)}</span>`:''}
-  </div>`:'';
+  const fwdHTML = msg.forwarded ? _renderForwardedCard(msg) : '';
   const editTag=msg.edited?`<span class="msg-edited" title="Edited${msg.editedAt ? ' at '+new Date(msg.editedAt).toLocaleString() : ''}">(edited)</span>`:'';
   const reactHTML=msg.reactions?Object.entries(msg.reactions).map(([emoji,users])=>{
     const arr=Array.isArray(users)?users:Object.values(users);
@@ -6535,7 +6589,7 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
       + `<button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg></button>`
       + `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>`
       + (isOwn ? `<button onclick="editMsg('${safeId}')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : '')
-      + `<button onclick="forwardMsg('${safeText}')" title="Forward"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>`
+      + `<button onclick="forwardFromMsgEl(this,'${safeText}')" title="Forward"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>`
       + ((isOwn||isBastionAdmin) ? `<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(248,113,113,.6);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>` : '');
   }
 
@@ -6555,7 +6609,7 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
     html += `<button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg></button>`;
   }
   // Forward
-  html += `<button onclick="forwardMsg('${safeText}')" title="Forward"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>`;
+  html += `<button onclick="forwardFromMsgEl(this,'${safeText}')" title="Forward"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>`;
   // More (dropdown)
   html += `<button onclick="_showMsgMoreMenu(event,'${safeId}','${safeFrom}','${safeText}','${context}',${isOwn},${isBastionAdmin})" title="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>`;
   return html;
@@ -6901,8 +6955,14 @@ function _undoDelete() {
   }
   document.querySelector('.undo-toast')?.remove();
 }
-function forwardMsg(text) {
+function forwardMsg(text, origin) {
   forwardMsgText = text;
+  // Origin is optional — if the caller supplies it (lightbox, context
+  // menu, or action-bar button), the outgoing forward gets a
+  // `forwardedFrom` field so the recipient sees a rich card.
+  _forwardOrigin = (origin && typeof origin === 'object')
+    ? origin
+    : { context: _currentForwardContext() };
   // Show message preview
   const preview = document.getElementById('forward-msg-preview');
   if (preview) preview.textContent = text.length > 120 ? text.slice(0, 120) + '...' : text;
@@ -6913,6 +6973,15 @@ function forwardMsg(text) {
   _buildForwardTargets('');
   openModal('modal-forward');
   setTimeout(() => { const s = document.getElementById('forward-search'); if (s) s.focus(); }, 100);
+}
+
+// Helper used by message action-bar buttons and context menu handlers —
+// walks up from the clicked element to the owning msg-row, gathers origin
+// metadata, and opens the forward picker.
+function forwardFromMsgEl(el, text) {
+  const row = el?.closest?.('.msg-row');
+  const origin = row ? _forwardOriginFromRow(row) : null;
+  forwardMsg(text, origin);
 }
 function _buildForwardTargets(query) {
   const targets = document.getElementById('forward-targets');
@@ -6975,12 +7044,28 @@ function _filterForwardTargets(query) { _buildForwardTargets(query); }
 async function forwardTo(type, target) {
   const text = forwardMsgText;
   if (!text) return;
+  // Build forwardedFrom field for the outgoing message. We only include
+  // author/pfp/timestamp when the caller provided them; context (where
+  // the original message lives) is always captured when known.
+  const origin = _forwardOrigin;
+  let forwardedFrom = null;
+  if (origin && (origin.author || origin.context)) {
+    forwardedFrom = {};
+    if (origin.author) forwardedFrom.author = origin.author;
+    if (origin.displayName) forwardedFrom.displayName = origin.displayName;
+    if (origin.pfp) forwardedFrom.pfp = origin.pfp;
+    if (origin.timestamp) forwardedFrom.timestamp = origin.timestamp;
+    if (origin.context) forwardedFrom.context = origin.context;
+  }
   try {
     if (type === 'dm') {
-      await FortizedSocial.sendDMMessage(CU.username, target, text, { forwarded: true, forwardedBy: CU.username });
+      const extra = { forwarded: true, forwardedBy: CU.username };
+      if (forwardedFrom) extra.forwardedFrom = forwardedFrom;
+      await FortizedSocial.sendDMMessage(CU.username, target, text, extra);
       toast('Forwarded to ' + target, 'success');
     } else if (type === 'gc') {
       const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
+      if (forwardedFrom) msgObj.forwardedFrom = forwardedFrom;
       await firebase.database().ref('groupChats/' + target + '/messages').push(msgObj);
       toast('Forwarded to group chat', 'success');
     } else if (type === 'bastion') {
@@ -6988,11 +7073,13 @@ async function forwardTo(type, target) {
       const b = CU.bastions?.[parseInt(bi)];
       if (b) {
         const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
+        if (forwardedFrom) msgObj.forwardedFrom = forwardedFrom;
         await firebase.database().ref('bastionMsgs/' + (b.globalId || b.name) + '/' + chId).push(msgObj);
         toast('Forwarded to #' + ((b.channels||[]).find(c=>c.id===chId)?.name || chId), 'success');
       }
     }
   } catch { toast('Forward failed', 'error'); }
+  finally { _forwardOrigin = null; }
 }
 async function forwardToDM(username) {
   return forwardTo('dm', username);
@@ -17065,7 +17152,7 @@ function handleContextMenu(e) {
       items: [
         { icon: _ctxSvg('reply'), label: 'Reply', hint: 'R', action: () => replyToMsg(msgId, msgRow.querySelector('.msg-author')?.textContent || '', context) },
         { icon: _ctxSvg('emoji'), label: 'React', action: () => addReactionUI(msgId, context) },
-        { icon: _ctxSvg('forward'), label: 'Forward', action: () => forwardMsg(text) },
+        { icon: _ctxSvg('forward'), label: 'Forward', action: () => forwardMsg(text, _forwardOriginFromRow(msgRow)) },
         { icon: _ctxSvg('copy'), label: 'Copy Text', hint: 'C', action: () => navigator.clipboard.writeText(text), copyFeedback: true },
       ]
     };
@@ -22951,6 +23038,30 @@ function preprocessMessageText(text) {
 // Extract author/timestamp/filename context from the clicked element so the
 // lightbox header can show who posted the image and when. Used everywhere a
 // chat/forum image is opened.
+// Resolve a usable pfp URL for a message row. Messages are grouped into
+// "first" rows (avatar + name) and "continuation" rows (timestamp only,
+// no avatar). For continuation rows we walk up to the owning msg-first to
+// borrow its avatar; we also fall back to the global _pfpCache and finally
+// to the default avatar so the lightbox never shows an empty circle.
+function _resolveMsgPfp(row, author) {
+  if (author && typeof _pfpCache !== 'undefined' && _pfpCache[author]) return _pfpCache[author];
+  if (author && author === (typeof CU !== 'undefined' && CU?.username) && CU?.pfp) return CU.pfp;
+  const direct = row?.querySelector?.('.msg-av-inner img');
+  if (direct?.src) return direct.src;
+  if (row?.previousElementSibling) {
+    let cur = row.previousElementSibling;
+    while (cur) {
+      if (cur.classList?.contains('msg-row') && cur.classList.contains('msg-first') && cur.dataset.from === author) {
+        const img = cur.querySelector('.msg-av-inner img');
+        if (img?.src) return img.src;
+        break;
+      }
+      cur = cur.previousElementSibling;
+    }
+  }
+  try { return typeof _defaultPfpUrl === 'function' ? _defaultPfpUrl(author || '') : ''; } catch { return ''; }
+}
+
 function _lightboxMetaFromEl(el) {
   const meta = {};
   if (!el) return meta;
@@ -22966,10 +23077,58 @@ function _lightboxMetaFromEl(el) {
     meta.displayName = authorEl?.textContent?.trim() || meta.author;
     const tsEl = row.querySelector('.msg-timestamp');
     meta.timestamp = tsEl?.getAttribute('data-tip') || tsEl?.textContent?.replace(/^·\s*/, '').trim() || '';
-    const avImg = row.querySelector('.msg-av-inner img');
-    meta.pfp = avImg?.src || '';
+    meta.rawTimestamp = row.dataset.timestamp || '';
+    meta.pfp = _resolveMsgPfp(row, meta.author);
+    // If the row is itself a forwarded message, surface the *original*
+    // author in the lightbox header (that's who sent the image) rather
+    // than the forwarder.
+    const fwdRaw = row.dataset.forwardedFrom;
+    if (fwdRaw) {
+      try {
+        const ff = JSON.parse(fwdRaw);
+        if (ff?.author) meta.author = ff.author;
+        if (ff?.displayName) meta.displayName = ff.displayName;
+        if (ff?.pfp) meta.pfp = ff.pfp;
+        if (!meta.pfp && ff?.author && _pfpCache[ff.author]) meta.pfp = _pfpCache[ff.author];
+        if (ff?.timestamp) {
+          meta.rawTimestamp = ff.timestamp;
+          try {
+            meta.timestamp = new Date(ff.timestamp).toLocaleString('en-GB',
+              {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+          } catch {}
+        }
+        meta.forwardedFromContext = ff.context || null;
+      } catch {}
+    }
   }
   return meta;
+}
+
+// Build origin metadata for a message row — used when the user initiates
+// a forward (either from the lightbox or from the message action bar /
+// context menu) so we can attach a `forwardedFrom` field on the outgoing
+// message and render a rich "Forwarded from X" card on the receiving end.
+function _forwardOriginFromRow(row) {
+  if (!row) return null;
+  const author = row.dataset.from || '';
+  if (!author || author === '__system__') return null;
+  const displayName = row.querySelector('.msg-author')?.textContent?.trim() || author;
+  const pfp = _resolveMsgPfp(row, author);
+  const ts = row.dataset.timestamp || null;
+  return { author, displayName, pfp, timestamp: ts, context: _currentForwardContext() };
+}
+
+function _currentForwardContext() {
+  try {
+    if (typeof curBastion !== 'undefined' && curBastion !== null && typeof curChannel !== 'undefined' && curChannel !== null) {
+      const b = CU?.bastions?.[curBastion];
+      const ch = b?.channels?.[curChannel];
+      return { type: 'bastion', bastionName: b?.name || '', channelName: ch?.name || '' };
+    }
+    if (typeof curDM !== 'undefined' && curDM) return { type: 'dm', user: curDM };
+    if (typeof curGC !== 'undefined' && curGC) return { type: 'gc', id: curGC };
+  } catch {}
+  return null;
 }
 window._openLightboxFromImg = function(imgEl) {
   if (!imgEl) return;
@@ -22988,9 +23147,12 @@ function _openMediaLightbox(src, meta) {
   const lb = document.createElement('div');
   lb.className = 'media-lightbox';
 
+  const headerInitial = escapeHTML((m.displayName || m.author || '?').charAt(0).toUpperCase());
   const headerHTML = (m.displayName || m.author || m.timestamp || m.pfp)
     ? `<div class="mlb-header">
-         ${m.pfp ? `<img src="${escapeHTML(m.pfp)}" class="mlb-pfp" alt="" onerror="this.style.display='none'">` : `<div class="mlb-pfp-fallback">${escapeHTML((m.displayName||m.author||'?').charAt(0).toUpperCase())}</div>`}
+         ${m.pfp
+           ? `<img src="${escapeHTML(m.pfp)}" class="mlb-pfp" alt="" onerror="this.onerror=null;this.outerHTML='<div class=&quot;mlb-pfp-fallback&quot;>${headerInitial}</div>'">`
+           : `<div class="mlb-pfp-fallback">${headerInitial}</div>`}
          <div class="mlb-meta">
            ${m.displayName ? `<div class="mlb-name">${escapeHTML(m.displayName)}</div>` : ''}
            ${m.timestamp ? `<div class="mlb-time">${escapeHTML(m.timestamp)}</div>` : ''}
@@ -23152,10 +23314,23 @@ async function _lightboxCopy(src) {
   }
 }
 function _lightboxForward(src, meta) {
-  if (typeof openForwardPicker === 'function') {
-    try { openForwardPicker(src, meta); return; } catch(_){}
+  // Use the real forward flow (same modal that message actions / context
+  // menu use) with the image URL as the forwarded content. Passing origin
+  // metadata means the recipient will see a "Forwarded from <orig author>"
+  // card with the original sender's avatar and timestamp.
+  const origin = (meta && meta.author) ? {
+    author: meta.author,
+    displayName: meta.displayName || meta.author,
+    pfp: meta.pfp || '',
+    timestamp: meta.rawTimestamp || null,
+    context: meta.forwardedFromContext || _currentForwardContext(),
+  } : null;
+  _closeMediaLightbox();
+  if (typeof forwardMsg === 'function') {
+    forwardMsg(src, origin);
+    return;
   }
-  // Fallback: copy URL so the user can paste into a DM
+  // Defensive fallback: copy URL so the user can paste it manually.
   navigator.clipboard?.writeText(src).then(() => {
     if (typeof toast === 'function') toast('Image URL copied — paste to forward', 'success');
   });

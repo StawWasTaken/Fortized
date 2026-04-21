@@ -727,6 +727,71 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Reply / quote — soft left border, lighter bg, clickable */
 .msg-reply-ref{display:flex;align-items:center;gap:8px;padding:5px 10px;background:rgba(255,255,255,.025);border-left:2px solid rgba(255,249,62,.25);border-radius:0 6px 6px 0;margin-bottom:6px;font-size:11.5px;color:rgba(255,255,255,.4);cursor:pointer;transition:background .12s;}
 .msg-reply-ref:hover{background:rgba(255,255,255,.05);}
+
+/* Forwarded-message card (Discord-style) */
+.msg-fwd-card{
+  margin:0 0 6px 0;
+  padding:6px 10px 7px 10px;
+  border-left:3px solid rgba(124,92,191,.55);
+  background:linear-gradient(90deg,rgba(124,92,191,.08),rgba(124,92,191,.02) 60%,transparent);
+  border-radius:0 8px 8px 0;
+  max-width:460px;
+  width:fit-content;
+}
+.msg-fwd-badge{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  font-size:10.5px;
+  font-weight:700;
+  color:rgba(186,156,255,.85);
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.msg-fwd-badge svg{flex-shrink:0;}
+.msg-fwd-label{margin-right:2px;}
+.msg-fwd-ctx{font-weight:600;color:rgba(255,255,255,.35);text-transform:none;letter-spacing:0;}
+.msg-fwd-by{font-weight:500;color:rgba(255,255,255,.28);text-transform:none;letter-spacing:0;}
+.msg-fwd-origin{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:4px;
+  font-size:11.5px;
+  color:rgba(255,255,255,.55);
+}
+.msg-fwd-pfp{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  object-fit:cover;
+  flex-shrink:0;
+  background:rgba(255,255,255,.06);
+}
+.msg-fwd-pfp-fb{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:10px;
+  font-weight:700;
+  color:rgba(255,255,255,.55);
+  background:rgba(124,92,191,.18);
+}
+.msg-fwd-name{font-weight:600;color:rgba(255,255,255,.82);}
+.msg-fwd-time{opacity:.5;margin-left:4px;font-size:10.5px;}
+.msg-fwd-min{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  background:rgba(124,92,191,.06);
+  border-left:2px solid rgba(124,92,191,.35);
+  border-radius:0 6px 6px 0;
+  margin-bottom:5px;
+  font-size:11.5px;
+  color:rgba(186,156,255,.7);
+}
+.msg-fwd-min span{font-weight:600;}
 .msg-forward-tag{font-size:10px;color:rgba(255,255,255,.25);margin-bottom:3px;}
 .reply-bar{display:none;align-items:center;gap:10px;padding:8px 16px;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.04);font-size:12.5px;}
 .reply-bar.show{display:flex;}

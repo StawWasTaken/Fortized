@@ -763,7 +763,17 @@ const FortizedSocial = (() => {
       }
 
       if (error) {
-        console.error('[getDMMessages] Query error:', error.message);
+        // Demote the common "column does not exist" schema-mismatch to a
+        // single warn per session — otherwise every DM thread retry logs it.
+        const msg = error.message || '';
+        if (/column .* does not exist/i.test(msg)) {
+          if (!window._dmSchemaWarned) {
+            window._dmSchemaWarned = true;
+            console.warn('[getDMMessages] DM schema mismatch — table missing expected columns:', msg);
+          }
+        } else {
+          console.error('[getDMMessages] Query error:', msg);
+        }
         return [];
       }
 

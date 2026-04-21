@@ -6227,11 +6227,10 @@ select:focus-visible {
   100% {left:120%;}
 }
 .shop-item-card .sic-preview,
-.shop-item-card .sic-deco-img,
+.shop-item-card .sic-deco-wrap,
 .home-buy-card .hbc-img{position:relative;}
-.shop-item-card .sic-deco-img{overflow:hidden;}
 .shop-item-card .sic-preview::before,
-.shop-item-card .sic-deco-img::before,
+.shop-item-card .sic-deco-wrap::before,
 .home-buy-card .hbc-img::before{
   content:"";position:absolute;top:0;left:-60%;width:50%;height:100%;
   background:linear-gradient(110deg,transparent 0%,rgba(255,255,255,.55) 45%,transparent 90%);
@@ -6241,14 +6240,14 @@ select:focus-visible {
   animation:ftz-img-shine 4.5s ease-in-out infinite;
 }
 .shop-item-card:nth-child(even) .sic-preview::before,
-.shop-item-card:nth-child(even) .sic-deco-img::before{animation-delay:1.4s;}
+.shop-item-card:nth-child(even) .sic-deco-wrap::before{animation-delay:1.4s;}
 .shop-item-card:nth-child(3n) .sic-preview::before,
-.shop-item-card:nth-child(3n) .sic-deco-img::before{animation-delay:2.8s;animation-duration:5.5s;}
+.shop-item-card:nth-child(3n) .sic-deco-wrap::before{animation-delay:2.8s;animation-duration:5.5s;}
 .home-buy-card:nth-child(even) .hbc-img::before{animation-delay:1.6s;}
 .home-buy-card:nth-child(3n) .hbc-img::before{animation-delay:3s;animation-duration:5.5s;}
 @media (prefers-reduced-motion: reduce){
   .shop-item-card .sic-preview::before,
-  .shop-item-card .sic-deco-img::before,
+  .shop-item-card .sic-deco-wrap::before,
   .home-buy-card .hbc-img::before{animation:none;display:none;}
 }
 

@@ -3530,6 +3530,13 @@ function _buildJoysterUserContext() {
 }
 
 let _joysterAIDisabledUntil = 0;
+async function _joysterFetch(bodyObj) {
+  return fetch(JOYSTER_API_URL + '?key=' + JOYSTER_API_KEY, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(bodyObj),
+  });
+}
 async function _getJoysterAIResponse(context) {
   if (Date.now() < _joysterAIDisabledUntil) return null;
   try {
@@ -3539,22 +3546,36 @@ async function _getJoysterAIResponse(context) {
 Directive: ${context || 'Bubble a cocky, personal jester comment for this user.'}
 
 Pick ONE specific detail from user_context and make it the core of your comment. 1-2 sentences, in-character, punchy.`;
-    const res = await fetch(JOYSTER_API_URL + '?key=' + JOYSTER_API_KEY, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        systemInstruction: {parts:[{text: JOYSTER_SYSTEM_PROMPT}]},
-        contents: [{role:'user', parts:[{text: promptText}]}],
-        generationConfig: {maxOutputTokens: 120, temperature: 1.0}
-      })
+
+    // Primary attempt: systemInstruction + contents (modern v1beta shape)
+    let res = await _joysterFetch({
+      systemInstruction: {parts:[{text: JOYSTER_SYSTEM_PROMPT}]},
+      contents: [{role:'user', parts:[{text: promptText}]}],
+      generationConfig: {maxOutputTokens: 120, temperature: 1.0}
     });
+
+    // If that 400s, retry once with the system prompt folded into the user
+    // turn — some API keys / model tiers reject top-level systemInstruction.
+    if (res.status === 400) {
+      const errBody = await res.clone().text().catch(() => '');
+      if (!window._joysterErrorLogged) {
+        window._joysterErrorLogged = true;
+        console.warn('[Joyster] 400 from Gemini — body:', errBody.slice(0, 400));
+      }
+      res = await _joysterFetch({
+        contents: [{role:'user', parts:[{text: JOYSTER_SYSTEM_PROMPT + '\n\n' + promptText}]}],
+        generationConfig: {maxOutputTokens: 120, temperature: 1.0}
+      });
+    }
+
     if (!res.ok) {
       // Cool off on 4xx — retrying in a tight loop just hammers Google with 400s.
       if (res.status >= 400 && res.status < 500) {
         _joysterAIDisabledUntil = Date.now() + 15 * 60 * 1000; // 15m
         if (!window._joysterWarned) {
           window._joysterWarned = true;
-          console.warn('[Joyster] AI disabled for 15m after', res.status);
+          const body = await res.clone().text().catch(() => '');
+          console.warn('[Joyster] AI disabled for 15m after', res.status, body.slice(0, 300));
         }
       }
       return null;

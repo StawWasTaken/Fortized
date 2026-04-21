@@ -49,7 +49,7 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=20260418d">
+<link rel="stylesheet" href="/app/styles.css?v=20260421a">
 <style id="radiance-font-style"></style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous" async></script>
 <body>
@@ -1120,9 +1120,9 @@ window._cdnReady.then(() => {
   </div>
 </div>
 
-<script src="/app/app.js?v=20260418d"></script>
-<script src="/app/joy-system.js?v=20260418d"></script>
-<script src="/app/chronicle-games.js?v=20260418d"></script>
+<script src="/app/app.js?v=20260421a"></script>
+<script src="/app/joy-system.js?v=20260421a"></script>
+<script src="/app/chronicle-games.js?v=20260421a"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -1131,6 +1131,25 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script>
 (function _ftzTwemojiBoot() {
+  // Custom Fortized art overrides — these codepoints swap the default
+  // twemoji SVG for a Fortized-branded PNG living under /custom-emojis/.
+  const FTZ_EMOJI_OVERRIDES = {
+    '1f4b0': '/custom-emojis/moneybag.png',            // money bag
+    '1f911': '/custom-emojis/money%20mouth.png',       // money-mouth face
+    '1f4b8': '/custom-emojis/money%20with%20wings.png',// money with wings
+  };
+  const TWE_BASE = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/';
+  function _tweOpts() {
+    return {
+      folder: 'svg',
+      ext: '.svg',
+      callback: (icon, opts) => {
+        if (FTZ_EMOJI_OVERRIDES[icon]) return FTZ_EMOJI_OVERRIDES[icon];
+        return TWE_BASE + icon + (opts.ext || '.svg');
+      }
+    };
+  }
+  window._ftzEmojiOverrides = FTZ_EMOJI_OVERRIDES;
   let _scheduled = false;
   let _pendingNodes = new Set();
   function _flushParse() {
@@ -1139,9 +1158,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!_pendingNodes.size) return;
     const nodes = [..._pendingNodes];
     _pendingNodes.clear();
+    const opts = _tweOpts();
     nodes.forEach(n => {
       if (n && n.nodeType === 1 && n.isConnected) {
-        try { twemoji.parse(n, { folder: 'svg', ext: '.svg' }); } catch(_){}
+        try { twemoji.parse(n, opts); } catch(_){}
       }
     });
   }
@@ -1158,7 +1178,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   function _setup() {
     if (typeof twemoji === 'undefined') { setTimeout(_setup, 80); return; }
-    try { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); } catch(_){}
+    try { twemoji.parse(document.body, _tweOpts()); } catch(_){}
     const obs = new MutationObserver(muts => {
       muts.forEach(m => {
         m.addedNodes.forEach(n => { if (n.nodeType === 1) _scheduleParse(n); });

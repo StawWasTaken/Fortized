@@ -31392,6 +31392,59 @@ function _gdmReportIssue() {
   document.body.appendChild(overlay);
 }
 
+function _gdmReportReview(reviewId, reviewUser, gameName) {
+  document.getElementById('gdm-report-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'gdm-report-modal';
+  overlay.className = 'gdm-report-overlay';
+  overlay.innerHTML = `
+    <div class="gdm-report-card" onclick="event.stopPropagation()">
+      <button class="gdm-report-close" onclick="document.getElementById('gdm-report-modal').remove()" aria-label="Close">×</button>
+      <div class="gdm-report-title">Report this review</div>
+      <div class="gdm-report-sub">By <strong>@${escapeHTML(reviewUser || 'unknown')}</strong> on <strong>${escapeHTML(gameName || 'this game')}</strong></div>
+      <label class="gdm-report-opt"><input type="radio" name="gdm-rev-report" value="spam"><span>Spam or advertising</span></label>
+      <label class="gdm-report-opt"><input type="radio" name="gdm-rev-report" value="offensive"><span>Offensive language or harassment</span></label>
+      <label class="gdm-report-opt"><input type="radio" name="gdm-rev-report" value="off_topic"><span>Off-topic / not about the game</span></label>
+      <label class="gdm-report-opt"><input type="radio" name="gdm-rev-report" value="false_info"><span>Misleading or false information</span></label>
+      <label class="gdm-report-opt"><input type="radio" name="gdm-rev-report" value="other"><span>Other</span></label>
+      <textarea class="gdm-report-text" id="gdm-rev-report-text" placeholder="Optional: tell us more…" maxlength="500"></textarea>
+      <div class="gdm-report-actions">
+        <button class="gdm-report-cancel" onclick="document.getElementById('gdm-report-modal').remove()">Cancel</button>
+        <button class="gdm-report-submit" onclick="_gdmSubmitReviewReport('${escapeHTML(reviewId).replace(/'/g, "\\'")}','${escapeHTML(reviewUser).replace(/'/g, "\\'")}','${escapeHTML(gameName).replace(/'/g, "\\'")}')">Send report</button>
+      </div>
+    </div>`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+
+async function _gdmSubmitReviewReport(reviewId, reviewUser, gameName) {
+  const choice = document.querySelector('input[name="gdm-rev-report"]:checked')?.value;
+  const note = document.getElementById('gdm-rev-report-text')?.value?.trim() || '';
+  if (!choice) { toast('Pick a reason first', 'error'); return; }
+  const report = {
+    id: 'gdmrevrep_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    kind: 'review_report',
+    reporter: CU?.username || null,
+    username: reviewUser,            // makes it appear in the user's targeted-actions in admin UI
+    reason: choice,
+    context: 'Review by @' + (reviewUser || '?') + ' on game: ' + (gameName || 'unknown'),
+    note,
+    game: gameName,
+    reviewId,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  };
+  try { await FortizedSocial.adminSaveReport(report); }
+  catch(e) { console.warn('[GDM] Review report save failed:', e?.message); }
+  try {
+    const existing = JSON.parse(localStorage.getItem('ftz_reports') || '[]');
+    if (!existing.find(r => r.id === report.id)) existing.push(report);
+    localStorage.setItem('ftz_reports', JSON.stringify(existing));
+  } catch(_) {}
+  document.getElementById('gdm-report-modal')?.remove();
+  toast('Thanks — review reported.', 'success');
+}
+
 async function _gdmSubmitReport(gameName) {
   const choice = document.querySelector('input[name="gdm-report"]:checked')?.value;
   const note = document.getElementById('gdm-report-text')?.value?.trim() || '';
@@ -31550,6 +31603,7 @@ function _gdmStartReviewCarousel(gameName) {
             <div class="gdm-rc-handle">@${escapeHTML(r.user)}</div>
           </div>
           <div class="gdm-rc-vote"><span class="gdm-rc-emoji">${emojiFor(r.vote)}</span><span>${labelFor(r.vote)}</span></div>
+          <button class="gdm-rc-flag" title="Report this review" onclick="event.stopPropagation();_gdmReportReview('${escapeHTML(r.id).replace(/'/g, "\\'")}','${escapeHTML(r.user || '').replace(/'/g, "\\'")}','${escapeHTML(r.game || '').replace(/'/g, "\\'")}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
         </div>
         ${r.text ? `<div class="gdm-rc-body">${escapeHTML(r.text)}</div>` : ''}
       </div>`;

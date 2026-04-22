@@ -26628,6 +26628,61 @@ async function _removeFromWantToPlay(idx) {
   buildProfileView('myprofile');
 }
 
+// Renders the always-on "Games I Like" widget with the shared gamecard
+// design language — uppercase section header, a stats strip showing
+// collection total + top genre + week-delta, then the masonry grid.
+function _gdmRenderGamesILikeWidget(u, games, isOwnProfile) {
+  const total = games.length;
+  // Top genre by count across the collection.
+  const genreCounts = {};
+  games.forEach(g => {
+    (g.genre || 'Game').split(',').map(s => s.trim()).filter(Boolean).forEach(gn => {
+      genreCounts[gn] = (genreCounts[gn] || 0) + 1;
+    });
+  });
+  const topGenreEntry = Object.entries(genreCounts).sort((a,b) => b[1] - a[1])[0];
+  const topGenre = topGenreEntry ? topGenreEntry[0] : '—';
+  // Added this week.
+  const weekAgo = Date.now() - 7 * 86400000;
+  const addedThisWeek = games.filter(g => g.addedAt && new Date(g.addedAt).getTime() >= weekAgo).length;
+  const visibleGames = games.slice(0, 20);
+  const headerBtn = isOwnProfile
+    ? `<button class="pw-gc-add-btn" onclick="_openWidgetGameSearch(event)" title="Add a game">
+         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+         Add
+       </button>`
+    : '';
+  const grid = visibleGames.length
+    ? `<div class="pw-gc-masonry">${visibleGames.map(g => {
+        const _cv = g.coverUrl || _getManualCover(g.name);
+        const _safeG = escapeHTML(g.name).replace(/'/g, "\\'");
+        return `<div class="pw-gc-card" onclick="_openGameFromWidget('${_safeG}')" title="${escapeHTML(g.name)}">
+          ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));">${g.icon||'🎮'}</div>`}
+          <div class="gc-hover-name">${escapeHTML(g.name)}</div>
+          ${isOwnProfile ? `<button class="gc-delete-btn" onclick="event.stopPropagation();_removeGameFromCollection('${escapeHTML(g.name)}')" title="Remove"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>` : ''}
+        </div>`;
+      }).join('')}</div>`
+    : (isOwnProfile
+        ? `<div class="pw-gc-empty">
+             <div class="pw-gc-empty-title">Your collection is empty</div>
+             <div class="pw-gc-empty-sub">Add games you love to show them on your profile.</div>
+             <button class="pw-gc-add-btn" onclick="_openWidgetGameSearch(event)">+ Add a game</button>
+           </div>`
+        : `<div class="pw-gc-empty"><div class="pw-gc-empty-sub">Nothing on the shelf yet.</div></div>`);
+  return `<div class="pw-widget">
+    <div class="pw-widget-title-row">
+      <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Games I Like</div>
+      ${headerBtn}
+    </div>
+    <div class="pw-stat-row">
+      <div class="pw-stat-cell pw-stat-cell--accent"><div class="pw-stat-cell-label">In collection</div><div class="pw-stat-cell-num">${total}</div><div class="pw-stat-cell-sub">${total === 1 ? 'game' : 'games'}</div></div>
+      <div class="pw-stat-cell pw-stat-cell--blue"><div class="pw-stat-cell-label">Top genre</div><div class="pw-stat-cell-num" style="font-size:15px;">${escapeHTML(topGenre)}</div><div class="pw-stat-cell-sub">${topGenreEntry ? topGenreEntry[1] + ' ' + (topGenreEntry[1] === 1 ? 'game' : 'games') : '—'}</div></div>
+      <div class="pw-stat-cell pw-stat-cell--green"><div class="pw-stat-cell-label">This week</div><div class="pw-stat-cell-num">+${addedThisWeek}</div><div class="pw-stat-cell-sub">added</div></div>
+    </div>
+    ${grid}
+  </div>`;
+}
+
 function renderProfileWidgetsOnCard(u, containerEl) {
   if (!containerEl) return;
   const widgets = u.profileWidgets || [];
@@ -26663,30 +26718,13 @@ function renderProfileWidgetsOnCard(u, containerEl) {
   }
 
   // Render enabled widgets
+  // Games I Like is always visible — it's the pulse of a user's profile.
+  // Rendered before the configurable widget loop and skipped inside it.
+  html += _gdmRenderGamesILikeWidget(u, games, isOwnProfile);
+
   widgets.forEach(w => {
     if (!w.enabled) return;
-
-    if (w.id === 'game_collection') {
-      const max = w.config?.maxShow || 20;
-      const visibleGames = games.slice(0, max);
-      html += `<div class="pw-widget" style="padding:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div>
-            <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Games I like</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">Add up to 20 games</div>
-          </div>
-          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event)" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add game
-          </button>` : ''}
-        </div>
-        ${visibleGames.length ? `<div class="pw-gc-masonry">${visibleGames.map(g => {const _cv = g.coverUrl || _getManualCover(g.name); const _safeG = escapeHTML(g.name).replace(/'/g,"\\'"); return `<div class="pw-gc-card" onclick="_openGameFromWidget('${_safeG}')" title="${escapeHTML(g.name)}">
-          ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));">${g.icon||'🎮'}</div>`}
-          <div class="gc-hover-name">${escapeHTML(g.name)}</div>
-          ${isOwnProfile ? `<button class="gc-delete-btn" onclick="event.stopPropagation();_removeGameFromCollection('${escapeHTML(g.name)}')" title="Remove"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>` : ''}
-        </div>`;}).join('')}</div>` : `<div style="text-align:center;padding:24px;color:rgba(255,255,255,.2);font-size:12px;">No games added yet</div>`}
-      </div>`;
-    }
+    if (w.id === 'game_collection') return; // always-rendered above
 
     if (w.id === 'favourite_game' && w.config?.gameName) {
       const fg = games.find(g => g.name === w.config.gameName) || (u.gameCollection||[]).find(g => g.name === w.config.gameName);
@@ -31480,7 +31518,12 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
   card.innerHTML = `
     <div class="gdm-hero" style="${heroSrc ? `background-image:linear-gradient(180deg,rgba(10,8,8,.12),rgba(10,8,8,.85)),url('${escapeHTML(heroSrc)}');` : ''}">
       <div class="gdm-hero-actions">
-        ${canAdd ? `<button class="gdm-add-btn" onclick="_gdmAddToProfile('${safeNameAttr}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to Profile</button>` : ''}
+        ${canAdd ? (function(){
+          const inColl = (CU?.gameCollection || []).some(g => g.name === game.name);
+          return inColl
+            ? `<button class="gdm-add-btn gdm-add-btn--added" onclick="_gdmRemoveFromProfile('${safeNameAttr}')" title="Click to remove from your profile"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> On Your Profile</button>`
+            : `<button class="gdm-add-btn" onclick="_gdmAddToProfile('${safeNameAttr}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to Profile</button>`;
+        })() : ''}
         <div class="gdm-menu-wrap">
           <button class="gdm-close gdm-menu-btn" onclick="_gdmToggleMenu(event)" title="More" aria-haspopup="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
           <div class="gdm-menu" id="gdm-menu" style="display:none;">
@@ -31707,11 +31750,57 @@ function _openGameFromWidget(gameName) {
 async function _gdmAddToProfile(gameName) {
   try {
     if (typeof addGameToCollection !== 'function') return;
-    await addGameToCollection(gameName);
+    const g = _gdmLastGame;
+    const cover = g?.coverUrl || g?.coverThumb || null;
+    const thumb = g?.coverThumb || g?.coverUrl || null;
+    const genre = (g?.genres && g.genres.length) ? g.genres.join(', ') : 'Game';
+    // Skip toast from addGameToCollection — we toast ourselves after the flip.
+    const already = (CU?.gameCollection || []).some(x => x.name === gameName);
+    if (already) return; // UI shouldn't even show Add in this state, but belt-and-braces
+    CU.gameCollection = CU.gameCollection || [];
+    const entry = { name: gameName, icon: '🎮', genre, addedAt: new Date().toISOString() };
+    if (cover) entry.coverUrl = cover;
+    if (thumb) entry.coverThumb = thumb;
+    CU.gameCollection.push(entry);
+    await saveUser();
+    _gdmRefreshModalState(gameName);
+    try { buildProfileView('game_collection'); } catch (_) {}
     toast('Added ' + gameName + ' to your profile.', 'success');
   } catch(e) {
     console.warn('[GDM] Add to profile failed:', e);
     toast('Couldn\'t add to profile.', 'error');
+  }
+}
+
+async function _gdmRemoveFromProfile(gameName) {
+  try {
+    CU.gameCollection = (CU?.gameCollection || []).filter(g => g.name !== gameName);
+    await saveUser();
+    _gdmRefreshModalState(gameName);
+    try { buildProfileView('game_collection'); } catch (_) {}
+    toast('Removed from your profile.', 'success');
+  } catch (e) {
+    console.warn('[GDM] Remove from profile failed:', e);
+    toast('Couldn\'t remove from profile.', 'error');
+  }
+}
+
+// Flip the Add/Remove button in place without tearing down the modal.
+function _gdmRefreshModalState(gameName) {
+  const btn = document.querySelector('.gdm-add-btn');
+  if (!btn) return;
+  const inCollection = (CU?.gameCollection || []).some(g => g.name === gameName);
+  const safeName = escapeHTML(gameName).replace(/'/g, "\\'");
+  if (inCollection) {
+    btn.classList.add('gdm-add-btn--added');
+    btn.setAttribute('onclick', `_gdmRemoveFromProfile('${safeName}')`);
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> On Your Profile';
+    btn.title = 'Click to remove from your profile';
+  } else {
+    btn.classList.remove('gdm-add-btn--added');
+    btn.setAttribute('onclick', `_gdmAddToProfile('${safeName}')`);
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to Profile';
+    btn.title = '';
   }
 }
 

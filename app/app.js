@@ -31276,34 +31276,6 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
       <div class="gdm-main">
         ${mediaHTML}
         ${game.summary ? `<p class="gdm-summary">${escapeHTML(game.summary)}</p>` : ''}
-        <div class="gdm-reviews-banner">
-          <div class="gdm-reviews-head">
-            <div class="gdm-side-head">Reviews</div>
-            <div class="gdm-reviews-ratings">${ratingsHTML}</div>
-          </div>
-          <div class="gdm-reviews-grid">
-            <div class="gdm-reviews-left">
-              <div class="gdm-user-review-head">How was it for you?</div>
-              <div class="gdm-thumbs">
-                <button class="gdm-thumb gdm-thumb--up" data-vote="up" onclick="_gdmPickVote(this,'up')" title="Great">
-                  <span class="gdm-thumb-emoji">👏</span><span>Great</span>
-                </button>
-                <button class="gdm-thumb gdm-thumb--mid" data-vote="mid" onclick="_gdmPickVote(this,'mid')" title="OK">
-                  <span class="gdm-thumb-emoji">👌</span><span>OK</span>
-                </button>
-                <button class="gdm-thumb gdm-thumb--down" data-vote="down" onclick="_gdmPickVote(this,'down')" title="Bad">
-                  <span class="gdm-thumb-emoji">👎</span><span>Bad</span>
-                </button>
-              </div>
-              <textarea id="gdm-review-text" class="gdm-review-text" placeholder="Add a comment (optional)" maxlength="280"></textarea>
-              <button class="gdm-review-submit" onclick="_gdmSubmitReview('${safeNameAttr}')">Post review</button>
-            </div>
-            <div class="gdm-reviews-right">
-              <div class="gdm-reviews-right-head">Community reviews</div>
-              <div class="gdm-review-carousel" id="gdm-review-carousel"></div>
-            </div>
-          </div>
-        </div>
       </div>
       <aside class="gdm-side">
         <div class="gdm-side-card">
@@ -31322,6 +31294,24 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
           ${linksHTML ? `<div class="gdm-row"><span class="gdm-row-k">Links</span><span class="gdm-row-v gdm-row-v--links">${linksHTML}</span></div>` : ''}
         </div>
       </aside>
+      <div class="gdm-reviews-banner">
+        <div class="gdm-reviews-head">
+          <div class="gdm-side-head">Reviews</div>
+          <div class="gdm-reviews-ratings">${ratingsHTML}</div>
+        </div>
+        <div class="gdm-reviews-row">
+          <div class="gdm-thumbs">
+            <button class="gdm-thumb gdm-thumb--up" data-vote="up" onclick="_gdmPickVote(this,'up')" title="Great"><span class="gdm-thumb-emoji">👏</span><span>Great</span></button>
+            <button class="gdm-thumb gdm-thumb--mid" data-vote="mid" onclick="_gdmPickVote(this,'mid')" title="OK"><span class="gdm-thumb-emoji">👌</span><span>OK</span></button>
+            <button class="gdm-thumb gdm-thumb--down" data-vote="down" onclick="_gdmPickVote(this,'down')" title="Bad"><span class="gdm-thumb-emoji">👎</span><span>Bad</span></button>
+          </div>
+          <div class="gdm-review-compose">
+            <input id="gdm-review-text" class="gdm-review-input" placeholder="Add a short comment (optional)" maxlength="200">
+            <button class="gdm-review-submit" onclick="_gdmSubmitReview('${safeNameAttr}')">Post</button>
+          </div>
+          <div class="gdm-review-carousel" id="gdm-review-carousel"></div>
+        </div>
+      </div>
     </div>`;
   // Kick off the Fortized user-review carousel for this game.
   _gdmStartReviewCarousel(game.name);

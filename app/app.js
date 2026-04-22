@@ -26438,20 +26438,37 @@ async function _addWidgetFromPanel(widgetId) {
   let w = widgets.find(w => w.id === widgetId);
   if (!w) { w = {id:widgetId,enabled:false,config:{}}; widgets.push(w); }
   w.enabled = true;
-  // Gather config from the panel form
+  w.config = w.config || {};
+  // Pre-populate config with sane defaults — the add panel doesn't carry a
+  // form, so widgets that need specifics fall back to the user's first game /
+  // first bastion and can be tuned via Settings → Profile Widgets.
+  if (widgetId === 'favourite_game' && !w.config.gameName) {
+    const firstGame = (CU.gameCollection || [])[0];
+    if (firstGame?.name) w.config.gameName = firstGame.name;
+  } else if (widgetId === 'primary_bastion' && w.config.bastionIdx == null) {
+    const firstBastion = (CU.bastions || [])[0];
+    if (firstBastion) { w.config.bastionIdx = 0; w.config.bastionName = firstBastion.name || ''; }
+  } else if (widgetId === 'game_collection' || widgetId === 'games_rotation') {
+    if (!w.config.maxShow) w.config.maxShow = 8;
+  }
+  // Overwrite with whatever the settings tab form has (if the user hit the
+  // panel from there) — otherwise this is a no-op.
   const cfgEl = document.getElementById('pw-cfg-' + widgetId);
-  if (widgetId === 'favourite_game' && cfgEl) {
-    w.config.gameName = cfgEl.value;
-  } else if (widgetId === 'primary_bastion' && cfgEl) {
-    w.config.bastionIdx = parseInt(cfgEl.value)||0;
-    w.config.bastionName = cfgEl.options?.[cfgEl.selectedIndex]?.text || '';
-  } else if ((widgetId === 'game_collection' || widgetId === 'games_rotation') && cfgEl) {
-    w.config.maxShow = parseInt(cfgEl.value)||8;
+  if (cfgEl) {
+    if (widgetId === 'favourite_game') w.config.gameName = cfgEl.value || w.config.gameName;
+    else if (widgetId === 'primary_bastion') {
+      w.config.bastionIdx = parseInt(cfgEl.value) || 0;
+      w.config.bastionName = cfgEl.options?.[cfgEl.selectedIndex]?.text || w.config.bastionName || '';
+    } else if (widgetId === 'game_collection' || widgetId === 'games_rotation') {
+      w.config.maxShow = parseInt(cfgEl.value) || w.config.maxShow || 8;
+    }
   }
   _setProfileWidgets(widgets);
   await saveUser();
   buildProfileView('myprofile');
-  toast('Widget added!', 'success');
+  const needsTune = (widgetId === 'favourite_game' && !w.config.gameName)
+    || (widgetId === 'primary_bastion' && w.config.bastionIdx == null);
+  toast(needsTune ? 'Widget added — configure it in Settings.' : 'Widget added!', 'success');
 }
 
 // Legacy alias
@@ -30912,7 +30929,6 @@ let _igdbGameCache = Object.create(null);
 
 async function openGameDetailsModal(gameName) {
   if (!gameName) return;
-  // Close any prior instance
   document.getElementById('game-details-modal')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'game-details-modal';
@@ -30940,6 +30956,40 @@ async function openGameDetailsModal(gameName) {
   _renderGameDetailsModal(overlay, gameName, game);
 }
 
+const _GDM_LINK_ICONS = {
+  official: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  steam:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2.1 6.3 2 11.7l5.4 2.2c.5-.3 1-.5 1.6-.5l2.5-3.6C11.5 8 13.3 6.4 15.5 6.4c2.5 0 4.5 2 4.5 4.5s-2 4.6-4.5 4.6h-.1l-3.6 2.6c0 1.6-1.3 2.9-2.9 2.9-1.4 0-2.6-1-2.9-2.3L2.6 17c1.2 4 4.9 7 9.4 7 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>',
+  twitch:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 2 2 6v14h5v2h3l2-2h4l5-5V2H4zm15 11-3 3h-4l-2 2v-2H6V4h13v9zM15 7v5h-2V7h2zm-5 0v5H8V7h2z"/></svg>',
+  youtube:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 7.2a2.9 2.9 0 0 0-2-2.1C19 4.5 12 4.5 12 4.5s-7 0-9 .6a2.9 2.9 0 0 0-2 2.1A30 30 0 0 0 .5 12 30 30 0 0 0 1 16.8a2.9 2.9 0 0 0 2 2.1c2 .6 9 .6 9 .6s7 0 9-.6a2.9 2.9 0 0 0 2-2.1A30 30 0 0 0 23.5 12 30 30 0 0 0 23 7.2zM10 15.5v-7l6 3.5-6 3.5z"/></svg>',
+  twitter:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 2h3.3l-7.2 8.2L23.5 22h-6.5L12 15l-5.9 7H2.8l7.7-8.8L2 2h6.6l4.7 6.2L18.9 2zm-1.2 18h1.8L7 4H5l12.7 16z"/></svg>',
+  reddit:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12c0-1.2-1-2.2-2.2-2.2-.6 0-1.1.2-1.5.6a10.4 10.4 0 0 0-5.5-1.7l1-4.4 3.1.7a1.6 1.6 0 1 0 .3-1.1l-3.5-.8a.5.5 0 0 0-.6.4l-1.1 5A10.4 10.4 0 0 0 5.7 10.4c-.4-.4-.9-.6-1.5-.6a2.2 2.2 0 0 0-1.1 4 5 5 0 0 0-.1.9c0 3.8 4.2 6.8 9.3 6.8s9.3-3 9.3-6.8c0-.3 0-.6-.1-.9.9-.4 1.5-1.3 1.5-2.3zM8 13.3a1.4 1.4 0 1 1 2.8 0 1.4 1.4 0 0 1-2.8 0zm8.8 3.7c-1.2 1.2-3.5 1.3-4.2 1.3s-3-.1-4.2-1.3a.5.5 0 0 1 .7-.7c.7.7 2.3.9 3.5.9s2.8-.2 3.5-.9a.5.5 0 0 1 .7.7zm-.5-2.3a1.4 1.4 0 1 1 0-2.8 1.4 1.4 0 0 1 0 2.8z"/></svg>',
+  instagram:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.4A4 4 0 1 1 12.6 8a4 4 0 0 1 3.4 3.4z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
+  facebook: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.5 9.9V15H8v-3h2.5V9.8c0-2.5 1.5-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12H16l-.4 3h-2.1v6.9A10 10 0 0 0 22 12z"/></svg>',
+  wikipedia:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.3 5l-4.7 14h-1.2L10 12 7.3 19H6.1L1.4 5H3l3.6 11 2.5-6.3L8 5h1.5l2.3 7.2L14 5h1.4l2.1 7.3L19.8 5h1.5z"/></svg>',
+  epic:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 2h14a2 2 0 0 1 2 2v14l-9 6-9-6V4a2 2 0 0 1 2-2zm3 5h8v2h-3v8h-2V9H8V7z"/></svg>',
+  gog:      '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm4 12.5a2 2 0 0 1-2 2h-2v-1.5h1.5a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5H12V16.5h-2a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2z"/></svg>',
+  discord:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.6 5.3A17.4 17.4 0 0 0 15.3 4l-.2.3a12 12 0 0 0-6.2 0L8.7 4a17.4 17.4 0 0 0-4.3 1.3A19.7 19.7 0 0 0 1 16a17.4 17.4 0 0 0 5.3 2.6l.3-.5c-.6-.2-1.2-.5-1.8-.8l.4-.3a12.5 12.5 0 0 0 10.6 0l.4.3c-.6.3-1.2.6-1.8.8l.3.5A17.4 17.4 0 0 0 23 16a19.7 19.7 0 0 0-3.4-10.7zM8.7 14c-.9 0-1.6-.8-1.6-1.8s.7-1.8 1.6-1.8 1.6.8 1.6 1.8-.7 1.8-1.6 1.8zm6.6 0c-.9 0-1.6-.8-1.6-1.8s.7-1.8 1.6-1.8 1.6.8 1.6 1.8-.7 1.8-1.6 1.8z"/></svg>',
+  itch:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 5l2-2h16l2 2v4a2 2 0 0 1-1.5 2A2 2 0 0 1 19 14v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1-1.5-3A2 2 0 0 1 2 9V5zm7 9h6l-1 2h-1v-2h-2v2h-1l-1-2z"/></svg>',
+  link:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>',
+};
+
+const _GDM_LINK_LABELS = {
+  official:'Website', steam:'Steam', twitch:'Twitch', youtube:'YouTube',
+  twitter:'X', reddit:'Reddit', instagram:'Instagram', facebook:'Facebook',
+  wikipedia:'Wikipedia', epic:'Epic Games', gog:'GOG', discord:'Discord',
+  itch:'itch.io', link:'Link',
+};
+
+function _gdmReviewBand(v) {
+  if (v == null) return null;
+  if (v >= 90) return 'Overwhelmingly Positive';
+  if (v >= 80) return 'Very Positive';
+  if (v >= 70) return 'Mostly Positive';
+  if (v >= 55) return 'Mixed';
+  if (v >= 40) return 'Mostly Negative';
+  return 'Very Negative';
+}
+
 function _renderGameDetailsModal(overlay, requestedName, game) {
   const card = overlay.querySelector('.gdm-card');
   if (!card) return;
@@ -30948,8 +30998,8 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
       <button class="gdm-close" onclick="document.getElementById('game-details-modal').remove()" title="Close">×</button>
       <div class="gdm-empty">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 12h3M8.5 10.5v3M15 12h.01M18 12h.01"/></svg>
-        <div class="gdm-empty-title">No IGDB match for "${escapeHTML(requestedName)}"</div>
-        <div class="gdm-empty-sub">We couldn't find metadata for this game — it may not be indexed yet or IGDB isn't configured on the server.</div>
+        <div class="gdm-empty-title">We don't have details for "${escapeHTML(requestedName)}" yet</div>
+        <div class="gdm-empty-sub">This game isn't in our catalog right now. Try again later or search with a slightly different name.</div>
       </div>`;
     return;
   }
@@ -30963,31 +31013,45 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
     .map(p => `<span class="gdm-platform" title="${escapeHTML(p.name)}">${escapeHTML(p.abbr || p.name)}</span>`)
     .join('');
   const linksHTML = (game.links || []).map(l => {
-    const label = l.kind === 'official' ? 'Website'
-      : l.kind === 'steam' ? 'Steam'
-      : l.kind.charAt(0).toUpperCase() + l.kind.slice(1);
-    return `<a class="gdm-link" href="${escapeHTML(l.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHTML(label)}">${escapeHTML(label)}</a>`;
+    const kind = (_GDM_LINK_ICONS[l.kind] ? l.kind : 'link');
+    const label = _GDM_LINK_LABELS[kind] || 'Link';
+    return `<a class="gdm-link-chip" href="${escapeHTML(l.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHTML(label)}" aria-label="${escapeHTML(label)}">${_GDM_LINK_ICONS[kind]}</a>`;
   }).join('');
   const screenshots = (game.screenshots || []);
+  const videos = (game.videos || []);
   const heroSrc = (screenshots[0] && screenshots[0].full) || game.coverUrl || '';
   const ratings = [];
-  if (typeof game.userRating === 'number') ratings.push({ src:'IGDB users', label: game.userRating + '%', count: game.userRatingCount || 0 });
-  if (typeof game.criticRating === 'number') ratings.push({ src:'Critics (IGDB)', label: game.criticRating + '%', count: game.criticRatingCount || 0 });
+  if (typeof game.userRating === 'number') ratings.push({ src:'Players', label: _gdmReviewBand(game.userRating), count: game.userRatingCount || 0, score: game.userRating });
+  if (typeof game.criticRating === 'number') ratings.push({ src:'Critics', label: _gdmReviewBand(game.criticRating), count: game.criticRatingCount || 0, score: game.criticRating });
   const ratingsHTML = ratings.length
-    ? ratings.map(r => `<div class="gdm-rating-row"><span class="gdm-rating-src">${escapeHTML(r.src)}</span><span class="gdm-rating-val">${escapeHTML(r.label)} <span style="opacity:.5;font-weight:500;">(${r.count.toLocaleString()})</span></span></div>`).join('')
-    : `<div class="gdm-rating-empty">No review aggregate available yet.</div>`;
+    ? ratings.map(r => `<div class="gdm-rating-row"><span class="gdm-rating-src">${escapeHTML(r.src)}</span><span class="gdm-rating-val"><span class="gdm-rating-band">${escapeHTML(r.label)}</span> <span class="gdm-rating-count">(${r.count.toLocaleString()})</span></span></div>`).join('')
+    : `<div class="gdm-rating-empty">No aggregated reviews yet.</div>`;
   const canAdd = typeof addGameToCollection === 'function';
   const safeName = escapeHTML(game.name);
+  const safeNameAttr = safeName.replace(/'/g, "\\'");
+  const mediaHTML = (videos.length || screenshots.length)
+    ? `<div class="gdm-shots">${[
+        ...videos.map((v, i) => `<button class="gdm-shot gdm-shot--video" onclick="_gdmOpenVideo(${i})" title="${escapeHTML(v.name)}" aria-label="Play ${escapeHTML(v.name)}"><img src="${escapeHTML(v.thumb)}" alt=""><span class="gdm-shot-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></button>`),
+        ...screenshots.slice(1).map((s, i) => `<button class="gdm-shot" onclick="_gdmOpenLightbox(${i+1})" aria-label="View screenshot"><img src="${escapeHTML(s.thumb)}" alt=""></button>`)
+      ].join('')}</div>`
+    : '';
+  _gdmLastGame = game;
   card.innerHTML = `
     <div class="gdm-hero" style="${heroSrc ? `background-image:linear-gradient(180deg,rgba(10,8,8,.12),rgba(10,8,8,.85)),url('${escapeHTML(heroSrc)}');` : ''}">
       <div class="gdm-hero-actions">
-        ${canAdd ? `<button class="gdm-add-btn" onclick="_gdmAddToProfile('${safeName.replace(/'/g,"\\'")}')">+ Add to Profile</button>` : ''}
+        ${canAdd ? `<button class="gdm-add-btn" onclick="_gdmAddToProfile('${safeNameAttr}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to Profile</button>` : ''}
+        <div class="gdm-menu-wrap">
+          <button class="gdm-close gdm-menu-btn" onclick="_gdmToggleMenu(event)" title="More" aria-haspopup="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+          <div class="gdm-menu" id="gdm-menu" style="display:none;">
+            <button class="gdm-menu-item" onclick="_gdmReportIssue()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Report issue</button>
+          </div>
+        </div>
         <button class="gdm-close" onclick="document.getElementById('game-details-modal').remove()" title="Close">×</button>
       </div>
       <div class="gdm-hero-bottom">
         ${game.coverThumb ? `<img class="gdm-cover" src="${escapeHTML(game.coverThumb)}" alt="${safeName}">` : ''}
         <div class="gdm-hero-text">
-          <div class="gdm-kicker">Game · IGDB</div>
+          <div class="gdm-kicker">Game</div>
           <div class="gdm-title">${safeName}</div>
           <div class="gdm-genres">${escapeHTML(genres)}</div>
         </div>
@@ -30995,7 +31059,7 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
     </div>
     <div class="gdm-body">
       <div class="gdm-main">
-        ${screenshots.length ? `<div class="gdm-shots">${screenshots.slice(1).map(s => `<img src="${escapeHTML(s.thumb)}" onclick="window.open('${escapeHTML(s.full)}','_blank')" alt="">`).join('')}</div>` : ''}
+        ${mediaHTML}
         ${game.summary ? `<p class="gdm-summary">${escapeHTML(game.summary)}</p>` : ''}
       </div>
       <aside class="gdm-side">
@@ -31011,22 +31075,101 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
           ${releaseDate ? `<div class="gdm-row"><span class="gdm-row-k">Release Date</span><span class="gdm-row-v">${escapeHTML(releaseDate)}</span></div>` : ''}
           ${platformsHTML ? `<div class="gdm-row"><span class="gdm-row-k">Platforms</span><span class="gdm-row-v gdm-row-v--platforms">${platformsHTML}</span></div>` : ''}
           ${linksHTML ? `<div class="gdm-row"><span class="gdm-row-k">Links</span><span class="gdm-row-v gdm-row-v--links">${linksHTML}</span></div>` : ''}
-          <div class="gdm-row gdm-row--meta"><span class="gdm-row-k">Game metadata by</span><span class="gdm-row-v"><a class="gdm-link" href="https://www.igdb.com" target="_blank" rel="noopener noreferrer">IGDB</a></span></div>
         </div>
       </aside>
     </div>`;
 }
 
+let _gdmLastGame = null;
+
+function _gdmToggleMenu(e) {
+  e?.stopPropagation?.();
+  const m = document.getElementById('gdm-menu');
+  if (!m) return;
+  const open = m.style.display !== 'none';
+  m.style.display = open ? 'none' : 'block';
+  if (!open) {
+    const close = () => { m.style.display = 'none'; document.removeEventListener('click', close); };
+    setTimeout(() => document.addEventListener('click', close), 0);
+  }
+}
+
+function _gdmOpenLightbox(index) {
+  const g = _gdmLastGame;
+  if (!g || !g.screenshots || !g.screenshots[index]) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'gdm-lightbox';
+  const s = g.screenshots[index];
+  overlay.innerHTML = `<img src="${escapeHTML(s.full)}" alt=""><button class="gdm-lightbox-close" title="Close">×</button>`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+
+function _gdmOpenVideo(index) {
+  const g = _gdmLastGame;
+  if (!g || !g.videos || !g.videos[index]) return;
+  const v = g.videos[index];
+  const overlay = document.createElement('div');
+  overlay.className = 'gdm-lightbox gdm-lightbox--video';
+  overlay.innerHTML = `<div class="gdm-video-frame" onclick="event.stopPropagation()"><iframe src="${escapeHTML(v.embedUrl)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div><button class="gdm-lightbox-close" title="Close">×</button>`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+
+function _gdmReportIssue() {
+  const g = _gdmLastGame;
+  const gameName = g ? g.name : '';
+  document.getElementById('gdm-report-modal')?.remove();
+  const m = document.getElementById('gdm-menu'); if (m) m.style.display = 'none';
+  const overlay = document.createElement('div');
+  overlay.id = 'gdm-report-modal';
+  overlay.className = 'gdm-report-overlay';
+  overlay.innerHTML = `
+    <div class="gdm-report-card" onclick="event.stopPropagation()">
+      <button class="gdm-report-close" onclick="document.getElementById('gdm-report-modal').remove()" aria-label="Close">×</button>
+      <div class="gdm-report-title">What went wrong?</div>
+      <div class="gdm-report-sub">Please select your issue for <strong>${escapeHTML(gameName || 'this game')}</strong></div>
+      <label class="gdm-report-opt"><input type="radio" name="gdm-report" value="wrong_game"><span>Wrong game is shown</span></label>
+      <label class="gdm-report-opt"><input type="radio" name="gdm-report" value="missing_info"><span>Missing or outdated info</span></label>
+      <label class="gdm-report-opt"><input type="radio" name="gdm-report" value="bad_media"><span>Bad or broken screenshots / video</span></label>
+      <label class="gdm-report-opt"><input type="radio" name="gdm-report" value="other"><span>Other feedback</span></label>
+      <textarea class="gdm-report-text" id="gdm-report-text" placeholder="Optional: tell us more…" maxlength="500"></textarea>
+      <div class="gdm-report-actions">
+        <button class="gdm-report-cancel" onclick="document.getElementById('gdm-report-modal').remove()">Cancel</button>
+        <button class="gdm-report-submit" onclick="_gdmSubmitReport('${escapeHTML(gameName).replace(/'/g, "\\'")}')">Send report</button>
+      </div>
+    </div>`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+
+async function _gdmSubmitReport(gameName) {
+  const choice = document.querySelector('input[name="gdm-report"]:checked')?.value;
+  const note = document.getElementById('gdm-report-text')?.value?.trim() || '';
+  if (!choice) { toast('Pick a reason first', 'error'); return; }
+  try {
+    // Persist locally; the support team will pick these up if/when a backend
+    // endpoint lands — losing a single row to a closed tab isn't worth the
+    // server trip for something this low-traffic.
+    const queue = JSON.parse(localStorage.getItem('ftz_gdm_reports') || '[]');
+    queue.push({ game: gameName, reason: choice, note, at: Date.now(), user: CU?.username || null });
+    localStorage.setItem('ftz_gdm_reports', JSON.stringify(queue.slice(-100)));
+  } catch(_) {}
+  document.getElementById('gdm-report-modal')?.remove();
+  toast('Thanks — we got your report.', 'success');
+}
+
 async function _gdmAddToProfile(gameName) {
   try {
     if (typeof addGameToCollection !== 'function') return;
-    await addGameToCollection({ name: gameName });
+    await addGameToCollection(gameName);
     toast('Added ' + gameName + ' to your profile.', 'success');
   } catch(e) {
     console.warn('[GDM] Add to profile failed:', e);
     toast('Couldn\'t add to profile.', 'error');
   }
 }
+
 
 function refreshGameActivityBar() {
   const bar = document.getElementById('game-activity-bar');

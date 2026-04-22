@@ -301,11 +301,37 @@ setInterval(() => {
   }
 }, 300000);
 
+// Env-driven Spotify config — mirrors the IGDB setup. Client reads this
+// from /api/spotify/config so nothing is hardcoded on the client side.
+function _spotifyConfig() {
+  return {
+    clientId: process.env.SPOTIFY_CLIENT_ID || '',
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET || '',
+    redirectUri: process.env.SPOTIFY_REDIRECT_URI || 'https://fortized.com/spotify-callback.html',
+  };
+}
+
+// Health probe — same pattern as /api/igdb/health.
+app.get('/api/spotify/health', (req, res) => {
+  const cfg = _spotifyConfig();
+  if (!cfg.clientId) return res.status(503).json({ ok: false, reason: 'not_configured' });
+  return res.json({ ok: true, clientId: cfg.clientId, redirectUri: cfg.redirectUri });
+});
+
+// Config (for the client to build the authorize URL without hardcoding).
+app.get('/api/spotify/config', (req, res) => {
+  const cfg = _spotifyConfig();
+  if (!cfg.clientId) return res.status(503).json({ error: 'Spotify not configured on server' });
+  res.json({ clientId: cfg.clientId, redirectUri: cfg.redirectUri });
+});
+
 // Step 1: App sends PKCE verifier before opening Spotify auth
 app.post('/api/spotify-auth-init', (req, res) => {
-  const { state, codeVerifier, clientId, redirectUri } = req.body;
+  const { state, codeVerifier } = req.body;
   if (!state || !codeVerifier) return res.status(400).json({ error: 'Missing state or codeVerifier' });
-  _spotifyAuth.set(state, { codeVerifier, clientId, redirectUri, ts: Date.now(), tokens: null });
+  const cfg = _spotifyConfig();
+  if (!cfg.clientId) return res.status(503).json({ error: 'Spotify not configured on server' });
+  _spotifyAuth.set(state, { codeVerifier, clientId: cfg.clientId, redirectUri: cfg.redirectUri, ts: Date.now(), tokens: null });
   res.json({ ok: true });
 });
 
@@ -315,19 +341,27 @@ app.post('/api/spotify-code', async (req, res) => {
   if (!state || !code) return res.status(400).json({ error: 'Missing state or code' });
   const entry = _spotifyAuth.get(state);
   if (!entry) return res.status(404).json({ error: 'Unknown state' });
+  const cfg = _spotifyConfig();
+  if (!cfg.clientId) return res.status(503).json({ error: 'Spotify not configured on server' });
 
-  // Exchange the code for tokens right here on the server
+  // Exchange the code for tokens. PKCE flow (no client secret required)
+  // but we include one when available for wider compatibility.
   try {
+    const body = {
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: entry.redirectUri || cfg.redirectUri,
+      client_id: entry.clientId || cfg.clientId,
+      code_verifier: entry.codeVerifier,
+    };
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    if (cfg.clientSecret) {
+      headers['Authorization'] = 'Basic ' + Buffer.from(`${cfg.clientId}:${cfg.clientSecret}`).toString('base64');
+    }
     const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: entry.redirectUri || 'https://fortized.com/spotify-callback.html',
-        client_id: entry.clientId || 'a632e938880e4e84b27d73a5d32be42e',
-        code_verifier: entry.codeVerifier,
-      }).toString(),
+      headers,
+      body: new URLSearchParams(body).toString(),
     });
     const data = await tokenRes.json();
     if (data.access_token) {
@@ -336,16 +370,15 @@ app.post('/api/spotify-code', async (req, res) => {
         refresh_token: data.refresh_token || null,
         expires_in: data.expires_in || 3600,
       };
-      res.json({ ok: true });
-    } else {
-      console.error('[Spotify] Token exchange failed:', data);
-      entry.tokens = { error: data.error_description || data.error || 'Token exchange failed' };
-      res.json({ ok: false, error: entry.tokens.error });
+      return res.json({ ok: true });
     }
+    console.error('[Spotify] Token exchange failed:', data);
+    entry.tokens = { error: data.error_description || data.error || 'Token exchange failed' };
+    return res.json({ ok: false, error: entry.tokens.error });
   } catch (e) {
     console.error('[Spotify] Token exchange error:', e);
     entry.tokens = { error: e.message };
-    res.json({ ok: false, error: e.message });
+    return res.json({ ok: false, error: e.message });
   }
 });
 
@@ -358,6 +391,45 @@ app.get('/api/spotify-tokens/:state', (req, res) => {
     return res.json({ tokens: entry.tokens });
   }
   res.json({ tokens: null }); // Not ready yet
+});
+
+// Server-side refresh — clients POST their refresh_token and get a new
+// access_token back. Keeps the refresh flow server-owned so we can later
+// drop in Basic auth with the client secret without leaking it to browsers.
+app.post('/api/spotify/refresh', async (req, res) => {
+  const { refresh_token } = req.body || {};
+  if (!refresh_token) return res.status(400).json({ error: 'refresh_token required' });
+  const cfg = _spotifyConfig();
+  if (!cfg.clientId) return res.status(503).json({ error: 'Spotify not configured on server' });
+  try {
+    const body = {
+      grant_type: 'refresh_token',
+      refresh_token,
+      client_id: cfg.clientId,
+    };
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    if (cfg.clientSecret) {
+      headers['Authorization'] = 'Basic ' + Buffer.from(`${cfg.clientId}:${cfg.clientSecret}`).toString('base64');
+    }
+    const r = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers,
+      body: new URLSearchParams(body).toString(),
+    });
+    const data = await r.json();
+    if (data.access_token) {
+      return res.json({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token || null,
+        expires_in: data.expires_in || 3600,
+      });
+    }
+    console.error('[Spotify] Refresh failed:', data);
+    return res.status(400).json({ error: data.error_description || data.error || 'Refresh failed' });
+  } catch (e) {
+    console.error('[Spotify] Refresh error:', e);
+    return res.status(500).json({ error: e.message });
+  }
 });
 
 // ── Bastion Invite API ────────────────────────────

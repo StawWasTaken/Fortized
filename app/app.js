@@ -26919,8 +26919,18 @@ async function _connectSpotify() {
   CU.spotifyTokenExpiry = null;
   CU.spotifyNowPlaying = null;
 
-  const clientId = 'a632e938880e4e84b27d73a5d32be42e';
-  const redirectUri = 'https://fortized.com/spotify-callback.html';
+  // Pull the clientId + redirectUri from the server (env-driven).
+  let cfg;
+  try {
+    const cr = await fetch('/api/spotify/config');
+    if (!cr.ok) throw new Error('HTTP ' + cr.status);
+    cfg = await cr.json();
+  } catch (e) {
+    toast('Spotify is not configured on the server yet.', 'error');
+    return;
+  }
+  const clientId = cfg.clientId;
+  const redirectUri = cfg.redirectUri;
   const scope = 'user-read-private user-read-playback-state user-read-currently-playing';
   const state = (CU?.username || 'ftz') + '_' + Date.now() + '_' + Math.random().toString(36).slice(2);
 
@@ -26928,13 +26938,13 @@ async function _connectSpotify() {
   const codeVerifier = _generateCodeVerifier();
   const codeChallenge = await _generateCodeChallenge(codeVerifier);
 
-  // Send the PKCE verifier to the SERVER so it can do the token exchange
-  // (the callback may run in a different browser/context than this app)
+  // Send the PKCE verifier to the server so it can do the token exchange
+  // (the callback page may run in a different browser context than the app).
   try {
-    await fetch('https://fortized.onrender.com/api/spotify-auth-init', {
+    await fetch('/api/spotify-auth-init', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ state, codeVerifier, clientId, redirectUri })
+      body: JSON.stringify({ state, codeVerifier })
     });
   } catch (e) {
     toast('Failed to start Spotify auth — server unreachable', 'error');
@@ -26958,7 +26968,7 @@ async function _connectSpotify() {
   const _spotifyPoll = setInterval(async () => {
     if (_resolved) return;
     try {
-      const r = await fetch('https://fortized.onrender.com/api/spotify-tokens/' + encodeURIComponent(state));
+      const r = await fetch('/api/spotify-tokens/' + encodeURIComponent(state));
       const d = await r.json();
       if (d.tokens) {
         _resolved = true;
@@ -26995,27 +27005,25 @@ async function _onSpotifyTokens(tokens) {
   try { buildProfileView('myprofile'); } catch (e) { _dbg('[Spotify] profile refresh failed', e); }
 }
 
-// Refresh Spotify token using refresh_token
+// Refresh Spotify token via our server so the client never sees the client
+// secret (and so we can swap in Basic auth later without touching callers).
 async function _refreshSpotifyToken() {
   if (!CU?.spotifyRefreshToken) return false;
   try {
-    const res = await fetch('https://accounts.spotify.com/api/token', {
+    const res = await fetch('/api/spotify/refresh', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: CU.spotifyRefreshToken,
-        client_id: 'a632e938880e4e84b27d73a5d32be42e'
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: CU.spotifyRefreshToken }),
     });
     const data = await res.json();
-    if (data.access_token) {
+    if (res.ok && data.access_token) {
       CU.spotifyToken = data.access_token;
       if (data.refresh_token) CU.spotifyRefreshToken = data.refresh_token;
       if (data.expires_in) CU.spotifyTokenExpiry = Date.now() + (data.expires_in * 1000);
       saveUser();
       return true;
     }
+    _dbg('[Spotify] refresh returned error', data?.error);
   } catch (e) { _dbg('[Spotify] token refresh failed', e); }
   return false;
 }

@@ -29,7 +29,10 @@ p{font-size:14px;color:rgba(255,255,255,.5);}
   const msgEl = document.getElementById('msg');
 
   if (code && state) {
-    fetch('https://fortized.onrender.com/api/spotify-code', {
+    // Relative path — the callback always runs on the same origin as the
+    // Fortized app (fortized.com or www.fortized.com), so no need to pin a
+    // specific Render hostname. Works on both the apex and www.
+    fetch('/api/spotify-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state, code })

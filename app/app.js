@@ -26680,7 +26680,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
             Add game
           </button>` : ''}
         </div>
-        ${visibleGames.length ? `<div class="pw-gc-masonry">${visibleGames.map(g => {const _cv = g.coverUrl || _getManualCover(g.name); return `<div class="pw-gc-card">
+        ${visibleGames.length ? `<div class="pw-gc-masonry">${visibleGames.map(g => {const _cv = g.coverUrl || _getManualCover(g.name); const _safeG = escapeHTML(g.name).replace(/'/g,"\\'"); return `<div class="pw-gc-card" onclick="_openGameFromWidget('${_safeG}')" title="${escapeHTML(g.name)}">
           ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));">${g.icon||'🎮'}</div>`}
           <div class="gc-hover-name">${escapeHTML(g.name)}</div>
           ${isOwnProfile ? `<button class="gc-delete-btn" onclick="event.stopPropagation();_removeGameFromCollection('${escapeHTML(g.name)}')" title="Remove"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>` : ''}
@@ -26700,7 +26700,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         const addedDays = fg.addedAt ? Math.max(1, Math.floor((Date.now() - new Date(fg.addedAt).getTime()) / 86400000)) : '—';
         html += `<div class="pw-widget">
           <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Favourite Game</div>
-          <div class="pw-fav-large-card">
+          <div class="pw-fav-large-card" onclick="_openGameFromWidget('${escapeHTML(fg.name).replace(/'/g,"\\'")}')" title="View ${escapeHTML(fg.name)}">
             <div class="pfl-cover">${fgCover ? `<img src="${escapeHTML(fgCover)}" alt="${escapeHTML(fg.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03));">${fg.icon||'⭐'}</div>`}</div>
             <div class="pfl-info">
               <div class="pfl-name">${escapeHTML(fg.name)}</div>
@@ -26744,7 +26744,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         : '';
       html += `<div class="pw-widget">
         <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg> Currently Playing</div>
-        <div class="pw-rotation-carousel">${rotationGames.map(g => {const _cv = g.coverUrl||_getManualCover(g.name); return `<div class="pw-rotation-card">
+        <div class="pw-rotation-carousel">${rotationGames.map(g => {const _cv = g.coverUrl||_getManualCover(g.name); const _safeG = escapeHTML(g.name).replace(/'/g,"\\'"); return `<div class="pw-rotation-card" onclick="_openGameFromWidget('${_safeG}')" title="${escapeHTML(g.name)}">
           ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(96,165,250,.02));">${g.icon||'🎮'}</div>`}
           <div class="prc-name">${escapeHTML(g.name)}</div>
         </div>`;}).join('')}</div>
@@ -26846,7 +26846,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         </div>
         ${wantList.length ? `<div style="display:flex;flex-direction:column;gap:6px;">${wantList.map((g,i) => {
           const _cv = g.coverUrl || _getManualCover(g.name);
-          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:10px;border:1px solid rgba(255,255,255,.04);" draggable="${isOwnProfile}" ondragstart="event.dataTransfer.setData('text/plain','${i}')" ondragover="event.preventDefault()" ondrop="event.preventDefault();_reorderWantToPlay(parseInt(event.dataTransfer.getData('text/plain')),${i})">
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:10px;border:1px solid rgba(255,255,255,.04);cursor:pointer;" draggable="${isOwnProfile}" ondragstart="event.dataTransfer.setData('text/plain','${i}')" ondragover="event.preventDefault()" ondrop="event.preventDefault();_reorderWantToPlay(parseInt(event.dataTransfer.getData('text/plain')),${i})" onclick="_openGameFromWidget('${escapeHTML(g.name).replace(/'/g,"\\'")}')" title="View ${escapeHTML(g.name)}">
             ${_cv ? `<img src="${escapeHTML(_cv)}" style="width:36px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(244,114,182,.1);" onerror="this.style.display='none'">` : `<div style="width:36px;height:48px;border-radius:6px;background:rgba(244,114,182,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,114,182,.4)" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg></div>`}
             <div style="flex:1;min-width:0;">
               <div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</div>
@@ -31689,6 +31689,19 @@ async function _gdmSubmitReport(gameName) {
   } catch(_) {}
   document.getElementById('gdm-report-modal')?.remove();
   toast('Thanks — report sent to moderators.', 'success');
+}
+
+// Opens the game-detail modal from any profile-widget game card, closing
+// the profile modal first so the two don't stack on top of each other.
+function _openGameFromWidget(gameName) {
+  if (!gameName) return;
+  try { closeModal('modal-user'); } catch (_) {}
+  // Also close the mini profile preview popup if it's open (that's a
+  // separate floating element, not the modal).
+  try { document.getElementById('mini-profile-preview')?.remove(); } catch (_) {}
+  // Defer slightly so the close animation finishes before the new modal
+  // pops in — feels "natural", as requested.
+  setTimeout(() => openGameDetailsModal(gameName), 100);
 }
 
 async function _gdmAddToProfile(gameName) {

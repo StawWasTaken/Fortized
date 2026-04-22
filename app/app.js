@@ -31047,20 +31047,25 @@ async function _gdmJoinBastion(bastionId) {
 }
 
 const _GDM_LINK_ICONS = {
-  official: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
-  steam:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2.1 6.3 2 11.7l5.4 2.2c.5-.3 1-.5 1.6-.5l2.5-3.6C11.5 8 13.3 6.4 15.5 6.4c2.5 0 4.5 2 4.5 4.5s-2 4.6-4.5 4.6h-.1l-3.6 2.6c0 1.6-1.3 2.9-2.9 2.9-1.4 0-2.6-1-2.9-2.3L2.6 17c1.2 4 4.9 7 9.4 7 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>',
-  twitch:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 2 2 6v14h5v2h3l2-2h4l5-5V2H4zm15 11-3 3h-4l-2 2v-2H6V4h13v9zM15 7v5h-2V7h2zm-5 0v5H8V7h2z"/></svg>',
-  youtube:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 7.2a2.9 2.9 0 0 0-2-2.1C19 4.5 12 4.5 12 4.5s-7 0-9 .6a2.9 2.9 0 0 0-2 2.1A30 30 0 0 0 .5 12 30 30 0 0 0 1 16.8a2.9 2.9 0 0 0 2 2.1c2 .6 9 .6 9 .6s7 0 9-.6a2.9 2.9 0 0 0 2-2.1A30 30 0 0 0 23.5 12 30 30 0 0 0 23 7.2zM10 15.5v-7l6 3.5-6 3.5z"/></svg>',
-  twitter:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 2h3.3l-7.2 8.2L23.5 22h-6.5L12 15l-5.9 7H2.8l7.7-8.8L2 2h6.6l4.7 6.2L18.9 2zm-1.2 18h1.8L7 4H5l12.7 16z"/></svg>',
-  reddit:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12c0-1.2-1-2.2-2.2-2.2-.6 0-1.1.2-1.5.6a10.4 10.4 0 0 0-5.5-1.7l1-4.4 3.1.7a1.6 1.6 0 1 0 .3-1.1l-3.5-.8a.5.5 0 0 0-.6.4l-1.1 5A10.4 10.4 0 0 0 5.7 10.4c-.4-.4-.9-.6-1.5-.6a2.2 2.2 0 0 0-1.1 4 5 5 0 0 0-.1.9c0 3.8 4.2 6.8 9.3 6.8s9.3-3 9.3-6.8c0-.3 0-.6-.1-.9.9-.4 1.5-1.3 1.5-2.3zM8 13.3a1.4 1.4 0 1 1 2.8 0 1.4 1.4 0 0 1-2.8 0zm8.8 3.7c-1.2 1.2-3.5 1.3-4.2 1.3s-3-.1-4.2-1.3a.5.5 0 0 1 .7-.7c.7.7 2.3.9 3.5.9s2.8-.2 3.5-.9a.5.5 0 0 1 .7.7zm-.5-2.3a1.4 1.4 0 1 1 0-2.8 1.4 1.4 0 0 1 0 2.8z"/></svg>',
-  instagram:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.4A4 4 0 1 1 12.6 8a4 4 0 0 1 3.4 3.4z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
-  facebook: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.5 9.9V15H8v-3h2.5V9.8c0-2.5 1.5-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12H16l-.4 3h-2.1v6.9A10 10 0 0 0 22 12z"/></svg>',
-  wikipedia:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.3 5l-4.7 14h-1.2L10 12 7.3 19H6.1L1.4 5H3l3.6 11 2.5-6.3L8 5h1.5l2.3 7.2L14 5h1.4l2.1 7.3L19.8 5h1.5z"/></svg>',
-  epic:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 2h14a2 2 0 0 1 2 2v14l-9 6-9-6V4a2 2 0 0 1 2-2zm3 5h8v2h-3v8h-2V9H8V7z"/></svg>',
-  gog:      '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm4 12.5a2 2 0 0 1-2 2h-2v-1.5h1.5a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5H12V16.5h-2a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2z"/></svg>',
-  discord:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.6 5.3A17.4 17.4 0 0 0 15.3 4l-.2.3a12 12 0 0 0-6.2 0L8.7 4a17.4 17.4 0 0 0-4.3 1.3A19.7 19.7 0 0 0 1 16a17.4 17.4 0 0 0 5.3 2.6l.3-.5c-.6-.2-1.2-.5-1.8-.8l.4-.3a12.5 12.5 0 0 0 10.6 0l.4.3c-.6.3-1.2.6-1.8.8l.3.5A17.4 17.4 0 0 0 23 16a19.7 19.7 0 0 0-3.4-10.7zM8.7 14c-.9 0-1.6-.8-1.6-1.8s.7-1.8 1.6-1.8 1.6.8 1.6 1.8-.7 1.8-1.6 1.8zm6.6 0c-.9 0-1.6-.8-1.6-1.8s.7-1.8 1.6-1.8 1.6.8 1.6 1.8-.7 1.8-1.6 1.8z"/></svg>',
-  itch:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 5l2-2h16l2 2v4a2 2 0 0 1-1.5 2A2 2 0 0 1 19 14v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1-1.5-3A2 2 0 0 1 2 9V5zm7 9h6l-1 2h-1v-2h-2v2h-1l-1-2z"/></svg>',
-  link:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>',
+  official: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  steam: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.6 0 .3 4.9 0 11.1l6.4 2.7c.5-.4 1.2-.6 1.9-.6l2.9-4.2c0-2.5 2-4.6 4.5-4.6s4.6 2.1 4.6 4.6-2.1 4.6-4.6 4.6h-.1l-4.1 3a3.4 3.4 0 0 1-6.7.6l-4.6-1.9C2 20.3 6.5 24 12 24c6.6 0 12-5.4 12-12S18.6 0 12 0zm-4.4 18.1-1.5-.6a2.6 2.6 0 0 0 4.8-.3c.5-1.3-.1-2.8-1.4-3.4L8 13.2c.6-.2 1.3-.2 1.9 0 1.3.5 1.9 2 1.4 3.4-.6 1.3-2 1.9-3.4 1.4zm11.4-9.3c0-1.7-1.4-3-3-3s-3 1.3-3 3 1.3 3 3 3 3-1.3 3-3zm-5.3 0c0-1.2 1-2.3 2.3-2.3s2.3 1 2.3 2.3-1 2.3-2.3 2.3-2.3-1-2.3-2.3z"/></svg>',
+  twitch: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.6 5.9H13V10h-1.4zm4 0H17V10h-1.4zM7 2 3.5 5.6v12.8h4.2V21l3.6-3.5H14l5-5V2zm13.3 9.8-3 3h-3l-2.6 2.6v-2.6H7.8V3.4h12.5z"/></svg>',
+  youtube: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.6V8.4L15.8 12z"/></svg>',
+  twitter: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.2 2.2h3.3L14.3 10.5 22.8 22h-6.7l-5.2-6.8L5 22H1.7l7.7-8.8L1.3 2.2h6.8L13 8.5zm-1.2 17.6h1.9L7.1 4.1H5.2z"/></svg>',
+  reddit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm6.1 9.5a1.8 1.8 0 0 1-1 3.2 4 4 0 0 1 .1.9c0 3-3.4 5.5-7.6 5.5S2 16.6 2 13.6c0-.3 0-.6.1-.9a1.8 1.8 0 1 1 2.1-2.9 9.6 9.6 0 0 1 4.9-1.6l.9-4.1a.4.4 0 0 1 .5-.3l3.2.7a1.3 1.3 0 1 1-.2 1l-2.8-.6-.8 3.6c1.7 0 3.4.6 4.7 1.5a1.8 1.8 0 0 1 2.5-.5zM8.4 14.2a1.3 1.3 0 1 0 1.3-1.3 1.3 1.3 0 0 0-1.3 1.3zm7.2 0a1.3 1.3 0 1 0-1.3 1.3 1.3 1.3 0 0 0 1.3-1.3zm-1.4 2.5a.4.4 0 0 0-.5 0 3.3 3.3 0 0 1-2.1.5 3.3 3.3 0 0 1-2.1-.5.4.4 0 1 0-.5.5 4 4 0 0 0 2.6.8 4 4 0 0 0 2.6-.8.4.4 0 0 0 0-.5z"/></svg>',
+  instagram: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r=".9" fill="currentColor"/></svg>',
+  facebook: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.6 9.9V15H7.9v-3h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 3h-2.3v6.9A10 10 0 0 0 22 12z"/></svg>',
+  wikipedia: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.1 18.3 8 8.8l-3.5 9.5H3.2L.3 5.6h2l2 9.4 3.3-9.4h1.7l3.8 9.4 1.9-9.4h2l-2.9 12.7zm7.8 0h-1.5l-3.5-9.5-1.5 9.5h-1.3l2-12.7h1.5l3.6 9.5L21 5.6h1.5z"/></svg>',
+  epic: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.5 2h17c.8 0 1.5.7 1.5 1.5v14L12 23 2 17.5v-14C2 2.7 2.7 2 3.5 2zM17 17V7H7v2h3v8zm-7 0v-1h2v1z"/></svg>',
+  gog: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm4 12.5a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2zm-2-5h-4v5h2v-2h-1v-1h3z"/></svg>',
+  discord: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.6 5.3A17.4 17.4 0 0 0 15.3 4l-.2.4a12 12 0 0 0-6.2 0L8.7 4a17.4 17.4 0 0 0-4.3 1.3A19.7 19.7 0 0 0 1 16a17.4 17.4 0 0 0 5.3 2.6l.4-.5c-.7-.2-1.3-.5-1.9-.8l.5-.3a12.4 12.4 0 0 0 10.4 0l.5.3c-.6.3-1.2.6-1.9.8l.4.5A17.4 17.4 0 0 0 23 16a19.7 19.7 0 0 0-3.4-10.7zM8.7 14a1.6 1.6 0 1 1 1.6-1.8 1.7 1.7 0 0 1-1.6 1.8zm6.6 0a1.6 1.6 0 1 1 1.6-1.8 1.7 1.7 0 0 1-1.6 1.8z"/></svg>',
+  itch: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3c-1 .7-3 3-3 3.6v.9c0 1.2 1.1 2.2 2.1 2.2 1.3 0 2.3-1 2.3-2.3 0 1.3 1 2.3 2.3 2.3s2.3-1 2.3-2.3c0 1.3 1 2.3 2.3 2.3h.4c1.2 0 2.2-1 2.2-2.3 0 1.3 1 2.3 2.3 2.3s2.3-1 2.3-2.3c0 1.3 1 2.3 2.3 2.3 1.1 0 2.2-1 2.2-2.2v-.9c0-.6-2-2.9-3-3.6zm8.4 7.2a2.4 2.4 0 0 1-1.6.9 2.4 2.4 0 0 1-1.6-.9h-.1a2.4 2.4 0 0 1-4.2 0c-.6.6-1.3.9-2.2.8-.4 0-.7-.1-.8-.1.1 1.7 0 7-.3 8.8 0 .8.7 1.4 1.5 1.4H20c.7 0 1.4-.6 1.4-1.4-.4-1.8-.4-7.1-.3-8.8 0 0-.4 0-.8.1-.9.1-1.7-.2-2.3-.8a2.4 2.4 0 0 1-4.2 0zM8.1 13.6H15c1 0 1.8.8 1.8 1.7l-.3 1.8a1.8 1.8 0 0 1-1.7 1.4 2.6 2.6 0 0 1-2-.9 2.6 2.6 0 0 1-4.8 0 2.6 2.6 0 0 1-2.1.9 1.8 1.8 0 0 1-1.6-1.4L4 15.3a1.8 1.8 0 0 1 1.7-1.7zm4.9 2.6a2 2 0 0 1-.8-.4 1.2 1.2 0 0 1-.4-.6V15h-1v.2a1.2 1.2 0 0 1-.4.6 2 2 0 0 1-.8.4h1.1V17h1.2v-.8z"/></svg>',
+  tiktok: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.6 6.3a5.5 5.5 0 0 1-3.1-1.1 5.5 5.5 0 0 1-2.1-3.2h-3.1v13.4a2.9 2.9 0 1 1-2-2.8V9.4a6 6 0 1 0 5.1 6V10a8.5 8.5 0 0 0 5.2 1.8z"/></svg>',
+  playstation: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.1 3v18.1l3-.9V9.7c0-.9.4-1.4 1.1-1.2.9.3 1.1 1.3 1.1 2.2v4.8l2.9-1c1.4-.5 2-1.4 2-2.8 0-1.9-1.2-3-3.5-3.8zM4 17l5 1.6v-1.9l-3.3-1.2c-.3-.1-.5-.2-.5-.5 0-.2.2-.3.5-.3l3.7.6v-1.7l-4.8-.4c-1.1.1-2.6.5-2.6 1.9 0 1 .8 1.6 2 2zm14.2 1.3 4-1.3c1.4-.4 1.6-1.1 1.6-1.6 0-1-1-1.8-2.5-1.7l-3.3.4v1.7l3.4-.4c.3 0 .5.1.5.3s-.2.4-.5.5l-3.2 1V18.3z"/></svg>',
+  xbox: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.1 4.8a10 10 0 0 1 15.8 0 9.9 9.9 0 0 0-7.9 2.9 9.9 9.9 0 0 0-7.9-2.9zM12 9.1a22.5 22.5 0 0 1 6.8 10.4 10 10 0 0 1-13.6 0A22.5 22.5 0 0 1 12 9.1zm-8.7-3.2a22 22 0 0 1 7.5 2.7A22.5 22.5 0 0 0 4 18.3a10 10 0 0 1-.7-12.4zm17.4 0a10 10 0 0 1-.6 12.4 22.5 22.5 0 0 0-6.9-9.7 22 22 0 0 1 7.5-2.7z"/></svg>',
+  roblox: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.6 2 2 16.8 18.4 22 22 7.2zm6.9 11.5-4.5-1.2 1.2-4.5 4.5 1.2z"/></svg>',
+  bluesky: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.3 3.1c3 2.2 6.2 6.7 7.4 9.1 1.2-2.4 4.4-6.9 7.4-9.1 2.2-1.6 5.7-2.8 5.7 1.2 0 .8-.4 6.8-.7 7.8-1 3.4-4.5 4.3-7.6 3.7 5.4 1 6.9 4 3.9 7-5.7 5.9-8.2-1.5-8.8-3.4v-.4l-.1.2c-.6 2-3.1 9.3-8.8 3.4C1.7 19.5 3.2 16.4 8.6 15.5c-3.1.5-6.6-.3-7.6-3.7C.6 11-.2 5 0 4.3c0-4 3.5-2.8 5.7-1.2z"/></svg>',
+  link: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>',
 };
 
 const _GDM_LINK_LABELS = {
@@ -31073,11 +31078,7 @@ const _GDM_LINK_LABELS = {
 
 // Extra icons for hostname-auto-detected kinds
 Object.assign(_GDM_LINK_ICONS, {
-  tiktok:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.6 6.3a5.5 5.5 0 0 1-3.1-1.1 5.5 5.5 0 0 1-2.1-3.2h-3.1v13.4a2.9 2.9 0 1 1-2-2.8V9.4a6 6 0 1 0 5.1 6V10a8.5 8.5 0 0 0 5.2 1.8V8.7c-.1 0-.1 0 0-2.4z"/></svg>',
-  playstation:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 3v18l3-.9V9.5c0-1 .4-1.5 1.1-1.3.9.3 1 1.3 1 2.3v5l2.9-1c1.5-.5 2-1.5 2-2.9 0-1.9-1.2-3-3.5-3.8L9 3zm-5 15 5 1.7v-2L5.8 16.6c-.3-.1-.5-.3-.5-.5s.2-.3.5-.3l3.7.6v-1.7l-4.8-.4C3.5 14.2 2 14.6 2 16c0 1 .7 1.6 2 2zm14 1.3 4-1.3c1.3-.4 1.6-1 1.6-1.6 0-1-1-1.8-2.5-1.7l-3.3.4v1.7l3.4-.4c.3 0 .5.1.5.3s-.2.4-.5.5l-3.2 1v1.1z"/></svg>',
-  xbox:       '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-6.8 2.7c2-.1 5.2 2 6.8 3.5 1.6-1.5 4.8-3.6 6.8-3.5A10 10 0 0 0 12 2zM3.5 6.6A10 10 0 0 0 2 12c0 4.5 2.9 8.3 7 9.6-1-2.2 2-8 4-10.6-1.5-1.5-5.1-5-9.5-4.4zm17 0c-4.4-.6-8 2.9-9.5 4.4 2 2.6 5 8.4 4 10.6 4.1-1.3 7-5.1 7-9.6 0-2-.6-3.8-1.5-5.4z"/></svg>',
-  roblox:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.3 2 2 16.5 18.7 22 22 7.5 5.3 2zm6.9 11.6-4.6-1.2 1.2-4.6 4.6 1.2-1.2 4.6z"/></svg>',
-  bluesky:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 3c3 2 6 6 6 9 0-3 3-7 6-9 3 0 3 3 2 5l-2 7c-1 3-3 3-6 0-3 3-5 3-6 0l-2-7c-1-2-1-5 2-5z"/></svg>',
+  // (All brand icons now live in the main _GDM_LINK_ICONS table above.)
 });
 
 // Hostname → kind (priority over IGDB's category)
@@ -31121,9 +31122,9 @@ function _gdmClassifyLink(l) {
 
 // Platform → { svg, label }. Matches IGDB platform names / abbreviations.
 const _GDM_PLATFORM_ICONS = {
-  pc:{lbl:'PC (Windows)',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'},
-  mac:{lbl:'macOS',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2c-1 0-2 .5-3 1.5S11.5 6 12 7c1 0 2.5-.5 3-1.5S16.5 3 16 2zm1 5c-1 0-2 .5-3 1-1-.5-2-1-3-1-2 0-4 1.5-4 4.5C7 16 10 22 12 22c.5 0 1-.5 2-.5s1.5.5 2 .5c2 0 5-6 5-10 0-3-2-4.5-4-5z"/></svg>'},
-  linux:{lbl:'Linux',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a4 4 0 0 0-4 4c0 1 .3 2 .8 3-1.5 1-3.8 3.5-3.8 7 0 4 3 6 7 6s7-2 7-6c0-3.5-2.3-6-3.8-7 .5-1 .8-2 .8-3a4 4 0 0 0-4-4zm-1.2 4c.5 0 .8.3.8.7s-.3.8-.8.8-.8-.4-.8-.8.3-.7.8-.7zm2.4 0c.5 0 .8.3.8.7s-.3.8-.8.8-.8-.4-.8-.8.3-.7.8-.7z"/></svg>'},
+  pc:{lbl:'PC (Windows)',svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/></svg>'},
+  mac:{lbl:'macOS',svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2c-1 0-2 .5-3 1.5S11.5 6 12 7c1 0 2.5-.5 3-1.5S16.5 3 16 2zm1 5c-1 0-2 .5-3 1-1-.5-2-1-3-1-2 0-4 1.5-4 4.5C7 16 10 22 12 22c.5 0 1-.5 2-.5s1.5.5 2 .5c2 0 5-6 5-10 0-3-2-4.5-4-5z"/></svg>'},
+  linux:{lbl:'Linux',svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a4 4 0 0 0-4 4c0 1 .3 2 .8 3-1.5 1-3.8 3.5-3.8 7 0 4 3 6 7 6s7-2 7-6c0-3.5-2.3-6-3.8-7 .5-1 .8-2 .8-3a4 4 0 0 0-4-4zm-1.2 4a.8.8 0 0 1 .8.8.8.8 0 1 1-.8-.8zm2.4 0a.8.8 0 0 1 .8.8.8.8 0 1 1-.8-.8z"/></svg>'},
   ps3:{lbl:'PlayStation 3',svg:_GDM_LINK_ICONS.playstation},
   ps4:{lbl:'PlayStation 4',svg:_GDM_LINK_ICONS.playstation},
   ps5:{lbl:'PlayStation 5',svg:_GDM_LINK_ICONS.playstation},
@@ -31131,12 +31132,12 @@ const _GDM_PLATFORM_ICONS = {
   xone:{lbl:'Xbox One',svg:_GDM_LINK_ICONS.xbox},
   xsx:{lbl:'Xbox Series X|S',svg:_GDM_LINK_ICONS.xbox},
   x360:{lbl:'Xbox 360',svg:_GDM_LINK_ICONS.xbox},
-  switch:{lbl:'Nintendo Switch',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="7" height="20" rx="2"/><rect x="13" y="2" width="7" height="20" rx="2"/><circle cx="7.5" cy="8" r=".8" fill="currentColor"/><circle cx="16.5" cy="16" r="1.2" fill="currentColor"/></svg>'},
-  ios:{lbl:'iOS',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2c-1 0-2 .5-3 1.5S11.5 6 12 7c1 0 2.5-.5 3-1.5S16.5 3 16 2zm1 5c-1 0-2 .5-3 1-1-.5-2-1-3-1-2 0-4 1.5-4 4.5C7 16 10 22 12 22c.5 0 1-.5 2-.5s1.5.5 2 .5c2 0 5-6 5-10 0-3-2-4.5-4-5z"/></svg>'},
-  android:{lbl:'Android',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 10v7c0 .6.4 1 1 1h1v3.5c0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5V18h2v3.5c0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5V18h1c.6 0 1-.4 1-1v-7H6zm-1.5 0c-.8 0-1.5.7-1.5 1.5v5c0 .8.7 1.5 1.5 1.5S6 17.3 6 16.5v-5c0-.8-.7-1.5-1.5-1.5zm15 0c-.8 0-1.5.7-1.5 1.5v5c0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5v-5c0-.8-.7-1.5-1.5-1.5zM8 9h8c0-2.5-1.4-4.6-3.5-5.5l1-1.7a.3.3 0 0 0-.5-.3L12 3.3 10.9 1.5a.3.3 0 0 0-.5.3l1.1 1.7C9.4 4.4 8 6.5 8 9z"/></svg>'},
-  meta:{lbl:'Meta Quest',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 8C3 5.8 4.8 4 7 4c2.3 0 3.8 1.7 5 3.5C13.2 5.7 14.7 4 17 4c2.2 0 4 1.8 4 4s-1.8 4-4 4c-2.3 0-3.8-1.7-5-3.5C10.8 10.3 9.3 12 7 12c-2.2 0-4-1.8-4-4zm2 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0zm10 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"/></svg>'},
+  switch:{lbl:'Nintendo Switch',svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.7 2H19a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3h-4.3zm0 2v16H19a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1zm3 4.5a1.5 1.5 0 1 1-1.5 1.5A1.5 1.5 0 0 1 17.7 8.5zM10 22H5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h5zM5 4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h3V4zm1 2a1.5 1.5 0 1 1-1.5 1.5A1.5 1.5 0 0 1 6 6z"/></svg>'},
+  ios:{lbl:'iOS',svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2c-1 0-2 .5-3 1.5S11.5 6 12 7c1 0 2.5-.5 3-1.5S16.5 3 16 2zm1 5c-1 0-2 .5-3 1-1-.5-2-1-3-1-2 0-4 1.5-4 4.5C7 16 10 22 12 22c.5 0 1-.5 2-.5s1.5.5 2 .5c2 0 5-6 5-10 0-3-2-4.5-4-5z"/></svg>'},
+  android:{lbl:'Android',svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 8.2a.5.5 0 0 0-.4.2l-1.2 2A8 8 0 0 0 12 9.3a8 8 0 0 0-4 1.1L6.9 8.4a.5.5 0 0 0-.9.4L7 11A7.2 7.2 0 0 0 4 17h16a7.2 7.2 0 0 0-3-6l1-2.4a.5.5 0 0 0-.2-.4zM8.5 14.5a.8.8 0 1 1 .8-.8.8.8 0 0 1-.8.8zm7 0a.8.8 0 1 1 .8-.8.8.8 0 0 1-.8.8z"/></svg>'},
+  meta:{lbl:'Meta Quest',svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 8c-2 0-3.5 1.2-5 3-1.5-1.8-3-3-5-3S6 9.3 6 12s1.5 4 3 4 3-1 5-3c1.5 2 3 3 5 3s3-1.3 3-4-1-4-2-4zm-8 5c-1 1.3-2 2-3 2s-1.5-.7-1.5-2 .5-2 1.5-2 2 .7 3 2zm3 0c1-1.3 2-2 3-2s1.5.7 1.5 2-.5 2-1.5 2-2-.7-3-2z"/></svg>'},
   web:{lbl:'Web Browser',svg:_GDM_LINK_ICONS.official},
-  generic:{lbl:'Platform',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>'},
+  generic:{lbl:'Platform',svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>'},
 };
 
 function _gdmClassifyPlatform(p) {
@@ -31275,26 +31276,33 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
       <div class="gdm-main">
         ${mediaHTML}
         ${game.summary ? `<p class="gdm-summary">${escapeHTML(game.summary)}</p>` : ''}
-        <div class="gdm-reviews-card">
-          <div class="gdm-side-head">Reviews</div>
-          ${ratingsHTML}
-          <div class="gdm-user-review">
-            <div class="gdm-user-review-head">How was it for you?</div>
-            <div class="gdm-thumbs">
-              <button class="gdm-thumb gdm-thumb--up" data-vote="up" onclick="_gdmPickVote(this,'up')" title="Great">
-                <span class="gdm-thumb-emoji">👏</span><span>Great</span>
-              </button>
-              <button class="gdm-thumb gdm-thumb--mid" data-vote="mid" onclick="_gdmPickVote(this,'mid')" title="OK">
-                <span class="gdm-thumb-emoji">👌</span><span>OK</span>
-              </button>
-              <button class="gdm-thumb gdm-thumb--down" data-vote="down" onclick="_gdmPickVote(this,'down')" title="Bad">
-                <span class="gdm-thumb-emoji">👎</span><span>Bad</span>
-              </button>
-            </div>
-            <textarea id="gdm-review-text" class="gdm-review-text" placeholder="Optional — add a comment to your review" maxlength="280"></textarea>
-            <button class="gdm-review-submit" onclick="_gdmSubmitReview('${safeNameAttr}')">Post review</button>
+        <div class="gdm-reviews-banner">
+          <div class="gdm-reviews-head">
+            <div class="gdm-side-head">Reviews</div>
+            <div class="gdm-reviews-ratings">${ratingsHTML}</div>
           </div>
-          <div class="gdm-review-carousel" id="gdm-review-carousel"></div>
+          <div class="gdm-reviews-grid">
+            <div class="gdm-reviews-left">
+              <div class="gdm-user-review-head">How was it for you?</div>
+              <div class="gdm-thumbs">
+                <button class="gdm-thumb gdm-thumb--up" data-vote="up" onclick="_gdmPickVote(this,'up')" title="Great">
+                  <span class="gdm-thumb-emoji">👏</span><span>Great</span>
+                </button>
+                <button class="gdm-thumb gdm-thumb--mid" data-vote="mid" onclick="_gdmPickVote(this,'mid')" title="OK">
+                  <span class="gdm-thumb-emoji">👌</span><span>OK</span>
+                </button>
+                <button class="gdm-thumb gdm-thumb--down" data-vote="down" onclick="_gdmPickVote(this,'down')" title="Bad">
+                  <span class="gdm-thumb-emoji">👎</span><span>Bad</span>
+                </button>
+              </div>
+              <textarea id="gdm-review-text" class="gdm-review-text" placeholder="Add a comment (optional)" maxlength="280"></textarea>
+              <button class="gdm-review-submit" onclick="_gdmSubmitReview('${safeNameAttr}')">Post review</button>
+            </div>
+            <div class="gdm-reviews-right">
+              <div class="gdm-reviews-right-head">Community reviews</div>
+              <div class="gdm-review-carousel" id="gdm-review-carousel"></div>
+            </div>
+          </div>
         </div>
       </div>
       <aside class="gdm-side">

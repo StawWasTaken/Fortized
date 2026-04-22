@@ -2648,7 +2648,7 @@ body.is-desktop-app .notif-panel{top:0;}
 .gdm-rating-src { color:var(--muted-light); }
 .gdm-rating-val { color:var(--text);font-weight:700; }
 .gdm-rating-empty { font-size:12px;color:var(--muted);font-style:italic; }
-.gdm-row { display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start; }
+.gdm-row { display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:center; }
 .gdm-row:last-child { border-bottom:none; }
 .gdm-row-k { color:var(--muted-light);flex-shrink:0; }
 .gdm-row-v { color:var(--text);font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere; }
@@ -2752,16 +2752,20 @@ body.is-desktop-app .notif-panel{top:0;}
 .gdm-media-thumb img { width:100%;height:100%;object-fit:cover;display:block; }
 .gdm-thumb-play { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(0,0,0,.3); }
 
-/* ── Reviews block (below media) + user submit — banner-style ── */
-.gdm-reviews-card { position:relative;margin-top:20px;padding:20px 22px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(167,139,250,.06) 50%,rgba(62,207,110,.06));border:1px solid var(--border);box-shadow:0 8px 28px rgba(0,0,0,.25); }
-.gdm-reviews-card::before { content:"";position:absolute;inset:0;background:radial-gradient(900px 220px at 15% -20%,rgba(255,249,62,.1),transparent 60%),radial-gradient(900px 220px at 85% -20%,rgba(167,139,250,.12),transparent 60%);pointer-events:none; }
-.gdm-reviews-card > * { position:relative; }
-.gdm-reviews-card .gdm-side-head { font-family:var(--font-display);font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin-bottom:12px; }
-.gdm-user-review { margin-top:14px;padding-top:14px;border-top:1px solid var(--border); }
-.gdm-user-review-head { font-size:12px;font-weight:700;color:var(--muted-light);margin-bottom:10px;letter-spacing:.02em; }
+/* ── Reviews banner (wider-than-tall, details palette) ── */
+.gdm-reviews-banner { margin-top:18px;padding:16px 18px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--border); }
+.gdm-reviews-head { display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--border);flex-wrap:wrap; }
+.gdm-reviews-head .gdm-side-head { margin:0; }
+.gdm-reviews-ratings { display:flex;flex-direction:column;gap:2px;align-items:flex-end;min-width:0; }
+.gdm-reviews-ratings .gdm-rating-row { padding:2px 0;border:none;font-size:12px;gap:8px; }
+.gdm-reviews-grid { display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:18px;align-items:stretch; }
+.gdm-reviews-left, .gdm-reviews-right { display:flex;flex-direction:column;min-width:0; }
+.gdm-reviews-right-head { font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px; }
+.gdm-user-review-head { font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px; }
+@media(max-width:720px) { .gdm-reviews-grid { grid-template-columns:1fr; } }
 .gdm-thumbs { display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap; }
-.gdm-thumb { flex:1;min-width:96px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--muted-light);cursor:pointer;font-family:var(--font-ui);font-size:11.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;transition:all .15s; }
-.gdm-thumb-emoji, .gdm-thumb-emoji img.emoji, .gdm-thumb-emoji img { font-size:26px;width:26px;height:26px;display:inline-block;vertical-align:middle; }
+.gdm-thumb { flex:1;min-width:72px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--muted-light);cursor:pointer;font-family:var(--font-ui);font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;transition:all .15s; }
+.gdm-thumb-emoji, .gdm-thumb-emoji img.emoji, .gdm-thumb-emoji img { font-size:22px;width:22px;height:22px;display:inline-block;vertical-align:middle; }
 .gdm-rc-emoji, .gdm-rc-emoji img.emoji, .gdm-rc-emoji img { font-size:14px;width:14px;height:14px;display:inline-block;vertical-align:-2px; }
 .gdm-thumb:hover { background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16);color:var(--text); }
 .gdm-thumb--up.gdm-thumb--active { background:rgba(62,207,110,.14);border-color:rgba(62,207,110,.4);color:var(--green); }

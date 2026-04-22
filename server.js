@@ -87,16 +87,26 @@ async function getIGDBToken() {
       return null;
     }
     const data = await res.json();
-    if (data.access_token) {
+    if (data.access_token && typeof data.expires_in === 'number' && data.expires_in > 0) {
       _igdbToken = data.access_token;
       _igdbTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
       console.log('[IGDB] Token acquired, expires in', data.expires_in, 'seconds');
       return _igdbToken;
     }
-    console.error('[IGDB] Token response missing access_token:', JSON.stringify(data));
+    console.error('[IGDB] Token response missing access_token or expires_in:', JSON.stringify(data));
   } catch (e) { console.error('[IGDB] Token error:', e.message); }
   return null;
 }
+
+// Cheap availability probe — avoids burning a search quota on every client load.
+app.get('/api/igdb/health', async (req, res) => {
+  const clientId = process.env.TWITCH_CLIENT_ID;
+  const clientSecret = process.env.TWITCH_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return res.status(503).json({ ok: false, reason: 'not_configured' });
+  const token = await getIGDBToken();
+  if (!token) return res.status(503).json({ ok: false, reason: 'token_failed' });
+  return res.json({ ok: true });
+});
 
 app.post('/api/igdb/search', async (req, res) => {
   const { query } = req.body;
@@ -135,10 +145,10 @@ app.post('/api/igdb/search', async (req, res) => {
       summary: g.summary ? g.summary.slice(0, 200) : null,
       year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : null,
     }));
-    res.json({ results });
+    return res.json({ results });
   } catch (e) {
     console.error('[IGDB] Search error:', e.message);
-    res.status(500).json({ error: 'IGDB request failed' });
+    return res.status(500).json({ error: 'IGDB request failed' });
   }
 });
 
@@ -156,7 +166,8 @@ app.post('/api/igdb/lookup', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
       },
-      body: `where name ~ (${nameList}); fields name,genres.name,cover.image_id,summary; limit 20;`,
+      // IGDB list match uses `= (a,b,c)` — `~` is single-value fuzzy match only.
+      body: `where name = (${nameList}); fields name,genres.name,cover.image_id,summary; limit 20;`,
     });
     if (!igdbRes.ok) {
       const errText = await igdbRes.text().catch(() => '');
@@ -178,10 +189,74 @@ app.post('/api/igdb/lookup', async (req, res) => {
         summary: g.summary ? g.summary.slice(0, 200) : null,
       };
     });
-    res.json({ results });
+    return res.json({ results });
   } catch (e) {
     console.error('[IGDB] Lookup error:', e.message);
-    res.status(500).json({ error: 'IGDB request failed' });
+    return res.status(500).json({ error: 'IGDB request failed' });
+  }
+});
+
+// Fetch the full metadata blob for a single game by name (best match).
+// Used by the in-app "registered game card" modal.
+app.post('/api/igdb/game', async (req, res) => {
+  const { name } = req.body || {};
+  if (!name || typeof name !== 'string') return res.status(400).json({ error: 'name required' });
+  const token = await getIGDBToken();
+  if (!token) return res.status(503).json({ error: 'IGDB not configured' });
+  try {
+    const safe = name.replace(/"/g, '');
+    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
+      body: `search "${safe}"; fields name,summary,genres.name,cover.image_id,first_release_date,involved_companies.company.name,involved_companies.developer,involved_companies.publisher,platforms.name,platforms.abbreviation,screenshots.image_id,websites.url,websites.category,rating,rating_count,aggregated_rating,aggregated_rating_count; limit 1;`,
+    });
+    if (!igdbRes.ok) {
+      const errText = await igdbRes.text().catch(() => '');
+      console.error('[IGDB] Game API error:', igdbRes.status, errText);
+      if (igdbRes.status === 401 || igdbRes.status === 403) { _igdbToken = null; _igdbTokenExpiry = 0; }
+      return res.status(igdbRes.status).json({ error: 'IGDB API error: ' + igdbRes.status });
+    }
+    const games = await igdbRes.json();
+    if (!Array.isArray(games) || !games.length) return res.json({ game: null });
+    const g = games[0];
+    const companies = g.involved_companies || [];
+    const developers = companies.filter(c => c.developer).map(c => c.company?.name).filter(Boolean);
+    const publishers = companies.filter(c => c.publisher).map(c => c.company?.name).filter(Boolean);
+    // Website category codes (IGDB): 1=official, 13=steam, 2=wikia, 3=wikipedia, 4=facebook,
+    // 5=twitter/x, 6=twitch, 8=instagram, 9=youtube, 10=iphone, 11=ipad, 12=android,
+    // 14=reddit, 15=itch, 16=epicgames, 17=gog, 18=discord
+    const WEBSITE_KIND = {1:'official',13:'steam',3:'wikipedia',4:'facebook',5:'twitter',6:'twitch',8:'instagram',9:'youtube',14:'reddit',15:'itch',16:'epic',17:'gog',18:'discord'};
+    const links = (g.websites || [])
+      .map(w => ({ kind: WEBSITE_KIND[w.category] || 'link', url: w.url }))
+      .filter(l => l.url);
+    const game = {
+      id: g.id,
+      name: g.name,
+      summary: g.summary || null,
+      genres: (g.genres || []).map(x => x.name),
+      coverUrl: g.cover?.image_id ? `https://images.igdb.com/igdb/image/upload/t_1080p/${g.cover.image_id}.jpg` : null,
+      coverThumb: g.cover?.image_id ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${g.cover.image_id}.jpg` : null,
+      screenshots: (g.screenshots || []).slice(0, 6).map(s => ({
+        thumb: `https://images.igdb.com/igdb/image/upload/t_screenshot_med/${s.image_id}.jpg`,
+        full:  `https://images.igdb.com/igdb/image/upload/t_screenshot_huge/${s.image_id}.jpg`,
+      })),
+      releaseDate: g.first_release_date ? new Date(g.first_release_date * 1000).toISOString() : null,
+      developers, publishers,
+      platforms: (g.platforms || []).map(p => ({ name: p.name, abbr: p.abbreviation || null })),
+      links,
+      userRating: typeof g.rating === 'number' ? Math.round(g.rating) : null,
+      userRatingCount: g.rating_count || 0,
+      criticRating: typeof g.aggregated_rating === 'number' ? Math.round(g.aggregated_rating) : null,
+      criticRatingCount: g.aggregated_rating_count || 0,
+    };
+    return res.json({ game });
+  } catch (e) {
+    console.error('[IGDB] Game error:', e.message);
+    return res.status(500).json({ error: 'IGDB request failed' });
   }
 });
 

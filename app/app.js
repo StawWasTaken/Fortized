@@ -123,6 +123,8 @@ let CU = null;
 const _pfpCache = {};
 const _pfpCropCache = {}; // username -> {leftPct, topPct, widthPct} for GIF avatar CSS cropping
 const _liveStatusCache = {}; // username -> status, updated by real-time presence events
+const _liveGameActivityCache = {}; // username -> { name, metadata, startedAt } | null
+const _liveActivityCache = {};     // username -> { activities:[...] }
 const _verifiedCache = {};   // username -> bool (populated via getUserByName)
 let curBastion = null;
 let curChannel = null;
@@ -4973,6 +4975,13 @@ function _buildGCMemberEntry(m, meta, isOwner, statusMap) {
   const isGCOwner = m === meta.owner;
   const st = statusMap ? (statusMap[m] || 'offline') : (isMe ? (CU.status||'online') : 'offline');
   const isOnline = st === 'online' || st === 'away' || st === 'dnd';
+  // Activity card variant for online players
+  if (isOnline) {
+    const activity = _activityCardFromStatus(m);
+    if (activity && activity.name) {
+      return buildActivityCard(m, displayN, pfpSrc, pfpCrop, st, activity, { compact: true });
+    }
+  }
   return `<div class="ml-entry" data-member="${escapeHTML(m)}" data-status="${st}" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)" style="${isOnline?'':'opacity:.4;'}">
     <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30,pfpCrop)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${st}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(st, 10)}</span></div>
     <div style="flex:1;min-width:0;">
@@ -7468,7 +7477,14 @@ const _MLH_TOP      = 41;   // .ml-header
 const _MLH_SEARCH   = 46;   // .ml-search
 const _MLH_ROLE     = 30;   // .ml-role-header
 const _MLH_ENTRY    = 46;   // .ml-entry
+const _MLH_ACTIVITY = 70;   // .ml-entry--activity (taller card)
 const _MLH_OFFL_GAP = 38;   // .ml-role-header with top margin (offline divider)
+
+function _mlRowHeightFor(u, isOffline) {
+  if (isOffline) return _MLH_ENTRY;
+  const a = (typeof _activityCardFromStatus === 'function') ? _activityCardFromStatus(u) : null;
+  return (a && a.name) ? _MLH_ACTIVITY : _MLH_ENTRY;
+}
 
 function _mlRenderItem(idx) {
   const it = _mlItems[idx];
@@ -7599,7 +7615,7 @@ async function renderMemberList() {
 
   if (ownerOnline.length) {
     items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="opacity:.6;vertical-align:-2px;margin-right:4px;"><path d="M2 18l3-10 5 5 2-6 2 6 5-5 3 10H2zm0 2h20v2H2z"/></svg> Owner</div>` });
-    ownerOnline.forEach(u => items.push({ type:'member', height:_MLH_ENTRY, u, isOffline:false }));
+    ownerOnline.forEach(u => items.push({ type:'member', height:_mlRowHeightFor(u, false), u, isOffline:false }));
   }
 
   const sortedGroups = Object.values(roleGroups).sort((a,b) => roles.indexOf(a.role) - roles.indexOf(b.role));
@@ -7607,14 +7623,14 @@ async function renderMemberList() {
     const online = g.members.filter(u => isOnlineStatus(statusMap[u]));
     if (online.length) {
       items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><span style="width:6px;height:6px;border-radius:50%;background:${g.role.color||'var(--muted)'};flex-shrink:0;"></span> ${escapeHTML(g.role.name)} <span class="ml-role-count">— ${online.length}</span></div>` });
-      online.forEach(u => items.push({ type:'member', height:_MLH_ENTRY, u, isOffline:false }));
+      online.forEach(u => items.push({ type:'member', height:_mlRowHeightFor(u, false), u, isOffline:false }));
     }
   });
 
   const noRoleOnline = noRole.filter(u => isOnlineStatus(statusMap[u]));
   if (noRoleOnline.length) {
     items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header">Online <span class="ml-role-count">— ${noRoleOnline.length}</span></div>` });
-    noRoleOnline.forEach(u => items.push({ type:'member', height:_MLH_ENTRY, u, isOffline:false }));
+    noRoleOnline.forEach(u => items.push({ type:'member', height:_mlRowHeightFor(u, false), u, isOffline:false }));
   }
 
   const allOffline = [...ownerOffline];
@@ -7691,6 +7707,13 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
   const pfpSrc = isMe ? CU.pfp : (_pfpCache[u] || null);
   const pfpCrop = isMe ? CU.pfpCrop : (_pfpCropCache[u] || null);
   const status = knownStatus || (isMe ? (CU.status||'online') : 'online');
+  // Activity card takes priority for online users who are playing something
+  if (!isOffline) {
+    const activity = _activityCardFromStatus(u);
+    if (activity && activity.name) {
+      return buildActivityCard(u, displayN, pfpSrc, pfpCrop, status, activity);
+    }
+  }
   // Deferred fetch for profile data (status already live via Socket.IO onStatusChange).
   // Fire at most once per user per session so rows that pop in/out of the virtualized
   // viewport don't re-spam getUserByName.
@@ -8701,6 +8724,7 @@ function initFortizedUXResilience() {
         if (!data || !data.username) return;
         // Cache the live status for use in renderMemberList fallback
         _liveStatusCache[data.username] = data.status;
+        if (data.gameActivity !== undefined) _liveGameActivityCache[data.username] = data.gameActivity || null;
         const color = typeof FtzStatus !== 'undefined' ? FtzStatus.color(data.status) : (data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#f87171':'rgba(255,255,255,.15)');
         const isOnline = data.status==='online'||data.status==='away'||data.status==='dnd';
 
@@ -8806,6 +8830,12 @@ function initFortizedUXResilience() {
       },
       onActivityChange: function(data) {
         if (!data || !data.username) return;
+        // Cache activities so memberlist entries can render activity cards without refetch
+        if (data.activityState && Array.isArray(data.activityState.activities)) _liveActivityCache[data.username] = data.activityState;
+        if (data.gameActivity !== undefined) _liveGameActivityCache[data.username] = data.gameActivity || null;
+        // Re-sort memberlists so cards bubble up when a user starts playing
+        if (curBastion !== null && document.getElementById('member-list') && typeof _debouncedMemberListResort === 'function') _debouncedMemberListResort();
+        if (curGC && document.getElementById('gc-member-panel') && typeof _debouncedGCMemberResort === 'function') _debouncedGCMemberResort();
         // Refresh open profile modal with new activity
         const profileModal = document.getElementById('modal-user');
         if (profileModal && profileModal.style.display !== 'none') {
@@ -25982,11 +26012,12 @@ let _igdbAvailable = null; // null=unknown, true/false
 let _igdbLastCheck = 0;
 
 async function _checkIGDB() {
-  // Re-check every 2 minutes if previously failed, cache success for 10 minutes
+  // Re-check every 2 minutes if previously failed, cache success for 10 minutes.
+  // Uses /api/igdb/health (doesn't burn a search quota on every page load).
   const cacheTime = _igdbAvailable ? 600000 : 120000;
   if (_igdbAvailable !== null && Date.now() - _igdbLastCheck < cacheTime) return _igdbAvailable;
   try {
-    const r = await fetch('/api/igdb/search', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'test'})});
+    const r = await fetch('/api/igdb/health');
     _igdbAvailable = r.ok;
     _igdbLastCheck = Date.now();
   } catch { _igdbAvailable = false; _igdbLastCheck = Date.now(); }
@@ -30780,6 +30811,202 @@ async function _enrichActivityWithIGDB(activity) {
       _updateUserbarActivity();
     }
   } catch(e) { console.warn('[IGDB] Activity enrichment failed:', e); }
+}
+
+// ── Activity cards (memberlist presence) ──
+// Renders a Discord-style richer row for members with an active game activity.
+// Used by bastion memberlists (buildMemberEntry) and group-chat memberlists
+// (_buildGCMemberEntry). Click = open the game-detail modal.
+function _activityCardFromStatus(username) {
+  // Prefer the real-time activityState cache (server-side push), falling back
+  // to the user's persisted game_activity row.
+  const live = (typeof _liveActivityCache !== 'undefined') ? _liveActivityCache[username] : null;
+  const acts = live && Array.isArray(live.activities) ? live.activities : null;
+  if (acts && acts.length) {
+    const game = acts.find(a => a && a.id === 'game');
+    if (game) return {
+      name: game.name,
+      coverUrl: game.metadata?.coverUrl || game.metadata?.coverThumb || null,
+      since: game.startedAt || null,
+      streak: game.metadata?.streak || null,
+      mostPlayed: game.metadata?.mostPlayed || null,
+    };
+  }
+  // Fallback: old single-game cache used by presence broadcasts
+  const ga = (typeof _liveGameActivityCache !== 'undefined') ? _liveGameActivityCache[username] : null;
+  if (ga && ga.name) return {
+    name: ga.name,
+    coverUrl: ga.metadata?.coverUrl || ga.metadata?.coverThumb || null,
+    since: ga.startedAt || null,
+    streak: ga.metadata?.streak || null,
+    mostPlayed: ga.metadata?.mostPlayed || null,
+  };
+  return null;
+}
+
+function _activityTimeAgo(ts) {
+  if (!ts) return 'now';
+  const diff = Math.max(0, Date.now() - ts);
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const d = Math.floor(h / 24);
+  if (d < 7) return d + 'd ago';
+  const w = Math.floor(d / 7);
+  return w + 'w ago';
+}
+
+function buildActivityCard(username, displayName, pfpSrc, pfpCrop, status, activity, opts) {
+  const isMe = username === CU.username;
+  const isOffline = !(status === 'online' || status === 'away' || status === 'dnd');
+  const compact = !!(opts && opts.compact);
+  const safeGame = escapeHTML(activity.name || 'Unknown game');
+  const safeName = escapeHTML(displayName);
+  const cover = activity.coverUrl
+    ? `<img class="ml-act-cover" src="${escapeHTML(activity.coverUrl)}" onerror="this.remove()">`
+    : `<div class="ml-act-cover ml-act-cover-fallback"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 12h2M8 11v2M15 12h.01M18 12h.01"/></svg></div>`;
+  const subline = activity.mostPlayed
+    ? `<span class="ml-act-sub"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 6.5 6.8.3-5.4 4.2 1.9 6.6L12 16l-5.7 3.6 1.9-6.6L2.8 8.8l6.8-.3z"/></svg> Most played — ${escapeHTML(activity.mostPlayed)}</span>`
+    : activity.streak
+      ? `<span class="ml-act-sub"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> ${escapeHTML(activity.streak)}</span>`
+      : `<span class="ml-act-sub"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="4"/></svg> ${_activityTimeAgo(activity.since)}</span>`;
+  const dim = isOffline ? 'opacity:.55;' : '';
+  const avatarHtml = buildAvatarHTML(pfpSrc, displayName, 28, pfpCrop);
+  const gameEscapedAttr = escapeHTML(activity.name || '');
+  return `<div class="ml-entry ml-entry--activity${compact ? ' ml-entry--activity-compact' : ''}" data-member="${escapeHTML(username)}" data-status="${status}" style="${dim}" onclick="openGameDetailsModal('${gameEscapedAttr.replace(/'/g,"\\'")}')" title="View ${safeGame} details">
+    <div class="ml-act-head">
+      <div class="ml-av-wrap" style="position:relative;display:inline-flex;flex-shrink:0;">${avatarHtml}<span class="profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="10" data-dot-status="${status}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(status, 10)}</span></div>
+      <div class="ml-act-head-text">
+        <div class="ml-act-name">${safeName}</div>
+        <div class="ml-act-game">${safeGame}</div>
+        ${subline}
+      </div>
+      ${cover}
+    </div>
+  </div>`;
+}
+
+// ── Game-detail modal (IGDB-backed "registered game card") ──
+let _igdbGameCache = Object.create(null);
+
+async function openGameDetailsModal(gameName) {
+  if (!gameName) return;
+  // Close any prior instance
+  document.getElementById('game-details-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'game-details-modal';
+  overlay.className = 'gdm-overlay';
+  overlay.innerHTML = `
+    <div class="gdm-card" onclick="event.stopPropagation()">
+      <div class="gdm-loading">
+        <div class="gdm-spinner"></div>
+        <div style="color:var(--muted);font-size:13px;">Loading ${escapeHTML(gameName)}…</div>
+      </div>
+    </div>`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+  let game = _igdbGameCache[gameName] || null;
+  if (!game) {
+    try {
+      const r = await fetch('/api/igdb/game', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: gameName }) });
+      if (r.ok) {
+        const data = await r.json();
+        game = data.game;
+        if (game) _igdbGameCache[gameName] = game;
+      }
+    } catch(_) {}
+  }
+  _renderGameDetailsModal(overlay, gameName, game);
+}
+
+function _renderGameDetailsModal(overlay, requestedName, game) {
+  const card = overlay.querySelector('.gdm-card');
+  if (!card) return;
+  if (!game) {
+    card.innerHTML = `
+      <button class="gdm-close" onclick="document.getElementById('game-details-modal').remove()" title="Close">×</button>
+      <div class="gdm-empty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 12h3M8.5 10.5v3M15 12h.01M18 12h.01"/></svg>
+        <div class="gdm-empty-title">No IGDB match for "${escapeHTML(requestedName)}"</div>
+        <div class="gdm-empty-sub">We couldn't find metadata for this game — it may not be indexed yet or IGDB isn't configured on the server.</div>
+      </div>`;
+    return;
+  }
+  const releaseDate = game.releaseDate
+    ? new Date(game.releaseDate).toLocaleDateString(undefined, { day:'numeric', month:'long', year:'numeric' })
+    : null;
+  const genres = (game.genres || []).join(', ') || '—';
+  const devs = (game.developers || []).join(', ');
+  const pubs = (game.publishers || []).join(', ');
+  const platformsHTML = (game.platforms || []).slice(0, 8)
+    .map(p => `<span class="gdm-platform" title="${escapeHTML(p.name)}">${escapeHTML(p.abbr || p.name)}</span>`)
+    .join('');
+  const linksHTML = (game.links || []).map(l => {
+    const label = l.kind === 'official' ? 'Website'
+      : l.kind === 'steam' ? 'Steam'
+      : l.kind.charAt(0).toUpperCase() + l.kind.slice(1);
+    return `<a class="gdm-link" href="${escapeHTML(l.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHTML(label)}">${escapeHTML(label)}</a>`;
+  }).join('');
+  const screenshots = (game.screenshots || []);
+  const heroSrc = (screenshots[0] && screenshots[0].full) || game.coverUrl || '';
+  const ratings = [];
+  if (typeof game.userRating === 'number') ratings.push({ src:'IGDB users', label: game.userRating + '%', count: game.userRatingCount || 0 });
+  if (typeof game.criticRating === 'number') ratings.push({ src:'Critics (IGDB)', label: game.criticRating + '%', count: game.criticRatingCount || 0 });
+  const ratingsHTML = ratings.length
+    ? ratings.map(r => `<div class="gdm-rating-row"><span class="gdm-rating-src">${escapeHTML(r.src)}</span><span class="gdm-rating-val">${escapeHTML(r.label)} <span style="opacity:.5;font-weight:500;">(${r.count.toLocaleString()})</span></span></div>`).join('')
+    : `<div class="gdm-rating-empty">No review aggregate available yet.</div>`;
+  const canAdd = typeof addGameToCollection === 'function';
+  const safeName = escapeHTML(game.name);
+  card.innerHTML = `
+    <div class="gdm-hero" style="${heroSrc ? `background-image:linear-gradient(180deg,rgba(10,8,8,.12),rgba(10,8,8,.85)),url('${escapeHTML(heroSrc)}');` : ''}">
+      <div class="gdm-hero-actions">
+        ${canAdd ? `<button class="gdm-add-btn" onclick="_gdmAddToProfile('${safeName.replace(/'/g,"\\'")}')">+ Add to Profile</button>` : ''}
+        <button class="gdm-close" onclick="document.getElementById('game-details-modal').remove()" title="Close">×</button>
+      </div>
+      <div class="gdm-hero-bottom">
+        ${game.coverThumb ? `<img class="gdm-cover" src="${escapeHTML(game.coverThumb)}" alt="${safeName}">` : ''}
+        <div class="gdm-hero-text">
+          <div class="gdm-kicker">Game · IGDB</div>
+          <div class="gdm-title">${safeName}</div>
+          <div class="gdm-genres">${escapeHTML(genres)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="gdm-body">
+      <div class="gdm-main">
+        ${screenshots.length ? `<div class="gdm-shots">${screenshots.slice(1).map(s => `<img src="${escapeHTML(s.thumb)}" onclick="window.open('${escapeHTML(s.full)}','_blank')" alt="">`).join('')}</div>` : ''}
+        ${game.summary ? `<p class="gdm-summary">${escapeHTML(game.summary)}</p>` : ''}
+      </div>
+      <aside class="gdm-side">
+        <div class="gdm-side-card">
+          <div class="gdm-side-head">Reviews</div>
+          ${ratingsHTML}
+        </div>
+        <div class="gdm-side-card">
+          <div class="gdm-side-head">Details</div>
+          <div class="gdm-row"><span class="gdm-row-k">Genres</span><span class="gdm-row-v">${escapeHTML(genres)}</span></div>
+          ${pubs ? `<div class="gdm-row"><span class="gdm-row-k">Publisher</span><span class="gdm-row-v">${escapeHTML(pubs)}</span></div>` : ''}
+          ${devs ? `<div class="gdm-row"><span class="gdm-row-k">Developer</span><span class="gdm-row-v">${escapeHTML(devs)}</span></div>` : ''}
+          ${releaseDate ? `<div class="gdm-row"><span class="gdm-row-k">Release Date</span><span class="gdm-row-v">${escapeHTML(releaseDate)}</span></div>` : ''}
+          ${platformsHTML ? `<div class="gdm-row"><span class="gdm-row-k">Platforms</span><span class="gdm-row-v gdm-row-v--platforms">${platformsHTML}</span></div>` : ''}
+          ${linksHTML ? `<div class="gdm-row"><span class="gdm-row-k">Links</span><span class="gdm-row-v gdm-row-v--links">${linksHTML}</span></div>` : ''}
+          <div class="gdm-row gdm-row--meta"><span class="gdm-row-k">Game metadata by</span><span class="gdm-row-v"><a class="gdm-link" href="https://www.igdb.com" target="_blank" rel="noopener noreferrer">IGDB</a></span></div>
+        </div>
+      </aside>
+    </div>`;
+}
+
+async function _gdmAddToProfile(gameName) {
+  try {
+    if (typeof addGameToCollection !== 'function') return;
+    await addGameToCollection({ name: gameName });
+    toast('Added ' + gameName + ' to your profile.', 'success');
+  } catch(e) {
+    console.warn('[GDM] Add to profile failed:', e);
+    toast('Couldn\'t add to profile.', 'error');
+  }
 }
 
 function refreshGameActivityBar() {

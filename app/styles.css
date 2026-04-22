@@ -2753,6 +2753,64 @@ body.is-desktop-app .notif-panel{top:0;}
 .gdm-media-thumb img { width:100%;height:100%;object-fit:cover;display:block; }
 .gdm-thumb-play { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(0,0,0,.3); }
 
+/* ── Community review embed (Roblox/Polytoria nerd-stats style) ── */
+.gdm-reviews-embed { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;padding:12px 14px;margin-bottom:12px;background:radial-gradient(600px 120px at 15% 100%,rgba(255,249,62,.05),transparent 70%),rgba(0,0,0,.32);border:1px solid var(--border);border-radius:12px;position:relative;overflow:hidden; }
+.gdm-reviews-embed::before { content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:22px 22px;pointer-events:none;opacity:.5; }
+.gdm-reviews-embed > * { position:relative;z-index:1; }
+.gdm-embed-main { display:flex;align-items:center;gap:22px;min-width:0; }
+.gdm-embed-score { display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex-shrink:0;min-width:110px; }
+.gdm-embed-num { font-family:var(--font-display);font-size:48px;font-weight:800;line-height:1;letter-spacing:-.01em;color:var(--text);font-variant-numeric:tabular-nums; }
+.gdm-embed-num-unit { font-size:22px;font-weight:700;color:var(--muted-light);margin-left:2px; }
+.gdm-embed-band { font-family:var(--font-display);font-size:12.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--text);white-space:nowrap; }
+.gdm-embed-score.gdm-tone-great .gdm-embed-num { color:var(--green); }
+.gdm-embed-score.gdm-tone-great .gdm-embed-band { color:var(--green); }
+.gdm-embed-score.gdm-tone-good  .gdm-embed-num { color:var(--blue); }
+.gdm-embed-score.gdm-tone-good  .gdm-embed-band { color:var(--blue); }
+.gdm-embed-score.gdm-tone-mixed .gdm-embed-num { color:var(--accent); }
+.gdm-embed-score.gdm-tone-mixed .gdm-embed-band { color:var(--accent); }
+.gdm-embed-score.gdm-tone-bad   .gdm-embed-num { color:#fb923c; }
+.gdm-embed-score.gdm-tone-bad   .gdm-embed-band { color:#fb923c; }
+.gdm-embed-score.gdm-tone-awful .gdm-embed-num { color:var(--red); }
+.gdm-embed-score.gdm-tone-awful .gdm-embed-band { color:var(--red); }
+.gdm-embed-bar-wrap { flex:1;min-width:0;display:flex;flex-direction:column;gap:8px; }
+.gdm-embed-bar { display:flex;height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.04);box-shadow:inset 0 1px 0 rgba(0,0,0,.4); }
+.gdm-embed-seg { transition:width .6s cubic-bezier(.22,1,.36,1),opacity .15s; }
+.gdm-embed-seg:hover { opacity:.85; }
+.gdm-embed-seg--up { background:linear-gradient(90deg,#3ecf6e,#5de88a); }
+.gdm-embed-seg--mid { background:linear-gradient(90deg,#fff93e,#ffe55c); }
+.gdm-embed-seg--down { background:linear-gradient(90deg,#f87171,#fb923c); }
+.gdm-embed-tally-row { display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted-light);font-variant-numeric:tabular-nums; }
+.gdm-embed-tally { display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--text); }
+.gdm-embed-tally-emoji, .gdm-embed-tally-emoji img.emoji, .gdm-embed-tally-emoji img { font-size:14px;width:14px;height:14px;display:inline-block;vertical-align:middle; }
+.gdm-embed-tally--up { color:var(--green); }
+.gdm-embed-tally--mid { color:var(--accent); }
+.gdm-embed-tally--down { color:#fb923c; }
+.gdm-embed-total { margin-left:auto;color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.03em;text-transform:uppercase; }
+.gdm-embed-spark { flex-shrink:0;display:flex;flex-direction:column;gap:4px;min-width:140px;padding:8px 12px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:10px;color:var(--accent); }
+.gdm-embed-spark-head { display:flex;align-items:center;justify-content:space-between;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);gap:8px; }
+.gdm-embed-delta { color:var(--muted-light);font-family:var(--font-display);font-size:11px;font-weight:800;font-variant-numeric:tabular-nums; }
+.gdm-embed-delta--up { color:var(--green); }
+.gdm-embed-sparkline { width:100%;height:24px;display:block;opacity:.85; }
+.gdm-embed-empty { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:18px;width:100%;grid-column:1 / -1; }
+.gdm-embed-empty-num { font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--muted); }
+.gdm-embed-empty-sub { font-size:12px;color:var(--muted-light);font-style:italic; }
+
+/* Critics embed (kept separate below the community section) */
+.gdm-reviews-foot { margin-top:10px;display:flex;gap:10px;flex-wrap:wrap; }
+.gdm-critic-embed { display:inline-flex;flex-direction:column;padding:10px 14px;background:rgba(0,0,0,.28);border:1px solid var(--border);border-radius:10px;min-width:140px; }
+.gdm-critic-label { font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted); }
+.gdm-critic-score { font-family:var(--font-display);font-size:22px;font-weight:800;line-height:1;color:var(--text);margin:3px 0;font-variant-numeric:tabular-nums; }
+.gdm-critic-score span { font-size:12px;color:var(--muted-light);font-weight:700;margin-left:2px; }
+.gdm-critic-sub { font-size:10.5px;color:var(--muted); }
+.gdm-critic-embed.gdm-tone-great .gdm-critic-score { color:var(--green); }
+.gdm-critic-embed.gdm-tone-good .gdm-critic-score { color:var(--blue); }
+.gdm-critic-embed.gdm-tone-mixed .gdm-critic-score { color:var(--accent); }
+.gdm-critic-embed.gdm-tone-bad .gdm-critic-score { color:#fb923c; }
+.gdm-critic-embed.gdm-tone-awful .gdm-critic-score { color:var(--red); }
+
+.gdm-reviews-head-note { font-size:11px;color:var(--muted);font-style:italic; }
+@media(max-width:860px) { .gdm-reviews-embed { grid-template-columns:1fr; } .gdm-embed-main { flex-direction:column;align-items:stretch;gap:14px; } .gdm-embed-spark { width:100%; } }
+
 /* ── Reviews banner (full-width, compact, landscape) ── */
 .gdm-reviews-banner { grid-column:1 / -1;margin-top:16px;padding:14px 18px;border-radius:14px;background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.28));border:1px solid var(--border);box-shadow:0 6px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.02); }
 .gdm-reviews-head { display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border);flex-wrap:wrap; }

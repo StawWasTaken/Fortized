@@ -31182,6 +31182,146 @@ function _gdmReviewTone(v) {
   return 'awful';
 }
 
+// Community-flavoured band labels. Used anywhere that shows the merged
+// IGDB + Fortized score so the UI reads as a community-led thing, not a
+// corporate review aggregator.
+function _gdmCommunityLabel(v) {
+  if (v == null) return '—';
+  if (v >= 90) return 'Community Favourite';
+  if (v >= 80) return 'Mostly Loved';
+  if (v >= 70) return 'Well-Liked';
+  if (v >= 55) return 'Divisive';
+  if (v >= 40) return 'Rough';
+  return 'Disliked';
+}
+
+// Merge IGDB's player rating + Fortized 👏/👌/👎 votes into a single
+// community score (0-100) + total voter count + per-bucket tally.
+// Fortized vote weights: great = 100, ok = 55, bad = 10.
+function _gdmCommunityAggregate(game, reviews) {
+  const tallies = { up: 0, mid: 0, down: 0 };
+  (reviews || []).forEach(r => {
+    if (r.vote === 'up') tallies.up++;
+    else if (r.vote === 'mid') tallies.mid++;
+    else if (r.vote === 'down') tallies.down++;
+  });
+  const fortTotal = tallies.up + tallies.mid + tallies.down;
+  const fortScore = fortTotal
+    ? (tallies.up * 100 + tallies.mid * 55 + tallies.down * 10) / fortTotal
+    : null;
+
+  const igdbScore = typeof game?.userRating === 'number' ? game.userRating : null;
+  const igdbCount = game?.userRatingCount || 0;
+
+  // Weighted average — IGDB's count is often dominant; Fortized votes
+  // still move the needle because weights stack naturally.
+  let mergedScore = null;
+  const totalWeight = igdbCount + fortTotal;
+  if (totalWeight > 0) {
+    mergedScore = ((igdbScore ?? 0) * igdbCount + (fortScore ?? 0) * fortTotal) / totalWeight;
+    if (igdbScore == null) mergedScore = fortScore;
+    if (fortScore == null) mergedScore = igdbScore;
+  }
+
+  // "+N this week" delta counts only Fortized votes in the last 7 days
+  // — IGDB doesn't give us per-vote timestamps, so community velocity
+  // is Fortized-only by necessity.
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const weekDelta = (reviews || []).filter(r => (r.at || 0) >= weekAgo).length;
+
+  return {
+    score: mergedScore,
+    total: totalWeight,
+    tallies,
+    fortTotal,
+    igdbCount,
+    weekDelta,
+  };
+}
+
+// Buckets Fortized reviews into the last 7 days for the sparkline.
+// Returns an array of 7 integers, oldest-first.
+function _gdmReviewActivityBuckets(reviews) {
+  const buckets = [0, 0, 0, 0, 0, 0, 0];
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+  (reviews || []).forEach(r => {
+    const age = now - (r.at || 0);
+    if (age < 0 || age > 7 * dayMs) return;
+    const idx = 6 - Math.floor(age / dayMs);
+    if (idx >= 0 && idx <= 6) buckets[idx]++;
+  });
+  return buckets;
+}
+
+function _gdmRenderEmbedHTML(game) {
+  const reviews = _gdmGetReviewsFor(game?.name || '');
+  const agg = _gdmCommunityAggregate(game, reviews);
+  if (!agg.total) {
+    return `<div class="gdm-embed-empty">
+      <div class="gdm-embed-empty-num">—</div>
+      <div class="gdm-embed-empty-sub">No community reviews yet. Be the first.</div>
+    </div>`;
+  }
+  const tone = _gdmReviewTone(agg.score);
+  const label = _gdmCommunityLabel(agg.score);
+  const pct = Math.round(agg.score);
+  // Estimate bucket percentages. For Fortized votes we have exact tallies;
+  // for IGDB we split its count across up/mid/down using its 0-100 rating.
+  const igdbUp = agg.igdbCount > 0 ? Math.round(agg.igdbCount * Math.max(0, Math.min(1, (game.userRating ?? 0) / 100))) : 0;
+  const igdbDown = agg.igdbCount > 0 ? Math.round(agg.igdbCount * Math.max(0, Math.min(1, (100 - (game.userRating ?? 0)) / 100)) * 0.5) : 0;
+  const igdbMid = Math.max(0, agg.igdbCount - igdbUp - igdbDown);
+  const totalUp = agg.tallies.up + igdbUp;
+  const totalMid = agg.tallies.mid + igdbMid;
+  const totalDown = agg.tallies.down + igdbDown;
+  const totalAll = Math.max(1, totalUp + totalMid + totalDown);
+  const upPct = (totalUp / totalAll) * 100;
+  const midPct = (totalMid / totalAll) * 100;
+  const downPct = 100 - upPct - midPct;
+  const buckets = _gdmReviewActivityBuckets(reviews);
+  const spark = _gdmSparklinePath(buckets, 120, 24);
+  return `
+    <div class="gdm-embed-main">
+      <div class="gdm-embed-score gdm-tone-${tone}">
+        <div class="gdm-embed-num">${pct}<span class="gdm-embed-num-unit">%</span></div>
+        <div class="gdm-embed-band">${escapeHTML(label)}</div>
+      </div>
+      <div class="gdm-embed-bar-wrap">
+        <div class="gdm-embed-bar">
+          <div class="gdm-embed-seg gdm-embed-seg--up" style="width:${upPct.toFixed(1)}%" title="${totalUp.toLocaleString()} positive"></div>
+          <div class="gdm-embed-seg gdm-embed-seg--mid" style="width:${midPct.toFixed(1)}%" title="${totalMid.toLocaleString()} mixed"></div>
+          <div class="gdm-embed-seg gdm-embed-seg--down" style="width:${downPct.toFixed(1)}%" title="${totalDown.toLocaleString()} negative"></div>
+        </div>
+        <div class="gdm-embed-tally-row">
+          <span class="gdm-embed-tally gdm-embed-tally--up"><span class="gdm-embed-tally-emoji">👏</span>${totalUp.toLocaleString()}</span>
+          <span class="gdm-embed-tally gdm-embed-tally--mid"><span class="gdm-embed-tally-emoji">👌</span>${totalMid.toLocaleString()}</span>
+          <span class="gdm-embed-tally gdm-embed-tally--down"><span class="gdm-embed-tally-emoji">👎</span>${totalDown.toLocaleString()}</span>
+          <span class="gdm-embed-total">${agg.total.toLocaleString()} voter${agg.total === 1 ? '' : 's'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="gdm-embed-spark">
+      <div class="gdm-embed-spark-head">
+        <span>Activity · last 7 days</span>
+        <span class="gdm-embed-delta${agg.weekDelta > 0 ? ' gdm-embed-delta--up' : ''}">${agg.weekDelta > 0 ? '+' : ''}${agg.weekDelta}</span>
+      </div>
+      <svg class="gdm-embed-sparkline" viewBox="0 0 120 24" preserveAspectRatio="none" aria-hidden="true">
+        <path d="${spark}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>`;
+}
+
+function _gdmSparklinePath(buckets, w, h) {
+  if (!buckets || buckets.length < 2) return '';
+  const max = Math.max(1, ...buckets);
+  const step = w / (buckets.length - 1);
+  return buckets.map((v, i) => {
+    const x = (i * step).toFixed(1);
+    const y = (h - (v / max) * (h - 2) - 1).toFixed(1);
+    return (i === 0 ? 'M' : 'L') + x + ',' + y;
+  }).join(' ');
+}
+
 function _renderGameDetailsModal(overlay, requestedName, game) {
   const card = overlay.querySelector('.gdm-card');
   if (!card) return;
@@ -31235,11 +31375,15 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
   const videos = (game.videos || []);
   const heroSrc = (screenshots[0] && screenshots[0].full) || game.coverUrl || '';
   const ratings = [];
-  if (typeof game.userRating === 'number') ratings.push({ src:'Players', label: _gdmReviewBand(game.userRating), tone: _gdmReviewTone(game.userRating), count: game.userRatingCount || 0, score: game.userRating });
-  if (typeof game.criticRating === 'number') ratings.push({ src:'Critics', label: _gdmReviewBand(game.criticRating), tone: _gdmReviewTone(game.criticRating), count: game.criticRatingCount || 0, score: game.criticRating });
-  const ratingsHTML = ratings.length
-    ? ratings.map(r => `<div class="gdm-rating-pill gdm-tone-${escapeHTML(r.tone)}"><span class="gdm-rating-dot"></span><span class="gdm-rating-src">${escapeHTML(r.src)}</span><span class="gdm-rating-band">${escapeHTML(r.label)}</span><span class="gdm-rating-count">${r.count.toLocaleString()}</span></div>`).join('')
-    : `<div class="gdm-rating-empty">No aggregated reviews yet.</div>`;
+  // Critics stay in their own small embed (methodologically different
+  // from community sentiment).
+  const criticHTML = typeof game.criticRating === 'number'
+    ? `<div class="gdm-critic-embed gdm-tone-${escapeHTML(_gdmReviewTone(game.criticRating))}">
+         <div class="gdm-critic-label">Critics</div>
+         <div class="gdm-critic-score">${Math.round(game.criticRating)}<span>/100</span></div>
+         <div class="gdm-critic-sub">${(game.criticRatingCount || 0).toLocaleString()} outlets</div>
+       </div>`
+    : '';
   const canAdd = typeof addGameToCollection === 'function';
   const safeName = escapeHTML(game.name);
   const safeNameAttr = safeName.replace(/'/g, "\\'");
@@ -31311,9 +31455,10 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
       </aside>
       <div class="gdm-reviews-banner">
         <div class="gdm-reviews-head">
-          <div class="gdm-side-head">Reviews</div>
-          <div class="gdm-reviews-ratings">${ratingsHTML}</div>
+          <div class="gdm-side-head">Community</div>
+          <div class="gdm-reviews-head-note">Your vote counts toward the community score.</div>
         </div>
+        <div class="gdm-reviews-embed" id="gdm-reviews-embed">${_gdmRenderEmbedHTML(game)}</div>
         <div class="gdm-reviews-row">
           <div class="gdm-thumbs">
             <button class="gdm-thumb gdm-thumb--up" data-vote="up" onclick="_gdmPickVote(this,'up')" title="Great"><span class="gdm-thumb-emoji">👏</span><span>Great</span></button>
@@ -31326,6 +31471,7 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
           </div>
           <div class="gdm-review-carousel" id="gdm-review-carousel"></div>
         </div>
+        ${criticHTML ? `<div class="gdm-reviews-foot">${criticHTML}</div>` : ''}
       </div>
     </div>`;
   // Kick off the Fortized user-review carousel for this game.
@@ -31579,6 +31725,12 @@ async function _gdmSubmitReview(gameName) {
   const ta = document.getElementById('gdm-review-text'); if (ta) ta.value = '';
   toast('Review posted!', 'success');
   _gdmStartReviewCarousel(gameName);
+  // Re-paint the community embed so the bar + score + delta move immediately.
+  const host = document.getElementById('gdm-reviews-embed');
+  if (host && _gdmLastGame) {
+    host.innerHTML = _gdmRenderEmbedHTML(_gdmLastGame);
+    try { if (typeof window._twemojiReparse === 'function') window._twemojiReparse(host); } catch(_){}
+  }
 }
 
 function _gdmStopReviewCarousel() {

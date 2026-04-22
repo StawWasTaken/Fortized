@@ -8093,12 +8093,38 @@ async function loadDiscover(){
   discoverData = discoverData.filter(b => b.name && b.name.trim().length > 0);
   // Fix member counts — ensure at least 1 if they have an owner
   discoverData.forEach(b => { if (!b.memberCount && b.owner) b.memberCount = 1; });
-  // Update stats
+  // Update stats — Polytoria-style embed with big numbers + category breakdown bar.
   const statsEl=document.getElementById('disc-stats');
   if(statsEl){
     const publicCount=discoverData.length;
     const totalMembers=discoverData.reduce((s,b)=>s+(b.memberCount||1),0);
-    statsEl.innerHTML=`<div class="disc-stat"><strong>${publicCount}</strong> communities</div><div class="disc-stat"><strong>${totalMembers}</strong> total members</div>`;
+    const verifiedCount=discoverData.filter(b=>b.verified).length;
+    const boostedCount=discoverData.filter(b=>(b.boostLevel||0)>0).length;
+    // Category breakdown — percentages across top 4 categories
+    const catCounts={};
+    discoverData.forEach(b=>{ const c=(b.category||'other').toLowerCase(); catCounts[c]=(catCounts[c]||0)+1; });
+    const topCats=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    const totalCatCount=topCats.reduce((s,[,n])=>s+n,0);
+    const catColors=['#3ecf6e','#60a5fa','#fbbf24','#f472b6'];
+    const catBarHTML=topCats.map(([name,count],i)=>{
+      const pct=totalCatCount?(count/totalCatCount)*100:0;
+      return `<div class="disc-cat-seg" style="width:${pct.toFixed(1)}%;background:${catColors[i]};" title="${escapeHTML(name)}: ${count}"></div>`;
+    }).join('');
+    const catLabelsHTML=topCats.map(([name,count],i)=>
+      `<span class="disc-cat-label"><span class="disc-cat-dot" style="background:${catColors[i]};"></span>${escapeHTML(name)} <strong>${count}</strong></span>`
+    ).join('');
+    statsEl.innerHTML=`
+      <div class="disc-stats-embed">
+        <div class="disc-stats-row">
+          <div class="disc-stat-cell"><div class="disc-stat-num">${publicCount.toLocaleString()}</div><div class="disc-stat-lbl">Communities</div></div>
+          <div class="disc-stat-cell"><div class="disc-stat-num" style="color:var(--green);">${totalMembers.toLocaleString()}</div><div class="disc-stat-lbl">Total members</div></div>
+          <div class="disc-stat-cell"><div class="disc-stat-num" style="color:var(--blue);">${verifiedCount.toLocaleString()}</div><div class="disc-stat-lbl">Verified</div></div>
+          <div class="disc-stat-cell"><div class="disc-stat-num" style="color:var(--accent);">${boostedCount.toLocaleString()}</div><div class="disc-stat-lbl">Boosted</div></div>
+        </div>
+        ${topCats.length?`<div class="disc-cat-head">Top categories</div>
+        <div class="disc-cat-bar">${catBarHTML}</div>
+        <div class="disc-cat-labels">${catLabelsHTML}</div>`:''}
+      </div>`;
   }
   _renderDiscoverFeatured(discoverData);
   renderDiscoverGrid(discoverData);
@@ -26666,7 +26692,13 @@ function renderProfileWidgetsOnCard(u, containerEl) {
       const fg = games.find(g => g.name === w.config.gameName) || (u.gameCollection||[]).find(g => g.name === w.config.gameName);
       if (fg) {
         const fgCover = fg.coverUrl || _getManualCover(fg.name);
-        html += `<div class="pw-widget" style="border-left:3px solid #f59e0b;">
+        // Nerdy stat-embed: "hours" uses any lastPlayed heuristic, streak from
+        // the gamecard store if present, rank is positional within the user's
+        // gameCollection. Falls back to dashes if we don't have the data.
+        const rank = ((u.gameCollection || []).findIndex(x => x.name === fg.name) + 1) || '—';
+        const sessions = fg.playCount || Array.isArray(fg.sessions) ? (fg.playCount || fg.sessions.length) : '—';
+        const addedDays = fg.addedAt ? Math.max(1, Math.floor((Date.now() - new Date(fg.addedAt).getTime()) / 86400000)) : '—';
+        html += `<div class="pw-widget">
           <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Favourite Game</div>
           <div class="pw-fav-large-card">
             <div class="pfl-cover">${fgCover ? `<img src="${escapeHTML(fgCover)}" alt="${escapeHTML(fg.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03));">${fg.icon||'⭐'}</div>`}</div>
@@ -26676,6 +26708,11 @@ function renderProfileWidgetsOnCard(u, containerEl) {
               <div class="pfl-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> All-time favourite</div>
             </div>
           </div>
+          <div class="pw-stat-row">
+            <div class="pw-stat-cell pw-stat-cell--accent"><div class="pw-stat-cell-label">Rank</div><div class="pw-stat-cell-num">#${rank}</div><div class="pw-stat-cell-sub">in collection</div></div>
+            <div class="pw-stat-cell pw-stat-cell--blue"><div class="pw-stat-cell-label">Sessions</div><div class="pw-stat-cell-num">${sessions}</div><div class="pw-stat-cell-sub">played</div></div>
+            <div class="pw-stat-cell pw-stat-cell--green"><div class="pw-stat-cell-label">Added</div><div class="pw-stat-cell-num">${addedDays}${typeof addedDays === 'number' ? '<span style="font-size:12px;color:var(--muted-light);margin-left:2px;">d</span>' : ''}</div><div class="pw-stat-cell-sub">ago</div></div>
+          </div>
         </div>`;
       }
     }
@@ -26683,12 +26720,35 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     if (w.id === 'games_rotation' && games.length) {
       const max = w.config?.maxShow || 6;
       const rotationGames = games.slice(0, max);
+      // Build a fake "last 7 days activity" sparkline from lastPlayed
+      // timestamps across the full collection — gives the widget a
+      // living-data feel without needing a playtime API.
+      const now = Date.now(), dayMs = 86400000;
+      const buckets = [0,0,0,0,0,0,0];
+      (u.gameCollection || []).forEach(g => {
+        const t = g.lastPlayed ? new Date(g.lastPlayed).getTime() : 0;
+        if (!t) return;
+        const age = now - t;
+        if (age < 0 || age > 7 * dayMs) return;
+        const idx = 6 - Math.floor(age / dayMs);
+        if (idx >= 0 && idx <= 6) buckets[idx]++;
+      });
+      const sparkPath = _gdmSparklinePath(buckets, 180, 22);
+      const weekTotal = buckets.reduce((a,b)=>a+b,0);
+      const sparkEmbed = sparkPath
+        ? `<div class="pw-sparkline-wrap">
+             <span class="pw-sparkline-label">Last 7 days</span>
+             <svg viewBox="0 0 180 22" preserveAspectRatio="none"><path d="${sparkPath}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+             <span class="pw-sparkline-delta${weekTotal > 0 ? ' pw-sparkline-delta--up' : ''}">${weekTotal} sessions</span>
+           </div>`
+        : '';
       html += `<div class="pw-widget">
         <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg> Currently Playing</div>
         <div class="pw-rotation-carousel">${rotationGames.map(g => {const _cv = g.coverUrl||_getManualCover(g.name); return `<div class="pw-rotation-card">
           ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(96,165,250,.02));">${g.icon||'🎮'}</div>`}
           <div class="prc-name">${escapeHTML(g.name)}</div>
         </div>`;}).join('')}</div>
+        ${sparkEmbed}
       </div>`;
     }
 
@@ -26699,15 +26759,22 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         const bName = b.name || w.config.bastionName || 'Bastion';
         const bMembers = b.members?.length || 0;
         const bType = b.type || 'Community';
-        html += `<div class="pw-widget" style="border-left:3px solid #a78bfa;">
+        const bChannels = Array.isArray(b.channels) ? b.channels.length : (b.channelCount || 0);
+        const bRoles = Array.isArray(b.roles) ? b.roles.length : (b.roleCount || 0);
+        html += `<div class="pw-widget">
           <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Primary Bastion</div>
           <div class="pw-bastion-card" onclick="joinBastionFromWidget('${escapeHTML(bName)}',${bIdx})">
             <div class="pw-bastion-emblem">${b.emblem ? `<img src="${escapeHTML(b.emblem)}">` : '🏰'}</div>
             <div class="pw-bastion-info">
               <div class="pw-bastion-name">${escapeHTML(bName)}</div>
-              <div class="pw-bastion-meta">${bMembers} member${bMembers!==1?'s':''} · ${escapeHTML(bType)}</div>
+              <div class="pw-bastion-meta">${escapeHTML(bType)}</div>
             </div>
             <button class="pw-join-btn">Join</button>
+          </div>
+          <div class="pw-stat-row">
+            <div class="pw-stat-cell pw-stat-cell--accent"><div class="pw-stat-cell-label">Members</div><div class="pw-stat-cell-num">${bMembers.toLocaleString()}</div></div>
+            <div class="pw-stat-cell pw-stat-cell--blue"><div class="pw-stat-cell-label">Channels</div><div class="pw-stat-cell-num">${bChannels}</div></div>
+            <div class="pw-stat-cell pw-stat-cell--green"><div class="pw-stat-cell-label">Roles</div><div class="pw-stat-cell-num">${bRoles}</div></div>
           </div>
         </div>`;
       }
@@ -26722,7 +26789,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         const currentProgressMs = Math.min(spotifyData.durationMs, (spotifyData.progressMs || 0) + elapsedMs);
         const progressPct = spotifyData.durationMs ? Math.min(100, (currentProgressMs / spotifyData.durationMs) * 100) : 0;
         const currentProgressStr = Math.floor(currentProgressMs/60000) + ':' + String(Math.floor((currentProgressMs%60000)/1000)).padStart(2,'0');
-        html += `<div class="pw-widget" style="border-left:3px solid #3ecf6e;padding:12px 14px;">
+        html += `<div class="pw-widget pw-widget--spotify" style="padding:12px 14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div class="pw-widget-title" style="color:#3ecf6e;margin-bottom:0;">${_spotifySvg} Listening to Spotify</div>
             ${isOwnProfile ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
@@ -26748,7 +26815,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
       } else if (isOwnProfile) {
         const hasValidToken = !!(u.spotifyToken && u.spotifyRefreshToken);
         const isConnected = !!u.spotifyConnected && hasValidToken;
-        html += `<div class="pw-widget" style="border-left:3px solid #3ecf6e;padding:12px 14px;">
+        html += `<div class="pw-widget pw-widget--spotify" style="padding:12px 14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
             <div class="pw-widget-title" style="color:#3ecf6e;margin-bottom:0;">${_spotifySvg} Spotify</div>
             ${isConnected ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
@@ -33943,6 +34010,7 @@ async function _forumViewThread(threadId, opts) {
                   ${_forumCanEditPost(thread) ? `<button class="forum-pa-btn" onclick="_forumEditThread('${thread.id}')">${_svgIcon('pencil')} Edit</button>` : ''}
                   ${_forumCanDeleteThread(thread) ? `<button class="forum-pa-btn danger" onclick="_forumDeleteThreadConfirm('${thread.id}')">${_svgIcon('trash')} Delete</button>` : ''}
                 </div>
+                ${_forumThreadStatsEmbed(thread, posts)}
               </div>
             </div>
 
@@ -34183,6 +34251,60 @@ function _forumCanDeletePost(obj) {
   return false;
 }
 function _forumCanDeleteThread(obj) { return _forumCanDeletePost(obj); }
+
+// Polytoria-style stats embed for a forum thread detail view.
+// Shows: upvote-vs-downvote ratio bar, reply activity sparkline (last 7 days).
+function _forumThreadStatsEmbed(thread, posts) {
+  const ups = Array.isArray(thread.likes) ? thread.likes.length : 0;
+  const downs = Array.isArray(thread.dislikes) ? thread.dislikes.length : 0;
+  const totalVotes = ups + downs;
+  const upPct = totalVotes ? (ups / totalVotes) * 100 : 100;
+  const views = (typeof _forumBoostedViews === 'function') ? _forumBoostedViews(thread) : (thread.views || 0);
+  const replies = (posts || []).length;
+  // Reply velocity — bucket last 7 days
+  const now = Date.now(), dayMs = 86400000;
+  const buckets = [0,0,0,0,0,0,0];
+  (posts || []).forEach(p => {
+    const t = p.created_at || 0;
+    if (!t) return;
+    const age = now - t;
+    if (age < 0 || age > 7 * dayMs) return;
+    const idx = 6 - Math.floor(age / dayMs);
+    if (idx >= 0 && idx <= 6) buckets[idx]++;
+  });
+  const spark = _gdmSparklinePath(buckets, 160, 22);
+  const weekReplies = buckets.reduce((a,b)=>a+b,0);
+  return `
+    <div class="forum-stats-embed">
+      <div class="forum-stats-left">
+        <div class="forum-stats-ratio">
+          <div class="forum-stats-ratio-num">${Math.round(upPct)}<span>%</span></div>
+          <div class="forum-stats-ratio-lbl">liked</div>
+        </div>
+        <div class="forum-stats-ratio-bar-wrap">
+          <div class="forum-stats-ratio-bar">
+            <div class="forum-stats-ratio-seg forum-stats-ratio-seg--up" style="width:${upPct.toFixed(1)}%"></div>
+            <div class="forum-stats-ratio-seg forum-stats-ratio-seg--down" style="width:${(100 - upPct).toFixed(1)}%"></div>
+          </div>
+          <div class="forum-stats-ratio-tallies">
+            <span class="forum-stats-tally forum-stats-tally--up">👏 ${ups.toLocaleString()}</span>
+            <span class="forum-stats-tally forum-stats-tally--down">👎 ${downs.toLocaleString()}</span>
+            <span class="forum-stats-tally-sep">·</span>
+            <span class="forum-stats-tally">${views.toLocaleString()} views</span>
+            <span class="forum-stats-tally-sep">·</span>
+            <span class="forum-stats-tally">${replies.toLocaleString()} ${replies === 1 ? 'reply' : 'replies'}</span>
+          </div>
+        </div>
+      </div>
+      ${spark ? `<div class="forum-stats-spark">
+        <div class="forum-stats-spark-head">
+          <span>Replies · last 7 days</span>
+          <span class="forum-stats-spark-delta${weekReplies > 0 ? ' forum-stats-spark-delta--up' : ''}">+${weekReplies}</span>
+        </div>
+        <svg viewBox="0 0 160 22" preserveAspectRatio="none"><path d="${spark}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>` : ''}
+    </div>`;
+}
 
 function _forumRenderBody(text) {
   // Render @mentions before markdown so they're styled links

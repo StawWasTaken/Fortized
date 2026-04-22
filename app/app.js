@@ -34067,9 +34067,15 @@ async function _forumViewThread(threadId, opts) {
         <div class="forum-detail-body">
           <div class="forum-detail-inner">
             <div class="forum-op-card" id="fp-${escapeHTML(thread.id)}">
-              <img class="forum-op-avatar" data-forum-author="${escapeHTML(thread.author||'')}" src="${escapeHTML(author?.pfp || _defaultPfpUrl(thread.author))}" onerror="this.src='${_defaultPfpUrl(thread.author)}'">
+              <div class="forum-user-col">
+                <img class="forum-op-avatar" data-forum-author="${escapeHTML(thread.author||'')}" src="${escapeHTML(author?.pfp || _defaultPfpUrl(thread.author))}" onerror="this.src='${_defaultPfpUrl(thread.author)}'">
+                <div class="forum-user-name">${escapeHTML(author?.displayName || thread.author)}</div>
+                <div class="forum-user-handle">@${escapeHTML(thread.author)}</div>
+                ${(function(){const r=getStaffRole(thread.author);return r?`<div class="forum-user-role forum-user-role--${escapeHTML(r)}">${r==='superadmin'?'Superadmin':r==='admin'?'Admin':'Moderator'}</div>`:'';})()}
+                ${author?.createdAt ? `<div class="forum-user-joined">Joined ${_forumTimeAgo(new Date(author.createdAt).getTime())}</div>` : ''}
+              </div>
               <div class="forum-op-content">
-                <div class="forum-op-author">
+                <div class="forum-op-author" style="display:none;">
                   <strong>${escapeHTML(author?.displayName || thread.author)}</strong>
                   <span class="forum-op-handle">@${escapeHTML(thread.author)}</span>
                 </div>
@@ -34089,6 +34095,8 @@ async function _forumViewThread(threadId, opts) {
               </div>
             </div>
 
+            ${_forumRenderStaffResponseCard(thread)}
+
             <div class="forum-replies-divider"><span>${posts.length} ${posts.length === 1 ? 'Reply' : 'Replies'}</span></div>
 
             <div id="forum-posts-list">
@@ -34105,8 +34113,9 @@ async function _forumViewThread(threadId, opts) {
                 <input id="forum-post-image-upload" type="file" accept="image/*,video/*" multiple style="display:none;" onchange="_forumPostAttachmentsAdd(event)">
                 <button class="forum-img-btn" onclick="document.getElementById('forum-post-image-upload').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Add Media</button>
                 <button class="forum-img-btn" onclick="toggleEmojiPicker('forum-post-text')" title="Add emoji"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Emoji</button>
+                ${_forumCanStaffRespond(thread) ? `<button class="forum-img-btn forum-staff-toggle" onclick="_forumToggleStaffResponseMode(this)" title="Post as Staff Response (attaches to the original post)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6z"/></svg>Staff Response</button>` : ''}
                 <span class="forum-file-label" id="forum-post-file-label">No attachment selected</span>
-                <button class="forum-submit-btn" onclick="_forumCreatePost('${threadId}')">Post Reply</button>
+                <button class="forum-submit-btn" data-forum-submit onclick="_forumStaffResponseMode ? _forumSubmitStaffResponse('${threadId}') : _forumCreatePost('${threadId}')">Post Reply</button>
               </div>
               <div id="forum-post-image-preview" style="margin-top:10px;"></div>
             </div>
@@ -34117,6 +34126,7 @@ async function _forumViewThread(threadId, opts) {
     _forumHydratePfps(content);
     _forumPostAttachments = [];
     _forumPostImageData = null;
+    _forumStaffResponseMode = false;
     _forumRenderPostAttachmentsEdit();
   } catch(e) {
     console.error('[Forum] View thread failed:', e);
@@ -34128,6 +34138,96 @@ async function _forumViewThread(threadId, opts) {
 let _forumCurrentPosts = [];
 let _forumPendingQuote = null;
 let _forumViewedThreads = null; // tracks which thread had its view already incremented this session
+let _forumStaffResponseMode = false; // admin/superadmin toggle for Bugs category only
+
+function _forumCanStaffRespond(thread) {
+  // Staff responses are a Bugs & Troubleshooting specific mechanic.
+  return thread && thread.category === 'bugs' && (isAdmin() || isSuperAdmin());
+}
+
+function _forumToggleStaffResponseMode(btn) {
+  _forumStaffResponseMode = !_forumStaffResponseMode;
+  if (btn) btn.classList.toggle('active', _forumStaffResponseMode);
+  const submitBtn = document.querySelector('.forum-submit-btn[data-forum-submit]');
+  if (submitBtn) submitBtn.textContent = _forumStaffResponseMode ? 'Post Staff Response' : 'Post Reply';
+  const compose = document.querySelector('.forum-reply-compose');
+  if (compose) compose.classList.toggle('forum-reply-compose--staff', _forumStaffResponseMode);
+}
+
+async function _forumSubmitStaffResponse(threadId) {
+  const text = document.getElementById('forum-post-text')?.value?.trim();
+  if (!text) { toast('Write something first', 'error'); return; }
+  const atts = Array.isArray(_forumPostAttachments) ? _forumPostAttachments.slice() : [];
+  const firstImage = atts.find(a => a.type === 'image' || a.type === 'gif');
+  const staffResponse = {
+    author: CU.username,
+    author_displayName: CU.displayName || CU.username,
+    author_pfp: CU.pfp || null,
+    author_role: getStaffRole(CU.username) || (isSuperAdmin() ? 'superadmin' : isAdmin() ? 'admin' : 'moderator'),
+    content: text,
+    image: (firstImage ? firstImage.url : null) || null,
+    attachments: atts,
+    created_at: Date.now(),
+    edited_at: null,
+  };
+  try {
+    await FortizedSocial.updateForumThread(threadId, { staffResponse });
+    document.getElementById('forum-post-text').value = '';
+    _forumPostAttachments = [];
+    _forumStaffResponseMode = false;
+    const prev = document.getElementById('forum-post-image-preview'); if (prev) prev.innerHTML = '';
+    toast('Staff response posted — visible at the top of the thread.', 'success');
+    await _forumViewThread(threadId, { skipViewInc: true });
+  } catch (e) {
+    console.error('[Forum] Staff response save failed:', e);
+    toast('Staff response failed: ' + (e?.message || 'unknown error'), 'error');
+  }
+}
+
+function _forumRenderStaffResponseCard(thread) {
+  const sr = thread?.staffResponse;
+  if (!sr || !sr.content) return '';
+  const pfpFallback = _defaultPfpUrl(sr.author || '');
+  const role = (sr.author_role || '').toLowerCase();
+  const roleLabel = role === 'superadmin' ? 'Superadmin' : role === 'admin' ? 'Admin' : 'Moderator';
+  const body = _forumRenderBody(sr.content || '');
+  const atts = Array.isArray(sr.attachments) && sr.attachments.length
+    ? `<div class="forum-att-grid">${_forumRenderAttachmentsHTML(sr.attachments, { compact: true })}</div>` : '';
+  const img = sr.image && !atts ? `<img src="${escapeHTML(sr.image)}" style="max-width:100%;max-height:300px;border-radius:10px;margin-top:8px;">` : '';
+  const canEdit = CU?.username === sr.author || isSuperAdmin();
+  return `
+    <div class="forum-staff-card" id="staff-response-${escapeHTML(thread.id)}">
+      <div class="forum-staff-ribbon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        Official Staff Response
+      </div>
+      <div class="forum-staff-body">
+        <img class="forum-staff-avatar" src="${escapeHTML(sr.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
+        <div class="forum-staff-content">
+          <div class="forum-staff-head">
+            <strong>${escapeHTML(sr.author_displayName || sr.author)}</strong>
+            <span class="forum-staff-handle">@${escapeHTML(sr.author || '')}</span>
+            <span class="forum-staff-role forum-staff-role--${escapeHTML(role)}">${escapeHTML(roleLabel)}</span>
+            <span class="forum-staff-time">${_forumTimeAgo(sr.created_at)}</span>
+            ${sr.edited_at ? `<span class="forum-edited" title="Edited ${new Date(sr.edited_at).toLocaleString()}">edited</span>` : ''}
+          </div>
+          <div class="forum-staff-text">${body}</div>
+          ${img}${atts}
+          ${canEdit ? `<div class="forum-staff-actions">
+            <button class="forum-pa-btn" onclick="_forumClearStaffResponse('${escapeHTML(thread.id)}')">${_svgIcon('trash')} Remove</button>
+          </div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+async function _forumClearStaffResponse(threadId) {
+  try {
+    await FortizedSocial.updateForumThread(threadId, { staffResponse: null });
+    toast('Staff response removed.', 'success');
+    await _forumViewThread(threadId, { skipViewInc: true });
+  } catch (e) { toast('Remove failed', 'error'); }
+}
 
 function _forumRenderPostCard(post, threadId, thread) {
   const score = _forumNetScore(post);
@@ -34150,13 +34250,17 @@ function _forumRenderPostCard(post, threadId, thread) {
       <div class="fqb-text">${_forumRenderBody((qText||'').slice(0, 280))}</div>
     </div>` : '';
   const pfpFallback = _defaultPfpUrl(post.author || '');
+  const staffRole = getStaffRole(post.author);
   return `
     <div class="forum-reply-card" id="fp-${post.id}">
-      <img class="forum-reply-avatar" data-forum-author="${escapeHTML(post.author||'')}" src="${escapeHTML(post.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
+      <div class="forum-user-col">
+        <img class="forum-reply-avatar" data-forum-author="${escapeHTML(post.author||'')}" src="${escapeHTML(post.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
+        <div class="forum-user-name">${escapeHTML(post.author_displayName || post.author)}</div>
+        <div class="forum-user-handle">@${escapeHTML(post.author)}</div>
+        ${staffRole?`<div class="forum-user-role forum-user-role--${escapeHTML(staffRole)}">${staffRole==='superadmin'?'Superadmin':staffRole==='admin'?'Admin':'Moderator'}</div>`:''}
+      </div>
       <div class="forum-reply-content">
         <div class="frc-meta">
-          <span class="frc-author">${escapeHTML(post.author_displayName || post.author)}</span>
-          <span class="frc-handle">@${escapeHTML(post.author)}</span>
           <span class="frc-time">${_svgIcon('clock', 12)}<span>${_forumTimeAgo(post.created_at)}</span></span>
           ${post.edited_at?`<span class="forum-edited" title="Edited ${new Date(post.edited_at).toLocaleString()}">edited</span>`:''}
         </div>

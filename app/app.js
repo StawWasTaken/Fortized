@@ -25827,6 +25827,7 @@ function renderGameCollectionTab(main) {
   if (games.length) {
     gamesListHtml += '<div class="rg-list">';
     games.forEach((g, i) => {
+      if (!g || typeof g.name !== 'string' || !g.name) return; // skip corrupted entries
       const isPlaying = currentGame?.name === g.name;
       const cover = g.coverUrl || g.coverThumb || _getManualCover(g.name);
       const lastPlayed = _formatLastPlayed(g.lastPlayed);
@@ -30776,7 +30777,7 @@ const _MANUAL_COVER_ART = {
   'Honkai: Star Rail':  'https://images.igdb.com/igdb/image/upload/t_cover_big/cobivp.webp',
 };
 function _getManualCover(name) {
-  if (!name) return null;
+  if (!name || typeof name !== 'string') return null;
   // Exact match first
   if (_MANUAL_COVER_ART[name]) return _MANUAL_COVER_ART[name];
   // Case-insensitive match

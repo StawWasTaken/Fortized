@@ -34140,10 +34140,13 @@ let _forumViewedThreads = null; // tracks which thread had its view already incr
 let _forumStaffResponseMode = false; // admin/superadmin toggle for Bugs category only
 
 function _forumCanStaffRespond(thread, posts) {
-  // Staff responses are a Bugs & Troubleshooting specific mechanic.
+  // Staff responses apply to Bugs & Troubleshooting and Suggestions —
+  // categories where an official reply needs to be visible at the top.
   // Once one exists, the compose toggle hides so a new one can't be posted —
   // the author edits via the Edit button, superadmins delete to free the slot.
-  if (!thread || thread.category !== 'bugs') return false;
+  if (!thread) return false;
+  const allowed = thread.category === 'bugs' || thread.category === 'suggestions';
+  if (!allowed) return false;
   if (!isAdmin() && !isSuperAdmin()) return false;
   const { staff } = _forumExtractStaffResponse(posts);
   return !staff;

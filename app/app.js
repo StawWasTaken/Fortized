@@ -15553,6 +15553,22 @@ function buildProfileNav(scroll) {
 }
 
 function buildProfileView(tab) {
+  try {
+    return _buildProfileView(tab);
+  } catch (e) {
+    console.error('[buildProfileView] Tab "' + tab + '" failed to render:', e);
+    const main = document.getElementById('profile-main');
+    if (main) {
+      main.innerHTML = `<div class="empty-state" style="padding:40px;text-align:center;">
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px;">This page hit a snag</div>
+        <div style="font-size:12.5px;color:var(--muted-light);max-width:420px;margin:0 auto 14px;line-height:1.5;">Something broke while rendering <code style="color:var(--text);">${escapeHTML(tab || '')}</code>. Open the browser console for the exact error.</div>
+        <div style="font-size:11px;color:var(--muted);font-family:monospace;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:8px;padding:10px 12px;max-width:520px;margin:0 auto;word-break:break-word;">${escapeHTML(String(e && e.message || e))}</div>
+      </div>`;
+    }
+  }
+}
+
+function _buildProfileView(tab) {
   const main = document.getElementById('profile-main');
   if (!main) return;
   // Hide unsaved bar when switching tabs (only show on myprofile tab with actual changes)
@@ -25779,7 +25795,7 @@ function renderGameCollectionTab(main) {
       +   '<div class="rg-current-name">' + escapeHTML(currentGame.name) + verified + '</div>'
       +   '<div class="rg-current-sub">Playing now</div>'
       + '</div>'
-      + '<button class="rg-icon-btn rg-icon-btn--ghost" title="Stop" onclick="setGameActivity(null);renderGameCollectionTab(this.closest(\'.settings-main\'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      + '<button class="rg-icon-btn rg-icon-btn--ghost" title="Stop" onclick="setGameActivity(null);renderGameCollectionTab(document.getElementById(\'profile-main\'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
       + '</div>';
   } else {
     currentGameHtml += '<div class="rg-current rg-current--empty">'
@@ -30954,6 +30970,79 @@ async function openGameDetailsModal(gameName) {
     } catch(_) {}
   }
   _renderGameDetailsModal(overlay, gameName, game);
+  // Fetch + inject the Community section asynchronously so the modal paints fast.
+  _gdmLoadCommunity(gameName).catch(() => {});
+}
+
+async function _gdmLoadCommunity(gameName) {
+  const slot = document.getElementById('gdm-community-slot');
+  if (!slot) return;
+  try {
+    const all = await FortizedSocial.getGlobalBastions();
+    const target = (gameName || '').trim().toLowerCase();
+    let match = null;
+    let total = 0;
+    for (const id in all) {
+      const b = all[id];
+      if (!b || !b.name) continue;
+      total++;
+      if (b.verified && b.name.trim().toLowerCase() === target) { match = { id, ...b }; break; }
+    }
+    if (match) {
+      const members = Array.isArray(match.members) ? match.members.length : (match.memberCount || 0);
+      const emblem = match.emblem
+        ? `<img src="${escapeHTML(match.emblem)}" alt="" onerror="this.outerHTML='<div class=&quot;gdm-bastion-emblem gdm-emblem-fallback&quot;>🏰</div>'">`
+        : `<div class="gdm-bastion-emblem gdm-emblem-fallback">🏰</div>`;
+      const banner = match.banner ? `style="background-image:linear-gradient(180deg,rgba(10,8,8,.1),rgba(10,8,8,.75)),url('${escapeHTML(match.banner)}');"` : '';
+      slot.innerHTML = `
+        <div class="gdm-community">
+          <div class="gdm-community-banner" ${banner}></div>
+          <div class="gdm-community-body">
+            <div class="gdm-community-head">
+              <div class="gdm-bastion-emblem-wrap">${emblem}</div>
+              <div class="gdm-community-text">
+                <div class="gdm-community-title">
+                  ${_verifiedBadge ? _verifiedBadge(14) : '<svg width="14" height="14" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+                  <span>${escapeHTML(match.name)}</span>
+                </div>
+                <div class="gdm-community-sub">The Official ${escapeHTML(gameName)} Fortized Bastion</div>
+                <div class="gdm-community-meta">${members.toLocaleString()} member${members === 1 ? '' : 's'}</div>
+              </div>
+            </div>
+            <button class="gdm-community-join" onclick="_gdmJoinBastion('${escapeHTML(match.id).replace(/'/g, "\\'")}')">Join</button>
+          </div>
+        </div>`;
+    } else {
+      slot.innerHTML = `
+        <div class="gdm-community gdm-community--empty">
+          <div class="gdm-community-empty-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          </div>
+          <div class="gdm-community-text">
+            <div class="gdm-community-empty-title">No official community yet</div>
+            <div class="gdm-community-empty-sub">When a verified Bastion for <strong>${escapeHTML(gameName)}</strong> launches, it'll show up here.</div>
+          </div>
+        </div>`;
+    }
+  } catch (e) {
+    console.warn('[GDM] Community lookup failed:', e);
+    slot.innerHTML = '';
+  }
+}
+
+async function _gdmJoinBastion(bastionId) {
+  try {
+    if (typeof joinGlobalBastion === 'function') {
+      await joinGlobalBastion(bastionId);
+    } else if (typeof FortizedSocial?.joinBastion === 'function') {
+      await FortizedSocial.joinBastion(bastionId);
+    }
+    document.getElementById('game-details-modal')?.remove();
+    toast('Joined the community!', 'success');
+  } catch (e) {
+    console.warn('[GDM] Join failed:', e);
+    toast('Could not join this community.', 'error');
+  }
 }
 
 const _GDM_LINK_ICONS = {
@@ -31063,6 +31152,12 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
         ${game.summary ? `<p class="gdm-summary">${escapeHTML(game.summary)}</p>` : ''}
       </div>
       <aside class="gdm-side">
+        <div class="gdm-side-card">
+          <div class="gdm-side-head">Community</div>
+          <div id="gdm-community-slot" class="gdm-community-slot">
+            <div class="gdm-community-loading">Looking for an official community…</div>
+          </div>
+        </div>
         <div class="gdm-side-card">
           <div class="gdm-side-head">Reviews</div>
           ${ratingsHTML}

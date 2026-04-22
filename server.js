@@ -212,7 +212,7 @@ app.post('/api/igdb/game', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
       },
-      body: `search "${safe}"; fields name,summary,genres.name,cover.image_id,first_release_date,involved_companies.company.name,involved_companies.developer,involved_companies.publisher,platforms.name,platforms.abbreviation,screenshots.image_id,websites.url,websites.category,rating,rating_count,aggregated_rating,aggregated_rating_count; limit 1;`,
+      body: `search "${safe}"; fields name,summary,genres.name,cover.image_id,first_release_date,involved_companies.company.name,involved_companies.developer,involved_companies.publisher,platforms.name,platforms.abbreviation,screenshots.image_id,videos.video_id,videos.name,websites.url,websites.category,rating,rating_count,aggregated_rating,aggregated_rating_count; limit 1;`,
     });
     if (!igdbRes.ok) {
       const errText = await igdbRes.text().catch(() => '');
@@ -243,6 +243,12 @@ app.post('/api/igdb/game', async (req, res) => {
       screenshots: (g.screenshots || []).slice(0, 6).map(s => ({
         thumb: `https://images.igdb.com/igdb/image/upload/t_screenshot_med/${s.image_id}.jpg`,
         full:  `https://images.igdb.com/igdb/image/upload/t_screenshot_huge/${s.image_id}.jpg`,
+      })),
+      videos: (g.videos || []).slice(0, 3).map(v => ({
+        id: v.video_id,
+        name: v.name || 'Trailer',
+        embedUrl: `https://www.youtube-nocookie.com/embed/${v.video_id}?rel=0&modestbranding=1`,
+        thumb: `https://img.youtube.com/vi/${v.video_id}/hqdefault.jpg`,
       })),
       releaseDate: g.first_release_date ? new Date(g.first_release_date * 1000).toISOString() : null,
       developers, publishers,

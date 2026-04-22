@@ -2727,12 +2727,12 @@ body.is-desktop-app .notif-panel{top:0;}
 .gdm-community-empty-sub { font-size:11px;color:var(--muted-light);line-height:1.45; }
 
 /* ── Game modal: chrome-less platform + link icons ── */
-.gdm-platform-icon { display:inline-flex;align-items:center;justify-content:center;padding:3px;color:var(--muted-light);cursor:default;transition:color .12s,transform .12s;border:none;background:transparent;border-radius:6px; }
-.gdm-platform-icon:hover { color:var(--accent);transform:translateY(-1px); }
-.gdm-link-chip { display:inline-flex;align-items:center;justify-content:center;padding:3px;color:var(--muted-light);transition:color .12s,transform .12s;border:none;background:transparent; }
-.gdm-link-chip:hover { color:var(--accent);transform:translateY(-1px); }
-.gdm-row-v--platforms { display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center; }
-.gdm-row-v--links { display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center; }
+.gdm-platform-icon { display:inline-flex;align-items:center;justify-content:center;padding:4px;color:var(--text);cursor:default;transition:color .15s,transform .15s;border:none;background:transparent;border-radius:6px;opacity:.78; }
+.gdm-platform-icon:hover { color:var(--accent);opacity:1;transform:translateY(-1px); }
+.gdm-link-chip { display:inline-flex;align-items:center;justify-content:center;padding:4px;color:var(--text);transition:color .15s,transform .15s,opacity .15s;border:none;background:transparent;opacity:.78; }
+.gdm-link-chip:hover { color:var(--accent);opacity:1;transform:translateY(-1px); }
+.gdm-row-v--platforms { display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center; }
+.gdm-row-v--links { display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center; }
 
 /* ── Media hero + strip ── */
 .gdm-media-stage { position:relative;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:16/9;margin-bottom:8px; }

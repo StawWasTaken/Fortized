@@ -31172,6 +31172,16 @@ function _gdmReviewBand(v) {
   return 'Very Negative';
 }
 
+function _gdmReviewTone(v) {
+  // Maps a 0-100 rating to a semantic tone for the colour-coded chip.
+  if (v == null) return 'mute';
+  if (v >= 80) return 'great';
+  if (v >= 70) return 'good';
+  if (v >= 55) return 'mixed';
+  if (v >= 40) return 'bad';
+  return 'awful';
+}
+
 function _renderGameDetailsModal(overlay, requestedName, game) {
   const card = overlay.querySelector('.gdm-card');
   if (!card) return;
@@ -31220,10 +31230,10 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
   const videos = (game.videos || []);
   const heroSrc = (screenshots[0] && screenshots[0].full) || game.coverUrl || '';
   const ratings = [];
-  if (typeof game.userRating === 'number') ratings.push({ src:'Players', label: _gdmReviewBand(game.userRating), count: game.userRatingCount || 0, score: game.userRating });
-  if (typeof game.criticRating === 'number') ratings.push({ src:'Critics', label: _gdmReviewBand(game.criticRating), count: game.criticRatingCount || 0, score: game.criticRating });
+  if (typeof game.userRating === 'number') ratings.push({ src:'Players', label: _gdmReviewBand(game.userRating), tone: _gdmReviewTone(game.userRating), count: game.userRatingCount || 0, score: game.userRating });
+  if (typeof game.criticRating === 'number') ratings.push({ src:'Critics', label: _gdmReviewBand(game.criticRating), tone: _gdmReviewTone(game.criticRating), count: game.criticRatingCount || 0, score: game.criticRating });
   const ratingsHTML = ratings.length
-    ? ratings.map(r => `<div class="gdm-rating-row"><span class="gdm-rating-src">${escapeHTML(r.src)}</span><span class="gdm-rating-val"><span class="gdm-rating-band">${escapeHTML(r.label)}</span> <span class="gdm-rating-count">(${r.count.toLocaleString()})</span></span></div>`).join('')
+    ? ratings.map(r => `<div class="gdm-rating-pill gdm-tone-${escapeHTML(r.tone)}"><span class="gdm-rating-dot"></span><span class="gdm-rating-src">${escapeHTML(r.src)}</span><span class="gdm-rating-band">${escapeHTML(r.label)}</span><span class="gdm-rating-count">${r.count.toLocaleString()}</span></div>`).join('')
     : `<div class="gdm-rating-empty">No aggregated reviews yet.</div>`;
   const canAdd = typeof addGameToCollection === 'function';
   const safeName = escapeHTML(game.name);

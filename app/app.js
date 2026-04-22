@@ -8093,38 +8093,12 @@ async function loadDiscover(){
   discoverData = discoverData.filter(b => b.name && b.name.trim().length > 0);
   // Fix member counts — ensure at least 1 if they have an owner
   discoverData.forEach(b => { if (!b.memberCount && b.owner) b.memberCount = 1; });
-  // Update stats — Polytoria-style embed with big numbers + category breakdown bar.
+  // Update stats
   const statsEl=document.getElementById('disc-stats');
   if(statsEl){
     const publicCount=discoverData.length;
     const totalMembers=discoverData.reduce((s,b)=>s+(b.memberCount||1),0);
-    const verifiedCount=discoverData.filter(b=>b.verified).length;
-    const boostedCount=discoverData.filter(b=>(b.boostLevel||0)>0).length;
-    // Category breakdown — percentages across top 4 categories
-    const catCounts={};
-    discoverData.forEach(b=>{ const c=(b.category||'other').toLowerCase(); catCounts[c]=(catCounts[c]||0)+1; });
-    const topCats=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,4);
-    const totalCatCount=topCats.reduce((s,[,n])=>s+n,0);
-    const catColors=['#3ecf6e','#60a5fa','#fbbf24','#f472b6'];
-    const catBarHTML=topCats.map(([name,count],i)=>{
-      const pct=totalCatCount?(count/totalCatCount)*100:0;
-      return `<div class="disc-cat-seg" style="width:${pct.toFixed(1)}%;background:${catColors[i]};" title="${escapeHTML(name)}: ${count}"></div>`;
-    }).join('');
-    const catLabelsHTML=topCats.map(([name,count],i)=>
-      `<span class="disc-cat-label"><span class="disc-cat-dot" style="background:${catColors[i]};"></span>${escapeHTML(name)} <strong>${count}</strong></span>`
-    ).join('');
-    statsEl.innerHTML=`
-      <div class="disc-stats-embed">
-        <div class="disc-stats-row">
-          <div class="disc-stat-cell"><div class="disc-stat-num">${publicCount.toLocaleString()}</div><div class="disc-stat-lbl">Communities</div></div>
-          <div class="disc-stat-cell"><div class="disc-stat-num" style="color:var(--green);">${totalMembers.toLocaleString()}</div><div class="disc-stat-lbl">Total members</div></div>
-          <div class="disc-stat-cell"><div class="disc-stat-num" style="color:var(--blue);">${verifiedCount.toLocaleString()}</div><div class="disc-stat-lbl">Verified</div></div>
-          <div class="disc-stat-cell"><div class="disc-stat-num" style="color:var(--accent);">${boostedCount.toLocaleString()}</div><div class="disc-stat-lbl">Boosted</div></div>
-        </div>
-        ${topCats.length?`<div class="disc-cat-head">Top categories</div>
-        <div class="disc-cat-bar">${catBarHTML}</div>
-        <div class="disc-cat-labels">${catLabelsHTML}</div>`:''}
-      </div>`;
+    statsEl.innerHTML=`<div class="disc-stat"><strong>${publicCount}</strong> communities</div><div class="disc-stat"><strong>${totalMembers}</strong> total members</div>`;
   }
   _renderDiscoverFeatured(discoverData);
   renderDiscoverGrid(discoverData);
@@ -34112,7 +34086,6 @@ async function _forumViewThread(threadId, opts) {
                   ${_forumCanEditPost(thread) ? `<button class="forum-pa-btn" onclick="_forumEditThread('${thread.id}')">${_svgIcon('pencil')} Edit</button>` : ''}
                   ${_forumCanDeleteThread(thread) ? `<button class="forum-pa-btn danger" onclick="_forumDeleteThreadConfirm('${thread.id}')">${_svgIcon('trash')} Delete</button>` : ''}
                 </div>
-                ${_forumThreadStatsEmbed(thread, posts)}
               </div>
             </div>
 
@@ -34353,60 +34326,6 @@ function _forumCanDeletePost(obj) {
   return false;
 }
 function _forumCanDeleteThread(obj) { return _forumCanDeletePost(obj); }
-
-// Polytoria-style stats embed for a forum thread detail view.
-// Shows: upvote-vs-downvote ratio bar, reply activity sparkline (last 7 days).
-function _forumThreadStatsEmbed(thread, posts) {
-  const ups = Array.isArray(thread.likes) ? thread.likes.length : 0;
-  const downs = Array.isArray(thread.dislikes) ? thread.dislikes.length : 0;
-  const totalVotes = ups + downs;
-  const upPct = totalVotes ? (ups / totalVotes) * 100 : 100;
-  const views = (typeof _forumBoostedViews === 'function') ? _forumBoostedViews(thread) : (thread.views || 0);
-  const replies = (posts || []).length;
-  // Reply velocity — bucket last 7 days
-  const now = Date.now(), dayMs = 86400000;
-  const buckets = [0,0,0,0,0,0,0];
-  (posts || []).forEach(p => {
-    const t = p.created_at || 0;
-    if (!t) return;
-    const age = now - t;
-    if (age < 0 || age > 7 * dayMs) return;
-    const idx = 6 - Math.floor(age / dayMs);
-    if (idx >= 0 && idx <= 6) buckets[idx]++;
-  });
-  const spark = _gdmSparklinePath(buckets, 160, 22);
-  const weekReplies = buckets.reduce((a,b)=>a+b,0);
-  return `
-    <div class="forum-stats-embed">
-      <div class="forum-stats-left">
-        <div class="forum-stats-ratio">
-          <div class="forum-stats-ratio-num">${Math.round(upPct)}<span>%</span></div>
-          <div class="forum-stats-ratio-lbl">liked</div>
-        </div>
-        <div class="forum-stats-ratio-bar-wrap">
-          <div class="forum-stats-ratio-bar">
-            <div class="forum-stats-ratio-seg forum-stats-ratio-seg--up" style="width:${upPct.toFixed(1)}%"></div>
-            <div class="forum-stats-ratio-seg forum-stats-ratio-seg--down" style="width:${(100 - upPct).toFixed(1)}%"></div>
-          </div>
-          <div class="forum-stats-ratio-tallies">
-            <span class="forum-stats-tally forum-stats-tally--up">👏 ${ups.toLocaleString()}</span>
-            <span class="forum-stats-tally forum-stats-tally--down">👎 ${downs.toLocaleString()}</span>
-            <span class="forum-stats-tally-sep">·</span>
-            <span class="forum-stats-tally">${views.toLocaleString()} views</span>
-            <span class="forum-stats-tally-sep">·</span>
-            <span class="forum-stats-tally">${replies.toLocaleString()} ${replies === 1 ? 'reply' : 'replies'}</span>
-          </div>
-        </div>
-      </div>
-      ${spark ? `<div class="forum-stats-spark">
-        <div class="forum-stats-spark-head">
-          <span>Replies · last 7 days</span>
-          <span class="forum-stats-spark-delta${weekReplies > 0 ? ' forum-stats-spark-delta--up' : ''}">+${weekReplies}</span>
-        </div>
-        <svg viewBox="0 0 160 22" preserveAspectRatio="none"><path d="${spark}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>` : ''}
-    </div>`;
-}
 
 function _forumRenderBody(text) {
   // Render @mentions before markdown so they're styled links

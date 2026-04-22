@@ -31228,29 +31228,25 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
   const safeName = escapeHTML(game.name);
   const safeNameAttr = safeName.replace(/'/g, "\\'");
   // Assemble the media strip: videos first (with play overlay) then screenshots.
-  // Each entry carries its own "open" action so the lightbox can tell them apart.
+  // Videos play inline in the hero; screenshots open the in-app lightbox.
   const mediaItems = [
-    ...videos.map((v, i) => ({ kind:'video', thumb: v.thumb, idx: i, label: v.name || 'Trailer' })),
-    ...screenshots.map((s, i) => ({ kind:'shot', thumb: s.thumb, idx: i, label: 'Screenshot' })),
+    ...videos.map((v, i) => ({ kind:'video', thumb: v.thumb, idx: i, label: v.name || 'Trailer', embedUrl: v.embedUrl })),
+    ...screenshots.map((s, i) => ({ kind:'shot', thumb: s.thumb, full: s.full, idx: i, label: 'Screenshot' })),
   ].slice(0, 10);
+  _gdmMediaList = mediaItems;
+  _gdmMediaIdx = 0;
   const hasMedia = mediaItems.length > 0;
-  const heroItem = mediaItems[0] || null;
-  const stripItems = mediaItems.slice(1);
   const mediaHTML = hasMedia ? `
-    <div class="gdm-media-stage">
-      ${heroItem.kind === 'video'
-        ? `<button class="gdm-media-hero gdm-media-hero--video" onclick="_gdmOpenVideo(${heroItem.idx})" title="Play ${escapeHTML(heroItem.label)}">
-             <img src="${escapeHTML(heroItem.thumb)}" alt="">
-             <span class="gdm-hero-play"><svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
-           </button>`
-        : `<button class="gdm-media-hero" onclick="_gdmOpenLightbox(${heroItem.idx})" title="View screenshot">
-             <img src="${escapeHTML((game.screenshots[heroItem.idx] && game.screenshots[heroItem.idx].full) || heroItem.thumb)}" alt="">
-           </button>`}
+    <div class="gdm-media-stage" id="gdm-media-stage">
+      <div id="gdm-media-hero-slot"></div>
+      ${mediaItems.length > 1 ? `
+        <button class="gdm-media-nav gdm-media-nav--prev" onclick="_gdmMediaStep(-1)" aria-label="Previous"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="gdm-media-nav gdm-media-nav--next" onclick="_gdmMediaStep(1)" aria-label="Next"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <div class="gdm-media-counter"><span id="gdm-media-counter-txt">1 / ${mediaItems.length}</span></div>
+      ` : ''}
     </div>
-    ${stripItems.length ? `<div class="gdm-media-strip">${stripItems.map(it =>
-      it.kind === 'video'
-        ? `<button class="gdm-media-thumb gdm-media-thumb--video" onclick="_gdmOpenVideo(${it.idx})" title="${escapeHTML(it.label)}"><img src="${escapeHTML(it.thumb)}" alt=""><span class="gdm-thumb-play"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></button>`
-        : `<button class="gdm-media-thumb" onclick="_gdmOpenLightbox(${it.idx})" title="View screenshot"><img src="${escapeHTML(it.thumb)}" alt=""></button>`
+    ${mediaItems.length > 1 ? `<div class="gdm-media-strip" id="gdm-media-strip">${mediaItems.map((it, i) =>
+      `<button class="gdm-media-thumb${i===0?' gdm-media-thumb--active':''}${it.kind==='video'?' gdm-media-thumb--video':''}" onclick="_gdmMediaSelect(${i})" title="${escapeHTML(it.label)}"><img src="${escapeHTML(it.thumb)}" alt="">${it.kind==='video'?`<span class="gdm-thumb-play"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>`:''}</button>`
     ).join('')}</div>` : ''}
   ` : '';
   _gdmLastGame = game;
@@ -31285,17 +31281,14 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
           <div class="gdm-user-review">
             <div class="gdm-user-review-head">How was it for you?</div>
             <div class="gdm-thumbs">
-              <button class="gdm-thumb gdm-thumb--up" data-vote="up" onclick="_gdmPickVote(this,'up')" title="Good">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-6 0v4H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-1.7l1-7a2 2 0 0 0-2-2.3h-4z" transform="rotate(180 12 12)"/></svg>
-                <span>Good</span>
+              <button class="gdm-thumb gdm-thumb--up" data-vote="up" onclick="_gdmPickVote(this,'up')" title="Great">
+                <span class="gdm-thumb-emoji">👏</span><span>Great</span>
               </button>
-              <button class="gdm-thumb gdm-thumb--mid" data-vote="mid" onclick="_gdmPickVote(this,'mid')" title="Mid">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M4 8l3-3h10l3 3"/><path d="M4 16l3 3h10l3-3"/></svg>
-                <span>Mid</span>
+              <button class="gdm-thumb gdm-thumb--mid" data-vote="mid" onclick="_gdmPickVote(this,'mid')" title="OK">
+                <span class="gdm-thumb-emoji">👌</span><span>OK</span>
               </button>
               <button class="gdm-thumb gdm-thumb--down" data-vote="down" onclick="_gdmPickVote(this,'down')" title="Bad">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-6 0v4H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-1.7l1-7a2 2 0 0 0-2-2.3h-4z"/></svg>
-                <span>Bad</span>
+                <span class="gdm-thumb-emoji">👎</span><span>Bad</span>
               </button>
             </div>
             <textarea id="gdm-review-text" class="gdm-review-text" placeholder="Optional — add a comment to your review" maxlength="280"></textarea>
@@ -31324,6 +31317,8 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
     </div>`;
   // Kick off the Fortized user-review carousel for this game.
   _gdmStartReviewCarousel(game.name);
+  _gdmRenderHero();
+  try { if (typeof window._twemojiReparse === 'function') window._twemojiReparse(card); } catch(_){}
 }
 
 let _gdmLastGame = null;
@@ -31428,6 +31423,41 @@ async function _gdmAddToProfile(gameName) {
   }
 }
 
+// ── Media hero state (used by arrows, thumb strip, inline video) ──
+let _gdmMediaList = [];
+let _gdmMediaIdx = 0;
+
+function _gdmRenderHero() {
+  const slot = document.getElementById('gdm-media-hero-slot');
+  if (!slot) return;
+  const item = _gdmMediaList[_gdmMediaIdx];
+  if (!item) { slot.innerHTML = ''; return; }
+  if (item.kind === 'video') {
+    // Inline YouTube-nocookie iframe with autoplay so the click-to-switch feels instant
+    const src = (item.embedUrl || '') + ((item.embedUrl || '').includes('?') ? '&' : '?') + 'autoplay=1';
+    slot.innerHTML = `<iframe class="gdm-media-iframe" src="${escapeHTML(src)}" title="${escapeHTML(item.label)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>`;
+  } else {
+    const fullSrc = item.full || item.thumb;
+    slot.innerHTML = `<button class="gdm-media-hero" onclick="_gdmOpenLightbox(${item.idx})" title="View full-size"><img src="${escapeHTML(fullSrc)}" alt=""></button>`;
+  }
+  const c = document.getElementById('gdm-media-counter-txt');
+  if (c) c.textContent = (_gdmMediaIdx + 1) + ' / ' + _gdmMediaList.length;
+  document.querySelectorAll('#gdm-media-strip .gdm-media-thumb').forEach((el, i) => {
+    el.classList.toggle('gdm-media-thumb--active', i === _gdmMediaIdx);
+  });
+}
+
+function _gdmMediaSelect(idx) {
+  if (!_gdmMediaList.length) return;
+  _gdmMediaIdx = ((idx % _gdmMediaList.length) + _gdmMediaList.length) % _gdmMediaList.length;
+  _gdmRenderHero();
+}
+
+function _gdmMediaStep(delta) {
+  if (!_gdmMediaList.length) return;
+  _gdmMediaSelect(_gdmMediaIdx + delta);
+}
+
 // ── Fortized user reviews (per-game) ──
 // MVP storage: localStorage, keyed by lower-cased game name. When a
 // Supabase `game_reviews` table lands we'll mirror to it, but the UX works
@@ -31496,12 +31526,8 @@ function _gdmStartReviewCarousel(gameName) {
   const reviews = _gdmGetReviewsFor(gameName);
   if (!reviews.length) { host.innerHTML = '<div class="gdm-review-empty">No reviews yet — be the first to share what you think.</div>'; return; }
   let idx = 0;
-  const labelFor = v => v === 'up' ? 'Good' : v === 'down' ? 'Bad' : 'Mid';
-  const svgFor = v => {
-    if (v === 'up') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14 9V5a3 3 0 0 0-6 0v4H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-1.7l1-7a2 2 0 0 0-2-2.3h-4z" transform="rotate(180 12 12)"/></svg>';
-    if (v === 'down') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14 9V5a3 3 0 0 0-6 0v4H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-1.7l1-7a2 2 0 0 0-2-2.3h-4z"/></svg>';
-    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/></svg>';
-  };
+  const labelFor = v => v === 'up' ? 'Great' : v === 'down' ? 'Bad' : 'OK';
+  const emojiFor = v => v === 'up' ? '👏' : v === 'down' ? '👎' : '👌';
   const paint = () => {
     const r = reviews[idx % reviews.length];
     const pfp = r.pfp
@@ -31515,10 +31541,11 @@ function _gdmStartReviewCarousel(gameName) {
             <div class="gdm-rc-name">${escapeHTML(r.displayName || r.user)}</div>
             <div class="gdm-rc-handle">@${escapeHTML(r.user)}</div>
           </div>
-          <div class="gdm-rc-vote">${svgFor(r.vote)}<span>${labelFor(r.vote)}</span></div>
+          <div class="gdm-rc-vote"><span class="gdm-rc-emoji">${emojiFor(r.vote)}</span><span>${labelFor(r.vote)}</span></div>
         </div>
         ${r.text ? `<div class="gdm-rc-body">${escapeHTML(r.text)}</div>` : ''}
       </div>`;
+    try { if (typeof window._twemojiReparse === 'function') window._twemojiReparse(host); } catch(_){}
   };
   window._gdmScheduleNext = function() {
     _gdmStopReviewCarousel();

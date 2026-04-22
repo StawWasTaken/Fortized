@@ -34095,12 +34095,12 @@ async function _forumViewThread(threadId, opts) {
               </div>
             </div>
 
-            ${_forumRenderStaffResponseCard(thread)}
+            ${(function(){ const { staff } = _forumExtractStaffResponse(posts); return _forumRenderStaffResponseCard(thread, staff); })()}
 
-            <div class="forum-replies-divider"><span>${posts.length} ${posts.length === 1 ? 'Reply' : 'Replies'}</span></div>
+            <div class="forum-replies-divider"><span>${(function(){ const {rest} = _forumExtractStaffResponse(posts); return rest.length; })()} ${(function(){ const {rest} = _forumExtractStaffResponse(posts); return rest.length === 1 ? 'Reply' : 'Replies'; })()}</span></div>
 
             <div id="forum-posts-list">
-              ${posts.map(post => _forumRenderPostCard(post, threadId, thread)).join('')}
+              ${(function(){ const {rest} = _forumExtractStaffResponse(posts); return rest.map(post => _forumRenderPostCard(post, threadId, thread)).join(''); })()}
             </div>
 
             <div class="forum-reply-compose">
@@ -34154,24 +34154,42 @@ function _forumToggleStaffResponseMode(btn) {
   if (compose) compose.classList.toggle('forum-reply-compose--staff', _forumStaffResponseMode);
 }
 
+const _FORUM_STAFF_MARKER = '[FTZ_STAFF_RESPONSE]';
+
 async function _forumSubmitStaffResponse(threadId) {
   const text = document.getElementById('forum-post-text')?.value?.trim();
   if (!text) { toast('Write something first', 'error'); return; }
   const atts = Array.isArray(_forumPostAttachments) ? _forumPostAttachments.slice() : [];
   const firstImage = atts.find(a => a.type === 'image' || a.type === 'gif');
-  const staffResponse = {
-    author: CU.username,
-    author_displayName: CU.displayName || CU.username,
-    author_pfp: CU.pfp || null,
-    author_role: getStaffRole(CU.username) || (isSuperAdmin() ? 'superadmin' : isAdmin() ? 'admin' : 'moderator'),
-    content: text,
-    image: (firstImage ? firstImage.url : null) || null,
-    attachments: atts,
-    created_at: Date.now(),
-    edited_at: null,
-  };
+
+  // Saved as a regular forum_post with a marker on the first line so we can
+  // pluck it back out on render. The Supabase schema doesn't have a dedicated
+  // column for staff responses and the update-retry loop silently drops unknown
+  // fields, which is why the previous thread-level approach never persisted.
   try {
-    await FortizedSocial.updateForumThread(threadId, { staffResponse });
+    // Wipe any prior staff response for this thread so there's only ever one.
+    const existing = await FortizedSocial.getForumPosts(threadId);
+    const prior = (existing || []).find(p => typeof p.content === 'string' && p.content.startsWith(_FORUM_STAFF_MARKER));
+    if (prior) {
+      try { await FortizedSocial.deleteForumPost(prior.id); } catch (_) {}
+    }
+
+    const post = {
+      id: 'staff_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      thread_id: threadId,
+      author: CU.username,
+      author_displayName: CU.displayName || CU.username,
+      author_pfp: CU.pfp || null,
+      content: _FORUM_STAFF_MARKER + '\n' + text,
+      image: (firstImage ? firstImage.url : null) || null,
+      attachments: atts,
+      created_at: Date.now(),
+      edited_at: null,
+      likes: [],
+      dislikes: [],
+    };
+    await FortizedSocial.createForumPost(post);
+
     document.getElementById('forum-post-text').value = '';
     _forumPostAttachments = [];
     _forumStaffResponseMode = false;
@@ -34184,49 +34202,64 @@ async function _forumSubmitStaffResponse(threadId) {
   }
 }
 
-function _forumRenderStaffResponseCard(thread) {
-  const sr = thread?.staffResponse;
-  if (!sr || !sr.content) return '';
-  const pfpFallback = _defaultPfpUrl(sr.author || '');
-  const role = (sr.author_role || '').toLowerCase();
-  const roleLabel = role === 'superadmin' ? 'Superadmin' : role === 'admin' ? 'Admin' : 'Moderator';
-  const body = _forumRenderBody(sr.content || '');
-  const atts = Array.isArray(sr.attachments) && sr.attachments.length
-    ? `<div class="forum-att-grid">${_forumRenderAttachmentsHTML(sr.attachments, { compact: true })}</div>` : '';
-  const img = sr.image && !atts ? `<img src="${escapeHTML(sr.image)}" style="max-width:100%;max-height:300px;border-radius:10px;margin-top:8px;">` : '';
-  const canEdit = CU?.username === sr.author || isSuperAdmin();
+function _forumExtractStaffResponse(posts) {
+  // Returns the staff-response post + the rest of the replies, so the reply
+  // list doesn't duplicate what's shown in the pinned card.
+  if (!Array.isArray(posts)) return { staff: null, rest: [] };
+  let staff = null;
+  const rest = [];
+  posts.forEach(p => {
+    if (!staff && typeof p.content === 'string' && p.content.startsWith(_FORUM_STAFF_MARKER)) staff = p;
+    else rest.push(p);
+  });
+  return { staff, rest };
+}
+
+function _forumRenderStaffResponseCard(thread, staffPost) {
+  if (!staffPost) return '';
+  const body = (staffPost.content || '').slice(_FORUM_STAFF_MARKER.length).replace(/^\n/, '');
+  const pfpFallback = _defaultPfpUrl(staffPost.author || '');
+  const role = (getStaffRole(staffPost.author) || '').toLowerCase();
+  const roleLabel = role === 'superadmin' ? 'Superadmin' : role === 'admin' ? 'Admin' : role === 'moderator' ? 'Moderator' : 'Staff';
+  const atts = Array.isArray(staffPost.attachments) && staffPost.attachments.length
+    ? `<div class="forum-att-grid">${_forumRenderAttachmentsHTML(staffPost.attachments, { compact: true })}</div>` : '';
+  const img = staffPost.image && !atts ? `<img src="${escapeHTML(staffPost.image)}" style="max-width:100%;max-height:300px;border-radius:10px;margin-top:8px;">` : '';
+  const canEdit = CU?.username === staffPost.author || isSuperAdmin();
   return `
-    <div class="forum-staff-card" id="staff-response-${escapeHTML(thread.id)}">
+    <div class="forum-staff-card" id="staff-response-${escapeHTML(staffPost.id)}">
       <div class="forum-staff-ribbon">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6z"/><path d="M9 12l2 2 4-4"/></svg>
         Official Staff Response
       </div>
       <div class="forum-staff-body">
-        <img class="forum-staff-avatar" src="${escapeHTML(sr.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
+        <img class="forum-staff-avatar" src="${escapeHTML(staffPost.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
         <div class="forum-staff-content">
           <div class="forum-staff-head">
-            <strong>${escapeHTML(sr.author_displayName || sr.author)}</strong>
-            <span class="forum-staff-handle">@${escapeHTML(sr.author || '')}</span>
+            <strong>${escapeHTML(staffPost.author_displayName || staffPost.author)}</strong>
+            <span class="forum-staff-handle">@${escapeHTML(staffPost.author || '')}</span>
             <span class="forum-staff-role forum-staff-role--${escapeHTML(role)}">${escapeHTML(roleLabel)}</span>
-            <span class="forum-staff-time">${_forumTimeAgo(sr.created_at)}</span>
-            ${sr.edited_at ? `<span class="forum-edited" title="Edited ${new Date(sr.edited_at).toLocaleString()}">edited</span>` : ''}
+            <span class="forum-staff-time">${_forumTimeAgo(staffPost.created_at)}</span>
+            ${staffPost.edited_at ? `<span class="forum-edited" title="Edited ${new Date(staffPost.edited_at).toLocaleString()}">edited</span>` : ''}
           </div>
-          <div class="forum-staff-text">${body}</div>
+          <div class="forum-staff-text">${_forumRenderBody(body)}</div>
           ${img}${atts}
           ${canEdit ? `<div class="forum-staff-actions">
-            <button class="forum-pa-btn" onclick="_forumClearStaffResponse('${escapeHTML(thread.id)}')">${_svgIcon('trash')} Remove</button>
+            <button class="forum-pa-btn" onclick="_forumClearStaffResponse('${escapeHTML(thread.id)}','${escapeHTML(staffPost.id)}')">${_svgIcon('trash')} Remove</button>
           </div>` : ''}
         </div>
       </div>
     </div>`;
 }
 
-async function _forumClearStaffResponse(threadId) {
+async function _forumClearStaffResponse(threadId, postId) {
   try {
-    await FortizedSocial.updateForumThread(threadId, { staffResponse: null });
+    await FortizedSocial.deleteForumPost(postId);
     toast('Staff response removed.', 'success');
     await _forumViewThread(threadId, { skipViewInc: true });
-  } catch (e) { toast('Remove failed', 'error'); }
+  } catch (e) {
+    console.warn('[Forum] Clear staff response failed:', e);
+    toast('Remove failed', 'error');
+  }
 }
 
 function _forumRenderPostCard(post, threadId, thread) {

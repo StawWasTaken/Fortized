@@ -34092,10 +34092,9 @@ async function _forumViewThread(threadId, opts) {
                   ${_forumCanEditPost(thread) ? `<button class="forum-pa-btn" onclick="_forumEditThread('${thread.id}')">${_svgIcon('pencil')} Edit</button>` : ''}
                   ${_forumCanDeleteThread(thread) ? `<button class="forum-pa-btn danger" onclick="_forumDeleteThreadConfirm('${thread.id}')">${_svgIcon('trash')} Delete</button>` : ''}
                 </div>
+                ${(function(){ const { staff } = _forumExtractStaffResponse(posts); return _forumRenderStaffResponseCard(thread, staff); })()}
               </div>
             </div>
-
-            ${(function(){ const { staff } = _forumExtractStaffResponse(posts); return _forumRenderStaffResponseCard(thread, staff); })()}
 
             <div class="forum-replies-divider"><span>${(function(){ const {rest} = _forumExtractStaffResponse(posts); return rest.length; })()} ${(function(){ const {rest} = _forumExtractStaffResponse(posts); return rest.length === 1 ? 'Reply' : 'Replies'; })()}</span></div>
 
@@ -34113,7 +34112,7 @@ async function _forumViewThread(threadId, opts) {
                 <input id="forum-post-image-upload" type="file" accept="image/*,video/*" multiple style="display:none;" onchange="_forumPostAttachmentsAdd(event)">
                 <button class="forum-img-btn" onclick="document.getElementById('forum-post-image-upload').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Add Media</button>
                 <button class="forum-img-btn" onclick="toggleEmojiPicker('forum-post-text')" title="Add emoji"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Emoji</button>
-                ${_forumCanStaffRespond(thread) ? `<button class="forum-img-btn forum-staff-toggle" onclick="_forumToggleStaffResponseMode(this)" title="Post as Staff Response (attaches to the original post)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6z"/></svg>Staff Response</button>` : ''}
+                ${_forumCanStaffRespond(thread, posts) ? `<button class="forum-img-btn forum-staff-toggle" onclick="_forumToggleStaffResponseMode(this)" title="Post as Staff Response (attaches to the original post)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6z"/></svg>Staff Response</button>` : ''}
                 <span class="forum-file-label" id="forum-post-file-label">No attachment selected</span>
                 <button class="forum-submit-btn" data-forum-submit onclick="_forumStaffResponseMode ? _forumSubmitStaffResponse('${threadId}') : _forumCreatePost('${threadId}')">Post Reply</button>
               </div>
@@ -34140,9 +34139,14 @@ let _forumPendingQuote = null;
 let _forumViewedThreads = null; // tracks which thread had its view already incremented this session
 let _forumStaffResponseMode = false; // admin/superadmin toggle for Bugs category only
 
-function _forumCanStaffRespond(thread) {
+function _forumCanStaffRespond(thread, posts) {
   // Staff responses are a Bugs & Troubleshooting specific mechanic.
-  return thread && thread.category === 'bugs' && (isAdmin() || isSuperAdmin());
+  // Once one exists, the compose toggle hides so a new one can't be posted —
+  // the author edits via the Edit button, superadmins delete to free the slot.
+  if (!thread || thread.category !== 'bugs') return false;
+  if (!isAdmin() && !isSuperAdmin()) return false;
+  const { staff } = _forumExtractStaffResponse(posts);
+  return !staff;
 }
 
 function _forumToggleStaffResponseMode(btn) {
@@ -34224,15 +34228,19 @@ function _forumRenderStaffResponseCard(thread, staffPost) {
   const atts = Array.isArray(staffPost.attachments) && staffPost.attachments.length
     ? `<div class="forum-att-grid">${_forumRenderAttachmentsHTML(staffPost.attachments, { compact: true })}</div>` : '';
   const img = staffPost.image && !atts ? `<img src="${escapeHTML(staffPost.image)}" style="max-width:100%;max-height:300px;border-radius:10px;margin-top:8px;">` : '';
-  const canEdit = CU?.username === staffPost.author || isSuperAdmin();
+  const isAuthor = CU?.username === staffPost.author;
+  const canDel = isSuperAdmin();
+  const canEdit = isAuthor || isSuperAdmin();
+  const safeId = escapeHTML(staffPost.id).replace(/'/g, "\\'");
+  const safeThread = escapeHTML(thread.id).replace(/'/g, "\\'");
   return `
-    <div class="forum-staff-card" id="staff-response-${escapeHTML(staffPost.id)}">
+    <div class="forum-staff-card" id="staff-response-${escapeHTML(staffPost.id)}" data-staff-id="${escapeHTML(staffPost.id)}">
       <div class="forum-staff-ribbon">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6z"/><path d="M9 12l2 2 4-4"/></svg>
         Official Staff Response
       </div>
       <div class="forum-staff-body">
-        <img class="forum-staff-avatar" src="${escapeHTML(staffPost.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
+        <img class="forum-staff-avatar" data-forum-author="${escapeHTML(staffPost.author||'')}" src="${escapeHTML(staffPost.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
         <div class="forum-staff-content">
           <div class="forum-staff-head">
             <strong>${escapeHTML(staffPost.author_displayName || staffPost.author)}</strong>
@@ -34241,14 +34249,52 @@ function _forumRenderStaffResponseCard(thread, staffPost) {
             <span class="forum-staff-time">${_forumTimeAgo(staffPost.created_at)}</span>
             ${staffPost.edited_at ? `<span class="forum-edited" title="Edited ${new Date(staffPost.edited_at).toLocaleString()}">edited</span>` : ''}
           </div>
-          <div class="forum-staff-text">${_forumRenderBody(body)}</div>
+          <div class="forum-staff-text" data-staff-body>${_forumRenderBody(body)}</div>
           ${img}${atts}
-          ${canEdit ? `<div class="forum-staff-actions">
-            <button class="forum-pa-btn" onclick="_forumClearStaffResponse('${escapeHTML(thread.id)}','${escapeHTML(staffPost.id)}')">${_svgIcon('trash')} Remove</button>
+          ${(canEdit || canDel) ? `<div class="forum-staff-actions">
+            ${canEdit ? `<button class="forum-pa-btn" onclick="_forumEditStaffResponse('${safeId}')">${_svgIcon('pencil')} Edit</button>` : ''}
+            ${canDel ? `<button class="forum-pa-btn danger" onclick="_forumClearStaffResponse('${safeThread}','${safeId}')">${_svgIcon('trash')} Remove</button>` : ''}
           </div>` : ''}
         </div>
       </div>
     </div>`;
+}
+
+function _forumEditStaffResponse(postId) {
+  const card = document.getElementById('staff-response-' + postId);
+  if (!card) return;
+  const bodyEl = card.querySelector('[data-staff-body]');
+  const actionsEl = card.querySelector('.forum-staff-actions');
+  if (!bodyEl) return;
+  // Pull the raw text out of the post (strip the marker) for the textarea.
+  const allPosts = _forumCurrentPosts || [];
+  const post = allPosts.find(p => p.id === postId);
+  const raw = post && typeof post.content === 'string'
+    ? post.content.slice(_FORUM_STAFF_MARKER.length).replace(/^\n/, '')
+    : '';
+  bodyEl.innerHTML = `<textarea class="forum-staff-edit-area" id="staff-edit-${escapeHTML(postId)}" maxlength="6000">${escapeHTML(raw)}</textarea>`;
+  if (actionsEl) actionsEl.innerHTML = `
+    <button class="forum-pa-btn" onclick="_forumSaveStaffResponseEdit('${escapeHTML(postId).replace(/'/g, "\\'")}')">Save</button>
+    <button class="forum-pa-btn danger" onclick="_forumViewThread(_forumCurrentThread,{skipViewInc:true})">Cancel</button>
+  `;
+  bodyEl.querySelector('textarea')?.focus();
+}
+
+async function _forumSaveStaffResponseEdit(postId) {
+  const ta = document.getElementById('staff-edit-' + postId);
+  const newText = ta?.value?.trim();
+  if (!newText) { toast('Write something first', 'error'); return; }
+  try {
+    await FortizedSocial.updateForumPost(postId, {
+      content: _FORUM_STAFF_MARKER + '\n' + newText,
+      edited_at: Date.now(),
+    });
+    toast('Staff response updated.', 'success');
+    await _forumViewThread(_forumCurrentThread, { skipViewInc: true });
+  } catch (e) {
+    console.warn('[Forum] Edit staff response failed:', e);
+    toast('Couldn\'t save the edit.', 'error');
+  }
 }
 
 async function _forumClearStaffResponse(threadId, postId) {

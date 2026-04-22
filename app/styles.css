@@ -2617,7 +2617,8 @@ body.is-desktop-app .notif-panel{top:0;}
 /* ── Game detail modal (registered game card) ── */
 .gdm-overlay { position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:28px;animation:gdmIn .18s ease-out; }
 @keyframes gdmIn { from { opacity:0; } to { opacity:1; } }
-.gdm-card { background:var(--panel);border:1px solid var(--border);border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.55);width:min(960px,100%);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;animation:gdmCardIn .22s cubic-bezier(.22,1,.36,1); }
+.gdm-card { position:relative;background:var(--panel);border:1px solid var(--border);border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.55);width:min(960px,100%);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;animation:gdmCardIn .22s cubic-bezier(.22,1,.36,1); }
+.gdm-card::before { content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.25) 12%,var(--accent) 50%,rgba(255,249,62,.25) 88%,transparent 100%);box-shadow:0 0 18px rgba(255,249,62,.45);z-index:5;pointer-events:none; }
 @keyframes gdmCardIn { from { opacity:0;transform:translateY(14px) scale(.98); } to { opacity:1;transform:none; } }
 .gdm-loading { padding:48px 24px;display:flex;flex-direction:column;align-items:center;gap:14px; }
 .gdm-spinner { width:26px;height:26px;border:3px solid rgba(255,255,255,.08);border-top-color:var(--accent);border-radius:50%;animation:gdmSpin 1s linear infinite; }
@@ -2807,6 +2808,8 @@ body.is-desktop-app .notif-panel{top:0;}
 .gdm-review-chip.gdm-vote-mid { border-left-width:3px; }
 .gdm-review-chip.gdm-vote-down { border-left-width:3px; }
 .gdm-rc-vote { margin-left:auto; }
+.gdm-rc-flag { background:transparent;border:none;padding:4px;color:var(--muted);cursor:pointer;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .15s,background .15s; }
+.gdm-rc-flag:hover { color:var(--red);background:rgba(248,113,113,.1); }
 .gdm-review-chip--in { opacity:1;transform:translateY(0); }
 .gdm-review-chip--out { opacity:0;transform:translateY(-6px); }
 .gdm-review-chip.gdm-vote-up { border-left:3px solid var(--green); }
@@ -6697,15 +6700,23 @@ select:focus-visible {
 
 /* ── Admin report cards (message / ad) ───────────────────────── */
 .rep-card{
-  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.01));
+  position:relative;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.012));
   border:1px solid rgba(255,255,255,.06);
   border-radius:16px;
   overflow:hidden;
-  transition:border-color .18s, transform .18s;
+  transition:border-color .18s, transform .18s, box-shadow .18s;
+  box-shadow:0 4px 18px rgba(0,0,0,.18);
 }
-.rep-card:hover{border-color:rgba(255,255,255,.09);}
-.rep-card--pending{border-color:rgba(248,113,113,.18);box-shadow:0 0 0 1px rgba(248,113,113,.05),0 4px 22px rgba(248,113,113,.04);}
-.rep-card--pending:hover{border-color:rgba(248,113,113,.28);}
+.rep-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent 0%,rgba(248,113,113,.25) 12%,#f87171 50%,rgba(248,113,113,.25) 88%,transparent 100%);
+  box-shadow:0 0 18px rgba(248,113,113,.45);
+  z-index:1;pointer-events:none;
+}
+.rep-card:hover{border-color:rgba(248,113,113,.18);transform:translateY(-1px);box-shadow:0 8px 28px rgba(248,113,113,.12);}
+.rep-card--pending{border-color:rgba(248,113,113,.22);box-shadow:0 0 0 1px rgba(248,113,113,.06),0 6px 26px rgba(248,113,113,.08);}
+.rep-card--pending:hover{border-color:rgba(248,113,113,.36);}
 
 .rep-card__head{
   display:flex;align-items:center;gap:10px;

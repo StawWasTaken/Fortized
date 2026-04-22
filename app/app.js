@@ -31006,7 +31006,7 @@ async function _gdmLoadCommunity(gameName) {
                   ${_verifiedBadge ? _verifiedBadge(14) : '<svg width="14" height="14" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
                   <span>${escapeHTML(match.name)}</span>
                 </div>
-                <div class="gdm-community-sub">The Official ${escapeHTML(gameName)} Fortized Bastion</div>
+                <div class="gdm-community-sub">Official ${escapeHTML(gameName)} Bastion</div>
                 <div class="gdm-community-meta">${members.toLocaleString()} member${members === 1 ? '' : 's'}</div>
               </div>
             </div>
@@ -31020,7 +31020,7 @@ async function _gdmLoadCommunity(gameName) {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
           </div>
           <div class="gdm-community-text">
-            <div class="gdm-community-empty-title">No official community yet</div>
+            <div class="gdm-community-empty-title">No official Bastion yet</div>
             <div class="gdm-community-empty-sub">When a verified Bastion for <strong>${escapeHTML(gameName)}</strong> launches, it'll show up here.</div>
           </div>
         </div>`;
@@ -31067,8 +31067,99 @@ const _GDM_LINK_LABELS = {
   official:'Website', steam:'Steam', twitch:'Twitch', youtube:'YouTube',
   twitter:'X', reddit:'Reddit', instagram:'Instagram', facebook:'Facebook',
   wikipedia:'Wikipedia', epic:'Epic Games', gog:'GOG', discord:'Discord',
-  itch:'itch.io', link:'Link',
+  itch:'itch.io', tiktok:'TikTok', playstation:'PlayStation', xbox:'Xbox',
+  roblox:'Roblox', bluesky:'Bluesky', link:'Website',
 };
+
+// Extra icons for hostname-auto-detected kinds
+Object.assign(_GDM_LINK_ICONS, {
+  tiktok:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.6 6.3a5.5 5.5 0 0 1-3.1-1.1 5.5 5.5 0 0 1-2.1-3.2h-3.1v13.4a2.9 2.9 0 1 1-2-2.8V9.4a6 6 0 1 0 5.1 6V10a8.5 8.5 0 0 0 5.2 1.8V8.7c-.1 0-.1 0 0-2.4z"/></svg>',
+  playstation:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 3v18l3-.9V9.5c0-1 .4-1.5 1.1-1.3.9.3 1 1.3 1 2.3v5l2.9-1c1.5-.5 2-1.5 2-2.9 0-1.9-1.2-3-3.5-3.8L9 3zm-5 15 5 1.7v-2L5.8 16.6c-.3-.1-.5-.3-.5-.5s.2-.3.5-.3l3.7.6v-1.7l-4.8-.4C3.5 14.2 2 14.6 2 16c0 1 .7 1.6 2 2zm14 1.3 4-1.3c1.3-.4 1.6-1 1.6-1.6 0-1-1-1.8-2.5-1.7l-3.3.4v1.7l3.4-.4c.3 0 .5.1.5.3s-.2.4-.5.5l-3.2 1v1.1z"/></svg>',
+  xbox:       '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-6.8 2.7c2-.1 5.2 2 6.8 3.5 1.6-1.5 4.8-3.6 6.8-3.5A10 10 0 0 0 12 2zM3.5 6.6A10 10 0 0 0 2 12c0 4.5 2.9 8.3 7 9.6-1-2.2 2-8 4-10.6-1.5-1.5-5.1-5-9.5-4.4zm17 0c-4.4-.6-8 2.9-9.5 4.4 2 2.6 5 8.4 4 10.6 4.1-1.3 7-5.1 7-9.6 0-2-.6-3.8-1.5-5.4z"/></svg>',
+  roblox:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.3 2 2 16.5 18.7 22 22 7.5 5.3 2zm6.9 11.6-4.6-1.2 1.2-4.6 4.6 1.2-1.2 4.6z"/></svg>',
+  bluesky:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 3c3 2 6 6 6 9 0-3 3-7 6-9 3 0 3 3 2 5l-2 7c-1 3-3 3-6 0-3 3-5 3-6 0l-2-7c-1-2-1-5 2-5z"/></svg>',
+});
+
+// Hostname → kind (priority over IGDB's category)
+const _GDM_HOST_MAP = {
+  'store.steampowered.com':'steam','steamcommunity.com':'steam','steampowered.com':'steam',
+  'twitch.tv':'twitch','www.twitch.tv':'twitch',
+  'youtube.com':'youtube','www.youtube.com':'youtube','youtu.be':'youtube','m.youtube.com':'youtube',
+  'x.com':'twitter','twitter.com':'twitter','mobile.twitter.com':'twitter',
+  'reddit.com':'reddit','www.reddit.com':'reddit','old.reddit.com':'reddit',
+  'instagram.com':'instagram','www.instagram.com':'instagram',
+  'facebook.com':'facebook','www.facebook.com':'facebook','fb.com':'facebook',
+  'tiktok.com':'tiktok','www.tiktok.com':'tiktok',
+  'wikipedia.org':'wikipedia','en.wikipedia.org':'wikipedia',
+  'epicgames.com':'epic','store.epicgames.com':'epic','www.epicgames.com':'epic',
+  'gog.com':'gog','www.gog.com':'gog',
+  'discord.com':'discord','discord.gg':'discord',
+  'itch.io':'itch',
+  'playstation.com':'playstation','www.playstation.com':'playstation','store.playstation.com':'playstation',
+  'xbox.com':'xbox','www.xbox.com':'xbox',
+  'roblox.com':'roblox','www.roblox.com':'roblox',
+  'bsky.app':'bluesky','bsky.social':'bluesky',
+};
+
+// Priority order for picking the 7 most important links when trimming
+const _GDM_LINK_PRIORITY = ['official','steam','epic','playstation','xbox','roblox','gog','itch','youtube','twitch','discord','twitter','reddit','instagram','tiktok','facebook','bluesky','wikipedia','link'];
+
+function _gdmClassifyLink(l) {
+  try {
+    const u = new URL(l.url);
+    const h = u.hostname.toLowerCase();
+    if (_GDM_HOST_MAP[h]) return _GDM_HOST_MAP[h];
+    // Strip leading subdomains and try parent
+    const parts = h.split('.');
+    for (let i = 1; i < parts.length - 1; i++) {
+      const parent = parts.slice(i).join('.');
+      if (_GDM_HOST_MAP[parent]) return _GDM_HOST_MAP[parent];
+    }
+  } catch(_) {}
+  return (_GDM_LINK_ICONS[l.kind] ? l.kind : 'link');
+}
+
+// Platform → { svg, label }. Matches IGDB platform names / abbreviations.
+const _GDM_PLATFORM_ICONS = {
+  pc:{lbl:'PC (Windows)',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'},
+  mac:{lbl:'macOS',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2c-1 0-2 .5-3 1.5S11.5 6 12 7c1 0 2.5-.5 3-1.5S16.5 3 16 2zm1 5c-1 0-2 .5-3 1-1-.5-2-1-3-1-2 0-4 1.5-4 4.5C7 16 10 22 12 22c.5 0 1-.5 2-.5s1.5.5 2 .5c2 0 5-6 5-10 0-3-2-4.5-4-5z"/></svg>'},
+  linux:{lbl:'Linux',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a4 4 0 0 0-4 4c0 1 .3 2 .8 3-1.5 1-3.8 3.5-3.8 7 0 4 3 6 7 6s7-2 7-6c0-3.5-2.3-6-3.8-7 .5-1 .8-2 .8-3a4 4 0 0 0-4-4zm-1.2 4c.5 0 .8.3.8.7s-.3.8-.8.8-.8-.4-.8-.8.3-.7.8-.7zm2.4 0c.5 0 .8.3.8.7s-.3.8-.8.8-.8-.4-.8-.8.3-.7.8-.7z"/></svg>'},
+  ps3:{lbl:'PlayStation 3',svg:_GDM_LINK_ICONS.playstation},
+  ps4:{lbl:'PlayStation 4',svg:_GDM_LINK_ICONS.playstation},
+  ps5:{lbl:'PlayStation 5',svg:_GDM_LINK_ICONS.playstation},
+  psvita:{lbl:'PS Vita',svg:_GDM_LINK_ICONS.playstation},
+  xone:{lbl:'Xbox One',svg:_GDM_LINK_ICONS.xbox},
+  xsx:{lbl:'Xbox Series X|S',svg:_GDM_LINK_ICONS.xbox},
+  x360:{lbl:'Xbox 360',svg:_GDM_LINK_ICONS.xbox},
+  switch:{lbl:'Nintendo Switch',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="7" height="20" rx="2"/><rect x="13" y="2" width="7" height="20" rx="2"/><circle cx="7.5" cy="8" r=".8" fill="currentColor"/><circle cx="16.5" cy="16" r="1.2" fill="currentColor"/></svg>'},
+  ios:{lbl:'iOS',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2c-1 0-2 .5-3 1.5S11.5 6 12 7c1 0 2.5-.5 3-1.5S16.5 3 16 2zm1 5c-1 0-2 .5-3 1-1-.5-2-1-3-1-2 0-4 1.5-4 4.5C7 16 10 22 12 22c.5 0 1-.5 2-.5s1.5.5 2 .5c2 0 5-6 5-10 0-3-2-4.5-4-5z"/></svg>'},
+  android:{lbl:'Android',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 10v7c0 .6.4 1 1 1h1v3.5c0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5V18h2v3.5c0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5V18h1c.6 0 1-.4 1-1v-7H6zm-1.5 0c-.8 0-1.5.7-1.5 1.5v5c0 .8.7 1.5 1.5 1.5S6 17.3 6 16.5v-5c0-.8-.7-1.5-1.5-1.5zm15 0c-.8 0-1.5.7-1.5 1.5v5c0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5v-5c0-.8-.7-1.5-1.5-1.5zM8 9h8c0-2.5-1.4-4.6-3.5-5.5l1-1.7a.3.3 0 0 0-.5-.3L12 3.3 10.9 1.5a.3.3 0 0 0-.5.3l1.1 1.7C9.4 4.4 8 6.5 8 9z"/></svg>'},
+  meta:{lbl:'Meta Quest',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 8C3 5.8 4.8 4 7 4c2.3 0 3.8 1.7 5 3.5C13.2 5.7 14.7 4 17 4c2.2 0 4 1.8 4 4s-1.8 4-4 4c-2.3 0-3.8-1.7-5-3.5C10.8 10.3 9.3 12 7 12c-2.2 0-4-1.8-4-4zm2 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0zm10 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"/></svg>'},
+  web:{lbl:'Web Browser',svg:_GDM_LINK_ICONS.official},
+  generic:{lbl:'Platform',svg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>'},
+};
+
+function _gdmClassifyPlatform(p) {
+  const name = (p.name || '').toLowerCase();
+  const abbr = (p.abbr || '').toLowerCase();
+  const hay = name + ' ' + abbr;
+  if (/playstation 5|\bps5\b/.test(hay)) return 'ps5';
+  if (/playstation 4|\bps4\b/.test(hay)) return 'ps4';
+  if (/playstation 3|\bps3\b/.test(hay)) return 'ps3';
+  if (/vita/.test(hay)) return 'psvita';
+  if (/xbox series/.test(hay)) return 'xsx';
+  if (/xbox one/.test(hay)) return 'xone';
+  if (/xbox 360|x360/.test(hay)) return 'x360';
+  if (/switch|nsw|nintendo/.test(hay)) return 'switch';
+  if (/\bios\b|iphone|ipad/.test(hay)) return 'ios';
+  if (/android/.test(hay)) return 'android';
+  if (/mac\s?os|macintosh|os x/.test(hay)) return 'mac';
+  if (/linux/.test(hay)) return 'linux';
+  if (/quest|oculus|meta/.test(hay)) return 'meta';
+  if (/windows|\bpc\b|\bwin\b/.test(hay)) return 'pc';
+  if (/web|browser/.test(hay)) return 'web';
+  return 'generic';
+}
 
 function _gdmReviewBand(v) {
   if (v == null) return null;
@@ -31099,11 +31190,28 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
   const genres = (game.genres || []).join(', ') || '—';
   const devs = (game.developers || []).join(', ');
   const pubs = (game.publishers || []).join(', ');
-  const platformsHTML = (game.platforms || []).slice(0, 8)
-    .map(p => `<span class="gdm-platform" title="${escapeHTML(p.name)}">${escapeHTML(p.abbr || p.name)}</span>`)
+  const platformsHTML = (game.platforms || [])
+    .map(p => {
+      const k = _gdmClassifyPlatform(p);
+      const info = _GDM_PLATFORM_ICONS[k] || _GDM_PLATFORM_ICONS.generic;
+      return `<span class="gdm-platform-icon" title="${escapeHTML(p.name)}" aria-label="${escapeHTML(p.name)}">${info.svg}</span>`;
+    })
+    .slice(0, 10)
     .join('');
-  const linksHTML = (game.links || []).map(l => {
-    const kind = (_GDM_LINK_ICONS[l.kind] ? l.kind : 'link');
+  // Dedupe by kind (so duplicate Twitter links etc. don't take a slot),
+  // rank by priority, cap at 7.
+  const linksSorted = (() => {
+    const seen = new Map();
+    (game.links || []).forEach(l => {
+      const kind = _gdmClassifyLink(l);
+      if (!seen.has(kind)) seen.set(kind, { kind, url: l.url });
+    });
+    const arr = [...seen.values()];
+    arr.sort((a,b) => _GDM_LINK_PRIORITY.indexOf(a.kind) - _GDM_LINK_PRIORITY.indexOf(b.kind));
+    return arr.slice(0, 7);
+  })();
+  const linksHTML = linksSorted.map(l => {
+    const kind = _GDM_LINK_ICONS[l.kind] ? l.kind : 'link';
     const label = _GDM_LINK_LABELS[kind] || 'Link';
     return `<a class="gdm-link-chip" href="${escapeHTML(l.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHTML(label)}" aria-label="${escapeHTML(label)}">${_GDM_LINK_ICONS[kind]}</a>`;
   }).join('');
@@ -31119,12 +31227,32 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
   const canAdd = typeof addGameToCollection === 'function';
   const safeName = escapeHTML(game.name);
   const safeNameAttr = safeName.replace(/'/g, "\\'");
-  const mediaHTML = (videos.length || screenshots.length)
-    ? `<div class="gdm-shots">${[
-        ...videos.map((v, i) => `<button class="gdm-shot gdm-shot--video" onclick="_gdmOpenVideo(${i})" title="${escapeHTML(v.name)}" aria-label="Play ${escapeHTML(v.name)}"><img src="${escapeHTML(v.thumb)}" alt=""><span class="gdm-shot-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></button>`),
-        ...screenshots.slice(1).map((s, i) => `<button class="gdm-shot" onclick="_gdmOpenLightbox(${i+1})" aria-label="View screenshot"><img src="${escapeHTML(s.thumb)}" alt=""></button>`)
-      ].join('')}</div>`
-    : '';
+  // Assemble the media strip: videos first (with play overlay) then screenshots.
+  // Each entry carries its own "open" action so the lightbox can tell them apart.
+  const mediaItems = [
+    ...videos.map((v, i) => ({ kind:'video', thumb: v.thumb, idx: i, label: v.name || 'Trailer' })),
+    ...screenshots.map((s, i) => ({ kind:'shot', thumb: s.thumb, idx: i, label: 'Screenshot' })),
+  ].slice(0, 10);
+  const hasMedia = mediaItems.length > 0;
+  const heroItem = mediaItems[0] || null;
+  const stripItems = mediaItems.slice(1);
+  const mediaHTML = hasMedia ? `
+    <div class="gdm-media-stage">
+      ${heroItem.kind === 'video'
+        ? `<button class="gdm-media-hero gdm-media-hero--video" onclick="_gdmOpenVideo(${heroItem.idx})" title="Play ${escapeHTML(heroItem.label)}">
+             <img src="${escapeHTML(heroItem.thumb)}" alt="">
+             <span class="gdm-hero-play"><svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+           </button>`
+        : `<button class="gdm-media-hero" onclick="_gdmOpenLightbox(${heroItem.idx})" title="View screenshot">
+             <img src="${escapeHTML((game.screenshots[heroItem.idx] && game.screenshots[heroItem.idx].full) || heroItem.thumb)}" alt="">
+           </button>`}
+    </div>
+    ${stripItems.length ? `<div class="gdm-media-strip">${stripItems.map(it =>
+      it.kind === 'video'
+        ? `<button class="gdm-media-thumb gdm-media-thumb--video" onclick="_gdmOpenVideo(${it.idx})" title="${escapeHTML(it.label)}"><img src="${escapeHTML(it.thumb)}" alt=""><span class="gdm-thumb-play"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></button>`
+        : `<button class="gdm-media-thumb" onclick="_gdmOpenLightbox(${it.idx})" title="View screenshot"><img src="${escapeHTML(it.thumb)}" alt=""></button>`
+    ).join('')}</div>` : ''}
+  ` : '';
   _gdmLastGame = game;
   card.innerHTML = `
     <div class="gdm-hero" style="${heroSrc ? `background-image:linear-gradient(180deg,rgba(10,8,8,.12),rgba(10,8,8,.85)),url('${escapeHTML(heroSrc)}');` : ''}">
@@ -31151,17 +31279,37 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
       <div class="gdm-main">
         ${mediaHTML}
         ${game.summary ? `<p class="gdm-summary">${escapeHTML(game.summary)}</p>` : ''}
+        <div class="gdm-reviews-card">
+          <div class="gdm-side-head">Reviews</div>
+          ${ratingsHTML}
+          <div class="gdm-user-review">
+            <div class="gdm-user-review-head">How was it for you?</div>
+            <div class="gdm-thumbs">
+              <button class="gdm-thumb gdm-thumb--up" data-vote="up" onclick="_gdmPickVote(this,'up')" title="Good">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-6 0v4H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-1.7l1-7a2 2 0 0 0-2-2.3h-4z" transform="rotate(180 12 12)"/></svg>
+                <span>Good</span>
+              </button>
+              <button class="gdm-thumb gdm-thumb--mid" data-vote="mid" onclick="_gdmPickVote(this,'mid')" title="Mid">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M4 8l3-3h10l3 3"/><path d="M4 16l3 3h10l3-3"/></svg>
+                <span>Mid</span>
+              </button>
+              <button class="gdm-thumb gdm-thumb--down" data-vote="down" onclick="_gdmPickVote(this,'down')" title="Bad">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-6 0v4H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-1.7l1-7a2 2 0 0 0-2-2.3h-4z"/></svg>
+                <span>Bad</span>
+              </button>
+            </div>
+            <textarea id="gdm-review-text" class="gdm-review-text" placeholder="Optional — add a comment to your review" maxlength="280"></textarea>
+            <button class="gdm-review-submit" onclick="_gdmSubmitReview('${safeNameAttr}')">Post review</button>
+          </div>
+          <div class="gdm-review-carousel" id="gdm-review-carousel"></div>
+        </div>
       </div>
       <aside class="gdm-side">
         <div class="gdm-side-card">
-          <div class="gdm-side-head">Community</div>
+          <div class="gdm-side-head">Bastion</div>
           <div id="gdm-community-slot" class="gdm-community-slot">
-            <div class="gdm-community-loading">Looking for an official community…</div>
+            <div class="gdm-community-loading">Looking for an official Bastion…</div>
           </div>
-        </div>
-        <div class="gdm-side-card">
-          <div class="gdm-side-head">Reviews</div>
-          ${ratingsHTML}
         </div>
         <div class="gdm-side-card">
           <div class="gdm-side-head">Details</div>
@@ -31174,6 +31322,8 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
         </div>
       </aside>
     </div>`;
+  // Kick off the Fortized user-review carousel for this game.
+  _gdmStartReviewCarousel(game.name);
 }
 
 let _gdmLastGame = null;
@@ -31243,16 +31393,28 @@ async function _gdmSubmitReport(gameName) {
   const choice = document.querySelector('input[name="gdm-report"]:checked')?.value;
   const note = document.getElementById('gdm-report-text')?.value?.trim() || '';
   if (!choice) { toast('Pick a reason first', 'error'); return; }
+  const report = {
+    id: 'gdmrep_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    kind: 'game_feedback',
+    reporter: CU?.username || null,
+    reason: choice,
+    context: 'Game: ' + (gameName || 'unknown'),
+    note,
+    game: gameName,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  };
+  // Send to the Supabase reports queue so it shows up in the admin console.
+  try { await FortizedSocial.adminSaveReport(report); }
+  catch(e) { console.warn('[GDM] Report save to Supabase failed, caching locally:', e?.message); }
+  // Always cache locally too (same pattern the user-report flow uses)
   try {
-    // Persist locally; the support team will pick these up if/when a backend
-    // endpoint lands — losing a single row to a closed tab isn't worth the
-    // server trip for something this low-traffic.
-    const queue = JSON.parse(localStorage.getItem('ftz_gdm_reports') || '[]');
-    queue.push({ game: gameName, reason: choice, note, at: Date.now(), user: CU?.username || null });
-    localStorage.setItem('ftz_gdm_reports', JSON.stringify(queue.slice(-100)));
+    const existing = JSON.parse(localStorage.getItem('ftz_reports') || '[]');
+    if (!existing.find(r => r.id === report.id)) existing.push(report);
+    localStorage.setItem('ftz_reports', JSON.stringify(existing));
   } catch(_) {}
   document.getElementById('gdm-report-modal')?.remove();
-  toast('Thanks — we got your report.', 'success');
+  toast('Thanks — report sent to moderators.', 'success');
 }
 
 async function _gdmAddToProfile(gameName) {
@@ -31264,6 +31426,112 @@ async function _gdmAddToProfile(gameName) {
     console.warn('[GDM] Add to profile failed:', e);
     toast('Couldn\'t add to profile.', 'error');
   }
+}
+
+// ── Fortized user reviews (per-game) ──
+// MVP storage: localStorage, keyed by lower-cased game name. When a
+// Supabase `game_reviews` table lands we'll mirror to it, but the UX works
+// offline-first so the carousel never depends on the network.
+const _GDM_REVIEWS_KEY = 'ftz_game_reviews_v1';
+let _gdmPickedVote = null;
+let _gdmCarouselTimer = null;
+let _gdmCarouselPaused = false;
+
+function _gdmLoadReviews() {
+  try { return JSON.parse(localStorage.getItem(_GDM_REVIEWS_KEY) || '{}'); }
+  catch(_) { return {}; }
+}
+function _gdmSaveReviews(all) {
+  try { localStorage.setItem(_GDM_REVIEWS_KEY, JSON.stringify(all)); } catch(_) {}
+}
+function _gdmGetReviewsFor(gameName) {
+  const all = _gdmLoadReviews();
+  const key = (gameName || '').toLowerCase();
+  return Array.isArray(all[key]) ? all[key] : [];
+}
+
+function _gdmPickVote(btn, vote) {
+  _gdmPickedVote = vote;
+  document.querySelectorAll('.gdm-thumb').forEach(b => b.classList.remove('gdm-thumb--active'));
+  btn.classList.add('gdm-thumb--active');
+}
+
+async function _gdmSubmitReview(gameName) {
+  if (!_gdmPickedVote) { toast('Pick 👍, ✋ or 👎 first', 'error'); return; }
+  const text = (document.getElementById('gdm-review-text')?.value || '').trim().slice(0, 280);
+  const entry = {
+    id: 'rev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    game: gameName,
+    vote: _gdmPickedVote,
+    text,
+    user: CU?.username || 'anonymous',
+    displayName: CU?.displayName || CU?.username || 'Someone',
+    pfp: CU?.pfp || null,
+    at: Date.now(),
+  };
+  const all = _gdmLoadReviews();
+  const key = (gameName || '').toLowerCase();
+  if (!Array.isArray(all[key])) all[key] = [];
+  // Replace any previous review from the same user so one-per-user stays true.
+  all[key] = all[key].filter(r => r.user !== entry.user);
+  all[key].unshift(entry);
+  all[key] = all[key].slice(0, 200);
+  _gdmSaveReviews(all);
+  // Reset the form, refresh the carousel with the new entry at the front.
+  _gdmPickedVote = null;
+  document.querySelectorAll('.gdm-thumb').forEach(b => b.classList.remove('gdm-thumb--active'));
+  const ta = document.getElementById('gdm-review-text'); if (ta) ta.value = '';
+  toast('Review posted!', 'success');
+  _gdmStartReviewCarousel(gameName);
+}
+
+function _gdmStopReviewCarousel() {
+  if (_gdmCarouselTimer) { clearTimeout(_gdmCarouselTimer); _gdmCarouselTimer = null; }
+}
+
+function _gdmStartReviewCarousel(gameName) {
+  _gdmStopReviewCarousel();
+  const host = document.getElementById('gdm-review-carousel');
+  if (!host) return;
+  const reviews = _gdmGetReviewsFor(gameName);
+  if (!reviews.length) { host.innerHTML = '<div class="gdm-review-empty">No reviews yet — be the first to share what you think.</div>'; return; }
+  let idx = 0;
+  const labelFor = v => v === 'up' ? 'Good' : v === 'down' ? 'Bad' : 'Mid';
+  const svgFor = v => {
+    if (v === 'up') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14 9V5a3 3 0 0 0-6 0v4H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-1.7l1-7a2 2 0 0 0-2-2.3h-4z" transform="rotate(180 12 12)"/></svg>';
+    if (v === 'down') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14 9V5a3 3 0 0 0-6 0v4H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-1.7l1-7a2 2 0 0 0-2-2.3h-4z"/></svg>';
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/></svg>';
+  };
+  const paint = () => {
+    const r = reviews[idx % reviews.length];
+    const pfp = r.pfp
+      ? `<img src="${escapeHTML(r.pfp)}" onerror="this.outerHTML='<div class=&quot;gdm-rc-pfp-fallback&quot;>${escapeHTML((r.displayName||'?')[0].toUpperCase())}</div>'">`
+      : `<div class="gdm-rc-pfp-fallback">${escapeHTML((r.displayName||'?')[0].toUpperCase())}</div>`;
+    host.innerHTML = `
+      <div class="gdm-review-chip gdm-review-chip--in gdm-vote-${escapeHTML(r.vote)}" onmouseenter="_gdmCarouselPaused=true" onmouseleave="_gdmCarouselPaused=false;_gdmScheduleNext()">
+        <div class="gdm-rc-head">
+          <div class="gdm-rc-pfp">${pfp}</div>
+          <div class="gdm-rc-meta">
+            <div class="gdm-rc-name">${escapeHTML(r.displayName || r.user)}</div>
+            <div class="gdm-rc-handle">@${escapeHTML(r.user)}</div>
+          </div>
+          <div class="gdm-rc-vote">${svgFor(r.vote)}<span>${labelFor(r.vote)}</span></div>
+        </div>
+        ${r.text ? `<div class="gdm-rc-body">${escapeHTML(r.text)}</div>` : ''}
+      </div>`;
+  };
+  window._gdmScheduleNext = function() {
+    _gdmStopReviewCarousel();
+    if (reviews.length <= 1) return;
+    _gdmCarouselTimer = setTimeout(function tick() {
+      if (_gdmCarouselPaused) { _gdmCarouselTimer = setTimeout(tick, 500); return; }
+      const chip = host.querySelector('.gdm-review-chip');
+      if (chip) { chip.classList.remove('gdm-review-chip--in'); chip.classList.add('gdm-review-chip--out'); }
+      setTimeout(() => { idx++; paint(); window._gdmScheduleNext(); }, 360);
+    }, 5000);
+  };
+  paint();
+  window._gdmScheduleNext();
 }
 
 

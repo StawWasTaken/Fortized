@@ -25764,104 +25764,108 @@ function renderGameCollectionTab(main) {
   const currentGame = _gameActivity;
   const activityEnabled = localStorage.getItem('ftz_activity_detection') !== 'false';
   const isDesktop = !!window.fortizedDesktop?.isDesktopApp;
+  const verifiedSvg = '<svg class="rg-verified" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 14.3l-4.8 2.6.9-5.4L4.2 7.7l5.4-.8L12 2z"/></svg>';
 
-  // ── Current Game section ──
-  let currentGameHtml = '';
+  // ── Current Game ──
+  let currentGameHtml = '<div class="rg-section-head">Current Game</div>';
   if (currentGame) {
     const cover = currentGame.coverUrl || currentGame.coverThumb || _getManualCover(currentGame.name);
-    currentGameHtml = '<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:12px;">Current Game</div>'
-      + '<div style="padding:16px 20px;background:linear-gradient(135deg,rgba(30,100,50,.35),rgba(20,80,40,.25));border:1.5px solid rgba(62,207,110,.3);border-radius:14px;margin-bottom:24px;display:flex;align-items:center;gap:14px;">'
-      + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:48px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '<div style="width:48px;height:64px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">' + (currentGame.icon||'🎮') + '</div>')
-      + '<div style="flex:1;min-width:0;">'
-      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
-      + '<span style="font-size:15px;font-weight:700;color:#fff;">' + escapeHTML(currentGame.name) + '</span>'
-      + (currentGame._igdbEnriched ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#60a5fa" style="flex-shrink:0;"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>' : '')
+    const verified = currentGame._igdbEnriched ? verifiedSvg : '';
+    currentGameHtml += '<div class="rg-current rg-current--playing">'
+      + (cover
+          ? '<img class="rg-cover-sm" src="' + escapeHTML(cover) + '" alt="" onerror="this.outerHTML=\'<div class=&quot;rg-cover-sm rg-cover-fallback&quot;><span>' + (currentGame.icon||'🎮') + '</span></div>\'">'
+          : '<div class="rg-cover-sm rg-cover-fallback"><span>' + (currentGame.icon||'🎮') + '</span></div>')
+      + '<div class="rg-current-body">'
+      +   '<div class="rg-current-name">' + escapeHTML(currentGame.name) + verified + '</div>'
+      +   '<div class="rg-current-sub">Playing now</div>'
       + '</div>'
-      + (currentGame.genre ? '<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:3px;">' + escapeHTML(currentGame.genre) + '</div>' : '')
-      + '<div style="font-size:12px;color:rgba(62,207,110,.7);font-weight:600;">Now playing!</div>'
-      + '</div>'
-      + '<button onclick="setGameActivity(null);renderGameCollectionTab(this.closest(\'.settings-main\'))" title="Stop" class="game-stop-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      + '<button class="rg-icon-btn rg-icon-btn--ghost" title="Stop" onclick="setGameActivity(null);renderGameCollectionTab(this.closest(\'.settings-main\'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      + '</div>';
+  } else {
+    currentGameHtml += '<div class="rg-current rg-current--empty">'
+      + '<div class="rg-current-empty-title">No game detected</div>'
+      + '<div class="rg-current-empty-sub">What are you playing?!</div>'
       + '</div>';
   }
 
-  // ── Add Game — Electron-powered app detection with cover art ──
-  let addGameHtml = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">'
-    + '<span style="font-size:13px;color:var(--muted);">Not seeing your game?</span>'
-    + '<span style="font-size:13px;color:var(--accent);cursor:pointer;text-decoration:underline;font-weight:600;" onclick="_toggleInlineGamePicker()">Add it!</span>'
+  // ── Inline "Add it!" picker ──
+  const inlineAdd = '<div class="rg-addline">'
+    + '<span>Not seeing your game?</span>'
+    + '<button class="rg-link" onclick="_toggleInlineGamePicker()">Add it!</button>'
     + '</div>'
-    + '<div id="inline-game-picker" style="display:none;margin-bottom:24px;">'
-    + '<div style="padding:16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'
-    + '<div style="font-size:13px;font-weight:700;color:#fff;">Detected Apps</div>'
-    + '<button onclick="_refreshInlineDetectedApps()" style="background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;">Refresh</button>'
+    + '<div id="inline-game-picker" class="rg-inline-picker" style="display:none;">'
+    + '<div class="rg-inline-head"><span class="rg-inline-title">Detected Apps</span>'
+    +   '<button class="rg-chip-btn" onclick="_refreshInlineDetectedApps()">Refresh</button></div>'
+    + '<div id="inline-detected-apps" class="rg-detected-list"><div class="rg-detected-loading">Scanning…</div></div>'
+    + '<div class="rg-inline-sep">Or search manually</div>'
+    + '<div class="rg-inline-search">'
+    +   '<input class="settings-input" id="inline-game-search" placeholder="Search games…" oninput="_filterInlineGameSearch(this.value)">'
+    +   '<button class="btn-a rg-inline-add-btn" onclick="_addGameFromInlineSearch()">Add</button>'
     + '</div>'
-    + '<div id="inline-detected-apps" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:240px;overflow-y:auto;">'
-    + '<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--muted);font-size:12px;">Scanning...</div>'
-    + '</div>'
-    + '<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">'
-    + '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Or search manually:</div>'
-    + '<div style="display:flex;gap:8px;">'
-    + '<input class="settings-input" id="inline-game-search" placeholder="Search games..." style="flex:1;font-size:12px;padding:8px 12px;" oninput="_filterInlineGameSearch(this.value)">'
-    + '<button class="btn-a" onclick="_addGameFromInlineSearch()" style="font-size:12px;padding:8px 16px;white-space:nowrap;">Add</button>'
-    + '</div>'
-    + '<div id="inline-game-search-results" style="display:none;margin-top:8px;max-height:160px;overflow-y:auto;"></div>'
-    + '</div>'
-    + '</div>'
+    + '<div id="inline-game-search-results" class="rg-inline-results" style="display:none;"></div>'
     + '</div>';
 
-  // ── Added Games section (list with cover art left, name/description right) ──
-  let gamesListHtml = '';
+  // ── Added Games ──
+  let gamesListHtml = '<div class="rg-divider"></div><div class="rg-section-head">Added Games</div>'
+    + '<div class="rg-section-note">Some information about games (such as genre or cover art) is provided by <a href="https://www.igdb.com" target="_blank" rel="noopener">IGDB</a>.</div>';
   if (games.length) {
-    gamesListHtml = '<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Your Games</div>'
-      + '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Cover art provided by <a href="https://www.igdb.com" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-weight:600;">IGDB</a>.</div>'
-      + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
+    gamesListHtml += '<div class="rg-list">';
     games.forEach((g, i) => {
       const isPlaying = currentGame?.name === g.name;
       const cover = g.coverUrl || g.coverThumb || _getManualCover(g.name);
       const lastPlayed = _formatLastPlayed(g.lastPlayed);
-      gamesListHtml += '<div class="game-list-item" style="border:1.5px solid ' + (isPlaying ? 'rgba(62,207,110,.25)' : 'rgba(255,255,255,.05)') + ';background:' + (isPlaying ? 'rgba(62,207,110,.04)' : 'rgba(255,255,255,.02)') + ';">'
-        + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:48px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.06);" onerror="this.style.display=\'none\'">'
-          : '<div style="width:48px;height:64px;border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">' + (g.icon||'🎮') + '</div>')
-        + '<div style="flex:1;min-width:0;">'
-        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">'
-        + '<span style="font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(g.name) + '</span>'
-        + (isPlaying ? '<span style="font-size:9px;font-weight:700;color:var(--green);background:rgba(62,207,110,.12);padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.03em;flex-shrink:0;">Playing</span>' : '')
-        + (g.hidden ? '<span style="flex-shrink:0;opacity:.4;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></span>' : '')
+      const verified = (g.coverUrl || g.coverThumb) ? verifiedSvg : '';
+      const sub = isPlaying
+        ? '<span class="rg-row-sub rg-row-sub--playing">Playing now</span>'
+        : (lastPlayed
+            ? '<span class="rg-row-sub">Last played <strong>' + escapeHTML(lastPlayed) + '</strong></span>'
+            : (g.genre ? '<span class="rg-row-sub">' + escapeHTML(g.genre) + '</span>' : ''));
+      const safeName = escapeHTML(g.name).replace(/'/g, "\\'");
+      gamesListHtml += '<div class="rg-row' + (isPlaying?' rg-row--playing':'') + '" onclick="openGameDetailsModal(\'' + safeName + '\')" title="View details">'
+        + (cover
+            ? '<img class="rg-row-cover" src="' + escapeHTML(cover) + '" alt="" onerror="this.outerHTML=\'<div class=&quot;rg-row-cover rg-cover-fallback&quot;><span>' + (g.icon||'🎮') + '</span></div>\'">'
+            : '<div class="rg-row-cover rg-cover-fallback"><span>' + (g.icon||'🎮') + '</span></div>')
+        + '<div class="rg-row-body">'
+        +   '<div class="rg-row-name">' + escapeHTML(g.name) + verified + (g.hidden?'<span class="rg-row-hidden-tag" title="Hidden from profile">hidden</span>':'') + '</div>'
+        +   sub
         + '</div>'
-        + (g.genre ? '<div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:2px;">' + escapeHTML(g.genre) + '</div>' : '')
-        + (lastPlayed ? '<div style="font-size:10.5px;color:rgba(255,255,255,.2);">Last played ' + lastPlayed + '</div>' : '')
+        + '<div class="rg-row-actions">'
+        +   '<button class="rg-icon-btn" title="' + (g.hidden?'Show on profile':'Hide from profile') + '" onclick="event.stopPropagation();_toggleGameVisibility(' + i + ',this)">'
+        +     (g.hidden
+                ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>')
+        +   '</button>'
+        +   '<button class="rg-icon-btn rg-icon-btn--danger" title="Remove" onclick="event.stopPropagation();removeGameFromCollection(' + i + ')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
         + '</div>'
-        + '<div style="display:flex;gap:4px;flex-shrink:0;">'
-        + '<button onclick="event.stopPropagation();_toggleGameVisibility(' + i + ',this)" title="' + (g.hidden ? 'Show' : 'Hide') + '" class="icon-btn-sm" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.06);color:rgba(255,255,255,.35);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + (g.hidden ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>') + '</svg></button>'
-        + '<button onclick="event.stopPropagation();removeGameFromCollection(' + i + ')" title="Remove" class="icon-btn-sm" style="background:rgba(248,113,113,.04);border-color:rgba(248,113,113,.1);color:rgba(248,113,113,.45);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
-        + '</div></div>';
+        + '</div>';
     });
     gamesListHtml += '</div>';
   } else {
-    gamesListHtml = '<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Your Games</div>'
-      + '<div style="text-align:center;padding:40px;">'
-      + '<div style="font-size:48px;margin-bottom:14px;">\uD83C\uDFAE</div>'
-      + '<div style="font-family:var(--font-display);font-weight:800;font-size:16px;margin-bottom:8px;">No games yet</div>'
-      + '<div style="font-size:13px;color:var(--muted);">Add games you love to show them on your public profile.</div>'
+    gamesListHtml += '<div class="rg-empty">'
+      + '<div class="rg-empty-title">No games added yet</div>'
+      + '<div class="rg-empty-sub">Games you add show up on your public profile.</div>'
       + '</div>';
   }
 
-  // ── Activity Detection toggle ──
-  let activityToggleHtml = '<div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
-    + '<div>'
-    + '<div style="font-size:14px;font-weight:700;color:#fff;">Activity Detection</div>'
-    + '<div style="font-size:12px;color:var(--muted);margin-top:2px;">' + (isDesktop ? 'Automatically detect games and show as your status' : 'Requires the <strong>Fortized Desktop</strong> app for real-time game detection') + '</div>'
-    + '</div>'
-    + (isDesktop ? '<div class="toggle ' + (activityEnabled ? 'on' : '') + '" onclick="toggleActivityDetection(this)"></div>' : '<div style="font-size:11px;color:var(--muted);background:rgba(255,255,255,.04);padding:6px 12px;border-radius:8px;font-weight:600;">Desktop Only</div>')
-    + '</div>'
+  // ── Activity Detection ──
+  const activityToggleHtml = '<div class="rg-divider"></div>'
+    + '<div class="rg-row rg-row--setting">'
+    +   '<div class="rg-row-body">'
+    +     '<div class="rg-row-name">Activity Detection</div>'
+    +     '<span class="rg-row-sub">' + (isDesktop ? 'Automatically detect games and show them as your status.' : 'Requires the <strong>Fortized Desktop</strong> app.') + '</span>'
+    +   '</div>'
+    +   '<div class="rg-row-actions">'
+    +     (isDesktop
+              ? '<div class="toggle' + (activityEnabled?' on':'') + '" onclick="toggleActivityDetection(this)"></div>'
+              : '<span class="rg-chip-muted">Desktop only</span>')
+    +   '</div>'
     + '</div>';
 
-  main.innerHTML = '<div class="settings-panel" style="padding:24px;">'
+  main.innerHTML = '<div class="settings-panel rg-panel">'
     + currentGameHtml
-    + addGameHtml
+    + inlineAdd
     + gamesListHtml
-    + '<button class="btn-a" onclick="openGameCollectionPicker()" style="font-size:13px;padding:10px 22px;margin-bottom:16px;">+ Add Game</button>'
+    + '<div class="rg-bottom-actions"><button class="btn-a" onclick="openGameCollectionPicker()">+ Add Game</button></div>'
     + activityToggleHtml
     + '</div>';
 }
@@ -25896,7 +25900,6 @@ async function _refreshInlineDetectedApps() {
   const owned = new Set((CU.gameCollection||[]).map(g => g.name.toLowerCase()));
   let detectedApps = [];
 
-  // Detect running apps via Electron
   if (window.fortizedDesktop?.isDesktopApp) {
     try {
       const procs = await window.fortizedDesktop.getProcesses();
@@ -25904,7 +25907,6 @@ async function _refreshInlineDetectedApps() {
     } catch (e) { _dbg('[Desktop] detect apps failed', e); }
   }
 
-  // Enrich detected apps with IGDB cover art
   const enrichedApps = [];
   for (const app of detectedApps) {
     let enriched = {...app, coverUrl: null, coverThumb: null};
@@ -25924,26 +25926,27 @@ async function _refreshInlineDetectedApps() {
   }
 
   if (!enrichedApps.length && !window.fortizedDesktop?.isDesktopApp) {
-    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:12px;">'
-      + '<div style="font-size:24px;margin-bottom:8px;">🖥️</div>'
-      + '<div>Requires the <strong>Fortized Desktop</strong> app to detect running games.</div></div>';
+    container.innerHTML = '<div class="rg-detected-empty"><strong>Requires Fortized Desktop</strong><span>Install the desktop app to auto-detect running games.</span></div>';
     return;
   }
   if (!enrichedApps.length) {
-    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:12px;">'
-      + '<div style="font-size:24px;margin-bottom:8px;">🔍</div>'
-      + '<div>No new apps detected. Try opening a game!</div></div>';
+    container.innerHTML = '<div class="rg-detected-empty"><strong>Nothing new detected</strong><span>Open a game and hit Refresh.</span></div>';
     return;
   }
 
   container.innerHTML = enrichedApps.map(app => {
     const cover = app.coverUrl || app.coverThumb;
-    return '<div onclick="_addDetectedGame(\'' + escapeHTML(app.name).replace(/'/g,"\\'") + '\')" class="detected-game-item">'
-      + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:40px;height:54px;border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
-        : '<div style="width:40px;height:54px;border-radius:6px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">' + (app.icon||'🎮') + '</div>')
-      + '<div style="flex:1;min-width:0;"><div style="font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(app.name) + '</div>'
-      + (app.genre ? '<div style="font-size:10.5px;color:rgba(255,255,255,.3);">' + escapeHTML(app.genre) + '</div>' : '')
-      + '</div><div style="font-size:11px;color:rgba(62,207,110,.7);font-weight:700;flex-shrink:0;">+ Add</div></div>';
+    const safeName = escapeHTML(app.name).replace(/\x27/g, "\\\x27");
+    return '<div class="rg-detected-row" onclick="_addDetectedGame(\x27' + safeName + '\x27)">'
+      + (cover
+          ? '<img class="rg-detected-cover" src="' + escapeHTML(cover) + '" alt="" onerror="this.outerHTML=\x27<div class=&quot;rg-detected-cover rg-cover-fallback&quot;><span>' + (app.icon||'🎮') + '</span></div>\x27">'
+          : '<div class="rg-detected-cover rg-cover-fallback"><span>' + (app.icon||'🎮') + '</span></div>')
+      + '<div class="rg-detected-body">'
+      +   '<div class="rg-detected-name">' + escapeHTML(app.name) + '</div>'
+      +   (app.genre ? '<div class="rg-detected-genre">' + escapeHTML(app.genre) + '</div>' : '')
+      + '</div>'
+      + '<span class="rg-detected-add">+ Add</span>'
+      + '</div>';
   }).join('');
 }
 
@@ -25963,7 +25966,6 @@ async function _addDetectedGame(name) {
     } catch (e) { _dbg('[IGDB] search failed', e); }
   }
   addGameToCollection(name, catalogEntry?.icon || '🎮', genre, cover, coverThumb);
-  // Refresh the picker to remove the added game
   setTimeout(() => _refreshInlineDetectedApps(), 200);
 }
 
@@ -25976,15 +25978,22 @@ function _filterInlineGameSearch(query) {
   const q = query.toLowerCase();
   const matches = GAME_CATALOG.filter(g => !owned.has(g.name.toLowerCase()) && g.name.toLowerCase().includes(q)).slice(0, 8);
   if (!matches.length) {
-    container.innerHTML = '<div style="padding:8px;font-size:12px;color:var(--muted);">No matches. Press Add to add "' + escapeHTML(query) + '" as custom.</div>';
+    container.innerHTML = '<div class="rg-detected-empty"><span>No matches. Press <strong>Add</strong> to add "' + escapeHTML(query) + '" as custom.</span></div>';
     return;
   }
   container.innerHTML = matches.map(g => {
     const cover = _getManualCover(g.name);
-    return '<div onclick="_addDetectedGame(\'' + escapeHTML(g.name).replace(/'/g,"\\'") + '\');document.getElementById(\'inline-game-search\').value=\'\';document.getElementById(\'inline-game-search-results\').style.display=\'none\'" class="game-search-item">'
-      + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:28px;height:38px;border-radius:4px;object-fit:cover;flex-shrink:0;">' : '<div style="width:28px;height:38px;border-radius:4px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">' + (g.icon||'🎮') + '</div>')
-      + '<div><div style="font-size:12px;font-weight:600;color:#fff;">' + escapeHTML(g.name) + '</div>'
-      + '<div style="font-size:10px;color:var(--muted);">' + escapeHTML(g.genre||'Game') + '</div></div></div>';
+    const safeName = escapeHTML(g.name).replace(/\x27/g, "\\\x27");
+    return '<div class="rg-detected-row" onclick="_addDetectedGame(\x27' + safeName + '\x27);document.getElementById(\x27inline-game-search\x27).value=\x27\x27;document.getElementById(\x27inline-game-search-results\x27).style.display=\x27none\x27">'
+      + (cover
+          ? '<img class="rg-detected-cover" src="' + escapeHTML(cover) + '" alt="">'
+          : '<div class="rg-detected-cover rg-cover-fallback"><span>' + (g.icon||'🎮') + '</span></div>')
+      + '<div class="rg-detected-body">'
+      +   '<div class="rg-detected-name">' + escapeHTML(g.name) + '</div>'
+      +   '<div class="rg-detected-genre">' + escapeHTML(g.genre||'Game') + '</div>'
+      + '</div>'
+      + '<span class="rg-detected-add">+ Add</span>'
+      + '</div>';
   }).join('');
 }
 
@@ -26085,28 +26094,32 @@ function openGameCollectionPicker() {
   document.getElementById('gc-overlay')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'gc-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.9);backdrop-filter:blur(14px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.className = 'gcp-overlay';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:620px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);">'
-    + '<div style="padding:20px 24px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">'
-    + '<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:4px;color:#fff;">Add to Your Collection</div>'
-    + '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;" id="gc-igdb-badge">Searching local catalog...</div>'
-    + '<input class="field-input" id="gc-search" placeholder="Search games or type a name\u2026" style="width:100%;padding:10px 14px;font-size:13px;" oninput="filterGCPicker(this.value)">'
+  overlay.innerHTML = '<div class="gcp-card" onclick="event.stopPropagation()">'
+    + '<div class="gcp-head">'
+    +   '<div class="gcp-title">Add a game</div>'
+    +   '<div class="gcp-sub" id="gc-igdb-badge">Loading…</div>'
     + '</div>'
-    + '<div id="gc-grid" style="overflow-y:auto;flex:1;padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;"></div>'
-    + '<div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;">'
-    + '<button class="btn-g" style="flex:1;" onclick="document.getElementById(\'gc-overlay\').remove()">Cancel</button>'
-    + '<button class="btn-a" style="flex:1;" onclick="addCustomGameFromSearch()">+ Custom</button>'
-    + '</div></div>';
+    + '<div class="gcp-search-wrap">'
+    +   '<svg class="gcp-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+    +   '<input class="gcp-search" id="gc-search" placeholder="Search any game by name…" oninput="filterGCPicker(this.value)" autocomplete="off">'
+    + '</div>'
+    + '<div id="gc-grid" class="gcp-list"></div>'
+    + '<div class="gcp-foot">'
+    +   '<button class="btn-g" onclick="document.getElementById(\'gc-overlay\').remove()">Cancel</button>'
+    +   '<button class="btn-a" onclick="addCustomGameFromSearch()">+ Add as custom</button>'
+    + '</div>'
+    + '</div>';
   document.body.appendChild(overlay);
   renderGCGrid(GAME_CATALOG);
   document.getElementById('gc-search').focus();
-  // Check IGDB availability and enrich existing games
   _checkIGDB().then(ok => {
     const badge = document.getElementById('gc-igdb-badge');
-    if (badge) badge.innerHTML = ok
-      ? '<span style="color:var(--green);">&#x2713;</span> Powered by <strong style="color:rgba(255,255,255,.5);">IGDB</strong> — search any game'
-      : 'Local catalog · Set TWITCH_CLIENT_ID & TWITCH_CLIENT_SECRET for IGDB';
+    if (!badge) return;
+    badge.innerHTML = ok
+      ? 'Powered by <a href="https://www.igdb.com" target="_blank" rel="noopener">IGDB</a> — search any game'
+      : 'Local catalog only · configure TWITCH_CLIENT_ID & TWITCH_CLIENT_SECRET to enable IGDB';
     if (ok && CU.gameCollection?.length) _enrichGamesFromIGDB(CU.gameCollection);
   });
 }
@@ -26123,31 +26136,29 @@ function filterGCPicker(q) {
     if (filtered.length) {
       renderGCGrid(filtered);
     } else {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--muted);">Searching...</div>';
+      grid.innerHTML = '<div class="gcp-hint">Searching IGDB…</div>';
     }
-    // Also search IGDB if available
     if (_igdbAvailable) {
       _igdbSearchTimer = setTimeout(async () => {
         const igdbResults = await _searchIGDB(q);
         const currentGrid = document.getElementById('gc-grid');
         if (!currentGrid) return;
-        // Merge: show local first, then IGDB results not in local
         const localNames = new Set(filtered.map(g => g.name.toLowerCase()));
         const igdbNew = igdbResults.filter(g => !localNames.has(g.name.toLowerCase()));
         const combined = [...filtered, ...igdbNew];
         if (combined.length) {
           renderGCGrid(combined);
         } else {
-          currentGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);">'
-            + 'No match found<br>'
-            + '<button class="btn-a" style="margin-top:10px;font-size:12px;" onclick="addGameToCollection(\'' + escapeHTML(q) + '\',\'\uD83C\uDFAE\',\'Custom\')">Add \u201c' + escapeHTML(q) + '\u201d</button>'
+          currentGrid.innerHTML = '<div class="gcp-empty">'
+            + '<div class="gcp-empty-title">No matches for "' + escapeHTML(q) + '"</div>'
+            + '<button class="btn-a" onclick="addGameToCollection(\'' + escapeHTML(q).replace(/\x27/g, "\\\x27") + '\',\'🎮\',\'Custom\')">Add "' + escapeHTML(q) + '" as custom</button>'
             + '</div>';
         }
-      }, 100);
+      }, 150);
     } else if (!filtered.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);">'
-        + 'No match found<br>'
-        + '<button class="btn-a" style="margin-top:10px;font-size:12px;" onclick="addGameToCollection(\'' + escapeHTML(q) + '\',\'\uD83C\uDFAE\',\'Custom\')">Add \u201c' + escapeHTML(q) + '\u201d</button>'
+      grid.innerHTML = '<div class="gcp-empty">'
+        + '<div class="gcp-empty-title">No matches for "' + escapeHTML(q) + '"</div>'
+        + '<button class="btn-a" onclick="addGameToCollection(\'' + escapeHTML(q).replace(/\x27/g, "\\\x27") + '\',\'🎮\',\'Custom\')">Add "' + escapeHTML(q) + '" as custom</button>'
         + '</div>';
     }
   }, 200);
@@ -26160,20 +26171,28 @@ function renderGCGrid(games) {
   let html = '';
   games.forEach(g => {
     const has = owned.has(g.name);
-    const hasCover = g.coverThumb || g.coverUrl;
-    const addArgs = has
-      ? 'removeGameFromCollectionByName(\'' + escapeHTML(g.name) + '\')'
-      : 'addGameToCollection(\'' + escapeHTML(g.name) + '\',\'' + (g.icon||'\uD83C\uDFAE') + '\',\'' + escapeHTML(g.genre||'Game') + '\'' + (g.coverUrl ? ',\'' + escapeHTML(g.coverUrl) + '\'' : ',null') + (g.coverThumb ? ',\'' + escapeHTML(g.coverThumb) + '\'' : '') + ')';
-    html += '<div class="game-card' + (has?' game-card-active':'') + '" style="background:' + (has?'var(--accent-dim)':'rgba(255,255,255,.02)') + ';border:1.5px solid ' + (has?'var(--accent-mid)':'rgba(255,255,255,.05)') + ';border-radius:14px;cursor:pointer;overflow:hidden;transition:all .15s;" onclick="' + addArgs + '">'
-      + (hasCover
-        ? '<div style="width:100%;height:90px;overflow:hidden;position:relative;"><img src="' + escapeHTML(g.coverThumb||g.coverUrl) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'<div style=text-align:center;padding:20px;font-size:28px;background:rgba(255,255,255,.02)>' + (g.icon||'🎮') + '</div>\'"></div>'
-        : '<div style="text-align:center;padding:20px 8px 8px;font-size:32px;background:rgba(255,255,255,.015);">' + (g.icon||'\uD83C\uDFAE') + '</div>')
-      + '<div style="padding:8px 10px 10px;text-align:center;">'
-      + '<div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(g.name) + '</div>'
-      + '<div style="font-size:10px;color:' + (has?'var(--accent)':'var(--muted)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (has?'\u2713 Added':escapeHTML(g.genre||'')) + '</div>'
-      + '</div></div>';
+    const cover = g.coverThumb || g.coverUrl;
+    const safeName = escapeHTML(g.name).replace(/\x27/g, "\\\x27");
+    const safeGenre = escapeHTML(g.genre||'Game').replace(/\x27/g, "\\\x27");
+    const coverArg = g.coverUrl ? ",\x27" + escapeHTML(g.coverUrl).replace(/\x27/g, "\\\x27") + "\x27" : ',null';
+    const thumbArg = g.coverThumb ? ",\x27" + escapeHTML(g.coverThumb).replace(/\x27/g, "\\\x27") + "\x27" : '';
+    const action = has
+      ? 'removeGameFromCollectionByName(\x27' + safeName + '\x27)'
+      : 'addGameToCollection(\x27' + safeName + '\x27,\x27' + (g.icon||'🎮') + '\x27,\x27' + safeGenre + '\x27' + coverArg + thumbArg + ')';
+    html += '<div class="gcp-row' + (has?' gcp-row--added':'') + '" onclick="' + action + '">'
+      + (cover
+          ? '<img class="gcp-row-cover" src="' + escapeHTML(cover) + '" alt="" onerror="this.outerHTML=\x27<div class=&quot;gcp-row-cover gcp-row-cover-fallback&quot;>' + (g.icon||'🎮') + '</div>\x27">'
+          : '<div class="gcp-row-cover gcp-row-cover-fallback">' + (g.icon||'🎮') + '</div>')
+      + '<div class="gcp-row-body">'
+      +   '<div class="gcp-row-name">' + escapeHTML(g.name) + '</div>'
+      +   '<div class="gcp-row-genre">' + escapeHTML(g.genre||'Game') + '</div>'
+      + '</div>'
+      + (has
+          ? '<span class="gcp-row-action gcp-row-action--added">✓ Added</span>'
+          : '<span class="gcp-row-action">+ Add</span>')
+      + '</div>';
   });
-  grid.innerHTML = html;
+  grid.innerHTML = html || '<div class="gcp-hint">No games to show.</div>';
 }
 
 async function addGameToCollection(name, icon, genre, coverUrl, coverThumb) {

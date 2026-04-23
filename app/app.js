@@ -32864,276 +32864,26 @@ function renderAtelierTab(tab) {
 
   // ── SHOP ─────────────────────────────────────────────────
   else if (tab === 'shop') {
-    const shopTab = el._shopTab || 'featured';
-    const CATS = ['All','Frames','Effects','Badges','Colors'];
-    const shopCat = el._shopCat || 'All';
     const ownedAppearances = CU?.unlockedAppearances || [];
 
-    // Shop item definitions
     const SHOP_APPEARANCES = [
-      { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(140,100,220,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
-      { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(255,249,62,.18)', hoverBorder:'rgba(255,249,62,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
+      { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, rarity:'rare', gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(140,100,220,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
+      { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, rarity:'rare', gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(255,249,62,.18)', hoverBorder:'rgba(255,249,62,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
     ];
 
-    const onyxTier = CU?.onyxBadge ? _getOnyxTier(CU.onyxBadgeSpent||0) : null;
+    el.innerHTML = `<div class="atelier-content-inner fortshop-flat">
+      ${_renderFortshopActionsRow()}
+      ${_renderFortshopHero()}
+      ${_renderItemOfTheDay(SHOP_APPEARANCES, ownedAppearances)}
+      ${_renderFortshopFeaturedSection(SHOP_APPEARANCES, ownedAppearances)}
+      ${_renderFortshopSponsoredSlot()}
+      ${_renderFortshopBundlesSection(SHOP_APPEARANCES, ownedAppearances)}
+      ${_renderFortshopMarketplaceSection()}
+    </div>`;
 
-    el.innerHTML = `<div class="atelier-content-inner">
-
-      <!-- Shop Header with Tabs, Actions and Balance -->
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
-        ${['featured','browse','marketplace'].map(t=> {
-          const label = t==='featured'?'Featured':t==='browse'?'Browse All':`${_svgIcon('tag',13)} Marketplace`;
-          return '<button class="quest-tab-chip'+(shopTab===t?' active':'')+'" onclick="setShopTab(\''+t+'\')" id="stab-'+t+'" style="padding:9px 22px;border-radius:12px;font-size:13px;font-weight:700;letter-spacing:.01em;display:inline-flex;align-items:center;gap:6px;">'+label+'</button>';
-        }).join('')}
-        <button class="quest-tab-chip" onclick="viewUserProfile(CU.username)" style="padding:9px 16px;border-radius:12px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;" title="Your wishlist now lives in your profile card">${_svgIcon('heart',13)} My Wishlist</button>
-        <button class="quest-tab-chip" onclick="openTradeModal()" style="padding:9px 16px;border-radius:12px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">${_svgIcon('swap',13)} Trade</button>
-        <div style="flex:1;"></div>
-        <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,rgba(255,249,62,.055),rgba(255,249,62,.025));border:1px solid rgba(255,249,62,.12);border-radius:12px;">
-          <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(255,249,62,.2));">
-          <span style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--accent);text-shadow:0 1px 6px rgba(255,249,62,.1);">${bal}</span>
-        </div>
-      </div>
-
-      ${shopTab==='featured'?`
-
-        <!-- Featured Items — Premium Grid -->
-        <div style="margin-bottom:36px;">
-          <div class="atel-section-hdr" style="margin-bottom:18px;"><span>Featured This Week</span></div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-            ${SHOP_APPEARANCES.map(a => {
-              const owned = ownedAppearances.includes(a.id);
-              return '<div style="background:'+a.gradient+';border:1.5px solid '+a.borderColor+';border-radius:16px;overflow:hidden;transition:all .24s cubic-bezier(.22,1,.36,1);position:relative;display:flex;flex-direction:column;" onmouseover="this.style.borderColor=\''+a.hoverBorder+'\';this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 16px 48px rgba(0,0,0,.3)\'" onmouseout="this.style.borderColor=\''+a.borderColor+'\';this.style.transform=\'\';this.style.boxShadow=\'none\'">'
-                + '<div style="height:120px;background:'+a.previewBg+';display:flex;gap:3px;padding:12px;position:relative;overflow:hidden;">'
-                + '<div style="width:20px;background:'+a.sidebarBg+';border-radius:5px;"></div>'
-                + '<div style="flex:1;background:rgba(255,255,255,.025);border-radius:5px;padding:10px;"><div style="height:4px;background:var(--accent);border-radius:var(--radius-pill);width:40%;margin-bottom:6px;"></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:var(--radius-pill);width:70%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.03);border-radius:var(--radius-pill);width:45%;"></div></div>'
-                + '</div>'
-                + '<div style="flex:1;padding:16px;display:flex;flex-direction:column;position:relative;z-index:1;">'
-                + '<div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.01em;">'+a.name+'</div>'
-                + '<div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:12px;flex:1;">'+a.desc+'</div>'
-                + (owned ? '<div style="padding:9px 12px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);border-radius:10px;color:var(--green);font-size:11px;font-weight:700;text-align:center;">✓ Owned</div>' : '<button onclick="buyAppearance(\''+a.id+'\','+a.price+')" style="padding:9px 12px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;" onmouseover="this.style.filter=\'brightness(1.1)\'" onmouseout="this.style.filter=\'\'"><img src=\'/Onyx.png\' style=\'width:13px;height:13px;object-fit:contain;\'> '+a.price+'</button>')
-                + '</div></div>';
-            }).join('')}
-          </div>
-        </div>
-
-        <!-- Decorations Spotlight -->
-        <div style="margin-bottom:36px;">
-          <div class="atel-section-hdr" style="margin-bottom:18px;"><span>Avatar Decorations</span></div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
-            ${PROFILE_DECORATIONS.slice(0,4).map(d => _renderShopItemCard('decoration', d, ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)).join('')}
-          </div>
-        </div>
-
-
-          <!-- ── Midnight Collection ── Redesigned -->
-          <div style="margin-bottom:40px;">
-            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(5,8,18,.95),rgba(10,18,40,.8),rgba(30,60,130,.3),rgba(96,165,250,.12));border:1.5px solid rgba(96,165,250,.12);border-radius:18px;cursor:pointer;" onclick="setShopCat('All');setShopTab('browse')" onmouseover="this.style.borderColor='rgba(96,165,250,.3)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(96,165,250,.1)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)';this.style.transform='';this.style.boxShadow='none'">
-              <div style="position:absolute;top:-30px;right:10px;width:160px;height:160px;background:radial-gradient(circle,rgba(96,165,250,.06) 0%,transparent 70%);pointer-events:none;"></div>
-              <div style="padding:32px;position:relative;z-index:1;">
-                <div class="collection-bar-title" style="color:var(--blue);text-shadow:0 2px 20px rgba(96,165,250,.35);font-size:28px;margin-bottom:8px;letter-spacing:-.02em;">Midnight Collection</div>
-                <div class="collection-bar-desc" style="color:rgba(96,165,250,.6);font-size:13px;margin-bottom:16px;">Command the night with deep blue aesthetics and premium dark-mode design</div>
-                <button class="collection-bar-btn" style="background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.25);color:var(--blue);padding:10px 24px;font-weight:700;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.2)';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='rgba(96,165,250,.12)';this.style.transform=''">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                  Shop Collection
-                </button>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px;">
-              ${_renderShopItemCard('appearance', SHOP_APPEARANCES.find(a=>a.id==='midnight_citadel'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
-              ${_renderShopItemCard('decoration', PROFILE_DECORATIONS.find(d=>d.id==='blue_glow'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
-              ${_renderShopBundle('midnight_bundle','Midnight Bundle',260,210,['Midnight Citadel','Blue Glow'],'linear-gradient(135deg,rgba(96,165,250,.04),rgba(5,8,18,.9))','rgba(96,165,250,.12)','#60a5fa',()=>ownedAppearances.includes('midnight_citadel')&&(CU?.ownedDecorations||[]).includes('blue_glow'))}
-            </div>
-          </div>
-
-          <!-- ── Onyx Collection ── Redesigned -->
-          <div style="margin-bottom:40px;">
-            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(1,1,3,.95),rgba(14,10,34,.85),rgba(60,40,120,.2),rgba(140,100,220,.08));border:1.5px solid rgba(140,100,220,.12);border-radius:18px;cursor:default;" onmouseover="this.style.borderColor='rgba(140,100,220,.25)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(140,100,220,.12)';this.style.transform=''">
-              <div style="position:absolute;top:-20px;right:20px;width:140px;height:140px;background:radial-gradient(circle,rgba(140,100,220,.06) 0%,transparent 70%);pointer-events:none;"></div>
-              <div style="padding:32px;position:relative;z-index:1;">
-                <div class="collection-bar-title" style="color:rgba(140,100,220,.85);text-shadow:0 2px 16px rgba(140,100,220,.25);font-size:28px;margin-bottom:8px;letter-spacing:-.02em;">Onyx Signature</div>
-                <div class="collection-bar-desc" style="color:rgba(140,100,220,.5);font-size:13px;">Pure darkness. Minimal distractions. Premium immersion.</div>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:18px;">
-              ${_renderShopItemCard('appearance', SHOP_APPEARANCES.find(a=>a.id==='onyx_pure'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
-              <!-- Onyx Badge — Redesigned -->
-              <div style="background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.12);border-radius:16px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,249,62,.12)';this.style.transform=''">
-                <div style="padding:20px;flex:1;">
-                  <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;">
-                    <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,249,62,.12);"><img src="/fortized badges/onyx.png" style="width:28px;height:28px;object-fit:contain;"></div>
-                    <div style="flex:1;">
-                      <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;">Onyx Badge</div>
-                      <div style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.04em;font-weight:600;">Evolving Status</div>
-                    </div>
-                  </div>
-                  ${CU?.onyxBadge
-                    ?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                      <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;"><div style="height:100%;border-radius:2px;background:var(--accent);width:${Math.min(100,(CU.onyxBadgeSpent||0)/100)}%;transition:width .6s cubic-bezier(.22,1,.36,1);"></div></div>
-                      <span style="font-size:10px;font-weight:700;color:var(--accent);white-space:nowrap;">${CU.onyxBadgeSpent||0} invested</span>
-                    </div>
-                    <div style="display:flex;gap:6px;">
-                      ${[{amt:100,label:'100'},{amt:500,label:'500'}].map(u=>'<button onclick="upgradeOnyxBadge('+u.amt+')" style="flex:1;padding:6px 10px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:8px;color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;transition:all .15s;" onmouseover="this.style.background=\'rgba(255,249,62,.15)\'" onmouseout="this.style.background=\'rgba(255,249,62,.08)\'"><img src=\'/Onyx.png\' style=\'width:9px;height:9px;object-fit:contain;\'> +'+u.label+'</button>').join('')}
-                    </div>`
-                    :`<div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:12px;">Showcase your Onyx investment with this exclusive evolving badge</div>`}
-                </div>
-                ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:12px;background:var(--accent);color:var(--rail);border:none;border-radius:0;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;letter-spacing:.01em;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:14px;height:14px;object-fit:contain;'> Buy for 100</button>`:'<div style="padding:12px;background:rgba(62,207,110,.08);border-top:1px solid rgba(62,207,110,.12);color:var(--green);font-size:11px;font-weight:700;text-align:center;">✓ Owned</div>'}
-              </div>
-            </div>
-          </div>
-
-          <!-- ── Glow Decorations Collection ── Redesigned -->
-          <div style="margin-bottom:40px;">
-            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(62,207,110,.04),rgba(251,146,60,.04),rgba(244,114,182,.03));border:1.5px solid rgba(255,255,255,.08);border-radius:18px;cursor:default;">
-              <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(96,165,250,.04),transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(251,146,60,.04),transparent 50%);pointer-events:none;border-radius:18px;"></div>
-              <div style="padding:32px;position:relative;z-index:1;">
-                <div class="collection-bar-title" style="color:rgba(255,255,255,.8);font-size:28px;margin-bottom:8px;letter-spacing:-.02em;">Avatar Glow Effects</div>
-                <div class="collection-bar-desc" style="color:rgba(255,255,255,.4);font-size:13px;">Make your profile picture shine with vibrant animated glow effects</div>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px;">
-              ${PROFILE_DECORATIONS.map(d => _renderShopItemCard('decoration', d, ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)).join('')}
-            </div>
-          </div>
-
-          <!-- ── Coming Soon ── Enhanced -->
-          <div class="atel-section-hdr" style="margin-top:18px;margin-bottom:18px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.5;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>Coming Soon</span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
-            ${[{n:'Avatar Frames',i:'🖼️',c:'#a78bfa',d:'Decorative frames for your profile'},{n:'Profile Effects',i:'✨',c:'#60a5fa',d:'Animated effects on profile cards'},{n:'Name Colors',i:'🎨',c:'#fb923c',d:'Colorize your username'}].map(it=>`
-              <div style="background:linear-gradient(135deg,rgba(255,255,255,.015),rgba(255,255,255,.005));border:1.5px solid rgba(255,255,255,.06);border-radius:16px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${it.c}22';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''">
-                <div style="height:100px;background:linear-gradient(135deg,${it.c}08,rgba(0,0,0,.3));display:flex;align-items:center;justify-content:center;font-size:42px;position:relative;opacity:.6;">
-                  <span>${it.i}</span>
-                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);"><div style="background:rgba(255,255,255,.1);padding:8px 12px;border-radius:8px;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em;">Coming</div></div>
-                </div>
-                <div style="padding:16px;">
-                  <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:rgba(255,255,255,.65);margin-bottom:5px;letter-spacing:-.01em;">${it.n}</div>
-                  <div style="font-size:10px;color:rgba(255,255,255,.3);line-height:1.5;">${it.d}</div>
-                </div>
-              </div>`).join('')}
-          </div>`:`
-          <!-- Browse All Categories -->
-          <div style="padding:0;">
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;">
-              ${['All','Appearances','Badges','Decorations','Bundles'].map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')" style="padding:9px 18px;border-radius:11px;font-size:12px;">${cat}</button>`).join('')}
-            </div>
-            ${(shopCat==='All'||shopCat==='Appearances') ? `
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              Appearances
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;">
-              ${SHOP_APPEARANCES.map(a => {
-                const owned = ownedAppearances.includes(a.id);
-                return `<div style="background:${a.gradient};border:1.5px solid ${a.borderColor};border-radius:20px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${a.hoverBorder}';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='${a.borderColor}';this.style.transform=''">
-                  <div style="height:80px;background:${a.previewBg};display:flex;gap:3px;padding:10px;position:relative;">
-                    <div style="width:16px;background:${a.sidebarBg};border-radius:4px;"></div>
-                    <div style="flex:1;background:rgba(255,255,255,.02);border-radius:4px;padding:8px;"><div style="height:4px;background:var(--accent);border-radius:var(--radius-pill);width:35%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.05);border-radius:var(--radius-pill);width:55%;"></div></div>
-                    <span style="position:absolute;bottom:6px;right:10px;font-size:8px;color:${a.labelColor};font-weight:700;letter-spacing:.04em;">${a.name.toUpperCase()}</span>
-                  </div>
-                  <div style="padding:14px 16px;">
-                    <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;">${a.name}</div>
-                    <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.4;margin-bottom:10px;">${a.desc}</div>
-                    ${owned
-                      ? '<div style="padding:7px 14px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:10px;color:var(--green);font-size:11px;font-weight:700;text-align:center;">Owned</div>'
-                      : `<button onclick="event.stopPropagation();buyAppearance('${a.id}',${a.price})" style="width:100%;padding:8px 14px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> ${a.price} Onyx</button>`}
-                  </div>
-                </div>`;
-              }).join('')}
-            </div>` : ''}
-            ${(shopCat==='All'||shopCat==='Badges') ? `
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
-              Badges
-            </div>
-            <div style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.12);border-radius:18px;padding:16px 18px;margin-bottom:28px;display:flex;align-items:center;gap:14px;">
-              <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="/fortized badges/onyx.png" style="width:28px;height:28px;object-fit:contain;"></div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">Onyx Badge</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.3);">Evolves as you invest Onyx</div>
-              </div>
-              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 16px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> 100</button>`:'<div style="font-size:11px;font-weight:700;color:var(--green);">Owned</div>'}
-            </div>` : ''}
-            ${(shopCat==='All'||shopCat==='Decorations') ? `
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><path d="M2 12h20"/></svg>
-              Profile Decorations
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;">
-              ${PROFILE_DECORATIONS.map(d => {
-                const owned = (CU?.ownedDecorations||[]).includes(d.id);
-                const equipped = CU?.activeDecoration === d.id;
-                return `<div style="background:rgba(255,255,255,.02);border:1.5px solid ${equipped?d.color+'44':'rgba(255,255,255,.05)'};border-radius:16px;padding:16px 12px;text-align:center;transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='${d.color}33';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='${equipped?d.color+'44':'rgba(255,255,255,.05)'}';this.style.transform=''">
-                  <div style="position:relative;width:56px;height:56px;margin:0 auto 10px;">
-                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;overflow:hidden;">
-                      ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<div style="width:100%;height:100%;background:${d.color}22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:var(--font-display);font-weight:800;color:${d.color};">U</div>`}
-                    </div>
-                    <img src="${d.src}" style="position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);object-fit:contain;pointer-events:none;" onerror="this.style.display='none'">
-                  </div>
-                  <div style="font-size:11.5px;font-weight:700;color:#fff;margin-bottom:3px;">${d.name}</div>
-                  ${equipped
-                    ? `<div style="font-size:10px;font-weight:700;color:${d.color};">Equipped</div>`
-                    : owned
-                      ? `<button onclick="event.stopPropagation();equipDecoration('${d.id}')" style="padding:4px 12px;background:${d.color}15;border:1px solid ${d.color}25;border-radius:8px;color:${d.color};font-size:10px;font-weight:700;cursor:pointer;">Equip</button>`
-                      : `<button onclick="event.stopPropagation();buyDecoration('${d.id}',${d.price})" style="padding:4px 12px;background:var(--accent);color:var(--rail);border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;"><img src='/Onyx.png' style='width:10px;height:10px;object-fit:contain;'> ${d.price}</button>`}
-                </div>`;
-              }).join('')}
-            </div>` : ''}
-            ${(shopCat==='All'||shopCat==='Bundles') ? `
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-              Bundles
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;">
-              ${[
-                {id:'midnight_bundle',name:'Midnight Bundle',desc:'Blue Glow decoration + Midnight Citadel appearance.',items:['Blue Glow','Midnight Citadel'],origPrice:260,price:210,gradient:'linear-gradient(135deg,rgba(96,165,250,.06),rgba(5,8,18,.9))',borderColor:'rgba(96,165,250,.15)',accent:'#60a5fa'},
-              ].map(bundle => {
-                const bundleOwned = bundle.items.every(item => {
-                  const lower = item.toLowerCase();
-                  if (lower.includes('blue glow')) return (CU?.ownedDecorations||[]).includes('blue_glow');
-                  if (lower.includes('midnight')) return ownedAppearances.includes('midnight_citadel');
-                  return false;
-                });
-                const discount = Math.round((1 - bundle.price / bundle.origPrice) * 100);
-                return `<div style="background:${bundle.gradient};border:1.5px solid ${bundle.borderColor};border-radius:20px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;" onmouseover="this.style.borderColor='${bundle.accent}44';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(0,0,0,.3)'" onmouseout="this.style.borderColor='${bundle.borderColor}';this.style.transform='';this.style.boxShadow='none'">
-                  <div style="position:absolute;top:12px;right:12px;background:${bundle.accent}22;border:1px solid ${bundle.accent}33;border-radius:8px;padding:3px 8px;font-size:9px;font-weight:800;color:${bundle.accent};z-index:1;">-${discount}%</div>
-                  <div style="padding:20px 18px 14px;">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${bundle.accent}" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-                      <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:#fff;">${bundle.name}</div>
-                    </div>
-                    <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.5;margin-bottom:12px;">${bundle.desc}</div>
-                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;">
-                      ${bundle.items.map(item => `<span style="font-size:10px;padding:3px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-weight:600;">${item}</span>`).join('')}
-                    </div>
-                    ${bundleOwned
-                      ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:var(--green);font-size:12px;font-weight:700;text-align:center;">Owned</div>'
-                      : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:var(--rail);border:none;border-radius:12px;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
-                  </div>
-                </div>`;
-              }).join('')}
-            </div>` : ''}
-          </div>`}
-      ${shopTab==='marketplace'?`
-        <div id="shop-marketplace-page" style="margin-bottom:32px;">
-          <div class="atel-section-hdr" style="margin-bottom:14px;"><span>${_svgIcon('tag',14)} Rare & Seasonal Marketplace</span></div>
-          <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:18px;max-width:640px;line-height:1.55;">
-            Owners of <strong style="color:var(--accent);">rare</strong> and <strong style="color:var(--accent);">seasonal</strong> items can list them for resale here. All sales are taxed 30%. List your own rare/seasonal items from the <em>Browse</em> tab or any shop card.
-          </div>
-          <div id="shop-marketplace-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
-            <div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">
-              <div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto 10px;"></div>
-              Loading listings...
-            </div>
-          </div>
-        </div>
-      `:''}
-      </div>`;
-
-    el._shopTab = shopTab;
-    el._shopCat = shopCat;
-    if (shopTab === 'marketplace') setTimeout(() => _loadShopMarketplace(), 30);
+    // Kick off the live countdown for the item of the day + async marketplace load.
+    try { _startItemOfDayCountdown(); } catch(e) { _dbg('[Fortshop] countdown start', e); }
+    setTimeout(() => { try { _loadShopMarketplace(); } catch(e) {} }, 30);
   }
 
   // ── CREATOR ──────────────────────────────────────────────
@@ -41007,6 +40757,221 @@ async function openMarketplace() {
       setTimeout(() => { setShopTab('marketplace'); }, 60);
     }, 60);
   } catch(e) { console.warn('[Marketplace] open failed', e); }
+}
+
+// ── Fortshop flat layout — section helpers ──
+let _itemOfDayTimer = null;
+
+function _renderFortshopActionsRow() {
+  const bal = (CU?.onyx || 0).toLocaleString();
+  return `<div class="fortshop-actions-row">
+    <button class="fortshop-quick-btn" onclick="viewUserProfile(CU.username)">${_svgIcon('heart',13)} My Wishlist</button>
+    <button class="fortshop-quick-btn" onclick="openTradeModal()">${_svgIcon('swap',13)} Trade</button>
+    <div style="flex:1;"></div>
+    <div class="fortshop-balance-pill">
+      <img src="/Onyx.png" alt=""><span>${bal}</span>
+    </div>
+  </div>`;
+}
+
+function _renderFortshopHero() {
+  return `<div class="fortshop-hero">
+    <div class="fortshop-hero-art"></div>
+    <div class="fortshop-hero-content">
+      <div class="fortshop-hero-kicker">Fortized Drop</div>
+      <div class="fortshop-hero-title">Midnight Collection</div>
+      <div class="fortshop-hero-sub">Command the night with deep blue aesthetics and premium dark-mode design.</div>
+      <button class="fortshop-hero-cta" onclick="_fortshopScrollToBundles()">Shop the Collection <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>`;
+}
+
+function _fortshopScrollToBundles() {
+  document.querySelector('.fortshop-section--bundles')?.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function _renderItemOfTheDay(appearances, ownedAppearances) {
+  const pool = [
+    ...appearances.map(a => ({ kind:'appearance', item:a })),
+    ...(typeof PROFILE_DECORATIONS !== 'undefined' ? PROFILE_DECORATIONS.map(d => ({ kind:'decoration', item:d })) : []),
+  ];
+  if (!pool.length) return '';
+  const dayIndex = Math.floor(Date.now() / 86400000);
+  const pick = pool[dayIndex % pool.length];
+  const it = pick.item;
+  const origPrice = it.price;
+  const discountPct = 35;
+  const dealPrice = Math.max(5, Math.round(origPrice * (1 - discountPct / 100)));
+  const isOwned = pick.kind === 'appearance'
+    ? ownedAppearances.includes(it.id)
+    : (CU?.ownedDecorations || []).includes(it.id);
+  const preview = pick.kind === 'decoration' && it.src
+    ? `<img src="${escapeHTML(it.src)}" style="width:100%;height:100%;object-fit:contain;padding:14px;">`
+    : `<div class="iotd-preview-theme" style="background:${(it.previewBg || 'linear-gradient(135deg,#050812,#101a38)')};"></div>`;
+  const safeId = escapeHTML(it.id).replace(/'/g, "\\'");
+  return `<div class="fortshop-section fortshop-section--iotd">
+    <div class="fortshop-section-head">
+      <h3>Item of the Day</h3>
+      <span class="fortshop-section-sub">A new deal every day — rotates at midnight.</span>
+    </div>
+    <div class="iotd-card">
+      <div class="iotd-preview">${preview}</div>
+      <div class="iotd-body">
+        <div class="iotd-type">${pick.kind === 'appearance' ? 'APPEARANCE' : 'AVATAR DECORATION'}</div>
+        <div class="iotd-name">${escapeHTML(it.name)}</div>
+        <div class="iotd-price-row">
+          <span class="iotd-price-orig"><img src="/Onyx.png" alt="">${origPrice}</span>
+          <span class="iotd-price-now"><img src="/Onyx.png" alt="">${dealPrice}</span>
+          <span class="iotd-discount">-${discountPct}%</span>
+        </div>
+        <div class="iotd-countdown">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Ends in <span id="iotd-countdown-txt">—</span>
+        </div>
+        ${isOwned
+          ? '<button class="iotd-btn iotd-btn--owned" disabled>✓ Already Owned</button>'
+          : `<button class="iotd-btn" onclick="${pick.kind === 'appearance' ? `buyAppearance('${safeId}',${dealPrice})` : `buyDecoration('${safeId}',${dealPrice})`}">Claim deal · ${dealPrice} Ξ</button>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function _startItemOfDayCountdown() {
+  if (_itemOfDayTimer) clearInterval(_itemOfDayTimer);
+  const tick = () => {
+    const el = document.getElementById('iotd-countdown-txt');
+    if (!el) { clearInterval(_itemOfDayTimer); _itemOfDayTimer = null; return; }
+    const now = new Date();
+    const end = new Date(now); end.setHours(24, 0, 0, 0);
+    const ms = Math.max(0, end - now);
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  };
+  tick();
+  _itemOfDayTimer = setInterval(tick, 1000);
+}
+
+function _renderFortshopFeaturedSection(appearances, ownedAppearances) {
+  const decos = (typeof PROFILE_DECORATIONS !== 'undefined' ? PROFILE_DECORATIONS : []).slice(0, 4);
+  const items = [
+    ...appearances.map(a => ({ kind:'appearance', item:a })),
+    ...decos.map(d => ({ kind:'decoration', item:d })),
+  ];
+  if (!items.length) return '';
+  return `<div class="fortshop-section">
+    <div class="fortshop-section-head">
+      <h3>Featured this week</h3>
+      <span class="fortshop-section-sub">Handpicked drops curated by the Fortized team.</span>
+    </div>
+    <div class="fortshop-card-row">
+      ${items.map(({ kind, item }) => _renderFortshopUnifiedCard(kind, item, ownedAppearances)).join('')}
+    </div>
+  </div>`;
+}
+
+function _renderFortshopUnifiedCard(kind, item, ownedAppearances) {
+  if (!item) return '';
+  const isOwned = kind === 'appearance'
+    ? (ownedAppearances || []).includes(item.id)
+    : (CU?.ownedDecorations || []).includes(item.id);
+  const rarity = item.rarity || (kind === 'appearance' ? 'rare' : 'common');
+  const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+  const typeLabel = kind === 'appearance' ? 'Appearance' : kind === 'decoration' ? 'Avatar Decoration' : 'Item';
+  const safeId = escapeHTML(item.id).replace(/'/g, "\\'");
+  const seed = (item.id || '').split('').reduce((s, c) => s + c.charCodeAt(0), 0);
+  const owners = 40 + (seed % 160);
+  const trend = ((seed % 21) - 10);
+  const preview = kind === 'decoration' && item.src
+    ? `<img src="${escapeHTML(item.src)}">`
+    : `<div class="fsc-preview-theme" style="background:${(item.previewBg || item.gradient || 'linear-gradient(135deg,#1a1426,#0a0814)')};"></div>`;
+  const buyAction = kind === 'appearance'
+    ? `buyAppearance('${safeId}',${item.price})`
+    : `buyDecoration('${safeId}',${item.price})`;
+  return `<div class="fortshop-card fortshop-card--${escapeHTML(rarity)}" onclick="openShopItemModal('${safeId}','${kind}')">
+    <div class="fortshop-card-rarity" title="${escapeHTML(rarityLabel)}"></div>
+    <div class="fortshop-card-preview">${preview}</div>
+    <div class="fortshop-card-body">
+      <div class="fortshop-card-type">${escapeHTML(typeLabel)}</div>
+      <div class="fortshop-card-name">${escapeHTML(item.name)}</div>
+      <div class="fortshop-card-stats">
+        <span title="${owners} users own this"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${owners}</span>
+        <span class="${trend >= 0 ? 'fsc-trend-up' : 'fsc-trend-dn'}" title="7-day price trend">${trend >= 0 ? '▲' : '▼'} ${Math.abs(trend)}%</span>
+      </div>
+      ${isOwned
+        ? '<button class="fortshop-card-btn fortshop-card-btn--owned" onclick="event.stopPropagation();">✓ Owned</button>'
+        : `<button class="fortshop-card-btn" onclick="event.stopPropagation();${buyAction}"><img src="/Onyx.png" alt="">${item.price}</button>`}
+    </div>
+  </div>`;
+}
+
+function _renderFortshopSponsoredSlot() {
+  let adHTML = '';
+  try {
+    if (typeof _pickInAppAd === 'function') {
+      const ad = _pickInAppAd('/app/atelier?tab=shop');
+      if (ad && typeof _renderInAppAd === 'function') adHTML = _renderInAppAd(ad, 'fortshop');
+    }
+  } catch (_) {}
+  return `<div class="fortshop-ad-slot">
+    <span class="fortshop-ad-tag">AD</span>
+    ${adHTML || `<div class="fortshop-ad-placeholder">
+      <div class="fortshop-ad-placeholder-kicker">Featured by the community</div>
+      <div class="fortshop-ad-placeholder-title">Your drop could live here</div>
+      <div class="fortshop-ad-placeholder-sub">Creators can promote items, bastions, and events from the Creator Hub.</div>
+      <button class="fortshop-ad-placeholder-btn" onclick="setAtelierTab('creator')">Promote in Creator Hub →</button>
+    </div>`}
+  </div>`;
+}
+
+function _renderFortshopBundlesSection(appearances, ownedAppearances) {
+  const midnightBundleOwned = (ownedAppearances || []).includes('midnight_citadel') && (CU?.ownedDecorations || []).includes('blue_glow');
+  return `<div class="fortshop-section fortshop-section--bundles">
+    <div class="fortshop-section-head">
+      <h3>Bundles</h3>
+      <span class="fortshop-section-sub">Curated collections — save vs buying each piece alone.</span>
+    </div>
+    <div class="fortshop-bundles-row">
+      <div class="fortshop-bundle-hero fortshop-bundle-hero--midnight" onclick="openShopBundleModal('midnight_bundle')">
+        <div class="fortshop-bundle-hero-art"></div>
+        <div class="fortshop-bundle-hero-meta">
+          <div class="fortshop-bundle-hero-kicker">2 items · save 19%</div>
+          <div class="fortshop-bundle-hero-title">Midnight Bundle</div>
+          <div class="fortshop-bundle-hero-sub">Midnight Citadel + Blue Glow</div>
+          <button class="fortshop-bundle-hero-btn" onclick="event.stopPropagation();${midnightBundleOwned ? `toast('Already owned.','info')` : `(typeof buyBundle === 'function' ? buyBundle('midnight_bundle',210) : toast('Bundle purchase coming soon.','info'))`}">${midnightBundleOwned ? '✓ Owned' : 'Take me there'}</button>
+        </div>
+      </div>
+      <div class="fortshop-bundle-hero fortshop-bundle-hero--onyx" onclick="openShopBundleModal('onyx_signature')">
+        <div class="fortshop-bundle-hero-art"></div>
+        <div class="fortshop-bundle-hero-meta">
+          <div class="fortshop-bundle-hero-kicker">Signature line</div>
+          <div class="fortshop-bundle-hero-title">Onyx Signature</div>
+          <div class="fortshop-bundle-hero-sub">Pure darkness. Minimal distractions.</div>
+          <button class="fortshop-bundle-hero-btn" onclick="event.stopPropagation();openShopBundleModal('onyx_signature')">Take me there</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function _renderFortshopMarketplaceSection() {
+  return `<div class="fortshop-section fortshop-section--marketplace">
+    <div class="fortshop-section-head">
+      <h3>Marketplace</h3>
+      <span class="fortshop-section-sub">Community listings — rare and seasonal items sold peer-to-peer.</span>
+    </div>
+    <div class="fortshop-marketplace-grid" id="shop-marketplace-grid">
+      <div class="fortshop-marketplace-loading">Loading listings…</div>
+    </div>
+  </div>`;
+}
+
+function openShopItemModal(itemId, kind) {
+  toast('Opening item — full detail view lands next.', 'info');
+}
+function openShopBundleModal(id) {
+  toast('Bundle detail view lands in the next round.', 'info');
 }
 
 async function _loadShopMarketplace() {

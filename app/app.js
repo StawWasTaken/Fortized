@@ -17131,7 +17131,15 @@ function _clearAllDMBadges(){document.querySelectorAll('.friend-item').forEach(f
 // ════════════════════════════════════════════
 // USER PROFILE POPUP
 // ════════════════════════════════════════════
-async function viewUserProfile(username) {
+async function viewUserProfile(username, opts) {
+  // Optional second arg: a string tab name ('wishlist' / 'activity-detail' /
+  // 'mutuals') to deep-link into a specific page on the profile card.
+  const tabKey = typeof opts === 'string' ? opts : (opts && opts.tab) || null;
+  if (tabKey) window._upPendingTab = tabKey;
+  return _viewUserProfile(username);
+}
+
+async function _viewUserProfile(username) {
   let u = null;
   try { u = await FortizedSocial.getUserByName(username); } catch (e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
@@ -17339,6 +17347,13 @@ async function viewUserProfile(username) {
       <div class="up-right-tabs">
         <div class="up-right-tab active" onclick="_upSwitchTab(this,'up-tab-activity')">Board</div>
         <div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-activity-detail')">Activity</div>
+        ${(() => {
+          const wl = Array.isArray(u.wishlist) ? u.wishlist : [];
+          const priv = !!u.wishlistPrivate;
+          if (!isOwn && priv) return '';
+          if (!isOwn && !wl.length) return '';
+          return `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-wishlist')">Wishlist${wl.length ? ` · ${wl.length}` : ''}</div>`;
+        })()}
         ${!isOwn ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-mutuals')">Mutual Friends</div>` : ''}
       </div>
       <div class="up-right-content">
@@ -17352,15 +17367,18 @@ async function viewUserProfile(username) {
               ${games.map(g=>`<div class="game-col-item"><span style="font-size:17px;">${g.coverUrl ? `<img src='${escapeHTML(g.coverUrl)}' style='width:24px;height:32px;border-radius:4px;object-fit:cover;'>` : (g.icon||ftzIcon('gamepad','15'))}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</span></div>`).join('')}
             </div>
           </div>` : ''}
-          ${(() => {
-            const wl = Array.isArray(u.wishlist) ? u.wishlist : [];
-            const priv = !!u.wishlistPrivate;
-            if (!isOwn && priv) return '';
-            if (!isOwn && !wl.length) return '';
-            const items = wl.map(id => ({ id, it: (typeof _getShopItemById==='function' ? _getShopItemById(id) : null) })).filter(x => x.it);
-            return `<div class="up-right-section" id="up-wishlist-section">
+        </div>
+        <!-- Wishlist tab: its own page on the profile card -->
+        ${(() => {
+          const wl = Array.isArray(u.wishlist) ? u.wishlist : [];
+          const priv = !!u.wishlistPrivate;
+          if (!isOwn && priv) return '';
+          if (!isOwn && !wl.length) return '';
+          const items = wl.map(id => ({ id, it: (typeof _getShopItemById==='function' ? _getShopItemById(id) : null) })).filter(x => x.it);
+          return `<div id="up-tab-wishlist" style="display:none;">
+            <div class="up-right-section" id="up-wishlist-section">
               <div class="up-right-section-title" style="display:flex;align-items:center;gap:8px;">
-                <span>Wishlist</span>
+                <span>Wishlist${items.length ? ` · ${items.length}` : ''}</span>
                 ${isOwn ? `<label style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--muted);cursor:pointer;">
                   <input type="checkbox" ${priv?'checked':''} onchange="setWishlistPrivacy(this.checked)" style="accent-color:var(--accent);"> Private
                 </label>` : `<span style="margin-left:auto;font-size:10px;color:var(--muted);font-weight:600;">Public</span>`}
@@ -17369,13 +17387,13 @@ async function viewUserProfile(username) {
                 ${items.map(({id, it}) => `<div class="up-wl-card" style="padding:8px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:4px;">
                   <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(it.name||id)}</div>
                   <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:10px;height:10px;">${it.price||'—'}</div>
-                  ${isOwn ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}'),60);" style="background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:4px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
+                  ${isOwn ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}','wishlist'),60);" style="background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:4px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
                   : `<button onclick="openGiftModal('${escapeHTML(id)}','${escapeHTML(u.username)}')" style="background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.2);border-radius:6px;padding:4px 8px;font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;justify-content:center;">${_svgIcon('gift',10)} Gift</button>`}
                 </div>`).join('')}
               </div>` : `<div style="padding:14px;text-align:center;font-size:11.5px;color:var(--muted);">${isOwn ? 'Your wishlist is empty. Heart items in the Fortshop to add them.' : 'Wishlist is empty.'}</div>`}
-            </div>`;
-          })()}
-        </div>
+            </div>
+          </div>`;
+        })()}
         <!-- Activity tab: current game activity -->
         <div id="up-tab-activity-detail" style="display:none;">${_activityContent.join('')}</div>
         <!-- Mutual Friends tab -->
@@ -17393,6 +17411,16 @@ async function viewUserProfile(username) {
     </div>`;
 
   openModal('modal-user');
+  // Deep-link to a specific profile-card tab if a caller set window._upPendingTab.
+  if (window._upPendingTab) {
+    const pending = window._upPendingTab;
+    window._upPendingTab = null;
+    setTimeout(() => {
+      const targetId = 'up-tab-' + pending;
+      const targetTab = document.querySelector(`.up-right-tab[onclick*="${targetId}"]`);
+      if (targetTab) _upSwitchTab(targetTab, targetId);
+    }, 40);
+  }
   // Render profile widgets if the user has any enabled
   const widgetsContainer = document.getElementById('up-widgets-container');
   if (widgetsContainer) renderProfileWidgetsOnCard(u, widgetsContainer);
@@ -40765,7 +40793,7 @@ let _itemOfDayTimer = null;
 function _renderFortshopActionsRow() {
   const bal = (CU?.onyx || 0).toLocaleString();
   return `<div class="fortshop-actions-row">
-    <button class="fortshop-quick-btn" onclick="viewUserProfile(CU.username)">${_svgIcon('heart',13)} My Wishlist</button>
+    <button class="fortshop-quick-btn" onclick="viewUserProfile(CU.username,'wishlist')">${_svgIcon('heart',13)} My Wishlist</button>
     <button class="fortshop-quick-btn" onclick="openTradeModal()">${_svgIcon('swap',13)} Trade</button>
     <div style="flex:1;"></div>
     <div class="fortshop-balance-pill">
@@ -40967,11 +40995,238 @@ function _renderFortshopMarketplaceSection() {
   </div>`;
 }
 
+// ── Fortshop item-detail modal ──
+// Polytoria-style big detail view with price-history embed. Item data is
+// looked up via _getShopItemById (the existing helper that knows the static
+// SHOP_APPEARANCES + PROFILE_DECORATIONS tables).
 function openShopItemModal(itemId, kind) {
-  toast('Opening item — full detail view lands next.', 'info');
+  const it = (typeof _getShopItemById === 'function') ? _getShopItemById(itemId) : null;
+  if (!it) { toast('Item not found', 'error'); return; }
+  document.getElementById('shop-item-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'shop-item-modal';
+  overlay.className = 'sim-overlay';
+  overlay.onclick = () => overlay.remove();
+  overlay.innerHTML = _fsRenderItemDetail(it, kind || 'appearance');
+  document.body.appendChild(overlay);
+  try { _fsDrawPriceHistory(it); } catch (e) { _dbg('[Fortshop] price chart', e); }
 }
+
+function _fsRenderItemDetail(it, kind) {
+  const rarity = it.rarity || (kind === 'appearance' ? 'rare' : 'common');
+  const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+  const typeLabel = kind === 'appearance' ? 'Appearance' : 'Avatar Decoration';
+  const isOwned = kind === 'appearance'
+    ? (CU?.unlockedAppearances || []).includes(it.id)
+    : (CU?.ownedDecorations || []).includes(it.id);
+  const onWL = (typeof isItemOnWishlist === 'function') ? isItemOnWishlist(it.id) : false;
+  const preview = kind === 'decoration' && it.src
+    ? `<img src="${escapeHTML(it.src)}" alt="">`
+    : `<div class="sim-preview-theme" style="background:${(it.previewBg || it.gradient || 'linear-gradient(135deg,#1a1426,#0a0814)')};"></div>`;
+  // Deterministic sample stats based on item id so the same item shows the
+  // same "history" every session until a real trade log lands.
+  const seed = (it.id || '').split('').reduce((s, c) => s + c.charCodeAt(0), 0);
+  const owners = 40 + (seed % 260);
+  const sales = 120 + (seed % 900);
+  const original = it.price;
+  const avgPrice = Math.round(it.price * (0.9 + ((seed % 50) / 100)));
+  const safeId = escapeHTML(it.id).replace(/'/g, "\\'");
+  return `
+    <div class="sim-card" onclick="event.stopPropagation()">
+      <button class="sim-close" onclick="document.getElementById('shop-item-modal').remove()" aria-label="Close">×</button>
+      <div class="sim-hero sim-hero--${escapeHTML(rarity)}">
+        <div class="sim-hero-badge">${escapeHTML(rarityLabel)}</div>
+        <div class="sim-hero-preview">${preview}</div>
+        <div class="sim-hero-meta">
+          <div class="sim-hero-type">${escapeHTML(typeLabel)}</div>
+          <div class="sim-hero-name">${escapeHTML(it.name)}</div>
+          ${it.desc ? `<div class="sim-hero-desc">${escapeHTML(it.desc)}</div>` : ''}
+          <div class="sim-hero-micro">
+            <span title="${owners} users own this">${_svgIcon('tag',11)} ${owners.toLocaleString()} owners</span>
+            <span title="Total sales">${_svgIcon('swap',11)} ${sales.toLocaleString()} sales</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sim-body">
+        <div class="sim-price-history">
+          <div class="sim-ph-head">Price History</div>
+          <div class="sim-ph-chart"><svg id="sim-ph-svg" viewBox="0 0 640 220" preserveAspectRatio="none"></svg></div>
+          <div class="sim-ph-stats">
+            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">${sales.toLocaleString()}</div></div>
+            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${original.toLocaleString()}</div></div>
+            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${avgPrice.toLocaleString()}</div></div>
+          </div>
+        </div>
+
+        <div class="sim-buy-panel">
+          <div class="sim-buy-price">
+            <div class="sim-buy-price-lbl">Best Price</div>
+            <div class="sim-buy-price-num"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div>
+          </div>
+          <div class="sim-buy-actions">
+            ${isOwned
+              ? '<button class="sim-buy-btn sim-buy-btn--owned" disabled>✓ Owned</button>'
+              : `<button class="sim-buy-btn" onclick="openShopCheckout('${safeId}','${escapeHTML(kind)}')">Buy now</button>`}
+            ${!isOwned ? `<button class="sim-wl-btn${onWL ? ' sim-wl-btn--on' : ''}" onclick="toggleWishlist('${safeId}');_fsRefreshModalWL('${safeId}')" title="${onWL ? 'Remove from wishlist' : 'Add to wishlist'}">${_svgIcon('heart',13)} ${onWL ? 'On wishlist' : 'Wishlist'}</button>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function _fsRefreshModalWL(itemId) {
+  const btn = document.querySelector('.sim-wl-btn');
+  if (!btn) return;
+  const onWL = (typeof isItemOnWishlist === 'function') ? isItemOnWishlist(itemId) : false;
+  btn.classList.toggle('sim-wl-btn--on', onWL);
+  btn.innerHTML = _svgIcon('heart', 13) + ' ' + (onWL ? 'On wishlist' : 'Wishlist');
+  btn.title = onWL ? 'Remove from wishlist' : 'Add to wishlist';
+}
+
+// Draws a Polytoria-style price history: green line for price, grey bars
+// for daily sales volume, over a faint grid. Data is synthetic-but-
+// deterministic (seeded from the item id) until a real trade log lands.
+function _fsDrawPriceHistory(it) {
+  const svg = document.getElementById('sim-ph-svg');
+  if (!svg) return;
+  const W = 640, H = 220, PAD_L = 48, PAD_R = 16, PAD_T = 18, PAD_B = 36;
+  const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
+  const days = 10;
+  // Seed for reproducibility.
+  let seed = (it.id || '').split('').reduce((s, c) => s + c.charCodeAt(0), 0) + it.price;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const base = it.price;
+  const priceSeries = [];
+  let p = base * (0.7 + rand() * 0.3);
+  for (let i = 0; i < days; i++) {
+    p = Math.max(base * 0.5, p + (rand() - 0.45) * base * 0.18);
+    priceSeries.push(Math.round(p));
+  }
+  const volSeries = priceSeries.map(() => Math.round(20 + rand() * 220));
+  const maxPrice = Math.max(base, ...priceSeries) * 1.08;
+  const minPrice = Math.min(0, ...priceSeries) * 0.95;
+  const maxVol = Math.max(...volSeries, 1);
+  const x = i => PAD_L + (plotW * i) / (days - 1);
+  const yP = v => PAD_T + plotH - ((v - minPrice) / (maxPrice - minPrice)) * plotH;
+  const yV = v => PAD_T + plotH - (v / maxVol) * plotH;
+
+  // Y-axis gridlines + labels (price)
+  const gridTicks = 5;
+  let gridHTML = '';
+  for (let i = 0; i <= gridTicks; i++) {
+    const v = Math.round(minPrice + ((maxPrice - minPrice) * i) / gridTicks);
+    const y = yP(v);
+    gridHTML += `<line x1="${PAD_L}" y1="${y}" x2="${W - PAD_R}" y2="${y}" stroke="rgba(255,255,255,.04)" stroke-width="1"/>`;
+    gridHTML += `<text x="${PAD_L - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="rgba(255,255,255,.4)" font-family="var(--font-ui)">${v.toLocaleString()}</text>`;
+  }
+
+  // Volume bars (grey, anchored to bottom axis)
+  const bars = volSeries.map((v, i) => {
+    const bx = x(i) - 16, bh = ((H - PAD_B) - yV(v));
+    return `<rect x="${bx}" y="${yV(v)}" width="32" height="${Math.max(1, bh)}" fill="rgba(255,255,255,.12)" rx="2"/>`;
+  }).join('');
+
+  // Price line + dots (green)
+  const linePath = priceSeries.map((v, i) => (i === 0 ? 'M' : 'L') + x(i) + ',' + yP(v)).join(' ');
+  const dots = priceSeries.map((v, i) => `<circle cx="${x(i)}" cy="${yP(v)}" r="3.5" fill="#3ecf6e"/>`).join('');
+
+  // X-axis date labels (just last 10 days)
+  const today = new Date();
+  const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const xLabels = priceSeries.map((_, i) => {
+    const d = new Date(today); d.setDate(today.getDate() - (days - 1 - i));
+    if (i % 3 !== 0 && i !== days - 1) return '';
+    return `<text x="${x(i)}" y="${H - 10}" text-anchor="middle" font-size="9.5" fill="rgba(255,255,255,.5)" font-family="var(--font-ui)">${d.getDate()} ${mon[d.getMonth()]}</text>`;
+  }).join('');
+
+  // Legend
+  const legend = `<g transform="translate(${W / 2 - 80},4)">
+    <rect x="0" y="2" width="10" height="4" fill="#3ecf6e" rx="1"/>
+    <text x="16" y="10" font-size="10" fill="rgba(255,255,255,.7)" font-family="var(--font-ui)">Price</text>
+    <rect x="70" y="2" width="10" height="4" fill="rgba(255,255,255,.3)" rx="1"/>
+    <text x="86" y="10" font-size="10" fill="rgba(255,255,255,.7)" font-family="var(--font-ui)">Volume</text>
+  </g>`;
+
+  svg.innerHTML = legend + gridHTML + bars + `<path d="${linePath}" stroke="#3ecf6e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` + dots + xLabels;
+}
+
+// ── Fortshop checkout sub-modal ──
+// Discord-style compact checkout over the item-detail modal. "I agree to
+// immediate delivery" checkbox must be ticked before Purchase is active.
+function openShopCheckout(itemId, kind) {
+  const it = (typeof _getShopItemById === 'function') ? _getShopItemById(itemId) : null;
+  if (!it) { toast('Item not found', 'error'); return; }
+  document.getElementById('sim-checkout')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'sim-checkout';
+  overlay.className = 'sim-checkout-overlay';
+  overlay.onclick = () => overlay.remove();
+  const typeLabel = kind === 'appearance' ? 'Appearance' : 'Avatar Decoration';
+  const preview = kind === 'decoration' && it.src
+    ? `<img src="${escapeHTML(it.src)}" style="width:100%;height:100%;object-fit:contain;padding:6px;">`
+    : `<div class="sim-preview-theme" style="background:${(it.previewBg || it.gradient || 'linear-gradient(135deg,#1a1426,#0a0814)')};width:100%;height:100%;"></div>`;
+  const safeId = escapeHTML(itemId).replace(/'/g, "\\'");
+  overlay.innerHTML = `
+    <div class="sim-checkout-card" onclick="event.stopPropagation()">
+      <div class="sim-checkout-head">
+        <div class="sim-checkout-title">Checkout</div>
+        <button class="sim-checkout-close" onclick="document.getElementById('sim-checkout').remove()" aria-label="Close">×</button>
+      </div>
+      <div class="sim-checkout-item">
+        <div class="sim-checkout-item-preview">${preview}</div>
+        <div class="sim-checkout-item-meta">
+          <div class="sim-checkout-item-name">${escapeHTML(it.name)}</div>
+          <div class="sim-checkout-item-type">${escapeHTML(typeLabel)}</div>
+        </div>
+        <div class="sim-checkout-item-price"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div>
+      </div>
+      <div class="sim-checkout-method">
+        <div class="sim-checkout-method-lbl">Payment method</div>
+        <div class="sim-checkout-method-row">
+          <img src="/Onyx.png" alt="" style="width:18px;height:18px;">
+          <span>Onyx balance · ${(CU?.onyx || 0).toLocaleString()} available</span>
+        </div>
+      </div>
+      <div class="sim-checkout-total">
+        <span>Total due</span>
+        <span class="sim-checkout-total-num"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</span>
+      </div>
+      <div class="sim-checkout-legal">
+        <label class="sim-checkout-agree">
+          <input type="checkbox" id="sim-checkout-agree-box" onchange="document.getElementById('sim-checkout-buy').disabled=!this.checked">
+          <span>I agree to the immediate delivery of my digital purchase and acknowledge that the item is final once delivered.</span>
+        </label>
+        <p class="sim-checkout-terms">By clicking <strong>Purchase</strong> you accept the Fortized Paid Services Terms. Items are non-refundable.</p>
+      </div>
+      <div class="sim-checkout-actions">
+        <button class="sim-checkout-cancel" onclick="document.getElementById('sim-checkout').remove()">Cancel</button>
+        <button class="sim-checkout-buy" id="sim-checkout-buy" disabled onclick="_fsCompletePurchase('${safeId}','${escapeHTML(kind)}',${it.price})">Purchase</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function _fsCompletePurchase(itemId, kind, price) {
+  try {
+    if (kind === 'appearance' && typeof buyAppearance === 'function') {
+      await buyAppearance(itemId, price);
+    } else if (kind === 'decoration' && typeof buyDecoration === 'function') {
+      await buyDecoration(itemId, price);
+    } else {
+      toast('Purchase failed — unknown item type.', 'error');
+      return;
+    }
+    document.getElementById('sim-checkout')?.remove();
+    document.getElementById('shop-item-modal')?.remove();
+  } catch (e) {
+    console.warn('[Fortshop] purchase failed:', e);
+    toast('Purchase failed.', 'error');
+  }
+}
+
 function openShopBundleModal(id) {
-  toast('Bundle detail view lands in the next round.', 'info');
+  toast('Bundle detail view lands in a later round.', 'info');
 }
 
 async function _loadShopMarketplace() {

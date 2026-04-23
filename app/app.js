@@ -35001,6 +35001,54 @@ const ONYX_TIERS = [
   { name:'Onyx Artisan', min:2000 },
   { name:'Onyx Master', min:10000 },
 ];
+// ── Seasonal events ──────────────────────────────────────────────────────
+// Seasonal items are sold DIRECTLY in Fortshop only while their season is
+// active. Once the season ends, the item is pulled from direct sale — but
+// players who already own it can still list it on the resellers market,
+// and anyone can buy from resellers regardless of season status.
+//
+// Lifecycle:
+//   1. Add an entry to SEASONAL_EVENTS with { id, name, startTs, endTs, itemIds }.
+//   2. Flag each catalog item with `seasonal:true, seasonId:'<event-id>'`.
+//   3. During [startTs, endTs]: Fortshop shows the item, direct-buy enabled.
+//   4. After endTs: Fortshop hides the direct-buy button, shows
+//      "Season ended - check resellers". Owners can still list for resale.
+//
+// Resale gate: seasonal items follow the same ownership rule as other items
+// (must own it to list). Since the direct-buy path is gated by the season
+// window, the ownership check alone guarantees "only people who bought
+// during the season can resell" — except for buyers who bought via
+// resellers post-season, which is intentional (that's how the aftermarket
+// keeps liquidity).
+//
+// Timestamps are Unix ms. Example (commented out, ready to enable):
+// {
+//   id: 'winter_2026',
+//   name: 'Winter Festival 2026',
+//   startTs: new Date('2026-12-01T00:00:00Z').getTime(),
+//   endTs:   new Date('2027-01-05T23:59:59Z').getTime(),
+//   itemIds: ['frost_crown', 'snowfall_halo'],
+// }
+const SEASONAL_EVENTS = [];
+
+function _getSeasonForItem(item) {
+  if (!item || !item.seasonId) return null;
+  return SEASONAL_EVENTS.find(s => s.id === item.seasonId) || null;
+}
+function _isSeasonActive(season) {
+  if (!season) return false;
+  const now = Date.now();
+  return now >= season.startTs && now <= season.endTs;
+}
+// Is this item currently available for direct purchase from Fortshop?
+// Non-seasonal items are always available. Seasonal items require an active
+// season window.
+function _isItemOnSaleInShop(item) {
+  if (!item || !item.seasonal) return true;
+  const season = _getSeasonForItem(item);
+  return _isSeasonActive(season);
+}
+
 // ── Profile Decorations ──
 const PROFILE_DECORATIONS = [
   {id:'blue_glow',name:'Blue Glow',src:'/profile decorations/Blue Glow.png',price:75,color:'#60a5fa'},
@@ -41376,7 +41424,7 @@ async function _fsLoadResellers(it) {
   }
 
   listings.sort((a, b) => (a.price || 0) - (b.price || 0));
-  if (countEl) countEl.textContent = `${listings.length} active · from ${listings[0].price.toLocaleString()} Ξ`;
+  if (countEl) countEl.innerHTML = `${listings.length} active · from <img src="/Onyx.png" alt="" style="width:10px;height:10px;vertical-align:-1px;object-fit:contain;margin-right:2px;">${listings[0].price.toLocaleString()}`;
 
   const sellerNames = [...new Set(listings.map(l => l.seller).filter(Boolean))];
   const sellerData = {};
@@ -41569,6 +41617,7 @@ function _fsRenderItemDetail(it, kind) {
   const isOwned = kind === 'appearance'
     ? (CU?.unlockedAppearances || []).includes(it.id)
     : (CU?.ownedDecorations || []).includes(it.id);
+  const seasonOpen = _isItemOnSaleInShop(it);
   const onWL = (typeof isItemOnWishlist === 'function') ? isItemOnWishlist(it.id) : false;
   const preview = kind === 'decoration' && it.src
     ? `<img src="${escapeHTML(it.src)}" alt="">`
@@ -41589,18 +41638,6 @@ function _fsRenderItemDetail(it, kind) {
 
       <div class="sim-body">
         ${isRareOrEvent ? `<div class="sim-market">
-          <div class="sim-resellers" id="sim-resellers-slot">
-            <div class="sim-resellers-head">
-              <span>Resellers</span>
-              <span class="sim-resellers-count" id="sim-resellers-count">loading…</span>
-            </div>
-            <div class="sim-resellers-list" id="sim-resellers-list">
-              <div class="sim-resellers-loading">Checking live listings…</div>
-            </div>
-            ${isOwned ? `<button class="sim-list-resell-btn" onclick="_fsPromptListResale('${safeId}')">${_svgIcon('tag', 12)} List for resale</button>` : ''}
-            <div class="sim-resellers-fee">Editing or removing a listing costs 5 Onyx.</div>
-          </div>
-
           <div class="sim-price-history">
             <div class="sim-ph-head">Price History</div>
             <div class="sim-ph-chart"><svg id="sim-ph-svg" viewBox="0 0 640 220" preserveAspectRatio="none"></svg></div>
@@ -41610,6 +41647,18 @@ function _fsRenderItemDetail(it, kind) {
               <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--muted);">- -</div></div>
             </div>
             <div class="sim-ph-note">Price history appears once resellers list this item on the Marketplace.</div>
+          </div>
+
+          <div class="sim-resellers" id="sim-resellers-slot">
+            <div class="sim-resellers-head">
+              <span>Resellers</span>
+              <span class="sim-resellers-count" id="sim-resellers-count">loading…</span>
+            </div>
+            <div class="sim-resellers-list" id="sim-resellers-list">
+              <div class="sim-resellers-loading">Checking live listings…</div>
+            </div>
+            ${isOwned ? `<button class="sim-list-resell-btn" onclick="_fsPromptListResale('${safeId}')">${_svgIcon('tag', 12)} List for resale</button>` : ''}
+            <div class="sim-resellers-fee">Editing or removing a listing costs 5 Onyx. Max 2 listings per item.</div>
           </div>
         </div>` : ''}
 
@@ -41621,7 +41670,9 @@ function _fsRenderItemDetail(it, kind) {
           <div class="sim-buy-actions">
             ${isOwned
               ? '<button class="sim-buy-btn sim-buy-btn--owned" disabled>✓ Owned</button>'
-              : `<button class="sim-buy-btn" id="sim-buy-btn" onclick="_fsArmPurchase('${safeId}','${escapeHTML(kind)}',${it.price})">Buy · <img src="/Onyx.png" alt="" style="width:13px;height:13px;vertical-align:-2px;"> ${it.price.toLocaleString()}</button>`}
+              : (!seasonOpen
+                ? '<button class="sim-buy-btn sim-buy-btn--owned" disabled>Season ended - check resellers</button>'
+                : `<button class="sim-buy-btn" id="sim-buy-btn" onclick="_fsArmPurchase('${safeId}','${escapeHTML(kind)}',${it.price})">Buy · <img src="/Onyx.png" alt="" style="width:13px;height:13px;vertical-align:-2px;"> ${it.price.toLocaleString()}</button>`)}
             ${!isOwned ? `<button class="sim-wl-btn${onWL ? ' sim-wl-btn--on' : ''}" onclick="toggleWishlist('${safeId}');_fsRefreshModalWL('${safeId}')" title="${onWL ? 'Remove from wishlist' : 'Add to wishlist'}">${_svgIcon('heart',13)} ${onWL ? 'On wishlist' : 'Wishlist'}</button>` : ''}
           </div>
         </div>
@@ -41705,7 +41756,7 @@ async function _fsDrawPriceHistory(it) {
   // listings active that day, weighted by how many sellers are in the pool:
   //   * fewer than 5 sellers => barely moves (5% of delta per listing)
   //   * 5+ sellers          => fully converges to the median
-  // So 2 sellers at 90 and 5 sellers at 10 on a 100-Ξ item => the series
+  // So 2 sellers at 90 and 5 sellers at 10 on a 100-Onyx item => the series
   // drops sharply toward 10 once the pool crosses 5.
   const startDayKey = Math.floor(cutoff / dayMs);
   const endDayKey = Math.floor(now / dayMs);
@@ -41866,6 +41917,13 @@ function _legacyOpenShopCheckout_unused(itemId, kind) {
 
 async function _fsCompletePurchase(itemId, kind, price) {
   try {
+    // Server-side-ish guard: if the item is seasonal and its season isn't
+    // active, bounce the direct-buy attempt. Resellers are still fine.
+    const guardItem = _getShopItemById(itemId);
+    if (guardItem && !_isItemOnSaleInShop(guardItem)) {
+      toast('This seasonal item is no longer sold in Fortshop. Check resellers.', 'error');
+      return;
+    }
     if (kind === 'appearance' && typeof buyAppearance === 'function') {
       await buyAppearance(itemId, price);
     } else if (kind === 'decoration' && typeof buyDecoration === 'function') {
@@ -42034,6 +42092,15 @@ async function listForResale(itemId, askPrice) {
   if (!(CU?.unlockedAppearances||[]).includes(itemId) && !(CU?.ownedDecorations||[]).includes(itemId)) {
     toast('You don\'t own this item', 'error'); return;
   }
+  // Cap: a seller can have at most 2 active listings per item at a time.
+  try {
+    const existing = await _fsReadAllListings(itemId);
+    const mine = existing.filter(l => l.seller === CU?.username);
+    if (mine.length >= 2) {
+      toast('You already have 2 active listings for this item.', 'error');
+      return;
+    }
+  } catch(_) {}
   const listing = {
     id: 'listing_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
     item_id: itemId,

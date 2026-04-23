@@ -1628,11 +1628,27 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 
 @media(max-width:860px) { .trade-columns { grid-template-columns:1fr;gap:12px; } .trade-swap-pip { transform:rotate(90deg);justify-self:center; } }
 
-/* ── Marketplace pane (Resellers + Price History side-by-side) ── */
-.sim-market { display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;margin-bottom:18px; }
+/* ── Marketplace pane (Price History LEFT wider, Resellers RIGHT narrower) ── */
+.sim-market { display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:14px;margin-bottom:18px;align-items:stretch; }
 @media(max-width:860px) { .sim-market { grid-template-columns:1fr; } }
 .sim-market .sim-resellers,
 .sim-market .sim-price-history { margin:0 !important; }
+.sim-market .sim-resellers { padding:14px 14px; }
+.sim-market .sim-resellers-list { max-height:260px; }
+.sim-market .sim-reseller-row { padding:7px 8px;gap:8px;grid-template-columns:32px 1fr auto; }
+.sim-market .sim-reseller-row--self { grid-template-columns:32px 1fr auto auto; }
+.sim-market .sim-reseller-pfp { width:32px;height:32px; }
+.sim-market .sim-reseller-name { font-size:12px; }
+.sim-market .sim-reseller-serial { font-size:10px; }
+.sim-market .sim-reseller-price { font-size:13px;padding:0 2px; }
+.sim-market .sim-reseller-price img { width:12px;height:12px; }
+.sim-market .sim-reseller-buy,
+.sim-market .sim-reseller-buy--self,
+.sim-market .sim-reseller-edit { font-size:10px;padding:5px 8px; }
+.sim-market .sim-resellers-head > span:first-child { font-size:12px; }
+.sim-market .sim-resellers-count { font-size:10.5px; }
+.sim-market .sim-list-resell-btn { padding:7px 12px;font-size:10.5px; }
+.sim-market .sim-resellers-fee { font-size:10px; }
 
 /* ── Fortshop reseller panel (inside item-detail modal) ── */
 .sim-resellers { margin-bottom:18px;padding:16px 18px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:14px;position:relative;overflow:hidden;display:flex;flex-direction:column; }

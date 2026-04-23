@@ -41679,7 +41679,7 @@ function _fsRenderItemDetail(it, kind) {
         ${!isOwned ? `<div id="sim-confirm-panel" class="sim-confirm-panel" style="display:none;">
           <label class="sim-confirm-agree">
             <input type="checkbox" id="sim-confirm-agree-box" onchange="document.getElementById('sim-confirm-buy').disabled=!this.checked">
-            <span>I agree to the immediate delivery of my digital purchase. Items are non-refundable.</span>
+            <span>I agree to the <a href="/legal/fortshop-policy" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Fortshop Policy</a>. Items are non-refundable once delivered.</span>
           </label>
           <div class="sim-confirm-actions">
             <button class="sim-confirm-cancel" onclick="_fsDisarmPurchase()">Cancel</button>
@@ -41903,9 +41903,8 @@ function _legacyOpenShopCheckout_unused(itemId, kind) {
       <div class="sim-checkout-legal">
         <label class="sim-checkout-agree">
           <input type="checkbox" id="sim-checkout-agree-box" onchange="document.getElementById('sim-checkout-buy').disabled=!this.checked">
-          <span>I agree to the immediate delivery of my digital purchase and acknowledge that the item is final once delivered.</span>
+          <span>I agree to the <a href="/legal/fortshop-policy" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Fortshop Policy</a>. Items are final once delivered.</span>
         </label>
-        <p class="sim-checkout-terms">By clicking <strong>Purchase</strong> you accept the Fortized Paid Services Terms. Items are non-refundable.</p>
       </div>
       <div class="sim-checkout-actions">
         <button class="sim-checkout-cancel" onclick="document.getElementById('sim-checkout').remove()">Cancel</button>
@@ -42034,7 +42033,7 @@ function openShopBundleModal(id) {
         ${!allOwned ? `<div id="sim-confirm-panel" class="sim-confirm-panel" style="display:none;">
           <label class="sim-confirm-agree">
             <input type="checkbox" id="sim-confirm-agree-box" onchange="document.getElementById('sim-confirm-buy').disabled=!this.checked">
-            <span>I agree to the immediate delivery of this bundle. Items are non-refundable.</span>
+            <span>I agree to the <a href="/legal/fortshop-policy" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Fortshop Policy</a>. Items are final once delivered.</span>
           </label>
           <div class="sim-confirm-actions">
             <button class="sim-confirm-cancel" onclick="_fsDisarmPurchase()">Cancel</button>

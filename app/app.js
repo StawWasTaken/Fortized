@@ -32562,6 +32562,12 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
   if (type === 'appearance') {
     const owned = ownedApps.includes(item.id);
     const onWL = (typeof isOnWishlist==='function') && isOnWishlist(item.id);
+    const discCalc = _calculateFinalPrice(item.price, false);
+    const priceContent = !owned
+      ? (discCalc.totalDiscount > 0
+        ? `<div class="sic-price"><img src="/Onyx.png"> <span style="text-decoration:line-through;opacity:.4;margin-right:3px;">${item.price}</span>${discCalc.finalPrice}</div>`
+        : `<div class="sic-price"><img src="/Onyx.png"> ${item.price}</div>`)
+      : '<div class="sic-owned">Owned</div>';
     return '<div class="shop-item-card" style="position:relative;background:'+item.gradient+';border-color:'+item.borderColor+';" onmouseover="this.style.borderColor=\''+item.hoverBorder+'\'" onmouseout="this.style.borderColor=\''+item.borderColor+'\'">'
       + '<div class="sic-quick">'
       + '<button class="sic-qb '+(onWL?'on':'')+'" title="'+(onWL?'Remove from wishlist':'Add to wishlist')+'" onclick="event.stopPropagation();toggleWishlist(\''+item.id+'\')">'+_svgIcon('heart',12)+'</button>'
@@ -32575,7 +32581,7 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
       + '<div class="sic-body">'
       + '<div class="sic-name">'+item.name+'</div>'
       + '<div class="sic-type">Appearance</div>'
-      + (owned ? '<div class="sic-owned">Owned</div>' : '<div class="sic-price"><img src="/Onyx.png"> '+item.price+'</div>')
+      + priceContent
       + '</div></div>';
   } else if (type === 'decoration') {
     const owned = ownedDecos.includes(item.id);
@@ -32584,6 +32590,14 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
     const initLetter = (CU?.displayName||'U')[0].toUpperCase();
     const avatarInner = pfp ? '<img src="'+pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '<div style="width:100%;height:100%;background:'+item.color+'22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:var(--font-display);font-weight:800;color:'+item.color+';">'+initLetter+'</div>';
     const onWL = (typeof isOnWishlist==='function') && isOnWishlist(item.id);
+    const discCalc = _calculateFinalPrice(item.price, false);
+    const priceContent = equipped
+      ? '<div style="font-size:11px;font-weight:700;color:'+item.color+';">Equipped</div>'
+      : owned
+        ? '<div class="sic-owned">Owned</div>'
+        : (discCalc.totalDiscount > 0
+          ? `<div class="sic-price" style="justify-content:center;flex-direction:column;gap:4px;"><span style="font-size:10px;color:rgba(255,255,255,.5);"><span style="text-decoration:line-through;">${item.price}</span> <span style="color:#fff93e;font-weight:700;">${discCalc.finalPrice}</span></span><img src="/Onyx.png"></div>`
+          : '<div class="sic-price" style="justify-content:center;"><img src="/Onyx.png"> '+item.price+'</div>');
     return '<div class="shop-item-card" style="position:relative;background:rgba(255,255,255,.02);border-color:'+(equipped?item.color+'44':'rgba(255,255,255,.05)')+';text-align:center;" onmouseover="this.style.borderColor=\''+item.color+'44\'" onmouseout="this.style.borderColor=\''+(equipped?item.color+'44':'rgba(255,255,255,.05)')+'\'">'
       + '<div class="sic-quick">'
       + '<button class="sic-qb '+(onWL?'on':'')+'" title="'+(onWL?'Remove from wishlist':'Add to wishlist')+'" onclick="event.stopPropagation();toggleWishlist(\''+item.id+'\')">'+_svgIcon('heart',12)+'</button>'
@@ -32595,7 +32609,7 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
       + '<div style="padding:0 14px 16px;">'
       + '<div class="sic-name">'+item.name+'</div>'
       + '<div class="sic-type">Decoration</div>'
-      + (equipped ? '<div style="font-size:11px;font-weight:700;color:'+item.color+';">Equipped</div>' : owned ? '<div class="sic-owned">Owned</div>' : '<div class="sic-price" style="justify-content:center;"><img src="/Onyx.png"> '+item.price+'</div>')
+      + priceContent
       + '</div></div>';
   }
   return '';
@@ -41102,6 +41116,42 @@ function _fortshopScrollToBundles() {
   document.querySelector('.fortshop-section--bundles')?.scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
+// ═══ Discount Stacking System ═══
+// Radiance: 10% | Streak (20+ days): 5% | IOTD: 35% | Max: 50% (additive)
+function _getActiveDiscounts() {
+  const discounts = {};
+  if (CU?.radianceUntil && new Date(CU.radianceUntil) > new Date()) {
+    discounts.radiance = 0.10;
+  }
+  if ((CU?.dailyStreak || 0) >= 20) {
+    discounts.streak = 0.05;
+  }
+  return discounts;
+}
+
+function _calculateFinalPrice(origPrice, includeIOTD = false) {
+  let totalDiscount = 0;
+  const discounts = _getActiveDiscounts();
+  if (discounts.radiance) totalDiscount += discounts.radiance;
+  if (discounts.streak) totalDiscount += discounts.streak;
+  if (includeIOTD) totalDiscount += 0.35;
+  // Cap at 50%
+  totalDiscount = Math.min(totalDiscount, 0.50);
+  const finalPrice = Math.max(5, Math.round(origPrice * (1 - totalDiscount)));
+  return {
+    finalPrice,
+    totalDiscount,
+    radiance: discounts.radiance || 0,
+    streak: discounts.streak || 0,
+    breakdown: discounts
+  };
+}
+
+function _formatDiscountPill(percent) {
+  if (!percent) return '';
+  return `<span style="display:inline-block;padding:2px 8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:#fff93e;font-size:10px;font-weight:700;border-radius:4px;margin-left:6px;">-${Math.round(percent * 100)}%</span>`;
+}
+
 function _renderItemOfTheDay(appearances, ownedAppearances) {
   const pool = [
     ...appearances.map(a => ({ kind:'appearance', item:a })),
@@ -41112,8 +41162,9 @@ function _renderItemOfTheDay(appearances, ownedAppearances) {
   const pick = pool[dayIndex % pool.length];
   const it = pick.item;
   const origPrice = it.price;
-  const discountPct = 35;
-  const dealPrice = Math.max(5, Math.round(origPrice * (1 - discountPct / 100)));
+  const calc = _calculateFinalPrice(origPrice, true);
+  const dealPrice = calc.finalPrice;
+  const totalDiscountPct = Math.round(calc.totalDiscount * 100);
   const isOwned = pick.kind === 'appearance'
     ? ownedAppearances.includes(it.id)
     : (CU?.ownedDecorations || []).includes(it.id);
@@ -41142,10 +41193,11 @@ function _renderItemOfTheDay(appearances, ownedAppearances) {
       <div class="iotd-body">
         <div class="iotd-type" style="${typeStyle}">${pick.kind === 'appearance' ? 'APPEARANCE' : 'AVATAR DECORATION'}</div>
         <div class="iotd-name">${escapeHTML(it.name)}</div>
+        ${calc.breakdown.radiance || calc.breakdown.streak ? `<div style="font-size:11px;color:rgba(255,249,62,.7);margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap;">${calc.breakdown.radiance ? '<span style="padding:1px 6px;background:rgba(255,119,228,.15);border:1px solid rgba(255,119,228,.3);border-radius:3px;">Radiance 10%</span>' : ''}${calc.breakdown.streak ? '<span style="padding:1px 6px;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:3px;">Streak 5%</span>' : ''}<span style="padding:1px 6px;background:rgba(255,249,62,.15);border:1px solid rgba(255,249,62,.3);border-radius:3px;">IOTD 35%</span></div>` : '<div style="font-size:11px;color:rgba(255,249,62,.7);margin-bottom:8px;"><span style="padding:1px 6px;background:rgba(255,249,62,.15);border:1px solid rgba(255,249,62,.3);border-radius:3px;">IOTD 35%</span></div>'}
         <div class="iotd-price-row">
           <span class="iotd-price-orig"><img src="/Onyx.png" alt="">${origPrice}</span>
           <span class="iotd-price-now"><img src="/Onyx.png" alt="">${dealPrice}</span>
-          <span class="iotd-discount">-${discountPct}%</span>
+          <span class="iotd-discount">-${totalDiscountPct}%</span>
         </div>
         <div class="iotd-countdown">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -41623,6 +41675,11 @@ function _fsRenderItemDetail(it, kind) {
     ? `<img src="${escapeHTML(it.src)}" alt="">`
     : _renderAppearancePreview(it);
   const safeId = escapeHTML(it.id).replace(/'/g, "\\'");
+  const discCalc = _calculateFinalPrice(it.price, false);
+  const finalPrice = discCalc.finalPrice;
+  const priceLabel = discCalc.totalDiscount > 0
+    ? `<span style="text-decoration:line-through;opacity:.5;font-size:13px;">${it.price.toLocaleString()}</span><span style="margin-left:8px;color:#fff93e;font-weight:700;">${finalPrice.toLocaleString()}</span>`
+    : finalPrice.toLocaleString();
   return `
     <div class="sim-card" onclick="event.stopPropagation()">
       <button class="sim-close" onclick="document.getElementById('shop-item-modal').remove()" aria-label="Close">×</button>
@@ -41665,14 +41722,15 @@ function _fsRenderItemDetail(it, kind) {
         <div class="sim-buy-panel">
           <div class="sim-buy-price">
             <div class="sim-buy-price-lbl">Price</div>
-            <div class="sim-buy-price-num"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div>
+            <div class="sim-buy-price-num"><img src="/Onyx.png" alt="">${priceLabel}</div>
+            ${discCalc.totalDiscount > 0 ? `<div style="font-size:11px;color:rgba(255,249,62,.7);margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">${discCalc.breakdown.radiance ? '<span style="padding:1px 6px;background:rgba(255,119,228,.15);border:1px solid rgba(255,119,228,.3);border-radius:3px;">Radiance 10%</span>' : ''}${discCalc.breakdown.streak ? '<span style="padding:1px 6px;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:3px;">Streak 5%</span>' : ''}</div>` : ''}
           </div>
           <div class="sim-buy-actions">
             ${isOwned
               ? '<button class="sim-buy-btn sim-buy-btn--owned" disabled>✓ Owned</button>'
               : (!seasonOpen
                 ? '<button class="sim-buy-btn sim-buy-btn--owned" disabled>Season ended - check resellers</button>'
-                : `<button class="sim-buy-btn" id="sim-buy-btn" onclick="_fsArmPurchase('${safeId}','${escapeHTML(kind)}',${it.price})">Buy · <img src="/Onyx.png" alt="" style="width:13px;height:13px;vertical-align:-2px;"> ${it.price.toLocaleString()}</button>`)}
+                : `<button class="sim-buy-btn" id="sim-buy-btn" onclick="_fsArmPurchase('${safeId}','${escapeHTML(kind)}',${finalPrice})">Buy · <img src="/Onyx.png" alt="" style="width:13px;height:13px;vertical-align:-2px;"> ${finalPrice.toLocaleString()}</button>`)}
             ${!isOwned ? `<button class="sim-wl-btn${onWL ? ' sim-wl-btn--on' : ''}" onclick="toggleWishlist('${safeId}');_fsRefreshModalWL('${safeId}')" title="${onWL ? 'Remove from wishlist' : 'Add to wishlist'}">${_svgIcon('heart',13)} ${onWL ? 'On wishlist' : 'Wishlist'}</button>` : ''}
           </div>
         </div>
@@ -41683,7 +41741,7 @@ function _fsRenderItemDetail(it, kind) {
           </label>
           <div class="sim-confirm-actions">
             <button class="sim-confirm-cancel" onclick="_fsDisarmPurchase()">Cancel</button>
-            <button class="sim-confirm-buy" id="sim-confirm-buy" disabled onclick="_fsCompletePurchase('${safeId}','${escapeHTML(kind)}',${it.price})">Confirm purchase</button>
+            <button class="sim-confirm-buy" id="sim-confirm-buy" disabled onclick="_fsCompletePurchase('${safeId}','${escapeHTML(kind)}',${finalPrice})">Confirm purchase</button>
           </div>
         </div>` : ''}
       </div>

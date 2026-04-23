@@ -32909,8 +32909,10 @@ function renderAtelierTab(tab) {
       ${_renderFortshopMarketplaceSection()}
     </div>`;
 
-    // Kick off the live countdown for the item of the day + async marketplace load.
+    // Kick off the live countdown, the banner ad rotation, and the async
+    // marketplace load once the new DOM is live.
     try { _startItemOfDayCountdown(); } catch(e) { _dbg('[Fortshop] countdown start', e); }
+    try { _startFortshopAdRotation(); } catch(e) { _dbg('[Fortshop] ad rotation start', e); }
     setTimeout(() => { try { _loadShopMarketplace(); } catch(e) {} }, 30);
   }
 
@@ -40616,86 +40618,170 @@ async function confirmGift(itemId) {
 }
 
 // ── Trading (no rares, onyx-only, taxed) ──────────────
+// ── Trade modal (rebuilt in gamecard design language) ──
+let _tradeSelectedItems = new Set();
+let _tradePartnerUser = null;
+
 async function openTradeModal(targetUsername) {
-  const target = targetUsername ? await FortizedSocial.getUserByName(targetUsername) : null;
-  const owned = (CU?.unlockedAppearances||[]).concat(CU?.ownedDecorations||[]);
-  const myPfp = CU?.pfp || _defaultPfpUrl(CU?.username||'');
+  _tradeSelectedItems = new Set();
+  _tradePartnerUser = targetUsername ? await FortizedSocial.getUserByName(targetUsername) : null;
+  document.getElementById('trade-modal-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'trade-modal-overlay';
+  overlay.className = 'trade-overlay';
+  overlay.onclick = () => overlay.remove();
+  overlay.innerHTML = _renderTradeModalHTML();
+  document.body.appendChild(overlay);
+  _tradeUpdateTotals();
+  setTimeout(() => document.getElementById('trade-partner-input')?.focus(), 60);
+}
+
+function _renderTradeModalHTML() {
+  const myPfp = CU?.pfp || _defaultPfpUrl(CU?.username || '');
   const myName = CU?.displayName || CU?.username || 'You';
   const friends = (CU?.friends || []).slice(0, 60);
-  openSimpleModal(`
-    <div class="trade-modal ftz-trade-v2">
-      <div class="ftz-trade-hdr">
-        <div class="ftz-trade-title">${_svgIcon('swap',16)} New Trade Offer</div>
-        <div class="ftz-trade-sub">Rare &amp; seasonal items can't be traded — use the Marketplace instead. All trades are taxed 30%.</div>
+  const tgt = _tradePartnerUser;
+  const tradable = [
+    ...((CU?.unlockedAppearances || []).map(id => ({ id, kind: 'appearance' }))),
+    ...((CU?.ownedDecorations || []).map(id => ({ id, kind: 'decoration' }))),
+  ]
+    .map(({ id, kind }) => ({ id, kind, it: _getShopItemById(id) }))
+    .filter(x => x.it && !x.it.rare && !x.it.seasonal && !x.it.event);
+
+  const itemGrid = tradable.length
+    ? tradable.map(({ id, kind, it }) => {
+        const sel = _tradeSelectedItems.has(id);
+        const cover = kind === 'decoration' && it.src
+          ? `<img src="${escapeHTML(it.src)}">`
+          : `<div class="trade-item-theme" style="background:${it.previewBg || it.gradient || 'linear-gradient(135deg,#1a1426,#0a0814)'};"></div>`;
+        return `<div class="trade-item-tile${sel ? ' trade-item-tile--on' : ''}" onclick="_tradeToggleItem('${escapeHTML(id).replace(/'/g, "\\'")}')">
+          ${cover}
+          <div class="trade-item-meta">
+            <div class="trade-item-name">${escapeHTML(it.name || id)}</div>
+            <div class="trade-item-price"><img src="/Onyx.png" alt="">${it.price || 0}</div>
+          </div>
+          <span class="trade-item-check">${sel ? '✓' : ''}</span>
+        </div>`;
+      }).join('')
+    : '<div class="trade-item-empty">You don\'t have any tradable items yet. Rare &amp; event items aren\'t tradable.</div>';
+
+  return `
+    <div class="trade-card" onclick="event.stopPropagation()">
+      <button class="trade-close" onclick="document.getElementById('trade-modal-overlay').remove()" aria-label="Close">×</button>
+      <div class="trade-hero">
+        <div class="trade-hero-kicker">New Trade Offer</div>
+        <div class="trade-hero-title">Swap Onyx & items with another user</div>
+        <div class="trade-hero-sub">Every trade is taxed 30%. Rare and event items can't be traded — they live on the Marketplace instead.</div>
       </div>
-      <div class="ftz-trade-parties">
-        <!-- My side -->
-        <div class="ftz-trade-col">
-          <div class="ftz-trade-party">
-            <img class="ftz-trade-pfp" src="${escapeHTML(myPfp)}" onerror="this.src='${_defaultPfpUrl(CU?.username||'')}'">
-            <div class="ftz-trade-who">
-              <div class="ftz-trade-name">${escapeHTML(myName)}</div>
-              <div class="ftz-trade-handle">@${escapeHTML(CU?.username||'')}</div>
+      <div class="trade-body">
+        <!-- Partner picker -->
+        <div class="trade-partner-row">
+          <div class="trade-partner-pfp">
+            ${tgt ? `<img src="${escapeHTML(tgt.pfp || _defaultPfpUrl(tgt.username))}" onerror="this.src='${_defaultPfpUrl(tgt.username)}'">` : '<div class="trade-partner-pfp-ph">?</div>'}
+          </div>
+          <div class="trade-partner-meta">
+            <label class="trade-field-label">Partner</label>
+            <input id="trade-partner-input" class="trade-input" placeholder="Enter a username" value="${tgt ? escapeHTML(tgt.username) : ''}" list="trade-friends-list" oninput="_tradeUpdateTotals()">
+            <datalist id="trade-friends-list">${friends.map(f => `<option value="${escapeHTML(f)}">`).join('')}</datalist>
+          </div>
+        </div>
+
+        <div class="trade-columns">
+          <!-- My offer -->
+          <div class="trade-col">
+            <div class="trade-col-head">
+              <img class="trade-col-pfp" src="${escapeHTML(myPfp)}" onerror="this.src='${_defaultPfpUrl(CU?.username || '')}'">
+              <div>
+                <div class="trade-col-kicker">You send</div>
+                <div class="trade-col-name">${escapeHTML(myName)}</div>
+              </div>
+            </div>
+            <label class="trade-field-label">Onyx</label>
+            <div class="trade-onyx-input">
+              <img src="/Onyx.png" alt="">
+              <input id="trade-my-onyx" type="number" min="0" max="${CU?.onyx || 0}" placeholder="0" oninput="_tradeUpdateTotals()">
+              <span class="trade-onyx-avail">/ ${(CU?.onyx || 0).toLocaleString()}</span>
+            </div>
+            <label class="trade-field-label">Items <span class="trade-field-count" id="trade-my-items-count">0 selected</span></label>
+            <div class="trade-item-grid">${itemGrid}</div>
+          </div>
+
+          <div class="trade-swap-pip">${_svgIcon('swap', 22)}</div>
+
+          <!-- Their return -->
+          <div class="trade-col">
+            <div class="trade-col-head">
+              <div class="trade-col-pfp trade-col-pfp-ph">${tgt ? `<img src="${escapeHTML(tgt.pfp || _defaultPfpUrl(tgt.username))}">` : '?'}</div>
+              <div>
+                <div class="trade-col-kicker">They pay</div>
+                <div class="trade-col-name">${tgt ? escapeHTML(tgt.displayName || tgt.username) : 'Partner'}</div>
+              </div>
+            </div>
+            <label class="trade-field-label">Onyx</label>
+            <div class="trade-onyx-input">
+              <img src="/Onyx.png" alt="">
+              <input id="trade-their-onyx" type="number" min="0" placeholder="0" oninput="_tradeUpdateTotals()">
+              <span class="trade-onyx-avail">paid to you</span>
+            </div>
+            <div class="trade-return-note">
+              Partners can't be forced to send items in return — they pay the Onyx you request. Counter-offers come as a separate trade.
             </div>
           </div>
-          <label class="ftz-trade-label">Your Onyx offer</label>
-          <div class="ftz-trade-onyx-row">
-            <img src="/Onyx.png" style="width:14px;height:14px;">
-            <input id="trade-my-onyx" type="number" min="0" max="${CU?.onyx||0}" placeholder="0" oninput="_tradeUpdateTotals()">
-            <span class="ftz-trade-bal">of ${(CU?.onyx||0).toLocaleString()} available</span>
-          </div>
-          <label class="ftz-trade-label">Your item offer</label>
-          <select id="trade-my-items" multiple size="5" class="ftz-trade-items" onchange="_tradeUpdateTotals()">
-            ${owned.length ? owned.map(id => {
-              const it = _getShopItemById(id);
-              if (!it || it.rare || it.seasonal) return '';
-              return `<option value="${escapeHTML(id)}">${escapeHTML(it.name||id)}${it.price?` · ${it.price} Onyx`:''}</option>`;
-            }).join('') : '<option disabled>You have no tradable items.</option>'}
-          </select>
-          <div class="ftz-trade-hint">Hold Ctrl/Cmd to select multiple.</div>
         </div>
-        <div class="ftz-trade-swap-indicator">${_svgIcon('swap',22)}</div>
-        <!-- Their side -->
-        <div class="ftz-trade-col">
-          <div class="ftz-trade-party">
-            <div class="ftz-trade-pfp ftz-trade-pfp-ph">${target ? `<img src="${escapeHTML(target.pfp||_defaultPfpUrl(target.username))}">` : '?'}</div>
-            <div class="ftz-trade-who">
-              <input id="trade-partner" class="ftz-trade-partner-input" placeholder="username" value="${target?escapeHTML(target.username):''}" list="trade-friends-list">
-              <datalist id="trade-friends-list">${friends.map(f => `<option value="${escapeHTML(f)}">`).join('')}</datalist>
-              <div class="ftz-trade-handle">Partner</div>
-            </div>
+
+        <!-- Summary -->
+        <div class="trade-summary">
+          <div class="trade-summary-row">
+            <span>You receive (after 30% tax)</span>
+            <strong id="trade-net-me">—</strong>
           </div>
-          <label class="ftz-trade-label">Request Onyx</label>
-          <div class="ftz-trade-onyx-row">
-            <img src="/Onyx.png" style="width:14px;height:14px;">
-            <input id="trade-their-onyx" type="number" min="0" placeholder="0" oninput="_tradeUpdateTotals()">
-            <span class="ftz-trade-bal">From partner</span>
+          <div class="trade-summary-row">
+            <span>Partner receives (after 30% tax)</span>
+            <strong id="trade-net-them">—</strong>
           </div>
-          <label class="ftz-trade-label">Request items</label>
-          <textarea id="trade-their-items" class="ftz-trade-textarea" rows="3" placeholder="Describe which items you want (partner can counter-offer)."></textarea>
+        </div>
+
+        <div class="trade-actions">
+          <button class="trade-btn trade-btn-ghost" onclick="document.getElementById('trade-modal-overlay').remove()">Cancel</button>
+          <button class="trade-btn trade-btn-send" onclick="sendTradeOffer()">${_svgIcon('send', 12)} Send Offer</button>
         </div>
       </div>
-      <div class="ftz-trade-summary">
-        <div class="ftz-trade-net"><span>Your net (after 30% tax):</span><strong id="trade-net-me">0 Onyx</strong></div>
-        <div class="ftz-trade-net"><span>Partner net (after 30% tax):</span><strong id="trade-net-them">0 Onyx</strong></div>
-      </div>
-      <div class="gift-actions">
-        <button class="btn-b" onclick="closeSimpleModal()">Cancel</button>
-        <button class="btn-a" onclick="sendTradeOffer()">${_svgIcon('send',12)} Send Offer</button>
-      </div>
-    </div>`);
-  setTimeout(() => _tradeUpdateTotals(), 30);
+    </div>`;
+}
+
+function _tradeToggleItem(id) {
+  if (_tradeSelectedItems.has(id)) _tradeSelectedItems.delete(id); else _tradeSelectedItems.add(id);
+  const tile = document.querySelector(`.trade-item-tile[onclick*="${id.replace(/'/g, "\\'")}"]`);
+  if (tile) {
+    tile.classList.toggle('trade-item-tile--on', _tradeSelectedItems.has(id));
+    const check = tile.querySelector('.trade-item-check');
+    if (check) check.textContent = _tradeSelectedItems.has(id) ? '✓' : '';
+  }
+  _tradeUpdateTotals();
 }
 
 function _tradeUpdateTotals() {
-  const myO = parseInt(document.getElementById('trade-my-onyx')?.value||'0', 10) || 0;
-  const thO = parseInt(document.getElementById('trade-their-onyx')?.value||'0', 10) || 0;
-  const netMe = Math.round((thO - myO) * 0.7);
-  const netThem = Math.round((myO - thO) * 0.7);
+  const myO = parseInt(document.getElementById('trade-my-onyx')?.value || '0', 10) || 0;
+  const thO = parseInt(document.getElementById('trade-their-onyx')?.value || '0', 10) || 0;
+  // After-tax receive amounts
+  const meReceives = Math.round(thO * 0.7);
+  const themReceives = Math.round(myO * 0.7);
   const meEl = document.getElementById('trade-net-me');
   const themEl = document.getElementById('trade-net-them');
-  if (meEl) { meEl.textContent = (netMe>=0?'+':'') + netMe.toLocaleString() + ' Onyx'; meEl.style.color = netMe>0?'var(--green)':netMe<0?'var(--red)':'var(--muted)'; }
-  if (themEl) { themEl.textContent = (netThem>=0?'+':'') + netThem.toLocaleString() + ' Onyx'; themEl.style.color = netThem>0?'var(--green)':netThem<0?'var(--red)':'var(--muted)'; }
+  if (meEl) {
+    meEl.innerHTML = meReceives > 0
+      ? `<img src="/Onyx.png" style="width:12px;height:12px;vertical-align:-2px;"> ${meReceives.toLocaleString()}`
+      : '—';
+    meEl.style.color = meReceives > 0 ? 'var(--green)' : 'var(--muted)';
+  }
+  if (themEl) {
+    themEl.innerHTML = themReceives > 0
+      ? `<img src="/Onyx.png" style="width:12px;height:12px;vertical-align:-2px;"> ${themReceives.toLocaleString()}`
+      : '—';
+    themEl.style.color = themReceives > 0 ? 'var(--green)' : 'var(--muted)';
+  }
+  const countEl = document.getElementById('trade-my-items-count');
+  if (countEl) countEl.textContent = `${_tradeSelectedItems.size} selected`;
 }
 async function sendTradeOffer() {
   const partner = (document.getElementById('trade-partner')?.value||'').trim();
@@ -40791,14 +40877,10 @@ async function openMarketplace() {
 let _itemOfDayTimer = null;
 
 function _renderFortshopActionsRow() {
-  const bal = (CU?.onyx || 0).toLocaleString();
+  // Onyx balance intentionally omitted — it already lives in the top bar.
   return `<div class="fortshop-actions-row">
     <button class="fortshop-quick-btn" onclick="viewUserProfile(CU.username,'wishlist')">${_svgIcon('heart',13)} My Wishlist</button>
     <button class="fortshop-quick-btn" onclick="openTradeModal()">${_svgIcon('swap',13)} Trade</button>
-    <div style="flex:1;"></div>
-    <div class="fortshop-balance-pill">
-      <img src="/Onyx.png" alt=""><span>${bal}</span>
-    </div>
   </div>`;
 }
 
@@ -40904,29 +40986,25 @@ function _renderFortshopUnifiedCard(kind, item, ownedAppearances) {
   const isOwned = kind === 'appearance'
     ? (ownedAppearances || []).includes(item.id)
     : (CU?.ownedDecorations || []).includes(item.id);
-  const rarity = item.rarity || (kind === 'appearance' ? 'rare' : 'common');
-  const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+  const isRareOrEvent = !!(item.rare || item.seasonal || item.event || item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary');
+  const rarity = item.rarity || (item.seasonal || item.event ? 'event' : isRareOrEvent ? 'rare' : 'common');
+  const rarityLabel = isRareOrEvent
+    ? (item.event ? 'Event' : item.seasonal ? 'Seasonal' : rarity.charAt(0).toUpperCase() + rarity.slice(1))
+    : null;
   const typeLabel = kind === 'appearance' ? 'Appearance' : kind === 'decoration' ? 'Avatar Decoration' : 'Item';
   const safeId = escapeHTML(item.id).replace(/'/g, "\\'");
-  const seed = (item.id || '').split('').reduce((s, c) => s + c.charCodeAt(0), 0);
-  const owners = 40 + (seed % 160);
-  const trend = ((seed % 21) - 10);
   const preview = kind === 'decoration' && item.src
     ? `<img src="${escapeHTML(item.src)}">`
-    : `<div class="fsc-preview-theme" style="background:${(item.previewBg || item.gradient || 'linear-gradient(135deg,#1a1426,#0a0814)')};"></div>`;
+    : _renderAppearancePreview(item);
   const buyAction = kind === 'appearance'
     ? `buyAppearance('${safeId}',${item.price})`
     : `buyDecoration('${safeId}',${item.price})`;
-  return `<div class="fortshop-card fortshop-card--${escapeHTML(rarity)}" onclick="openShopItemModal('${safeId}','${kind}')">
-    <div class="fortshop-card-rarity" title="${escapeHTML(rarityLabel)}"></div>
+  return `<div class="fortshop-card${isRareOrEvent ? ` fortshop-card--${escapeHTML(rarity)}` : ''}" onclick="openShopItemModal('${safeId}','${kind}')">
+    ${isRareOrEvent ? `<div class="fortshop-card-rarity" title="${escapeHTML(rarityLabel)}"></div>` : ''}
     <div class="fortshop-card-preview">${preview}</div>
     <div class="fortshop-card-body">
-      <div class="fortshop-card-type">${escapeHTML(typeLabel)}</div>
+      <div class="fortshop-card-type">${escapeHTML(typeLabel)}${rarityLabel ? ` · <span class="fsc-rarity-tag">${escapeHTML(rarityLabel)}</span>` : ''}</div>
       <div class="fortshop-card-name">${escapeHTML(item.name)}</div>
-      <div class="fortshop-card-stats">
-        <span title="${owners} users own this"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${owners}</span>
-        <span class="${trend >= 0 ? 'fsc-trend-up' : 'fsc-trend-dn'}" title="7-day price trend">${trend >= 0 ? '▲' : '▼'} ${Math.abs(trend)}%</span>
-      </div>
       ${isOwned
         ? '<button class="fortshop-card-btn fortshop-card-btn--owned" onclick="event.stopPropagation();">✓ Owned</button>'
         : `<button class="fortshop-card-btn" onclick="event.stopPropagation();${buyAction}"><img src="/Onyx.png" alt="">${item.price}</button>`}
@@ -40934,27 +41012,69 @@ function _renderFortshopUnifiedCard(kind, item, ownedAppearances) {
   </div>`;
 }
 
-function _renderFortshopSponsoredSlot() {
-  let adHTML = '';
-  try {
-    if (typeof _pickInAppAd === 'function') {
-      const ad = _pickInAppAd('/app/atelier?tab=shop');
-      if (ad && typeof _renderInAppAd === 'function') adHTML = _renderInAppAd(ad, 'fortshop');
-    }
-  } catch (_) {}
-  return `<div class="fortshop-ad-slot">
-    <span class="fortshop-ad-tag">AD</span>
-    ${adHTML || `<div class="fortshop-ad-placeholder">
-      <div class="fortshop-ad-placeholder-kicker">Featured by the community</div>
-      <div class="fortshop-ad-placeholder-title">Your drop could live here</div>
-      <div class="fortshop-ad-placeholder-sub">Creators can promote items, bastions, and events from the Creator Hub.</div>
-      <button class="fortshop-ad-placeholder-btn" onclick="setAtelierTab('creator')">Promote in Creator Hub →</button>
-    </div>`}
+// Minimalistic Fortized-UI preview rendered INSIDE an appearance card/modal
+// so users can actually see what the theme looks like (sidebar + main content
+// + accent line + rail dots). Colours driven by the item's previewBg +
+// sidebarBg + labelColor fields.
+function _renderAppearancePreview(item) {
+  const bg = item.previewBg || item.gradient || 'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)';
+  const sidebar = item.sidebarBg || '#080e1a';
+  const accent = item.labelColor || 'rgba(255,249,62,.55)';
+  return `<div class="fsc-appearance-preview" style="background:${bg};">
+    <div class="fap-rail">
+      <span style="background:${accent};"></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="fap-sidebar" style="background:${sidebar};">
+      <div class="fap-sb-title"></div>
+      <div class="fap-sb-row fap-sb-row-active" style="background:${accent};opacity:.18;"></div>
+      <div class="fap-sb-row"></div>
+      <div class="fap-sb-row"></div>
+      <div class="fap-sb-row"></div>
+    </div>
+    <div class="fap-main">
+      <div class="fap-main-hdr"></div>
+      <div class="fap-main-line" style="background:${accent};width:42%;"></div>
+      <div class="fap-main-line" style="width:68%;"></div>
+      <div class="fap-main-line" style="width:54%;"></div>
+      <div class="fap-main-bubble"></div>
+    </div>
   </div>`;
+}
+
+function _renderFortshopSponsoredSlot() {
+  // Reuses the same banner-ad container shape as the home page, so real ads
+  // from _getAllActiveAds() are broadcast the same way. The actual rotation
+  // kicks off in _startFortshopAdRotation once the DOM is live.
+  return `<div id="fortshop-ads" class="home-banner-ad home-banner-card"></div>`;
+}
+
+let _fortshopAdTimer = null;
+async function _startFortshopAdRotation() {
+  if (_fortshopAdTimer) { clearInterval(_fortshopAdTimer); _fortshopAdTimer = null; }
+  async function _rotate() {
+    const el = document.getElementById('fortshop-ads');
+    if (!el) { clearInterval(_fortshopAdTimer); _fortshopAdTimer = null; return; }
+    try {
+      const allAds = await _getAllActiveAds();
+      const bannerAd = _pickWeightedAd(allAds, 'banner');
+      if (bannerAd) {
+        el.innerHTML = _renderAdHTML(bannerAd, 'banner');
+        el.onclick = () => _adClickAction(bannerAd);
+      } else {
+        el.innerHTML = '<div class="ad-empty ad-empty-banner">Ad</div>';
+        el.onclick = null;
+      }
+    } catch (e) { _dbg('[Fortshop] ad rotate failed', e); }
+  }
+  await _rotate();
+  _fortshopAdTimer = setInterval(_rotate, 75000);
 }
 
 function _renderFortshopBundlesSection(appearances, ownedAppearances) {
   const midnightBundleOwned = (ownedAppearances || []).includes('midnight_citadel') && (CU?.ownedDecorations || []).includes('blue_glow');
+  const onyxBundleOwned = (ownedAppearances || []).includes('onyx_pure');
   return `<div class="fortshop-section fortshop-section--bundles">
     <div class="fortshop-section-head">
       <h3>Bundles</h3>
@@ -40967,7 +41087,7 @@ function _renderFortshopBundlesSection(appearances, ownedAppearances) {
           <div class="fortshop-bundle-hero-kicker">2 items · save 19%</div>
           <div class="fortshop-bundle-hero-title">Midnight Bundle</div>
           <div class="fortshop-bundle-hero-sub">Midnight Citadel + Blue Glow</div>
-          <button class="fortshop-bundle-hero-btn" onclick="event.stopPropagation();${midnightBundleOwned ? `toast('Already owned.','info')` : `(typeof buyBundle === 'function' ? buyBundle('midnight_bundle',210) : toast('Bundle purchase coming soon.','info'))`}">${midnightBundleOwned ? '✓ Owned' : 'Take me there'}</button>
+          <button class="fortshop-bundle-hero-btn" onclick="event.stopPropagation();openShopBundleModal('midnight_bundle')">${midnightBundleOwned ? '✓ Owned' : 'View bundle'}</button>
         </div>
       </div>
       <div class="fortshop-bundle-hero fortshop-bundle-hero--onyx" onclick="openShopBundleModal('onyx_signature')">
@@ -40976,7 +41096,7 @@ function _renderFortshopBundlesSection(appearances, ownedAppearances) {
           <div class="fortshop-bundle-hero-kicker">Signature line</div>
           <div class="fortshop-bundle-hero-title">Onyx Signature</div>
           <div class="fortshop-bundle-hero-sub">Pure darkness. Minimal distractions.</div>
-          <button class="fortshop-bundle-hero-btn" onclick="event.stopPropagation();openShopBundleModal('onyx_signature')">Take me there</button>
+          <button class="fortshop-bundle-hero-btn" onclick="event.stopPropagation();openShopBundleModal('onyx_signature')">${onyxBundleOwned ? '✓ Owned' : 'View bundle'}</button>
         </div>
       </div>
     </div>
@@ -41009,12 +41129,13 @@ function openShopItemModal(itemId, kind) {
   overlay.onclick = () => overlay.remove();
   overlay.innerHTML = _fsRenderItemDetail(it, kind || 'appearance');
   document.body.appendChild(overlay);
-  try { _fsDrawPriceHistory(it); } catch (e) { _dbg('[Fortshop] price chart', e); }
+  try { _fsDrawPriceHistory(it).catch(() => {}); } catch (e) { _dbg('[Fortshop] price chart', e); }
 }
 
 function _fsRenderItemDetail(it, kind) {
-  const rarity = it.rarity || (kind === 'appearance' ? 'rare' : 'common');
-  const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+  const isRareOrEvent = !!(it.rare || it.seasonal || it.event || it.rarity === 'rare' || it.rarity === 'epic' || it.rarity === 'legendary');
+  const rarity = it.rarity || (it.seasonal || it.event ? 'event' : isRareOrEvent ? 'rare' : 'common');
+  const rarityLabel = it.event ? 'Event' : it.seasonal ? 'Seasonal' : (rarity.charAt(0).toUpperCase() + rarity.slice(1));
   const typeLabel = kind === 'appearance' ? 'Appearance' : 'Avatar Decoration';
   const isOwned = kind === 'appearance'
     ? (CU?.unlockedAppearances || []).includes(it.id)
@@ -41022,57 +41143,78 @@ function _fsRenderItemDetail(it, kind) {
   const onWL = (typeof isItemOnWishlist === 'function') ? isItemOnWishlist(it.id) : false;
   const preview = kind === 'decoration' && it.src
     ? `<img src="${escapeHTML(it.src)}" alt="">`
-    : `<div class="sim-preview-theme" style="background:${(it.previewBg || it.gradient || 'linear-gradient(135deg,#1a1426,#0a0814)')};"></div>`;
-  // Deterministic sample stats based on item id so the same item shows the
-  // same "history" every session until a real trade log lands.
-  const seed = (it.id || '').split('').reduce((s, c) => s + c.charCodeAt(0), 0);
-  const owners = 40 + (seed % 260);
-  const sales = 120 + (seed % 900);
-  const original = it.price;
-  const avgPrice = Math.round(it.price * (0.9 + ((seed % 50) / 100)));
+    : _renderAppearancePreview(it);
   const safeId = escapeHTML(it.id).replace(/'/g, "\\'");
   return `
     <div class="sim-card" onclick="event.stopPropagation()">
       <button class="sim-close" onclick="document.getElementById('shop-item-modal').remove()" aria-label="Close">×</button>
       <div class="sim-hero sim-hero--${escapeHTML(rarity)}">
-        <div class="sim-hero-badge">${escapeHTML(rarityLabel)}</div>
+        ${isRareOrEvent ? `<div class="sim-hero-badge">${escapeHTML(rarityLabel)}</div>` : ''}
         <div class="sim-hero-preview">${preview}</div>
         <div class="sim-hero-meta">
           <div class="sim-hero-type">${escapeHTML(typeLabel)}</div>
           <div class="sim-hero-name">${escapeHTML(it.name)}</div>
           ${it.desc ? `<div class="sim-hero-desc">${escapeHTML(it.desc)}</div>` : ''}
-          <div class="sim-hero-micro">
-            <span title="${owners} users own this">${_svgIcon('tag',11)} ${owners.toLocaleString()} owners</span>
-            <span title="Total sales">${_svgIcon('swap',11)} ${sales.toLocaleString()} sales</span>
-          </div>
         </div>
       </div>
 
       <div class="sim-body">
-        <div class="sim-price-history">
+        ${isRareOrEvent ? `<div class="sim-price-history">
           <div class="sim-ph-head">Price History</div>
           <div class="sim-ph-chart"><svg id="sim-ph-svg" viewBox="0 0 640 220" preserveAspectRatio="none"></svg></div>
-          <div class="sim-ph-stats">
-            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">${sales.toLocaleString()}</div></div>
-            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${original.toLocaleString()}</div></div>
-            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${avgPrice.toLocaleString()}</div></div>
+          <div class="sim-ph-stats" id="sim-ph-stats">
+            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">—</div></div>
+            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div></div>
+            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--muted);">—</div></div>
           </div>
-        </div>
+          <div class="sim-ph-note">Price history appears once resellers list this item on the Marketplace.</div>
+        </div>` : ''}
 
         <div class="sim-buy-panel">
           <div class="sim-buy-price">
-            <div class="sim-buy-price-lbl">Best Price</div>
+            <div class="sim-buy-price-lbl">Price</div>
             <div class="sim-buy-price-num"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div>
           </div>
           <div class="sim-buy-actions">
             ${isOwned
               ? '<button class="sim-buy-btn sim-buy-btn--owned" disabled>✓ Owned</button>'
-              : `<button class="sim-buy-btn" onclick="openShopCheckout('${safeId}','${escapeHTML(kind)}')">Buy now</button>`}
+              : `<button class="sim-buy-btn" id="sim-buy-btn" onclick="_fsArmPurchase('${safeId}','${escapeHTML(kind)}',${it.price})">Buy · <img src="/Onyx.png" alt="" style="width:13px;height:13px;vertical-align:-2px;"> ${it.price.toLocaleString()}</button>`}
             ${!isOwned ? `<button class="sim-wl-btn${onWL ? ' sim-wl-btn--on' : ''}" onclick="toggleWishlist('${safeId}');_fsRefreshModalWL('${safeId}')" title="${onWL ? 'Remove from wishlist' : 'Add to wishlist'}">${_svgIcon('heart',13)} ${onWL ? 'On wishlist' : 'Wishlist'}</button>` : ''}
           </div>
         </div>
+        ${!isOwned ? `<div id="sim-confirm-panel" class="sim-confirm-panel" style="display:none;">
+          <label class="sim-confirm-agree">
+            <input type="checkbox" id="sim-confirm-agree-box" onchange="document.getElementById('sim-confirm-buy').disabled=!this.checked">
+            <span>I agree to the immediate delivery of my digital purchase. Items are non-refundable.</span>
+          </label>
+          <div class="sim-confirm-actions">
+            <button class="sim-confirm-cancel" onclick="_fsDisarmPurchase()">Cancel</button>
+            <button class="sim-confirm-buy" id="sim-confirm-buy" disabled onclick="_fsCompletePurchase('${safeId}','${escapeHTML(kind)}',${it.price})">Confirm purchase</button>
+          </div>
+        </div>` : ''}
       </div>
     </div>`;
+}
+
+// Single-modal flow — "Buy" arms the inline confirmation panel (with the
+// mandatory-agreement checkbox) instead of opening a separate checkout card.
+function _fsArmPurchase(itemId, kind, price) {
+  const panel = document.getElementById('sim-confirm-panel');
+  if (!panel) return;
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const buyBtn = document.getElementById('sim-buy-btn');
+  if (buyBtn) buyBtn.style.display = 'none';
+  const box = document.getElementById('sim-confirm-agree-box');
+  if (box) { box.checked = false; }
+  const confirm = document.getElementById('sim-confirm-buy');
+  if (confirm) confirm.disabled = true;
+}
+function _fsDisarmPurchase() {
+  const panel = document.getElementById('sim-confirm-panel');
+  if (panel) panel.style.display = 'none';
+  const buyBtn = document.getElementById('sim-buy-btn');
+  if (buyBtn) buyBtn.style.display = '';
 }
 
 function _fsRefreshModalWL(itemId) {
@@ -41084,31 +41226,75 @@ function _fsRefreshModalWL(itemId) {
   btn.title = onWL ? 'Remove from wishlist' : 'Add to wishlist';
 }
 
-// Draws a Polytoria-style price history: green line for price, grey bars
-// for daily sales volume, over a faint grid. Data is synthetic-but-
-// deterministic (seeded from the item id) until a real trade log lands.
-function _fsDrawPriceHistory(it) {
+// Draws a Polytoria-style price history from REAL marketplace trade data.
+// Pulls completed listings for this item from the marketplace_listings table
+// and buckets them per day. Renders an empty state when there's no history.
+async function _fsDrawPriceHistory(it) {
   const svg = document.getElementById('sim-ph-svg');
+  const statsEl = document.getElementById('sim-ph-stats');
   if (!svg) return;
+  // Only rare / seasonal / event items get trade history in the first place —
+  // regular stock doesn't have a Marketplace market.
+  const isRareOrEvent = !!(it.rare || it.seasonal || it.event || it.rarity === 'rare' || it.rarity === 'epic' || it.rarity === 'legendary');
+  if (!isRareOrEvent) return;
+
+  let listings = [];
+  try {
+    const raw = await FortizedSocial.sb?.from('marketplace_listings')
+      ?.select('*').eq('item_id', it.id).order('created_at', { ascending: true });
+    listings = raw?.data || [];
+  } catch (_) { listings = []; }
+
+  // No real data yet — show empty state in the chart + stats.
+  if (!listings.length) {
+    svg.innerHTML = `<text x="320" y="110" text-anchor="middle" font-family="var(--font-ui)" font-size="13" fill="rgba(255,255,255,.35)">No trade history yet.</text>`;
+    return;
+  }
+
+  // Bucket by day — last 30 days max.
+  const dayMs = 86400000;
+  const now = Date.now();
+  const cutoff = now - 30 * dayMs;
+  const relevant = listings.filter(l => new Date(l.created_at).getTime() >= cutoff);
+  const buckets = new Map(); // dayKey -> { prices:[], count:0 }
+  relevant.forEach(l => {
+    const t = new Date(l.created_at).getTime();
+    const k = Math.floor(t / dayMs);
+    if (!buckets.has(k)) buckets.set(k, { prices: [], count: 0 });
+    const b = buckets.get(k);
+    b.prices.push(l.price || 0);
+    b.count++;
+  });
+  const sortedKeys = [...buckets.keys()].sort();
+  if (!sortedKeys.length) {
+    svg.innerHTML = `<text x="320" y="110" text-anchor="middle" font-family="var(--font-ui)" font-size="13" fill="rgba(255,255,255,.35)">No trade history yet.</text>`;
+    return;
+  }
+  const priceSeries = sortedKeys.map(k => {
+    const ps = buckets.get(k).prices;
+    return Math.round(ps.reduce((a,b)=>a+b,0) / ps.length);
+  });
+  const volSeries = sortedKeys.map(k => buckets.get(k).count);
+
+  // Totals for the stat strip.
+  const totalSales = relevant.length;
+  const avgPrice = Math.round(priceSeries.reduce((a,b)=>a+b,0) / priceSeries.length);
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">${totalSales.toLocaleString()}</div></div>
+      <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div></div>
+      <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${avgPrice.toLocaleString()}</div></div>`;
+  }
+
+  const days = priceSeries.length;
   const W = 640, H = 220, PAD_L = 48, PAD_R = 16, PAD_T = 18, PAD_B = 36;
   const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
-  const days = 10;
-  // Seed for reproducibility.
-  let seed = (it.id || '').split('').reduce((s, c) => s + c.charCodeAt(0), 0) + it.price;
-  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
   const base = it.price;
-  const priceSeries = [];
-  let p = base * (0.7 + rand() * 0.3);
-  for (let i = 0; i < days; i++) {
-    p = Math.max(base * 0.5, p + (rand() - 0.45) * base * 0.18);
-    priceSeries.push(Math.round(p));
-  }
-  const volSeries = priceSeries.map(() => Math.round(20 + rand() * 220));
   const maxPrice = Math.max(base, ...priceSeries) * 1.08;
   const minPrice = Math.min(0, ...priceSeries) * 0.95;
   const maxVol = Math.max(...volSeries, 1);
-  const x = i => PAD_L + (plotW * i) / (days - 1);
-  const yP = v => PAD_T + plotH - ((v - minPrice) / (maxPrice - minPrice)) * plotH;
+  const x = i => PAD_L + (plotW * (days > 1 ? i / (days - 1) : 0.5));
+  const yP = v => PAD_T + plotH - ((v - minPrice) / (maxPrice - minPrice || 1)) * plotH;
   const yV = v => PAD_T + plotH - (v / maxVol) * plotH;
 
   // Y-axis gridlines + labels (price)
@@ -41151,10 +41337,15 @@ function _fsDrawPriceHistory(it) {
   svg.innerHTML = legend + gridHTML + bars + `<path d="${linePath}" stroke="#3ecf6e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` + dots + xLabels;
 }
 
-// ── Fortshop checkout sub-modal ──
-// Discord-style compact checkout over the item-detail modal. "I agree to
-// immediate delivery" checkbox must be ticked before Purchase is active.
+// Legacy entry kept as a shim so any stray caller still arms the inline
+// confirm panel instead of popping a stacked sub-modal.
 function openShopCheckout(itemId, kind) {
+  const it = (typeof _getShopItemById === 'function') ? _getShopItemById(itemId) : null;
+  if (it) _fsArmPurchase(itemId, kind, it.price);
+}
+
+// ── Legacy Fortshop checkout sub-modal (kept for backwards compat) ──
+function _legacyOpenShopCheckout_unused(itemId, kind) {
   const it = (typeof _getShopItemById === 'function') ? _getShopItemById(itemId) : null;
   if (!it) { toast('Item not found', 'error'); return; }
   document.getElementById('sim-checkout')?.remove();
@@ -41213,11 +41404,12 @@ async function _fsCompletePurchase(itemId, kind, price) {
       await buyAppearance(itemId, price);
     } else if (kind === 'decoration' && typeof buyDecoration === 'function') {
       await buyDecoration(itemId, price);
+    } else if (kind === 'bundle' && typeof buyBundle === 'function') {
+      await buyBundle(itemId, price);
     } else {
       toast('Purchase failed — unknown item type.', 'error');
       return;
     }
-    document.getElementById('sim-checkout')?.remove();
     document.getElementById('shop-item-modal')?.remove();
   } catch (e) {
     console.warn('[Fortshop] purchase failed:', e);
@@ -41225,8 +41417,109 @@ async function _fsCompletePurchase(itemId, kind, price) {
   }
 }
 
+// ── Fortshop bundle detail modal ──
+// Real bundle-detail now — single-card flow like item detail, preview
+// renders each bundled item, price + savings + inline Confirm Purchase.
+const _FORTSHOP_BUNDLES = {
+  midnight_bundle: {
+    id: 'midnight_bundle',
+    name: 'Midnight Bundle',
+    kicker: 'Command the night',
+    desc: 'Deep blue fortress aesthetics paired with the signature Blue Glow. Everything you need to run Fortized on Midnight mode.',
+    items: [
+      { id: 'midnight_citadel', kind: 'appearance' },
+      { id: 'blue_glow', kind: 'decoration' },
+    ],
+    price: 210,
+    origTotal: 260,
+    theme: 'midnight',
+  },
+  onyx_signature: {
+    id: 'onyx_signature',
+    name: 'Onyx Signature',
+    kicker: 'Pure darkness',
+    desc: 'The darkest appearance Fortized offers, paired with the signature Onyx Badge evolution line.',
+    items: [
+      { id: 'onyx_pure', kind: 'appearance' },
+    ],
+    price: 150,
+    origTotal: 150,
+    theme: 'onyx',
+  },
+};
+
 function openShopBundleModal(id) {
-  toast('Bundle detail view lands in a later round.', 'info');
+  const bundle = _FORTSHOP_BUNDLES[id];
+  if (!bundle) { toast('Bundle not found', 'error'); return; }
+  const ownedApps = CU?.unlockedAppearances || [];
+  const ownedDecos = CU?.ownedDecorations || [];
+  const allOwned = bundle.items.every(i => i.kind === 'appearance' ? ownedApps.includes(i.id) : ownedDecos.includes(i.id));
+  const savings = Math.max(0, bundle.origTotal - bundle.price);
+  const savingsPct = bundle.origTotal > 0 ? Math.round((savings / bundle.origTotal) * 100) : 0;
+
+  document.getElementById('shop-item-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'shop-item-modal';
+  overlay.className = 'sim-overlay';
+  overlay.onclick = () => overlay.remove();
+
+  const itemsHTML = bundle.items.map(entry => {
+    const it = (typeof _getShopItemById === 'function') ? _getShopItemById(entry.id) : null;
+    if (!it) return '';
+    const owned = entry.kind === 'appearance' ? ownedApps.includes(entry.id) : ownedDecos.includes(entry.id);
+    const cover = entry.kind === 'decoration' && it.src
+      ? `<img src="${escapeHTML(it.src)}" alt="">`
+      : _renderAppearancePreview(it);
+    return `<div class="sim-bundle-item${owned ? ' sim-bundle-item--owned' : ''}">
+      <div class="sim-bundle-item-preview">${cover}</div>
+      <div class="sim-bundle-item-meta">
+        <div class="sim-bundle-item-type">${entry.kind === 'appearance' ? 'Appearance' : 'Avatar Decoration'}</div>
+        <div class="sim-bundle-item-name">${escapeHTML(it.name)}</div>
+        <div class="sim-bundle-item-price"><img src="/Onyx.png" alt="">${it.price}</div>
+        ${owned ? '<div class="sim-bundle-item-owned">✓ Already on your profile</div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const safeId = escapeHTML(bundle.id).replace(/'/g, "\\'");
+  overlay.innerHTML = `
+    <div class="sim-card sim-card--bundle sim-hero--${escapeHTML(bundle.theme || 'onyx')}" onclick="event.stopPropagation()">
+      <button class="sim-close" onclick="document.getElementById('shop-item-modal').remove()" aria-label="Close">×</button>
+      <div class="sim-hero sim-hero--${escapeHTML(bundle.theme || 'onyx')}">
+        <div class="sim-hero-badge">Bundle · save ${savingsPct}%</div>
+        <div class="sim-hero-meta" style="max-width:none;">
+          <div class="sim-hero-type">${escapeHTML(bundle.kicker)}</div>
+          <div class="sim-hero-name">${escapeHTML(bundle.name)}</div>
+          <div class="sim-hero-desc">${escapeHTML(bundle.desc)}</div>
+        </div>
+      </div>
+      <div class="sim-body">
+        <div class="sim-bundle-list">${itemsHTML}</div>
+        <div class="sim-buy-panel">
+          <div class="sim-buy-price">
+            <div class="sim-buy-price-lbl">Bundle price</div>
+            <div class="sim-buy-price-num"><img src="/Onyx.png" alt="">${bundle.price.toLocaleString()}</div>
+            ${savings > 0 ? `<div class="sim-buy-savings">Save <img src="/Onyx.png" alt="">${savings.toLocaleString()} vs. buying alone</div>` : ''}
+          </div>
+          <div class="sim-buy-actions">
+            ${allOwned
+              ? '<button class="sim-buy-btn sim-buy-btn--owned" disabled>✓ Bundle already on your profile</button>'
+              : `<button class="sim-buy-btn" id="sim-buy-btn" onclick="_fsArmPurchase('${safeId}','bundle',${bundle.price})">Buy bundle · <img src="/Onyx.png" alt="" style="width:13px;height:13px;vertical-align:-2px;"> ${bundle.price.toLocaleString()}</button>`}
+          </div>
+        </div>
+        ${!allOwned ? `<div id="sim-confirm-panel" class="sim-confirm-panel" style="display:none;">
+          <label class="sim-confirm-agree">
+            <input type="checkbox" id="sim-confirm-agree-box" onchange="document.getElementById('sim-confirm-buy').disabled=!this.checked">
+            <span>I agree to the immediate delivery of this bundle. Items are non-refundable.</span>
+          </label>
+          <div class="sim-confirm-actions">
+            <button class="sim-confirm-cancel" onclick="_fsDisarmPurchase()">Cancel</button>
+            <button class="sim-confirm-buy" id="sim-confirm-buy" disabled onclick="_fsCompletePurchase('${safeId}','bundle',${bundle.price})">Confirm purchase</button>
+          </div>
+        </div>` : ''}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
 }
 
 async function _loadShopMarketplace() {

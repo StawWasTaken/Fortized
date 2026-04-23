@@ -41394,8 +41394,8 @@ async function _fsLoadResellers(it) {
     const canAfford = myBal >= (l.price || 0);
     const serial = l.serial || ('#' + (i + 1));
     const ownerActions = isSelf ? `
-      <button class="sim-reseller-edit" onclick="_fsEditResellListing('${escapeHTML(l.id)}','${escapeHTML(it.id)}',${l.price || 0})" title="Edit price · 5 Ξ fee">Edit</button>
-      <button class="sim-reseller-buy sim-reseller-buy--self" onclick="_fsCancelResellListing('${escapeHTML(l.id)}','${escapeHTML(it.id)}')" title="Remove listing · 5 Ξ fee">Remove · 5 Ξ</button>` : '';
+      <button class="sim-reseller-edit" onclick="_fsEditResellListing('${escapeHTML(l.id)}','${escapeHTML(it.id)}',${l.price || 0})" title="Edit price (5 Onyx fee)">Edit</button>
+      <button class="sim-reseller-buy sim-reseller-buy--self" onclick="_fsCancelResellListing('${escapeHTML(l.id)}','${escapeHTML(it.id)}')" title="Remove listing (5 Onyx fee)">Remove</button>` : '';
     return `<div class="sim-reseller-row${isSelf ? ' sim-reseller-row--self' : ''}">
       <div class="sim-reseller-pfp"><img src="${escapeHTML(pfpUrl)}" onerror="this.src='${_defaultPfpUrl(l.seller || '')}'"></div>
       <div class="sim-reseller-meta">
@@ -41469,7 +41469,7 @@ function _fsEditResellListing(listingId, itemId, currentPrice) {
   form.id = 'sim-list-resale-form';
   form.className = 'sim-list-resale-form';
   form.innerHTML = `
-    <div class="sim-list-resale-head">Edit your asking price · ${_FORTSHOP_RESELL_FEE} Ξ fee</div>
+    <div class="sim-list-resale-head">Edit your asking price<span class="sim-list-resale-fee">5 Onyx fee</span></div>
     <div class="sim-list-resale-row">
       <label for="sim-list-resale-price">New price</label>
       <div class="sim-list-resale-input-wrap">
@@ -41479,7 +41479,7 @@ function _fsEditResellListing(listingId, itemId, currentPrice) {
     </div>
     <div class="sim-list-resale-actions">
       <button class="sim-list-resale-cancel" onclick="document.getElementById('sim-list-resale-form').remove()">Cancel</button>
-      <button class="sim-list-resale-submit" onclick="_fsConfirmEditResale('${safeListing}','${safeItem}')">Save · ${_FORTSHOP_RESELL_FEE} Ξ</button>
+      <button class="sim-list-resale-submit" onclick="_fsConfirmEditResale('${safeListing}','${safeItem}')">Save</button>
     </div>`;
   slot.appendChild(form);
   form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -41588,26 +41588,29 @@ function _fsRenderItemDetail(it, kind) {
       </div>
 
       <div class="sim-body">
-        ${isRareOrEvent ? `<div class="sim-resellers" id="sim-resellers-slot">
-          <div class="sim-resellers-head">
-            <span>Resellers</span>
-            <span class="sim-resellers-count" id="sim-resellers-count">loading…</span>
+        ${isRareOrEvent ? `<div class="sim-market">
+          <div class="sim-resellers" id="sim-resellers-slot">
+            <div class="sim-resellers-head">
+              <span>Resellers</span>
+              <span class="sim-resellers-count" id="sim-resellers-count">loading…</span>
+            </div>
+            <div class="sim-resellers-list" id="sim-resellers-list">
+              <div class="sim-resellers-loading">Checking live listings…</div>
+            </div>
+            ${isOwned ? `<button class="sim-list-resell-btn" onclick="_fsPromptListResale('${safeId}')">${_svgIcon('tag', 12)} List for resale</button>` : ''}
+            <div class="sim-resellers-fee">Editing or removing a listing costs 5 Onyx.</div>
           </div>
-          <div class="sim-resellers-list" id="sim-resellers-list">
-            <div class="sim-resellers-loading">Checking live listings…</div>
-          </div>
-          ${isOwned ? `<button class="sim-list-resell-btn" onclick="_fsPromptListResale('${safeId}')">${_svgIcon('tag', 12)} List for resale</button>` : ''}
-        </div>` : ''}
 
-        ${isRareOrEvent ? `<div class="sim-price-history">
-          <div class="sim-ph-head">Price History</div>
-          <div class="sim-ph-chart"><svg id="sim-ph-svg" viewBox="0 0 640 220" preserveAspectRatio="none"></svg></div>
-          <div class="sim-ph-stats" id="sim-ph-stats">
-            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">- -</div></div>
-            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div></div>
-            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--muted);">- -</div></div>
+          <div class="sim-price-history">
+            <div class="sim-ph-head">Price History</div>
+            <div class="sim-ph-chart"><svg id="sim-ph-svg" viewBox="0 0 640 220" preserveAspectRatio="none"></svg></div>
+            <div class="sim-ph-stats" id="sim-ph-stats">
+              <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">- -</div></div>
+              <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div></div>
+              <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--muted);">- -</div></div>
+            </div>
+            <div class="sim-ph-note">Price history appears once resellers list this item on the Marketplace.</div>
           </div>
-          <div class="sim-ph-note">Price history appears once resellers list this item on the Marketplace.</div>
         </div>` : ''}
 
         <div class="sim-buy-panel">

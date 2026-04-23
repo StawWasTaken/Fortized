@@ -41360,12 +41360,10 @@ async function _fsLoadResellers(it) {
   if (!slot) return;
   let listings = [];
   try {
-    // Don't use .eq('sold', false) — rows where sold is NULL (not set) would
-    // be excluded. Filter in JS instead so fresh listings always appear.
-    const raw = await FortizedSocial.sb?.from('marketplace_listings')
-      ?.select('*').eq('item_id', it.id);
-    if (raw?.error) console.warn('[Fortshop] reseller fetch error:', raw.error.message);
-    listings = (raw?.data || []).filter(l => !l.sold);
+    // Merged reader — pulls from both Supabase AND the localStorage fallback
+    // so listings are visible even if the marketplace_listings table isn't
+    // provisioned yet.
+    listings = await _fsReadAllListings(it.id);
   } catch (e) { console.warn('[Fortshop] reseller fetch threw:', e); listings = []; }
 
   if (!listings.length) {
@@ -41431,8 +41429,22 @@ async function _fsCancelResellListing(listingId, itemId) {
     return;
   }
   try {
-    const { error } = (await FortizedSocial.sb?.from('marketplace_listings')?.delete()?.eq('id', listingId)) || {};
-    if (error) throw error;
+    // Try Supabase; fall through to localStorage for rows that only live
+    // client-side (i.e., the table didn't exist when the listing was made).
+    let removed = false;
+    try {
+      const res = await FortizedSocial.sb?.from('marketplace_listings')?.delete()?.eq('id', listingId);
+      if (res && !res.error) removed = true;
+    } catch(_) {}
+    try {
+      const local = JSON.parse(localStorage.getItem('ftz_local_marketplace_listings') || '[]');
+      const next = local.filter(l => l.id !== listingId);
+      if (next.length !== local.length) {
+        localStorage.setItem('ftz_local_marketplace_listings', JSON.stringify(next));
+        removed = true;
+      }
+    } catch(_) {}
+    if (!removed) throw new Error('listing not found');
     CU.onyx = (CU.onyx || 0) - _FORTSHOP_RESELL_FEE;
     await saveUser(true);
     updateOnyxDisplay();
@@ -41482,8 +41494,17 @@ async function _fsConfirmEditResale(listingId, itemId) {
     return;
   }
   try {
-    const { error } = (await FortizedSocial.sb?.from('marketplace_listings')?.update({ price: p })?.eq('id', listingId)) || {};
-    if (error) throw error;
+    let updated = false;
+    try {
+      const res = await FortizedSocial.sb?.from('marketplace_listings')?.update({ price: p })?.eq('id', listingId);
+      if (res && !res.error) updated = true;
+    } catch(_) {}
+    try {
+      const local = JSON.parse(localStorage.getItem('ftz_local_marketplace_listings') || '[]');
+      const idx = local.findIndex(l => l.id === listingId);
+      if (idx >= 0) { local[idx].price = p; localStorage.setItem('ftz_local_marketplace_listings', JSON.stringify(local)); updated = true; }
+    } catch(_) {}
+    if (!updated) throw new Error('listing not found');
     CU.onyx = (CU.onyx || 0) - _FORTSHOP_RESELL_FEE;
     await saveUser(true);
     updateOnyxDisplay();
@@ -42019,10 +42040,48 @@ async function listForResale(itemId, askPrice) {
     created_at: Date.now(),
     sold: false,
   };
+  let wroteToSupabase = false;
   try {
-    await FortizedSocial.sb?.from('marketplace_listings')?.insert(listing);
-    toast('Listed for resale', 'success');
-  } catch(e) { toast('Listing failed', 'error'); }
+    const res = await FortizedSocial.sb?.from('marketplace_listings')?.insert(listing);
+    if (res && !res.error) wroteToSupabase = true;
+    else if (res?.error) console.warn('[Fortshop] Supabase insert failed:', res.error.message);
+  } catch(e) { console.warn('[Fortshop] Supabase insert threw:', e); }
+
+  // Fallback: persist locally so the listing is visible in the UI even if
+  // the marketplace_listings table isn't provisioned on Supabase yet. Merged
+  // with the remote set on read by _fsReadAllListings.
+  if (!wroteToSupabase) {
+    try {
+      const local = JSON.parse(localStorage.getItem('ftz_local_marketplace_listings') || '[]');
+      local.push(listing);
+      localStorage.setItem('ftz_local_marketplace_listings', JSON.stringify(local.slice(-500)));
+    } catch(_) {}
+  }
+  toast(wroteToSupabase ? 'Listed for resale.' : 'Listed for resale (pending sync).', 'success');
+}
+
+// Reads listings from Supabase + the localStorage fallback and merges them.
+// Dedupes by id (Supabase row wins when both exist). Filters out sold rows.
+async function _fsReadAllListings(itemId) {
+  let remote = [];
+  try {
+    const raw = await FortizedSocial.sb?.from('marketplace_listings')
+      ?.select('*').eq('item_id', itemId);
+    if (raw?.error) console.warn('[Fortshop] marketplace_listings read error:', raw.error.message);
+    remote = raw?.data || [];
+  } catch(e) { console.warn('[Fortshop] marketplace_listings read threw:', e); }
+
+  let local = [];
+  try {
+    const all = JSON.parse(localStorage.getItem('ftz_local_marketplace_listings') || '[]');
+    local = all.filter(l => l.item_id === itemId);
+  } catch(_) {}
+
+  const seen = new Set();
+  const merged = [];
+  remote.forEach(l => { seen.add(l.id); merged.push(l); });
+  local.forEach(l => { if (!seen.has(l.id)) merged.push(l); });
+  return merged.filter(l => !l.sold);
 }
 async function buyListing(listingId) {
   const listings = await getMarketplaceListings();

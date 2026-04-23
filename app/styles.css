@@ -1330,13 +1330,14 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .fortshop-hero-cta { display:inline-flex;align-items:center;gap:6px;background:#fff;color:#0a0a12;border:none;border-radius:999px;padding:11px 22px;font-family:var(--font-display);font-size:12.5px;font-weight:800;letter-spacing:.04em;cursor:pointer;transition:all .15s;text-transform:uppercase; }
 .fortshop-hero-cta:hover { transform:translateY(-1px);box-shadow:0 10px 22px rgba(255,255,255,.14); }
 
-/* Item of the Day */
-.iotd-card { display:grid;grid-template-columns:240px 1fr;gap:22px;padding:16px;border-radius:12px;background:linear-gradient(135deg,rgba(30,80,180,.15),rgba(96,165,250,.05));border:1px solid rgba(96,165,250,.2); }
-.iotd-preview { position:relative;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06); }
+/* Item of the Day — aligned with gamecard/forum aesthetic (no more blue gradient) */
+.iotd-card { display:grid;grid-template-columns:240px 1fr;gap:22px;padding:16px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--border);position:relative;overflow:hidden; }
+.iotd-card::before { content:"";position:absolute;top:0;left:0;width:3px;bottom:0;background:var(--accent);opacity:.85; }
+.iotd-preview { position:relative;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.06); }
 .iotd-preview img { display:block; }
 .iotd-preview-theme { width:100%;height:100%; }
 .iotd-body { display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0; }
-.iotd-type { font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--blue);text-transform:uppercase; }
+.iotd-type { font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--accent);text-transform:uppercase; }
 .iotd-name { font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-.01em;margin-bottom:6px; }
 .iotd-price-row { display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px; }
 .iotd-price-orig { display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--muted);text-decoration:line-through; }
@@ -1346,14 +1347,14 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .iotd-discount { font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:.04em;padding:3px 8px;border-radius:999px;background:rgba(62,207,110,.16);color:var(--green);border:1px solid rgba(62,207,110,.35); }
 .iotd-countdown { display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#f87171;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:12px; }
 .iotd-countdown svg { opacity:.9; }
-.iotd-btn { background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px 22px;font-family:var(--font-display);font-size:13px;font-weight:800;letter-spacing:.04em;cursor:pointer;transition:all .15s;align-self:flex-start; }
-.iotd-btn:hover { transform:translateY(-1px);box-shadow:0 10px 22px rgba(96,165,250,.28); }
+.iotd-btn { background:var(--accent);color:var(--rail);border:none;border-radius:10px;padding:12px 22px;font-family:var(--font-display);font-size:13px;font-weight:800;letter-spacing:.04em;cursor:pointer;transition:all .15s;align-self:flex-start; }
+.iotd-btn:hover { transform:translateY(-1px);box-shadow:0 10px 22px rgba(255,249,62,.28);filter:brightness(1.06); }
 .iotd-btn--owned { background:rgba(62,207,110,.12);color:var(--green);border:1px solid rgba(62,207,110,.3);cursor:not-allowed; }
 
 /* Unified item card (Featured + Marketplace) */
 .fortshop-card-row { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px; }
-.fortshop-card { position:relative;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;min-width:0; }
-.fortshop-card:hover { transform:translateY(-3px);border-color:rgba(255,249,62,.24);box-shadow:0 14px 30px rgba(0,0,0,.32),0 0 0 1px rgba(255,249,62,.08); }
+.fortshop-card { position:relative;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;min-width:0;box-shadow:0 2px 10px rgba(0,0,0,.2); }
+.fortshop-card:hover { transform:translateY(-4px);border-color:rgba(255,249,62,.32);box-shadow:0 18px 36px rgba(0,0,0,.4),0 0 0 1px rgba(255,249,62,.12),0 -2px 14px rgba(255,249,62,.08); }
 .fortshop-card-rarity { position:absolute;top:0;left:0;width:36px;height:36px;background:linear-gradient(135deg,var(--accent) 50%,transparent 50%);z-index:2;pointer-events:none; }
 /* Rarity corner-stripe — swapped off the purple-blue tint toward the
    Fortized yellow family so nothing reads "too corporate purple" */
@@ -1617,6 +1618,35 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .trade-btn-send:hover { filter:brightness(1.08);transform:translateY(-1px); }
 
 @media(max-width:860px) { .trade-columns { grid-template-columns:1fr;gap:12px; } .trade-swap-pip { transform:rotate(90deg);justify-self:center; } }
+
+/* ── Fortshop reseller panel (inside item-detail modal) ── */
+.sim-resellers { margin-bottom:18px;padding:16px 18px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:14px;position:relative;overflow:hidden; }
+.sim-resellers::before { content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.2) 15%,var(--accent) 50%,rgba(255,249,62,.2) 85%,transparent 100%);box-shadow:0 0 10px rgba(255,249,62,.25); }
+.sim-resellers-head { display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:12px;font-family:var(--font-display); }
+.sim-resellers-head > span:first-child { font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text); }
+.sim-resellers-count { font-size:11px;font-weight:600;letter-spacing:.02em;text-transform:none;color:var(--muted-light);font-family:var(--font-ui);font-variant-numeric:tabular-nums; }
+.sim-resellers-list { display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;padding-right:4px; }
+.sim-resellers-loading,
+.sim-resellers-empty { padding:20px;text-align:center;color:var(--muted);font-size:12px;font-style:italic; }
+.sim-resellers-empty-title { color:var(--muted-light);font-weight:700;font-style:normal;font-size:13px;margin-bottom:3px; }
+.sim-resellers-empty-sub { font-size:11.5px; }
+.sim-reseller-row { display:grid;grid-template-columns:44px 1fr auto auto;gap:12px;align-items:center;padding:8px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;transition:background .12s,border-color .12s; }
+.sim-reseller-row:hover { background:rgba(255,255,255,.04);border-color:rgba(255,249,62,.16); }
+.sim-reseller-row--self { border-color:rgba(255,249,62,.3);background:rgba(255,249,62,.04); }
+.sim-reseller-pfp { width:44px;height:44px;border-radius:10px;overflow:hidden;background:var(--panel2);border:1px solid var(--border); }
+.sim-reseller-pfp img { width:100%;height:100%;object-fit:cover; }
+.sim-reseller-meta { min-width:0; }
+.sim-reseller-name { font-family:var(--font-display);font-weight:800;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.sim-reseller-serial { font-size:11px;color:var(--muted);margin-top:2px; }
+.sim-reseller-price { display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--green);font-variant-numeric:tabular-nums;padding:0 4px; }
+.sim-reseller-price img { width:14px;height:14px; }
+.sim-reseller-buy { background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-family:var(--font-display);font-size:11.5px;font-weight:800;letter-spacing:.04em;cursor:pointer;text-transform:uppercase;transition:all .15s; }
+.sim-reseller-buy:hover:not(:disabled) { filter:brightness(1.1);transform:translateY(-1px); }
+.sim-reseller-buy--poor { background:rgba(255,255,255,.04);color:var(--muted);cursor:not-allowed; }
+.sim-reseller-buy--self { background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.3); }
+.sim-reseller-buy--self:hover { background:rgba(248,113,113,.22); }
+.sim-list-resell-btn { display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:8px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.25);color:var(--accent);border-radius:8px;font-family:var(--font-display);font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s; }
+.sim-list-resell-btn:hover { background:var(--accent);color:var(--rail); }
 
 /* Notification inbox — trade Accept/Decline + countdown */
 .np-actions .np-decline { background:transparent;border:1px solid var(--border);color:var(--muted-light);border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;margin-left:6px;transition:all .15s; }

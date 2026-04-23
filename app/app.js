@@ -3306,9 +3306,11 @@ function _renderAdHTML(ad, size) {
           <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(isBastionInvite?(ad.bastionName||''):'')}')">Report ad</span>
         </div>`;
   if (isBanner) {
+    // The 728:90 aspect lock lives on the wrapper (.home-banner-ad .ad-banner-inner > a)
+    // so placeholder + loaded states share the same footprint. The image just fills it.
     return `<div class="ad-banner-inner">
-      <a style="display:block;cursor:pointer;width:100%;border-radius:10px;overflow:hidden;" onclick="_adClickAction(window['${adKey}'])">
-        <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:100%;aspect-ratio:728/90;object-fit:cover;display:block;border-radius:10px;" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
+      <a style="cursor:pointer;" onclick="_adClickAction(window['${adKey}'])">
+        <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
       </a>
       ${meta.replace('<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 2px 0;">','<div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;">')}
     </div>`;

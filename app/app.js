@@ -41061,7 +41061,7 @@ function _renderItemOfTheDay(appearances, ownedAppearances) {
   return `<div class="fortshop-section fortshop-section--iotd">
     <div class="fortshop-section-head">
       <h3>Item of the Day</h3>
-      <span class="fortshop-section-sub">A new deal every day — rotates at midnight.</span>
+      <span class="fortshop-section-sub">A new deal every day. Rotates at midnight.</span>
     </div>
     <div class="iotd-card">
       <div class="iotd-preview">${preview}</div>
@@ -41217,7 +41217,7 @@ function _renderFortshopBundlesSection(appearances, ownedAppearances) {
   return `<div class="fortshop-section fortshop-section--bundles">
     <div class="fortshop-section-head">
       <h3>Bundles</h3>
-      <span class="fortshop-section-sub">Curated collections — save vs buying each piece alone.</span>
+      <span class="fortshop-section-sub">Curated collections; save vs buying each piece alone.</span>
     </div>
     <div class="fortshop-bundles-row">
       <div class="fortshop-bundle-hero fortshop-bundle-hero--midnight" onclick="openShopBundleModal('midnight_bundle')">
@@ -41246,7 +41246,7 @@ function _renderFortshopMarketplaceSection() {
   return `<div class="fortshop-section fortshop-section--marketplace">
     <div class="fortshop-section-head">
       <h3>Marketplace</h3>
-      <span class="fortshop-section-sub">Community listings — rare and seasonal items sold peer-to-peer.</span>
+      <span class="fortshop-section-sub">Community listings: rare and seasonal items sold peer-to-peer.</span>
     </div>
     <div class="fortshop-marketplace-grid" id="shop-marketplace-grid">
       <div class="fortshop-marketplace-loading">Loading listings…</div>

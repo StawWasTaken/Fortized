@@ -32931,6 +32931,7 @@ function renderAtelierTab(tab) {
       ${_renderFortshopSponsoredSlot()}
       ${_renderFortshopBundlesSection(SHOP_APPEARANCES, ownedAppearances)}
       ${_renderFortshopMarketplaceSection()}
+      ${_renderFortshopCatalogSection(SHOP_APPEARANCES, ownedAppearances)}
     </div>`;
 
     // Kick off the live countdown, the banner ad rotation, and the async
@@ -41311,6 +41312,27 @@ function _renderFortshopMarketplaceSection() {
   </div>`;
 }
 
+// Polytoria-style flat catalog: every appearance + every decoration in one
+// tight grid at the very bottom of the shop. Cards use the unified shape but
+// rendered compact so users can browse the whole inventory in one scroll.
+function _renderFortshopCatalogSection(appearances, ownedAppearances) {
+  const decos = (typeof PROFILE_DECORATIONS !== 'undefined' ? PROFILE_DECORATIONS : []);
+  const items = [
+    ...appearances.map(a => ({ kind:'appearance', item:a })),
+    ...decos.map(d => ({ kind:'decoration', item:d })),
+  ];
+  if (!items.length) return '';
+  return `<div class="fortshop-section fortshop-section--catalog">
+    <div class="fortshop-section-head">
+      <h3>Catalog</h3>
+      <span class="fortshop-section-sub">Every appearance and decoration available right now. ${items.length} items.</span>
+    </div>
+    <div class="fortshop-catalog-grid">
+      ${items.map(({ kind, item }) => _renderFortshopUnifiedCard(kind, item, ownedAppearances)).join('')}
+    </div>
+  </div>`;
+}
+
 // ── Fortshop item-detail modal ──
 // Polytoria-style big detail view with price-history embed. Item data is
 // looked up via _getShopItemById (the existing helper that knows the static
@@ -41415,18 +41437,39 @@ async function _fsPromptListResale(itemId) {
   if (!(CU?.unlockedAppearances || []).includes(itemId) && !(CU?.ownedDecorations || []).includes(itemId)) {
     toast("You don't own this item.", 'error'); return;
   }
-  const proceed = async (val) => {
-    const p = parseInt(val || '0', 10);
-    if (!p || p < 1) { toast('Enter a valid price.', 'error'); return; }
-    await listForResale(itemId, p);
-    await _fsLoadResellers(item);
-    await _fsDrawPriceHistory(item);
-  };
-  if (typeof showCustomInput === 'function') {
-    showCustomInput('List for resale', `Asking price in Onyx for "${item.name}"?`, proceed, String(item.price || 100));
-  } else {
-    await proceed(prompt(`Asking price in Onyx for "${item.name}"?`, String(item.price || 100)));
-  }
+  // Inline panel inside the resellers section — avoids a stacked modal that
+  // would render behind .sim-overlay (z-index 9999).
+  const slot = document.getElementById('sim-resellers-slot');
+  if (!slot) return;
+  document.getElementById('sim-list-resale-form')?.remove();
+  const form = document.createElement('div');
+  form.id = 'sim-list-resale-form';
+  form.className = 'sim-list-resale-form';
+  form.innerHTML = `
+    <div class="sim-list-resale-head">List your copy for resale</div>
+    <div class="sim-list-resale-row">
+      <label for="sim-list-resale-price">Asking price</label>
+      <div class="sim-list-resale-input-wrap">
+        <img src="/Onyx.png" alt="">
+        <input id="sim-list-resale-price" type="number" min="1" max="999999" value="${item.price || 100}" autofocus>
+      </div>
+    </div>
+    <div class="sim-list-resale-actions">
+      <button class="sim-list-resale-cancel" onclick="document.getElementById('sim-list-resale-form').remove()">Cancel</button>
+      <button class="sim-list-resale-submit" onclick="_fsConfirmListResale('${escapeHTML(itemId).replace(/'/g, "\\'")}')">List it</button>
+    </div>`;
+  slot.appendChild(form);
+  form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function _fsConfirmListResale(itemId) {
+  const inp = document.getElementById('sim-list-resale-price');
+  const p = parseInt(inp?.value || '0', 10);
+  if (!p || p < 1) { toast('Enter a valid price.', 'error'); return; }
+  await listForResale(itemId, p);
+  document.getElementById('sim-list-resale-form')?.remove();
+  const item = _getShopItemById(itemId);
+  if (item) { await _fsLoadResellers(item); await _fsDrawPriceHistory(item); }
 }
 
 function _fsRenderItemDetail(it, kind) {

@@ -41360,10 +41360,13 @@ async function _fsLoadResellers(it) {
   if (!slot) return;
   let listings = [];
   try {
+    // Don't use .eq('sold', false) — rows where sold is NULL (not set) would
+    // be excluded. Filter in JS instead so fresh listings always appear.
     const raw = await FortizedSocial.sb?.from('marketplace_listings')
-      ?.select('*').eq('item_id', it.id).eq('sold', false);
-    listings = raw?.data || [];
-  } catch (_) { listings = []; }
+      ?.select('*').eq('item_id', it.id);
+    if (raw?.error) console.warn('[Fortshop] reseller fetch error:', raw.error.message);
+    listings = (raw?.data || []).filter(l => !l.sold);
+  } catch (e) { console.warn('[Fortshop] reseller fetch threw:', e); listings = []; }
 
   if (!listings.length) {
     if (countEl) countEl.textContent = '0 active';
@@ -41392,6 +41395,9 @@ async function _fsLoadResellers(it) {
     const isSelf = l.seller === CU?.username;
     const canAfford = myBal >= (l.price || 0);
     const serial = l.serial || ('#' + (i + 1));
+    const ownerActions = isSelf ? `
+      <button class="sim-reseller-edit" onclick="_fsEditResellListing('${escapeHTML(l.id)}','${escapeHTML(it.id)}',${l.price || 0})" title="Edit price · 5 Ξ fee">Edit</button>
+      <button class="sim-reseller-buy sim-reseller-buy--self" onclick="_fsCancelResellListing('${escapeHTML(l.id)}','${escapeHTML(it.id)}')" title="Remove listing · 5 Ξ fee">Remove · 5 Ξ</button>` : '';
     return `<div class="sim-reseller-row${isSelf ? ' sim-reseller-row--self' : ''}">
       <div class="sim-reseller-pfp"><img src="${escapeHTML(pfpUrl)}" onerror="this.src='${_defaultPfpUrl(l.seller || '')}'"></div>
       <div class="sim-reseller-meta">
@@ -41400,7 +41406,7 @@ async function _fsLoadResellers(it) {
       </div>
       <div class="sim-reseller-price"><img src="/Onyx.png" alt="">${(l.price || 0).toLocaleString()}</div>
       ${isSelf
-        ? `<button class="sim-reseller-buy sim-reseller-buy--self" onclick="_fsCancelResellListing('${escapeHTML(l.id)}','${escapeHTML(it.id)}')" title="Cancel your listing">Cancel</button>`
+        ? ownerActions
         : `<button class="sim-reseller-buy${canAfford ? '' : ' sim-reseller-buy--poor'}" ${canAfford ? '' : 'disabled'} onclick="_fsBuyReseller('${escapeHTML(l.id)}','${escapeHTML(it.id)}')">${canAfford ? 'Buy' : 'Need more Onyx'}</button>`}
     </div>`;
   }).join('');
@@ -41417,15 +41423,77 @@ async function _fsBuyReseller(listingId, itemId) {
   }
 }
 
+const _FORTSHOP_RESELL_FEE = 5;
+
 async function _fsCancelResellListing(listingId, itemId) {
+  if ((CU?.onyx || 0) < _FORTSHOP_RESELL_FEE) {
+    toast(`You need ${_FORTSHOP_RESELL_FEE} Onyx to remove a listing.`, 'error');
+    return;
+  }
   try {
-    await FortizedSocial.sb?.from('marketplace_listings')?.delete()?.eq('id', listingId);
-    toast('Listing cancelled.', 'success');
+    const { error } = (await FortizedSocial.sb?.from('marketplace_listings')?.delete()?.eq('id', listingId)) || {};
+    if (error) throw error;
+    CU.onyx = (CU.onyx || 0) - _FORTSHOP_RESELL_FEE;
+    await saveUser(true);
+    updateOnyxDisplay();
+    toast(`Listing removed. -${_FORTSHOP_RESELL_FEE} Onyx.`, 'success');
     const it = _getShopItemById(itemId);
     if (it) { await _fsLoadResellers(it); await _fsDrawPriceHistory(it); }
   } catch (e) {
     console.warn('[Fortshop] cancel listing failed:', e);
-    toast('Could not cancel listing.', 'error');
+    toast('Could not remove listing.', 'error');
+  }
+}
+
+// Edit price on a listing you already own — opens the inline form with the
+// current price prefilled. Save charges 5 Onyx and updates the listing.
+function _fsEditResellListing(listingId, itemId, currentPrice) {
+  const slot = document.getElementById('sim-resellers-slot');
+  if (!slot) return;
+  document.getElementById('sim-list-resale-form')?.remove();
+  const safeListing = escapeHTML(listingId).replace(/'/g, "\\'");
+  const safeItem = escapeHTML(itemId).replace(/'/g, "\\'");
+  const form = document.createElement('div');
+  form.id = 'sim-list-resale-form';
+  form.className = 'sim-list-resale-form';
+  form.innerHTML = `
+    <div class="sim-list-resale-head">Edit your asking price · ${_FORTSHOP_RESELL_FEE} Ξ fee</div>
+    <div class="sim-list-resale-row">
+      <label for="sim-list-resale-price">New price</label>
+      <div class="sim-list-resale-input-wrap">
+        <img src="/Onyx.png" alt="">
+        <input id="sim-list-resale-price" type="number" min="1" max="999999" value="${currentPrice}" autofocus>
+      </div>
+    </div>
+    <div class="sim-list-resale-actions">
+      <button class="sim-list-resale-cancel" onclick="document.getElementById('sim-list-resale-form').remove()">Cancel</button>
+      <button class="sim-list-resale-submit" onclick="_fsConfirmEditResale('${safeListing}','${safeItem}')">Save · ${_FORTSHOP_RESELL_FEE} Ξ</button>
+    </div>`;
+  slot.appendChild(form);
+  form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function _fsConfirmEditResale(listingId, itemId) {
+  const inp = document.getElementById('sim-list-resale-price');
+  const p = parseInt(inp?.value || '0', 10);
+  if (!p || p < 1) { toast('Enter a valid price.', 'error'); return; }
+  if ((CU?.onyx || 0) < _FORTSHOP_RESELL_FEE) {
+    toast(`You need ${_FORTSHOP_RESELL_FEE} Onyx to edit a listing.`, 'error');
+    return;
+  }
+  try {
+    const { error } = (await FortizedSocial.sb?.from('marketplace_listings')?.update({ price: p })?.eq('id', listingId)) || {};
+    if (error) throw error;
+    CU.onyx = (CU.onyx || 0) - _FORTSHOP_RESELL_FEE;
+    await saveUser(true);
+    updateOnyxDisplay();
+    document.getElementById('sim-list-resale-form')?.remove();
+    toast(`Price updated. -${_FORTSHOP_RESELL_FEE} Onyx.`, 'success');
+    const it = _getShopItemById(itemId);
+    if (it) { await _fsLoadResellers(it); await _fsDrawPriceHistory(it); }
+  } catch (e) {
+    console.warn('[Fortshop] edit listing failed:', e);
+    toast('Could not update listing.', 'error');
   }
 }
 
@@ -41489,7 +41557,7 @@ function _fsRenderItemDetail(it, kind) {
     <div class="sim-card" onclick="event.stopPropagation()">
       <button class="sim-close" onclick="document.getElementById('shop-item-modal').remove()" aria-label="Close">×</button>
       <div class="sim-hero sim-hero--${escapeHTML(rarity)}">
-        ${isRareOrEvent ? `<div class="sim-hero-badge">${escapeHTML(rarityLabel)}</div>` : ''}
+        ${isRareOrEvent ? `<div class="sim-hero-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>${escapeHTML(rarityLabel)}</div>` : ''}
         <div class="sim-hero-preview">${preview}</div>
         <div class="sim-hero-meta">
           <div class="sim-hero-type">${escapeHTML(typeLabel)}</div>

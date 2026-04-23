@@ -41281,6 +41281,107 @@ function openShopItemModal(itemId, kind) {
   overlay.innerHTML = _fsRenderItemDetail(it, kind || 'appearance');
   document.body.appendChild(overlay);
   try { _fsDrawPriceHistory(it).catch(() => {}); } catch (e) { _dbg('[Fortshop] price chart', e); }
+  try { _fsLoadResellers(it).catch(() => {}); } catch (e) { _dbg('[Fortshop] resellers', e); }
+}
+
+// Fetches live listings for the item + paints them into the modal's
+// resellers slot. Sorts by price ascending so the lowest reseller is at
+// the top — that's how buyers shop.
+async function _fsLoadResellers(it) {
+  const slot = document.getElementById('sim-resellers-list');
+  const countEl = document.getElementById('sim-resellers-count');
+  if (!slot) return;
+  let listings = [];
+  try {
+    const raw = await FortizedSocial.sb?.from('marketplace_listings')
+      ?.select('*').eq('item_id', it.id).eq('sold', false);
+    listings = raw?.data || [];
+  } catch (_) { listings = []; }
+
+  if (!listings.length) {
+    if (countEl) countEl.textContent = '0 active';
+    slot.innerHTML = `<div class="sim-resellers-empty">
+      <div class="sim-resellers-empty-title">No one's reselling this yet.</div>
+      <div class="sim-resellers-empty-sub">Rare items only show here after someone lists one.</div>
+    </div>`;
+    return;
+  }
+
+  listings.sort((a, b) => (a.price || 0) - (b.price || 0));
+  if (countEl) countEl.textContent = `${listings.length} active · from ${listings[0].price.toLocaleString()} Ξ`;
+
+  const sellerNames = [...new Set(listings.map(l => l.seller).filter(Boolean))];
+  const sellerData = {};
+  await Promise.all(sellerNames.map(async n => {
+    try { sellerData[n] = await FortizedSocial.getUserByName(n); }
+    catch (_) { sellerData[n] = null; }
+  }));
+
+  const myBal = CU?.onyx || 0;
+  slot.innerHTML = listings.map((l, i) => {
+    const seller = sellerData[l.seller] || {};
+    const displayName = seller.displayName || l.seller || '?';
+    const pfpUrl = seller.pfp || _defaultPfpUrl(l.seller || '');
+    const isSelf = l.seller === CU?.username;
+    const canAfford = myBal >= (l.price || 0);
+    const serial = l.serial || ('#' + (i + 1));
+    return `<div class="sim-reseller-row${isSelf ? ' sim-reseller-row--self' : ''}">
+      <div class="sim-reseller-pfp"><img src="${escapeHTML(pfpUrl)}" onerror="this.src='${_defaultPfpUrl(l.seller || '')}'"></div>
+      <div class="sim-reseller-meta">
+        <div class="sim-reseller-name">${escapeHTML(displayName)}</div>
+        <div class="sim-reseller-serial">Serial ${escapeHTML(String(serial))}</div>
+      </div>
+      <div class="sim-reseller-price"><img src="/Onyx.png" alt="">${(l.price || 0).toLocaleString()}</div>
+      ${isSelf
+        ? `<button class="sim-reseller-buy sim-reseller-buy--self" onclick="_fsCancelResellListing('${escapeHTML(l.id)}','${escapeHTML(it.id)}')" title="Cancel your listing">Cancel</button>`
+        : `<button class="sim-reseller-buy${canAfford ? '' : ' sim-reseller-buy--poor'}" ${canAfford ? '' : 'disabled'} onclick="_fsBuyReseller('${escapeHTML(l.id)}','${escapeHTML(it.id)}')">${canAfford ? 'Buy' : 'Need more Onyx'}</button>`}
+    </div>`;
+  }).join('');
+}
+
+async function _fsBuyReseller(listingId, itemId) {
+  try {
+    if (typeof buyListing === 'function') await buyListing(listingId);
+    const it = _getShopItemById(itemId);
+    if (it) { await _fsLoadResellers(it); await _fsDrawPriceHistory(it); }
+  } catch (e) {
+    console.warn('[Fortshop] reseller buy failed:', e);
+    toast('Purchase failed.', 'error');
+  }
+}
+
+async function _fsCancelResellListing(listingId, itemId) {
+  try {
+    await FortizedSocial.sb?.from('marketplace_listings')?.delete()?.eq('id', listingId);
+    toast('Listing cancelled.', 'success');
+    const it = _getShopItemById(itemId);
+    if (it) { await _fsLoadResellers(it); await _fsDrawPriceHistory(it); }
+  } catch (e) {
+    console.warn('[Fortshop] cancel listing failed:', e);
+    toast('Could not cancel listing.', 'error');
+  }
+}
+
+async function _fsPromptListResale(itemId) {
+  const item = _getShopItemById(itemId);
+  if (!item) { toast('Item not found', 'error'); return; }
+  const isRareOrEvent = !!(item.rare || item.seasonal || item.event || item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary');
+  if (!isRareOrEvent) { toast('Only rare or event items can be resold.', 'error'); return; }
+  if (!(CU?.unlockedAppearances || []).includes(itemId) && !(CU?.ownedDecorations || []).includes(itemId)) {
+    toast("You don't own this item.", 'error'); return;
+  }
+  const proceed = async (val) => {
+    const p = parseInt(val || '0', 10);
+    if (!p || p < 1) { toast('Enter a valid price.', 'error'); return; }
+    await listForResale(itemId, p);
+    await _fsLoadResellers(item);
+    await _fsDrawPriceHistory(item);
+  };
+  if (typeof showCustomInput === 'function') {
+    showCustomInput('List for resale', `Asking price in Onyx for "${item.name}"?`, proceed, String(item.price || 100));
+  } else {
+    await proceed(prompt(`Asking price in Onyx for "${item.name}"?`, String(item.price || 100)));
+  }
 }
 
 function _fsRenderItemDetail(it, kind) {
@@ -41310,13 +41411,24 @@ function _fsRenderItemDetail(it, kind) {
       </div>
 
       <div class="sim-body">
+        ${isRareOrEvent ? `<div class="sim-resellers" id="sim-resellers-slot">
+          <div class="sim-resellers-head">
+            <span>Resellers</span>
+            <span class="sim-resellers-count" id="sim-resellers-count">loading…</span>
+          </div>
+          <div class="sim-resellers-list" id="sim-resellers-list">
+            <div class="sim-resellers-loading">Checking live listings…</div>
+          </div>
+          ${isOwned ? `<button class="sim-list-resell-btn" onclick="_fsPromptListResale('${safeId}')">${_svgIcon('tag', 12)} List for resale</button>` : ''}
+        </div>` : ''}
+
         ${isRareOrEvent ? `<div class="sim-price-history">
           <div class="sim-ph-head">Price History</div>
           <div class="sim-ph-chart"><svg id="sim-ph-svg" viewBox="0 0 640 220" preserveAspectRatio="none"></svg></div>
           <div class="sim-ph-stats" id="sim-ph-stats">
             <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">- -</div></div>
             <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div></div>
-            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--muted);">—</div></div>
+            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--muted);">- -</div></div>
           </div>
           <div class="sim-ph-note">Price history appears once resellers list this item on the Marketplace.</div>
         </div>` : ''}

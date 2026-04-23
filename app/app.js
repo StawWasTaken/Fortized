@@ -17076,14 +17076,32 @@ async function buildNotifList() {
       const st = n.data?.status==='closed'?'<span style="color:var(--green);">Closed</span>':'<span style="color:#38bdf8;">Open</span>';
       text='<strong>Support Ticket</strong>: '+escapeHTML((n.data?.subject||'').slice(0,50))+' — '+st;
     }
+    else if(n.type==='trade_offer') {
+      const offer = n.data || {};
+      const expired = offer.expires_at && Date.now() > offer.expires_at;
+      const countdown = offer.expires_at
+        ? (expired ? '<span style="color:var(--red);">Expired</span>' : `<span class="np-trade-countdown" data-expires="${offer.expires_at}">${_formatTradeCountdown(offer.expires_at)}</span>`)
+        : '';
+      text = `<strong>${escapeHTML(offer.from_display || n.from || 'Someone')}</strong> sent you a trade offer${countdown ? ` · ${countdown}` : ''}`;
+    }
+    else if(n.type==='trade_accepted') text='<strong>'+escapeHTML(n.from||'')+'</strong> accepted your trade offer';
+    else if(n.type==='trade_declined') text=(n.data?.reason==='expired'?'Your trade offer expired':'<strong>'+escapeHTML(n.from||'')+'</strong> declined your trade offer');
     else text='New notification';
     const _alreadyFriends = n.type==='friend_request' && (CU?.friends||[]).includes(n.from);
     const _stillPending = n.type==='friend_request' && !_alreadyFriends && (CU?.friendRequestsReceived||[]).includes(n.from);
-    const actions = _stillPending
-      ? '<div class="np-actions"><button class="np-accept" onclick="event.stopPropagation();acceptFriend(\''+escapeHTML(n.from||'')+'\');buildNotifList()">Accept</button></div>'
-      : (n.type==='friend_request' && _alreadyFriends
-        ? '<div class="np-actions"><span style="font-size:11px;color:var(--green);font-weight:600;">Friends</span></div>'
-        : '');
+    let actions = '';
+    if (_stillPending) {
+      actions = '<div class="np-actions"><button class="np-accept" onclick="event.stopPropagation();acceptFriend(\''+escapeHTML(n.from||'')+'\');buildNotifList()">Accept</button></div>';
+    } else if (n.type==='friend_request' && _alreadyFriends) {
+      actions = '<div class="np-actions"><span style="font-size:11px;color:var(--green);font-weight:600;">Friends</span></div>';
+    } else if (n.type === 'trade_offer' && n.data) {
+      const offer = n.data;
+      const expired = offer.expires_at && Date.now() > offer.expires_at;
+      const payload = encodeURIComponent(JSON.stringify(offer));
+      actions = expired
+        ? '<div class="np-actions"><span style="font-size:11px;color:var(--red);font-weight:700;">Expired</span></div>'
+        : `<div class="np-actions"><button class="np-accept" onclick="event.stopPropagation();_handleTradeAccept('${payload}');buildNotifList()">Accept</button><button class="np-decline" onclick="event.stopPropagation();_handleTradeDecline('${payload}');buildNotifList()">Decline</button></div>`;
+    }
     // Use user's actual profile picture for personal notifications
     const _nu = _notifUsers[n.from];
     const useAvatar = n.from && n.type !== 'support_ticket' && _nu;
@@ -17374,7 +17392,14 @@ async function _viewUserProfile(username) {
           const priv = !!u.wishlistPrivate;
           if (!isOwn && priv) return '';
           if (!isOwn && !wl.length) return '';
-          const items = wl.map(id => ({ id, it: (typeof _getShopItemById==='function' ? _getShopItemById(id) : null) })).filter(x => x.it);
+          // Hide items the viewed user already owns — no point wishing for
+          // something you've unlocked. Checks both appearance and decoration
+          // catalogues against the user's owned lists.
+          const ownedA = Array.isArray(u.unlockedAppearances) ? u.unlockedAppearances : [];
+          const ownedD = Array.isArray(u.ownedDecorations) ? u.ownedDecorations : [];
+          const items = wl
+            .map(id => ({ id, it: (typeof _getShopItemById==='function' ? _getShopItemById(id) : null) }))
+            .filter(x => x.it && !ownedA.includes(x.id) && !ownedD.includes(x.id));
           return `<div id="up-tab-wishlist" style="display:none;">
             <div class="up-right-section" id="up-wishlist-section">
               <div class="up-right-section-title" style="display:flex;align-items:center;gap:8px;">
@@ -17386,7 +17411,7 @@ async function _viewUserProfile(username) {
               ${items.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:8px;margin-top:8px;">
                 ${items.map(({id, it}) => `<div class="up-wl-card" style="padding:8px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:4px;">
                   <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(it.name||id)}</div>
-                  <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:10px;height:10px;">${it.price||'—'}</div>
+                  <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:10px;height:10px;">${it.price || '-'}</div>
                   ${isOwn ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}','wishlist'),60);" style="background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:4px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
                   : `<button onclick="openGiftModal('${escapeHTML(id)}','${escapeHTML(u.username)}')" style="background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.2);border-radius:6px;padding:4px 8px;font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;justify-content:center;">${_svgIcon('gift',10)} Gift</button>`}
                 </div>`).join('')}
@@ -32893,11 +32918,7 @@ function renderAtelierTab(tab) {
   // ── SHOP ─────────────────────────────────────────────────
   else if (tab === 'shop') {
     const ownedAppearances = CU?.unlockedAppearances || [];
-
-    const SHOP_APPEARANCES = [
-      { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, rarity:'rare', gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(140,100,220,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
-      { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, rarity:'rare', gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(255,249,62,.18)', hoverBorder:'rgba(255,249,62,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
-    ];
+    const SHOP_APPEARANCES = SHOP_APPEARANCES_ALL;
 
     el.innerHTML = `<div class="atelier-content-inner fortshop-flat">
       ${_renderFortshopActionsRow()}
@@ -34986,6 +35007,20 @@ const PROFILE_DECORATIONS = [
   {id:'red_glow',name:'Red Glow',src:'/profile decorations/Red Glow.png',price:75,color:'#f87171'},
   {id:'yellow_glow',name:'Yellow Glow',src:'/profile decorations/Yellow Glow.png',price:75,color:'#fbbf24'},
 ];
+
+// Master appearance catalogue. Lives at module scope (not inside the shop
+// render) so _getShopItemById can resolve any appearance from anywhere —
+// wishlist rendering, trade modal, the gift flow, etc. Expanded with
+// additional themes so the Fortshop has real breadth to browse.
+const SHOP_APPEARANCES_ALL = [
+  { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, rarity:'rare', gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
+  { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, rarity:'rare', gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(96,165,250,.18)', hoverBorder:'rgba(96,165,250,.35)', labelColor:'rgba(96,165,250,.85)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
+  { id:'solar_warmth', name:'Solar Warmth', desc:'Warm amber dawn — soft light and burnished highlights.', price:120, gradient:'linear-gradient(135deg,#1a1208,#2a1a0a,#3a240e)', borderColor:'rgba(251,191,36,.22)', hoverBorder:'rgba(251,191,36,.45)', labelColor:'rgba(251,191,36,.9)', previewBg:'linear-gradient(170deg,#1a1208 0%,#2a1a0a 50%,#3a240e 100%)', sidebarBg:'#1a0f06' },
+  { id:'verdant_grove', name:'Verdant Grove', desc:'Calm forest greens — a quieter place to talk.', price:130, gradient:'linear-gradient(135deg,#0a1410,#0e1f16,#132b1e)', borderColor:'rgba(62,207,110,.22)', hoverBorder:'rgba(62,207,110,.45)', labelColor:'rgba(62,207,110,.9)', previewBg:'linear-gradient(170deg,#0a1410 0%,#0e1f16 50%,#132b1e 100%)', sidebarBg:'#091310' },
+  { id:'crimson_embers', name:'Crimson Embers', desc:'Low-lit reds that glow when you speak.', price:140, gradient:'linear-gradient(135deg,#140808,#1e0a0a,#2a0d0d)', borderColor:'rgba(248,113,113,.22)', hoverBorder:'rgba(248,113,113,.48)', labelColor:'rgba(248,113,113,.9)', previewBg:'linear-gradient(170deg,#140808 0%,#1e0a0a 50%,#2a0d0d 100%)', sidebarBg:'#110707' },
+  { id:'rose_dawn', name:'Rose Dawn', desc:'Soft pinks and warm neutrals — light on the eyes.', price:115, gradient:'linear-gradient(135deg,#12080d,#1f0d16,#2a121f)', borderColor:'rgba(244,114,182,.22)', hoverBorder:'rgba(244,114,182,.45)', labelColor:'rgba(244,114,182,.9)', previewBg:'linear-gradient(170deg,#12080d 0%,#1f0d16 50%,#2a121f 100%)', sidebarBg:'#0f060a' },
+  { id:'ashen_void', name:'Ashen Void', desc:'Monochrome greys. For the minimalists.', price:250, rarity:'legendary', gradient:'linear-gradient(135deg,#08080a,#121214,#1a1a1d)', borderColor:'rgba(255,249,62,.28)', hoverBorder:'rgba(255,249,62,.5)', labelColor:'rgba(255,249,62,.92)', previewBg:'linear-gradient(170deg,#08080a 0%,#121214 50%,#1a1a1d 100%)', sidebarBg:'#050506' },
+];
 function getDecorationSrc(decoId) {
   const d = PROFILE_DECORATIONS.find(d=>d.id===decoId);
   return d ? d.src : null;
@@ -35005,6 +35040,7 @@ async function buyDecoration(decoId, price) {
     CU.onyx = bal - price;
     CU.ownedDecorations = [...(CU.ownedDecorations||[]), decoId];
     CU.activeDecoration = decoId;
+    if (Array.isArray(CU.wishlist)) CU.wishlist = CU.wishlist.filter(id => id !== decoId);
     await saveUser(true); updateOnyxDisplay();
     distributeOnyxRevenue(price);
     toast(d.name+' unlocked and equipped!','success');
@@ -38628,16 +38664,17 @@ function saveCustomMood() {
 async function buyAppearance(themeId, cost) {
   const bal = CU?.onyx||0;
   if (bal < cost) { toast('Not enough Onyx! Need '+cost+' ⬡','error'); return; }
-  const names = {onyx_pure:'Onyx Pure', midnight_citadel:'Midnight Citadel'};
-  showCustomConfirm(`Buy ${names[themeId]||themeId} for ${cost} Onyx?`, async () => {
-    CU.onyx = bal - cost;
-    CU.unlockedAppearances = [...(CU.unlockedAppearances||[]), themeId];
-    await saveUser(true); updateOnyxDisplay();
-    distributeOnyxRevenue(cost);
-    applyAppearance(themeId);
-    toast(`${names[themeId]||themeId} unlocked!`, 'success');
-    renderAtelierTab('shop');
-  });
+  const _catalogued = (typeof _getShopItemById === 'function') ? _getShopItemById(themeId) : null;
+  const niceName = (_catalogued && _catalogued.name) || themeId;
+  CU.onyx = bal - cost;
+  CU.unlockedAppearances = [...(CU.unlockedAppearances||[]), themeId];
+  // Clean the item off the wishlist if it was on there
+  if (Array.isArray(CU.wishlist)) CU.wishlist = CU.wishlist.filter(id => id !== themeId);
+  await saveUser(true); updateOnyxDisplay();
+  distributeOnyxRevenue(cost);
+  applyAppearance(themeId);
+  toast(`${niceName} unlocked!`, 'success');
+  renderAtelierTab('shop');
 }
 
 
@@ -40542,7 +40579,7 @@ async function showWishlistModal(username) {
           if (!it) return '';
           return `<div class="wl-card">
             <div class="wl-name">${escapeHTML(it.name || id)}</div>
-            <div class="wl-price">${it.price || '—'} ⬡</div>
+            <div class="wl-price">${it.price || '-'} ⬡</div>
             ${!isOwn ? `<button class="wl-gift-btn" onclick="openGiftModal('${id}','${escapeHTML(target.username)}');">🎁 Gift</button>` : ''}
             ${isOwn ? `<button class="wl-rm-btn" onclick="toggleWishlist('${id}');">Remove</button>` : ''}
           </div>`;
@@ -40784,63 +40821,165 @@ function _tradeUpdateTotals() {
   if (countEl) countEl.textContent = `${_tradeSelectedItems.size} selected`;
 }
 async function sendTradeOffer() {
-  const partner = (document.getElementById('trade-partner')?.value||'').trim();
-  const myOnyx = parseInt(document.getElementById('trade-my-onyx')?.value||'0', 10) || 0;
-  const theirOnyx = parseInt(document.getElementById('trade-their-onyx')?.value||'0', 10) || 0;
-  const myItemsEl = document.getElementById('trade-my-items');
-  const myItems = myItemsEl ? Array.from(myItemsEl.selectedOptions).map(o=>o.value) : [];
-  if (!partner || partner === CU?.username) { toast('Invalid partner', 'error'); return; }
-  if ((CU?.onyx||0) < myOnyx) { toast('Not enough Onyx', 'error'); return; }
+  // Reads from the rebuilt trade modal: partner input, Onyx inputs, and the
+  // _tradeSelectedItems Set populated by click-to-toggle tiles.
+  const partner = (document.getElementById('trade-partner-input')?.value || '').trim();
+  const myOnyx = parseInt(document.getElementById('trade-my-onyx')?.value || '0', 10) || 0;
+  const theirOnyx = parseInt(document.getElementById('trade-their-onyx')?.value || '0', 10) || 0;
+  const myItems = Array.from((typeof _tradeSelectedItems !== 'undefined' && _tradeSelectedItems) ? _tradeSelectedItems : []);
+
+  if (!partner) { toast('Pick someone to trade with first.', 'error'); return; }
+  if (partner === CU?.username) { toast("You can't trade with yourself.", 'error'); return; }
+  if (myOnyx === 0 && theirOnyx === 0 && !myItems.length) {
+    toast('Put something on the table first.', 'error'); return;
+  }
+  if ((CU?.onyx || 0) < myOnyx) { toast('Not enough Onyx for this offer.', 'error'); return; }
   for (const id of myItems) {
     const it = _getShopItemById(id);
-    if (it?.rare) { toast('Cannot trade rare items', 'error'); return; }
+    if (it?.rare || it?.seasonal || it?.event) { toast('Rare and event items can\'t be traded.', 'error'); return; }
   }
+
+  // Validate the partner exists before sending — avoids silent "user not found".
+  let partnerUser = null;
+  try { partnerUser = await FortizedSocial.getUserByName(partner); } catch(_) {}
+  if (!partnerUser) {
+    toast(`We couldn't find @${partner}.`, 'error'); return;
+  }
+
+  const FIVE_H = 5 * 60 * 60 * 1000;
+  const now = Date.now();
   const offer = {
-    id: 'trade_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    id: 'trade_' + now + '_' + Math.random().toString(36).slice(2, 6),
     from: CU.username,
-    to: partner,
+    from_display: CU.displayName || CU.username,
+    from_pfp: CU.pfp || null,
+    to: partnerUser.username,
     myOnyx, myItems,
     theirOnyx, theirItems: [],
     status: 'pending',
-    created_at: Date.now(),
+    created_at: now,
+    expires_at: now + FIVE_H,
   };
+
   try {
-    await FortizedSocial.addNotification(partner, {
+    await FortizedSocial.addNotification(partnerUser.username, {
       type: 'trade_offer',
       from: CU.username,
-      text: `🤝 ${CU.displayName||CU.username} sent you a trade offer`,
+      text: `🤝 ${CU.displayName || CU.username} sent you a trade offer — expires in 5h`,
       data: offer,
-      at: Date.now(),
+      at: now,
       read: false,
     });
-    closeSimpleModal();
-    toast('Trade offer sent', 'success');
-  } catch(e) { toast('Trade failed', 'error'); }
+    document.getElementById('trade-modal-overlay')?.remove();
+    toast(`Trade offer sent to @${partnerUser.username}.`, 'success');
+  } catch(e) {
+    console.warn('[Trade] send failed:', e);
+    toast('Failed to send trade offer.', 'error');
+  }
 }
 async function acceptTradeOffer(offer) {
   try {
+    if (offer.expires_at && Date.now() > offer.expires_at) {
+      toast('This trade offer expired.', 'error');
+      return;
+    }
     const sender = await FortizedSocial.getUserByName(offer.from);
-    if (!sender) { toast('Sender missing', 'error'); return; }
-    if ((CU?.onyx||0) < (offer.theirOnyx||0)) { toast('Not enough Onyx', 'error'); return; }
-    // Settle: sender -> receiver: myOnyx (taxed), myItems transferred
-    //         receiver -> sender: theirOnyx (taxed), theirItems transferred
+    if (!sender) { toast('Offer sender is no longer available.', 'error'); return; }
+    if ((CU?.onyx || 0) < (offer.theirOnyx || 0)) { toast('Not enough Onyx to accept.', 'error'); return; }
+    if ((sender.onyx || 0) < (offer.myOnyx || 0)) { toast('Sender no longer has enough Onyx.', 'error'); return; }
+
+    // Onyx settlement goes through applyTax — "seller" is the net-receiver.
     if (offer.myOnyx > 0) await applyTax(offer.myOnyx, { seller: CU.username, reason: 'trade' });
     if (offer.theirOnyx > 0) await applyTax(offer.theirOnyx, { seller: offer.from, reason: 'trade' });
-    // Transfer items
-    const field = 'unlockedAppearances';
-    const senderItems = (sender[field]||[]).filter(i => !offer.myItems.includes(i));
-    await FortizedSocial.adminUpdateUserField(offer.from, field, senderItems);
-    const myItems = (CU[field]||[]).slice();
-    offer.myItems.forEach(id => { if (!myItems.includes(id)) myItems.push(id); });
-    CU[field] = myItems;
+
+    // Transfer items (appearances + decorations) from sender → me.
+    const myItemIds = Array.isArray(offer.myItems) ? offer.myItems : [];
+    const apps = new Set(sender.unlockedAppearances || []);
+    const decos = new Set(sender.ownedDecorations || []);
+    const myApps = new Set(CU.unlockedAppearances || []);
+    const myDecos = new Set(CU.ownedDecorations || []);
+    for (const id of myItemIds) {
+      if (apps.has(id)) { apps.delete(id); myApps.add(id); }
+      else if (decos.has(id)) { decos.delete(id); myDecos.add(id); }
+    }
+    await FortizedSocial.adminUpdateUserField(offer.from, 'unlockedAppearances', [...apps]);
+    await FortizedSocial.adminUpdateUserField(offer.from, 'ownedDecorations', [...decos]);
+    CU.unlockedAppearances = [...myApps];
+    CU.ownedDecorations = [...myDecos];
     await saveUser(true);
-    CU.onyx = (CU.onyx||0) - (offer.theirOnyx||0) + (offer.myOnyx||0);
-    await saveUser(true); updateOnyxDisplay();
-    toast('Trade accepted', 'success');
+    updateOnyxDisplay();
+
+    // Notify the sender so they see the trade was accepted.
+    try {
+      await FortizedSocial.addNotification(offer.from, {
+        type: 'trade_accepted',
+        from: CU.username,
+        text: `✅ ${CU.displayName || CU.username} accepted your trade.`,
+        data: { offerId: offer.id },
+        at: Date.now(),
+        read: false,
+      });
+    } catch(_) {}
+    toast('Trade accepted — items transferred.', 'success');
   } catch(e) {
     console.error('[Trade] accept failed', e);
-    toast('Trade failed', 'error');
+    toast('Trade failed — changes rolled back.', 'error');
   }
+}
+
+// Formatted "Xh Ym" countdown used in the notif inbox for pending trades.
+function _formatTradeCountdown(expiresAt) {
+  const ms = Math.max(0, expiresAt - Date.now());
+  if (ms <= 0) return 'Expired';
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  if (h > 0) return `Expires in ${h}h ${m}m`;
+  if (m > 0) return `Expires in ${m}m ${s}s`;
+  return `Expires in ${s}s`;
+}
+
+// Ticks every 15s to update "Expires in Xh Ym" labels across all visible
+// trade notifs. No-op when no inbox is open.
+if (!window._tradeCountdownTick) {
+  window._tradeCountdownTick = setInterval(() => {
+    document.querySelectorAll('.np-trade-countdown').forEach(el => {
+      const ex = parseInt(el.getAttribute('data-expires') || '0', 10) || 0;
+      if (!ex) return;
+      el.textContent = _formatTradeCountdown(ex);
+      if (Date.now() > ex) el.style.color = 'var(--red)';
+    });
+  }, 15000);
+}
+
+function _handleTradeAccept(payload) {
+  try {
+    const offer = JSON.parse(decodeURIComponent(payload));
+    acceptTradeOffer(offer);
+  } catch (e) { console.warn('[Trade] accept parse failed:', e); }
+}
+function _handleTradeDecline(payload) {
+  try {
+    const offer = JSON.parse(decodeURIComponent(payload));
+    declineTradeOffer(offer);
+  } catch (e) { console.warn('[Trade] decline parse failed:', e); }
+}
+
+async function declineTradeOffer(offer, opts) {
+  const auto = !!(opts && opts.auto);
+  try {
+    await FortizedSocial.addNotification(offer.from, {
+      type: 'trade_declined',
+      from: CU?.username || 'system',
+      text: auto
+        ? `⌛ Your trade offer to @${offer.to} expired.`
+        : `❌ ${CU.displayName || CU.username} declined your trade.`,
+      data: { offerId: offer.id, reason: auto ? 'expired' : 'declined' },
+      at: Date.now(),
+      read: false,
+    });
+  } catch(_) {}
+  toast(auto ? 'Offer expired.' : 'Offer declined.', 'info');
 }
 
 // ── Marketplace resale (rare/seasonal only, price-follower) ──
@@ -40917,7 +41056,7 @@ function _renderItemOfTheDay(appearances, ownedAppearances) {
     : (CU?.ownedDecorations || []).includes(it.id);
   const preview = pick.kind === 'decoration' && it.src
     ? `<img src="${escapeHTML(it.src)}" style="width:100%;height:100%;object-fit:contain;padding:14px;">`
-    : `<div class="iotd-preview-theme" style="background:${(it.previewBg || 'linear-gradient(135deg,#050812,#101a38)')};"></div>`;
+    : _renderAppearancePreview(it);
   const safeId = escapeHTML(it.id).replace(/'/g, "\\'");
   return `<div class="fortshop-section fortshop-section--iotd">
     <div class="fortshop-section-head">
@@ -41163,7 +41302,7 @@ function _fsRenderItemDetail(it, kind) {
           <div class="sim-ph-head">Price History</div>
           <div class="sim-ph-chart"><svg id="sim-ph-svg" viewBox="0 0 640 220" preserveAspectRatio="none"></svg></div>
           <div class="sim-ph-stats" id="sim-ph-stats">
-            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">—</div></div>
+            <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">- -</div></div>
             <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div></div>
             <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--muted);">—</div></div>
           </div>

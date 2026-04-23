@@ -35010,7 +35010,7 @@ const PROFILE_DECORATIONS = [
   {id:'pink_glow',name:'Pink Glow',src:'/profile decorations/Pink Glow.png',price:75,color:'#f472b6'},
   {id:'red_glow',name:'Red Glow',src:'/profile decorations/Red Glow.png',price:75,color:'#f87171'},
   {id:'yellow_glow',name:'Yellow Glow',src:'/profile decorations/Yellow Glow.png',price:75,color:'#fbbf24'},
-  {id:'sunset_halo',name:'Sunset Halo',src:'/profile decorations/Sunset Halo.png',price:120,color:'#fb923c'},
+  {id:'sunset_halo',name:'Sunset Halo',src:'/profile decorations/Sunset Halo.png',price:120,color:'#fb923c',rarity:'rare',rare:true},
 ];
 
 // Master appearance catalogue. Lives at module scope (not inside the shop
@@ -41200,7 +41200,7 @@ function _renderFortshopUnifiedCard(kind, item, ownedAppearances) {
     ${isRareOrEvent ? `<div class="fortshop-card-rarity" title="${escapeHTML(rarityLabel)}"></div>` : ''}
     <div class="fortshop-card-preview">${preview}</div>
     <div class="fortshop-card-body">
-      <div class="fortshop-card-type">${escapeHTML(typeLabel)}${rarityLabel ? ` · <span class="fsc-rarity-tag">${escapeHTML(rarityLabel)}</span>` : ''}</div>
+      <div class="fortshop-card-type">${escapeHTML(typeLabel)}${rarityLabel ? ` <span class="fsc-rarity-tag"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>${escapeHTML(rarityLabel)}</span>` : ''}</div>
       <div class="fortshop-card-name">${escapeHTML(item.name)}</div>
       ${isOwned
         ? '<button class="fortshop-card-btn fortshop-card-btn--owned" onclick="event.stopPropagation();">✓ Owned</button>'
@@ -41602,34 +41602,58 @@ async function _fsDrawPriceHistory(it) {
     return;
   }
 
-  // Bucket by day — last 30 days max.
+  // Bucket by day for volume bars.
   const dayMs = 86400000;
   const now = Date.now();
   const cutoff = now - 30 * dayMs;
   const relevant = listings.filter(l => new Date(l.created_at).getTime() >= cutoff);
-  const buckets = new Map(); // dayKey -> { prices:[], count:0 }
+
+  // Auto-market price model — series ALWAYS starts at the item's original
+  // price. Each day the "market price" is nudged toward the median of the
+  // listings active that day, weighted by how many sellers are in the pool:
+  //   * fewer than 5 sellers => barely moves (5% of delta per listing)
+  //   * 5+ sellers          => fully converges to the median
+  // So 2 sellers at 90 and 5 sellers at 10 on a 100-Ξ item => the series
+  // drops sharply toward 10 once the pool crosses 5.
+  const startDayKey = Math.floor(cutoff / dayMs);
+  const endDayKey = Math.floor(now / dayMs);
+  const sortedKeys = [];
+  for (let k = startDayKey; k <= endDayKey; k++) sortedKeys.push(k);
+  const bucketsByDay = new Map(sortedKeys.map(k => [k, []]));
+  const newListingsPerDay = new Map(sortedKeys.map(k => [k, 0]));
   relevant.forEach(l => {
     const t = new Date(l.created_at).getTime();
     const k = Math.floor(t / dayMs);
-    if (!buckets.has(k)) buckets.set(k, { prices: [], count: 0 });
-    const b = buckets.get(k);
-    b.prices.push(l.price || 0);
-    b.count++;
+    if (newListingsPerDay.has(k)) newListingsPerDay.set(k, newListingsPerDay.get(k) + 1);
   });
-  const sortedKeys = [...buckets.keys()].sort();
-  if (!sortedKeys.length) {
-    svg.innerHTML = `<text x="320" y="110" text-anchor="middle" font-family="var(--font-ui)" font-size="13" fill="rgba(255,255,255,.35)">No trade history yet.</text>`;
-    return;
-  }
-  const priceSeries = sortedKeys.map(k => {
-    const ps = buckets.get(k).prices;
-    return Math.round(ps.reduce((a,b)=>a+b,0) / ps.length);
+  const median = (arr) => {
+    const s = [...arr].sort((a, b) => a - b);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  };
+  const base = it.price;
+  const priceSeries = [];
+  const volSeries = [];
+  let marketPrice = base;
+  const THRESHOLD = 5;
+  sortedKeys.forEach(k => {
+    // Pool = every listing whose created_at is on or before this day and
+    // hasn't yet been sold (approximated by "still in the active set").
+    const cutoffT = (k + 1) * dayMs;
+    const pool = relevant.filter(l => new Date(l.created_at).getTime() <= cutoffT).map(l => l.price || 0);
+    if (pool.length > 0) {
+      const med = median(pool);
+      const weight = Math.min(1, pool.length / THRESHOLD);
+      const nudge = weight >= 1 ? 1 : (weight * 0.2);
+      marketPrice = Math.round(marketPrice + (med - marketPrice) * nudge);
+    }
+    priceSeries.push(marketPrice);
+    volSeries.push(newListingsPerDay.get(k) || 0);
   });
-  const volSeries = sortedKeys.map(k => buckets.get(k).count);
 
   // Totals for the stat strip.
   const totalSales = relevant.length;
-  const avgPrice = Math.round(priceSeries.reduce((a,b)=>a+b,0) / priceSeries.length);
+  const avgPrice = Math.round(priceSeries.reduce((a, b) => a + b, 0) / priceSeries.length);
   if (statsEl) {
     statsEl.innerHTML = `
       <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">${totalSales.toLocaleString()}</div></div>
@@ -41640,7 +41664,6 @@ async function _fsDrawPriceHistory(it) {
   const days = priceSeries.length;
   const W = 640, H = 220, PAD_L = 48, PAD_R = 16, PAD_T = 18, PAD_B = 36;
   const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
-  const base = it.price;
   const maxPrice = Math.max(base, ...priceSeries) * 1.08;
   const minPrice = Math.min(0, ...priceSeries) * 0.95;
   const maxVol = Math.max(...volSeries, 1);
@@ -41914,7 +41937,8 @@ async function _loadShopMarketplace() {
 async function listForResale(itemId, askPrice) {
   const item = _getShopItemById(itemId);
   if (!item) { toast('Item not found', 'error'); return; }
-  if (!item.rare && !item.seasonal) { toast('Only rare/seasonal items can be resold', 'error'); return; }
+  const isRareOrEvent = !!(item.rare || item.seasonal || item.event || item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary');
+  if (!isRareOrEvent) { toast('Only rare or event items can be resold', 'error'); return; }
   if (!(CU?.unlockedAppearances||[]).includes(itemId) && !(CU?.ownedDecorations||[]).includes(itemId)) {
     toast('You don\'t own this item', 'error'); return;
   }

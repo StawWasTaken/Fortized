@@ -1368,7 +1368,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .fortshop-card--epic .fortshop-card-rarity { background:linear-gradient(135deg,#fb923c 50%,transparent 50%); }
 .fortshop-card--event .fortshop-card-rarity { background:linear-gradient(135deg,#3ecf6e 50%,transparent 50%); }
 .fortshop-card--legendary .fortshop-card-rarity { background:linear-gradient(135deg,var(--accent) 50%,transparent 50%);box-shadow:0 0 10px rgba(255,249,62,.4); }
-.fortshop-card-rarity::after { content:"★";position:absolute;top:4px;left:5px;font-size:11px;color:#fff;opacity:.95; }
+.fortshop-card-rarity::after { content:"★";position:absolute;top:4px;left:5px;font-size:11px;color:#0a0a12;opacity:1; }
 .fortshop-card-preview { aspect-ratio:4/3;background:#0a0812;display:flex;align-items:center;justify-content:center;overflow:hidden; }
 .fortshop-card-preview img { width:auto;max-width:80%;max-height:75%;object-fit:contain; }
 .fsc-preview-theme { width:100%;height:100%; }
@@ -1561,7 +1561,9 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 
 /* Note under the empty price history chart */
 .sim-ph-note { font-size:11.5px;color:var(--muted);margin-top:10px;font-style:italic;text-align:center; }
-.fsc-rarity-tag { color:var(--accent);font-weight:700; }
+/* Rarity capsule inline with the type label — yellow pill, black star + text */
+.fsc-rarity-tag { display:inline-flex;align-items:center;gap:4px;padding:1px 7px;margin-left:6px;background:var(--accent);color:#0a0a12;border-radius:999px;font-family:var(--font-display);font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;vertical-align:middle; }
+.fsc-rarity-tag svg { flex-shrink:0; }
 
 /* ── Trade modal (rebuilt) ── */
 .trade-overlay { position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:28px;animation:gdmIn .18s ease-out; }

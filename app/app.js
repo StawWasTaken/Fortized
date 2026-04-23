@@ -41737,7 +41737,7 @@ function _fsRenderItemDetail(it, kind) {
         ${!isOwned ? `<div id="sim-confirm-panel" class="sim-confirm-panel" style="display:none;">
           <label class="sim-confirm-agree">
             <input type="checkbox" id="sim-confirm-agree-box" onchange="document.getElementById('sim-confirm-buy').disabled=!this.checked">
-            <span>I agree to the <a href="/legal/fortshop-policy" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Fortshop Policy</a>. Items are non-refundable once delivered.</span>
+            <span>I agree to the <a href="/legal#fortshop" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Fortshop Policy</a>. Items are non-refundable once delivered.</span>
           </label>
           <div class="sim-confirm-actions">
             <button class="sim-confirm-cancel" onclick="_fsDisarmPurchase()">Cancel</button>
@@ -41961,7 +41961,7 @@ function _legacyOpenShopCheckout_unused(itemId, kind) {
       <div class="sim-checkout-legal">
         <label class="sim-checkout-agree">
           <input type="checkbox" id="sim-checkout-agree-box" onchange="document.getElementById('sim-checkout-buy').disabled=!this.checked">
-          <span>I agree to the <a href="/legal/fortshop-policy" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Fortshop Policy</a>. Items are final once delivered.</span>
+          <span>I agree to the <a href="/legal#fortshop" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Fortshop Policy</a>. Items are final once delivered.</span>
         </label>
       </div>
       <div class="sim-checkout-actions">
@@ -42091,7 +42091,7 @@ function openShopBundleModal(id) {
         ${!allOwned ? `<div id="sim-confirm-panel" class="sim-confirm-panel" style="display:none;">
           <label class="sim-confirm-agree">
             <input type="checkbox" id="sim-confirm-agree-box" onchange="document.getElementById('sim-confirm-buy').disabled=!this.checked">
-            <span>I agree to the <a href="/legal/fortshop-policy" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Fortshop Policy</a>. Items are final once delivered.</span>
+            <span>I agree to the <a href="/legal#fortshop" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Fortshop Policy</a>. Items are final once delivered.</span>
           </label>
           <div class="sim-confirm-actions">
             <button class="sim-confirm-cancel" onclick="_fsDisarmPurchase()">Cancel</button>

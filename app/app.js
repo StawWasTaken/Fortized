@@ -41070,15 +41070,26 @@ function _renderItemOfTheDay(appearances, ownedAppearances) {
     ? `<img src="${escapeHTML(it.src)}" style="width:100%;height:100%;object-fit:contain;padding:14px;">`
     : _renderAppearancePreview(it);
   const safeId = escapeHTML(it.id).replace(/'/g, "\\'");
+  // Derive a dominant brand colour for the card tint. Decorations ship
+  // with .color; appearances expose their main tone via .labelColor.
+  const themeHex = _iotdDominantHex(it) || '#fef83d';
+  const rgb = _iotdHexToRgb(themeHex) || { r: 254, g: 248, b: 61 };
+  const tintStrong = `rgba(${rgb.r},${rgb.g},${rgb.b},.18)`;
+  const tintSoft = `rgba(${rgb.r},${rgb.g},${rgb.b},.06)`;
+  const tintRail = `rgba(${rgb.r},${rgb.g},${rgb.b},.85)`;
+  const cardStyle = `background:radial-gradient(600px 220px at 15% 0%,${tintStrong},transparent 70%),linear-gradient(180deg,${tintSoft},rgba(0,0,0,.35));`;
+  const btnStyle = `background:${themeHex};color:var(--rail);`;
+  const typeStyle = `color:${themeHex};`;
   return `<div class="fortshop-section fortshop-section--iotd">
     <div class="fortshop-section-head">
       <h3>Item of the Day</h3>
       <span class="fortshop-section-sub">A new deal every day. Rotates at midnight.</span>
     </div>
-    <div class="iotd-card">
+    <div class="iotd-card" style="${cardStyle}">
+      <div class="iotd-card-rail" style="background:${tintRail};"></div>
       <div class="iotd-preview">${preview}</div>
       <div class="iotd-body">
-        <div class="iotd-type">${pick.kind === 'appearance' ? 'APPEARANCE' : 'AVATAR DECORATION'}</div>
+        <div class="iotd-type" style="${typeStyle}">${pick.kind === 'appearance' ? 'APPEARANCE' : 'AVATAR DECORATION'}</div>
         <div class="iotd-name">${escapeHTML(it.name)}</div>
         <div class="iotd-price-row">
           <span class="iotd-price-orig"><img src="/Onyx.png" alt="">${origPrice}</span>
@@ -41091,10 +41102,42 @@ function _renderItemOfTheDay(appearances, ownedAppearances) {
         </div>
         ${isOwned
           ? '<button class="iotd-btn iotd-btn--owned" disabled>✓ Already Owned</button>'
-          : `<button class="iotd-btn" onclick="${pick.kind === 'appearance' ? `buyAppearance('${safeId}',${dealPrice})` : `buyDecoration('${safeId}',${dealPrice})`}">Claim deal · ${dealPrice} Ξ</button>`}
+          : `<button class="iotd-btn" style="${btnStyle}" onclick="${pick.kind === 'appearance' ? `buyAppearance('${safeId}',${dealPrice})` : `buyDecoration('${safeId}',${dealPrice})`}">Claim deal</button>`}
       </div>
     </div>
   </div>`;
+}
+
+// Hex → {r,g,b}. Accepts "#abc" / "#aabbcc" / "rgb(...)" / "rgba(...)".
+function _iotdHexToRgb(input) {
+  if (!input) return null;
+  const s = String(input).trim();
+  let m = s.match(/^#([0-9a-f]{3})$/i);
+  if (m) {
+    const h = m[1];
+    return { r: parseInt(h[0] + h[0], 16), g: parseInt(h[1] + h[1], 16), b: parseInt(h[2] + h[2], 16) };
+  }
+  m = s.match(/^#([0-9a-f]{6})$/i);
+  if (m) {
+    const h = m[1];
+    return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+  }
+  m = s.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (m) return { r: +m[1], g: +m[2], b: +m[3] };
+  return null;
+}
+
+// Picks the dominant hex color for an item so the Item of the Day card can
+// tint itself automatically. Decorations ship with .color already.
+// Appearances expose their main tone via .labelColor.
+function _iotdDominantHex(it) {
+  if (!it) return null;
+  if (it.color) return it.color;
+  if (it.labelColor) {
+    const rgb = _iotdHexToRgb(it.labelColor);
+    if (rgb) return '#' + [rgb.r, rgb.g, rgb.b].map(v => v.toString(16).padStart(2, '0')).join('');
+  }
+  return null;
 }
 
 function _startItemOfDayCountdown() {

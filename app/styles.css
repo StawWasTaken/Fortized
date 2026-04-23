@@ -1330,14 +1330,15 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .fortshop-hero-cta { display:inline-flex;align-items:center;gap:6px;background:#fff;color:#0a0a12;border:none;border-radius:999px;padding:11px 22px;font-family:var(--font-display);font-size:12.5px;font-weight:800;letter-spacing:.04em;cursor:pointer;transition:all .15s;text-transform:uppercase; }
 .fortshop-hero-cta:hover { transform:translateY(-1px);box-shadow:0 10px 22px rgba(255,255,255,.14); }
 
-/* Item of the Day — aligned with gamecard/forum aesthetic (no more blue gradient) */
-.iotd-card { display:grid;grid-template-columns:240px 1fr;gap:22px;padding:16px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--border);position:relative;overflow:hidden; }
-.iotd-card::before { content:"";position:absolute;top:0;left:0;width:3px;bottom:0;background:var(--accent);opacity:.85; }
+/* Item of the Day — card + rail colour tint is driven by inline styles from
+   _renderItemOfTheDay so each day's item paints its own dominant hue. */
+.iotd-card { display:grid;grid-template-columns:240px 1fr;gap:22px;padding:16px;border-radius:12px;border:1px solid var(--border);position:relative;overflow:hidden; }
+.iotd-card-rail { position:absolute;top:0;left:0;width:3px;bottom:0;opacity:.9;pointer-events:none; }
 .iotd-preview { position:relative;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.06); }
 .iotd-preview img { display:block; }
 .iotd-preview-theme { width:100%;height:100%; }
 .iotd-body { display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0; }
-.iotd-type { font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--accent);text-transform:uppercase; }
+.iotd-type { font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase; }
 .iotd-name { font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-.01em;margin-bottom:6px; }
 .iotd-price-row { display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px; }
 .iotd-price-orig { display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--muted);text-decoration:line-through; }

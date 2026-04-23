@@ -1310,16 +1310,19 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .fortshop-section-head h3 { font-family:var(--font-display);font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin:0; }
 .fortshop-section-sub { font-size:12px;color:var(--muted-light);flex:1; }
 
-/* Hero banner — Discord-shop-style big banner */
-.fortshop-hero { position:relative;height:220px;border-radius:16px;overflow:hidden;border:1px solid var(--border);background:linear-gradient(135deg,#050812 0%,#0a1428 35%,#151a3c 70%,#1d1040 100%);display:flex;align-items:center; }
+/* Hero banner — Discord-shop-style big banner with the same wrapBackground
+   overlay used on the Radiance Dwelling hero, but keyed to Fortized's
+   neutral #11141c instead of the pink+yellow Radiance gradient. */
+.fortshop-hero { position:relative;height:220px;border-radius:16px;overflow:hidden;border:1px solid var(--border);background:#11141c;display:flex;align-items:center; }
 .fortshop-hero::before { content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.25) 12%,var(--accent) 50%,rgba(255,249,62,.25) 88%,transparent 100%);box-shadow:0 0 14px rgba(255,249,62,.35);z-index:3; }
 .fortshop-hero-art { position:absolute;inset:0;background:
-  radial-gradient(800px 260px at 80% 40%,rgba(96,165,250,.28),transparent 60%),
-  radial-gradient(500px 180px at 20% 80%,rgba(167,139,250,.2),transparent 60%),
-  radial-gradient(1200px 300px at 50% 110%,rgba(255,249,62,.06),transparent 60%);
+  linear-gradient(135deg,rgba(17,20,28,.65) 0%,rgba(17,20,28,.35) 50%,rgba(17,20,28,.7) 100%),
+  url('/wrapBackground.png');
+  background-size:cover;background-position:center;
+  opacity:1;
   pointer-events:none;
 }
-.fortshop-hero-art::after { content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.08) 1px,transparent 1.5px);background-size:28px 28px;opacity:.25;mix-blend-mode:screen; }
+.fortshop-hero-art::after { content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(17,20,28,0) 40%,rgba(17,20,28,.65) 100%);pointer-events:none; }
 .fortshop-hero-content { position:relative;z-index:2;padding:28px 36px;max-width:540px; }
 .fortshop-hero-kicker { font-family:var(--font-display);font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:8px; }
 .fortshop-hero-title { font-family:var(--font-display);font-size:40px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.01em;margin-bottom:10px;text-shadow:0 2px 14px rgba(0,0,0,.5); }

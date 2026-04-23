@@ -16145,6 +16145,7 @@ function _buildProfileView(tab) {
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
+      {id:'green_leaves',     name:'Green Leaves',     desc:'Calm forest greens. A quieter place to talk.', bg:'#0a1410', sidebar:'#091310', channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:'', cost:130, locked:!unlocked.includes('green_leaves')},
     ];
     const defaultThemes = allThemes.filter(t => t.free);
     const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
@@ -35006,20 +35007,16 @@ const PROFILE_DECORATIONS = [
   {id:'pink_glow',name:'Pink Glow',src:'/profile decorations/Pink Glow.png',price:75,color:'#f472b6'},
   {id:'red_glow',name:'Red Glow',src:'/profile decorations/Red Glow.png',price:75,color:'#f87171'},
   {id:'yellow_glow',name:'Yellow Glow',src:'/profile decorations/Yellow Glow.png',price:75,color:'#fbbf24'},
+  {id:'sunset_halo',name:'Sunset Halo',src:'/profile decorations/Sunset Halo.png',price:120,color:'#fb923c'},
 ];
 
 // Master appearance catalogue. Lives at module scope (not inside the shop
 // render) so _getShopItemById can resolve any appearance from anywhere —
-// wishlist rendering, trade modal, the gift flow, etc. Expanded with
-// additional themes so the Fortshop has real breadth to browse.
+// wishlist rendering, trade modal, the gift flow, etc.
 const SHOP_APPEARANCES_ALL = [
   { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, rarity:'rare', gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
   { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, rarity:'rare', gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(96,165,250,.18)', hoverBorder:'rgba(96,165,250,.35)', labelColor:'rgba(96,165,250,.85)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
-  { id:'solar_warmth', name:'Solar Warmth', desc:'Warm amber dawn — soft light and burnished highlights.', price:120, gradient:'linear-gradient(135deg,#1a1208,#2a1a0a,#3a240e)', borderColor:'rgba(251,191,36,.22)', hoverBorder:'rgba(251,191,36,.45)', labelColor:'rgba(251,191,36,.9)', previewBg:'linear-gradient(170deg,#1a1208 0%,#2a1a0a 50%,#3a240e 100%)', sidebarBg:'#1a0f06' },
-  { id:'verdant_grove', name:'Verdant Grove', desc:'Calm forest greens — a quieter place to talk.', price:130, gradient:'linear-gradient(135deg,#0a1410,#0e1f16,#132b1e)', borderColor:'rgba(62,207,110,.22)', hoverBorder:'rgba(62,207,110,.45)', labelColor:'rgba(62,207,110,.9)', previewBg:'linear-gradient(170deg,#0a1410 0%,#0e1f16 50%,#132b1e 100%)', sidebarBg:'#091310' },
-  { id:'crimson_embers', name:'Crimson Embers', desc:'Low-lit reds that glow when you speak.', price:140, gradient:'linear-gradient(135deg,#140808,#1e0a0a,#2a0d0d)', borderColor:'rgba(248,113,113,.22)', hoverBorder:'rgba(248,113,113,.48)', labelColor:'rgba(248,113,113,.9)', previewBg:'linear-gradient(170deg,#140808 0%,#1e0a0a 50%,#2a0d0d 100%)', sidebarBg:'#110707' },
-  { id:'rose_dawn', name:'Rose Dawn', desc:'Soft pinks and warm neutrals — light on the eyes.', price:115, gradient:'linear-gradient(135deg,#12080d,#1f0d16,#2a121f)', borderColor:'rgba(244,114,182,.22)', hoverBorder:'rgba(244,114,182,.45)', labelColor:'rgba(244,114,182,.9)', previewBg:'linear-gradient(170deg,#12080d 0%,#1f0d16 50%,#2a121f 100%)', sidebarBg:'#0f060a' },
-  { id:'ashen_void', name:'Ashen Void', desc:'Monochrome greys. For the minimalists.', price:250, rarity:'legendary', gradient:'linear-gradient(135deg,#08080a,#121214,#1a1a1d)', borderColor:'rgba(255,249,62,.28)', hoverBorder:'rgba(255,249,62,.5)', labelColor:'rgba(255,249,62,.92)', previewBg:'linear-gradient(170deg,#08080a 0%,#121214 50%,#1a1a1d 100%)', sidebarBg:'#050506' },
+  { id:'green_leaves', name:'Green Leaves', desc:'Calm forest greens. A quieter place to talk.', price:130, gradient:'linear-gradient(135deg,#0a1410,#0e1f16,#132b1e)', borderColor:'rgba(62,207,110,.22)', hoverBorder:'rgba(62,207,110,.45)', labelColor:'rgba(62,207,110,.9)', previewBg:'linear-gradient(170deg,#0a1410 0%,#0e1f16 50%,#132b1e 100%)', sidebarBg:'#091310' },
 ];
 function getDecorationSrc(decoId) {
   const d = PROFILE_DECORATIONS.find(d=>d.id===decoId);
@@ -38257,6 +38254,20 @@ function applyAppearance(themeId, _opts) {
     document.documentElement.style.setProperty('--border',     '#0e0e1e');
     document.documentElement.style.setProperty('--muted',      '#2a2a3e');
     document.documentElement.style.setProperty('--muted-light','#44445e');
+  } else if (themeId === 'green_leaves') {
+    canvasColor = '#0a1410';
+    sidebarColor = '#091310';
+    glassHeavy = 'rgba(10,20,16,.94)'; glassMid = 'rgba(10,20,16,.86)'; glassLight = 'rgba(10,20,16,.78)';
+    document.documentElement.style.setProperty('--bg',         '#0a1410');
+    document.documentElement.style.setProperty('--rail',       '#06100d');
+    document.documentElement.style.setProperty('--sidebar',    sidebarColor);
+    document.documentElement.style.setProperty('--channel',    '#0c1814');
+    document.documentElement.style.setProperty('--panel',      '#0f1f18');
+    document.documentElement.style.setProperty('--panel2',     '#122a1f');
+    document.documentElement.style.setProperty('--panel3',     '#163526');
+    document.documentElement.style.setProperty('--border',     '#1a3524');
+    document.documentElement.style.setProperty('--muted',      '#3a5848');
+    document.documentElement.style.setProperty('--muted-light','#6aa782');
   } else {
     // Fortized Classic (default)
     canvasColor = '#13161d';
@@ -38300,7 +38311,7 @@ function applyAppearance(themeId, _opts) {
   const chatInputOuter = document.querySelector('.chat-input-outer');
   if (userbarEl) userbarEl.style.background = '';
   if (chatInputOuter) chatInputOuter.style.background = '';
-  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic'};
+  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', green_leaves:'🍃 Green Leaves', fortized_classic:'⚡ Fortized Classic'};
   toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
 }
 
@@ -38311,6 +38322,7 @@ const _appearanceThemeData = {
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
+  green_leaves:     {id:'green_leaves',     name:'Green Leaves',     bg:'#0a1410', sidebar:'#091310', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:''},
 };
 
 function _buildPreviewMockup(t, label) {

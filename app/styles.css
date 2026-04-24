@@ -1288,7 +1288,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .act-ov-back:hover{color:var(--accent);}
 .act-ov-banner{height:300px;overflow:hidden;position:relative;border-bottom:1px solid rgba(255,249,62,.08);}
 .act-ov-banner::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:42px 42px;mix-blend-mode:overlay;pointer-events:none;z-index:2;}
-.act-ov-banner-gjg{position:absolute;bottom:18px;right:22px;z-index:4;filter:drop-shadow(0 3px 12px rgba(0,0,0,.75));opacity:.95;}
+.act-ov-banner-gjg{position:absolute;bottom:18px;right:22px;z-index:4;filter:brightness(0) invert(1) drop-shadow(0 3px 12px rgba(0,0,0,.75));opacity:.9;}
 .act-ov-header{display:flex;align-items:flex-end;gap:22px;padding:0 32px;margin-top:-56px;margin-bottom:22px;position:relative;z-index:3;}
 .act-ov-icon{width:108px;height:108px;border-radius:26px;border:5px solid var(--panel);flex-shrink:0;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.65),0 0 0 1px rgba(255,249,62,.06);background:var(--panel);}
 .act-ov-title-col{flex:1;min-width:0;padding-bottom:8px;}
@@ -1319,7 +1319,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .act-ov-yml-body{padding:28px 14px 14px;position:relative;}
 .act-ov-yml-icon{position:absolute;top:-24px;left:14px;width:44px;height:44px;border-radius:13px;border:3px solid var(--panel);overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.5);}
 /* Activity card GJG corner badge */
-.ac-gjg{position:absolute;bottom:8px;right:8px;z-index:4;filter:drop-shadow(0 2px 5px rgba(0,0,0,.5));}
+.ac-gjg{position:absolute;bottom:8px;right:8px;z-index:4;filter:brightness(0) invert(1) drop-shadow(0 2px 5px rgba(0,0,0,.5));opacity:.85;}
 /* Discover Events section */
 .disc-events-section{padding:0 28px 24px;}
 /* ── Bastion Mood 2027 ──────────────────────────── */

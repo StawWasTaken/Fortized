@@ -8658,7 +8658,7 @@ function openActivityOverview(id) {
       <div class="act-ov-section">
         <div class="act-ov-section-label">Developer</div>
         <div class="act-ov-dev-card">
-          ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:32px;opacity:.95;">` : `<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;color:var(--accent);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`}
+          ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:32px;filter:brightness(0) invert(1);opacity:.9;">` : `<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;color:var(--accent);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`}
           <div style="flex:1;min-width:0;">
             <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:-.01em;">${act.owner === 'Fortized' ? 'Grand Joy Games' : escapeHTML(act.owner)}</div>
             <div style="font-size:11px;color:rgba(255,255,255,.38);font-family:var(--font-ui);margin-top:2px;">Activity developer</div>
@@ -8725,7 +8725,7 @@ function _showActivityPermDialog(act, onAccept) {
     </li>`
   ).join('');
   const gjgBadge = (act.owner === 'Fortized')
-    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:14px;margin-left:4px;vertical-align:middle;opacity:.7;">` : '';
+    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:14px;margin-left:4px;vertical-align:middle;filter:brightness(0) invert(1);opacity:.6;">` : '';
   const modal = document.createElement('div');
   modal.id = 'modal-activity-perm';
   modal.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);';

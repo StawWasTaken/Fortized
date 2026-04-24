@@ -8632,20 +8632,16 @@ function openActivityOverview(id) {
   if (activitiesPage) activitiesPage.style.display = 'none';
 
   const [r,g,b] = act.dominantRgb;
-  const gjgBadge = (act.owner === 'Fortized')
-    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" title="Grand Joy Games" style="height:18px;vertical-align:middle;opacity:.9;">`
-    : '';
 
   const langIcons = (act.languages || []).join(' · ');
   const launchNum = act.launchCount ? (act.launchCount).toLocaleString() : '';
 
   const others = FORTIZED_ACTIVITIES.filter(a => a.id !== id);
   const othersHTML = others.map(o => {
-    const [or,og,ob] = o.dominantRgb;
-    return `<div onclick="openActivityOverview('${o.id}')" style="flex-shrink:0;width:180px;background:var(--panel2);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;" onmouseover="this.style.transform='translateY(-3px)';this.style.borderColor='rgba(255,255,255,.16)'" onmouseout="this.style.transform='';this.style.borderColor='rgba(255,255,255,.07)'">
-      <div style="height:80px;position:relative;overflow:hidden;">${_actBanner(o, false)}</div>
-      <div style="padding:10px 13px 13px;">
-        <div style="width:38px;height:38px;border-radius:11px;margin-top:-23px;margin-bottom:9px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${or},${og},${ob},.9),rgba(${or},${og},${ob},.55));color:#fff;border:3px solid var(--panel2);overflow:hidden;">${_actIconBox(o)}</div>
+    return `<div class="act-ov-yml-card" onclick="openActivityOverview('${o.id}')">
+      <div class="act-ov-yml-banner">${_actBanner(o, false)}</div>
+      <div class="act-ov-yml-body">
+        <div class="act-ov-yml-icon">${_actIconBox(o)}</div>
         <div style="font-family:var(--font-display);font-size:13.5px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:3px;">${escapeHTML(o.name)}</div>
         <div style="font-size:11px;color:rgba(255,255,255,.32);font-family:var(--font-ui);">${escapeHTML(o.category)}${o.comingSoon ? ' · Soon' : ''}</div>
       </div>
@@ -8708,12 +8704,13 @@ function openActivityOverview(id) {
 
       <div class="act-ov-section">
         <div class="act-ov-section-label">Developer</div>
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;">
-          ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:28px;opacity:.9;">` : `<div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`}
-          <div>
-            <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;">${act.owner === 'Fortized' ? 'Grand Joy Games' : escapeHTML(act.owner)}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">Activity developer</div>
+        <div class="act-ov-dev-card">
+          ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:32px;opacity:.95;">` : `<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;color:var(--accent);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`}
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:-.01em;">${act.owner === 'Fortized' ? 'Grand Joy Games' : escapeHTML(act.owner)}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.38);font-family:var(--font-ui);margin-top:2px;">Activity developer</div>
           </div>
+          ${act.owner === 'Fortized' ? `<div style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:var(--accent);background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.18);padding:4px 9px;border-radius:var(--radius-pill);font-family:var(--font-ui);letter-spacing:.04em;text-transform:uppercase;">Official</div>` : ''}
         </div>
       </div>
 
@@ -8979,6 +8976,10 @@ function setDiscoverSubPage(page, btn) {
   if (btn) btn.classList.add('active');
   const bastions = document.getElementById('disc-page-bastions');
   const activities = document.getElementById('disc-page-activities');
+  const overview = document.getElementById('disc-activity-overview');
+  const hero = document.querySelector('#discover-scroll .disc-hero');
+  if (overview) overview.style.display = 'none';
+  if (hero) hero.style.display = '';
   if (bastions) bastions.style.display = page === 'bastions' ? '' : 'none';
   if (activities) activities.style.display = page === 'activities' ? '' : 'none';
   if (page === 'activities') _renderDiscoverActivities();

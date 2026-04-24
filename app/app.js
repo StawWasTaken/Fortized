@@ -8459,6 +8459,15 @@ const _ACT_ICONS = {
   'poll-stage':   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
 };
 
+// Standard permission set granted to every Fortized activity upon user acceptance
+const ACTIVITY_PERMISSIONS = [
+  { svg: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>', text: 'See your display name and avatar' },
+  { svg: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>', text: 'Know you are a Fortized member' },
+  { svg: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', text: 'Earn and spend Onyx through authorised in-activity transactions' },
+  { svg: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>', text: 'Store activity progress locally on your device' },
+  { svg: '<circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>', text: 'Display your activity state in your presence' },
+];
+
 const FORTIZED_ACTIVITIES = [
   {
     id: 'mist-and-cards',
@@ -8469,7 +8478,8 @@ const FORTIZED_ACTIVITIES = [
     category: 'Games',
     players: 'You vs The Stranger',
     tags: ['cards', 'wager', 'mystery'],
-    permissions: ['See your display name', 'Spend and receive Onyx for wagers', 'Keep a local record of your matches'],
+    languages: ['French', 'English'],
+    launchCount: 1247,
     comingSoon: false,
     dominantRgb: [190, 150, 40],
     bannerBg: 'radial-gradient(ellipse at 22% 60%,rgba(255,220,80,.28) 0%,transparent 45%),radial-gradient(ellipse at 78% 30%,rgba(200,160,40,.18) 0%,transparent 42%),radial-gradient(ellipse at 55% 90%,rgba(140,100,20,.2) 0%,transparent 40%),linear-gradient(135deg,#14110a 0%,#1e1a0e 40%,#2a220f 70%,#0a0906 100%)',
@@ -8484,7 +8494,8 @@ const FORTIZED_ACTIVITIES = [
     category: 'Creative',
     players: '1–50 players',
     tags: ['art', 'canvas', 'creative'],
-    permissions: ['See your display name', 'Store canvas contributions', 'Read your current bastion'],
+    languages: ['English'],
+    launchCount: 892,
     comingSoon: true,
     dominantRgb: [0, 130, 80],
     bannerBg: 'radial-gradient(ellipse at 24% 48%,rgba(0,255,150,.3) 0%,transparent 44%),radial-gradient(ellipse at 76% 28%,rgba(0,220,255,.22) 0%,transparent 42%),radial-gradient(ellipse at 50% 86%,rgba(0,200,100,.25) 0%,transparent 38%),linear-gradient(135deg,#001f14 0%,#003c28 40%,#005a42 70%,#001208 100%)',
@@ -8499,7 +8510,8 @@ const FORTIZED_ACTIVITIES = [
     category: 'Games',
     players: '2 players',
     tags: ['words', 'duel', 'pvp'],
-    permissions: ['See your display name', 'Track match results', 'Send game invites to friends'],
+    languages: ['English', 'French'],
+    launchCount: 634,
     comingSoon: true,
     dominantRgb: [160, 70, 0],
     bannerBg: 'radial-gradient(ellipse at 28% 42%,rgba(255,140,20,.4) 0%,transparent 46%),radial-gradient(ellipse at 72% 72%,rgba(255,80,0,.3) 0%,transparent 42%),radial-gradient(ellipse at 50% 18%,rgba(255,200,80,.22) 0%,transparent 36%),linear-gradient(135deg,#250c00 0%,#561e00 40%,#8a3800 70%,#160600 100%)',
@@ -8514,7 +8526,8 @@ const FORTIZED_ACTIVITIES = [
     category: 'Social',
     players: 'Any size',
     tags: ['polls', 'vote', 'social'],
-    permissions: ['See your display name', 'Record your votes', 'Post results to the current channel'],
+    languages: ['English', 'French'],
+    launchCount: 2108,
     comingSoon: true,
     dominantRgb: [100, 20, 180],
     bannerBg: 'radial-gradient(ellipse at 22% 35%,rgba(160,50,255,.42) 0%,transparent 44%),radial-gradient(ellipse at 76% 68%,rgba(80,20,255,.32) 0%,transparent 42%),radial-gradient(ellipse at 50% 88%,rgba(210,70,255,.2) 0%,transparent 36%),linear-gradient(135deg,#0e0022 0%,#230055 40%,#380080 70%,#090012 100%)',
@@ -8545,13 +8558,12 @@ function _renderDiscoverActivities() {
   grid.innerHTML = FORTIZED_ACTIVITIES.map(act => {
     const [r,g,b] = act.dominantRgb;
     const ownerBadge = act.ownerVerified ? _verifiedBadge(12) : '';
-    return `<div class="ac" onclick="launchActivity('${act.id}')">
+    return `<div class="ac" onclick="openActivityOverview('${act.id}')" style="cursor:pointer;">
       ${act.comingSoon ? `<div style="position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-radius:6px;padding:3px 9px;font-size:9px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;">Soon</div>` : ''}
       <div class="ac-banner">${_actBanner(act)}</div>
       <div class="ac-body" style="background:linear-gradient(180deg,rgba(${r},${g},${b},.14) 0%,rgba(${r},${g},${b},.04) 100%);">
         <div class="ac-meta">
           <div class="ac-icon">${_actIconBox(act)}</div>
-          ${!act.comingSoon ? `<button class="ac-launch-btn" onclick="event.stopPropagation();launchActivity('${act.id}')">Launch</button>` : ''}
         </div>
         <div class="ac-name">${escapeHTML(act.name)}</div>
         <div class="ac-desc">${escapeHTML(act.desc)}</div>
@@ -8565,6 +8577,139 @@ function _renderDiscoverActivities() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ── Activity Overview ────────────────────────────────────────────
+// Clicking a card opens the overview page (detail view inside discover).
+// The Launch button in the overview then triggers the permission dialog.
+
+function openActivityOverview(id) {
+  const act = FORTIZED_ACTIVITIES.find(a => a.id === id);
+  if (!act) return;
+  if (act.comingSoon) {
+    toast(`${act.name} is coming soon — stay tuned!`, 'info');
+    return;
+  }
+
+  const discScroll = document.getElementById('discover-scroll');
+  const hero    = discScroll ? discScroll.querySelector('.disc-hero') : null;
+  const subnav  = discScroll ? discScroll.querySelector('.disc-subnav') : null;
+  const bastionsPage   = document.getElementById('disc-page-bastions');
+  const activitiesPage = document.getElementById('disc-page-activities');
+  const overview       = document.getElementById('disc-activity-overview');
+  if (!overview) return;
+
+  if (hero)          hero.style.display = 'none';
+  if (subnav)        subnav.style.display = 'none';
+  if (bastionsPage)  bastionsPage.style.display = 'none';
+  if (activitiesPage) activitiesPage.style.display = 'none';
+
+  const [r,g,b] = act.dominantRgb;
+  const gjgBadge = (act.owner === 'Fortized')
+    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" title="Grand Joy Games" style="height:20px;vertical-align:middle;margin-left:6px;opacity:.9;">`
+    : '';
+
+  const langIcons = (act.languages || []).join(' · ');
+  const launchNum = act.launchCount ? `${(act.launchCount).toLocaleString()} launches` : '';
+
+  const others = FORTIZED_ACTIVITIES.filter(a => a.id !== id);
+  const othersHTML = others.map(o => {
+    const [or,og,ob] = o.dominantRgb;
+    return `<div onclick="openActivityOverview('${o.id}')" style="flex-shrink:0;width:160px;background:var(--panel2);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="this.style.transform='';this.style.borderColor='rgba(255,255,255,.07)'">
+      <div style="height:72px;position:relative;overflow:hidden;background:${o.bannerBg};">
+        <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(rgba(255,255,255,.03) 0 1px,transparent 1px 28px),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 28px);background-size:28px 28px;"></div>
+      </div>
+      <div style="padding:10px 12px 12px;">
+        <div style="width:36px;height:36px;border-radius:10px;margin-top:-22px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${or},${og},${ob},.9),rgba(${or},${og},${ob},.55));color:#fff;border:3px solid var(--panel2);">${_ACT_ICONS[o.id] || ''}</div>
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;">${escapeHTML(o.name)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">${escapeHTML(o.category)}${o.comingSoon ? ' · Soon' : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  overview.style.display = 'block';
+  overview.innerHTML = `
+    <div class="act-ov-wrap">
+      <!-- Back -->
+      <button class="act-ov-back" onclick="_closeActivityOverview()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Activities
+      </button>
+
+      <!-- Banner -->
+      <div class="act-ov-banner">${_actBanner(act)}</div>
+
+      <!-- Header row -->
+      <div class="act-ov-header">
+        <div class="act-ov-icon">${_actIconBox(act)}</div>
+        <div class="act-ov-title-col">
+          <div class="act-ov-name">${escapeHTML(act.name)}${gjgBadge}</div>
+          <div class="act-ov-sub">
+            <span onclick="event.stopPropagation();viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.55);transition:color .15s;" onmouseover="this.style.color='rgba(255,249,62,.85)'" onmouseout="this.style.color='rgba(255,249,62,.55)'">${escapeHTML(act.owner)}</span>
+            <span style="color:rgba(255,255,255,.2);">·</span>
+            <span>${escapeHTML(act.category)}</span>
+          </div>
+        </div>
+        <button class="act-ov-launch-btn" onclick="launchActivity('${act.id}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Launch
+        </button>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="act-ov-stats">
+        ${launchNum ? `<div class="act-ov-stat">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          ${launchNum}
+        </div>` : ''}
+        ${langIcons ? `<div class="act-ov-stat">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          ${escapeHTML(langIcons)}
+        </div>` : ''}
+      </div>
+
+      <!-- Divider -->
+      <div style="height:1px;background:rgba(255,255,255,.06);margin:0 24px;"></div>
+
+      <!-- About -->
+      <div class="act-ov-section">
+        <div class="act-ov-section-label">About</div>
+        <p class="act-ov-desc">${escapeHTML(act.desc)}</p>
+      </div>
+
+      <!-- You might also like -->
+      ${others.length ? `<div class="act-ov-section">
+        <div class="act-ov-section-label">You might also like</div>
+        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">${othersHTML}</div>
+      </div>` : ''}
+
+      <!-- Report -->
+      <div style="padding:0 24px 32px;">
+        <button onclick="_reportActivity('${act.id}')" style="background:none;border:none;color:rgba(255,255,255,.22);font-size:11.5px;font-family:var(--font-ui);cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;transition:color .15s;" onmouseover="this.style.color='rgba(255,100,100,.6)'" onmouseout="this.style.color='rgba(255,255,255,.22)'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Report activity
+        </button>
+      </div>
+    </div>`;
+
+  if (discScroll) discScroll.scrollTop = 0;
+}
+
+function _closeActivityOverview() {
+  const discScroll = document.getElementById('discover-scroll');
+  const hero    = discScroll ? discScroll.querySelector('.disc-hero') : null;
+  const subnav  = discScroll ? discScroll.querySelector('.disc-subnav') : null;
+  const overview = document.getElementById('disc-activity-overview');
+  if (overview) overview.style.display = 'none';
+  if (hero)   hero.style.display = '';
+  if (subnav) subnav.style.display = '';
+  // Restore activities sub-page (the subnav was on activities tab)
+  const activitiesPage = document.getElementById('disc-page-activities');
+  if (activitiesPage) activitiesPage.style.display = '';
+}
+
+function _reportActivity(id) {
+  toast('Report submitted. Our team will review it shortly.', 'success');
 }
 
 function launchActivity(id) {
@@ -8589,32 +8734,62 @@ function _showActivityPermDialog(act, onAccept) {
   const existing = document.getElementById('modal-activity-perm');
   if (existing) existing.remove();
   const [r,g,b] = act.dominantRgb;
-  const iconHTML = act.icon
-    ? `<img src="${escapeHTML(act.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:9px;" alt="">`
-    : `<div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(${r},${g},${b},.9),rgba(${r},${g},${b},.55));border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;">${_ACT_ICONS[act.id]||''}</div>`;
-  const permItems = act.permissions.map(p =>
-    `<li style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.6)" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:12.5px;color:rgba(255,255,255,.6);font-family:var(--font-ui);">${escapeHTML(p)}</span></li>`
+
+  const permItems = ACTIVITY_PERMISSIONS.map(p =>
+    `<li style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.045);">
+      <div style="width:32px;height:32px;border-radius:9px;background:rgba(${r},${g},${b},.12);border:1px solid rgba(${r},${g},${b},.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(${r},${g},${b},1)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p.svg}</svg>
+      </div>
+      <span style="font-size:12.5px;color:rgba(255,255,255,.65);font-family:var(--font-ui);line-height:1.4;">${escapeHTML(p.text)}</span>
+    </li>`
   ).join('');
+
+  const gjgBadge = (act.owner === 'Fortized')
+    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:14px;margin-left:4px;vertical-align:middle;opacity:.7;">`
+    : '';
+
   const modal = document.createElement('div');
   modal.id = 'modal-activity-perm';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);';
   modal.innerHTML = `
-    <div style="background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;max-width:380px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,.5);">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-        <div style="width:52px;height:52px;border-radius:14px;overflow:hidden;flex-shrink:0;">${iconHTML}</div>
-        <div>
-          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:3px;">${escapeHTML(act.name)}</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">by <span onclick="document.getElementById('modal-activity-perm').remove();viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.6);text-decoration:none;">${escapeHTML(act.owner)}</span> · ${escapeHTML(act.category)}</div>
+    <div style="background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:22px;max-width:400px;width:92%;box-shadow:0 32px 100px rgba(0,0,0,.6);overflow:hidden;">
+      <!-- Coloured header band -->
+      <div style="height:6px;background:linear-gradient(90deg,rgba(${r},${g},${b},.8),rgba(${r},${g},${b},.35));"></div>
+      <div style="padding:24px 24px 20px;">
+        <!-- Activity identity -->
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
+          <div style="width:56px;height:56px;border-radius:16px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,rgba(${r},${g},${b},.9),rgba(${r},${g},${b},.55));display:flex;align-items:center;justify-content:center;color:#fff;">${_ACT_ICONS[act.id]||''}</div>
+          <div>
+            <div style="font-family:var(--font-display);font-size:17px;font-weight:900;color:#fff;letter-spacing:-.02em;margin-bottom:4px;">${escapeHTML(act.name)}</div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">
+              <span onclick="document.getElementById('modal-activity-perm').remove();viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.55);">${escapeHTML(act.owner)}</span>${gjgBadge}
+              <span style="color:rgba(255,255,255,.2);">·</span>
+              <span>${escapeHTML(act.category)}</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <div style="margin-bottom:18px;">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;font-family:var(--font-ui);">This activity will be able to</div>
+        <!-- Permissions heading -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.07em;text-transform:uppercase;font-family:var(--font-ui);">This activity will be able to</span>
+        </div>
         <ul style="list-style:none;margin:0;padding:0;">${permItems}</ul>
-      </div>
-      <div style="font-size:11px;color:rgba(255,255,255,.22);font-family:var(--font-ui);margin-bottom:20px;line-height:1.5;">By launching, you agree to the <a href="/legal/fortshop-policy" style="color:rgba(255,249,62,.5);text-decoration:none;" target="_blank">Fortized Activity Terms</a>. This prompt won't appear again for this activity.</div>
-      <div style="display:flex;gap:10px;">
-        <button onclick="document.getElementById('modal-activity-perm').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
-        <button id="perm-accept-btn" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;">Launch Activity</button>
+        <!-- Legal footer -->
+        <p style="font-size:11px;color:rgba(255,255,255,.2);font-family:var(--font-ui);margin:16px 0 20px;line-height:1.6;">
+          By launching you agree to Fortized's
+          <a href="/legal/privacy-policy" style="color:rgba(255,249,62,.45);text-decoration:none;" target="_blank">Privacy Policy</a>
+          and
+          <a href="/legal/terms-of-use" style="color:rgba(255,249,62,.45);text-decoration:none;" target="_blank">Terms of Use</a>.
+          This dialog won't appear again for this activity.
+        </p>
+        <!-- Actions -->
+        <div style="display:flex;gap:10px;">
+          <button onclick="document.getElementById('modal-activity-perm').remove()" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;color:rgba(255,255,255,.45);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Cancel</button>
+          <button id="perm-accept-btn" style="flex:2;padding:11px;background:var(--accent);border:none;border-radius:11px;color:#000;font-family:var(--font-display);font-size:13px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:-.01em;transition:opacity .15s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Launch Activity
+          </button>
+        </div>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -8629,32 +8804,23 @@ function _openActivityScreen(act) {
   _activeActivity = act;
   const screen = document.getElementById('activity-screen');
   if (!screen) return;
-  const iconEl = document.getElementById('act-tb-icon');
   const nameEl = document.getElementById('act-tb-name');
   const contentEl = document.getElementById('act-content');
-  if (iconEl) { iconEl.src = act.icon || ''; iconEl.style.display = act.icon ? '' : 'none'; }
   if (nameEl) nameEl.textContent = act.name;
   if (contentEl) {
-    // Route to specific activity implementations
     if (act.id === 'mist-and-cards') {
       _mcMount(contentEl);
     } else {
+      const [rr,gg,bb] = act.dominantRgb;
       contentEl.innerHTML = `
         <div style="text-align:center;max-width:420px;padding:40px 24px;">
-          <div style="width:72px;height:72px;border-radius:20px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${act.dominantRgb[0]},${act.dominantRgb[1]},${act.dominantRgb[2]},.85),rgba(${act.dominantRgb[0]},${act.dominantRgb[1]},${act.dominantRgb[2]},.5));color:#fff;transform:scale(1.6);">${_ACT_ICONS[act.id]||''}</div>
+          <div style="width:72px;height:72px;border-radius:20px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rr},${gg},${bb},.85),rgba(${rr},${gg},${bb},.5));color:#fff;transform:scale(1.6);">${_ACT_ICONS[act.id]||''}</div>
           <div style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin-bottom:8px;">${escapeHTML(act.name)}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.4);font-family:var(--font-ui);line-height:1.6;margin-bottom:28px;">${escapeHTML(act.desc)}</div>
-          <div style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;font-size:12px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Activity content will appear here once available
-          </div>
+          <div style="font-size:13px;color:rgba(255,255,255,.4);font-family:var(--font-ui);line-height:1.6;">${escapeHTML(act.desc)}</div>
         </div>`;
     }
   }
-  // Populate pill info too
-  const pillIcon = document.getElementById('apill-icon');
   const pillName = document.getElementById('apill-name');
-  if (pillIcon) { pillIcon.src = act.icon || ''; pillIcon.style.display = act.icon ? '' : 'none'; }
   if (pillName) pillName.textContent = act.name;
   requestAnimationFrame(() => screen.classList.add('is-open'));
 }
@@ -8678,52 +8844,9 @@ function _leaveActivity() {
   const pill = document.getElementById('activity-pill');
   if (screen) screen.classList.remove('is-open');
   if (pill) pill.style.display = 'none';
-  const act = _activeActivity;
   _activeActivity = null;
-  if (act) setTimeout(() => _showActivityFeedback(act), 400);
 }
 
-function _showActivityFeedback(act) {
-  const existing = document.getElementById('modal-activity-feedback');
-  if (existing) existing.remove();
-  const modal = document.createElement('div');
-  modal.id = 'modal-activity-feedback';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);';
-  modal.innerHTML = `
-    <div style="background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;max-width:340px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,.5);text-align:center;">
-      <div style="width:52px;height:52px;border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${act.dominantRgb[0]},${act.dominantRgb[1]},${act.dominantRgb[2]},.85),rgba(${act.dominantRgb[0]},${act.dominantRgb[1]},${act.dominantRgb[2]},.5));color:#fff;">${_ACT_ICONS[act.id]||''}</div>
-      <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:6px;">How was ${escapeHTML(act.name)}?</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.35);font-family:var(--font-ui);margin-bottom:20px;">Your feedback helps us improve Activities.</div>
-      <div id="act-fb-stars" style="display:flex;gap:6px;justify-content:center;margin-bottom:18px;">
-        ${[1,2,3,4,5].map(n => `<span data-star="${n}" onclick="_setFbStar(${n})" style="font-size:28px;cursor:pointer;filter:grayscale(1);opacity:.35;transition:all .15s;" title="${n} star${n>1?'s':''}">★</span>`).join('')}
-      </div>
-      <textarea id="act-fb-text" placeholder="Optional comment…" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:10px 12px;resize:none;height:64px;outline:none;box-sizing:border-box;margin-bottom:16px;"></textarea>
-      <div style="display:flex;gap:10px;">
-        <button onclick="document.getElementById('modal-activity-feedback').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.4);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;">Skip</button>
-        <button onclick="_submitActivityFeedback('${act.id}')" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;">Send</button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-}
-
-let _actFbRating = 0;
-function _setFbStar(n) {
-  _actFbRating = n;
-  document.querySelectorAll('#act-fb-stars [data-star]').forEach(s => {
-    const v = +s.dataset.star;
-    s.style.filter = v <= n ? 'none' : 'grayscale(1)';
-    s.style.opacity = v <= n ? '1' : '.3';
-    s.style.color = v <= n ? 'var(--accent)' : '';
-  });
-}
-
-function _submitActivityFeedback(actId) {
-  const modal = document.getElementById('modal-activity-feedback');
-  if (modal) modal.remove();
-  toast('Thanks for your feedback!', 'success');
-  _actFbRating = 0;
-}
 
 // ════════════════════════════════════════════════════════════════
 // MIST & CARDS — Fortized's first activity

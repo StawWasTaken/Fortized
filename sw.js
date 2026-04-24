@@ -1,5 +1,76 @@
-// Fortized Service Worker — Push Notifications
-self.addEventListener('push', function(event) {
+// Fortized Service Worker
+// Handles push notifications + ensures fresh HTML is always served
+
+const SW_VERSION = '20260424b';
+const CACHE_NAME = 'ftz-shell-' + SW_VERSION;
+
+// ── Install: skip waiting immediately so new SW takes over fast ──
+self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+
+// ── Activate: clear old caches, claim clients, signal them to reload ──
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
+      .then(() => {
+        // Tell every open tab to reload so they get fresh HTML/CSS/JS
+        return self.clients.matchAll({ type: 'window' }).then(clients => {
+          clients.forEach(client => {
+            client.postMessage({ type: 'FTZ_SW_UPDATED', version: SW_VERSION });
+          });
+        });
+      })
+  );
+});
+
+// ── Fetch: network-first for HTML navigations, cache-first for versioned assets ──
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  const url = new URL(req.url);
+
+  // Only handle same-origin requests
+  if (url.origin !== self.location.origin) return;
+
+  // HTML navigation requests: always go network-first so CDN cache can't serve stale HTML
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req).then(resp => {
+        // Cache a fresh copy
+        if (resp.ok) {
+          const clone = resp.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
+        }
+        return resp;
+      }).catch(() => caches.match(req))  // offline fallback
+    );
+    return;
+  }
+
+  // Versioned assets (?v=...): cache-first (they never change content for a given version)
+  if (url.searchParams.has('v')) {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        if (cached) return cached;
+        return fetch(req).then(resp => {
+          if (resp.ok) {
+            const clone = resp.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
+          }
+          return resp;
+        });
+      })
+    );
+    return;
+  }
+});
+
+// ── Push Notifications ───────────────────────────────────────────
+self.addEventListener('push', event => {
   const data = event.data ? event.data.json() : {};
   const title = data.title || 'Fortized';
   const options = {
@@ -13,11 +84,11 @@ self.addEventListener('push', function(event) {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', event => {
   event.notification.close();
   const url = event.notification.data?.url || '/app';
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
       for (const client of clientList) {
         if (client.url.includes('/app') && 'focus' in client) return client.focus();
       }
@@ -25,6 +96,3 @@ self.addEventListener('notificationclick', function(event) {
     })
   );
 });
-
-self.addEventListener('install', function() { self.skipWaiting(); });
-self.addEventListener('activate', function(event) { event.waitUntil(self.clients.claim()); });

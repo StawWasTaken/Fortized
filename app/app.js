@@ -36327,14 +36327,14 @@ async function _checkAndAwardPendingQuests() {
 async function _initPushNotifications() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
+    // SW is already registered on page load; just get the existing registration
+    const reg = await navigator.serviceWorker.ready;
     if (Notification.permission === 'default') {
-      // Don't ask immediately — wait for user to interact
-      _dbg('[Push] Service worker registered, permission pending');
+      _dbg('[Push] Service worker ready, permission pending');
     } else if (Notification.permission === 'granted') {
       _dbg('[Push] Notifications already granted');
     }
-  } catch(e) { _dbg('[Push] SW registration failed:', e); }
+  } catch(e) { _dbg('[Push] SW ready failed:', e); }
 }
 function askNotificationPermission() {
   if (!('Notification' in window)) { toast('Notifications not supported','error'); return; }

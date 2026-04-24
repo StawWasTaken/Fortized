@@ -394,31 +394,33 @@ body.is-desktop-app .topbar{padding-right:0;}
 .onyx-pill img{width:14px;height:14px;object-fit:contain;}
 /* ═══ Topbar wallet capsules (onyx + streak) — gamescard aesthetic ═══ */
 .tb-wallet{display:flex;align-items:center;gap:8px;}
-.tb-cap{position:relative;display:flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.03) 0%,rgba(255,255,255,.01) 100%);border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:border-color .18s cubic-bezier(.22,1,.36,1),transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s cubic-bezier(.22,1,.36,1);white-space:nowrap;overflow:hidden;}
+.tb-cap{position:relative;display:flex;align-items:center;gap:9px;padding:6px 14px 6px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.03) 0%,rgba(255,255,255,.01) 100%);border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:border-color .18s cubic-bezier(.22,1,.36,1),transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s cubic-bezier(.22,1,.36,1);white-space:nowrap;overflow:hidden;}
 .tb-cap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0,rgba(255,255,255,.14) 50%,transparent 100%);pointer-events:none;}
-.tb-cap-ic{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;flex-shrink:0;}
+/* Icon holder — no box, no border. Just a flex cell that sizes the icon. */
+.tb-cap-ic{display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:0;}
+.tb-cap-ic svg,.tb-cap-ic img{width:18px;height:18px;object-fit:contain;display:block;}
 .tb-cap-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;}
 .tb-cap-lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.35);letter-spacing:.02em;line-height:1;}
 /* Onyx capsule — yellow accent */
-.tb-cap--onyx .tb-cap-ic{background:radial-gradient(circle at 30% 30%,rgba(255,249,62,.18),rgba(255,249,62,.04));border:1px solid rgba(255,249,62,.18);}
 .tb-cap--onyx .tb-cap-val{color:#fff93e;}
 .tb-cap--onyx:hover{border-color:rgba(255,249,62,.3);transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,249,62,.08),inset 0 1px 0 rgba(255,249,62,.08);}
 .tb-cap--onyx:hover::before{background:linear-gradient(90deg,transparent 0,rgba(255,249,62,.4) 50%,transparent 100%);}
-/* Streak capsule — orange/red flame accent */
-.tb-cap--streak .tb-cap-ic{background:radial-gradient(circle at 30% 30%,rgba(255,138,62,.2),rgba(255,62,94,.04));border:1px solid rgba(255,138,62,.22);}
+/* Streak capsule — flame accent. Icon color inherits from capsule state. */
+.tb-cap--streak .tb-cap-ic{color:#ff8a3e;filter:drop-shadow(0 0 4px rgba(255,138,62,.35));}
 .tb-cap--streak .tb-cap-val{color:#ff9d5e;}
 .tb-cap--streak:hover{border-color:rgba(255,138,62,.32);transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,138,62,.09),inset 0 1px 0 rgba(255,138,62,.08);}
 .tb-cap--streak:hover::before{background:linear-gradient(90deg,transparent 0,rgba(255,138,62,.4) 50%,transparent 100%);}
 .tb-cap--streak.is-zero{opacity:.55;}
 .tb-cap--streak.is-zero .tb-cap-val{color:rgba(255,255,255,.35);}
-.tb-cap--streak.is-zero .tb-cap-ic{filter:grayscale(.7) opacity(.7);}
+.tb-cap--streak.is-zero .tb-cap-ic{color:rgba(255,255,255,.25);filter:none;}
 /* Shield overlay when protected */
 .tb-streak-shield{position:absolute;top:-3px;right:-3px;width:14px;height:14px;display:flex;align-items:center;justify-content:center;background:#0c0f1a;border-radius:50%;border:1.5px solid rgba(74,144,245,.5);color:#4a90f5;}
 .tb-cap--streak.is-protected{border-color:rgba(74,144,245,.22);}
 .tb-cap--streak.is-protected .tb-cap-val{color:#7eb8f7;}
+.tb-cap--streak.is-protected .tb-cap-ic{color:#7eb8f7;filter:drop-shadow(0 0 4px rgba(74,144,245,.35));}
 /* Legacy .tb-onyx-pill selector retained for backwards-compat with any
    remaining references; visually equivalent to the new onyx capsule. */
-.tb-onyx-pill{display:flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,249,62,.15);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);white-space:nowrap;}
+.tb-onyx-pill{display:flex;align-items:center;gap:9px;padding:6px 14px 6px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,249,62,.15);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);white-space:nowrap;}
 .tb-onyx-pill:hover{background:linear-gradient(135deg,rgba(254,248,61,.1),rgba(254,248,61,.04));border-color:rgba(254,248,61,.3);transform:translateY(-1px);box-shadow:0 4px 16px rgba(254,248,61,.08);}
 
 /* ═══ Public streak chip — forum posts, profile previews, profile cards ═══ */

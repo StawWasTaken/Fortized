@@ -2284,6 +2284,9 @@ function updateOnyxDisplay() {
     const el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
+  // Keep the Onyx capsule tooltip in sync with the balance (unified format).
+  const onyxPill = document.getElementById('onyx-display');
+  if (onyxPill) onyxPill.title = `${bal.toLocaleString()} Onyx · click to open Atelier · right-click for options`;
   if (_lastOnyxSeen !== null && bal !== _lastOnyxSeen && typeof _logJoysterEvent === 'function') {
     const delta = bal - _lastOnyxSeen;
     if (delta <= -5) _logJoysterEvent(`spent ${Math.abs(delta)} Onyx (now ${bal})`);
@@ -2291,6 +2294,44 @@ function updateOnyxDisplay() {
   }
   _lastOnyxSeen = bal;
   updateStreakDisplay();
+}
+
+// Right-click handler for the Onyx capsule — mirrors the streak menu structure
+// (header row with balance + 3 action items with consistent icon set).
+function onOnyxCtxMenu(ev) {
+  ev.preventDefault();
+  const balance = CU?.onyx || 0;
+  const onyxIcon = '<img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
+  const shopIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
+  const questIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  const radIcon = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.5 6.5L21 9.3l-5 4.7 1.3 7-5.3-3.6L6.7 21 8 14l-5-4.7 6.5-.8z"/></svg>';
+  const items = [
+    { icon: onyxIcon, label: `${balance.toLocaleString()} Onyx`, hint: 'Balance', disabled: true },
+    {
+      icon: shopIcon, label: 'Open the Fortshop', hint: 'Atelier',
+      action: () => {
+        if (typeof showView === 'function') showView('atelier');
+        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('shop'), 80);
+      },
+    },
+    {
+      icon: questIcon, label: 'Earn Onyx from quests', hint: 'Atelier',
+      action: () => {
+        if (typeof showView === 'function') showView('atelier');
+        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('quests'), 80);
+      },
+    },
+    {
+      icon: radIcon, label: 'Buy Radiance', hint: 'Atelier',
+      action: () => {
+        if (typeof showView === 'function') showView('atelier');
+        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('radiance'), 80);
+      },
+    },
+  ];
+  if (typeof showCtxMenu === 'function') {
+    showCtxMenu(ev.clientX, ev.clientY, [{ label: 'Onyx', items }]);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -2407,20 +2448,16 @@ async function _checkStreakValidity() {
   if (typeof updateStreakDisplay === 'function') updateStreakDisplay();
 }
 
-// Inline flame SVG used across the app (topbar capsule, quest widget,
-// forum chips, profile previews/cards). Size is px.
-function _streakFlameSvg(size) {
-  const s = size || 14;
-  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="flameGrad" x1="50%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#ffd93e"/><stop offset="50%" stop-color="#ff8a3e"/><stop offset="100%" stop-color="#ff3e5e"/></linearGradient></defs><path fill="url(#flameGrad)" d="M13.5 2.5c.6 2.4-.8 3.9-2.2 5.3C9.6 9.5 8 11 8 13.5c0 1.1.4 2 1 2.7-.3-1.8.6-3 1.6-4 .3 2 1.2 3.1 2.3 3.8-.2-1 .2-1.9.8-2.6.8 2.2 2.5 3 2.5 5.1 0 3-2.5 5-5.7 5-3.6 0-6.5-2.9-6.5-6.7 0-4 2.7-5.9 5.2-8.4 1.7-1.7 3-3.4 3.3-5.9.5.4 1 .9 1 2Z"/></svg>`;
+// Fire-left icon: single solid path, leans to the left, inherits currentColor
+// so the capsule's state colour (orange / blue-protected / grey-zero) flows
+// through automatically. Size is px; color is optional (defaults to inherit).
+function _streakFlameSvg(size, color) {
+  const s = size || 18;
+  const fill = color || 'currentColor';
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${fill}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.73 2.2a.75.75 0 0 1 1.18-.35c2.64 2.2 4.86 5.23 4.86 8.93 0 4.9-3.8 8.47-8.27 8.47-4.38 0-7.5-3.3-7.5-7.55 0-2.2 1.17-4.4 3.07-6.13a.75.75 0 0 1 1.23.45c.2 1.4.88 2.4 1.65 2.95.08-2.4 1-4.5 2.3-5.9 1-1.08 1.45-1.56 1.48-.87ZM12 17.5c1.9 0 3.5-1.53 3.5-3.53 0-1.5-.83-2.5-1.72-3.4-.2.7-.7 1.1-1.3 1.1-.8-1.8-.3-3.5-1.08-5.7-.8 1.3-1.9 2.9-1.9 5.1 0 .85.28 1.5.75 1.95-.8-.2-1.42-.95-1.58-1.85C8.1 11.7 7.75 12.6 7.75 13.6c0 2.2 1.8 3.9 4.25 3.9Z"/></svg>`;
 }
-
-// Lightweight version for small pills (solid flame, no gradient overhead when
-// many are rendered on a list).
-function _streakFlameSvgSolid(size, color) {
-  const s = size || 11;
-  const c = color || '#ff8a3e';
-  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${c}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.5 2.5c.6 2.4-.8 3.9-2.2 5.3C9.6 9.5 8 11 8 13.5c0 1.1.4 2 1 2.7-.3-1.8.6-3 1.6-4 .3 2 1.2 3.1 2.3 3.8-.2-1 .2-1.9.8-2.6.8 2.2 2.5 3 2.5 5.1 0 3-2.5 5-5.7 5-3.6 0-6.5-2.9-6.5-6.7 0-4 2.7-5.9 5.2-8.4 1.7-1.7 3-3.4 3.3-5.9.5.4 1 .9 1 2Z"/></svg>`;
-}
+// Back-compat alias: _streakFlameSvgSolid(size, color) — same glyph.
+function _streakFlameSvgSolid(size, color) { return _streakFlameSvg(size || 12, color || 'currentColor'); }
 
 // Updates the topbar streak capsule with the current streak + protection state.
 function updateStreakDisplay() {
@@ -2434,16 +2471,12 @@ function updateStreakDisplay() {
   pillEl.classList.toggle('is-zero', streak === 0);
   const shield = pillEl.querySelector('.tb-streak-shield');
   if (shield) shield.style.display = protected_ ? '' : 'none';
-  // Title tooltip
-  let title;
-  if (streak === 0) title = 'No streak yet — claim your daily in Atelier to start one. Right-click to protect.';
-  else if (protected_) {
-    const until = new Date(+CU.streakProtectedUntil);
-    title = `${streak}-day streak · protected until ${until.toLocaleDateString()}. Right-click for options.`;
-  } else {
-    title = `${streak}-day streak. Right-click to protect it (30 Onyx / 30 days).`;
-  }
-  pillEl.title = title;
+  // Unified tooltip format: "<state> · click to X · right-click for options"
+  let state;
+  if (streak === 0) state = 'No streak yet';
+  else if (protected_) state = `${streak}-day streak · protected until ${new Date(+CU.streakProtectedUntil).toLocaleDateString()}`;
+  else state = `${streak}-day streak`;
+  pillEl.title = `${state} · click to claim daily · right-click for options`;
 }
 
 // Buy or extend streak protection. Stacks from the existing expiry, so calling
@@ -33126,8 +33159,8 @@ function renderAtelierTab(tab) {
         </div>
         <!-- Streak widget -->
         <div oncontextmenu="onStreakCtxMenu(event);return false;" style="display:flex;align-items:center;gap:12px;padding:14px 18px 14px 14px;background:linear-gradient(135deg,rgba(255,138,62,.07),rgba(255,62,94,.02));border:1.5px solid rgba(255,138,62,.15);border-radius:16px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,138,62,.28)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(255,138,62,.1)'" onmouseout="this.style.borderColor='rgba(255,138,62,.15)';this.style.transform='';this.style.boxShadow=''" title="Right-click for streak options">
-          <div style="position:relative;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 30%,rgba(255,138,62,.22),rgba(255,62,94,.04));border:1px solid rgba(255,138,62,.22);border-radius:12px;">
-            ${_streakFlameSvg(26)}
+          <div style="position:relative;width:48px;height:48px;display:flex;align-items:center;justify-content:center;color:#ff8a3e;filter:drop-shadow(0 0 4px rgba(255,138,62,.3));">
+            ${_streakFlameSvg(32)}
             ${_isStreakProtected() ? '<div style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:#0c0f1a;border-radius:50%;border:1.5px solid rgba(74,144,245,.55);color:#4a90f5;" title="Protected"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></div>' : ''}
           </div>
           <div>

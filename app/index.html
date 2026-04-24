@@ -293,13 +293,13 @@ window._cdnReady.then(() => {
       <span id="tb-notif-badge" style="display:none;position:absolute;top:1px;right:1px;min-width:18px;height:18px;border-radius:100px;background:#ef4444;color:#fff;font-size:9px;font-weight:800;font-family:'Syne',sans-serif;padding:0 4px;line-height:18px;text-align:center;box-shadow:0 2px 8px rgba(239,68,68,.5),0 0 0 2.5px var(--panel);animation:notifBadgePulse 2s ease-in-out infinite;"></span>
     </button>
     <div class="tb-wallet">
-      <div class="tb-cap tb-cap--onyx" id="onyx-display" onclick="showView('atelier')" title="Your Onyx balance — click to open Atelier">
-        <div class="tb-cap-ic"><img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;" alt=""></div>
+      <div class="tb-cap tb-cap--onyx" id="onyx-display" onclick="showView('atelier')" oncontextmenu="onOnyxCtxMenu&amp;&amp;onOnyxCtxMenu(event);return false;" title="Onyx balance · click to open Atelier · right-click for options">
+        <div class="tb-cap-ic"><img src="/Onyx.png" alt=""></div>
         <span id="onyx-val" class="tb-cap-val">0</span>
         <span class="tb-cap-lbl">Onyx</span>
       </div>
-      <div class="tb-cap tb-cap--streak is-zero" id="streak-display" onclick="showView('atelier');setTimeout(()=>switchAtelierTab&&switchAtelierTab('quests'),80)" oncontextmenu="onStreakCtxMenu(event);return false;" title="Daily streak — right-click for options">
-        <div class="tb-cap-ic" id="streak-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="tbFlameGrad" x1="50%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#ffd93e"/><stop offset="50%" stop-color="#ff8a3e"/><stop offset="100%" stop-color="#ff3e5e"/></linearGradient></defs><path fill="url(#tbFlameGrad)" d="M13.5 2.5c.6 2.4-.8 3.9-2.2 5.3C9.6 9.5 8 11 8 13.5c0 1.1.4 2 1 2.7-.3-1.8.6-3 1.6-4 .3 2 1.2 3.1 2.3 3.8-.2-1 .2-1.9.8-2.6.8 2.2 2.5 3 2.5 5.1 0 3-2.5 5-5.7 5-3.6 0-6.5-2.9-6.5-6.7 0-4 2.7-5.9 5.2-8.4 1.7-1.7 3-3.4 3.3-5.9.5.4 1 .9 1 2Z"/></svg></div>
+      <div class="tb-cap tb-cap--streak is-zero" id="streak-display" onclick="showView('atelier');setTimeout(()=>switchAtelierTab&amp;&amp;switchAtelierTab('quests'),80)" oncontextmenu="onStreakCtxMenu&amp;&amp;onStreakCtxMenu(event);return false;" title="Daily streak · click to claim daily · right-click for options">
+        <div class="tb-cap-ic" id="streak-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.73 2.2a.75.75 0 0 1 1.18-.35c2.64 2.2 4.86 5.23 4.86 8.93 0 4.9-3.8 8.47-8.27 8.47-4.38 0-7.5-3.3-7.5-7.55 0-2.2 1.17-4.4 3.07-6.13a.75.75 0 0 1 1.23.45c.2 1.4.88 2.4 1.65 2.95.08-2.4 1-4.5 2.3-5.9 1-1.08 1.45-1.56 1.48-.87ZM12 17.5c1.9 0 3.5-1.53 3.5-3.53 0-1.5-.83-2.5-1.72-3.4-.2.7-.7 1.1-1.3 1.1-.8-1.8-.3-3.5-1.08-5.7-.8 1.3-1.9 2.9-1.9 5.1 0 .85.28 1.5.75 1.95-.8-.2-1.42-.95-1.58-1.85C8.1 11.7 7.75 12.6 7.75 13.6c0 2.2 1.8 3.9 4.25 3.9Z"/></svg></div>
         <span id="streak-val" class="tb-cap-val">0</span>
         <span class="tb-cap-lbl">Days</span>
         <span class="tb-streak-shield" style="display:none;" title="Streak protected"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></span>

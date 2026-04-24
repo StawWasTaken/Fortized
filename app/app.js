@@ -2284,12 +2284,281 @@ function updateOnyxDisplay() {
     const el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
+  // Keep the Onyx capsule tooltip in sync with the balance (unified format).
+  const onyxPill = document.getElementById('onyx-display');
+  if (onyxPill) onyxPill.title = `${bal.toLocaleString()} Onyx · click to open Atelier · right-click for options`;
   if (_lastOnyxSeen !== null && bal !== _lastOnyxSeen && typeof _logJoysterEvent === 'function') {
     const delta = bal - _lastOnyxSeen;
     if (delta <= -5) _logJoysterEvent(`spent ${Math.abs(delta)} Onyx (now ${bal})`);
     else if (delta >= 5) _logJoysterEvent(`gained ${delta} Onyx (now ${bal})`);
   }
   _lastOnyxSeen = bal;
+  updateStreakDisplay();
+}
+
+// Right-click handler for the Onyx capsule — mirrors the streak menu structure
+// (header row with balance + 3 action items with consistent icon set).
+function onOnyxCtxMenu(ev) {
+  ev.preventDefault();
+  const balance = CU?.onyx || 0;
+  const onyxIcon = '<img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
+  const shopIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
+  const questIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  const radIcon = '<img src="/fortized%20badges/radiance.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
+  const items = [
+    { icon: onyxIcon, label: `${balance.toLocaleString()} Onyx`, hint: 'Balance', disabled: true },
+    {
+      icon: shopIcon, label: 'Open the Fortshop', hint: 'Atelier',
+      action: () => {
+        if (typeof showView === 'function') showView('atelier');
+        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('shop'), 80);
+      },
+    },
+    {
+      icon: questIcon, label: 'Earn Onyx from quests', hint: 'Atelier',
+      action: () => {
+        if (typeof showView === 'function') showView('atelier');
+        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('quests'), 80);
+      },
+    },
+    {
+      icon: radIcon, label: 'Buy Radiance', hint: 'Atelier',
+      action: () => {
+        if (typeof showView === 'function') showView('atelier');
+        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('radiance'), 80);
+      },
+    },
+  ];
+  if (typeof showCtxMenu === 'function') {
+    showCtxMenu(ev.clientX, ev.clientY, [{ label: 'Onyx', items }]);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Daily Streak — persistence, validity check, grace period, protection
+// ══════════════════════════════════════════════════════════════════════════
+// Data fields on CU (all persisted via saveUser):
+//   dailyStreak           – int, current consecutive-day count
+//   streakDate            – YYYY-MM-DD string of the last day the streak was
+//                           counted as valid
+//   streakProtectedUntil  – epoch-ms; while >= now, the streak is protected
+//                           and missed days don't reset it (stacks on purchase)
+//   streakGraceUsedAt     – epoch-ms of the last time the grace pass was used;
+//                           grace becomes available again 6 months later
+
+const STREAK_DAY_MS = 86400000;
+const STREAK_GRACE_COOLDOWN_MS = 182 * STREAK_DAY_MS; // ≈6 months
+const STREAK_PROTECT_COST = 30;   // Onyx
+const STREAK_PROTECT_DAYS = 30;   // days added per purchase
+
+function _streakDateStr(d) {
+  // Use YYYY-MM-DD in local time so the streak tracks calendar days the way
+  // the user experiences them.
+  const dt = (d instanceof Date) ? d : new Date(d);
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function _daysBetween(aStr, bStr) {
+  // Whole-day difference between two YYYY-MM-DD strings (b - a).
+  const [ay,am,ad] = aStr.split('-').map(Number);
+  const [by,bm,bd] = bStr.split('-').map(Number);
+  const a = new Date(ay, am-1, ad).getTime();
+  const b = new Date(by, bm-1, bd).getTime();
+  return Math.round((b - a) / STREAK_DAY_MS);
+}
+
+function _isStreakProtected() {
+  const until = +CU?.streakProtectedUntil || 0;
+  return until > Date.now();
+}
+
+function _isStreakGraceAvailable() {
+  // Available if never used, or used ≥6 months ago.
+  const last = +CU?.streakGraceUsedAt || 0;
+  if (!last) return true;
+  return (Date.now() - last) >= STREAK_GRACE_COOLDOWN_MS;
+}
+
+// Called on session-start and on window focus. Catches the case where the
+// user has been offline long enough that the streak should break, and
+// applies grace / protection if available.
+async function _checkStreakValidity() {
+  if (!CU || !CU.username) return;
+  const streak = +CU.dailyStreak || 0;
+  if (streak <= 0) return; // nothing to protect
+
+  const today = _streakDateStr(new Date());
+  const last  = CU.streakDate || null;
+  if (!last) {
+    // Migrate: if we have a streak but no streakDate, anchor it to today so
+    // we don't falsely reset a long-standing streak on first upgrade.
+    CU.streakDate = today;
+    try { await saveUser(); } catch(_) {}
+    return;
+  }
+  const gap = _daysBetween(last, today);
+  if (gap <= 1) return; // today or yesterday — still valid, nothing to do
+
+  // Missed at least one full day. Try protection first, then grace, else break.
+  if (_isStreakProtected()) {
+    CU.streakDate = today;
+    try { await saveUser(); } catch(_) {}
+    return;
+  }
+
+  if (_isStreakGraceAvailable()) {
+    CU.streakGraceUsedAt = Date.now();
+    CU.streakDate = today;
+    try { await saveUser(); } catch(_) {}
+    // Notify the user in their inbox that their grace was used.
+    try {
+      if (typeof FortizedSocial !== 'undefined' && FortizedSocial.addNotification) {
+        await FortizedSocial.addNotification(CU.username, {
+          type: 'streak_grace',
+          from: 'Fortized',
+          msg: `You missed a day, but your 6-month grace kicked in — your ${streak}-day streak is safe. Don't miss another one, the grace won't refresh for 6 months.`,
+          time: Date.now(),
+          read: false,
+        });
+        if (typeof updateNotifBadge === 'function') updateNotifBadge();
+      }
+    } catch (e) { _dbg?.('[Streak] grace notify failed', e); }
+    return;
+  }
+
+  // No protection, no grace → streak breaks.
+  CU.dailyStreak = 0;
+  CU.streakDate = today;
+  try { await saveUser(); } catch(_) {}
+  try {
+    if (typeof FortizedSocial !== 'undefined' && FortizedSocial.addNotification) {
+      await FortizedSocial.addNotification(CU.username, {
+        type: 'streak_broken',
+        from: 'Fortized',
+        msg: `Your ${streak}-day streak broke. You'd already used your grace this 6-month window, so it couldn't save you this time. Start a new streak with your next daily claim.`,
+        time: Date.now(),
+        read: false,
+      });
+      if (typeof updateNotifBadge === 'function') updateNotifBadge();
+    }
+  } catch (e) { _dbg?.('[Streak] break notify failed', e); }
+  if (typeof updateStreakDisplay === 'function') updateStreakDisplay();
+}
+
+// Fire-left icon: single solid path, leans to the left, inherits currentColor
+// so the capsule's state colour (orange / blue-protected / grey-zero) flows
+// through automatically. Size is px; color is optional (defaults to inherit).
+function _streakFlameSvg(size, color) {
+  const s = size || 18;
+  const fill = color || 'currentColor';
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${fill}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.73 2.2a.75.75 0 0 1 1.18-.35c2.64 2.2 4.86 5.23 4.86 8.93 0 4.9-3.8 8.47-8.27 8.47-4.38 0-7.5-3.3-7.5-7.55 0-2.2 1.17-4.4 3.07-6.13a.75.75 0 0 1 1.23.45c.2 1.4.88 2.4 1.65 2.95.08-2.4 1-4.5 2.3-5.9 1-1.08 1.45-1.56 1.48-.87ZM12 17.5c1.9 0 3.5-1.53 3.5-3.53 0-1.5-.83-2.5-1.72-3.4-.2.7-.7 1.1-1.3 1.1-.8-1.8-.3-3.5-1.08-5.7-.8 1.3-1.9 2.9-1.9 5.1 0 .85.28 1.5.75 1.95-.8-.2-1.42-.95-1.58-1.85C8.1 11.7 7.75 12.6 7.75 13.6c0 2.2 1.8 3.9 4.25 3.9Z"/></svg>`;
+}
+// Back-compat alias: _streakFlameSvgSolid(size, color) — same glyph.
+function _streakFlameSvgSolid(size, color) { return _streakFlameSvg(size || 12, color || 'currentColor'); }
+
+// Updates the topbar streak capsule with the current streak + protection state.
+function updateStreakDisplay() {
+  const valEl = document.getElementById('streak-val');
+  const pillEl = document.getElementById('streak-display');
+  if (!pillEl) return;
+  const streak = +CU?.dailyStreak || 0;
+  const protected_ = _isStreakProtected();
+  if (valEl) valEl.textContent = streak;
+  pillEl.classList.toggle('is-protected', protected_);
+  pillEl.classList.toggle('is-zero', streak === 0);
+  const shield = pillEl.querySelector('.tb-streak-shield');
+  if (shield) shield.style.display = protected_ ? '' : 'none';
+  // Unified tooltip format: "<state> · click to X · right-click for options"
+  let state;
+  if (streak === 0) state = 'No streak yet';
+  else if (protected_) state = `${streak}-day streak · protected until ${new Date(+CU.streakProtectedUntil).toLocaleDateString()}`;
+  else state = `${streak}-day streak`;
+  pillEl.title = `${state} · click to claim daily · right-click for options`;
+}
+
+// Buy or extend streak protection. Stacks from the existing expiry, so calling
+// this twice in a row extends by 60 days total.
+async function buyStreakProtection() {
+  if (!CU) return;
+  const cost = STREAK_PROTECT_COST;
+  const days = STREAK_PROTECT_DAYS;
+  if ((CU.onyx || 0) < cost) {
+    toast(`You need ${cost} Onyx to protect your streak.`, 'error');
+    return;
+  }
+  if (!CU.dailyStreak || CU.dailyStreak <= 0) {
+    toast('Start a streak first — claim your daily in the Atelier.', 'info');
+    return;
+  }
+  const base = Math.max(Date.now(), +CU.streakProtectedUntil || 0);
+  const newUntil = base + days * STREAK_DAY_MS;
+  const stacking = (+CU.streakProtectedUntil || 0) > Date.now();
+  const msg = stacking
+    ? `Extend streak protection by ${days} days for ${cost} Onyx? New expiry: ${new Date(newUntil).toLocaleDateString()}.`
+    : `Protect your ${CU.dailyStreak}-day streak for ${days} days (${cost} Onyx)?`;
+  showCustomConfirm(msg, async () => {
+    CU.onyx = (CU.onyx || 0) - cost;
+    CU.streakProtectedUntil = newUntil;
+    await saveUser(true);
+    updateOnyxDisplay();
+    toast(`🛡 Streak protected until ${new Date(newUntil).toLocaleDateString()}`, 'success');
+  });
+}
+
+// Right-click handler for the streak capsule — opens the unified ctx menu.
+function onStreakCtxMenu(ev) {
+  ev.preventDefault();
+  const streak = +CU?.dailyStreak || 0;
+  const protected_ = _isStreakProtected();
+  const untilStr = protected_ ? new Date(+CU.streakProtectedUntil).toLocaleDateString() : null;
+  const graceOK = _isStreakGraceAvailable();
+  const graceNext = !graceOK ? new Date((+CU.streakGraceUsedAt || 0) + STREAK_GRACE_COOLDOWN_MS).toLocaleDateString() : null;
+
+  const flameIcon = _streakFlameSvgSolid(14);
+  const shieldIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  const statusIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  const questIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+
+  const headerLabel = streak > 0 ? `${streak}-day streak` : 'No streak yet';
+  const statusLabel = protected_
+    ? `Protected until ${untilStr}`
+    : (graceOK ? 'Grace pass available' : `Grace refreshes ${graceNext}`);
+
+  const items = [
+    { icon: flameIcon, label: headerLabel, hint: statusLabel, disabled: true },
+    {
+      icon: shieldIcon,
+      label: protected_ ? `Extend protection · +${STREAK_PROTECT_DAYS} days` : `Protect streak · ${STREAK_PROTECT_DAYS} days`,
+      hint: `${STREAK_PROTECT_COST} Onyx`,
+      action: () => buyStreakProtection(),
+      disabled: streak <= 0,
+    },
+    {
+      icon: questIcon,
+      label: streak > 0 ? 'Open daily claim' : 'Start a streak',
+      hint: 'Atelier',
+      action: () => {
+        if (typeof showView === 'function') showView('atelier');
+        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('quests'), 80);
+      },
+    },
+  ];
+  if (typeof showCtxMenu === 'function') {
+    showCtxMenu(ev.clientX, ev.clientY, [{ label: 'Daily streak', items }]);
+  }
+}
+
+// Renders a small public-facing streak chip. `streak` is the integer.
+// Used on forum posts, profile previews, and profile cards. Returns '' for 0.
+function renderStreakChip(streak, opts) {
+  const n = +streak || 0;
+  if (n <= 0) return '';
+  const size = (opts && opts.size) || 'sm';
+  const cls = size === 'lg' ? 'streak-chip streak-chip--lg' : 'streak-chip';
+  return `<span class="${cls}" title="${n}-day streak">${_streakFlameSvgSolid(size === 'lg' ? 14 : 11)}<span class="streak-chip-n">${n}</span></span>`;
 }
 function updateAtelierSidebar() {
   if (!CU) return;
@@ -8102,6 +8371,7 @@ async function loadDiscover(){
     const totalMembers=discoverData.reduce((s,b)=>s+(b.memberCount||1),0);
     statsEl.innerHTML=`<div class="disc-stat"><strong>${publicCount}</strong> communities</div><div class="disc-stat"><strong>${totalMembers}</strong> total members</div>`;
   }
+  _renderDiscoverActivities();
   _renderDiscoverFeatured(discoverData);
   renderDiscoverGrid(discoverData);
 }
@@ -8118,7 +8388,7 @@ function _renderDiscoverFeatured(bastions){
     const boostBadge = (b.boostLevel||0)>0?(['🟦 Tier 1','🟪 Tier 2','👑 Tier 3'][(b.boostLevel||1)-1]):'';
     return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,${(b.boostLevel||0)>0?'rgba(255,249,62,.08)':'rgba(255,249,62,.04)'},rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.12)'};border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(12px);" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px ${(b.boostLevel||0)>0?'rgba(255,249,62,.12)':'rgba(255,249,62,.06)'}';" onmouseleave="this.style.transform='';this.style.boxShadow='';">
       <div style="width:52px;height:52px;border-radius:14px;background:${(b.boostLevel||0)>0?'linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,249,62,.05))':'rgba(255,249,62,.06)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.1)'};overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
-      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}${b.verified?` <svg width="16" height="16" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:2px;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''} ${boostBadge?'<span style="font-size:10px;margin-left:6px;font-weight:700;color:var(--accent);">'+boostBadge+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>`:`<span style="color:rgba(255,255,255,.4);">💤 ${mc>1?'Active':'Quiet'}</span>`}</div></div>
+      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}${b.verified?_verifiedBadge(16):''} ${boostBadge?'<span style="font-size:10px;margin-left:6px;font-weight:700;color:var(--accent);">'+boostBadge+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>`:`<span style="color:rgba(255,255,255,.4);">💤 ${mc>1?'Active':'Quiet'}</span>`}</div></div>
       ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">✓ Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);padding:5px 12px;border-radius:10px;">+ Join</span>`}
     </div>`;
   }).join('')}</div>`;
@@ -8163,7 +8433,7 @@ function renderDiscoverGrid(bastions){
           <div style="flex:1"></div>
           ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);padding:4px 12px;border-radius:8px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Joined</span>`:`<button class="ftz-btn ftz-btn-accent ftz-btn-xs" style="padding:5px 16px;border-radius:8px;" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">+ Join</button>`}
         </div>
-        <div class="bc-name">${escapeHTML(b.name)}${b.verified?` <svg width="16" height="16" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:4px;flex-shrink:0;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}</div>
+        <div class="bc-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(16):''}</div>
         <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,140))}</div>
         <div class="bc-footer">
           <span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.35);"><span style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;"></span> ${mc > 1000 ? Math.floor(mc/1000)+'K' : Math.max(1,Math.floor(mc*0.3))} Online</span>
@@ -8178,6 +8448,810 @@ function filterDiscover(q){
   const query=q.toLowerCase().trim();
   if(!query){renderDiscoverGrid(discoverData);return;}
   renderDiscoverGrid(discoverData.filter(b=>(b.name||'').toLowerCase().includes(query)||(b.desc||'').toLowerCase().includes(query)||(b.category||'').toLowerCase().includes(query)));
+}
+
+// ── Activities ─────────────────────────────────────────────────────────────
+// ── Activity icon SVGs (Lucide-style, 20×20) ──
+const _ACT_ICONS = {
+  'mist-and-cards': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3" width="11" height="16" rx="2" transform="rotate(-10 10 11)"/><rect x="8.5" y="5" width="11" height="16" rx="2" transform="rotate(8 14 13)"/></svg>',
+  'pixel-canvas': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+  'word-duel':    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="21" x2="9" y2="19"/></svg>',
+  'poll-stage':   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
+};
+
+// Standard permission set granted to every Fortized activity upon user acceptance
+const ACTIVITY_PERMISSIONS = [
+  { svg: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>', text: 'See your display name and avatar' },
+  { svg: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>', text: 'Know you are a Fortized member' },
+  { svg: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', text: 'Earn and spend Onyx through authorised in-activity transactions' },
+  { svg: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>', text: 'Store activity progress locally on your device' },
+  { svg: '<circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>', text: 'Display your activity state in your presence' },
+];
+
+const FORTIZED_ACTIVITIES = [
+  {
+    id: 'mist-and-cards',
+    name: 'Mist & Cards',
+    desc: 'A wager game from the year 1487. Stake your Onyx against the Stranger in the Mist, draw one card, and test fate.',
+    owner: 'Fortized',
+    ownerVerified: true,
+    category: 'Games',
+    players: 'You vs The Stranger',
+    tags: ['cards', 'wager', 'mystery'],
+    languages: ['French', 'English'],
+    launchCount: 1247,
+    comingSoon: false,
+    dominantRgb: [190, 150, 40],
+    bannerBg: 'radial-gradient(ellipse at 22% 60%,rgba(255,220,80,.28) 0%,transparent 45%),radial-gradient(ellipse at 78% 30%,rgba(200,160,40,.18) 0%,transparent 42%),radial-gradient(ellipse at 55% 90%,rgba(140,100,20,.2) 0%,transparent 40%),linear-gradient(135deg,#14110a 0%,#1e1a0e 40%,#2a220f 70%,#0a0906 100%)',
+    bannerAccent: 'rgba(255,220,80,.14)',
+  },
+  {
+    id: 'pixel-canvas',
+    name: 'Pixel Canvas',
+    desc: 'Paint pixel art on a living shared canvas. Claim zones, defend your work, and watch the world evolve.',
+    owner: 'Fortized',
+    ownerVerified: true,
+    category: 'Creative',
+    players: '1–50 players',
+    tags: ['art', 'canvas', 'creative'],
+    languages: ['English'],
+    launchCount: 892,
+    comingSoon: true,
+    dominantRgb: [0, 130, 80],
+    bannerBg: 'radial-gradient(ellipse at 24% 48%,rgba(0,255,150,.3) 0%,transparent 44%),radial-gradient(ellipse at 76% 28%,rgba(0,220,255,.22) 0%,transparent 42%),radial-gradient(ellipse at 50% 86%,rgba(0,200,100,.25) 0%,transparent 38%),linear-gradient(135deg,#001f14 0%,#003c28 40%,#005a42 70%,#001208 100%)',
+    bannerAccent: 'rgba(0,200,120,.18)',
+  },
+  {
+    id: 'word-duel',
+    name: 'Word Duel',
+    desc: 'Fast-paced word battles — one challenger, one board. Outsmart your opponent before the timer runs out.',
+    owner: 'Fortized',
+    ownerVerified: true,
+    category: 'Games',
+    players: '2 players',
+    tags: ['words', 'duel', 'pvp'],
+    languages: ['English', 'French'],
+    launchCount: 634,
+    comingSoon: true,
+    dominantRgb: [160, 70, 0],
+    bannerBg: 'radial-gradient(ellipse at 28% 42%,rgba(255,140,20,.4) 0%,transparent 46%),radial-gradient(ellipse at 72% 72%,rgba(255,80,0,.3) 0%,transparent 42%),radial-gradient(ellipse at 50% 18%,rgba(255,200,80,.22) 0%,transparent 36%),linear-gradient(135deg,#250c00 0%,#561e00 40%,#8a3800 70%,#160600 100%)',
+    bannerAccent: 'rgba(255,120,20,.18)',
+  },
+  {
+    id: 'poll-stage',
+    name: 'Poll Stage',
+    desc: 'Host live polls, ranked votes, and heated debates inside any bastion. Results animate in real time.',
+    owner: 'Fortized',
+    ownerVerified: true,
+    category: 'Social',
+    players: 'Any size',
+    tags: ['polls', 'vote', 'social'],
+    languages: ['English', 'French'],
+    launchCount: 2108,
+    comingSoon: true,
+    dominantRgb: [100, 20, 180],
+    bannerBg: 'radial-gradient(ellipse at 22% 35%,rgba(160,50,255,.42) 0%,transparent 44%),radial-gradient(ellipse at 76% 68%,rgba(80,20,255,.32) 0%,transparent 42%),radial-gradient(ellipse at 50% 88%,rgba(210,70,255,.2) 0%,transparent 36%),linear-gradient(135deg,#0e0022 0%,#230055 40%,#380080 70%,#090012 100%)',
+    bannerAccent: 'rgba(150,50,255,.18)',
+  },
+];
+
+let _activeActivity = null;
+
+function _actBanner(act) {
+  const icon = _ACT_ICONS[act.id] || '';
+  return `<div style="width:100%;height:100%;position:relative;overflow:hidden;background:${act.bannerBg};">
+    <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(rgba(255,255,255,.03) 0 1px,transparent 1px 36px),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 36px);background-size:36px 36px;"></div>
+    <div style="position:absolute;top:-20px;left:-20px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,${act.bannerAccent},transparent);filter:blur(18px);"></div>
+    <div style="position:absolute;right:-6px;bottom:-6px;color:rgba(255,255,255,.07);transform:scale(4.2) rotate(-12deg);pointer-events:none;">${icon}</div>
+  </div>`;
+}
+
+function _actIconBox(act) {
+  const [r,g,b] = act.dominantRgb;
+  const icon = _ACT_ICONS[act.id] || '';
+  return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${r},${g},${b},.9),rgba(${r},${g},${b},.6));border-radius:12px;color:#fff;">${icon}</div>`;
+}
+
+function _renderDiscoverActivities() {
+  const grid = document.getElementById('disc-activities-grid');
+  if (!grid) return;
+  grid.innerHTML = FORTIZED_ACTIVITIES.map(act => {
+    const [r,g,b] = act.dominantRgb;
+    const ownerBadge = act.ownerVerified ? _verifiedBadge(12) : '';
+    return `<div class="ac" onclick="openActivityOverview('${act.id}')" style="cursor:pointer;">
+      ${act.comingSoon ? `<div style="position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-radius:6px;padding:3px 9px;font-size:9px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;">Soon</div>` : ''}
+      <div class="ac-banner">${_actBanner(act)}</div>
+      <div class="ac-body" style="background:linear-gradient(180deg,rgba(${r},${g},${b},.14) 0%,rgba(${r},${g},${b},.04) 100%);">
+        <div class="ac-meta">
+          <div class="ac-icon">${_actIconBox(act)}</div>
+        </div>
+        <div class="ac-name">${escapeHTML(act.name)}</div>
+        <div class="ac-desc">${escapeHTML(act.desc)}</div>
+        <div class="ac-footer">
+          <div class="ac-owner" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;" title="View ${escapeHTML(act.owner)}'s profile">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            ${escapeHTML(act.owner)}${ownerBadge}
+          </div>
+          <span class="ac-players">${escapeHTML(act.players)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Activity Overview ────────────────────────────────────────────
+// Clicking a card opens the overview page (detail view inside discover).
+// The Launch button in the overview then triggers the permission dialog.
+
+function openActivityOverview(id) {
+  const act = FORTIZED_ACTIVITIES.find(a => a.id === id);
+  if (!act) return;
+  if (act.comingSoon) {
+    toast(`${act.name} is coming soon — stay tuned!`, 'info');
+    return;
+  }
+
+  const discScroll = document.getElementById('discover-scroll');
+  const hero    = discScroll ? discScroll.querySelector('.disc-hero') : null;
+  const subnav  = discScroll ? discScroll.querySelector('.disc-subnav') : null;
+  const bastionsPage   = document.getElementById('disc-page-bastions');
+  const activitiesPage = document.getElementById('disc-page-activities');
+  const overview       = document.getElementById('disc-activity-overview');
+  if (!overview) return;
+
+  if (hero)          hero.style.display = 'none';
+  if (subnav)        subnav.style.display = 'none';
+  if (bastionsPage)  bastionsPage.style.display = 'none';
+  if (activitiesPage) activitiesPage.style.display = 'none';
+
+  const [r,g,b] = act.dominantRgb;
+  const gjgBadge = (act.owner === 'Fortized')
+    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" title="Grand Joy Games" style="height:20px;vertical-align:middle;margin-left:6px;opacity:.9;">`
+    : '';
+
+  const langIcons = (act.languages || []).join(' · ');
+  const launchNum = act.launchCount ? `${(act.launchCount).toLocaleString()} launches` : '';
+
+  const others = FORTIZED_ACTIVITIES.filter(a => a.id !== id);
+  const othersHTML = others.map(o => {
+    const [or,og,ob] = o.dominantRgb;
+    return `<div onclick="openActivityOverview('${o.id}')" style="flex-shrink:0;width:160px;background:var(--panel2);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="this.style.transform='';this.style.borderColor='rgba(255,255,255,.07)'">
+      <div style="height:72px;position:relative;overflow:hidden;background:${o.bannerBg};">
+        <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(rgba(255,255,255,.03) 0 1px,transparent 1px 28px),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 28px);background-size:28px 28px;"></div>
+      </div>
+      <div style="padding:10px 12px 12px;">
+        <div style="width:36px;height:36px;border-radius:10px;margin-top:-22px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${or},${og},${ob},.9),rgba(${or},${og},${ob},.55));color:#fff;border:3px solid var(--panel2);">${_ACT_ICONS[o.id] || ''}</div>
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;">${escapeHTML(o.name)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">${escapeHTML(o.category)}${o.comingSoon ? ' · Soon' : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  overview.style.display = 'block';
+  overview.innerHTML = `
+    <div class="act-ov-wrap">
+      <!-- Back -->
+      <button class="act-ov-back" onclick="_closeActivityOverview()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Activities
+      </button>
+
+      <!-- Banner -->
+      <div class="act-ov-banner">${_actBanner(act)}</div>
+
+      <!-- Header row -->
+      <div class="act-ov-header">
+        <div class="act-ov-icon">${_actIconBox(act)}</div>
+        <div class="act-ov-title-col">
+          <div class="act-ov-name">${escapeHTML(act.name)}${gjgBadge}</div>
+          <div class="act-ov-sub">
+            <span onclick="event.stopPropagation();viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.55);transition:color .15s;" onmouseover="this.style.color='rgba(255,249,62,.85)'" onmouseout="this.style.color='rgba(255,249,62,.55)'">${escapeHTML(act.owner)}</span>
+            <span style="color:rgba(255,255,255,.2);">·</span>
+            <span>${escapeHTML(act.category)}</span>
+          </div>
+        </div>
+        <button class="act-ov-launch-btn" onclick="launchActivity('${act.id}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Launch
+        </button>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="act-ov-stats">
+        ${launchNum ? `<div class="act-ov-stat">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          ${launchNum}
+        </div>` : ''}
+        ${langIcons ? `<div class="act-ov-stat">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          ${escapeHTML(langIcons)}
+        </div>` : ''}
+      </div>
+
+      <!-- Divider -->
+      <div style="height:1px;background:rgba(255,255,255,.06);margin:0 24px;"></div>
+
+      <!-- About -->
+      <div class="act-ov-section">
+        <div class="act-ov-section-label">About</div>
+        <p class="act-ov-desc">${escapeHTML(act.desc)}</p>
+      </div>
+
+      <!-- You might also like -->
+      ${others.length ? `<div class="act-ov-section">
+        <div class="act-ov-section-label">You might also like</div>
+        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">${othersHTML}</div>
+      </div>` : ''}
+
+      <!-- Report -->
+      <div style="padding:0 24px 32px;">
+        <button onclick="_reportActivity('${act.id}')" style="background:none;border:none;color:rgba(255,255,255,.22);font-size:11.5px;font-family:var(--font-ui);cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;transition:color .15s;" onmouseover="this.style.color='rgba(255,100,100,.6)'" onmouseout="this.style.color='rgba(255,255,255,.22)'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Report activity
+        </button>
+      </div>
+    </div>`;
+
+  if (discScroll) discScroll.scrollTop = 0;
+}
+
+function _closeActivityOverview() {
+  const discScroll = document.getElementById('discover-scroll');
+  const hero    = discScroll ? discScroll.querySelector('.disc-hero') : null;
+  const subnav  = discScroll ? discScroll.querySelector('.disc-subnav') : null;
+  const overview = document.getElementById('disc-activity-overview');
+  if (overview) overview.style.display = 'none';
+  if (hero)   hero.style.display = '';
+  if (subnav) subnav.style.display = '';
+  // Restore activities sub-page (the subnav was on activities tab)
+  const activitiesPage = document.getElementById('disc-page-activities');
+  if (activitiesPage) activitiesPage.style.display = '';
+}
+
+function _reportActivity(id) {
+  toast('Report submitted. Our team will review it shortly.', 'success');
+}
+
+function launchActivity(id) {
+  const act = FORTIZED_ACTIVITIES.find(a => a.id === id);
+  if (!act) return;
+  if (act.comingSoon) {
+    toast(`${act.name} is coming soon — stay tuned!`, 'info');
+    return;
+  }
+  const permKey = 'ftza_perm_' + id;
+  if (!localStorage.getItem(permKey)) {
+    _showActivityPermDialog(act, () => {
+      localStorage.setItem(permKey, '1');
+      _openActivityScreen(act);
+    });
+  } else {
+    _openActivityScreen(act);
+  }
+}
+
+function _showActivityPermDialog(act, onAccept) {
+  const existing = document.getElementById('modal-activity-perm');
+  if (existing) existing.remove();
+  const [r,g,b] = act.dominantRgb;
+
+  const permItems = ACTIVITY_PERMISSIONS.map(p =>
+    `<li style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.045);">
+      <div style="width:32px;height:32px;border-radius:9px;background:rgba(${r},${g},${b},.12);border:1px solid rgba(${r},${g},${b},.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(${r},${g},${b},1)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p.svg}</svg>
+      </div>
+      <span style="font-size:12.5px;color:rgba(255,255,255,.65);font-family:var(--font-ui);line-height:1.4;">${escapeHTML(p.text)}</span>
+    </li>`
+  ).join('');
+
+  const gjgBadge = (act.owner === 'Fortized')
+    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:14px;margin-left:4px;vertical-align:middle;opacity:.7;">`
+    : '';
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-activity-perm';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);';
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:22px;max-width:400px;width:92%;box-shadow:0 32px 100px rgba(0,0,0,.6);overflow:hidden;">
+      <!-- Coloured header band -->
+      <div style="height:6px;background:linear-gradient(90deg,rgba(${r},${g},${b},.8),rgba(${r},${g},${b},.35));"></div>
+      <div style="padding:24px 24px 20px;">
+        <!-- Activity identity -->
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
+          <div style="width:56px;height:56px;border-radius:16px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,rgba(${r},${g},${b},.9),rgba(${r},${g},${b},.55));display:flex;align-items:center;justify-content:center;color:#fff;">${_ACT_ICONS[act.id]||''}</div>
+          <div>
+            <div style="font-family:var(--font-display);font-size:17px;font-weight:900;color:#fff;letter-spacing:-.02em;margin-bottom:4px;">${escapeHTML(act.name)}</div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">
+              <span onclick="document.getElementById('modal-activity-perm').remove();viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.55);">${escapeHTML(act.owner)}</span>${gjgBadge}
+              <span style="color:rgba(255,255,255,.2);">·</span>
+              <span>${escapeHTML(act.category)}</span>
+            </div>
+          </div>
+        </div>
+        <!-- Permissions heading -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.07em;text-transform:uppercase;font-family:var(--font-ui);">This activity will be able to</span>
+        </div>
+        <ul style="list-style:none;margin:0;padding:0;">${permItems}</ul>
+        <!-- Legal footer -->
+        <p style="font-size:11px;color:rgba(255,255,255,.2);font-family:var(--font-ui);margin:16px 0 20px;line-height:1.6;">
+          By launching you agree to Fortized's
+          <a href="/legal/privacy-policy" style="color:rgba(255,249,62,.45);text-decoration:none;" target="_blank">Privacy Policy</a>
+          and
+          <a href="/legal/terms-of-use" style="color:rgba(255,249,62,.45);text-decoration:none;" target="_blank">Terms of Use</a>.
+          This dialog won't appear again for this activity.
+        </p>
+        <!-- Actions -->
+        <div style="display:flex;gap:10px;">
+          <button onclick="document.getElementById('modal-activity-perm').remove()" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;color:rgba(255,255,255,.45);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Cancel</button>
+          <button id="perm-accept-btn" style="flex:2;padding:11px;background:var(--accent);border:none;border-radius:11px;color:#000;font-family:var(--font-display);font-size:13px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:-.01em;transition:opacity .15s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Launch Activity
+          </button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.getElementById('perm-accept-btn').addEventListener('click', () => {
+    modal.remove();
+    onAccept();
+  });
+}
+
+function _openActivityScreen(act) {
+  _activeActivity = act;
+  const screen = document.getElementById('activity-screen');
+  if (!screen) return;
+  const nameEl = document.getElementById('act-tb-name');
+  const contentEl = document.getElementById('act-content');
+  if (nameEl) nameEl.textContent = act.name;
+  if (contentEl) {
+    if (act.id === 'mist-and-cards') {
+      _mcMount(contentEl);
+    } else {
+      const [rr,gg,bb] = act.dominantRgb;
+      contentEl.innerHTML = `
+        <div style="text-align:center;max-width:420px;padding:40px 24px;">
+          <div style="width:72px;height:72px;border-radius:20px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rr},${gg},${bb},.85),rgba(${rr},${gg},${bb},.5));color:#fff;transform:scale(1.6);">${_ACT_ICONS[act.id]||''}</div>
+          <div style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin-bottom:8px;">${escapeHTML(act.name)}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.4);font-family:var(--font-ui);line-height:1.6;">${escapeHTML(act.desc)}</div>
+        </div>`;
+    }
+  }
+  const pillName = document.getElementById('apill-name');
+  if (pillName) pillName.textContent = act.name;
+  requestAnimationFrame(() => screen.classList.add('is-open'));
+}
+
+function _minimizeActivity() {
+  const screen = document.getElementById('activity-screen');
+  const pill = document.getElementById('activity-pill');
+  if (screen) screen.classList.remove('is-open');
+  if (pill) pill.style.display = 'flex';
+}
+
+function _resumeActivity() {
+  const screen = document.getElementById('activity-screen');
+  const pill = document.getElementById('activity-pill');
+  if (screen) screen.classList.add('is-open');
+  if (pill) pill.style.display = 'none';
+}
+
+function _leaveActivity() {
+  const screen = document.getElementById('activity-screen');
+  const pill = document.getElementById('activity-pill');
+  if (screen) screen.classList.remove('is-open');
+  if (pill) pill.style.display = 'none';
+  _activeActivity = null;
+}
+
+
+// ════════════════════════════════════════════════════════════════
+// MIST & CARDS — Fortized's first activity
+// A 15th-century wager game against The Stranger in the Mist.
+// Higher card wins. Joyster is a wildcard. Bets are in Onyx.
+// Contains 4 subtle hints toward a future werewolf-themed event.
+// ════════════════════════════════════════════════════════════════
+const MC_SUITS = {
+  hearts:   { color: 'yellow', name: 'Hearts',   svg: '<path d="M12 21.5s-7-4.5-9.5-9.5C1 9 2.5 5 6 5c2 0 3.5 1.2 4.5 2.5C11.5 6.2 13 5 15 5c3.5 0 5 4 3.5 7-2.5 5-9.5 9.5-9.5 9.5z" fill="currentColor"/>' },
+  spades:   { color: 'yellow', name: 'Spades',   svg: '<path d="M12 2C8 6 3 10 3 14.5c0 3 2.2 5 5 5 1.3 0 2.3-.4 3-1l-1 4h4l-1-4c.7.6 1.7 1 3 1 2.8 0 5-2 5-5C21 10 16 6 12 2z" fill="currentColor"/>' },
+  clubs:    { color: 'black',  name: 'Clubs',    svg: '<g fill="currentColor"><circle cx="12" cy="7" r="3.8"/><circle cx="7.3" cy="13.5" r="3.8"/><circle cx="16.7" cy="13.5" r="3.8"/><path d="M10.2 14.5l1.2 5.5-2 2.5h5.2l-2-2.5 1.2-5.5z"/></g>' },
+  losanges: { color: 'black',  name: 'Losanges', svg: '<path d="M12 1.5 C 15 6, 20 11.5, 22 16 C 20 20.5, 15 26, 12 30.5 C 9 26, 4 20.5, 2 16 C 4 11.5, 9 6, 12 1.5 Z" fill="currentColor" transform="scale(1, 0.75) translate(0, 2.5)"/>' },
+};
+const MC_RANK_ORDER = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+// Joyster (jester) has its own slot at the top of the rank order (wildcard)
+const MC_PIP_LAYOUTS = {
+  1:  [ {c:2,r:4} ],
+  2:  [ {c:2,r:1}, {c:2,r:7,flip:true} ],
+  3:  [ {c:2,r:1}, {c:2,r:4}, {c:2,r:7,flip:true} ],
+  4:  [ {c:1,r:1}, {c:3,r:1}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
+  5:  [ {c:1,r:1}, {c:3,r:1}, {c:2,r:4}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
+  6:  [ {c:1,r:1}, {c:3,r:1}, {c:1,r:4}, {c:3,r:4}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
+  7:  [ {c:1,r:1}, {c:3,r:1}, {c:2,r:2}, {c:1,r:4}, {c:3,r:4}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
+  8:  [ {c:1,r:1}, {c:3,r:1}, {c:2,r:2}, {c:1,r:4}, {c:3,r:4}, {c:2,r:6,flip:true}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
+  9:  [ {c:1,r:1}, {c:3,r:1}, {c:1,r:3}, {c:3,r:3}, {c:2,r:4}, {c:1,r:5,flip:true}, {c:3,r:5,flip:true}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
+  10: [ {c:1,r:1}, {c:3,r:1}, {c:2,r:2}, {c:1,r:3}, {c:3,r:3}, {c:1,r:5,flip:true}, {c:3,r:5,flip:true}, {c:2,r:6,flip:true}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
+};
+
+// Werewolf-event foreshadowing lines — shown rarely as "whispers"
+const MC_WHISPERS = [
+  'A howl drifts from the tree line. Far off. For now.',
+  'The Stranger glances at the moon — nearly full.',
+  'You smell wet fur on the wind. No one is there.',
+  '"The pack stirs," the Stranger murmurs. "Soon enough."',
+];
+
+let _mcState = null;
+let _mcEl = null;
+
+function _mcGetBalance() { return Math.max(0, +CU?.onyx || 0); }
+
+function _mcMount(container) {
+  _mcState = {
+    phase: 'lore',             // lore | betting | dealing | reveal | outcome
+    bet: 0,
+    playerCard: null,
+    botCard: null,
+    playerWon: null,            // true | false | null (push)
+    handsPlayed: +localStorage.getItem('mc_hands_played') || 0,
+    sessionWhispers: [],
+  };
+  _mcEl = container;
+  container.innerHTML = `
+    <div class="mc-stage" id="mc-stage">
+      <div class="mc-mist"></div>
+      <div class="mc-whisper" id="mc-whisper"></div>
+      <div class="mc-topbar">
+        <div class="mc-brand">
+          <div>
+            <div class="mc-brand-title">Mist &amp; Cards</div>
+            <div class="mc-brand-sub">Anno Domini 1487</div>
+          </div>
+        </div>
+        <div class="mc-pot" id="mc-pot">${_onyxImg(14)} <span id="mc-pot-val">${_mcGetBalance().toLocaleString()}</span></div>
+      </div>
+      <div class="mc-body" id="mc-body"></div>
+    </div>`;
+  _mcRender();
+}
+
+function _mcRender() {
+  if (!_mcEl) return;
+  const body = _mcEl.querySelector('#mc-body');
+  const potVal = _mcEl.querySelector('#mc-pot-val');
+  if (potVal) potVal.textContent = _mcGetBalance().toLocaleString();
+  if (!body) return;
+  const s = _mcState;
+  if (s.phase === 'lore')     body.innerHTML = _mcRenderLore();
+  else if (s.phase === 'betting') body.innerHTML = _mcRenderBetting();
+  else if (s.phase === 'dealing' || s.phase === 'reveal' || s.phase === 'outcome') body.innerHTML = _mcRenderDuel();
+}
+
+function _mcRenderLore() {
+  return `
+    <div class="mc-lore">
+      <div class="mc-lore-crest">
+        <svg width="44" height="44" viewBox="0 0 24 32" fill="currentColor"><path d="M12 1 C 15 6, 20 12, 22 16 C 20 20, 15 26, 12 31 C 9 26, 4 20, 2 16 C 4 12, 9 6, 12 1 Z"/></svg>
+      </div>
+      <h1 class="mc-lore-title">Mist &amp; Cards</h1>
+      <div class="mc-lore-sub">A Wager in the Dark</div>
+      <p class="mc-lore-text">
+        The Stranger waits where the <em>mists</em> have not lifted in seven days. Across the fire, they deal a single card and ask one thing of you:
+        <em>how much of your Onyx do you trust to fate?</em>
+      </p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="mc-cta" onclick="_mcBegin()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          Approach the Fire
+        </button>
+        <button class="mc-cta secondary" onclick="_mcShowRules()">How It's Played</button>
+      </div>
+    </div>`;
+}
+
+function _mcShowRules() {
+  const existing = document.getElementById('mc-rules-modal');
+  if (existing) existing.remove();
+  const m = document.createElement('div');
+  m.id = 'mc-rules-modal';
+  m.style.cssText = 'position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);';
+  m.innerHTML = `
+    <div style="background:#14141a;border:1px solid rgba(236,230,217,.12);border-radius:18px;padding:28px;max-width:420px;width:90%;font-family:'Fraunces',serif;color:#ece6d9;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+      <div style="font-family:'Syne',serif;font-size:20px;font-weight:700;margin-bottom:4px;">The Rules</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.3em;color:rgba(236,230,217,.4);text-transform:uppercase;margin-bottom:18px;">a single draw · a single outcome</div>
+      <ol style="padding-left:18px;line-height:1.7;font-size:13.5px;color:rgba(236,230,217,.75);margin:0 0 18px;">
+        <li>Stake your Onyx — 5, 10, 25, or 50 pieces.</li>
+        <li>You and the Stranger each draw one card.</li>
+        <li>Higher rank wins. Joyster is a wildcard; on reveal it takes a rank of fortune.</li>
+        <li>Win: you receive <strong>twice</strong> your stake. Lose: your stake is gone.</li>
+        <li>A draw returns your stake to you.</li>
+      </ol>
+      <div style="font-size:11.5px;color:rgba(236,230,217,.42);font-style:italic;margin-bottom:18px;line-height:1.5;">
+        Hearts &amp; Spades bear the gold. Clubs &amp; Losanges wear the dark. The four suits watch and do not speak.
+      </div>
+      <button onclick="document.getElementById('mc-rules-modal').remove()" class="mc-cta" style="width:100%;">Close</button>
+    </div>`;
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+}
+
+function _mcBegin() {
+  _mcState.phase = 'betting';
+  _mcRender();
+}
+
+function _mcRenderBetting() {
+  const bal = _mcGetBalance();
+  const chips = [5, 10, 25, 50];
+  return `
+    <div class="mc-bet-stage">
+      <div class="mc-bet-prompt">Place your stake</div>
+      <div class="mc-bet-sub">Choose your wager</div>
+      <div class="mc-chips">
+        ${chips.map(c => `<button class="mc-chip" ${bal<c?'disabled':''} onclick="_mcPlaceBet(${c})"><span class="mc-chip-amt">${c}</span><span class="mc-chip-lbl">Onyx</span></button>`).join('')}
+      </div>
+      <div class="mc-balance">${_onyxImg(11)} <span>${bal.toLocaleString()} available</span></div>
+      ${bal < 5 ? `<div style="margin-top:18px;font-size:12px;color:rgba(248,113,113,.7);font-family:'Fraunces',serif;font-style:italic;">Your purse is too light. Earn Onyx and return.</div>` : ''}
+    </div>`;
+}
+
+function _mcPlaceBet(amount) {
+  if (_mcGetBalance() < amount) return;
+  _mcState.bet = amount;
+  _mcState.phase = 'dealing';
+  // Deduct the stake up front
+  CU.onyx = Math.max(0, (+CU.onyx||0) - amount);
+  if (typeof saveUser === 'function') saveUser();
+  if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
+  _mcRender();
+  // Deal after a brief "dealing" pause
+  setTimeout(() => _mcDeal(), 700);
+}
+
+function _mcDrawRandomCard() {
+  // 1 in 25 chance: Joyster (wildcard)
+  if (Math.random() < 0.04) {
+    return { rank: 'JOY', suit: 'joyster', color: 'yellow', isJoyster: true };
+  }
+  const suitKeys = Object.keys(MC_SUITS);
+  const suit = suitKeys[Math.floor(Math.random() * suitKeys.length)];
+  const rank = MC_RANK_ORDER[Math.floor(Math.random() * MC_RANK_ORDER.length)];
+  return { rank, suit, color: MC_SUITS[suit].color, isJoyster: false };
+}
+
+function _mcRankValue(card) {
+  if (card.isJoyster) {
+    // Joyster resolves as a random rank at reveal — stored on card
+    return card.resolvedValue;
+  }
+  return MC_RANK_ORDER.indexOf(card.rank) + 1;
+}
+
+function _mcDeal() {
+  const s = _mcState;
+  s.playerCard = _mcDrawRandomCard();
+  s.botCard = _mcDrawRandomCard();
+  // Resolve Joyster values immediately so reveals are deterministic
+  if (s.playerCard.isJoyster) s.playerCard.resolvedValue = 1 + Math.floor(Math.random() * 13);
+  if (s.botCard.isJoyster)    s.botCard.resolvedValue    = 1 + Math.floor(Math.random() * 13);
+  s.phase = 'reveal';
+  _mcRender();
+}
+
+function _mcRevealCards() {
+  const s = _mcState;
+  if (s.phase !== 'reveal') return;
+  const pEl = document.querySelector('#mc-player-card');
+  const bEl = document.querySelector('#mc-bot-card');
+  if (pEl) pEl.classList.add('flipped');
+  if (bEl) setTimeout(() => bEl.classList.add('flipped'), 500);
+  setTimeout(() => _mcResolve(), 1400);
+}
+
+function _mcResolve() {
+  const s = _mcState;
+  const pv = _mcRankValue(s.playerCard);
+  const bv = _mcRankValue(s.botCard);
+  let delta = 0;
+  if (pv > bv)      { s.playerWon = true;  delta = s.bet; }        // win: return stake + match
+  else if (pv < bv) { s.playerWon = false; delta = 0; }             // loss: stake already gone
+  else              { s.playerWon = null;  delta = 0; }             // push: will refund
+
+  if (s.playerWon === true) {
+    CU.onyx = (+CU.onyx||0) + (s.bet * 2);   // refund stake + winnings
+  } else if (s.playerWon === null) {
+    CU.onyx = (+CU.onyx||0) + s.bet;          // push — refund stake
+  }
+  if (typeof saveUser === 'function') saveUser();
+  if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
+
+  // Visual glow on winner card
+  const pWrap = document.querySelector('#mc-player-card-wrap');
+  const bWrap = document.querySelector('#mc-bot-card-wrap');
+  if (s.playerWon === true) { pWrap?.classList.add('is-winner'); bWrap?.classList.add('is-loser'); }
+  else if (s.playerWon === false) { pWrap?.classList.add('is-loser'); bWrap?.classList.add('is-winner'); }
+
+  s.phase = 'outcome';
+  s.handsPlayed = (s.handsPlayed||0) + 1;
+  localStorage.setItem('mc_hands_played', String(s.handsPlayed));
+  _mcUpdateOutcome();
+  _mcMaybeWhisper();
+}
+
+function _mcUpdateOutcome() {
+  const potVal = _mcEl?.querySelector('#mc-pot-val');
+  if (potVal) potVal.textContent = _mcGetBalance().toLocaleString();
+  const area = _mcEl?.querySelector('#mc-actions-area');
+  if (!area) return;
+  const s = _mcState;
+  let label, amt, cls;
+  if (s.playerWon === true)      { label = 'You win';     amt = '+' + s.bet;          cls = 'is-win';  }
+  else if (s.playerWon === false){ label = 'You lose';    amt = '−' + s.bet;          cls = 'is-loss'; }
+  else                            { label = 'A tie — stake returned'; amt = '±0';     cls = 'is-push'; }
+  area.innerHTML = `
+    <div class="mc-outcome ${cls}">
+      <div class="mc-outcome-label">${label}</div>
+      <div class="mc-outcome-amt">${amt} ${_onyxImg(20)}</div>
+    </div>
+    <div class="mc-msg">${_mcOutcomeLine()}</div>
+    <div class="mc-actions">
+      <button class="mc-cta" onclick="_mcNextHand()">Deal Again</button>
+      <button class="mc-cta secondary" onclick="_mcBackToLore()">Rise from the Fire</button>
+    </div>`;
+}
+
+function _mcOutcomeLine() {
+  const s = _mcState;
+  const WIN = [
+    'The Stranger tips their hood, approving.',
+    '"Fortune walks with you tonight."',
+    'The flames lean toward you, hungry.',
+  ];
+  const LOSE = [
+    'The Stranger says nothing. The mist closes in.',
+    '"Again, friend?" they ask softly.',
+    'You hear a distant howl. The night is long.',
+  ];
+  const PUSH = [
+    'A stalemate. The cards agree on nothing.',
+    'The Stranger almost smiles. Almost.',
+  ];
+  const pool = s.playerWon === true ? WIN : s.playerWon === false ? LOSE : PUSH;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function _mcNextHand() {
+  const s = _mcState;
+  s.bet = 0; s.playerCard = null; s.botCard = null; s.playerWon = null;
+  s.phase = 'betting';
+  _mcRender();
+}
+
+function _mcBackToLore() {
+  _mcState.phase = 'lore';
+  _mcRender();
+}
+
+function _mcRenderDuel() {
+  const s = _mcState;
+  const faceDown = s.phase === 'dealing';
+  return `
+    <div class="mc-duel">
+      <div class="mc-seat">
+        <div class="mc-seat-label">The Stranger</div>
+        <div class="mc-avatar is-stranger">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(236,230,217,.55)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C 8 4, 6 8, 6 13 L 6 20 C 6 21, 7 22, 8 22 L 16 22 C 17 22, 18 21, 18 20 L 18 13 C 18 8, 16 4, 12 2 Z"/><path d="M9 14 L 10.5 16 L 9 18"/><path d="M15 14 L 13.5 16 L 15 18"/></svg>
+        </div>
+        <div class="mc-card-wrap" id="mc-bot-card-wrap">${_mcCardHTML(s.botCard, !faceDown && s.phase !== 'reveal', 'mc-bot-card')}</div>
+      </div>
+      <div class="mc-versus">— vs —</div>
+      <div class="mc-seat">
+        <div class="mc-seat-label">You</div>
+        <div class="mc-avatar">
+          ${CU?.pfp ? `<img src="${escapeHTML(CU.pfp)}" alt="">` : `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.7)" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 22c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>`}
+        </div>
+        <div class="mc-card-wrap" id="mc-player-card-wrap">${_mcCardHTML(s.playerCard, !faceDown && s.phase !== 'reveal', 'mc-player-card')}</div>
+      </div>
+    </div>
+    <div id="mc-actions-area" style="margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+      ${s.phase === 'reveal' ? `
+        <div class="mc-msg" id="mc-reveal-msg">Your stake: <em>${s.bet} Onyx</em>. The cards wait.</div>
+        <div class="mc-actions">
+          <button class="mc-cta" onclick="_mcRevealCards()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Turn the Cards
+          </button>
+        </div>` : ''}
+      ${s.phase === 'dealing' ? `<div class="mc-msg">The Stranger deals…</div>` : ''}
+    </div>`;
+}
+
+function _mcCardHTML(card, flipped, id) {
+  // Always render the two faces; toggle .flipped class to reveal
+  const initFlipped = !!(card && flipped);
+  const cls = initFlipped ? 'flipped' : '';
+  if (!card) {
+    return `<div class="mc-card ${cls}" id="${id}"><div class="mc-card-back">${_mcCardBackCrest()}</div><div class="mc-card-face"></div></div>`;
+  }
+  const suitMeta = card.isJoyster ? { color: 'yellow' } : MC_SUITS[card.suit];
+  const faceInner = _mcCardFaceInner(card);
+  return `<div class="mc-card ${cls}" id="${id}" data-color="${suitMeta.color}">
+    <div class="mc-card-back">${_mcCardBackCrest()}</div>
+    <div class="mc-card-face">
+      ${faceInner}
+    </div>
+  </div>`;
+}
+
+function _mcCardBackCrest() {
+  return `<div class="mc-card-back-crest">
+    <svg width="54" height="72" viewBox="0 0 24 32" fill="currentColor"><path d="M12 1 C 15 6, 20 12, 22 16 C 20 20, 15 26, 12 31 C 9 26, 4 20, 2 16 C 4 12, 9 6, 12 1 Z"/></svg>
+  </div>`;
+}
+
+function _mcCardFaceInner(card) {
+  if (card.isJoyster) {
+    return `
+      <div class="mc-corner mc-corner-tl"><span class="mc-rank" style="font-size:11px;letter-spacing:.15em;">JOY</span></div>
+      <div class="mc-jest-art">
+        <div class="mc-jest-glyph">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3 L 9 7 L 5 6 L 7 10 L 4 13 L 8 14 L 8 18 L 12 16 L 16 18 L 16 14 L 20 13 L 17 10 L 19 6 L 15 7 Z"/>
+            <circle cx="12" cy="12" r="1.4" fill="currentColor"/>
+          </svg>
+        </div>
+        <div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.3em;color:rgba(255,249,62,.4);text-transform:uppercase;">Joyster · Wild</div>
+      </div>
+      <div class="mc-corner mc-corner-br"><span class="mc-rank" style="font-size:11px;letter-spacing:.15em;">JOY</span></div>`;
+  }
+  const suit = MC_SUITS[card.suit];
+  const rankLabel = card.rank;
+  const isCourt = ['J','Q','K'].includes(card.rank);
+  const pipMini = `<svg class="mc-pip-mini" viewBox="0 0 24 32">${suit.svg}</svg>`;
+  let center;
+  if (isCourt) {
+    center = `
+      <div class="mc-court">
+        <svg class="mc-seal top" viewBox="0 0 24 32">${suit.svg}</svg>
+        <div class="mc-monogram">${card.rank}</div>
+        <svg class="mc-seal bot" viewBox="0 0 24 32">${suit.svg}</svg>
+        <div class="mc-ornaments"></div>
+      </div>`;
+  } else {
+    const n = card.rank === 'A' ? 1 : parseInt(card.rank, 10);
+    const layout = MC_PIP_LAYOUTS[n];
+    if (n === 1) {
+      center = `<div class="mc-pip-field" style="grid-template-rows:1fr;">
+        <svg viewBox="0 0 24 32" style="width:56%;height:auto;grid-column:2;">${suit.svg}</svg>
+      </div>`;
+    } else {
+      center = `<div class="mc-pip-field">${layout.map(p =>
+        `<div style="grid-column:${p.c};grid-row:${p.r};" class="${p.flip ? 'flip' : ''}"><svg viewBox="0 0 24 32">${suit.svg}</svg></div>`
+      ).join('')}</div>`;
+    }
+  }
+  return `
+    <div class="mc-corner mc-corner-tl"><span class="mc-rank">${rankLabel}</span>${pipMini}</div>
+    ${center}
+    <div class="mc-corner mc-corner-br"><span class="mc-rank">${rankLabel}</span>${pipMini}</div>`;
+}
+
+function _mcMaybeWhisper() {
+  const s = _mcState;
+  // Show a werewolf whisper: rarely on early hands, more often after 3+ hands
+  const chance = s.handsPlayed >= 3 ? 0.28 : 0.12;
+  // Don't repeat in the same session
+  const pool = MC_WHISPERS.filter(w => !s.sessionWhispers.includes(w));
+  if (!pool.length || Math.random() >= chance) return;
+  const line = pool[Math.floor(Math.random() * pool.length)];
+  s.sessionWhispers.push(line);
+  const w = _mcEl?.querySelector('#mc-whisper');
+  if (!w) return;
+  w.innerHTML = `<span class="mc-whisper-mark">✦</span> ${line}`;
+  setTimeout(() => w.classList.add('is-show'), 900);
+  setTimeout(() => w.classList.remove('is-show'), 6400);
 }
 
 // Extract dominant color from an image and tint the card background
@@ -8208,6 +9282,15 @@ function _extractCardColor(img, cardId) {
   } catch(e) { /* CORS or canvas error — ignore */ }
 }
 function setDiscoverTab(tab,btn){discoverTab=tab;document.querySelectorAll('.disc-tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderDiscoverGrid(discoverData);}
+function setDiscoverSubPage(page, btn) {
+  document.querySelectorAll('.disc-subnav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const bastions = document.getElementById('disc-page-bastions');
+  const activities = document.getElementById('disc-page-activities');
+  if (bastions) bastions.style.display = page === 'bastions' ? '' : 'none';
+  if (activities) activities.style.display = page === 'activities' ? '' : 'none';
+  if (page === 'activities') _renderDiscoverActivities();
+}
 async function promptJoinPublicBastion(bastionId){
   try{
     const all=await FortizedSocial.getGlobalBastions()||{};
@@ -8680,8 +9763,20 @@ function initFortizedUXResilience() {
       } catch(e) {
         console.warn('[Init] Refresh failed but continuing:', e?.message);
       }
+      // Run the streak validity check right after refresh so we catch the
+      // case where the user was offline long enough to break/grace a streak.
+      try { await _checkStreakValidity(); } catch(e) { _dbg?.('[Streak] init check failed', e); }
+      try { updateStreakDisplay(); } catch(_) {}
     }, 50);
   }
+
+  // Re-check on tab focus — user might have left the tab open overnight,
+  // come back the next day, and the streak state would otherwise be stale.
+  window.addEventListener('focus', () => {
+    if (typeof _checkStreakValidity === 'function') {
+      _checkStreakValidity().catch(() => {});
+    }
+  });
 
   // Trigger new onboarding for first-time users
   setTimeout(showOnboarding, 600);
@@ -15796,6 +16891,7 @@ function _buildProfileView(tab) {
                     <span style="width:8px;height:8px;border-radius:50%;background:${sc};flex-shrink:0;box-shadow:0 0 6px ${sc}66;"></span>
                   </div>
                   <div style="font-size:11px;color:rgba(255,255,255,.3);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; <span style="color:rgba(255,255,255,.2);">'+escapeHTML(CU.pronouns)+'</span>' : ''}</div>
+                  ${(+CU.dailyStreak) ? '<div style="margin-top:6px;">'+renderStreakChip(+CU.dailyStreak)+'</div>' : ''}
                 </div>
                 ${cs&&cs.text ? '<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:8px;">'+(cs.emoji?'<img src="'+emojiToTwemojiUrl(cs.emoji)+'" style="width:13px;height:13px;object-fit:contain;" onerror="this.outerHTML=\''+escapeHTML(cs.emoji)+'\'">':'')+' '+escapeHTML(cs.text)+'</div>' : ''}
                 ${CU.bio ? '<div style="margin-bottom:10px;"><div style="font-size:8.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:4px;">About Me</div><div style="font-size:11px;color:rgba(255,255,255,.45);line-height:1.55;">'+escapeHTML(CU.bio.slice(0,120))+(CU.bio.length>120?'&hellip;':'')+'</div></div>' : ''}
@@ -16913,29 +18009,47 @@ async function claimDaily() {
   toast('🎉 +50 Onyx claimed!','success');
 }
 
+// Stacks from the later of (now, existing expiry) so repeat purchases extend
+// the subscription instead of overwriting it.
+function _stackFromExpiry(existingIso, days) {
+  const existing = existingIso ? new Date(existingIso).getTime() : 0;
+  const base = Math.max(Date.now(), existing || 0);
+  return new Date(base + days * 86400000).toISOString();
+}
+
 async function buyRadiance(days, cost) {
   if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
-  showCustomConfirm(`Buy ${days}-day Radiance for ${cost} Onyx?`, async ()=>{
+  const stacking = CU.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const msg = stacking
+    ? `Extend Radiance by ${days} days for ${cost} Onyx?`
+    : `Buy ${days}-day Radiance for ${cost} Onyx?`;
+  showCustomConfirm(msg, async ()=>{
     CU.onyx=(CU.onyx||0)-cost;
-    const until=new Date(); until.setDate(until.getDate()+days);
-    CU.radianceUntil=until.toISOString();
+    CU.radianceUntil = _stackFromExpiry(CU.radianceUntil, days);
     await saveUser(); updateOnyxDisplay();
     distributeOnyxRevenue(cost);
-    toast(`✨ Radiance active for ${days} days!`,'success');
+    const untilStr = new Date(CU.radianceUntil).toLocaleDateString();
+    toast(`✨ Radiance active until ${untilStr}`,'success');
   });
 }
 
 async function buyRadiancePlus(days, cost) {
-  showCustomConfirm(`Buy ${days}-day Radiance for ${cost} Onyx?`, async () => {
+  const stacking = CU.radiancePlus && new Date(CU.radiancePlus) > new Date();
+  const msg = stacking
+    ? `Extend Radiance+ by ${days} days for ${cost} Onyx?`
+    : `Buy ${days}-day Radiance for ${cost} Onyx?`;
+  showCustomConfirm(msg, async () => {
     if ((CU.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
     CU.onyx -= cost;
-    const until = new Date(Date.now() + days*86400000);
-    CU.radiancePlus = until.toISOString();
-    CU.radianceUntil = until.toISOString();
+    // Extend from the later of the two so basic + plus expirations stay aligned.
+    const base = _stackFromExpiry(CU.radiancePlus || CU.radianceUntil, days);
+    CU.radiancePlus = base;
+    CU.radianceUntil = base;
     await saveUser();
     refreshAtelierBalance();
     distributeOnyxRevenue(cost);
-    toast(`🌟 Radiance active for ${days} days!`, 'success');
+    const untilStr = new Date(base).toLocaleDateString();
+    toast(`🌟 Radiance active until ${untilStr}`, 'success');
   });
 }
 
@@ -17318,6 +18432,7 @@ async function _viewUserProfile(username) {
           ${escapeHTML(u.displayName||u.username)}
         </div>
         <div class="up-left-uname">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.25);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
+        ${(+u.dailyStreak) ? `<div class="up-left-streak" style="margin-top:8px;">${renderStreakChip(+u.dailyStreak, { size: 'lg' })}</div>` : ''}
       </div>
       <!-- Status -->
       <div class="up-left-status">
@@ -20943,7 +22058,7 @@ async function adminSearchUser() {
           ${!isMe && !alreadyFriends?`<button class="hq-quick-btn" onclick="adminForceFriend('${escapeHTML(username)}')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);">Force Friend</button>`:''}
           <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Give Onyx</button>
           <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Radiance</button>
-          ${isSuperAdmin()?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${u.verified?'Unverify':'Verify'}</button>`:''}
+          ${isSuperAdmin()?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')" style="border-color:rgba(255,249,62,.18);background:rgba(255,249,62,.05);color:rgba(255,249,62,.7);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff93e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${u.verified?'Unverify':'Verify'}</button>`:''}
           ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','force_logout')" style="border-color:rgba(248,113,113,.12);background:rgba(248,113,113,.03);color:rgba(248,113,113,.5);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Force Logout</button>`:''}
         `}
         <button class="hq-quick-btn" onclick="openDMView('${escapeHTML(username)}');_closeAdminPanel();" style="border-color:rgba(96,165,250,.15);background:rgba(96,165,250,.04);color:rgba(96,165,250,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</button>
@@ -20963,7 +22078,7 @@ async function adminSearchUser() {
               [ageLabel, ageDisplay, '#a78bfa'],
               ['Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown', '#60a5fa'],
               ['Radiance', hasRadiancePlus ? 'Active' : hasRadiance ? 'Active' : 'None', (hasRadiancePlus||hasRadiance) ? '#ffd93e' : '#6b7280'],
-              ['Verified', u.verified ? 'Yes' : 'No', u.verified ? '#3ecf6e' : '#6b7280'],
+              ['Verified', u.verified ? 'Yes' : 'No', u.verified ? '#fff93e' : '#6b7280'],
               ['Reports Against', reportsAgainst.length, reportsAgainst.length > 0 ? '#f87171' : '#3ecf6e'],
               ...(canSeeEmail ? [['Email', u.email || 'N/A', '#38bdf8']] : []),
               ...(canSeeFullData ? [
@@ -23113,7 +24228,7 @@ function renderAdminBastionsList(bastions) {
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-weight:700;font-size:13.5px;">${escapeHTML(b.name||'Unnamed')}</span>
-          ${b.verified?'<svg width="14" height="14" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+          ${b.verified?_verifiedBadge(14):''}
           ${b.public===false?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);">PRIVATE</span>':''}
           ${nsfwChannels?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:var(--red);">${nsfwChannels} NSFW</span>`:''}
           ${boostLv?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,249,62,.08);color:#ffd93e;display:inline-flex;align-items:center;gap:2px;">${_boostSvg('9')} Lv${boostLv}</span>`:''}
@@ -31146,7 +32261,7 @@ async function _gdmLoadCommunity(gameName) {
               <div class="gdm-bastion-emblem-wrap">${emblem}</div>
               <div class="gdm-community-text">
                 <div class="gdm-community-title">
-                  ${_verifiedBadge ? _verifiedBadge(14) : '<svg width="14" height="14" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+                  ${_verifiedBadge ? _verifiedBadge(14) : '<svg width="14" height="14" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#fff93e"/><path d="M15 25l6 6 12-12" stroke="#13161d" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
                   <span>${escapeHTML(match.name)}</span>
                 </div>
                 <div class="gdm-community-sub">Official ${escapeHTML(gameName)} Bastion</div>
@@ -32841,7 +33956,7 @@ function renderAtelierTab(tab) {
     el.innerHTML = `<div class="atelier-content-inner">
 
       <!-- Stats row -->
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:14px;margin-bottom:24px;">
+      <div style="display:grid;grid-template-columns:auto auto 1fr;gap:14px;margin-bottom:24px;">
         <!-- Daily progress ring -->
         <div style="display:flex;align-items:center;gap:12px;padding:14px 18px 14px 14px;background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.015));border:1.5px solid rgba(255,255,255,.06);border-radius:16px;">
           <div style="position:relative;width:48px;height:48px;">
@@ -32854,6 +33969,18 @@ function renderAtelierTab(tab) {
           <div>
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;">Daily Quests</div>
             <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);margin-top:3px;">${dailyDone === dailyTotal ? 'All done!' : (dailyTotal - dailyDone) + ' remaining'}</div>
+          </div>
+        </div>
+        <!-- Streak widget -->
+        <div oncontextmenu="onStreakCtxMenu(event);return false;" style="display:flex;align-items:center;gap:12px;padding:14px 18px 14px 14px;background:linear-gradient(135deg,rgba(255,138,62,.07),rgba(255,62,94,.02));border:1.5px solid rgba(255,138,62,.15);border-radius:16px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,138,62,.28)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(255,138,62,.1)'" onmouseout="this.style.borderColor='rgba(255,138,62,.15)';this.style.transform='';this.style.boxShadow=''" title="Right-click for streak options">
+          <div style="position:relative;width:48px;height:48px;display:flex;align-items:center;justify-content:center;color:#ff8a3e;filter:drop-shadow(0 0 4px rgba(255,138,62,.3));">
+            ${_streakFlameSvg(32)}
+            ${_isStreakProtected() ? '<div style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:#0c0f1a;border-radius:50%;border:1.5px solid rgba(74,144,245,.55);color:#4a90f5;" title="Protected"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></div>' : ''}
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;">Day Streak</div>
+            <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:${streak > 0 ? '#ff9d5e' : 'rgba(255,255,255,.35)'};line-height:1;margin-top:4px;">${streak}<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.4);margin-left:4px;letter-spacing:0;">${streak === 1 ? 'day' : 'days'}</span></div>
+            ${_isStreakProtected() ? `<div style="font-size:10px;color:#7eb8f7;margin-top:3px;font-weight:600;">Protected · ${new Date(+CU.streakProtectedUntil).toLocaleDateString()}</div>` : (streak > 0 ? '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">Claim daily to keep it alive</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">Start with today\'s claim</div>')}
           </div>
         </div>
         <!-- Stats pills -->
@@ -33898,6 +35025,7 @@ async function _forumViewThread(threadId, opts) {
                 <img class="forum-op-avatar" data-forum-author="${escapeHTML(thread.author||'')}" src="${escapeHTML(author?.pfp || _defaultPfpUrl(thread.author))}" onerror="this.src='${_defaultPfpUrl(thread.author)}'">
                 <div class="forum-user-name">${escapeHTML(author?.displayName || thread.author)}</div>
                 <div class="forum-user-handle">@${escapeHTML(thread.author)}</div>
+                <div class="forum-user-streak" data-streak-for="${escapeHTML(thread.author||'')}" style="margin-top:6px;">${(+author?.dailyStreak) ? renderStreakChip(+author.dailyStreak) : ''}</div>
                 ${(function(){const r=getStaffRole(thread.author);return r?`<div class="forum-user-role forum-user-role--${escapeHTML(r)}">${r==='superadmin'?'Superadmin':r==='admin'?'Admin':'Moderator'}</div>`:'';})()}
                 ${author?.createdAt ? `<div class="forum-user-joined">Joined ${_forumTimeAgo(new Date(author.createdAt).getTime())}</div>` : ''}
               </div>
@@ -34076,6 +35204,7 @@ function _forumRenderStaffResponseCard(thread, staffPost) {
             <strong>${escapeHTML(staffPost.author_displayName || staffPost.author)}</strong>
             <span class="forum-staff-handle">@${escapeHTML(staffPost.author || '')}</span>
             <span class="forum-staff-role forum-staff-role--${escapeHTML(role)}">${escapeHTML(roleLabel)}</span>
+            <span data-streak-for="${escapeHTML(staffPost.author||'')}" style="display:inline-flex;"></span>
             <span class="forum-staff-time">${_forumTimeAgo(staffPost.created_at)}</span>
             ${staffPost.edited_at ? `<span class="forum-edited" title="Edited ${new Date(staffPost.edited_at).toLocaleString()}">edited</span>` : ''}
           </div>
@@ -34166,6 +35295,7 @@ function _forumRenderPostCard(post, threadId, thread) {
         <img class="forum-reply-avatar" data-forum-author="${escapeHTML(post.author||'')}" src="${escapeHTML(post.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
         <div class="forum-user-name">${escapeHTML(post.author_displayName || post.author)}</div>
         <div class="forum-user-handle">@${escapeHTML(post.author)}</div>
+        <div class="forum-user-streak" data-streak-for="${escapeHTML(post.author||'')}" style="margin-top:6px;"></div>
         ${staffRole?`<div class="forum-user-role forum-user-role--${escapeHTML(staffRole)}">${staffRole==='superadmin'?'Superadmin':staffRole==='admin'?'Admin':'Moderator'}</div>`:''}
       </div>
       <div class="forum-reply-content">
@@ -34211,25 +35341,42 @@ function _svgIcon(name, size=13) {
   }
 }
 
-const _forumPfpCache = new Map();
+// Cache of author -> { pfp, streak } so the forum (and other places with
+// pre-rendered author HTML) can hydrate pfp and streak chips after render
+// without blocking on network.
+const _forumAuthorCache = new Map();
+// Back-compat alias: keep the old name working for any other callers.
+const _forumPfpCache = _forumAuthorCache; // retained for reference; reads .pfp
 async function _forumHydratePfps(root) {
   try {
     const scope = (typeof root === 'string') ? document.querySelector(root) : (root || document);
     if (!scope) return;
     const imgs = scope.querySelectorAll('img[data-forum-author]');
+    const streakHosts = scope.querySelectorAll('[data-streak-for]');
     const authors = new Set();
     imgs.forEach(i => { const a = i.getAttribute('data-forum-author'); if (a) authors.add(a); });
+    streakHosts.forEach(h => { const a = h.getAttribute('data-streak-for'); if (a) authors.add(a); });
     await Promise.all([...authors].map(async a => {
-      if (_forumPfpCache.has(a)) return;
+      if (_forumAuthorCache.has(a)) return;
       try {
         const u = await FortizedSocial.getUserByName(a);
-        _forumPfpCache.set(a, u?.pfp || '');
-      } catch(_) { _forumPfpCache.set(a, ''); }
+        _forumAuthorCache.set(a, { pfp: u?.pfp || '', streak: +u?.dailyStreak || 0 });
+      } catch(_) { _forumAuthorCache.set(a, { pfp: '', streak: 0 }); }
     }));
     imgs.forEach(i => {
       const a = i.getAttribute('data-forum-author');
-      const pfp = _forumPfpCache.get(a);
-      if (pfp) i.src = pfp;
+      const entry = _forumAuthorCache.get(a);
+      if (entry?.pfp) i.src = entry.pfp;
+    });
+    streakHosts.forEach(h => {
+      const a = h.getAttribute('data-streak-for');
+      const entry = _forumAuthorCache.get(a);
+      const streak = entry?.streak || 0;
+      if (streak > 0 && typeof renderStreakChip === 'function') {
+        h.innerHTML = renderStreakChip(streak);
+      } else {
+        h.innerHTML = '';
+      }
     });
   } catch(e) { console.warn('[Forum] pfp hydrate failed:', e); }
 }
@@ -35731,14 +36878,14 @@ async function _checkAndAwardPendingQuests() {
 async function _initPushNotifications() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
+    // SW is already registered on page load; just get the existing registration
+    const reg = await navigator.serviceWorker.ready;
     if (Notification.permission === 'default') {
-      // Don't ask immediately — wait for user to interact
-      _dbg('[Push] Service worker registered, permission pending');
+      _dbg('[Push] Service worker ready, permission pending');
     } else if (Notification.permission === 'granted') {
       _dbg('[Push] Notifications already granted');
     }
-  } catch(e) { _dbg('[Push] SW registration failed:', e); }
+  } catch(e) { _dbg('[Push] SW ready failed:', e); }
 }
 function askNotificationPermission() {
   if (!('Notification' in window)) { toast('Notifications not supported','error'); return; }
@@ -37142,16 +38289,23 @@ async function purchaseRadiance(isPlus, days, cost) {
     document.body.appendChild(ov);
     return;
   }
+  const existingExpiry = (isPlus ? CU.radiancePlus : CU.radianceUntil) || CU.radianceUntil;
+  const stacking = existingExpiry && new Date(existingExpiry) > new Date();
+  const confirmMsg = stacking
+    ? `Extend Radiance by ${days} days for ${cost} Onyx?`
+    : `Purchase Radiance for ${days} days (${cost} Onyx)?`;
   showCustomConfirm(
-    `Purchase Radiance for ${days} days (${cost} Onyx)?`,
+    confirmMsg,
     async () => {
       CU.onyx = (CU.onyx || 0) - cost;
-      const until = new Date(Date.now() + days * 86400000).toISOString();
-      CU.radiancePlus = until; CU.radianceUntil = until;
+      const until = _stackFromExpiry(existingExpiry, days);
+      if (isPlus) CU.radiancePlus = until;
+      CU.radianceUntil = until;
       await saveUser();
       updateOnyxDisplay();
       distributeOnyxRevenue(cost);
-      toast(`✨ Radiance active for ${days} days!`, 'success');
+      const untilStr = new Date(until).toLocaleDateString();
+      toast(`✨ Radiance active until ${untilStr}`, 'success');
       renderAtelierTab('radiance');
     }
   );
@@ -37400,20 +38554,27 @@ function checkGiftLinks() {
 }
 
 async function claimDailyQuest() {
-  // Both daily claim AND invite renew every day
+  // Let the validity check resolve any pending grace/reset from missed days
+  // BEFORE we award this claim, so streak reflects reality.
+  await _checkStreakValidity();
+
   const today = new Date().toDateString();
   if (CU.lastDailyReward === today || CU.lastDaily === today) {
     toast('Already claimed today! Come back tomorrow 🕛', 'info');
     return;
   }
-  // Streak tracking: check if yesterday was claimed
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
-  const wasYesterday = CU.lastDailyReward === yesterday || CU.lastDaily === yesterday;
-  if (wasYesterday) {
-    CU.dailyStreak = (CU.dailyStreak || 0) + 1;
+  // Streak tracking: increment if yesterday was valid, otherwise (first-ever
+  // claim, or returning after grace/protection expired) start at 1.
+  const todayStr     = _streakDateStr(new Date());
+  const yesterdayStr = _streakDateStr(new Date(Date.now() - STREAK_DAY_MS));
+  const prevStreakDate = CU.streakDate || null;
+  if (prevStreakDate === yesterdayStr || prevStreakDate === todayStr) {
+    CU.dailyStreak = (+CU.dailyStreak || 0) + 1;
   } else {
     CU.dailyStreak = 1;
   }
+  CU.streakDate = todayStr;
+
   const streakBonus = CU.dailyStreak >= 7 ? 25 : CU.dailyStreak >= 3 ? 10 : 0;
   const totalReward = 50 + streakBonus;
   CU.onyx = (CU.onyx || 0) + totalReward;
@@ -38073,6 +39234,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <div class="mpp-identity">
       <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
       <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.2);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
+      ${(+u.dailyStreak) ? `<div style="margin-top:6px;">${renderStreakChip(+u.dailyStreak)}</div>` : ''}
     </div>
     <!-- Status -->
     <div class="mpp-status-row">

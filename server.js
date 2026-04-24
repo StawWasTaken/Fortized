@@ -517,14 +517,31 @@ app.get('/api/bastion/invite/:code', async (req, res) => {
   }
 });
 
-// ── Serve static frontend ──────────────────────────
-// Disable caching for HTML files so code updates are picked up immediately
+// ── Static file cache headers ──────────────────────
+// Must run BEFORE express.static so headers are set before the file is sent.
 app.use((req, res, next) => {
-  if (req.path.endsWith('.html') || req.path === '/' || !req.path.includes('.')) {
+  const p = req.path;
+  // Service worker: must never be cached by CDN or browser — always fetch fresh
+  if (p === '/sw.js') {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
+    return next();
   }
+  // HTML / navigation: no-cache so deploys are always picked up
+  if (p.endsWith('.html') || p === '/' || !p.includes('.')) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    return next();
+  }
+  // Versioned assets (?v=...): immutable — content never changes for a given URL
+  if (req.query.v) {
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    return next();
+  }
+  // Everything else (images, fonts, unversioned assets): revalidate each time
+  res.set('Cache-Control', 'public, max-age=0, must-revalidate');
   next();
 });
 app.use(express.static(path.join(__dirname), {

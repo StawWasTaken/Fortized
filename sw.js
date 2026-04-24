@@ -1,7 +1,7 @@
 // Fortized Service Worker
 // Handles push notifications + ensures fresh HTML is always served
 
-const SW_VERSION = '20260424p';
+const SW_VERSION = '20260424q';
 const CACHE_NAME = 'ftz-shell-' + SW_VERSION;
 
 // ── Install: skip waiting immediately so new SW takes over fast ──
@@ -36,19 +36,11 @@ self.addEventListener('fetch', event => {
   // Only handle same-origin requests
   if (url.origin !== self.location.origin) return;
 
-  // HTML navigation requests: always go network-first, bypassing any HTTP/CDN
-  // cache between us and the server. cache:'no-store' forces a real network hit
-  // so we never pick up a stale copy from the browser's HTTP cache.
+  // HTML navigation requests: always go network-first, never cache.
+  // Caching HTML in the SW caused stale pages on sub-page reloads.
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req, { cache: 'no-store' }).then(resp => {
-        // Cache a fresh copy as offline fallback only
-        if (resp.ok) {
-          const clone = resp.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
-        }
-        return resp;
-      }).catch(() => caches.match(req))  // offline fallback
+      fetch(req, { cache: 'no-store' }).catch(() => caches.match('/app'))
     );
     return;
   }

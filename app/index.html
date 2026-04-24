@@ -52,14 +52,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=20260424m">
+<link rel="stylesheet" href="/app/styles.css?v=20260424n">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=20260424m', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=20260424n', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -576,7 +576,8 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             Bastions
           </button>
-          <button class="disc-subnav-btn" id="dsub-activities" onclick="setDiscoverSubPage('activities',this)">
+          <!-- Activities tab hidden until feature is ready -->
+          <button class="disc-subnav-btn" id="dsub-activities" onclick="setDiscoverSubPage('activities',this)" style="display:none;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             Activities
           </button>
@@ -1224,10 +1225,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=20260424m"></script>
-<script src="/app/app.js?v=20260424m"></script>
-<script src="/app/joy-system.js?v=20260424m"></script>
-<script src="/app/chronicle-games.js?v=20260424m"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=20260424n"></script>
+<script src="/app/app.js?v=20260424n"></script>
+<script src="/app/joy-system.js?v=20260424n"></script>
+<script src="/app/chronicle-games.js?v=20260424n"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

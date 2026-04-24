@@ -831,7 +831,7 @@ function saveLocal() {
       // Still too big; give up silently — the server is the source of truth.
       if (!window._saveLocalQuotaWarned) {
         window._saveLocalQuotaWarned = true;
-        console.warn('localStorage save failed (quota): profile too large to cache locally');
+        // quota still exceeded after trim — server is source of truth, skip log
       }
     }
   }
@@ -3402,7 +3402,7 @@ async function _renderWhatArePeopleBuying() {
     el.innerHTML = `<div class="home-buying-inner">` + picks.slice(0, 6).map(it => {
       const name = it.name || 'Item';
       const price = it.price != null ? Number(it.price).toLocaleString() : '—';
-      const img = it.thumb || it.image || it.src || '/fortshop_placeholder.png';
+      const img = it.thumb || it.image || it.src || '';
       const buyers = Array.isArray(it.buyers) ? it.buyers.slice(0,3) : [];
       const buyersHtml = buyers.length ? `<div class="hbc-pfps">${buyers.map(b => `<img class="hbc-pfp" data-forum-author="${escapeHTML(b)}" src="${escapeHTML(_defaultPfpUrl(b))}" onerror="this.src='${_defaultPfpUrl(b)}'" title="${escapeHTML(b)}">`).join('')}${(it.buyerCount && it.buyerCount > buyers.length) ? `<span class="hbc-pfp-more">+${it.buyerCount - buyers.length}</span>` : ''}</div>` : '';
       const isDeco = it.kind === 'decoration' && (it.decoSrc || it.image || it.thumb);
@@ -3411,7 +3411,7 @@ async function _renderWhatArePeopleBuying() {
       const ownedBadge = owned ? `<span class="hbc-owned" title="You already own this">Owned</span>` : '';
       const cardClass = 'home-buy-card' + (isDeco ? ' has-deco-preview' : '') + (owned ? ' is-owned' : '');
       return `<div class="${cardClass}" onclick="_openFortshop()" title="${escapeHTML(name)}">
-        <div class="hbc-img">${pfpPreview}<img class="hbc-deco" src="${escapeHTML(img)}" onerror="this.style.opacity='.25';this.src='/fortshop_placeholder.png'">${ownedBadge}</div>
+        <div class="hbc-img">${pfpPreview}${img ? `<img class="hbc-deco" src="${escapeHTML(img)}" onerror="this.onerror=null;this.style.opacity='0'">` : ''}${ownedBadge}</div>
         <div class="hbc-name">${escapeHTML(name)}</div>
         <div class="hbc-price"><img class="hbc-onyx" src="/Onyx.png" onerror="this.style.display='none'"><span>${price}</span></div>
         ${buyersHtml}
@@ -9327,7 +9327,7 @@ function initFortizedUXResilience() {
     try {
       localStorage.setItem('ftz_user_'+username, JSON.stringify(CU));
     } catch (e) {
-      console.warn('[Init] User cache write skipped:', e?.name || e?.message);
+      // quota exceeded — in-memory CU is still valid; skip noisy log;
       // Best-effort: try again with the heaviest field (pfp data URL) stripped
       // so we still get a cached profile on next load.
       try {

@@ -550,19 +550,28 @@ window._cdnReady.then(() => {
     </div>
 
     <!-- DISCOVER VIEW -->
-    <div class="view" id="view-discover">
-      <div class="discover-scroll">
+    <div class="view" id="view-discover" style="position:relative;overflow:hidden;">
+      <div class="discover-scroll" id="discover-scroll">
         <!-- Hero Banner -->
         <div class="disc-hero">
           <img src="/Fortized banner.png" class="disc-hero-bg" alt="">
           <div class="disc-hero-fade"></div>
           <div class="disc-hero-content">
-            <h1 style="font-family:var(--font-display);font-size:24px;font-weight:900;color:#fff;margin:0 0 4px;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.5);">Explore the realm.</h1>
-            <p style="font-size:12.5px;color:rgba(255,255,255,.45);margin:0;">Find the Bastions where people gather around the things you love.</p>
+            <h1 style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#fff;margin:0 0 3px;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.5);">Explore the realm.</h1>
+            <p style="font-size:12px;color:rgba(255,255,255,.45);margin:0;">Find the Bastions and Activities where people gather.</p>
           </div>
         </div>
+        <!-- Activities Section -->
+        <div class="act-section" id="disc-activities-section">
+          <div class="act-section-hdr">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.6)" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span class="act-section-label">Activities</span>
+            <span style="font-size:10.5px;color:rgba(255,255,255,.18);margin-left:4px;font-family:var(--font-ui);">Coming soon</span>
+          </div>
+          <div class="act-grid" id="disc-activities-grid"></div>
+        </div>
         <!-- Search + Categories -->
-        <div style="padding:20px 28px 0;">
+        <div style="padding:0 28px 0;">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
             <div class="disc-search" style="flex:1;max-width:360px;">
               <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
@@ -580,10 +589,40 @@ window._cdnReady.then(() => {
             <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
           </div>
         </div>
-        <div style="padding:0 28px;">
+        <!-- Bastions section label -->
+        <div style="padding:0 28px 12px;display:flex;align-items:center;gap:8px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.6)" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span class="act-section-label">Bastions</span>
+        </div>
+        <div style="padding:0 28px 28px;">
           <div id="disc-featured" style="margin-bottom:20px;"></div>
           <div class="bastion-grid" id="discover-grid"></div>
         </div>
+      </div>
+      <!-- Activity Full-Screen Overlay -->
+      <div class="activity-screen" id="activity-screen">
+        <div class="act-topbar" id="act-topbar">
+          <div class="act-topbar-icon"><img id="act-tb-icon" src="" alt=""></div>
+          <div class="act-topbar-name" id="act-tb-name"></div>
+          <div class="act-topbar-controls">
+            <button class="act-ctrl" onclick="_minimizeActivity()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/></svg>
+              Minimize
+            </button>
+            <button class="act-ctrl is-leave" onclick="_leaveActivity()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Leave
+            </button>
+          </div>
+        </div>
+        <div class="act-content" id="act-content"></div>
+      </div>
+      <!-- Activity Mini-Pill (minimized state) -->
+      <div class="activity-pill" id="activity-pill" style="display:none;" onclick="_resumeActivity()">
+        <div class="apill-icon"><img id="apill-icon" src="" alt=""></div>
+        <span class="apill-name" id="apill-name"></span>
+        <button class="apill-resume">Resume</button>
+        <span class="apill-close" onclick="event.stopPropagation();_leaveActivity()" title="Leave">&times;</span>
       </div>
     </div>
 

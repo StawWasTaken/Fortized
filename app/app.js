@@ -8371,6 +8371,7 @@ async function loadDiscover(){
     const totalMembers=discoverData.reduce((s,b)=>s+(b.memberCount||1),0);
     statsEl.innerHTML=`<div class="disc-stat"><strong>${publicCount}</strong> communities</div><div class="disc-stat"><strong>${totalMembers}</strong> total members</div>`;
   }
+  _renderDiscoverActivities();
   _renderDiscoverFeatured(discoverData);
   renderDiscoverGrid(discoverData);
 }
@@ -8447,6 +8448,259 @@ function filterDiscover(q){
   const query=q.toLowerCase().trim();
   if(!query){renderDiscoverGrid(discoverData);return;}
   renderDiscoverGrid(discoverData.filter(b=>(b.name||'').toLowerCase().includes(query)||(b.desc||'').toLowerCase().includes(query)||(b.category||'').toLowerCase().includes(query)));
+}
+
+// ── Activities ─────────────────────────────────────────────────────────────
+const FORTIZED_ACTIVITIES = [
+  {
+    id: 'trivia-realm',
+    name: 'Trivia Realm',
+    desc: 'Test your knowledge across history, science, gaming, and more. Compete live with others.',
+    owner: 'Fortized',
+    ownerVerified: true,
+    icon: null,
+    bannerGradient: 'linear-gradient(135deg,#1a1a4e 0%,#2d1b69 50%,#0f0f2e 100%)',
+    bannerEmoji: '🧠',
+    category: 'Games',
+    players: '2–8 players',
+    tags: ['trivia', 'quiz', 'multiplayer'],
+    permissions: ['See your display name', 'Submit answers on your behalf', 'Track your score for the session'],
+    comingSoon: true,
+  },
+  {
+    id: 'pixel-canvas',
+    name: 'Pixel Canvas',
+    desc: 'Draw pixel art together on a shared canvas. Collaborate, protect zones, and share creations.',
+    owner: 'Fortized',
+    ownerVerified: true,
+    icon: null,
+    bannerGradient: 'linear-gradient(135deg,#0e2a1a 0%,#1a4a2e 50%,#0a1a10 100%)',
+    bannerEmoji: '🎨',
+    category: 'Creative',
+    players: '1–50 players',
+    tags: ['art', 'canvas', 'creative'],
+    permissions: ['See your display name', 'Store canvas contributions', 'Read your current bastion'],
+    comingSoon: true,
+  },
+  {
+    id: 'word-duel',
+    name: 'Word Duel',
+    desc: 'Challenge friends to fast-paced word battles. Think fast, score big.',
+    owner: 'Fortized',
+    ownerVerified: true,
+    icon: null,
+    bannerGradient: 'linear-gradient(135deg,#2a1a0e 0%,#4a2e0a 50%,#1a0e00 100%)',
+    bannerEmoji: '🔤',
+    category: 'Games',
+    players: '2–4 players',
+    tags: ['words', 'duel', 'pvp'],
+    permissions: ['See your display name', 'Track match results', 'Send game invites to friends'],
+    comingSoon: true,
+  },
+  {
+    id: 'poll-stage',
+    name: 'Poll Stage',
+    desc: 'Run live polls, votes, and debates in your bastion. See results update in real time.',
+    owner: 'Fortized',
+    ownerVerified: true,
+    icon: null,
+    bannerGradient: 'linear-gradient(135deg,#1a0a2e 0%,#2d0e4a 50%,#110520 100%)',
+    bannerEmoji: '📊',
+    category: 'Social',
+    players: 'Any size',
+    tags: ['polls', 'vote', 'social'],
+    permissions: ['See your display name', 'Record your votes', 'Post results to current channel'],
+    comingSoon: true,
+  },
+];
+
+let _activeActivity = null;
+
+function _renderDiscoverActivities() {
+  const grid = document.getElementById('disc-activities-grid');
+  if (!grid) return;
+  grid.innerHTML = FORTIZED_ACTIVITIES.map(act => {
+    const ownerBadge = act.ownerVerified
+      ? `<svg width="12" height="12" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:2px;flex-shrink:0;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+      : '';
+    const bannerHTML = act.icon
+      ? `<img src="${escapeHTML(act.icon)}" alt="">`
+      : `<div style="width:100%;height:100%;background:${act.bannerGradient};display:flex;align-items:center;justify-content:center;font-size:28px;">${act.bannerEmoji}</div>`;
+    const iconHTML = act.icon
+      ? `<img src="${escapeHTML(act.icon)}" alt="">`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${act.bannerGradient};border-radius:9px;font-size:18px;">${act.bannerEmoji}</div>`;
+    return `<div class="ac" onclick="launchActivity('${act.id}')">
+      ${act.comingSoon ? `<div style="position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);border-radius:6px;padding:3px 8px;font-size:9.5px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.04em;">SOON</div>` : ''}
+      <div class="ac-banner">${bannerHTML}</div>
+      <div class="ac-body">
+        <div class="ac-meta">
+          <div class="ac-icon">${iconHTML}</div>
+          ${!act.comingSoon ? `<button class="ac-launch-btn" onclick="event.stopPropagation();launchActivity('${act.id}')">Launch</button>` : ''}
+        </div>
+        <div class="ac-name">${escapeHTML(act.name)}</div>
+        <div class="ac-desc">${escapeHTML(act.desc)}</div>
+        <div class="ac-footer">
+          <div class="ac-owner">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            ${escapeHTML(act.owner)}${ownerBadge}
+          </div>
+          <span class="ac-players">${escapeHTML(act.players)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function launchActivity(id) {
+  const act = FORTIZED_ACTIVITIES.find(a => a.id === id);
+  if (!act) return;
+  if (act.comingSoon) {
+    toast(`${act.name} is coming soon — stay tuned!`, 'info');
+    return;
+  }
+  const permKey = 'ftza_perm_' + id;
+  if (!localStorage.getItem(permKey)) {
+    _showActivityPermDialog(act, () => {
+      localStorage.setItem(permKey, '1');
+      _openActivityScreen(act);
+    });
+  } else {
+    _openActivityScreen(act);
+  }
+}
+
+function _showActivityPermDialog(act, onAccept) {
+  const existing = document.getElementById('modal-activity-perm');
+  if (existing) existing.remove();
+  const iconHTML = act.icon
+    ? `<img src="${escapeHTML(act.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:9px;" alt="">`
+    : `<div style="width:100%;height:100%;background:${act.bannerGradient};border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:22px;">${act.bannerEmoji}</div>`;
+  const permItems = act.permissions.map(p =>
+    `<li style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.6)" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:12.5px;color:rgba(255,255,255,.6);font-family:var(--font-ui);">${escapeHTML(p)}</span></li>`
+  ).join('');
+  const modal = document.createElement('div');
+  modal.id = 'modal-activity-perm';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);';
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;max-width:380px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,.5);">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div style="width:52px;height:52px;border-radius:14px;overflow:hidden;flex-shrink:0;">${iconHTML}</div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:3px;">${escapeHTML(act.name)}</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">by ${escapeHTML(act.owner)} · ${escapeHTML(act.category)}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:18px;">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;font-family:var(--font-ui);">This activity will be able to</div>
+        <ul style="list-style:none;margin:0;padding:0;">${permItems}</ul>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,.22);font-family:var(--font-ui);margin-bottom:20px;line-height:1.5;">By launching, you agree to the <a href="/legal/fortshop-policy" style="color:rgba(255,249,62,.5);text-decoration:none;" target="_blank">Fortized Activity Terms</a>. This prompt won't appear again for this activity.</div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('modal-activity-perm').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+        <button id="perm-accept-btn" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;">Launch Activity</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.getElementById('perm-accept-btn').addEventListener('click', () => {
+    modal.remove();
+    onAccept();
+  });
+}
+
+function _openActivityScreen(act) {
+  _activeActivity = act;
+  const screen = document.getElementById('activity-screen');
+  if (!screen) return;
+  const iconEl = document.getElementById('act-tb-icon');
+  const nameEl = document.getElementById('act-tb-name');
+  const contentEl = document.getElementById('act-content');
+  if (iconEl) { iconEl.src = act.icon || ''; iconEl.style.display = act.icon ? '' : 'none'; }
+  if (nameEl) nameEl.textContent = act.name;
+  if (contentEl) {
+    contentEl.innerHTML = `
+      <div style="text-align:center;max-width:420px;padding:40px 24px;">
+        <div style="font-size:56px;margin-bottom:20px;">${act.bannerEmoji}</div>
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin-bottom:8px;">${escapeHTML(act.name)}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.4);font-family:var(--font-ui);line-height:1.6;margin-bottom:28px;">${escapeHTML(act.desc)}</div>
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;font-size:12px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Activity content will appear here once available
+        </div>
+      </div>`;
+  }
+  // Populate pill info too
+  const pillIcon = document.getElementById('apill-icon');
+  const pillName = document.getElementById('apill-name');
+  if (pillIcon) { pillIcon.src = act.icon || ''; pillIcon.style.display = act.icon ? '' : 'none'; }
+  if (pillName) pillName.textContent = act.name;
+  requestAnimationFrame(() => screen.classList.add('is-open'));
+}
+
+function _minimizeActivity() {
+  const screen = document.getElementById('activity-screen');
+  const pill = document.getElementById('activity-pill');
+  if (screen) screen.classList.remove('is-open');
+  if (pill) pill.style.display = 'flex';
+}
+
+function _resumeActivity() {
+  const screen = document.getElementById('activity-screen');
+  const pill = document.getElementById('activity-pill');
+  if (screen) screen.classList.add('is-open');
+  if (pill) pill.style.display = 'none';
+}
+
+function _leaveActivity() {
+  const screen = document.getElementById('activity-screen');
+  const pill = document.getElementById('activity-pill');
+  if (screen) screen.classList.remove('is-open');
+  if (pill) pill.style.display = 'none';
+  const act = _activeActivity;
+  _activeActivity = null;
+  if (act) setTimeout(() => _showActivityFeedback(act), 400);
+}
+
+function _showActivityFeedback(act) {
+  const existing = document.getElementById('modal-activity-feedback');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'modal-activity-feedback';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);';
+  modal.innerHTML = `
+    <div style="background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;max-width:340px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,.5);text-align:center;">
+      <div style="font-size:36px;margin-bottom:12px;">${act.bannerEmoji}</div>
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:6px;">How was ${escapeHTML(act.name)}?</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.35);font-family:var(--font-ui);margin-bottom:20px;">Your feedback helps us improve Activities.</div>
+      <div id="act-fb-stars" style="display:flex;gap:6px;justify-content:center;margin-bottom:18px;">
+        ${[1,2,3,4,5].map(n => `<span data-star="${n}" onclick="_setFbStar(${n})" style="font-size:28px;cursor:pointer;filter:grayscale(1);opacity:.35;transition:all .15s;" title="${n} star${n>1?'s':''}">★</span>`).join('')}
+      </div>
+      <textarea id="act-fb-text" placeholder="Optional comment…" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:10px 12px;resize:none;height:64px;outline:none;box-sizing:border-box;margin-bottom:16px;"></textarea>
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('modal-activity-feedback').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.4);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;">Skip</button>
+        <button onclick="_submitActivityFeedback('${act.id}')" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;">Send</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+let _actFbRating = 0;
+function _setFbStar(n) {
+  _actFbRating = n;
+  document.querySelectorAll('#act-fb-stars [data-star]').forEach(s => {
+    const v = +s.dataset.star;
+    s.style.filter = v <= n ? 'none' : 'grayscale(1)';
+    s.style.opacity = v <= n ? '1' : '.3';
+    s.style.color = v <= n ? 'var(--accent)' : '';
+  });
+}
+
+function _submitActivityFeedback(actId) {
+  const modal = document.getElementById('modal-activity-feedback');
+  if (modal) modal.remove();
+  toast('Thanks for your feedback!', 'success');
+  _actFbRating = 0;
 }
 
 // Extract dominant color from an image and tint the card background

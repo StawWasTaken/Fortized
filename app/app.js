@@ -8472,13 +8472,13 @@ const FORTIZED_ACTIVITIES = [
   {
     id: 'mist-and-cards',
     name: 'Mist & Cards',
-    desc: 'A wager game from the year 1487. Stake your Onyx against the Stranger in the Mist, draw one card, and test fate.',
+    desc: 'A wager game from the year 1452. Stake your Onyx against the Stranger in the Mist, draw one card, and test fate.',
     owner: 'Fortized',
     ownerVerified: true,
     category: 'Games',
     players: 'You vs The Stranger',
     tags: ['cards', 'wager', 'mystery'],
-    languages: ['French', 'English'],
+    languages: ['English'],
     launchCount: 1247,
     comingSoon: false,
     dominantRgb: [190, 150, 40],
@@ -8537,12 +8537,16 @@ const FORTIZED_ACTIVITIES = [
 
 let _activeActivity = null;
 
-function _actBanner(act) {
+function _actBanner(act, showGjg) {
   const icon = _ACT_ICONS[act.id] || '';
+  const gjg = (showGjg !== false && act.owner === 'Fortized')
+    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" class="ac-gjg" style="height:36px;">`
+    : '';
   return `<div style="width:100%;height:100%;position:relative;overflow:hidden;background:${act.bannerBg};">
     <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(rgba(255,255,255,.03) 0 1px,transparent 1px 36px),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 36px);background-size:36px 36px;"></div>
     <div style="position:absolute;top:-20px;left:-20px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,${act.bannerAccent},transparent);filter:blur(18px);"></div>
     <div style="position:absolute;right:-6px;bottom:-6px;color:rgba(255,255,255,.07);transform:scale(4.2) rotate(-12deg);pointer-events:none;">${icon}</div>
+    ${gjg}
   </div>`;
 }
 
@@ -8552,12 +8556,33 @@ function _actIconBox(act) {
   return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${r},${g},${b},.9),rgba(${r},${g},${b},.6));border-radius:12px;color:#fff;">${icon}</div>`;
 }
 
+function _playActivitySound(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const freqs = type === 'join' ? [523.25, 659.25, 783.99] : [783.99, 523.25, 392.00];
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      const t = ctx.currentTime + i * 0.09;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(type === 'join' ? 0.11 : 0.08, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+      osc.start(t);
+      osc.stop(t + 0.5);
+    });
+  } catch(e) {}
+}
+
 function _renderDiscoverActivities() {
   const grid = document.getElementById('disc-activities-grid');
   if (!grid) return;
   grid.innerHTML = FORTIZED_ACTIVITIES.map(act => {
     const [r,g,b] = act.dominantRgb;
-    const ownerBadge = act.ownerVerified ? _verifiedBadge(12) : '';
+    const ownerBadge = act.ownerVerified ? _verifiedBadge(11) : '';
     return `<div class="ac" onclick="openActivityOverview('${act.id}')" style="cursor:pointer;">
       ${act.comingSoon ? `<div style="position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-radius:6px;padding:3px 9px;font-size:9px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;">Soon</div>` : ''}
       <div class="ac-banner">${_actBanner(act)}</div>
@@ -8579,9 +8604,13 @@ function _renderDiscoverActivities() {
   }).join('');
 }
 
-// ── Activity Overview ────────────────────────────────────────────
-// Clicking a card opens the overview page (detail view inside discover).
-// The Launch button in the overview then triggers the permission dialog.
+// ── Activity Overview & Launch System ────────────────────────────
+// Card click → overview page (detail within discover scroll).
+// Launch button → permission dialog (first time) → activity screen.
+// Activity screen covers only the discover view area.
+// The global mini-pill stays visible on any page when minimized.
+
+let _actBarRating = 0;
 
 function openActivityOverview(id) {
   const act = FORTIZED_ACTIVITIES.find(a => a.id === id);
@@ -8606,23 +8635,21 @@ function openActivityOverview(id) {
 
   const [r,g,b] = act.dominantRgb;
   const gjgBadge = (act.owner === 'Fortized')
-    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" title="Grand Joy Games" style="height:20px;vertical-align:middle;margin-left:6px;opacity:.9;">`
+    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" title="Grand Joy Games" style="height:18px;vertical-align:middle;opacity:.9;">`
     : '';
 
   const langIcons = (act.languages || []).join(' · ');
-  const launchNum = act.launchCount ? `${(act.launchCount).toLocaleString()} launches` : '';
+  const launchNum = act.launchCount ? (act.launchCount).toLocaleString() : '';
 
   const others = FORTIZED_ACTIVITIES.filter(a => a.id !== id);
   const othersHTML = others.map(o => {
     const [or,og,ob] = o.dominantRgb;
-    return `<div onclick="openActivityOverview('${o.id}')" style="flex-shrink:0;width:160px;background:var(--panel2);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="this.style.transform='';this.style.borderColor='rgba(255,255,255,.07)'">
-      <div style="height:72px;position:relative;overflow:hidden;background:${o.bannerBg};">
-        <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(rgba(255,255,255,.03) 0 1px,transparent 1px 28px),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 28px);background-size:28px 28px;"></div>
-      </div>
-      <div style="padding:10px 12px 12px;">
-        <div style="width:36px;height:36px;border-radius:10px;margin-top:-22px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${or},${og},${ob},.9),rgba(${or},${og},${ob},.55));color:#fff;border:3px solid var(--panel2);">${_ACT_ICONS[o.id] || ''}</div>
-        <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;">${escapeHTML(o.name)}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">${escapeHTML(o.category)}${o.comingSoon ? ' · Soon' : ''}</div>
+    return `<div onclick="openActivityOverview('${o.id}')" style="flex-shrink:0;width:180px;background:var(--panel2);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;" onmouseover="this.style.transform='translateY(-3px)';this.style.borderColor='rgba(255,255,255,.16)'" onmouseout="this.style.transform='';this.style.borderColor='rgba(255,255,255,.07)'">
+      <div style="height:80px;position:relative;overflow:hidden;">${_actBanner(o, false)}</div>
+      <div style="padding:10px 13px 13px;">
+        <div style="width:38px;height:38px;border-radius:11px;margin-top:-23px;margin-bottom:9px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${or},${og},${ob},.9),rgba(${or},${og},${ob},.55));color:#fff;border:3px solid var(--panel2);overflow:hidden;">${_actIconBox(o)}</div>
+        <div style="font-family:var(--font-display);font-size:13.5px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:3px;">${escapeHTML(o.name)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.32);font-family:var(--font-ui);">${escapeHTML(o.category)}${o.comingSoon ? ' · Soon' : ''}</div>
       </div>
     </div>`;
   }).join('');
@@ -8630,62 +8657,63 @@ function openActivityOverview(id) {
   overview.style.display = 'block';
   overview.innerHTML = `
     <div class="act-ov-wrap">
-      <!-- Back -->
       <button class="act-ov-back" onclick="_closeActivityOverview()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
         Activities
       </button>
 
-      <!-- Banner -->
-      <div class="act-ov-banner">${_actBanner(act)}</div>
+      <div class="act-ov-banner">
+        ${_actBanner(act)}
+        ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" class="act-ov-banner-gjg" style="height:52px;">` : ''}
+      </div>
 
-      <!-- Header row -->
       <div class="act-ov-header">
         <div class="act-ov-icon">${_actIconBox(act)}</div>
         <div class="act-ov-title-col">
-          <div class="act-ov-name">${escapeHTML(act.name)}${gjgBadge}</div>
+          <div class="act-ov-name">${escapeHTML(act.name)}</div>
           <div class="act-ov-sub">
-            <span onclick="event.stopPropagation();viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.55);transition:color .15s;" onmouseover="this.style.color='rgba(255,249,62,.85)'" onmouseout="this.style.color='rgba(255,249,62,.55)'">${escapeHTML(act.owner)}</span>
-            <span style="color:rgba(255,255,255,.2);">·</span>
+            <span onclick="viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.6);transition:color .15s;" onmouseover="this.style.color='rgba(255,249,62,.9)'" onmouseout="this.style.color='rgba(255,249,62,.6)'">${escapeHTML(act.owner)}</span>
+            ${act.ownerVerified ? _verifiedBadge(11) : ''}
+            ${gjgBadge}
+            <span style="color:rgba(255,255,255,.18);">·</span>
             <span>${escapeHTML(act.category)}</span>
           </div>
         </div>
         <button class="act-ov-launch-btn" onclick="launchActivity('${act.id}')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg>
           Launch
         </button>
       </div>
 
-      <!-- Stats bar -->
       <div class="act-ov-stats">
-        ${launchNum ? `<div class="act-ov-stat">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-          ${launchNum}
+        ${launchNum ? `<div class="act-ov-stat-pill">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          ${launchNum} launches
         </div>` : ''}
-        ${langIcons ? `<div class="act-ov-stat">
+        ${langIcons ? `<div class="act-ov-stat-pill">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
           ${escapeHTML(langIcons)}
         </div>` : ''}
+        <div class="act-ov-stat-pill">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          ${escapeHTML(act.players)}
+        </div>
       </div>
 
-      <!-- Divider -->
-      <div style="height:1px;background:rgba(255,255,255,.06);margin:0 24px;"></div>
+      <div class="act-ov-divider"></div>
 
-      <!-- About -->
       <div class="act-ov-section">
         <div class="act-ov-section-label">About</div>
         <p class="act-ov-desc">${escapeHTML(act.desc)}</p>
       </div>
 
-      <!-- You might also like -->
-      ${others.length ? `<div class="act-ov-section">
+      ${others.length ? `<div class="act-ov-section" style="padding-bottom:16px;">
         <div class="act-ov-section-label">You might also like</div>
-        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">${othersHTML}</div>
+        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;">${othersHTML}</div>
       </div>` : ''}
 
-      <!-- Report -->
-      <div style="padding:0 24px 32px;">
-        <button onclick="_reportActivity('${act.id}')" style="background:none;border:none;color:rgba(255,255,255,.22);font-size:11.5px;font-family:var(--font-ui);cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;transition:color .15s;" onmouseover="this.style.color='rgba(255,100,100,.6)'" onmouseout="this.style.color='rgba(255,255,255,.22)'">
+      <div style="padding:8px 28px 0;">
+        <button onclick="_reportActivity('${act.id}')" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11.5px;font-family:var(--font-ui);cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:5px;transition:color .15s;" onmouseover="this.style.color='rgba(255,90,90,.6)'" onmouseout="this.style.color='rgba(255,255,255,.2)'">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
           Report activity
         </button>
@@ -8703,22 +8731,18 @@ function _closeActivityOverview() {
   if (overview) overview.style.display = 'none';
   if (hero)   hero.style.display = '';
   if (subnav) subnav.style.display = '';
-  // Restore activities sub-page (the subnav was on activities tab)
   const activitiesPage = document.getElementById('disc-page-activities');
   if (activitiesPage) activitiesPage.style.display = '';
 }
 
 function _reportActivity(id) {
-  toast('Report submitted. Our team will review it shortly.', 'success');
+  toast('Report submitted. Our team will review it.', 'success');
 }
 
 function launchActivity(id) {
   const act = FORTIZED_ACTIVITIES.find(a => a.id === id);
   if (!act) return;
-  if (act.comingSoon) {
-    toast(`${act.name} is coming soon — stay tuned!`, 'info');
-    return;
-  }
+  if (act.comingSoon) { toast(`${act.name} is coming soon!`, 'info'); return; }
   const permKey = 'ftza_perm_' + id;
   if (!localStorage.getItem(permKey)) {
     _showActivityPermDialog(act, () => {
@@ -8734,7 +8758,6 @@ function _showActivityPermDialog(act, onAccept) {
   const existing = document.getElementById('modal-activity-perm');
   if (existing) existing.remove();
   const [r,g,b] = act.dominantRgb;
-
   const permItems = ACTIVITY_PERMISSIONS.map(p =>
     `<li style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.045);">
       <div style="width:32px;height:32px;border-radius:9px;background:rgba(${r},${g},${b},.12);border:1px solid rgba(${r},${g},${b},.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -8743,516 +8766,140 @@ function _showActivityPermDialog(act, onAccept) {
       <span style="font-size:12.5px;color:rgba(255,255,255,.65);font-family:var(--font-ui);line-height:1.4;">${escapeHTML(p.text)}</span>
     </li>`
   ).join('');
-
   const gjgBadge = (act.owner === 'Fortized')
-    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:14px;margin-left:4px;vertical-align:middle;opacity:.7;">`
-    : '';
-
+    ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:14px;margin-left:4px;vertical-align:middle;opacity:.7;">` : '';
   const modal = document.createElement('div');
   modal.id = 'modal-activity-perm';
   modal.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);';
   modal.innerHTML = `
     <div style="background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:22px;max-width:400px;width:92%;box-shadow:0 32px 100px rgba(0,0,0,.6);overflow:hidden;">
-      <!-- Coloured header band -->
       <div style="height:6px;background:linear-gradient(90deg,rgba(${r},${g},${b},.8),rgba(${r},${g},${b},.35));"></div>
       <div style="padding:24px 24px 20px;">
-        <!-- Activity identity -->
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
-          <div style="width:56px;height:56px;border-radius:16px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,rgba(${r},${g},${b},.9),rgba(${r},${g},${b},.55));display:flex;align-items:center;justify-content:center;color:#fff;">${_ACT_ICONS[act.id]||''}</div>
+          <div style="width:56px;height:56px;border-radius:16px;overflow:hidden;flex-shrink:0;">${_actIconBox(act)}</div>
           <div>
             <div style="font-family:var(--font-display);font-size:17px;font-weight:900;color:#fff;letter-spacing:-.02em;margin-bottom:4px;">${escapeHTML(act.name)}</div>
             <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">
               <span onclick="document.getElementById('modal-activity-perm').remove();viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.55);">${escapeHTML(act.owner)}</span>${gjgBadge}
-              <span style="color:rgba(255,255,255,.2);">·</span>
-              <span>${escapeHTML(act.category)}</span>
+              <span style="color:rgba(255,255,255,.2);">·</span><span>${escapeHTML(act.category)}</span>
             </div>
           </div>
         </div>
-        <!-- Permissions heading -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.07em;text-transform:uppercase;font-family:var(--font-ui);">This activity will be able to</span>
         </div>
         <ul style="list-style:none;margin:0;padding:0;">${permItems}</ul>
-        <!-- Legal footer -->
         <p style="font-size:11px;color:rgba(255,255,255,.2);font-family:var(--font-ui);margin:16px 0 20px;line-height:1.6;">
-          By launching you agree to Fortized's
-          <a href="/legal/privacy-policy" style="color:rgba(255,249,62,.45);text-decoration:none;" target="_blank">Privacy Policy</a>
-          and
-          <a href="/legal/terms-of-use" style="color:rgba(255,249,62,.45);text-decoration:none;" target="_blank">Terms of Use</a>.
-          This dialog won't appear again for this activity.
+          By launching you agree to Fortized's <a href="/legal/privacy-policy" style="color:rgba(255,249,62,.45);text-decoration:none;" target="_blank">Privacy Policy</a> and <a href="/legal/terms-of-use" style="color:rgba(255,249,62,.45);text-decoration:none;" target="_blank">Terms of Use</a>. This dialog won't appear again for this activity.
         </p>
-        <!-- Actions -->
         <div style="display:flex;gap:10px;">
-          <button onclick="document.getElementById('modal-activity-perm').remove()" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;color:rgba(255,255,255,.45);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Cancel</button>
-          <button id="perm-accept-btn" style="flex:2;padding:11px;background:var(--accent);border:none;border-radius:11px;color:#000;font-family:var(--font-display);font-size:13px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:-.01em;transition:opacity .15s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Launch Activity
+          <button onclick="document.getElementById('modal-activity-perm').remove()" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;color:rgba(255,255,255,.45);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+          <button id="perm-accept-btn" style="flex:2;padding:11px;background:var(--accent);border:none;border-radius:11px;color:#000;font-family:var(--font-display);font-size:13px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg>Launch Activity
           </button>
         </div>
       </div>
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-  document.getElementById('perm-accept-btn').addEventListener('click', () => {
-    modal.remove();
-    onAccept();
-  });
+  document.getElementById('perm-accept-btn').addEventListener('click', () => { modal.remove(); onAccept(); });
 }
 
 function _openActivityScreen(act) {
   _activeActivity = act;
   const screen = document.getElementById('activity-screen');
   if (!screen) return;
-  const nameEl = document.getElementById('act-tb-name');
+  if (typeof showView === 'function') showView('discover');
+  const nameEl    = document.getElementById('act-tb-name');
   const contentEl = document.getElementById('act-content');
   if (nameEl) nameEl.textContent = act.name;
+  _actBarRating = 0;
+  _actBarRenderStars();
+  const fb = document.getElementById('act-feedback-bar');
+  if (fb) fb.style.display = 'flex';
   if (contentEl) {
     if (act.id === 'mist-and-cards') {
       _mcMount(contentEl);
     } else {
       const [rr,gg,bb] = act.dominantRgb;
-      contentEl.innerHTML = `
-        <div style="text-align:center;max-width:420px;padding:40px 24px;">
-          <div style="width:72px;height:72px;border-radius:20px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rr},${gg},${bb},.85),rgba(${rr},${gg},${bb},.5));color:#fff;transform:scale(1.6);">${_ACT_ICONS[act.id]||''}</div>
-          <div style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin-bottom:8px;">${escapeHTML(act.name)}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.4);font-family:var(--font-ui);line-height:1.6;">${escapeHTML(act.desc)}</div>
-        </div>`;
+      contentEl.innerHTML = `<div style="text-align:center;max-width:420px;padding:40px 24px;">
+        <div style="width:72px;height:72px;border-radius:20px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rr},${gg},${bb},.85),rgba(${rr},${gg},${bb},.5));color:#fff;transform:scale(1.6);">${_ACT_ICONS[act.id]||''}</div>
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin-bottom:8px;">${escapeHTML(act.name)}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.4);font-family:var(--font-ui);line-height:1.6;">${escapeHTML(act.desc)}</div>
+      </div>`;
     }
   }
   const pillName = document.getElementById('apill-name');
   if (pillName) pillName.textContent = act.name;
+  _playActivitySound('join');
   requestAnimationFrame(() => screen.classList.add('is-open'));
 }
 
 function _minimizeActivity() {
   const screen = document.getElementById('activity-screen');
-  const pill = document.getElementById('activity-pill');
+  const pill   = document.getElementById('activity-pill');
   if (screen) screen.classList.remove('is-open');
-  if (pill) pill.style.display = 'flex';
+  if (pill) {
+    pill.style.display = 'flex';
+    requestAnimationFrame(() => pill.classList.add('is-visible'));
+  }
 }
 
 function _resumeActivity() {
   const screen = document.getElementById('activity-screen');
-  const pill = document.getElementById('activity-pill');
-  if (screen) screen.classList.add('is-open');
-  if (pill) pill.style.display = 'none';
+  const pill   = document.getElementById('activity-pill');
+  if (typeof showView === 'function') showView('discover');
+  setTimeout(() => {
+    if (screen) screen.classList.add('is-open');
+    if (pill) {
+      pill.classList.remove('is-visible');
+      setTimeout(() => { pill.style.display = 'none'; }, 300);
+    }
+  }, 80);
 }
 
 function _leaveActivity() {
   const screen = document.getElementById('activity-screen');
-  const pill = document.getElementById('activity-pill');
+  const pill   = document.getElementById('activity-pill');
   if (screen) screen.classList.remove('is-open');
-  if (pill) pill.style.display = 'none';
+  if (pill) {
+    pill.classList.remove('is-visible');
+    setTimeout(() => { pill.style.display = 'none'; }, 300);
+  }
+  _playActivitySound('leave');
   _activeActivity = null;
 }
 
+function _actBarRenderStars() {
+  const bar = document.getElementById('act-fb-stars-bar');
+  if (!bar) return;
+  bar.querySelectorAll('[data-s]').forEach(s => {
+    s.classList.toggle('lit', +s.dataset.s <= _actBarRating);
+  });
+  const send = document.getElementById('act-fb-send');
+  if (send) send.classList.toggle('ready', _actBarRating > 0);
+}
+
+function _actBarStar(n) {
+  _actBarRating = n;
+  _actBarRenderStars();
+}
+
+function _actBarSubmit() {
+  if (!_actBarRating) return;
+  const fb = document.getElementById('act-feedback-bar');
+  if (fb) {
+    fb.innerHTML = `<span style="font-size:11.5px;color:rgba(255,249,62,.6);font-family:var(--font-ui);margin:0 auto;">Thanks for the feedback!</span>`;
+    setTimeout(() => { fb.style.display = 'none'; }, 2200);
+  }
+  _actBarRating = 0;
+}
+
 
 // ════════════════════════════════════════════════════════════════
-// MIST & CARDS — Fortized's first activity
-// A 15th-century wager game against The Stranger in the Mist.
-// Higher card wins. Joyster is a wildcard. Bets are in Onyx.
-// Contains 4 subtle hints toward a future werewolf-themed event.
+// MIST & CARDS — loaded from app/activities/mist-and-cards/game.js
 // ════════════════════════════════════════════════════════════════
-const MC_SUITS = {
-  hearts:   { color: 'yellow', name: 'Hearts',   svg: '<path d="M12 21.5s-7-4.5-9.5-9.5C1 9 2.5 5 6 5c2 0 3.5 1.2 4.5 2.5C11.5 6.2 13 5 15 5c3.5 0 5 4 3.5 7-2.5 5-9.5 9.5-9.5 9.5z" fill="currentColor"/>' },
-  spades:   { color: 'yellow', name: 'Spades',   svg: '<path d="M12 2C8 6 3 10 3 14.5c0 3 2.2 5 5 5 1.3 0 2.3-.4 3-1l-1 4h4l-1-4c.7.6 1.7 1 3 1 2.8 0 5-2 5-5C21 10 16 6 12 2z" fill="currentColor"/>' },
-  clubs:    { color: 'black',  name: 'Clubs',    svg: '<g fill="currentColor"><circle cx="12" cy="7" r="3.8"/><circle cx="7.3" cy="13.5" r="3.8"/><circle cx="16.7" cy="13.5" r="3.8"/><path d="M10.2 14.5l1.2 5.5-2 2.5h5.2l-2-2.5 1.2-5.5z"/></g>' },
-  losanges: { color: 'black',  name: 'Losanges', svg: '<path d="M12 1.5 C 15 6, 20 11.5, 22 16 C 20 20.5, 15 26, 12 30.5 C 9 26, 4 20.5, 2 16 C 4 11.5, 9 6, 12 1.5 Z" fill="currentColor" transform="scale(1, 0.75) translate(0, 2.5)"/>' },
-};
-const MC_RANK_ORDER = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-// Joyster (jester) has its own slot at the top of the rank order (wildcard)
-const MC_PIP_LAYOUTS = {
-  1:  [ {c:2,r:4} ],
-  2:  [ {c:2,r:1}, {c:2,r:7,flip:true} ],
-  3:  [ {c:2,r:1}, {c:2,r:4}, {c:2,r:7,flip:true} ],
-  4:  [ {c:1,r:1}, {c:3,r:1}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
-  5:  [ {c:1,r:1}, {c:3,r:1}, {c:2,r:4}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
-  6:  [ {c:1,r:1}, {c:3,r:1}, {c:1,r:4}, {c:3,r:4}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
-  7:  [ {c:1,r:1}, {c:3,r:1}, {c:2,r:2}, {c:1,r:4}, {c:3,r:4}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
-  8:  [ {c:1,r:1}, {c:3,r:1}, {c:2,r:2}, {c:1,r:4}, {c:3,r:4}, {c:2,r:6,flip:true}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
-  9:  [ {c:1,r:1}, {c:3,r:1}, {c:1,r:3}, {c:3,r:3}, {c:2,r:4}, {c:1,r:5,flip:true}, {c:3,r:5,flip:true}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
-  10: [ {c:1,r:1}, {c:3,r:1}, {c:2,r:2}, {c:1,r:3}, {c:3,r:3}, {c:1,r:5,flip:true}, {c:3,r:5,flip:true}, {c:2,r:6,flip:true}, {c:1,r:7,flip:true}, {c:3,r:7,flip:true} ],
-};
-
-// Werewolf-event foreshadowing lines — shown rarely as "whispers"
-const MC_WHISPERS = [
-  'A howl drifts from the tree line. Far off. For now.',
-  'The Stranger glances at the moon — nearly full.',
-  'You smell wet fur on the wind. No one is there.',
-  '"The pack stirs," the Stranger murmurs. "Soon enough."',
-];
-
-let _mcState = null;
-let _mcEl = null;
-
-function _mcGetBalance() { return Math.max(0, +CU?.onyx || 0); }
-
-function _mcMount(container) {
-  _mcState = {
-    phase: 'lore',             // lore | betting | dealing | reveal | outcome
-    bet: 0,
-    playerCard: null,
-    botCard: null,
-    playerWon: null,            // true | false | null (push)
-    handsPlayed: +localStorage.getItem('mc_hands_played') || 0,
-    sessionWhispers: [],
-  };
-  _mcEl = container;
-  container.innerHTML = `
-    <div class="mc-stage" id="mc-stage">
-      <div class="mc-mist"></div>
-      <div class="mc-whisper" id="mc-whisper"></div>
-      <div class="mc-topbar">
-        <div class="mc-brand">
-          <div>
-            <div class="mc-brand-title">Mist &amp; Cards</div>
-            <div class="mc-brand-sub">Anno Domini 1487</div>
-          </div>
-        </div>
-        <div class="mc-pot" id="mc-pot">${_onyxImg(14)} <span id="mc-pot-val">${_mcGetBalance().toLocaleString()}</span></div>
-      </div>
-      <div class="mc-body" id="mc-body"></div>
-    </div>`;
-  _mcRender();
-}
-
-function _mcRender() {
-  if (!_mcEl) return;
-  const body = _mcEl.querySelector('#mc-body');
-  const potVal = _mcEl.querySelector('#mc-pot-val');
-  if (potVal) potVal.textContent = _mcGetBalance().toLocaleString();
-  if (!body) return;
-  const s = _mcState;
-  if (s.phase === 'lore')     body.innerHTML = _mcRenderLore();
-  else if (s.phase === 'betting') body.innerHTML = _mcRenderBetting();
-  else if (s.phase === 'dealing' || s.phase === 'reveal' || s.phase === 'outcome') body.innerHTML = _mcRenderDuel();
-}
-
-function _mcRenderLore() {
-  return `
-    <div class="mc-lore">
-      <div class="mc-lore-crest">
-        <svg width="44" height="44" viewBox="0 0 24 32" fill="currentColor"><path d="M12 1 C 15 6, 20 12, 22 16 C 20 20, 15 26, 12 31 C 9 26, 4 20, 2 16 C 4 12, 9 6, 12 1 Z"/></svg>
-      </div>
-      <h1 class="mc-lore-title">Mist &amp; Cards</h1>
-      <div class="mc-lore-sub">A Wager in the Dark</div>
-      <p class="mc-lore-text">
-        The Stranger waits where the <em>mists</em> have not lifted in seven days. Across the fire, they deal a single card and ask one thing of you:
-        <em>how much of your Onyx do you trust to fate?</em>
-      </p>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <button class="mc-cta" onclick="_mcBegin()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          Approach the Fire
-        </button>
-        <button class="mc-cta secondary" onclick="_mcShowRules()">How It's Played</button>
-      </div>
-    </div>`;
-}
-
-function _mcShowRules() {
-  const existing = document.getElementById('mc-rules-modal');
-  if (existing) existing.remove();
-  const m = document.createElement('div');
-  m.id = 'mc-rules-modal';
-  m.style.cssText = 'position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);';
-  m.innerHTML = `
-    <div style="background:#14141a;border:1px solid rgba(236,230,217,.12);border-radius:18px;padding:28px;max-width:420px;width:90%;font-family:'Fraunces',serif;color:#ece6d9;box-shadow:0 24px 80px rgba(0,0,0,.6);">
-      <div style="font-family:'Syne',serif;font-size:20px;font-weight:700;margin-bottom:4px;">The Rules</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.3em;color:rgba(236,230,217,.4);text-transform:uppercase;margin-bottom:18px;">a single draw · a single outcome</div>
-      <ol style="padding-left:18px;line-height:1.7;font-size:13.5px;color:rgba(236,230,217,.75);margin:0 0 18px;">
-        <li>Stake your Onyx — 5, 10, 25, or 50 pieces.</li>
-        <li>You and the Stranger each draw one card.</li>
-        <li>Higher rank wins. Joyster is a wildcard; on reveal it takes a rank of fortune.</li>
-        <li>Win: you receive <strong>twice</strong> your stake. Lose: your stake is gone.</li>
-        <li>A draw returns your stake to you.</li>
-      </ol>
-      <div style="font-size:11.5px;color:rgba(236,230,217,.42);font-style:italic;margin-bottom:18px;line-height:1.5;">
-        Hearts &amp; Spades bear the gold. Clubs &amp; Losanges wear the dark. The four suits watch and do not speak.
-      </div>
-      <button onclick="document.getElementById('mc-rules-modal').remove()" class="mc-cta" style="width:100%;">Close</button>
-    </div>`;
-  document.body.appendChild(m);
-  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
-}
-
-function _mcBegin() {
-  _mcState.phase = 'betting';
-  _mcRender();
-}
-
-function _mcRenderBetting() {
-  const bal = _mcGetBalance();
-  const chips = [5, 10, 25, 50];
-  return `
-    <div class="mc-bet-stage">
-      <div class="mc-bet-prompt">Place your stake</div>
-      <div class="mc-bet-sub">Choose your wager</div>
-      <div class="mc-chips">
-        ${chips.map(c => `<button class="mc-chip" ${bal<c?'disabled':''} onclick="_mcPlaceBet(${c})"><span class="mc-chip-amt">${c}</span><span class="mc-chip-lbl">Onyx</span></button>`).join('')}
-      </div>
-      <div class="mc-balance">${_onyxImg(11)} <span>${bal.toLocaleString()} available</span></div>
-      ${bal < 5 ? `<div style="margin-top:18px;font-size:12px;color:rgba(248,113,113,.7);font-family:'Fraunces',serif;font-style:italic;">Your purse is too light. Earn Onyx and return.</div>` : ''}
-    </div>`;
-}
-
-function _mcPlaceBet(amount) {
-  if (_mcGetBalance() < amount) return;
-  _mcState.bet = amount;
-  _mcState.phase = 'dealing';
-  // Deduct the stake up front
-  CU.onyx = Math.max(0, (+CU.onyx||0) - amount);
-  if (typeof saveUser === 'function') saveUser();
-  if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
-  _mcRender();
-  // Deal after a brief "dealing" pause
-  setTimeout(() => _mcDeal(), 700);
-}
-
-function _mcDrawRandomCard() {
-  // 1 in 25 chance: Joyster (wildcard)
-  if (Math.random() < 0.04) {
-    return { rank: 'JOY', suit: 'joyster', color: 'yellow', isJoyster: true };
-  }
-  const suitKeys = Object.keys(MC_SUITS);
-  const suit = suitKeys[Math.floor(Math.random() * suitKeys.length)];
-  const rank = MC_RANK_ORDER[Math.floor(Math.random() * MC_RANK_ORDER.length)];
-  return { rank, suit, color: MC_SUITS[suit].color, isJoyster: false };
-}
-
-function _mcRankValue(card) {
-  if (card.isJoyster) {
-    // Joyster resolves as a random rank at reveal — stored on card
-    return card.resolvedValue;
-  }
-  return MC_RANK_ORDER.indexOf(card.rank) + 1;
-}
-
-function _mcDeal() {
-  const s = _mcState;
-  s.playerCard = _mcDrawRandomCard();
-  s.botCard = _mcDrawRandomCard();
-  // Resolve Joyster values immediately so reveals are deterministic
-  if (s.playerCard.isJoyster) s.playerCard.resolvedValue = 1 + Math.floor(Math.random() * 13);
-  if (s.botCard.isJoyster)    s.botCard.resolvedValue    = 1 + Math.floor(Math.random() * 13);
-  s.phase = 'reveal';
-  _mcRender();
-}
-
-function _mcRevealCards() {
-  const s = _mcState;
-  if (s.phase !== 'reveal') return;
-  const pEl = document.querySelector('#mc-player-card');
-  const bEl = document.querySelector('#mc-bot-card');
-  if (pEl) pEl.classList.add('flipped');
-  if (bEl) setTimeout(() => bEl.classList.add('flipped'), 500);
-  setTimeout(() => _mcResolve(), 1400);
-}
-
-function _mcResolve() {
-  const s = _mcState;
-  const pv = _mcRankValue(s.playerCard);
-  const bv = _mcRankValue(s.botCard);
-  let delta = 0;
-  if (pv > bv)      { s.playerWon = true;  delta = s.bet; }        // win: return stake + match
-  else if (pv < bv) { s.playerWon = false; delta = 0; }             // loss: stake already gone
-  else              { s.playerWon = null;  delta = 0; }             // push: will refund
-
-  if (s.playerWon === true) {
-    CU.onyx = (+CU.onyx||0) + (s.bet * 2);   // refund stake + winnings
-  } else if (s.playerWon === null) {
-    CU.onyx = (+CU.onyx||0) + s.bet;          // push — refund stake
-  }
-  if (typeof saveUser === 'function') saveUser();
-  if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
-
-  // Visual glow on winner card
-  const pWrap = document.querySelector('#mc-player-card-wrap');
-  const bWrap = document.querySelector('#mc-bot-card-wrap');
-  if (s.playerWon === true) { pWrap?.classList.add('is-winner'); bWrap?.classList.add('is-loser'); }
-  else if (s.playerWon === false) { pWrap?.classList.add('is-loser'); bWrap?.classList.add('is-winner'); }
-
-  s.phase = 'outcome';
-  s.handsPlayed = (s.handsPlayed||0) + 1;
-  localStorage.setItem('mc_hands_played', String(s.handsPlayed));
-  _mcUpdateOutcome();
-  _mcMaybeWhisper();
-}
-
-function _mcUpdateOutcome() {
-  const potVal = _mcEl?.querySelector('#mc-pot-val');
-  if (potVal) potVal.textContent = _mcGetBalance().toLocaleString();
-  const area = _mcEl?.querySelector('#mc-actions-area');
-  if (!area) return;
-  const s = _mcState;
-  let label, amt, cls;
-  if (s.playerWon === true)      { label = 'You win';     amt = '+' + s.bet;          cls = 'is-win';  }
-  else if (s.playerWon === false){ label = 'You lose';    amt = '−' + s.bet;          cls = 'is-loss'; }
-  else                            { label = 'A tie — stake returned'; amt = '±0';     cls = 'is-push'; }
-  area.innerHTML = `
-    <div class="mc-outcome ${cls}">
-      <div class="mc-outcome-label">${label}</div>
-      <div class="mc-outcome-amt">${amt} ${_onyxImg(20)}</div>
-    </div>
-    <div class="mc-msg">${_mcOutcomeLine()}</div>
-    <div class="mc-actions">
-      <button class="mc-cta" onclick="_mcNextHand()">Deal Again</button>
-      <button class="mc-cta secondary" onclick="_mcBackToLore()">Rise from the Fire</button>
-    </div>`;
-}
-
-function _mcOutcomeLine() {
-  const s = _mcState;
-  const WIN = [
-    'The Stranger tips their hood, approving.',
-    '"Fortune walks with you tonight."',
-    'The flames lean toward you, hungry.',
-  ];
-  const LOSE = [
-    'The Stranger says nothing. The mist closes in.',
-    '"Again, friend?" they ask softly.',
-    'You hear a distant howl. The night is long.',
-  ];
-  const PUSH = [
-    'A stalemate. The cards agree on nothing.',
-    'The Stranger almost smiles. Almost.',
-  ];
-  const pool = s.playerWon === true ? WIN : s.playerWon === false ? LOSE : PUSH;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
-function _mcNextHand() {
-  const s = _mcState;
-  s.bet = 0; s.playerCard = null; s.botCard = null; s.playerWon = null;
-  s.phase = 'betting';
-  _mcRender();
-}
-
-function _mcBackToLore() {
-  _mcState.phase = 'lore';
-  _mcRender();
-}
-
-function _mcRenderDuel() {
-  const s = _mcState;
-  const faceDown = s.phase === 'dealing';
-  return `
-    <div class="mc-duel">
-      <div class="mc-seat">
-        <div class="mc-seat-label">The Stranger</div>
-        <div class="mc-avatar is-stranger">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(236,230,217,.55)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C 8 4, 6 8, 6 13 L 6 20 C 6 21, 7 22, 8 22 L 16 22 C 17 22, 18 21, 18 20 L 18 13 C 18 8, 16 4, 12 2 Z"/><path d="M9 14 L 10.5 16 L 9 18"/><path d="M15 14 L 13.5 16 L 15 18"/></svg>
-        </div>
-        <div class="mc-card-wrap" id="mc-bot-card-wrap">${_mcCardHTML(s.botCard, !faceDown && s.phase !== 'reveal', 'mc-bot-card')}</div>
-      </div>
-      <div class="mc-versus">— vs —</div>
-      <div class="mc-seat">
-        <div class="mc-seat-label">You</div>
-        <div class="mc-avatar">
-          ${CU?.pfp ? `<img src="${escapeHTML(CU.pfp)}" alt="">` : `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.7)" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 22c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>`}
-        </div>
-        <div class="mc-card-wrap" id="mc-player-card-wrap">${_mcCardHTML(s.playerCard, !faceDown && s.phase !== 'reveal', 'mc-player-card')}</div>
-      </div>
-    </div>
-    <div id="mc-actions-area" style="margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:8px;">
-      ${s.phase === 'reveal' ? `
-        <div class="mc-msg" id="mc-reveal-msg">Your stake: <em>${s.bet} Onyx</em>. The cards wait.</div>
-        <div class="mc-actions">
-          <button class="mc-cta" onclick="_mcRevealCards()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Turn the Cards
-          </button>
-        </div>` : ''}
-      ${s.phase === 'dealing' ? `<div class="mc-msg">The Stranger deals…</div>` : ''}
-    </div>`;
-}
-
-function _mcCardHTML(card, flipped, id) {
-  // Always render the two faces; toggle .flipped class to reveal
-  const initFlipped = !!(card && flipped);
-  const cls = initFlipped ? 'flipped' : '';
-  if (!card) {
-    return `<div class="mc-card ${cls}" id="${id}"><div class="mc-card-back">${_mcCardBackCrest()}</div><div class="mc-card-face"></div></div>`;
-  }
-  const suitMeta = card.isJoyster ? { color: 'yellow' } : MC_SUITS[card.suit];
-  const faceInner = _mcCardFaceInner(card);
-  return `<div class="mc-card ${cls}" id="${id}" data-color="${suitMeta.color}">
-    <div class="mc-card-back">${_mcCardBackCrest()}</div>
-    <div class="mc-card-face">
-      ${faceInner}
-    </div>
-  </div>`;
-}
-
-function _mcCardBackCrest() {
-  return `<div class="mc-card-back-crest">
-    <svg width="54" height="72" viewBox="0 0 24 32" fill="currentColor"><path d="M12 1 C 15 6, 20 12, 22 16 C 20 20, 15 26, 12 31 C 9 26, 4 20, 2 16 C 4 12, 9 6, 12 1 Z"/></svg>
-  </div>`;
-}
-
-function _mcCardFaceInner(card) {
-  if (card.isJoyster) {
-    return `
-      <div class="mc-corner mc-corner-tl"><span class="mc-rank" style="font-size:11px;letter-spacing:.15em;">JOY</span></div>
-      <div class="mc-jest-art">
-        <div class="mc-jest-glyph">
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3 L 9 7 L 5 6 L 7 10 L 4 13 L 8 14 L 8 18 L 12 16 L 16 18 L 16 14 L 20 13 L 17 10 L 19 6 L 15 7 Z"/>
-            <circle cx="12" cy="12" r="1.4" fill="currentColor"/>
-          </svg>
-        </div>
-        <div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.3em;color:rgba(255,249,62,.4);text-transform:uppercase;">Joyster · Wild</div>
-      </div>
-      <div class="mc-corner mc-corner-br"><span class="mc-rank" style="font-size:11px;letter-spacing:.15em;">JOY</span></div>`;
-  }
-  const suit = MC_SUITS[card.suit];
-  const rankLabel = card.rank;
-  const isCourt = ['J','Q','K'].includes(card.rank);
-  const pipMini = `<svg class="mc-pip-mini" viewBox="0 0 24 32">${suit.svg}</svg>`;
-  let center;
-  if (isCourt) {
-    center = `
-      <div class="mc-court">
-        <svg class="mc-seal top" viewBox="0 0 24 32">${suit.svg}</svg>
-        <div class="mc-monogram">${card.rank}</div>
-        <svg class="mc-seal bot" viewBox="0 0 24 32">${suit.svg}</svg>
-        <div class="mc-ornaments"></div>
-      </div>`;
-  } else {
-    const n = card.rank === 'A' ? 1 : parseInt(card.rank, 10);
-    const layout = MC_PIP_LAYOUTS[n];
-    if (n === 1) {
-      center = `<div class="mc-pip-field" style="grid-template-rows:1fr;">
-        <svg viewBox="0 0 24 32" style="width:56%;height:auto;grid-column:2;">${suit.svg}</svg>
-      </div>`;
-    } else {
-      center = `<div class="mc-pip-field">${layout.map(p =>
-        `<div style="grid-column:${p.c};grid-row:${p.r};" class="${p.flip ? 'flip' : ''}"><svg viewBox="0 0 24 32">${suit.svg}</svg></div>`
-      ).join('')}</div>`;
-    }
-  }
-  return `
-    <div class="mc-corner mc-corner-tl"><span class="mc-rank">${rankLabel}</span>${pipMini}</div>
-    ${center}
-    <div class="mc-corner mc-corner-br"><span class="mc-rank">${rankLabel}</span>${pipMini}</div>`;
-}
-
-function _mcMaybeWhisper() {
-  const s = _mcState;
-  // Show a werewolf whisper: rarely on early hands, more often after 3+ hands
-  const chance = s.handsPlayed >= 3 ? 0.28 : 0.12;
-  // Don't repeat in the same session
-  const pool = MC_WHISPERS.filter(w => !s.sessionWhispers.includes(w));
-  if (!pool.length || Math.random() >= chance) return;
-  const line = pool[Math.floor(Math.random() * pool.length)];
-  s.sessionWhispers.push(line);
-  const w = _mcEl?.querySelector('#mc-whisper');
-  if (!w) return;
-  w.innerHTML = `<span class="mc-whisper-mark">✦</span> ${line}`;
-  setTimeout(() => w.classList.add('is-show'), 900);
-  setTimeout(() => w.classList.remove('is-show'), 6400);
-}
 
 // Extract dominant color from an image and tint the card background
 function _extractCardColor(img, cardId) {

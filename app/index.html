@@ -52,7 +52,7 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=20260424f">
+<link rel="stylesheet" href="/app/styles.css?v=20260424g">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
@@ -626,14 +626,16 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
       </div>
       <!-- Activity Overview (replaces activity list when viewing a single activity) -->
       <div id="disc-activity-overview" style="display:none;overflow-y:auto;flex:1;"></div>
-      <!-- Activity Full-Screen Overlay -->
+      <!-- Activity Full-Screen Overlay (covers the discover view only) -->
       <div class="activity-screen" id="activity-screen">
         <div class="act-topbar" id="act-topbar">
-          <div class="act-topbar-icon"><img id="act-tb-icon" src="" alt=""></div>
-          <div class="act-topbar-name" id="act-tb-name"></div>
+          <div class="act-topbar-identity">
+            <div class="act-topbar-icon"><img id="act-tb-icon" src="" alt=""></div>
+            <div class="act-topbar-name" id="act-tb-name"></div>
+          </div>
           <div class="act-topbar-controls">
             <button class="act-ctrl" onclick="_minimizeActivity()">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/></svg>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Minimize
             </button>
             <button class="act-ctrl is-leave" onclick="_leaveActivity()">
@@ -643,13 +645,18 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
           </div>
         </div>
         <div class="act-content" id="act-content"></div>
-      </div>
-      <!-- Activity Mini-Pill (minimized state) -->
-      <div class="activity-pill" id="activity-pill" style="display:none;" onclick="_resumeActivity()">
-        <div class="apill-icon"><img id="apill-icon" src="" alt=""></div>
-        <span class="apill-name" id="apill-name"></span>
-        <button class="apill-resume">Resume</button>
-        <span class="apill-close" onclick="event.stopPropagation();_leaveActivity()" title="Leave">&times;</span>
+        <!-- In-activity feedback bar — never leaves the activity square -->
+        <div class="act-feedback-bar" id="act-feedback-bar" style="display:none;">
+          <span class="act-fb-label">Rate this activity</span>
+          <div class="act-fb-stars" id="act-fb-stars-bar">
+            <span data-s="1" onclick="_actBarStar(1)">★</span>
+            <span data-s="2" onclick="_actBarStar(2)">★</span>
+            <span data-s="3" onclick="_actBarStar(3)">★</span>
+            <span data-s="4" onclick="_actBarStar(4)">★</span>
+            <span data-s="5" onclick="_actBarStar(5)">★</span>
+          </div>
+          <button class="act-fb-send" id="act-fb-send" onclick="_actBarSubmit()">Send</button>
+        </div>
       </div>
     </div>
 
@@ -687,6 +694,15 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
 
   </div><!-- /content -->
   </div><!-- /main -->
+<!-- Activity Mini-Pill — global, stays visible on all pages when minimized -->
+<div class="activity-pill" id="activity-pill" style="display:none;" onclick="_resumeActivity()">
+  <div class="apill-dot" id="apill-dot"></div>
+  <span class="apill-name" id="apill-name"></span>
+  <button class="apill-resume">Resume</button>
+  <button class="apill-close" onclick="event.stopPropagation();_leaveActivity()" title="Leave">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+</div>
 </div><!-- /main-wrap -->
 
 <!-- SETTINGS MODAL (opens over current page like Create Bastion) -->
@@ -1194,9 +1210,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/app.js?v=20260424f"></script>
-<script src="/app/joy-system.js?v=20260424f"></script>
-<script src="/app/chronicle-games.js?v=20260424f"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=20260424g"></script>
+<script src="/app/app.js?v=20260424g"></script>
+<script src="/app/joy-system.js?v=20260424g"></script>
+<script src="/app/chronicle-games.js?v=20260424g"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

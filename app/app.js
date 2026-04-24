@@ -8661,7 +8661,7 @@ function openActivityOverview(id) {
       </button>
 
       <div class="act-ov-banner">
-        ${_actBanner(act)}
+        ${_actBanner(act, false)}
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(${r},${g},${b},.18) 80%,var(--channel,#12141b) 100%);pointer-events:none;"></div>
         ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" class="act-ov-banner-gjg" style="height:58px;">` : ''}
       </div>
@@ -8673,7 +8673,6 @@ function openActivityOverview(id) {
           <div class="act-ov-sub">
             <span onclick="viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.7);font-weight:600;transition:color .15s;" onmouseover="this.style.color='rgba(255,249,62,.95)'" onmouseout="this.style.color='rgba(255,249,62,.7)'">${escapeHTML(act.owner)}</span>
             ${act.ownerVerified ? _verifiedBadge(11) : ''}
-            ${gjgBadge}
             <span style="color:rgba(255,255,255,.15);">·</span>
             <span style="font-weight:500;">${escapeHTML(act.category)}</span>
           </div>
@@ -8712,7 +8711,7 @@ function openActivityOverview(id) {
         <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;">
           ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:28px;opacity:.9;">` : `<div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`}
           <div>
-            <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;">${escapeHTML(act.owner)}</div>
+            <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;">${act.owner === 'Fortized' ? 'Grand Joy Games' : escapeHTML(act.owner)}</div>
             <div style="font-size:11px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">Activity developer</div>
           </div>
         </div>

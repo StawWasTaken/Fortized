@@ -8731,6 +8731,15 @@ function _extractCardColor(img, cardId) {
   } catch(e) { /* CORS or canvas error — ignore */ }
 }
 function setDiscoverTab(tab,btn){discoverTab=tab;document.querySelectorAll('.disc-tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderDiscoverGrid(discoverData);}
+function setDiscoverSubPage(page, btn) {
+  document.querySelectorAll('.disc-subnav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const bastions = document.getElementById('disc-page-bastions');
+  const activities = document.getElementById('disc-page-activities');
+  if (bastions) bastions.style.display = page === 'bastions' ? '' : 'none';
+  if (activities) activities.style.display = page === 'activities' ? '' : 'none';
+  if (page === 'activities') _renderDiscoverActivities();
+}
 async function promptJoinPublicBastion(bastionId){
   try{
     const all=await FortizedSocial.getGlobalBastions()||{};

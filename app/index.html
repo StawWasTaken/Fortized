@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Fortized</title>
 <meta name="description" content="Your fortress awaits. Chat, connect, and build with your squad on Fortized.">
 <meta name="theme-color" content="#fff93e">
@@ -49,7 +52,7 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=20260423p">
+<link rel="stylesheet" href="/app/styles.css?v=20260424">
 <style id="radiance-font-style"></style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous" async></script>
 <body>
@@ -561,42 +564,52 @@ window._cdnReady.then(() => {
             <p style="font-size:12px;color:rgba(255,255,255,.45);margin:0;">Find the Bastions and Activities where people gather.</p>
           </div>
         </div>
-        <!-- Activities Section -->
-        <div class="act-section" id="disc-activities-section">
-          <div class="act-section-hdr">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.6)" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span class="act-section-label">Activities</span>
-            <span style="font-size:10.5px;color:rgba(255,255,255,.18);margin-left:4px;font-family:var(--font-ui);">Coming soon</span>
-          </div>
-          <div class="act-grid" id="disc-activities-grid"></div>
+        <!-- Sub-navigation -->
+        <div class="disc-subnav">
+          <button class="disc-subnav-btn active" id="dsub-bastions" onclick="setDiscoverSubPage('bastions',this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Bastions
+          </button>
+          <button class="disc-subnav-btn" id="dsub-activities" onclick="setDiscoverSubPage('activities',this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Activities
+          </button>
         </div>
-        <!-- Search + Categories -->
-        <div style="padding:0 28px 0;">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-            <div class="disc-search" style="flex:1;max-width:360px;">
-              <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-              <input type="text" placeholder="Search bastions..." id="disc-search-input" oninput="filterDiscover(this.value)">
+        <!-- Bastions Sub-page -->
+        <div id="disc-page-bastions">
+          <div style="padding:16px 28px 0;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div class="disc-search" style="flex:1;max-width:360px;">
+                <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+                <input type="text" placeholder="Search bastions..." id="disc-search-input" oninput="filterDiscover(this.value)">
+              </div>
+              <div class="disc-stats" id="disc-stats" style="display:flex;gap:12px;margin-left:auto;"></div>
             </div>
-            <div class="disc-stats" id="disc-stats" style="display:flex;gap:12px;margin-left:auto;"></div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
+              <button class="disc-tab active" onclick="setDiscoverTab('all',this)">All</button>
+              <button class="disc-tab" onclick="setDiscoverTab('gaming',this)">Gaming</button>
+              <button class="disc-tab" onclick="setDiscoverTab('art',this)">Art</button>
+              <button class="disc-tab" onclick="setDiscoverTab('tech',this)">Tech</button>
+              <button class="disc-tab" onclick="setDiscoverTab('social',this)">Social</button>
+              <button class="disc-tab" onclick="setDiscoverTab('music',this)">Music</button>
+              <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
-            <button class="disc-tab active" onclick="setDiscoverTab('all',this)">All</button>
-            <button class="disc-tab" onclick="setDiscoverTab('gaming',this)">Gaming</button>
-            <button class="disc-tab" onclick="setDiscoverTab('art',this)">Art</button>
-            <button class="disc-tab" onclick="setDiscoverTab('tech',this)">Tech</button>
-            <button class="disc-tab" onclick="setDiscoverTab('social',this)">Social</button>
-            <button class="disc-tab" onclick="setDiscoverTab('music',this)">Music</button>
-            <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
+          <div style="padding:0 28px 28px;">
+            <div id="disc-featured" style="margin-bottom:20px;"></div>
+            <div class="bastion-grid" id="discover-grid"></div>
           </div>
         </div>
-        <!-- Bastions section label -->
-        <div style="padding:0 28px 12px;display:flex;align-items:center;gap:8px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.6)" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          <span class="act-section-label">Bastions</span>
-        </div>
-        <div style="padding:0 28px 28px;">
-          <div id="disc-featured" style="margin-bottom:20px;"></div>
-          <div class="bastion-grid" id="discover-grid"></div>
+        <!-- Activities Sub-page -->
+        <div id="disc-page-activities" style="display:none;">
+          <div class="act-section" style="padding-top:20px;" id="disc-activities-section">
+            <div class="act-section-hdr">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.6)" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span class="act-section-label">Activities</span>
+              <span style="font-size:10.5px;color:rgba(255,255,255,.18);margin-left:4px;font-family:var(--font-ui);">Coming soon</span>
+            </div>
+            <div class="act-grid" id="disc-activities-grid"></div>
+          </div>
         </div>
       </div>
       <!-- Activity Full-Screen Overlay -->
@@ -1167,9 +1180,9 @@ window._cdnReady.then(() => {
   </div>
 </div>
 
-<script src="/app/app.js?v=20260423p"></script>
-<script src="/app/joy-system.js?v=20260423p"></script>
-<script src="/app/chronicle-games.js?v=20260423p"></script>
+<script src="/app/app.js?v=20260424"></script>
+<script src="/app/joy-system.js?v=20260424"></script>
+<script src="/app/chronicle-games.js?v=20260424"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

@@ -1091,6 +1091,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .bc-footer{display:flex;align-items:center;gap:14px;}
 .bc-footer .bc-category{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.25);}
 .bc-footer .bc-tag{display:inline-flex;padding:2px 8px;border-radius:var(--radius-pill);font-size:8.5px;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.35);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);}
+/* ── Discover Sub-navigation ────────────────────── */
+.disc-subnav{display:flex;align-items:center;gap:4px;padding:14px 28px 0;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.12);}
+.disc-subnav-btn{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px 8px 0 0;font-family:var(--font-ui);font-size:13px;font-weight:600;color:rgba(255,255,255,.4);background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s cubic-bezier(.22,1,.36,1);letter-spacing:.01em;}
+.disc-subnav-btn:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.03);}
+.disc-subnav-btn.active{color:#fff;border-bottom-color:var(--accent);background:rgba(255,249,62,.04);}
+.disc-subnav-btn.active svg{stroke:var(--accent);}
 /* ── Discover Activities ─────────────────────────── */
 .act-section{padding:0 28px 24px;}
 .act-section-hdr{display:flex;align-items:center;gap:8px;margin-bottom:14px;}

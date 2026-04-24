@@ -616,16 +616,25 @@ app.get('/invite', async (req, res) => {
   }
 });
 
-app.get('/app/messages', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'messages', 'index.html')));
-app.get('/app/discover', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'discover', 'index.html')));
-app.get('/app/atelier', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'atelier', 'index.html')));
-app.get('/app/bastion', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'bastion', 'index.html')));
-app.get('/app/forum', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'forum', 'index.html')));
-app.get('/app/forum/{*rest}', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'forum', 'index.html')));
+// Helper: send an HTML file with explicit no-cache headers so nothing between
+// origin and browser (CDN, Render edge, HTTP cache) can ever serve a stale copy.
+// `cacheControl: false` stops sendFile from setting its own max-age default.
+function sendHtmlNoCache(res, filePath) {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.sendFile(filePath, { cacheControl: false });
+}
+app.get('/app/messages', (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'messages', 'index.html')));
+app.get('/app/discover', (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'discover', 'index.html')));
+app.get('/app/atelier',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'atelier',  'index.html')));
+app.get('/app/bastion',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'bastion',  'index.html')));
+app.get('/app/forum',    (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'forum',    'index.html')));
+app.get('/app/forum/{*rest}', (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'forum', 'index.html')));
 // SPA-style fallback for /app, /login, etc.
 ['app', 'login', 'signup', 'blog', 'support', 'download', 'privacy', 'terms', 'legal'].forEach(route => {
-  app.get(`/${route}`, (_req, res) => res.sendFile(path.join(__dirname, route, 'index.html')));
-  app.get(`/${route}/{*rest}`, (_req, res) => res.sendFile(path.join(__dirname, route, 'index.html')));
+  app.get(`/${route}`,            (_req, res) => sendHtmlNoCache(res, path.join(__dirname, route, 'index.html')));
+  app.get(`/${route}/{*rest}`,    (_req, res) => sendHtmlNoCache(res, path.join(__dirname, route, 'index.html')));
 });
 
 // ── Custom 404 page for unknown routes ────────────

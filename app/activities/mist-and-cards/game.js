@@ -65,7 +65,7 @@ function _mcMount(container) {
         <div class="mc-brand">
           <div>
             <div class="mc-brand-title">Mist &amp; Cards</div>
-            <div class="mc-brand-sub">Anno Domini 1487</div>
+            <div class="mc-brand-sub">Anno Domini 1452</div>
           </div>
         </div>
         <div class="mc-pot" id="mc-pot">${_onyxImg(14)} <span id="mc-pot-val">${_mcGetBalance().toLocaleString()}</span></div>

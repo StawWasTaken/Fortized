@@ -1240,17 +1240,18 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Activity screen — covers only the discover view area, not topbar/sidebar */
 .activity-screen{position:absolute;inset:0;z-index:200;background:var(--channel,#12141b);display:flex;flex-direction:column;transform:translateY(102%);transition:transform .38s cubic-bezier(.22,1,.36,1);pointer-events:none;}
 .activity-screen.is-open{transform:translateY(0);pointer-events:auto;}
-.act-topbar{display:flex;align-items:center;gap:0;padding:0 14px;height:44px;background:rgba(0,0,0,.45);border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;backdrop-filter:blur(16px);}
+.act-topbar{display:flex;align-items:center;gap:0;padding:0 12px 0 14px;height:40px;background:rgba(0,0,0,.55);border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;backdrop-filter:blur(16px);z-index:3;position:relative;}
 .act-topbar-identity{display:flex;align-items:center;gap:9px;flex:1;min-width:0;}
-.act-topbar-icon{width:26px;height:26px;border-radius:8px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;}
+.act-topbar-icon{width:22px;height:22px;border-radius:6px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;}
 .act-topbar-icon img{width:100%;height:100%;object-fit:cover;}
-.act-topbar-name{font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.act-topbar-controls{display:flex;align-items:center;gap:5px;flex-shrink:0;}
-.act-ctrl{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:7px;color:rgba(255,255,255,.55);cursor:pointer;font-size:11.5px;padding:5px 12px;font-family:var(--font-ui);font-weight:600;transition:all .15s;display:flex;align-items:center;gap:4px;}
-.act-ctrl:hover{background:rgba(255,255,255,.1);color:#fff;}
-.act-ctrl.is-leave{color:rgba(255,90,90,.75);}
-.act-ctrl.is-leave:hover{background:rgba(255,80,80,.1);border-color:rgba(255,80,80,.22);color:#ff5050;}
-.act-content{flex:1;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.act-topbar-name{font-family:var(--font-display);font-size:12.5px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;}
+.act-topbar-controls{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.act-ctrl{background:rgba(255,255,255,.04);border:none;border-radius:6px;color:rgba(255,255,255,.5);cursor:pointer;font-size:11.5px;padding:5px 10px;font-family:var(--font-ui);font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;height:26px;}
+.act-ctrl:hover{background:rgba(255,255,255,.08);color:#fff;}
+.act-ctrl svg{opacity:.8;}
+.act-ctrl.is-leave{color:rgba(237,66,69,.85);}
+.act-ctrl.is-leave:hover{background:rgba(237,66,69,.15);color:#ed4245;}
+.act-content{flex:1;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
 /* In-activity feedback bar */
 .act-feedback-bar{display:flex;align-items:center;gap:10px;padding:8px 16px;background:rgba(0,0,0,.3);border-top:1px solid rgba(255,255,255,.05);flex-shrink:0;}
 .act-fb-label{font-size:11px;color:rgba(255,255,255,.3);font-family:var(--font-ui);white-space:nowrap;}

@@ -3,75 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Fortized | Forum</title>
-<meta name="description" content="Engage with the Fortized community — share ideas, ask questions, showcase your work, and discuss what's next.">
+<meta name="description" content="Your fortress awaits. Chat, connect, and build with your squad on Fortized.">
 <meta name="theme-color" content="#fff93e">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Fortized">
 <meta property="og:title" content="Fortized | Forum">
-<meta property="og:description" content="Engage with the Fortized community — share ideas, ask questions, showcase your work, and discuss what's next.">
+<meta property="og:description" content="Your fortress awaits. Chat, connect, and build with your squad on Fortized.">
 <meta property="og:image" content="https://fortized.com/Fortized banner.png">
 <meta property="og:url" content="https://fortized.com/app/forum">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Fortized | Forum">
-<meta name="twitter:description" content="Engage with the Fortized community — share ideas, ask questions, showcase your work, and discuss what's next.">
+<meta name="twitter:description" content="Your fortress awaits. Chat, connect, and build with your squad on Fortized.">
 <meta name="twitter:image" content="https://fortized.com/Fortized banner.png">
 <link rel="icon" type="image/png" href="/Fortized icon.png" id="favicon">
 <script>window._initialView = 'forum';</script>
 <script>
-// Suppress Socket.IO connection errors since we're using Supabase polling instead
-(function() {
-  if (!window.console) return;
-  const originalError = console.error;
-  const originalWarn = console.warn;
-
-  console.error = function(...args) {
-    const msg = (args[0]?.toString?.() || '').toLowerCase();
-    if (msg.includes('wss://') || msg.includes('socket.io') || msg.includes('websocket')) return;
-    originalError.apply(console, args);
-  };
-
-  console.warn = function(...args) {
-    const msg = (args[0]?.toString?.() || '').toLowerCase();
-    if (msg.includes('wss://') || msg.includes('socket.io') || msg.includes('websocket')) return;
-    originalWarn.apply(console, args);
-  };
-})();
-</script>
-<script>
 // Load CDN scripts with timeout
-window._cdnReady = new Promise(function(resolve) {
-  var loaded = 0, needed = 2, timer;
-  function done() { loaded++; if (loaded >= needed) { clearTimeout(timer); resolve(true); } }
-  function timeout() { console.warn('[Fortized] CDN scripts timed out — offline mode'); resolve(false); }
-  timer = setTimeout(timeout, 5000);
-  var s1 = document.createElement('script');
+window._cdnReady = new Promise((resolve) => {
+  let loaded = 0;
+  const needed = 2;
+  const done = () => { loaded++; if (loaded >= needed) { clearTimeout(timer); resolve(true); } };
+  const timeout = () => { console.warn('[Fortized] CDN scripts timed out — offline mode'); resolve(false); };
+  const timer = setTimeout(timeout, 5000);
+  const s1 = document.createElement('script');
   s1.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
   s1.onload = done; s1.onerror = done;
   document.head.appendChild(s1);
-  var s2 = document.createElement('script');
+  const s2 = document.createElement('script');
   s2.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
   s2.onload = done; s2.onerror = done;
   document.head.appendChild(s2);
 });
-window._cdnReady.then(function() {
-  var s3 = document.createElement('script');
+window._cdnReady.then(() => {
+  const s3 = document.createElement('script');
   s3.src = '/FortizedSocial-supabase.js';
-  function loadShim() {
-    var s4 = document.createElement('script');
+  const loadShim = () => {
+    const s4 = document.createElement('script');
     s4.src = '/firebase-compat-shim.js';
     document.head.appendChild(s4);
-  }
+  };
   s3.onload = loadShim;
   s3.onerror = loadShim;
   document.head.appendChild(s3);
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=20260418d">
+<link rel="stylesheet" href="/app/styles.css?v=20260424c">
 <style id="radiance-font-style"></style>
+<script>
+// Register SW on every load for network-first HTML caching + auto-reload on update
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  // When a new SW activates and signals an update, reload to get fresh content
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
+  });
+}
+// Reload when page is restored from bfcache (back/forward nav) to avoid stale state
+window.addEventListener('pageshow', e => { if (e.persisted) window.location.reload(); });
+</script>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous" async></script>
 <body>
+<!-- GLOBAL CANVAS — the 'source of truth' for theme colour -->
+<div class="global-canvas" id="global-canvas"></div>
+
 <!-- APP LOADING -->
 <div class="app-loading" id="app-loading">
   <img src="/fortized loading animation.gif" class="app-loading-anim" alt="" onerror="this.src='/Fortized icon.png';this.style.width='50px';this.style.height='50px';this.style.filter='drop-shadow(0 0 16px rgba(255,249,62,.4))';">
@@ -308,10 +307,18 @@ window._cdnReady.then(function() {
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       <span id="tb-notif-badge" style="display:none;position:absolute;top:1px;right:1px;min-width:18px;height:18px;border-radius:100px;background:#ef4444;color:#fff;font-size:9px;font-weight:800;font-family:'Syne',sans-serif;padding:0 4px;line-height:18px;text-align:center;box-shadow:0 2px 8px rgba(239,68,68,.5),0 0 0 2.5px var(--panel);animation:notifBadgePulse 2s ease-in-out infinite;"></span>
     </button>
-    <div class="tb-onyx-pill" id="onyx-display" onclick="showView('atelier')" title="Your Onyx Balance">
-      <img src="/Onyx.png" alt="Onyx" style="width:15px;height:15px;object-fit:contain;">
-      <span id="onyx-val" style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--accent);">0</span>
-      <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">Onyx</span>
+    <div class="tb-wallet">
+      <div class="tb-cap tb-cap--onyx" id="onyx-display" onclick="showView('atelier')" oncontextmenu="onOnyxCtxMenu&amp;&amp;onOnyxCtxMenu(event);return false;" title="Onyx balance · click to open Atelier · right-click for options">
+        <div class="tb-cap-ic"><img src="/Onyx.png" alt=""></div>
+        <span id="onyx-val" class="tb-cap-val">0</span>
+        <span class="tb-cap-lbl">Onyx</span>
+      </div>
+      <div class="tb-cap tb-cap--streak is-zero" id="streak-display" onclick="showView('atelier');setTimeout(()=>switchAtelierTab&amp;&amp;switchAtelierTab('quests'),80)" oncontextmenu="onStreakCtxMenu&amp;&amp;onStreakCtxMenu(event);return false;" title="Daily streak · click to claim daily · right-click for options">
+        <div class="tb-cap-ic" id="streak-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.73 2.2a.75.75 0 0 1 1.18-.35c2.64 2.2 4.86 5.23 4.86 8.93 0 4.9-3.8 8.47-8.27 8.47-4.38 0-7.5-3.3-7.5-7.55 0-2.2 1.17-4.4 3.07-6.13a.75.75 0 0 1 1.23.45c.2 1.4.88 2.4 1.65 2.95.08-2.4 1-4.5 2.3-5.9 1-1.08 1.45-1.56 1.48-.87ZM12 17.5c1.9 0 3.5-1.53 3.5-3.53 0-1.5-.83-2.5-1.72-3.4-.2.7-.7 1.1-1.3 1.1-.8-1.8-.3-3.5-1.08-5.7-.8 1.3-1.9 2.9-1.9 5.1 0 .85.28 1.5.75 1.95-.8-.2-1.42-.95-1.58-1.85C8.1 11.7 7.75 12.6 7.75 13.6c0 2.2 1.8 3.9 4.25 3.9Z"/></svg></div>
+        <span id="streak-val" class="tb-cap-val">0</span>
+        <span class="tb-cap-lbl">Days</span>
+        <span class="tb-streak-shield" style="display:none;" title="Streak protected"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></span>
+      </div>
     </div>
     <div class="tb-search">
       <span style="display:flex;align-items:center;color:var(--muted);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
@@ -390,7 +397,7 @@ window._cdnReady.then(function() {
   <!-- CONTENT VIEWS -->
   <div class="content">
 
-        <!-- HOME VIEW -->
+    <!-- HOME VIEW -->
     <div class="view" id="view-home">
       <div class="home-wrap">
         <div class="home-feed">
@@ -509,7 +516,8 @@ window._cdnReady.then(function() {
         </div>
       </div>
     </div>
-<!-- DMs VIEW -->
+
+    <!-- DMs VIEW -->
     <div class="view" id="view-dms">
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
       </div>
@@ -539,6 +547,11 @@ window._cdnReady.then(function() {
       </div>
     </div>
 
+    <!-- FORUM VIEW -->
+    <div class="view" id="view-forum">
+      <div style="flex:1;overflow-y:auto;" id="forum-root"></div>
+    </div>
+
     <!-- BASTION VIEW -->
     <div class="view" id="view-bastion">
       <div class="chat-wrap" id="bastion-chat-wrap">
@@ -551,46 +564,90 @@ window._cdnReady.then(function() {
       <div class="member-list" id="member-list"></div>
     </div>
 
-    <!-- FORUM VIEW -->
-    <div class="view" id="view-forum">
-      <div style="flex:1;overflow-y:auto;" id="forum-root"></div>
-    </div>
-
     <!-- DISCOVER VIEW -->
-    <div class="view" id="view-discover">
-      <div class="discover-scroll">
+    <div class="view" id="view-discover" style="position:relative;overflow:hidden;">
+      <div class="discover-scroll" id="discover-scroll">
         <!-- Hero Banner -->
         <div class="disc-hero">
           <img src="/Fortized banner.png" class="disc-hero-bg" alt="">
           <div class="disc-hero-fade"></div>
           <div class="disc-hero-content">
-            <h1 style="font-family:var(--font-display);font-size:24px;font-weight:900;color:#fff;margin:0 0 4px;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.5);">Explore the realm.</h1>
-            <p style="font-size:12.5px;color:rgba(255,255,255,.45);margin:0;">Find the Bastions where people gather around the things you love.</p>
+            <h1 style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#fff;margin:0 0 3px;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.5);">Explore the realm.</h1>
+            <p style="font-size:12px;color:rgba(255,255,255,.45);margin:0;">Find the Bastions and Activities where people gather.</p>
           </div>
         </div>
-        <!-- Search + Categories -->
-        <div style="padding:20px 28px 0;">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-            <div class="disc-search" style="flex:1;max-width:360px;">
-              <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-              <input type="text" placeholder="Search bastions..." id="disc-search-input" oninput="filterDiscover(this.value)">
+        <!-- Sub-navigation -->
+        <div class="disc-subnav">
+          <button class="disc-subnav-btn active" id="dsub-bastions" onclick="setDiscoverSubPage('bastions',this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Bastions
+          </button>
+          <button class="disc-subnav-btn" id="dsub-activities" onclick="setDiscoverSubPage('activities',this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Activities
+          </button>
+        </div>
+        <!-- Bastions Sub-page -->
+        <div id="disc-page-bastions">
+          <div style="padding:16px 28px 0;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div class="disc-search" style="flex:1;max-width:360px;">
+                <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+                <input type="text" placeholder="Search bastions..." id="disc-search-input" oninput="filterDiscover(this.value)">
+              </div>
+              <div class="disc-stats" id="disc-stats" style="display:flex;gap:12px;margin-left:auto;"></div>
             </div>
-            <div class="disc-stats" id="disc-stats" style="display:flex;gap:12px;margin-left:auto;"></div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
+              <button class="disc-tab active" onclick="setDiscoverTab('all',this)">All</button>
+              <button class="disc-tab" onclick="setDiscoverTab('gaming',this)">Gaming</button>
+              <button class="disc-tab" onclick="setDiscoverTab('art',this)">Art</button>
+              <button class="disc-tab" onclick="setDiscoverTab('tech',this)">Tech</button>
+              <button class="disc-tab" onclick="setDiscoverTab('social',this)">Social</button>
+              <button class="disc-tab" onclick="setDiscoverTab('music',this)">Music</button>
+              <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
-            <button class="disc-tab active" onclick="setDiscoverTab('all',this)">All</button>
-            <button class="disc-tab" onclick="setDiscoverTab('gaming',this)">Gaming</button>
-            <button class="disc-tab" onclick="setDiscoverTab('art',this)">Art</button>
-            <button class="disc-tab" onclick="setDiscoverTab('tech',this)">Tech</button>
-            <button class="disc-tab" onclick="setDiscoverTab('social',this)">Social</button>
-            <button class="disc-tab" onclick="setDiscoverTab('music',this)">Music</button>
-            <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
+          <div style="padding:0 28px 28px;">
+            <div id="disc-featured" style="margin-bottom:20px;"></div>
+            <div class="bastion-grid" id="discover-grid"></div>
           </div>
         </div>
-        <div style="padding:0 28px;">
-          <div id="disc-featured" style="margin-bottom:20px;"></div>
-          <div class="bastion-grid" id="discover-grid"></div>
+        <!-- Activities Sub-page -->
+        <div id="disc-page-activities" style="display:none;">
+          <div class="act-section" style="padding-top:20px;" id="disc-activities-section">
+            <div class="act-section-hdr">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.6)" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span class="act-section-label">Activities</span>
+              <span style="font-size:10.5px;color:rgba(255,255,255,.18);margin-left:4px;font-family:var(--font-ui);">Coming soon</span>
+            </div>
+            <div class="act-grid" id="disc-activities-grid"></div>
+          </div>
         </div>
+      </div>
+      <!-- Activity Full-Screen Overlay -->
+      <div class="activity-screen" id="activity-screen">
+        <div class="act-topbar" id="act-topbar">
+          <div class="act-topbar-icon"><img id="act-tb-icon" src="" alt=""></div>
+          <div class="act-topbar-name" id="act-tb-name"></div>
+          <div class="act-topbar-controls">
+            <button class="act-ctrl" onclick="_minimizeActivity()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/></svg>
+              Minimize
+            </button>
+            <button class="act-ctrl is-leave" onclick="_leaveActivity()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Leave
+            </button>
+          </div>
+        </div>
+        <div class="act-content" id="act-content"></div>
+      </div>
+      <!-- Activity Mini-Pill (minimized state) -->
+      <div class="activity-pill" id="activity-pill" style="display:none;" onclick="_resumeActivity()">
+        <div class="apill-icon"><img id="apill-icon" src="" alt=""></div>
+        <span class="apill-name" id="apill-name"></span>
+        <button class="apill-resume">Resume</button>
+        <span class="apill-close" onclick="event.stopPropagation();_leaveActivity()" title="Leave">&times;</span>
       </div>
     </div>
 
@@ -724,7 +781,7 @@ window._cdnReady.then(function() {
             </div>
             <div class="tmpl-import-card" onclick="showImportTemplateStep('fortized')">
               <div class="tic-icon fortized">
-                <img src="/Fortized icon.png" alt="Fortized logo" style="width:24px;height:24px;border-radius:6px;">
+                <img src="/Fortized icon.png" style="width:24px;height:24px;border-radius:6px;">
               </div>
               <div class="tic-meta">
                 <div class="tic-title">Fortized bastion template</div>
@@ -835,7 +892,7 @@ window._cdnReady.then(function() {
       </div>
       <!-- Group Chat pane -->
       <div id="ndm-pane-gc" style="display:none;">
-        <input class="modal-input" id="gc-name-input" placeholder="Group name…" style="margin-bottom:10px;">
+        <input class="modal-input" id="gc-name-input" placeholder="Group name…" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')createGroupChat()">
         <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Select Friends</div>
         <div id="gc-friend-picker" style="max-height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:12px;"></div>
         <div id="gc-selected-preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:24px;"></div>
@@ -854,6 +911,7 @@ window._cdnReady.then(function() {
   <div class="modal" style="max-width:540px;">
     <div class="modal-bar"></div>
     <div class="modal-body" style="padding:0;">
+      <!-- Add Friend Section -->
       <div style="padding:28px 28px 22px;position:relative;">
         <div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#fff;margin-bottom:5px;">Add Friend</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;max-width:340px;">You can add friends with their Fortized usernames.</div>
@@ -869,6 +927,7 @@ window._cdnReady.then(function() {
         <div class="modal-error" id="friend-error"></div>
         <div class="modal-success" id="friend-success"></div>
       </div>
+      <!-- Other Places -->
       <div style="padding:0 24px 24px;border-top:1px solid rgba(255,255,255,.05);">
         <div style="padding-top:16px;">
           <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">Other Places to Make Friends</div>
@@ -1016,42 +1075,210 @@ window._cdnReady.then(function() {
 </div>
 
 
-<script src="/app/app.js?v=20260418d"></script>
+<!-- ═══════ THE FORTIZED GRAND CHRONICLE ═══════ -->
+<div class="chronicle-overlay" id="chronicle-overlay">
+  <div class="chronicle-container">
+
+    <!-- Top bar (draggable for Electron) -->
+    <div class="chronicle-topbar">
+      <div class="chronicle-topbar-left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <span class="chronicle-topbar-title">The Fortized Grand Chronicle</span>
+        <span class="chronicle-topbar-chapter">Chapter I</span>
+      </div>
+      <div class="chronicle-topbar-right">
+        <div class="chronicle-timer" id="chronicle-timer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="chronicle-timer-text">Limited Time</span>
+        </div>
+        <button class="chronicle-close-btn" onclick="closeChronicle()" title="Close Chronicle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <!-- Electron window controls (duplicated so desktop users can still minimize/maximize/close) -->
+        <div class="chronicle-win-controls">
+          <button class="tb-win-btn" onclick="window.fortizedDesktop?.minimizeWindow()" title="Minimize">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="5.5" width="10" height="1" fill="currentColor"/></svg>
+          </button>
+          <button class="tb-win-btn" onclick="window.fortizedDesktop?.maximizeWindow()" title="Maximize">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+          </button>
+          <button class="tb-win-btn tb-win-close" onclick="window.fortizedDesktop?.closeWindow()" title="Close Window">
+            <svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.3"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Intro video overlay (shows first time) -->
+    <div class="chronicle-intro" id="chronicle-intro">
+      <video id="chronicle-intro-video" preload="auto" playsinline>
+        <source src="/app/Chronicle/chapter1/assets/FTZchap1-Intro.mp4" type="video/mp4">
+      </video>
+      <button class="chronicle-skip-btn" id="chronicle-skip-btn" onclick="skipChronicleIntro()">Skip Intro</button>
+    </div>
+
+    <!-- Main chronicle content — Medieval Desk -->
+    <div class="chronicle-body" id="chronicle-body">
+
+      <!-- The desk surface -->
+      <div class="chronicle-desk">
+
+        <!-- Map on the desk (left / center) -->
+        <div class="chronicle-desk-map">
+          <div class="chronicle-map-wrap">
+            <img src="/app/Chronicle/chapter1/assets/IRL Human World Map 1452.png" class="chronicle-map-img" alt="Earth, 1452" id="chronicle-map" draggable="false">
+            <!-- Interactive event pins (positioned via JS) -->
+            <div class="chronicle-map-pins" id="chronicle-map-pins"></div>
+            <!-- Parchment corner curls -->
+            <div class="map-corner map-corner-tl"></div>
+            <div class="map-corner map-corner-tr"></div>
+            <div class="map-corner map-corner-bl"></div>
+            <div class="map-corner map-corner-br"></div>
+          </div>
+          <!-- Chapter info parchment below map -->
+          <div class="chronicle-chapter-parchment">
+            <div class="chronicle-chapter-label">CHAPTER I</div>
+            <h2 class="chronicle-chapter-title">The War of the Shattered Pact</h2>
+            <p class="chronicle-chapter-desc">The Treaty of the Silver Stream lies broken. Vastilly's banners march east — and you, a knight of the realm, are called to serve.</p>
+            <div class="chronicle-progress-bar">
+              <div class="chronicle-progress-fill" id="chronicle-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="chronicle-progress-label"><span id="chronicle-progress-text">0 / 14</span> Events Complete</div>
+
+            <!-- Joy System Bar -->
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,249,62,.2);">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <span style="font-size: 12px; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: 1px;">🎭 Joy</span>
+                <span id="chronicle-joy-percent" style="font-size: 14px; font-weight: 600; color: #fff93e;">85</span>%
+              </div>
+              <div style="height: 12px; background: rgba(255,255,255,.1); border-radius: 6px; overflow: hidden; cursor: pointer;" title="Click to increase Joy">
+                <div id="chronicle-joy-bar" style="height: 100%; background: linear-gradient(90deg, #4ade80, #22c55e); width: 85%; transition: width 0.3s;"></div>
+              </div>
+              <p style="margin: 8px 0 0 0; font-size: 11px; color: rgba(255,255,255,.5);">
+                Click bar to boost Joy • Depletes during battles • Recovers over time
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Scroll / event list (right side, like a rolled-out scroll) -->
+        <div class="chronicle-scroll-panel">
+          <div class="chronicle-scroll-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            War Orders
+          </div>
+          <div class="chronicle-scroll-list" id="chronicle-event-list">
+            <!-- Events populated by JS -->
+          </div>
+          <div class="chronicle-shop-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            <div class="chronicle-shop-banner-text"><strong>Chapter I Collection</strong> will appear in the Atelier after the event ends.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Event detail panel -->
+    <div class="chronicle-detail" id="chronicle-detail">
+      <button class="chronicle-detail-back" onclick="chronicleBack()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <div class="chronicle-detail-inner" id="chronicle-detail-inner"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/app/app.js?v=20260424c"></script>
+<script src="/app/joy-system.js?v=20260424c"></script>
+<script src="/app/chronicle-games.js?v=20260424c"></script>
 <script>
-// twemoji is loaded async, so on a fresh refresh the forum view renders
-// vote buttons before twemoji is defined. The old one-shot check silently
-// no-op'd and the observer never got installed, leaving 👍/👎 as the OS
-// default emoji. Retry until twemoji lands, then parse + observe + expose
-// window._twemojiReparse so app.js can poke us after renders.
-(function _ftzForumTwemojiBoot() {
-  let _scheduled = false;
-  const _pending = new Set();
-  function _flush() {
-    _scheduled = false;
-    if (typeof twemoji === 'undefined' || !_pending.size) return;
-    const nodes = [..._pending];
-    _pending.clear();
-    nodes.forEach(n => {
-      if (n && n.nodeType === 1 && n.isConnected) {
-        try { twemoji.parse(n, { folder: 'svg', ext: '.svg' }); } catch(_){}
+// Initialize Joy System when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => initializeJoySystem(), 500);
+});
+</script>
+<script>
+(function _ftzTwemojiBoot() {
+  // Custom Fortized art overrides — these codepoints swap the default
+  // twemoji SVG for a Fortized-branded PNG living under /custom-emojis/.
+  const FTZ_EMOJI_OVERRIDES = {
+    '1f4b0': '/custom-emojis/moneybag.png',            // money bag
+    '1f911': '/custom-emojis/money%20mouth.png',       // money-mouth face
+    '1f4b8': '/custom-emojis/money%20with%20wings.png',// money with wings
+  };
+  const TWE_BASE = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/';
+  function _tweOpts() {
+    return {
+      folder: 'svg',
+      ext: '.svg',
+      callback: (icon, opts) => {
+        if (FTZ_EMOJI_OVERRIDES[icon]) return FTZ_EMOJI_OVERRIDES[icon];
+        return TWE_BASE + icon + (opts.ext || '.svg');
       }
-    });
+    };
   }
-  function _schedule(node) {
+  window._ftzEmojiOverrides = FTZ_EMOJI_OVERRIDES;
+  let _scheduled = false;
+  let _pendingNodes = new Set();
+  function _isSkipped(node) {
+    // Emoji picker renders cells as native unicode text on purpose — letting
+    // twemoji walk into it rebuilds every cell as <img> and nukes opening
+    // performance. Also skip anything explicitly opted out.
+    if (!node || !node.closest) return false;
+    return !!(node.closest('#epp-grid') || node.closest('.emoji-picker-panel') || node.closest('[data-no-twemoji]'));
+  }
+  function _flushParse() {
+    _scheduled = false;
+    if (typeof twemoji === 'undefined') return;
+    if (!_pendingNodes.size) return;
+    const nodes = [..._pendingNodes];
+    _pendingNodes.clear();
+    const opts = _tweOpts();
+    // Detach the emoji picker (if open) so whole-body parses can't walk into
+    // its 1400+ native-text cells. We reattach immediately after.
+    const picker = document.querySelector('.emoji-picker-panel');
+    let pickerHost = null, pickerAnchor = null;
+    nodes.forEach(n => {
+      if (!n || n.nodeType !== 1 || !n.isConnected || _isSkipped(n)) return;
+      const containsPicker = picker && n !== picker && n.contains(picker);
+      if (containsPicker && !pickerHost) {
+        pickerHost = picker.parentNode;
+        pickerAnchor = picker.nextSibling;
+        pickerHost.removeChild(picker);
+      }
+      try { twemoji.parse(n, opts); } catch(_){}
+    });
+    if (pickerHost) {
+      pickerHost.insertBefore(picker, pickerAnchor);
+    }
+  }
+  function _scheduleParse(node) {
     if (!node) return;
-    _pending.add(node);
+    if (_isSkipped(node)) return;
+    _pendingNodes.add(node);
     if (_scheduled) return;
     _scheduled = true;
-    requestAnimationFrame(_flush);
+    requestAnimationFrame(_flushParse);
   }
-  window._twemojiReparse = function(scope) { _schedule(scope || document.body); };
+  window._twemojiReparse = function(scope) {
+    const root = scope || document.body;
+    _scheduleParse(root);
+  };
   function _setup() {
     if (typeof twemoji === 'undefined') { setTimeout(_setup, 80); return; }
-    try { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); } catch(_){}
+    try { twemoji.parse(document.body, _tweOpts()); } catch(_){}
     const obs = new MutationObserver(muts => {
-      muts.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) _schedule(n); }));
+      muts.forEach(m => {
+        m.addedNodes.forEach(n => { if (n.nodeType === 1) _scheduleParse(n); });
+        // catch innerHTML replacements: target itself may now contain raw emoji again
+        if (m.type === 'childList' && m.target && m.target.nodeType === 1) _scheduleParse(m.target);
+      });
     });
-    obs.observe(document.body, { childList: true, subtree: true });
+    obs.observe(document.body, { childList: true, subtree: true, characterData: false });
   }
   _setup();
 })();

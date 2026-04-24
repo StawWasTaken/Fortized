@@ -3743,9 +3743,7 @@ let _joysterClickCount = 0;
 let _joysterLastTip = -1;
 const _JOYSTER_DAILY_LIMIT = 5;
 
-// Joyster AI — uses Gemini API for dynamic personality responses
-const JOYSTER_API_KEY = 'AIzaSyARHuqX0uWrWv_GZaXOeFgFZNaOnplLRU4';
-const JOYSTER_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+// Joyster AI — talks to our /api/joyster proxy so the Gemini key stays server-side
 const JOYSTER_SYSTEM_PROMPT = `You are Joyster the Jester, the official mischievous mascot of Fortized - a gaming/social platform. You're a witty, cocky jester from King Staw's royal court who lives for chaos, pranks, and making people laugh. Personality: playful, arrogant, cheeky, spontaneous, constantly laughing (BAHAHA! Ahahaha! Hehehehe~), terrible puns, teases lovingly, unpredictable, bold, irreverent.
 
 You know Fortized features: Bastions (guilds with roles/channels), Onyx (currency), Radiance/VIP (premium), Atelier (cosmetics shop), voice/party rooms, profiles, custom status.
@@ -3826,10 +3824,10 @@ function _joysterAIIncDaily() {
   } catch {}
 }
 async function _joysterFetch(bodyObj) {
-  return fetch(JOYSTER_API_URL + '?key=' + JOYSTER_API_KEY, {
+  return fetch('/api/joyster', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(bodyObj),
+    body: JSON.stringify({ body: bodyObj }),
   });
 }
 async function _getJoysterAIResponse(context) {

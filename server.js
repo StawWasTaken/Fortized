@@ -434,6 +434,28 @@ app.post('/api/spotify/refresh', async (req, res) => {
 
 // ── Bastion Invite API ────────────────────────────
 // Returns bastion info for an invite code (used by invite landing page + chat embeds)
+// ── Joyster AI proxy — keeps the Gemini key on the server, not the client ──
+// Client POSTs { body: <gemini-request-body> } and we forward to Gemini with our key.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_MODEL   = process.env.GEMINI_MODEL   || 'gemini-2.5-flash';
+app.post('/api/joyster', async (req, res) => {
+  if (!GEMINI_API_KEY) return res.status(503).json({ error: 'AI not configured' });
+  const body = req.body?.body;
+  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'Missing body' });
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${GEMINI_API_KEY}`;
+    const upstream = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const text = await upstream.text();
+    res.status(upstream.status).type('application/json').send(text);
+  } catch (e) {
+    res.status(502).json({ error: 'Upstream failed' });
+  }
+});
+
 app.get('/api/bastion/invite/:code', async (req, res) => {
   try {
     const code = req.params.code;

@@ -2304,7 +2304,7 @@ function onOnyxCtxMenu(ev) {
   const onyxIcon = '<img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
   const shopIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
   const questIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
-  const radIcon = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.5 6.5L21 9.3l-5 4.7 1.3 7-5.3-3.6L6.7 21 8 14l-5-4.7 6.5-.8z"/></svg>';
+  const radIcon = '<img src="/fortized%20badges/radiance.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
   const items = [
     { icon: onyxIcon, label: `${balance.toLocaleString()} Onyx`, hint: 'Balance', disabled: true },
     {

@@ -8388,7 +8388,7 @@ function _renderDiscoverFeatured(bastions){
     const boostBadge = (b.boostLevel||0)>0?(['🟦 Tier 1','🟪 Tier 2','👑 Tier 3'][(b.boostLevel||1)-1]):'';
     return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,${(b.boostLevel||0)>0?'rgba(255,249,62,.08)':'rgba(255,249,62,.04)'},rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.12)'};border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(12px);" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px ${(b.boostLevel||0)>0?'rgba(255,249,62,.12)':'rgba(255,249,62,.06)'}';" onmouseleave="this.style.transform='';this.style.boxShadow='';">
       <div style="width:52px;height:52px;border-radius:14px;background:${(b.boostLevel||0)>0?'linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,249,62,.05))':'rgba(255,249,62,.06)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.1)'};overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
-      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}${b.verified?` <svg width="16" height="16" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:2px;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''} ${boostBadge?'<span style="font-size:10px;margin-left:6px;font-weight:700;color:var(--accent);">'+boostBadge+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>`:`<span style="color:rgba(255,255,255,.4);">💤 ${mc>1?'Active':'Quiet'}</span>`}</div></div>
+      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}${b.verified?_verifiedBadge(16):''} ${boostBadge?'<span style="font-size:10px;margin-left:6px;font-weight:700;color:var(--accent);">'+boostBadge+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>`:`<span style="color:rgba(255,255,255,.4);">💤 ${mc>1?'Active':'Quiet'}</span>`}</div></div>
       ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">✓ Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);padding:5px 12px;border-radius:10px;">+ Join</span>`}
     </div>`;
   }).join('')}</div>`;
@@ -8433,7 +8433,7 @@ function renderDiscoverGrid(bastions){
           <div style="flex:1"></div>
           ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);padding:4px 12px;border-radius:8px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Joined</span>`:`<button class="ftz-btn ftz-btn-accent ftz-btn-xs" style="padding:5px 16px;border-radius:8px;" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">+ Join</button>`}
         </div>
-        <div class="bc-name">${escapeHTML(b.name)}${b.verified?` <svg width="16" height="16" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:4px;flex-shrink:0;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}</div>
+        <div class="bc-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(16):''}</div>
         <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,140))}</div>
         <div class="bc-footer">
           <span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.35);"><span style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;"></span> ${mc > 1000 ? Math.floor(mc/1000)+'K' : Math.max(1,Math.floor(mc*0.3))} Online</span>
@@ -8521,7 +8521,7 @@ function _renderDiscoverActivities() {
   if (!grid) return;
   grid.innerHTML = FORTIZED_ACTIVITIES.map(act => {
     const ownerBadge = act.ownerVerified
-      ? `<svg width="12" height="12" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:2px;flex-shrink:0;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+      ? _verifiedBadge(12)
       : '';
     const bannerHTML = act.icon
       ? `<img src="${escapeHTML(act.icon)}" alt="">`
@@ -8540,7 +8540,7 @@ function _renderDiscoverActivities() {
         <div class="ac-name">${escapeHTML(act.name)}</div>
         <div class="ac-desc">${escapeHTML(act.desc)}</div>
         <div class="ac-footer">
-          <div class="ac-owner">
+          <div class="ac-owner" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;" title="View ${escapeHTML(act.owner)}'s profile">
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             ${escapeHTML(act.owner)}${ownerBadge}
           </div>
@@ -8587,7 +8587,7 @@ function _showActivityPermDialog(act, onAccept) {
         <div style="width:52px;height:52px;border-radius:14px;overflow:hidden;flex-shrink:0;">${iconHTML}</div>
         <div>
           <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:3px;">${escapeHTML(act.name)}</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">by ${escapeHTML(act.owner)} · ${escapeHTML(act.category)}</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">by <span onclick="document.getElementById('modal-activity-perm').remove();viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.6);text-decoration:none;">${escapeHTML(act.owner)}</span> · ${escapeHTML(act.category)}</div>
         </div>
       </div>
       <div style="margin-bottom:18px;">
@@ -21507,7 +21507,7 @@ async function adminSearchUser() {
           ${!isMe && !alreadyFriends?`<button class="hq-quick-btn" onclick="adminForceFriend('${escapeHTML(username)}')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);">Force Friend</button>`:''}
           <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Give Onyx</button>
           <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Radiance</button>
-          ${isSuperAdmin()?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${u.verified?'Unverify':'Verify'}</button>`:''}
+          ${isSuperAdmin()?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')" style="border-color:rgba(255,249,62,.18);background:rgba(255,249,62,.05);color:rgba(255,249,62,.7);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff93e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${u.verified?'Unverify':'Verify'}</button>`:''}
           ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','force_logout')" style="border-color:rgba(248,113,113,.12);background:rgba(248,113,113,.03);color:rgba(248,113,113,.5);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Force Logout</button>`:''}
         `}
         <button class="hq-quick-btn" onclick="openDMView('${escapeHTML(username)}');_closeAdminPanel();" style="border-color:rgba(96,165,250,.15);background:rgba(96,165,250,.04);color:rgba(96,165,250,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</button>
@@ -21527,7 +21527,7 @@ async function adminSearchUser() {
               [ageLabel, ageDisplay, '#a78bfa'],
               ['Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown', '#60a5fa'],
               ['Radiance', hasRadiancePlus ? 'Active' : hasRadiance ? 'Active' : 'None', (hasRadiancePlus||hasRadiance) ? '#ffd93e' : '#6b7280'],
-              ['Verified', u.verified ? 'Yes' : 'No', u.verified ? '#3ecf6e' : '#6b7280'],
+              ['Verified', u.verified ? 'Yes' : 'No', u.verified ? '#fff93e' : '#6b7280'],
               ['Reports Against', reportsAgainst.length, reportsAgainst.length > 0 ? '#f87171' : '#3ecf6e'],
               ...(canSeeEmail ? [['Email', u.email || 'N/A', '#38bdf8']] : []),
               ...(canSeeFullData ? [
@@ -23677,7 +23677,7 @@ function renderAdminBastionsList(bastions) {
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-weight:700;font-size:13.5px;">${escapeHTML(b.name||'Unnamed')}</span>
-          ${b.verified?'<svg width="14" height="14" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+          ${b.verified?_verifiedBadge(14):''}
           ${b.public===false?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);">PRIVATE</span>':''}
           ${nsfwChannels?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:var(--red);">${nsfwChannels} NSFW</span>`:''}
           ${boostLv?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,249,62,.08);color:#ffd93e;display:inline-flex;align-items:center;gap:2px;">${_boostSvg('9')} Lv${boostLv}</span>`:''}
@@ -31710,7 +31710,7 @@ async function _gdmLoadCommunity(gameName) {
               <div class="gdm-bastion-emblem-wrap">${emblem}</div>
               <div class="gdm-community-text">
                 <div class="gdm-community-title">
-                  ${_verifiedBadge ? _verifiedBadge(14) : '<svg width="14" height="14" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+                  ${_verifiedBadge ? _verifiedBadge(14) : '<svg width="14" height="14" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#fff93e"/><path d="M15 25l6 6 12-12" stroke="#13161d" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
                   <span>${escapeHTML(match.name)}</span>
                 </div>
                 <div class="gdm-community-sub">Official ${escapeHTML(gameName)} Bastion</div>

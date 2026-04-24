@@ -1307,6 +1307,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .act-ov-desc{font-size:14px;color:rgba(255,255,255,.68);font-family:var(--font-ui);line-height:1.8;margin:0;}
 .act-ov-dev-card{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:14px;transition:border-color .15s,background .15s;}
 .act-ov-dev-card:hover{border-color:rgba(255,249,62,.14);background:var(--surface-2);}
+.act-ov-soon-badge{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:rgba(255,255,255,.38);font-family:var(--font-ui);font-size:12.5px;font-weight:600;margin-bottom:6px;cursor:default;letter-spacing:.01em;}
+/* Activity page intro */
+.act-page-intro{padding:22px 28px 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,249,62,.07);margin-bottom:2px;}
+.act-page-intro-icon{width:42px;height:42px;border-radius:13px;background:rgba(255,249,62,.09);border:1px solid rgba(255,249,62,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent);}
+.act-page-intro-title{font-family:var(--font-display);font-size:16px;font-weight:900;color:#fff;letter-spacing:-.02em;margin-bottom:3px;}
+.act-page-intro-sub{font-size:12px;color:rgba(255,255,255,.38);font-family:var(--font-ui);line-height:1.5;}
 .act-ov-yml-card{flex-shrink:0;width:192px;background:var(--panel);border:1px solid var(--surface-border);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s;position:relative;}
 .act-ov-yml-card:hover{transform:translateY(-3px);border-color:rgba(255,249,62,.2);box-shadow:0 10px 32px rgba(0,0,0,.45);}
 .act-ov-yml-banner{height:86px;overflow:hidden;position:relative;}

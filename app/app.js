@@ -8615,10 +8615,6 @@ let _actBarRating = 0;
 function openActivityOverview(id) {
   const act = FORTIZED_ACTIVITIES.find(a => a.id === id);
   if (!act) return;
-  if (act.comingSoon) {
-    toast(`${act.name} is coming soon — stay tuned!`, 'info');
-    return;
-  }
 
   const discScroll = document.getElementById('discover-scroll');
   const hero    = discScroll ? discScroll.querySelector('.disc-hero') : null;
@@ -8648,6 +8644,16 @@ function openActivityOverview(id) {
     </div>`;
   }).join('');
 
+  const launchBtnHTML = act.comingSoon
+    ? `<div class="act-ov-soon-badge">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Arriving to the Realm
+      </div>`
+    : `<button class="act-ov-launch-btn" onclick="launchActivity('${act.id}')">
+        <svg width="14" height="14" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg>
+        Launch Activity
+      </button>`;
+
   overview.style.display = 'block';
   overview.innerHTML = `
     <div class="act-ov-wrap">
@@ -8659,6 +8665,7 @@ function openActivityOverview(id) {
       <div class="act-ov-banner">
         ${_actBanner(act, false)}
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(${r},${g},${b},.18) 80%,var(--channel,#12141b) 100%);pointer-events:none;"></div>
+        ${act.comingSoon ? `<div style="position:absolute;top:16px;left:20px;z-index:5;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 11px;font-size:10px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-ui);"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Coming Soon</div>` : ''}
         ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" class="act-ov-banner-gjg" style="height:58px;">` : ''}
       </div>
 
@@ -8673,10 +8680,7 @@ function openActivityOverview(id) {
             <span style="font-weight:500;">${escapeHTML(act.category)}</span>
           </div>
         </div>
-        <button class="act-ov-launch-btn" onclick="launchActivity('${act.id}')">
-          <svg width="14" height="14" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg>
-          Launch Activity
-        </button>
+        ${launchBtnHTML}
       </div>
 
       <div class="act-ov-stats">
@@ -8692,7 +8696,7 @@ function openActivityOverview(id) {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
           ${escapeHTML(act.players)}
         </div>
-        ${(act.tags || []).slice(0,2).map(t => `<div class="act-ov-stat-pill" style="border-color:rgba(${r},${g},${b},.25);color:rgba(${r},${g},${b+50},.9);">#${t}</div>`).join('')}
+        ${(act.tags || []).slice(0,2).map(t => `<div class="act-ov-stat-pill" style="border-color:rgba(${r},${g},${b},.3);color:rgba(${r},${g},${b+30},1);">#${t}</div>`).join('')}
       </div>
 
       <div class="act-ov-divider"></div>
@@ -8715,7 +8719,7 @@ function openActivityOverview(id) {
       </div>
 
       ${others.length ? `<div class="act-ov-section" style="padding-bottom:16px;">
-        <div class="act-ov-section-label">You might also like</div>
+        <div class="act-ov-section-label">More Activities</div>
         <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;-webkit-overflow-scrolling:touch;">${othersHTML}</div>
       </div>` : ''}
 

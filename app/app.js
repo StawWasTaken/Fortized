@@ -8451,90 +8451,110 @@ function filterDiscover(q){
 }
 
 // ── Activities ─────────────────────────────────────────────────────────────
+// ── Activity icon SVGs (Lucide-style, 20×20) ──
+const _ACT_ICONS = {
+  'trivia-realm': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  'pixel-canvas': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+  'word-duel':    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="21" x2="9" y2="19"/></svg>',
+  'poll-stage':   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
+};
+
 const FORTIZED_ACTIVITIES = [
   {
     id: 'trivia-realm',
     name: 'Trivia Realm',
-    desc: 'Test your knowledge across history, science, gaming, and more. Compete live with others.',
+    desc: 'Test your knowledge across history, science, gaming, and pop culture. Compete live against others in real time.',
     owner: 'Fortized',
     ownerVerified: true,
-    icon: null,
-    bannerGradient: 'linear-gradient(135deg,#1a1a4e 0%,#2d1b69 50%,#0f0f2e 100%)',
-    bannerEmoji: '🧠',
     category: 'Games',
     players: '2–8 players',
     tags: ['trivia', 'quiz', 'multiplayer'],
     permissions: ['See your display name', 'Submit answers on your behalf', 'Track your score for the session'],
     comingSoon: true,
+    dominantRgb: [30, 50, 180],
+    // Rich multi-layer gradient: cosmic indigo + aurora glows
+    bannerBg: 'radial-gradient(ellipse at 18% 62%,rgba(110,70,255,.48) 0%,transparent 42%),radial-gradient(ellipse at 80% 22%,rgba(50,130,255,.32) 0%,transparent 44%),radial-gradient(ellipse at 58% 88%,rgba(190,60,255,.22) 0%,transparent 36%),linear-gradient(135deg,#08061e 0%,#150540 40%,#0a1458 70%,#030210 100%)',
+    bannerAccent: 'rgba(110,70,255,.18)',
   },
   {
     id: 'pixel-canvas',
     name: 'Pixel Canvas',
-    desc: 'Draw pixel art together on a shared canvas. Collaborate, protect zones, and share creations.',
+    desc: 'Paint pixel art on a living shared canvas. Claim zones, defend your work, and watch the world evolve.',
     owner: 'Fortized',
     ownerVerified: true,
-    icon: null,
-    bannerGradient: 'linear-gradient(135deg,#0e2a1a 0%,#1a4a2e 50%,#0a1a10 100%)',
-    bannerEmoji: '🎨',
     category: 'Creative',
     players: '1–50 players',
     tags: ['art', 'canvas', 'creative'],
     permissions: ['See your display name', 'Store canvas contributions', 'Read your current bastion'],
     comingSoon: true,
+    dominantRgb: [0, 130, 80],
+    // Vibrant teal + cyan bioluminescence
+    bannerBg: 'radial-gradient(ellipse at 24% 48%,rgba(0,255,150,.3) 0%,transparent 44%),radial-gradient(ellipse at 76% 28%,rgba(0,220,255,.22) 0%,transparent 42%),radial-gradient(ellipse at 50% 86%,rgba(0,200,100,.25) 0%,transparent 38%),linear-gradient(135deg,#001f14 0%,#003c28 40%,#005a42 70%,#001208 100%)',
+    bannerAccent: 'rgba(0,200,120,.18)',
   },
   {
     id: 'word-duel',
     name: 'Word Duel',
-    desc: 'Challenge friends to fast-paced word battles. Think fast, score big.',
+    desc: 'Fast-paced word battles — one challenger, one board. Outsmart your opponent before the timer runs out.',
     owner: 'Fortized',
     ownerVerified: true,
-    icon: null,
-    bannerGradient: 'linear-gradient(135deg,#2a1a0e 0%,#4a2e0a 50%,#1a0e00 100%)',
-    bannerEmoji: '🔤',
     category: 'Games',
-    players: '2–4 players',
+    players: '2 players',
     tags: ['words', 'duel', 'pvp'],
     permissions: ['See your display name', 'Track match results', 'Send game invites to friends'],
     comingSoon: true,
+    dominantRgb: [160, 70, 0],
+    // Fierce amber + ember glows
+    bannerBg: 'radial-gradient(ellipse at 28% 42%,rgba(255,140,20,.4) 0%,transparent 46%),radial-gradient(ellipse at 72% 72%,rgba(255,80,0,.3) 0%,transparent 42%),radial-gradient(ellipse at 50% 18%,rgba(255,200,80,.22) 0%,transparent 36%),linear-gradient(135deg,#250c00 0%,#561e00 40%,#8a3800 70%,#160600 100%)',
+    bannerAccent: 'rgba(255,120,20,.18)',
   },
   {
     id: 'poll-stage',
     name: 'Poll Stage',
-    desc: 'Run live polls, votes, and debates in your bastion. See results update in real time.',
+    desc: 'Host live polls, ranked votes, and heated debates inside any bastion. Results animate in real time.',
     owner: 'Fortized',
     ownerVerified: true,
-    icon: null,
-    bannerGradient: 'linear-gradient(135deg,#1a0a2e 0%,#2d0e4a 50%,#110520 100%)',
-    bannerEmoji: '📊',
     category: 'Social',
     players: 'Any size',
     tags: ['polls', 'vote', 'social'],
-    permissions: ['See your display name', 'Record your votes', 'Post results to current channel'],
+    permissions: ['See your display name', 'Record your votes', 'Post results to the current channel'],
     comingSoon: true,
+    dominantRgb: [100, 20, 180],
+    // Deep indigo + violet aurora
+    bannerBg: 'radial-gradient(ellipse at 22% 35%,rgba(160,50,255,.42) 0%,transparent 44%),radial-gradient(ellipse at 76% 68%,rgba(80,20,255,.32) 0%,transparent 42%),radial-gradient(ellipse at 50% 88%,rgba(210,70,255,.2) 0%,transparent 36%),linear-gradient(135deg,#0e0022 0%,#230055 40%,#380080 70%,#090012 100%)',
+    bannerAccent: 'rgba(150,50,255,.18)',
   },
 ];
 
 let _activeActivity = null;
 
+function _actBanner(act) {
+  const icon = _ACT_ICONS[act.id] || '';
+  return `<div style="width:100%;height:100%;position:relative;overflow:hidden;background:${act.bannerBg};">
+    <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(rgba(255,255,255,.03) 0 1px,transparent 1px 36px),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 36px);background-size:36px 36px;"></div>
+    <div style="position:absolute;top:-20px;left:-20px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,${act.bannerAccent},transparent);filter:blur(18px);"></div>
+    <div style="position:absolute;right:-6px;bottom:-6px;color:rgba(255,255,255,.07);transform:scale(4.2) rotate(-12deg);pointer-events:none;">${icon}</div>
+  </div>`;
+}
+
+function _actIconBox(act) {
+  const [r,g,b] = act.dominantRgb;
+  const icon = _ACT_ICONS[act.id] || '';
+  return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${r},${g},${b},.9),rgba(${r},${g},${b},.6));border-radius:12px;color:#fff;">${icon}</div>`;
+}
+
 function _renderDiscoverActivities() {
   const grid = document.getElementById('disc-activities-grid');
   if (!grid) return;
   grid.innerHTML = FORTIZED_ACTIVITIES.map(act => {
-    const ownerBadge = act.ownerVerified
-      ? _verifiedBadge(12)
-      : '';
-    const bannerHTML = act.icon
-      ? `<img src="${escapeHTML(act.icon)}" alt="">`
-      : `<div style="width:100%;height:100%;background:${act.bannerGradient};display:flex;align-items:center;justify-content:center;font-size:28px;">${act.bannerEmoji}</div>`;
-    const iconHTML = act.icon
-      ? `<img src="${escapeHTML(act.icon)}" alt="">`
-      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${act.bannerGradient};border-radius:9px;font-size:18px;">${act.bannerEmoji}</div>`;
+    const [r,g,b] = act.dominantRgb;
+    const ownerBadge = act.ownerVerified ? _verifiedBadge(12) : '';
     return `<div class="ac" onclick="launchActivity('${act.id}')">
-      ${act.comingSoon ? `<div style="position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);border-radius:6px;padding:3px 8px;font-size:9.5px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.04em;">SOON</div>` : ''}
-      <div class="ac-banner">${bannerHTML}</div>
-      <div class="ac-body">
+      ${act.comingSoon ? `<div style="position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-radius:6px;padding:3px 9px;font-size:9px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;">Soon</div>` : ''}
+      <div class="ac-banner">${_actBanner(act)}</div>
+      <div class="ac-body" style="background:linear-gradient(180deg,rgba(${r},${g},${b},.14) 0%,rgba(${r},${g},${b},.04) 100%);">
         <div class="ac-meta">
-          <div class="ac-icon">${iconHTML}</div>
+          <div class="ac-icon">${_actIconBox(act)}</div>
           ${!act.comingSoon ? `<button class="ac-launch-btn" onclick="event.stopPropagation();launchActivity('${act.id}')">Launch</button>` : ''}
         </div>
         <div class="ac-name">${escapeHTML(act.name)}</div>
@@ -8572,9 +8592,10 @@ function launchActivity(id) {
 function _showActivityPermDialog(act, onAccept) {
   const existing = document.getElementById('modal-activity-perm');
   if (existing) existing.remove();
+  const [r,g,b] = act.dominantRgb;
   const iconHTML = act.icon
     ? `<img src="${escapeHTML(act.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:9px;" alt="">`
-    : `<div style="width:100%;height:100%;background:${act.bannerGradient};border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:22px;">${act.bannerEmoji}</div>`;
+    : `<div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(${r},${g},${b},.9),rgba(${r},${g},${b},.55));border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;">${_ACT_ICONS[act.id]||''}</div>`;
   const permItems = act.permissions.map(p =>
     `<li style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.6)" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:12.5px;color:rgba(255,255,255,.6);font-family:var(--font-ui);">${escapeHTML(p)}</span></li>`
   ).join('');
@@ -8620,7 +8641,7 @@ function _openActivityScreen(act) {
   if (contentEl) {
     contentEl.innerHTML = `
       <div style="text-align:center;max-width:420px;padding:40px 24px;">
-        <div style="font-size:56px;margin-bottom:20px;">${act.bannerEmoji}</div>
+        <div style="width:72px;height:72px;border-radius:20px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${act.dominantRgb[0]},${act.dominantRgb[1]},${act.dominantRgb[2]},.85),rgba(${act.dominantRgb[0]},${act.dominantRgb[1]},${act.dominantRgb[2]},.5));color:#fff;transform:scale(1.6);">${_ACT_ICONS[act.id]||''}</div>
         <div style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin-bottom:8px;">${escapeHTML(act.name)}</div>
         <div style="font-size:13px;color:rgba(255,255,255,.4);font-family:var(--font-ui);line-height:1.6;margin-bottom:28px;">${escapeHTML(act.desc)}</div>
         <div style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;font-size:12px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">
@@ -8669,7 +8690,7 @@ function _showActivityFeedback(act) {
   modal.style.cssText = 'position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);';
   modal.innerHTML = `
     <div style="background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;max-width:340px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,.5);text-align:center;">
-      <div style="font-size:36px;margin-bottom:12px;">${act.bannerEmoji}</div>
+      <div style="width:52px;height:52px;border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${act.dominantRgb[0]},${act.dominantRgb[1]},${act.dominantRgb[2]},.85),rgba(${act.dominantRgb[0]},${act.dominantRgb[1]},${act.dominantRgb[2]},.5));color:#fff;">${_ACT_ICONS[act.id]||''}</div>
       <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:6px;">How was ${escapeHTML(act.name)}?</div>
       <div style="font-size:12.5px;color:rgba(255,255,255,.35);font-family:var(--font-ui);margin-bottom:20px;">Your feedback helps us improve Activities.</div>
       <div id="act-fb-stars" style="display:flex;gap:6px;justify-content:center;margin-bottom:18px;">

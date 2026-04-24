@@ -52,7 +52,7 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=20260424h">
+<link rel="stylesheet" href="/app/styles.css?v=20260424i">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
@@ -565,7 +565,40 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
     </div>
 
     <!-- DISCOVER VIEW -->
-    <div class="view" id="view-discover" style="position:relative;overflow:hidden;">
+    <div class="view" id="view-discover" style="position:relative;overflow:hidden;display:flex;flex-direction:column;">
+      <!-- Discover Topbar — styled like room-topbar; transforms when activity is running -->
+      <div class="disc-subnav" id="disc-subnav">
+        <!-- Normal mode: Bastions / Activities tabs -->
+        <div class="disc-subnav-normal" id="disc-subnav-normal">
+          <span class="disc-subnav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <span class="disc-subnav-title">Discover</span>
+          <div class="disc-subnav-sep"></div>
+          <button class="disc-subnav-btn active" id="dsub-bastions" onclick="setDiscoverSubPage('bastions',this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Bastions
+          </button>
+          <button class="disc-subnav-btn" id="dsub-activities" onclick="setDiscoverSubPage('activities',this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Activities
+          </button>
+        </div>
+        <!-- Activity mode: shown when an activity is running -->
+        <div class="disc-subnav-act" id="disc-subnav-act" style="display:none;">
+          <div class="disc-subnav-act-icon" id="disc-subnav-act-icon"></div>
+          <span class="disc-subnav-act-name" id="disc-subnav-act-name"></span>
+          <div class="disc-subnav-sep"></div>
+          <span class="disc-subnav-live-badge">● Live</span>
+          <div class="disc-subnav-act-spacer"></div>
+          <button class="disc-subnav-fb-btn" onclick="_actBarShow()" title="Rate this activity">★</button>
+          <button class="disc-subnav-act-ctrl" onclick="_minimizeActivity()" title="Minimize">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
+          <button class="disc-subnav-act-ctrl is-leave" onclick="_leaveActivity()" title="Leave activity">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+      <!-- Scrollable content (flex:1) -->
       <div class="discover-scroll" id="discover-scroll">
         <!-- Hero Banner -->
         <div class="disc-hero">
@@ -575,17 +608,6 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
             <h1 style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#fff;margin:0 0 3px;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.5);">Explore the realm.</h1>
             <p style="font-size:12px;color:rgba(255,255,255,.45);margin:0;">Find the Bastions and Activities where people gather.</p>
           </div>
-        </div>
-        <!-- Sub-navigation -->
-        <div class="disc-subnav">
-          <button class="disc-subnav-btn active" id="dsub-bastions" onclick="setDiscoverSubPage('bastions',this)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            Bastions
-          </button>
-          <button class="disc-subnav-btn" id="dsub-activities" onclick="setDiscoverSubPage('activities',this)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Activities
-          </button>
         </div>
         <!-- Bastions Sub-page -->
         <div id="disc-page-bastions">
@@ -623,39 +645,28 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
             <div class="act-grid" id="disc-activities-grid"></div>
           </div>
         </div>
+        <!-- Activity Overview (replaces activity list when viewing a single activity) -->
+        <div id="disc-activity-overview" style="display:none;"></div>
       </div>
-      <!-- Activity Overview (replaces activity list when viewing a single activity) -->
-      <div id="disc-activity-overview" style="display:none;overflow-y:auto;flex:1;"></div>
-      <!-- Activity Full-Screen Overlay (covers the discover view only) -->
+      <!-- Activity Full-Screen Overlay (starts at 46px, leaving topbar visible) -->
       <div class="activity-screen" id="activity-screen">
-        <div class="act-topbar" id="act-topbar">
-          <div class="act-topbar-identity">
-            <div class="act-topbar-icon"><img id="act-tb-icon" src="" alt=""></div>
-            <div class="act-topbar-name" id="act-tb-name"></div>
-          </div>
-          <div class="act-topbar-controls">
-            <button class="act-ctrl" onclick="_minimizeActivity()">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Minimize
-            </button>
-            <button class="act-ctrl is-leave" onclick="_leaveActivity()">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-              Leave
-            </button>
-          </div>
-        </div>
         <div class="act-content" id="act-content"></div>
-        <!-- In-activity feedback bar — never leaves the activity square -->
-        <div class="act-feedback-bar" id="act-feedback-bar" style="display:none;">
-          <span class="act-fb-label">Rate this activity</span>
-          <div class="act-fb-stars" id="act-fb-stars-bar">
-            <span data-s="1" onclick="_actBarStar(1)">★</span>
-            <span data-s="2" onclick="_actBarStar(2)">★</span>
-            <span data-s="3" onclick="_actBarStar(3)">★</span>
-            <span data-s="4" onclick="_actBarStar(4)">★</span>
-            <span data-s="5" onclick="_actBarStar(5)">★</span>
+        <!-- In-activity feedback overlay — centered card, never leaves the activity square -->
+        <div class="act-feedback-overlay" id="act-feedback-overlay" style="display:none;">
+          <div class="act-feedback-card">
+            <button class="act-fb-card-close" onclick="document.getElementById('act-feedback-overlay').style.display='none'">×</button>
+            <div class="act-fb-card-icon" id="act-fb-card-icon"></div>
+            <div class="act-fb-card-title">Rate your experience</div>
+            <div class="act-fb-card-sub" id="act-fb-card-sub">How was the activity?</div>
+            <div class="act-fb-stars" id="act-fb-stars-bar">
+              <span data-s="1" onclick="_actBarStar(1)">★</span>
+              <span data-s="2" onclick="_actBarStar(2)">★</span>
+              <span data-s="3" onclick="_actBarStar(3)">★</span>
+              <span data-s="4" onclick="_actBarStar(4)">★</span>
+              <span data-s="5" onclick="_actBarStar(5)">★</span>
+            </div>
+            <button class="act-fb-send" id="act-fb-send" onclick="_actBarSubmit()">Send Feedback</button>
           </div>
-          <button class="act-fb-send" id="act-fb-send" onclick="_actBarSubmit()">Send</button>
         </div>
       </div>
     </div>
@@ -1210,10 +1221,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=20260424h"></script>
-<script src="/app/app.js?v=20260424h"></script>
-<script src="/app/joy-system.js?v=20260424h"></script>
-<script src="/app/chronicle-games.js?v=20260424h"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=20260424i"></script>
+<script src="/app/app.js?v=20260424i"></script>
+<script src="/app/joy-system.js?v=20260424i"></script>
+<script src="/app/chronicle-games.js?v=20260424i"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

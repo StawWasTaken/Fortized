@@ -8622,14 +8622,12 @@ function openActivityOverview(id) {
 
   const discScroll = document.getElementById('discover-scroll');
   const hero    = discScroll ? discScroll.querySelector('.disc-hero') : null;
-  const subnav  = discScroll ? discScroll.querySelector('.disc-subnav') : null;
   const bastionsPage   = document.getElementById('disc-page-bastions');
   const activitiesPage = document.getElementById('disc-page-activities');
   const overview       = document.getElementById('disc-activity-overview');
   if (!overview) return;
 
   if (hero)          hero.style.display = 'none';
-  if (subnav)        subnav.style.display = 'none';
   if (bastionsPage)  bastionsPage.style.display = 'none';
   if (activitiesPage) activitiesPage.style.display = 'none';
 
@@ -8664,7 +8662,8 @@ function openActivityOverview(id) {
 
       <div class="act-ov-banner">
         ${_actBanner(act)}
-        ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" class="act-ov-banner-gjg" style="height:52px;">` : ''}
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(${r},${g},${b},.18) 80%,var(--channel,#12141b) 100%);pointer-events:none;"></div>
+        ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" class="act-ov-banner-gjg" style="height:58px;">` : ''}
       </div>
 
       <div class="act-ov-header">
@@ -8672,32 +8671,33 @@ function openActivityOverview(id) {
         <div class="act-ov-title-col">
           <div class="act-ov-name">${escapeHTML(act.name)}</div>
           <div class="act-ov-sub">
-            <span onclick="viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.6);transition:color .15s;" onmouseover="this.style.color='rgba(255,249,62,.9)'" onmouseout="this.style.color='rgba(255,249,62,.6)'">${escapeHTML(act.owner)}</span>
+            <span onclick="viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.7);font-weight:600;transition:color .15s;" onmouseover="this.style.color='rgba(255,249,62,.95)'" onmouseout="this.style.color='rgba(255,249,62,.7)'">${escapeHTML(act.owner)}</span>
             ${act.ownerVerified ? _verifiedBadge(11) : ''}
             ${gjgBadge}
-            <span style="color:rgba(255,255,255,.18);">·</span>
-            <span>${escapeHTML(act.category)}</span>
+            <span style="color:rgba(255,255,255,.15);">·</span>
+            <span style="font-weight:500;">${escapeHTML(act.category)}</span>
           </div>
         </div>
         <button class="act-ov-launch-btn" onclick="launchActivity('${act.id}')">
-          <svg width="13" height="13" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg>
-          Launch
+          <svg width="14" height="14" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg>
+          Launch Activity
         </button>
       </div>
 
       <div class="act-ov-stats">
         ${launchNum ? `<div class="act-ov-stat-pill">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-          ${launchNum} launches
+          ${launchNum} plays
         </div>` : ''}
         ${langIcons ? `<div class="act-ov-stat-pill">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
           ${escapeHTML(langIcons)}
         </div>` : ''}
         <div class="act-ov-stat-pill">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
           ${escapeHTML(act.players)}
         </div>
+        ${(act.tags || []).slice(0,2).map(t => `<div class="act-ov-stat-pill" style="border-color:rgba(${r},${g},${b},.25);color:rgba(${r},${g},${b+50},.9);">#${t}</div>`).join('')}
       </div>
 
       <div class="act-ov-divider"></div>
@@ -8707,15 +8707,26 @@ function openActivityOverview(id) {
         <p class="act-ov-desc">${escapeHTML(act.desc)}</p>
       </div>
 
+      <div class="act-ov-section">
+        <div class="act-ov-section-label">Developer</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;">
+          ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:28px;opacity:.9;">` : `<div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`}
+          <div>
+            <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;">${escapeHTML(act.owner)}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.35);font-family:var(--font-ui);">Activity developer</div>
+          </div>
+        </div>
+      </div>
+
       ${others.length ? `<div class="act-ov-section" style="padding-bottom:16px;">
         <div class="act-ov-section-label">You might also like</div>
-        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;">${othersHTML}</div>
+        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;-webkit-overflow-scrolling:touch;">${othersHTML}</div>
       </div>` : ''}
 
-      <div style="padding:8px 28px 0;">
+      <div style="padding:8px 32px 0;">
         <button onclick="_reportActivity('${act.id}')" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11.5px;font-family:var(--font-ui);cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:5px;transition:color .15s;" onmouseover="this.style.color='rgba(255,90,90,.6)'" onmouseout="this.style.color='rgba(255,255,255,.2)'">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-          Report activity
+          Report
         </button>
       </div>
     </div>`;
@@ -8726,11 +8737,9 @@ function openActivityOverview(id) {
 function _closeActivityOverview() {
   const discScroll = document.getElementById('discover-scroll');
   const hero    = discScroll ? discScroll.querySelector('.disc-hero') : null;
-  const subnav  = discScroll ? discScroll.querySelector('.disc-subnav') : null;
   const overview = document.getElementById('disc-activity-overview');
   if (overview) overview.style.display = 'none';
   if (hero)   hero.style.display = '';
-  if (subnav) subnav.style.display = '';
   const activitiesPage = document.getElementById('disc-page-activities');
   if (activitiesPage) activitiesPage.style.display = '';
 }
@@ -8811,13 +8820,10 @@ function _openActivityScreen(act) {
   const screen = document.getElementById('activity-screen');
   if (!screen) return;
   if (typeof showView === 'function') showView('discover');
-  const nameEl    = document.getElementById('act-tb-name');
-  const contentEl = document.getElementById('act-content');
-  if (nameEl) nameEl.textContent = act.name;
   _actBarRating = 0;
   _actBarRenderStars();
-  const fb = document.getElementById('act-feedback-bar');
-  if (fb) fb.style.display = 'flex';
+  const contentEl = document.getElementById('act-content');
+  _discSubnavSetActivity(act);
   if (contentEl) {
     if (act.id === 'mist-and-cards') {
       _mcMount(contentEl);
@@ -8836,10 +8842,41 @@ function _openActivityScreen(act) {
   requestAnimationFrame(() => screen.classList.add('is-open'));
 }
 
+function _discSubnavSetActivity(act) {
+  const normal  = document.getElementById('disc-subnav-normal');
+  const actMode = document.getElementById('disc-subnav-act');
+  const nameEl  = document.getElementById('disc-subnav-act-name');
+  const iconEl  = document.getElementById('disc-subnav-act-icon');
+  if (normal)  normal.style.display  = 'none';
+  if (actMode) actMode.style.display = 'flex';
+  if (nameEl)  nameEl.textContent    = act.name;
+  if (iconEl)  iconEl.innerHTML      = `<div style="width:100%;height:100%;">${_actIconBox(act)}</div>`;
+  const fbIcon = document.getElementById('act-fb-card-icon');
+  const fbSub  = document.getElementById('act-fb-card-sub');
+  if (fbIcon)  fbIcon.innerHTML = `<div style="width:100%;height:100%;">${_actIconBox(act)}</div>`;
+  if (fbSub)   fbSub.textContent = `How was ${act.name}?`;
+}
+
+function _discSubnavSetNormal() {
+  const normal  = document.getElementById('disc-subnav-normal');
+  const actMode = document.getElementById('disc-subnav-act');
+  if (normal)  normal.style.display  = 'flex';
+  if (actMode) actMode.style.display = 'none';
+}
+
+function _actBarShow() {
+  const overlay = document.getElementById('act-feedback-overlay');
+  if (!overlay) return;
+  _actBarRating = 0;
+  _actBarRenderStars();
+  overlay.style.display = 'flex';
+}
+
 function _minimizeActivity() {
   const screen = document.getElementById('activity-screen');
   const pill   = document.getElementById('activity-pill');
   if (screen) screen.classList.remove('is-open');
+  _discSubnavSetNormal();
   if (pill) {
     pill.style.display = 'flex';
     requestAnimationFrame(() => pill.classList.add('is-visible'));
@@ -8851,6 +8888,7 @@ function _resumeActivity() {
   const pill   = document.getElementById('activity-pill');
   if (typeof showView === 'function') showView('discover');
   setTimeout(() => {
+    if (_activeActivity) _discSubnavSetActivity(_activeActivity);
     if (screen) screen.classList.add('is-open');
     if (pill) {
       pill.classList.remove('is-visible');
@@ -8863,6 +8901,9 @@ function _leaveActivity() {
   const screen = document.getElementById('activity-screen');
   const pill   = document.getElementById('activity-pill');
   if (screen) screen.classList.remove('is-open');
+  _discSubnavSetNormal();
+  const fb = document.getElementById('act-feedback-overlay');
+  if (fb) fb.style.display = 'none';
   if (pill) {
     pill.classList.remove('is-visible');
     setTimeout(() => { pill.style.display = 'none'; }, 300);
@@ -8888,10 +8929,15 @@ function _actBarStar(n) {
 
 function _actBarSubmit() {
   if (!_actBarRating) return;
-  const fb = document.getElementById('act-feedback-bar');
-  if (fb) {
-    fb.innerHTML = `<span style="font-size:11.5px;color:rgba(255,249,62,.6);font-family:var(--font-ui);margin:0 auto;">Thanks for the feedback!</span>`;
-    setTimeout(() => { fb.style.display = 'none'; }, 2200);
+  const overlay = document.getElementById('act-feedback-overlay');
+  const card = overlay ? overlay.querySelector('.act-feedback-card') : null;
+  if (card) {
+    card.innerHTML = `<div style="padding:16px;text-align:center;">
+      <div style="font-size:36px;margin-bottom:12px;">✨</div>
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:#fff;margin-bottom:8px;">Thanks!</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.45);font-family:var(--font-ui);">Your feedback helps us improve.</div>
+    </div>`;
+    setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 2000);
   }
   _actBarRating = 0;
 }

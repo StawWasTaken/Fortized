@@ -2290,6 +2290,242 @@ function updateOnyxDisplay() {
     else if (delta >= 5) _logJoysterEvent(`gained ${delta} Onyx (now ${bal})`);
   }
   _lastOnyxSeen = bal;
+  updateStreakDisplay();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Daily Streak — persistence, validity check, grace period, protection
+// ══════════════════════════════════════════════════════════════════════════
+// Data fields on CU (all persisted via saveUser):
+//   dailyStreak           – int, current consecutive-day count
+//   streakDate            – YYYY-MM-DD string of the last day the streak was
+//                           counted as valid
+//   streakProtectedUntil  – epoch-ms; while >= now, the streak is protected
+//                           and missed days don't reset it (stacks on purchase)
+//   streakGraceUsedAt     – epoch-ms of the last time the grace pass was used;
+//                           grace becomes available again 6 months later
+
+const STREAK_DAY_MS = 86400000;
+const STREAK_GRACE_COOLDOWN_MS = 182 * STREAK_DAY_MS; // ≈6 months
+const STREAK_PROTECT_COST = 30;   // Onyx
+const STREAK_PROTECT_DAYS = 30;   // days added per purchase
+
+function _streakDateStr(d) {
+  // Use YYYY-MM-DD in local time so the streak tracks calendar days the way
+  // the user experiences them.
+  const dt = (d instanceof Date) ? d : new Date(d);
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function _daysBetween(aStr, bStr) {
+  // Whole-day difference between two YYYY-MM-DD strings (b - a).
+  const [ay,am,ad] = aStr.split('-').map(Number);
+  const [by,bm,bd] = bStr.split('-').map(Number);
+  const a = new Date(ay, am-1, ad).getTime();
+  const b = new Date(by, bm-1, bd).getTime();
+  return Math.round((b - a) / STREAK_DAY_MS);
+}
+
+function _isStreakProtected() {
+  const until = +CU?.streakProtectedUntil || 0;
+  return until > Date.now();
+}
+
+function _isStreakGraceAvailable() {
+  // Available if never used, or used ≥6 months ago.
+  const last = +CU?.streakGraceUsedAt || 0;
+  if (!last) return true;
+  return (Date.now() - last) >= STREAK_GRACE_COOLDOWN_MS;
+}
+
+// Called on session-start and on window focus. Catches the case where the
+// user has been offline long enough that the streak should break, and
+// applies grace / protection if available.
+async function _checkStreakValidity() {
+  if (!CU || !CU.username) return;
+  const streak = +CU.dailyStreak || 0;
+  if (streak <= 0) return; // nothing to protect
+
+  const today = _streakDateStr(new Date());
+  const last  = CU.streakDate || null;
+  if (!last) {
+    // Migrate: if we have a streak but no streakDate, anchor it to today so
+    // we don't falsely reset a long-standing streak on first upgrade.
+    CU.streakDate = today;
+    try { await saveUser(); } catch(_) {}
+    return;
+  }
+  const gap = _daysBetween(last, today);
+  if (gap <= 1) return; // today or yesterday — still valid, nothing to do
+
+  // Missed at least one full day. Try protection first, then grace, else break.
+  if (_isStreakProtected()) {
+    CU.streakDate = today;
+    try { await saveUser(); } catch(_) {}
+    return;
+  }
+
+  if (_isStreakGraceAvailable()) {
+    CU.streakGraceUsedAt = Date.now();
+    CU.streakDate = today;
+    try { await saveUser(); } catch(_) {}
+    // Notify the user in their inbox that their grace was used.
+    try {
+      if (typeof FortizedSocial !== 'undefined' && FortizedSocial.addNotification) {
+        await FortizedSocial.addNotification(CU.username, {
+          type: 'streak_grace',
+          from: 'Fortized',
+          msg: `You missed a day, but your 6-month grace kicked in — your ${streak}-day streak is safe. Don't miss another one, the grace won't refresh for 6 months.`,
+          time: Date.now(),
+          read: false,
+        });
+        if (typeof updateNotifBadge === 'function') updateNotifBadge();
+      }
+    } catch (e) { _dbg?.('[Streak] grace notify failed', e); }
+    return;
+  }
+
+  // No protection, no grace → streak breaks.
+  CU.dailyStreak = 0;
+  CU.streakDate = today;
+  try { await saveUser(); } catch(_) {}
+  try {
+    if (typeof FortizedSocial !== 'undefined' && FortizedSocial.addNotification) {
+      await FortizedSocial.addNotification(CU.username, {
+        type: 'streak_broken',
+        from: 'Fortized',
+        msg: `Your ${streak}-day streak broke. You'd already used your grace this 6-month window, so it couldn't save you this time. Start a new streak with your next daily claim.`,
+        time: Date.now(),
+        read: false,
+      });
+      if (typeof updateNotifBadge === 'function') updateNotifBadge();
+    }
+  } catch (e) { _dbg?.('[Streak] break notify failed', e); }
+  if (typeof updateStreakDisplay === 'function') updateStreakDisplay();
+}
+
+// Inline flame SVG used across the app (topbar capsule, quest widget,
+// forum chips, profile previews/cards). Size is px.
+function _streakFlameSvg(size) {
+  const s = size || 14;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="flameGrad" x1="50%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#ffd93e"/><stop offset="50%" stop-color="#ff8a3e"/><stop offset="100%" stop-color="#ff3e5e"/></linearGradient></defs><path fill="url(#flameGrad)" d="M13.5 2.5c.6 2.4-.8 3.9-2.2 5.3C9.6 9.5 8 11 8 13.5c0 1.1.4 2 1 2.7-.3-1.8.6-3 1.6-4 .3 2 1.2 3.1 2.3 3.8-.2-1 .2-1.9.8-2.6.8 2.2 2.5 3 2.5 5.1 0 3-2.5 5-5.7 5-3.6 0-6.5-2.9-6.5-6.7 0-4 2.7-5.9 5.2-8.4 1.7-1.7 3-3.4 3.3-5.9.5.4 1 .9 1 2Z"/></svg>`;
+}
+
+// Lightweight version for small pills (solid flame, no gradient overhead when
+// many are rendered on a list).
+function _streakFlameSvgSolid(size, color) {
+  const s = size || 11;
+  const c = color || '#ff8a3e';
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${c}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.5 2.5c.6 2.4-.8 3.9-2.2 5.3C9.6 9.5 8 11 8 13.5c0 1.1.4 2 1 2.7-.3-1.8.6-3 1.6-4 .3 2 1.2 3.1 2.3 3.8-.2-1 .2-1.9.8-2.6.8 2.2 2.5 3 2.5 5.1 0 3-2.5 5-5.7 5-3.6 0-6.5-2.9-6.5-6.7 0-4 2.7-5.9 5.2-8.4 1.7-1.7 3-3.4 3.3-5.9.5.4 1 .9 1 2Z"/></svg>`;
+}
+
+// Updates the topbar streak capsule with the current streak + protection state.
+function updateStreakDisplay() {
+  const valEl = document.getElementById('streak-val');
+  const pillEl = document.getElementById('streak-display');
+  if (!pillEl) return;
+  const streak = +CU?.dailyStreak || 0;
+  const protected_ = _isStreakProtected();
+  if (valEl) valEl.textContent = streak;
+  pillEl.classList.toggle('is-protected', protected_);
+  pillEl.classList.toggle('is-zero', streak === 0);
+  const shield = pillEl.querySelector('.tb-streak-shield');
+  if (shield) shield.style.display = protected_ ? '' : 'none';
+  // Title tooltip
+  let title;
+  if (streak === 0) title = 'No streak yet — claim your daily in Atelier to start one. Right-click to protect.';
+  else if (protected_) {
+    const until = new Date(+CU.streakProtectedUntil);
+    title = `${streak}-day streak · protected until ${until.toLocaleDateString()}. Right-click for options.`;
+  } else {
+    title = `${streak}-day streak. Right-click to protect it (30 Onyx / 30 days).`;
+  }
+  pillEl.title = title;
+}
+
+// Buy or extend streak protection. Stacks from the existing expiry, so calling
+// this twice in a row extends by 60 days total.
+async function buyStreakProtection() {
+  if (!CU) return;
+  const cost = STREAK_PROTECT_COST;
+  const days = STREAK_PROTECT_DAYS;
+  if ((CU.onyx || 0) < cost) {
+    toast(`You need ${cost} Onyx to protect your streak.`, 'error');
+    return;
+  }
+  if (!CU.dailyStreak || CU.dailyStreak <= 0) {
+    toast('Start a streak first — claim your daily in the Atelier.', 'info');
+    return;
+  }
+  const base = Math.max(Date.now(), +CU.streakProtectedUntil || 0);
+  const newUntil = base + days * STREAK_DAY_MS;
+  const stacking = (+CU.streakProtectedUntil || 0) > Date.now();
+  const msg = stacking
+    ? `Extend streak protection by ${days} days for ${cost} Onyx? New expiry: ${new Date(newUntil).toLocaleDateString()}.`
+    : `Protect your ${CU.dailyStreak}-day streak for ${days} days (${cost} Onyx)?`;
+  showCustomConfirm(msg, async () => {
+    CU.onyx = (CU.onyx || 0) - cost;
+    CU.streakProtectedUntil = newUntil;
+    await saveUser(true);
+    updateOnyxDisplay();
+    toast(`🛡 Streak protected until ${new Date(newUntil).toLocaleDateString()}`, 'success');
+  });
+}
+
+// Right-click handler for the streak capsule — opens the unified ctx menu.
+function onStreakCtxMenu(ev) {
+  ev.preventDefault();
+  const streak = +CU?.dailyStreak || 0;
+  const protected_ = _isStreakProtected();
+  const untilStr = protected_ ? new Date(+CU.streakProtectedUntil).toLocaleDateString() : null;
+  const graceOK = _isStreakGraceAvailable();
+  const graceNext = !graceOK ? new Date((+CU.streakGraceUsedAt || 0) + STREAK_GRACE_COOLDOWN_MS).toLocaleDateString() : null;
+
+  const flameIcon = _streakFlameSvgSolid(14);
+  const shieldIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  const statusIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  const questIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+
+  const headerLabel = streak > 0 ? `${streak}-day streak` : 'No streak yet';
+  const statusLabel = protected_
+    ? `Protected until ${untilStr}`
+    : (graceOK ? 'Grace pass available' : `Grace refreshes ${graceNext}`);
+
+  const items = [
+    { icon: flameIcon, label: headerLabel, hint: statusLabel, disabled: true },
+    {
+      icon: shieldIcon,
+      label: protected_ ? `Extend protection · +${STREAK_PROTECT_DAYS} days` : `Protect streak · ${STREAK_PROTECT_DAYS} days`,
+      hint: `${STREAK_PROTECT_COST} Onyx`,
+      action: () => buyStreakProtection(),
+      disabled: streak <= 0,
+    },
+    {
+      icon: questIcon,
+      label: streak > 0 ? 'Open daily claim' : 'Start a streak',
+      hint: 'Atelier',
+      action: () => {
+        if (typeof showView === 'function') showView('atelier');
+        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('quests'), 80);
+      },
+    },
+  ];
+  if (typeof showCtxMenu === 'function') {
+    showCtxMenu(ev.clientX, ev.clientY, [{ label: 'Daily streak', items }]);
+  }
+}
+
+// Renders a small public-facing streak chip. `streak` is the integer.
+// Used on forum posts, profile previews, and profile cards. Returns '' for 0.
+function renderStreakChip(streak, opts) {
+  const n = +streak || 0;
+  if (n <= 0) return '';
+  const size = (opts && opts.size) || 'sm';
+  const cls = size === 'lg' ? 'streak-chip streak-chip--lg' : 'streak-chip';
+  return `<span class="${cls}" title="${n}-day streak">${_streakFlameSvgSolid(size === 'lg' ? 14 : 11)}<span class="streak-chip-n">${n}</span></span>`;
 }
 function updateAtelierSidebar() {
   if (!CU) return;
@@ -8680,8 +8916,20 @@ function initFortizedUXResilience() {
       } catch(e) {
         console.warn('[Init] Refresh failed but continuing:', e?.message);
       }
+      // Run the streak validity check right after refresh so we catch the
+      // case where the user was offline long enough to break/grace a streak.
+      try { await _checkStreakValidity(); } catch(e) { _dbg?.('[Streak] init check failed', e); }
+      try { updateStreakDisplay(); } catch(_) {}
     }, 50);
   }
+
+  // Re-check on tab focus — user might have left the tab open overnight,
+  // come back the next day, and the streak state would otherwise be stale.
+  window.addEventListener('focus', () => {
+    if (typeof _checkStreakValidity === 'function') {
+      _checkStreakValidity().catch(() => {});
+    }
+  });
 
   // Trigger new onboarding for first-time users
   setTimeout(showOnboarding, 600);
@@ -15796,6 +16044,7 @@ function _buildProfileView(tab) {
                     <span style="width:8px;height:8px;border-radius:50%;background:${sc};flex-shrink:0;box-shadow:0 0 6px ${sc}66;"></span>
                   </div>
                   <div style="font-size:11px;color:rgba(255,255,255,.3);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; <span style="color:rgba(255,255,255,.2);">'+escapeHTML(CU.pronouns)+'</span>' : ''}</div>
+                  ${(+CU.dailyStreak) ? '<div style="margin-top:6px;">'+renderStreakChip(+CU.dailyStreak)+'</div>' : ''}
                 </div>
                 ${cs&&cs.text ? '<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:8px;">'+(cs.emoji?'<img src="'+emojiToTwemojiUrl(cs.emoji)+'" style="width:13px;height:13px;object-fit:contain;" onerror="this.outerHTML=\''+escapeHTML(cs.emoji)+'\'">':'')+' '+escapeHTML(cs.text)+'</div>' : ''}
                 ${CU.bio ? '<div style="margin-bottom:10px;"><div style="font-size:8.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:4px;">About Me</div><div style="font-size:11px;color:rgba(255,255,255,.45);line-height:1.55;">'+escapeHTML(CU.bio.slice(0,120))+(CU.bio.length>120?'&hellip;':'')+'</div></div>' : ''}
@@ -16913,29 +17162,47 @@ async function claimDaily() {
   toast('🎉 +50 Onyx claimed!','success');
 }
 
+// Stacks from the later of (now, existing expiry) so repeat purchases extend
+// the subscription instead of overwriting it.
+function _stackFromExpiry(existingIso, days) {
+  const existing = existingIso ? new Date(existingIso).getTime() : 0;
+  const base = Math.max(Date.now(), existing || 0);
+  return new Date(base + days * 86400000).toISOString();
+}
+
 async function buyRadiance(days, cost) {
   if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
-  showCustomConfirm(`Buy ${days}-day Radiance for ${cost} Onyx?`, async ()=>{
+  const stacking = CU.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const msg = stacking
+    ? `Extend Radiance by ${days} days for ${cost} Onyx?`
+    : `Buy ${days}-day Radiance for ${cost} Onyx?`;
+  showCustomConfirm(msg, async ()=>{
     CU.onyx=(CU.onyx||0)-cost;
-    const until=new Date(); until.setDate(until.getDate()+days);
-    CU.radianceUntil=until.toISOString();
+    CU.radianceUntil = _stackFromExpiry(CU.radianceUntil, days);
     await saveUser(); updateOnyxDisplay();
     distributeOnyxRevenue(cost);
-    toast(`✨ Radiance active for ${days} days!`,'success');
+    const untilStr = new Date(CU.radianceUntil).toLocaleDateString();
+    toast(`✨ Radiance active until ${untilStr}`,'success');
   });
 }
 
 async function buyRadiancePlus(days, cost) {
-  showCustomConfirm(`Buy ${days}-day Radiance for ${cost} Onyx?`, async () => {
+  const stacking = CU.radiancePlus && new Date(CU.radiancePlus) > new Date();
+  const msg = stacking
+    ? `Extend Radiance+ by ${days} days for ${cost} Onyx?`
+    : `Buy ${days}-day Radiance for ${cost} Onyx?`;
+  showCustomConfirm(msg, async () => {
     if ((CU.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
     CU.onyx -= cost;
-    const until = new Date(Date.now() + days*86400000);
-    CU.radiancePlus = until.toISOString();
-    CU.radianceUntil = until.toISOString();
+    // Extend from the later of the two so basic + plus expirations stay aligned.
+    const base = _stackFromExpiry(CU.radiancePlus || CU.radianceUntil, days);
+    CU.radiancePlus = base;
+    CU.radianceUntil = base;
     await saveUser();
     refreshAtelierBalance();
     distributeOnyxRevenue(cost);
-    toast(`🌟 Radiance active for ${days} days!`, 'success');
+    const untilStr = new Date(base).toLocaleDateString();
+    toast(`🌟 Radiance active until ${untilStr}`, 'success');
   });
 }
 
@@ -17318,6 +17585,7 @@ async function _viewUserProfile(username) {
           ${escapeHTML(u.displayName||u.username)}
         </div>
         <div class="up-left-uname">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.25);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
+        ${(+u.dailyStreak) ? `<div class="up-left-streak" style="margin-top:8px;">${renderStreakChip(+u.dailyStreak, { size: 'lg' })}</div>` : ''}
       </div>
       <!-- Status -->
       <div class="up-left-status">
@@ -32841,7 +33109,7 @@ function renderAtelierTab(tab) {
     el.innerHTML = `<div class="atelier-content-inner">
 
       <!-- Stats row -->
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:14px;margin-bottom:24px;">
+      <div style="display:grid;grid-template-columns:auto auto 1fr;gap:14px;margin-bottom:24px;">
         <!-- Daily progress ring -->
         <div style="display:flex;align-items:center;gap:12px;padding:14px 18px 14px 14px;background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.015));border:1.5px solid rgba(255,255,255,.06);border-radius:16px;">
           <div style="position:relative;width:48px;height:48px;">
@@ -32854,6 +33122,18 @@ function renderAtelierTab(tab) {
           <div>
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;">Daily Quests</div>
             <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);margin-top:3px;">${dailyDone === dailyTotal ? 'All done!' : (dailyTotal - dailyDone) + ' remaining'}</div>
+          </div>
+        </div>
+        <!-- Streak widget -->
+        <div oncontextmenu="onStreakCtxMenu(event);return false;" style="display:flex;align-items:center;gap:12px;padding:14px 18px 14px 14px;background:linear-gradient(135deg,rgba(255,138,62,.07),rgba(255,62,94,.02));border:1.5px solid rgba(255,138,62,.15);border-radius:16px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,138,62,.28)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(255,138,62,.1)'" onmouseout="this.style.borderColor='rgba(255,138,62,.15)';this.style.transform='';this.style.boxShadow=''" title="Right-click for streak options">
+          <div style="position:relative;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 30%,rgba(255,138,62,.22),rgba(255,62,94,.04));border:1px solid rgba(255,138,62,.22);border-radius:12px;">
+            ${_streakFlameSvg(26)}
+            ${_isStreakProtected() ? '<div style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:#0c0f1a;border-radius:50%;border:1.5px solid rgba(74,144,245,.55);color:#4a90f5;" title="Protected"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></div>' : ''}
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;">Day Streak</div>
+            <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:${streak > 0 ? '#ff9d5e' : 'rgba(255,255,255,.35)'};line-height:1;margin-top:4px;">${streak}<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.4);margin-left:4px;letter-spacing:0;">${streak === 1 ? 'day' : 'days'}</span></div>
+            ${_isStreakProtected() ? `<div style="font-size:10px;color:#7eb8f7;margin-top:3px;font-weight:600;">Protected · ${new Date(+CU.streakProtectedUntil).toLocaleDateString()}</div>` : (streak > 0 ? '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">Claim daily to keep it alive</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">Start with today\'s claim</div>')}
           </div>
         </div>
         <!-- Stats pills -->
@@ -33898,6 +34178,7 @@ async function _forumViewThread(threadId, opts) {
                 <img class="forum-op-avatar" data-forum-author="${escapeHTML(thread.author||'')}" src="${escapeHTML(author?.pfp || _defaultPfpUrl(thread.author))}" onerror="this.src='${_defaultPfpUrl(thread.author)}'">
                 <div class="forum-user-name">${escapeHTML(author?.displayName || thread.author)}</div>
                 <div class="forum-user-handle">@${escapeHTML(thread.author)}</div>
+                <div class="forum-user-streak" data-streak-for="${escapeHTML(thread.author||'')}" style="margin-top:6px;">${(+author?.dailyStreak) ? renderStreakChip(+author.dailyStreak) : ''}</div>
                 ${(function(){const r=getStaffRole(thread.author);return r?`<div class="forum-user-role forum-user-role--${escapeHTML(r)}">${r==='superadmin'?'Superadmin':r==='admin'?'Admin':'Moderator'}</div>`:'';})()}
                 ${author?.createdAt ? `<div class="forum-user-joined">Joined ${_forumTimeAgo(new Date(author.createdAt).getTime())}</div>` : ''}
               </div>
@@ -34076,6 +34357,7 @@ function _forumRenderStaffResponseCard(thread, staffPost) {
             <strong>${escapeHTML(staffPost.author_displayName || staffPost.author)}</strong>
             <span class="forum-staff-handle">@${escapeHTML(staffPost.author || '')}</span>
             <span class="forum-staff-role forum-staff-role--${escapeHTML(role)}">${escapeHTML(roleLabel)}</span>
+            <span data-streak-for="${escapeHTML(staffPost.author||'')}" style="display:inline-flex;"></span>
             <span class="forum-staff-time">${_forumTimeAgo(staffPost.created_at)}</span>
             ${staffPost.edited_at ? `<span class="forum-edited" title="Edited ${new Date(staffPost.edited_at).toLocaleString()}">edited</span>` : ''}
           </div>
@@ -34166,6 +34448,7 @@ function _forumRenderPostCard(post, threadId, thread) {
         <img class="forum-reply-avatar" data-forum-author="${escapeHTML(post.author||'')}" src="${escapeHTML(post.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
         <div class="forum-user-name">${escapeHTML(post.author_displayName || post.author)}</div>
         <div class="forum-user-handle">@${escapeHTML(post.author)}</div>
+        <div class="forum-user-streak" data-streak-for="${escapeHTML(post.author||'')}" style="margin-top:6px;"></div>
         ${staffRole?`<div class="forum-user-role forum-user-role--${escapeHTML(staffRole)}">${staffRole==='superadmin'?'Superadmin':staffRole==='admin'?'Admin':'Moderator'}</div>`:''}
       </div>
       <div class="forum-reply-content">
@@ -34211,25 +34494,42 @@ function _svgIcon(name, size=13) {
   }
 }
 
-const _forumPfpCache = new Map();
+// Cache of author -> { pfp, streak } so the forum (and other places with
+// pre-rendered author HTML) can hydrate pfp and streak chips after render
+// without blocking on network.
+const _forumAuthorCache = new Map();
+// Back-compat alias: keep the old name working for any other callers.
+const _forumPfpCache = _forumAuthorCache; // retained for reference; reads .pfp
 async function _forumHydratePfps(root) {
   try {
     const scope = (typeof root === 'string') ? document.querySelector(root) : (root || document);
     if (!scope) return;
     const imgs = scope.querySelectorAll('img[data-forum-author]');
+    const streakHosts = scope.querySelectorAll('[data-streak-for]');
     const authors = new Set();
     imgs.forEach(i => { const a = i.getAttribute('data-forum-author'); if (a) authors.add(a); });
+    streakHosts.forEach(h => { const a = h.getAttribute('data-streak-for'); if (a) authors.add(a); });
     await Promise.all([...authors].map(async a => {
-      if (_forumPfpCache.has(a)) return;
+      if (_forumAuthorCache.has(a)) return;
       try {
         const u = await FortizedSocial.getUserByName(a);
-        _forumPfpCache.set(a, u?.pfp || '');
-      } catch(_) { _forumPfpCache.set(a, ''); }
+        _forumAuthorCache.set(a, { pfp: u?.pfp || '', streak: +u?.dailyStreak || 0 });
+      } catch(_) { _forumAuthorCache.set(a, { pfp: '', streak: 0 }); }
     }));
     imgs.forEach(i => {
       const a = i.getAttribute('data-forum-author');
-      const pfp = _forumPfpCache.get(a);
-      if (pfp) i.src = pfp;
+      const entry = _forumAuthorCache.get(a);
+      if (entry?.pfp) i.src = entry.pfp;
+    });
+    streakHosts.forEach(h => {
+      const a = h.getAttribute('data-streak-for');
+      const entry = _forumAuthorCache.get(a);
+      const streak = entry?.streak || 0;
+      if (streak > 0 && typeof renderStreakChip === 'function') {
+        h.innerHTML = renderStreakChip(streak);
+      } else {
+        h.innerHTML = '';
+      }
     });
   } catch(e) { console.warn('[Forum] pfp hydrate failed:', e); }
 }
@@ -37142,16 +37442,23 @@ async function purchaseRadiance(isPlus, days, cost) {
     document.body.appendChild(ov);
     return;
   }
+  const existingExpiry = (isPlus ? CU.radiancePlus : CU.radianceUntil) || CU.radianceUntil;
+  const stacking = existingExpiry && new Date(existingExpiry) > new Date();
+  const confirmMsg = stacking
+    ? `Extend Radiance by ${days} days for ${cost} Onyx?`
+    : `Purchase Radiance for ${days} days (${cost} Onyx)?`;
   showCustomConfirm(
-    `Purchase Radiance for ${days} days (${cost} Onyx)?`,
+    confirmMsg,
     async () => {
       CU.onyx = (CU.onyx || 0) - cost;
-      const until = new Date(Date.now() + days * 86400000).toISOString();
-      CU.radiancePlus = until; CU.radianceUntil = until;
+      const until = _stackFromExpiry(existingExpiry, days);
+      if (isPlus) CU.radiancePlus = until;
+      CU.radianceUntil = until;
       await saveUser();
       updateOnyxDisplay();
       distributeOnyxRevenue(cost);
-      toast(`✨ Radiance active for ${days} days!`, 'success');
+      const untilStr = new Date(until).toLocaleDateString();
+      toast(`✨ Radiance active until ${untilStr}`, 'success');
       renderAtelierTab('radiance');
     }
   );
@@ -37400,20 +37707,27 @@ function checkGiftLinks() {
 }
 
 async function claimDailyQuest() {
-  // Both daily claim AND invite renew every day
+  // Let the validity check resolve any pending grace/reset from missed days
+  // BEFORE we award this claim, so streak reflects reality.
+  await _checkStreakValidity();
+
   const today = new Date().toDateString();
   if (CU.lastDailyReward === today || CU.lastDaily === today) {
     toast('Already claimed today! Come back tomorrow 🕛', 'info');
     return;
   }
-  // Streak tracking: check if yesterday was claimed
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
-  const wasYesterday = CU.lastDailyReward === yesterday || CU.lastDaily === yesterday;
-  if (wasYesterday) {
-    CU.dailyStreak = (CU.dailyStreak || 0) + 1;
+  // Streak tracking: increment if yesterday was valid, otherwise (first-ever
+  // claim, or returning after grace/protection expired) start at 1.
+  const todayStr     = _streakDateStr(new Date());
+  const yesterdayStr = _streakDateStr(new Date(Date.now() - STREAK_DAY_MS));
+  const prevStreakDate = CU.streakDate || null;
+  if (prevStreakDate === yesterdayStr || prevStreakDate === todayStr) {
+    CU.dailyStreak = (+CU.dailyStreak || 0) + 1;
   } else {
     CU.dailyStreak = 1;
   }
+  CU.streakDate = todayStr;
+
   const streakBonus = CU.dailyStreak >= 7 ? 25 : CU.dailyStreak >= 3 ? 10 : 0;
   const totalReward = 50 + streakBonus;
   CU.onyx = (CU.onyx || 0) + totalReward;
@@ -38073,6 +38387,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <div class="mpp-identity">
       <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
       <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.2);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
+      ${(+u.dailyStreak) ? `<div style="margin-top:6px;">${renderStreakChip(+u.dailyStreak)}</div>` : ''}
     </div>
     <!-- Status -->
     <div class="mpp-status-row">

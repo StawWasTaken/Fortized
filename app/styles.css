@@ -392,8 +392,40 @@ body.is-desktop-app .topbar{padding-right:0;}
 .tb-act-btn:hover{background:rgba(255,255,255,.07);color:#fff;}
 .onyx-pill{display:flex;align-items:center;gap:5px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:var(--radius-pill);padding:5px 12px;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;}
 .onyx-pill img{width:14px;height:14px;object-fit:contain;}
-.tb-onyx-pill{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(254,248,61,.06),rgba(254,248,61,.02));border:1px solid rgba(254,248,61,.15);border-radius:12px;padding:5px 14px 5px 10px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);white-space:nowrap;}
+/* ═══ Topbar wallet capsules (onyx + streak) — gamescard aesthetic ═══ */
+.tb-wallet{display:flex;align-items:center;gap:8px;}
+.tb-cap{position:relative;display:flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.03) 0%,rgba(255,255,255,.01) 100%);border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:border-color .18s cubic-bezier(.22,1,.36,1),transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s cubic-bezier(.22,1,.36,1);white-space:nowrap;overflow:hidden;}
+.tb-cap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0,rgba(255,255,255,.14) 50%,transparent 100%);pointer-events:none;}
+.tb-cap-ic{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;flex-shrink:0;}
+.tb-cap-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;}
+.tb-cap-lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.35);letter-spacing:.02em;line-height:1;}
+/* Onyx capsule — yellow accent */
+.tb-cap--onyx .tb-cap-ic{background:radial-gradient(circle at 30% 30%,rgba(255,249,62,.18),rgba(255,249,62,.04));border:1px solid rgba(255,249,62,.18);}
+.tb-cap--onyx .tb-cap-val{color:#fff93e;}
+.tb-cap--onyx:hover{border-color:rgba(255,249,62,.3);transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,249,62,.08),inset 0 1px 0 rgba(255,249,62,.08);}
+.tb-cap--onyx:hover::before{background:linear-gradient(90deg,transparent 0,rgba(255,249,62,.4) 50%,transparent 100%);}
+/* Streak capsule — orange/red flame accent */
+.tb-cap--streak .tb-cap-ic{background:radial-gradient(circle at 30% 30%,rgba(255,138,62,.2),rgba(255,62,94,.04));border:1px solid rgba(255,138,62,.22);}
+.tb-cap--streak .tb-cap-val{color:#ff9d5e;}
+.tb-cap--streak:hover{border-color:rgba(255,138,62,.32);transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,138,62,.09),inset 0 1px 0 rgba(255,138,62,.08);}
+.tb-cap--streak:hover::before{background:linear-gradient(90deg,transparent 0,rgba(255,138,62,.4) 50%,transparent 100%);}
+.tb-cap--streak.is-zero{opacity:.55;}
+.tb-cap--streak.is-zero .tb-cap-val{color:rgba(255,255,255,.35);}
+.tb-cap--streak.is-zero .tb-cap-ic{filter:grayscale(.7) opacity(.7);}
+/* Shield overlay when protected */
+.tb-streak-shield{position:absolute;top:-3px;right:-3px;width:14px;height:14px;display:flex;align-items:center;justify-content:center;background:#0c0f1a;border-radius:50%;border:1.5px solid rgba(74,144,245,.5);color:#4a90f5;}
+.tb-cap--streak.is-protected{border-color:rgba(74,144,245,.22);}
+.tb-cap--streak.is-protected .tb-cap-val{color:#7eb8f7;}
+/* Legacy .tb-onyx-pill selector retained for backwards-compat with any
+   remaining references; visually equivalent to the new onyx capsule. */
+.tb-onyx-pill{display:flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,249,62,.15);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);white-space:nowrap;}
 .tb-onyx-pill:hover{background:linear-gradient(135deg,rgba(254,248,61,.1),rgba(254,248,61,.04));border-color:rgba(254,248,61,.3);transform:translateY(-1px);box-shadow:0 4px 16px rgba(254,248,61,.08);}
+
+/* ═══ Public streak chip — forum posts, profile previews, profile cards ═══ */
+.streak-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px 2px 5px;border-radius:100px;background:linear-gradient(135deg,rgba(255,138,62,.14),rgba(255,62,94,.06));border:1px solid rgba(255,138,62,.22);font-size:11px;font-weight:700;color:#ffb07e;font-family:'Syne',sans-serif;letter-spacing:.01em;line-height:1;vertical-align:baseline;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.streak-chip svg{flex-shrink:0;}
+.streak-chip-n{color:#ffcfa8;}
+.streak-chip--lg{font-size:12.5px;padding:3px 9px 3px 7px;gap:5px;}
 .tb-search{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:5px 10px;width:170px;transition:all .2s;}
 .tb-search:focus-within{border-color:rgba(255,249,62,.2);width:200px;}
 .tb-search input{background:transparent;border:none;outline:none;color:#fff;font-family:var(--font-ui);font-size:12.5px;flex:1;}
@@ -4413,6 +4445,10 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .topbar{padding:0 12px;gap:8px;height:48px;}
   .tb-onyx-pill{padding:4px 10px 4px 7px;}
   .tb-onyx-pill span:last-child{display:none;}
+  .tb-wallet{gap:6px;}
+  .tb-cap{padding:4px 10px 4px 6px;}
+  .tb-cap-lbl{display:none;}
+  .tb-cap-ic{width:22px;height:22px;}
   /* ══════ HOME ══════ */
   .home-hero{min-height:180px!important;padding:20px!important;}
   .home-hero h1{font-size:22px!important;}

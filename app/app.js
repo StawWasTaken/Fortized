@@ -13567,6 +13567,18 @@ function _maybeShowAnnouncementModal() {
   _showWhatsNewModal(a);
 }
 
+// Pick the first media item (attachment first, legacy `image` field as
+// fallback). Returns null when the post has no media at all so the modal
+// can simply not render any media block.
+function _pickAnnouncementMedia(post) {
+  if (!post) return null;
+  const atts = Array.isArray(post.attachments) ? post.attachments : [];
+  const first = atts.find(a => a && a.url && ['image','gif','video'].includes(a.type));
+  if (first) return { type: first.type, url: first.url };
+  if (post.image) return { type: 'image', url: post.image };
+  return null;
+}
+
 function _showWhatsNewModal(post) {
   if (document.getElementById('modal-whats-new')) return;
   const overlay = document.createElement('div');
@@ -13577,9 +13589,19 @@ function _showWhatsNewModal(post) {
   const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); } catch { return ''; } };
   const authorPfp = post.author_pfp || (typeof _defaultPfpUrl === 'function' ? _defaultPfpUrl(post.author||'') : '');
   const body = post.content || '';
+  const media = _pickAnnouncementMedia(post);
+
+  // Discord-style media block: full-width inside the modal, no inner
+  // padding, slight tonal background so dark images don't look orphaned.
+  // Hidden entirely when the post has no media.
+  const mediaHTML = media ? (
+    media.type === 'video'
+      ? `<div style="background:#0a0c12;line-height:0;"><video controls playsinline preload="metadata" src="${escapeHTML(media.url)}" style="width:100%;display:block;max-height:320px;object-fit:cover;background:#000;" onerror="this.parentElement.style.display='none'"></video></div>`
+      : `<div style="background:#0a0c12;line-height:0;"><img src="${escapeHTML(media.url)}" style="width:100%;display:block;max-height:320px;object-fit:cover;" onerror="this.parentElement.style.display='none'"></div>`
+  ) : '';
 
   overlay.innerHTML = `
-    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:560px;width:94%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:560px;width:94%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);overflow:hidden;">
       <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,.06);">
         <div>
@@ -13588,14 +13610,16 @@ function _showWhatsNewModal(post) {
         </div>
         <button onclick="_dismissWhatsNew()" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='rgba(255,255,255,.06)'">&times;</button>
       </div>
-      <!-- Content -->
-      <div style="overflow-y:auto;padding:20px 24px;flex:1;">
-        ${post.image ? `<div style="margin-bottom:16px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);"><img src="${escapeHTML(post.image)}" style="width:100%;display:block;max-height:240px;object-fit:cover;" onerror="this.parentElement.style.display='none'"></div>` : ''}
-        <div style="font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.3;">${escapeHTML(post.title||'')}</div>
-        <div style="font-size:13.5px;color:rgba(255,255,255,.62);line-height:1.7;word-break:break-word;">${typeof _forumRenderBody === 'function' ? _forumRenderBody(body) : escapeHTML(body)}</div>
-        <div style="margin-top:14px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:rgba(255,255,255,.35);">
-          <img src="${escapeHTML(authorPfp)}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">
-          Posted by <strong style="color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(post.author||'staff')}</strong>
+      <!-- Scroll area: media (edge-to-edge) + text -->
+      <div style="overflow-y:auto;flex:1;">
+        ${mediaHTML}
+        <div style="padding:${media ? '18px' : '20px'} 24px 22px;">
+          <div style="font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.3;">${escapeHTML(post.title||'')}</div>
+          <div style="font-size:13.5px;color:rgba(255,255,255,.62);line-height:1.7;word-break:break-word;">${typeof _forumRenderBody === 'function' ? _forumRenderBody(body) : escapeHTML(body)}</div>
+          <div style="margin-top:14px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:rgba(255,255,255,.35);">
+            <img src="${escapeHTML(authorPfp)}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">
+            Posted by <strong style="color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(post.author||'staff')}</strong>
+          </div>
         </div>
       </div>
       <!-- Footer with don't-show + actions -->

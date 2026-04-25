@@ -13182,6 +13182,7 @@ async function _cmCreateAd() {
     await saveUser();
     try { await FortizedSocial.upsertGlobalAd(ad); } catch(e) { console.warn('[Ads] Sync failed:', e); }
     toast(ownerIsSuper ? 'Ad created! Broadcasting permanently.' : 'Ad created! Broadcasting for 4 days.', 'success');
+    document.getElementById('modal-create-ad')?.remove();
     switchAtelierTab('creator');
     setTimeout(() => _switchCreatorSub('creations'), 50);
   });
@@ -33699,6 +33700,13 @@ function renderAtelierTab(tab) {
 
   // ── CREATOR ──────────────────────────────────────────────
   else if (tab === 'creator') {
+    // First-visit gate: must accept ToU + ToS + Creator Policy before
+    // anything in the Creator Hub becomes interactive.
+    if (!_hasAcceptedCreatorTerms()) {
+      el.innerHTML = `<div class="atelier-content-inner"><div class="ch-gate-placeholder" style="padding:60px 20px;text-align:center;color:rgba(255,255,255,.35);font-size:13px;">Loading the Creator Hub…</div></div>`;
+      _openCreatorTermsGate();
+      return;
+    }
     _pruneCancelledAds();
     const myAds = (CU.ads||[]);
     const myBots = (CU.bots||[]);
@@ -33749,147 +33757,13 @@ function renderAtelierTab(tab) {
               <div class="ch-section-title">Ads</div>
               <div class="ch-section-sub">Promote your bastion or content across Fortized. 15 Onyx for 4 days of placement.</div>
             </div>
-            <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/BannerAdTemplate.png" target="_blank" rel="noopener" class="ch-section-link">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Banner template
-            </a>
-            <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/RectangleAdTemplate.png" target="_blank" rel="noopener" class="ch-section-link">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Rectangle template
-            </a>
+            <button class="btn-a ch-section-cta" onclick="openCreateAdModal()" ${onyxBal<15?'disabled title="Insufficient Onyx"':''}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              New Ad
+            </button>
           </div>
 
-          <!-- Editor + Live Preview split -->
-          <div class="ch-editor">
-            <!-- Form column -->
-            <div class="ch-editor-form">
-              <div class="ch-editor-head">
-                <div class="ch-editor-head-icon">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                </div>
-                <div>
-                  <div class="ch-editor-title">New Ad</div>
-                  <div class="ch-editor-sub">Configure how your ad will appear across the realm.</div>
-                </div>
-              </div>
-
-              <div class="ch-field">
-                <label class="ch-label">Title</label>
-                <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60" oninput="_cmUpdateAdPreview()">
-                <div class="ch-helper">Up to 60 characters. Shown above the ad image.</div>
-              </div>
-
-              <div class="ch-field">
-                <label class="ch-label">Image</label>
-                <input id="cm-ad-image-upload" type="file" accept="image/*" style="display:none;" onchange="_cmAdImagePreview(event)">
-                <div class="ch-upload" onclick="document.getElementById('cm-ad-image-upload').click()">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  <div class="ch-upload-text">
-                    <div class="ch-upload-cta">Click to upload</div>
-                    <span id="cm-ad-file-label" class="ch-upload-name">PNG, JPG up to 4MB</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="ch-field">
-                <label class="ch-label">Format</label>
-                <div class="ch-format-grid">
-                  <label id="cm-ratio-banner" class="ch-format active" onclick="_cmSelectAdRatio('banner')">
-                    <input type="radio" name="cm-ad-ratio" value="banner" checked>
-                    <div class="ch-format-thumb ch-format-thumb-banner"></div>
-                    <div class="ch-format-meta">
-                      <div class="ch-format-name">Banner</div>
-                      <div class="ch-format-desc">728 × 90 px — Main content placement</div>
-                    </div>
-                  </label>
-                  <label id="cm-ratio-rectangle" class="ch-format" onclick="_cmSelectAdRatio('rectangle')">
-                    <input type="radio" name="cm-ad-ratio" value="rectangle">
-                    <div class="ch-format-thumb ch-format-thumb-rect"></div>
-                    <div class="ch-format-meta">
-                      <div class="ch-format-name">Rectangle</div>
-                      <div class="ch-format-desc">300 × 250 px — Sidebar placement</div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div class="ch-field">
-                <label class="ch-label">Destination ${isSuperAdmin() ? '<span class="ch-badge-staff">SUPERADMIN</span>' : ''}</label>
-                <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="_cmOnAdLinkTypeChange()">
-                  <option value="bastion">Default — Join Bastion (opens in app)</option>
-                  <optgroup label="In-app pages">
-                    <option value="/app">Home</option>
-                    <option value="/app/messages">Direct Messages</option>
-                    <option value="/app/messages?friends=1">Friends</option>
-                    <option value="/app/discover">Discover</option>
-                    <option value="/app/forum">Forum</option>
-                    <option value="/app/atelier?tab=radiance">Radiance Dwelling</option>
-                    <option value="/app/atelier?tab=quests">Quests</option>
-                    <option value="/app/atelier?tab=shop">Fortshop</option>
-                    <option value="/app/atelier?tab=creator">Creator</option>
-                  </optgroup>
-                  ${isSuperAdmin() ? `
-                  <optgroup label="Fortized Web (opens in browser)">
-                    <option value="https://fortized.com/">Home (web)</option>
-                    <option value="https://fortized.com/blog">Blog</option>
-                    <option value="https://fortized.com/support">Support</option>
-                    <option value="https://fortized.com/legal">Legal</option>
-                    <option value="https://fortized.com/download">Download</option>
-                  </optgroup>
-                  <option value="custom">Custom URL</option>
-                  ` : ''}
-                </select>
-                ${isSuperAdmin() ? '<input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">' : ''}
-                <div class="ch-helper">${isSuperAdmin() ? 'Web pages open in browser. App pages and bastion links open in-app.' : 'In-app pages only. External URLs are reserved for Fortized staff.'}</div>
-              </div>
-
-              <div class="ch-field" id="cm-ad-bastion-wrap">
-                <label class="ch-label" id="cm-ad-bastion-label">Target Bastion</label>
-                <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
-                  <option value="">— None —</option>
-                  ${(CU.bastions||[]).map((bst,i)=>{
-                    return `<option value="${i}">${escapeHTML(bst.name)}</option>`;
-                  }).join('')}
-                </select>
-                <div id="cm-ad-bastion-hint" class="ch-helper">Required — the ad links to this bastion's invite.</div>
-              </div>
-
-              <label class="ch-checkrow">
-                <input type="checkbox" id="cm-ad-autorefund">
-                <div class="ch-checkrow-text">
-                  <div class="ch-checkrow-title">Auto-renew</div>
-                  <div class="ch-checkrow-desc">Automatically deduct 15 Onyx every 4 days to keep this ad live.</div>
-                </div>
-              </label>
-
-              <div class="ch-cta-row">
-                <button class="btn-a ch-cta-btn" onclick="_cmCreateAd()" ${onyxBal<15?'disabled':''}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                  Publish — 15 Onyx
-                </button>
-                <div class="ch-cta-hint">${onyxBal<15 ? '<span style="color:var(--red);">Insufficient Onyx</span>' : `Lasts 4 days · You have ${onyxBal.toLocaleString()} Onyx`}</div>
-              </div>
-            </div>
-
-            <!-- Preview column -->
-            <div class="ch-editor-preview">
-              <div class="ch-preview-head">
-                <span class="ch-preview-dot"></span>
-                Live Preview
-              </div>
-              <div id="cm-ad-preview-wrap" class="ch-preview-frame">
-                <div id="cm-ad-live-preview" class="ch-preview-content">
-                  <div class="ch-preview-empty">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <div>Upload an image to see your ad preview here</div>
-                  </div>
-                </div>
-              </div>
-              <div class="ch-preview-footnote">
-                Banners appear in main content areas. Rectangles appear in sidebars. Wrong-ratio images are stretched.
-              </div>
-            </div>
-          </div>
+          <!-- (legacy inline editor removed — moved to openCreateAdModal) -->
 
           <!-- Active Ads -->
           <div class="ch-list-head">
@@ -34168,6 +34042,221 @@ function _switchCreationsSub(sub) {
   });
   const el = document.getElementById('atelier-content');
   if (el) el._creationsSub = sub;
+}
+
+// ── Creator Terms gate ───────────────────────────────────
+// Block first entry to the Creator Hub until the user accepts the three
+// agreements (ToU, ToS, Creator Policy). Once accepted, the timestamp is
+// saved on the user record and the gate never appears again — unless we
+// publish a material change and bump _CREATOR_TERMS_VERSION.
+const _CREATOR_TERMS_VERSION = '2026-04-25';
+function _hasAcceptedCreatorTerms() {
+  const accepted = CU?.creatorTermsAcceptedAt;
+  const version = CU?.creatorTermsVersion;
+  return !!accepted && version === _CREATOR_TERMS_VERSION;
+}
+function _openCreatorTermsGate() {
+  document.getElementById('ch-gate-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'ch-gate-overlay';
+  overlay.id = 'ch-gate-modal';
+  overlay.innerHTML = `
+    <div class="ch-gate" role="dialog" aria-modal="true" aria-labelledby="ch-gate-title">
+      <div class="ch-gate-body">
+        <div class="ch-gate-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+            <path d="M2 2l7.586 7.586"/>
+            <circle cx="11" cy="11" r="2"/>
+          </svg>
+        </div>
+        <div class="ch-gate-kicker">Before you enter</div>
+        <div class="ch-gate-title" id="ch-gate-title">The Creator Hub</div>
+        <div class="ch-gate-sub">You're about to access tools that publish ads, run bots, and integrate with third-party software on behalf of the realm. Please review and accept the following agreements to continue.</div>
+        <div class="ch-gate-list">
+          <a href="/legal/terms-of-use" target="_blank" rel="noopener">
+            <span>Terms of Use</span>
+            <svg class="ch-gate-list-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg>
+          </a>
+          <a href="/legal/terms-of-service" target="_blank" rel="noopener">
+            <span>Terms of Service</span>
+            <svg class="ch-gate-list-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg>
+          </a>
+          <a href="/legal/creator-policy" target="_blank" rel="noopener">
+            <span>Creator Policy</span>
+            <svg class="ch-gate-list-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg>
+          </a>
+        </div>
+        <label class="ch-gate-check">
+          <input type="checkbox" id="ch-gate-check" onchange="document.getElementById('ch-gate-accept').disabled=!this.checked;">
+          <div class="ch-gate-check-text">I have read and agree to the <a href="/legal/terms-of-use" target="_blank" rel="noopener">Terms of Use</a>, the <a href="/legal/terms-of-service" target="_blank" rel="noopener">Terms of Service</a>, and the <a href="/legal/creator-policy" target="_blank" rel="noopener">Creator Policy</a>.</div>
+        </label>
+        <div class="ch-gate-actions">
+          <button class="btn-g" onclick="_dismissCreatorTermsGate()">Not now</button>
+          <button class="btn-a" id="ch-gate-accept" disabled onclick="_acceptCreatorTerms()">Accept & Continue</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+function _dismissCreatorTermsGate() {
+  document.getElementById('ch-gate-modal')?.remove();
+  // Send the user back somewhere safe rather than leaving them on a dead Creator tab.
+  try { switchAtelierTab('radiance'); } catch(_) { try { showView('home'); } catch(_){} }
+}
+async function _acceptCreatorTerms() {
+  if (!CU) return;
+  CU.creatorTermsAcceptedAt = new Date().toISOString();
+  CU.creatorTermsVersion = _CREATOR_TERMS_VERSION;
+  try { saveLocal(); } catch(_){}
+  try { await saveUser?.(); } catch(_){}
+  document.getElementById('ch-gate-modal')?.remove();
+  switchAtelierTab('creator');
+}
+
+// Open the Ad creation flow in a dedicated modal, mirroring openCreateBotModal.
+// The form HTML preserves the cm-* IDs so the existing handlers
+// (_cmCreateAd, _cmUpdateAdPreview, _cmSelectAdRatio, etc.) keep working.
+function openCreateAdModal() {
+  if (!CU) return;
+  const onyxBal = CU.onyx || 0;
+  if (onyxBal < 15) { toast('You need 15 Onyx to publish a new ad.', 'error'); return; }
+  document.getElementById('modal-create-ad')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'modal-create-ad';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:880px;width:96vw;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;padding:0;">
+      <div class="modal-bar"></div>
+      <div style="padding:22px 24px 0;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:18px;">
+        <div class="ch-editor-head-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="ch-editor-title">New Ad</div>
+          <div class="ch-editor-sub">Configure how your ad will appear across the realm.</div>
+        </div>
+        <button class="ch-modal-close" aria-label="Close" onclick="document.getElementById('modal-create-ad').remove()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="ch-editor" style="padding:22px 24px;overflow-y:auto;flex:1;">
+        <div class="ch-editor-form" style="background:transparent;border:none;padding:0;">
+          <div class="ch-field">
+            <label class="ch-label">Title</label>
+            <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60" oninput="_cmUpdateAdPreview()">
+            <div class="ch-helper">Up to 60 characters. Shown above the ad image.</div>
+          </div>
+          <div class="ch-field">
+            <label class="ch-label">Image</label>
+            <input id="cm-ad-image-upload" type="file" accept="image/*" style="display:none;" onchange="_cmAdImagePreview(event)">
+            <div class="ch-upload" onclick="document.getElementById('cm-ad-image-upload').click()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div class="ch-upload-text">
+                <div class="ch-upload-cta">Click to upload</div>
+                <span id="cm-ad-file-label" class="ch-upload-name">PNG, JPG up to 4MB</span>
+              </div>
+            </div>
+            <div class="ch-helper" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;">
+              <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/BannerAdTemplate.png" target="_blank" rel="noopener" style="color:var(--accent);">↓ Banner template</a>
+              <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/RectangleAdTemplate.png" target="_blank" rel="noopener" style="color:var(--accent);">↓ Rectangle template</a>
+            </div>
+          </div>
+          <div class="ch-field">
+            <label class="ch-label">Format</label>
+            <div class="ch-format-grid">
+              <label id="cm-ratio-banner" class="ch-format active" onclick="_cmSelectAdRatio('banner')">
+                <input type="radio" name="cm-ad-ratio" value="banner" checked>
+                <div class="ch-format-thumb ch-format-thumb-banner"></div>
+                <div class="ch-format-meta">
+                  <div class="ch-format-name">Banner</div>
+                  <div class="ch-format-desc">728 × 90 px — Main content placement</div>
+                </div>
+              </label>
+              <label id="cm-ratio-rectangle" class="ch-format" onclick="_cmSelectAdRatio('rectangle')">
+                <input type="radio" name="cm-ad-ratio" value="rectangle">
+                <div class="ch-format-thumb ch-format-thumb-rect"></div>
+                <div class="ch-format-meta">
+                  <div class="ch-format-name">Rectangle</div>
+                  <div class="ch-format-desc">300 × 250 px — Sidebar placement</div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="ch-field">
+            <label class="ch-label">Destination ${isSuperAdmin() ? '<span class="ch-badge-staff">SUPERADMIN</span>' : ''}</label>
+            <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="_cmOnAdLinkTypeChange()">
+              <option value="bastion">Default — Join Bastion (opens in app)</option>
+              <optgroup label="In-app pages">
+                <option value="/app">Home</option>
+                <option value="/app/messages">Direct Messages</option>
+                <option value="/app/messages?friends=1">Friends</option>
+                <option value="/app/discover">Discover</option>
+                <option value="/app/forum">Forum</option>
+                <option value="/app/atelier?tab=radiance">Radiance Dwelling</option>
+                <option value="/app/atelier?tab=quests">Quests</option>
+                <option value="/app/atelier?tab=shop">Fortshop</option>
+                <option value="/app/atelier?tab=creator">Creator</option>
+              </optgroup>
+              ${isSuperAdmin() ? `
+              <optgroup label="Fortized Web (opens in browser)">
+                <option value="https://fortized.com/">Home (web)</option>
+                <option value="https://fortized.com/blog">Blog</option>
+                <option value="https://fortized.com/support">Support</option>
+                <option value="https://fortized.com/legal">Legal</option>
+                <option value="https://fortized.com/download">Download</option>
+              </optgroup>
+              <option value="custom">Custom URL</option>
+              ` : ''}
+            </select>
+            ${isSuperAdmin() ? '<input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">' : ''}
+            <div class="ch-helper">${isSuperAdmin() ? 'Web pages open in browser. App pages and bastion links open in-app.' : 'In-app pages only. External URLs are reserved for Fortized staff.'}</div>
+          </div>
+          <div class="ch-field" id="cm-ad-bastion-wrap">
+            <label class="ch-label" id="cm-ad-bastion-label">Target Bastion</label>
+            <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
+              <option value="">— None —</option>
+              ${(CU.bastions||[]).map((bst,i)=>`<option value="${i}">${escapeHTML(bst.name)}</option>`).join('')}
+            </select>
+            <div id="cm-ad-bastion-hint" class="ch-helper">Required — the ad links to this bastion's invite.</div>
+          </div>
+          <label class="ch-checkrow">
+            <input type="checkbox" id="cm-ad-autorefund">
+            <div class="ch-checkrow-text">
+              <div class="ch-checkrow-title">Auto-renew</div>
+              <div class="ch-checkrow-desc">Automatically deduct 15 Onyx every 4 days to keep this ad live.</div>
+            </div>
+          </label>
+        </div>
+        <div class="ch-editor-preview" style="position:static;">
+          <div class="ch-preview-head"><span class="ch-preview-dot"></span> Live Preview</div>
+          <div id="cm-ad-preview-wrap" class="ch-preview-frame">
+            <div id="cm-ad-live-preview" class="ch-preview-content">
+              <div class="ch-preview-empty">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <div>Upload an image to see your ad preview here</div>
+              </div>
+            </div>
+          </div>
+          <div class="ch-preview-footnote">
+            Banners appear in main content areas. Rectangles appear in sidebars. Wrong-ratio images are stretched.
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 24px;border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="font-size:11.5px;color:rgba(255,255,255,.4);flex:1;">${onyxBal<15 ? '<span style="color:var(--red);">Insufficient Onyx</span>' : `Lasts 4 days · You have ${onyxBal.toLocaleString()} Onyx`}</div>
+        <button class="btn-g" onclick="document.getElementById('modal-create-ad').remove()">Cancel</button>
+        <button class="btn-a" onclick="_cmCreateAd()" ${onyxBal<15?'disabled':''}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Publish — 15 Onyx
+        </button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  // Prime the bastion-wrap visibility state based on the default link type
+  try { _cmOnAdLinkTypeChange?.(); } catch(_) {}
 }
 
 function _switchMktTab(tab) {

@@ -2582,8 +2582,14 @@ function _defaultPfpUrl(name) {
   const hash = (name||'').split('').reduce((a,c) => a + c.charCodeAt(0), 0);
   return hash % 2 === 0 ? '/default%20pfp.png' : '/default%20pfp2.png';
 }
-function buildAvatarHTML(pfp, name, size, cropData) {
-  const s = 'width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0;';
+function buildAvatarHTML(pfp, name, size, cropData, opts) {
+  // opts.fit = 'contain' lets large profile-card avatars show the full
+  // image (with a tonal background filling any letterbox bars) instead
+  // of cropping non-square pfps. Smaller thumbnails default to 'cover'
+  // because contain looks weird at tiny sizes.
+  const fit = (opts && opts.fit) || 'cover';
+  const bg = (opts && opts.bg) || 'var(--panel2,#1a1c2e)';
+  const s = 'width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:'+fit+';display:block;flex-shrink:0;'+(fit==='contain'?'background:'+bg+';':'');
   const defaultUrl = _defaultPfpUrl(name);
   const initial = (name||'?')[0].toUpperCase();
   const fs = Math.floor(size/2.2);
@@ -18246,7 +18252,7 @@ async function _viewUserProfile(username) {
       <!-- Avatar -->
       <div class="up-left-av-area">
         <div class="profile-decoration-wrap" style="position:relative;">
-          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 88)}</div>
+          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 88, null, { fit: 'contain' })}</div>
           ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay-lg" onerror="this.style.display='none'">` : ''}
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22" style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 22)}</span>
         </div>
@@ -39503,33 +39509,88 @@ async function showMiniProfilePreview(username, anchorEl) {
   const _memberSince = u.joinedAt||u.createdAt ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null;
   const _isFriend = (CU?.friends||[]).includes(username);
   const _hasPending = (CU?.friendRequestsSent||[]).includes(username) || (CU?.friendRequestsReceived||[]).includes(username);
+  // Staff/role tag shown above the display name (Guilded-style accent
+  // pill). Falls back to the special "Verified" mark for verified users.
+  const _staffRole = typeof getStaffRole === 'function' ? getStaffRole(username) : null;
+  const _roleTag = _staffRole
+    ? `<div class="mpp-role-tag mpp-role-tag--${escapeHTML(_staffRole)}">${_staffRole === 'superadmin' ? 'Superadmin' : _staffRole === 'admin' ? 'Admin' : 'Moderator'}</div>`
+    : (u.verified ? `<div class="mpp-role-tag mpp-role-tag--verified">Verified</div>` : '');
+
   panel.innerHTML = `
+    <div class="mpp-accent"></div>
     <!-- Banner -->
     <div class="mpp-banner">
       ${bannerBg}
-      ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.7;z-index:1;"></div>` : ''}
+      ${profileTheme ? `<div class="mpp-banner-fade" style="background:linear-gradient(180deg,${profileTheme.color1}22,transparent 60%,rgba(0,0,0,.4));"></div>` : '<div class="mpp-banner-fade"></div>'}
     </div>
-    <!-- Avatar -->
+    <!-- Avatar overlapping the banner -->
     <div class="mpp-av-area">
-      <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 64)}</div>
+      <div class="profile-decoration-wrap mpp-av-wrap" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
+        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 80, null, { fit: 'contain' })}</div>
         ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
-        <span class="profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="18" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 18)}</span>
+        <span class="profile-status-dot mpp-status-dot" data-for="${escapeHTML(username)}" data-dot-size="20" style="width:20px;height:20px;">${FtzStatus.dotSvg(u.status||'offline', 20)}</span>
       </div>
     </div>
     <!-- Identity -->
     <div class="mpp-identity">
-      <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
-      <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.2);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
-      ${(+u.dailyStreak) ? `<div style="margin-top:6px;">${renderStreakChip(+u.dailyStreak)}</div>` : ''}
-    </div>
-    <!-- Status -->
-    <div class="mpp-status-row">
-      <div class="mpp-status-pill">
-        <span class="sdot profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="10" style="display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 10)}</span>
-        <span class="profile-status-label" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
+      ${_roleTag}
+      <div class="mpp-name" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
+      <div class="mpp-handle">@${escapeHTML(u.username)}${u.pronouns ? `<span class="mpp-handle-sep">·</span>${escapeHTML(u.pronouns)}` : ''}</div>
+      <!-- Status line: dot + public label + optional custom status -->
+      <div class="mpp-status-line">
+        <span class="profile-status-dot mpp-inline-dot" data-for="${escapeHTML(username)}" data-dot-size="9" style="display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 9)}</span>
+        <span class="profile-status-label mpp-status-text" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
+        ${customStatus?.text ? `<span class="mpp-handle-sep">·</span><span class="profile-custom-status mpp-custom-status" data-for="${escapeHTML(username)}">${customStatus.emoji ? `<span class="csb-emoji"><img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:12px;height:12px;" onerror="this.outerHTML='${customStatus.emoji}'"></span>` : ''}<span class="csb-text">${escapeHTML(customStatus.text).slice(0,40)}</span></span>` : `<span class="profile-custom-status mpp-custom-status" data-for="${escapeHTML(username)}" style="display:none;"></span>`}
       </div>
-      <div class="profile-custom-status cloud-status-bubble" data-for="${escapeHTML(username)}" style="${customStatus?.text ? 'display:inline-flex;' : 'display:none;'}font-size:10.5px;padding:4px 10px;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);color:rgba(255,255,255,.45);">${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,30)}</span>` : ''}</div>
+    </div>
+    <!-- 4-button circular action row (Guilded-style) -->
+    <div class="mpp-actions-row">
+      ${isOwn ? `
+        <button class="mpp-circ-btn" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')" aria-label="Edit Profile">
+          <span class="mpp-circ-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+          <span class="mpp-circ-label">Edit</span>
+        </button>
+        <button class="mpp-circ-btn" onclick="document.getElementById('mini-profile-preview')?.remove();_openCustomStatus?.()" aria-label="Set status">
+          <span class="mpp-circ-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 11h.01M15 11h.01M8 15s1.5 2 4 2 4-2 4-2"/></svg></span>
+          <span class="mpp-circ-label">Status</span>
+        </button>
+        <button class="mpp-circ-btn" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" aria-label="Open profile">
+          <span class="mpp-circ-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          <span class="mpp-circ-label">Profile</span>
+        </button>
+        <button class="mpp-circ-btn" onclick="event.stopPropagation();_mppShowMore('${escapeHTML(username)}',event)" aria-label="More">
+          <span class="mpp-circ-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></span>
+          <span class="mpp-circ-label">More</span>
+        </button>
+      ` : `
+        <button class="mpp-circ-btn" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')" aria-label="Message">
+          <span class="mpp-circ-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></span>
+          <span class="mpp-circ-label">Message</span>
+        </button>
+        ${_isFriend
+          ? `<button class="mpp-circ-btn mpp-circ-btn--on" onclick="document.getElementById('mini-profile-preview')?.remove();removeFriend('${escapeHTML(username)}')" aria-label="Friends">
+              <span class="mpp-circ-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></span>
+              <span class="mpp-circ-label">Friends</span>
+            </button>`
+          : _hasPending
+            ? `<button class="mpp-circ-btn" disabled aria-label="Request pending">
+                <span class="mpp-circ-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+                <span class="mpp-circ-label">Pending</span>
+              </button>`
+            : `<button class="mpp-circ-btn" onclick="quickAddFriend('${escapeHTML(username)}')" aria-label="Add friend">
+                <span class="mpp-circ-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></span>
+                <span class="mpp-circ-label">Add</span>
+              </button>`
+        }
+        <button class="mpp-circ-btn" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" aria-label="Open profile">
+          <span class="mpp-circ-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          <span class="mpp-circ-label">Profile</span>
+        </button>
+        <button class="mpp-circ-btn" onclick="event.stopPropagation();_mppShowMore('${escapeHTML(username)}',event)" aria-label="More">
+          <span class="mpp-circ-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></span>
+          <span class="mpp-circ-label">More</span>
+        </button>
+      `}
     </div>
     <!-- Activity Status - Multi-activity support -->
     ${(() => {
@@ -39585,15 +39646,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Widgets -->
     <div id="mpp-widgets-area"></div>
     <!-- Mutuals -->
-    ${_previewMutuals.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Mutual Friends</div><div style="display:flex;align-items:center;">${_previewMutuals.slice(0,6).map(f => `<div class="mpp-mutual-av" title="${escapeHTML(f)}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,22)}</div>`).join('')}${_previewMutuals.length>6?`<span style="font-size:10.5px;color:rgba(255,255,255,.28);margin-left:5px;">+${_previewMutuals.length-6}</span>`:''}</div></div>` : ''}
-    <div class="mpp-divider"></div>
-    <!-- Actions -->
-    <div class="mpp-actions">
-      ${isOwn ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
-      `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
-      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
-      ${!isOwn && !_isFriend && !_hasPending ? `<button class="mpp-btn-secondary" title="Add Friend" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>` : ''}
-    </div>`;
+    ${_previewMutuals.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Mutual Friends</div><div style="display:flex;align-items:center;">${_previewMutuals.slice(0,6).map(f => `<div class="mpp-mutual-av" title="${escapeHTML(f)}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,22)}</div>`).join('')}${_previewMutuals.length>6?`<span style="font-size:10.5px;color:rgba(255,255,255,.28);margin-left:5px;">+${_previewMutuals.length-6}</span>`:''}</div></div>` : ''}`;
 
   // Position near the anchor element
   document.body.appendChild(panel);
@@ -39636,6 +39689,33 @@ async function showMiniProfilePreview(username, anchorEl) {
 }
 
 // Inline role picker for mini profile preview
+// "More" overflow menu fired from the popover's circular action row.
+// Surfaces destructive / less-frequent actions (Block, Ignore, Report,
+// Copy username) without taking up a permanent slot in the row.
+function _mppShowMore(username, e) {
+  if (typeof showCtxMenu !== 'function') return;
+  const isOwn = username === CU?.username;
+  const isBlocked = typeof isUserBlocked === 'function' && isUserBlocked(username);
+  const ignored  = typeof isUserIgnored  === 'function' && isUserIgnored(username);
+  const close = () => { try { document.getElementById('mini-profile-preview')?.remove(); } catch(_){} };
+  const items = [];
+  items.push({ icon: _ctxSvg('copy'), label: 'Copy Username', action: () => { navigator.clipboard.writeText(username).then(()=>toast('Username copied.','success')).catch(()=>{}); }, copyFeedback: true });
+  if (!isOwn) {
+    if (isBlocked) {
+      items.push({ icon: _ctxSvg('leave'), label: 'Unblock', action: () => { close(); toggleBlockUser(username); } });
+    } else {
+      items.push({ icon: _ctxSvg('leave'), label: 'Block', action: () => { close(); toggleBlockUser(username); }, danger: true });
+      items.push({ icon: _ctxSvg('mute'), label: ignored ? 'Unignore' : 'Ignore', action: () => { close(); ignored ? unignoreUser(username) : showIgnorePicker(username); } });
+    }
+    items.push({ icon: _ctxSvg('report')||_ctxSvg('warn')||_ctxSvg('leave'), label: 'Report', action: () => { close(); reportUser(username); }, danger: true });
+  } else {
+    items.push({ icon: _ctxSvg('settings'), label: 'Settings', action: () => { close(); showView('profile'); } });
+  }
+  const x = e?.clientX ?? (window.innerWidth/2);
+  const y = e?.clientY ?? (window.innerHeight/2);
+  showCtxMenu(x, y, [{ items }]);
+}
+
 function _mppToggleRolePicker(username) {
   const picker = document.getElementById('mpp-role-picker');
   if (!picker) return;

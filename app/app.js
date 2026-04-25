@@ -13672,8 +13672,8 @@ function _showWhatsNewModal(post) {
       <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 26px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
         <div style="display:flex;align-items:center;gap:10px;">
           <div>
-            <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.01em;display:flex;align-items:center;gap:9px;">What's New <img src="/Fortized logo.png" alt="Official Fortized" title="Official Fortized announcement" style="height:18px;width:auto;display:block;filter:drop-shadow(0 0 6px rgba(255,249,62,.25));"></div>
-            <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:5px;letter-spacing:.02em;">${fmtDate(post.created_at)}${post.edited_at && post.edited_at !== post.created_at ? ` <span style="color:rgba(255,249,62,.7);" title="Updated ${new Date(post.edited_at).toLocaleString()}">· updated</span>` : ''}</div>
+            <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.01em;display:flex;align-items:center;gap:9px;">What's New <span class="forum-official-logo" role="img" aria-label="Official Fortized" title="Official Fortized announcement" style="margin-left:0;"></span></div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:5px;letter-spacing:.02em;">${fmtDate(post.created_at)}${post.edited_at && post.edited_at !== post.created_at ? ` <span style="color:rgba(255,249,62,.7);" title="Edited ${new Date(post.edited_at).toLocaleString()}">· edited</span>` : ''}</div>
           </div>
         </div>
         <button onclick="_dismissWhatsNew()" aria-label="Close" style="width:30px;height:30px;border-radius:9px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)';this.style.color='#fff';" onmouseleave="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)';">
@@ -34905,7 +34905,7 @@ async function _forumLoadThreads() {
           </div>
           <img class="forum-thread-avatar" data-forum-author="${escapeHTML(th.author||'')}" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
           <div class="forum-thread-info">
-            <div class="forum-thread-title">${th.pinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="color:var(--accent);vertical-align:middle;margin-right:4px;"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg> ' : ''}${escapeHTML(th.title)}${th.category === 'announcements' ? ' <img class="forum-official-logo forum-official-logo--inline" src="/Fortized logo.png" alt="Official Fortized" title="Official Fortized announcement">' : ''}</div>
+            <div class="forum-thread-title">${th.pinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="color:var(--accent);vertical-align:middle;margin-right:4px;"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg> ' : ''}${escapeHTML(th.title)}${th.category === 'announcements' ? ' <span class="forum-official-logo forum-official-logo--inline" role="img" aria-label="Official Fortized" title="Official Fortized announcement"></span>' : ''}</div>
             <div class="forum-thread-meta">
               <span>by <strong style="color:var(--text);">${escapeHTML(th.author)}</strong></span>
               <span class="forum-thread-meta-sep"></span>
@@ -34999,7 +34999,7 @@ async function _forumViewThread(threadId, opts) {
         <div class="forum-detail-header">
           <button class="forum-detail-back" onclick="${backAction}">← Back</button>
           <div style="flex:1;min-width:0;">
-            <div class="forum-detail-title">${escapeHTML(thread.title)}${thread.category === 'announcements' ? ' <img class="forum-official-logo" src="/Fortized logo.png" alt="Official Fortized" title="Official Fortized announcement">' : ''}</div>
+            <div class="forum-detail-title">${escapeHTML(thread.title)}${thread.category === 'announcements' ? ' <span class="forum-official-logo" role="img" aria-label="Official Fortized" title="Official Fortized announcement"></span>' : ''}</div>
             <div class="forum-detail-stats">
               <span>${_forumBoostedViews(thread)} views</span>
               <span>·</span>

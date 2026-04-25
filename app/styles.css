@@ -4576,16 +4576,16 @@ button[disabled],
 .ftz-notif-close:hover{color:#fff;background:rgba(255,255,255,.06);}
 
 /* ── Mini Profile Preview — Guilded-inspired popup card ── */
-.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:20px;z-index:4000;box-shadow:0 24px 80px rgba(0,0,0,.7),0 8px 32px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.02);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .22s cubic-bezier(.16,1,.3,1);width:340px;}
+.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:22px;z-index:4000;box-shadow:0 24px 80px rgba(0,0,0,.7),0 8px 32px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.02);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .22s cubic-bezier(.16,1,.3,1);width:380px;}
 .mpp-accent{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.25) 12%,var(--accent) 50%,rgba(255,249,62,.25) 88%,transparent 100%);box-shadow:0 0 14px rgba(255,249,62,.35);z-index:6;pointer-events:none;}
 .mpp-banner-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.45) 100%);pointer-events:none;}
 @keyframes mppSlideIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
-.mpp-banner{height:88px;position:relative;overflow:hidden;background:#141a2e;}
+.mpp-banner{height:120px;position:relative;overflow:hidden;background:#141a2e;}
 .mpp-banner img{width:100%;height:100%;object-fit:cover;}
-.mpp-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:38px;background:linear-gradient(to top,var(--panel),transparent);pointer-events:none;z-index:1;}
-.mpp-av-area{padding:0 18px;margin-top:-38px;position:relative;z-index:2;display:flex;align-items:flex-end;}
+.mpp-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(to top,var(--panel),transparent);pointer-events:none;z-index:1;}
+.mpp-av-area{padding:0 22px;margin-top:-50px;position:relative;z-index:2;display:flex;align-items:flex-end;}
 .mpp-av-wrap{position:relative;cursor:pointer;flex-shrink:0;}
-.mpp-av{width:72px;height:72px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);background:var(--panel2);flex-shrink:0;box-shadow:0 8px 24px rgba(0,0,0,.55);transition:transform .18s cubic-bezier(.22,1,.36,1);}
+.mpp-av{width:96px;height:96px;border-radius:50%;overflow:hidden;border:5px solid var(--panel);background:var(--panel2);flex-shrink:0;box-shadow:0 10px 28px rgba(0,0,0,.6);transition:transform .18s cubic-bezier(.22,1,.36,1);}
 .mpp-av-wrap:hover .mpp-av{transform:scale(1.05);}
 /* Don't force object-fit cover here — let the JS decide via inline
    style on the <img>. Non-square avatars use object-fit:contain so the
@@ -4593,36 +4593,50 @@ button[disabled],
    filling any letterbox bars). */
 .mpp-av img{width:100%;height:100%;border-radius:50%;display:block;}
 .mpp-status-dot{position:absolute;bottom:2px;right:2px;z-index:3;display:flex;align-items:center;justify-content:center;background:var(--panel);border-radius:50%;padding:2px;}
-.mpp-identity{padding:12px 20px 0;}
-.mpp-role-tag{display:inline-block;font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;color:#a78bfa;}
+.mpp-identity{padding:14px 22px 0;}
+.mpp-role-tag{display:inline-block;font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;color:#a78bfa;}
 .mpp-role-tag--moderator{color:#a78bfa;}
 .mpp-role-tag--admin{color:#fbbf24;}
 .mpp-role-tag--superadmin{color:#f87171;}
 .mpp-role-tag--verified{color:var(--accent);}
-.mpp-name{font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;cursor:pointer;transition:filter .12s;line-height:1.2;letter-spacing:-.01em;}
+.mpp-name{font-family:var(--font-display);font-size:24px;font-weight:800;color:#fff;cursor:pointer;transition:filter .12s;line-height:1.15;letter-spacing:-.01em;}
 .mpp-name:hover{filter:brightness(1.1);}
-.mpp-handle{font-size:11.5px;color:rgba(255,255,255,.38);font-weight:500;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.mpp-handle-sep{margin:0 5px;color:rgba(255,255,255,.18);}
-.mpp-status-line{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:11.5px;color:rgba(255,255,255,.5);font-weight:500;margin-top:7px;}
-.mpp-inline-dot{width:9px;height:9px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mpp-handle{font-size:13px;color:rgba(255,255,255,.42);font-weight:500;margin-top:5px;}
+.mpp-handle-sep{margin:0 6px;color:rgba(255,255,255,.18);}
+.mpp-status-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;margin-top:9px;}
+.mpp-inline-dot{width:10px;height:10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mpp-status-text{font-weight:600;}
-.mpp-custom-status{display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,.65);font-weight:500;}
-.mpp-custom-status .csb-emoji{display:inline-flex;}
-.mpp-custom-status .csb-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;display:inline-block;vertical-align:bottom;}
 
-/* Bio one-liner — kept tight, no header label, just the body. */
-.mpp-bio{padding:12px 20px 0;font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+/* 4 circular action buttons — Guilded layout. Each button is a big
+   disc with a centred icon and a label underneath. */
+.mpp-circ-row{display:flex;align-items:flex-start;justify-content:space-around;gap:8px;padding:18px 22px 6px;}
+.mpp-circ{display:flex;flex-direction:column;align-items:center;gap:7px;padding:0;background:none;border:none;cursor:pointer;flex:1;min-width:0;color:rgba(255,255,255,.7);transition:color .15s;}
+.mpp-circ:hover{color:#fff;}
+.mpp-circ:disabled{opacity:.4;cursor:not-allowed;}
+.mpp-circ-disc{width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:all .15s cubic-bezier(.22,1,.36,1);}
+.mpp-circ:hover .mpp-circ-disc{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.22);transform:translateY(-2px);}
+.mpp-circ:disabled .mpp-circ-disc,.mpp-circ:disabled:hover .mpp-circ-disc{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.06);transform:none;}
+.mpp-circ--on .mpp-circ-disc{background:rgba(62,207,110,.12);border-color:rgba(62,207,110,.32);color:var(--green);}
+.mpp-circ--on:hover .mpp-circ-disc{background:rgba(62,207,110,.18);border-color:rgba(62,207,110,.5);}
+.mpp-circ-lbl{font-family:var(--font-ui);font-size:11.5px;font-weight:600;letter-spacing:.01em;color:inherit;}
 
-/* Mutual friends count chip (no avatars to save space). */
-.mpp-mutuals-chip{margin:10px 20px 0;display:inline-flex;align-items:center;gap:6px;padding:5px 10px;font-size:11px;font-weight:600;color:rgba(255,255,255,.55);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-pill);width:fit-content;}
+/* Sections in the popover (Custom Status, Streak, Roles). */
+.mpp .mpp-section,.mini-profile-preview .mpp-section{padding:14px 22px 4px;}
+.mpp-section-label{font-family:var(--font-display);font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.32);margin-bottom:8px;}
 
-/* Two-button action row: primary CTA + ghost icon button for full profile. */
-.mpp-actions-row{display:flex;gap:6px;padding:14px 18px 16px;}
-.mpp-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:10px;border:none;font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:.01em;cursor:pointer;transition:all .15s cubic-bezier(.22,1,.36,1);}
-.mpp-btn--primary{flex:1;background:var(--accent);color:var(--rail);}
-.mpp-btn--primary:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 6px 16px rgba(255,249,62,.18);}
-.mpp-btn--ghost{width:36px;padding:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.6);}
-.mpp-btn--ghost:hover{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.12);}
+/* Custom status row — emoji + text, like Guilded's "🎉 Partying". */
+.mpp-cs-row{display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,.78);font-weight:500;}
+.mpp-cs-emoji{font-size:20px;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex-shrink:0;}
+.mpp-cs-emoji img{width:22px;height:22px;}
+.mpp-cs-text{flex:1;min-width:0;line-height:1.4;}
+
+/* Roles row */
+.mpp-roles-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.mpp-role-add-btn{width:24px;height:24px;border-radius:7px;border:1px dashed rgba(255,255,255,.18);background:none;color:rgba(255,255,255,.4);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1;transition:all .15s;}
+.mpp-role-add-btn:hover{border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.7);}
+
+/* Bottom padding so the last section doesn't hug the rounded corner. */
+.mini-profile-preview > *:last-child{padding-bottom:18px;}
 .mpp-badges-row{display:flex;flex-wrap:wrap;gap:3px;padding:8px 18px 0;}
 .mpp-divider{height:1px;background:rgba(255,255,255,.05);margin:12px 18px;}
 .mpp-section{padding:3px 18px 5px;}

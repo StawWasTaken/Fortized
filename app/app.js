@@ -13543,6 +13543,16 @@ async function _checkForAnnouncements() {
   } catch(e) { console.warn('[Announcements] Check failed:', e); }
 }
 
+// Build a "version key" that combines the post id with the last edit
+// timestamp. Editing the post bumps edited_at so the key changes, which
+// re-surfaces the card even if the user previously ticked "Don't show
+// this again". A brand-new post also has its own id, so it's covered.
+function _announcementSeenKey(post) {
+  if (!post || !post.id) return '';
+  const stamp = post.edited_at || post.updated_at || post.created_at || '';
+  return post.id + '@' + stamp;
+}
+
 // Surface the cached announcement, but only once per session. Refreshing
 // the page resets the flag so the card returns on the next load.
 function _maybeShowAnnouncementModal() {
@@ -13552,7 +13562,10 @@ function _maybeShowAnnouncementModal() {
   if (document.getElementById('modal-whats-new')) return;
   let seen = [];
   try { seen = JSON.parse(localStorage.getItem('ftz_seen_forum_announcements') || '[]'); } catch(_) {}
-  if (seen.includes(a.id)) return;
+  const key = _announcementSeenKey(a);
+  // Treat both legacy bare-id entries and new versioned keys as "seen"
+  // so existing users don't suddenly get the modal again on first load.
+  if (seen.includes(key) || seen.includes(a.id)) return;
   _announcementShownThisSession = true;
   _showWhatsNewModal(a);
 }
@@ -13659,7 +13672,7 @@ function _showWhatsNewModal(post) {
         <div style="display:flex;align-items:center;gap:10px;">
           <div>
             <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;">What's New <span class="whats-new-official" title="Official Fortized announcement"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L9.6 8.4 1.2 12l8.4 3.6L12 24l2.4-8.4L22.8 12l-8.4-3.6z"/></svg> Official</span></div>
-            <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:5px;letter-spacing:.02em;">${fmtDate(post.created_at)}</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:5px;letter-spacing:.02em;">${fmtDate(post.created_at)}${post.edited_at && post.edited_at !== post.created_at ? ` <span style="color:rgba(255,249,62,.7);" title="Updated ${new Date(post.edited_at).toLocaleString()}">· updated</span>` : ''}</div>
           </div>
         </div>
         <button onclick="_dismissWhatsNew()" aria-label="Close" style="width:30px;height:30px;border-radius:9px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)';this.style.color='#fff';" onmouseleave="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)';">
@@ -13750,12 +13763,14 @@ function _dismissWhatsNew() {
   const shouldRemember = dismissCheck?.checked === true;
   modal.remove();
   // Only persist a "seen" flag if the user explicitly opted out.
-  // Otherwise the card will reappear on the next navigation.
+  // The key is the id PLUS the last-edit timestamp, so an edit to the
+  // same post re-surfaces the card even after the user dismissed it.
   if (shouldRemember && _latestForumAnnouncement?.id) {
     let seen = [];
     try { seen = JSON.parse(localStorage.getItem('ftz_seen_forum_announcements') || '[]'); } catch(_) {}
-    const merged = [...new Set([...seen, _latestForumAnnouncement.id])];
-    // Trim to the last 50 ids so the array doesn't grow forever.
+    const key = _announcementSeenKey(_latestForumAnnouncement);
+    const merged = [...new Set([...seen, key])];
+    // Trim to the last 50 keys so the array doesn't grow forever.
     localStorage.setItem('ftz_seen_forum_announcements', JSON.stringify(merged.slice(-50)));
   }
 }

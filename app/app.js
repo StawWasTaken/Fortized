@@ -13638,7 +13638,8 @@ function _showWhatsNewModal(post) {
 
   const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); } catch { return ''; } };
   const authorName = post.author || 'staff';
-  const authorPfp = post.author_pfp || (typeof _defaultPfpUrl === 'function' ? _defaultPfpUrl(authorName) : '');
+  const initialPfp = post.author_pfp || (typeof _defaultPfpUrl === 'function' ? _defaultPfpUrl(authorName) : '');
+  const fallbackPfp = typeof _defaultPfpUrl === 'function' ? _defaultPfpUrl(authorName) : '';
   const body = post.content || '';
   const media = _pickAnnouncementMedia(post);
   const { score, upvoted } = _announcementVoteState(post);
@@ -13655,9 +13656,11 @@ function _showWhatsNewModal(post) {
       <div class="whats-new-accent"></div>
       <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 26px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
-        <div>
-          <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.01em;">What's New</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:5px;letter-spacing:.02em;">${fmtDate(post.created_at)}</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div>
+            <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;">What's New <span class="whats-new-official" title="Official Fortized announcement"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L9.6 8.4 1.2 12l8.4 3.6L12 24l2.4-8.4L22.8 12l-8.4-3.6z"/></svg> Official</span></div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:5px;letter-spacing:.02em;">${fmtDate(post.created_at)}</div>
+          </div>
         </div>
         <button onclick="_dismissWhatsNew()" aria-label="Close" style="width:30px;height:30px;border-radius:9px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)';this.style.color='#fff';" onmouseleave="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)';">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -13671,7 +13674,7 @@ function _showWhatsNewModal(post) {
           <div style="font-size:13.5px;color:rgba(255,255,255,.66);line-height:1.7;word-break:break-word;">${typeof _forumRenderBody === 'function' ? _forumRenderBody(body) : escapeHTML(body)}</div>
           <!-- Author row -->
           <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px;">
-            <img src="${escapeHTML(authorPfp)}" alt="${escapeHTML(authorName)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,249,62,.18);background:var(--panel);" onerror="this.onerror=null;this.src='${typeof _defaultPfpUrl === 'function' ? _defaultPfpUrl(authorName) : ''}'">
+            <img id="whats-new-pfp" src="${escapeHTML(initialPfp || fallbackPfp)}" alt="${escapeHTML(authorName)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,249,62,.18);background:var(--panel);flex-shrink:0;" onerror="this.onerror=null;this.src='${escapeHTML(fallbackPfp)}'">
             <div style="min-width:0;">
               <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.85);">${escapeHTML(authorName)}</div>
               <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:1px;">Posted ${fmtDate(post.created_at)}</div>
@@ -13694,6 +13697,40 @@ function _showWhatsNewModal(post) {
       </div>
     </div>`;
   document.body.appendChild(overlay);
+
+  // Hydrate the modal asynchronously: pull the author's real PFP and the
+  // freshest vote counts from the source thread so they always match
+  // what the forum is showing right now.
+  _hydrateAnnouncementModal(post.id, post.author);
+}
+
+// Async hydration: fetch the author's user record (for the real PFP) and
+// the latest forum thread row (for live vote counts). Called once when
+// the modal opens; updates are applied in place if the modal is still up.
+async function _hydrateAnnouncementModal(threadId, authorName) {
+  // 1. Author PFP — forum threads only store the username, not the avatar.
+  if (authorName && typeof FortizedSocial?.getUserByName === 'function') {
+    try {
+      const user = await FortizedSocial.getUserByName(authorName);
+      const pfp = user?.pfp || user?.data?.pfp;
+      if (pfp) {
+        const img = document.getElementById('whats-new-pfp');
+        if (img) img.src = pfp;
+      }
+    } catch(_) {}
+  }
+  // 2. Live thread state — re-pull likes/dislikes so the modal's count
+  //    matches the forum even if the cache was stale.
+  if (threadId && typeof FortizedSocial?.getForumThread === 'function') {
+    try {
+      const fresh = await FortizedSocial.getForumThread(threadId);
+      if (fresh && _latestForumAnnouncement?.id === threadId) {
+        _latestForumAnnouncement.likes = Array.isArray(fresh.likes) ? fresh.likes : [];
+        _latestForumAnnouncement.dislikes = Array.isArray(fresh.dislikes) ? fresh.dislikes : [];
+        _refreshAnnouncementVoteUI();
+      }
+    } catch(_) {}
+  }
 }
 
 function _renderAnnouncementBody(text) {
@@ -34852,7 +34889,7 @@ async function _forumLoadThreads() {
           </div>
           <img class="forum-thread-avatar" data-forum-author="${escapeHTML(th.author||'')}" src="${escapeHTML(th.author_pfp || pfpF)}" onerror="this.src='${pfpF}'">
           <div class="forum-thread-info">
-            <div class="forum-thread-title">${th.pinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="color:var(--accent);vertical-align:middle;margin-right:4px;"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg> ' : ''}${escapeHTML(th.title)}</div>
+            <div class="forum-thread-title">${th.pinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="color:var(--accent);vertical-align:middle;margin-right:4px;"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg> ' : ''}${escapeHTML(th.title)}${th.category === 'announcements' ? ' <span class="forum-official-badge forum-official-badge--inline" title="Official Fortized announcement"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L9.6 8.4 1.2 12l8.4 3.6L12 24l2.4-8.4L22.8 12l-8.4-3.6z"/></svg> Official</span>' : ''}</div>
             <div class="forum-thread-meta">
               <span>by <strong style="color:var(--text);">${escapeHTML(th.author)}</strong></span>
               <span class="forum-thread-meta-sep"></span>
@@ -34946,7 +34983,7 @@ async function _forumViewThread(threadId, opts) {
         <div class="forum-detail-header">
           <button class="forum-detail-back" onclick="${backAction}">← Back</button>
           <div style="flex:1;min-width:0;">
-            <div class="forum-detail-title">${escapeHTML(thread.title)}</div>
+            <div class="forum-detail-title">${escapeHTML(thread.title)}${thread.category === 'announcements' ? ' <span class="forum-official-badge" title="Official Fortized announcement"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L9.6 8.4 1.2 12l8.4 3.6L12 24l2.4-8.4L22.8 12l-8.4-3.6z"/></svg> Official</span>' : ''}</div>
             <div class="forum-detail-stats">
               <span>${_forumBoostedViews(thread)} views</span>
               <span>·</span>
@@ -34978,10 +35015,10 @@ async function _forumViewThread(threadId, opts) {
                 ${thread.image ? `<img class="forum-op-image" src="${escapeHTML(thread.image)}">` : ''}
                 ${Array.isArray(thread.attachments) && thread.attachments.length ? `<div class="forum-att-grid">${_forumRenderAttachmentsHTML(thread.attachments)}</div>` : ''}
                 <div class="forum-post-actions">
-                  <div class="forum-vote-group">
+                  <div class="forum-vote-group${thread.category === 'announcements' ? ' forum-vote-group--upvote-only' : ''}">
                     <button class="forum-vote-btn up ${opUpvoted?'active':''}" onclick="_forumVote('thread','${thread.id}',1)" title="Upvote"><span class="fvb-icon">👏</span></button>
                     <div class="forum-vote-score ${opScore>0?'pos':opScore<0?'neg':''}">${opScore.toLocaleString()}</div>
-                    <button class="forum-vote-btn down ${opDownvoted?'active':''}" onclick="_forumVote('thread','${thread.id}',-1)" title="Downvote"><span class="fvb-icon">👎</span></button>
+                    ${thread.category === 'announcements' ? '' : `<button class="forum-vote-btn down ${opDownvoted?'active':''}" onclick="_forumVote('thread','${thread.id}',-1)" title="Downvote"><span class="fvb-icon">👎</span></button>`}
                   </div>
                   ${_forumCanEditPost(thread) ? `<button class="forum-pa-btn" onclick="_forumEditThread('${thread.id}')">${_svgIcon('pencil')} Edit</button>` : ''}
                   ${_forumCanDeleteThread(thread) ? `<button class="forum-pa-btn danger" onclick="_forumDeleteThreadConfirm('${thread.id}')">${_svgIcon('trash')} Delete</button>` : ''}
@@ -35361,6 +35398,14 @@ async function _forumVote(kind, id, dir) {
   try {
     if (kind === 'thread') {
       const t = await FortizedSocial.getForumThread(id);
+      // Announcement threads can be applauded but not downvoted —
+      // they're official platform updates, not community debate posts.
+      // Replies to announcement threads can still be downvoted (handled
+      // in the `else` branch below), per the policy.
+      if (t?.category === 'announcements' && dir === -1) {
+        toast("You can't downvote an announcement.", 'info');
+        return;
+      }
       const likes = Array.isArray(t.likes) ? t.likes.slice() : [];
       const dislikes = Array.isArray(t.dislikes) ? t.dislikes.slice() : [];
       const liSet = new Set(likes);

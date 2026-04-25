@@ -1694,6 +1694,9 @@ window.addEventListener('popstate', function(e) {
   showView(state.view || 'home', true);
 });
 function showView(v, _skipPush) {
+  // Show the latest forum announcement on every page navigation. Cached
+  // by _checkForAnnouncements; this just re-displays if still unseen.
+  try { _maybeShowAnnouncementModal?.(); } catch(_) {}
   // ── Settings & bastion settings open as modals over the current page ──
   if (v === 'profile') {
     closeModal('modal-bsettings'); // close other if open
@@ -3173,8 +3176,14 @@ function renderHomePanel() {
   // Keep the legacy Active Now right sidebar as-is
   setTimeout(() => renderActiveNowSidebar('home-active-now-list'), 220);
 
-  // Check for new announcements
+  // Check for new announcements once on landing, then every 5 minutes so a
+  // freshly posted thread surfaces without requiring a hard reload.
   setTimeout(_checkForAnnouncements, 500);
+  if (!window._ftzAnnouncementInterval) {
+    window._ftzAnnouncementInterval = setInterval(() => {
+      _checkForAnnouncements?.();
+    }, 5 * 60 * 1000);
+  }
 }
 
 // ── Feedback: "A place where…" + regular ──
@@ -9396,6 +9405,15 @@ function initFortizedUXResilience() {
   _ftzRouter.applyInitialRoute();
   _ftzRouter._initialLoad = false;
 
+  // Kick off the announcement check on every initial load (any landing page),
+  // and keep it refreshed in the background so a new forum post surfaces fast.
+  setTimeout(() => { try { _checkForAnnouncements?.(); } catch(_){} }, 600);
+  if (!window._ftzAnnouncementInterval) {
+    window._ftzAnnouncementInterval = setInterval(() => {
+      _checkForAnnouncements?.();
+    }, 5 * 60 * 1000);
+  }
+
   // CRITICAL: Sync fresh user data from database after page load
   // This ensures changes (PFP, messages, friends) made in other sessions are visible
   if (navigator.onLine && typeof FortizedSocial !== 'undefined') {
@@ -13514,68 +13532,88 @@ async function _submitAdReport(adId) {
 // ANNOUNCEMENT SYSTEM — "What's New"
 // ═══════════════════════════════════════════════════════
 
+// ANNOUNCEMENT SYSTEM — "What's New"
+// ═══════════════════════════════════════════════════════
+// The latest post in the Forum's `announcements` category is shown as a
+// dismissible update card. It re-appears on every page navigation until
+// the user ticks "Don't show this again". A new announcement (different
+// post id) automatically resurfaces the card.
+
+let _latestForumAnnouncement = null;
+
 async function _checkForAnnouncements() {
   try {
-    const all = await FortizedSocial.getAnnouncements();
-    if (!all?.length) return;
-    const seenIds = JSON.parse(localStorage.getItem('ftz_seen_announcements')||'[]');
-    const unseen = all.filter(a => a.published && !seenIds.includes(a.id));
-    if (unseen.length) _showWhatsNewModal(unseen);
+    const threads = await FortizedSocial.getForumThreads('announcements', 5, 0);
+    if (!Array.isArray(threads) || !threads.length) return;
+    // Pick the most recently created post regardless of pinning order.
+    const recent = [...threads]
+      .filter(t => t && t.id)
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0];
+    if (!recent) return;
+    _latestForumAnnouncement = recent;
+    _maybeShowAnnouncementModal();
   } catch(e) { console.warn('[Announcements] Check failed:', e); }
 }
 
-function _showWhatsNewModal(announcements) {
+// Called on every page navigation. Re-uses the cached announcement so
+// we don't hammer Supabase; _checkForAnnouncements refreshes the cache.
+function _maybeShowAnnouncementModal() {
+  const a = _latestForumAnnouncement;
+  if (!a || !a.id) return;
   if (document.getElementById('modal-whats-new')) return;
-  const sorted = [...announcements].sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+  let seen = [];
+  try { seen = JSON.parse(localStorage.getItem('ftz_seen_forum_announcements') || '[]'); } catch(_) {}
+  if (seen.includes(a.id)) return;
+  _showWhatsNewModal(a);
+}
+
+function _showWhatsNewModal(post) {
+  if (document.getElementById('modal-whats-new')) return;
   const overlay = document.createElement('div');
   overlay.id = 'modal-whats-new';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;animation:fadeIn .2s;';
   overlay.onclick = e => { if (e.target === overlay) _dismissWhatsNew(); };
 
   const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); } catch { return ''; } };
+  const authorPfp = post.author_pfp || (typeof _defaultPfpUrl === 'function' ? _defaultPfpUrl(post.author||'') : '');
+  const body = post.content || '';
 
   overlay.innerHTML = `
     <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:560px;width:94%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);">
       <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,.06);">
-        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">What's New</div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;line-height:1.1;">What's New</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:4px;">${fmtDate(post.created_at)}</div>
+        </div>
         <button onclick="_dismissWhatsNew()" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='rgba(255,255,255,.06)'">&times;</button>
       </div>
       <!-- Content -->
       <div style="overflow-y:auto;padding:20px 24px;flex:1;">
-        ${sorted.map(a => `
-          <div style="margin-bottom:24px;">
-            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:8px;">${fmtDate(a.createdAt)}</div>
-            ${a.image ? `<div style="margin-bottom:14px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);"><img src="${escapeHTML(a.image)}" style="width:100%;display:block;max-height:220px;object-fit:cover;" onerror="this.parentElement.style.display='none'"></div>` : ''}
-            <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;margin-bottom:8px;line-height:1.3;">${escapeHTML(a.title||'')}</div>
-            <div style="font-size:13.5px;color:rgba(255,255,255,.55);line-height:1.7;white-space:pre-wrap;word-break:break-word;">${_renderAnnouncementBody(a.body||'')}</div>
-            ${a.author ? `<div style="margin-top:10px;font-size:11.5px;color:rgba(255,255,255,.25);">— ${escapeHTML(a.author)}</div>` : ''}
-          </div>
-          ${sorted.indexOf(a) < sorted.length-1 ? '<div style="border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:20px;"></div>' : ''}
-        `).join('')}
+        ${post.image ? `<div style="margin-bottom:16px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);"><img src="${escapeHTML(post.image)}" style="width:100%;display:block;max-height:240px;object-fit:cover;" onerror="this.parentElement.style.display='none'"></div>` : ''}
+        <div style="font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.3;">${escapeHTML(post.title||'')}</div>
+        <div style="font-size:13.5px;color:rgba(255,255,255,.62);line-height:1.7;word-break:break-word;">${typeof _forumRenderBody === 'function' ? _forumRenderBody(body) : escapeHTML(body)}</div>
+        <div style="margin-top:14px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:rgba(255,255,255,.35);">
+          <img src="${escapeHTML(authorPfp)}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">
+          Posted by <strong style="color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(post.author||'staff')}</strong>
+        </div>
       </div>
-      <!-- Footer with socials -->
-      <div style="padding:14px 24px 18px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:16px;">
-        <a href="https://x.com/Fortized" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.3);text-decoration:none;transition:color .15s;" onmouseenter="this.style.color='rgba(255,255,255,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.3)'">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          @Fortized
-        </a>
-        <a href="https://www.reddit.com/r/fortized/" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.3);text-decoration:none;transition:color .15s;" onmouseenter="this.style.color='rgba(255,255,255,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.3)'">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9.067" cy="14.533" r="1.6"/><circle cx="14.933" cy="14.533" r="1.6"/><path d="M24 12c0 6.627-5.373 12-12 12S0 18.627 0 12 5.373 0 12 0s12 5.373 12 12zm-4.862-2.2a1.76 1.76 0 00-2.985-1.009 8.67 8.67 0 00-4.18-1.37l.834-3.926 2.683.57a1.252 1.252 0 102.17-.085l-3.016-.64a.42.42 0 00-.49.313l-.933 4.39a8.764 8.764 0 00-4.322 1.355A1.76 1.76 0 106.975 12c-.023.176-.035.356-.035.538 0 3.17 3.582 5.737 8 5.737s8-2.567 8-5.737c0-.173-.01-.344-.029-.512a1.755 1.755 0 00.028-3.226l-.001.001zm-5.1 6.584c-1.085 0-3.15-.267-4.038-1.217a.42.42 0 01.595-.595c.63.676 2.174.915 3.443.915s2.813-.24 3.443-.915a.42.42 0 11.595.595c-.888.95-2.953 1.217-4.038 1.217z"/></svg>
-          r/fortized
-        </a>
-        <a href="/app/forum" style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.3);text-decoration:none;transition:color .15s;" onmouseenter="this.style.color='rgba(255,255,255,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.3)'">
-          <img src="/Fortized logo.png" style="width:14px;height:14px;border-radius:3px;opacity:.5;">
-          Forum
-        </a>
-        <div style="flex:1;"></div>
-        <button onclick="_dismissWhatsNew()" style="padding:8px 20px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;">Got it!</button>
+      <!-- Footer with don't-show + actions -->
+      <div style="padding:14px 24px 18px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;flex:1;min-width:0;">
+          <input type="checkbox" id="whats-new-dismiss-check" style="accent-color:var(--accent);">
+          <span>Don't show this again</span>
+        </label>
+        <a href="/app/forum?thread=${encodeURIComponent(post.id)}" onclick="event.preventDefault();_dismissWhatsNew();_forumViewThread('${escapeHTML(post.id)}');" style="font-size:11.5px;color:rgba(255,255,255,.4);text-decoration:none;">Open in forum →</a>
+        <button onclick="_dismissWhatsNew()" style="padding:8px 20px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;">Got it</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
 }
 
 function _renderAnnouncementBody(text) {
+  // Legacy helper kept for the admin-side preview. Forum announcements
+  // use _forumRenderBody, which already handles markdown + mentions.
   let html = escapeHTML(text);
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700;">$1</strong>');
   html = html.replace(/__(.*?)__/g, '<em>$1</em>');
@@ -13586,14 +13624,18 @@ function _renderAnnouncementBody(text) {
 function _dismissWhatsNew() {
   const modal = document.getElementById('modal-whats-new');
   if (!modal) return;
+  const dismissCheck = document.getElementById('whats-new-dismiss-check');
+  const shouldRemember = dismissCheck?.checked === true;
   modal.remove();
-  FortizedSocial.getAnnouncements().then(all => {
-    if (!all?.length) return;
-    const seenIds = JSON.parse(localStorage.getItem('ftz_seen_announcements')||'[]');
-    const published = all.filter(a=>a.published).map(a=>a.id);
-    const merged = [...new Set([...seenIds, ...published])];
-    localStorage.setItem('ftz_seen_announcements', JSON.stringify(merged));
-  }).catch(()=>{});
+  // Only persist a "seen" flag if the user explicitly opted out.
+  // Otherwise the card will reappear on the next navigation.
+  if (shouldRemember && _latestForumAnnouncement?.id) {
+    let seen = [];
+    try { seen = JSON.parse(localStorage.getItem('ftz_seen_forum_announcements') || '[]'); } catch(_) {}
+    const merged = [...new Set([...seen, _latestForumAnnouncement.id])];
+    // Trim to the last 50 ids so the array doesn't grow forever.
+    localStorage.setItem('ftz_seen_forum_announcements', JSON.stringify(merged.slice(-50)));
+  }
 }
 
 // Admin: create announcement
@@ -20122,12 +20164,8 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <h3>What's New Announcements</h3>
         </div>
         <div style="padding:var(--space-lg);">
-          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Create "What's New" announcements shown to all users. These also appear as blog posts.</div>
-          <div style="display:flex;gap:var(--space-sm);align-items:center;flex-wrap:wrap;">
-            <button class="hq-quick-btn" onclick="_adminCreateAnnouncement()" style="background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.15);color:#60a5fa;font-weight:700;">📝 New Announcement</button>
-            <button class="hq-quick-btn" onclick="_adminViewAnnouncements()">📋 View All</button>
-          </div>
-          <div id="admin-announcements-preview" style="margin-top:var(--space-md);"></div>
+          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:var(--space-sm);line-height:1.6;">The "What's New" card shown to every user is now powered by the most recent post in the <strong style="color:var(--accent);">Announcements</strong> forum category. Post a new thread there to push an update.</div>
+          <a href="/app/forum" onclick="event.preventDefault();showView('forum');" class="hq-quick-btn" style="display:inline-flex;background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.15);color:#60a5fa;font-weight:700;text-decoration:none;">→ Open Forum</a>
         </div>
       </div>
       <div class="hq-panel" style="margin-top:var(--space-lg);">

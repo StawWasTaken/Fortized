@@ -13253,34 +13253,41 @@ async function _autoRenewAds() {
   }
 }
 
+// Cancelled ads stick around in Your Ads for 2 hours so the user can confirm
+// the action, then they vanish on the next render. _pruneCancelledAds is also
+// called whenever the Creator tab is rendered to handle reloads.
+const _AD_CANCEL_GRACE_MS = 2 * 60 * 60 * 1000;
+function _pruneCancelledAds() {
+  if (!Array.isArray(CU.ads) || !CU.ads.length) return false;
+  const now = Date.now();
+  const before = CU.ads.length;
+  CU.ads = CU.ads.filter(a => {
+    if (a?.status !== 'cancelled') return true;
+    const ts = +a.cancelledAt || 0;
+    return ts > 0 && (now - ts) < _AD_CANCEL_GRACE_MS;
+  });
+  if (CU.ads.length !== before) {
+    try { saveLocal(); } catch(_){}
+    try { saveUser?.(); } catch(_){}
+    return true;
+  }
+  return false;
+}
 async function _cmCancelAd(adIdx) {
   const ad = CU.ads?.[adIdx];
   if (!ad) return;
   const onyxBal = CU.onyx||0;
   if (onyxBal < 5) { toast('Cancelling costs 5 Onyx. Not enough!', 'error'); return; }
-  showCustomConfirm('Cancel this ad? You will be charged 5 Onyx. The ad will be deleted in 20 seconds.', async () => {
+  showCustomConfirm('Cancel this ad? You will be charged 5 Onyx. The ad will disappear from your inventory in 2 hours.', async () => {
     CU.onyx = (CU.onyx||0) - 5;
     ad.status = 'cancelled';
+    ad.cancelledAt = Date.now();
     saveLocal();
     await saveUser();
     try { await FortizedSocial.removeGlobalAd(ad.id); } catch(e) {}
-    toast('Ad cancelled. It will be deleted in 20 seconds.', 'info');
+    toast('Ad cancelled. It will leave your inventory in 2 hours.', 'info');
     switchAtelierTab('creator');
     setTimeout(() => _switchCreatorSub('creations'), 50);
-    // Auto-delete the ad after 20 seconds
-    const adId = ad.id;
-    setTimeout(async () => {
-      try {
-        CU.ads = (CU.ads||[]).filter(a => a.id !== adId);
-        saveLocal();
-        await saveUser();
-        // Refresh Creator tab if viewing it
-        if (_currentView === 'atelier' && _atelierTab === 'creator') {
-          switchAtelierTab('creator');
-          setTimeout(() => _switchCreatorSub('creations'), 50);
-        }
-      } catch(e) { console.warn('[Ads] Auto-delete failed:', e); }
-    }, 20000);
   });
 }
 async function _cmRenewAd(adIdx) {
@@ -33591,95 +33598,27 @@ function renderAtelierTab(tab) {
     };
 
     const allDailyDone = dailyDone === dailyTotal;
-    const heroHeadline = allDailyDone
-      ? 'All daily quests cleared.'
-      : (activeQ.length ? `${activeQ.length} ${activeQ.length===1?'quest':'quests'} await you.` : 'Every quest completed.');
-    const heroSub = allDailyDone
-      ? 'Come back tomorrow for new daily quests, or chase the longer goals below.'
-      : 'Earn Onyx, grow your streak, and rise through the ranks of the realm.';
 
     el.innerHTML = `<div class="atelier-content-inner">
 
-      <!-- ═══ HERO ═══ -->
-      <div class="ch-hero">
-        <div class="ch-hero-glow"></div>
-        <div class="ch-hero-grid"></div>
-        <div class="ch-hero-inner">
-          <div class="ch-hero-top">
-            <div class="ch-hero-info">
-              <div class="ch-hero-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-              </div>
-              <div class="ch-hero-text">
-                <div class="ch-hero-kicker">Quests</div>
-                <h1>${heroHeadline}</h1>
-                <div class="ch-hero-sub">${heroSub}</div>
-              </div>
-            </div>
-            <div class="ch-hero-balance ch-hero-streak${streak>0?' ch-hero-streak-on':''}" oncontextmenu="onStreakCtxMenu(event);return false;" title="Right-click for streak options">
-              <div class="ch-hero-streak-flame">${_streakFlameSvg(28)}${_isStreakProtected() ? '<span class="ch-hero-streak-shield" title="Protected"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></span>' : ''}</div>
-              <div>
-                <div class="ch-hero-bal-num" style="color:${streak>0?'#ff9d5e':'rgba(255,255,255,.35)'};">${streak}<span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.4);margin-left:4px;">${streak === 1 ? 'day' : 'days'}</span></div>
-                <div class="ch-hero-bal-lbl">${_isStreakProtected() ? 'Protected · '+new Date(+CU.streakProtectedUntil).toLocaleDateString() : 'Day Streak'}</div>
-              </div>
-            </div>
-          </div>
+      <!-- Top row: tabs + streak chip -->
+      <div class="quests-top-row">
+        <div class="quests-tab-row">
+          <button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available <span class="quest-tab-count">${activeQ.length}</span></button>
+          <button class="quest-tab-chip ${qTab==='completed'?'active':''}" onclick="setQuestTab('completed')" id="qtab-completed">Completed <span class="quest-tab-count">${doneQ.length}</span></button>
+          ${dailyTotal ? `<div class="quest-daily-pill" title="${dailyDone}/${dailyTotal} daily quests done">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>${dailyDone}/${dailyTotal} today</span>
+          </div>` : ''}
+        </div>
+        <div class="quest-streak-chip${streak>0?' on':''}" oncontextmenu="onStreakCtxMenu(event);return false;" title="Right-click for streak options">
+          <span class="quest-streak-flame">${_streakFlameSvg(18)}${_isStreakProtected() ? '<span class="quest-streak-shield" title="Protected"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></span>' : ''}</span>
+          <span class="quest-streak-num">${streak}</span>
+          <span class="quest-streak-lbl">${streak === 1 ? 'day' : 'days'}</span>
         </div>
       </div>
 
-      <!-- Stat row -->
-      <div class="ch-stats-row">
-        <div class="ch-stat">
-          <div class="ch-stat-icon" style="background:rgba(255,249,62,.08);position:relative;">
-            <svg width="32" height="32" viewBox="0 0 48 48" style="position:absolute;inset:0;transform:rotate(-90deg);">
-              <circle cx="24" cy="24" r="14" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/>
-              <circle cx="24" cy="24" r="14" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${14*2*Math.PI}" stroke-dashoffset="${14*2*Math.PI*(1-dailyDone/Math.max(dailyTotal,1))}" style="transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);"/>
-            </svg>
-            <span style="font-family:var(--font-display);font-size:9.5px;font-weight:800;color:#fff;position:relative;z-index:1;">${dailyDone}/${dailyTotal}</span>
-          </div>
-          <div class="ch-stat-body">
-            <div class="ch-stat-num">${dailyDone}<span style="font-size:13px;color:rgba(255,255,255,.4);font-weight:600;">/${dailyTotal}</span></div>
-            <div class="ch-stat-label">Daily Quests</div>
-          </div>
-        </div>
-        <div class="ch-stat">
-          <div class="ch-stat-icon" style="background:rgba(255,249,62,.08);color:var(--accent);">
-            <img src="/Onyx.png" style="width:16px;height:16px;">
-          </div>
-          <div class="ch-stat-body">
-            <div class="ch-stat-num">${totalOnyx.toLocaleString()}</div>
-            <div class="ch-stat-label">Onyx Earned</div>
-          </div>
-        </div>
-        <div class="ch-stat">
-          <div class="ch-stat-icon" style="background:rgba(62,207,110,.08);color:var(--green);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <div class="ch-stat-body">
-            <div class="ch-stat-num">${doneQ.length}<span style="font-size:13px;color:rgba(255,255,255,.4);font-weight:600;">/${QUESTS_DEF.length}</span></div>
-            <div class="ch-stat-label">Completed</div>
-          </div>
-        </div>
-        <div class="ch-stat">
-          <div class="ch-stat-icon" style="background:rgba(251,146,60,.08);color:#fb923c;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11H1l8-8M23 13h-8l8 8M13 1v8l-10-10M11 23v-8l10 10"/></svg>
-          </div>
-          <div class="ch-stat-body">
-            <div class="ch-stat-num">${activeQ.length}</div>
-            <div class="ch-stat-label">Available</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tabs -->
-      <div style="display:flex;gap:8px;margin-bottom:20px;">
-          <button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available (${activeQ.length})</button>
-          <button class="quest-tab-chip ${qTab==='completed'?'active':''}" onclick="setQuestTab('completed')" id="qtab-completed">Completed (${doneQ.length})</button>
-        </div>
-
-        ${qTab === 'available' ? `
+      ${qTab === 'available' ? `
           <!-- Daily Quests Section -->
           ${activeQ.filter(q=>q.daily).length ? `
             <div class="ch-section-head" style="--ch-accent:#60a5fa;">
@@ -33760,6 +33699,7 @@ function renderAtelierTab(tab) {
 
   // ── CREATOR ──────────────────────────────────────────────
   else if (tab === 'creator') {
+    _pruneCancelledAds();
     const myAds = (CU.ads||[]);
     const myBots = (CU.bots||[]);
     const myTemplates = (CU.bastions||[]).filter(bst=>bst.owner===CU.username);
@@ -33771,78 +33711,6 @@ function renderAtelierTab(tab) {
     const activeBots = myBots.filter(b => b.enabled !== false).length;
 
     el.innerHTML = `<div class="atelier-content-inner">
-      <!-- ═══ HERO ═══ -->
-      <div class="ch-hero">
-        <div class="ch-hero-glow"></div>
-        <div class="ch-hero-grid"></div>
-        <div class="ch-hero-inner">
-          <div class="ch-hero-top">
-            <div class="ch-hero-info">
-              <div class="ch-hero-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-                  <path d="M2 2l7.586 7.586"/>
-                  <circle cx="11" cy="11" r="2"/>
-                </svg>
-              </div>
-              <div class="ch-hero-text">
-                <div class="ch-hero-kicker">Creator Hub</div>
-                <h1>Build, publish & grow your realm.</h1>
-                <div class="ch-hero-sub">Publish ads, craft bots, and share your creations with the community.</div>
-              </div>
-            </div>
-            <div class="ch-hero-balance">
-              <img src="/Onyx.png" alt="Onyx">
-              <div>
-                <div class="ch-hero-bal-num">${onyxBal.toLocaleString()}</div>
-                <div class="ch-hero-bal-lbl">Onyx Balance</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stat row (outside hero, mirrors Quests + Fortshop rhythm) -->
-      <div class="ch-stats-row">
-        <div class="ch-stat">
-          <div class="ch-stat-icon" style="background:rgba(255,249,62,.08);color:var(--accent);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          </div>
-          <div class="ch-stat-body">
-            <div class="ch-stat-num">${activeAds}</div>
-            <div class="ch-stat-label">Active Ads</div>
-          </div>
-        </div>
-        <div class="ch-stat">
-          <div class="ch-stat-icon" style="background:rgba(96,165,250,.1);color:#60a5fa;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          </div>
-          <div class="ch-stat-body">
-            <div class="ch-stat-num">${totalClicks.toLocaleString()}</div>
-            <div class="ch-stat-label">Total Clicks</div>
-          </div>
-        </div>
-        <div class="ch-stat">
-          <div class="ch-stat-icon" style="background:rgba(62,207,110,.08);color:var(--green);">
-            <img src="/Fortized Bot.png" style="width:14px;height:14px;opacity:.85;">
-          </div>
-          <div class="ch-stat-body">
-            <div class="ch-stat-num">${activeBots}</div>
-            <div class="ch-stat-label">Bots Online</div>
-          </div>
-        </div>
-        <div class="ch-stat">
-          <div class="ch-stat-icon" style="background:rgba(167,139,250,.08);color:#a78bfa;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-          </div>
-          <div class="ch-stat-body">
-            <div class="ch-stat-num">${myTemplates.length}</div>
-            <div class="ch-stat-label">Templates</div>
-          </div>
-        </div>
-      </div>
-
       <!-- ═══ SEGMENTED TABS ═══ -->
       <div class="ch-segtabs">
         <button id="cr-tab-creations" class="ch-segtab ${creatorSub==='creations'?'active':''}" onclick="_switchCreatorSub('creations')">
@@ -34237,7 +34105,14 @@ async function _hydrateMyAdsAndRender() {
   // remote which is the source of truth for status/stats/expiresAt.
   local.forEach(a => { if (a?.id) byId.set(a.id, a); });
   remote.forEach(a => { if (a?.id) byId.set(a.id, { ...(byId.get(a.id) || {}), ...a }); });
-  const merged = [...byId.values()];
+  let merged = [...byId.values()];
+  // Drop cancelled ads whose 2h grace window has passed.
+  const now = Date.now();
+  merged = merged.filter(a => {
+    if (a?.status !== 'cancelled') return true;
+    const ts = +a.cancelledAt || 0;
+    return ts > 0 && (now - ts) < _AD_CANCEL_GRACE_MS;
+  });
   // Only reassign if something actually changed to avoid spurious re-renders
   const changed = merged.length !== local.length
     || merged.some((a,i) => (a?.id || '') !== (local[i]?.id || '') || (a?.status||'') !== (local[i]?.status||''));

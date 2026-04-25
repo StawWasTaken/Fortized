@@ -1412,40 +1412,20 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 @keyframes atel-fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
 /* ─── Creator Hub ─────────────────────────────────── */
-/* Hero */
-.ch-hero{position:relative;border-radius:18px;overflow:hidden;padding:28px 30px;margin-bottom:18px;background:linear-gradient(135deg,rgba(255,249,62,.06) 0%,rgba(167,139,250,.025) 50%,rgba(96,165,250,.03) 100%),var(--panel);border:1px solid var(--border);}
-.ch-hero::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.25) 12%,var(--accent) 50%,rgba(255,249,62,.25) 88%,transparent 100%);box-shadow:0 0 14px rgba(255,249,62,.35);z-index:3;pointer-events:none;}
-.ch-hero-glow{position:absolute;top:-140px;right:-100px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(255,249,62,.07) 0%,transparent 70%);animation:chDrift 12s ease-in-out infinite alternate;pointer-events:none;}
-@keyframes chDrift{0%{transform:translate(0,0) scale(1);}100%{transform:translate(-30px,20px) scale(1.08);}}
-.ch-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,249,62,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.018) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;mask-image:radial-gradient(ellipse at center,black 35%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at center,black 35%,transparent 75%);}
-.ch-hero-inner{position:relative;z-index:1;}
-.ch-hero-top{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;}
-.ch-hero-info{display:flex;align-items:center;gap:14px;}
-.ch-hero-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,rgba(255,249,62,.16),rgba(255,249,62,.05));border:1.5px solid rgba(255,249,62,.22);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;box-shadow:0 6px 18px rgba(255,249,62,.06),inset 0 1px 0 rgba(255,255,255,.06);}
-.ch-hero-icon svg{width:24px;height:24px;}
-.ch-hero-kicker{font-family:var(--font-display);font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
-.ch-hero-text h1{font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-.01em;color:#fff;margin:0 0 6px;line-height:1.1;}
-.ch-hero-sub{font-size:12.5px;color:var(--muted-light);max-width:560px;line-height:1.55;}
-.ch-hero-balance{display:flex;align-items:center;gap:11px;padding:10px 16px;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.04);border-radius:12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:border-color .15s,transform .15s;}
-.ch-hero-balance img{width:20px;height:20px;filter:drop-shadow(0 2px 6px rgba(255,249,62,.25));}
-.ch-hero-bal-num{font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--accent);line-height:1;}
-.ch-hero-bal-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.32);margin-top:3px;}
-/* Streak pill variant for Quests hero */
-.ch-hero-streak{cursor:pointer;}
-.ch-hero-streak.ch-hero-streak-on{background:linear-gradient(135deg,rgba(255,138,62,.12),rgba(255,62,94,.04));border-color:rgba(255,138,62,.18);}
-.ch-hero-streak.ch-hero-streak-on:hover{border-color:rgba(255,138,62,.35);transform:translateY(-1px);}
-.ch-hero-streak-flame{position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#ff8a3e;filter:drop-shadow(0 0 4px rgba(255,138,62,.3));flex-shrink:0;}
-.ch-hero-streak-shield{position:absolute;bottom:-3px;right:-3px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;background:#0c0f1a;border-radius:50%;border:1.5px solid rgba(74,144,245,.55);color:#4a90f5;}
-/* Stat row (now lives outside the hero) */
-.ch-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
-.ch-stat{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;transition:border-color .15s,transform .15s;position:relative;overflow:hidden;}
-.ch-stat::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,249,62,.35),transparent);opacity:0;transition:opacity .2s;}
-.ch-stat:hover{border-color:rgba(255,249,62,.16);transform:translateY(-1px);}
-.ch-stat:hover::before{opacity:1;}
-.ch-stat-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ch-stat-body{min-width:0;}
-.ch-stat-num{font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.01em;}
-.ch-stat-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.32);margin-top:5px;}
+/* Quests top row: tabs left + streak chip right */
+.quests-top-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap;}
+.quests-tab-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.quest-tab-count{display:inline-block;min-width:18px;padding:1px 6px;margin-left:4px;border-radius:8px;background:rgba(255,255,255,.06);font-size:10px;font-weight:700;color:rgba(255,255,255,.55);text-align:center;}
+.quest-tab-chip.active .quest-tab-count{background:rgba(255,249,62,.18);color:var(--accent);}
+.quest-daily-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-pill);background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.14);color:#7cb1ff;font-size:11px;font-weight:600;font-family:var(--font-ui);}
+.quest-streak-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px 6px 9px;border-radius:var(--radius-pill);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-family:var(--font-ui);transition:all .15s;cursor:pointer;}
+.quest-streak-chip.on{background:linear-gradient(135deg,rgba(255,138,62,.1),rgba(255,62,94,.03));border-color:rgba(255,138,62,.18);color:#ff9d5e;}
+.quest-streak-chip.on:hover{border-color:rgba(255,138,62,.32);transform:translateY(-1px);}
+.quest-streak-flame{position:relative;width:18px;height:18px;display:flex;align-items:center;justify-content:center;color:#ff8a3e;filter:drop-shadow(0 0 3px rgba(255,138,62,.3));}
+.quest-streak-chip:not(.on) .quest-streak-flame{filter:none;color:rgba(255,255,255,.25);}
+.quest-streak-shield{position:absolute;bottom:-3px;right:-3px;width:11px;height:11px;display:flex;align-items:center;justify-content:center;background:#0c0f1a;border-radius:50%;border:1px solid rgba(74,144,245,.55);color:#4a90f5;}
+.quest-streak-num{font-family:var(--font-display);font-size:13px;font-weight:800;line-height:1;}
+.quest-streak-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.4);}
 
 /* Segmented main tabs */
 .ch-segtabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border);}
@@ -1626,15 +1606,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 @media (max-width:960px){
   .ch-editor{grid-template-columns:1fr;}
   .ch-editor-preview{position:static;}
-  .ch-stats-row{grid-template-columns:repeat(2,1fr);}
-  .ch-hero{padding:24px 22px 22px;}
-  .ch-hero-text h1{font-size:24px;}
 }
 @media (max-width:520px){
-  .ch-stats-row{grid-template-columns:1fr 1fr;}
   .ch-format-grid{grid-template-columns:1fr;}
-  .ch-hero-top{flex-direction:column;align-items:flex-start;}
-  .ch-hero-balance{align-self:stretch;justify-content:center;}
+  .quests-top-row{flex-direction:column;align-items:stretch;}
+  .quests-tab-row{justify-content:flex-start;}
+  .quest-streak-chip{align-self:flex-start;}
 }
 .atel-page-header{margin-bottom:24px;}
 .atel-page-title{font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:4px;}

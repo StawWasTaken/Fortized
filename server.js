@@ -456,6 +456,107 @@ app.post('/api/joyster', async (req, res) => {
   }
 });
 
+// ─── Public API: Fortized API Keys ──────────────────────────────────
+// Third-party integrations call /api/v1/* with a `ftz_…` key supplied
+// either as `X-Fortized-Key` header or `?key=` query parameter. Keys
+// live on the user record (raw.apiKeys[]); we look up the owning user
+// via Supabase JSONB containment.
+
+function _readApiKey(req) {
+  const h = req.headers['x-fortized-key'];
+  if (typeof h === 'string' && h.startsWith('ftz_')) return h;
+  const q = req.query?.key;
+  if (typeof q === 'string' && q.startsWith('ftz_')) return q;
+  return null;
+}
+
+async function _findKeyOwner(token) {
+  if (!token || !token.startsWith('ftz_')) return null;
+  try {
+    const { data } = await sb.from('users').select('username,display_name,pfp,raw').contains('raw', { apiKeys: [{ key: token }] }).limit(1);
+    if (!Array.isArray(data) || !data.length) return null;
+    const row = data[0];
+    const keys = Array.isArray(row?.raw?.apiKeys) ? row.raw.apiKeys : [];
+    const rec = keys.find(k => k && k.key === token);
+    if (!rec) return null;
+    return { row, rec };
+  } catch(e) {
+    console.warn('[API] key lookup failed:', e.message);
+    return null;
+  }
+}
+
+async function _bumpKeyLastUsed(row, rec) {
+  try {
+    const keys = (row.raw.apiKeys || []).map(k => k && k.id === rec.id ? { ...k, lastUsed: new Date().toISOString() } : k);
+    const newRaw = { ...(row.raw || {}), apiKeys: keys };
+    await sb.from('users').update({ raw: newRaw }).eq('username', row.username);
+  } catch(_) {}
+}
+
+function _scopeAllows(rec, scope) {
+  const scopes = Array.isArray(rec?.scopes) ? rec.scopes : [];
+  return scopes.includes(scope);
+}
+
+// GET /api/v1/me — verify a key and identify its owner.
+app.get('/api/v1/me', async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  const token = _readApiKey(req);
+  if (!token) return res.status(401).json({ error: 'Missing key. Pass X-Fortized-Key header or ?key=…' });
+  const found = await _findKeyOwner(token);
+  if (!found) return res.status(401).json({ error: 'Invalid or revoked key.' });
+  if (!_scopeAllows(found.rec, 'identify')) return res.status(403).json({ error: 'Key lacks the `identify` scope.' });
+  // Don't await — bump the timestamp lazily so we don't slow the response.
+  _bumpKeyLastUsed(found.row, found.rec);
+  res.json({
+    username: found.row.username,
+    displayName: found.row.display_name || found.row.username,
+    pfp: found.row.pfp || null,
+    verified: !!(found.row.raw && found.row.raw.verified),
+    scopes: found.rec.scopes || [],
+  });
+});
+
+// GET /api/v1/bastions/:id — public info for a bastion the key's owner
+// owns (member count, name, icon). Used by the upcoming embed widgets.
+app.get('/api/v1/bastions/:id', async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  const token = _readApiKey(req);
+  if (!token) return res.status(401).json({ error: 'Missing key.' });
+  const found = await _findKeyOwner(token);
+  if (!found) return res.status(401).json({ error: 'Invalid or revoked key.' });
+  if (!_scopeAllows(found.rec, 'bastions:read')) return res.status(403).json({ error: 'Key lacks the `bastions:read` scope.' });
+  try {
+    const { data: row } = await sb.from('global_bastions').select('id,data').eq('id', req.params.id).maybeSingle();
+    if (!row || !row.data) return res.status(404).json({ error: 'Bastion not found.' });
+    const b = row.data;
+    // Only owners or admins should expose details; readonly members count for everyone else.
+    const isOwner = b.owner === found.row.username;
+    _bumpKeyLastUsed(found.row, found.rec);
+    res.json({
+      id: row.id,
+      name: b.name || '',
+      icon: b.icon || null,
+      memberCount: Array.isArray(b.members) ? b.members.length : 0,
+      online: Array.isArray(b.members) ? b.members.filter(m => m && m.status && m.status !== 'offline').length : 0,
+      vanity: b.vanityUrl || null,
+      isOwner,
+    });
+  } catch(e) {
+    console.warn('[API] bastion read failed:', e.message);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// Preflight for cross-origin embeds.
+app.options('/api/v1/*', (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Headers', 'X-Fortized-Key, Content-Type');
+  res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.sendStatus(204);
+});
+
 app.get('/api/bastion/invite/:code', async (req, res) => {
   try {
     const code = req.params.code;

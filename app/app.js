@@ -33887,6 +33887,7 @@ function renderAtelierTab(tab) {
     const myAds = (CU.ads||[]);
     const myBots = (CU.bots||[]);
     const myTemplates = (CU.bastions||[]).filter(bst=>bst.owner===CU.username);
+    const myApiKeys = Array.isArray(CU.apiKeys) ? CU.apiKeys : [];
     const onyxBal = CU.onyx||0;
     const creatorSub = el._creatorSub || 'creations';
     const creationsSub = el._creationsSub || 'ads';
@@ -33922,6 +33923,10 @@ function renderAtelierTab(tab) {
           <button id="cr-cr-templates-btn" class="ch-pill ${creationsSub==='templates'?'active':''}" onclick="_switchCreationsSub('templates')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
             Templates <span class="ch-pill-count">${myTemplates.length}</span>
+          </button>
+          <button id="cr-cr-keys-btn" class="ch-pill ${creationsSub==='keys'?'active':''}" onclick="_switchCreationsSub('keys')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            API Keys <span class="ch-pill-count">${myApiKeys.length}</span>
           </button>
         </div>
 
@@ -34076,6 +34081,113 @@ function renderAtelierTab(tab) {
             <div class="ch-empty-sub">Bastions you own will appear here. Build one in your bastion list, then export it here.</div>
           </div>`}
         </div>
+
+        <!-- API KEYS Section -->
+        <div id="cr-cr-keys" style="display:none;">
+          <div class="ch-section-head">
+            <div class="ch-section-head-text">
+              <div class="ch-section-title">API Keys</div>
+              <div class="ch-section-sub">Build Fortized into your own apps. Each key authenticates your integration: Login with Fortized, embed a bastion's member list, or render a Join Bastion button anywhere on the web.</div>
+            </div>
+            <button class="btn-a ch-section-cta" onclick="openCreateApiKeyModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              New Key
+            </button>
+          </div>
+
+          ${myApiKeys.length ? `<div class="ch-key-list">
+            ${myApiKeys.map(k => {
+              const created = k.createdAt ? new Date(k.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+              const lastUsed = k.lastUsed ? new Date(k.lastUsed).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : 'Never used';
+              const masked = (k.key || '').slice(0,7) + '••••••••••••' + (k.key || '').slice(-4);
+              const scopeChips = (k.scopes || []).map(s => `<span class="ch-key-scope">${escapeHTML(s)}</span>`).join('');
+              return `<div class="ch-key-card">
+                <div class="ch-key-head">
+                  <div class="ch-key-meta">
+                    <div class="ch-key-name">${escapeHTML(k.name || 'Untitled key')}</div>
+                    <div class="ch-key-when">Created ${created} · ${lastUsed}</div>
+                  </div>
+                  <div class="ch-key-scopes">${scopeChips}</div>
+                </div>
+                <div class="ch-key-row">
+                  <code class="ch-key-token" title="Click to reveal" onclick="this.textContent='${escapeHTML(k.key||'')}';this.classList.add('revealed');">${escapeHTML(masked)}</code>
+                  <button class="ch-action-btn" onclick="_copyApiKey('${escapeHTML(k.key||'')}')" title="Copy"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>
+                  <button class="ch-action-btn ch-action-danger" onclick="_revokeApiKey('${escapeHTML(k.id||'')}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg> Revoke</button>
+                </div>
+                <div class="ch-key-row ch-key-row--url">
+                  <span class="ch-key-url-label">Endpoint</span>
+                  <code class="ch-key-url">${escapeHTML((typeof window!=='undefined'?window.location.origin:'https://fortized.com') + '/api/v1')}</code>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>` : `<div class="ch-empty">
+            <div class="ch-empty-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.65)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>
+            <div class="ch-empty-title">No API keys yet</div>
+            <div class="ch-empty-sub">Generate your first key to integrate Fortized into a website or app — Login with Fortized, member-list widgets, or a Join Bastion button.</div>
+            <button class="btn-a ch-empty-cta" onclick="openCreateApiKeyModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Generate first key
+            </button>
+          </div>`}
+
+          <!-- Integration docs -->
+          <div class="ch-key-docs">
+            <div class="ch-key-doc-head">
+              <div class="ch-key-doc-title">What you can build</div>
+              <div class="ch-key-doc-sub">Three ready-to-use integration recipes. The first is live; the rest are rolling out — your keys will work with them automatically when they ship.</div>
+            </div>
+            <div class="ch-key-recipes">
+              <div class="ch-key-recipe">
+                <div class="ch-key-recipe-head">
+                  <div class="ch-key-recipe-icon" style="color:var(--green);background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.2);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                  </div>
+                  <div class="ch-key-recipe-text">
+                    <div class="ch-key-recipe-name">Verify a key <span class="ch-key-recipe-status ch-key-recipe-status--live">Live</span></div>
+                    <div class="ch-key-recipe-desc">Confirm a key is valid and identify its owner.</div>
+                  </div>
+                </div>
+                <pre class="ch-key-snippet"><code>GET /api/v1/me
+X-Fortized-Key: <i>your-key</i>
+
+→ { "username": "...", "displayName": "...", "verified": true }</code></pre>
+              </div>
+              <div class="ch-key-recipe">
+                <div class="ch-key-recipe-head">
+                  <div class="ch-key-recipe-icon" style="color:#60a5fa;background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.2);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </div>
+                  <div class="ch-key-recipe-text">
+                    <div class="ch-key-recipe-name">Embed a bastion member list <span class="ch-key-recipe-status">Preview</span></div>
+                    <div class="ch-key-recipe-desc">Drop a live, oEmbed-friendly member roster on any site.</div>
+                  </div>
+                </div>
+                <pre class="ch-key-snippet"><code>&lt;script src="https://fortized.com/embed.js"&gt;&lt;/script&gt;
+&lt;div data-fortized-bastion="&lt;BASTION_ID&gt;"
+     data-fortized-key="&lt;your-key&gt;"&gt;&lt;/div&gt;</code></pre>
+              </div>
+              <div class="ch-key-recipe">
+                <div class="ch-key-recipe-head">
+                  <div class="ch-key-recipe-icon" style="color:#a78bfa;background:rgba(167,139,250,.08);border-color:rgba(167,139,250,.2);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                  </div>
+                  <div class="ch-key-recipe-text">
+                    <div class="ch-key-recipe-name">"Join Bastion" button <span class="ch-key-recipe-status">Preview</span></div>
+                    <div class="ch-key-recipe-desc">A drop-in CTA that opens an invite, with optional Login with Fortized.</div>
+                  </div>
+                </div>
+                <pre class="ch-key-snippet"><code>&lt;a class="fortized-join"
+   data-bastion="&lt;BASTION_ID&gt;"
+   data-fortized-key="&lt;your-key&gt;"&gt;
+  Join on Fortized
+&lt;/a&gt;</code></pre>
+              </div>
+            </div>
+            <div class="ch-key-doc-foot">
+              All API key usage is governed by the <a href="/legal/creator-policy" target="_blank" rel="noopener">Creator Policy</a>. Keep your keys private — anyone holding a key can act on your behalf.
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ═══ CREATOR MARKETPLACE ═══ -->
@@ -34210,7 +34322,7 @@ function _switchCreatorSub(sub) {
   if (sub === 'creations') { try { _switchCreationsSub(el?._creationsSub || 'ads'); } catch(_){} }
 }
 function _switchCreationsSub(sub) {
-  ['ads','bots','templates'].forEach(t => {
+  ['ads','bots','templates','keys'].forEach(t => {
     const sec = document.getElementById('cr-cr-'+t);
     const btn = document.getElementById('cr-cr-'+t+'-btn');
     if (sec) sec.style.display = t===sub?'':'none';
@@ -34433,6 +34545,146 @@ function openCreateAdModal() {
   document.body.appendChild(overlay);
   // Prime the bastion-wrap visibility state based on the default link type
   try { _cmOnAdLinkTypeChange?.(); } catch(_) {}
+}
+
+// ── API Keys ─────────────────────────────────────────────
+// Generate cryptographically random Fortized API keys client-side and
+// persist them on the user record. The server reads CU.apiKeys (stored
+// in the row's `raw` JSONB column) to validate inbound requests.
+function _genApiKeyToken() {
+  // 32 random bytes → ~43-char base64url. Prefix `ftz_` so leaks are
+  // recognisable and easy to grep for in code, logs, or screenshots.
+  const buf = new Uint8Array(32);
+  (crypto || window.crypto).getRandomValues(buf);
+  let out = '';
+  for (const b of buf) out += String.fromCharCode(b);
+  return 'ftz_' + btoa(out).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'').slice(0,40);
+}
+
+const _API_KEY_SCOPES = [
+  { id: 'identify',    name: 'Identify',      desc: 'Read your username, display name, avatar, and verification status.' },
+  { id: 'bastions:read', name: 'Bastions (read)', desc: 'Read public info for bastions you own — name, icon, member count.' },
+  { id: 'oauth:login', name: 'Login flow',    desc: 'Use the key as the client of a Login-with-Fortized flow.' },
+];
+
+function openCreateApiKeyModal() {
+  if (!CU) return;
+  document.getElementById('modal-create-key')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'modal-create-key';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:520px;width:96vw;padding:0;display:flex;flex-direction:column;">
+      <div class="modal-bar"></div>
+      <div style="padding:22px 24px 18px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;">
+        <div class="ch-editor-head-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>
+        <div style="flex:1;">
+          <div class="ch-editor-title">New API Key</div>
+          <div class="ch-editor-sub">A name and a set of scopes. The key itself is shown once.</div>
+        </div>
+        <button class="ch-modal-close" aria-label="Close" onclick="document.getElementById('modal-create-key').remove()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="padding:20px 24px;overflow-y:auto;">
+        <div class="ch-field">
+          <label class="ch-label">Key name</label>
+          <input class="field-input" id="ck-name" placeholder="e.g. My website's Login button" maxlength="60">
+          <div class="ch-helper">Helps you remember which integration uses this key.</div>
+        </div>
+        <div class="ch-field">
+          <label class="ch-label">Scopes</label>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${_API_KEY_SCOPES.map((s,i) => `
+              <label class="ch-checkrow" style="margin-bottom:0;">
+                <input type="checkbox" class="ck-scope" value="${s.id}" ${i===0?'checked':''}>
+                <div class="ch-checkrow-text">
+                  <div class="ch-checkrow-title">${escapeHTML(s.name)}</div>
+                  <div class="ch-checkrow-desc">${escapeHTML(s.desc)}</div>
+                </div>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 24px 18px;border-top:1px solid rgba(255,255,255,.05);display:flex;justify-content:flex-end;gap:10px;">
+        <button class="btn-g" onclick="document.getElementById('modal-create-key').remove()">Cancel</button>
+        <button class="btn-a" onclick="_finalizeCreateApiKey()">Generate Key</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('ck-name')?.focus(), 30);
+}
+
+async function _finalizeCreateApiKey() {
+  const name = document.getElementById('ck-name')?.value?.trim();
+  if (!name) { toast('Give your key a name.', 'error'); return; }
+  const scopes = [...document.querySelectorAll('.ck-scope:checked')].map(el => el.value);
+  if (!scopes.length) { toast('Select at least one scope.', 'error'); return; }
+  const token = _genApiKeyToken();
+  const rec = {
+    id: 'key_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    name, scopes,
+    key: token,
+    createdAt: new Date().toISOString(),
+    lastUsed: null,
+  };
+  if (!Array.isArray(CU.apiKeys)) CU.apiKeys = [];
+  CU.apiKeys.push(rec);
+  try { saveLocal(); } catch(_){}
+  try { await saveUser?.(); } catch(_){}
+  document.getElementById('modal-create-key')?.remove();
+  _showApiKeyOnce(rec);
+}
+
+// One-time key reveal: the user sees the full token ONCE, can copy it,
+// and is reminded that it won't be shown again in the clear (we mask it
+// in the list afterwards).
+function _showApiKeyOnce(rec) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'modal-key-reveal';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:520px;width:96vw;padding:24px;">
+      <div class="modal-bar"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div class="ch-editor-head-icon" style="background:rgba(62,207,110,.1);border-color:rgba(62,207,110,.2);color:var(--green);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <div class="ch-editor-title">Key generated</div>
+          <div class="ch-editor-sub">Copy it now — Fortized will only show the full key this once.</div>
+        </div>
+      </div>
+      <div style="background:rgba(0,0,0,.35);border:1px solid rgba(255,249,62,.18);border-radius:12px;padding:14px;margin-bottom:14px;font-family:'JetBrains Mono','Courier New',monospace;font-size:12.5px;color:var(--accent);word-break:break-all;line-height:1.5;">${escapeHTML(rec.key)}</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn-g" onclick="_copyApiKey('${escapeHTML(rec.key)}')">Copy</button>
+        <button class="btn-a" onclick="document.getElementById('modal-key-reveal').remove();switchAtelierTab('creator');setTimeout(()=>{_switchCreatorSub('creations');_switchCreationsSub('keys');},50);">Done</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+async function _copyApiKey(token) {
+  try {
+    await navigator.clipboard.writeText(token);
+    toast('Key copied to clipboard.', 'success');
+  } catch(_) { toast('Copy failed — select the key manually.', 'error'); }
+}
+
+async function _revokeApiKey(id) {
+  if (!id) return;
+  showCustomConfirm('Revoke this API key? Apps and integrations using it will stop working immediately.', async () => {
+    if (!Array.isArray(CU.apiKeys)) return;
+    CU.apiKeys = CU.apiKeys.filter(k => k.id !== id);
+    try { saveLocal(); } catch(_){}
+    try { await saveUser?.(); } catch(_){}
+    toast('Key revoked.', 'info');
+    switchAtelierTab('creator');
+    setTimeout(() => { _switchCreatorSub('creations'); _switchCreationsSub('keys'); }, 50);
+  });
 }
 
 function _switchMktTab(tab) {

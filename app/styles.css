@@ -1650,6 +1650,44 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .ch-gate-actions .btn-a{flex:1;justify-content:center;}
 .ch-gate-actions .btn-a:disabled{opacity:.4;cursor:not-allowed;}
 
+/* ── API Keys panel ─────────────────────────────────────── */
+.ch-key-list{display:flex;flex-direction:column;gap:12px;margin-bottom:32px;}
+.ch-key-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;transition:border-color .15s;}
+.ch-key-card:hover{border-color:rgba(255,249,62,.18);}
+.ch-key-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.ch-key-meta{min-width:0;flex:1;}
+.ch-key-name{font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:-.01em;}
+.ch-key-when{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;}
+.ch-key-scopes{display:flex;gap:5px;flex-wrap:wrap;}
+.ch-key-scope{display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;background:rgba(255,249,62,.06);color:var(--accent);border:1px solid rgba(255,249,62,.18);border-radius:var(--radius-pill);letter-spacing:.02em;font-family:var(--font-ui);}
+.ch-key-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ch-key-row--url{padding-top:10px;border-top:1px solid rgba(255,255,255,.04);}
+.ch-key-token{flex:1;min-width:0;padding:7px 12px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.05);border-radius:8px;font-family:'JetBrains Mono','Courier New',monospace;font-size:11.5px;color:rgba(255,255,255,.55);word-break:break-all;cursor:pointer;transition:color .15s;}
+.ch-key-token:hover{color:rgba(255,255,255,.8);}
+.ch-key-token.revealed{color:var(--accent);}
+.ch-key-url-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.32);flex-shrink:0;}
+.ch-key-url{flex:1;min-width:0;font-family:'JetBrains Mono','Courier New',monospace;font-size:11.5px;color:rgba(255,255,255,.5);word-break:break-all;}
+
+/* Integration recipes */
+.ch-key-docs{margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,.05);}
+.ch-key-doc-head{margin-bottom:18px;}
+.ch-key-doc-title{font-family:var(--font-display);font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.85);margin-bottom:5px;}
+.ch-key-doc-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.55;max-width:560px;}
+.ch-key-recipes{display:flex;flex-direction:column;gap:14px;}
+.ch-key-recipe{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:16px 18px;}
+.ch-key-recipe-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.ch-key-recipe-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid;}
+.ch-key-recipe-text{flex:1;min-width:0;}
+.ch-key-recipe-name{font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ch-key-recipe-status{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:var(--radius-pill);background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.08);font-family:var(--font-ui);}
+.ch-key-recipe-status--live{background:rgba(62,207,110,.1);color:var(--green);border-color:rgba(62,207,110,.25);}
+.ch-key-recipe-desc{font-size:11.5px;color:rgba(255,255,255,.4);margin-top:2px;}
+.ch-key-snippet{margin:0;padding:12px 14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.04);border-radius:10px;font-family:'JetBrains Mono','Courier New',monospace;font-size:11.5px;line-height:1.6;color:rgba(255,255,255,.75);overflow-x:auto;white-space:pre;}
+.ch-key-snippet code i{color:var(--accent);font-style:normal;}
+.ch-key-doc-foot{margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.04);font-size:11.5px;color:rgba(255,255,255,.4);line-height:1.55;}
+.ch-key-doc-foot a{color:var(--accent);text-decoration:none;}
+.ch-key-doc-foot a:hover{text-decoration:underline;}
+
 /* Responsive: collapse the editor split on narrow viewports */
 @media (max-width:960px){
   .ch-editor{grid-template-columns:1fr;}

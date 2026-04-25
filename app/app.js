@@ -23231,6 +23231,17 @@ function showRailBastionCtx(e, idx) {
         { icon: _ctxSvg('create'), label: 'Save as Template', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('templates'),100); } },
       ]
     }] : []),
+    // Developer group — only shown after the user accepts the Creator
+    // Terms gate. Surfaces the Bastion ID for use in API calls and
+    // embed snippets without forcing creators to dig through Settings.
+    ...(typeof _hasAcceptedCreatorTerms === 'function' && _hasAcceptedCreatorTerms() && b.globalId ? [{
+      label: 'Developer',
+      items: [
+        { icon: _ctxSvg('copy'), label: 'Copy Bastion ID', action: () => {
+            navigator.clipboard.writeText(b.globalId).then(() => toast('Bastion ID copied.', 'success')).catch(() => toast('Copy failed.', 'error'));
+          }, copyFeedback: true },
+      ]
+    }] : []),
     { items: [
       ...(isOwner
         ? [{ icon: _ctxSvg('leave'), label: 'Delete Bastion', action: () => confirmDeleteBastion(idx), danger: true }]
@@ -34134,55 +34145,63 @@ function renderAtelierTab(tab) {
           <div class="ch-key-docs">
             <div class="ch-key-doc-head">
               <div class="ch-key-doc-title">What you can build</div>
-              <div class="ch-key-doc-sub">Three drop-in integration recipes — all live. Copy the snippet, paste it into your site, replace the placeholders with your key, and you're done.</div>
+              <div class="ch-key-doc-sub">Three drop-in integration recipes — all live. ${myApiKeys.length ? 'Snippets below are <strong>pre-filled with your first key</strong> — copy and paste straight into your site.' : 'Generate a key above and the snippets here will auto-fill with it.'}</div>
             </div>
-            <div class="ch-key-recipes">
-              <div class="ch-key-recipe">
+            ${(() => {
+              // Pre-fill snippets with the user's actual data when possible.
+              // Falls back to clearly-marked placeholders the user can swap.
+              const apiOrigin = (typeof window !== 'undefined' ? window.location.origin : 'https://fortized.com');
+              const k = (myApiKeys[0] && myApiKeys[0].key) || '';
+              const sampleKey = k || '<your-key>';
+              const ownedBastion = (CU.bastions||[]).find(b => b && b.owner === CU.username && b.globalId);
+              const bid = ownedBastion?.globalId || '';
+              const sampleBastionId = bid || '<BASTION_ID>';
+              const verifySnippet = `curl ${apiOrigin}/api/v1/me \\\n  -H "X-Fortized-Key: ${sampleKey}"`;
+              const embedSnippet = `<script src="${apiOrigin}/embed.js"></script>\n<div data-fortized-bastion="${sampleBastionId}"\n     data-fortized-key="${sampleKey}"></div>`;
+              const joinSnippet = `<a class="fortized-join"\n   data-bastion="${sampleBastionId}"\n   data-fortized-key="${sampleKey}">\n  Join on Fortized\n</a>`;
+              const ph = (val, fallback, html) => val ? html : `<mark class="ch-key-ph">${fallback}</mark>`;
+              const verifyHtml = `curl ${escapeHTML(apiOrigin)}/api/v1/me \\\n  -H "X-Fortized-Key: ${ph(k, '&lt;your-key&gt;', escapeHTML(sampleKey))}"`;
+              const embedHtml = `&lt;script src="${escapeHTML(apiOrigin)}/embed.js"&gt;&lt;/script&gt;\n&lt;div data-fortized-bastion="${ph(bid, '&lt;BASTION_ID&gt;', escapeHTML(sampleBastionId))}"\n     data-fortized-key="${ph(k, '&lt;your-key&gt;', escapeHTML(sampleKey))}"&gt;&lt;/div&gt;`;
+              const joinHtml = `&lt;a class="fortized-join"\n   data-bastion="${ph(bid, '&lt;BASTION_ID&gt;', escapeHTML(sampleBastionId))}"\n   data-fortized-key="${ph(k, '&lt;your-key&gt;', escapeHTML(sampleKey))}"&gt;\n  Join on Fortized\n&lt;/a&gt;`;
+              const recipe = (cfg) => `<div class="ch-key-recipe">
                 <div class="ch-key-recipe-head">
-                  <div class="ch-key-recipe-icon" style="color:var(--green);background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.2);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
-                  </div>
+                  <div class="ch-key-recipe-icon" style="color:${cfg.color};background:${cfg.tint};border-color:${cfg.border};">${cfg.icon}</div>
                   <div class="ch-key-recipe-text">
-                    <div class="ch-key-recipe-name">Verify a key <span class="ch-key-recipe-status ch-key-recipe-status--live">Live</span></div>
-                    <div class="ch-key-recipe-desc">Confirm a key is valid and identify its owner.</div>
+                    <div class="ch-key-recipe-name">${cfg.name} <span class="ch-key-recipe-status ch-key-recipe-status--live">Live</span></div>
+                    <div class="ch-key-recipe-desc">${cfg.desc}</div>
                   </div>
+                  <button class="ch-key-copy-btn" onclick="_copyRecipeSnippet(this)" data-snippet="${escapeHTML(cfg.raw)}">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <span>Copy</span>
+                  </button>
                 </div>
-                <pre class="ch-key-snippet"><code>GET /api/v1/me
-X-Fortized-Key: <i>your-key</i>
-
-→ { "username": "...", "displayName": "...", "verified": true }</code></pre>
+                <pre class="ch-key-snippet"><code>${cfg.html}</code></pre>
+              </div>`;
+              return `<div class="ch-key-recipes">
+                ${recipe({
+                  name: 'Verify a key',
+                  desc: 'Confirm a key is valid and identify its owner.',
+                  color: 'var(--green)', tint: 'rgba(62,207,110,.08)', border: 'rgba(62,207,110,.2)',
+                  icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+                  raw: verifySnippet, html: verifyHtml,
+                })}
+                ${recipe({
+                  name: 'Embed a bastion member list',
+                  desc: 'Drop a live, oEmbed-friendly member roster on any site.',
+                  color: '#60a5fa', tint: 'rgba(96,165,250,.08)', border: 'rgba(96,165,250,.2)',
+                  icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+                  raw: embedSnippet, html: embedHtml,
+                })}
+                ${recipe({
+                  name: '"Join Bastion" button',
+                  desc: 'A drop-in CTA that opens an invite, with optional Login with Fortized.',
+                  color: '#a78bfa', tint: 'rgba(167,139,250,.08)', border: 'rgba(167,139,250,.2)',
+                  icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
+                  raw: joinSnippet, html: joinHtml,
+                })}
               </div>
-              <div class="ch-key-recipe">
-                <div class="ch-key-recipe-head">
-                  <div class="ch-key-recipe-icon" style="color:#60a5fa;background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.2);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  </div>
-                  <div class="ch-key-recipe-text">
-                    <div class="ch-key-recipe-name">Embed a bastion member list <span class="ch-key-recipe-status ch-key-recipe-status--live">Live</span></div>
-                    <div class="ch-key-recipe-desc">Drop a live, oEmbed-friendly member roster on any site.</div>
-                  </div>
-                </div>
-                <pre class="ch-key-snippet"><code>&lt;script src="https://fortized.com/embed.js"&gt;&lt;/script&gt;
-&lt;div data-fortized-bastion="&lt;BASTION_ID&gt;"
-     data-fortized-key="&lt;your-key&gt;"&gt;&lt;/div&gt;</code></pre>
-              </div>
-              <div class="ch-key-recipe">
-                <div class="ch-key-recipe-head">
-                  <div class="ch-key-recipe-icon" style="color:#a78bfa;background:rgba(167,139,250,.08);border-color:rgba(167,139,250,.2);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-                  </div>
-                  <div class="ch-key-recipe-text">
-                    <div class="ch-key-recipe-name">"Join Bastion" button <span class="ch-key-recipe-status ch-key-recipe-status--live">Live</span></div>
-                    <div class="ch-key-recipe-desc">A drop-in CTA that opens an invite, with optional Login with Fortized.</div>
-                  </div>
-                </div>
-                <pre class="ch-key-snippet"><code>&lt;a class="fortized-join"
-   data-bastion="&lt;BASTION_ID&gt;"
-   data-fortized-key="&lt;your-key&gt;"&gt;
-  Join on Fortized
-&lt;/a&gt;</code></pre>
-              </div>
-            </div>
+              ${!bid ? '<div class="ch-key-tip">Right-click any bastion in your sidebar → <strong>Developer → Copy Bastion ID</strong> to grab an ID for the snippets above.</div>' : ''}`;
+            })()}
             <div class="ch-key-doc-foot">
               All API key usage is governed by the <a href="/legal/creator-policy" target="_blank" rel="noopener">Creator Policy</a>. Keep your keys private — anyone holding a key can act on your behalf.
             </div>
@@ -34672,6 +34691,22 @@ async function _copyApiKey(token) {
     await navigator.clipboard.writeText(token);
     toast('Key copied to clipboard.', 'success');
   } catch(_) { toast('Copy failed — select the key manually.', 'error'); }
+}
+
+// Copy an integration recipe to the clipboard. The raw (unescaped)
+// snippet is stashed on the button via data-snippet so we can hand it
+// straight to navigator.clipboard regardless of HTML highlighting.
+async function _copyRecipeSnippet(btn) {
+  const snippet = btn?.dataset?.snippet || '';
+  if (!snippet) return;
+  try {
+    await navigator.clipboard.writeText(snippet);
+    const lbl = btn.querySelector('span');
+    const prev = lbl?.textContent || 'Copy';
+    if (lbl) lbl.textContent = 'Copied';
+    btn.classList.add('on');
+    setTimeout(() => { btn.classList.remove('on'); if (lbl) lbl.textContent = prev; }, 1400);
+  } catch(_) { toast('Copy failed.', 'error'); }
 }
 
 async function _revokeApiKey(id) {

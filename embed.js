@@ -178,18 +178,45 @@ a.fortized-join.fortized-join-error{
   function fetchBastion(bastionId, key) {
     const k = bastionId + '|' + key;
     if (_cache.has(k)) return _cache.get(k);
+    // Reject obvious placeholder values up-front with a friendly hint
+    // — copy-pasting the literal <BASTION_ID>/<your-key> is a common
+    // first-time mistake that otherwise surfaces as a generic 401.
+    if (!bastionId || /^[<{].*[>}]$/.test(bastionId)) {
+      const p = Promise.reject(new Error('Replace data-fortized-bastion with your real bastion ID. Tip: right-click a bastion in the Fortized sidebar → Developer → Copy Bastion ID.'));
+      _cache.set(k, p);
+      return p;
+    }
+    if (!key || !key.startsWith('ftz_')) {
+      const p = Promise.reject(new Error('Replace data-fortized-key with the key you generated in Atelier → Creator → API Keys.'));
+      _cache.set(k, p);
+      return p;
+    }
     const url = API_BASE + '/api/v1/bastions/' + encodeURIComponent(bastionId) +
                 '?key=' + encodeURIComponent(key);
-    const p = fetch(url, { credentials: 'omit' })
-      .then(r => r.json())
-      .then(b => {
-        if (b && b.error) throw new Error(b.error);
-        return b;
+    const p = fetch(url, { credentials: 'omit', mode: 'cors' })
+      .then(async r => {
+        let body = null;
+        try { body = await r.json(); } catch(_) {}
+        if (!r.ok) throw new Error((body && body.error) || ('HTTP ' + r.status));
+        if (body && body.error) throw new Error(body.error);
+        return body;
+      })
+      .catch(err => {
+        // Network failures (offline, CORS-blocked, host unreachable)
+        // surface here as TypeError "Failed to fetch" / "NetworkError".
+        // Re-throw with a clearer hint so the rendered card explains
+        // what to check rather than echoing browser jargon.
+        if (err && (err.name === 'TypeError' || /NetworkError|Failed to fetch/i.test(err.message))) {
+          throw new Error('Could not reach Fortized. Check your network and that ' + API_BASE + ' is reachable.');
+        }
+        throw err;
       });
     _cache.set(k, p);
     // Drop the cache entry after 60s so subsequent loads see fresh data
     // (online count, member count, etc.) without forcing a full reload.
+    // Also drop on error so the next attempt can succeed.
     setTimeout(() => { _cache.delete(k); }, 60 * 1000);
+    p.catch(() => { _cache.delete(k); });
     return p;
   }
 

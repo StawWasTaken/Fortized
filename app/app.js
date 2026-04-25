@@ -34134,7 +34134,7 @@ function renderAtelierTab(tab) {
           <div class="ch-key-docs">
             <div class="ch-key-doc-head">
               <div class="ch-key-doc-title">What you can build</div>
-              <div class="ch-key-doc-sub">Three ready-to-use integration recipes. The first is live; the rest are rolling out — your keys will work with them automatically when they ship.</div>
+              <div class="ch-key-doc-sub">Three drop-in integration recipes — all live. Copy the snippet, paste it into your site, replace the placeholders with your key, and you're done.</div>
             </div>
             <div class="ch-key-recipes">
               <div class="ch-key-recipe">
@@ -34158,7 +34158,7 @@ X-Fortized-Key: <i>your-key</i>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                   </div>
                   <div class="ch-key-recipe-text">
-                    <div class="ch-key-recipe-name">Embed a bastion member list <span class="ch-key-recipe-status">Preview</span></div>
+                    <div class="ch-key-recipe-name">Embed a bastion member list <span class="ch-key-recipe-status ch-key-recipe-status--live">Live</span></div>
                     <div class="ch-key-recipe-desc">Drop a live, oEmbed-friendly member roster on any site.</div>
                   </div>
                 </div>
@@ -34172,7 +34172,7 @@ X-Fortized-Key: <i>your-key</i>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                   </div>
                   <div class="ch-key-recipe-text">
-                    <div class="ch-key-recipe-name">"Join Bastion" button <span class="ch-key-recipe-status">Preview</span></div>
+                    <div class="ch-key-recipe-name">"Join Bastion" button <span class="ch-key-recipe-status ch-key-recipe-status--live">Live</span></div>
                     <div class="ch-key-recipe-desc">A drop-in CTA that opens an invite, with optional Login with Fortized.</div>
                   </div>
                 </div>

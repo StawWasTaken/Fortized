@@ -2582,14 +2582,8 @@ function _defaultPfpUrl(name) {
   const hash = (name||'').split('').reduce((a,c) => a + c.charCodeAt(0), 0);
   return hash % 2 === 0 ? '/default%20pfp.png' : '/default%20pfp2.png';
 }
-function buildAvatarHTML(pfp, name, size, cropData, opts) {
-  // opts.fit = 'contain' lets large profile-card avatars show the full
-  // image (with a tonal background filling any letterbox bars) instead
-  // of cropping non-square pfps. Smaller thumbnails default to 'cover'
-  // because contain looks weird at tiny sizes.
-  const fit = (opts && opts.fit) || 'cover';
-  const bg = (opts && opts.bg) || 'var(--panel2,#1a1c2e)';
-  const s = 'width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:'+fit+';display:block;flex-shrink:0;'+(fit==='contain'?'background:'+bg+';':'');
+function buildAvatarHTML(pfp, name, size, cropData) {
+  const s = 'width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0;';
   const defaultUrl = _defaultPfpUrl(name);
   const initial = (name||'?')[0].toUpperCase();
   const fs = Math.floor(size/2.2);
@@ -18135,23 +18129,26 @@ async function _viewUserProfile(username) {
   const hasPending = (CU.friendRequestsSent||[]).includes(username);
   const isBlocked = isUserBlocked(username);
   const ignored = isUserIgnored(username);
-  // Radiance is now a single tier — both theme colour and custom
-  // banners unlock with one Radiance subscription. No more Radiance+
-  // distinction. Theme colour also tints only the banner (Discord
-  // pattern), never the whole card, so the rest of the UI stays
-  // legible regardless of the user's chosen colours.
-  const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
-  const profileTheme = hasUserRadiance ? (u.profileTheme || null) : null;
-  const profileCardBg = null;
+  const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+  const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
+  // Auto-generate profile card background from blended theme colors
+  const profileCardBg = profileTheme && profileTheme.color1 && profileTheme.color2
+    ? _blendColorsForProfileCard(profileTheme.color1, profileTheme.color2)
+    : null;
 
   const sc = FtzStatus.color(status);
   const socials = u.socials || {};
   const customStatus = u.customStatus;
   const games = u.gameCollection || [];
 
-  const themeBorder = '';
+  // Profile theme border
+  const themeBorder = profileTheme
+    ? `background:linear-gradient(135deg,${profileTheme.color1},${profileTheme.color2});padding:3px;border-radius:20px;`
+    : '';
+  // Show custom banner if user has Radiance + banner, otherwise a nice gradient
+  const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
-  const bannerBg = userBanner ? 'transparent' : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'aa':'#141a2e'},${profileTheme?profileTheme.color2+'88':'#1a1030'},${profileTheme?profileTheme.color1+'55':'#0f1828'})`;
+  const bannerBg = userBanner ? 'transparent' : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'88':'#141a2e'},${profileTheme?profileTheme.color2+'66':'#1a1030'},${profileTheme?profileTheme.color1+'44':'#0f1828'})`;
 
   const modalEl = document.getElementById('user-modal-body');
   if (!modalEl) { openModal('modal-user'); return; }
@@ -18230,16 +18227,9 @@ async function _viewUserProfile(username) {
   if (_mutualFriends.length) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${_mutualFriends.slice(0,12).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>12?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-12}</div>`:''}</div></div>`);
   if (!_activityContent.length) _activityContent.push(`<div class="ftz-empty"><div class="ftz-empty-icon">🎮</div><div class="ftz-empty-text">No recent activity</div></div>`);
 
-  // Same role-tag derivation the popover uses, so both views display
-  // the same accent pill above the user's name.
-  const _modalStaffRole = typeof getStaffRole === 'function' ? getStaffRole(username) : null;
-  const _modalRoleTag = _modalStaffRole
-    ? `<div class="mpp-role-tag mpp-role-tag--${escapeHTML(_modalStaffRole)}" style="margin-bottom:6px;">${_modalStaffRole === 'superadmin' ? 'Superadmin' : _modalStaffRole === 'admin' ? 'Admin' : 'Moderator'}</div>`
-    : (u.verified ? `<div class="mpp-role-tag mpp-role-tag--verified" style="margin-bottom:6px;">Verified</div>` : '');
-
   modalEl.innerHTML = `
-    <div class="up-card" style="position:relative;">
-    <div class="up-accent"></div>
+    <div style="${themeBorder}">
+    <div class="up-card" style="position:relative;${profileCardBg ? `background:${profileCardBg};` : ''}">
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
       <div class="pbo-icon" style="font-size:32px;color:rgba(248,113,113,.5);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
       <div class="pbo-text">You blocked ${escapeHTML(username)}</div>
@@ -18256,18 +18246,17 @@ async function _viewUserProfile(username) {
       <!-- Avatar -->
       <div class="up-left-av-area">
         <div class="profile-decoration-wrap" style="position:relative;">
-          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 88, null, { fit: 'contain' })}</div>
+          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 88)}</div>
           ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay-lg" onerror="this.style.display='none'">` : ''}
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22" style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 22)}</span>
         </div>
       </div>
       <!-- Name -->
       <div class="up-left-info">
-        ${_modalRoleTag}
         <div class="up-left-name" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">
           ${escapeHTML(u.displayName||u.username)}
         </div>
-        <div class="up-left-uname">@${escapeHTML(u.username)}${u.pronouns ? `<span style="margin:0 6px;color:rgba(255,255,255,.18);">·</span><span style="color:rgba(255,255,255,.4);font-weight:500;">${escapeHTML(u.pronouns)}</span>` : ''}</div>
+        <div class="up-left-uname">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.25);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
         ${(+u.dailyStreak) ? `<div class="up-left-streak" style="margin-top:8px;">${renderStreakChip(+u.dailyStreak, { size: 'lg' })}</div>` : ''}
       </div>
       <!-- Status -->
@@ -18385,6 +18374,7 @@ async function _viewUserProfile(username) {
           </div>` : `<div class="ftz-empty"><div class="ftz-empty-icon">👥</div><div class="ftz-empty-text">No mutual friends</div></div>`}
         </div>` : ''}
       </div>
+    </div>
     </div>
     </div>`;
 
@@ -39485,10 +39475,8 @@ async function showMiniProfilePreview(username, anchorEl) {
 
   const sc = FtzStatus.color(status);
   const isOwn = username === CU?.username;
-  // Radiance is now a single tier (no more Radiance / Radiance+ split).
-  // Theme color and custom banner both unlock once a user has Radiance.
-  const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
-  const profileTheme = hasUserRadiance ? (u.profileTheme || null) : null;
+  const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+  const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
   const customStatus = u.customStatus;
 
   const panel = document.createElement('div');
@@ -39496,8 +39484,16 @@ async function showMiniProfilePreview(username, anchorEl) {
   panel.className = 'mini-profile-preview';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-label', 'Profile preview for ' + (u.displayName || u.username));
-  // No more whole-card tint — the theme colour is applied to the banner
-  // only, matching Discord's pattern. The card itself stays neutral.
+  if (profileTheme) {
+    panel.style.borderColor = 'transparent';
+    panel.style.backgroundImage = `linear-gradient(160deg,${profileTheme.color1}0a,var(--panel) 30%,var(--panel) 70%,${profileTheme.color2}08),linear-gradient(135deg,${profileTheme.color1}40,${profileTheme.color2}40)`;
+    panel.style.backgroundOrigin = 'border-box';
+    panel.style.backgroundClip = 'padding-box,border-box';
+    panel.style.borderWidth = '1.5px';
+    panel.style.borderStyle = 'solid';
+    panel.style.boxShadow = `0 20px 60px rgba(0,0,0,.6),0 4px 20px rgba(0,0,0,.35)`;
+  }
+  const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
   const bannerBg = userBanner
     ? `<img src="${escapeHTML(userBanner)}" style="width:100%;height:100%;object-fit:cover;">`
@@ -39507,142 +39503,119 @@ async function showMiniProfilePreview(username, anchorEl) {
   const _memberSince = u.joinedAt||u.createdAt ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null;
   const _isFriend = (CU?.friends||[]).includes(username);
   const _hasPending = (CU?.friendRequestsSent||[]).includes(username) || (CU?.friendRequestsReceived||[]).includes(username);
-  // Staff/role tag shown above the display name (Guilded-style accent
-  // pill). Falls back to the special "Verified" mark for verified users.
-  const _staffRole = typeof getStaffRole === 'function' ? getStaffRole(username) : null;
-  const _roleTag = _staffRole
-    ? `<div class="mpp-role-tag mpp-role-tag--${escapeHTML(_staffRole)}">${_staffRole === 'superadmin' ? 'Superadmin' : _staffRole === 'admin' ? 'Admin' : 'Moderator'}</div>`
-    : (u.verified ? `<div class="mpp-role-tag mpp-role-tag--verified">Verified</div>` : '');
-
-  // ── Build the preview from scratch following the design brief ──
-  // Three vertical zones, separated by hairline dividers:
-  //   1. IDENTITY  — banner, avatar, role tag, name, handle, presence.
-  //   2. ENGAGEMENT — custom status, streak, roles (only when set).
-  //   3. ACTION    — primary, friend, profile, more (4 circular icons).
-  // Sections render only when they have data, so an empty profile is
-  // a clean two-zone card rather than a wall of empty headers.
-
-  // ENGAGEMENT zone
-  const _csBlock = customStatus?.text ? `
-    <div class="mpp-cs">
-      ${customStatus.emoji ? `<span class="mpp-cs-emoji"><img src="${emojiToTwemojiUrl(customStatus.emoji)}" alt="" onerror="this.outerHTML='${customStatus.emoji}'"></span>` : ''}
-      <span class="mpp-cs-text">${escapeHTML(customStatus.text)}</span>
-    </div>` : '';
-
-  const _streakBlock = (+u.dailyStreak) ? `
-    <div class="mpp-row">
-      <span class="mpp-row-label">Streak</span>
-      <span class="mpp-row-val">${renderStreakChip(+u.dailyStreak)}</span>
-    </div>` : '';
-
-  let _rolesBlock = '';
-  if (_currentView === 'bastion' && curBastion !== null) {
-    const _canManageRoles = hasPerm('manage_roles') || (CU?.bastions?.[curBastion]?.owner === CU?.username);
-    const _roleTags = renderUserRoleTags(username);
-    const _addBtn = _canManageRoles && !isOwn
-      ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" aria-label="Manage roles">+</button>`
-      : '';
-    if (_roleTags || _addBtn) {
-      _rolesBlock = `
-        <div class="mpp-block">
-          <div class="mpp-block-label">Roles</div>
-          <div class="mpp-roles" id="mpp-roles-container">${_roleTags}${_addBtn}</div>
-          <div id="mpp-role-picker" style="display:none;"></div>
-        </div>`;
-    }
-  }
-
-  const _engagement = (_csBlock || _streakBlock || _rolesBlock)
-    ? `<div class="mpp-zone mpp-zone-engagement">${_csBlock}${_streakBlock}${_rolesBlock}</div>`
-    : '';
-
-  // ACTION zone — circular icon-first buttons. Each one is wired to a
-  // real existing function; no placeholders.
-  const _actionsBtns = isOwn ? `
-    <button class="mpp-act" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')" title="Edit Profile">
-      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
-      <span class="mpp-act-lbl">Edit</span>
-    </button>
-    <button class="mpp-act" onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()" title="Set status">
-      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 11h.01M15 11h.01M8 15s1.5 2 4 2 4-2 4-2"/></svg></span>
-      <span class="mpp-act-lbl">Status</span>
-    </button>
-    <button class="mpp-act" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" title="Open profile">
-      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-      <span class="mpp-act-lbl">Profile</span>
-    </button>
-    <button class="mpp-act" onclick="event.stopPropagation();_mppShowMore('${escapeHTML(username)}',event)" title="More">
-      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></span>
-      <span class="mpp-act-lbl">More</span>
-    </button>
-  ` : `
-    <button class="mpp-act" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')" title="Send a message">
-      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></span>
-      <span class="mpp-act-lbl">Message</span>
-    </button>
-    ${_isFriend
-      ? `<button class="mpp-act mpp-act--on" onclick="document.getElementById('mini-profile-preview')?.remove();removeFriend('${escapeHTML(username)}')" title="Remove friend">
-          <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></span>
-          <span class="mpp-act-lbl">Friends</span>
-        </button>`
-      : _hasPending
-        ? `<button class="mpp-act" disabled title="Friend request pending">
-            <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-            <span class="mpp-act-lbl">Pending</span>
-          </button>`
-        : `<button class="mpp-act" onclick="quickAddFriend('${escapeHTML(username)}')" title="Add friend">
-            <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></span>
-            <span class="mpp-act-lbl">Add</span>
-          </button>`
-    }
-    <button class="mpp-act" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" title="Open profile">
-      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-      <span class="mpp-act-lbl">Profile</span>
-    </button>
-    <button class="mpp-act" onclick="event.stopPropagation();_mppShowMore('${escapeHTML(username)}',event)" title="More">
-      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></span>
-      <span class="mpp-act-lbl">More</span>
-    </button>
-  `;
-
   panel.innerHTML = `
-    <div class="mpp-accent"></div>
-
-    <!-- IDENTITY ─────────────────────────────────── -->
+    <!-- Banner -->
     <div class="mpp-banner">
       ${bannerBg}
-      ${profileTheme ? `<div class="mpp-banner-tint" style="background:linear-gradient(180deg,${profileTheme.color1}33,transparent 55%,rgba(0,0,0,.45));"></div>` : '<div class="mpp-banner-tint"></div>'}
+      ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.7;z-index:1;"></div>` : ''}
     </div>
-    <div class="mpp-body">
-      <div class="mpp-zone mpp-zone-identity">
-        <div class="profile-decoration-wrap mpp-av-wrap" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-          <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 84, null, { fit: 'contain' })}</div>
-          ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
-          <span class="profile-status-dot mpp-status-dot" data-for="${escapeHTML(username)}" data-dot-size="20" style="width:20px;height:20px;">${FtzStatus.dotSvg(u.status||'offline', 20)}</span>
-        </div>
-        ${_roleTag}
-        <div class="mpp-name" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
-        <div class="mpp-handle">@${escapeHTML(u.username)}${u.pronouns ? `<span class="mpp-handle-sep">·</span>${escapeHTML(u.pronouns)}` : ''}</div>
-        <div class="mpp-presence">
-          <span class="profile-status-dot mpp-presence-dot" data-for="${escapeHTML(username)}" data-dot-size="9" style="display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 9)}</span>
-          <span class="profile-status-label" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
-        </div>
+    <!-- Avatar -->
+    <div class="mpp-av-area">
+      <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
+        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 64)}</div>
+        ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
+        <span class="profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="18" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 18)}</span>
       </div>
-
-      ${_engagement ? '<div class="mpp-divider"></div>' : ''}
-      ${_engagement}
-
-      <!-- ACTION ─────────────────────────────────── -->
-      <div class="mpp-divider"></div>
-      <div class="mpp-zone mpp-zone-action">
-        <div class="mpp-actions">${_actionsBtns}</div>
+    </div>
+    <!-- Identity -->
+    <div class="mpp-identity">
+      <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
+      <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.2);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
+      ${(+u.dailyStreak) ? `<div style="margin-top:6px;">${renderStreakChip(+u.dailyStreak)}</div>` : ''}
+    </div>
+    <!-- Status -->
+    <div class="mpp-status-row">
+      <div class="mpp-status-pill">
+        <span class="sdot profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="10" style="display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 10)}</span>
+        <span class="profile-status-label" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
       </div>
+      <div class="profile-custom-status cloud-status-bubble" data-for="${escapeHTML(username)}" style="${customStatus?.text ? 'display:inline-flex;' : 'display:none;'}font-size:10.5px;padding:4px 10px;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);color:rgba(255,255,255,.45);">${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,30)}</span>` : ''}</div>
+    </div>
+    <!-- Activity Status - Multi-activity support -->
+    ${(() => {
+      let activitiesToShow = [];
+      if (u.activityState?.activities?.length) {
+        activitiesToShow = u.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2)).slice(0, 2);
+      } else if (u.gameActivity?.name) {
+        activitiesToShow = [{
+          id: u.gameActivity._spotify ? 'spotify' : 'game',
+          type: u.gameActivity._spotify ? 'listening' : 'playing',
+          name: u.gameActivity.name,
+          icon: u.gameActivity.icon || '🎮',
+          since: u.gameActivity.since,
+          priority: u.gameActivity._spotify ? 3 : 2,
+          metadata: {
+            coverThumb: u.gameActivity.coverThumb,
+            genre: u.gameActivity.genre,
+            spotifyAlbumArt: u.gameActivity.spotifyAlbumArt
+          }
+        }];
+      }
+
+      if (!activitiesToShow.length) return '';
+
+      const statusColor = FtzStatus.color(u.status || 'online');
+      return `<div class="mpp-divider"></div><div class="mpp-section">
+        <div class="mpp-section-title" style="color:${statusColor}88;">Active Now</div>
+        ${activitiesToShow.map((a, idx) => {
+          const coverThumb = a.metadata?.coverThumb || a.metadata?.spotifyAlbumArt;
+          const accentBg = statusColor + (idx === 0 ? '08' : '04');
+          const accentBorder = statusColor + (idx === 0 ? '15' : '08');
+          const _coverHTML = coverThumb
+            ? `<img src="${escapeHTML(coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.outerHTML='<span style=font-size:14px>${a.icon||'🎮'}</span>'">`
+            : `<span style="font-size:14px;">${a.icon||'🎮'}</span>`;
+          const _elapsedHTML = a.since ? `<div style="font-size:9px;color:${statusColor}66;margin-top:1.5px;display:flex;align-items:center;gap:3px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${_formatActivityElapsed(a.since)}</div>` : '';
+          return `<div style="display:flex;align-items:center;gap:10px;padding:10px 11px;background:${accentBg};border:1px solid ${accentBorder};border-radius:10px;${idx > 0 ? 'margin-top:8px;' : ''}"><div style="width:36px;height:48px;border-radius:6px;background:linear-gradient(135deg,${statusColor}12,${statusColor}06);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:1px solid ${statusColor}22;">${_coverHTML}</div><div style="min-width:0;flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(a.name)}</div>${a.metadata?.genre?`<div style="font-size:9.5px;color:rgba(255,255,255,.28);margin-top:1.5px;">${escapeHTML(typeof a.metadata.genre==='string'?a.metadata.genre:a.metadata.genre[0]||'')}</div>`:''}${_elapsedHTML}</div></div>`;
+        }).join('')}
+      </div>`;
+    })()}
+    <!-- Badges -->
+    <div class="mpp-badges-row">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
+    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${parseMD(escapeHTML(u.bio.slice(0,150)))}${u.bio.length>150?'…':''}</div></div>` : ''}
+    ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
+    <!-- Roles -->
+    ${_currentView === 'bastion' && curBastion !== null ? (() => {
+      const _canManageRoles = hasPerm('manage_roles') || (CU?.bastions?.[curBastion]?.owner === CU?.username);
+      const _roleTags = renderUserRoleTags(username);
+      const _addBtn = _canManageRoles && !isOwn ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" style="width:22px;height:22px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;margin-top:4px;" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.3)'">+</button>` : '';
+      return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="display:flex;align-items:center;justify-content:space-between;">Roles</div><div class="mpp-roles-row" id="mpp-roles-container">${_roleTags}${_addBtn}</div><div id="mpp-role-picker" style="display:none;"></div></div>`;
+    })() : ''}
+    <!-- Games -->
+    ${_previewGames.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Games</div><div class="mpp-game-row">${_previewGames.slice(0,4).map(g=>`<div class="mpp-game-chip">${g.coverUrl ? `<img src="${escapeHTML(g.coverUrl)}" style="width:14px;height:18px;border-radius:2px;object-fit:cover;">` : (g.icon||ftzIcon('gamepad','12'))} ${escapeHTML(g.name)}</div>`).join('')}${_previewGames.length>4?`<div class="mpp-game-chip">+${_previewGames.length-4} more</div>`:''}</div></div>` : ''}
+    <!-- Widgets -->
+    <div id="mpp-widgets-area"></div>
+    <!-- Mutuals -->
+    ${_previewMutuals.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Mutual Friends</div><div style="display:flex;align-items:center;">${_previewMutuals.slice(0,6).map(f => `<div class="mpp-mutual-av" title="${escapeHTML(f)}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,22)}</div>`).join('')}${_previewMutuals.length>6?`<span style="font-size:10.5px;color:rgba(255,255,255,.28);margin-left:5px;">+${_previewMutuals.length-6}</span>`:''}</div></div>` : ''}
+    <div class="mpp-divider"></div>
+    <!-- Actions -->
+    <div class="mpp-actions">
+      ${isOwn ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
+      `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
+      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
+      ${!isOwn && !_isFriend && !_hasPending ? `<button class="mpp-btn-secondary" title="Add Friend" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>` : ''}
     </div>`;
 
   // Position near the anchor element
   document.body.appendChild(panel);
+  // Render mini widgets (favourite game & primary bastion only, compact)
+  const _mppWidgetArea = panel.querySelector('#mpp-widgets-area');
+  if (_mppWidgetArea && (u.profileWidgets||[]).some(w => w.enabled && (w.id === 'favourite_game' || w.id === 'primary_bastion'))) {
+    let _mwHtml = '<div class="mpp-divider"></div>';
+    (u.profileWidgets||[]).forEach(w => {
+      if (!w.enabled) return;
+      if (w.id === 'favourite_game' && w.config?.gameName) {
+        const fg = (u.gameCollection||[]).find(g => g.name === w.config.gameName);
+        if (fg) _mwHtml += `<div class="mpp-section"><div class="mpp-section-title">Favourite Game</div><div class="mpp-game-row"><div class="mpp-game-chip" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.15);color:rgba(245,158,11,.8);">${fg.coverUrl ? `<img src="${escapeHTML(fg.coverUrl)}" style="width:14px;height:18px;border-radius:2px;object-fit:cover;">` : '⭐'} ${escapeHTML(fg.name)}</div></div></div>`;
+      }
+      if (w.id === 'primary_bastion' && w.config?.bastionIdx !== undefined) {
+        const b = u.bastions?.[w.config.bastionIdx];
+        if (b) _mwHtml += `<div class="mpp-section"><div class="mpp-section-title">Primary Bastion</div><div class="mpp-game-row"><div class="mpp-game-chip" style="background:rgba(96,165,250,.06);border-color:rgba(96,165,250,.15);color:rgba(96,165,250,.8);cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();joinBastionFromWidget('${escapeHTML(b.name||'')}',${w.config.bastionIdx})">${b.emblem ? `<img src="${escapeHTML(b.emblem)}" style="width:14px;height:14px;border-radius:3px;object-fit:cover;">` : '🏰'} ${escapeHTML(b.name||'Bastion')}</div></div></div>`;
+      }
+    });
+    _mppWidgetArea.innerHTML = _mwHtml;
+  }
   const rect = anchorEl?.getBoundingClientRect() || {left:100, top:100, width:40};
-  const PW = panel.offsetWidth || 320;
+  const PW = panel.offsetWidth || 340;
   const PH = panel.offsetHeight || 300;
   let left = rect.left + rect.width + 8;
   let top = rect.top;
@@ -39663,33 +39636,6 @@ async function showMiniProfilePreview(username, anchorEl) {
 }
 
 // Inline role picker for mini profile preview
-// "More" overflow menu fired from the popover's circular action row.
-// Surfaces destructive / less-frequent actions (Block, Ignore, Report,
-// Copy username) without taking up a permanent slot in the row.
-function _mppShowMore(username, e) {
-  if (typeof showCtxMenu !== 'function') return;
-  const isOwn = username === CU?.username;
-  const isBlocked = typeof isUserBlocked === 'function' && isUserBlocked(username);
-  const ignored  = typeof isUserIgnored  === 'function' && isUserIgnored(username);
-  const close = () => { try { document.getElementById('mini-profile-preview')?.remove(); } catch(_){} };
-  const items = [];
-  items.push({ icon: _ctxSvg('copy'), label: 'Copy Username', action: () => { navigator.clipboard.writeText(username).then(()=>toast('Username copied.','success')).catch(()=>{}); }, copyFeedback: true });
-  if (!isOwn) {
-    if (isBlocked) {
-      items.push({ icon: _ctxSvg('leave'), label: 'Unblock', action: () => { close(); toggleBlockUser(username); } });
-    } else {
-      items.push({ icon: _ctxSvg('leave'), label: 'Block', action: () => { close(); toggleBlockUser(username); }, danger: true });
-      items.push({ icon: _ctxSvg('mute'), label: ignored ? 'Unignore' : 'Ignore', action: () => { close(); ignored ? unignoreUser(username) : showIgnorePicker(username); } });
-    }
-    items.push({ icon: _ctxSvg('report')||_ctxSvg('warn')||_ctxSvg('leave'), label: 'Report', action: () => { close(); reportUser(username); }, danger: true });
-  } else {
-    items.push({ icon: _ctxSvg('settings'), label: 'Settings', action: () => { close(); showView('profile'); } });
-  }
-  const x = e?.clientX ?? (window.innerWidth/2);
-  const y = e?.clientY ?? (window.innerHeight/2);
-  showCtxMenu(x, y, [{ items }]);
-}
-
 function _mppToggleRolePicker(username) {
   const picker = document.getElementById('mpp-role-picker');
   if (!picker) return;

@@ -550,7 +550,7 @@ app.get('/api/v1/bastions/:id', async (req, res) => {
 });
 
 // Preflight for cross-origin embeds.
-app.options('/api/v1/*', (req, res) => {
+app.options('/api/v1/{*rest}', (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Headers', 'X-Fortized-Key, Content-Type');
   res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');

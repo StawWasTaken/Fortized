@@ -13058,17 +13058,10 @@ let _cmAdImageData = null;
 function _cmSelectAdRatio(ratio) {
   const bannerLabel = document.getElementById('cm-ratio-banner');
   const rectLabel = document.getElementById('cm-ratio-rectangle');
-  if (ratio === 'banner') {
-    if (bannerLabel) { bannerLabel.style.background='rgba(255,249,62,.06)'; bannerLabel.style.borderColor='rgba(255,249,62,.2)'; }
-    if (rectLabel) { rectLabel.style.background='rgba(255,255,255,.02)'; rectLabel.style.borderColor='rgba(255,255,255,.06)'; }
-    const bnInput = bannerLabel?.querySelector('input[type="radio"]');
-    if (bnInput) bnInput.checked = true;
-  } else {
-    if (rectLabel) { rectLabel.style.background='rgba(255,249,62,.06)'; rectLabel.style.borderColor='rgba(255,249,62,.2)'; }
-    if (bannerLabel) { bannerLabel.style.background='rgba(255,255,255,.02)'; bannerLabel.style.borderColor='rgba(255,255,255,.06)'; }
-    const rcInput = rectLabel?.querySelector('input[type="radio"]');
-    if (rcInput) rcInput.checked = true;
-  }
+  if (bannerLabel) bannerLabel.classList.toggle('active', ratio === 'banner');
+  if (rectLabel) rectLabel.classList.toggle('active', ratio === 'rectangle');
+  const targetInput = (ratio === 'banner' ? bannerLabel : rectLabel)?.querySelector('input[type="radio"]');
+  if (targetInput) targetInput.checked = true;
   _cmUpdateAdPreview();
 }
 function _cmAdImagePreview(e) {
@@ -33733,276 +33726,445 @@ function renderAtelierTab(tab) {
     const myTemplates = (CU.bastions||[]).filter(bst=>bst.owner===CU.username);
     const onyxBal = CU.onyx||0;
     const creatorSub = el._creatorSub || 'creations';
+    const creationsSub = el._creationsSub || 'ads';
+    const totalClicks = myAds.reduce((s,a) => s + (a.clicks||0), 0);
+    const activeAds = myAds.filter(a => _isAdLive(a)).length;
+    const activeBots = myBots.filter(b => b.enabled !== false).length;
 
     el.innerHTML = `<div class="atelier-content-inner">
-      <!-- Creator Header -->
-      <div style="margin-bottom:28px;">
-        <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;">Creator Hub</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.4);">Create ads, manage bots, publish bastion templates, and browse the Creator Marketplace.</div>
+      <!-- ═══ HERO ═══ -->
+      <div class="ch-hero">
+        <div class="ch-hero-glow"></div>
+        <div class="ch-hero-grid"></div>
+        <div class="ch-hero-inner">
+          <div class="ch-hero-top">
+            <div class="ch-hero-info">
+              <div class="ch-hero-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                  <path d="M2 2l7.586 7.586"/>
+                  <circle cx="11" cy="11" r="2"/>
+                </svg>
+              </div>
+              <div class="ch-hero-text">
+                <h1>Creator Hub</h1>
+                <div class="ch-hero-sub">Publish ads, craft bots, and share your creations with the realm.</div>
+              </div>
+            </div>
+            <div class="ch-hero-balance">
+              <img src="/Onyx.png" alt="Onyx">
+              <div>
+                <div class="ch-hero-bal-num">${onyxBal.toLocaleString()}</div>
+                <div class="ch-hero-bal-lbl">Onyx Balance</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ch-stats-row">
+            <div class="ch-stat">
+              <div class="ch-stat-icon" style="background:rgba(255,249,62,.08);color:var(--accent);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <div class="ch-stat-body">
+                <div class="ch-stat-num">${activeAds}</div>
+                <div class="ch-stat-label">Active Ads</div>
+              </div>
+            </div>
+            <div class="ch-stat">
+              <div class="ch-stat-icon" style="background:rgba(96,165,250,.1);color:#60a5fa;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </div>
+              <div class="ch-stat-body">
+                <div class="ch-stat-num">${totalClicks.toLocaleString()}</div>
+                <div class="ch-stat-label">Total Clicks</div>
+              </div>
+            </div>
+            <div class="ch-stat">
+              <div class="ch-stat-icon" style="background:rgba(62,207,110,.08);color:var(--green);">
+                <img src="/Fortized Bot.png" style="width:14px;height:14px;opacity:.85;">
+              </div>
+              <div class="ch-stat-body">
+                <div class="ch-stat-num">${activeBots}</div>
+                <div class="ch-stat-label">Bots Online</div>
+              </div>
+            </div>
+            <div class="ch-stat">
+              <div class="ch-stat-icon" style="background:rgba(167,139,250,.08);color:#a78bfa;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              </div>
+              <div class="ch-stat-body">
+                <div class="ch-stat-num">${myTemplates.length}</div>
+                <div class="ch-stat-label">Templates</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Sub-tabs -->
-      <div style="display:flex;gap:4px;margin-bottom:24px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
-        <button id="cr-tab-creations" class="btn-g" style="padding:8px 18px;font-size:12px;border-radius:8px;font-weight:${creatorSub==='creations'?'700':'600'};background:${creatorSub==='creations'?'var(--accent)':'transparent'};color:${creatorSub==='creations'?'var(--rail)':'var(--muted-light)'};border:none;cursor:pointer;" onclick="_switchCreatorSub('creations')">Creations</button>
-        <button id="cr-tab-marketplace" class="btn-g" style="padding:8px 18px;font-size:12px;border-radius:8px;font-weight:${creatorSub==='marketplace'?'700':'600'};background:${creatorSub==='marketplace'?'var(--accent)':'transparent'};color:${creatorSub==='marketplace'?'var(--rail)':'var(--muted-light)'};border:none;cursor:pointer;" onclick="_switchCreatorSub('marketplace')">Creator Marketplace</button>
+      <!-- ═══ SEGMENTED TABS ═══ -->
+      <div class="ch-segtabs">
+        <button id="cr-tab-creations" class="ch-segtab ${creatorSub==='creations'?'active':''}" onclick="_switchCreatorSub('creations')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+          My Creations
+        </button>
+        <button id="cr-tab-marketplace" class="ch-segtab ${creatorSub==='marketplace'?'active':''}" onclick="_switchCreatorSub('marketplace')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          Marketplace
+        </button>
       </div>
 
       <!-- ═══ CREATIONS ═══ -->
       <div id="cr-section-creations" style="${creatorSub!=='creations'?'display:none;':''}">
-        <!-- Creations sub-nav -->
-        <div style="display:flex;gap:6px;margin-bottom:18px;">
-          <button id="cr-cr-ads-btn" style="padding:6px 14px;font-size:11.5px;border-radius:8px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);cursor:pointer;" onclick="_switchCreationsSub('ads')">Ads</button>
-          <button id="cr-cr-bots-btn" style="padding:6px 14px;font-size:11.5px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:1px solid var(--border);cursor:pointer;" onclick="_switchCreationsSub('bots')">Bots</button>
-          <button id="cr-cr-templates-btn" style="padding:6px 14px;font-size:11.5px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:1px solid var(--border);cursor:pointer;" onclick="_switchCreationsSub('templates')">Templates</button>
+        <!-- Pillbar sub-nav -->
+        <div class="ch-pillbar">
+          <button id="cr-cr-ads-btn" class="ch-pill ${creationsSub==='ads'?'active':''}" onclick="_switchCreationsSub('ads')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Ads <span class="ch-pill-count">${myAds.length}</span>
+          </button>
+          <button id="cr-cr-bots-btn" class="ch-pill ${creationsSub==='bots'?'active':''}" onclick="_switchCreationsSub('bots')">
+            <img src="/Fortized Bot.png" style="width:13px;height:13px;opacity:.8;">
+            Bots <span class="ch-pill-count">${myBots.length}</span>
+          </button>
+          <button id="cr-cr-templates-btn" class="ch-pill ${creationsSub==='templates'?'active':''}" onclick="_switchCreationsSub('templates')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            Templates <span class="ch-pill-count">${myTemplates.length}</span>
+          </button>
         </div>
 
         <!-- ADS Section -->
         <div id="cr-cr-ads">
-          <!-- Create New Ad -->
-          <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:20px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <div style="font-size:14px;font-weight:700;">Create New Ad</div>
-              <div style="flex:1;"></div>
-              <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;"><img src="/Onyx.png" style="width:12px;height:12px;"> ${onyxBal.toLocaleString()} Onyx</div>
+          <!-- Section header -->
+          <div class="ch-section-head">
+            <div class="ch-section-head-text">
+              <div class="ch-section-title">Ads</div>
+              <div class="ch-section-sub">Promote your bastion or content across Fortized. 15 Onyx for 4 days of placement.</div>
             </div>
+            <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/BannerAdTemplate.png" target="_blank" rel="noopener" class="ch-section-link">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Banner template
+            </a>
+            <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/RectangleAdTemplate.png" target="_blank" rel="noopener" class="ch-section-link">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Rectangle template
+            </a>
+          </div>
 
-            <div style="margin-bottom:14px;">
-              <div class="settings-title">Ad Title</div>
-              <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60" oninput="_cmUpdateAdPreview()">
-            </div>
-
-            <div style="margin-bottom:14px;">
-              <input id="cm-ad-image-upload" type="file" accept="image/*" style="display:none;" onchange="_cmAdImagePreview(event)">
-              <div style="display:flex;align-items:center;gap:12px;">
-                <button class="btn-g" onclick="document.getElementById('cm-ad-image-upload').click()" style="font-size:12px;padding:8px 16px;">Choose file</button>
-                <span id="cm-ad-file-label" style="font-size:12px;color:var(--muted);">No file selected.</span>
+          <!-- Editor + Live Preview split -->
+          <div class="ch-editor">
+            <!-- Form column -->
+            <div class="ch-editor-form">
+              <div class="ch-editor-head">
+                <div class="ch-editor-head-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                </div>
+                <div>
+                  <div class="ch-editor-title">New Ad</div>
+                  <div class="ch-editor-sub">Configure how your ad will appear across the realm.</div>
+                </div>
               </div>
-            </div>
 
-            <div style="margin-bottom:14px;">
-              <div class="settings-title">Ad Format</div>
-              <div style="display:flex;gap:8px;margin-bottom:8px;">
-                <label id="cm-ratio-banner" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.2);border-radius:10px;cursor:pointer;transition:all .15s;" onclick="_cmSelectAdRatio('banner')">
-                  <input type="radio" name="cm-ad-ratio" value="banner" checked style="accent-color:var(--accent);">
-                  <div>
-                    <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.85);">Banner</div>
-                    <div style="font-size:10px;color:var(--muted);">728 x 90 px — Wide horizontal strip (main content)</div>
-                  </div>
-                </label>
-                <label id="cm-ratio-rectangle" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;transition:all .15s;" onclick="_cmSelectAdRatio('rectangle')">
-                  <input type="radio" name="cm-ad-ratio" value="rectangle" style="accent-color:var(--accent);">
-                  <div>
-                    <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.65);">Rectangle</div>
-                    <div style="font-size:10px;color:var(--muted);">300 x 250 px — Sidebar placement</div>
-                  </div>
-                </label>
+              <div class="ch-field">
+                <label class="ch-label">Title</label>
+                <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60" oninput="_cmUpdateAdPreview()">
+                <div class="ch-helper">Up to 60 characters. Shown above the ad image.</div>
               </div>
-              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Banners appear in main content areas. Rectangles appear in sidebars. Wrong ratio images will be stretched.</div>
-            </div>
 
-            <div style="margin-bottom:14px;">
-              <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Ad Templates</div>
-              <div style="display:flex;align-items:center;gap:14px;">
-                <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/BannerAdTemplate.png" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);text-decoration:none;transition:opacity .15s;" onmouseenter="this.style.opacity='.7'" onmouseleave="this.style.opacity='1'">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Banner
-                </a>
-                <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/RectangleAdTemplate.png" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);text-decoration:none;transition:opacity .15s;" onmouseenter="this.style.opacity='.7'" onmouseleave="this.style.opacity='1'">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Rectangle
-                </a>
-              </div>
-            </div>
-
-            <div style="margin-bottom:14px;">
-              <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Link ${isSuperAdmin() ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span>' : ''}</div>
-              <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="_cmOnAdLinkTypeChange()">
-                <option value="bastion">Default - Join Bastion (opens in app)</option>
-                <optgroup label="In-app pages">
-                  <option value="/app">Home</option>
-                  <option value="/app/messages">Direct Messages</option>
-                  <option value="/app/messages?friends=1">Friends</option>
-                  <option value="/app/discover">Discover</option>
-                  <option value="/app/forum">Forum</option>
-                  <option value="/app/atelier?tab=radiance">Radiance Dwelling</option>
-                  <option value="/app/atelier?tab=quests">Quests</option>
-                  <option value="/app/atelier?tab=shop">Fortshop</option>
-                  <option value="/app/atelier?tab=creator">Creator</option>
-                </optgroup>
-                ${isSuperAdmin() ? `
-                <optgroup label="Fortized Web (opens in browser)">
-                  <option value="https://fortized.com/">Home (web)</option>
-                  <option value="https://fortized.com/blog">Blog</option>
-                  <option value="https://fortized.com/support">Support</option>
-                  <option value="https://fortized.com/legal">Legal</option>
-                  <option value="https://fortized.com/download">Download</option>
-                </optgroup>
-                <option value="custom">Custom URL</option>
-                ` : ''}
-              </select>
-              ${isSuperAdmin() ? '<input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">' : ''}
-              <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">${isSuperAdmin() ? 'Web pages open in browser. App pages and bastion links open in-app.' : 'In-app pages only. External URLs are reserved for Fortized staff.'}</div>
-            </div>
-
-            <div style="margin-bottom:14px;" id="cm-ad-bastion-wrap">
-              <div class="settings-title" id="cm-ad-bastion-label">Target Bastion</div>
-              <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
-                <option value="">- None -</option>
-                ${(CU.bastions||[]).map((bst,i)=>{
-                  return `<option value="${i}">${escapeHTML(bst.name)}</option>`;
-                }).join('')}
-              </select>
-              <div id="cm-ad-bastion-hint" style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Required - the ad links to this bastion's invite.</div>
-            </div>
-
-            <div style="margin-bottom:16px;">
-              <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted-light);cursor:pointer;">
-                <input type="checkbox" id="cm-ad-autorefund" style="accent-color:var(--accent);">
-                Auto-renew — automatically deduct 15 Onyx every 4 days
-              </label>
-            </div>
-
-            <div style="margin-bottom:16px;">
-              <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:8px;">Live Preview</div>
-              <div id="cm-ad-preview-wrap" style="max-width:728px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:12px;">
-                <div id="cm-ad-live-preview" style="text-align:center;">
-                  <div style="width:100%;height:90px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));display:flex;align-items:center;justify-content:center;">
-                    <span style="font-size:11px;color:var(--muted);">Upload an image to preview</span>
+              <div class="ch-field">
+                <label class="ch-label">Image</label>
+                <input id="cm-ad-image-upload" type="file" accept="image/*" style="display:none;" onchange="_cmAdImagePreview(event)">
+                <div class="ch-upload" onclick="document.getElementById('cm-ad-image-upload').click()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <div class="ch-upload-text">
+                    <div class="ch-upload-cta">Click to upload</div>
+                    <span id="cm-ad-file-label" class="ch-upload-name">PNG, JPG up to 4MB</span>
                   </div>
                 </div>
               </div>
+
+              <div class="ch-field">
+                <label class="ch-label">Format</label>
+                <div class="ch-format-grid">
+                  <label id="cm-ratio-banner" class="ch-format active" onclick="_cmSelectAdRatio('banner')">
+                    <input type="radio" name="cm-ad-ratio" value="banner" checked>
+                    <div class="ch-format-thumb ch-format-thumb-banner"></div>
+                    <div class="ch-format-meta">
+                      <div class="ch-format-name">Banner</div>
+                      <div class="ch-format-desc">728 × 90 px — Main content placement</div>
+                    </div>
+                  </label>
+                  <label id="cm-ratio-rectangle" class="ch-format" onclick="_cmSelectAdRatio('rectangle')">
+                    <input type="radio" name="cm-ad-ratio" value="rectangle">
+                    <div class="ch-format-thumb ch-format-thumb-rect"></div>
+                    <div class="ch-format-meta">
+                      <div class="ch-format-name">Rectangle</div>
+                      <div class="ch-format-desc">300 × 250 px — Sidebar placement</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="ch-field">
+                <label class="ch-label">Destination ${isSuperAdmin() ? '<span class="ch-badge-staff">SUPERADMIN</span>' : ''}</label>
+                <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="_cmOnAdLinkTypeChange()">
+                  <option value="bastion">Default — Join Bastion (opens in app)</option>
+                  <optgroup label="In-app pages">
+                    <option value="/app">Home</option>
+                    <option value="/app/messages">Direct Messages</option>
+                    <option value="/app/messages?friends=1">Friends</option>
+                    <option value="/app/discover">Discover</option>
+                    <option value="/app/forum">Forum</option>
+                    <option value="/app/atelier?tab=radiance">Radiance Dwelling</option>
+                    <option value="/app/atelier?tab=quests">Quests</option>
+                    <option value="/app/atelier?tab=shop">Fortshop</option>
+                    <option value="/app/atelier?tab=creator">Creator</option>
+                  </optgroup>
+                  ${isSuperAdmin() ? `
+                  <optgroup label="Fortized Web (opens in browser)">
+                    <option value="https://fortized.com/">Home (web)</option>
+                    <option value="https://fortized.com/blog">Blog</option>
+                    <option value="https://fortized.com/support">Support</option>
+                    <option value="https://fortized.com/legal">Legal</option>
+                    <option value="https://fortized.com/download">Download</option>
+                  </optgroup>
+                  <option value="custom">Custom URL</option>
+                  ` : ''}
+                </select>
+                ${isSuperAdmin() ? '<input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">' : ''}
+                <div class="ch-helper">${isSuperAdmin() ? 'Web pages open in browser. App pages and bastion links open in-app.' : 'In-app pages only. External URLs are reserved for Fortized staff.'}</div>
+              </div>
+
+              <div class="ch-field" id="cm-ad-bastion-wrap">
+                <label class="ch-label" id="cm-ad-bastion-label">Target Bastion</label>
+                <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
+                  <option value="">— None —</option>
+                  ${(CU.bastions||[]).map((bst,i)=>{
+                    return `<option value="${i}">${escapeHTML(bst.name)}</option>`;
+                  }).join('')}
+                </select>
+                <div id="cm-ad-bastion-hint" class="ch-helper">Required — the ad links to this bastion's invite.</div>
+              </div>
+
+              <label class="ch-checkrow">
+                <input type="checkbox" id="cm-ad-autorefund">
+                <div class="ch-checkrow-text">
+                  <div class="ch-checkrow-title">Auto-renew</div>
+                  <div class="ch-checkrow-desc">Automatically deduct 15 Onyx every 4 days to keep this ad live.</div>
+                </div>
+              </label>
+
+              <div class="ch-cta-row">
+                <button class="btn-a ch-cta-btn" onclick="_cmCreateAd()" ${onyxBal<15?'disabled':''}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                  Publish — 15 Onyx
+                </button>
+                <div class="ch-cta-hint">${onyxBal<15 ? '<span style="color:var(--red);">Insufficient Onyx</span>' : `Lasts 4 days · You have ${onyxBal.toLocaleString()} Onyx`}</div>
+              </div>
             </div>
 
-            <button class="btn-a" onclick="_cmCreateAd()" ${onyxBal<15?'disabled style="opacity:.5;cursor:not-allowed;font-size:13px;padding:9px 22px;"':'style="font-size:13px;padding:9px 22px;"'}>+ Create Ad — 15 Onyx</button>
+            <!-- Preview column -->
+            <div class="ch-editor-preview">
+              <div class="ch-preview-head">
+                <span class="ch-preview-dot"></span>
+                Live Preview
+              </div>
+              <div id="cm-ad-preview-wrap" class="ch-preview-frame">
+                <div id="cm-ad-live-preview" class="ch-preview-content">
+                  <div class="ch-preview-empty">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <div>Upload an image to see your ad preview here</div>
+                  </div>
+                </div>
+              </div>
+              <div class="ch-preview-footnote">
+                Banners appear in main content areas. Rectangles appear in sidebars. Wrong-ratio images are stretched.
+              </div>
+            </div>
           </div>
 
           <!-- Active Ads -->
-          <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Your Ads</div>
-          <div id="cr-ads-list">
+          <div class="ch-list-head">
+            <div class="ch-list-head-title">Your Ads</div>
+            <div class="ch-list-head-count">${myAds.length} total</div>
+          </div>
+          <div id="cr-ads-list" class="ch-grid">
             ${myAds.length ? myAds.map((ad,i) => {
               const neverExpires = _isAdOwnerSuperadmin(ad);
               const isActive = _isAdLive(ad);
               const expired = !neverExpires && (ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date()));
               const statusLabel = ad.status==='cancelled'?'Cancelled':neverExpires?'Permanent':expired?'Expired':isActive?'Active':'Inactive';
-              const statusColor = isActive?'#3ecf6e':ad.status==='cancelled'?'#f87171':'#6b7280';
-              return `<div style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
-                ${ad.image?`<img src="${escapeHTML(ad.image)}" style="width:48px;height:${ad.ratio==='rectangle'?'40px':'28px'};object-fit:cover;border-radius:6px;flex-shrink:0;">`:''}
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.title||'Untitled')}</div>
-                  <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;margin-top:2px;">
-                    <span style="color:${statusColor};font-weight:700;">${statusLabel}</span>
-                    <span>${ad.ratio==='rectangle'?'Rectangle':'Banner'}</span>
-                    <span>${ad.clicks||0} clicks</span>
-                  </div>
+              const statusCls = isActive?'live':ad.status==='cancelled'?'danger':expired?'muted':'muted';
+              return `<div class="ch-card ch-card-ad">
+                <div class="ch-card-banner ch-card-banner--${ad.ratio==='rectangle'?'rect':'banner'}">
+                  ${ad.image?`<img src="${escapeHTML(ad.image)}" alt="">`:'<div class="ch-card-banner-empty"></div>'}
+                  <div class="ch-status-chip ch-status-${statusCls}">${statusLabel}</div>
                 </div>
-                ${isActive?`
-                  <button onclick="_cmEditAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--muted-light);cursor:pointer;">Edit (5 Onyx)</button>
-                  <button onclick="_cmRenewAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;">Renew</button>
-                  <button onclick="_cmCancelAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:#f87171;cursor:pointer;">Cancel</button>
-                `:''}
+                <div class="ch-card-body">
+                  <div class="ch-card-title">${escapeHTML(ad.title||'Untitled Ad')}</div>
+                  <div class="ch-card-meta">
+                    <span class="ch-card-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> ${(ad.clicks||0).toLocaleString()} clicks</span>
+                    <span class="ch-card-meta-sep"></span>
+                    <span class="ch-card-meta-item">${ad.ratio==='rectangle'?'Rectangle':'Banner'}</span>
+                  </div>
+                  ${isActive?`<div class="ch-card-actions">
+                    <button class="ch-action-btn" onclick="_cmEditAd(${i})" title="Edit (5 Onyx)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
+                    <button class="ch-action-btn ch-action-accent" onclick="_cmRenewAd(${i})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Renew</button>
+                    <button class="ch-action-btn ch-action-danger" onclick="_cmCancelAd(${i})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel</button>
+                  </div>`:''}
+                </div>
               </div>`;
-            }).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">No ads created yet.</div>'}
+            }).join('') : `<div class="ch-empty">
+              <div class="ch-empty-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+              <div class="ch-empty-title">No ads yet</div>
+              <div class="ch-empty-sub">Publish your first ad above and start growing your bastion's reach.</div>
+            </div>`}
           </div>
         </div>
 
         <!-- BOTS Section -->
         <div id="cr-cr-bots" style="display:none;">
-          <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:14px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <img src="/Fortized Bot.png" style="width:22px;height:22px;">
-                <div style="font-size:14px;font-weight:700;">Your Bots</div>
-              </div>
-              <div style="display:flex;gap:8px;">
-                <button class="btn-a" onclick="openCreateBotModal()" style="font-size:11.5px;padding:6px 14px;">+ Create Bot</button>
-              </div>
+          <div class="ch-section-head">
+            <div class="ch-section-head-text">
+              <div class="ch-section-title">Bots</div>
+              <div class="ch-section-sub">Build bots with custom commands and visual block scripting, then deploy them to your bastions.</div>
             </div>
-            <div style="font-size:11.5px;color:var(--muted);margin-bottom:14px;">Create bots with custom commands, visual block scripting, and deploy them to your Bastions.</div>
-            ${(CU.bots||[]).length ? (CU.bots||[]).map((bot, i) => `
-              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin-bottom:6px;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
-                <div style="width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--panel2);display:flex;align-items:center;justify-content:center;">
-                  ${bot.avatar ? `<img src="${escapeHTML(bot.avatar)}" style="width:100%;height:100%;object-fit:cover;">` : `<img src="/Fortized Bot.png" style="width:28px;height:28px;">`}
-                </div>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;">
-                    ${escapeHTML(bot.name)}
-                    <span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;${bot.enabled!==false?'background:rgba(62,207,110,.1);color:var(--green);':'background:rgba(255,255,255,.05);color:var(--muted);'}">${bot.enabled!==false?'Online':'Offline'}</span>
-                  </div>
-                  <div style="font-size:11px;color:var(--muted);">${escapeHTML(bot.bio||'No description')} · ${(bot.commands||[]).length} commands · ${bot.visibility||'private'}</div>
-                </div>
-                <div style="display:flex;gap:6px;">
-                  <button class="btn-g" style="font-size:10.5px;padding:5px 10px;" onclick="openBotEditor(${i})">Edit</button>
-                  <button class="btn-g" style="font-size:10.5px;padding:5px 10px;color:var(--red);" onclick="_crDeleteBot(${i})">Delete</button>
-                </div>
-              </div>
-            `).join('') : `
-              <div style="text-align:center;padding:24px;border:1px dashed rgba(255,255,255,.08);border-radius:12px;">
-                <img src="/Fortized Bot.png" style="width:40px;height:40px;opacity:.3;margin-bottom:8px;">
-                <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;">No bots yet. Create your first bot to automate your Bastions!</div>
-                <button class="btn-a" onclick="openCreateBotModal()" style="font-size:12px;">Create Bot</button>
-              </div>
-            `}
+            <button class="btn-a ch-section-cta" onclick="openCreateBotModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              New Bot
+            </button>
           </div>
+
+          ${myBots.length ? `<div class="ch-grid">
+            ${myBots.map((bot, i) => `
+              <div class="ch-card ch-card-bot" onclick="openBotEditor(${i})">
+                <div class="ch-card-bot-header">
+                  <div class="ch-card-bot-avatar">
+                    ${bot.avatar ? `<img src="${escapeHTML(bot.avatar)}" alt="">` : `<img src="/Fortized Bot.png" alt="">`}
+                  </div>
+                  <div class="ch-card-bot-meta">
+                    <div class="ch-card-bot-name">
+                      ${escapeHTML(bot.name)}
+                      <span class="ch-status-dot ${bot.enabled!==false?'online':'offline'}"></span>
+                    </div>
+                    <div class="ch-card-bot-status">${bot.enabled!==false?'Online':'Offline'} · ${bot.visibility||'private'}</div>
+                  </div>
+                </div>
+                <div class="ch-card-bot-bio">${escapeHTML(bot.bio||'No description')}</div>
+                <div class="ch-card-bot-stats">
+                  <div class="ch-stat-chip">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                    ${(bot.commands||[]).length} commands
+                  </div>
+                </div>
+                <div class="ch-card-actions">
+                  <button class="ch-action-btn" onclick="event.stopPropagation();openBotEditor(${i})">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button class="ch-action-btn ch-action-danger" onclick="event.stopPropagation();_crDeleteBot(${i})">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/></svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>` : `<div class="ch-empty">
+            <div class="ch-empty-icon"><img src="/Fortized Bot.png" style="width:34px;height:34px;opacity:.5;"></div>
+            <div class="ch-empty-title">No bots yet</div>
+            <div class="ch-empty-sub">Create your first bot to automate your bastions, run commands, and react to events.</div>
+            <button class="btn-a ch-empty-cta" onclick="openCreateBotModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Create your first bot
+            </button>
+          </div>`}
         </div>
 
         <!-- TEMPLATES Section -->
         <div id="cr-cr-templates" style="display:none;">
-          <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:16px;">
-            <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Your Bastion Templates</div>
-            ${myTemplates.length ? myTemplates.map((bst,i) => {
-              const idx = (CU.bastions||[]).indexOf(bst);
-              return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
-                ${bst.icon?`<img src="${escapeHTML(bst.icon)}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;">`:`<div style="width:36px;height:36px;border-radius:8px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>`}
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:13px;font-weight:700;">${escapeHTML(bst.name)}</div>
-                  <div style="font-size:11px;color:var(--muted);">${(bst.channels||[]).length} channels</div>
-                </div>
-                <button onclick="_cmExportTemplate(${idx})" style="padding:5px 12px;font-size:11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;">Export</button>
-              </div>`;
-            }).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No bastions to publish as templates.</div>'}
+          <div class="ch-section-head">
+            <div class="ch-section-head-text">
+              <div class="ch-section-title">Bastion Templates</div>
+              <div class="ch-section-sub">Export any bastion you own as a template — share its structure with the community.</div>
+            </div>
           </div>
+
+          ${myTemplates.length ? `<div class="ch-grid">
+            ${myTemplates.map((bst,i) => {
+              const idx = (CU.bastions||[]).indexOf(bst);
+              return `<div class="ch-card ch-card-tpl">
+                <div class="ch-card-tpl-banner" ${bst.icon?`style="background-image:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.6) 100%),url('${escapeHTML(bst.icon)}');background-size:cover;background-position:center;"`:''}>
+                  ${!bst.icon?`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.45)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>`:''}
+                </div>
+                <div class="ch-card-body">
+                  <div class="ch-card-title">${escapeHTML(bst.name)}</div>
+                  <div class="ch-card-meta">
+                    <span class="ch-card-meta-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> ${(bst.channels||[]).length} channels</span>
+                    <span class="ch-card-meta-sep"></span>
+                    <span class="ch-card-meta-item">${(bst.roles||[]).length} roles</span>
+                  </div>
+                  <div class="ch-card-actions">
+                    <button class="ch-action-btn ch-action-accent" onclick="_cmExportTemplate(${idx})">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      Export
+                    </button>
+                  </div>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>` : `<div class="ch-empty">
+            <div class="ch-empty-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+            <div class="ch-empty-title">No templates to export</div>
+            <div class="ch-empty-sub">Bastions you own will appear here. Build one in your bastion list, then export it here.</div>
+          </div>`}
         </div>
       </div>
 
       <!-- ═══ CREATOR MARKETPLACE ═══ -->
       <div id="cr-section-marketplace" style="${creatorSub!=='marketplace'?'display:none;':''}">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-          <div>
-            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;">Creator Marketplace</div>
-            <div style="font-size:11.5px;color:var(--muted);">Browse and get community-made bots and bastion templates.</div>
+        <div class="ch-section-head">
+          <div class="ch-section-head-text">
+            <div class="ch-section-title">Marketplace</div>
+            <div class="ch-section-sub">Discover community-made bots and bastion templates. Built by creators, for creators.</div>
           </div>
         </div>
 
-        <!-- Marketplace sub-tabs -->
-        <div style="display:flex;gap:6px;margin-bottom:16px;">
-          <button id="cr-mkt-bots-btn2" style="padding:7px 16px;font-size:11.5px;border-radius:8px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);cursor:pointer;" onclick="_switchMktTab('bots')">Bots</button>
-          <button id="cr-mkt-templates-btn2" style="padding:7px 16px;font-size:11.5px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:1px solid var(--border);cursor:pointer;" onclick="_switchMktTab('templates')">Templates</button>
+        <div class="ch-pillbar">
+          <button id="cr-mkt-bots-btn2" class="ch-pill active" onclick="_switchMktTab('bots')">
+            <img src="/Fortized Bot.png" style="width:13px;height:13px;opacity:.8;">
+            Bots
+          </button>
+          <button id="cr-mkt-templates-btn2" class="ch-pill" onclick="_switchMktTab('templates')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            Templates
+          </button>
         </div>
 
         <!-- Marketplace Bots -->
         <div id="cr-mkt-bots2">
-          <div style="margin-bottom:14px;position:relative;">
-            <input class="field-input" id="mkt-bot-search" placeholder="Search bots..." oninput="_filterMktBots(this.value)" style="padding-left:34px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <div class="ch-search-wrap">
+            <svg class="ch-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input class="ch-search-input" id="mkt-bot-search" placeholder="Search community bots..." oninput="_filterMktBots(this.value)">
           </div>
-          <div id="mkt-bots-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
-            <div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">
-              <img src="/Fortized Bot.png" style="width:36px;height:36px;opacity:.25;margin-bottom:8px;">
-              <div>No bots listed yet. List yours from the Creations tab!</div>
+          <div id="mkt-bots-grid" class="ch-mkt-grid">
+            <div class="ch-empty ch-empty-mkt">
+              <div class="ch-empty-icon"><img src="/Fortized Bot.png" style="width:34px;height:34px;opacity:.5;"></div>
+              <div class="ch-empty-title">Marketplace is just opening</div>
+              <div class="ch-empty-sub">Bots created by the community will show up here. List yours from the Creations tab.</div>
             </div>
           </div>
         </div>
 
         <!-- Marketplace Templates -->
         <div id="cr-mkt-templates2" style="display:none;">
-          <div style="margin-bottom:14px;position:relative;">
-            <input class="field-input" id="mkt-tpl-search" placeholder="Search templates..." oninput="_filterMktTemplates(this.value)" style="padding-left:34px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <div class="ch-search-wrap">
+            <svg class="ch-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input class="ch-search-input" id="mkt-tpl-search" placeholder="Search community templates..." oninput="_filterMktTemplates(this.value)">
           </div>
-          <div id="mkt-templates-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
-            <div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5" style="margin-bottom:8px;"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-              <div>No templates listed yet. Export yours from the Creations tab!</div>
+          <div id="mkt-templates-grid" class="ch-mkt-grid">
+            <div class="ch-empty ch-empty-mkt">
+              <div class="ch-empty-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+              <div class="ch-empty-title">No templates listed yet</div>
+              <div class="ch-empty-sub">Bastion templates from the community will appear here. Export yours from the Creations tab.</div>
             </div>
           </div>
         </div>
@@ -34074,7 +34236,7 @@ function _switchCreatorSub(sub) {
     const sec = document.getElementById('cr-section-'+t);
     const btn = document.getElementById('cr-tab-'+t);
     if (sec) sec.style.display = t===sub?'':'none';
-    if (btn) { btn.style.background = t===sub?'var(--accent)':'transparent'; btn.style.color = t===sub?'var(--rail)':'var(--muted-light)'; btn.style.fontWeight = t===sub?'700':'600'; }
+    if (btn) btn.classList.toggle('active', t===sub);
   });
   const el = document.getElementById('atelier-content');
   if (el) el._creatorSub = sub;
@@ -34086,7 +34248,7 @@ function _switchCreationsSub(sub) {
     const sec = document.getElementById('cr-cr-'+t);
     const btn = document.getElementById('cr-cr-'+t+'-btn');
     if (sec) sec.style.display = t===sub?'':'none';
-    if (btn) { btn.style.background = t===sub?'rgba(255,249,62,.1)':'transparent'; btn.style.color = t===sub?'var(--accent)':'var(--muted-light)'; btn.style.borderColor = t===sub?'rgba(255,249,62,.2)':'var(--border)'; btn.style.fontWeight = t===sub?'700':'600'; }
+    if (btn) btn.classList.toggle('active', t===sub);
   });
   const el = document.getElementById('atelier-content');
   if (el) el._creationsSub = sub;
@@ -34099,64 +34261,69 @@ function _switchMktTab(tab) {
   const tplBtn = document.getElementById('cr-mkt-templates-btn2');
   if (bots) bots.style.display = tab==='bots'?'':'none';
   if (tpl) tpl.style.display = tab==='templates'?'':'none';
-  if (botsBtn) { botsBtn.style.background = tab==='bots'?'rgba(255,249,62,.1)':'transparent'; botsBtn.style.color = tab==='bots'?'var(--accent)':'var(--muted-light)'; botsBtn.style.borderColor = tab==='bots'?'rgba(255,249,62,.2)':'var(--border)'; botsBtn.style.fontWeight = tab==='bots'?'700':'600'; }
-  if (tplBtn) { tplBtn.style.background = tab==='templates'?'rgba(255,249,62,.1)':'transparent'; tplBtn.style.color = tab==='templates'?'var(--accent)':'var(--muted-light)'; tplBtn.style.borderColor = tab==='templates'?'rgba(255,249,62,.2)':'var(--border)'; tplBtn.style.fontWeight = tab==='templates'?'700':'600'; }
+  if (botsBtn) botsBtn.classList.toggle('active', tab==='bots');
+  if (tplBtn) tplBtn.classList.toggle('active', tab==='templates');
   if (tab==='bots') _loadMktBots();
   if (tab==='templates') _loadMktTemplates();
 }
 async function _loadMktBots() {
   const grid = document.getElementById('mkt-bots-grid');
   if (!grid) return;
+  const empty = `<div class="ch-empty ch-empty-mkt"><div class="ch-empty-icon"><img src="/Fortized Bot.png" style="width:34px;height:34px;opacity:.5;"></div><div class="ch-empty-title">Marketplace is just opening</div><div class="ch-empty-sub">Bots created by the community will show up here.</div></div>`;
   try {
     const listed = await FortizedSocial.getMarketplaceBots?.() || [];
-    if (!listed.length) { grid.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;"><img src="/Fortized Bot.png" style="width:36px;height:36px;opacity:.25;margin-bottom:8px;"><div>No bots listed yet.</div></div>'; return; }
+    if (!listed.length) { grid.innerHTML = empty; return; }
     grid.innerHTML = listed.map(bot => `
-      <div style="padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <div style="width:36px;height:36px;border-radius:10px;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;">
-            ${bot.avatar ? `<img src="${escapeHTML(bot.avatar)}" style="width:100%;height:100%;object-fit:cover;">` : `<img src="/Fortized Bot.png" style="width:24px;height:24px;">`}
+      <div class="ch-card ch-card-mkt">
+        <div class="ch-card-mkt-header">
+          <div class="ch-card-mkt-avatar">
+            ${bot.avatar ? `<img src="${escapeHTML(bot.avatar)}" alt="">` : `<img src="/Fortized Bot.png" alt="">`}
           </div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(bot.name)}</div>
-            <div style="font-size:10px;color:var(--muted);">by ${escapeHTML(bot.owner||'Unknown')}</div>
+          <div class="ch-card-mkt-meta">
+            <div class="ch-card-mkt-name">${escapeHTML(bot.name)}</div>
+            <div class="ch-card-mkt-author">by ${escapeHTML(bot.owner||'Unknown')}</div>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--muted-light);line-height:1.4;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHTML(bot.bio||'No description')}</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-size:11px;font-weight:700;color:var(--accent);">${(bot.price||0)>0?bot.price+' Onyx':'Free'}</span>
-          <span style="font-size:10px;color:var(--muted);">${(bot.commands||[]).length} commands</span>
+        <div class="ch-card-mkt-bio">${escapeHTML(bot.bio||'No description')}</div>
+        <div class="ch-card-mkt-foot">
+          <div class="ch-card-mkt-stats">
+            <span class="ch-stat-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> ${(bot.commands||[]).length}</span>
+          </div>
+          <div class="ch-card-mkt-price ${(bot.price||0)>0?'paid':'free'}">${(bot.price||0)>0?(bot.price+' Onyx'):'Free'}</div>
         </div>
       </div>
     `).join('');
-  } catch(e) {
-    grid.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">No bots listed yet.</div>';
-  }
+  } catch(e) { grid.innerHTML = empty; }
 }
 async function _loadMktTemplates() {
   const grid = document.getElementById('mkt-templates-grid');
   if (!grid) return;
+  const empty = `<div class="ch-empty ch-empty-mkt"><div class="ch-empty-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div><div class="ch-empty-title">No templates listed yet</div><div class="ch-empty-sub">Bastion templates from the community will appear here.</div></div>`;
   try {
     const listed = await FortizedSocial.getMarketplaceTemplates?.() || [];
-    if (!listed.length) { grid.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5" style="margin-bottom:8px;"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><div>No templates listed yet.</div></div>'; return; }
+    if (!listed.length) { grid.innerHTML = empty; return; }
     grid.innerHTML = listed.map(tpl => `
-      <div style="padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          ${tpl.icon?`<img src="${escapeHTML(tpl.icon)}" style="width:36px;height:36px;border-radius:10px;object-fit:cover;">`:`<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>`}
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(tpl.name)}</div>
-            <div style="font-size:10px;color:var(--muted);">by ${escapeHTML(tpl.owner||'Unknown')}</div>
+      <div class="ch-card ch-card-mkt">
+        <div class="ch-card-mkt-header">
+          <div class="ch-card-mkt-avatar">
+            ${tpl.icon?`<img src="${escapeHTML(tpl.icon)}" alt="">`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.6)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>`}
+          </div>
+          <div class="ch-card-mkt-meta">
+            <div class="ch-card-mkt-name">${escapeHTML(tpl.name)}</div>
+            <div class="ch-card-mkt-author">by ${escapeHTML(tpl.owner||'Unknown')}</div>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--muted-light);margin-bottom:8px;">${(tpl.channels||[]).length} channels · ${(tpl.roles||[]).length} roles</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-size:11px;font-weight:700;color:var(--accent);">${(tpl.price||0)>0?tpl.price+' Onyx':'Free'}</span>
-          <button class="btn-g" style="font-size:10px;padding:4px 10px;" onclick="event.stopPropagation();toast('Template imported!','success')">Use</button>
+        <div class="ch-card-mkt-bio">${(tpl.channels||[]).length} channels · ${(tpl.roles||[]).length} roles</div>
+        <div class="ch-card-mkt-foot">
+          <div class="ch-card-mkt-price ${(tpl.price||0)>0?'paid':'free'}">${(tpl.price||0)>0?(tpl.price+' Onyx'):'Free'}</div>
+          <button class="ch-action-btn ch-action-accent" onclick="event.stopPropagation();toast('Template imported!','success')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Use
+          </button>
         </div>
       </div>
     `).join('');
-  } catch(e) {
-    grid.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">No templates listed yet.</div>';
-  }
+  } catch(e) { grid.innerHTML = empty; }
 }
 function _filterMktBots(q) { /* search is a stub for now — filters client-side when data is loaded */ }
 function _filterMktTemplates(q) { /* stub */ }

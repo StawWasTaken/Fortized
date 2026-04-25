@@ -33590,53 +33590,86 @@ function renderAtelierTab(tab) {
       </div>`;
     };
 
+    const allDailyDone = dailyDone === dailyTotal;
+    const heroHeadline = allDailyDone
+      ? 'All daily quests cleared.'
+      : (activeQ.length ? `${activeQ.length} ${activeQ.length===1?'quest':'quests'} await you.` : 'Every quest completed.');
+    const heroSub = allDailyDone
+      ? 'Come back tomorrow for new daily quests, or chase the longer goals below.'
+      : 'Earn Onyx, grow your streak, and rise through the ranks of the realm.';
+
     el.innerHTML = `<div class="atelier-content-inner">
 
-      <!-- Stats row -->
-      <div style="display:grid;grid-template-columns:auto auto 1fr;gap:14px;margin-bottom:24px;">
-        <!-- Daily progress ring -->
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 18px 14px 14px;background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.015));border:1.5px solid rgba(255,255,255,.06);border-radius:16px;">
-          <div style="position:relative;width:48px;height:48px;">
-            <svg width="48" height="48" viewBox="0 0 48 48" style="transform:rotate(-90deg);">
-              <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
-              <circle cx="24" cy="24" r="20" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${20*2*Math.PI}" stroke-dashoffset="${20*2*Math.PI*(1-dailyDone/Math.max(dailyTotal,1))}" style="transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);filter:drop-shadow(0 0 6px rgba(255,249,62,.2));"/>
+      <!-- ═══ HERO ═══ -->
+      <div class="ch-hero">
+        <div class="ch-hero-glow"></div>
+        <div class="ch-hero-grid"></div>
+        <div class="ch-hero-inner">
+          <div class="ch-hero-top">
+            <div class="ch-hero-info">
+              <div class="ch-hero-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <div class="ch-hero-text">
+                <div class="ch-hero-kicker">Quests</div>
+                <h1>${heroHeadline}</h1>
+                <div class="ch-hero-sub">${heroSub}</div>
+              </div>
+            </div>
+            <div class="ch-hero-balance ch-hero-streak${streak>0?' ch-hero-streak-on':''}" oncontextmenu="onStreakCtxMenu(event);return false;" title="Right-click for streak options">
+              <div class="ch-hero-streak-flame">${_streakFlameSvg(28)}${_isStreakProtected() ? '<span class="ch-hero-streak-shield" title="Protected"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></span>' : ''}</div>
+              <div>
+                <div class="ch-hero-bal-num" style="color:${streak>0?'#ff9d5e':'rgba(255,255,255,.35)'};">${streak}<span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.4);margin-left:4px;">${streak === 1 ? 'day' : 'days'}</span></div>
+                <div class="ch-hero-bal-lbl">${_isStreakProtected() ? 'Protected · '+new Date(+CU.streakProtectedUntil).toLocaleDateString() : 'Day Streak'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat row -->
+      <div class="ch-stats-row">
+        <div class="ch-stat">
+          <div class="ch-stat-icon" style="background:rgba(255,249,62,.08);position:relative;">
+            <svg width="32" height="32" viewBox="0 0 48 48" style="position:absolute;inset:0;transform:rotate(-90deg);">
+              <circle cx="24" cy="24" r="14" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/>
+              <circle cx="24" cy="24" r="14" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${14*2*Math.PI}" stroke-dashoffset="${14*2*Math.PI*(1-dailyDone/Math.max(dailyTotal,1))}" style="transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);"/>
             </svg>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:12px;font-weight:800;color:#fff;">${dailyDone}/${dailyTotal}</div>
+            <span style="font-family:var(--font-display);font-size:9.5px;font-weight:800;color:#fff;position:relative;z-index:1;">${dailyDone}/${dailyTotal}</span>
           </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;">Daily Quests</div>
-            <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);margin-top:3px;">${dailyDone === dailyTotal ? 'All done!' : (dailyTotal - dailyDone) + ' remaining'}</div>
-          </div>
-        </div>
-        <!-- Streak widget -->
-        <div oncontextmenu="onStreakCtxMenu(event);return false;" style="display:flex;align-items:center;gap:12px;padding:14px 18px 14px 14px;background:linear-gradient(135deg,rgba(255,138,62,.07),rgba(255,62,94,.02));border:1.5px solid rgba(255,138,62,.15);border-radius:16px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,138,62,.28)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(255,138,62,.1)'" onmouseout="this.style.borderColor='rgba(255,138,62,.15)';this.style.transform='';this.style.boxShadow=''" title="Right-click for streak options">
-          <div style="position:relative;width:48px;height:48px;display:flex;align-items:center;justify-content:center;color:#ff8a3e;filter:drop-shadow(0 0 4px rgba(255,138,62,.3));">
-            ${_streakFlameSvg(32)}
-            ${_isStreakProtected() ? '<div style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:#0c0f1a;border-radius:50%;border:1.5px solid rgba(74,144,245,.55);color:#4a90f5;" title="Protected"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></div>' : ''}
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;">Day Streak</div>
-            <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:${streak > 0 ? '#ff9d5e' : 'rgba(255,255,255,.35)'};line-height:1;margin-top:4px;">${streak}<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.4);margin-left:4px;letter-spacing:0;">${streak === 1 ? 'day' : 'days'}</span></div>
-            ${_isStreakProtected() ? `<div style="font-size:10px;color:#7eb8f7;margin-top:3px;font-weight:600;">Protected · ${new Date(+CU.streakProtectedUntil).toLocaleDateString()}</div>` : (streak > 0 ? '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">Claim daily to keep it alive</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">Start with today\'s claim</div>')}
+          <div class="ch-stat-body">
+            <div class="ch-stat-num">${dailyDone}<span style="font-size:13px;color:rgba(255,255,255,.4);font-weight:600;">/${dailyTotal}</span></div>
+            <div class="ch-stat-label">Daily Quests</div>
           </div>
         </div>
-        <!-- Stats pills -->
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <div style="display:flex;align-items:center;gap:7px;padding:10px 16px;background:linear-gradient(135deg,rgba(255,249,62,.05),rgba(255,249,62,.02));border:1.5px solid rgba(255,249,62,.1);border-radius:14px;">
-            <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;">
-            <span style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--accent);">${totalOnyx}</span>
-            <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">earned</span>
+        <div class="ch-stat">
+          <div class="ch-stat-icon" style="background:rgba(255,249,62,.08);color:var(--accent);">
+            <img src="/Onyx.png" style="width:16px;height:16px;">
           </div>
-          <div style="display:flex;align-items:center;gap:7px;padding:10px 16px;background:rgba(62,207,110,.03);border:1.5px solid rgba(62,207,110,.08);border-radius:14px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span style="font-size:12px;font-weight:700;color:var(--green);">${doneQ.length}/${QUESTS_DEF.length}</span>
-            <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">done</span>
+          <div class="ch-stat-body">
+            <div class="ch-stat-num">${totalOnyx.toLocaleString()}</div>
+            <div class="ch-stat-label">Onyx Earned</div>
           </div>
-          ${streak > 0 ? `<div style="display:flex;align-items:center;gap:7px;padding:10px 16px;background:linear-gradient(135deg,rgba(251,146,60,.05),rgba(251,146,60,.02));border:1.5px solid rgba(251,146,60,.1);border-radius:14px;">
-            <span style="font-size:15px;">🔥</span>
-            <span style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fb923c;">${streak}</span>
-            <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">day streak</span>
-          </div>` : ''}
+        </div>
+        <div class="ch-stat">
+          <div class="ch-stat-icon" style="background:rgba(62,207,110,.08);color:var(--green);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="ch-stat-body">
+            <div class="ch-stat-num">${doneQ.length}<span style="font-size:13px;color:rgba(255,255,255,.4);font-weight:600;">/${QUESTS_DEF.length}</span></div>
+            <div class="ch-stat-label">Completed</div>
+          </div>
+        </div>
+        <div class="ch-stat">
+          <div class="ch-stat-icon" style="background:rgba(251,146,60,.08);color:#fb923c;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11H1l8-8M23 13h-8l8 8M13 1v8l-10-10M11 23v-8l10 10"/></svg>
+          </div>
+          <div class="ch-stat-body">
+            <div class="ch-stat-num">${activeQ.length}</div>
+            <div class="ch-stat-label">Available</div>
+          </div>
         </div>
       </div>
 
@@ -33649,31 +33682,37 @@ function renderAtelierTab(tab) {
         ${qTab === 'available' ? `
           <!-- Daily Quests Section -->
           ${activeQ.filter(q=>q.daily).length ? `
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(96,165,250,.5);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Daily Quests
+            <div class="ch-section-head" style="--ch-accent:#60a5fa;">
+              <div class="ch-section-head-text">
+                <div class="ch-section-title">Daily Quests</div>
+                <div class="ch-section-sub">Reset every midnight. Claim them before they're gone.</div>
+              </div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px;">
               ${activeQ.filter(q=>q.daily).map(q=>questCardHTML(q)).join('')}
             </div>` : ''}
 
           <!-- Beginner Quests -->
           ${activeQ.filter(q=>!q.daily && q.category==='Beginner').length ? `
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              Beginner Quests
+            <div class="ch-section-head" style="--ch-accent:#a78bfa;">
+              <div class="ch-section-head-text">
+                <div class="ch-section-title">Beginner Quests</div>
+                <div class="ch-section-sub">Find your footing. One-time rewards for getting started in the realm.</div>
+              </div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px;">
               ${activeQ.filter(q=>!q.daily && q.category==='Beginner').map(q=>questCardHTML(q)).join('')}
             </div>` : ''}
 
           <!-- Explorer Quests -->
           ${activeQ.filter(q=>!q.daily && q.category==='Explorer').length ? `
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(251,146,60,.5);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              Explorer Quests
+            <div class="ch-section-head" style="--ch-accent:#fb923c;">
+              <div class="ch-section-head-text">
+                <div class="ch-section-title">Explorer Quests</div>
+                <div class="ch-section-sub">Push further. Bigger goals, bigger rewards.</div>
+              </div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px;">
               ${activeQ.filter(q=>!q.daily && q.category==='Explorer').map(q=>questCardHTML(q)).join('')}
             </div>` : ''}
 
@@ -33740,7 +33779,7 @@ function renderAtelierTab(tab) {
           <div class="ch-hero-top">
             <div class="ch-hero-info">
               <div class="ch-hero-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 19l7-7 3 3-7 7-3-3z"/>
                   <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
                   <path d="M2 2l7.586 7.586"/>
@@ -33748,8 +33787,9 @@ function renderAtelierTab(tab) {
                 </svg>
               </div>
               <div class="ch-hero-text">
-                <h1>Creator Hub</h1>
-                <div class="ch-hero-sub">Publish ads, craft bots, and share your creations with the realm.</div>
+                <div class="ch-hero-kicker">Creator Hub</div>
+                <h1>Build, publish & grow your realm.</h1>
+                <div class="ch-hero-sub">Publish ads, craft bots, and share your creations with the community.</div>
               </div>
             </div>
             <div class="ch-hero-balance">
@@ -33760,44 +33800,45 @@ function renderAtelierTab(tab) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="ch-stats-row">
-            <div class="ch-stat">
-              <div class="ch-stat-icon" style="background:rgba(255,249,62,.08);color:var(--accent);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              </div>
-              <div class="ch-stat-body">
-                <div class="ch-stat-num">${activeAds}</div>
-                <div class="ch-stat-label">Active Ads</div>
-              </div>
-            </div>
-            <div class="ch-stat">
-              <div class="ch-stat-icon" style="background:rgba(96,165,250,.1);color:#60a5fa;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              </div>
-              <div class="ch-stat-body">
-                <div class="ch-stat-num">${totalClicks.toLocaleString()}</div>
-                <div class="ch-stat-label">Total Clicks</div>
-              </div>
-            </div>
-            <div class="ch-stat">
-              <div class="ch-stat-icon" style="background:rgba(62,207,110,.08);color:var(--green);">
-                <img src="/Fortized Bot.png" style="width:14px;height:14px;opacity:.85;">
-              </div>
-              <div class="ch-stat-body">
-                <div class="ch-stat-num">${activeBots}</div>
-                <div class="ch-stat-label">Bots Online</div>
-              </div>
-            </div>
-            <div class="ch-stat">
-              <div class="ch-stat-icon" style="background:rgba(167,139,250,.08);color:#a78bfa;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-              </div>
-              <div class="ch-stat-body">
-                <div class="ch-stat-num">${myTemplates.length}</div>
-                <div class="ch-stat-label">Templates</div>
-              </div>
-            </div>
+      <!-- Stat row (outside hero, mirrors Quests + Fortshop rhythm) -->
+      <div class="ch-stats-row">
+        <div class="ch-stat">
+          <div class="ch-stat-icon" style="background:rgba(255,249,62,.08);color:var(--accent);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="ch-stat-body">
+            <div class="ch-stat-num">${activeAds}</div>
+            <div class="ch-stat-label">Active Ads</div>
+          </div>
+        </div>
+        <div class="ch-stat">
+          <div class="ch-stat-icon" style="background:rgba(96,165,250,.1);color:#60a5fa;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div class="ch-stat-body">
+            <div class="ch-stat-num">${totalClicks.toLocaleString()}</div>
+            <div class="ch-stat-label">Total Clicks</div>
+          </div>
+        </div>
+        <div class="ch-stat">
+          <div class="ch-stat-icon" style="background:rgba(62,207,110,.08);color:var(--green);">
+            <img src="/Fortized Bot.png" style="width:14px;height:14px;opacity:.85;">
+          </div>
+          <div class="ch-stat-body">
+            <div class="ch-stat-num">${activeBots}</div>
+            <div class="ch-stat-label">Bots Online</div>
+          </div>
+        </div>
+        <div class="ch-stat">
+          <div class="ch-stat-icon" style="background:rgba(167,139,250,.08);color:#a78bfa;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          </div>
+          <div class="ch-stat-body">
+            <div class="ch-stat-num">${myTemplates.length}</div>
+            <div class="ch-stat-label">Templates</div>
           </div>
         </div>
       </div>

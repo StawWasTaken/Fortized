@@ -39514,8 +39514,28 @@ async function showMiniProfilePreview(username, anchorEl) {
     ? `<div class="mpp-role-tag mpp-role-tag--${escapeHTML(_staffRole)}">${_staffRole === 'superadmin' ? 'Superadmin' : _staffRole === 'admin' ? 'Admin' : 'Moderator'}</div>`
     : (u.verified ? `<div class="mpp-role-tag mpp-role-tag--verified">Verified</div>` : '');
 
-  // Roles section (only when viewing inside a bastion).
-  let _rolesSection = '';
+  // ── Build the preview from scratch following the design brief ──
+  // Three vertical zones, separated by hairline dividers:
+  //   1. IDENTITY  — banner, avatar, role tag, name, handle, presence.
+  //   2. ENGAGEMENT — custom status, streak, roles (only when set).
+  //   3. ACTION    — primary, friend, profile, more (4 circular icons).
+  // Sections render only when they have data, so an empty profile is
+  // a clean two-zone card rather than a wall of empty headers.
+
+  // ENGAGEMENT zone
+  const _csBlock = customStatus?.text ? `
+    <div class="mpp-cs">
+      ${customStatus.emoji ? `<span class="mpp-cs-emoji"><img src="${emojiToTwemojiUrl(customStatus.emoji)}" alt="" onerror="this.outerHTML='${customStatus.emoji}'"></span>` : ''}
+      <span class="mpp-cs-text">${escapeHTML(customStatus.text)}</span>
+    </div>` : '';
+
+  const _streakBlock = (+u.dailyStreak) ? `
+    <div class="mpp-row">
+      <span class="mpp-row-label">Streak</span>
+      <span class="mpp-row-val">${renderStreakChip(+u.dailyStreak)}</span>
+    </div>` : '';
+
+  let _rolesBlock = '';
   if (_currentView === 'bastion' && curBastion !== null) {
     const _canManageRoles = hasPerm('manage_roles') || (CU?.bastions?.[curBastion]?.owner === CU?.username);
     const _roleTags = renderUserRoleTags(username);
@@ -39523,108 +39543,106 @@ async function showMiniProfilePreview(username, anchorEl) {
       ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" aria-label="Manage roles">+</button>`
       : '';
     if (_roleTags || _addBtn) {
-      _rolesSection = `<div class="mpp-section">
-        <div class="mpp-section-label">Roles</div>
-        <div class="mpp-roles-row" id="mpp-roles-container">${_roleTags}${_addBtn}</div>
-        <div id="mpp-role-picker" style="display:none;"></div>
-      </div>`;
+      _rolesBlock = `
+        <div class="mpp-block">
+          <div class="mpp-block-label">Roles</div>
+          <div class="mpp-roles" id="mpp-roles-container">${_roleTags}${_addBtn}</div>
+          <div id="mpp-role-picker" style="display:none;"></div>
+        </div>`;
     }
   }
 
-  const _streakChip = (+u.dailyStreak)
-    ? `<div class="mpp-section"><div class="mpp-section-label">Streak</div><div>${renderStreakChip(+u.dailyStreak)}</div></div>`
+  const _engagement = (_csBlock || _streakBlock || _rolesBlock)
+    ? `<div class="mpp-zone mpp-zone-engagement">${_csBlock}${_streakBlock}${_rolesBlock}</div>`
     : '';
 
-  // Custom status section (mirrors Guilded's "🎉 Partying" block).
-  const _customStatusSection = customStatus?.text
-    ? `<div class="mpp-section">
-        <div class="mpp-section-label">Custom Status</div>
-        <div class="mpp-cs-row profile-custom-status" data-for="${escapeHTML(username)}">
-          ${customStatus.emoji ? `<span class="mpp-cs-emoji"><img src="${emojiToTwemojiUrl(customStatus.emoji)}" alt="" onerror="this.outerHTML='${customStatus.emoji}'"></span>` : ''}
-          <span class="mpp-cs-text">${escapeHTML(customStatus.text)}</span>
-        </div>
-      </div>`
-    : '';
+  // ACTION zone — circular icon-first buttons. Each one is wired to a
+  // real existing function; no placeholders.
+  const _actionsBtns = isOwn ? `
+    <button class="mpp-act" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')" title="Edit Profile">
+      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+      <span class="mpp-act-lbl">Edit</span>
+    </button>
+    <button class="mpp-act" onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()" title="Set status">
+      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 11h.01M15 11h.01M8 15s1.5 2 4 2 4-2 4-2"/></svg></span>
+      <span class="mpp-act-lbl">Status</span>
+    </button>
+    <button class="mpp-act" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" title="Open profile">
+      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+      <span class="mpp-act-lbl">Profile</span>
+    </button>
+    <button class="mpp-act" onclick="event.stopPropagation();_mppShowMore('${escapeHTML(username)}',event)" title="More">
+      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></span>
+      <span class="mpp-act-lbl">More</span>
+    </button>
+  ` : `
+    <button class="mpp-act" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')" title="Send a message">
+      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></span>
+      <span class="mpp-act-lbl">Message</span>
+    </button>
+    ${_isFriend
+      ? `<button class="mpp-act mpp-act--on" onclick="document.getElementById('mini-profile-preview')?.remove();removeFriend('${escapeHTML(username)}')" title="Remove friend">
+          <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <span class="mpp-act-lbl">Friends</span>
+        </button>`
+      : _hasPending
+        ? `<button class="mpp-act" disabled title="Friend request pending">
+            <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+            <span class="mpp-act-lbl">Pending</span>
+          </button>`
+        : `<button class="mpp-act" onclick="quickAddFriend('${escapeHTML(username)}')" title="Add friend">
+            <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></span>
+            <span class="mpp-act-lbl">Add</span>
+          </button>`
+    }
+    <button class="mpp-act" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" title="Open profile">
+      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+      <span class="mpp-act-lbl">Profile</span>
+    </button>
+    <button class="mpp-act" onclick="event.stopPropagation();_mppShowMore('${escapeHTML(username)}',event)" title="More">
+      <span class="mpp-act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></span>
+      <span class="mpp-act-lbl">More</span>
+    </button>
+  `;
 
   panel.innerHTML = `
     <div class="mpp-accent"></div>
+
+    <!-- IDENTITY ─────────────────────────────────── -->
     <div class="mpp-banner">
       ${bannerBg}
-      ${profileTheme ? `<div class="mpp-banner-fade" style="background:linear-gradient(180deg,${profileTheme.color1}33,transparent 55%,rgba(0,0,0,.45));"></div>` : '<div class="mpp-banner-fade"></div>'}
+      ${profileTheme ? `<div class="mpp-banner-tint" style="background:linear-gradient(180deg,${profileTheme.color1}33,transparent 55%,rgba(0,0,0,.45));"></div>` : '<div class="mpp-banner-tint"></div>'}
     </div>
-    <div class="mpp-av-area">
-      <div class="profile-decoration-wrap mpp-av-wrap" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 96, null, { fit: 'contain' })}</div>
-        ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
-        <span class="profile-status-dot mpp-status-dot" data-for="${escapeHTML(username)}" data-dot-size="22" style="width:22px;height:22px;">${FtzStatus.dotSvg(u.status||'offline', 22)}</span>
+    <div class="mpp-body">
+      <div class="mpp-zone mpp-zone-identity">
+        <div class="profile-decoration-wrap mpp-av-wrap" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
+          <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 84, null, { fit: 'contain' })}</div>
+          ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
+          <span class="profile-status-dot mpp-status-dot" data-for="${escapeHTML(username)}" data-dot-size="20" style="width:20px;height:20px;">${FtzStatus.dotSvg(u.status||'offline', 20)}</span>
+        </div>
+        ${_roleTag}
+        <div class="mpp-name" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
+        <div class="mpp-handle">@${escapeHTML(u.username)}${u.pronouns ? `<span class="mpp-handle-sep">·</span>${escapeHTML(u.pronouns)}` : ''}</div>
+        <div class="mpp-presence">
+          <span class="profile-status-dot mpp-presence-dot" data-for="${escapeHTML(username)}" data-dot-size="9" style="display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 9)}</span>
+          <span class="profile-status-label" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
+        </div>
       </div>
-    </div>
-    <div class="mpp-identity">
-      ${_roleTag}
-      <div class="mpp-name" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
-      <div class="mpp-handle">@${escapeHTML(u.username)}${u.pronouns ? `<span class="mpp-handle-sep">·</span>${escapeHTML(u.pronouns)}` : ''}</div>
-      <div class="mpp-status-line">
-        <span class="profile-status-dot mpp-inline-dot" data-for="${escapeHTML(username)}" data-dot-size="10" style="display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 10)}</span>
-        <span class="profile-status-label mpp-status-text" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
+
+      ${_engagement ? '<div class="mpp-divider"></div>' : ''}
+      ${_engagement}
+
+      <!-- ACTION ─────────────────────────────────── -->
+      <div class="mpp-divider"></div>
+      <div class="mpp-zone mpp-zone-action">
+        <div class="mpp-actions">${_actionsBtns}</div>
       </div>
-    </div>
-    <!-- 4 circular action buttons (Guilded-style) -->
-    <div class="mpp-circ-row">
-      ${isOwn ? `
-        <button class="mpp-circ" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')" title="Edit Profile">
-          <span class="mpp-circ-disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
-          <span class="mpp-circ-lbl">Edit</span>
-        </button>
-        <button class="mpp-circ" onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()" title="Set status">
-          <span class="mpp-circ-disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 11h.01M15 11h.01"/><path d="M8 15s1.5 2 4 2 4-2 4-2"/></svg></span>
-          <span class="mpp-circ-lbl">Status</span>
-        </button>
-        <button class="mpp-circ" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" title="Open profile">
-          <span class="mpp-circ-disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-          <span class="mpp-circ-lbl">Profile</span>
-        </button>
-        <button class="mpp-circ" onclick="event.stopPropagation();_mppShowMore('${escapeHTML(username)}',event)" title="More">
-          <span class="mpp-circ-disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg></span>
-          <span class="mpp-circ-lbl">More</span>
-        </button>
-      ` : `
-        <button class="mpp-circ" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')" title="Send a message">
-          <span class="mpp-circ-disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></span>
-          <span class="mpp-circ-lbl">Message</span>
-        </button>
-        ${_isFriend
-          ? `<button class="mpp-circ mpp-circ--on" onclick="document.getElementById('mini-profile-preview')?.remove();removeFriend('${escapeHTML(username)}')" title="Remove friend">
-              <span class="mpp-circ-disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></span>
-              <span class="mpp-circ-lbl">Friends</span>
-            </button>`
-          : _hasPending
-            ? `<button class="mpp-circ" disabled title="Friend request pending">
-                <span class="mpp-circ-disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-                <span class="mpp-circ-lbl">Pending</span>
-              </button>`
-            : `<button class="mpp-circ" onclick="quickAddFriend('${escapeHTML(username)}')" title="Add friend">
-                <span class="mpp-circ-disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></span>
-                <span class="mpp-circ-lbl">Add</span>
-              </button>`
-        }
-        <button class="mpp-circ" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" title="Open profile">
-          <span class="mpp-circ-disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-          <span class="mpp-circ-lbl">Profile</span>
-        </button>
-        <button class="mpp-circ" onclick="event.stopPropagation();_mppShowMore('${escapeHTML(username)}',event)" title="More">
-          <span class="mpp-circ-disc"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg></span>
-          <span class="mpp-circ-lbl">More</span>
-        </button>
-      `}
-    </div>
-    ${_customStatusSection}
-    ${_streakChip}
-    ${_rolesSection}`;
+    </div>`;
 
   // Position near the anchor element
   document.body.appendChild(panel);
   const rect = anchorEl?.getBoundingClientRect() || {left:100, top:100, width:40};
-  const PW = panel.offsetWidth || 380;
+  const PW = panel.offsetWidth || 320;
   const PH = panel.offsetHeight || 300;
   let left = rect.left + rect.width + 8;
   let top = rect.top;

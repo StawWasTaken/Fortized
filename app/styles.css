@@ -4575,83 +4575,205 @@ button[disabled],
 .ftz-notif-close{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:16px;padding:2px;line-height:1;flex-shrink:0;margin-top:-2px;border-radius:6px;transition:all .12s;}
 .ftz-notif-close:hover{color:#fff;background:rgba(255,255,255,.06);}
 
-/* ── Mini Profile Preview — Guilded-inspired popup card ── */
-.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:22px;z-index:4000;box-shadow:0 24px 80px rgba(0,0,0,.7),0 8px 32px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.02);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .22s cubic-bezier(.16,1,.3,1);width:380px;}
-.mpp-accent{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.25) 12%,var(--accent) 50%,rgba(255,249,62,.25) 88%,transparent 100%);box-shadow:0 0 14px rgba(255,249,62,.35);z-index:6;pointer-events:none;}
-.mpp-banner-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.45) 100%);pointer-events:none;}
-@keyframes mppSlideIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
-.mpp-banner{height:120px;position:relative;overflow:hidden;background:#141a2e;}
-.mpp-banner img{width:100%;height:100%;object-fit:cover;}
-.mpp-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(to top,var(--panel),transparent);pointer-events:none;z-index:1;}
-.mpp-av-area{padding:0 22px;margin-top:-50px;position:relative;z-index:2;display:flex;align-items:flex-end;}
-.mpp-av-wrap{position:relative;cursor:pointer;flex-shrink:0;}
-.mpp-av{width:96px;height:96px;border-radius:50%;overflow:hidden;border:5px solid var(--panel);background:var(--panel2);flex-shrink:0;box-shadow:0 10px 28px rgba(0,0,0,.6);transition:transform .18s cubic-bezier(.22,1,.36,1);}
-.mpp-av-wrap:hover .mpp-av{transform:scale(1.05);}
-/* Don't force object-fit cover here — let the JS decide via inline
-   style on the <img>. Non-square avatars use object-fit:contain so the
-   full image shows inside the circle (with a panel-tone background
-   filling any letterbox bars). */
+/* ───────────────────────────────────────────────────────────────
+   PROFILE PREVIEW — vertical card, Identity → Engagement → Action.
+   Modeled on the Guilded reference + the design brief: portrait
+   orientation, generous whitespace, hairline dividers between
+   zones, hover lift on the whole card.
+   ─────────────────────────────────────────────────────────────── */
+.mini-profile-preview{
+  position:fixed;width:320px;
+  background:var(--panel);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:14px;
+  z-index:4000;
+  overflow:hidden;overflow-y:auto;
+  max-height:calc(100vh - 32px);
+  box-shadow:0 18px 56px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);
+  animation:mppSlideIn .2s cubic-bezier(.16,1,.3,1);
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+.mini-profile-preview:hover{
+  transform:translateY(-2px);
+  box-shadow:0 24px 72px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.03);
+}
+@keyframes mppSlideIn{from{opacity:0;transform:scale(.97) translateY(6px);}to{opacity:1;transform:none;}}
+
+/* Yellow accent stripe — Fortized signature, same as What's New. */
+.mpp-accent{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.25) 12%,var(--accent) 50%,rgba(255,249,62,.25) 88%,transparent 100%);
+  box-shadow:0 0 12px rgba(255,249,62,.3);
+  z-index:6;pointer-events:none;
+}
+
+/* Banner — short header strip, optional Radiance theme tint. */
+.mpp-banner{
+  position:relative;
+  height:80px;
+  overflow:hidden;
+  background:linear-gradient(135deg,#1f2540,#0f1622);
+}
+.mpp-banner img{width:100%;height:100%;object-fit:cover;display:block;}
+.mpp-banner-tint{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.4));pointer-events:none;}
+.mpp-banner::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:30px;
+  background:linear-gradient(to top,var(--panel),transparent);
+  pointer-events:none;z-index:1;
+}
+
+/* ── Body wraps the three vertical zones ── */
+.mpp-body{padding:0 22px 18px;}
+.mpp-zone{padding:0;}
+
+/* ── ZONE 1: IDENTITY ──
+   Avatar overlaps the banner, then role tag, name, handle, presence
+   stack underneath. Centred-left for a calmer, less busy feel. */
+.mpp-zone-identity{
+  position:relative;
+  margin-top:-44px;            /* avatar overlaps banner */
+  padding-top:0;
+}
+.mpp-av-wrap{
+  position:relative;width:84px;height:84px;
+  margin-bottom:12px;cursor:pointer;
+}
+.mpp-av{
+  width:84px;height:84px;border-radius:50%;
+  overflow:hidden;
+  border:4px solid var(--panel);
+  background:var(--panel2);
+  box-shadow:0 8px 22px rgba(0,0,0,.55);
+  transition:transform .18s cubic-bezier(.22,1,.36,1);
+}
+.mpp-av-wrap:hover .mpp-av{transform:scale(1.04);}
 .mpp-av img{width:100%;height:100%;border-radius:50%;display:block;}
-.mpp-status-dot{position:absolute;bottom:2px;right:2px;z-index:3;display:flex;align-items:center;justify-content:center;background:var(--panel);border-radius:50%;padding:2px;}
-.mpp-identity{padding:14px 22px 0;}
-.mpp-role-tag{display:inline-block;font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;color:#a78bfa;}
+.mpp-status-dot{
+  position:absolute;bottom:0;right:0;z-index:3;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--panel);border-radius:50%;padding:2px;
+}
+.profile-decoration-overlay{position:absolute;inset:-6px;pointer-events:none;}
+
+.mpp-role-tag{
+  display:inline-block;
+  font-family:var(--font-display);
+  font-size:10.5px;font-weight:800;
+  letter-spacing:.14em;text-transform:uppercase;
+  margin-bottom:4px;
+  color:#a78bfa;
+}
 .mpp-role-tag--moderator{color:#a78bfa;}
 .mpp-role-tag--admin{color:#fbbf24;}
 .mpp-role-tag--superadmin{color:#f87171;}
 .mpp-role-tag--verified{color:var(--accent);}
-.mpp-name{font-family:var(--font-display);font-size:24px;font-weight:800;color:#fff;cursor:pointer;transition:filter .12s;line-height:1.15;letter-spacing:-.01em;}
-.mpp-name:hover{filter:brightness(1.1);}
-.mpp-handle{font-size:13px;color:rgba(255,255,255,.42);font-weight:500;margin-top:5px;}
+
+.mpp-name{
+  font-family:var(--font-display);
+  font-size:20px;font-weight:800;letter-spacing:-.01em;
+  color:#fff;line-height:1.15;
+  cursor:pointer;transition:filter .12s;
+  word-break:break-word;
+}
+.mpp-name:hover{filter:brightness(1.08);}
+
+.mpp-handle{
+  font-size:12.5px;font-weight:500;
+  color:rgba(255,255,255,.42);
+  margin-top:3px;
+}
 .mpp-handle-sep{margin:0 6px;color:rgba(255,255,255,.18);}
-.mpp-status-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;margin-top:9px;}
-.mpp-inline-dot{width:10px;height:10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
-.mpp-status-text{font-weight:600;}
 
-/* 4 circular action buttons — Guilded layout. Each button is a big
-   disc with a centred icon and a label underneath. */
-.mpp-circ-row{display:flex;align-items:flex-start;justify-content:space-around;gap:8px;padding:18px 22px 6px;}
-.mpp-circ{display:flex;flex-direction:column;align-items:center;gap:7px;padding:0;background:none;border:none;cursor:pointer;flex:1;min-width:0;color:rgba(255,255,255,.7);transition:color .15s;}
-.mpp-circ:hover{color:#fff;}
-.mpp-circ:disabled{opacity:.4;cursor:not-allowed;}
-.mpp-circ-disc{width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:all .15s cubic-bezier(.22,1,.36,1);}
-.mpp-circ:hover .mpp-circ-disc{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.22);transform:translateY(-2px);}
-.mpp-circ:disabled .mpp-circ-disc,.mpp-circ:disabled:hover .mpp-circ-disc{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.06);transform:none;}
-.mpp-circ--on .mpp-circ-disc{background:rgba(62,207,110,.12);border-color:rgba(62,207,110,.32);color:var(--green);}
-.mpp-circ--on:hover .mpp-circ-disc{background:rgba(62,207,110,.18);border-color:rgba(62,207,110,.5);}
-.mpp-circ-lbl{font-family:var(--font-ui);font-size:11.5px;font-weight:600;letter-spacing:.01em;color:inherit;}
+.mpp-presence{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;
+  color:rgba(255,255,255,.5);
+  margin-top:8px;
+}
+.mpp-presence-dot{width:9px;height:9px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
 
-/* Sections in the popover (Custom Status, Streak, Roles). */
-.mpp .mpp-section,.mini-profile-preview .mpp-section{padding:14px 22px 4px;}
-.mpp-section-label{font-family:var(--font-display);font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.32);margin-bottom:8px;}
+/* ── Hairline divider between zones ── */
+.mpp-divider{
+  height:1px;
+  background:rgba(255,255,255,.06);
+  margin:14px -22px;            /* full-bleed within the body padding */
+}
 
-/* Custom status row — emoji + text, like Guilded's "🎉 Partying". */
-.mpp-cs-row{display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,.78);font-weight:500;}
-.mpp-cs-emoji{font-size:20px;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex-shrink:0;}
-.mpp-cs-emoji img{width:22px;height:22px;}
-.mpp-cs-text{flex:1;min-width:0;line-height:1.4;}
+/* ── ZONE 2: ENGAGEMENT ──
+   Custom status, streak chip, roles. Each block is optional. */
+.mpp-zone-engagement{display:flex;flex-direction:column;gap:12px;}
 
-/* Roles row */
-.mpp-roles-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
-.mpp-role-add-btn{width:24px;height:24px;border-radius:7px;border:1px dashed rgba(255,255,255,.18);background:none;color:rgba(255,255,255,.4);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1;transition:all .15s;}
-.mpp-role-add-btn:hover{border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.7);}
+/* Custom status — emoji + text, no header label needed. */
+.mpp-cs{display:flex;align-items:center;gap:10px;font-size:13.5px;line-height:1.4;color:rgba(255,255,255,.78);}
+.mpp-cs-emoji{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex-shrink:0;font-size:18px;}
+.mpp-cs-emoji img{width:20px;height:20px;}
+.mpp-cs-text{flex:1;min-width:0;}
 
-/* Bottom padding so the last section doesn't hug the rounded corner. */
-.mini-profile-preview > *:last-child{padding-bottom:18px;}
-.mpp-badges-row{display:flex;flex-wrap:wrap;gap:3px;padding:8px 18px 0;}
-.mpp-divider{height:1px;background:rgba(255,255,255,.05);margin:12px 18px;}
-.mpp-section{padding:3px 18px 5px;}
-.mpp-section-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.2);margin-bottom:5px;}
-.mpp-section-body{font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.55;}
-.mpp-roles-row{display:flex;flex-wrap:wrap;gap:5px;padding:3px 18px 5px;}
-.mpp-role-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--radius-pill);font-size:10.5px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.5);transition:all .12s;}
-.mpp-role-chip:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);}
-.mpp-role-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-/* (legacy .mpp-actions/.mpp-btn-* removed — replaced by .mpp-actions-row + .mpp-circ-btn) */
-.mpp-mutual-av{width:26px;height:26px;border-radius:50%;overflow:hidden;border:2px solid var(--panel);margin-left:-6px;transition:transform .15s;cursor:pointer;}
-.mpp-mutual-av:first-child{margin-left:0;}
-.mpp-mutual-av:hover{transform:scale(1.15);z-index:2;}
-.mpp-game-row{display:flex;gap:5px;flex-wrap:wrap;}
-.mpp-game-chip{padding:5px 10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:8px;font-size:10.5px;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:5px;}
+/* Compact label/value row used for Streak. */
+.mpp-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.mpp-row-label{
+  font-family:var(--font-display);font-size:10.5px;font-weight:800;
+  letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.32);
+}
+.mpp-row-val{display:inline-flex;}
+
+/* Block-style section with its own label + content (Roles). */
+.mpp-block-label{
+  font-family:var(--font-display);font-size:10.5px;font-weight:800;
+  letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.32);
+  margin-bottom:8px;
+}
+.mpp-roles{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.mpp-role-add-btn{
+  width:24px;height:24px;border-radius:7px;
+  border:1px dashed rgba(255,255,255,.18);background:none;
+  color:rgba(255,255,255,.4);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:14px;line-height:1;transition:all .15s;
+}
+.mpp-role-add-btn:hover{border-color:rgba(255,255,255,.35);color:rgba(255,255,255,.7);}
+
+/* ── ZONE 3: ACTION ──
+   Four circular icon buttons with labels. Wired to existing functions. */
+.mpp-zone-action{padding-top:4px;}
+.mpp-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.mpp-act{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:0;background:none;border:none;cursor:pointer;
+  color:rgba(255,255,255,.7);transition:color .15s;
+}
+.mpp-act:hover{color:#fff;}
+.mpp-act:disabled{opacity:.45;cursor:not-allowed;}
+.mpp-act-icon{
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s cubic-bezier(.22,1,.36,1);
+}
+.mpp-act:hover .mpp-act-icon{
+  background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.22);
+  transform:translateY(-1px);
+}
+.mpp-act:active .mpp-act-icon{transform:translateY(0);background:rgba(255,249,62,.14);}
+.mpp-act:disabled .mpp-act-icon,.mpp-act:disabled:hover .mpp-act-icon{
+  background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.06);transform:none;
+}
+.mpp-act--on .mpp-act-icon{background:rgba(62,207,110,.12);border-color:rgba(62,207,110,.32);color:var(--green);}
+.mpp-act--on:hover .mpp-act-icon{background:rgba(62,207,110,.18);border-color:rgba(62,207,110,.5);}
+.mpp-act-lbl{
+  font-family:var(--font-ui);
+  font-size:11px;font-weight:600;
+  color:inherit;letter-spacing:.01em;
+}
+
+/* Mobile / narrow viewports — actions wrap to 2x2 grid. */
+@media (max-width:380px){
+  .mini-profile-preview{width:calc(100vw - 24px);}
+  .mpp-actions{grid-template-columns:repeat(2,1fr);}
+}
+
 /* ── Full Profile Modal — Guilded-inspired two-column ── */
 .up-card{display:flex;min-height:500px;max-height:85vh;border-radius:20px;overflow:hidden;background:var(--panel);box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.03);position:relative;}
 /* Yellow accent stripe at the top of the modal — matches the

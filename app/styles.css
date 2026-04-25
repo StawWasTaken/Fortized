@@ -1606,6 +1606,13 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .ch-modal-close{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.55);cursor:pointer;transition:all .15s;}
 .ch-modal-close:hover{background:rgba(255,255,255,.08);color:#fff;}
 
+/* What's New (forum announcements) card */
+.whats-new-card{position:relative;background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:22px;max-width:560px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);overflow:hidden;}
+.whats-new-accent{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.25) 12%,var(--accent) 50%,rgba(255,249,62,.25) 88%,transparent 100%);box-shadow:0 0 14px rgba(255,249,62,.35);z-index:5;pointer-events:none;}
+#whats-new-upvote:hover{background:rgba(255,249,62,.06);border-color:rgba(255,249,62,.18);color:rgba(255,255,255,.85);}
+#whats-new-upvote.on{background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.32);color:var(--accent);}
+#whats-new-upvote.on:hover{background:rgba(255,249,62,.15);}
+
 /* Creator Terms gate modal */
 .ch-gate-overlay{position:fixed;inset:0;z-index:var(--z-modal,5000);display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,10,15,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:chGateFade .2s ease-out;}
 @keyframes chGateFade{from{opacity:0;}to{opacity:1;}}

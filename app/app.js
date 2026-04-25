@@ -1694,9 +1694,6 @@ window.addEventListener('popstate', function(e) {
   showView(state.view || 'home', true);
 });
 function showView(v, _skipPush) {
-  // Show the latest forum announcement on every page navigation. Cached
-  // by _checkForAnnouncements; this just re-displays if still unseen.
-  try { _maybeShowAnnouncementModal?.(); } catch(_) {}
   // ── Settings & bastion settings open as modals over the current page ──
   if (v === 'profile') {
     closeModal('modal-bsettings'); // close other if open
@@ -3176,14 +3173,9 @@ function renderHomePanel() {
   // Keep the legacy Active Now right sidebar as-is
   setTimeout(() => renderActiveNowSidebar('home-active-now-list'), 220);
 
-  // Check for new announcements once on landing, then every 5 minutes so a
-  // freshly posted thread surfaces without requiring a hard reload.
+  // Check for new announcements once on landing. Subsequent in-app navs
+  // don't re-trigger the modal — only a real page refresh does.
   setTimeout(_checkForAnnouncements, 500);
-  if (!window._ftzAnnouncementInterval) {
-    window._ftzAnnouncementInterval = setInterval(() => {
-      _checkForAnnouncements?.();
-    }, 5 * 60 * 1000);
-  }
 }
 
 // ── Feedback: "A place where…" + regular ──
@@ -9405,14 +9397,10 @@ function initFortizedUXResilience() {
   _ftzRouter.applyInitialRoute();
   _ftzRouter._initialLoad = false;
 
-  // Kick off the announcement check on every initial load (any landing page),
-  // and keep it refreshed in the background so a new forum post surfaces fast.
+  // Show the What's New card once per session (per page load / refresh).
+  // The user explicitly opted in to seeing it again on refresh, but not on
+  // every in-app navigation, so there's no need for a background interval.
   setTimeout(() => { try { _checkForAnnouncements?.(); } catch(_){} }, 600);
-  if (!window._ftzAnnouncementInterval) {
-    window._ftzAnnouncementInterval = setInterval(() => {
-      _checkForAnnouncements?.();
-    }, 5 * 60 * 1000);
-  }
 
   // CRITICAL: Sync fresh user data from database after page load
   // This ensures changes (PFP, messages, friends) made in other sessions are visible
@@ -13535,17 +13523,17 @@ async function _submitAdReport(adId) {
 // ANNOUNCEMENT SYSTEM — "What's New"
 // ═══════════════════════════════════════════════════════
 // The latest post in the Forum's `announcements` category is shown as a
-// dismissible update card. It re-appears on every page navigation until
-// the user ticks "Don't show this again". A new announcement (different
-// post id) automatically resurfaces the card.
+// dismissible update card. It appears ONCE per app load (or refresh) so
+// it doesn't get in the way as you move around the app. A new post in
+// the forum surfaces a fresh card on the next refresh.
 
 let _latestForumAnnouncement = null;
+let _announcementShownThisSession = false;
 
 async function _checkForAnnouncements() {
   try {
     const threads = await FortizedSocial.getForumThreads('announcements', 5, 0);
     if (!Array.isArray(threads) || !threads.length) return;
-    // Pick the most recently created post regardless of pinning order.
     const recent = [...threads]
       .filter(t => t && t.id)
       .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0];
@@ -13555,21 +13543,23 @@ async function _checkForAnnouncements() {
   } catch(e) { console.warn('[Announcements] Check failed:', e); }
 }
 
-// Called on every page navigation. Re-uses the cached announcement so
-// we don't hammer Supabase; _checkForAnnouncements refreshes the cache.
+// Surface the cached announcement, but only once per session. Refreshing
+// the page resets the flag so the card returns on the next load.
 function _maybeShowAnnouncementModal() {
+  if (_announcementShownThisSession) return;
   const a = _latestForumAnnouncement;
   if (!a || !a.id) return;
   if (document.getElementById('modal-whats-new')) return;
   let seen = [];
   try { seen = JSON.parse(localStorage.getItem('ftz_seen_forum_announcements') || '[]'); } catch(_) {}
   if (seen.includes(a.id)) return;
+  _announcementShownThisSession = true;
   _showWhatsNewModal(a);
 }
 
-// Pick the first media item (attachment first, legacy `image` field as
-// fallback). Returns null when the post has no media at all so the modal
-// can simply not render any media block.
+// Pick the first usable media item for the modal hero (attachment first,
+// legacy `image` field as fallback). Returns null when the post has no
+// media so the card can simply omit the media block.
 function _pickAnnouncementMedia(post) {
   if (!post) return null;
   const atts = Array.isArray(post.attachments) ? post.attachments : [];
@@ -13579,21 +13569,80 @@ function _pickAnnouncementMedia(post) {
   return null;
 }
 
+// Compute upvote/downvote state for the modal so the count + button can
+// reflect what the forum already knows about this thread.
+function _announcementVoteState(post) {
+  const me = CU?.username || '';
+  const likes = Array.isArray(post.likes) ? post.likes : [];
+  const dislikes = Array.isArray(post.dislikes) ? post.dislikes : [];
+  return {
+    score: likes.length - dislikes.length,
+    upvoted: !!me && likes.includes(me),
+  };
+}
+
+// Wire the announcement card's Open-in-Forum link so it works from any
+// page: switch to the forum view first, wait for it to mount, then open
+// the thread inside it.
+async function _openAnnouncementInForum(threadId) {
+  _dismissWhatsNew();
+  try {
+    if (typeof showView === 'function') showView('forum');
+  } catch(_) {}
+  // Forum view mounts asynchronously; poll for its container before
+  // calling _forumViewThread, which assumes #forum-page-content exists.
+  for (let i = 0; i < 25; i++) {
+    if (document.getElementById('forum-page-content')) break;
+    await new Promise(r => setTimeout(r, 60));
+  }
+  try { await _forumViewThread(threadId); } catch(e) { console.warn('[Announcements] open failed', e); }
+}
+
+// One-click upvote from inside the announcement card. The vote is stored
+// against the same forum thread, so the count matches everywhere.
+async function _toggleAnnouncementVote() {
+  const post = _latestForumAnnouncement;
+  if (!post?.id) return;
+  if (!CU?.username) { toast('Sign in to react', 'error'); return; }
+  // Optimistic UI update
+  const me = CU.username;
+  post.likes = Array.isArray(post.likes) ? post.likes.slice() : [];
+  post.dislikes = Array.isArray(post.dislikes) ? post.dislikes.slice() : [];
+  const liSet = new Set(post.likes);
+  const diSet = new Set(post.dislikes);
+  if (liSet.has(me)) liSet.delete(me);
+  else { liSet.add(me); diSet.delete(me); }
+  post.likes = [...liSet];
+  post.dislikes = [...diSet];
+  _refreshAnnouncementVoteUI();
+  // Persist
+  try { await _forumVote('thread', post.id, 1); } catch(_) {}
+}
+
+function _refreshAnnouncementVoteUI() {
+  const post = _latestForumAnnouncement;
+  if (!post) return;
+  const { score, upvoted } = _announcementVoteState(post);
+  const btn = document.getElementById('whats-new-upvote');
+  if (!btn) return;
+  btn.classList.toggle('on', upvoted);
+  btn.querySelector('.wn-up-count').textContent = score.toLocaleString();
+}
+
 function _showWhatsNewModal(post) {
   if (document.getElementById('modal-whats-new')) return;
   const overlay = document.createElement('div');
   overlay.id = 'modal-whats-new';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;animation:fadeIn .2s;';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;animation:fadeIn .2s;padding:24px;';
   overlay.onclick = e => { if (e.target === overlay) _dismissWhatsNew(); };
 
   const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); } catch { return ''; } };
-  const authorPfp = post.author_pfp || (typeof _defaultPfpUrl === 'function' ? _defaultPfpUrl(post.author||'') : '');
+  const authorName = post.author || 'staff';
+  const authorPfp = post.author_pfp || (typeof _defaultPfpUrl === 'function' ? _defaultPfpUrl(authorName) : '');
   const body = post.content || '';
   const media = _pickAnnouncementMedia(post);
+  const { score, upvoted } = _announcementVoteState(post);
 
-  // Discord-style media block: full-width inside the modal, no inner
-  // padding, slight tonal background so dark images don't look orphaned.
-  // Hidden entirely when the post has no media.
   const mediaHTML = media ? (
     media.type === 'video'
       ? `<div style="background:#0a0c12;line-height:0;"><video controls playsinline preload="metadata" src="${escapeHTML(media.url)}" style="width:100%;display:block;max-height:320px;object-fit:cover;background:#000;" onerror="this.parentElement.style.display='none'"></video></div>`
@@ -13601,35 +13650,47 @@ function _showWhatsNewModal(post) {
   ) : '';
 
   overlay.innerHTML = `
-    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:560px;width:94%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);overflow:hidden;">
+    <div class="whats-new-card">
+      <!-- Yellow accent bar (matches Atelier hero language) -->
+      <div class="whats-new-accent"></div>
       <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 26px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
         <div>
-          <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;line-height:1.1;">What's New</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:4px;">${fmtDate(post.created_at)}</div>
+          <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.01em;">What's New</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:5px;letter-spacing:.02em;">${fmtDate(post.created_at)}</div>
         </div>
-        <button onclick="_dismissWhatsNew()" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='rgba(255,255,255,.06)'">&times;</button>
+        <button onclick="_dismissWhatsNew()" aria-label="Close" style="width:30px;height:30px;border-radius:9px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)';this.style.color='#fff';" onmouseleave="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)';">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <!-- Scroll area: media (edge-to-edge) + text -->
       <div style="overflow-y:auto;flex:1;">
         ${mediaHTML}
-        <div style="padding:${media ? '18px' : '20px'} 24px 22px;">
-          <div style="font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.3;">${escapeHTML(post.title||'')}</div>
-          <div style="font-size:13.5px;color:rgba(255,255,255,.62);line-height:1.7;word-break:break-word;">${typeof _forumRenderBody === 'function' ? _forumRenderBody(body) : escapeHTML(body)}</div>
-          <div style="margin-top:14px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:rgba(255,255,255,.35);">
-            <img src="${escapeHTML(authorPfp)}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">
-            Posted by <strong style="color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(post.author||'staff')}</strong>
+        <div style="padding:${media ? '20px' : '22px'} 26px 24px;">
+          <div style="font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;margin-bottom:12px;line-height:1.3;">${escapeHTML(post.title||'')}</div>
+          <div style="font-size:13.5px;color:rgba(255,255,255,.66);line-height:1.7;word-break:break-word;">${typeof _forumRenderBody === 'function' ? _forumRenderBody(body) : escapeHTML(body)}</div>
+          <!-- Author row -->
+          <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px;">
+            <img src="${escapeHTML(authorPfp)}" alt="${escapeHTML(authorName)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,249,62,.18);background:var(--panel);" onerror="this.onerror=null;this.src='${typeof _defaultPfpUrl === 'function' ? _defaultPfpUrl(authorName) : ''}'">
+            <div style="min-width:0;">
+              <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.85);">${escapeHTML(authorName)}</div>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:1px;">Posted ${fmtDate(post.created_at)}</div>
+            </div>
           </div>
         </div>
       </div>
-      <!-- Footer with don't-show + actions -->
-      <div style="padding:14px 24px 18px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <!-- Footer -->
+      <div style="padding:14px 26px 18px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <button id="whats-new-upvote" class="${upvoted?'on':''}" onclick="_toggleAnnouncementVote()" title="Upvote" style="display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);cursor:pointer;font-family:var(--font-display);font-size:12px;font-weight:700;transition:all .15s;">
+          <span style="font-size:14px;line-height:1;">👏</span>
+          <span class="wn-up-count" style="font-variant-numeric:tabular-nums;">${score.toLocaleString()}</span>
+        </button>
         <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;flex:1;min-width:0;">
           <input type="checkbox" id="whats-new-dismiss-check" style="accent-color:var(--accent);">
           <span>Don't show this again</span>
         </label>
-        <a href="/app/forum?thread=${encodeURIComponent(post.id)}" onclick="event.preventDefault();_dismissWhatsNew();_forumViewThread('${escapeHTML(post.id)}');" style="font-size:11.5px;color:rgba(255,255,255,.4);text-decoration:none;">Open in forum →</a>
-        <button onclick="_dismissWhatsNew()" style="padding:8px 20px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;">Got it</button>
+        <button onclick="_openAnnouncementInForum('${escapeHTML(post.id)}')" style="font-size:11.5px;color:rgba(255,255,255,.45);background:none;border:none;cursor:pointer;padding:6px 0;">Open in forum →</button>
+        <button onclick="_dismissWhatsNew()" style="padding:8px 22px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseenter="this.style.filter='brightness(1.06)'" onmouseleave="this.style.filter=''">Got it</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);

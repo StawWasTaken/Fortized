@@ -39522,9 +39522,12 @@ async function showMiniProfilePreview(username, anchorEl) {
   }
   const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
+  // Fortized-branded banner: user banner if Radiance, else the Fortized icons
+  // pattern (`wrapBackground.png`) tinted with the user's profile theme — keeps
+  // every profile card feeling identifiably Fortized rather than a flat colour.
   const bannerBg = userBanner
     ? `<img src="${escapeHTML(userBanner)}" style="width:100%;height:100%;object-fit:cover;">`
-    : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#1a1a2e'},${profileTheme?profileTheme.color2+'33':'#0f3460'});"></div>`;
+    : `<div style="width:100%;height:100%;background:${profileTheme?`linear-gradient(135deg,${profileTheme.color1}55,${(profileTheme.color2||profileTheme.color1)}33),`:''}url('/wrapBackground.png') center/cover no-repeat,#0e1117;"></div>`;
   const _previewGames = u.gameCollection || u.registeredGames || [];
   const _previewMutuals = isOwn ? [] : (CU?.friends||[]).filter(f => f !== CU?.username && f !== username && (u.friends||[]).includes(f));
   const _memberSince = u.joinedAt||u.createdAt ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null;
@@ -39596,7 +39599,9 @@ async function showMiniProfilePreview(username, anchorEl) {
       </div>`;
     })()}
     <!-- (badges moved into the handle row above) -->
-    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${parseMD(escapeHTML(u.bio.slice(0,150)))}${u.bio.length>150?'…':''}</div></div>` : ''}
+    <!-- Bio renders as a polished, headerless markdown block (Discord-style)
+         so users can format their own "Role at Company" + signup links. -->
+    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-bio">${parseMD(escapeHTML(u.bio.slice(0,300)))}${u.bio.length>300?'…':''}</div>` : ''}
     ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
     <!-- Roles -->
     ${_currentView === 'bastion' && curBastion !== null ? (() => {

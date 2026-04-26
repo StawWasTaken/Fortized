@@ -16691,49 +16691,43 @@ function _buildProfileView(tab) {
 
           </div>
 
-          <!-- RIGHT: sticky preview -->
+          <!-- RIGHT: sticky preview — mirrors the popover visual language so
+               every Fortized profile surface reads as the same family. -->
           <div style="position:sticky;top:20px;">
 
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:10px;">Preview</div>
-            <div style="border-radius:16px;overflow:hidden;border:1.5px solid ${themeC1?'transparent':'rgba(255,255,255,.08)'};${themeC1?'background-image:linear-gradient(var(--panel),var(--panel)),linear-gradient(135deg,'+themeC1+','+( themeC2||themeC1)+');background-origin:border-box;background-clip:padding-box,border-box':''};box-shadow:0 8px 40px rgba(0,0,0,.35)${themeC1?',0 0 28px '+themeC1+'15':''};margin-bottom:18px;">
-              <!-- Banner -->
-              <div style="height:100px;position:relative;overflow:hidden;${CU.banner?'':'background:'+previewBg};cursor:pointer;transition:opacity .2s;" onclick="document.getElementById('banner-file-inp')?.click();" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-                ${CU.banner ? '<img src="'+escapeHTML(CU.banner)+'" style="width:100%;height:100%;object-fit:cover;">' : ''}
-                <div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,transparent 60%);"></div>
-                ${themeC1 ? '<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+themeC1+','+(themeC2||themeC1)+');opacity:.8;"></div>' : ''}
+            <div class="settings-profile-preview mini-profile-preview" style="position:relative;width:auto;max-height:none;animation:none;${themeC1?'border-color:transparent;background-image:linear-gradient(160deg,'+themeC1+'0a,var(--panel) 30%,var(--panel) 70%,'+(themeC2||themeC1)+'08),linear-gradient(135deg,'+themeC1+'40,'+(themeC2||themeC1)+'40);background-origin:border-box;background-clip:padding-box,border-box;border-width:1.5px;border-style:solid;':''}margin-bottom:18px;">
+              <!-- Banner: Fortized icons pattern (or user banner if Radiance), click→upload -->
+              <div class="mpp-banner" style="cursor:pointer;" onclick="document.getElementById('banner-file-inp')?.click();" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'" title="Change banner">
+                ${(CU.banner && hasRadiance) ? '<img src="'+escapeHTML(CU.banner)+'">' : '<div style="width:100%;height:100%;background:'+(themeC1?'linear-gradient(135deg,'+themeC1+'55,'+(themeC2||themeC1)+'33),':'')+"url('/wrapBackground.png') center/cover no-repeat,#0e1117;\"></div>"}
+                ${themeC1 ? '<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+themeC1+','+(themeC2||themeC1)+');opacity:.7;z-index:1;"></div>' : ''}
               </div>
-              <div style="padding:0 16px 16px;">
-                <div style="display:flex;align-items:flex-end;gap:8px;margin-top:-38px;margin-bottom:12px;position:relative;z-index:2;">
-                  <div style="width:76px;height:76px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(0,0,0,.6);flex-shrink:0;position:relative;cursor:pointer;transition:opacity .2s;" onclick="_showAvatarPickerMenu(event)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                    ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-family:var(--font-display);font-weight:800;font-size:22px;color:'+(themeC1||'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</span>'}
-                    ${CU.activeDecoration ? (()=>{const d=PROFILE_DECORATIONS.find(dec=>dec.id===CU.activeDecoration);return d?'<img src="'+escapeHTML(d.src)+'" style="position:absolute;inset:-9px;width:calc(100%+18px);height:calc(100%+18px);object-fit:contain;pointer-events:none;z-index:2;" onerror="this.style.display=\'none\'">':'';})() : ''}
-                  </div>
-                  <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;">${renderBadgesHTML(CU)}</div>
+              <!-- Avatar row: avatar + custom-status pill + streak chip -->
+              <div class="mpp-av-area">
+                <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;position:relative;" onclick="_showAvatarPickerMenu(event)" title="Change avatar">
+                  <div class="mpp-av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 64)}</div>
+                  ${CU.activeDecoration ? (()=>{const d=PROFILE_DECORATIONS.find(dec=>dec.id===CU.activeDecoration);return d?'<img src="'+escapeHTML(d.src)+'" class="profile-decoration-overlay" onerror="this.style.display=\'none\'">':'';})() : ''}
+                  <span class="profile-status-dot" data-for="${escapeHTML(CU.username)}" data-dot-size="18" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;z-index:3;">${FtzStatus.dotSvg(CU.status||'online', 18)}</span>
                 </div>
-                <div style="margin-bottom:8px;">
-                  <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
-                    <div style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};font-size:17px;font-weight:800;line-height:1;${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
-                    <span style="width:8px;height:8px;border-radius:50%;background:${sc};flex-shrink:0;box-shadow:0 0 6px ${sc}66;"></span>
-                  </div>
-                  <div style="font-size:11px;color:rgba(255,255,255,.3);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; <span style="color:rgba(255,255,255,.2);">'+escapeHTML(CU.pronouns)+'</span>' : ''}</div>
-                  ${(+CU.dailyStreak) ? '<div style="margin-top:6px;">'+renderStreakChip(+CU.dailyStreak)+'</div>' : ''}
-                </div>
-                ${cs&&cs.text ? '<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:8px;">'+(cs.emoji?'<img src="'+emojiToTwemojiUrl(cs.emoji)+'" style="width:13px;height:13px;object-fit:contain;" onerror="this.outerHTML=\''+escapeHTML(cs.emoji)+'\'">':'')+' '+escapeHTML(cs.text)+'</div>' : ''}
-                ${CU.bio ? '<div style="margin-bottom:10px;"><div style="font-size:8.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:4px;">About Me</div><div style="font-size:11px;color:rgba(255,255,255,.45);line-height:1.55;">'+escapeHTML(CU.bio.slice(0,120))+(CU.bio.length>120?'&hellip;':'')+'</div></div>' : ''}
-                <div id="preview-widgets-container"></div>
-                <!-- Chat message preview -->
-                <div style="margin-top:10px;background:rgba(255,255,255,.02);border-radius:10px;padding:9px 12px;">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
-                    <span style="font-size:11.5px;font-weight:700;font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
-                    <span style="font-size:9px;color:rgba(255,255,255,.2);">Today at 20:14</span>
-                  </div>
-                  <div style="font-size:11.5px;color:rgba(255,255,255,.45);">This is how your messages look!</div>
-                </div>
-                <div style="display:flex;gap:6px;margin-top:10px;">
-                  <button style="flex:1;padding:8px;background:${themeC1||'var(--accent)'};border:none;border-radius:8px;color:${themeC1?'#fff':'#0f1119'};font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">Edit Profile</button>
-                  <button onclick="viewUserProfile(CU.username)" style="flex:1;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:8px;color:rgba(255,255,255,.55);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;">View Profile</button>
+                <button class="profile-custom-status mpp-cs-pill ${cs&&cs.text ? '' : 'mpp-cs-pill--empty'}" data-for="${escapeHTML(CU.username)}" onclick="openStatusPicker()">${cs&&cs.text ? '<span class="csb-emoji">'+(cs.emoji?'<img src="'+emojiToTwemojiUrl(cs.emoji)+'" onerror="this.outerHTML=\''+escapeHTML(cs.emoji)+'\'">':'')+'</span><span class="csb-text">'+escapeHTML(cs.text).slice(0,40)+'</span>' : '<span class="mpp-cs-plus">+</span><span class="csb-text">Add a status</span>'}</button>
+                ${(+CU.dailyStreak) ? '<div class="mpp-streak-chip">'+(typeof _streakFlameSvg==='function' ? _streakFlameSvg(11) : '🔥')+'<span>'+(+CU.dailyStreak)+'</span></div>' : ''}
+              </div>
+              <!-- Identity: display name + handle row with badges right-aligned -->
+              <div class="mpp-identity">
+                <div class="mpp-displayname" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
+                <div class="mpp-handle-row">
+                  <div class="mpp-username">@${escapeHTML(CU.username)}${CU.pronouns ? '<span class="mpp-handle-dot">·</span>'+escapeHTML(CU.pronouns) : ''}</div>
+                  <div class="mpp-badges-inline">${renderBadgesHTML(CU)}</div>
                 </div>
               </div>
+              <!-- Headerless bio block — same as popover/modal -->
+              <div id="preview-bio-section" style="${CU.bio?'':'display:none;'}">
+                <div class="mpp-divider"></div>
+                <div class="mpp-bio" id="preview-bio-body">${CU.bio ? (parseMD(escapeHTML(CU.bio.slice(0,300)))+(CU.bio.length>300?'…':'')) : ''}</div>
+              </div>
+              ${(CU.joinedAt||CU.createdAt) ? '<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">'+new Date(CU.joinedAt||CU.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</div></div>' : ''}
+              <div id="preview-widgets-container"></div>
+              <div style="height:14px;"></div>
             </div>
 
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:10px;">Nameplate</div>
@@ -39089,71 +39083,77 @@ function _blendColorsForProfileCard(color1, color2) {
   return '#' + [r, g, b].map(x => ('0' + x.toString(16)).slice(-2)).join('');
 }
 function updateProfilePreview() {
-  // Update the profile card preview in real-time as user makes changes
-  const previewContainer = document.querySelector('[style*="sticky"]');
-  if (!previewContainer || !previewContainer.querySelector('.up-card')) return;
+  // Live-update the settings sticky preview as the user edits inputs.
+  const previewContainer = document.querySelector('.settings-profile-preview');
+  if (!previewContainer) return;
 
-  // Get current input values
   const dnInp = document.getElementById('dn-input');
   const bioInp = document.getElementById('bio-input');
-  const displayName = dnInp ? dnInp.value.trim() || CU.username : (CU.displayName || CU.username);
+  const pronounsInp = document.getElementById('pronouns-input');
+  const displayName = dnInp ? (dnInp.value.trim() || CU.username) : (CU.displayName || CU.username);
   const bio = bioInp ? bioInp.value.trim() : (CU.bio || '');
+  const pronouns = pronounsInp ? pronounsInp.value.trim() : (CU.pronouns || '');
 
-  // Get theme colors
   const themeC1 = CU.profileTheme?.color1 || null;
   const themeC2 = CU.profileTheme?.color2 || themeC1 || null;
-  const profileCardBg = (themeC1 && themeC2) ? _blendColorsForProfileCard(themeC1, themeC2) : null;
 
-  // Get status color
-  const sc = FtzStatus.color(CU.status || 'online');
-  const cs = CU.customStatus;
+  // Border/theme treatment on the card wrapper
+  if (themeC1) {
+    previewContainer.style.borderColor = 'transparent';
+    previewContainer.style.backgroundImage = `linear-gradient(160deg,${themeC1}0a,var(--panel) 30%,var(--panel) 70%,${themeC2||themeC1}08),linear-gradient(135deg,${themeC1}40,${themeC2||themeC1}40)`;
+    previewContainer.style.backgroundOrigin = 'border-box';
+    previewContainer.style.backgroundClip = 'padding-box,border-box';
+    previewContainer.style.borderWidth = '1.5px';
+    previewContainer.style.borderStyle = 'solid';
+  } else {
+    previewContainer.style.borderColor = '';
+    previewContainer.style.backgroundImage = '';
+    previewContainer.style.backgroundOrigin = '';
+    previewContainer.style.backgroundClip = '';
+  }
+
+  // Banner: user banner if Radiance, else theme-tinted Fortized icons pattern
   const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
   const userBanner = (CU.banner && hasRadiance) ? CU.banner : null;
-  const previewBg = themeC1 ? `linear-gradient(135deg,${themeC1}ee,${themeC2||themeC1}bb)` : `linear-gradient(135deg,#141a2e,#1a1035,#0f1828)`;
-
-  // Update the preview card background
-  const cardEl = previewContainer.querySelector('.up-card');
-  if (cardEl) {
-    cardEl.style.background = profileCardBg || '';
-  }
-
-  // Update border styling
-  const cardWrapper = previewContainer.querySelector('[style*="border-radius:16px"]');
-  if (cardWrapper && themeC1) {
-    cardWrapper.style.borderColor = 'transparent';
-    cardWrapper.style.backgroundImage = `linear-gradient(var(--panel),var(--panel)),linear-gradient(135deg,${themeC1},${themeC2||themeC1})`;
-    cardWrapper.style.backgroundOrigin = 'border-box';
-    cardWrapper.style.backgroundClip = 'padding-box,border-box';
-    cardWrapper.style.boxShadow = `0 8px 40px rgba(0,0,0,.35),0 0 28px ${themeC1}15`;
-  }
-
-  // Update banner background
-  const bannerEl = previewContainer.querySelector('[style*="height:100px"]');
+  const bannerEl = previewContainer.querySelector('.mpp-banner');
   if (bannerEl) {
+    const existingImg = bannerEl.querySelector('img');
+    const existingFallback = bannerEl.querySelector('div');
     if (userBanner) {
-      bannerEl.style.backgroundImage = `url('${escapeHTML(userBanner)}')`;
+      if (existingFallback) existingFallback.remove();
+      if (existingImg) existingImg.src = userBanner;
+      else bannerEl.insertAdjacentHTML('afterbegin', `<img src="${escapeHTML(userBanner)}">`);
     } else {
-      bannerEl.style.background = previewBg;
+      if (existingImg) existingImg.remove();
+      const fallbackBg = `${themeC1?`linear-gradient(135deg,${themeC1}55,${themeC2||themeC1}33),`:''}url('/wrapBackground.png') center/cover no-repeat,#0e1117`;
+      if (existingFallback) existingFallback.style.background = fallbackBg;
+      else bannerEl.insertAdjacentHTML('afterbegin', `<div style="width:100%;height:100%;background:${fallbackBg};"></div>`);
     }
   }
 
-  // Update display name
-  const displayNameEl = previewContainer.querySelector('[style*="font-size:17px"]');
-  if (displayNameEl) {
-    displayNameEl.textContent = displayName;
-    displayNameEl.style.fontFamily = _getDisplayFontCSS(CU.displayFont || 'default');
+  // Display name (with current font + effect)
+  const dnEl = previewContainer.querySelector('.mpp-displayname');
+  if (dnEl) {
+    dnEl.textContent = displayName;
     const effectCss = _getDisplayEffectCSS(CU.displayEffect || 'solid', CU.displayColor || '#fff');
-    displayNameEl.setAttribute('style', displayNameEl.getAttribute('style') + ';' + effectCss);
+    dnEl.style.cssText = `font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${effectCss}`;
   }
 
-  // Update bio
-  const bioEl = Array.from(previewContainer.querySelectorAll('div')).find(el =>
-    el.textContent && el.textContent.includes('About Me')
-  );
-  if (bioEl && bio) {
-    const bioText = bioEl.parentElement.querySelector('div:last-child');
-    if (bioText) {
-      bioText.textContent = bio.slice(0, 120) + (bio.length > 120 ? '…' : '');
+  // Handle row (username + pronouns)
+  const handleEl = previewContainer.querySelector('.mpp-username');
+  if (handleEl) {
+    handleEl.innerHTML = `@${escapeHTML(CU.username)}${pronouns ? `<span class="mpp-handle-dot">·</span>${escapeHTML(pronouns)}` : ''}`;
+  }
+
+  // Bio
+  const bioSection = previewContainer.querySelector('#preview-bio-section');
+  const bioBody = previewContainer.querySelector('#preview-bio-body');
+  if (bioBody) {
+    if (bio) {
+      bioBody.innerHTML = parseMD(escapeHTML(bio.slice(0, 300))) + (bio.length > 300 ? '…' : '');
+      if (bioSection) bioSection.style.display = '';
+    } else if (bioSection) {
+      bioSection.style.display = 'none';
     }
   }
 

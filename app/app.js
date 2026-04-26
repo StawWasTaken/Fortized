@@ -28761,80 +28761,45 @@ async function showDMUserPanel(username) {
   // Banner
   const userBanner = (u.banner && hasR) ? u.banner : null;
   const bannerBg = userBanner
-    ? '<img src="' + escapeHTML(userBanner) + '" style="width:100%;height:100%;object-fit:cover;">'
-    : '<div style="width:100%;height:100%;background:linear-gradient(135deg,' + (profileTheme?profileTheme.color1+'44':'#1a1a2e') + ',' + (profileTheme?profileTheme.color2+'33':'#0f3460') + ');"></div>';
-  // Member-since label
-  const memberSince = (u.joinedAt || u.createdAt) ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null;
-  // Activity (single primary activity, mirrors popover)
-  let activityHtml = '';
-  let _act = null;
-  if (u.activityState?.activities?.length) {
-    _act = u.activityState.activities.sort((a,b)=>(b.priority||2)-(a.priority||2))[0];
-  } else if (u.gameActivity?.name) {
-    _act = { type: u.gameActivity._spotify ? 'listening' : 'playing', name: u.gameActivity.name, icon: u.gameActivity.icon||'\ud83c\udfae', since: u.gameActivity.since, metadata: { coverThumb: u.gameActivity.coverThumb, genre: u.gameActivity.genre } };
-  }
-  if (_act) {
-    const verb = _act.type === 'listening' ? 'Listening to' : (_act.type === 'watching' ? 'Watching' : 'Playing');
-    const cover = _act.metadata?.coverThumb || _act.metadata?.spotifyAlbumArt;
-    const coverHTML = cover
-      ? '<img src="'+escapeHTML(cover)+'" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.outerHTML=\'<span style=font-size:18px>'+(_act.icon||'\ud83c\udfae')+'</span>\'">'
-      : '<span style="font-size:18px;">'+(_act.icon||'\ud83c\udfae')+'</span>';
-    activityHtml = '<div class="mpp-card mpp-activity-card"><div class="mpp-card-label">'+verb+'</div><div class="mpp-activity-body"><div class="mpp-activity-cover">'+coverHTML+'</div><div class="mpp-activity-info"><div class="mpp-activity-name">'+escapeHTML(_act.name)+'</div>'+(_act.since?'<div class="mpp-activity-meta">'+_formatActivityElapsed(_act.since)+'</div>':'')+'</div></div></div>';
-  }
-  // Game collection
-  const games = u.gameCollection || u.registeredGames || [];
-  let gamesHtml = '';
-  if (games.length) {
-    gamesHtml = '<div class="mpp-card mpp-game-card"><span class="mpp-card-inline-label">Game Collection</span><div class="mpp-game-thumbs">' + games.slice(0,3).map(g => {
-      const cover = g.coverUrl || g.cover || g.icon || g.iconUrl || '';
-      const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));
-      const titleAttr = 'title="'+escapeHTML(g.name||'')+'"';
-      if (isUrl) {
-        const fb = '<span class=&quot;mpp-game-thumb mpp-game-thumb--fallback&quot; title=&quot;'+escapeHTML(g.name||'')+'&quot;>'+escapeHTML((g.name||'?')[0].toUpperCase())+'</span>';
-        return '<img class="mpp-game-thumb" src="'+escapeHTML(cover)+'" alt="'+escapeHTML(g.name||'')+'" '+titleAttr+' onerror="this.outerHTML=\''+fb+'\'">';
-      }
-      return '<span class="mpp-game-thumb mpp-game-thumb--fallback" '+titleAttr+'>'+escapeHTML((g.name||'?')[0].toUpperCase())+'</span>';
-    }).join('') + (games.length>3?'<span class="mpp-game-thumb mpp-game-thumb--more">+'+(games.length-3)+'</span>':'') + '</div></div>';
-  }
+    ? "url('" + userBanner + "') center/cover no-repeat"
+    : 'linear-gradient(135deg,' + (profileTheme?profileTheme.color1+'88':'#141a2e') + ',' + (profileTheme?profileTheme.color2+'66':'#1a1030') + ',' + (profileTheme?profileTheme.color1+'44':'#0f1828') + ')';
   panel.innerHTML =
     // Banner
-    '<div class="mpp-banner" style="height:100px;">' + bannerBg
-    + (profileTheme ? '<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+profileTheme.color1+','+profileTheme.color2+');opacity:.7;z-index:1;"></div>' : '')
+    '<div style="position:relative;height:120px;background:'+bannerBg+';overflow:hidden;">'
+    + (profileTheme ? '<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+profileTheme.color1+','+profileTheme.color2+');opacity:.6;z-index:1;"></div>' : '')
+    + '<div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--channel) 0%,rgba(12,14,20,.5) 40%,transparent 100%);"></div>'
     + '</div>'
-    // Avatar row: avatar + custom-status pill + streak chip
-    + '<div class="mpp-av-area">'
-    +   '<div class="profile-decoration-wrap" style="flex-shrink:0;position:relative;">'
-    +     '<div class="mpp-av">' + buildAvatarHTML(u.pfp, u.displayName||u.username, 64) + '</div>'
-    +     (u.activeDecoration ? '<img src="'+(getDecorationSrc(u.activeDecoration)||'')+'" class="profile-decoration-overlay" onerror="this.style.display=\'none\'">' : '')
-    +     '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" data-dot-size="18" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;z-index:3;">' + FtzStatus.dotSvg(u.status||'offline', 18) + '</span>'
-    +   '</div>'
-    +   (customStatus?.text
-        ? '<div class="cloud-status-bubble profile-custom-status mpp-cs-pill" data-for="'+escapeHTML(u.username)+'" tabindex="-1"><span class="csb-emoji">'+(customStatus.emoji?'<img src="'+emojiToTwemojiUrl(customStatus.emoji)+'" onerror="this.outerHTML=\''+escapeHTML(customStatus.emoji)+'\'">':'')+'</span><span class="csb-text">'+escapeHTML(customStatus.text).slice(0,40)+'</span></div>'
-        : '<div class="profile-custom-status mpp-cs-pill" data-for="'+escapeHTML(u.username)+'" style="display:none;"></div>')
-    +   ((+u.dailyStreak) ? '<div class="mpp-streak-chip">'+(typeof _streakFlameSvg==='function' ? _streakFlameSvg(11) : '\ud83d\udd25')+'<span>'+(+u.dailyStreak)+'</span></div>' : '')
+    // PFP
+    + '<div style="padding:0 16px;margin-top:-36px;margin-bottom:8px;position:relative;z-index:2;">'
+    + '<div style="position:relative;display:inline-block;">'
+    + '<div style="width:72px;height:72px;border-radius:50%;background:var(--panel2);border:4px solid var(--channel);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.6);">' + buildAvatarHTML(u.pfp,u.displayName||u.username,64) + '</div>'
+    + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" data-dot-size="16" style="position:absolute;bottom:3px;right:3px;width:16px;height:16px;">'+FtzStatus.dotSvg(u.status||'offline', 16)+'</span>'
     + '</div>'
-    // Identity
-    + '<div class="mpp-identity">'
-    +   '<div class="mpp-displayname" style="font-family:'+getDisplayFont(u)+';'+_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')+'">' + escapeHTML(u.displayName||u.username) + '</div>'
-    +   '<div class="mpp-handle-row">'
-    +     '<div class="mpp-username">@' + escapeHTML(u.username) + (u.pronouns ? '<span class="mpp-handle-dot">\u00b7</span>'+escapeHTML(u.pronouns) : '') + '</div>'
-    +     '<div class="mpp-badges-inline">' + (typeof renderBadgesHTML==='function' ? renderBadgesHTML(u) : '') + '</div>'
-    +   '</div>'
     + '</div>'
-    // Activity card
-    + activityHtml
+    // Display Name
+    + '<div style="padding:0 16px 4px;">'
+    + '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;line-height:1.15;'+(u.displayFont&&u.displayFont!=='default'?'font-family:'+getDisplayFont(u)+';':'')+'">' + escapeHTML(u.displayName||u.username) + '</div>'
+    // Username
+    + '<div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;">@' + escapeHTML(u.username) + '</div>'
+    + '</div>'
+    // Status
+    + '<div style="padding:6px 16px 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
+    + '<div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,255,255,.03);border-radius:var(--radius-pill);">'
+    + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" data-dot-size="10" style="width:10px;height:10px;display:inline-flex;">'+FtzStatus.dotSvg(u.status||'offline', 10)+'</span>'
+    + '<span class="profile-status-label" data-for="'+escapeHTML(u.username)+'" style="font-size:11px;color:rgba(255,255,255,.45);font-weight:600;">' + FtzStatus.publicLabel(status) + '</span>'
+    + '</div>'
+    // Custom Status Bubble
+    + (customStatus?.text ? '<div class="cloud-status-bubble profile-custom-status" data-for="'+escapeHTML(u.username)+'" style="font-size:10.5px;padding:4px 10px;"><span class="csb-emoji">'+(customStatus.emoji?'<img src="'+emojiToTwemojiUrl(customStatus.emoji)+'" style="width:13px;height:13px;" onerror="this.outerHTML=\''+customStatus.emoji+'\'">':'')+'</span><span class="csb-text">'+escapeHTML(customStatus.text)+'</span></div>' : '<div class="profile-custom-status" data-for="'+escapeHTML(u.username)+'" style="display:none;"></div>')
+    + '</div>'
+    // Divider
+    + '<div style="height:1px;background:rgba(255,255,255,.05);margin:10px 16px;"></div>'
     // About Me
-    + (u.bio ? '<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">' + parseMD(escapeHTML(u.bio.slice(0,300))) + (u.bio.length>300?'\u2026':'') + '</div></div>' : '')
-    // Member Since
-    + (memberSince ? '<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">' + memberSince + '</div></div>' : '')
-    // Game Collection
-    + gamesHtml
-    // Connections (existing \u2014 kept as-is)
+    + (u.bio ? '<div style="padding:8px 16px;"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:5px;">About Me</div><div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.55;">' + escapeHTML(u.bio.slice(0,300)) + (u.bio.length>300?'\u2026':'') + '</div></div>' : '')
+    // Connections
     + connHtml
     // View Full Profile button
-    + '<div class="mpp-divider"></div>'
-    + '<div class="mpp-actions">'
-    +   '<button class="mpp-btn-primary" onclick="viewUserProfile(\'' + escapeHTML(username) + '\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View Full Profile</button>'
+    + '<div style="padding:12px 16px;">'
+    + '<button onclick="viewUserProfile(\'' + escapeHTML(username) + '\')" style="width:100%;padding:9px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseenter="this.style.background=\'rgba(255,255,255,.08)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.04)\'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View Full Profile</button>'
     + '</div>';
 }
 

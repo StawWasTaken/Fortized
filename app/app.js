@@ -120,7 +120,24 @@ if (!window._faviconFocusHooked) {
 // GLOBAL STATE
 // ════════════════════════════════════════════
 let CU = null;
-const _pfpCache = {};
+// In-memory PFP cache, hydrated from localStorage on boot so DM/friend lists
+// render real avatars on FIRST paint instead of flashing fallback letters
+// while the async profile fetch runs. Updated everywhere a profile is read.
+const _pfpCache = (() => {
+  try {
+    const raw = localStorage.getItem('ftz_pfp_cache_v1');
+    if (raw) return JSON.parse(raw) || {};
+  } catch {}
+  return {};
+})();
+let _pfpCacheSaveTimer = null;
+function _persistPfpCache() {
+  if (_pfpCacheSaveTimer) return;
+  _pfpCacheSaveTimer = setTimeout(() => {
+    _pfpCacheSaveTimer = null;
+    try { localStorage.setItem('ftz_pfp_cache_v1', JSON.stringify(_pfpCache)); } catch {}
+  }, 500);
+}
 const _pfpCropCache = {}; // username -> {leftPct, topPct, widthPct} for GIF avatar CSS cropping
 const _liveStatusCache = {}; // username -> status, updated by real-time presence events
 const _liveGameActivityCache = {}; // username -> { name, metadata, startedAt } | null
@@ -4251,7 +4268,7 @@ async function renderDMSidebar(scroll) {
         html += `
       <div class="friend-item dm-sortable" id="dm-fi-${escapeHTML(f)}" data-dm-id="dm_${escapeHTML(f)}" data-last-time="0" onclick="openDMView('${escapeHTML(f)}')" oncontextmenu="event.preventDefault();showDMCtxMenu(event,'${escapeHTML(f)}')">
         <div style="position:relative;flex-shrink:0;">
-          <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(null,f,34)}</div>
+          <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(_pfpCache[f]||null,f,34)}</div>
           <span class="profile-status-dot" data-for="${escapeHTML(f)}" data-dot-size="12" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;">${FtzStatus.dotSvg('offline', 12)}</span>
         </div>
         <div class="fi-info" style="min-width:0;flex:1;">
@@ -4305,6 +4322,8 @@ async function renderDMSidebar(scroll) {
       const u = _friendProfileMap[f] || _friendProfileMap[f.toLowerCase()] || null;
       const dmMsgs = await FortizedSocial.getDMMessages(CU.username, f, 1);
       if (u) {
+        // Cache the pfp so the next render paints it immediately (no flash).
+        if (u.pfp) { _pfpCache[f] = u.pfp; _persistPfpCache(); }
         const avEl = document.getElementById('dm-av-'+f);
         if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
         const dnEl = document.getElementById('dm-dn-'+f);
@@ -5234,7 +5253,7 @@ async function showGCMemberPanel(meta) {
     setTimeout(() => {
       FortizedSocial.getUserByName(m).then(ud => {
         if (!ud) return;
-        if (ud.pfp) _pfpCache[m] = ud.pfp;
+        if (ud.pfp) { _pfpCache[m] = ud.pfp; _persistPfpCache(); }
         const entry = panel.querySelector(`.ml-entry[data-member="${CSS.escape(m)}"]`);
         if (!entry) return;
         _verifiedCache[m] = !!ud.verified;
@@ -8046,7 +8065,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
     setTimeout(() => {
       FortizedSocial.getUserByName(u).then(ud => {
         if (!ud) return;
-        if (ud.pfp) _pfpCache[u] = ud.pfp;
+        if (ud.pfp) { _pfpCache[u] = ud.pfp; _persistPfpCache(); }
         if (ud.pfpCrop) _pfpCropCache[u] = ud.pfpCrop;
         _verifiedCache[u] = !!ud.verified;
         const entry = document.querySelector('.ml-entry[data-member="'+CSS.escape(u)+'"]');
@@ -9948,6 +9967,7 @@ function initFortizedUXResilience() {
         // ── UPDATE PFP EVERYWHERE ──
         if (data.pfp) {
           _pfpCache[data.username] = data.pfp;
+          _persistPfpCache();
           const _upCrop = data.pfpCrop || _pfpCropCache[data.username] || null;
           // Bastion member list
           document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-av-wrap').forEach(avWrap => {

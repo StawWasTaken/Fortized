@@ -296,16 +296,24 @@ const FortizedSocial = (() => {
   // existing DB row so stale/partial saves can't erase data.
   const _PROTECTED_ACCOUNTS_HARD = new Set(['staw', 'fortized', 'joyster']);
   // Admin/moderation fields that ARE allowed to change freely (even to empty).
+  // Cosmetic fields the user controls themselves (profile theme, decoration,
+  // pfp, banner, bio, custom status) are also writable — without them, a
+  // protected user trying to remove their decoration / reset their theme /
+  // clear their banner would silently fail because the merge would always
+  // restore the old value.
   const _PROTECTED_WRITABLE_FIELDS = new Set([
     'badges', 'role', 'isAdmin', 'isModerator', 'isSuperAdmin',
     'forceLogoutAt', 'banned', 'banReason', 'suspension', 'suspendedUntil',
     'activeWarning', 'lastSeen', 'status', 'customStatus', 'gameActivity',
-    'onyx', 'password', // password changes must flow through
+    'onyx', 'password',
+    'pfp', 'banner', 'bio', 'profileTheme', 'activeDecoration',
+    'displayName', 'pronouns', 'displayFont', 'displayEffect', 'displayColor',
   ]);
   const _PROTECTED_WRITABLE_COLS = new Set([
     'badges', 'banned', 'ban_reason', 'suspension', 'suspended_until',
     'active_warning', 'last_seen', 'status', 'custom_status', 'game_activity',
     'onyx', 'password', 'raw',
+    'pfp', 'banner', 'bio', 'profile_theme', 'active_decoration', 'display_name',
   ]);
 
   function _isHardProtected(username) {

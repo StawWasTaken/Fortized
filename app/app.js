@@ -4805,9 +4805,12 @@ async function loadDMMessages(username) {
   const dmKey = [CU.username, username].sort().join('__');
   FortizedSocial.stopDMPolling(dmKey);
   try {
-    const msgs = await FortizedSocial.getDMMessages(CU.username, username);
+    // Discord-style initial fetch: only the last ~50 visible messages.
+    // Older messages are lazy-loaded on scroll-up via _attachLazyLoad().
+    const msgs = await FortizedSocial.getDMMessages(CU.username, username, 50);
     renderMessages(msgsEl, msgs||[], 'dm');
     if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
+    _attachLazyLoadOlder(msgsEl, 'dm');
     _attachDMLiveEdits(CU.username, username);
     // Start polling for new DM messages to enable real-time sync across sessions
     FortizedSocial.startDMPolling(dmKey);
@@ -5286,6 +5289,7 @@ async function loadGCMessages(gcId) {
     const msgs = snap.exists() ? Object.values(snap.val()) : [];
     renderMessages(msgsEl, msgs, 'gc');
     if (!_restoreChatScroll('gc:'+gcId, msgsEl)) scrollBottom('gc-msgs', true);
+    _attachLazyLoadOlder(msgsEl, 'gc');
     // Live listener
     const ref = firebase.database().ref('groupChats/'+gcId+'/messages');
     const handler = ref.on('child_added', snap => {
@@ -6135,9 +6139,11 @@ async function loadChannelMessages(idx) {
   // Join Socket.io room for bastion channel real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('bastion', b.globalId||b.name, ch.name);
   try {
-    const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name);
+    // Discord-style initial fetch: only the last ~50 visible messages.
+    const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,50);
     renderMessages(msgsEl,msgs||[],'ch');
     if (!_restoreChatScroll('ch:'+curBastion+':'+idx, msgsEl)) scrollBottom('ch-msgs-'+idx, true);
+    _attachLazyLoadOlder(msgsEl, 'ch');
     _attachChLiveEdits(b.globalId||b.name, ch.name);
     listenChannelTyping(b.globalId||b.name, ch.name);
     _chListener=FortizedSocial.listenBastionChannel(b.globalId||b.name,ch.name,msg=>{
@@ -6522,12 +6528,15 @@ function renderMessages(container, msgs, context) {
   container.querySelectorAll('.msg-row,.date-div,.load-more-bar').forEach(el => el.remove());
   if (!msgs.length) return;
 
-  if (msgs.length >= 100) {
+  // Show the lazy-load bar whenever we hit the initial fetch limit (50) — that
+  // tells us the server has more older messages waiting. Scroll-up triggers
+  // _attachLazyLoadOlder() which clicks the bar's button automatically.
+  if (msgs.length >= 50) {
     const loadMore = document.createElement('div');
     loadMore.className = 'load-more-bar';
     loadMore.innerHTML = '<button class="load-more-btn" onclick="_loadOlderMessages(this)">Load older messages</button>';
     loadMore.dataset.context = context;
-    loadMore.dataset.offset = '100';
+    loadMore.dataset.offset = '50';
     container.appendChild(loadMore);
   }
 
@@ -6585,40 +6594,68 @@ async function _loadOlderMessages(btn) {
   const bar = btn.closest('.load-more-bar');
   if (!bar) return;
   const context = bar.dataset.context;
-  const offset = parseInt(bar.dataset.offset) || 100;
+  const offset = parseInt(bar.dataset.offset) || 50;
   btn.textContent = 'Loading...';
   btn.disabled = true;
   try {
     let older = [];
     if (context === 'ch' && curBastion !== null && curChannel !== null) {
       const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
-      if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId||b.name, ch.name, 100, offset);
+      if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId||b.name, ch.name, 50, offset);
     } else if (context === 'dm' && curDM) {
-      older = await FortizedSocial.getDMMessages(CU.username, curDM, 100);
+      older = await FortizedSocial.getDMMessages(CU.username, curDM, 50);
     }
     if (older.length) {
       const container = bar.parentElement;
-      const firstMsg = container.querySelector('.msg-row');
+      // Anchor scroll to the first existing message so prepending doesn't
+      // visually "jump" the user away from what they were reading.
+      const anchor = container.querySelector('.msg-row');
+      const anchorOffsetTop = anchor ? anchor.offsetTop : 0;
+      const scrollTopBefore = container.scrollTop;
+      // Insert older messages immediately AFTER the load-more bar, in
+      // chronological order. Each appendMessage with prevAuthor=null lets
+      // _getLastAuthor compute grouping against the next-older row that
+      // was just inserted.
       older.forEach(msg => {
-        const row = document.createElement('div');
-        row.style.display = 'contents';
-        container.insertBefore(row, bar.nextSibling);
         appendMessage(container, msg, context, null);
-        // Move the appended row to after the load-more bar
         const appended = container.lastChild;
-        if (appended && appended !== row) container.insertBefore(appended, firstMsg);
+        if (appended && anchor && appended !== anchor) container.insertBefore(appended, anchor);
       });
+      // Restore scroll so the previous top message stays visually in place.
+      if (anchor) {
+        const newAnchorOffsetTop = anchor.offsetTop;
+        container.scrollTop = scrollTopBefore + (newAnchorOffsetTop - anchorOffsetTop);
+      }
       bar.dataset.offset = (offset + older.length).toString();
       btn.textContent = 'Load older messages';
       btn.disabled = false;
-      if (older.length < 100) bar.remove(); // No more messages
+      if (older.length < 50) bar.remove();
     } else {
-      bar.remove(); // No more messages
+      bar.remove();
     }
   } catch(e) {
     btn.textContent = 'Failed — try again';
     btn.disabled = false;
   }
+}
+
+// Discord-style lazy load: when the user scrolls within ~120px of the top,
+// auto-fire the existing _loadOlderMessages for the load-more bar. Idle
+// otherwise so older history isn't fetched eagerly.
+function _attachLazyLoadOlder(container, context) {
+  if (!container || container._lazyLoadAttached) return;
+  container._lazyLoadAttached = true;
+  let firing = false;
+  container.addEventListener('scroll', () => {
+    if (firing) return;
+    if (container.scrollTop > 120) return;
+    const bar = container.querySelector('.load-more-bar');
+    if (!bar) return;
+    const btn = bar.querySelector('.load-more-btn');
+    if (!btn || btn.disabled) return;
+    firing = true;
+    Promise.resolve(_loadOlderMessages(btn)).finally(() => { firing = false; });
+  }, { passive: true });
 }
 
 

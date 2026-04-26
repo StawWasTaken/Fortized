@@ -1095,6 +1095,44 @@ async function refreshCU() {
       _checkForceLogout(fresh);
     }
   } catch(e) { console.warn('[RefreshCU] Failed to refresh user data:', e?.message); }
+  // Pre-warm the friend profile cache in the background. By the time the
+  // user opens the DM list / Friends view, every friend's pfp + display
+  // name + status is already in _profileCache and paints on the first
+  // frame — no fallback flash on cold loads. Fire-and-forget; failure
+  // just falls back to the per-view fetch path.
+  try {
+    const _friends = (CU?.friends || []).slice(0, 60); // cap to keep it cheap
+    if (_friends.length && FortizedSocial.getUsersByNames) {
+      FortizedSocial.getUsersByNames(_friends).then(profiles => {
+        (profiles || []).forEach(u => { if (u) rememberProfile(u); });
+      }).catch(() => {});
+    }
+  } catch {}
+  // Always-on profile-cache hook: monkey-patch the FortizedSocial profile
+  // fetch methods so every caller — anywhere in the app, present or future
+  // — automatically primes _profileCache without having to remember. Done
+  // once, idempotent.
+  try {
+    if (FortizedSocial && !FortizedSocial.__profileCacheHooked) {
+      FortizedSocial.__profileCacheHooked = true;
+      const _origGetByName = FortizedSocial.getUserByName?.bind(FortizedSocial);
+      if (_origGetByName) {
+        FortizedSocial.getUserByName = async (...args) => {
+          const u = await _origGetByName(...args);
+          if (u) rememberProfile(u);
+          return u;
+        };
+      }
+      const _origGetByNames = FortizedSocial.getUsersByNames?.bind(FortizedSocial);
+      if (_origGetByNames) {
+        FortizedSocial.getUsersByNames = async (...args) => {
+          const list = await _origGetByNames(...args);
+          (list || []).forEach(u => { if (u) rememberProfile(u); });
+          return list;
+        };
+      }
+    }
+  } catch {}
 }
 function _checkForceLogout(user) {
   if (!user) return;

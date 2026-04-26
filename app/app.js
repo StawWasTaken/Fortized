@@ -18239,33 +18239,32 @@ async function _viewUserProfile(username) {
         ${userBanner ? `<img src="${escapeHTML(userBanner)}" style="width:100%;height:100%;object-fit:cover;">` : ''}
         ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.6;z-index:1;"></div>` : ''}
       </div>
-      <!-- Avatar row: avatar + custom-status pill + streak chip (popover-style) -->
+      <!-- Avatar -->
       <div class="up-left-av-area">
-        <div class="profile-decoration-wrap" style="position:relative;flex-shrink:0;">
+        <div class="profile-decoration-wrap" style="position:relative;">
           <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 88)}</div>
           ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay-lg" onerror="this.style.display='none'">` : ''}
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22" style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 22)}</span>
         </div>
-        ${(customStatus?.text || isOwn) ? `<button class="profile-custom-status cloud-status-bubble mpp-cs-pill ${customStatus?.text ? '' : 'mpp-cs-pill--empty'}" data-for="${escapeHTML(u.username)}" ${isOwn ? `onclick="closeModal('modal-user');openStatusPicker()"` : 'tabindex="-1"'}>${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" onerror="this.outerHTML='${escapeHTML(customStatus.emoji)}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,40)}</span>` : `<span class="mpp-cs-plus">+</span><span class="csb-text">Add a status</span>`}</button>` : `<div class="profile-custom-status mpp-cs-pill" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
-        ${(+u.dailyStreak) ? `<div class="mpp-streak-chip" oncontextmenu="${isOwn ? 'onStreakCtxMenu(event);return false;' : 'return false;'}">${typeof _streakFlameSvg === 'function' ? _streakFlameSvg(11) : '🔥'}<span>${+u.dailyStreak}</span></div>` : ''}
       </div>
-      <!-- Identity: display name + handle row with badges right-aligned -->
+      <!-- Name -->
       <div class="up-left-info">
         <div class="up-left-name" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">
           ${escapeHTML(u.displayName||u.username)}
         </div>
-        <div class="mpp-handle-row" style="margin-top:4px;">
-          <div class="up-left-uname" style="margin-top:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.25);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
-          <div class="mpp-badges-inline">${renderBadgesHTML(u)}</div>
-        </div>
+        <div class="up-left-uname">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.25);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
+        ${(+u.dailyStreak) ? `<div class="up-left-streak" style="margin-top:8px;">${renderStreakChip(+u.dailyStreak, { size: 'lg' })}</div>` : ''}
       </div>
-      <!-- Status pill (Online / Idle / DND label) -->
+      <!-- Status -->
       <div class="up-left-status">
         <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);">
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="10" style="width:10px;height:10px;display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 10)}</span>
           <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
         </div>
+        ${customStatus?.text ? `<div style="font-size:10.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);color:rgba(255,255,255,.4);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text)}</div>` : `<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
       </div>
+      <!-- Badges -->
+      <div class="up-left-badges">${renderBadgesHTML(u)}</div>
       <div class="up-left-divider"></div>
       <!-- Bio -->
       ${u.bio ? `<div class="up-left-section"><div class="up-left-section-title">About Me</div><div class="up-left-section-body">${parseMD(escapeHTML(u.bio.slice(0,300)))}${u.bio.length>300?'…':''}</div></div>` : ''}

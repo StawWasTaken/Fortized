@@ -4438,17 +4438,23 @@ async function renderDMSidebar(scroll) {
           // Show relative timestamp
           const timeEl = document.getElementById('dm-time-'+f);
           if (timeEl && lastTime) {
-            const d = new Date(typeof lastTime === 'number' ? lastTime : Date.parse(lastTime));
-            const now = new Date();
-            const diffMs = now - d;
-            const diffMin = Math.floor(diffMs / 60000);
-            const diffHr = Math.floor(diffMs / 3600000);
-            const diffDay = Math.floor(diffMs / 86400000);
-            if (diffMin < 1) timeEl.textContent = 'now';
-            else if (diffMin < 60) timeEl.textContent = diffMin + 'm';
-            else if (diffHr < 24) timeEl.textContent = diffHr + 'h';
-            else if (diffDay < 7) timeEl.textContent = diffDay + 'd';
-            else timeEl.textContent = d.toLocaleDateString('en-GB', {month:'short', day:'numeric'});
+            // Defensive parse — bad/empty timestamps used to render literal
+            // "Invalid Date" in the DM sidebar; now we just hide the field.
+            const d = _safeDate(typeof lastTime === 'number' ? lastTime : Date.parse(lastTime));
+            if (!d) {
+              timeEl.textContent = '';
+            } else {
+              const now = new Date();
+              const diffMs = now - d;
+              const diffMin = Math.floor(diffMs / 60000);
+              const diffHr = Math.floor(diffMs / 3600000);
+              const diffDay = Math.floor(diffMs / 86400000);
+              if (diffMin < 1) timeEl.textContent = 'now';
+              else if (diffMin < 60) timeEl.textContent = diffMin + 'm';
+              else if (diffHr < 24) timeEl.textContent = diffHr + 'h';
+              else if (diffDay < 7) timeEl.textContent = diffDay + 'd';
+              else timeEl.textContent = d.toLocaleDateString('en-GB', {month:'short', day:'numeric'});
+            }
           }
         }
       }
@@ -4873,8 +4879,8 @@ function openDMView(username) {
         <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Jump to Present</button></div>
         <div class="new-messages-bar" id="dm-new-msgs-bar"><span id="dm-new-msgs-text">1 new message</span><button onclick="markDMRead()">Mark as Read</button></div>
         <div class="chat-welcome">
-          <div class="w-av" id="dm-welcome-av">${buildAvatarHTML(null,username,60)}</div>
-          <h3 id="dm-welcome-name">${escapeHTML(username)}</h3>
+          <div class="w-av" id="dm-welcome-av">${(() => { const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {}; return buildAvatarHTML(_cp.pfp || null, _cp.displayName || username, 60); })()}</div>
+          <h3 id="dm-welcome-name">${escapeHTML((typeof cachedProfile === 'function' && cachedProfile(username)?.displayName) || username)}</h3>
           <p>Beginning of your conversation with <strong>${escapeHTML(username)}</strong>.</p>
         </div>
       </div>
@@ -6600,6 +6606,32 @@ function _executeBotScript(script, ctx) {
 // ════════════════════════════════════════════
 // MESSAGE RENDERING
 // ════════════════════════════════════════════
+// Safe date helpers — `new Date(badValue).toLocaleString()` silently returns
+// the literal string "Invalid Date", which then leaks into the UI as a date
+// divider or message timestamp (a recurring bug when DM/channel rows arrive
+// with malformed/empty timestamps). These wrappers validate the parsed Date
+// and fall back to a sane string so users never see "Invalid Date" again.
+function _safeDate(ts) {
+  if (ts == null || ts === '' || ts === 'Invalid Date') return null;
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return null;
+  return d;
+}
+function _fmtMsgDateDivider(ts) {
+  const d = _safeDate(ts);
+  return d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Today';
+}
+function _fmtMsgTime(ts, fallback) {
+  const d = _safeDate(ts);
+  if (d) return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  // If raw fallback ("HH:MM" string) was already provided by the message row,
+  // surface it; otherwise show empty so the row stays clean.
+  return (fallback && fallback !== 'Invalid Date') ? fallback : '';
+}
+function _fmtMsgFullTime(ts) {
+  const d = _safeDate(ts);
+  return d ? d.toLocaleString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+}
 // Render a batch of messages into the container, continuing from optional
 // carry-state so we can split a single msgs array across multiple rAF ticks
 // without breaking date-div placement or author-grouping ("isFirst" / "isCont"
@@ -6617,7 +6649,7 @@ function _renderMsgBatch(container, msgs, context, state) {
     if (lastDateDiv) state.lastDate = lastDateDiv.textContent?.trim() || null;
   }
   for (const msg of msgs) {
-    const d = msg.timestamp ? new Date(msg.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : 'Today';
+    const d = _fmtMsgDateDivider(msg.timestamp);
     if (d !== state.lastDate) {
       const div = document.createElement('div');
       div.className = 'date-div';
@@ -6932,7 +6964,7 @@ function appendMessage(container, msg, context, prevAuthor) {
   if (document.querySelector(`[data-msgid="${CSS.escape(id)}"]`)) return;
   // System messages (join, bot deploy, etc.)
   if (msg.from === '__system__') {
-    const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+    const time=_fmtMsgTime(msg.timestamp, msg.time);
     const row=document.createElement('div');
     row.className='msg-row msg-system';
     row.dataset.msgid=id;
@@ -6953,14 +6985,15 @@ function appendMessage(container, msg, context, prevAuthor) {
   if (!isFirst && container) {
     const lastRow = container.querySelector('.msg-row:last-child');
     const lastTs = lastRow?.dataset.timestamp;
-    if (lastTs && msg.timestamp) {
-      const gap = Math.abs(new Date(msg.timestamp).getTime() - new Date(lastTs).getTime());
+    const a = _safeDate(msg.timestamp), b = _safeDate(lastTs);
+    if (a && b) {
+      const gap = Math.abs(a.getTime() - b.getTime());
       if (gap > 20 * 60 * 1000) isFirst = true;
     }
   }
   const isOwn=msg.from===CU?.username;
-  const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):(msg.time||'');
-  const fullTime=msg.timestamp?new Date(msg.timestamp).toLocaleString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
+  const time=_fmtMsgTime(msg.timestamp, msg.time);
+  const fullTime=_fmtMsgFullTime(msg.timestamp);
   const row=document.createElement('div');
   row.className=`msg-row ${isFirst?'msg-first':'msg-cont'}${isOwn?' own':''}`;
   row.dataset.msgid=id;
@@ -23262,7 +23295,13 @@ async function _sendBastionInviteDM(btn, username) {
     const link = location.origin + '/app?invite=' + inviteCode;
     const dmPath = P_dm_path(CU.username, username);
     const msgRef = firebase.database().ref(dmPath).push();
-    await msgRef.set({id:msgRef.key, from:CU.username, text:'Join my bastion! ' + link, timestamp:Date.now()});
+    // Always emit BOTH the ISO `timestamp` and the legacy `time` field —
+    // older render paths fall back to `time`, and writing only `Date.now()`
+    // (a numeric epoch) caused "Invalid Date" to surface in the date
+    // divider when downstream consumers stringified the field with the
+    // wrong assumption.
+    const _now = new Date();
+    await msgRef.set({id:msgRef.key, from:CU.username, text:'Join my bastion! ' + link, timestamp:_now.toISOString(), time:_now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})});
     btn.textContent = 'Sent';
     btn.style.background = 'rgba(62,207,110,.15)';
     btn.style.borderColor = 'rgba(62,207,110,.3)';

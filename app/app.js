@@ -39348,15 +39348,19 @@ function _subscribeFriendStatuses() {
 // OWN PROFILE MINI-PANEL (Discord-style bottom-left popup)
 // ════════════════════════════════════════════════════════════
 let _ownProfileOpen = false;
-function toggleOwnProfilePanel() {
-  // Userbar click now shows the unified profile preview anchored to the
+function toggleOwnProfilePanel(ev) {
+  // Userbar click opens the unified profile preview anchored to the
   // userbar avatar — same component as the chat/memberlist popover.
-  // The legacy own-profile-panel (status mode picker) is preserved
-  // below for future re-use as a status quick-set, but it isn't shown
-  // on userbar click anymore.
+  // stopPropagation prevents the click from bubbling up to any global
+  // listener that might immediately tear the popover down.
+  if (ev && typeof ev.stopPropagation === 'function') ev.stopPropagation();
   const existing = document.getElementById('mini-profile-preview');
-  if (existing) { existing.remove(); return; }
+  if (existing) { existing.remove(); _ownProfileOpen = false; return; }
+  // Reset legacy state in case the old own-profile-panel ever lingered.
+  _ownProfileOpen = false;
+  document.getElementById('own-profile-panel')?.remove();
   const anchor = document.getElementById('ua-clickable')
+    || document.querySelector('.rail-ub-clickable')
     || document.querySelector('.userbar')
     || document.querySelector('#userbar-area');
   try {
@@ -39364,7 +39368,7 @@ function toggleOwnProfilePanel() {
       showMiniProfilePreview(CU.username, anchor);
       return;
     }
-  } catch(_) {}
+  } catch(e) { console.warn('[Profile] userbar preview failed:', e); }
   // Fallback: legacy own-profile-panel (status picker style).
   if (_ownProfileOpen) { closeOwnProfilePanel(); return; }
   _ownProfileOpen = true;
@@ -39506,9 +39510,11 @@ async function showMiniProfilePreview(username, anchorEl) {
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-label', 'Profile preview for ' + (u.displayName || u.username));
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
+  // Default banner uses the Fortized icon-pattern asset, with the user's
+  // theme colour layered as a translucent gradient if they have one.
   const bannerBg = userBanner
     ? `<img src="${escapeHTML(userBanner)}" style="width:100%;height:100%;object-fit:cover;">`
-    : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#1a1a2e'},${profileTheme?profileTheme.color2+'33':'#0f3460'});"></div>`;
+    : `<div style="width:100%;height:100%;background:url('/wrapBackground.png') center/cover no-repeat,linear-gradient(135deg,${profileTheme?profileTheme.color1+'33':'#1a1a2e'},${profileTheme?profileTheme.color2+'22':'#0f3460'});"></div>`;
   const _previewGames = u.gameCollection || u.registeredGames || [];
   const _previewMutuals = isOwn ? [] : (CU?.friends||[]).filter(f => f !== CU?.username && f !== username && (u.friends||[]).includes(f));
   const _memberSince = u.joinedAt||u.createdAt ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : null;
@@ -39629,9 +39635,20 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- GAME COLLECTION ─── inline label + tiny covers ─── -->
     <div class="pp-game-row">
       <span class="pp-game-row-label">Game Collection</span>
-      <div class="pp-game-icons">${_previewGames.slice(0,4).map(g => g.coverUrl
-        ? `<img class="pp-game-icon" src="${escapeHTML(g.coverUrl)}" alt="${escapeHTML(g.name||'')}" title="${escapeHTML(g.name||'')}" onerror="this.outerHTML='<span class=&quot;pp-game-icon pp-game-icon--fallback&quot; title=&quot;${escapeHTML(g.name||'')}&quot;>${escapeHTML((g.name||'?')[0].toUpperCase())}</span>'">`
-        : `<span class="pp-game-icon pp-game-icon--fallback" title="${escapeHTML(g.name||'')}">${escapeHTML((g.name||'?')[0].toUpperCase())}</span>`).join('')}${_previewGames.length>4?`<span class="pp-game-icon pp-game-icon--more">+${_previewGames.length-4}</span>`:''}</div>
+      <div class="pp-game-icons">${_previewGames.slice(0,4).map(g => {
+        const cover = g.coverUrl || g.cover || g.icon || g.iconUrl || '';
+        const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));
+        const titleAttr = `title="${escapeHTML(g.name||'')}"`;
+        if (isUrl) {
+          const fb = `<span class=&quot;pp-game-icon pp-game-icon--fallback&quot; title=&quot;${escapeHTML(g.name||'')}&quot;>${escapeHTML((g.name||'?')[0].toUpperCase())}</span>`;
+          return `<img class="pp-game-icon" src="${escapeHTML(cover)}" alt="${escapeHTML(g.name||'')}" ${titleAttr} onerror="this.outerHTML='${fb}'">`;
+        }
+        if (cover) {
+          // Emoji or short string icon
+          return `<span class="pp-game-icon pp-game-icon--emoji" ${titleAttr}>${escapeHTML(String(cover).slice(0,2))}</span>`;
+        }
+        return `<span class="pp-game-icon pp-game-icon--fallback" ${titleAttr}>${escapeHTML((g.name||'?')[0].toUpperCase())}</span>`;
+      }).join('')}${_previewGames.length>4?`<span class="pp-game-icon pp-game-icon--more">+${_previewGames.length-4}</span>`:''}</div>
     </div>` : ''}
 
     ${_activeAct ? `
@@ -39675,7 +39692,7 @@ async function showMiniProfilePreview(username, anchorEl) {
   // Close on outside click or Escape key
   setTimeout(() => {
     function _closePanel() { panel.remove(); document.removeEventListener('mousedown', _closeMouse); document.removeEventListener('keydown', _closeKey); }
-    function _closeMouse(e) { if (!panel.contains(e.target) && e.target !== anchorEl) _closePanel(); }
+    function _closeMouse(e) { if (!panel.contains(e.target) && !(anchorEl && (anchorEl === e.target || (anchorEl.contains && anchorEl.contains(e.target))))) _closePanel(); }
     function _closeKey(e) { if (e.key === 'Escape') { e.stopPropagation(); _closePanel(); } }
     document.addEventListener('mousedown', _closeMouse);
     document.addEventListener('keydown', _closeKey);

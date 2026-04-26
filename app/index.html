@@ -52,14 +52,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=20260425l">
+<link rel="stylesheet" href="/app/styles.css?v=20260425m">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=20260425l', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=20260425m', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -252,7 +252,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
     </div>
     <div class="rail-ub-container">
       <div class="rail-ub-user-row">
-        <div class="rail-ub-clickable" onclick="toggleOwnProfilePanel()">
+        <div class="rail-ub-clickable" onclick="toggleOwnProfilePanel(event)">
           <div class="rail-ub-avatar" id="rail-ub-avatar">
             <span id="rail-ub-status-dot" class="ua-status-dot" data-dot-size="13"></span>
           </div>
@@ -368,7 +368,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
       <div id="ua-custom-status" class="ua-custom-status-bubble"></div>
       <div class="ub-user-container">
         <div class="ub-user-row">
-          <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel()">
+          <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel(event)">
             <div class="ua" id="ua">
               <span id="ua-status-dot" class="ua-status-dot" data-dot-size="13" title="Online"></span>
             </div>
@@ -1225,10 +1225,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=20260425l"></script>
-<script src="/app/app.js?v=20260425l"></script>
-<script src="/app/joy-system.js?v=20260425l"></script>
-<script src="/app/chronicle-games.js?v=20260425l"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=20260425m"></script>
+<script src="/app/app.js?v=20260425m"></script>
+<script src="/app/joy-system.js?v=20260425m"></script>
+<script src="/app/chronicle-games.js?v=20260425m"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

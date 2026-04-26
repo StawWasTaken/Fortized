@@ -176,9 +176,9 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
       </div>
 
       <div class="field">
-        <div class="field-label"><label for="identifier">Username</label></div>
+        <div class="field-label"><label for="identifier">Username or email</label></div>
         <div class="input-wrap">
-          <input type="text" id="identifier" placeholder="your username" autocomplete="username">
+          <input type="text" id="identifier" placeholder="username or email" autocomplete="username">
           <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="8" cy="5" r="3.25"/><path d="M2.5 14.5c0-3 2.5-4.5 5.5-4.5s5.5 1.5 5.5 4.5"/>
           </svg>
@@ -228,8 +228,8 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="/FortizedSocial-supabase.js"></script>
-<script src="/firebase-compat-shim.js"></script>
+<script src="/FortizedSocial-supabase.js?v=20260426h"></script>
+<script src="/firebase-compat-shim.js?v=20260426h"></script>
 <script>
 const loginBtn        = document.getElementById('loginBtn');
 const identifierInput = document.getElementById('identifier');
@@ -258,8 +258,11 @@ togglePw.addEventListener('click', () => {
 loginBtn.addEventListener('click', doLogin);
 
 async function doLogin() {
+  // Trim both identifier AND password — copy-paste from password managers and
+  // mobile keyboards regularly adds trailing whitespace and silently breaks
+  // login with a generic "Wrong password" error.
   const id   = identifierInput.value.trim();
-  const pass = passwordInput.value;
+  const pass = passwordInput.value.trim();
   errorDiv.textContent = '';
   if (!id || !pass) { errorDiv.textContent = 'Please fill in all fields.'; return; }
 

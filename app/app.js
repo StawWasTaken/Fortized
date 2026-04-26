@@ -36887,8 +36887,8 @@ function showAddAccountModal() {
           </div>
         </div>
         <div style="margin-bottom:12px;">
-          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:6px;">Username</label>
-          <input id="add-acct-user" class="field-input" placeholder="Enter username…" style="width:100%;" autocomplete="username">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:6px;">Username or email</label>
+          <input id="add-acct-user" class="field-input" placeholder="username or email" style="width:100%;" autocomplete="username">
         </div>
         <div style="margin-bottom:20px;">
           <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:6px;">Password</label>
@@ -36911,36 +36911,34 @@ function showAddAccountModal() {
 }
 
 async function submitAddAccount() {
-  const username = document.getElementById('add-acct-user')?.value?.trim()?.toLowerCase();
-  const password = document.getElementById('add-acct-pass')?.value;
+  // Identifier is preserved as typed (FortizedSocial.login handles email vs
+  // username), but trimmed; password is also trimmed because mobile/desktop
+  // password managers commonly leak trailing whitespace.
+  const identifier = document.getElementById('add-acct-user')?.value?.trim();
+  const password = document.getElementById('add-acct-pass')?.value?.trim();
   const errEl = document.getElementById('add-acct-err');
   const btn = document.getElementById('add-acct-btn');
-  if (!username || !password) {
-    if(errEl){errEl.textContent='Please enter both username and password.';errEl.style.display='block';}
+  if (!identifier || !password) {
+    if(errEl){errEl.textContent='Please enter both your username/email and password.';errEl.style.display='block';}
     return;
   }
   if (btn) { btn.disabled=true; btn.textContent='Signing in…'; }
   try {
     let result = null;
-    // Method 1: FortizedSocial.login
+    // Use the canonical login (now accepts email or username).
     if (typeof FortizedSocial.login === 'function') {
       try {
-        const r = await FortizedSocial.login(username, password);
+        const r = await FortizedSocial.login(identifier, password);
+        if (r?.ok === false) throw new Error(r.msg || 'Login failed');
         if (r?.ok && r?.user?.username) result = r.user;
         else if (r?.username) result = r;
-      } catch(e1) { if (!result && e1?.message?.includes('password')) throw e1; }
+      } catch(e1) { if (!result) throw e1; }
     }
-    // Method 2: FortizedSocial.loginUser (may not exist)
-    if (!result && typeof FortizedSocial.loginUser === 'function') {
-      try { const r2 = await FortizedSocial.loginUser(username, password); if(r2?.username) result=r2; } catch(e) { _dbg('[Auth] loginUser fallback failed', e); }
-    }
-    // Method 3: Manual password check (fetch user + compare)
+    // Manual fallback (only if FortizedSocial.login isn't available)
     if (!result) {
-      const u = await FortizedSocial.getUserByName(username).catch(()=>null);
-      if (!u) throw new Error('No account found with username "' + username + '"');
-      const pw = String(u.password||'');
-      const pwOk = pw === password || pw.toLowerCase() === password.toLowerCase();
-      if (!pwOk) throw new Error('Incorrect password');
+      const u = await FortizedSocial.getUserByName(identifier.toLowerCase()).catch(()=>null);
+      if (!u) throw new Error('No account found for "' + identifier + '"');
+      if (String(u.password||'') !== password) throw new Error('Incorrect password');
       result = u;
     }
     if (!result?.username) throw new Error('Could not authenticate — check credentials');

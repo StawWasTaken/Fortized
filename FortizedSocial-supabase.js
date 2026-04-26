@@ -441,13 +441,29 @@ const FortizedSocial = (() => {
     return { ok: true, user };
   }
 
-  async function login(username, password) {
-    username = norm(username);
-    const user = await getUserByName(username);
-    if (!user) return { ok: false, msg: 'User not found.' };
+  async function login(identifier, password) {
+    // Accept either username or email — most users instinctively type their
+    // email, and forcing username-only was a major source of "User not found"
+    // confusion. Try username lookup first (cheap, normalised), then fall
+    // back to an email lookup when the identifier looks like an email.
+    const raw = (identifier || '').trim();
+    if (!raw) return { ok: false, msg: 'Please enter your username or email.' };
+    let user = null;
+    const looksLikeEmail = raw.includes('@');
+    if (!looksLikeEmail) {
+      user = await getUserByName(norm(raw));
+    }
+    if (!user && looksLikeEmail) {
+      try {
+        const emailLower = raw.toLowerCase();
+        const { data } = await sb.from('users').select('*').eq('email', emailLower).limit(1).maybeSingle();
+        user = data ? _userFromRow(data) : null;
+      } catch(e) { console.warn('[login] email lookup failed', e?.message); }
+    }
+    if (!user) return { ok: false, msg: looksLikeEmail ? 'No account found for that email.' : 'User not found.' };
     if (user.password !== password) return { ok: false, msg: 'Wrong password.' };
-    setCurrentUsername(username);
-    await setStatus(username, 'online');
+    setCurrentUsername(user.username);
+    await setStatus(user.username, 'online');
     return { ok: true, user };
   }
 

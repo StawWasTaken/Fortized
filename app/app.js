@@ -120,24 +120,69 @@ if (!window._faviconFocusHooked) {
 // GLOBAL STATE
 // ════════════════════════════════════════════
 let CU = null;
-// In-memory PFP cache, hydrated from localStorage on boot so DM/friend lists
-// render real avatars on FIRST paint instead of flashing fallback letters
-// while the async profile fetch runs. Updated everywhere a profile is read.
-const _pfpCache = (() => {
+// ── PROFILE LIGHT-CACHE ──────────────────────────────────────────────────
+// Discord-style stale-while-revalidate: keep a tiny per-user blob in
+// localStorage (pfp + displayName + lastStatus) so DM/friend/member lists
+// paint REAL data on first frame, before any network round-trip. When the
+// async profile fetch returns, we refresh both the cache and the visible
+// row. Without this, every cold load shows a wall of grey fallback avatars
+// while the user waits for the batch query.
+const _profileCache = (() => {
   try {
-    const raw = localStorage.getItem('ftz_pfp_cache_v1');
+    const raw = localStorage.getItem('ftz_profile_cache_v1');
     if (raw) return JSON.parse(raw) || {};
   } catch {}
   return {};
 })();
-let _pfpCacheSaveTimer = null;
-function _persistPfpCache() {
-  if (_pfpCacheSaveTimer) return;
-  _pfpCacheSaveTimer = setTimeout(() => {
-    _pfpCacheSaveTimer = null;
-    try { localStorage.setItem('ftz_pfp_cache_v1', JSON.stringify(_pfpCache)); } catch {}
+let _profileCacheSaveTimer = null;
+function _persistProfileCache() {
+  if (_profileCacheSaveTimer) return;
+  _profileCacheSaveTimer = setTimeout(() => {
+    _profileCacheSaveTimer = null;
+    try { localStorage.setItem('ftz_profile_cache_v1', JSON.stringify(_profileCache)); } catch {}
   }, 500);
 }
+function rememberProfile(u) {
+  if (!u || !u.username) return;
+  const entry = _profileCache[u.username] || {};
+  let dirty = false;
+  if (u.pfp && entry.pfp !== u.pfp) { entry.pfp = u.pfp; dirty = true; }
+  if (u.displayName && entry.displayName !== u.displayName) { entry.displayName = u.displayName; dirty = true; }
+  if (u.status && entry.status !== u.status) { entry.status = u.status; dirty = true; }
+  if (dirty) {
+    _profileCache[u.username] = entry;
+    _persistProfileCache();
+    if (u.pfp) _pfpCache[u.username] = u.pfp; // keep legacy cache aligned
+  }
+}
+function cachedProfile(username) {
+  return _profileCache[username] || _profileCache[(username||'').toLowerCase()] || null;
+}
+// Legacy in-memory PFP cache retained for backwards compatibility — now
+// hydrated from the profile cache so existing call sites keep working.
+const _pfpCache = (() => {
+  const out = {};
+  for (const [k, v] of Object.entries(_profileCache)) {
+    if (v && v.pfp) out[k] = v.pfp;
+  }
+  // Migrate any old standalone pfp cache.
+  try {
+    const oldRaw = localStorage.getItem('ftz_pfp_cache_v1');
+    if (oldRaw) {
+      const old = JSON.parse(oldRaw) || {};
+      for (const [k, v] of Object.entries(old)) {
+        if (v && !out[k]) {
+          out[k] = v;
+          _profileCache[k] = { ..._profileCache[k], pfp: v };
+        }
+      }
+      localStorage.removeItem('ftz_pfp_cache_v1');
+      _persistProfileCache();
+    }
+  } catch {}
+  return out;
+})();
+function _persistPfpCache() { _persistProfileCache(); } // alias
 const _pfpCropCache = {}; // username -> {leftPct, topPct, widthPct} for GIF avatar CSS cropping
 const _liveStatusCache = {}; // username -> status, updated by real-time presence events
 const _liveGameActivityCache = {}; // username -> { name, metadata, startedAt } | null
@@ -4265,14 +4310,19 @@ async function renderDMSidebar(scroll) {
     _dmEntries.forEach(entry => {
       if (entry.type === 'dm') {
         const f = entry.username;
+        // Stale-while-revalidate: paint with cached profile (pfp + display
+        // name + last-known status) so the row looks alive on first frame.
+        const _cp = cachedProfile(f) || {};
+        const _initStatus = _cp.status || 'offline';
+        const _initName = _cp.displayName || f;
         html += `
       <div class="friend-item dm-sortable" id="dm-fi-${escapeHTML(f)}" data-dm-id="dm_${escapeHTML(f)}" data-last-time="0" onclick="openDMView('${escapeHTML(f)}')" oncontextmenu="event.preventDefault();showDMCtxMenu(event,'${escapeHTML(f)}')">
         <div style="position:relative;flex-shrink:0;">
-          <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(_pfpCache[f]||null,f,34)}</div>
-          <span class="profile-status-dot" data-for="${escapeHTML(f)}" data-dot-size="12" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;">${FtzStatus.dotSvg('offline', 12)}</span>
+          <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(_cp.pfp||null,_initName,34)}</div>
+          <span class="profile-status-dot" data-for="${escapeHTML(f)}" data-dot-size="12" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;">${FtzStatus.dotSvg(_initStatus, 12)}</span>
         </div>
         <div class="fi-info" style="min-width:0;flex:1;">
-          <div class="fi-name" id="dm-dn-${escapeHTML(f)}" style="font-weight:600;">${escapeHTML(f)}</div>
+          <div class="fi-name" id="dm-dn-${escapeHTML(f)}" style="font-weight:600;">${escapeHTML(_initName)}</div>
           <div id="dm-preview-${escapeHTML(f)}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:120px;"></div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
@@ -4313,7 +4363,7 @@ async function renderDMSidebar(scroll) {
   let _friendProfileMap = {};
   try {
     const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(visibleFriends) : Promise.all(visibleFriends.map(f => FortizedSocial.getUserByName(f))));
-    (profiles || []).forEach(u => { if (u) _friendProfileMap[u.username] = u; });
+    (profiles || []).forEach(u => { if (u) { _friendProfileMap[u.username] = u; rememberProfile(u); } });
   } catch(e) { console.warn('[Friends] Batch profile fetch failed:', e?.message); }
 
   const friendPromises = visibleFriends.map(async f => {
@@ -4426,7 +4476,7 @@ async function renderDMFriendsHome() {
       // Get activity for pending user (will be updated when friend data loads)
       let activityHTML = '';
       html += `<div id="dm-home-pending-${escapeHTML(f)}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;transition:background .12s;">
-        <div style="position:relative;flex-shrink:0;"><div class="fa" id="dm-home-pav-${escapeHTML(f)}" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(null,f,40)}</div></div>
+        <div style="position:relative;flex-shrink:0;"><div class="fa" id="dm-home-pav-${escapeHTML(f)}" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(_pfpCache[f]||null,f,40)}</div></div>
         <div style="flex:1;min-width:0;"><div id="dm-home-pdn-${escapeHTML(f)}" style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div><div style="font-size:11.5px;color:var(--muted);">Incoming friend request</div><div id="dm-home-pact-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;"></div></div>
         <div style="display:flex;gap:6px;">
           <button class="btn-a" style="padding:6px 14px;font-size:12px;" onclick="acceptFriend('${escapeHTML(f)}')">Accept</button>
@@ -4443,15 +4493,20 @@ async function renderDMFriendsHome() {
   html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">${filter==='online'?'ONLINE':'ALL FRIENDS'} — <span id="dm-friends-header-count">${initialCount}</span></div>`;
 
   friends.forEach(f => {
+    // Stale-while-revalidate from local profile cache.
+    const _cp = cachedProfile(f) || {};
+    const _initStatus = _cp.status || 'offline';
+    const _initName = _cp.displayName || f;
+    const _initStatusColor = FtzStatus.color(_initStatus);
     html += `<div class="dm-friend-row" data-user="${escapeHTML(f)}" style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-radius:12px;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;border:1px solid transparent;background:transparent;" onclick="openDMView('${escapeHTML(f)}')">
       <div style="position:relative;flex-shrink:0;">
-        <div class="fa" id="dm-home-av-${escapeHTML(f)}" style="width:42px;height:42px;font-size:15px;border:2px solid rgba(255,255,255,.06);">${buildAvatarHTML(null,f,42)}</div>
-        <span class="dm-home-status" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;background:#6b7280;border:2.5px solid var(--bg);"></span>
+        <div class="fa" id="dm-home-av-${escapeHTML(f)}" style="width:42px;height:42px;font-size:15px;border:2px solid rgba(255,255,255,.06);">${buildAvatarHTML(_cp.pfp||null,_initName,42)}</div>
+        <span class="dm-home-status" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;background:${_initStatusColor};border:2.5px solid var(--bg);"></span>
       </div>
       <div style="flex:1;min-width:0;">
-        <div id="dm-home-dn-${escapeHTML(f)}" style="font-weight:700;font-size:13.5px;font-family:var(--font-display);">${escapeHTML(f)}</div>
+        <div id="dm-home-dn-${escapeHTML(f)}" style="font-weight:700;font-size:13.5px;font-family:var(--font-display);">${escapeHTML(_initName)}</div>
         <div style="display:flex;flex-direction:column;gap:1px;margin-top:2px;">
-          <div class="dm-home-status-text" data-for="${escapeHTML(f)}" style="font-size:11px;color:rgba(255,255,255,.25);">Offline</div>
+          <div class="dm-home-status-text" data-for="${escapeHTML(f)}" style="font-size:11px;color:rgba(255,255,255,.25);">${escapeHTML(FtzStatus.publicLabel(_initStatus))}</div>
           <div id="dm-home-activity-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.2);"></div>
         </div>
       </div>
@@ -4483,7 +4538,7 @@ async function renderDMFriendsHome() {
   let _homeProfileMap = {};
   try {
     const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(allUsers) : Promise.all(allUsers.map(f => FortizedSocial.getUserByName(f))));
-    (profiles || []).forEach(u => { if (u) _homeProfileMap[u.username] = u; });
+    (profiles || []).forEach(u => { if (u) { _homeProfileMap[u.username] = u; rememberProfile(u); } });
   } catch(e) { console.warn('[Friends] Home profile fetch failed:', e?.message); }
 
   let _onlineCount = 0;
@@ -4491,6 +4546,8 @@ async function renderDMFriendsHome() {
     try {
       const u = _homeProfileMap[f] || _homeProfileMap[f.toLowerCase()] || null;
       if (!u) return;
+      // Warm the persistent pfp cache so the next render paints instantly.
+      if (u.pfp) { _pfpCache[f] = u.pfp; _persistPfpCache(); }
 
       // Update friend row avatar + display name
       const avEl = document.getElementById('dm-home-av-'+f);
@@ -5253,7 +5310,7 @@ async function showGCMemberPanel(meta) {
     setTimeout(() => {
       FortizedSocial.getUserByName(m).then(ud => {
         if (!ud) return;
-        if (ud.pfp) { _pfpCache[m] = ud.pfp; _persistPfpCache(); }
+        rememberProfile(ud);
         const entry = panel.querySelector(`.ml-entry[data-member="${CSS.escape(m)}"]`);
         if (!entry) return;
         _verifiedCache[m] = !!ud.verified;
@@ -8065,7 +8122,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
     setTimeout(() => {
       FortizedSocial.getUserByName(u).then(ud => {
         if (!ud) return;
-        if (ud.pfp) { _pfpCache[u] = ud.pfp; _persistPfpCache(); }
+        rememberProfile(ud);
         if (ud.pfpCrop) _pfpCropCache[u] = ud.pfpCrop;
         _verifiedCache[u] = !!ud.verified;
         const entry = document.querySelector('.ml-entry[data-member="'+CSS.escape(u)+'"]');
@@ -9965,6 +10022,7 @@ function initFortizedUXResilience() {
         }
 
         // ── UPDATE PFP EVERYWHERE ──
+        rememberProfile({ username: data.username, pfp: data.pfp, displayName: data.displayName, status: data.status });
         if (data.pfp) {
           _pfpCache[data.username] = data.pfp;
           _persistPfpCache();

@@ -1144,7 +1144,15 @@ function autoResize(el) {
 // Clear chat input properly — resets value, height, and live preview overlay
 function clearChatInput(inp) {
   if (!inp) return;
-  inp.value = '';
+  // Works for both <input>/<textarea> (where .value works directly) and the
+  // contenteditable rich-input div (where the .value setter is shimmed in by
+  // _initRichInput, but might not be wired yet during a race). Falls back to
+  // textContent so clearing always succeeds.
+  if (typeof inp.value === 'string' || ('value' in inp && inp.tagName !== 'DIV')) {
+    inp.value = '';
+  } else {
+    inp.textContent = '';
+  }
   inp.style.height = 'auto';
   inp.style.color = '';
   if (inp._previewEl) {
@@ -4830,11 +4838,20 @@ async function loadDMMessages(username) {
   } catch(e){_wrn('DM load',e);}
 }
 
+// Reads a chat input safely whether the contenteditable shim is installed
+// (`.value` getter) or not (fall back to textContent). Without this fallback
+// a race during input mount throws "Cannot read properties of undefined
+// (reading 'trim')" mid-send and locks the entire UI.
+function _readChatInput(inp) {
+  if (!inp) return '';
+  return ((typeof inp.value === 'string' ? inp.value : (inp.textContent || '')) || '').trim();
+}
+
 async function sendDM() {
   _stopTypingBroadcast();
   const inp=document.getElementById('dm-input');
   if (!inp||!curDM) return;
-  let text=preprocessMessageText(inp.value.trim());
+  let text=preprocessMessageText(_readChatInput(inp));
   if (!text && !window._pendingAttachment) return;
   // Safety pre-check
   if (text) { const sw = contentSafetyCheck(text); if (sw) showContentWarning(sw); }
@@ -5327,7 +5344,7 @@ function _attachGCLiveEdits(gcId) {
 async function sendGCMessage() {
   const inp = document.getElementById('gc-input');
   if (!inp || !curGC) return;
-  const text = preprocessMessageText(inp.value.trim());
+  const text = preprocessMessageText(_readChatInput(inp));
   if (!text && !window._pendingAttachment) return;
   clearChatInput(inp);
   _stopGCTypingBroadcast();
@@ -6322,7 +6339,7 @@ async function _toggleAnnouncementSub(subKey) {
 async function _sendAnnouncement(idx) {
   const inp = document.getElementById('ann-input');
   if (!inp) return;
-  const text = preprocessMessageText(inp.value.trim());
+  const text = preprocessMessageText(_readChatInput(inp));
   if (!text) return;
   const b = CU.bastions?.[curBastion];
   const ch = b?.channels?.[idx];
@@ -6364,7 +6381,7 @@ const _sentEcho = new Set();
 async function sendChannelMsg(idx) {
   const inp=document.getElementById('ch-input');
   if (!inp) return;
-  let text=preprocessMessageText(inp.value.trim());
+  let text=preprocessMessageText(_readChatInput(inp));
   if (!text) return;
   const b=CU.bastions?.[curBastion];
   const ch=b?.channels?.[idx];
@@ -29616,8 +29633,18 @@ async function handleChatSend(context, chIdx) {
     else token = '[FTZFILE:'+att.name+'|'+sizeMB+'|'+fileUrl+']';
     const inp = document.getElementById(context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input');
     if (inp) {
-      const existing = inp.value.trim();
-      inp.value = (existing ? existing+' ' : '') + token;
+      // The chat input is a contenteditable div with a `.value` shim that
+      // `_initRichInput` installs. If the shim hasn't been wired yet (race
+      // on first open / after a re-render), `inp.value` is undefined and
+      // `.trim()` would throw — locking up the entire send pipeline. Fall
+      // back to textContent so the attachment-token append always works.
+      const existingRaw = (typeof inp.value === 'string') ? inp.value : (inp.textContent || '');
+      const existing = existingRaw.trim();
+      if (typeof inp.value === 'string') {
+        inp.value = (existing ? existing+' ' : '') + token;
+      } else {
+        inp.textContent = (existing ? existing+' ' : '') + token;
+      }
     }
     _clearAttachment();
   }
@@ -43791,4 +43818,54 @@ function openSimpleModal(html) {
 function closeSimpleModal() {
   document.getElementById('simple-modal')?.remove();
 }
+
+// ════════════════════════════════════════════════════════════
+// PANIC ESCAPE — global safety net for stuck overlays.
+//
+// Many modals across the app install their own Escape listeners, but if a
+// child element grabs focus (or the listener never gets registered because
+// of a thrown error during open), pressing Escape silently does nothing
+// and the user is locked out of the UI. This handler runs in the capture
+// phase and tears down the topmost obviously-blocking overlay whenever
+// Escape is pressed — it's idempotent and only fires when something is
+// actually stuck.
+// ════════════════════════════════════════════════════════════
+(function _installPanicEscape() {
+  if (window._ftzPanicEscapeInstalled) return;
+  window._ftzPanicEscapeInstalled = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) return;
+    // Skip if the user is editing text (let textarea/input/contenteditable own Escape).
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    // Find the topmost blocking overlay (highest z-index among full-screen fixed elements).
+    const candidates = Array.from(document.querySelectorAll('.modal-overlay.open, [id$="-modal"], [id$="-popup"], [id$="-overlay"]'))
+      .filter(el => el.offsetParent !== null && el.parentElement);
+    if (!candidates.length) return;
+    let top = candidates[0], topZ = -Infinity;
+    for (const el of candidates) {
+      const z = parseInt(getComputedStyle(el).zIndex, 10) || 0;
+      if (z >= topZ) { topZ = z; top = el; }
+    }
+    if (top) top.remove();
+  }, true);
+})();
+
+// ════════════════════════════════════════════════════════════
+// SEND-PATH CRASH GUARD — catch unhandled errors during message send so
+// they don't leave the UI in a stuck "sending…" state. Every send path
+// (DM / GC / channel) is wrapped: if any of them throw, log + toast, and
+// remove any leftover overlays that might have been opened mid-flight.
+// ════════════════════════════════════════════════════════════
+window.addEventListener('unhandledrejection', (e) => {
+  const msg = e.reason?.message || String(e.reason || '');
+  // Only guard send-path failures — surface everything else normally.
+  if (!/sendDM|sendGC|sendChannel|handleChatSend|preprocessMessageText|appendMessage/.test(msg + (e.reason?.stack || ''))) return;
+  console.error('[SendCrashGuard]', e.reason);
+  try { if (typeof toast === 'function') toast('Something glitched while sending. Try again.', 'error'); } catch {}
+  // Best-effort overlay sweep so the UI isn't locked.
+  document.querySelectorAll('.modal-overlay.open').forEach(el => {
+    if (el.dataset.ftzKeepOpen !== '1') el.classList.remove('open');
+  });
+});
 

@@ -4658,15 +4658,15 @@ button[disabled],
 
 .pp-streak{
   margin-left:auto;
-  display:inline-flex;align-items:center;gap:5px;
-  padding:5px 11px;border-radius:var(--radius-pill);
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:var(--radius-pill);
   background:rgba(255,138,62,.1);
   border:1px solid rgba(255,138,62,.22);
   color:#ff9d5e;
-  font-family:var(--font-display);font-size:12px;font-weight:800;
+  font-family:var(--font-display);font-size:11px;font-weight:800;
   margin-bottom:6px;cursor:default;
 }
-.pp-streak svg{flex-shrink:0;}
+.pp-streak svg{flex-shrink:0;width:11px;height:11px;}
 .pp-streak-num{font-variant-numeric:tabular-nums;}
 
 .pp-identity{
@@ -4690,23 +4690,28 @@ button[disabled],
 .pp-handle-sep{margin:0 6px;color:rgba(255,255,255,.18);}
 
 .pp-badges{
-  display:flex;align-items:center;gap:3px;flex-wrap:wrap;
+  display:flex;align-items:center;gap:2px;flex-wrap:wrap;
   flex-shrink:0;max-width:120px;
-  justify-content:flex-end;padding-top:6px;
+  justify-content:flex-end;padding-top:4px;
 }
-.pp-badges img{width:18px;height:18px;display:block;}
+.pp-badges img{width:14px;height:14px;display:block;}
 
-.pp-section{padding:14px 18px 0;}
+/* Sections are separated by hairline dividers (full-bleed within the
+   18px body padding). The first section just has its top padding;
+   every section after sits above a 1px divider line, so the card
+   reads as a clean stack of zones rather than a wall of text. */
+.pp-section{padding:14px 18px 14px;border-top:1px solid rgba(255,255,255,.05);}
+.pp-section:first-of-type{border-top:none;}
 .pp-section-label{
   font-family:var(--font-display);
-  font-size:10px;font-weight:800;
+  font-size:10.5px;font-weight:700;
   letter-spacing:.14em;text-transform:uppercase;
-  color:rgba(255,255,255,.32);margin-bottom:6px;
+  color:rgba(255,255,255,.32);margin-bottom:5px;
 }
-.pp-section-body{font-size:13px;color:rgba(255,255,255,.75);line-height:1.55;word-break:break-word;}
+.pp-section-body{font-size:13px;color:rgba(255,255,255,.78);line-height:1.55;font-weight:400;word-break:break-word;}
 
-.pp-game-row{display:flex;align-items:center;gap:10px;padding:14px 18px 0;}
-.pp-game-row-label{font-size:13px;color:rgba(255,255,255,.6);font-weight:500;flex:1;min-width:0;}
+.pp-game-row{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid rgba(255,255,255,.05);}
+.pp-game-row-label{font-size:13px;color:rgba(255,255,255,.6);font-weight:400;flex:1;min-width:0;}
 .pp-game-icons{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;}
 .pp-game-icon{
   width:24px;height:24px;border-radius:6px;
@@ -4718,8 +4723,8 @@ button[disabled],
 }
 .pp-game-icon--more{background:rgba(255,255,255,.04);font-size:10px;}
 
-.pp-activity{padding:14px 18px 0;}
-.pp-activity-header{font-size:13px;font-weight:600;color:rgba(255,255,255,.7);margin-bottom:8px;}
+.pp-activity{padding:14px 18px;border-top:1px solid rgba(255,255,255,.05);}
+.pp-activity-header{font-size:13px;font-weight:500;color:rgba(255,255,255,.7);margin-bottom:8px;}
 .pp-activity-card{
   display:flex;align-items:center;gap:12px;
   padding:10px 12px;
@@ -4737,7 +4742,7 @@ button[disabled],
 .pp-activity-info{min-width:0;flex:1;}
 .pp-activity-name{
   font-family:var(--font-display);
-  font-size:14px;font-weight:800;color:#fff;letter-spacing:-.01em;
+  font-size:14px;font-weight:700;color:#fff;letter-spacing:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .pp-activity-meta{

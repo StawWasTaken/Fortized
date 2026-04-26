@@ -4694,12 +4694,16 @@ button[disabled],
 .pp-handle-sep{margin:0 6px;color:rgba(255,255,255,.18);}
 
 .pp-badges{
-  display:flex;align-items:center;gap:2px;flex-wrap:nowrap;
+  display:flex;align-items:center;gap:1px;flex-wrap:nowrap;
   flex-shrink:0;
   justify-content:flex-end;
 }
-.pp-badges img{width:13px;height:13px;display:block;flex-shrink:0;}
-.pp-badges > *{flex-shrink:0;}
+/* Override the global .ftz-badge default (28px) — these are tiny
+   inline indicators inside the handle row, not 28px discs. */
+.pp-badges .ftz-badge{width:14px;height:14px;margin:0;flex-shrink:0;}
+.pp-badges .ftz-badge img,
+.pp-badges .ftz-badge svg{width:100%;height:100%;display:block;}
+.pp-badges img{width:14px;height:14px;display:block;flex-shrink:0;}
 
 /* Sections are separated by hairline dividers (full-bleed within the
    18px body padding). The first section just has its top padding;
@@ -4714,8 +4718,17 @@ button[disabled],
 }
 .pp-section-body{font-size:13px;color:rgba(255,255,255,.78);line-height:1.55;font-weight:400;word-break:break-word;}
 
-.pp-game-row{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid rgba(255,255,255,.05);}
-.pp-game-row-label{font-size:13px;color:rgba(255,255,255,.6);font-weight:400;flex:1;min-width:0;}
+/* Game Collection — sits as a small card (rather than a flat row),
+   matching the target. Sits between text-only sections without a
+   border-top, but with vertical margin to breathe. */
+.pp-game-row{
+  display:flex;align-items:center;gap:10px;
+  margin:14px 18px;padding:11px 14px;
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:10px;
+}
+.pp-game-row-label{font-size:13px;color:rgba(255,255,255,.7);font-weight:500;flex:1;min-width:0;}
 .pp-game-icons{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;}
 .pp-game-icon{
   width:24px;height:24px;border-radius:6px;
@@ -4727,14 +4740,19 @@ button[disabled],
 }
 .pp-game-icon--more{background:rgba(255,255,255,.04);font-size:10px;}
 
-.pp-activity{padding:14px 18px;border-top:1px solid rgba(255,255,255,.05);}
-.pp-activity-header{font-size:13px;font-weight:500;color:rgba(255,255,255,.7);margin-bottom:8px;}
+/* Playing/Listening — also a card, with the verb label sitting
+   inside the card's top-left rather than in its own padded section. */
+.pp-activity{
+  margin:0 18px 14px;
+  padding:12px 14px;
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:10px;
+}
+.pp-activity-header{font-size:12.5px;font-weight:500;color:rgba(255,255,255,.6);margin-bottom:8px;}
 .pp-activity-card{
   display:flex;align-items:center;gap:12px;
-  padding:10px 12px;
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:10px;
+  padding:0;background:transparent;border:none;border-radius:0;
 }
 .pp-activity-cover{
   width:44px;height:44px;border-radius:6px;flex-shrink:0;overflow:hidden;

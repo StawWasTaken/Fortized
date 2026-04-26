@@ -39509,27 +39509,23 @@ async function showMiniProfilePreview(username, anchorEl) {
       ${bannerBg}
       ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.7;z-index:1;"></div>` : ''}
     </div>
-    <!-- Avatar -->
+    <!-- Avatar row: avatar + custom status pill + streak chip on the same line -->
     <div class="mpp-av-area">
       <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
         <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 64)}</div>
         ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
         <span class="profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="18" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 18)}</span>
       </div>
+      ${(customStatus?.text || isOwn) ? `<button class="profile-custom-status cloud-status-bubble mpp-cs-pill ${customStatus?.text ? '' : 'mpp-cs-pill--empty'}" data-for="${escapeHTML(username)}" ${isOwn ? `onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()"` : 'tabindex="-1"'}>${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,40)}</span>` : `<span class="mpp-cs-plus">+</span><span class="csb-text">Add a status</span>`}</button>` : `<div class="profile-custom-status mpp-cs-pill" data-for="${escapeHTML(username)}" style="display:none;"></div>`}
+      ${(+u.dailyStreak) ? `<div class="mpp-streak-chip" oncontextmenu="${isOwn ? 'onStreakCtxMenu(event);return false;' : 'return false;'}">${typeof _streakFlameSvg === 'function' ? _streakFlameSvg(11) : '🔥'}<span>${+u.dailyStreak}</span></div>` : ''}
     </div>
-    <!-- Identity -->
+    <!-- Identity: name on top, then handle row with pronouns + badges right -->
     <div class="mpp-identity">
       <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
-      <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.2);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
-      ${(+u.dailyStreak) ? `<div style="margin-top:6px;">${renderStreakChip(+u.dailyStreak)}</div>` : ''}
-    </div>
-    <!-- Status -->
-    <div class="mpp-status-row">
-      <div class="mpp-status-pill">
-        <span class="sdot profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="10" style="display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 10)}</span>
-        <span class="profile-status-label" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
+      <div class="mpp-handle-row">
+        <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? `<span class="mpp-handle-dot">·</span>${escapeHTML(u.pronouns)}` : ''}</div>
+        <div class="mpp-badges-inline">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
       </div>
-      <div class="profile-custom-status cloud-status-bubble" data-for="${escapeHTML(username)}" style="${customStatus?.text ? 'display:inline-flex;' : 'display:none;'}font-size:10.5px;padding:4px 10px;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);color:rgba(255,255,255,.45);">${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,30)}</span>` : ''}</div>
     </div>
     <!-- Activity Status - Multi-activity support -->
     ${(() => {
@@ -39554,23 +39550,25 @@ async function showMiniProfilePreview(username, anchorEl) {
 
       if (!activitiesToShow.length) return '';
 
-      const statusColor = FtzStatus.color(u.status || 'online');
-      return `<div class="mpp-divider"></div><div class="mpp-section">
-        <div class="mpp-section-title" style="color:${statusColor}88;">Active Now</div>
-        ${activitiesToShow.map((a, idx) => {
-          const coverThumb = a.metadata?.coverThumb || a.metadata?.spotifyAlbumArt;
-          const accentBg = statusColor + (idx === 0 ? '08' : '04');
-          const accentBorder = statusColor + (idx === 0 ? '15' : '08');
-          const _coverHTML = coverThumb
-            ? `<img src="${escapeHTML(coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.outerHTML='<span style=font-size:14px>${a.icon||'🎮'}</span>'">`
-            : `<span style="font-size:14px;">${a.icon||'🎮'}</span>`;
-          const _elapsedHTML = a.since ? `<div style="font-size:9px;color:${statusColor}66;margin-top:1.5px;display:flex;align-items:center;gap:3px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${_formatActivityElapsed(a.since)}</div>` : '';
-          return `<div style="display:flex;align-items:center;gap:10px;padding:10px 11px;background:${accentBg};border:1px solid ${accentBorder};border-radius:10px;${idx > 0 ? 'margin-top:8px;' : ''}"><div style="width:36px;height:48px;border-radius:6px;background:linear-gradient(135deg,${statusColor}12,${statusColor}06);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:1px solid ${statusColor}22;">${_coverHTML}</div><div style="min-width:0;flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(a.name)}</div>${a.metadata?.genre?`<div style="font-size:9.5px;color:rgba(255,255,255,.28);margin-top:1.5px;">${escapeHTML(typeof a.metadata.genre==='string'?a.metadata.genre:a.metadata.genre[0]||'')}</div>`:''}${_elapsedHTML}</div></div>`;
-        }).join('')}
+      const a = activitiesToShow[0];
+      const verb = a.type === 'listening' ? 'Listening to' : a.type === 'watching' ? 'Watching' : 'Playing';
+      const coverThumb = a.metadata?.coverThumb || a.metadata?.spotifyAlbumArt;
+      const _coverHTML = coverThumb
+        ? `<img src="${escapeHTML(coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.outerHTML='<span style=font-size:18px>${a.icon||'🎮'}</span>'">`
+        : `<span style="font-size:18px;">${a.icon||'🎮'}</span>`;
+      return `<div class="mpp-card mpp-activity-card">
+        <div class="mpp-card-label">${verb}</div>
+        <div class="mpp-activity-body">
+          <div class="mpp-activity-cover">${_coverHTML}</div>
+          <div class="mpp-activity-info">
+            <div class="mpp-activity-name">${escapeHTML(a.name)}</div>
+            ${a.metadata?.genre ? `<div class="mpp-activity-meta">${escapeHTML(typeof a.metadata.genre==='string' ? a.metadata.genre : (a.metadata.genre[0]||''))}</div>` : ''}
+            ${a.since ? `<div class="mpp-activity-meta">${_formatActivityElapsed(a.since)}</div>` : ''}
+          </div>
+        </div>
       </div>`;
     })()}
-    <!-- Badges -->
-    <div class="mpp-badges-row">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
+    <!-- (badges moved into the handle row above) -->
     ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${parseMD(escapeHTML(u.bio.slice(0,150)))}${u.bio.length>150?'…':''}</div></div>` : ''}
     ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
     <!-- Roles -->
@@ -39580,19 +39578,28 @@ async function showMiniProfilePreview(username, anchorEl) {
       const _addBtn = _canManageRoles && !isOwn ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" style="width:22px;height:22px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;margin-top:4px;" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.3)'">+</button>` : '';
       return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="display:flex;align-items:center;justify-content:space-between;">Roles</div><div class="mpp-roles-row" id="mpp-roles-container">${_roleTags}${_addBtn}</div><div id="mpp-role-picker" style="display:none;"></div></div>`;
     })() : ''}
-    <!-- Games -->
-    ${_previewGames.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Games</div><div class="mpp-game-row">${_previewGames.slice(0,4).map(g=>`<div class="mpp-game-chip">${g.coverUrl ? `<img src="${escapeHTML(g.coverUrl)}" style="width:14px;height:18px;border-radius:2px;object-fit:cover;">` : (g.icon||ftzIcon('gamepad','12'))} ${escapeHTML(g.name)}</div>`).join('')}${_previewGames.length>4?`<div class="mpp-game-chip">+${_previewGames.length-4} more</div>`:''}</div></div>` : ''}
+    <!-- Game Collection (card style: inline label + small thumbs) -->
+    ${_previewGames.length ? `<div class="mpp-card mpp-game-card">
+      <span class="mpp-card-inline-label">Game Collection</span>
+      <div class="mpp-game-thumbs">${_previewGames.slice(0,3).map(g => {
+        const cover = g.coverUrl || g.cover || g.icon || g.iconUrl || '';
+        const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));
+        const titleAttr = `title="${escapeHTML(g.name||'')}"`;
+        if (isUrl) {
+          const fb = `<span class=&quot;mpp-game-thumb mpp-game-thumb--fallback&quot; title=&quot;${escapeHTML(g.name||'')}&quot;>${escapeHTML((g.name||'?')[0].toUpperCase())}</span>`;
+          return `<img class="mpp-game-thumb" src="${escapeHTML(cover)}" alt="${escapeHTML(g.name||'')}" ${titleAttr} onerror="this.outerHTML='${fb}'">`;
+        }
+        return `<span class="mpp-game-thumb mpp-game-thumb--fallback" ${titleAttr}>${escapeHTML((g.name||'?')[0].toUpperCase())}</span>`;
+      }).join('')}${_previewGames.length>3?`<span class="mpp-game-thumb mpp-game-thumb--more">+${_previewGames.length-3}</span>`:''}</div>
+    </div>` : ''}
     <!-- Widgets -->
     <div id="mpp-widgets-area"></div>
-    <!-- Mutuals -->
-    ${_previewMutuals.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Mutual Friends</div><div style="display:flex;align-items:center;">${_previewMutuals.slice(0,6).map(f => `<div class="mpp-mutual-av" title="${escapeHTML(f)}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,22)}</div>`).join('')}${_previewMutuals.length>6?`<span style="font-size:10.5px;color:rgba(255,255,255,.28);margin-left:5px;">+${_previewMutuals.length-6}</span>`:''}</div></div>` : ''}
     <div class="mpp-divider"></div>
     <!-- Actions -->
     <div class="mpp-actions">
       ${isOwn ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
       `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
-      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
-      ${!isOwn && !_isFriend && !_hasPending ? `<button class="mpp-btn-secondary" title="Add Friend" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>` : ''}
+      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
     </div>`;
 
   // Position near the anchor element

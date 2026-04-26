@@ -4609,7 +4609,7 @@ button[disabled],
 .pp-header-row{
   position:relative;
   display:flex;align-items:flex-end;gap:10px;
-  padding:0 16px;
+  padding:0 18px;
   margin-top:-26px;
   z-index:2;
 }
@@ -4669,11 +4669,7 @@ button[disabled],
 .pp-streak svg{flex-shrink:0;width:11px;height:11px;}
 .pp-streak-num{font-variant-numeric:tabular-nums;}
 
-.pp-identity{
-  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
-  padding:14px 18px 0;
-}
-.pp-name-block{min-width:0;flex:1;}
+.pp-identity{padding:14px 18px 14px;}
 .pp-name{
   font-family:var(--font-display);
   font-size:22px;font-weight:800;letter-spacing:-.01em;
@@ -4682,17 +4678,25 @@ button[disabled],
   word-break:break-word;
 }
 .pp-name:hover{filter:brightness(1.08);}
+
+/* Handle + badges sit on the same row, vertically centered, with the
+   handle on the left and the badges aligned to the right. */
+.pp-handle-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-top:4px;
+}
 .pp-handle{
   font-size:12.5px;font-weight:500;
   color:rgba(255,255,255,.42);
-  margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  flex:1;min-width:0;
 }
 .pp-handle-sep{margin:0 6px;color:rgba(255,255,255,.18);}
 
 .pp-badges{
   display:flex;align-items:center;gap:2px;flex-wrap:wrap;
-  flex-shrink:0;max-width:120px;
-  justify-content:flex-end;padding-top:4px;
+  flex-shrink:0;max-width:140px;
+  justify-content:flex-end;
 }
 .pp-badges img{width:14px;height:14px;display:block;}
 
@@ -4701,7 +4705,6 @@ button[disabled],
    every section after sits above a 1px divider line, so the card
    reads as a clean stack of zones rather than a wall of text. */
 .pp-section{padding:14px 18px 14px;border-top:1px solid rgba(255,255,255,.05);}
-.pp-section:first-of-type{border-top:none;}
 .pp-section-label{
   font-family:var(--font-display);
   font-size:10.5px;font-weight:700;
@@ -4762,7 +4765,7 @@ button[disabled],
 }
 .pp-role-add:hover{border-color:rgba(255,255,255,.35);color:rgba(255,255,255,.7);}
 
-.pp-actions{display:flex;gap:8px;padding:16px 18px 18px;}
+.pp-actions{display:flex;gap:8px;padding:16px 18px 18px;border-top:1px solid rgba(255,255,255,.05);}
 .pp-btn{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
   padding:11px 16px;border-radius:11px;border:none;

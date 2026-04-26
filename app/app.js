@@ -39608,13 +39608,13 @@ async function showMiniProfilePreview(username, anchorEl) {
       ${_streakNum > 0 ? `<div class="pp-streak" oncontextmenu="${isOwn ? `onStreakCtxMenu(event);return false;` : 'return false;'}" ${isOwn ? 'title="Right-click for streak options"' : ''}>${_streakFlameSvg ? _streakFlameSvg(13) : '🔥'}<span class="pp-streak-num">${_streakNum}</span></div>` : ''}
     </div>
 
-    <!-- IDENTITY ───────── name + handle + badges ───────── -->
+    <!-- IDENTITY ───────── name on top, handle + badges in a row below ───────── -->
     <div class="pp-identity">
-      <div class="pp-name-block">
-        <div class="pp-name" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
+      <div class="pp-name" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
+      <div class="pp-handle-row">
         <div class="pp-handle">@${escapeHTML(u.username)}${u.pronouns ? `<span class="pp-handle-sep">·</span>${escapeHTML(u.pronouns)}` : ''}</div>
+        ${_badgesHTML ? `<div class="pp-badges">${_badgesHTML}</div>` : ''}
       </div>
-      ${_badgesHTML ? `<div class="pp-badges">${_badgesHTML}</div>` : ''}
     </div>
 
     ${u.bio ? `

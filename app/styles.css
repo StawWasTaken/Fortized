@@ -4831,6 +4831,9 @@ button[disabled],
 .mpp-badges-inline .ftz-badge img,
 .mpp-badges-inline .ftz-badge svg{width:100%;height:100%;display:block;}
 
+/* DM-user-panel surface uses --channel; align banner fade so colors don't mismatch. */
+#dm-user-panel .mpp-banner::after{background:linear-gradient(to top,var(--channel),transparent);}
+
 /* Card-style sections (Game Collection, Playing). */
 .mpp-card{
   margin:14px 18px;

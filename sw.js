@@ -1,7 +1,7 @@
 // Fortized Service Worker
 // Handles push notifications + ensures fresh HTML is always served
 
-const SW_VERSION = '20260426e';
+const SW_VERSION = '20260426f';
 const CACHE_NAME = 'ftz-shell-' + SW_VERSION;
 
 // ── Install: skip waiting immediately so new SW takes over fast ──

@@ -4840,6 +4840,30 @@ button[disabled],
 .mpp-bio p{margin:0 0 6px;}
 .mpp-bio p:last-child{margin-bottom:0;}
 
+/* DM right-side profile panel — trimmed mirror of the modal LEFT, keeping
+   the same banner + identity language as the popover so every surface
+   reads as the same family. */
+.dm-up-banner{position:relative;height:100px;overflow:hidden;flex-shrink:0;}
+.dm-up-banner img{width:100%;height:100%;object-fit:cover;display:block;}
+.dm-up-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to top,var(--channel),transparent);pointer-events:none;}
+.dm-up-banner-stripe{position:absolute;bottom:0;left:0;right:0;height:2px;opacity:.7;z-index:1;}
+.dm-up-av-area{display:flex;align-items:center;gap:8px;padding:0 16px;margin-top:-26px;position:relative;z-index:2;}
+.dm-up-av{width:72px;height:72px;border-radius:50%;overflow:hidden;border:4px solid var(--channel);background:var(--panel2);box-shadow:0 6px 20px rgba(0,0,0,.55);flex-shrink:0;}
+.dm-up-av img{width:100%;height:100%;object-fit:cover;}
+.dm-up-identity{padding:10px 18px 0;}
+.dm-up-displayname{font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;line-height:1.2;letter-spacing:-.01em;}
+.dm-up-handle{flex:1;min-width:0;font-size:12.5px;color:rgba(255,255,255,.42);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dm-up-bio{padding:12px 18px 4px;font-size:12.5px;color:rgba(255,255,255,.62);line-height:1.6;word-wrap:break-word;}
+.dm-up-bio strong{color:#fff;font-weight:700;}
+.dm-up-bio a{color:var(--accent);text-decoration:none;}
+.dm-up-bio a:hover{text-decoration:underline;}
+.dm-up-bio p{margin:0 0 6px;}
+.dm-up-bio p:last-child{margin-bottom:0;}
+.dm-up-card{margin:14px 16px 0;padding:11px 14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:10px;}
+.dm-up-card-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.22);margin-bottom:5px;}
+.dm-up-card-body{font-size:12.5px;color:rgba(255,255,255,.55);font-weight:500;}
+.dm-up-actions{padding:14px 16px 18px;}
+
 /* Modal: same headerless bio language as the popover, scaled up. */
 .up-left-bio{padding:14px 22px 4px;font-size:13px;color:rgba(255,255,255,.62);line-height:1.65;word-wrap:break-word;}
 .up-left-bio strong{color:#fff;font-weight:700;}

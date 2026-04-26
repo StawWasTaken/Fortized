@@ -28778,48 +28778,47 @@ async function showDMUserPanel(username) {
   const connHtml = activeConns.length ? '<div style="padding:12px 16px;"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;">Connections</div><div style="display:flex;flex-direction:column;gap:4px;">'
     + activeConns.map(p=>'<a href="#" onclick="openExternalLink(event,\'' + escapeHTML(socials[p.key]) + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);text-decoration:none;transition:background .15s;" onmouseenter="this.style.background=\'rgba(255,255,255,.06)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.03)\'"><span style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:'+p.color+';">'+_connIcon(p.key)+' '+p.label+'</span><span style="font-size:12px;color:rgba(255,255,255,.25);">\u2192</span></a>').join('')
     + '</div></div>' : '';
-  // Banner
+  // Banner: same Fortized icons pattern as popover/modal \u2014 keeps every
+  // profile surface visually cohesive. User banner overrides if Radiance.
   const userBanner = (u.banner && hasR) ? u.banner : null;
-  const bannerBg = userBanner
-    ? "url('" + userBanner + "') center/cover no-repeat"
-    : 'linear-gradient(135deg,' + (profileTheme?profileTheme.color1+'88':'#141a2e') + ',' + (profileTheme?profileTheme.color2+'66':'#1a1030') + ',' + (profileTheme?profileTheme.color1+'44':'#0f1828') + ')';
+  const bannerInner = userBanner
+    ? '<img src="' + escapeHTML(userBanner) + '" style="width:100%;height:100%;object-fit:cover;">'
+    : '<div style="width:100%;height:100%;background:' + (profileTheme?'linear-gradient(135deg,'+profileTheme.color1+'55,'+(profileTheme.color2||profileTheme.color1)+'33),':'') + "url('/wrapBackground.png') center/cover no-repeat,#0e1117;\"></div>";
+  const memberSince = (u.joinedAt||u.createdAt) ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null;
   panel.innerHTML =
     // Banner
-    '<div style="position:relative;height:120px;background:'+bannerBg+';overflow:hidden;">'
-    + (profileTheme ? '<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+profileTheme.color1+','+profileTheme.color2+');opacity:.6;z-index:1;"></div>' : '')
-    + '<div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--channel) 0%,rgba(12,14,20,.5) 40%,transparent 100%);"></div>'
+    '<div class="dm-up-banner">'
+    +   bannerInner
+    +   (profileTheme ? '<div class="dm-up-banner-stripe" style="background:linear-gradient(90deg,'+profileTheme.color1+','+profileTheme.color2+');"></div>' : '')
     + '</div>'
-    // PFP
-    + '<div style="padding:0 16px;margin-top:-36px;margin-bottom:8px;position:relative;z-index:2;">'
-    + '<div style="position:relative;display:inline-block;">'
-    + '<div style="width:72px;height:72px;border-radius:50%;background:var(--panel2);border:4px solid var(--channel);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.6);">' + buildAvatarHTML(u.pfp,u.displayName||u.username,64) + '</div>'
-    + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" data-dot-size="16" style="position:absolute;bottom:3px;right:3px;width:16px;height:16px;">'+FtzStatus.dotSvg(u.status||'offline', 16)+'</span>'
+    // Avatar row: avatar + custom-status pill on same line
+    + '<div class="dm-up-av-area">'
+    +   '<div class="profile-decoration-wrap" style="position:relative;flex-shrink:0;">'
+    +     '<div class="dm-up-av">' + buildAvatarHTML(u.pfp, u.displayName||u.username, 72) + '</div>'
+    +     (u.activeDecoration ? '<img src="'+(getDecorationSrc(u.activeDecoration)||'')+'" class="profile-decoration-overlay" onerror="this.style.display=\'none\'">' : '')
+    +     '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" data-dot-size="20" style="position:absolute;bottom:2px;right:2px;width:20px;height:20px;z-index:3;">' + FtzStatus.dotSvg(u.status||'offline', 20) + '</span>'
+    +   '</div>'
+    +   (customStatus?.text
+        ? '<div class="cloud-status-bubble profile-custom-status mpp-cs-pill" data-for="'+escapeHTML(u.username)+'" tabindex="-1"><span class="csb-emoji">'+(customStatus.emoji?'<img src="'+emojiToTwemojiUrl(customStatus.emoji)+'" onerror="this.outerHTML=\''+escapeHTML(customStatus.emoji)+'\'">':'')+'</span><span class="csb-text">'+escapeHTML(customStatus.text).slice(0,40)+'</span></div>'
+        : '<div class="profile-custom-status mpp-cs-pill" data-for="'+escapeHTML(u.username)+'" style="display:none;"></div>')
     + '</div>'
+    // Identity: display name + handle row with badges right-aligned
+    + '<div class="dm-up-identity">'
+    +   '<div class="dm-up-displayname" style="font-family:'+getDisplayFont(u)+';'+_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')+'">' + escapeHTML(u.displayName||u.username) + '</div>'
+    +   '<div class="mpp-handle-row">'
+    +     '<div class="dm-up-handle">@' + escapeHTML(u.username) + (u.pronouns ? '<span class="mpp-handle-dot">\u00b7</span>'+escapeHTML(u.pronouns) : '') + '</div>'
+    +     '<div class="mpp-badges-inline">' + (typeof renderBadgesHTML==='function' ? renderBadgesHTML(u) : '') + '</div>'
+    +   '</div>'
     + '</div>'
-    // Display Name
-    + '<div style="padding:0 16px 4px;">'
-    + '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;line-height:1.15;'+(u.displayFont&&u.displayFont!=='default'?'font-family:'+getDisplayFont(u)+';':'')+'">' + escapeHTML(u.displayName||u.username) + '</div>'
-    // Username
-    + '<div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;">@' + escapeHTML(u.username) + '</div>'
-    + '</div>'
-    // Status
-    + '<div style="padding:6px 16px 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
-    + '<div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,255,255,.03);border-radius:var(--radius-pill);">'
-    + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" data-dot-size="10" style="width:10px;height:10px;display:inline-flex;">'+FtzStatus.dotSvg(u.status||'offline', 10)+'</span>'
-    + '<span class="profile-status-label" data-for="'+escapeHTML(u.username)+'" style="font-size:11px;color:rgba(255,255,255,.45);font-weight:600;">' + FtzStatus.publicLabel(status) + '</span>'
-    + '</div>'
-    // Custom Status Bubble
-    + (customStatus?.text ? '<div class="cloud-status-bubble profile-custom-status" data-for="'+escapeHTML(u.username)+'" style="font-size:10.5px;padding:4px 10px;"><span class="csb-emoji">'+(customStatus.emoji?'<img src="'+emojiToTwemojiUrl(customStatus.emoji)+'" style="width:13px;height:13px;" onerror="this.outerHTML=\''+customStatus.emoji+'\'">':'')+'</span><span class="csb-text">'+escapeHTML(customStatus.text)+'</span></div>' : '<div class="profile-custom-status" data-for="'+escapeHTML(u.username)+'" style="display:none;"></div>')
-    + '</div>'
-    // Divider
-    + '<div style="height:1px;background:rgba(255,255,255,.05);margin:10px 16px;"></div>'
-    // About Me
-    + (u.bio ? '<div style="padding:8px 16px;"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:5px;">About Me</div><div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.55;">' + escapeHTML(u.bio.slice(0,300)) + (u.bio.length>300?'\u2026':'') + '</div></div>' : '')
-    // Connections
+    // Bio (headerless markdown \u2014 Discord-style business card)
+    + (u.bio ? '<div class="dm-up-bio">' + parseMD(escapeHTML(u.bio.slice(0,300))) + (u.bio.length>300?'\u2026':'') + '</div>' : '')
+    // Member Since (compact card)
+    + (memberSince ? '<div class="dm-up-card"><div class="dm-up-card-title">Member Since</div><div class="dm-up-card-body">' + memberSince + '</div></div>' : '')
+    // Connections (kept \u2014 DM-context useful)
     + connHtml
-    // View Full Profile button
-    + '<div style="padding:12px 16px;">'
-    + '<button onclick="viewUserProfile(\'' + escapeHTML(username) + '\')" style="width:100%;padding:9px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseenter="this.style.background=\'rgba(255,255,255,.08)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.04)\'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View Full Profile</button>'
+    // View Full Profile (primary, fits the design language)
+    + '<div class="dm-up-actions">'
+    +   '<button class="mpp-btn-primary" onclick="viewUserProfile(\'' + escapeHTML(username) + '\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View Full Profile</button>'
     + '</div>';
 }
 

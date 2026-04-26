@@ -18148,7 +18148,11 @@ async function _viewUserProfile(username) {
   // Show custom banner if user has Radiance + banner, otherwise a nice gradient
   const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
-  const bannerBg = userBanner ? 'transparent' : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'88':'#141a2e'},${profileTheme?profileTheme.color2+'66':'#1a1030'},${profileTheme?profileTheme.color1+'44':'#0f1828'})`;
+  // Identity-cohesive banner: same Fortized icons pattern as the popover, just
+  // taller. Theme-tinted overlay when the user has Radiance+.
+  const bannerBg = userBanner
+    ? 'transparent'
+    : `${profileTheme?`linear-gradient(135deg,${profileTheme.color1}55,${(profileTheme.color2||profileTheme.color1)}33),`:''}url('/wrapBackground.png') center/cover no-repeat,#0e1117`;
 
   const modalEl = document.getElementById('user-modal-body');
   if (!modalEl) { openModal('modal-user'); return; }
@@ -18270,8 +18274,9 @@ async function _viewUserProfile(username) {
       <!-- Badges -->
       <div class="up-left-badges">${renderBadgesHTML(u)}</div>
       <div class="up-left-divider"></div>
-      <!-- Bio -->
-      ${u.bio ? `<div class="up-left-section"><div class="up-left-section-title">About Me</div><div class="up-left-section-body">${parseMD(escapeHTML(u.bio.slice(0,300)))}${u.bio.length>300?'…':''}</div></div>` : ''}
+      <!-- Bio: headerless, polished markdown — leaves room for "Role at
+           Company" + signup-link content like a business card. -->
+      ${u.bio ? `<div class="up-left-bio">${parseMD(escapeHTML(u.bio.slice(0,500)))}${u.bio.length>500?'…':''}</div>` : ''}
       <!-- Member Since -->
       ${_memberSince ? `<div class="up-left-section"><div class="up-left-section-title">Member Since</div><div style="font-size:12.5px;color:rgba(255,255,255,.45);font-weight:500;">${_memberSince}</div></div>` : ''}
       <!-- Roles -->
@@ -18322,10 +18327,21 @@ async function _viewUserProfile(username) {
         <div id="up-tab-activity">
           <div class="up-right-section" id="up-widgets-container"></div>
           ${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;text-align:center;"><button onclick="_openAddWidgetPanel()" class="add-widget-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Widgets</button></div>` : ''}
-          ${games.length && !(u.profileWidgets||[]).some(w=>w.enabled && w.id==='game_collection') ? `<div class="up-right-section">
-            <div class="up-right-section-title">Game Collection</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;">
-              ${games.map(g=>`<div class="game-col-item"><span style="font-size:17px;">${g.coverUrl ? `<img src='${escapeHTML(g.coverUrl)}' style='width:24px;height:32px;border-radius:4px;object-fit:cover;'>` : (g.icon||ftzIcon('gamepad','15'))}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</span></div>`).join('')}
+          ${(games.length || isOwn) && !(u.profileWidgets||[]).some(w=>w.enabled && w.id==='game_collection') ? `<div class="up-right-section up-games-section">
+            <div class="up-games-header">
+              <div>
+                <div class="up-games-title">${isOwn ? 'Games I like' : 'Game Collection'}</div>
+                ${isOwn ? `<div class="up-games-sub">Add up to 20 games</div>` : ''}
+              </div>
+              ${isOwn ? `<button class="up-games-add" onclick="showView('profile');setTimeout(()=>{const el=document.querySelector('[data-tab=games]');el?.click();},80)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add game</button>` : ''}
+            </div>
+            <div class="up-games-grid">
+              ${games.map(g => {
+                const cover = g.coverUrl || g.cover || '';
+                const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));
+                if (isUrl) return `<div class="up-game-cover" title="${escapeHTML(g.name||'')}"><img src="${escapeHTML(cover)}" alt="${escapeHTML(g.name||'')}" onerror="this.outerHTML='<div class=&quot;up-game-cover-fallback&quot;>${escapeHTML((g.name||'?')[0].toUpperCase())}</div>'"></div>`;
+                return `<div class="up-game-cover up-game-cover-fallback" title="${escapeHTML(g.name||'')}"><span>${escapeHTML((g.name||'?')[0].toUpperCase())}</span><span class="up-game-cover-name">${escapeHTML(g.name||'')}</span></div>`;
+              }).join('')}
             </div>
           </div>` : ''}
         </div>

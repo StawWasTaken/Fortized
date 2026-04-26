@@ -29626,101 +29626,123 @@ const STATUS_PRESETS = [
 ];
 
 function _closeStatusPicker(){const s=document.getElementById("ftz-status-picker");if(s)s.remove();}
+
+// Discord-style status setter: header, big preview card, status input
+// (emoji + text + clear), "Clear after" dropdown, Save button.
 function openStatusPicker() {
   _closeStatusPicker();
   const cur = CU?.customStatus || {};
   const status = CU?.status || 'online';
-
-  const STATUS_MODES = ['online','away','dnd','invisible'].map(id => ({
-    id, label: FtzStatus.label(id), color: FtzStatus.color(id),
-  }));
+  const curEmoji = cur.emoji || '';
+  const curText = cur.text || '';
 
   const overlay = document.createElement('div');
   overlay.className = 'status-picker-modal';
   overlay.id = 'ftz-status-picker';
-  overlay.onclick = e => { if(e.target===overlay) _closeStatusPicker(); };
+  overlay.onclick = e => { if (e.target === overlay) _closeStatusPicker(); };
 
-  // Render the emoji button with twemoji
-  const curEmoji = cur.emoji||'😊';
-  const twemojiUrl = emojiToTwemojiUrl(curEmoji);
+  const _csbForUser = CU || {};
+  const _csbName = escapeHTML(_csbForUser.displayName || _csbForUser.username || 'You');
+  const _csbHandle = escapeHTML('@' + (_csbForUser.username || ''));
+  const _csbPronouns = _csbForUser.pronouns ? `<span class="sp-prev-dot">·</span>${escapeHTML(_csbForUser.pronouns)}` : '';
+  const _csbBadges = typeof renderBadgesHTML === 'function' ? renderBadgesHTML(_csbForUser) : '';
+  const _csbBanner = (_csbForUser.banner && _csbForUser.radianceUntil && new Date(_csbForUser.radianceUntil) > new Date())
+    ? `<img src="${escapeHTML(_csbForUser.banner)}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<div style="width:100%;height:100%;background:url('/wrapBackground.png') center/cover no-repeat,linear-gradient(135deg,#1a1a2e,#0f3460);"></div>`;
 
-  // Build preset chips
-  const presetHTML = STATUS_PRESETS.map(p => {
-    const pUrl = emojiToTwemojiUrl(p.emoji);
-    return `<button class="cloud-preset" onclick="document.getElementById('status-emoji-btn').dataset.emoji='${p.emoji}';document.getElementById('status-emoji-btn').innerHTML='<img src=\\'${pUrl}\\' style=\\'width:24px;height:24px;object-fit:contain;\\'>';document.getElementById('status-text-input').value='${escapeHTML(p.text)}';_updateStatusPreview()"><img src="${pUrl}" style="width:16px;height:16px;object-fit:contain;"><span style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);">${escapeHTML(p.text)}</span></button>`;
-  }).join('');
+  // Pre-compute the emoji button's twemoji (or empty smiley as CTA).
+  const _emojiBtnContent = curEmoji
+    ? `<img src="${emojiToTwemojiUrl(curEmoji)}" style="width:22px;height:22px;object-fit:contain;" alt="" onerror="this.outerHTML='${curEmoji}'">`
+    : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 11h.01M15 11h.01M8 15s1.5 2 4 2 4-2 4-2"/></svg>`;
+
+  // Default "Clear after" choice — Discord uses 24 hours by default.
+  const DURATIONS = [
+    { id: 'never',  label: "Don't clear" },
+    { id: '30min',  label: '30 minutes' },
+    { id: '1h',     label: '1 hour' },
+    { id: '4h',     label: '4 hours' },
+    { id: '24h',    label: '24 hours', def: true },
+  ];
+  const _defaultDur = DURATIONS.find(d => d.def);
 
   overlay.innerHTML = `
-    <div class="sp-card" style="max-width:420px;width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.06);background:var(--panel);box-shadow:0 16px 48px rgba(0,0,0,.5);overflow:hidden;">
+    <div class="sp-card">
       <!-- Header -->
-      <div style="padding:18px 22px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-          <div>
-            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;">Set a custom status</div>
+      <div class="sp-header">
+        <div class="sp-title">Set your status</div>
+        <button class="sp-close-btn" onclick="_closeStatusPicker()" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Preview card -->
+      <div class="sp-preview">
+        <div class="sp-prev-banner">${_csbBanner}</div>
+        <div class="sp-prev-row">
+          <div class="sp-prev-av-wrap">
+            <div class="sp-prev-avatar">${_csbForUser.pfp ? `<img src="${escapeHTML(_csbForUser.pfp)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:rgba(255,255,255,.5);background:var(--panel2);">${_csbName[0]}</div>`}</div>
+            <span class="sp-prev-status">${FtzStatus.dotSvg(status, 14)}</span>
           </div>
-          <button onclick="_closeStatusPicker()" class="sp-close-btn" style="margin-left:auto;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <button id="status-preview-bubble" class="sp-prev-bubble" tabindex="-1" style="${curText ? '' : 'display:none;'}">
+            <span id="status-preview-emoji" class="sp-prev-bubble-emoji">${curEmoji ? `<img src="${emojiToTwemojiUrl(curEmoji)}" style="width:13px;height:13px;object-fit:contain;" alt="">` : ''}</span>
+            <span id="status-preview-text" class="sp-prev-bubble-text">${escapeHTML(curText)}</span>
+          </button>
+        </div>
+        <div class="sp-prev-identity">
+          <div class="sp-prev-name" style="font-family:${typeof getDisplayFont === 'function' ? getDisplayFont(_csbForUser) : 'var(--font-display)'};${typeof _getDisplayEffectCSS === 'function' ? _getDisplayEffectCSS(_csbForUser.displayEffect||'solid', _csbForUser.displayColor||'#fff') : ''}">${_csbName}</div>
+          <div class="sp-prev-meta">${_csbHandle}${_csbPronouns}${_csbBadges ? `<span class="sp-prev-badges">${_csbBadges}</span>` : ''}</div>
         </div>
       </div>
 
-      <div style="padding:20px 28px 24px;">
-        <!-- Profile Preview -->
-        <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Preview</div>
-        <div id="status-preview-card" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;margin-bottom:18px;">
-          <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel2);position:relative;">
-            ${CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<div style="width:100%;height:100%;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
-            <span style="position:absolute;bottom:0;right:0;width:14px;height:14px;">${FtzStatus.dotSvg(status, 14)}</span>
-          </div>
-          <div style="min-width:0;flex:1;">
-            <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">${escapeHTML(CU?.displayName||CU?.username||'User')}</div>
-            <div id="status-preview-bubble" style="display:${cur.text?'inline-flex':'none'};" class="cloud-status-bubble" >
-              <span class="csb-emoji" id="status-preview-emoji">${cur.emoji ? `<img src="${emojiToTwemojiUrl(cur.emoji)}" style="width:14px;height:14px;object-fit:contain;">` : ''}</span>
-              <span class="csb-text" id="status-preview-text" style="font-size:11px;">${escapeHTML(cur.text||'')}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Status Mode -->
-        <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Presence</div>
-        <div class="sp-mode-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;">
-          ${STATUS_MODES.map(m=>`
-            <div class="sp-mode-opt ${status===m.id?'sel':''}" onclick="pickStatusMode('${m.id}',this)" data-mode="${m.id}" style="border:1.5px solid ${status===m.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.06)'};">
-              <div style="width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">${FtzStatus.dotSvg(m.id, 14)}</div>
-              <span style="font-size:12.5px;font-weight:600;color:${status===m.id?'#fff':'rgba(255,255,255,.55)'};">${m.label}</span>
-            </div>`).join('')}
-        </div>
-
-        <!-- Custom Status Input -->
-        <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Custom Status</div>
-        <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">
-          <button onclick="pickStatusEmoji()" id="status-emoji-btn" data-emoji="${escapeHTML(curEmoji)}" class="sp-emoji-btn">
-            <img src="${twemojiUrl}" style="width:24px;height:24px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${curEmoji}</span>'">
+      <!-- Body -->
+      <div class="sp-body">
+        <div class="sp-label">Status</div>
+        <div class="sp-input-row">
+          <button id="status-emoji-btn" class="sp-emoji-btn" data-emoji="${escapeHTML(curEmoji)}" onclick="pickStatusEmoji()" title="Pick an emoji">${_emojiBtnContent}</button>
+          <input id="status-text-input" class="sp-input" placeholder="What's on your mind?" value="${escapeHTML(curText)}" maxlength="100" oninput="_updateStatusPreview()">
+          <button class="sp-clear-input" onclick="document.getElementById('status-text-input').value='';document.getElementById('status-emoji-btn').dataset.emoji='';document.getElementById('status-emoji-btn').innerHTML='<svg width=\\'20\\' height=\\'20\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'9\\'/><path d=\\'M9 11h.01M15 11h.01M8 15s1.5 2 4 2 4-2 4-2\\'/></svg>';_updateStatusPreview()" aria-label="Clear status">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
           </button>
-          <input id="status-text-input" class="field-input" placeholder="What's happening?" value="${escapeHTML(cur.text||'')}" style="flex:1;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:14px;padding:11px 16px;color:#fff;font-family:var(--font-ui);font-size:13.5px;outline:none;transition:border-color .2s;" maxlength="100" oninput="_updateStatusPreview()">
         </div>
 
-        <!-- Quick Presets -->
-        <div style="font-size:9.5px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Quick Pick</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;max-height:72px;overflow-y:auto;">
-          ${presetHTML}
+        <div class="sp-footer">
+          <button id="sp-clear-after-trigger" class="sp-clear-after" data-dur="${_defaultDur.id}" onclick="_spToggleDurationMenu(event)">
+            <span>Clear after: <strong id="sp-clear-after-label">${_defaultDur.label}</strong></span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="sp-actions-right">
+            ${curText ? '<button class="sp-clear-btn" onclick="clearCustomStatus()">Clear status</button>' : ''}
+            <button class="sp-save-btn" onclick="saveCustomStatus()">Save</button>
+          </div>
         </div>
 
-        <!-- Clear After -->
-        <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Clear After</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;">
-          ${FtzStatus.CUSTOM_DURATIONS.map(d=>
-            `<button class="status-dur-btn" data-dur="${d.id}" onclick="document.querySelectorAll('.status-dur-btn').forEach(b=>{b.removeAttribute('data-selected');b.style.background='transparent';b.style.borderColor='rgba(255,255,255,.06)';b.style.color='rgba(255,255,255,.45)'});this.setAttribute('data-selected','true');this.style.background='rgba(254,248,61,.08)';this.style.borderColor='rgba(254,248,61,.2)';this.style.color='var(--accent)'" style="padding:7px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.06);background:transparent;color:rgba(255,255,255,.45);font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s;">${d.label}</button>`
-          ).join('')}
-        </div>
-
-        <!-- Actions -->
-        <div style="display:flex;gap:8px;">
-          <button onclick="saveCustomStatus()" style="flex:1;background:var(--accent);color:var(--rail);border:none;border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Save Custom Status</button>
-          <button onclick="clearCustomStatus()" style="width:44px;height:44px;border-radius:14px;background:rgba(248,113,113,.06);border:1.5px solid rgba(248,113,113,.12);color:rgba(248,113,113,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;" onmouseover="this.style.borderColor='rgba(248,113,113,.25)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='rgba(248,113,113,.12)';this.style.color='rgba(248,113,113,.6)'" title="Clear status"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+        <!-- Duration menu (hidden until trigger click) -->
+        <div id="sp-duration-menu" class="sp-duration-menu" style="display:none;">
+          ${DURATIONS.map(d => `<button class="sp-dur-item${d.def ? ' on' : ''}" data-dur="${d.id}" onclick="_spPickDuration('${d.id}','${escapeHTML(d.label)}')">${d.label}${d.def ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</button>`).join('')}
         </div>
       </div>
     </div>`;
 
   document.body.appendChild(overlay);
+}
+
+// Toggle the "Clear after" dropdown menu open/closed.
+function _spToggleDurationMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('sp-duration-menu');
+  if (!menu) return;
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
+}
+
+// Pick a duration from the dropdown.
+function _spPickDuration(durId, label) {
+  const trigger = document.getElementById('sp-clear-after-trigger');
+  const lbl = document.getElementById('sp-clear-after-label');
+  if (trigger) trigger.dataset.dur = durId;
+  if (lbl) lbl.textContent = label;
+  document.querySelectorAll('.sp-dur-item').forEach(b => b.classList.toggle('on', b.dataset.dur === durId));
+  document.getElementById('sp-duration-menu').style.display = 'none';
 }
 
 function pickStatusMode(mode, el) {
@@ -29797,12 +29819,17 @@ function _updateStatusPreview() {
 
 async function saveCustomStatus() {
   const emojiBtn = document.getElementById('status-emoji-btn');
-  const emoji = emojiBtn?.dataset?.emoji || emojiBtn?.textContent?.trim() || '😊';
+  const emoji = emojiBtn?.dataset?.emoji || emojiBtn?.textContent?.trim() || '';
   const text = ((document.getElementById('status-text-input')||{}).value||'').trim();
   if (!text) { toast('Add some text!','error'); return; }
-  // Get selected duration
-  const durBtn = document.querySelector('.status-dur-btn[data-selected="true"]');
-  const duration = durBtn ? durBtn.dataset.dur : 'forever';
+  // Read selected duration: prefer the new sp-clear-after-trigger
+  // (Discord-style dropdown) and fall back to legacy radio buttons.
+  const trigger = document.getElementById('sp-clear-after-trigger');
+  const legacyBtn = document.querySelector('.status-dur-btn[data-selected="true"]');
+  const rawDur = trigger?.dataset?.dur || legacyBtn?.dataset?.dur || 'never';
+  // Map the new "never" value to the legacy "forever" so downstream
+  // setCustomStatusWithDuration logic still recognises it.
+  const duration = rawDur === 'never' ? 'forever' : rawDur;
   setCustomStatusWithDuration(emoji, text, duration);
   document.getElementById('ftz-status-picker')?.remove();
   buildProfileView('myprofile');

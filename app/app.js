@@ -18345,16 +18345,27 @@ async function viewUserProfile(username, opts) {
   try {
     return await _viewUserProfile(username);
   } catch (e) {
+    const msg = e?.message || String(e);
     console.error('[viewUserProfile] failed for', username, e);
-    try { toast?.('Could not open profile — refresh and try again.', 'error'); } catch {}
+    // Surface the real error message to the user so the actual cause is
+    // visible without needing to open F12. Truncated to keep the toast short.
+    try { toast?.('Profile error: ' + msg.slice(0, 90), 'error'); } catch {}
   }
 }
 
 async function _viewUserProfile(username) {
+  // Normalise the username so equality checks (`username === CU.username`)
+  // work regardless of how the caller cased the argument. Without this,
+  // own-profile detection could miss and downstream code paths assumed
+  // for "other users" would fire — including a friends-only branch that
+  // throws when CU is the same user.
+  username = (username || '').trim().toLowerCase();
+  if (!username) throw new Error('No username provided');
+  if (!CU?.username) throw new Error('Not signed in');
   let u = null;
   try { u = await FortizedSocial.getUserByName(username); } catch (e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
-  if (username === CU.username) u = { ...u, ...CU };
+  if (username === (CU.username||'').toLowerCase()) u = { ...u, ...CU };
 
   let status = 'offline';
   // Use live Socket.IO presence first, fallback to DB
@@ -18373,7 +18384,8 @@ async function _viewUserProfile(username) {
       try { status = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[Profile] status fallback failed', e); }
     }
   }
-  subscribeProfileStatus(username);
+  // Don't let a failing presence subscription block the modal from rendering.
+  try { subscribeProfileStatus(username); } catch(e) { console.warn('[Profile] subscribeProfileStatus failed', e?.message); }
 
   const isOwn = username === CU.username;
   const isFriend = (CU.friends||[]).includes(username);
@@ -18656,9 +18668,12 @@ async function _viewUserProfile(username) {
       if (targetTab) _upSwitchTab(targetTab, targetId);
     }, 40);
   }
-  // Render profile widgets if the user has any enabled
-  const widgetsContainer = document.getElementById('up-widgets-container');
-  if (widgetsContainer) renderProfileWidgetsOnCard(u, widgetsContainer);
+  // Render profile widgets if the user has any enabled. Wrapped so a
+  // misconfigured widget can't unwind the whole open-profile flow.
+  try {
+    const widgetsContainer = document.getElementById('up-widgets-container');
+    if (widgetsContainer) renderProfileWidgetsOnCard(u, widgetsContainer);
+  } catch (e) { console.warn('[Profile] widget render failed', e?.message); }
   // Widget manager is the "Add Widgets" button (already in HTML above)
 }
 

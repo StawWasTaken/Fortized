@@ -18586,33 +18586,13 @@ async function _viewUserProfile(username) {
         ${!isOwn ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-mutuals')">Mutual Friends</div>` : ''}
       </div>
       <div class="up-right-content">
-        <!-- Board tab: widgets, games, general info -->
+        <!-- Board tab: widgets only. The standalone "Games I like" section
+             used to render here too, but it duplicated the data already
+             surfaced by the Games I like widget — leaving it caused two
+             grids on the same page. The widget is the single source. -->
         <div id="up-tab-activity">
           <div class="up-right-section" id="up-widgets-container"></div>
           ${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;text-align:center;"><button onclick="_openAddWidgetPanel()" class="add-widget-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Widgets</button></div>` : ''}
-          ${(games.length || isOwn) && !(u.profileWidgets||[]).some(w=>w.enabled && w.id==='game_collection') ? `<div class="up-right-section up-games-section">
-            <div class="up-games-header">
-              <div>
-                <div class="up-games-title">Games I like</div>
-                ${isOwn ? `<div class="up-games-sub">Add up to 20 games</div>` : ''}
-              </div>
-              ${isOwn ? `<button class="up-games-add" onclick="showView('profile');setTimeout(()=>{const el=document.querySelector('[data-tab=games]');el?.click();},80)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add game</button>` : ''}
-            </div>
-            <div class="up-games-grid">
-              ${games.map(g => {
-                const cover = g.coverUrl || g.cover || '';
-                const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));
-                // String() coerces non-string g.name (objects, numbers, null)
-                // so .charAt() never throws — `(g.name||'?')[0].toUpperCase()`
-                // crashed when entries had a malformed name field, taking the
-                // entire profile-card render down with it.
-                const safeName = String(g.name || '?');
-                const initial = (safeName.charAt(0) || '?').toUpperCase();
-                if (isUrl) return `<div class="up-game-cover" title="${escapeHTML(safeName)}"><img src="${escapeHTML(cover)}" alt="${escapeHTML(safeName)}" onerror="this.outerHTML='<div class=&quot;up-game-cover-fallback&quot;>${escapeHTML(initial)}</div>'"></div>`;
-                return `<div class="up-game-cover up-game-cover-fallback" title="${escapeHTML(safeName)}"><span>${escapeHTML(initial)}</span><span class="up-game-cover-name">${escapeHTML(safeName)}</span></div>`;
-              }).join('')}
-            </div>
-          </div>` : ''}
         </div>
         <!-- Wishlist tab: its own page on the profile card -->
         ${(() => {

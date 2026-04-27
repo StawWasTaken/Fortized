@@ -9492,6 +9492,49 @@ function initFortizedUXResilience() {
         FortizedSocial.getUserByName(username, { noCache: true }),
         new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),7000))
       ]);
+      // ── DATA-LOSS GUARD ────────────────────────────────────────────────
+      // The protected-account merge in saveUserObject defends DB writes,
+      // but the load path never had its own guard. Result: when a stale
+      // or partial DB row was returned here, it silently clobbered the
+      // user's local good state — the source of "my onyx reset to 100,
+      // pfp/banner/bio gone" reports for staw/fortized/joyster. We now
+      // mirror refreshCU()'s SUPER_ADMIN protection: any cosmetic /
+      // economy field that's empty on `fresh` but populated in the
+      // localStorage snapshot is restored from local before assignment.
+      if (CU?.username && SUPER_ADMINS.includes((CU.username||'').toLowerCase())) {
+        try {
+          const cachedRaw = localStorage.getItem('ftz_user_' + CU.username);
+          const local = cachedRaw ? JSON.parse(cachedRaw) : null;
+          if (local) {
+            const protectFields = [
+              'pfp','banner','bio','displayName','friends','friendRequestsSent','friendRequestsReceived',
+              'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme','activeDecoration',
+              'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
+              'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
+              'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
+              'onyxBadge','onyxBadgeSpent','createdAt','customStatus','verified','appearance',
+              'completedQuests','questsRewarded','questsDailyLog','dailyStreak'
+            ];
+            for (const k of protectFields) {
+              const nv = CU[k], lv = local[k];
+              const isEmpty = nv == null
+                || (Array.isArray(nv) && nv.length === 0 && Array.isArray(lv) && lv.length > 0)
+                || (typeof nv === 'string' && nv === '' && typeof lv === 'string' && lv !== '')
+                || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && lv && typeof lv === 'object' && Object.keys(lv).length > 0);
+              if (isEmpty && lv != null) CU[k] = lv;
+            }
+            // Onyx is a write-allowed field for protected accounts (so admin
+            // grants flow through), which means a stale DB read with a low
+            // value would otherwise stomp the user's real balance. Take the
+            // higher of the two so balances only grow on read, never shrink.
+            if (typeof local.onyx === 'number' && (typeof CU.onyx !== 'number' || CU.onyx < local.onyx)) {
+              CU.onyx = local.onyx;
+            }
+            // Schedule a save so the recovered state heals the DB row too.
+            setTimeout(() => { try { saveUser(true); } catch {} }, 1500);
+          }
+        } catch(e) { console.warn('[Init] Protected-account merge failed:', e?.message); }
+      }
     }catch(e){
       CU=null;
       if(lbl)lbl.textContent='⚠️ Connection timeout. Trying cache…';
@@ -16923,10 +16966,13 @@ function _buildProfileView(tab) {
                   <div class="mpp-badges-inline">${renderBadgesHTML(CU)}</div>
                 </div>
               </div>
-              <!-- Headerless bio block — same as popover/modal -->
+              <!-- About Me section — matches popover/modal layout -->
               <div id="preview-bio-section" style="${CU.bio?'':'display:none;'}">
                 <div class="mpp-divider"></div>
-                <div class="mpp-bio" id="preview-bio-body">${CU.bio ? (parseMD(escapeHTML(CU.bio.slice(0,300)))+(CU.bio.length>300?'…':'')) : ''}</div>
+                <div class="mpp-section">
+                  <div class="mpp-section-title">About Me</div>
+                  <div class="mpp-bio" id="preview-bio-body">${CU.bio ? (parseMD(escapeHTML(CU.bio.slice(0,300)))+(CU.bio.length>300?'…':'')) : ''}</div>
+                </div>
               </div>
               ${(CU.joinedAt||CU.createdAt) ? '<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">'+new Date(CU.joinedAt||CU.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</div></div>' : ''}
               <div id="preview-widgets-container"></div>
@@ -18473,7 +18519,7 @@ async function _viewUserProfile(username) {
       <div class="up-left-divider"></div>
       <!-- Bio: headerless, polished markdown — leaves room for "Role at
            Company" + signup-link content like a business card. -->
-      ${u.bio ? `<div class="up-left-bio">${parseMD(escapeHTML(u.bio.slice(0,500)))}${u.bio.length>500?'…':''}</div>` : ''}
+      ${u.bio ? `<div class="up-left-section"><div class="up-left-section-title">About Me</div><div class="up-left-bio">${parseMD(escapeHTML(u.bio.slice(0,500)))}${u.bio.length>500?'…':''}</div></div>` : ''}
       <!-- Member Since -->
       ${_memberSince ? `<div class="up-left-section"><div class="up-left-section-title">Member Since</div><div style="font-size:12.5px;color:rgba(255,255,255,.45);font-weight:500;">${_memberSince}</div></div>` : ''}
       <!-- Roles -->
@@ -18527,7 +18573,7 @@ async function _viewUserProfile(username) {
           ${(games.length || isOwn) && !(u.profileWidgets||[]).some(w=>w.enabled && w.id==='game_collection') ? `<div class="up-right-section up-games-section">
             <div class="up-games-header">
               <div>
-                <div class="up-games-title">${isOwn ? 'Games I like' : 'Game Collection'}</div>
+                <div class="up-games-title">Games I like</div>
                 ${isOwn ? `<div class="up-games-sub">Add up to 20 games</div>` : ''}
               </div>
               ${isOwn ? `<button class="up-games-add" onclick="showView('profile');setTimeout(()=>{const el=document.querySelector('[data-tab=games]');el?.click();},80)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add game</button>` : ''}
@@ -29014,7 +29060,7 @@ async function showDMUserPanel(username) {
     +   '</div>'
     + '</div>'
     // Bio (headerless markdown \u2014 Discord-style business card)
-    + (u.bio ? '<div class="dm-up-bio">' + parseMD(escapeHTML(u.bio.slice(0,300))) + (u.bio.length>300?'\u2026':'') + '</div>' : '')
+    + (u.bio ? '<div class="dm-up-card"><div class="dm-up-card-title">About Me</div><div class="dm-up-bio" style="padding:0;">' + parseMD(escapeHTML(u.bio.slice(0,300))) + (u.bio.length>300?'\u2026':'') + '</div></div>' : '')
     // Member Since (compact card)
     + (memberSince ? '<div class="dm-up-card"><div class="dm-up-card-title">Member Since</div><div class="dm-up-card-body">' + memberSince + '</div></div>' : '')
     // Connections (kept \u2014 DM-context useful)
@@ -39608,7 +39654,22 @@ function _subscribeFriendStatuses() {
 // ════════════════════════════════════════════════════════════
 let _ownProfileOpen = false;
 function toggleOwnProfilePanel() {
+  // Use the canonical mini-profile popover so own + others' profile UIs
+  // are identical, AND so the popover's "Profile" button reliably opens
+  // the full profile card. The legacy bespoke own-profile panel below
+  // never wired its avatar/name onclicks consistently — users reported
+  // "I can open everyone else's profile card but not mine". Status
+  // switching is still reachable via the status pill in the popover.
   if (_ownProfileOpen) { closeOwnProfilePanel(); return; }
+  if (!CU?.username) return;
+  const anchor = document.getElementById('ua-clickable');
+  try {
+    if (typeof showMiniProfilePreview === 'function') {
+      showMiniProfilePreview(CU.username, anchor);
+      return;
+    }
+  } catch(e) { console.warn('[Userbar] mini profile failed, falling back:', e?.message); }
+  // Fallback: legacy bespoke panel (kept as a safety net).
   _ownProfileOpen = true;
   document.getElementById('own-profile-panel')?.remove();
   
@@ -39833,7 +39894,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- (badges moved into the handle row above) -->
     <!-- Bio renders as a polished, headerless markdown block (Discord-style)
          so users can format their own "Role at Company" + signup links. -->
-    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-bio">${parseMD(escapeHTML(u.bio.slice(0,300)))}${u.bio.length>300?'…':''}</div>` : ''}
+    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio">${parseMD(escapeHTML(u.bio.slice(0,300)))}${u.bio.length>300?'…':''}</div></div>` : ''}
     ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
     <!-- Roles -->
     ${_currentView === 'bastion' && curBastion !== null ? (() => {
@@ -39842,9 +39903,10 @@ async function showMiniProfilePreview(username, anchorEl) {
       const _addBtn = _canManageRoles && !isOwn ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" style="width:22px;height:22px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;margin-top:4px;" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.3)'">+</button>` : '';
       return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="display:flex;align-items:center;justify-content:space-between;">Roles</div><div class="mpp-roles-row" id="mpp-roles-container">${_roleTags}${_addBtn}</div><div id="mpp-role-picker" style="display:none;"></div></div>`;
     })() : ''}
-    <!-- Game Collection (card style: inline label + small thumbs) -->
+    <!-- Games I like — single source of truth, the gameCollection field;
+         modal renders it as a grid, popover shows it as an inline strip -->
     ${_previewGames.length ? `<div class="mpp-card mpp-game-card">
-      <span class="mpp-card-inline-label">Game Collection</span>
+      <span class="mpp-card-inline-label">Games I like</span>
       <div class="mpp-game-thumbs">${_previewGames.slice(0,3).map(g => {
         const cover = g.coverUrl || g.cover || g.icon || g.iconUrl || '';
         const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));

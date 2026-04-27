@@ -18339,7 +18339,15 @@ async function viewUserProfile(username, opts) {
   // 'mutuals') to deep-link into a specific page on the profile card.
   const tabKey = typeof opts === 'string' ? opts : (opts && opts.tab) || null;
   if (tabKey) window._upPendingTab = tabKey;
-  return _viewUserProfile(username);
+  // Surface any silent failure to the user instead of swallowing it. The bug
+  // "I can't open my own profile card" was a silent throw inside
+  // _viewUserProfile that left the modal closed and showed no error.
+  try {
+    return await _viewUserProfile(username);
+  } catch (e) {
+    console.error('[viewUserProfile] failed for', username, e);
+    try { toast?.('Could not open profile — refresh and try again.', 'error'); } catch {}
+  }
 }
 
 async function _viewUserProfile(username) {
@@ -36733,16 +36741,21 @@ function refreshAtelierBalance() {
 // BADGE SYSTEM
 // ════════════════════════════════════════════════════
 const BADGE_DEFS = {
-  superadmin: { img:'/fortized badges/superadmin.png', tooltip:'Superadmin - Highest level of platform authority in Fortized.', cls:'badge-superadmin', order:0 },
-  admin:      { img:'/fortized badges/admin.png', tooltip:'Admin - Platform administrator with elevated permissions.', cls:'badge-admin', order:1 },
-  moderator:  { img:'/fortized badges/moderator.png', tooltip:'Moderator - Helps maintain safety and order.', cls:'badge-moderator', order:2 },
+  // URLs are pre-encoded — express.static handles %20 fine, while raw spaces
+  // sometimes 404 on certain CDN edge caches and quietly hid the badges.
+  superadmin: { img:'/fortized%20badges/superadmin.png', tooltip:'Superadmin - Highest level of platform authority in Fortized.', cls:'badge-superadmin', order:0 },
+  admin:      { img:'/fortized%20badges/admin.png', tooltip:'Admin - Platform administrator with elevated permissions.', cls:'badge-admin', order:1 },
+  moderator:  { img:'/fortized%20badges/moderator.png', tooltip:'Moderator - Helps maintain safety and order.', cls:'badge-moderator', order:2 },
   verified:   { img:null, tooltip:'Verified - Identity confirmed by Fortized staff.', cls:'badge-verified', order:3 },
-  bot:        { img:'/fortized badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:4 },
-  'radiance-plus': { img:'/fortized badges/radiance+.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance-plus', order:5 },
-  radiance:   { img:'/fortized badges/basic radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance', order:6 },
-  beta:       { img:'/fortized badges/beta user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
-  quest:      { img:'/fortized badges/quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
-  onyx:       { img:'/fortized badges/onyx.png', cls:'badge-onyx', order:8 },
+  bot:        { img:'/fortized%20badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:4 },
+  // Both radiance tiers point at the only radiance art that actually ships in
+  // /fortized badges/ — radiance+.png and basic radiance.png never existed in
+  // the repo, so previously the badge img was 404ing and the row stayed blank.
+  'radiance-plus': { img:'/fortized%20badges/radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance-plus', order:5 },
+  radiance:   { img:'/fortized%20badges/radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance', order:6 },
+  beta:       { img:'/fortized%20badges/beta%20user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
+  quest:      { img:'/fortized%20badges/quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
+  onyx:       { img:'/fortized%20badges/onyx.png', cls:'badge-onyx', order:8 },
 };
 const ONYX_TIERS = [
   { name:'Onyx Apprentice', min:0 },

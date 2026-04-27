@@ -4826,10 +4826,11 @@ button[disabled],
 .mpp-handle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:3px;}
 .mpp-username{flex:1;min-width:0;font-size:12.5px;color:rgba(255,255,255,.42);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .mpp-handle-dot{margin:0 6px;color:rgba(255,255,255,.18);}
-.mpp-badges-inline{display:flex;align-items:center;gap:1px;flex-shrink:0;}
-.mpp-badges-inline .ftz-badge{width:14px;height:14px;margin:0;flex-shrink:0;}
+.mpp-badges-inline{display:flex;align-items:center;gap:3px;flex-shrink:0;}
+.mpp-badges-inline .ftz-badge-row{display:inline-flex;align-items:center;gap:3px;margin:0;}
+.mpp-badges-inline .ftz-badge{width:18px;height:18px;margin:0;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;}
 .mpp-badges-inline .ftz-badge img,
-.mpp-badges-inline .ftz-badge svg{width:100%;height:100%;display:block;}
+.mpp-badges-inline .ftz-badge svg{width:100%;height:100%;display:block;object-fit:contain;}
 
 /* Bio: headerless, generous line-height. Renders the user's markdown directly,
    leaving room for "Role at Company" + signup-link content like a business card. */
@@ -4839,6 +4840,11 @@ button[disabled],
 .mpp-bio a:hover{text-decoration:underline;}
 .mpp-bio p{margin:0 0 6px;}
 .mpp-bio p:last-child{margin-bottom:0;}
+/* When .mpp-bio is nested inside .mpp-section (so it sits beneath an
+   "About Me" header), drop its own horizontal padding — the section
+   already provides 18px, otherwise the body text would be indented to
+   36px while the header stayed at 18px (visible misalignment). */
+.mpp-section .mpp-bio{padding-left:0;padding-right:0;padding-top:0;}
 
 /* DM right-side profile panel — trimmed mirror of the modal LEFT, keeping
    the same banner + identity language as the popover so every surface
@@ -4866,6 +4872,9 @@ button[disabled],
 
 /* Modal: same headerless bio language as the popover, scaled up. */
 .up-left-bio{padding:14px 22px 4px;font-size:13px;color:rgba(255,255,255,.62);line-height:1.65;word-wrap:break-word;}
+/* Same alignment fix: .up-left-bio inside .up-left-section drops its own
+   horizontal padding so it lines up with the .up-left-section-title above. */
+.up-left-section .up-left-bio{padding-left:0;padding-right:0;padding-top:0;}
 .up-left-bio strong{color:#fff;font-weight:700;}
 .up-left-bio a{color:var(--accent);text-decoration:none;}
 .up-left-bio a:hover{text-decoration:underline;}

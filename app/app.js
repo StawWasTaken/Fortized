@@ -18602,8 +18602,14 @@ async function _viewUserProfile(username) {
               ${games.map(g => {
                 const cover = g.coverUrl || g.cover || '';
                 const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));
-                if (isUrl) return `<div class="up-game-cover" title="${escapeHTML(g.name||'')}"><img src="${escapeHTML(cover)}" alt="${escapeHTML(g.name||'')}" onerror="this.outerHTML='<div class=&quot;up-game-cover-fallback&quot;>${escapeHTML((g.name||'?')[0].toUpperCase())}</div>'"></div>`;
-                return `<div class="up-game-cover up-game-cover-fallback" title="${escapeHTML(g.name||'')}"><span>${escapeHTML((g.name||'?')[0].toUpperCase())}</span><span class="up-game-cover-name">${escapeHTML(g.name||'')}</span></div>`;
+                // String() coerces non-string g.name (objects, numbers, null)
+                // so .charAt() never throws — `(g.name||'?')[0].toUpperCase()`
+                // crashed when entries had a malformed name field, taking the
+                // entire profile-card render down with it.
+                const safeName = String(g.name || '?');
+                const initial = (safeName.charAt(0) || '?').toUpperCase();
+                if (isUrl) return `<div class="up-game-cover" title="${escapeHTML(safeName)}"><img src="${escapeHTML(cover)}" alt="${escapeHTML(safeName)}" onerror="this.outerHTML='<div class=&quot;up-game-cover-fallback&quot;>${escapeHTML(initial)}</div>'"></div>`;
+                return `<div class="up-game-cover up-game-cover-fallback" title="${escapeHTML(safeName)}"><span>${escapeHTML(initial)}</span><span class="up-game-cover-name">${escapeHTML(safeName)}</span></div>`;
               }).join('')}
             </div>
           </div>` : ''}
@@ -39938,12 +39944,17 @@ async function showMiniProfilePreview(username, anchorEl) {
       <div class="mpp-game-thumbs">${_previewGames.slice(0,3).map(g => {
         const cover = g.coverUrl || g.cover || g.icon || g.iconUrl || '';
         const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));
-        const titleAttr = `title="${escapeHTML(g.name||'')}"`;
+        // Defensive: g.name can be a non-string in some legacy rows; coerce
+        // via String() + charAt() so a single bad row doesn't blow up the
+        // entire popover render with a TypeError on .toUpperCase().
+        const safeName = String(g.name || '?');
+        const initial = (safeName.charAt(0) || '?').toUpperCase();
+        const titleAttr = `title="${escapeHTML(safeName)}"`;
         if (isUrl) {
-          const fb = `<span class=&quot;mpp-game-thumb mpp-game-thumb--fallback&quot; title=&quot;${escapeHTML(g.name||'')}&quot;>${escapeHTML((g.name||'?')[0].toUpperCase())}</span>`;
-          return `<img class="mpp-game-thumb" src="${escapeHTML(cover)}" alt="${escapeHTML(g.name||'')}" ${titleAttr} onerror="this.outerHTML='${fb}'">`;
+          const fb = `<span class=&quot;mpp-game-thumb mpp-game-thumb--fallback&quot; title=&quot;${escapeHTML(safeName)}&quot;>${escapeHTML(initial)}</span>`;
+          return `<img class="mpp-game-thumb" src="${escapeHTML(cover)}" alt="${escapeHTML(safeName)}" ${titleAttr} onerror="this.outerHTML='${fb}'">`;
         }
-        return `<span class="mpp-game-thumb mpp-game-thumb--fallback" ${titleAttr}>${escapeHTML((g.name||'?')[0].toUpperCase())}</span>`;
+        return `<span class="mpp-game-thumb mpp-game-thumb--fallback" ${titleAttr}>${escapeHTML(initial)}</span>`;
       }).join('')}${_previewGames.length>3?`<span class="mpp-game-thumb mpp-game-thumb--more">+${_previewGames.length-3}</span>`:''}</div>
     </div>` : ''}
     <!-- Widgets -->

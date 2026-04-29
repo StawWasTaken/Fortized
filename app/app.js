@@ -280,8 +280,17 @@ const FtzStatus = (() => {
   });
 
   const VALID = new Set(Object.keys(MODES));
-  const IDLE_TIMEOUT_ACTIVE  = 25 * 60 * 1000; // 25 min when tab visible
-  const IDLE_TIMEOUT_HIDDEN  = 5 * 60 * 1000;  // 5 min when tab hidden
+  // Discord-style idle thresholds:
+  //  - 10 min of no input while the tab is visible → auto-Idle (matches
+  //    Discord's "Idle After 10 minutes" default exactly).
+  //  - 3 min after the tab is hidden (alt-tab / minimised / window not in
+  //    focus) → auto-Idle. Hidden gets a shorter timer because we already
+  //    know the user isn't looking at the chat.
+  // The previous 25 / 5 min values left users showing as "Online" long
+  // after they'd walked away — broke the "is this person actually there
+  // right now?" signal that statuses exist for.
+  const IDLE_TIMEOUT_ACTIVE  = 10 * 60 * 1000; // 10 min when tab visible
+  const IDLE_TIMEOUT_HIDDEN  = 3 * 60 * 1000;  // 3 min when tab hidden
 
   const CUSTOM_DURATIONS = Object.freeze([
     { id: '30m',     label: '30 min',     ms: 30 * 60000 },
@@ -4933,9 +4942,10 @@ async function loadDMMessages(username) {
   const dmKey = [CU.username, username].sort().join('__');
   FortizedSocial.stopDMPolling(dmKey);
   try {
-    // Discord-style initial fetch: only the last ~50 visible messages.
-    // Older messages are lazy-loaded on scroll-up via _attachLazyLoad().
-    const msgs = await FortizedSocial.getDMMessages(CU.username, username, 50);
+    // Discord-style initial fetch: only the last 20 visible messages — the
+    // ~one-screen Discord paints first. Older messages are lazy-loaded on
+    // scroll-up via _attachLazyLoadOlder().
+    const msgs = await FortizedSocial.getDMMessages(CU.username, username, 20);
     renderMessages(msgsEl, msgs||[], 'dm');
     if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
     _attachLazyLoadOlder(msgsEl, 'dm');
@@ -6276,8 +6286,8 @@ async function loadChannelMessages(idx) {
   // Join Socket.io room for bastion channel real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('bastion', b.globalId||b.name, ch.name);
   try {
-    // Discord-style initial fetch: only the last ~50 visible messages.
-    const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,50);
+    // Discord-style initial fetch: only the last 20 visible messages.
+    const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,20);
     renderMessages(msgsEl,msgs||[],'ch');
     if (!_restoreChatScroll('ch:'+curBastion+':'+idx, msgsEl)) scrollBottom('ch-msgs-'+idx, true);
     _attachLazyLoadOlder(msgsEl, 'ch');
@@ -6691,15 +6701,16 @@ function renderMessages(container, msgs, context) {
   container.querySelectorAll('.msg-row,.date-div,.load-more-bar').forEach(el => el.remove());
   if (!msgs.length) return;
 
-  // Show the lazy-load bar whenever we hit the initial fetch limit (50) — that
-  // tells us the server has more older messages waiting. Scroll-up triggers
-  // _attachLazyLoadOlder() which clicks the bar's button automatically.
-  if (msgs.length >= 50) {
+  // Show the lazy-load bar whenever we hit the initial fetch limit (20) —
+  // that tells us the server has more older messages waiting. Scroll-up
+  // triggers _attachLazyLoadOlder() which clicks the bar's button auto-
+  // matically. Matches Discord: paint ~20 first, fetch more on scroll.
+  if (msgs.length >= 20) {
     const loadMore = document.createElement('div');
     loadMore.className = 'load-more-bar';
     loadMore.innerHTML = '<button class="load-more-btn" onclick="_loadOlderMessages(this)">Load older messages</button>';
     loadMore.dataset.context = context;
-    loadMore.dataset.offset = '50';
+    loadMore.dataset.offset = '20';
     container.appendChild(loadMore);
   }
 
@@ -7029,8 +7040,13 @@ function appendMessage(container, msg, context, prevAuthor) {
   if (isFirst) {
     const avId='av-'+id.replace(/[^a-z0-9]/gi,'-');
     const stripeHTML=roleColor?`<div class="msg-role-stripe" style="background:${roleColor};"></div>`:'';
+    // Use cached pfp on initial render so the avatar paints instantly with
+    // the real image instead of flashing the default fallback for ~half a
+    // second before hydration. Falls back to null (default avatar) only if
+    // we've never seen this author before.
+    const _msgPfp = (msg.from === CU?.username) ? (CU?.pfp || null) : (typeof _pfpCache !== 'undefined' ? (_pfpCache[msg.from] || null) : null);
     row.innerHTML=`${stripeHTML}
-      <div class="msg-av-wrap"><div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,msg.from,38)}</div></div>
+      <div class="msg-av-wrap"><div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(_msgPfp,msg.from,38)}</div></div>
       <div class="msg-content-col ${outlineWrap}">
         ${fwdHTML}${replyHTML}
         <div class="msg-header">

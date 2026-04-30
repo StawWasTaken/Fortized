@@ -1,8 +1,18 @@
 :root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.08);--accent-mid:rgba(255,249,62,.18);--bg:#13161d;--rail:#0f1119;--sidebar:#181a1f;--sidebar-ctx:#15171d;--channel:#15171e;--panel:#1b1e25;--panel2:#1f232b;--panel3:#23272f;--border:#252b3a;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-xs:4px;--space-sm:8px;--space-md:14px;--space-lg:20px;--space-xl:28px;--space-2xl:40px;--space-3xl:56px;--font-ui:'DM Sans',sans-serif;--font-display:'Syne',sans-serif;--font-xs:10.5px;--font-sm:12px;--font-md:13.5px;--font-lg:16px;--font-xl:20px;--font-2xl:28px;--font-hdr:10px;--surface-1:rgba(255,255,255,.03);--surface-2:rgba(255,255,255,.05);--surface-3:rgba(255,255,255,.08);--surface-4:rgba(255,255,255,.12);--surface-border:rgba(255,255,255,.05);--surface-border-hover:rgba(255,255,255,.1);--state-success:var(--green);--state-danger:var(--red);--state-warning:var(--yellow);--state-info:var(--blue);--state-success-dim:rgba(62,207,110,.08);--state-danger-dim:rgba(248,113,113,.08);--state-warning-dim:rgba(245,158,11,.08);--state-info-dim:rgba(96,165,250,.08);--purple:#a78bfa;--gold:#fbbf24;--spotify-green:#1DB954;--spotify-green-dim:rgba(29,185,84,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:22px;--radius-pill:100px;--elev-1:0 1px 4px rgba(0,0,0,.2);--elev-2:0 4px 16px rgba(0,0,0,.25);--elev-3:0 8px 32px rgba(0,0,0,.4);--ease-out:cubic-bezier(.22,1,.36,1);--shadow-sm:0 1px 4px rgba(0,0,0,.15);--shadow-md:0 4px 16px rgba(0,0,0,.2);--shadow-lg:0 8px 32px rgba(0,0,0,.35);--z-dropdown:2000;--z-modal:5000;--z-tooltip:6000;--z-overlay:8000;--z-max:9999;
 /* ── Layered Depth Architecture tokens ── */
 --canvas-color:#13161d;--glass-heavy:rgba(19,22,29,.96);--glass-mid:rgba(19,22,29,.82);--glass-light:rgba(19,22,29,.68);--glass-ultra-light:rgba(19,22,29,.50);--glass-border:rgba(255,255,255,.06);--glass-border-hover:rgba(255,255,255,.12);--blur-heavy:blur(32px) saturate(160%);--blur-mid:blur(24px) saturate(150%);--blur-light:blur(18px) saturate(140%);}
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}*:focus-visible{outline:none !important;}img{-webkit-user-drag:none;user-select:none;pointer-events:auto;draggable:false;}html,body{height:100%;overflow:hidden;}
-body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui);display:flex;flex-direction:row;position:relative;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+/* Suppress browser-default focus rings only on mouse interactions; preserve
+   the per-element :focus-visible accent rings that ship through the rest of
+   the stylesheet (they were silently disabled by a global `outline:none
+   !important` here, killing keyboard-nav visibility). */
+*:focus:not(:focus-visible){outline:none;}
+img{-webkit-user-drag:none;user-select:none;pointer-events:auto;draggable:false;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui);display:flex;flex-direction:row;position:relative;
+  /* Subpixel-clean typography on macOS/Linux retina + Chrome/Firefox; one
+     line, no risk, real polish on the most-read text in the app. */
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;}
 /* ── Global Canvas — the 'floor' of the entire app ── */
 .global-canvas{position:fixed;inset:0;z-index:0;background:var(--canvas-color);transition:background .5s ease,filter .5s ease;pointer-events:none;}
 ::selection{background:rgba(255,249,62,.2);}

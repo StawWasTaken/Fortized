@@ -55,7 +55,7 @@ function ftzIcon(name, size, color) {
   return out;
 }
 // Shorthand icon helpers — Radiance & Onyx use PNG images (displayed inline like SVGs), Boost uses SVG
-function _onyxImg(size){const s=size||'18';return '<img src="/fortized badges/onyx.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Onyx">';}
+function _onyxImg(size){const s=size||'18';return '<img src="/fortized%20badges/onyx.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Onyx">';}
 function _radianceImg(size){const s=size||'16';return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;object-fit:contain;" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="radianceGrad-'+Math.random()+'" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ff77e4;stop-opacity:1" /><stop offset="100%" style="stop-color:#fff93e;stop-opacity:1" /></linearGradient></defs><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#radianceGrad-'+Math.random()+')" /></svg>';}
 function _radiancePlusImg(size){return _radianceImg(size)}
 function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
@@ -8208,7 +8208,7 @@ async function renderMemberList() {
   }
 
   if (deployedBots.length) {
-    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><img src="/fortized badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>` });
+    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><img src="/fortized%20badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>` });
     deployedBots.forEach(bot => items.push({ type:'bot', height:_MLH_ENTRY, bot }));
   }
 
@@ -8355,7 +8355,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
     }, 50);
   }
   const staffRole = getStaffRole(u);
-  const staffBadge = staffRole ? `<img src="/fortized badges/${staffRole === 'superadmin' ? 'superadmin' : staffRole === 'admin' ? 'admin' : 'moderator'}.png" style="width:14px;height:14px;object-fit:contain;" title="${staffRole}">` : '';
+  const staffBadge = staffRole ? `<img src="/fortized%20badges/${staffRole === 'superadmin' ? 'superadmin' : staffRole === 'admin' ? 'admin' : 'moderator'}.png" style="width:14px;height:14px;object-fit:contain;" title="${staffRole}">` : '';
   const dimStyle = isOffline ? 'opacity:.4;' : '';
 
   return `<div class="ml-entry" data-member="${escapeHTML(u)}" data-status="${status}" style="${dimStyle}">
@@ -12874,7 +12874,7 @@ function renderBSettingsMain(tab) {
             <div class="bot-card" style="margin-bottom:8px;">
               <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
               <div class="bot-meta">
-                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
                 <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
                 <div class="bot-stats"><span>Owner: @${escapeHTML(bot.owner||CU.username)}</span><span>•</span><span>${(bot.commands||[]).length} commands</span></div>
               </div>
@@ -12898,7 +12898,7 @@ function renderBSettingsMain(tab) {
           <div class="bot-card" style="margin-bottom:8px;cursor:pointer;" onclick="openBotEditor(${i})">
             <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
             <div class="bot-meta">
-              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot</span></span>
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"><span class="badge-tooltip">Bot</span></span>
                 ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">🔒 Private</span>'}
               </div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
@@ -13035,7 +13035,7 @@ function renderBSettingsMain(tab) {
             <div class="bot-card" style="margin-bottom:8px;cursor:pointer;" onclick="openBotEditor(${i})">
               <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
               <div class="bot-meta">
-                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"></span>
+                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"></span>
                   ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">Private</span>'}
                   ${bot.listedForSale?`<span style="font-size:9px;color:#fbbf24;background:rgba(251,191,36,.1);padding:2px 6px;border-radius:4px;">On Sale · ${bot.salePrice||0} Onyx</span>`:''}
                 </div>
@@ -15174,7 +15174,7 @@ function renderMyBotsView(main) {
           <div class="bot-card" style="margin-bottom:10px;" onclick="openBotEditor(${i})">
             <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
             <div class="bot-meta">
-              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span>
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span>
                 ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">🔒 Private</span>'}
               </div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
@@ -15346,7 +15346,7 @@ function openBotEditor(idx) {
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
         <div class="bot-av" style="width:56px;height:56px;font-size:26px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
         <div>
-          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
           <div style="font-size:12px;color:var(--muted);">Owner: @${escapeHTML(bot.owner)} · Created ${new Date(bot.createdAt).toLocaleDateString()} · v${bot.version}</div>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px;">
@@ -15565,7 +15565,7 @@ function renderArsenalCard(bot) {
     <div style="display:flex;gap:12px;align-items:center;">
       <div class="bot-av">${bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
       <div style="flex:1;min-width:0;">
-        <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+        <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
         <div style="font-size:11px;color:var(--muted);">by @${escapeHTML(bot.owner)} · v${bot.version}</div>
       </div>
       <div style="display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold);">⭐ ${bot.rating}</div>
@@ -34027,7 +34027,7 @@ function renderAtelierTab(tab) {
         <!-- Wrap background overlay -->
         <div style="position:absolute;inset:0;background:url('/wrapBackground.png');background-size:cover;background-position:center;opacity:.6;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;display:flex;align-items:center;gap:24px;">
-          <img src="/fortized badges/radiance.png" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));"/>
+          <img src="/fortized%20badges/radiance.png" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));"/>
           <div>
             <h1 style="font-family:var(--font-display);font-size:36px;font-weight:900;color:#fff;margin:0;letter-spacing:-.03em;text-shadow:0 2px 16px rgba(0,0,0,.4);">Welcome to your Radiance Dwelling</h1>
             <p style="font-size:14px;color:rgba(255,255,255,.7);margin:8px 0 0 0;">Your premium membership is active. Enjoy all your exclusive perks.</p>
@@ -34048,7 +34048,7 @@ function renderAtelierTab(tab) {
 
         <div style="position:relative;z-index:1;">
           <div style="margin-bottom:16px;">
-            <img src="/fortized badges/radiance.png" style="width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(255,119,228,.25));"/>
+            <img src="/fortized%20badges/radiance.png" style="width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(255,119,228,.25));"/>
           </div>
           <div style="font-family:var(--font-display);font-size:20px;font-weight:900;background:linear-gradient(90deg,#ff77e4,#fff93e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;letter-spacing:-.01em;">Share Radiance</div>
           <p style="font-size:13px;color:rgba(255,255,255,.6);margin:0 0 24px 0;line-height:1.6;">Gift your friends a Radiance subscription and let them enjoy all the premium perks together.</p>
@@ -36855,7 +36855,7 @@ const BADGE_DEFS = {
   verified:   { img:null, tooltip:'Verified - Identity confirmed by Fortized staff.', cls:'badge-verified', order:3 },
   bot:        { img:'/fortized%20badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:4 },
   // Both radiance tiers point at the only radiance art that actually ships in
-  // /fortized badges/ — radiance+.png and basic radiance.png never existed in
+  // /fortized%20badges/ — radiance+.png and basic radiance.png never existed in
   // the repo, so previously the badge img was 404ing and the row stayed blank.
   'radiance-plus': { img:'/fortized%20badges/radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance-plus', order:5 },
   radiance:   { img:'/fortized%20badges/radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance', order:6 },
@@ -44269,4 +44269,44 @@ window.addEventListener('unhandledrejection', (e) => {
     if (el.dataset.ftzKeepOpen !== '1') el.classList.remove('open');
   });
 });
+
+// ════════════════════════════════════════════════════════════
+// GLOBAL IMAGE-ERROR FALLBACK
+// Capture-phase error listener on the document: when any <img> fails to
+// load, replace it with a neutral neutralised tile (subtle background +
+// faded glyph) so users never see the browser's broken-image icon. Per-
+// element onerror handlers (legacy code) still take precedence — we only
+// act when the image had no other handler.
+// ════════════════════════════════════════════════════════════
+(function _installImageErrorFallback() {
+  if (window._ftzImgFallbackInstalled) return;
+  window._ftzImgFallbackInstalled = true;
+  document.addEventListener('error', (e) => {
+    const t = e.target;
+    if (!t || t.tagName !== 'IMG') return;
+    if (t.dataset.ftzFallback === '1') return; // already handled
+    if (t.getAttribute('onerror')) return;     // legacy inline handler will run
+    t.dataset.ftzFallback = '1';
+    // Hide image, replace with a subtle neutral tile inheriting size + radius.
+    const cs = getComputedStyle(t);
+    const w = cs.width || (t.width ? t.width + 'px' : '24px');
+    const h = cs.height || (t.height ? t.height + 'px' : '24px');
+    const radius = cs.borderRadius || '6px';
+    const span = document.createElement('span');
+    span.setAttribute('aria-hidden', 'true');
+    span.style.cssText = `display:inline-block;width:${w};height:${h};border-radius:${radius};background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05);`;
+    if (t.parentNode) t.parentNode.replaceChild(span, t);
+  }, true);
+})();
+
+// ════════════════════════════════════════════════════════════
+// MEMORY HYGIENE — prune stale entries in _recentlyEditedFields every
+// 60s so the map doesn't grow unbounded over a long session.
+// ════════════════════════════════════════════════════════════
+setInterval(() => {
+  const m = window._recentlyEditedFields;
+  if (!m) return;
+  const cutoff = Date.now() - 30000; // 30s window — well past the 8s used by refreshCU
+  for (const k in m) { if (m[k] < cutoff) delete m[k]; }
+}, 60000);
 

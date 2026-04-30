@@ -40130,12 +40130,17 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Widgets -->
     <div id="mpp-widgets-area"></div>
     <div class="mpp-divider"></div>
-    <!-- Actions -->
-    <div class="mpp-actions">
-      ${isOwn ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
-      `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
+    <!-- Actions: own user gets Discord-style 3-stack (Edit Profile primary,
+         status pill, switch-accounts pill). Others get the standard
+         Message + Profile pair. -->
+    ${isOwn ? `<div class="mpp-actions mpp-actions-own">
+      <button class="mpp-btn-primary mpp-btn-fullwidth" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>
+      <button class="mpp-pill-action" onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()" title="Set status"><span class="mpp-pill-dot" style="background:${FtzStatus.color(u.status||'online')};"></span><span class="mpp-pill-label">${escapeHTML(FtzStatus.publicLabel(u.status||'online'))}</span><svg class="mpp-pill-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <button class="mpp-pill-action" onclick="document.getElementById('mini-profile-preview')?.remove();toggleAccountSwitcher()" title="Switch accounts"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><span class="mpp-pill-label">Switch Accounts</span><svg class="mpp-pill-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>` : `<div class="mpp-actions">
+      <button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>
       <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
-    </div>`;
+    </div>`}`;
 
   // Position near the anchor element
   document.body.appendChild(panel);

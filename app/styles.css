@@ -4779,6 +4779,27 @@ button[disabled],
 .mpp-role-chip:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);}
 .mpp-role-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .mpp-actions{padding:10px 18px 14px;display:flex;gap:6px;}
+/* Discord-style stacked actions for own popover: Edit Profile (full
+   width primary) + Status pill + Switch Accounts pill, vertically
+   stacked. Discord parity for the userbar profile viewer. */
+.mpp-actions-own{flex-direction:column;gap:6px;}
+.mpp-btn-fullwidth{flex:initial;width:100%;}
+.mpp-pill-action{
+  width:100%;
+  display:flex;align-items:center;gap:9px;
+  padding:9px 12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;
+  color:rgba(255,255,255,.72);
+  font-family:var(--font-ui);font-size:12.5px;font-weight:600;
+  cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.mpp-pill-action:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1);}
+.mpp-pill-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 6px currentColor inset;}
+.mpp-pill-label{flex:1;text-align:left;}
+.mpp-pill-chev{flex-shrink:0;color:rgba(255,255,255,.32);}
 .mpp-btn-primary{flex:1;padding:10px;background:var(--accent);color:#13161d;border:none;border-radius:10px;font-family:var(--font-display);font-size:11.5px;font-weight:800;cursor:pointer;transition:all .16s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;gap:6px;}
 .mpp-btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,249,62,.18);}
 .mpp-btn-secondary{padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:rgba(255,255,255,.55);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center;gap:5px;}

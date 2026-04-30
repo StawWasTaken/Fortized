@@ -5418,8 +5418,11 @@ async function showGCMemberPanel(meta) {
 }
 function _buildGCMemberEntry(m, meta, isOwner, statusMap) {
   const isMe = m === CU.username;
-  const displayN = isMe ? (CU.displayName||CU.username) : m;
-  const pfpSrc = isMe ? CU.pfp : (_pfpCache[m] || null);
+  // Same cached-first-paint rationale as renderMemberList — shows real
+  // pfp + display name on first render for any previously-seen GC peer.
+  const _cachedFor = isMe ? null : (typeof cachedProfile === 'function' ? cachedProfile(m) : null);
+  const displayN = isMe ? (CU.displayName||CU.username) : (_cachedFor?.displayName || m);
+  const pfpSrc = isMe ? CU.pfp : (_cachedFor?.pfp || _pfpCache[m] || null);
   const pfpCrop = isMe ? CU.pfpCrop : (_pfpCropCache[m] || null);
   const isGCOwner = m === meta.owner;
   const st = statusMap ? (statusMap[m] || 'offline') : (isMe ? (CU.status||'online') : 'offline');
@@ -8266,8 +8269,13 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
   const rids = memberRoles[u] || [];
   const primaryRole = roles.find(r => rids.includes(r.id));
   const isMe = u === CU.username;
-  const displayN = isMe ? (CU.displayName||CU.username) : u;
-  const pfpSrc = isMe ? CU.pfp : (_pfpCache[u] || null);
+  // Read from the persistent profile cache so previously-seen members
+  // paint with their real pfp + display name on first frame, instead of
+  // showing the default avatar + raw username for ~half a second while
+  // the deferred per-row getUserByName runs. Discord-style first-paint.
+  const _cachedFor = isMe ? null : (typeof cachedProfile === 'function' ? cachedProfile(u) : null);
+  const displayN = isMe ? (CU.displayName||CU.username) : (_cachedFor?.displayName || u);
+  const pfpSrc = isMe ? CU.pfp : (_cachedFor?.pfp || _pfpCache[u] || null);
   const pfpCrop = isMe ? CU.pfpCrop : (_pfpCropCache[u] || null);
   const status = knownStatus || (isMe ? (CU.status||'online') : 'online');
   // Activity card takes priority for online users who are playing something
@@ -36968,26 +36976,57 @@ async function equipDecoration(decoId) {
   // userbar avatar (which doesn't re-render on its own) kept the old
   // decoration overlay visually until the next page action.
   try { updateUserbar?.(); } catch {}
-  // If clearing, scrub the leftover overlay from CU's avatar surfaces only
-  // (don't touch other users' decorations). Targets the userbar and any
-  // own-profile contexts; member list / chat avatars belonging to others
-  // are left alone.
-  if (!CU.activeDecoration) {
-    const ownContainers = [
-      document.getElementById('ua-clickable'),
-      document.querySelector('.settings-profile-preview'),
-      document.querySelector('#own-profile-panel'),
-      document.getElementById('mini-profile-preview'),
-    ].filter(Boolean);
-    ownContainers.forEach(c => {
-      c.querySelectorAll('.profile-decoration-overlay,.profile-decoration-overlay-sm,.profile-decoration-overlay-lg,.profile-decoration-overlay-ml')
-        .forEach(el => el.remove());
-    });
-  }
-  // Immediate save (skip the 300ms debounce) so the DB row catches up
-  // before any subsequent refresh observes it.
-  await saveUser(true);
+  // Update CU's avatar overlay across every place it currently appears:
+  // member list, message rows (own messages), DM/Friends sidebar, mini
+  // profile preview, modal. Without this, staw's decoration change only
+  // showed in the userbar until each surface re-rendered organically.
+  _refreshOwnDecorationOverlays();
   toast(decoId ? 'Decoration equipped!' : 'Decoration removed', 'success');
+  // Fire-and-forget save so the picker can close without making the user
+  // wait 1–2 seconds for the round-trip. The UI is already correct; the
+  // DB just needs to catch up. Errors surface as a toast.
+  saveUser(true).catch(e => {
+    console.warn('[Deco] save failed', e?.message);
+    toast('Decoration save failed — try again', 'error');
+  });
+}
+
+// Scrub or refresh decoration overlays anywhere CU's own avatar is rendered.
+// On equip: insert/update overlays that point at the new decoration src.
+// On remove (CU.activeDecoration = null): strip every overlay that targets
+// CU. Scoped to CU's own avatar surfaces; other users' decorations are
+// untouched.
+function _refreshOwnDecorationOverlays() {
+  if (!CU?.username) return;
+  const decoSrc = CU.activeDecoration ? (typeof getDecorationSrc === 'function' ? (getDecorationSrc(CU.activeDecoration) || '') : '') : '';
+  const ownSelectors = [
+    `.ml-entry[data-member="${CSS.escape(CU.username)}"]`,
+    `.msg-row[data-from="${CSS.escape(CU.username)}"] .msg-av-inner`,
+    '#ua-clickable',
+    '.settings-profile-preview .profile-decoration-wrap',
+    '#own-profile-panel',
+    '#mini-profile-preview .profile-decoration-wrap',
+    '.up-card .up-left-av-area .profile-decoration-wrap',
+  ];
+  ownSelectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(host => {
+      // Remove any existing decoration overlay
+      host.querySelectorAll('.profile-decoration-overlay,.profile-decoration-overlay-sm,.profile-decoration-overlay-lg,.profile-decoration-overlay-ml')
+        .forEach(el => el.remove());
+      // If equipping a new decoration, inject the overlay
+      if (decoSrc) {
+        const cls = host.classList?.contains('msg-av-inner') ? 'profile-decoration-overlay-sm'
+          : host.id === 'mini-profile-preview' ? 'profile-decoration-overlay'
+          : 'profile-decoration-overlay';
+        const img = document.createElement('img');
+        img.src = decoSrc;
+        img.className = cls;
+        img.alt = '';
+        img.draggable = false;
+        host.appendChild(img);
+      }
+    });
+  });
 }
 
 // ── Decoration picker modal (opens over settings) ──

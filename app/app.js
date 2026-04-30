@@ -809,7 +809,11 @@ const EMOTICON_MAP = {
 // Fortized custom emojis — hosted on GitHub
 // Base URL for the Fortized emojis folder
 // Use jsDelivr CDN for reliable CORS access to GitHub-hosted images
-const FTZ_EMOJI_BASE = 'https://cdn.jsdelivr.net/gh/StawWasTaken/Fortized@main/fortized%20emojis/';
+// Same-origin emoji path — was previously loading from jsdelivr CDN, but
+// Firefox's OpaqueResponseBlocking blocks those cross-origin image fetches,
+// breaking every Fortized emoji on Firefox. Express.static serves the local
+// directory directly, with proper Content-Type headers.
+const FTZ_EMOJI_BASE = '/fortized%20emojis/';
 // Exact filenames from the Fortized emojis GitHub folder
 // Format: [name, extension] — .gif for animated, .png for static
 // Character-style emojis (mascots with expressions)
@@ -852,7 +856,8 @@ FORTIZED_EMOJIS_DATA.forEach(([name, ext]) => {
 
 // Custom money emoji overrides — live in a SEPARATE repo folder so the
 // "fortized emojis" folder stays reserved for Fortized Guide content.
-const FTZ_CUSTOM_EMOJI_BASE = 'https://cdn.jsdelivr.net/gh/StawWasTaken/Fortized@main/custom-emojis/';
+// Same-origin custom-emoji path (see FTZ_EMOJI_BASE rationale).
+const FTZ_CUSTOM_EMOJI_BASE = '/custom-emojis/';
 const EMOJI_URL_OVERRIDES = {
   '\u{1F4B0}': FTZ_CUSTOM_EMOJI_BASE + 'moneybag.png',            // 💰 money_bag
   '\u{1F911}': FTZ_CUSTOM_EMOJI_BASE + 'money%20mouth.png',        // 🤑 money_mouth_face
@@ -7440,7 +7445,11 @@ function cancelEdit(msgId) {
 async function saveEdit(msgId) {
   const ta=document.getElementById('edit-ta');
   if (!ta) return;
-  const caption=ta.value.trim();
+  // Use the contenteditable-safe reader — same race condition as the
+  // chat send path: if _initRichInput's value-shim hasn't installed on
+  // the edit textarea yet (or got blown away by a re-render), `.value`
+  // is undefined and `.trim()` throws, killing the save silently.
+  const caption=(typeof _readChatInput === 'function' ? _readChatInput(ta) : (ta.value || ta.textContent || '').trim());
   const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
   let tokens=[];
   try { tokens = JSON.parse(row?.dataset.editTokens || '[]'); } catch(_){}
@@ -7911,8 +7920,18 @@ async function toggleReaction(msgId, emoji, context, isSuper) {
   const me = CU.username.toLowerCase();
 
   try {
-    // Use Supabase to toggle reactions instead of Firebase
-    const reactionResult = await FortizedSocial.toggleReaction(msgId, emoji, context, me);
+    let reactionResult;
+    if (context === 'ch') {
+      // Bastion messages: FortizedSocial.toggleReaction throws "Use
+      // addReaction for bastion messages" — historical API split because
+      // bastion msgs need the bastion+channel keys. Route directly.
+      const b = CU.bastions?.[curBastion];
+      const ch = b?.channels?.[curChannel];
+      if (!b || !ch) { toast('Could not react here', 'error'); return; }
+      reactionResult = await FortizedSocial.addReaction(b.globalId||b.name, ch.name, msgId, emoji, me);
+    } else {
+      reactionResult = await FortizedSocial.toggleReaction(msgId, emoji, context, me);
+    }
     if (!reactionResult) {
       toast('Could not react here', 'error');
       return;

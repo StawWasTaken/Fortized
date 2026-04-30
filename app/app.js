@@ -1268,6 +1268,13 @@ function autoResize(el) {
 // Clear chat input properly — resets value, height, and live preview overlay
 function clearChatInput(inp) {
   if (!inp) return;
+  // Persisted draft is now stale — drop it so a future open doesn't
+  // restore the just-sent message.
+  try {
+    const id = inp.id || '';
+    const ctx = id === 'dm-input' ? 'dm' : id === 'gc-input' ? 'gc' : id === 'ch-input' ? 'ch' : null;
+    if (ctx) _clearDraft(_draftKeyFor(ctx, id));
+  } catch(_) {}
   // Works for both <input>/<textarea> (where .value works directly) and the
   // contenteditable rich-input div (where the .value setter is shimmed in by
   // _initRichInput, but might not be wired yet during a race). Falls back to
@@ -4918,6 +4925,11 @@ function openDMView(username) {
   loadDMMessages(username);
   setTimeout(() => { if (window.innerWidth > 768) showDMUserPanel(username); _initChatScroll(document.getElementById('dm-msgs')); }, 80);
   setupEmojiAutocomplete('dm-input');
+  // Restore composer draft (text + attached file) for this DM partner.
+  setTimeout(() => {
+    try { _restoreDraftFor('dm', 'dm-input'); } catch(_) {}
+    try { _wireInputSafetyNet('dm-input', 'dm'); } catch(_) {}
+  }, 50);
   ensureDMExists(username).catch(e => console.warn('[DM] Failed to ensure DM:', e?.message));
   // Join Socket.io room for DM real-time events (typing, edits, deletes).
   // Always lowercased — server's roomKey sorts the names; mixed case
@@ -4992,6 +5004,126 @@ async function loadDMMessages(username) {
 function _readChatInput(inp) {
   if (!inp) return '';
   return ((typeof inp.value === 'string' ? inp.value : (inp.textContent || '')) || '').trim();
+}
+
+// ════════════════════════════════════════════════════════════════
+// CHAT DRAFTS — persist text + attached file per-chatbox so the
+// composer state survives refresh / tab close. Different drafts for
+// each (DM partner | GC | bastion channel).
+// ════════════════════════════════════════════════════════════════
+const _DRAFTS_KEY = 'ftz_chat_drafts_v1';
+function _draftKeyFor(context, inputId) {
+  // Compose a stable key per chatbox.
+  if (context === 'dm' && curDM) return 'dm:' + String(curDM).toLowerCase();
+  if (context === 'gc' && curGC) return 'gc:' + String(curGC).toLowerCase();
+  if (context === 'ch' && curBastion !== null && curChannel !== null) {
+    const b = CU?.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+    if (b && ch) return 'ch:' + String(b.globalId||b.name).toLowerCase() + ':' + String(ch.name).toLowerCase();
+  }
+  // Fallback: per-input only (still better than losing drafts entirely).
+  return 'inp:' + (inputId || 'unknown');
+}
+function _loadDrafts() {
+  try { return JSON.parse(localStorage.getItem(_DRAFTS_KEY) || '{}') || {}; }
+  catch { return {}; }
+}
+function _saveDrafts(d) {
+  try { localStorage.setItem(_DRAFTS_KEY, JSON.stringify(d)); } catch(_) {}
+}
+function _saveDraft(key, draft) {
+  if (!key) return;
+  const all = _loadDrafts();
+  if (!draft || (!draft.text && !draft.attachment)) { delete all[key]; }
+  else { all[key] = draft; }
+  _saveDrafts(all);
+}
+function _clearDraft(key) {
+  if (!key) return;
+  const all = _loadDrafts();
+  delete all[key];
+  _saveDrafts(all);
+}
+function _getDraft(key) {
+  if (!key) return null;
+  return _loadDrafts()[key] || null;
+}
+// Restore the draft for the chatbox that's currently open. Called from
+// loadDMMessages / loadGCMessages / loadChannel after the input has been
+// painted into the DOM.
+function _restoreDraftFor(context, inputId) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  const key = _draftKeyFor(context, inputId);
+  const draft = _getDraft(key);
+  if (!draft) return;
+  if (draft.text) {
+    if (typeof inp.value === 'string') inp.value = draft.text;
+    else inp.textContent = draft.text;
+    try { autoResize(inp); } catch(_) {}
+  }
+  if (draft.attachment) {
+    window._pendingAttachment = draft.attachment;
+    try {
+      showAttachmentPreview(draft.attachment.name, draft.attachment.type, draft.attachment.data, draft.attachment.size, context);
+    } catch(_) {}
+  }
+}
+
+// Single safe oninput handler for chat inputs. Wraps the moving parts in
+// try/catch so a hiccup in one (e.g. autoResize hitting a value-shim race)
+// can't suppress the others — that's how broadcastTyping was silently
+// going dark on some sessions.
+function onChatInput(el, context, inputId) {
+  try { autoResize(el); } catch(e) { console.warn('[Input] autoResize failed', e?.message); }
+  // Persist draft text immediately.
+  try {
+    const text = (typeof el.value === 'string' ? el.value : (el.textContent || ''));
+    const key = _draftKeyFor(context, inputId);
+    const att = window._pendingAttachment || null;
+    _saveDraft(key, { text: text, attachment: att });
+  } catch(e) { console.warn('[Input] draft save failed', e?.message); }
+  // Typing broadcast — never let this throw, never let it block the rest.
+  try {
+    if (context === 'dm') broadcastTyping();
+    else if (context === 'gc') broadcastGCTyping();
+    else if (context === 'ch') broadcastChannelTyping();
+  } catch(e) { console.warn('[Input] typing broadcast failed', e?.message); }
+  try { updateCharCount(inputId); } catch(_) {}
+}
+
+// Belt-and-braces: bind a programmatic 'input' listener too. The inline
+// oninput attribute can be eaten by an unrelated runtime error in
+// autoResize / shim init and silently take broadcastTyping with it; a
+// listener attached via addEventListener is independent.
+function _wireInputSafetyNet(inputId, context) {
+  const el = document.getElementById(inputId);
+  if (!el || el._ftzInputNet) return;
+  el._ftzInputNet = true;
+  el.addEventListener('input', () => {
+    try {
+      if (context === 'dm') broadcastTyping();
+      else if (context === 'gc') broadcastGCTyping();
+      else if (context === 'ch') broadcastChannelTyping();
+      // Also keep the draft in sync from this path so a stuck inline
+      // onChatInput doesn't lose the user's text.
+      const key = _draftKeyFor(context, inputId);
+      const text = (typeof el.value === 'string' ? el.value : (el.textContent || ''));
+      const att = window._pendingAttachment || null;
+      _saveDraft(key, { text, attachment: att });
+    } catch(e) { if (window._ftzDebugTyping) console.warn('[Typing-net] failed', e?.message); }
+  });
+}
+
+// Persist + restore the pending attachment as a draft side-effect when
+// it's added/removed from outside onChatInput (file picker, paste, drop).
+function _persistPendingAttachmentChange(context, inputId) {
+  try {
+    const inp = inputId ? document.getElementById(inputId) : null;
+    const key = _draftKeyFor(context, inputId || (context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input'));
+    const text = inp ? (typeof inp.value === 'string' ? inp.value : (inp.textContent || '')) : '';
+    const att = window._pendingAttachment || null;
+    _saveDraft(key, { text: text, attachment: att });
+  } catch(_) {}
 }
 
 async function sendDM() {
@@ -5313,7 +5445,11 @@ async function openGroupChatView(gcId) {
   loadGCMessages(gcId);
   listenGCTyping(gcId, meta.members||[]);
   setupEmojiAutocomplete('gc-input');
-  setTimeout(() => _initChatScroll(document.getElementById('gc-msgs')), 100);
+  setTimeout(() => {
+    try { _restoreDraftFor('gc', 'gc-input'); } catch(_) {}
+    try { _wireInputSafetyNet('gc-input', 'gc'); } catch(_) {}
+    _initChatScroll(document.getElementById('gc-msgs'));
+  }, 100);
 }
 
 async function showGCMemberPanel(meta) {
@@ -6291,6 +6427,11 @@ function loadChatChannel(idx) {
   loadChannelMessages(idx);
   renderMemberList();
   setupEmojiAutocomplete('ch-input');
+  // Restore composer draft (text + attached file) for this bastion channel.
+  setTimeout(() => {
+    try { _restoreDraftFor('ch', 'ch-input'); } catch(_) {}
+    try { _wireInputSafetyNet('ch-input', 'ch'); } catch(_) {}
+  }, 50);
   setTimeout(() => _initChatScroll(document.getElementById('ch-msgs-'+idx)), 100);
 }
 
@@ -24946,7 +25087,7 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           </button>
           <div id="${inputId}" class="chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="${placeholder}" spellcheck="true"
             onkeydown="${keydown}"
-            oninput="autoResize(this);${context==='dm'?'broadcastTyping();':context==='gc'?'broadcastGCTyping();':context==='ch'?'broadcastChannelTyping();':''}updateCharCount('${inputId}')"
+            oninput="onChatInput(this,'${context}','${inputId}')"
             onpaste="handlePaste(event,'${inputId}')"></div>
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">
@@ -29943,8 +30084,11 @@ function showAttachmentPreview(name, type, dataUrl, size, context) {
 
   // context may be 'dm', 'gc', 'ch' OR 'dm-input', 'gc-input', 'ch-input'
   const inputId = context.endsWith('-input') ? context : (context==='dm' ? 'dm-input' : context==='gc' ? 'gc-input' : 'ch-input');
+  const ctxKey = inputId === 'dm-input' ? 'dm' : inputId === 'gc-input' ? 'gc' : 'ch';
   const outerWrap = document.getElementById(inputId)?.closest('.chat-input-outer');
   if (outerWrap) outerWrap.insertBefore(bar, outerWrap.firstChild);
+  // Persist the attachment as part of the chat draft so it survives refresh.
+  try { _persistPendingAttachmentChange(ctxKey, inputId); } catch(_) {}
 }
 
 function _showModifyAttachment() {
@@ -29985,7 +30129,15 @@ function _applyModifyAttachment(btn) {
   showAttachmentPreview(att.name, att.type, att.data, att.size, att.context);
 }
 
-function _clearAttachment(){document.getElementById("attach-preview-bar")?.remove();window._pendingAttachment=null;}
+function _clearAttachment(){
+  document.getElementById("attach-preview-bar")?.remove();
+  window._pendingAttachment=null;
+  // Update persisted draft so the cleared file isn't restored next open.
+  try {
+    const ctx = (curBastion!==null && curChannel!==null) ? 'ch' : (curGC ? 'gc' : (curDM ? 'dm' : null));
+    if (ctx) _persistPendingAttachmentChange(ctx, ctx==='dm'?'dm-input':ctx==='gc'?'gc-input':'ch-input');
+  } catch(_) {}
+}
 
 // ════════════════════════════════════════════
 // updateBastionBanner (duplicate guard)

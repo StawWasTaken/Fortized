@@ -5574,22 +5574,9 @@ function _stopGCTypingBroadcast() {
   if (CU?.username && curGC) firebase.database().ref(_gcTypingPath(curGC)+'/'+CU.username).remove().catch(()=>{});
 }
 
-function listenGCTyping(gcId, members) {
-  if (_gcTypingListenerOff) { try{_gcTypingListenerOff();}catch(e){_dbg('[GC] Typing listener off:',e?.message);} _gcTypingListenerOff=null; }
-  const ref = firebase.database().ref(_gcTypingPath(gcId));
-  const handler = ref.on('value', snap => {
-    const data = snap.val()||{};
-    const others = Object.values(data).filter(v=>v&&v.username&&CU?.username&&v.username!==CU.username);
-    const bar = document.getElementById('gc-typing-bar');
-    const txt = document.getElementById('gc-typing-text');
-    if (!bar||!txt) return;
-    if (others.length && curGC===gcId) {
-      const names = others.slice(0,3).map(v=>v.username);
-      txt.innerHTML = _formatTypingText(names);
-      bar.style.opacity='1';
-    } else { bar.style.opacity='0'; }
-  });
-  _gcTypingListenerOff = ()=>ref.off('value',handler);
+function listenGCTyping(_gcId, _members) {
+  // No-op: GC typing is socket-only now (see initSocket.onTyping).
+  if (_gcTypingListenerOff) { try{_gcTypingListenerOff();}catch(_){} _gcTypingListenerOff=null; }
 }
 
 function cancelGCReply() {
@@ -33930,24 +33917,10 @@ function _stopTypingBroadcast() {
   }
 }
 
-function _listenTyping(partner) {
-  if (_typingListenerOff) { try{_typingListenerOff();}catch(e){ _dbg('[Typing] listener cleanup failed', e); } _typingListenerOff=null; }
-  // Firebase listener as fallback
-  const ref = firebase.database().ref(_typingPath(CU.username, partner));
-  const handler = ref.on('value', snap => {
-    const data = snap.val() || {};
-    const partnerTyping = Object.values(data).filter(v => v && v.username && v.username !== CU.username);
-    const bar = document.getElementById('dm-typing-bar');
-    const txt = document.getElementById('dm-typing-text');
-    if (!bar || !txt) return;
-    if (partnerTyping.length > 0 && curDM === partner) {
-      txt.innerHTML = '<strong style="color:rgba(255,255,255,.5);">' + escapeHTML(partner) + '</strong> is writing\u2026';
-      bar.style.opacity = '1';
-    } else {
-      bar.style.opacity = '0';
-    }
-  });
-  _typingListenerOff = () => ref.off('value', handler);
+function _listenTyping(_partner) {
+  // No-op: typing is socket-only now (handled in initSocket \u2192 onTyping).
+  // Kept as a stub so existing call sites don't need to be touched.
+  if (_typingListenerOff) { try{_typingListenerOff();}catch(_){} _typingListenerOff=null; }
 }
 
 // ════════════════════════════════════════════
@@ -40072,12 +40045,14 @@ async function showMiniProfilePreview(username, anchorEl) {
   }
   const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
-  // Fortized-branded banner: user banner if Radiance, else the Fortized icons
-  // pattern (`wrapBackground.png`) tinted with the user's profile theme — keeps
-  // every profile card feeling identifiably Fortized rather than a flat colour.
+  // Userbar popover keeps the new Fortized-icons banner. Chat / member-list
+  // popovers revert to the older flat gradient — what the user was used to
+  // before the unification pass.
   const bannerBg = userBanner
     ? `<img src="${escapeHTML(userBanner)}" style="width:100%;height:100%;object-fit:cover;">`
-    : `<div style="width:100%;height:100%;background:${profileTheme?`linear-gradient(135deg,${profileTheme.color1}55,${(profileTheme.color2||profileTheme.color1)}33),`:''}url('/wrapBackground.png') center/cover no-repeat,#0e1117;"></div>`;
+    : (_isUserbarAnchor
+        ? `<div style="width:100%;height:100%;background:${profileTheme?`linear-gradient(135deg,${profileTheme.color1}55,${(profileTheme.color2||profileTheme.color1)}33),`:''}url('/wrapBackground.png') center/cover no-repeat,#0e1117;"></div>`
+        : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#1a1a2e'},${profileTheme?profileTheme.color2+'33':'#0f3460'});"></div>`);
   const _previewGames = u.gameCollection || u.registeredGames || [];
   const _previewMutuals = isOwn ? [] : (CU?.friends||[]).filter(f => f !== CU?.username && f !== username && (u.friends||[]).includes(f));
   const _memberSince = u.joinedAt||u.createdAt ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null;
@@ -40149,23 +40124,29 @@ async function showMiniProfilePreview(username, anchorEl) {
       </div>`;
     })()}
     <!-- (badges moved into the handle row above) -->
-    <!-- Bio renders as a polished, headerless markdown block (Discord-style)
-         so users can format their own "Role at Company" + signup links. -->
-    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio">${parseBioMD(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>` : (isOwn ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio mpp-bio-empty" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Click to add a bio…</div></div>` : '')}
-    ${(!isOwn && _memberSince) ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
-    <!-- Roles: only on OTHER users (in bastion context). Hidden on own
-         popover — you already know your roles, it was just clutter
-         that pushed the actions stack off-screen. -->
-    ${(!isOwn && _currentView === 'bastion' && curBastion !== null) ? (() => {
+    <!-- Bio: userbar uses lightweight inline parseBioMD with empty CTA;
+         chat/memberlist uses the older parseMD with 150-char truncation
+         (the design the user was used to before the unification pass). -->
+    ${_isUserbarAnchor
+      ? (u.bio
+          ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio">${parseBioMD(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>`
+          : (isOwn ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio mpp-bio-empty" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Click to add a bio…</div></div>` : ''))
+      : (u.bio
+          ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${parseMD(escapeHTML(u.bio.slice(0,150)))}${u.bio.length>150?'…':''}</div></div>`
+          : '')}
+    ${(_isUserbarAnchor ? !isOwn : true) && _memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
+    <!-- Roles: userbar hides them on own popover (compact). Chat/memberlist
+         shows them whenever in bastion context, matching the old design. -->
+    ${((_isUserbarAnchor ? !isOwn : true) && _currentView === 'bastion' && curBastion !== null) ? (() => {
       const _canManageRoles = hasPerm('manage_roles') || (CU?.bastions?.[curBastion]?.owner === CU?.username);
       const _roleTags = renderUserRoleTags(username);
-      const _addBtn = _canManageRoles ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" style="width:22px;height:22px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;margin-top:4px;" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.3)'">+</button>` : '';
+      const _addBtn = (_canManageRoles && !isOwn) ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" style="width:22px;height:22px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;margin-top:4px;" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.3)'">+</button>` : '';
       return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="display:flex;align-items:center;justify-content:space-between;">Roles</div><div class="mpp-roles-row" id="mpp-roles-container">${_roleTags}${_addBtn}</div><div id="mpp-role-picker" style="display:none;"></div></div>`;
     })() : ''}
-    <!-- Games I like — single source of truth, the gameCollection field;
-         modal renders it as a grid, popover shows it as an inline strip -->
+    <!-- Game collection — userbar says "Games I like", others say
+         "Game Collection" (the original label). -->
     ${_previewGames.length ? `<div class="mpp-card mpp-game-card">
-      <span class="mpp-card-inline-label">Games I like</span>
+      <span class="mpp-card-inline-label">${_isUserbarAnchor ? 'Games I like' : 'Game Collection'}</span>
       <div class="mpp-game-thumbs">${_previewGames.slice(0,3).map(g => {
         const cover = g.coverUrl || g.cover || g.icon || g.iconUrl || '';
         const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));
@@ -40185,15 +40166,17 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Widgets -->
     <div id="mpp-widgets-area"></div>
     <div class="mpp-divider"></div>
-    <!-- Actions: own user gets Discord-style 3-stack (Edit Profile primary,
-         status pill, switch-accounts pill). Others get the standard
-         Message + Profile pair. -->
-    ${isOwn ? `<div class="mpp-actions mpp-actions-own">
+    <!-- Actions: userbar (own user only) gets Discord-style 3-stack
+         (Edit Profile + status pill + switch-accounts pill). Chat /
+         memberlist popovers use the original single-row pair. -->
+    ${(_isUserbarAnchor && isOwn) ? `<div class="mpp-actions mpp-actions-own">
       <button class="mpp-btn-primary mpp-btn-fullwidth" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>
       <button class="mpp-pill-action" onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()" title="Set status"><span class="mpp-pill-dot" style="background:${FtzStatus.color(u.status||'online')};"></span><span class="mpp-pill-label">${escapeHTML(FtzStatus.publicLabel(u.status||'online'))}</span><svg class="mpp-pill-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
       <button class="mpp-pill-action" onclick="document.getElementById('mini-profile-preview')?.remove();toggleAccountSwitcher()" title="Switch accounts"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><span class="mpp-pill-label">Switch Accounts</span><svg class="mpp-pill-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
     </div>` : `<div class="mpp-actions">
-      <button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>
+      ${isOwn
+        ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>`
+        : `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
       <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
     </div>`}`;
 
@@ -41080,28 +41063,9 @@ function _stopChannelTypingBroadcast() {
   }
 }
 
-function listenChannelTyping(bid, chName) {
-  if (_chTypingListenerOff) { try { _chTypingListenerOff(); } catch(e) { _dbg('[Ch] typing listener cleanup failed', e); } _chTypingListenerOff = null; }
-  const ref = firebase.database().ref(_chTypingPath(bid, chName));
-  const handler = ref.on('value', snap => {
-    const data = snap.val() || {};
-    const others = Object.values(data).filter(v => v && v.username && v.username !== CU.username);
-    const bar = document.getElementById('ch-typing-bar');
-    const txt = document.getElementById('ch-typing-text');
-    if (!bar || !txt) return;
-    if (others.length > 0) {
-      const names = others.slice(0, 3).map(v => '<strong style="color:rgba(255,255,255,.5);">' + escapeHTML(v.username) + '</strong>');
-      if (others.length <= 3) {
-        txt.innerHTML = names.join(', ') + (others.length === 1 ? ' is typing...' : ' are typing...');
-      } else {
-        txt.innerHTML = names.join(', ') + ' and ' + (others.length - 3) + ' more are typing...';
-      }
-      bar.style.opacity = '1';
-    } else {
-      bar.style.opacity = '0';
-    }
-  });
-  _chTypingListenerOff = () => ref.off('value', handler);
+function listenChannelTyping(_bid, _chName) {
+  // No-op: bastion channel typing is socket-only (see initSocket.onTyping).
+  if (_chTypingListenerOff) { try { _chTypingListenerOff(); } catch(_) {} _chTypingListenerOff = null; }
 }
 
 // ════════════════════════════════════════════

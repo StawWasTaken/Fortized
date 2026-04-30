@@ -5554,17 +5554,11 @@ function _gcTypingPath(gcId) { return 'gcTyping/'+gcId; }
 
 function broadcastGCTyping() {
   if (!CU?.username||!curGC) return;
-  // Socket.io for instant delivery
+  // Socket.io is the canonical transport; cooldown handles throttling.
   FortizedSocial.socketEmit('typing:start', { type: 'gc', id1: curGC });
-  // Firebase fallback
-  const ref = firebase.database().ref(_gcTypingPath(curGC)+'/'+CU.username);
-  if (!_gcIsTyping) {
-    _gcIsTyping=true;
-    ref.set({ts:Date.now(),username:CU.username});
-    ref.onDisconnect().remove();
-  }
+  if (!_gcIsTyping) _gcIsTyping = true;
   clearTimeout(_gcTypingTimeout);
-  _gcTypingTimeout = setTimeout(()=>{ _gcIsTyping=false; FortizedSocial.socketEmit('typing:stop', { type: 'gc', id1: curGC }); ref.remove().catch(()=>{}); }, 2500);
+  _gcTypingTimeout = setTimeout(()=>{ _gcIsTyping=false; FortizedSocial.socketEmit('typing:stop', { type: 'gc', id1: curGC }); }, 2500);
 }
 
 function _stopGCTypingBroadcast() {
@@ -33885,22 +33879,18 @@ function _typingPath(u1, u2) {
 
 function broadcastTyping() {
   if (!CU?.username || !curDM) return;
-  // Try Socket.io first for instant delivery
+  // Always emit typing:start. The cooldown in socketEmit (1s) handles
+  // throttling internally, so we don't need to gate on _isTyping.
+  // Firebase is a Supabase shim — its typing path adds DB churn for no
+  // value when socket.io is the canonical transport. Skip the fallback
+  // entirely and rely on socket.io reconnection for resilience.
   const sent = FortizedSocial.socketEmit('typing:start', { type: 'dm', id1: CU.username, id2: curDM });
-  if (!sent) {
-    // Fallback to Firebase
-    const ref = firebase.database().ref(_typingPath(CU.username, curDM) + '/' + CU.username);
-    if (!_isTyping) {
-      ref.set({ ts: Date.now(), username: CU.username });
-      ref.onDisconnect().remove();
-    }
-  }
+  if (window._ftzDebugTyping) console.debug('[Typing] broadcast', { sent, dm: curDM, ready: FortizedSocial.isSocketReady?.() });
   if (!_isTyping) _isTyping = true;
   clearTimeout(_typingTimeout);
   _typingTimeout = setTimeout(() => {
     _isTyping = false;
     FortizedSocial.socketEmit('typing:stop', { type: 'dm', id1: CU.username, id2: curDM });
-    firebase.database().ref(_typingPath(CU.username, curDM) + '/' + CU.username).remove().catch(()=>{});
   }, 2500);
 }
 
@@ -41042,17 +41032,11 @@ function broadcastChannelTyping() {
   const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
   const bid = b?.globalId || b?.name; const chName = ch?.name || 'general';
   if (!bid) return;
-  // Socket.io for instant delivery
+  // Socket.io is the canonical transport; cooldown handles throttling.
   FortizedSocial.socketEmit('typing:start', { type: 'bastion', id1: bid, id2: chName });
-  // Firebase fallback
-  const ref = firebase.database().ref(_chTypingPath(bid, chName) + '/' + CU.username);
-  if (!_chIsTyping) {
-    _chIsTyping = true;
-    ref.set({ ts: Date.now(), username: CU.username });
-    ref.onDisconnect().remove();
-  }
+  if (!_chIsTyping) _chIsTyping = true;
   clearTimeout(_chTypingTimeout);
-  _chTypingTimeout = setTimeout(() => { _chIsTyping = false; FortizedSocial.socketEmit('typing:stop', { type: 'bastion', id1: bid, id2: chName }); ref.remove().catch(() => {}); }, 2500);
+  _chTypingTimeout = setTimeout(() => { _chIsTyping = false; FortizedSocial.socketEmit('typing:stop', { type: 'bastion', id1: bid, id2: chName }); }, 2500);
 }
 
 function _stopChannelTypingBroadcast() {

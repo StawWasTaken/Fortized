@@ -4763,8 +4763,11 @@ button[disabled],
 .mpp-av:hover{transform:scale(1.05);}
 .mpp-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .mpp-identity{padding:10px 18px 0;}
-.mpp-displayname{font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;cursor:pointer;transition:color .12s;line-height:1.2;display:flex;align-items:center;gap:6px;}
-.mpp-displayname:hover{color:var(--accent);}
+.mpp-displayname{font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;cursor:pointer;transition:opacity .12s,filter .12s;line-height:1.2;display:flex;align-items:center;gap:6px;}
+/* Hover indicator via opacity, NOT color — was overriding the user's
+   custom Radiance display colour set via _getDisplayEffectCSS inline.
+   Hover should signal "click to view" without stomping on personalisation. */
+.mpp-displayname:hover{opacity:.78;filter:brightness(1.08);}
 .mpp-username{font-size:11.5px;color:rgba(255,255,255,.22);font-weight:500;margin-top:3px;}
 .mpp-status-row{display:flex;align-items:center;gap:6px;padding:10px 18px 0;flex-wrap:wrap;}
 .mpp-status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);}
@@ -4857,11 +4860,14 @@ button[disabled],
 .mpp-handle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:3px;}
 .mpp-username{flex:1;min-width:0;font-size:12.5px;color:rgba(255,255,255,.42);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .mpp-handle-dot{margin:0 6px;color:rgba(255,255,255,.18);}
-.mpp-badges-inline{display:flex;align-items:center;gap:3px;flex-shrink:0;}
-.mpp-badges-inline .ftz-badge-row{display:inline-flex;align-items:center;gap:3px;margin:0;}
-.mpp-badges-inline .ftz-badge{width:18px;height:18px;margin:0;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;}
+.mpp-badges-inline{display:flex;align-items:center;gap:3px;flex-shrink:0;line-height:1;}
+/* Force badge box dimensions even if a parent stylesheet collapses them.
+   `!important` here is intentional: the popover's handle row is the most
+   visible badge surface and we want the icons to render reliably. */
+.mpp-badges-inline .ftz-badge-row{display:inline-flex !important;align-items:center;gap:3px;margin:0;}
+.mpp-badges-inline .ftz-badge{width:18px !important;height:18px !important;margin:0 !important;flex-shrink:0;display:inline-flex !important;align-items:center;justify-content:center;}
 .mpp-badges-inline .ftz-badge img,
-.mpp-badges-inline .ftz-badge svg{width:100%;height:100%;display:block;object-fit:contain;}
+.mpp-badges-inline .ftz-badge svg{width:100% !important;height:100% !important;display:block;object-fit:contain;}
 
 /* Bio: headerless, generous line-height. Renders the user's markdown directly,
    leaving room for "Role at Company" + signup-link content like a business card. */

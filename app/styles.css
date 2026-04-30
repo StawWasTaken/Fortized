@@ -4877,6 +4877,10 @@ button[disabled],
 .mpp-bio a:hover{text-decoration:underline;}
 .mpp-bio p{margin:0 0 6px;}
 .mpp-bio p:last-child{margin-bottom:0;}
+/* Empty-bio CTA for own popover — Discord-style "click to add" affordance
+   so the section is never silently missing. */
+.mpp-bio-empty{color:rgba(255,255,255,.32);font-style:italic;cursor:pointer;transition:color .14s;}
+.mpp-bio-empty:hover{color:rgba(255,255,255,.55);}
 /* When .mpp-bio is nested inside .mpp-section (so it sits beneath an
    "About Me" header), drop its own horizontal padding — the section
    already provides 18px, otherwise the body text would be indented to

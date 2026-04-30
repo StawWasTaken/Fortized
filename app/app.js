@@ -40131,7 +40131,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- (badges moved into the handle row above) -->
     <!-- Bio renders as a polished, headerless markdown block (Discord-style)
          so users can format their own "Role at Company" + signup links. -->
-    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio">${parseBioMD(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>` : ''}
+    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio">${parseBioMD(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>` : (isOwn ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio mpp-bio-empty" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Click to add a bio…</div></div>` : '')}
     ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
     <!-- Roles -->
     ${_currentView === 'bastion' && curBastion !== null ? (() => {
@@ -40194,14 +40194,31 @@ async function showMiniProfilePreview(username, anchorEl) {
     });
     _mppWidgetArea.innerHTML = _mwHtml;
   }
-  const rect = anchorEl?.getBoundingClientRect() || {left:100, top:100, width:40};
+  const rect = anchorEl?.getBoundingClientRect() || {left:100, top:100, width:40, bottom:140};
   const PW = panel.offsetWidth || 340;
   const PH = panel.offsetHeight || 300;
-  let left = rect.left + rect.width + 8;
-  let top = rect.top;
-  if (left + PW > window.innerWidth - 8) left = rect.left - PW - 8;
-  if (top + PH > window.innerHeight - 8) top = window.innerHeight - PH - 8;
-  if (top < 8) top = 8;
+  // Userbar context: the popover should rise UP from the anchor (Discord-
+  // style), aligned to the same column. Detect the userbar by id and the
+  // friend-row activity layout by anchor position near the bottom of the
+  // viewport. Otherwise fall back to the side-by-side default.
+  const isUserbarAnchor = anchorEl && (anchorEl.id === 'ua-clickable' || anchorEl.closest?.('#ua-clickable'));
+  const isNearBottom = rect.top > window.innerHeight - 240;
+  let left, top;
+  if (isUserbarAnchor || isNearBottom) {
+    // Place above the anchor, left-aligned with it. 10px gap so the popover
+    // visibly floats above the userbar like Discord does.
+    left = rect.left;
+    top = rect.top - PH - 10;
+    if (top < 8) top = 8; // viewport guard
+    if (left + PW > window.innerWidth - 8) left = window.innerWidth - PW - 8;
+  } else {
+    // Default: side-by-side to the right of the anchor (chat hover, etc.)
+    left = rect.left + rect.width + 8;
+    top = rect.top;
+    if (left + PW > window.innerWidth - 8) left = rect.left - PW - 8;
+    if (top + PH > window.innerHeight - 8) top = window.innerHeight - PH - 8;
+    if (top < 8) top = 8;
+  }
   panel.style.left = Math.max(8, left) + 'px';
   panel.style.top = Math.max(8, top) + 'px';
 

@@ -10085,15 +10085,21 @@ function initFortizedUXResilience() {
       },
       onTyping: function(room, users) {
         if (!room || !users) return;
-        // Normalise usernames consistently \u2014 server stores them lowercased
-        // and broadcasts lowercased; clients may have mixed-case CU.username.
+        // Normalise everything to lowercase for matching. Server stores
+        // typing usernames lowercased; clients may have mixed-case
+        // CU.username; older clients may send mixed-case room ids.
         const myName = String(CU?.username||'').toLowerCase();
         const others = (users||[]).filter(u => String(u||'').toLowerCase() !== myName);
         const roomLow = String(room).toLowerCase();
-        // DM typing
+        if (window._ftzDebugTyping) console.debug('[Typing] recv', { room: roomLow, users, others, curDM, curGC, curBastion, curChannel });
+        // DM typing \u2014 match by checking the room has both myName and curDM
+        // as participants (lenient: any "dm:" room that contains both).
         if (roomLow.startsWith('dm:') && curDM) {
-          const expectedRoom = 'dm:'+[myName, String(curDM).toLowerCase()].sort().join('__');
-          if (roomLow === expectedRoom) {
+          const themLow = String(curDM).toLowerCase();
+          const inner = roomLow.slice(3); // strip "dm:"
+          const parts = inner.split('__');
+          const matches = parts.includes(myName) && parts.includes(themLow);
+          if (matches) {
             const bar = document.getElementById('dm-typing-bar');
             const txt = document.getElementById('dm-typing-text');
             if (bar && txt) {
@@ -10117,12 +10123,15 @@ function initFortizedUXResilience() {
             }
           }
         }
-        // Bastion channel typing
+        // Bastion channel typing \u2014 lenient match: any bastion: room that
+        // ends with the current channel name and references the current
+        // bastion id or name.
         if (roomLow.startsWith('bastion:') && curBastion !== null && curChannel !== null) {
           const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
           if (b && ch) {
-            const expectedRoom = ('bastion:'+(b.globalId||b.name)+':'+ch.name).toLowerCase();
-            if (roomLow === expectedRoom) {
+            const expected1 = ('bastion:'+(b.globalId||b.name)+':'+ch.name).toLowerCase();
+            const expected2 = ('bastion:'+(b.name||b.globalId)+':'+ch.name).toLowerCase();
+            if (roomLow === expected1 || roomLow === expected2) {
               const bar = document.getElementById('ch-typing-bar');
               const txt = document.getElementById('ch-typing-text');
               if (bar && txt) {

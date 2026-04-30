@@ -5007,7 +5007,14 @@ async function sendDM() {
     _registerPendingSend('dm:'+[CU.username, curDM].sort().join('__'), CU.username, text, _optimRow);
   }
   try {
-    const savedMsg = await FortizedSocial.sendDMMessage(CU.username, curDM, text);
+    // Hard 15s timeout: if Supabase hangs (rare but it happens — slow
+    // connection, regional outage), the optimistic row was previously
+    // stuck in "sending..." forever with no feedback. Now it visibly
+    // fails with a Retry button after 15s.
+    const savedMsg = await _withSendTimeout(
+      FortizedSocial.sendDMMessage(CU.username, curDM, text),
+      15000
+    );
     if (savedMsg?.id && msgsEl) {
       const localRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
       if (localRow) localRow.dataset.msgid = savedMsg.id;
@@ -5019,6 +5026,18 @@ async function sendDM() {
     _markMessageFailed(msgsEl, msg.id, { kind: 'dm', target: curDM, text, replyTo: rep });
     toast('Message failed to send — tap to retry', 'error');
   }
+}
+
+// Race a send against a hard timeout so hung server requests fail visibly
+// instead of leaving the optimistic row stuck in "sending..." forever.
+function _withSendTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(
+      () => reject(new Error('Send timed out after ' + Math.round(ms/1000) + 's')),
+      ms
+    )),
+  ]);
 }
 
 function _markMessageFailed(msgsEl, localId, payload) {
@@ -5504,7 +5523,8 @@ async function sendGCMessage() {
   }
   _trackSendMsgQuest();
   try {
-    await msgRef.set(msg);
+    // 15s timeout — same reliability rationale as DM/channel sends.
+    await _withSendTimeout(msgRef.set(msg), 15000);
     FortizedSocial.socketEmit('message:send', { type: 'gc', id1: curGC, message: msg });
   } catch {
     _markMessageFailed(gcMsgsEl, msg.id, { kind: 'gc', target: curGC, text, replyTo: rep });
@@ -6539,7 +6559,11 @@ async function sendChannelMsg(idx) {
   awardMessageRep(b.globalId||b.name, CU.username);
   _trackSendMsgQuest();
   try {
-    const savedMsg = await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text);
+    // 15s timeout: prevents hung sends from leaving the row stuck.
+    const savedMsg = await _withSendTimeout(
+      FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text),
+      15000
+    );
     // Update the local message ID to match Supabase ID (for edit/delete)
     if (savedMsg?.id && msgsEl) {
       const localRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
@@ -6762,6 +6786,48 @@ function renderMessages(container, msgs, context) {
     else cleanup();
   };
   requestAnimationFrame(step);
+}
+
+// On Socket.IO reconnect (network blip, laptop sleep, tab wake), refetch the
+// last 30 messages of whichever chat is open and append only ones we haven't
+// already rendered. Discord-style: zero scroll disruption + zero missed
+// messages even after the polling fallback misses a beat.
+async function _resyncActiveChat() {
+  let msgs = [], containerId = null, ctx = null;
+  try {
+    if (curDM) {
+      msgs = await FortizedSocial.getDMMessages(CU.username, curDM, 30);
+      containerId = 'dm-msgs'; ctx = 'dm';
+    } else if (curGC) {
+      // GC uses Firebase RTDB, not getter — let the live listener handle it.
+      return;
+    } else if (curBastion !== null && curChannel !== null && curChannel !== 'overview') {
+      const b = CU?.bastions?.[curBastion];
+      const ch = b?.channels?.[curChannel];
+      if (!b || !ch) return;
+      msgs = await FortizedSocial.getBastionChannelMessages(b.globalId||b.name, ch.name, 30);
+      containerId = 'ch-msgs-' + curChannel; ctx = 'ch';
+    } else {
+      return;
+    }
+  } catch (e) { console.warn('[Resync] fetch failed', e?.message); return; }
+  const container = document.getElementById(containerId);
+  if (!container || !msgs?.length) return;
+  // Append only messages whose id isn't already in the DOM. Preserves order
+  // since the fetch returned them in chronological order.
+  let appended = 0;
+  for (const msg of msgs) {
+    const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
+    if (!mid) continue;
+    if (container.querySelector(`[data-msgid="${CSS.escape(String(mid))}"]`)) continue;
+    try { appendMessage(container, msg, ctx, null); appended++; } catch(_) {}
+  }
+  if (appended > 0) {
+    _dbg('[Resync] appended', appended, 'missed messages to', containerId);
+    // If the user was already at the bottom, keep them there.
+    const wasNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+    if (wasNearBottom) container.scrollTop = container.scrollHeight;
+  }
 }
 
 async function _loadOlderMessages(btn) {
@@ -9726,6 +9792,11 @@ function initFortizedUXResilience() {
         if (document.getElementById('activity-feed')?.offsetParent) {
           loadFriendActivity();
         }
+        // Resync the currently-open chat without disturbing scroll position:
+        // fetch the last 30 messages and append only the IDs we don't already
+        // have rendered. Catches anything delivered during the disconnect
+        // gap without flashing the whole conversation away.
+        try { _resyncActiveChat(); } catch(e) { console.warn('[Reconnect] resync failed', e?.message); }
       },
       onStatusChange: function(data) {
         if (!data || !data.username) return;

@@ -1377,11 +1377,15 @@ const FortizedSocial = (() => {
     const pollInterval = setInterval(async () => {
       if (_tabHidden()) return;
       try {
+        // Fetch the last 10 messages (was 3). A 3-message window made it
+        // possible to lose messages during a brief disconnect when more
+        // than 3 arrived in the gap — Discord polls a wider window for
+        // exactly this resilience reason.
         const { data, error } = await sb.from('dms')
           .select('id,from,text,time,timestamp,edited,reactions')
           .eq('dm_key', dmKey)
           .order('timestamp', { ascending: false })
-          .limit(3);
+          .limit(10);
 
         if (error || !data) return;
 
@@ -1446,7 +1450,7 @@ const FortizedSocial = (() => {
           .eq('bastion_id', bastionId)
           .eq('channel_id', channelId)
           .order('timestamp', { ascending: false })
-          .limit(3);
+          .limit(10);
 
         if (error) return; // silently skip on error
 

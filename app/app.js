@@ -9635,6 +9635,19 @@ function initFortizedUXResilience() {
           }
         } catch(e) { console.warn('[Init] Protected-account merge failed:', e?.message); }
       }
+      // Auto-prune any legacy malformed gameCollection rows (e.g. entries
+      // where g.name ended up as an object, which rendered as
+      // "[object Object]" and couldn't be removed via the UI's name-match
+      // filter). One-time cleanup that heals the row on first load.
+      if (Array.isArray(CU?.gameCollection)) {
+        const before = CU.gameCollection.length;
+        CU.gameCollection = CU.gameCollection.filter(g => g && typeof g.name === 'string' && g.name.trim().length > 0);
+        if (CU.gameCollection.length !== before) {
+          console.debug('[Init] Pruned', before - CU.gameCollection.length, 'malformed gameCollection rows');
+          // Persist the cleanup so the row never carries them again.
+          setTimeout(() => { try { saveUser(true); } catch {} }, 2000);
+        }
+      }
     }catch(e){
       CU=null;
       if(lbl)lbl.textContent='⚠️ Connection timeout. Trying cache…';
@@ -28588,7 +28601,14 @@ setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 15000); /
 
 async function _removeGameFromCollection(gameName) {
   if (!CU.gameCollection) return;
-  CU.gameCollection = CU.gameCollection.filter(g => g.name !== gameName);
+  // Drop the matching entry AND any malformed entries (where g.name isn't
+  // a string). Some legacy rows had g.name as an object, which rendered
+  // as "[object Object]" and couldn't be removed by name match — string
+  // equality always failed. This pass cleans up both at once.
+  CU.gameCollection = CU.gameCollection.filter(g => {
+    if (!g || typeof g.name !== 'string') return false; // drop malformed
+    return g.name !== gameName;
+  });
   await saveUser();
   const wc = document.getElementById('up-widgets-container');
   if (wc) renderProfileWidgetsOnCard(CU, wc);

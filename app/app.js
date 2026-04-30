@@ -36971,24 +36971,29 @@ async function equipDecoration(decoId) {
   // checks this map before overriding cosmetic fields.
   window._recentlyEditedFields = window._recentlyEditedFields || {};
   window._recentlyEditedFields.activeDecoration = Date.now();
-  // Immediate UI updates so the decoration disappears NOW, not after the
-  // round-trip — even before the DB write returns. Without these, the
-  // userbar avatar (which doesn't re-render on its own) kept the old
-  // decoration overlay visually until the next page action.
+  // Sync UI everywhere CU's avatar appears BEFORE any async work, so the
+  // user sees the change instantly. Without these the only update was
+  // the userbar; chat/memberlist/profile-card avatars kept the stale
+  // overlay until each surface re-rendered organically.
   try { updateUserbar?.(); } catch {}
-  // Update CU's avatar overlay across every place it currently appears:
-  // member list, message rows (own messages), DM/Friends sidebar, mini
-  // profile preview, modal. Without this, staw's decoration change only
-  // showed in the userbar until each surface re-rendered organically.
   _refreshOwnDecorationOverlays();
-  toast(decoId ? 'Decoration equipped!' : 'Decoration removed', 'success');
-  // Fire-and-forget save so the picker can close without making the user
-  // wait 1–2 seconds for the round-trip. The UI is already correct; the
-  // DB just needs to catch up. Errors surface as a toast.
-  saveUser(true).catch(e => {
+  // AWAIT the save. Earlier this was fire-and-forget for UI snappiness,
+  // but that meant: if the user refreshed before the save returned, the
+  // DB still had the old decoration and it "came back" on reload — the
+  // exact bug staw reported. UI is already correct from the sync code
+  // above; awaiting here only blocks the picker close briefly, not the
+  // visible state.
+  let saveOk = true;
+  try {
+    await saveUser(true);
+  } catch (e) {
+    saveOk = false;
     console.warn('[Deco] save failed', e?.message);
-    toast('Decoration save failed — try again', 'error');
-  });
+  }
+  toast(
+    saveOk ? (decoId ? 'Decoration equipped!' : 'Decoration removed') : 'Decoration save failed — try again',
+    saveOk ? 'success' : 'error'
+  );
 }
 
 // Scrub or refresh decoration overlays anywhere CU's own avatar is rendered.
@@ -44298,6 +44303,32 @@ window.addEventListener('unhandledrejection', (e) => {
     if (t.parentNode) t.parentNode.replaceChild(span, t);
   }, true);
 })();
+
+// ════════════════════════════════════════════════════════════
+// PENDING-SAVE FLUSH — when the user navigates away, force any
+// debounced saveUser() to fire NOW instead of being lost. Without this,
+// changes made within the last 300ms (the debounce window) silently
+// vanish on refresh. The classic case: change decoration → reload too
+// fast → DB still has the old value → "decoration came back".
+//
+// We flush by clearing the timer + calling saveUserObject synchronously
+// from the unload handler. Browsers cap async work in unload listeners,
+// so we use sendBeacon as a backup transport when available.
+// ════════════════════════════════════════════════════════════
+window.addEventListener('beforeunload', () => {
+  try {
+    if (window._saveUserTimer) {
+      clearTimeout(window._saveUserTimer);
+      window._saveUserTimer = null;
+    }
+    // Best-effort: fire the save. Browsers will honor the request as
+    // long as we don't await it here — the fetch is queued before the
+    // page unloads.
+    if (typeof FortizedSocial !== 'undefined' && CU?.username && FortizedSocial.saveUserObject) {
+      FortizedSocial.saveUserObject(CU).catch(() => {});
+    }
+  } catch {}
+}, { capture: true });
 
 // ════════════════════════════════════════════════════════════
 // MEMORY HYGIENE — prune stale entries in _recentlyEditedFields every

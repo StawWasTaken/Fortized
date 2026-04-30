@@ -24931,7 +24931,7 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           </button>
           <div id="${inputId}" class="chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="${placeholder}" spellcheck="true"
             onkeydown="${keydown}"
-            oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}')"
+            oninput="autoResize(this);${context==='dm'?'broadcastTyping();':context==='gc'?'broadcastGCTyping();':context==='ch'?'broadcastChannelTyping();':''}updateCharCount('${inputId}')"
             onpaste="handlePaste(event,'${inputId}')"></div>
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">

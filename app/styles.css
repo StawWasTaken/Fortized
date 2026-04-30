@@ -4773,8 +4773,13 @@ button[disabled],
 .mpp-status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);}
 .mpp-status-pill .sdot{width:10px;height:10px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;}
 .mpp-badges-row{display:flex;flex-wrap:wrap;gap:3px;padding:8px 18px 0;}
-.mpp-divider{height:1px;background:rgba(255,255,255,.05);margin:8px 18px;}
-.mpp-section{padding:2px 18px 4px;}
+.mpp-divider{height:1px;background:rgba(255,255,255,.05);margin:12px 18px;}
+.mpp-section{padding:5px 18px 8px;}
+/* Compact modifier: only the userbar's own-profile popover uses tight
+   spacing. Other popovers (chat hover, member-list click) keep the
+   fuller original layout the user was used to. */
+.mini-profile-preview--compact .mpp-divider{margin:8px 18px;}
+.mini-profile-preview--compact .mpp-section{padding:2px 18px 4px;}
 .mpp-section-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.2);margin-bottom:5px;}
 .mpp-section-body{font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.55;}
 .mpp-roles-row{display:flex;flex-wrap:wrap;gap:5px;padding:3px 18px 5px;}
@@ -4938,12 +4943,13 @@ button[disabled],
 
 /* Card-style sections (Game Collection, Playing). */
 .mpp-card{
-  margin:10px 18px;
-  padding:9px 12px;
+  margin:14px 18px;
+  padding:10px 14px;
   background:rgba(255,255,255,.025);
   border:1px solid rgba(255,255,255,.05);
   border-radius:10px;
 }
+.mini-profile-preview--compact .mpp-card{margin:10px 18px;padding:9px 12px;}
 .mpp-card-label{
   font-size:12.5px;font-weight:500;color:rgba(255,255,255,.6);
   margin-bottom:8px;

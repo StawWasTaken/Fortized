@@ -4919,8 +4919,10 @@ function openDMView(username) {
   setTimeout(() => { if (window.innerWidth > 768) showDMUserPanel(username); _initChatScroll(document.getElementById('dm-msgs')); }, 80);
   setupEmojiAutocomplete('dm-input');
   ensureDMExists(username).catch(e => console.warn('[DM] Failed to ensure DM:', e?.message));
-  // Join Socket.io room for DM real-time events (typing, edits, deletes)
-  FortizedSocial.joinRoom('dm', CU.username, username);
+  // Join Socket.io room for DM real-time events (typing, edits, deletes).
+  // Always lowercased — server's roomKey sorts the names; mixed case
+  // produces a different key than the receiver computes locally.
+  FortizedSocial.joinRoom('dm', String(CU.username).toLowerCase(), String(username).toLowerCase());
   window._activeSubs.dmRoom = { id1: CU.username, id2: username };
   // Start polling for instant message delivery
   const dmKey = [CU.username.toLowerCase(), username.toLowerCase()].sort().join('__');
@@ -5466,7 +5468,7 @@ async function loadGCMessages(gcId) {
   if (!msgsEl || !gcId) return;
   if (_gcListener) { try{_gcListener();}catch(e){_dbg('[GC] Listener cleanup:',e?.message);} _gcListener=null; }
   // Join Socket.io room for GC real-time events (typing, edits, deletes)
-  FortizedSocial.joinRoom('gc', gcId);
+  FortizedSocial.joinRoom('gc', String(gcId).toLowerCase());
   window._activeSubs.gcRoom = gcId;
   try {
     const snap = await firebase.database().ref('groupChats/'+gcId+'/messages').orderByKey().get();
@@ -5559,11 +5561,11 @@ function _gcTypingPath(gcId) { return 'gcTyping/'+gcId; }
 
 function broadcastGCTyping() {
   if (!CU?.username||!curGC) return;
-  // Socket.io is the canonical transport; cooldown handles throttling.
-  FortizedSocial.socketEmit('typing:start', { type: 'gc', id1: curGC });
+  const gc = String(curGC).toLowerCase();
+  FortizedSocial.socketEmit('typing:start', { type: 'gc', id1: gc });
   if (!_gcIsTyping) _gcIsTyping = true;
   clearTimeout(_gcTypingTimeout);
-  _gcTypingTimeout = setTimeout(()=>{ _gcIsTyping=false; FortizedSocial.socketEmit('typing:stop', { type: 'gc', id1: curGC }); }, 2500);
+  _gcTypingTimeout = setTimeout(()=>{ _gcIsTyping=false; FortizedSocial.socketEmit('typing:stop', { type: 'gc', id1: gc }); }, 2500);
 }
 
 function _stopGCTypingBroadcast() {
@@ -6316,7 +6318,7 @@ async function loadChannelMessages(idx) {
   if (!ch||!msgsEl) return;
   if (_chListener){try{_chListener();}catch(e){_dbg('[CH] Listener cleanup:',e?.message);}_chListener=null;}
   // Join Socket.io room for bastion channel real-time events (typing, edits, deletes)
-  FortizedSocial.joinRoom('bastion', b.globalId||b.name, ch.name);
+  FortizedSocial.joinRoom('bastion', String(b.globalId||b.name).toLowerCase(), String(ch.name).toLowerCase());
   try {
     // Discord-style initial fetch: only the last 20 visible messages.
     const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,20);
@@ -6347,7 +6349,7 @@ async function loadChannelMessages(idx) {
     window._activeSubs.chKey = channelKey;
     window._activeSubs.chRoom = { id1: (b.globalId||b.name), id2: ch.name };
     // Make sure we're actually joined in the room for real-time events
-    try { FortizedSocial.joinRoom('bastion', (b.globalId||b.name), ch.name); } catch(_){}
+    try { FortizedSocial.joinRoom('bastion', String(b.globalId||b.name).toLowerCase(), String(ch.name).toLowerCase()); } catch(_){}
   } catch(e){_wrn('Channel load',e);}
 }
 
@@ -10096,11 +10098,15 @@ function initFortizedUXResilience() {
       },
       onTyping: function(room, users) {
         if (!room || !users) return;
-        const others = (users||[]).filter(u => u !== CU.username);
+        // Normalise usernames consistently \u2014 server stores them lowercased
+        // and broadcasts lowercased; clients may have mixed-case CU.username.
+        const myName = String(CU?.username||'').toLowerCase();
+        const others = (users||[]).filter(u => String(u||'').toLowerCase() !== myName);
+        const roomLow = String(room).toLowerCase();
         // DM typing
-        if (room.startsWith('dm:') && curDM) {
-          const expectedRoom = 'dm:'+[CU.username, curDM].sort().join('__');
-          if (room === expectedRoom) {
+        if (roomLow.startsWith('dm:') && curDM) {
+          const expectedRoom = 'dm:'+[myName, String(curDM).toLowerCase()].sort().join('__');
+          if (roomLow === expectedRoom) {
             const bar = document.getElementById('dm-typing-bar');
             const txt = document.getElementById('dm-typing-text');
             if (bar && txt) {
@@ -10112,8 +10118,8 @@ function initFortizedUXResilience() {
           }
         }
         // GC typing
-        if (room.startsWith('gc:') && curGC) {
-          if (room === 'gc:'+curGC) {
+        if (roomLow.startsWith('gc:') && curGC) {
+          if (roomLow === 'gc:'+String(curGC).toLowerCase()) {
             const bar = document.getElementById('gc-typing-bar');
             const txt = document.getElementById('gc-typing-text');
             if (bar && txt) {
@@ -10125,11 +10131,11 @@ function initFortizedUXResilience() {
           }
         }
         // Bastion channel typing
-        if (room.startsWith('bastion:') && curBastion !== null && curChannel !== null) {
+        if (roomLow.startsWith('bastion:') && curBastion !== null && curChannel !== null) {
           const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
           if (b && ch) {
-            const expectedRoom = 'bastion:'+(b.globalId||b.name)+':'+ch.name;
-            if (room === expectedRoom) {
+            const expectedRoom = ('bastion:'+(b.globalId||b.name)+':'+ch.name).toLowerCase();
+            if (roomLow === expectedRoom) {
               const bar = document.getElementById('ch-typing-bar');
               const txt = document.getElementById('ch-typing-text');
               if (bar && txt) {
@@ -33898,18 +33904,19 @@ function _typingPath(u1, u2) {
 
 function broadcastTyping() {
   if (!CU?.username || !curDM) return;
-  // Always emit typing:start. The cooldown in socketEmit (1s) handles
-  // throttling internally, so we don't need to gate on _isTyping.
-  // Firebase is a Supabase shim — its typing path adds DB churn for no
-  // value when socket.io is the canonical transport. Skip the fallback
-  // entirely and rely on socket.io reconnection for resilience.
-  const sent = FortizedSocial.socketEmit('typing:start', { type: 'dm', id1: CU.username, id2: curDM });
-  if (window._ftzDebugTyping) console.debug('[Typing] broadcast', { sent, dm: curDM, ready: FortizedSocial.isSocketReady?.() });
+  // Always normalize usernames to lowercase. The server stores typing
+  // state keyed off the lowercased socket username, and the receiver
+  // computes its expected room with whatever case it has locally —
+  // mixed case on either side breaks the room match silently.
+  const me = String(CU.username).toLowerCase();
+  const them = String(curDM).toLowerCase();
+  const sent = FortizedSocial.socketEmit('typing:start', { type: 'dm', id1: me, id2: them });
+  if (window._ftzDebugTyping) console.debug('[Typing] broadcast', { sent, dm: them, ready: FortizedSocial.isSocketReady?.() });
   if (!_isTyping) _isTyping = true;
   clearTimeout(_typingTimeout);
   _typingTimeout = setTimeout(() => {
     _isTyping = false;
-    FortizedSocial.socketEmit('typing:stop', { type: 'dm', id1: CU.username, id2: curDM });
+    FortizedSocial.socketEmit('typing:stop', { type: 'dm', id1: me, id2: them });
   }, 2500);
 }
 
@@ -33917,8 +33924,9 @@ function _stopTypingBroadcast() {
   _isTyping = false;
   clearTimeout(_typingTimeout);
   if (CU?.username && curDM) {
-    FortizedSocial.socketEmit('typing:stop', { type: 'dm', id1: CU.username, id2: curDM });
-    firebase.database().ref(_typingPath(CU.username, curDM) + '/' + CU.username).remove().catch(()=>{});
+    const me = String(CU.username).toLowerCase();
+    const them = String(curDM).toLowerCase();
+    FortizedSocial.socketEmit('typing:stop', { type: 'dm', id1: me, id2: them });
   }
 }
 
@@ -40018,6 +40026,9 @@ function closeOwnProfilePanel() {
 // ════════════════════════════════════════════════════════════
 async function showMiniProfilePreview(username, anchorEl) {
   document.getElementById('mini-profile-preview')?.remove();
+  // Userbar anchor → compact "own profile" popover (Discord parity).
+  // Everywhere else → fuller original layout (chat hover, member list, etc).
+  const _isUserbarAnchor = !!(anchorEl && (anchorEl.id === 'ua-clickable' || anchorEl.closest?.('#ua-clickable')));
   let u = null;
   try { u = await FortizedSocial.getUserByName(username); } catch(e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
@@ -40047,7 +40058,7 @@ async function showMiniProfilePreview(username, anchorEl) {
 
   const panel = document.createElement('div');
   panel.id = 'mini-profile-preview';
-  panel.className = 'mini-profile-preview';
+  panel.className = 'mini-profile-preview' + (_isUserbarAnchor ? ' mini-profile-preview--compact' : '');
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-label', 'Profile preview for ' + (u.displayName || u.username));
   if (profileTheme) {
@@ -41049,9 +41060,10 @@ function _chTypingPath(bid, chName) { return 'chTyping/' + bid + '/' + chName; }
 function broadcastChannelTyping() {
   if (!CU?.username || curBastion === null || curChannel === null) return;
   const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
-  const bid = b?.globalId || b?.name; const chName = ch?.name || 'general';
-  if (!bid) return;
-  // Socket.io is the canonical transport; cooldown handles throttling.
+  const bidRaw = b?.globalId || b?.name; const chRaw = ch?.name || 'general';
+  if (!bidRaw) return;
+  const bid = String(bidRaw).toLowerCase();
+  const chName = String(chRaw).toLowerCase();
   FortizedSocial.socketEmit('typing:start', { type: 'bastion', id1: bid, id2: chName });
   if (!_chIsTyping) _chIsTyping = true;
   clearTimeout(_chTypingTimeout);

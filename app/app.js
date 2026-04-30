@@ -1018,7 +1018,17 @@ async function refreshCU() {
           'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
           'onyxBadge','onyxBadgeSpent','createdAt','customStatus','verified','appearance'
         ];
+        const _recentEdits = window._recentlyEditedFields || {};
+        const _now = Date.now();
         for (const k of protectFields) {
+          // If the user just edited this field locally (within 8s), trust
+          // the local copy regardless of what DB returned. Stops the race
+          // where a stale DB read undoes a just-cleared field — eg. "I
+          // removed my decoration but it came back".
+          if (_recentEdits[k] && (_now - _recentEdits[k]) < 8000) {
+            fresh[k] = CU[k];
+            continue;
+          }
           const nv = fresh[k], lv = CU[k];
           const isEmpty = nv == null
             || (Array.isArray(nv) && nv.length === 0 && Array.isArray(lv) && lv.length > 0)
@@ -36947,7 +36957,36 @@ async function buyDecoration(decoId, price) {
 }
 async function equipDecoration(decoId) {
   CU.activeDecoration = decoId || null;
-  await saveUser();
+  // Mark this field as freshly user-edited so a concurrent refreshCU
+  // can't silently restore the old value from a stale DB read while
+  // saveUser is still in flight. The protected-merge in refreshCU
+  // checks this map before overriding cosmetic fields.
+  window._recentlyEditedFields = window._recentlyEditedFields || {};
+  window._recentlyEditedFields.activeDecoration = Date.now();
+  // Immediate UI updates so the decoration disappears NOW, not after the
+  // round-trip — even before the DB write returns. Without these, the
+  // userbar avatar (which doesn't re-render on its own) kept the old
+  // decoration overlay visually until the next page action.
+  try { updateUserbar?.(); } catch {}
+  // If clearing, scrub the leftover overlay from CU's avatar surfaces only
+  // (don't touch other users' decorations). Targets the userbar and any
+  // own-profile contexts; member list / chat avatars belonging to others
+  // are left alone.
+  if (!CU.activeDecoration) {
+    const ownContainers = [
+      document.getElementById('ua-clickable'),
+      document.querySelector('.settings-profile-preview'),
+      document.querySelector('#own-profile-panel'),
+      document.getElementById('mini-profile-preview'),
+    ].filter(Boolean);
+    ownContainers.forEach(c => {
+      c.querySelectorAll('.profile-decoration-overlay,.profile-decoration-overlay-sm,.profile-decoration-overlay-lg,.profile-decoration-overlay-ml')
+        .forEach(el => el.remove());
+    });
+  }
+  // Immediate save (skip the 300ms debounce) so the DB row catches up
+  // before any subsequent refresh observes it.
+  await saveUser(true);
   toast(decoId ? 'Decoration equipped!' : 'Decoration removed', 'success');
 }
 

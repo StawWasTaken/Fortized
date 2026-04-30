@@ -17089,7 +17089,7 @@ function _buildProfileView(tab) {
                 <div class="mpp-divider"></div>
                 <div class="mpp-section">
                   <div class="mpp-section-title">About Me</div>
-                  <div class="mpp-bio" id="preview-bio-body">${CU.bio ? (parseMD(escapeHTML(CU.bio.slice(0,300)))+(CU.bio.length>300?'…':'')) : ''}</div>
+                  <div class="mpp-bio" id="preview-bio-body">${CU.bio ? (parseBioMD(CU.bio.slice(0,300))+(CU.bio.length>300?'…':'')) : ''}</div>
                 </div>
               </div>
               ${(CU.joinedAt||CU.createdAt) ? '<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">'+new Date(CU.joinedAt||CU.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</div></div>' : ''}
@@ -18657,7 +18657,7 @@ async function _viewUserProfile(username) {
       <div class="up-left-divider"></div>
       <!-- Bio: headerless, polished markdown — leaves room for "Role at
            Company" + signup-link content like a business card. -->
-      ${u.bio ? `<div class="up-left-section"><div class="up-left-section-title">About Me</div><div class="up-left-bio">${parseMD(escapeHTML(u.bio.slice(0,500)))}${u.bio.length>500?'…':''}</div></div>` : ''}
+      ${u.bio ? `<div class="up-left-section"><div class="up-left-section-title">About Me</div><div class="up-left-bio">${parseBioMD(u.bio.slice(0,500))}${u.bio.length>500?'…':''}</div></div>` : ''}
       <!-- Member Since -->
       ${_memberSince ? `<div class="up-left-section"><div class="up-left-section-title">Member Since</div><div style="font-size:12.5px;color:rgba(255,255,255,.45);font-weight:500;">${_memberSince}</div></div>` : ''}
       <!-- Roles -->
@@ -25323,6 +25323,39 @@ function _augmentShortcodes() {
   _EMOJI_TO_SHORTCODE = null; // invalidate reverse cache
 }
 
+// ── Bio renderer ──────────────────────────────────────────────────────
+// Lightweight markdown for profile bios: HTML-escaped text + inline
+// **bold** / *italic* / `code` / [label](url) / bare URLs as anchors.
+// Emojis pass through. NO heavy embed cards (parseMD turns bare URLs
+// into full ftz-embed cards which is overkill for a 300px popover —
+// the bio just wants a clean styled link). Used by popover, settings
+// preview, modal, DM sidebar.
+function parseBioMD(s) {
+  if (!s) return '';
+  let out = String(s);
+  // Escape HTML first so user-supplied content can't inject markup.
+  out = out.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  // [label](url) → anchor (do this before bare-URL pass so labels win)
+  out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, label, url) => {
+    const safe = url.replace(/"/g, '&quot;');
+    return `<a href="${safe}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${label}</a>`;
+  });
+  // Bare URLs → anchor with a shortened display label.
+  out = out.replace(/(?<!["'>])(https?:\/\/[^\s<]+)/g, (m) => {
+    const safe = m.replace(/"/g, '&quot;');
+    const label = m.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40) + (m.length > 45 ? '…' : '');
+    return `<a href="${safe}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${label}</a>`;
+  });
+  // **bold** and *italic*
+  out = out.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+  // `code`
+  out = out.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  // Line breaks
+  out = out.replace(/\n/g, '<br>');
+  return out;
+}
+
 function parseMD(s) {
   if (!s) return '';
   _augmentShortcodes();
@@ -29194,7 +29227,7 @@ async function showDMUserPanel(username) {
     +   '</div>'
     + '</div>'
     // Bio (headerless markdown \u2014 Discord-style business card)
-    + (u.bio ? '<div class="dm-up-card"><div class="dm-up-card-title">About Me</div><div class="dm-up-bio" style="padding:0;">' + parseMD(escapeHTML(u.bio.slice(0,300))) + (u.bio.length>300?'\u2026':'') + '</div></div>' : '')
+    + (u.bio ? '<div class="dm-up-card"><div class="dm-up-card-title">About Me</div><div class="dm-up-bio" style="padding:0;">' + parseBioMD(u.bio.slice(0,300)) + (u.bio.length>300?'\u2026':'') + '</div></div>' : '')
     // Member Since (compact card)
     + (memberSince ? '<div class="dm-up-card"><div class="dm-up-card-title">Member Since</div><div class="dm-up-card-body">' + memberSince + '</div></div>' : '')
     // Connections (kept \u2014 DM-context useful)
@@ -39617,7 +39650,7 @@ function updateProfilePreview() {
   const bioBody = previewContainer.querySelector('#preview-bio-body');
   if (bioBody) {
     if (bio) {
-      bioBody.innerHTML = parseMD(escapeHTML(bio.slice(0, 300))) + (bio.length > 300 ? '…' : '');
+      bioBody.innerHTML = parseBioMD(bio.slice(0, 300)) + (bio.length > 300 ? '…' : '');
       if (bioSection) bioSection.style.display = '';
     } else if (bioSection) {
       bioSection.style.display = 'none';
@@ -40098,7 +40131,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- (badges moved into the handle row above) -->
     <!-- Bio renders as a polished, headerless markdown block (Discord-style)
          so users can format their own "Role at Company" + signup links. -->
-    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio">${parseMD(escapeHTML(u.bio.slice(0,300)))}${u.bio.length>300?'…':''}</div></div>` : ''}
+    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio">${parseBioMD(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>` : ''}
     ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
     <!-- Roles -->
     ${_currentView === 'bastion' && curBastion !== null ? (() => {

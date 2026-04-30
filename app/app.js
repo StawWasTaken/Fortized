@@ -40132,12 +40132,14 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Bio renders as a polished, headerless markdown block (Discord-style)
          so users can format their own "Role at Company" + signup links. -->
     ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio">${parseBioMD(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>` : (isOwn ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio mpp-bio-empty" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Click to add a bio…</div></div>` : '')}
-    ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
-    <!-- Roles -->
-    ${_currentView === 'bastion' && curBastion !== null ? (() => {
+    ${(!isOwn && _memberSince) ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
+    <!-- Roles: only on OTHER users (in bastion context). Hidden on own
+         popover — you already know your roles, it was just clutter
+         that pushed the actions stack off-screen. -->
+    ${(!isOwn && _currentView === 'bastion' && curBastion !== null) ? (() => {
       const _canManageRoles = hasPerm('manage_roles') || (CU?.bastions?.[curBastion]?.owner === CU?.username);
       const _roleTags = renderUserRoleTags(username);
-      const _addBtn = _canManageRoles && !isOwn ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" style="width:22px;height:22px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;margin-top:4px;" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.3)'">+</button>` : '';
+      const _addBtn = _canManageRoles ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" style="width:22px;height:22px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;margin-top:4px;" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.3)'">+</button>` : '';
       return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="display:flex;align-items:center;justify-content:space-between;">Roles</div><div class="mpp-roles-row" id="mpp-roles-container">${_roleTags}${_addBtn}</div><div id="mpp-role-picker" style="display:none;"></div></div>`;
     })() : ''}
     <!-- Games I like — single source of truth, the gameCollection field;

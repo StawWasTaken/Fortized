@@ -5091,6 +5091,74 @@ function onChatInput(el, context, inputId) {
   try { updateCharCount(inputId); } catch(_) {}
 }
 
+// Per-room typing registry (room key → Set of lowercased usernames). The
+// member-list bubble + the chat input typing bar both read from this so a
+// single source of truth drives every UI surface.
+const _typingByRoom = new Map();
+function _setRoomTypingUsers(roomLow, namesLower) {
+  if (!roomLow) return;
+  if (!namesLower || namesLower.length === 0) {
+    _typingByRoom.delete(roomLow);
+  } else {
+    _typingByRoom.set(roomLow, new Set(namesLower));
+  }
+}
+// Compute the union of typing users in any room that's relevant to the
+// chat surface currently on screen, so multiple-room overlap (e.g. a DM
+// open while you're also viewing the bastion's member list) doesn't
+// cause flicker.
+function _activeTypingUsers() {
+  const active = new Set();
+  // Bastion channel — any matching room
+  if (curBastion !== null && curChannel !== null) {
+    const b = CU?.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+    if (b && ch) {
+      const k1 = ('bastion:'+(b.globalId||b.name)+':'+ch.name).toLowerCase();
+      const k2 = ('bastion:'+(b.name||b.globalId)+':'+ch.name).toLowerCase();
+      [k1, k2].forEach(k => { _typingByRoom.get(k)?.forEach(n => active.add(n)); });
+    }
+  }
+  // GC
+  if (curGC) {
+    const k = 'gc:'+String(curGC).toLowerCase();
+    _typingByRoom.get(k)?.forEach(n => active.add(n));
+  }
+  // DM (the partner's name appears in the DM room)
+  if (curDM) {
+    const me = String(CU?.username||'').toLowerCase();
+    const them = String(curDM).toLowerCase();
+    const k = 'dm:'+[me,them].sort().join('__');
+    _typingByRoom.get(k)?.forEach(n => active.add(n));
+  }
+  return active;
+}
+// Refresh the chat-bubble overlay on every avatar that maps to a typing
+// user in the current view. Idempotent — call freely from onTyping or
+// after re-renders of the member list.
+function _renderTypingBubbles() {
+  const active = _activeTypingUsers();
+  const all = document.querySelectorAll('.ml-entry, .an-row, .gc-ml-av');
+  all.forEach(node => {
+    const entry = node.classList.contains('ml-entry') || node.classList.contains('an-row') ? node : node.closest('.ml-entry, .an-row');
+    const username = (entry?.dataset.member || entry?.dataset.username || '').toLowerCase();
+    const wrap = node.classList.contains('gc-ml-av') ? node : node.querySelector('.gc-ml-av, .ml-av, .ml-av-wrap');
+    if (!username || !wrap) return;
+    let bubble = wrap.querySelector('.ml-typing-bubble');
+    if (active.has(username)) {
+      if (!bubble) {
+        bubble = document.createElement('div');
+        bubble.className = 'ml-typing-bubble';
+        bubble.innerHTML = '<span></span><span></span><span></span>';
+        wrap.appendChild(bubble);
+      }
+      if (entry) entry.dataset.typing = '1';
+    } else {
+      if (bubble) bubble.remove();
+      if (entry?.dataset.typing) delete entry.dataset.typing;
+    }
+  });
+}
+
 // Belt-and-braces: bind a programmatic 'input' listener too. The inline
 // oninput attribute can be eaten by an unrelated runtime error in
 // autoResize / shim init and silently take broadcastTyping with it; a
@@ -8387,6 +8455,8 @@ async function renderMemberList() {
     row._mlFilled = true;
   }
   rows.forEach(row => io.observe(row));
+  // Re-paint any active typing bubbles after the member list rebuilds.
+  try { _renderTypingBubbles(); } catch(_) {}
 }
 // Debounced member list re-sort when status changes in real-time
 let _memberResortTimer = null;
@@ -10231,8 +10301,13 @@ function initFortizedUXResilience() {
         // CU.username; older clients may send mixed-case room ids.
         const myName = String(CU?.username||'').toLowerCase();
         const others = (users||[]).filter(u => String(u||'').toLowerCase() !== myName);
+        const othersLower = others.map(u => String(u||'').toLowerCase());
         const roomLow = String(room).toLowerCase();
         if (window._ftzDebugTyping) console.debug('[Typing] recv', { room: roomLow, users, others, curDM, curGC, curBastion, curChannel });
+        // Update the per-room typing-users registry the member-list bubble
+        // overlay reads from. Done before bar updates so the dots and the
+        // bar appear in the same paint cycle.
+        try { _setRoomTypingUsers(roomLow, othersLower); _renderTypingBubbles(); } catch(_) {}
         // DM typing \u2014 match by checking the room has both myName and curDM
         // as participants (lenient: any "dm:" room that contains both).
         if (roomLow.startsWith('dm:') && curDM) {
@@ -10245,7 +10320,7 @@ function initFortizedUXResilience() {
             const txt = document.getElementById('dm-typing-text');
             if (bar && txt) {
               if (others.length > 0) {
-                txt.innerHTML = '<strong style="color:rgba(255,255,255,.5);">'+escapeHTML(others[0])+'</strong> is writing\u2026';
+                txt.innerHTML = _formatTypingText(others);
                 bar.style.opacity = '1';
               } else { bar.style.opacity = '0'; }
             }
@@ -34036,11 +34111,11 @@ async function checkFriendTarget(val) {
 let _typingTimeout = null;
 function _formatTypingText(users) {
   if (!users || !users.length) return '';
-  const bold = n => '<strong style="color:rgba(255,255,255,.5);">' + escapeHTML(n) + '</strong>';
-  if (users.length === 1) return bold(users[0]) + ' is writing\u2026';
-  if (users.length === 2) return bold(users[0]) + ' and ' + bold(users[1]) + ' are writing\u2026';
-  if (users.length === 3) return bold(users[0]) + ', ' + bold(users[1]) + ', and ' + bold(users[2]) + ' are writing\u2026';
-  return 'Several people are writing\u2026';
+  const bold = n => '<strong>' + escapeHTML(n) + '</strong>';
+  if (users.length === 1) return bold(users[0]) + ' is typing\u2026';
+  if (users.length === 2) return bold(users[0]) + ' and ' + bold(users[1]) + ' are typing\u2026';
+  if (users.length === 3) return bold(users[0]) + ', ' + bold(users[1]) + ', and ' + bold(users[2]) + ' are typing\u2026';
+  return 'Several people are typing\u2026';
 }
 
 let _typingListenerOff = null;

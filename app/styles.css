@@ -849,13 +849,41 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .reply-bar button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}
 /* Chat input */
 .chat-input-wrap{padding:0 12px 10px;flex-shrink:0;box-sizing:border-box;}
-/* Typing indicator — minimal redesign */
-.typing-indicator{display:flex;align-items:center;gap:8px;padding:4px 20px 6px;min-height:20px;font-size:11px;color:rgba(255,255,255,.3);transition:opacity .25s;letter-spacing:.01em;}
+/* Typing indicator — Discord-style: subtle bouncing dots + small text. */
+.typing-indicator{display:flex;align-items:center;gap:8px;padding:4px 20px 6px;min-height:20px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;}
+.typing-indicator strong{color:#fff;font-weight:700;}
 .typing-dots{display:flex;gap:3px;align-items:center;}
-.typing-dots span{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.25);animation:typingBounce 1.4s infinite ease-in-out;}
+.typing-dots span{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);animation:typingBounce 1.4s infinite ease-in-out;}
 .typing-dots span:nth-child(2){animation-delay:.2s;}
 .typing-dots span:nth-child(3){animation-delay:.4s;}
 @keyframes typingBounce{0%,70%,100%{transform:translateY(0);opacity:.4;}35%{transform:translateY(-4px);opacity:1;}}
+
+/* Member-list typing bubble — Discord-style chat-bubble overlay on the
+   bottom-right of the avatar (replaces the status dot while typing).
+   Three small bouncing dots inside a coloured pill with a tail. */
+.ml-typing-bubble{
+  position:absolute;
+  bottom:-3px;right:-8px;
+  width:22px;height:13px;
+  border-radius:10px 10px 10px 3px;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  gap:2px;
+  z-index:5;
+  box-shadow:0 0 0 2px var(--panel);
+  animation:typingBubbleIn .22s cubic-bezier(.22,1,.36,1);
+}
+.ml-typing-bubble span{
+  width:3px;height:3px;border-radius:50%;
+  background:rgba(0,0,0,.7);
+  animation:typingBounce 1.4s infinite ease-in-out;
+}
+.ml-typing-bubble span:nth-child(2){animation-delay:.2s;}
+.ml-typing-bubble span:nth-child(3){animation-delay:.4s;}
+@keyframes typingBubbleIn{from{opacity:0;transform:scale(.6);}to{opacity:1;transform:scale(1);}}
+/* When typing, hide the underlying status dot so the bubble takes over. */
+.ml-entry[data-typing="1"] .profile-status-dot{display:none;}
+.an-row[data-typing="1"] .profile-status-dot{display:none;}
 /* Chat input redesign — inline layout */
 .chat-input-outer{background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border:1.5px solid var(--glass-border);border-radius:12px;overflow:visible;transition:border-color .18s, box-shadow .18s;display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(0,0,0,.2);position:relative;}
 .chat-input-outer:focus-within{border-color:rgba(255,255,255,.12);box-shadow:0 6px 24px rgba(0,0,0,.28);}

@@ -732,8 +732,11 @@ app.get('/app/atelier',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname
 app.get('/app/bastion',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
 app.get('/app/forum',    (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
 app.get('/app/forum/{*rest}', (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
+// Backwards-compat: /blog -> /newsroom (folder was renamed)
+app.get('/blog', (_req, res) => res.redirect(301, '/newsroom'));
+app.get('/blog/{*rest}', (req, res) => res.redirect(301, '/newsroom'));
 // SPA-style fallback for /app, /login, etc.
-['app', 'login', 'signup', 'blog', 'support', 'download', 'privacy', 'terms', 'legal'].forEach(route => {
+['app', 'login', 'signup', 'newsroom', 'support', 'download', 'privacy', 'terms', 'legal'].forEach(route => {
   app.get(`/${route}`,            (_req, res) => sendHtmlNoCache(res, path.join(__dirname, route, 'index.html')));
   app.get(`/${route}/{*rest}`,    (_req, res) => sendHtmlNoCache(res, path.join(__dirname, route, 'index.html')));
 });

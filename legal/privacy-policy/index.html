@@ -129,25 +129,50 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 .hub-link-desc{font-size:12px;color:var(--mu-l)}
 .hub-link-arrow{color:var(--mu-l);font-size:18px;font-weight:700;transition:.2s}
 .hub-link:hover .hub-link-arrow{color:var(--acc);transform:translateX(3px)}
-</style>
+/* ── Unified site nav (matches homepage) ── */
+.nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:56px;display:flex;align-items:center;padding:0 36px;background:rgba(8,10,15,.0);transition:background .35s,border-color .35s,box-shadow .35s}
+.nav-root.scrolled{background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid #1a2030;box-shadow:0 1px 40px rgba(0,0,0,.5)}
+.nav-logo{display:flex;align-items:center;gap:9px;flex-shrink:0;margin-right:28px}
+.nav-logo img{height:24px;width:24px;object-fit:contain}
+.nav-logo-word{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:3px;gap:1px}
+.nav-pill{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#8b95a8;padding:6px 13px;border-radius:8px;transition:color .15s,background .15s;white-space:nowrap;text-decoration:none}
+.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-pill.active{color:#fff;background:rgba(255,255,255,.09)}
+.nav-sep{width:1px;height:20px;background:rgba(255,255,255,.07);margin:0 12px;flex-shrink:0}
+.nav-spacer{flex:1}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-btn-login{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#8b95a8;padding:7px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);transition:color .15s,border-color .15s,background .15s;text-decoration:none}
+.nav-btn-login:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+.nav-btn-cta{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#080a0f;background:#fff93e;padding:8px 18px;border-radius:9px;transition:box-shadow .2s,filter .15s,transform .14s;position:relative;overflow:hidden;text-decoration:none}
+.nav-btn-cta:hover{box-shadow:0 0 28px rgba(255,249,62,.35);filter:brightness(1.06);transform:translateY(-1px)}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+.nav-hamburger span{display:block;width:18px;height:1.5px;background:#8b95a8;border-radius:2px}
+@media(max-width:900px){.nav-pill-group{display:none}.nav-sep{display:none}.nav-hamburger{display:flex}}
+@media(max-width:600px){.nav-btn-login{display:none}}
+@media(max-width:768px){.nav-root{padding:0 18px}}
+body{padding-top:56px}/* nav-fixed-padding */</style>
 </head>
 <body>
 
-<nav class="nav">
+<nav class="nav-root" id="mainNav">
   <a href="/" class="nav-logo">
-    <img src="/Fortized icon.png" alt="Fortized" onerror="this.src='/Fortized icon2.png'"/>
+    <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
     <span class="nav-logo-word">Fortized</span>
-    <span class="nav-badge">Legal</span>
   </a>
   <div class="nav-pill-group">
-    <a href="/" class="nav-pill">Home</a>
-    <a href="/blog" class="nav-pill">Blog</a>
+    <a href="/newsroom" class="nav-pill">Newsroom</a>
     <a href="/support" class="nav-pill">Support</a>
     <a href="/download" class="nav-pill">Download</a>
     <a href="/legal" class="nav-pill active">Legal</a>
   </div>
-  <div class="nav-sp"></div>
-  <a href="/app" class="nav-btn">Open App &rarr;</a>
+  <div class="nav-sep"></div>
+  <div class="nav-spacer"></div>
+  <div class="nav-right">
+    <a href="/login" class="nav-btn-login">Login</a>
+    <a href="/signup" class="nav-btn-cta">Join the Fortress &rarr;</a>
+    <div class="nav-hamburger" id="navHamburger"><span></span><span></span><span></span></div>
+  </div>
 </nav>
 
 <div class="hero">
@@ -328,14 +353,30 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 <footer>
   <div class="footer-left">
     <a href="/" class="footer-logo">
-      <img src="/Fortized icon.png" alt="" onerror="this.src='/Fortized icon2.png'"/>
+      <img src="/Fortized icon.png" alt="" onerror="this.style.display='none'">
       <span>Fortized</span>
     </a>
+    <div class="footer-socials">
+      <a href="https://x.com/Fortized" target="_blank" rel="noopener" title="Fortized on X">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+      <a href="https://www.reddit.com/r/fortized/" target="_blank" rel="noopener" title="Reddit">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.385 4.859-7.181 4.859-3.796 0-7.182-2.165-7.182-4.859a3.5 3.5 0 0 1 .476-1.565c-.424-.372-.652-.905-.652-1.487 0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.53l.531-2.407 3.074.464 1.33 2.869c.297 0 .656-.021.656-.021.968 0 1.767.766 1.767 1.692 0 .906-.718 1.647-1.596 1.647-.797 0-1.48-.521-1.679-1.216l-2.541.341c.159.597.581 1.062 1.11 1.062.881 0 1.592-.727 1.592-1.608 0-.878-.718-1.6-1.596-1.6-.717 0-1.33.392-1.592.966l-2.074-.31c.159.022.34.09.518.09.881 0 1.599-.726 1.599-1.607 0-.878-.718-1.6-1.599-1.6-.881 0-1.599.722-1.599 1.6 0 .881.718 1.607 1.599 1.607.178 0 .36-.068.519-.09l2.073.311c-.262.574-.915.966-1.592.966-.878 0-1.596.722-1.596 1.6 0 .881.718 1.608 1.596 1.608.881 0 1.599-.727 1.599-1.608 0-.876-.719-1.599-1.599-1.599zm4.969-9.86c0 .733-.60 1.333-1.333 1.333-.733 0-1.333-.6-1.333-1.333 0-.734.6-1.334 1.333-1.334.733 0 1.333.6 1.333 1.334z"/></svg>
+      </a>
+      <a href="https://x.com/SwiftawTech" target="_blank" rel="noopener" title="Swiftaw on X">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+      <a href="https://www.youtube.com/@swiftaw" target="_blank" rel="noopener" title="YouTube">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      </a>
+    </div>
   </div>
   <p class="copy">&copy; 2026 Fortized &middot; Swiftaw</p>
   <div class="footer-links">
+    <a href="/newsroom">Newsroom</a>
     <a href="/legal">Legal</a>
     <a href="/support">Support</a>
+    <a href="/download">Download</a>
   </div>
 </footer>
 
@@ -365,5 +406,5 @@ window.addEventListener('scroll',()=>{
 },{passive:true});
 buildTOC();
 </script>
-</body>
+<script>(()=>{const n=document.getElementById('mainNav');if(!n)return;window.addEventListener('scroll',()=>n.classList.toggle('scrolled',window.scrollY>40),{passive:true});if(window.scrollY>40)n.classList.add('scrolled');})();</script></body>
 </html>

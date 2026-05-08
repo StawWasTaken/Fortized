@@ -14513,7 +14513,7 @@ async function _submitAnnouncement() {
     await FortizedSocial.saveAnnouncements(all.slice(0,50));
     logAudit('announcement_create', title, 'Published by '+CU?.username);
     document.getElementById('modal-create-announcement')?.remove();
-    toast('Announcement published! It will also appear on the blog.','success');
+    toast('Announcement published! It will also appear on the newsroom.','success');
   } catch(e) { toast('Failed to publish: '+e.message,'error'); }
 }
 
@@ -17480,9 +17480,9 @@ function _buildProfileView(tab) {
           <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Get Help</div>
           <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;">Account issues, bastions, Radiance, and more</div>
         </a>
-        <a href="/blog" target="_blank" rel="noopener noreferrer" class="quick-action-card" style="background:linear-gradient(135deg,rgba(254,248,61,.04),rgba(254,248,61,.01));border:1.5px solid rgba(254,248,61,.1);">
+        <a href="/newsroom" target="_blank" rel="noopener noreferrer" class="quick-action-card" style="background:linear-gradient(135deg,rgba(254,248,61,.04),rgba(254,248,61,.01));border:1.5px solid rgba(254,248,61,.1);">
           <div style="font-size:28px;margin-bottom:10px;">📰</div>
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Blog & Updates</div>
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Newsroom</div>
           <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;">News, features, and announcements</div>
         </a>
       </div>
@@ -17510,7 +17510,7 @@ function _buildProfileView(tab) {
         ${[
           {label:'Privacy Policy', url:'/privacy', desc:'How we handle your data and privacy', color:'62,207,110'},
           {label:'Terms of Service', url:'/terms', desc:'Our terms and community guidelines', color:'167,139,250'},
-          {label:'Fortized Blog', url:'/blog', desc:'News, updates, and announcements', color:'254,248,61'},
+          {label:'Fortized Newsroom', url:'/newsroom', desc:'News, updates, and announcements', color:'254,248,61'},
         ].map(link => `
           <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="legal-link-row" style="background:rgba(${link.color},.02);border:1.5px solid rgba(${link.color},.08);">
             <div style="flex:1;min-width:0;">
@@ -35203,7 +35203,7 @@ function openCreateAdModal() {
               ${isSuperAdmin() ? `
               <optgroup label="Fortized Web (opens in browser)">
                 <option value="https://fortized.com/">Home (web)</option>
-                <option value="https://fortized.com/blog">Blog</option>
+                <option value="https://fortized.com/newsroom">Newsroom</option>
                 <option value="https://fortized.com/support">Support</option>
                 <option value="https://fortized.com/legal">Legal</option>
                 <option value="https://fortized.com/download">Download</option>

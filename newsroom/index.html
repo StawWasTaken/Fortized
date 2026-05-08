@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Blog - Fortized</title>
+<title>Newsroom - Fortized</title>
 <meta name="description" content="Latest news, updates, and announcements from Fortized."/>
 <meta name="theme-color" content="#fff93e"/>
 <meta property="og:type" content="website"/>
 <meta property="og:site_name" content="Fortized"/>
-<meta property="og:title" content="Blog - Fortized"/>
+<meta property="og:title" content="Newsroom - Fortized"/>
 <meta property="og:description" content="Latest news, updates, and announcements from Fortized."/>
 <meta property="og:image" content="https://fortized.com/Fortized banner.png?v=2"/>
-<meta property="og:url" content="https://fortized.com/blog"/>
+<meta property="og:url" content="https://fortized.com/newsroom"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Blog - Fortized"/>
+<meta name="twitter:title" content="Newsroom - Fortized"/>
 <meta name="twitter:description" content="Latest news, updates, and announcements from Fortized."/>
 <meta name="twitter:image" content="https://fortized.com/Fortized banner.png?v=2"/>
 <link rel="icon" type="image/png" href="/Fortized icon2.png"/>
@@ -223,25 +223,51 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
   #article-view{padding:36px 24px 80px}
 }
 img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
-</style>
+/* ── Unified site nav (matches homepage) ── */
+.nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:56px;display:flex;align-items:center;padding:0 36px;background:rgba(8,10,15,.0);transition:background .35s,border-color .35s,box-shadow .35s}
+.nav-root.scrolled{background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid #1a2030;box-shadow:0 1px 40px rgba(0,0,0,.5)}
+.nav-logo{display:flex;align-items:center;gap:9px;flex-shrink:0;margin-right:28px}
+.nav-logo img{height:24px;width:24px;object-fit:contain}
+.nav-logo-word{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:3px;gap:1px}
+.nav-pill{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#8b95a8;padding:6px 13px;border-radius:8px;transition:color .15s,background .15s;white-space:nowrap;text-decoration:none}
+.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-pill.active{color:#fff;background:rgba(255,255,255,.09)}
+.nav-sep{width:1px;height:20px;background:rgba(255,255,255,.07);margin:0 12px;flex-shrink:0}
+.nav-spacer{flex:1}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-btn-login{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#8b95a8;padding:7px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);transition:color .15s,border-color .15s,background .15s;text-decoration:none}
+.nav-btn-login:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+.nav-btn-cta{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#080a0f;background:#fff93e;padding:8px 18px;border-radius:9px;transition:box-shadow .2s,filter .15s,transform .14s;position:relative;overflow:hidden;text-decoration:none}
+.nav-btn-cta:hover{box-shadow:0 0 28px rgba(255,249,62,.35);filter:brightness(1.06);transform:translateY(-1px)}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+.nav-hamburger span{display:block;width:18px;height:1.5px;background:#8b95a8;border-radius:2px}
+@media(max-width:900px){.nav-pill-group{display:none}.nav-sep{display:none}.nav-hamburger{display:flex}}
+@media(max-width:600px){.nav-btn-login{display:none}}
+@media(max-width:768px){.nav-root{padding:0 18px}}
+body{padding-top:56px}/* nav-fixed-padding */</style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
-<nav class="nav">
+<nav class="nav-root" id="mainNav">
   <a href="/" class="nav-logo">
-    <img src="/Fortized icon.png" alt="Fortized" onerror="this.src='/Fortized icon2.png'"/>
+    <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
     <span class="nav-logo-word">Fortized</span>
   </a>
   <div class="nav-pill-group">
-    <a href="/" class="nav-pill">Home</a>
-    <a href="/blog" class="nav-pill active">Blog</a>
+    <a href="/newsroom" class="nav-pill active">Newsroom</a>
     <a href="/support" class="nav-pill">Support</a>
     <a href="/download" class="nav-pill">Download</a>
     <a href="/legal" class="nav-pill">Legal</a>
   </div>
-  <div class="nav-sp"></div>
-  <a href="/app" class="nav-btn">Open App &rarr;</a>
+  <div class="nav-sep"></div>
+  <div class="nav-spacer"></div>
+  <div class="nav-right">
+    <a href="/login" class="nav-btn-login">Login</a>
+    <a href="/signup" class="nav-btn-cta">Join the Fortress &rarr;</a>
+    <div class="nav-hamburger" id="navHamburger"><span></span><span></span><span></span></div>
+  </div>
 </nav>
 
 <!-- ── BLOG LIST ──────────────────────────── -->
@@ -252,7 +278,7 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
     <div class="hero-glow"></div>
     <div class="hero-inner">
       <div class="hero-left fade-up">
-        <div class="hero-eyebrow">The Fortized Blog</div>
+        <div class="hero-eyebrow">The Fortized Newsroom</div>
         <h1>News &amp;<br><em>Dispatches.</em></h1>
         <p class="hero-sub">Official articles, R&amp;D announcements, and community updates from the Swiftaw team.</p>
       </div>
@@ -279,7 +305,7 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
     <!-- Search bar -->
     <div class="blog-search-wrap fade-up d1" style="margin-bottom:32px;">
       <svg class="blog-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input class="blog-search-input" id="blog-search" placeholder="Search blog posts..." oninput="filterBlogPosts(this.value)">
+      <input class="blog-search-input" id="blog-search" placeholder="Search the newsroom..." oninput="filterBlogPosts(this.value)">
     </div>
 
     <!-- Pinned: What is Fortized? -->
@@ -310,14 +336,14 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
 
 <!-- ── ARTICLE VIEW ──────────────────────── -->
 <div id="article-view">
-  <div class="article-back" onclick="closeArticle()">← Back to Blog</div>
+  <div class="article-back" onclick="closeArticle()">← Back to Newsroom</div>
   <div id="article-content"></div>
 </div>
 
 <footer>
   <div class="footer-left">
     <a href="/" class="footer-logo">
-      <img src="/Fortized icon.png" alt="" onerror="this.src='/Fortized icon2.png'"/>
+      <img src="/Fortized icon.png" alt="" onerror="this.style.display='none'">
       <span>Fortized</span>
     </a>
     <div class="footer-socials">
@@ -337,7 +363,7 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
   </div>
   <p class="copy">&copy; 2026 Fortized &middot; Swiftaw</p>
   <div class="footer-links">
-    <a href="/blog">Blog</a>
+    <a href="/newsroom">Newsroom</a>
     <a href="/legal">Legal</a>
     <a href="/support">Support</a>
     <a href="/download">Download</a>
@@ -525,7 +551,7 @@ function renderArticle(id) {
     </div>
     <div class="article-prose">${a.content}</div>
   `;
-  document.title = `${a.title} — Fortized Blog`;
+  document.title = `${a.title} — Fortized Newsroom`;
   document.getElementById('blog-list-view').classList.add('hidden');
   document.getElementById('article-view').classList.add('open');
   if (typeof twemoji !== 'undefined') twemoji.parse(document.getElementById('article-content'), { folder: 'svg', ext: '.svg' });
@@ -548,7 +574,7 @@ function closeArticle() {
   history.pushState({ articleId: null }, '', url.toString());
   document.getElementById('blog-list-view').classList.remove('hidden');
   document.getElementById('article-view').classList.remove('open');
-  document.title = 'Fortized Blog';
+  document.title = 'Fortized Newsroom';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -558,7 +584,7 @@ window.addEventListener('popstate', function(e) {
   else {
     document.getElementById('blog-list-view').classList.remove('hidden');
     document.getElementById('article-view').classList.remove('open');
-    document.title = 'Fortized Blog';
+    document.title = 'Fortized Newsroom';
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
@@ -823,5 +849,5 @@ if (countEl) countEl.textContent = Object.keys(ARTICLES).length;
 })();
 </script>
 <script>if (typeof twemoji !== 'undefined') { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); }</script>
-</body>
+<script>(()=>{const n=document.getElementById('mainNav');if(!n)return;window.addEventListener('scroll',()=>n.classList.toggle('scrolled',window.scrollY>40),{passive:true});if(window.scrollY>40)n.classList.add('scrolled');})();</script></body>
 </html>

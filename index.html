@@ -42,7 +42,7 @@
   --font-body: 'DM Sans', sans-serif;
 
   /* Nav tokens */
-  --nav-h: 68px;
+  --nav-h: 56px;
   --nav-bg: rgba(8,10,15,.0);
   --nav-bg-scrolled: rgba(8,10,15,.96);
 }
@@ -77,7 +77,7 @@ body::before {
   position: fixed; top: 0; left: 0; right: 0; z-index: 300;
   height: var(--nav-h);
   display: flex; align-items: center;
-  padding: 0 40px;
+  padding: 0 36px;
   background: var(--nav-bg);
   transition: background .35s, border-color .35s, box-shadow .35s;
 }
@@ -90,29 +90,29 @@ body::before {
 
 /* Logo */
 .nav-logo {
-  display: flex; align-items: center; gap: 10px;
-  flex-shrink: 0; margin-right: 32px;
+  display: flex; align-items: center; gap: 9px;
+  flex-shrink: 0; margin-right: 28px;
 }
-.nav-logo img { height: 28px; width: 28px; object-fit: contain; }
+.nav-logo img { height: 24px; width: 24px; object-fit: contain; }
 .nav-logo-word {
   font-family: var(--font-display);
-  font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -.5px;
+  font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -.5px;
 }
 /* Left pill group */
 .nav-pill-group {
   display: flex; align-items: center;
   background: rgba(255,255,255,.03);
   border: 1px solid rgba(255,255,255,.06);
-  border-radius: 12px;
-  padding: 4px;
+  border-radius: 11px;
+  padding: 3px;
   gap: 1px;
 }
 .nav-pill {
   font-family: var(--font-body);
-  font-size: 13.5px; font-weight: 500;
+  font-size: 13px; font-weight: 500;
   color: var(--muted-light);
-  padding: 7px 14px;
-  border-radius: 9px;
+  padding: 6px 13px;
+  border-radius: 8px;
   transition: color .15s, background .15s;
   white-space: nowrap;
 }
@@ -123,7 +123,7 @@ body::before {
 }
 
 .nav-sep {
-  width: 1px; height: 22px;
+  width: 1px; height: 20px;
   background: rgba(255,255,255,.07);
   margin: 0 12px; flex-shrink: 0;
 }
@@ -136,31 +136,11 @@ body::before {
   display: flex; align-items: center; gap: 8px;
 }
 
-/* Community badge */
-.nav-community-tag {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 12px; font-weight: 600; color: var(--muted-light);
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 100px; padding: 6px 14px 6px 10px;
-  margin-right: 4px;
-}
-.nav-community-tag .live-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #4ade80;
-  box-shadow: 0 0 8px rgba(74,222,128,.7);
-  animation: navDotBlink 2.5s ease infinite;
-}
-@keyframes navDotBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .3; }
-}
-
 .nav-btn-login {
   font-family: var(--font-body);
-  font-size: 13.5px; font-weight: 600;
+  font-size: 13px; font-weight: 600;
   color: var(--muted-light);
-  padding: 8px 16px; border-radius: 10px;
+  padding: 7px 14px; border-radius: 9px;
   border: 1px solid rgba(255,255,255,.09);
   background: rgba(255,255,255,.03);
   transition: color .15s, border-color .15s, background .15s;
@@ -169,10 +149,10 @@ body::before {
 
 .nav-btn-cta {
   font-family: var(--font-display);
-  font-size: 13.5px; font-weight: 700;
+  font-size: 13px; font-weight: 700;
   color: #080a0f;
   background: var(--accent);
-  padding: 9px 20px; border-radius: 10px;
+  padding: 8px 18px; border-radius: 9px;
   transition: box-shadow .2s, filter .15s, transform .14s;
   position: relative; overflow: hidden;
 }
@@ -192,19 +172,18 @@ body::before {
 /* Mobile hamburger */
 .nav-hamburger {
   display: none; flex-direction: column; gap: 5px;
-  cursor: pointer; padding: 8px; border-radius: 8px;
+  cursor: pointer; padding: 7px; border-radius: 8px;
   border: 1px solid rgba(255,255,255,.08);
   background: rgba(255,255,255,.03);
 }
 .nav-hamburger span {
-  display: block; width: 20px; height: 1.5px;
+  display: block; width: 18px; height: 1.5px;
   background: var(--muted-light); border-radius: 2px;
   transition: transform .2s, opacity .2s;
 }
 
 @media (max-width: 900px) {
   .nav-pill-group { display: none; }
-  .nav-community-tag { display: none; }
   .nav-sep { display: none; }
   .nav-hamburger { display: flex; }
 }
@@ -428,7 +407,7 @@ body::before {
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .stat-item {
   display: flex; align-items: center; gap: 12px;
-  padding: 20px 44px;
+  padding: 18px 44px;
   border-right: 1px solid var(--border);
   white-space: nowrap;
 }
@@ -439,178 +418,292 @@ body::before {
 }
 .stat-accent { color: var(--accent); }
 
-/* ════════════════════════════════════════════
-   SECTION COMMONS
-════════════════════════════════════════════ */
-.section-label {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 14px;
-}
-.section-label::before { content: ""; width: 18px; height: 1.5px; background: var(--accent); }
-.section-heading {
-  font-family: var(--font-display);
-  font-size: 44px; font-weight: 800; letter-spacing: -1.4px;
-  line-height: 1.04; margin-bottom: 16px;
-}
-.section-desc {
-  font-size: 16px; color: var(--muted-light); line-height: 1.72;
-  max-width: 460px; margin-bottom: 64px;
-}
-
-/* ════════════════════════════════════════════
-   FEATURES
-════════════════════════════════════════════ */
-.features { padding: 130px 72px 0; }
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-}
-.fcard {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 40px;
-  position: relative; overflow: hidden;
-  transition: transform .22s, border-color .22s, box-shadow .22s;
-  cursor: default;
-  opacity: 0; transform: translateY(28px);
-}
-.fcard.visible { animation: fadeUp .55s cubic-bezier(.22,1,.36,1) forwards; }
-@keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-.fcard::before {
-  content: ""; position: absolute;
-  top: 0; left: 0; right: 0; height: 1.5px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0; transition: opacity .3s;
-}
-.fcard::after {
-  content: ""; position: absolute;
-  top: -70px; right: -70px;
-  width: 180px; height: 180px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,249,62,.07), transparent 70%);
-  opacity: 0; transition: opacity .3s;
-}
-.fcard:hover { transform: translateY(-6px); border-color: rgba(255,249,62,.2); box-shadow: 0 24px 64px rgba(0,0,0,.55), 0 0 32px rgba(255,249,62,.06); }
-.fcard:hover::before, .fcard:hover::after { opacity: 1; }
-.fcard-icon {
-  width: 54px; height: 54px; border-radius: 15px;
-  background: rgba(255,249,62,.07); border: 1px solid rgba(255,249,62,.13);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 24px; margin-bottom: 22px;
-}
-.fcard-icon img { height: 28px; width: 28px; object-fit: contain; filter: drop-shadow(0 0 6px rgba(255,249,62,.28)); }
-.fcard h3 { font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: -.3px; margin-bottom: 10px; }
-.fcard p { font-size: 14.5px; color: var(--muted-light); line-height: 1.7; }
-
-/* ════════════════════════════════════════════
-   SHOWCASE
-════════════════════════════════════════════ */
-.showcase { padding: 130px 72px 0; }
-.showcase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.sc-card {
-  background: linear-gradient(135deg, var(--panel) 0%, rgba(12,15,24,.92) 100%); border: 1px solid rgba(255,249,62,.08);
-  border-radius: 24px; padding: 32px; position: relative; overflow: hidden;
-  transition: border-color .22s, transform .22s, box-shadow .22s, background .22s;
-  box-shadow: 0 8px 24px rgba(0,0,0,.3), inset 0 1px 2px rgba(255,255,255,.03);
-}
-.sc-card:hover { border-color: rgba(255,249,62,.16); transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0,0,0,.5), 0 0 32px rgba(255,249,62,.05), inset 0 1px 2px rgba(255,255,255,.06); background: linear-gradient(135deg, rgba(12,15,24,.95) 0%, rgba(12,15,24,.88) 100%); }
-.sc-card.full { grid-column: 1 / -1; padding: 0; }
-.sc-card-accent-bar { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0; transition: opacity .3s; }
-.sc-card:hover .sc-card-accent-bar { opacity: 1; }
-.sc-label { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(255,249,62,.13); border-radius: 4px; padding: 3px 9px; display: inline-block; margin-bottom: 18px; }
-.sc-card h3 { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -.5px; line-height: 1.12; margin-bottom: 12px; }
-.sc-card p { font-size: 14px; color: var(--muted-light); line-height: 1.72; }
-
-/* ── Realistic App Mockup ────────────────── */
-.app-mock { display: flex; height: 420px; background: linear-gradient(135deg, var(--bg) 0%, rgba(13,16,22,.92) 100%); border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,249,62,.08); box-shadow: inset 0 1px 2px rgba(255,255,255,.04), 0 20px 60px rgba(0,0,0,.6); }
-.app-mock-nav { width: 170px; min-width: 170px; background: linear-gradient(180deg, var(--bg2) 0%, rgba(12,15,24,.9) 100%); display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,.05); position: relative; }
-.app-mock-channels { width: 160px; min-width: 160px; background: var(--panel); border-right: 1px solid rgba(255,255,255,.05); display: flex; flex-direction: column; overflow: hidden; }
-.app-mock-chat { flex: 1; display: flex; flex-direction: column; min-width: 0; background: linear-gradient(to bottom, var(--panel) 0%, rgba(12,15,24,.95) 100%); }
-.app-mock-members { width: 150px; min-width: 150px; background: linear-gradient(to right, var(--panel) 0%, rgba(12,15,24,.92) 100%); border-left: 1px solid rgba(255,255,255,.05); padding: 10px 0; overflow: hidden; }
-.app-mock-msg { display: flex; padding: 2px 14px; opacity: 0; animation: msgIn .5s cubic-bezier(.22,1,.36,1) forwards; border-radius: 2px; transition: background .2s; }
-.app-mock-msg:hover { background: rgba(255,249,62,.02); }
-.app-mock-msg.first { padding-top: 12px; margin-top: 6px; }
-.app-mock-msg:nth-child(1) { animation-delay: .2s; }
-.app-mock-msg:nth-child(2) { animation-delay: .35s; }
-.app-mock-msg:nth-child(3) { animation-delay: .5s; }
-.app-mock-msg:nth-child(4) { animation-delay: .65s; }
-@keyframes msgIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
-
-/* ── DM Preview Card ─────────────────────── */
-.dm-card { background: linear-gradient(135deg, var(--panel) 0%, rgba(12,15,24,.92) 100%); border: 1px solid rgba(255,249,62,.06); border-radius: 16px; padding: 0; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,.3); }
-.dm-topbar { padding: 12px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,.05); background: rgba(255,255,255,.03); }
-.dm-topbar-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--font-display); flex-shrink: 0; border: 1px solid rgba(255,255,255,.08); }
-.dm-topbar-name { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: #fff; }
-.dm-topbar-status { font-size: 10px; color: #4ade80; margin-left: auto; display: flex; align-items: center; gap: 4px; font-weight: 600; }
-.dm-topbar-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,.4); }
-.dm-messages { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(to bottom, transparent, rgba(0,0,0,.05)); }
-.dm-msg { display: flex; align-items: flex-start; gap: 10px; opacity: 0; animation: fadeIn .4s ease forwards; }
-.dm-msg:nth-child(1) { animation-delay: .1s; }
-.dm-msg:nth-child(2) { animation-delay: .2s; }
-.dm-msg:nth-child(3) { animation-delay: .3s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-.dm-msg-av { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--font-display); border: 1px solid rgba(255,255,255,.08); }
-.dm-msg-bubble { flex: 1; }
-.dm-msg-name { font-size: 10.5px; font-weight: 700; color: #fff; margin-bottom: 3px; }
-.dm-msg-text { font-size: 12.5px; color: rgba(221,227,237,.9); line-height: 1.6; }
-.dm-input-bar { margin: 0 12px 12px; padding: 10px 14px; border-radius: 12px; background: linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border: 1px solid rgba(255,249,62,.08); font-size: 11.5px; color: rgba(255,255,255,.4); display: flex; align-items: center; gap: 8px; transition: all .2s; }
-
 /* Twemoji sizing */
 img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
 
 /* ════════════════════════════════════════════
-   SAFETY
+   BUBBLES (Feature grid with parallax 3D icons)
 ════════════════════════════════════════════ */
-.safety { padding: 130px 72px 0; }
-.safety-inner { background: var(--panel); border: 1px solid var(--border); border-radius: 28px; overflow: hidden; position: relative; }
-.safety-inner::before { content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 55%; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent), transparent); z-index: 1; }
-.safety-inner::after { content: ""; position: absolute; top: -100px; right: -100px; width: 480px; height: 480px; border-radius: 50%; background: radial-gradient(circle, rgba(255,249,62,.06), transparent 65%); pointer-events: none; }
-.safety-header { display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: center; padding: 52px 60px 38px; border-bottom: 1px solid var(--border); position: relative; z-index: 1; }
-.safety-logo-wrap { width: 84px; height: 84px; border-radius: 24px; background: rgba(255,249,62,.07); border: 1px solid rgba(255,249,62,.16); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 44px rgba(255,249,62,.12); flex-shrink: 0; }
-.safety-logo-wrap img { width: 54px; height: 54px; object-fit: contain; filter: drop-shadow(0 0 14px rgba(255,249,62,.42)); }
-.safety-header-text .section-label { margin-bottom: 8px; }
-.safety-header-text h2 { font-family: var(--font-display); font-size: 34px; font-weight: 800; letter-spacing: -.9px; line-height: 1.1; margin-bottom: 10px; }
-.safety-header-text p { font-size: 15px; color: var(--muted-light); line-height: 1.68; max-width: 520px; }
-.safety-pillars { display: grid; grid-template-columns: repeat(3, 1fr); position: relative; z-index: 1; }
-.safety-pillar { padding: 36px 38px; border-right: 1px solid var(--border); transition: background .18s; }
-.safety-pillar:last-child { border-right: none; }
-.safety-pillar:hover { background: rgba(255,249,62,.025); }
-.sp-icon { width: 44px; height: 44px; border-radius: 13px; background: rgba(255,249,62,.07); border: 1px solid rgba(255,249,62,.1); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
-.sp-icon img { height: 22px; width: 22px; object-fit: contain; opacity: .82; }
-.sp-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-.sp-desc { font-size: 13.5px; color: var(--muted-light); line-height: 1.62; }
-.safety-bottom { display: flex; align-items: center; justify-content: space-between; padding: 22px 60px; border-top: 1px solid var(--border); background: rgba(255,249,62,.018); position: relative; z-index: 1; gap: 24px; flex-wrap: wrap; }
-.safety-bottom-left { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
-.safety-trust-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted-light); }
-.sti-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 9px rgba(255,249,62,.5); flex-shrink: 0; }
-.safety-legal-links { display: flex; align-items: center; gap: 16px; }
-.safety-legal-links a { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 5px; transition: color .15s; }
-.safety-legal-links a:hover { color: var(--accent); }
-.safety-legal-links .sep { color: var(--border); }
+.bubbles {
+  padding: 140px 72px 0;
+  position: relative;
+}
+.bubbles::before {
+  content: ""; position: absolute;
+  top: 80px; left: 50%; transform: translateX(-50%);
+  width: 700px; height: 700px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,249,62,.05), transparent 65%);
+  pointer-events: none; z-index: 0;
+}
+.bubbles-head {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 84px;
+  position: relative; z-index: 1;
+}
+.bubbles-head .section-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 18px;
+}
+.bubbles-head .section-label::before {
+  content: ""; width: 18px; height: 1.5px; background: var(--accent);
+}
+.bubbles-head h2 {
+  font-family: var(--font-display);
+  font-size: 56px; font-weight: 800; letter-spacing: -2px;
+  line-height: 1.04; margin-bottom: 20px;
+}
+.bubbles-head h2 span { color: var(--accent); }
+.bubbles-head p {
+  font-size: 17px; color: var(--muted-light); line-height: 1.65;
+  max-width: 560px; margin: 0 auto;
+}
+
+.bubble-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  max-width: 1280px;
+  margin: 0 auto;
+  position: relative; z-index: 1;
+}
+.bubble {
+  position: relative;
+  background:
+    linear-gradient(160deg, rgba(18,22,34,.95) 0%, rgba(10,13,20,.92) 100%);
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  padding: 220px 30px 32px;
+  overflow: visible;
+  isolation: isolate;
+  transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .25s, box-shadow .35s;
+  opacity: 0; transform: translateY(28px);
+}
+.bubble.visible {
+  animation: bubbleIn .65s cubic-bezier(.22,1,.36,1) forwards;
+}
+@keyframes bubbleIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+.bubble::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: 26px;
+  background: radial-gradient(circle at var(--bx, 70%) var(--by, -10%), rgba(255,249,62,.13), transparent 55%);
+  opacity: .9;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity .35s;
+}
+.bubble::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(255,255,255,.04), transparent 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+.bubble:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255,249,62,.25);
+  box-shadow:
+    0 32px 80px rgba(0,0,0,.55),
+    0 0 60px rgba(255,249,62,.08),
+    inset 0 1px 2px rgba(255,255,255,.05);
+}
+.bubble:hover::before { opacity: 1.2; }
+
+.bubble-icon-wrap {
+  position: absolute;
+  top: -36px; right: -24px;
+  width: 210px; height: 210px;
+  pointer-events: none;
+  z-index: 2;
+  perspective: 800px;
+}
+.bubble-icon {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 28px 36px rgba(0,0,0,.55)) drop-shadow(0 0 18px rgba(255,249,62,.14));
+  transition: filter .35s, transform .15s linear;
+  will-change: transform;
+}
+.bubble:hover .bubble-icon {
+  filter: drop-shadow(0 36px 44px rgba(0,0,0,.6)) drop-shadow(0 0 32px rgba(255,249,62,.32));
+}
+
+.bubble-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(255,249,62,.18);
+  padding: 4px 10px;
+  border-radius: 100px;
+  margin-bottom: 14px;
+  position: relative; z-index: 1;
+}
+.bubble-tag .dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+.bubble h3 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -.8px;
+  line-height: 1.05;
+  margin-bottom: 12px;
+  position: relative; z-index: 1;
+}
+.bubble p {
+  font-size: 14.5px;
+  color: var(--muted-light);
+  line-height: 1.68;
+  position: relative; z-index: 1;
+}
+
+/* Feature row - things people will see beneath */
+.bubble-meta {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: var(--muted);
+  position: relative; z-index: 1;
+}
+.bubble-meta .pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74,222,128,.6);
+  animation: navDotBlink 2.5s ease infinite;
+}
+@keyframes navDotBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
+}
 
 /* ════════════════════════════════════════════
-   CTA
+   SAFETY STRIP (slim trust row)
 ════════════════════════════════════════════ */
-.cta-wrap { padding: 130px 72px 0; }
-.cta {
-  border-radius: 28px;
+.trust-strip {
+  margin: 110px auto 0;
+  max-width: 1280px;
+  padding: 0 72px;
+  position: relative; z-index: 1;
+}
+.trust-inner {
+  background: linear-gradient(135deg, rgba(18,22,34,.7), rgba(10,13,20,.85));
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 26px 36px;
+  display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+  position: relative; overflow: hidden;
+}
+.trust-inner::before {
+  content: ""; position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 50%; height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.trust-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,249,62,.07);
+  border: 1px solid rgba(255,249,62,.14);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.trust-icon img { width: 24px; height: 24px; object-fit: contain; }
+.trust-text {
+  flex: 1; min-width: 240px;
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -.3px;
+}
+.trust-text span { color: var(--accent); }
+.trust-pillars {
+  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+}
+.trust-pillar {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--muted-light);
+}
+.trust-pillar .ti-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(255,249,62,.5);
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════
+   FINAL CTA (compact, with 3D icon)
+════════════════════════════════════════════ */
+.final-cta-wrap { padding: 130px 72px 0; }
+.final-cta {
+  position: relative;
+  border-radius: 32px;
   background:
     linear-gradient(125deg, rgba(255,249,62,.13) 0%, transparent 52%),
     linear-gradient(to bottom, rgba(0,0,0,.5), rgba(8,10,15,.96)),
     url("Fortized banner.png") center / cover no-repeat;
-  border: 1px solid rgba(255,249,62,.16);
-  padding: 110px 90px;
-  text-align: center;
-  position: relative; overflow: hidden;
+  border: 1px solid rgba(255,249,62,.18);
+  padding: 80px 72px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 48px;
 }
-.cta::before { content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 65%; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
-.cta::after { content: ""; position: absolute; top: -120px; left: 50%; transform: translateX(-50%); width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(255,249,62,.09), transparent 65%); pointer-events: none; }
-.cta h2 { font-family: var(--font-display); font-size: 52px; font-weight: 800; letter-spacing: -1.8px; margin-bottom: 18px; position: relative; z-index: 1; }
-.cta h2 span { color: var(--accent); }
-.cta p { font-size: 17px; color: var(--muted-light); margin-bottom: 42px; position: relative; z-index: 1; }
-.cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
+.final-cta::before {
+  content: ""; position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 65%; height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.final-cta::after {
+  content: ""; position: absolute;
+  top: -120px; left: 30%; transform: translateX(-50%);
+  width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,249,62,.09), transparent 65%);
+  pointer-events: none;
+}
+.final-cta-text { position: relative; z-index: 1; }
+.final-cta-text .section-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 18px;
+}
+.final-cta-text .section-label::before { content: ""; width: 18px; height: 1.5px; background: var(--accent); }
+.final-cta h2 {
+  font-family: var(--font-display);
+  font-size: 50px; font-weight: 800; letter-spacing: -1.6px;
+  line-height: 1.04; margin-bottom: 18px;
+}
+.final-cta h2 span { color: var(--accent); }
+.final-cta p { font-size: 17px; color: var(--muted-light); margin-bottom: 32px; max-width: 480px; }
+.final-cta-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+.final-cta-icon-wrap {
+  position: relative; z-index: 1;
+  width: 280px; height: 280px;
+  flex-shrink: 0;
+}
+.final-cta-icon {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 60px rgba(0,0,0,.6)) drop-shadow(0 0 32px rgba(255,249,62,.32));
+  animation: ctaFloat 6s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes ctaFloat {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50%       { transform: translateY(-14px) rotate(-4deg); }
+}
 
 /* ════════════════════════════════════════════
    FOOTER
@@ -637,34 +730,35 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
 /* ════════════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════════════ */
+@media (max-width: 1180px) {
+  .bubble-grid { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 1024px) {
   .hero { grid-template-columns: 1fr; padding-top: 130px; min-height: auto; }
   .hero-right { display: none; }
   .hero h1 { font-size: 52px; }
-  .showcase-grid { grid-template-columns: 1fr 1fr; }
-  .sc-card.full { grid-column: 1 / -1; }
-  .app-mock-members { display: none; }
+  .bubbles-head h2 { font-size: 42px; }
+  .final-cta { grid-template-columns: 1fr; text-align: center; padding: 64px 40px; }
+  .final-cta-icon-wrap { width: 200px; height: 200px; margin: 0 auto; }
+  .final-cta-actions { justify-content: center; }
+  .final-cta-text .section-label { justify-content: center; }
+  .final-cta-text p { margin-left: auto; margin-right: auto; }
 }
 @media (max-width: 768px) {
-  .nav-root { padding: 0 20px; }
-  .features, .showcase, .safety, .cta-wrap, footer { padding-left: 24px; padding-right: 24px; }
+  .nav-root { padding: 0 18px; }
+  .bubbles, .trust-strip, .final-cta-wrap, footer { padding-left: 24px; padding-right: 24px; }
   .hero { padding-left: 24px; padding-right: 24px; }
   .hero h1 { font-size: 42px; letter-spacing: -2px; }
-  .section-heading { font-size: 32px; }
-  .features-grid, .showcase-grid { grid-template-columns: 1fr; }
-  .sc-card.full { grid-column: span 1; }
-  .app-mock-channels { display: none; }
-  .app-mock-nav { width: 140px; min-width: 140px; }
-  .app-mock { height: 360px; }
-  .safety-pillars { grid-template-columns: 1fr; }
-  .safety-pillar { border-right: none; border-bottom: 1px solid var(--border); }
-  .safety-pillar:last-child { border-bottom: none; }
-  .safety-header { grid-template-columns: 1fr; }
+  .bubbles-head h2 { font-size: 34px; letter-spacing: -1px; }
+  .bubble-grid { grid-template-columns: 1fr; gap: 14px; }
+  .bubble { padding: 200px 24px 28px; }
+  .bubble-icon-wrap { width: 180px; height: 180px; top: -28px; right: -16px; }
+  .bubble h3 { font-size: 26px; }
+  .trust-inner { padding: 22px 24px; }
   footer { grid-template-columns: 1fr; text-align: center; }
   .footer-left { justify-content: center; }
   .footer-links { justify-content: center; }
-  .cta h2 { font-size: 36px; }
-  .cta { padding: 64px 32px; }
+  .final-cta h2 { font-size: 34px; }
 }
 </style>
 </head>
@@ -750,227 +844,109 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   </div>
 </div>
 
-<!-- FEATURES -->
-<section class="features" id="features">
-  <div class="section-label">Core Platform</div>
-  <div class="section-heading">Everything to build,<br>manage &amp; protect.</div>
-  <div class="section-desc">Fortized gives you the complete toolkit. Five room types. Rank systems. Real-time chat. Community controls. Safety first, always.</div>
-  <div class="features-grid">
-    <div class="fcard">
-      <div class="fcard-icon">🏰</div>
-      <h3>Bastions</h3>
-      <p><strong>Five room types, infinite possibilities.</strong> Text chambers for group chat, Voice for hangouts, Forums for discussions that last, Announcements for broadcasts, Polls for decisions. Build your exact community structure with ranks, roles, and granular permission controls.</p>
-    </div>
-    <div class="fcard">
-      <div class="fcard-icon">💬</div>
-      <h3>Direct Messaging</h3>
-      <p><strong>Private. Secure. Yours.</strong> One-on-one chats with mutual-friend safety checks. Group DMs with your crew. Real-time typing indicators, read receipts, and media sharing. All messages encrypted. All conversations private.</p>
-    </div>
-    <div class="fcard">
-      <div class="fcard-icon">🎭</div>
-      <h3>The Atelier</h3>
-      <p><strong>Earn it. Customize it. Own it.</strong> Complete quests and dailies to earn Onyx. Unlock custom themes (Midnight Citadel, Obsidian), premium badges, 100MB file uploads, custom emojis, and unique appearances — all free if you grind.</p>
-    </div>
-    <div class="fcard">
-      <div class="fcard-icon">🔒</div>
-      <h3>Defense Layer</h3>
-      <p><strong>Multi-layer protection. Zero compromise.</strong> Intelligent AutoMod scans messages. Raid protection auto-lockdown activates under attack. Age restriction enforcement. Audit logs track everything. The Fortized Security Department watches 24/7.</p>
-    </div>
+<!-- BUBBLES (Feature grid) -->
+<section class="bubbles" id="features">
+  <div class="bubbles-head">
+    <div class="section-label">The Toolkit</div>
+    <h2>A fortress for<br>every kind of <span>squad.</span></h2>
+    <p>Six pillars built to grow your community without compromising what makes it yours.</p>
   </div>
-</section>
 
-<!-- SHOWCASE -->
-<section class="showcase" id="showcase">
-  <div class="section-label">Inside the App</div>
-  <div class="section-heading">The real<br>interface.</div>
-  <div class="section-desc">Built for community. Designed for power.</div>
-  <div class="showcase-grid">
-    <!-- Full-width realistic app mockup -->
-    <div class="sc-card full" style="height:520px;display:flex;padding:0;flex-direction:column;">
-      <div class="sc-card-accent-bar" style="background:linear-gradient(90deg,rgba(255,249,62,.3),rgba(255,249,62,.1),rgba(255,249,62,.3));height:2px;opacity:1;"></div>
-      <!-- Clean Skeleton Mockup with Real App Details -->
-      <div style="display:flex;height:100%;background:linear-gradient(to right,rgba(0,0,0,.4),var(--bg),rgba(0,0,0,.4));">
-        <!-- Left Sidebar -->
-        <div style="width:200px;background:rgba(0,0,0,.3);padding:20px 16px;display:flex;flex-direction:column;gap:14px;border-right:1px solid rgba(255,249,62,.08);overflow:hidden;">
-          <!-- Logo -->
-          <div style="width:100%;height:28px;background:linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,249,62,.05));border-radius:8px;border:1px solid rgba(255,249,62,.15);margin-bottom:8px;"></div>
+  <div class="bubble-grid">
 
-          <!-- Nav Items -->
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="height:6px;background:rgba(255,255,255,.1);border-radius:3px;width:100%;"></div>
-            <div style="height:6px;background:rgba(255,255,255,.08);border-radius:3px;width:90%;"></div>
-            <div style="height:6px;background:rgba(255,255,255,.08);border-radius:3px;width:85%;"></div>
-          </div>
-
-          <!-- Separator -->
-          <div style="height:1px;background:rgba(255,249,62,.12);"></div>
-
-          <!-- Bastions List -->
-          <div style="flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
-            <div style="height:24px;background:rgba(255,249,62,.12);border-radius:8px;border:1px solid rgba(255,249,62,.2);flex-shrink:0;"></div>
-            <div style="height:24px;background:rgba(100,160,255,.1);border-radius:8px;flex-shrink:0;"></div>
-            <div style="height:24px;background:rgba(255,255,255,.06);border-radius:8px;flex-shrink:0;"></div>
-            <div style="height:24px;background:rgba(255,255,255,.06);border-radius:8px;flex-shrink:0;"></div>
-            <div style="height:24px;background:rgba(255,255,255,.06);border-radius:8px;flex-shrink:0;"></div>
-          </div>
-
-          <!-- Bottom Profile -->
-          <div style="height:1px;background:rgba(255,249,62,.12);"></div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <div style="width:28px;height:28px;background:rgba(255,249,62,.15);border-radius:50%;flex-shrink:0;border:1px solid rgba(255,249,62,.2);"></div>
-            <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;">
-              <div style="height:4px;background:rgba(255,255,255,.15);border-radius:2px;width:70%;"></div>
-              <div style="height:3px;background:rgba(255,255,255,.1);border-radius:2px;width:50%;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Main Content - Member List Feed -->
-        <div style="flex:1;padding:28px 36px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;">
-          <!-- Header -->
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div style="width:10px;height:10px;background:rgba(255,249,62,.4);border-radius:50%;"></div>
-            <div style="height:9px;background:rgba(255,255,255,.18);border-radius:3px;width:180px;"></div>
-          </div>
-
-          <!-- Member Items -->
-          <div style="display:flex;flex-direction:column;gap:14px;flex:1;">
-            <!-- Member 1 -->
-            <div style="display:flex;gap:12px;align-items:center;padding:12px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);border-radius:10px;">
-              <div style="width:36px;height:36px;background:rgba(255,249,62,.2);border-radius:50%;flex-shrink:0;border:2px solid rgba(255,249,62,.3);"></div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <div style="height:6px;background:rgba(255,255,255,.2);border-radius:2px;width:120px;flex-shrink:0;"></div>
-                  <div style="height:5px;background:rgba(255,249,62,.25);border-radius:2px;width:60px;flex-shrink:0;"></div>
-                </div>
-                <div style="height:5px;background:rgba(255,255,255,.12);border-radius:2px;width:140px;"></div>
-              </div>
-              <div style="display:flex;gap:6px;flex-shrink:0;">
-                <div style="width:8px;height:8px;background:rgba(255,249,62,.3);border-radius:2px;"></div>
-                <div style="width:8px;height:8px;background:rgba(255,249,62,.2);border-radius:2px;"></div>
-              </div>
-            </div>
-
-            <!-- Member 2 -->
-            <div style="display:flex;gap:12px;align-items:center;padding:12px;border:1px solid rgba(255,255,255,.06);border-radius:10px;">
-              <div style="width:36px;height:36px;background:rgba(100,160,255,.15);border-radius:50%;flex-shrink:0;border:2px solid rgba(100,160,255,.25);"></div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <div style="height:6px;background:rgba(255,255,255,.2);border-radius:2px;width:110px;flex-shrink:0;"></div>
-                  <div style="height:5px;background:rgba(100,160,255,.2);border-radius:2px;width:55px;flex-shrink:0;"></div>
-                </div>
-                <div style="height:5px;background:rgba(255,255,255,.12);border-radius:2px;width:130px;"></div>
-              </div>
-              <div style="width:6px;height:6px;background:rgba(76,200,100,.4);border-radius:50%;flex-shrink:0;"></div>
-            </div>
-
-            <!-- Member 3 -->
-            <div style="display:flex;gap:12px;align-items:center;padding:12px;border:1px solid rgba(255,255,255,.06);border-radius:10px;">
-              <div style="width:36px;height:36px;background:rgba(100,220,140,.12);border-radius:50%;flex-shrink:0;border:2px solid rgba(100,220,140,.2);"></div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <div style="height:6px;background:rgba(255,255,255,.2);border-radius:2px;width:115px;flex-shrink:0;"></div>
-                  <div style="height:5px;background:rgba(100,220,140,.2);border-radius:2px;width:50px;flex-shrink:0;"></div>
-                </div>
-                <div style="height:5px;background:rgba(255,255,255,.12);border-radius:2px;width:145px;"></div>
-              </div>
-              <div style="width:6px;height:6px;background:rgba(76,200,100,.4);border-radius:50%;flex-shrink:0;"></div>
-            </div>
-
-            <!-- Member 4 -->
-            <div style="display:flex;gap:12px;align-items:center;padding:12px;border:1px solid rgba(255,255,255,.06);border-radius:10px;opacity:.6;">
-              <div style="width:36px;height:36px;background:rgba(200,100,255,.1);border-radius:50%;flex-shrink:0;border:2px solid rgba(200,100,255,.18);"></div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <div style="height:6px;background:rgba(255,255,255,.15);border-radius:2px;width:100px;flex-shrink:0;"></div>
-                  <div style="height:5px;background:rgba(200,100,255,.15);border-radius:2px;width:45px;flex-shrink:0;"></div>
-                </div>
-                <div style="height:5px;background:rgba(255,255,255,.1);border-radius:2px;width:120px;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Sidebar - Member Details -->
-        <div style="width:140px;background:rgba(0,0,0,.3);padding:24px 14px;display:flex;flex-direction:column;gap:16px;border-left:1px solid rgba(255,249,62,.08);overflow:hidden;">
-          <!-- Info header -->
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="height:6px;background:rgba(255,249,62,.2);border-radius:3px;width:100%;"></div>
-            <div style="height:5px;background:rgba(255,255,255,.1);border-radius:2px;width:85%;"></div>
-            <div style="height:5px;background:rgba(255,255,255,.08);border-radius:2px;width:70%;"></div>
-          </div>
-
-          <div style="height:1px;background:rgba(255,249,62,.12);"></div>
-
-          <!-- Side list items -->
-          <div style="flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
-            <div style="height:18px;background:rgba(255,255,255,.08);border-radius:6px;flex-shrink:0;"></div>
-            <div style="height:18px;background:rgba(255,255,255,.06);border-radius:6px;flex-shrink:0;"></div>
-            <div style="height:18px;background:rgba(255,255,255,.06);border-radius:6px;flex-shrink:0;"></div>
-            <div style="height:18px;background:rgba(255,255,255,.08);border-radius:6px;flex-shrink:0;"></div>
-          </div>
-        </div>
+    <article class="bubble" data-rot="-12" data-speed="0.12" style="--bx: 72%; --by: -12%;">
+      <div class="bubble-icon-wrap">
+        <img class="bubble-icon" src="Icons/FortizedHelmet.png" alt="">
       </div>
+      <span class="bubble-tag"><span class="dot"></span>01 — Build</span>
+      <h3>Create</h3>
+      <p>Forge your bastion from scratch. Pick room types, set ranks, shape the rules. Your fortress, your way — text chambers, voice halls, forums, polls, the works.</p>
+      <div class="bubble-meta"><span class="pulse"></span>Five room types · Custom ranks · Granular roles</div>
+    </article>
+
+    <article class="bubble" data-rot="14" data-speed="0.16" style="--bx: 68%; --by: -10%;">
+      <div class="bubble-icon-wrap">
+        <img class="bubble-icon" src="Icons/controller.png" alt="">
+      </div>
+      <span class="bubble-tag"><span class="dot"></span>02 — Action</span>
+      <h3>Play</h3>
+      <p>Broadcast your activity, share what you're playing, and squad up with allies in real time. Game presence that actually feels alive — no stale status lines.</p>
+      <div class="bubble-meta"><span class="pulse"></span>Live presence · Squad-up · Auto-detect</div>
+    </article>
+
+    <article class="bubble" data-rot="-9" data-speed="0.14" style="--bx: 70%; --by: -14%;">
+      <div class="bubble-icon-wrap">
+        <img class="bubble-icon" src="Icons/headset.png" alt="">
+      </div>
+      <span class="bubble-tag"><span class="dot"></span>03 — Voice</span>
+      <h3>Talk</h3>
+      <p>Crystal-clear voice rooms with low latency. Drop in, hang out, raid all night. Echo cancellation, push-to-talk, voice activity — tuned for long sessions.</p>
+      <div class="bubble-meta"><span class="pulse"></span>Low-latency · Noise suppression · PTT</div>
+    </article>
+
+    <article class="bubble" data-rot="11" data-speed="0.11" style="--bx: 65%; --by: -8%;">
+      <div class="bubble-icon-wrap">
+        <img class="bubble-icon" src="Icons/media.png" alt="">
+      </div>
+      <span class="bubble-tag"><span class="dot"></span>04 — Stream</span>
+      <h3>Share</h3>
+      <p>Post clips, screenshots, links and reactions. Embed YouTube, Spotify, Twitch — your highlights live where the squad already hangs out.</p>
+      <div class="bubble-meta"><span class="pulse"></span>Rich embeds · Reactions · Replies</div>
+    </article>
+
+    <article class="bubble" data-rot="-15" data-speed="0.18" style="--bx: 70%; --by: -16%;">
+      <div class="bubble-icon-wrap">
+        <img class="bubble-icon" src="Icons/Scheduling.png" alt="">
+      </div>
+      <span class="bubble-tag"><span class="dot"></span>05 — Plan</span>
+      <h3>Schedule</h3>
+      <p>Plan raids, set up tournaments, ping the squad. Built-in events with reminders, RSVPs, and timezone smarts so nobody misses kickoff.</p>
+      <div class="bubble-meta"><span class="pulse"></span>Events · RSVPs · Timezone-aware</div>
+    </article>
+
+    <article class="bubble" data-rot="13" data-speed="0.13" style="--bx: 68%; --by: -10%;">
+      <div class="bubble-icon-wrap">
+        <img class="bubble-icon" src="Icons/onyx3dicon.png" alt="">
+      </div>
+      <span class="bubble-tag"><span class="dot"></span>06 — Reward</span>
+      <h3>Customize</h3>
+      <p>Earn Onyx through quests and dailies. Unlock themes, badges, custom emotes, 100MB uploads, and more. All free — if you grind for it.</p>
+      <div class="bubble-meta"><span class="pulse"></span>Onyx quests · Themes · Badges</div>
+    </article>
 
   </div>
 </section>
 
-<!-- SAFETY -->
-<section class="safety" id="safety">
-  <div class="safety-inner">
-    <div class="safety-header">
-      <div class="safety-logo-wrap">
-        <img src="FortizedSecurity logo.png" alt="Fortized Security">
-      </div>
-      <div class="safety-header-text">
-        <div class="section-label">
-          <img src="FortizedSecurity logo.png" alt="" style="height:12px;vertical-align:middle;margin-right:2px;filter:drop-shadow(0 0 4px rgba(255,249,62,.5));">
-          Fortified
-        </div>
-        <h2>Walls that actually hold.</h2>
-        <p>Safety isn't bolted on. It's built in. Multi-layer defense. Automated threats. Granular controls. Your community stays yours. Always protected, never compromised.</p>
-      </div>
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="trust-inner">
+    <div class="trust-icon">
+      <img src="FortizedSecurity logo.png" alt="">
     </div>
-    <div class="safety-pillars">
-      <div class="safety-pillar">
-        <div class="sp-icon">🛡️</div>
-        <div class="sp-title">Raids Neutralized</div>
-        <div class="sp-desc">Coordinated attacks? Auto-lockdown activates instantly. Our detection engine scans for attack patterns 24/7. When raids start, your Bastion is already locked down. Automatic. Instant. Ruthless.</div>
-      </div>
-      <div class="safety-pillar">
-        <div class="sp-icon">🎛️</div>
-        <div class="sp-title">Your Control</div>
-        <div class="sp-desc">Every permission is yours. Per-rank rules. Per-chamber controls. Per-message permissions if you want. Build your exact access model. Admins stay in command.</div>
-      </div>
-      <div class="safety-pillar">
-        <div class="sp-icon">👁️</div>
-        <div class="sp-title">Full Visibility</div>
-        <div class="sp-desc">AutoMod scans every message. Keyword filters block what you define. Audit logs capture every action. Who did what, when, and why — you know everything.</div>
-      </div>
-    </div>
-    <div class="safety-bottom">
-      <div class="safety-bottom-left">
-        <div class="safety-trust-item"><span class="sti-dot"></span><span>Age restriction enforcement</span></div>
-        <div class="safety-trust-item"><span class="sti-dot"></span><span>Fortized Security Department</span></div>
-        <div class="safety-trust-item"><span class="sti-dot"></span><span>In-platform report system</span></div>
-      </div>
-      <div class="safety-legal-links">
-        <a href="/legal#privacy">🔒 Privacy Policy</a>
-        <span class="sep">|</span>
-        <a href="/legal">📜 Terms</a>
-      </div>
+    <div class="trust-text">Walls that <span>actually hold.</span></div>
+    <div class="trust-pillars">
+      <div class="trust-pillar"><span class="ti-dot"></span>Raid auto-lockdown</div>
+      <div class="trust-pillar"><span class="ti-dot"></span>AutoMod &amp; audit logs</div>
+      <div class="trust-pillar"><span class="ti-dot"></span>Per-rank permissions</div>
+      <div class="trust-pillar"><span class="ti-dot"></span>Age enforcement</div>
     </div>
   </div>
-</section>
+</div>
 
-<!-- CTA -->
-<div class="cta-wrap">
-  <section class="cta">
-    <h2>Your community<br>deserves <span>walls.</span></h2>
-    <p>Join the bastions already building on Fortized. It's free to start.</p>
-    <div class="cta-actions">
-      <a href="/signup" class="btn-cta">Create Your Fortress &rarr;</a>
-      <a href="/download" class="btn-ghost">⬇ Download App</a>
+<!-- FINAL CTA -->
+<div class="final-cta-wrap">
+  <section class="final-cta">
+    <div class="final-cta-text">
+      <div class="section-label">Ready?</div>
+      <h2>Your community<br>deserves <span>walls.</span></h2>
+      <p>Join the bastions already building on Fortized. Free to start. Yours forever.</p>
+      <div class="final-cta-actions">
+        <a href="/signup" class="btn-cta">Create Your Fortress &rarr;</a>
+        <a href="/download" class="btn-ghost">⬇ Download App</a>
+      </div>
+    </div>
+    <div class="final-cta-icon-wrap">
+      <img class="final-cta-icon" src="Icons/Fortized3dIcon.png" alt="Fortized">
     </div>
   </section>
 </div>
@@ -1010,28 +986,51 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
 const nav = document.getElementById('mainNav');
 window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40));
 
-const fcards = document.querySelectorAll('.fcard');
-const fObserver = new IntersectionObserver(entries => {
+/* Reveal-on-scroll for bubbles */
+const bubbles = document.querySelectorAll('.bubble');
+const bObserver = new IntersectionObserver(entries => {
   entries.forEach((entry) => {
     if (entry.isIntersecting) {
-      const i = [...fcards].indexOf(entry.target);
-      setTimeout(() => entry.target.classList.add('visible'), i * 90);
-      fObserver.unobserve(entry.target);
+      const i = [...bubbles].indexOf(entry.target);
+      setTimeout(() => entry.target.classList.add('visible'), (i % 3) * 90);
+      bObserver.unobserve(entry.target);
     }
   });
-}, { threshold: 0.1 });
-fcards.forEach(c => fObserver.observe(c));
+}, { threshold: 0.12 });
+bubbles.forEach(b => bObserver.observe(b));
 
-document.querySelectorAll('.sc-card').forEach((c, i) => {
-  c.style.opacity = '0'; c.style.transform = 'translateY(24px)';
-  c.style.transition = `opacity .5s ease ${i * 80}ms, transform .5s ease ${i * 80}ms`;
-  const o = new IntersectionObserver(en => {
-    if (en[0].isIntersecting) { c.style.opacity = '1'; c.style.transform = 'translateY(0)'; o.unobserve(c); }
-  }, { threshold: 0.1 });
-  o.observe(c);
-});
+/* Parallax for 3D icons */
+const parallaxItems = [...document.querySelectorAll('.bubble')].map(b => ({
+  el: b,
+  icon: b.querySelector('.bubble-icon'),
+  rot: parseFloat(b.dataset.rot || 0),
+  speed: parseFloat(b.dataset.speed || 0.12),
+}));
 
-// Parse all emojis to Twemoji
+let ticking = false;
+function updateParallax() {
+  const vh = window.innerHeight;
+  parallaxItems.forEach(({ el, icon, rot, speed }) => {
+    if (!icon) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.bottom < -200 || rect.top > vh + 200) return;
+    const cardCenter = rect.top + rect.height / 2;
+    const offset = (cardCenter - vh / 2) * speed;
+    icon.style.transform = `rotate(${rot}deg) translateY(${offset}px)`;
+  });
+  ticking = false;
+}
+function onScroll() {
+  if (!ticking) {
+    requestAnimationFrame(updateParallax);
+    ticking = true;
+  }
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+window.addEventListener('resize', onScroll);
+updateParallax();
+
+/* Parse all emojis to Twemoji */
 if (typeof twemoji !== 'undefined') {
   twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });
 }

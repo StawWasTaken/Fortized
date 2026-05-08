@@ -345,6 +345,244 @@ body::before {
   background: linear-gradient(115deg, rgba(8,10,15,.92) 26%, rgba(8,10,15,.40) 100%) !important;
 }
 .hero { border-bottom: 1px solid rgba(255,255,255,.05); }
+/* ── New Newsroom layout (sidebar categories + post grid) ── */
+.news-shell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 64px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 64px 56px 100px;
+  position: relative;
+  z-index: 2;
+}
+.news-cats {
+  position: sticky;
+  top: 80px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+}
+.news-cat {
+  position: relative;
+  display: block;
+  padding: 9px 16px 9px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #8b95a8;
+  cursor: pointer;
+  transition: color .15s;
+  border-left: 1px solid #1a2030;
+  text-decoration: none;
+  user-select: none;
+}
+.news-cat:hover { color: #fff; }
+.news-cat.active { color: #fff; font-weight: 600; border-left-color: #fff; }
+
+.news-main { min-width: 0; }
+.news-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: -2.6px;
+  line-height: 1;
+  color: #fff;
+  margin-bottom: 56px;
+}
+.news-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.news-cat-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8b95a8;
+}
+.news-search {
+  position: relative;
+  width: 360px;
+  max-width: 100%;
+}
+.news-search input {
+  width: 100%;
+  background: rgba(255,255,255,.04);
+  border: 1px solid #1a2030;
+  border-radius: 100px;
+  padding: 11px 18px 11px 44px;
+  font-size: 14px;
+  color: #c8d0dc;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+  font-family: 'DM Sans', sans-serif;
+}
+.news-search input:focus { border-color: rgba(255,249,62,.3); box-shadow: 0 0 0 3px rgba(255,249,62,.06); }
+.news-search input::placeholder { color: #4a5568; }
+.news-search svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
+  color: #4a5568;
+  pointer-events: none;
+}
+
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.news-card {
+  background: linear-gradient(160deg, rgba(18,22,34,.95) 0%, rgba(10,13,20,.92) 100%);
+  border: 1px solid #1a2030;
+  border-radius: 22px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  transition: border-color .25s, transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s;
+  position: relative;
+  isolation: isolate;
+}
+.news-card::before {
+  content: ""; position: absolute; inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 80% -10%, rgba(255,249,62,.10), transparent 55%);
+  pointer-events: none; z-index: 0; opacity: 0;
+  transition: opacity .35s;
+}
+.news-card:hover {
+  border-color: rgba(255,249,62,.22);
+  transform: translateY(-4px);
+  box-shadow: 0 28px 70px rgba(0,0,0,.55), 0 0 50px rgba(255,249,62,.06);
+}
+.news-card:hover::before { opacity: 1; }
+
+.news-card-img {
+  height: 200px;
+  background-color: #0c0f1a;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  z-index: 1;
+}
+.news-card-img-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(8,10,15,0) 30%, rgba(8,10,15,.55) 100%);
+}
+.news-card-body {
+  padding: 22px 22px 22px;
+  display: flex; flex-direction: column; gap: 8px;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+.news-card-tag {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: #8b95a8;
+}
+.news-card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -.4px;
+  line-height: 1.22;
+}
+.news-card-from {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: .06em;
+  color: #fff93e;
+  background: rgba(255,249,62,.07);
+  border: 1px solid rgba(255,249,62,.18);
+  border-radius: 100px;
+  padding: 3px 9px;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.news-card-from svg { width: 11px; height: 11px; }
+.news-card-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px;
+  color: #4a5568;
+  margin-top: 6px;
+}
+.news-card-pfp {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255,249,62,.25), rgba(255,249,62,.06));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 10px; font-weight: 800;
+  color: #fff93e;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255,249,62,.2);
+}
+.news-card-pfp img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.news-card-author { font-size: 13px; color: #8b95a8; font-weight: 500; }
+.news-card-dot { color: #2d3548; }
+.news-card-date { font-size: 12px; color: #4a5568; }
+.news-card-readmore {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  color: #fff;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  transition: color .15s;
+}
+.news-card:hover .news-card-readmore { color: #fff93e; }
+
+.news-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 20px;
+  color: #8b95a8;
+  font-size: 15px;
+}
+.news-empty span { font-size: 32px; display: block; margin-bottom: 12px; }
+
+@media (max-width: 1024px) {
+  .news-shell { grid-template-columns: 1fr; gap: 32px; padding: 48px 24px 80px; }
+  .news-cats {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .news-cat {
+    border-left: none;
+    border-bottom: 1px solid #1a2030;
+    padding: 8px 4px;
+    margin-right: 18px;
+  }
+  .news-cat.active { border-bottom-color: #fff; border-left: none; }
+  .news-grid { grid-template-columns: repeat(2, 1fr); }
+  .news-controls { flex-direction: column; align-items: stretch; }
+  .news-search { width: 100%; }
+  .news-title { font-size: 48px; letter-spacing: -1.8px; }
+}
+@media (max-width: 640px) {
+  .news-grid { grid-template-columns: 1fr; }
+  .news-title { font-size: 36px; letter-spacing: -1.2px; margin-bottom: 36px; }
+}
 </style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
@@ -370,68 +608,22 @@ body::before {
   </div>
 </nav>
 
-<!-- ── BLOG LIST ──────────────────────────── -->
+<!-- ── NEWSROOM LIST ──────────────────────── -->
 <div id="blog-list-view">
-  <div class="hero">
-    <div class="hero-banner"><img src="/Fortized banner.png?v=2" alt=""/></div>
-    <div class="grid-overlay"></div>
-    <div class="hero-glow"></div>
-    <div class="hero-inner">
-      <div class="hero-left fade-up">
-        <div class="hero-eyebrow">The Fortized Newsroom</div>
-        <h1>News &amp;<br><em>Dispatches.</em></h1>
-        <p class="hero-sub">Official articles, R&amp;D announcements, and community updates from the Swiftaw team.</p>
-      </div>
-      <div class="hero-stats fade-up d2">
-        <div class="hero-stat">
-          <div class="hero-stat-num" id="article-count">17</div>
-          <div class="hero-stat-label">Articles</div>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <div class="hero-stat-num">5</div>
-          <div class="hero-stat-label">Authors</div>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <div class="hero-stat-num">Mar</div>
-          <div class="hero-stat-label">Latest</div>
+  <section class="news-shell">
+    <aside class="news-cats" id="news-cats" aria-label="Categories"></aside>
+    <main class="news-main">
+      <h1 class="news-title">Newsroom</h1>
+      <div class="news-controls">
+        <div class="news-cat-label" id="cat-label">All News</div>
+        <div class="news-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input id="news-search-input" type="text" placeholder="Search by keyword" oninput="filterNewsroom(this.value)">
         </div>
       </div>
-    </div>
-  </div>
-
-  <div class="blog-wrap">
-    <!-- Search bar -->
-    <div class="blog-search-wrap fade-up d1" style="margin-bottom:32px;">
-      <svg class="blog-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input class="blog-search-input" id="blog-search" placeholder="Search the newsroom..." oninput="filterBlogPosts(this.value)">
-    </div>
-
-    <!-- Pinned: What is Fortized? -->
-    <div class="pinned-card fade-up d1" id="pinned-card"></div>
-
-    <!-- Most Recent -->
-    <div class="section-divider fade-up d2"><span class="section-divider-label">Most Recent</span><div class="section-divider-line"></div></div>
-    <div id="most-recent-grid" class="featured-row fade-up d3"></div>
-
-    <!-- All Posts (sorted by date, excluding pinned & most recent) -->
-    <div class="section-divider fade-up d4" id="all-posts-divider"><span class="section-divider-label">All Posts</span><div class="section-divider-line"></div></div>
-    <div class="post-grid" id="post-grid"></div>
-
-    <!-- For Newbies -->
-    <div class="section-divider fade-up" id="newbies-divider"><span class="section-divider-label">New to Fortized?</span><div class="section-divider-line"></div></div>
-    <div class="secondary-row fade-up" id="newbies-grid"></div>
-
-    <!-- Relevant / Popular -->
-    <div class="section-divider fade-up" id="relevant-divider"><span class="section-divider-label">Relevant &amp; Popular</span><div class="section-divider-line"></div></div>
-    <div class="secondary-row fade-up" id="relevant-grid"></div>
-
-    <div class="blog-no-results" id="blog-no-results">
-      <span>🔍</span>
-      No posts found matching your search.
-    </div>
-  </div>
+      <div class="news-grid" id="news-grid"></div>
+    </main>
+  </section>
 </div>
 
 <!-- ── ARTICLE VIEW ──────────────────────── -->
@@ -689,10 +881,8 @@ window.addEventListener('popstate', function(e) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// ── Dynamic blog grid with sections ──
+// ── Newsroom rendering (sidebar categories + flat grid) ──
 const PINNED_ID = 'whatisfortized';
-const NEWBIE_IDS = ['whatisfortized', 'betalive', 'milestone_launch', 'gates'];
-const RELEVANT_IDS = ['bastions2', 'atelier', 'encryption_update', 'safety', 'desktop', 'livingbastions'];
 function getExcerpt(content) {
   const tmp = document.createElement('div');
   tmp.innerHTML = content;
@@ -700,195 +890,138 @@ function getExcerpt(content) {
   return lead ? lead.textContent.slice(0, 160) + (lead.textContent.length > 160 ? '...' : '') : tmp.textContent.slice(0, 160) + '...';
 }
 function parseDate(str) {
-  return new Date(str.replace(/(\w+)\s(\d+),\s(\d+)/, '$1 $2, $3'));
+  return new Date(String(str).replace(/(\w+)\s(\d+),\s(\d+)/, '$1 $2, $3'));
 }
-function renderPostGrid(filter) {
-  const grid = document.getElementById('post-grid');
-  const recentGrid = document.getElementById('most-recent-grid');
-  const newbiesGrid = document.getElementById('newbies-grid');
-  const relevantGrid = document.getElementById('relevant-grid');
-  const noResults = document.getElementById('blog-no-results');
-  const pinned = document.getElementById('pinned-card');
-  const q = (filter || '').toLowerCase().trim();
+function escAttr(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function slugifyUsername(s) {
+  return String(s||'').toLowerCase().trim().replace(/[^a-z0-9_]/g,'');
+}
 
-  // Show/hide section dividers based on search
-  const sectionEls = ['all-posts-divider','newbies-divider','newbies-grid','relevant-divider','relevant-grid','most-recent-grid'];
-  const recentDivider = document.querySelector('.section-divider.fade-up.d2');
+const PFP_CACHE = {};
+const SB_URL = 'https://ufnjjddqnicbzyjfawrb.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbmpqZGRxbmljYnp5amZhd3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NTkzMjgsImV4cCI6MjA4ODIzNTMyOH0.5Sfc_wQO6T3mQT6lqsPTAntqyxhDZJqTrZ3GNkyQSEk';
+const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
 
-  const sorted = Object.entries(ARTICLES)
-    .filter(([id]) => id !== PINNED_ID)
-    .sort((a, b) => parseDate(b[1].date) - parseDate(a[1].date));
+let activeCategory = 'All';
+let searchQuery = '';
 
-  const filtered = q
-    ? sorted.filter(([id, a]) => a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q) || a.bylineName.toLowerCase().includes(q))
-    : sorted;
+function getCategories() {
+  const set = new Set(['All']);
+  Object.values(ARTICLES).forEach(a => { if (a.category) set.add(a.category); });
+  // Stable order: All first, then alphabetical
+  const arr = [...set];
+  return ['All', ...arr.filter(c => c !== 'All').sort()];
+}
 
-  const pinnedA = ARTICLES[PINNED_ID];
-  const pinnedMatch = !q || pinnedA.title.toLowerCase().includes(q) || pinnedA.category.toLowerCase().includes(q);
-  if (pinned) pinned.style.display = pinnedMatch ? '' : 'none';
+function renderCategories() {
+  const cont = document.getElementById('news-cats');
+  if (!cont) return;
+  cont.innerHTML = getCategories().map(c =>
+    `<a class="news-cat${c === activeCategory ? ' active' : ''}" data-cat="${escAttr(c)}">${escAttr(c)}</a>`
+  ).join('');
+  cont.querySelectorAll('.news-cat').forEach(el => el.addEventListener('click', () => {
+    activeCategory = el.dataset.cat;
+    const lbl = document.getElementById('cat-label');
+    if (lbl) lbl.textContent = (activeCategory === 'All' ? 'All News' : activeCategory).toUpperCase();
+    renderCategories();
+    renderGrid();
+  }));
+}
 
-  if (filtered.length === 0 && !pinnedMatch) {
-    grid.innerHTML = ''; recentGrid.innerHTML = ''; newbiesGrid.innerHTML = ''; relevantGrid.innerHTML = '';
-    sectionEls.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
-    if (recentDivider) recentDivider.style.display = 'none';
-    noResults.style.display = 'block';
+function buildCard(id, a) {
+  const banner = a.banner || '/Fortized banner.png?v=2';
+  const fromBadge = a.fromAnnouncement
+    ? `<span class="news-card-from"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11v2l13 4V7L3 11zm15-1v4l3-1v-2l-3-1z"/></svg>From announcement${a.fromBastion ? ' · ' + escAttr(a.fromBastion) : ''}</span>`
+    : '';
+  const initial = (a.bylineName||'?').trim().charAt(0).toUpperCase() || '?';
+  const username = a.authorUsername ? slugifyUsername(a.authorUsername) : slugifyUsername(a.bylineName);
+  return `
+    <article class="news-card" onclick="openArticle('${escAttr(id)}')">
+      <div class="news-card-img" style="background-image:linear-gradient(to bottom, rgba(8,10,15,.05), rgba(8,10,15,.55)), url('${escAttr(banner)}');"></div>
+      <div class="news-card-body">
+        <div class="news-card-tag">${escAttr(a.tagLabel || a.category || 'News')}</div>
+        <div class="news-card-title">${escAttr(a.title)}</div>
+        ${fromBadge}
+        <div class="news-card-meta">
+          <span class="news-card-pfp" data-username="${escAttr(username)}">${escAttr(initial)}</span>
+          <span class="news-card-author">${escAttr(a.bylineName || 'Fortized')}</span>
+          <span class="news-card-dot">·</span>
+          <span class="news-card-date">${escAttr(a.date)}</span>
+        </div>
+        <span class="news-card-readmore">Read more →</span>
+      </div>
+    </article>`;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('news-grid');
+  if (!grid) return;
+  const q = searchQuery.toLowerCase().trim();
+  const sorted = Object.entries(ARTICLES).sort((a, b) => parseDate(b[1].date) - parseDate(a[1].date));
+  const filtered = sorted.filter(([id, a]) => {
+    const matchesCat = activeCategory === 'All' || (a.category||'').toLowerCase() === activeCategory.toLowerCase();
+    if (!matchesCat) return false;
+    if (!q) return true;
+    return (a.title||'').toLowerCase().includes(q)
+      || (a.bylineName||'').toLowerCase().includes(q)
+      || (a.category||'').toLowerCase().includes(q);
+  });
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="news-empty"><span>🔍</span>No posts found.</div>`;
     return;
   }
-  noResults.style.display = 'none';
+  grid.innerHTML = filtered.map(([id, a]) => buildCard(id, a)).join('');
+  enrichAuthorsWithPfp();
+}
 
-  if (q) {
-    // Search mode: flat grid, hide sections
-    sectionEls.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
-    if (recentDivider) recentDivider.style.display = 'none';
-    document.getElementById('all-posts-divider').style.display = '';
-    grid.classList.add('search-grid');
-    grid.innerHTML = filtered.map(([id, a], i) => buildRegCard(id, a, i)).join('');
-    return;
+async function enrichAuthorsWithPfp() {
+  const els = document.querySelectorAll('.news-card-pfp[data-username]');
+  const usernames = [...new Set([...els].map(el => el.dataset.username).filter(Boolean))];
+  for (const u of usernames) {
+    if (PFP_CACHE[u] !== undefined) { applyPfp(u, PFP_CACHE[u]); continue; }
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/users?username=eq.${encodeURIComponent(u)}&select=username,pfp,display_name`, { headers: SB_HEADERS });
+      if (!r.ok) { PFP_CACHE[u] = null; continue; }
+      const rows = await r.json();
+      const pfp = rows && rows[0] && rows[0].pfp ? rows[0].pfp : null;
+      PFP_CACHE[u] = pfp;
+      applyPfp(u, pfp);
+    } catch { PFP_CACHE[u] = null; }
   }
-
-  // Full page mode: show all sections
-  sectionEls.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
-  if (recentDivider) recentDivider.style.display = '';
-  grid.classList.remove('search-grid');
-
-  // Most Recent: top 3
-  const [hero, side1, side2, ...rest] = filtered;
-  let recentHtml = '';
-  recentHtml += buildHeroCard(hero[0], hero[1]);
-  recentHtml += `<div class="side-stack">`;
-  recentHtml += buildSideCard(side1[0], side1[1], 0);
-  recentHtml += buildSideCard(side2[0], side2[1], 1);
-  recentHtml += `</div>`;
-  recentGrid.innerHTML = recentHtml;
-
-  // All Posts: the rest (excluding newbie/relevant duplicates still shown)
-  const allPostsIds = new Set([hero[0], side1[0], side2[0], PINNED_ID]);
-  const allPosts = rest.filter(([id]) => !allPostsIds.has(id));
-  grid.innerHTML = `<div class="secondary-row">${allPosts.map(([id, a]) => buildRegCard(id, a)).join('')}</div>`;
-
-  // Newbies section
-  const newbiePosts = NEWBIE_IDS.filter(id => ARTICLES[id]).map(id => [id, ARTICLES[id]]);
-  newbiesGrid.innerHTML = newbiePosts.map(([id, a]) => buildRegCard(id, a)).join('');
-
-  // Relevant section
-  const relevantPosts = RELEVANT_IDS.filter(id => ARTICLES[id]).map(id => [id, ARTICLES[id]]);
-  relevantGrid.innerHTML = relevantPosts.map(([id, a]) => buildRegCard(id, a)).join('');
+}
+function applyPfp(username, pfp) {
+  if (!pfp) return;
+  const sel = `.news-card-pfp[data-username="${CSS.escape(username)}"]`;
+  document.querySelectorAll(sel).forEach(el => {
+    const fallback = (el.textContent || '?').trim().charAt(0);
+    el.innerHTML = `<img src="${pfp}" alt="" onerror="this.parentNode.textContent='${fallback.replace(/['"\\]/g,'')}'">`;
+  });
 }
 
-function buildHeroCard(id, a) {
-  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg, rgba(255,249,62,.1) 0%, rgba(255,249,62,.02) 40%, transparent 70%),linear-gradient(to bottom, rgba(8,10,15,.05), rgba(8,10,15,.75)),url('${a.banner}') ;background-position:center;background-size:cover;"` : '';
-  return `
-    <div class="hero-card" onclick="openArticle('${id}')">
-      <div class="hero-card-img" ${imgStyle}>
-        <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
-      </div>
-      <div class="hero-card-body">
-        <div class="card-meta">
-          <span class="card-date">${a.date}</span>
-          <span class="card-readtime">${a.readTime}</span>
-        </div>
-        <div class="hero-card-title">${a.title}</div>
-        <div class="hero-card-excerpt">${getExcerpt(a.content)}</div>
-        <div class="hero-card-footer">
-          <div class="author-chip"><div class="author-chip-av">${a.authorInitial}</div>${a.bylineName}</div>
-          <span class="read-link">Read Article →</span>
-        </div>
-      </div>
-    </div>`;
+function filterNewsroom(val) {
+  searchQuery = val || '';
+  renderGrid();
 }
+// Backwards compat for older inline handler if any survives
+function filterBlogPosts(val) { return filterNewsroom(val); }
 
-function buildSideCard(id, a, i) {
-  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg, rgba(255,249,62,.07) 0%, transparent 60%),linear-gradient(to bottom, rgba(8,10,15,.1), rgba(8,10,15,.8)),url('${a.banner}');background-position:center;background-size:cover;"` : '';
-  return `
-    <div class="side-card" onclick="openArticle('${id}')">
-      <div class="side-card-img" ${imgStyle}></div>
-      <div class="side-card-body">
-        <div class="card-meta">
-          <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
-          <span class="card-date">${a.date}</span>
-        </div>
-        <div class="side-card-title">${a.title}</div>
-        <div class="side-card-excerpt">${getExcerpt(a.content).slice(0, 100)}...</div>
-        <div class="card-meta" style="margin-bottom:0;margin-top:auto;">
-          <div class="author-chip"><div class="author-chip-av">${a.authorInitial}</div>${a.bylineName}</div>
-          <span class="read-link" style="margin-left:auto;">Read →</span>
-        </div>
-      </div>
-    </div>`;
-}
-
-function buildRegCard(id, a, i) {
-  const delay = i !== undefined ? `style="animation-delay:${(i * 0.06) + 0.1}s"` : '';
-  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg, rgba(255,249,62,.06) 0%, transparent 55%),linear-gradient(to bottom, rgba(8,10,15,.1), rgba(8,10,15,.78)),url('${a.banner}');background-position:center;background-size:cover;"` : '';
-  return `
-    <div class="reg-card fade-up" ${delay} onclick="openArticle('${id}')">
-      <div class="reg-card-img" ${imgStyle}></div>
-      <div class="reg-card-body">
-        <div class="card-meta">
-          <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
-          <span class="card-date">${a.date}</span>
-          <span class="card-readtime">${a.readTime}</span>
-        </div>
-        <div class="reg-card-title">${a.title}</div>
-        <div class="reg-card-excerpt">${getExcerpt(a.content)}</div>
-        <div class="card-meta" style="margin-bottom:0;margin-top:auto;">
-          <div class="author-chip"><div class="author-chip-av">${a.authorInitial}</div>${a.bylineName}</div>
-          <span class="read-link" style="margin-left:auto;">Read →</span>
-        </div>
-      </div>
-    </div>`;
-}
-function filterBlogPosts(val) { renderPostGrid(val); }
-
-// Render pinned card dynamically
-(function renderPinned() {
-  const a = ARTICLES[PINNED_ID]; if (!a) return;
-  const el = document.getElementById('pinned-card');
-  if (!el) return;
-  el.onclick = function() { openArticle(PINNED_ID); };
-  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg,rgba(255,249,62,.1) 0%,rgba(255,249,62,.02) 40%,transparent 70%),linear-gradient(to bottom,rgba(8,10,15,.1),rgba(8,10,15,.6)),url('${a.banner}') center/cover;"` : '';
-  el.innerHTML = `
-    <div class="pinned-card-img" ${imgStyle}></div>
-    <div class="pinned-card-body">
-      <div class="pinned-badge">📌 Pinned</div>
-      <div class="card-meta">
-        <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
-        <span class="card-date">${a.date}</span>
-        <span class="card-readtime">⏱ ${a.readTime}</span>
-      </div>
-      <div class="pinned-card-title">${a.title}</div>
-      <div class="pinned-card-excerpt">${getExcerpt(a.content)}</div>
-      <div class="card-meta" style="margin-bottom:0;">
-        <div class="author-chip"><div class="author-chip-av">${a.authorInitial}</div>${a.bylineName} · ${a.authorPillLabel}</div>
-        <span class="read-link" style="margin-left:auto;">Read Article →</span>
-      </div>
-    </div>`;
-})();
-
-// ── Load announcements from Supabase as blog posts ──
-(async function loadAnnouncementPosts() {
+// ── Load Supabase admin announcements (existing source) ──
+async function loadAdminAnnouncements() {
   try {
-    const SB_URL = 'https://ufnjjddqnicbzyjfawrb.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbmpqZGRxbmljYnp5amZhd3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NTkzMjgsImV4cCI6MjA4ODIzNTMyOH0.5Sfc_wQO6T3mQT6lqsPTAntqyxhDZJqTrZ3GNkyQSEk';
-    const res = await fetch(SB_URL + '/rest/v1/admin_kv?key=eq.announcements&select=data', {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-    });
-    if (!res.ok) return;
+    const res = await fetch(SB_URL + '/rest/v1/admin_kv?key=eq.announcements&select=data', { headers: SB_HEADERS });
+    if (!res.ok) return 0;
     const rows = await res.json();
-    if (!rows?.length || !rows[0]?.data) return;
+    if (!rows?.length || !rows[0]?.data) return 0;
     const announcements = rows[0].data;
-    if (!Array.isArray(announcements)) return;
+    if (!Array.isArray(announcements)) return 0;
     const published = announcements.filter(a => a.published && a.title);
-    if (!published.length) return;
     let added = 0;
     for (const a of published) {
       const slug = 'ann_' + (a.id || '').replace(/[^a-z0-9_]/gi, '_');
       if (ARTICLES[slug]) continue;
-      // Convert announcement body to blog HTML
       let bodyHtml = (a.body || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       bodyHtml = bodyHtml.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       bodyHtml = bodyHtml.replace(/__(.*?)__/g, '<em>$1</em>');
-      // Split into paragraphs
       const lines = bodyHtml.split(/\n+/);
       let content = '<p class="lead">' + (lines[0] || '') + '</p>';
       const rest = lines.slice(1);
@@ -896,25 +1029,24 @@ function filterBlogPosts(val) { renderPostGrid(val); }
       for (const line of rest) {
         if (line.startsWith('• ') || line.startsWith('- ')) {
           if (!inBullets) { content += '<ul>'; inBullets = true; }
-          content += '<li>' + line.replace(/^[•\-]\s*/, '') + '</li>';
+          content += '<li>' + line.replace(/^[\u2022\-]\s*/, '') + '</li>';
         } else {
           if (inBullets) { content += '</ul>'; inBullets = false; }
           if (line.trim()) content += '<p>' + line + '</p>';
         }
       }
       if (inBullets) content += '</ul>';
-      // Format date
       let dateStr = '';
       try {
         const d = new Date(a.createdAt);
         dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       } catch { dateStr = 'Recent'; }
       const authorName = a.author || a.createdBy || 'Fortized';
-      const initial = authorName.charAt(0).toUpperCase();
       ARTICLES[slug] = {
         category: 'Announcement', date: dateStr, readTime: Math.max(1, Math.ceil((a.body||'').split(/\s+/).length / 200)) + ' min read',
-        authorInitial: initial, authorPillLabel: 'Fortized',
+        authorInitial: authorName.charAt(0).toUpperCase(), authorPillLabel: 'Fortized',
         title: a.title, bylineName: authorName,
+        authorUsername: authorName,
         bylineRole: 'Fortized Team',
         tagClass: 'tag-announce', tagLabel: 'Announcement',
         banner: a.image || '/Fortized banner.png?v=2',
@@ -922,31 +1054,101 @@ function filterBlogPosts(val) { renderPostGrid(val); }
       };
       added++;
     }
-    if (added) {
-      renderPostGrid();
-      const countEl = document.getElementById('article-count');
-      if (countEl) countEl.textContent = Object.keys(ARTICLES).length;
-      // Check if current URL has an announcement article
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get('article');
-      if (id && ARTICLES[id] && id.startsWith('ann_')) {
-        renderArticle(id);
+    return added;
+  } catch(e) { console.warn('[Newsroom] admin announcements load failed:', e); return 0; }
+}
+
+// ── Auto-import announcement-room posts from Bastions ──
+async function loadForumAnnouncementPosts() {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/global_bastions?select=id,data&limit=200', { headers: SB_HEADERS });
+    if (!r.ok) return 0;
+    const bastions = await r.json();
+    if (!Array.isArray(bastions)) return 0;
+
+    // Find channels typed/categorised as announcement
+    const annChannels = [];
+    for (const b of bastions) {
+      const name = (b.data && (b.data.name || b.data.title)) || 'Bastion';
+      // Bastions sometimes store channels under various keys
+      const buckets = [b.data && b.data.channels, b.data && b.data.rooms, b.data && b.data.chambers].filter(Array.isArray);
+      const list = [].concat(...buckets);
+      for (const ch of list) {
+        const t = String((ch && (ch.type || ch.kind || ch.category)) || '').toLowerCase();
+        if (t === 'announcement' || t === 'announcements') {
+          if (ch && ch.id) annChannels.push({ bastionId: b.id, bastionName: name, channelId: ch.id, channelName: ch.name || 'Announcements' });
+        }
       }
     }
-  } catch(e) { console.warn('[Blog] Failed to load announcements:', e); }
+    if (!annChannels.length) return 0;
+
+    let added = 0;
+    for (const c of annChannels) {
+      const r2 = await fetch(`${SB_URL}/rest/v1/bastion_msgs?bastion_id=eq.${encodeURIComponent(c.bastionId)}&channel_id=eq.${encodeURIComponent(c.channelId)}&select=id,from,text,timestamp,time&limit=15&order=timestamp.desc`, { headers: SB_HEADERS });
+      if (!r2.ok) continue;
+      const msgs = await r2.json();
+      if (!Array.isArray(msgs)) continue;
+      for (const m of msgs) {
+        if (!m || !m.text) continue;
+        if (String(m.text).trim().length < 80) continue; // skip short chatter
+        const slug = 'forum_' + slugifyUsername(c.bastionId) + '_' + slugifyUsername(c.channelId) + '_' + slugifyUsername(m.id);
+        if (ARTICLES[slug]) continue;
+        const lines = String(m.text).split(/\n+/).filter(Boolean);
+        const title = (lines[0] || 'Announcement').slice(0, 120);
+        const restLines = lines.slice(1);
+        let content = '<p class="lead">' + escAttr(lines[0] || '') + '</p>';
+        for (const line of restLines) content += '<p>' + escAttr(line) + '</p>';
+        let dateStr = '';
+        try {
+          const ts = m.timestamp ? (Number.isFinite(+m.timestamp) ? +m.timestamp : new Date(m.timestamp).getTime()) : Date.now();
+          dateStr = new Date(ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        } catch { dateStr = 'Recent'; }
+        ARTICLES[slug] = {
+          category: 'Announcement',
+          date: dateStr,
+          readTime: Math.max(1, Math.ceil(String(m.text).split(/\s+/).length / 200)) + ' min read',
+          authorInitial: (m.from || 'F').charAt(0).toUpperCase(),
+          authorPillLabel: c.bastionName,
+          title,
+          bylineName: m.from || 'Fortized',
+          authorUsername: m.from || '',
+          bylineRole: c.bastionName + ' · ' + c.channelName,
+          tagClass: 'tag-announce',
+          tagLabel: 'Announcement',
+          banner: '/Fortized banner.png?v=2',
+          fromAnnouncement: true,
+          fromBastion: c.bastionName,
+          content
+        };
+        added++;
+      }
+    }
+    return added;
+  } catch (e) {
+    console.warn('[Newsroom] forum announcements load failed:', e);
+    return 0;
+  }
+}
+
+// ── Bootstrap ──
+renderCategories();
+renderGrid();
+
+(async () => {
+  const [a, b] = await Promise.all([loadAdminAnnouncements(), loadForumAnnouncementPosts()]);
+  if (a + b > 0) { renderCategories(); renderGrid(); }
+  // Open article from URL after load (may target dynamic slug)
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('article');
+  if (id && ARTICLES[id]) renderArticle(id);
 })();
-
-renderPostGrid();
-
-// Update article count
-const countEl = document.getElementById('article-count');
-if (countEl) countEl.textContent = Object.keys(ARTICLES).length;
 
 (function() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('article');
   if (id && ARTICLES[id]) { renderArticle(id); history.replaceState({ articleId: id }, '', window.location.href); }
 })();
+
 </script>
 <script>if (typeof twemoji !== 'undefined') { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); }</script>
 <script>(()=>{const n=document.getElementById('mainNav');if(!n)return;window.addEventListener('scroll',()=>n.classList.toggle('scrolled',window.scrollY>40),{passive:true});if(window.scrollY>40)n.classList.add('scrolled');})();</script></body>

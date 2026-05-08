@@ -705,7 +705,7 @@ app.get('/invite', async (req, res) => {
     if (bastion) {
       const ogTags = `<meta property="og:title" content="${(bastion.name||'Bastion').replace(/"/g,'&quot;')} — Fortized">
     <meta property="og:description" content="${(bastion.desc||bastion.tagline||'Join this bastion on Fortized!').replace(/"/g,'&quot;').slice(0,200)}">
-    <meta property="og:image" content="${bastion.banner||bastion.icon||'https://fortized.com/Fortized banner.png'}">
+    <meta property="og:image" content="${bastion.banner||bastion.icon||'https://fortized.com/Fortized banner.png?v=2'}">
     <meta property="og:url" content="https://fortized.com/app?invite=${code}">
     <meta name="theme-color" content="#fff93e">`;
       html = html.replace('</head>', ogTags + '\n</head>');

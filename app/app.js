@@ -3719,7 +3719,7 @@ function _renderAdHTML(ad, size) {
     // so placeholder + loaded states share the same footprint. The image just fills it.
     return `<div class="ad-banner-inner">
       <a style="cursor:pointer;" onclick="_adClickAction(window['${adKey}'])">
-        <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
+        <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png?v=2')}" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
       </a>
       ${meta.replace('<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 2px 0;">','<div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;">')}
     </div>`;
@@ -3727,7 +3727,7 @@ function _renderAdHTML(ad, size) {
     return `<div style="text-align:center;padding:6px 0;">
       <div style="width:300px;margin:0 auto;">
         <a style="display:block;cursor:pointer;border-radius:10px;overflow:hidden;" onclick="_adClickAction(window['${adKey}'])">
-          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:300px;height:250px;object-fit:cover;display:block;border-radius:10px;" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
+          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png?v=2')}" style="width:300px;height:250px;object-fit:cover;display:block;border-radius:10px;" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
         </a>
         ${meta}
       </div>
@@ -4805,7 +4805,7 @@ function showDMFriendsHome() {
   wrap.innerHTML = `
     <div id="dm-friends-home" style="flex:1;overflow-y:auto;">
       <div class="disc-hero" style="height:140px;">
-        <img src="/Fortized banner.png" class="disc-hero-bg" alt="" onerror="this.style.display='none'">
+        <img src="/Fortized banner.png?v=2" class="disc-hero-bg" alt="" onerror="this.style.display='none'">
         <div class="disc-hero-fade"></div>
         <div class="disc-hero-content">
           <h1 style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin:0 0 3px;text-shadow:0 2px 12px rgba(0,0,0,.5);">Friends</h1>
@@ -21285,7 +21285,7 @@ function _renderAdminAdRow(m, totalWeight) {
   const ad = m.ad;
   const share = totalWeight > 0 ? ((m.effW / totalWeight) * 100) : 0;
   const ratio = ad.ratio || 'banner';
-  const img = ad.image || ad.bastionIcon || '/Fortized banner.png';
+  const img = ad.image || ad.bastionIcon || '/Fortized banner.png?v=2';
   const target = ad.customLink || (ad.bastionName ? `@${ad.bastionName}` : (ad.bastionId || '—'));
   const roleColor = m.role === 'superadmin' ? '#fff93e' : m.role === 'admin' ? '#60a5fa' : ad.ownerVerified ? '#4ecdc4' : '#9ca3af';
   const expires = ad.expiresAt ? new Date(ad.expiresAt) : null;
@@ -21293,7 +21293,7 @@ function _renderAdminAdRow(m, totalWeight) {
   const adId = ad.id || '';
   return `
     <div class="adm-ads-row" data-ad-id="${escapeHTML(adId)}">
-      <div class="adm-ads-preview"><img src="${escapeHTML(img)}" alt="" onerror="this.style.opacity='.2';this.src='/Fortized banner.png';"></div>
+      <div class="adm-ads-preview"><img src="${escapeHTML(img)}" alt="" onerror="this.style.opacity='.2';this.src='/Fortized banner.png?v=2';"></div>
       <div class="adm-ads-info">
         <div class="adm-ads-row-title">${escapeHTML(ad.title || ad.bastionName || 'Untitled ad')}</div>
         <div class="adm-ads-row-meta">
@@ -35646,7 +35646,7 @@ async function _forumInit() {
   root.innerHTML = `
     <div class="forum-scroll" id="forum-scroll-shell">
       <div class="disc-hero" style="height:140px;">
-        <img src="/Fortized banner.png" class="disc-hero-bg" alt="" onerror="this.style.display='none'">
+        <img src="/Fortized banner.png?v=2" class="disc-hero-bg" alt="" onerror="this.style.display='none'">
         <div class="disc-hero-fade"></div>
         <div class="disc-hero-content">
           <h1 style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin:0 0 3px;text-shadow:0 2px 12px rgba(0,0,0,.5);">Fortized Forum</h1>

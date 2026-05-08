@@ -193,7 +193,89 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
 @media(max-width:900px){.nav-pill-group{display:none}.nav-sep{display:none}.nav-hamburger{display:flex}}
 @media(max-width:600px){.nav-btn-login{display:none}}
 @media(max-width:768px){.nav-root{padding:0 18px}}
-body{padding-top:56px}/* nav-fixed-padding */</style>
+body{padding-top:56px}/* nav-fixed-padding */
+/* ── Page redesign overlay — match homepage bubble cards ── */
+/* Cardified surfaces */
+.pinned-card, .hero-card, .side-card, .reg-card,
+.help-card, .kb-card, .contact-card, .status-card,
+.doc-row, .article-byline, .faq {
+  background: linear-gradient(160deg, rgba(18,22,34,.95) 0%, rgba(10,13,20,.92) 100%);
+  border: 1px solid #1a2030;
+  position: relative;
+  isolation: isolate;
+  transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .25s, box-shadow .35s;
+}
+.pinned-card, .hero-card, .side-card, .reg-card,
+.help-card, .kb-card, .contact-card, .status-card,
+.article-byline { border-radius: 22px; }
+.faq { border-radius: 16px; margin-bottom: 10px; }
+.doc-row { border-radius: 22px; padding: 24px 26px; border-bottom: none !important; }
+
+/* Subtle accent radial in top-right */
+.pinned-card::before, .hero-card::before, .side-card::before, .reg-card::before,
+.help-card::before, .kb-card::before, .contact-card::before, .doc-row::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(circle at 80% -10%, rgba(255,249,62,.10), transparent 55%);
+  pointer-events: none; z-index: 0;
+}
+.pinned-card > *, .hero-card > *, .side-card > *, .reg-card > *,
+.help-card > *, .kb-card > *, .contact-card > *, .doc-row > * { position: relative; z-index: 1; }
+
+/* Hover lift + accent edge */
+.pinned-card:hover, .hero-card:hover, .side-card:hover, .reg-card:hover,
+.help-card:hover, .kb-card:hover, .doc-row:hover {
+  border-color: rgba(255,249,62,.22);
+  box-shadow: 0 28px 70px rgba(0,0,0,.55), 0 0 50px rgba(255,249,62,.06);
+  transform: translateY(-4px);
+}
+.doc-row:hover { padding-left: 26px !important; padding-right: 26px !important; background: linear-gradient(160deg, rgba(22,26,40,.95) 0%, rgba(13,16,26,.92) 100%); }
+
+/* doc-list gap so cards breathe */
+.doc-list { display: flex; flex-direction: column; gap: 14px; }
+
+/* Hero — match homepage scale + accent em */
+.hero h1 { font-family: 'Syne', sans-serif; font-size: 60px; font-weight: 800; letter-spacing: -2.4px; line-height: .96; color: #fff; }
+.hero h1 em { font-style: normal; color: #fff93e; }
+.hero-sub { font-size: 16px; }
+
+/* Section heading with accent bar */
+h2.section-h, .section-h {
+  font-family: 'Syne', sans-serif;
+  font-size: 30px; font-weight: 800; letter-spacing: -.9px;
+  color: #fff;
+  display: inline-flex; align-items: center; gap: 14px;
+  margin-bottom: 24px;
+}
+h2.section-h::before, .section-h::before {
+  content: ""; width: 22px; height: 2px; background: #fff93e;
+  border-radius: 2px;
+}
+.hub-section-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+  color: #fff93e !important;
+  border-bottom: none !important;
+  padding-bottom: 6px !important;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.hub-section-label::before {
+  content: ""; width: 18px; height: 1.5px; background: #fff93e;
+}
+
+/* CTA buttons */
+.nav-btn, .submit-btn {
+  background: #fff93e; color: #0a0d14;
+  font-family: 'Syne', sans-serif; font-weight: 700;
+}
+
+/* Modal panel — bubble look */
+.modal { border-radius: 24px; background: linear-gradient(160deg, rgba(18,22,34,.95), rgba(10,13,20,.92)); }
+
+@media (max-width: 768px) {
+  .hero h1 { font-size: 38px; letter-spacing: -1.4px; }
+  h2.section-h, .section-h { font-size: 22px; }
+}
+</style>
 </head>
 <body>
 
@@ -222,7 +304,7 @@ body{padding-top:56px}/* nav-fixed-padding */</style>
   <div class="grid-overlay"></div>
   <div class="hero-inner">
     <div class="hero-eyebrow">Help Center</div>
-    <h1>How can we help?</h1>
+    <h1>How can we <em>help?</em></h1>
     <p class="hero-sub">Search for answers, browse guides, or get in touch with our team.</p>
   </div>
 </div>

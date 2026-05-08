@@ -463,19 +463,15 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 .bubble-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 22px 20px;
+  grid-auto-rows: minmax(280px, auto);
+  gap: 20px;
   max-width: 1240px;
   margin: 0 auto;
   position: relative; z-index: 1;
-  align-items: start;
 }
-/* Messy stagger: each card sits at a different vertical offset */
-.bubble:nth-child(1) { margin-top: 0;    --tilt: -.6deg; }
-.bubble:nth-child(2) { margin-top: 56px; --tilt:  .8deg; }
-.bubble:nth-child(3) { margin-top: 24px; --tilt: -.4deg; }
-.bubble:nth-child(4) { margin-top: 0;    --tilt:  .5deg; }
-.bubble:nth-child(5) { margin-top: 40px; --tilt: -.7deg; }
-.bubble:nth-child(6) { margin-top: 16px; --tilt:  .4deg; }
+/* Bento spans: card 1 = wide hero, card 6 = full-width footer */
+.bubble.span-2 { grid-column: span 2; }
+.bubble.span-3 { grid-column: span 3; }
 
 .bubble {
   position: relative;
@@ -483,19 +479,19 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     linear-gradient(160deg, rgba(18,22,34,.95) 0%, rgba(10,13,20,.92) 100%);
   border: 1px solid var(--border);
   border-radius: 26px;
-  padding: 210px 30px 30px;
+  padding: 200px 30px 30px;
   overflow: visible;
   isolation: isolate;
   transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .25s, box-shadow .35s;
-  opacity: 0; transform: translateY(28px) rotate(0deg);
+  opacity: 0; transform: translateY(28px);
+  display: flex; flex-direction: column;
 }
 .bubble.visible {
   animation: bubbleIn .65s cubic-bezier(.22,1,.36,1) forwards;
 }
 @keyframes bubbleIn {
-  to { opacity: 1; transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.bubble.visible { transform: translateY(0) rotate(var(--tilt, 0deg)); }
 .bubble::before {
   content: "";
   position: absolute; inset: 0;
@@ -515,7 +511,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   z-index: 0;
 }
 .bubble:hover {
-  transform: translateY(-8px) rotate(0deg);
+  transform: translateY(-6px);
   border-color: rgba(255,249,62,.25);
   box-shadow:
     0 32px 80px rgba(0,0,0,.55),
@@ -524,19 +520,38 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 }
 .bubble:hover::before { opacity: 1.2; }
 
+/* ── Wide / full bento variants: side-by-side icon and content ── */
+.bubble.span-2,
+.bubble.span-3 {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  padding: 38px 40px;
+  gap: 24px;
+}
+.bubble.span-2 .bubble-body,
+.bubble.span-3 .bubble-body {
+  position: relative; z-index: 1;
+  max-width: 560px;
+}
+.bubble.span-3 .bubble-body { max-width: 720px; }
+
 .bubble-icon-wrap {
   position: absolute;
-  top: -34px; right: -22px;
-  width: 200px; height: 200px;
+  top: -32px; right: -20px;
+  width: 180px; height: 180px;
   pointer-events: none;
   z-index: 2;
-  perspective: 800px;
 }
-/* Vary icon position per card so it doesn't feel cookie-cutter */
-.bubble:nth-child(2) .bubble-icon-wrap { right: auto; left: -28px; top: -26px; width: 190px; height: 190px; }
-.bubble:nth-child(4) .bubble-icon-wrap { right: -16px; top: -44px; width: 215px; height: 215px; }
-.bubble:nth-child(5) .bubble-icon-wrap { right: auto; left: -22px; top: -38px; width: 205px; height: 205px; }
-.bubble:nth-child(6) .bubble-icon-wrap { right: -28px; top: -28px; width: 185px; height: 185px; }
+.bubble.span-2 .bubble-icon-wrap,
+.bubble.span-3 .bubble-icon-wrap {
+  position: relative;
+  top: auto; right: auto;
+  width: 220px; height: 220px;
+  flex-shrink: 0;
+}
+.bubble.span-3 .bubble-icon-wrap { width: 240px; height: 240px; }
+
 .bubble-icon {
   width: 100%; height: 100%;
   object-fit: contain;
@@ -570,29 +585,52 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 }
 .bubble h3 {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 800;
-  letter-spacing: -.8px;
+  letter-spacing: -.7px;
   line-height: 1.05;
   margin-bottom: 12px;
   position: relative; z-index: 1;
 }
+.bubble.span-2 h3 { font-size: 36px; letter-spacing: -1px; }
+.bubble.span-3 h3 { font-size: 42px; letter-spacing: -1.4px; line-height: 1; }
 .bubble p {
   font-size: 14.5px;
   color: var(--muted-light);
   line-height: 1.68;
   position: relative; z-index: 1;
 }
+.bubble.span-2 p, .bubble.span-3 p { font-size: 15.5px; line-height: 1.65; }
 
-/* Feature row - things people will see beneath */
+/* "FREE" callout pill specific to the Earn card */
+.free-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: #080a0f;
+  background: var(--accent);
+  border-radius: 100px;
+  padding: 6px 14px;
+  margin-left: 10px;
+  box-shadow: 0 0 24px rgba(255,249,62,.35);
+  vertical-align: middle;
+}
+.free-pill::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  background: #080a0f; opacity: .85;
+}
+
+/* Feature row — small footer tag list inside cards */
 .bubble-meta {
-  margin-top: 22px;
+  margin-top: auto;
   padding-top: 18px;
   border-top: 1px solid rgba(255,255,255,.05);
   display: flex; align-items: center; gap: 10px;
   font-size: 12px; color: var(--muted);
   position: relative; z-index: 1;
 }
+.bubble.span-2 .bubble-meta,
+.bubble.span-3 .bubble-meta { margin-top: 18px; }
 .bubble-meta .pulse {
   width: 6px; height: 6px; border-radius: 50%;
   background: #4ade80;
@@ -605,55 +643,108 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 }
 
 /* ════════════════════════════════════════════
-   SAFETY STRIP (slim trust row)
+   RAMPARTS (defense panel — matches bubble cards)
 ════════════════════════════════════════════ */
-.trust-strip {
-  margin: 110px auto 0;
-  max-width: 1280px;
+.ramparts {
+  margin: 100px auto 0;
+  max-width: 1240px;
   padding: 0 72px;
   position: relative; z-index: 1;
 }
-.trust-inner {
-  background: linear-gradient(135deg, rgba(18,22,34,.7), rgba(10,13,20,.85));
+.ramparts-inner {
+  position: relative;
+  background:
+    linear-gradient(160deg, rgba(18,22,34,.95) 0%, rgba(10,13,20,.92) 100%);
   border: 1px solid var(--border);
-  border-radius: 22px;
-  padding: 26px 36px;
-  display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
-  position: relative; overflow: hidden;
+  border-radius: 26px;
+  padding: 44px 44px 36px;
+  isolation: isolate;
+  overflow: hidden;
+  transition: border-color .25s, box-shadow .35s;
 }
-.trust-inner::before {
-  content: ""; position: absolute;
-  top: 0; left: 50%; transform: translateX(-50%);
-  width: 50%; height: 1.5px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+.ramparts-inner::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: 26px;
+  background: radial-gradient(circle at 75% -10%, rgba(255,249,62,.13), transparent 55%);
+  opacity: .9;
+  pointer-events: none;
+  z-index: 0;
 }
-.trust-icon {
-  width: 44px; height: 44px;
+.ramparts-inner::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(255,255,255,.04), transparent 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+.ramparts-inner:hover {
+  border-color: rgba(255,249,62,.22);
+  box-shadow: 0 32px 80px rgba(0,0,0,.55), 0 0 60px rgba(255,249,62,.08);
+}
+
+.ramparts-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 22px;
+  align-items: center;
+  padding-bottom: 26px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  margin-bottom: 26px;
+  position: relative; z-index: 1;
+}
+.ramparts-icon {
+  width: 64px; height: 64px;
   background: rgba(255,249,62,.07);
-  border: 1px solid rgba(255,249,62,.14);
-  border-radius: 12px;
+  border: 1px solid rgba(255,249,62,.18);
+  border-radius: 18px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 0 28px rgba(255,249,62,.12);
 }
-.trust-icon img { width: 24px; height: 24px; object-fit: contain; }
-.trust-text {
-  flex: 1; min-width: 240px;
+.ramparts-icon img { width: 36px; height: 36px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255,249,62,.4)); }
+.ramparts-head .bubble-tag { margin-bottom: 8px; }
+.ramparts-head h2 {
   font-family: var(--font-display);
-  font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -.3px;
+  font-size: 32px; font-weight: 800; letter-spacing: -.9px;
+  line-height: 1.05; margin-bottom: 8px;
 }
-.trust-text span { color: var(--accent); }
-.trust-pillars {
-  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+.ramparts-head h2 span { color: var(--accent); }
+.ramparts-head p {
+  font-size: 14.5px; color: var(--muted-light); line-height: 1.6;
+  max-width: 560px;
 }
-.trust-pillar {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; color: var(--muted-light);
+
+.ramparts-pillars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  position: relative; z-index: 1;
 }
-.trust-pillar .ti-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px rgba(255,249,62,.5);
-  flex-shrink: 0;
+.rampart {
+  background: rgba(255,255,255,.02);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 18px 18px 18px;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: border-color .2s, background .2s;
+}
+.rampart:hover {
+  border-color: rgba(255,249,62,.2);
+  background: rgba(255,249,62,.025);
+}
+.rampart-num {
+  font-family: var(--font-display);
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  color: var(--accent);
+}
+.rampart-title {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.3px;
+}
+.rampart-desc {
+  font-size: 12.5px; color: var(--muted-light); line-height: 1.55;
 }
 
 /* ════════════════════════════════════════════
@@ -683,26 +774,42 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
 ════════════════════════════════════════════ */
 @media (max-width: 1180px) {
   .bubble-grid { grid-template-columns: repeat(2, 1fr); }
+  .bubble.span-2, .bubble.span-3 { grid-column: span 2; }
+  .ramparts-pillars { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 1024px) {
   .hero { grid-template-columns: 1fr; padding-top: 130px; min-height: auto; }
   .hero-right { display: none; }
   .hero h1 { font-size: 52px; }
   .bubbles-head h2 { font-size: 42px; }
+  .ramparts-head h2 { font-size: 28px; }
 }
 @media (max-width: 768px) {
   .nav-root { padding: 0 18px; }
-  .bubbles, .trust-strip, footer { padding-left: 24px; padding-right: 24px; }
+  .bubbles, .ramparts, footer { padding-left: 24px; padding-right: 24px; }
   .hero { padding-left: 24px; padding-right: 24px; }
   .hero h1 { font-size: 42px; letter-spacing: -2px; }
   .bubbles-head h2 { font-size: 34px; letter-spacing: -1px; }
   .bubble-grid { grid-template-columns: 1fr; gap: 14px; }
-  .bubble { padding: 190px 24px 26px; }
-  .bubble:nth-child(n) { margin-top: 0; --tilt: 0deg; }
-  .bubble-icon-wrap,
-  .bubble:nth-child(n) .bubble-icon-wrap { width: 175px; height: 175px; top: -26px; right: -14px; left: auto; }
+  .bubble.span-2, .bubble.span-3 { grid-column: span 1; }
+  .bubble { padding: 180px 22px 24px; }
+  .bubble.span-2, .bubble.span-3 {
+    grid-template-columns: 1fr;
+    text-align: left;
+    padding: 160px 22px 24px;
+  }
+  .bubble.span-2 .bubble-icon-wrap, .bubble.span-3 .bubble-icon-wrap {
+    position: absolute; top: -28px; right: -14px;
+    width: 170px; height: 170px;
+  }
+  .bubble-icon-wrap { width: 165px; height: 165px; top: -22px; right: -12px; }
   .bubble h3 { font-size: 26px; }
-  .trust-inner { padding: 22px 24px; }
+  .bubble.span-2 h3 { font-size: 30px; }
+  .bubble.span-3 h3 { font-size: 32px; }
+  .ramparts-inner { padding: 28px 22px 24px; }
+  .ramparts-head { grid-template-columns: 1fr; gap: 14px; }
+  .ramparts-head h2 { font-size: 24px; }
+  .ramparts-pillars { grid-template-columns: 1fr; }
   footer { grid-template-columns: 1fr; text-align: center; }
   .footer-left { justify-content: center; }
   .footer-links { justify-content: center; }
@@ -795,90 +902,122 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
 <section class="bubbles" id="features">
   <div class="bubbles-head">
     <div class="section-label">The Toolkit</div>
-    <h2>Built for the <span>squad.</span></h2>
+    <h2>More than just a <span>chat app.</span></h2>
     <p>Everything you need to run a community. Nothing you don't.</p>
   </div>
 
   <div class="bubble-grid">
 
-    <article class="bubble" data-rot="-12" data-speed="0.12" style="--bx: 72%; --by: -12%;">
+    <!-- 01 — Create (wide hero) -->
+    <article class="bubble span-2" data-rot="-8" data-speed="0.10" style="--bx: 78%; --by: -10%;">
+      <div class="bubble-body">
+        <span class="bubble-tag"><span class="dot"></span>Build</span>
+        <h3>Create your bastion.</h3>
+        <p>Spin up a community in minutes. Set up rooms, ranks, roles and permissions, then open the Creator tab to brand it, design invites, and shape the whole vibe of your space.</p>
+        <div class="bubble-meta"><span class="pulse"></span>Rooms · Ranks · Creator tab · Branding</div>
+      </div>
       <div class="bubble-icon-wrap">
         <img class="bubble-icon" src="Icons/FortizedHelmet.png" alt="">
       </div>
-      <span class="bubble-tag"><span class="dot"></span>Build</span>
-      <h3>Create</h3>
-      <p>Spin up your bastion. Pick rooms, set ranks, write the rules. Your space.</p>
-      <div class="bubble-meta"><span class="pulse"></span>Rooms · Ranks · Roles</div>
     </article>
 
-    <article class="bubble" data-rot="14" data-speed="0.16" style="--bx: 30%; --by: -10%;">
+    <!-- 02 — Play -->
+    <article class="bubble" data-rot="12" data-speed="0.16" style="--bx: 70%; --by: -14%;">
       <div class="bubble-icon-wrap">
         <img class="bubble-icon" src="Icons/controller.png" alt="">
       </div>
       <span class="bubble-tag"><span class="dot"></span>Action</span>
       <h3>Play</h3>
-      <p>Show what you're playing. Squad up live, no stale status lines.</p>
-      <div class="bubble-meta"><span class="pulse"></span>Live presence · Squad-up</div>
+      <p>Share screenshots, go live, show off favourite games on your profile, and jump into Activities from Discover.</p>
+      <div class="bubble-meta"><span class="pulse"></span>Lives · Activities · Profile games</div>
     </article>
 
-    <article class="bubble" data-rot="-9" data-speed="0.14" style="--bx: 70%; --by: -14%;">
+    <!-- 03 — Talk -->
+    <article class="bubble" data-rot="-10" data-speed="0.14" style="--bx: 70%; --by: -10%;">
       <div class="bubble-icon-wrap">
         <img class="bubble-icon" src="Icons/headset.png" alt="">
       </div>
       <span class="bubble-tag"><span class="dot"></span>Voice</span>
       <h3>Talk</h3>
-      <p>Voice rooms that feel like sitting right next to your squad.</p>
-      <div class="bubble-meta"><span class="pulse"></span>Low-latency · PTT · Noise suppression</div>
+      <p>Hop into voice rooms or call any friend straight from their profile. No queue, no setup.</p>
+      <div class="bubble-meta"><span class="pulse"></span>Voice rooms · Profile calls</div>
     </article>
 
-    <article class="bubble" data-rot="11" data-speed="0.11" style="--bx: 65%; --by: -8%;">
+    <!-- 04 — Share -->
+    <article class="bubble" data-rot="9" data-speed="0.12" style="--bx: 70%; --by: -12%;">
       <div class="bubble-icon-wrap">
         <img class="bubble-icon" src="Icons/media.png" alt="">
       </div>
-      <span class="bubble-tag"><span class="dot"></span>Stream</span>
+      <span class="bubble-tag"><span class="dot"></span>Files</span>
       <h3>Share</h3>
-      <p>Drop clips, screenshots and links. Embeds, reactions, replies built in.</p>
-      <div class="bubble-meta"><span class="pulse"></span>Embeds · Reactions · Replies</div>
+      <p>Upload clips, screenshots, save files, art, anything. Drop it in chat, share it on a forum.</p>
+      <div class="bubble-meta"><span class="pulse"></span>Up to 100MB · Any format</div>
     </article>
 
-    <article class="bubble" data-rot="-15" data-speed="0.18" style="--bx: 30%; --by: -14%;">
+    <!-- 05 — Schedule -->
+    <article class="bubble" data-rot="-13" data-speed="0.18" style="--bx: 70%; --by: -14%;">
       <div class="bubble-icon-wrap">
         <img class="bubble-icon" src="Icons/Scheduling.png" alt="">
       </div>
       <span class="bubble-tag"><span class="dot"></span>Plan</span>
       <h3>Schedule</h3>
-      <p>Plan raids, set tournaments, ping the squad. Nobody misses kickoff.</p>
-      <div class="bubble-meta"><span class="pulse"></span>Events · RSVPs · Timezones</div>
+      <p>Each bastion has its own calendar. Pin events, raids, movie nights right inside your rooms.</p>
+      <div class="bubble-meta"><span class="pulse"></span>Bastion calendar · Events</div>
     </article>
 
-    <article class="bubble" data-rot="13" data-speed="0.13" style="--bx: 68%; --by: -10%;">
+    <!-- 06 — Earn (full-width footer card, hammers FREE) -->
+    <article class="bubble span-3" data-rot="10" data-speed="0.12" style="--bx: 82%; --by: -10%;">
+      <div class="bubble-body">
+        <span class="bubble-tag"><span class="dot"></span>Economy</span>
+        <h3>Earn it all<span class="free-pill">100% free</span></h3>
+        <p>Fortshop, Radiance, daily quests and the creator marketplace. Every cosmetic, every theme, every badge is earnable just by playing. No paywalls. No premium tier. No catch.</p>
+        <div class="bubble-meta"><span class="pulse"></span>Fortshop · Radiance · Quests · Creator marketplace</div>
+      </div>
       <div class="bubble-icon-wrap">
         <img class="bubble-icon" src="Icons/onyx3dicon.png" alt="">
       </div>
-      <span class="bubble-tag"><span class="dot"></span>Reward</span>
-      <h3>Customize</h3>
-      <p>Earn Onyx by playing. Spend it on themes, badges, emotes. Free.</p>
-      <div class="bubble-meta"><span class="pulse"></span>Onyx · Themes · Badges</div>
     </article>
 
   </div>
 </section>
 
-<!-- TRUST STRIP -->
-<div class="trust-strip">
-  <div class="trust-inner">
-    <div class="trust-icon">
-      <img src="FortizedSecurity logo.png" alt="">
+<!-- RAMPARTS (defense panel) -->
+<section class="ramparts" id="ramparts">
+  <div class="ramparts-inner">
+    <div class="ramparts-head">
+      <div class="ramparts-icon">
+        <img src="FortizedSecurity logo.png" alt="Fortized Security">
+      </div>
+      <div>
+        <span class="bubble-tag"><span class="dot"></span>Defense</span>
+        <h2>Ramparts designed to <span>withstand.</span></h2>
+        <p>Moderation, raid defense and granular controls baked into every bastion. Your community runs on your terms.</p>
+      </div>
     </div>
-    <div class="trust-text">Walls that <span>actually hold.</span></div>
-    <div class="trust-pillars">
-      <div class="trust-pillar"><span class="ti-dot"></span>Raid auto-lockdown</div>
-      <div class="trust-pillar"><span class="ti-dot"></span>AutoMod &amp; audit logs</div>
-      <div class="trust-pillar"><span class="ti-dot"></span>Per-rank permissions</div>
-      <div class="trust-pillar"><span class="ti-dot"></span>Age enforcement</div>
+    <div class="ramparts-pillars">
+      <div class="rampart">
+        <div class="rampart-num">01</div>
+        <div class="rampart-title">Raid lockdown</div>
+        <div class="rampart-desc">Auto-detects coordinated attacks and seals the bastion before it spreads.</div>
+      </div>
+      <div class="rampart">
+        <div class="rampart-num">02</div>
+        <div class="rampart-title">AutoMod</div>
+        <div class="rampart-desc">Filters, link blocking and audit logs scan every message in real time.</div>
+      </div>
+      <div class="rampart">
+        <div class="rampart-num">03</div>
+        <div class="rampart-title">Per-rank rules</div>
+        <div class="rampart-desc">Set permissions per room, per rank, even per message if you want.</div>
+      </div>
+      <div class="rampart">
+        <div class="rampart-num">04</div>
+        <div class="rampart-title">Age enforcement</div>
+        <div class="rampart-desc">Built-in age gating with the Fortized Security Department on watch.</div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
 <!-- FOOTER -->
 <footer>

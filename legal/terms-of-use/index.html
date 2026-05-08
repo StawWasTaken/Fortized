@@ -236,6 +236,24 @@ h2.section-h::before, .section-h::before {
   .hero h1 { font-size: 38px; letter-spacing: -1.4px; }
   h2.section-h, .section-h { font-size: 22px; }
 }
+
+/* ── Match homepage tone (bg + noise overlay) ── */ /* fortized-shared-tone */
+html, body { background: #080a0f; }
+body::before {
+  content: "";
+  position: fixed; inset: 0; z-index: 500;
+  pointer-events: none;
+  opacity: .018;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* ── Hero banner: less veil, more banner ── */
+.hero-banner img { opacity: .32; }
+.hero::before {
+  background: linear-gradient(115deg, rgba(8,10,15,.92) 26%, rgba(8,10,15,.40) 100%) !important;
+}
+.hero { border-bottom: 1px solid rgba(255,255,255,.05); }
 </style>
 </head>
 <body>

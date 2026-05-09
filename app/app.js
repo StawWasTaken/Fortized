@@ -19625,35 +19625,38 @@ async function submitReport() {
 
 // ── Admin data sync helpers ──
 // Each fetch lands in localStorage independently as soon as it resolves, so
-// one slow/failed table never gates the others. The console can render with
-// the cached copy immediately while the slow ones trickle in.
-function _admWithTimeout(promise, ms, fallback) {
+// one slow/failed table never gates the others. Crucially: a timeout or
+// failure NEVER stomps the cached copy — we keep the last good data.
+const _ADM_SYNC_SENTINEL = Symbol('adm-sync-fallback');
+function _admWithTimeout(promise, ms) {
   return Promise.race([
     promise,
-    new Promise(resolve => setTimeout(() => resolve(fallback), ms))
+    new Promise(resolve => setTimeout(() => resolve(_ADM_SYNC_SENTINEL), ms))
   ]);
 }
 async function _syncAdminData() {
-  const TIMEOUT = 8000;
+  const TIMEOUT = 12000;
   const tasks = [
-    ['ftz_reports',          FortizedSocial.adminGetReports,            []],
-    ['ftz_bans',             FortizedSocial.adminGetBans,               []],
-    ['ftz_staff',            FortizedSocial.adminGetStaff,              {admins:[],moderators:[]}],
-    ['ftz_audit_log',        FortizedSocial.adminGetAuditLog,           []],
-    ['ftz_global_settings',  FortizedSocial.adminGetGlobalSettings,     {}],
-    ['ftz_nsfw_queue',       FortizedSocial.adminGetNsfwQueue,          []],
-    ['ftz_nsfw_banned_hashes', FortizedSocial.adminGetNsfwBannedHashes, []],
-    ['ftz_support_tickets',  FortizedSocial.adminGetSupportTickets,     {}],
+    ['ftz_reports',          () => FortizedSocial.adminGetReports()],
+    ['ftz_bans',             () => FortizedSocial.adminGetBans()],
+    ['ftz_staff',            () => FortizedSocial.adminGetStaff()],
+    ['ftz_audit_log',        () => FortizedSocial.adminGetAuditLog()],
+    ['ftz_global_settings',  () => FortizedSocial.adminGetGlobalSettings()],
+    ['ftz_nsfw_queue',       () => FortizedSocial.adminGetNsfwQueue()],
+    ['ftz_nsfw_banned_hashes', () => FortizedSocial.adminGetNsfwBannedHashes()],
+    ['ftz_support_tickets',  () => FortizedSocial.adminGetSupportTickets()],
   ];
-  // Kick all of them off in parallel and persist as each resolves.
-  const settled = await Promise.allSettled(tasks.map(([key, fn, fb]) =>
+  const results = await Promise.allSettled(tasks.map(([key, fn]) =>
     _admWithTimeout(
-      Promise.resolve().then(() => fn ? fn.call(FortizedSocial) : fb).catch(() => fb),
-      TIMEOUT,
-      fb
+      Promise.resolve().then(() => fn()),
+      TIMEOUT
     ).then(value => {
+      // Sentinel = timed out. Don't touch the cache.
+      if (value === _ADM_SYNC_SENTINEL) { _wrn('[Staff] sync timeout for', key, '— keeping cached value'); return { key, ok: false, reason: 'timeout' }; }
+      // Skip writes for null/undefined too — keep the cached value rather than stomping it.
+      if (value === null || value === undefined) { return { key, ok: false, reason: 'empty' }; }
       try { localStorage.setItem(key, JSON.stringify(value)); } catch(_) {}
-      // Side effects for the values that drive in-memory state
+      // In-memory side effects only on success
       if (key === 'ftz_global_settings') _globalSettings = value || {};
       if (key === 'ftz_nsfw_banned_hashes') {
         const merged = [...new Set([...(_nsfwBannedHashes||[]), ...(value||[])])];
@@ -19661,10 +19664,10 @@ async function _syncAdminData() {
         try { localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(merged)); } catch(_) {}
       }
       return { key, ok: true };
-    }).catch(err => { _wrn('[Staff] sync failed for', key, err?.message); return { key, ok: false }; })
+    }).catch(err => { _wrn('[Staff] sync failed for', key, err?.message, '— keeping cached value'); return { key, ok: false, reason: err?.message }; })
   ));
-  const failed = settled.filter(r => r.value && r.value.ok === false).length;
-  if (failed) _wrn('[Staff] sync finished with', failed, 'failed table(s) — cached values still in use');
+  const failed = results.filter(r => r.value && r.value.ok === false).length;
+  if (failed) _wrn('[Staff] sync finished with', failed, 'partial(s) — cached values preserved');
 }
 
 async function _saveBanToServer(banObj) {
@@ -19792,21 +19795,39 @@ function _renderAdminNav(active) {
   const _admSvg = {
     dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
     moderation:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
-    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    management:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    members:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    bastions:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    economy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    broadcasts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2l13 4V7L3 11zm15-1v4l3-1v-2l-3-1z"/></svg>',
     feedback:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    system:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   };
-  // Simplified 5-tab structure
-  const tabs = [
-    {id:'dashboard', svg:_admSvg.dashboard, label:'Overview'},
+
+  // 8 top-level tabs in 3 grouped sections. The old "Platform Management"
+  // was a 11-sub-tab dumping ground — split into Bastions / Economy /
+  // Broadcasts / System so each domain stands on its own. The Broadcasts
+  // tab is the single home for everything pushed out to users (banner ads,
+  // system messages, scheduled actions) so the duplication is gone.
+  const operations = [
+    {id:'dashboard',  svg:_admSvg.dashboard,  label:'Overview'},
     {id:'moderation', svg:_admSvg.moderation, label:'Moderation'},
-    {id:'members', svg:_admSvg.users, label:'Members'},
-    ...(role!=='moderator'?[{id:'platform', svg:_admSvg.management, label:'Platform Management'}]:[]),
-    {id:'feedback', svg:_admSvg.feedback, label:'Feedback'},
+    {id:'members',    svg:_admSvg.members,    label:'Members'},
   ];
-  nav.innerHTML = tabs.map(t=>`<div id="adm-tab-${t.id}" class="adm-tab${active===t.id?' active':''}" onclick="_loadAdminPage('${t.id}')">
-    ${t.svg}<span>${t.label}</span>
-  </div>`).join('');
+  const platform = [
+    {id:'bastions',   svg:_admSvg.bastions,   label:'Bastions'},
+    ...(role!=='moderator' ? [{id:'economy',    svg:_admSvg.economy,    label:'Economy'}] : []),
+    ...(role!=='moderator' ? [{id:'broadcasts', svg:_admSvg.broadcasts, label:'Broadcasts'}] : []),
+  ];
+  const support = [
+    {id:'feedback', svg:_admSvg.feedback, label:'Feedback'},
+    ...(role!=='moderator' ? [{id:'system', svg:_admSvg.system, label:'System'}] : []),
+  ];
+
+  const _renderTab = t => `<div id="adm-tab-${t.id}" class="adm-tab${active===t.id?' active':''}" onclick="_loadAdminPage('${t.id}')">${t.svg}<span>${t.label}</span></div>`;
+  let html = '<div class="adm-sec-label">Operations</div>' + operations.map(_renderTab).join('');
+  if (platform.length) html += '<div class="adm-sec-label">Platform</div>' + platform.map(_renderTab).join('');
+  if (support.length)  html += '<div class="adm-sec-label">Support</div>'  + support.map(_renderTab).join('');
+  nav.innerHTML = html;
 }
 
 function renderAdminPanel() { _renderAdminNav('dashboard'); _loadAdminPage('dashboard'); }
@@ -19827,11 +19848,16 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     }, 30000);
   }
 
-  // ── Consolidated tab routing (new tabs map to old rendering) ──
+  // ── Top-level domain routing (one tab per domain) ──
   if (tab === 'moderation') { await _loadAdminModeration(main); return; }
-  if (tab === 'members') { await _loadAdminMembers(main); return; }
-  if (tab === 'platform') { await _loadAdminPlatform(main); return; }
-  if (tab === 'feedback') { await _loadAdminFeedback(main); return; }
+  if (tab === 'members')    { await _loadAdminMembers(main); return; }
+  if (tab === 'bastions')   { await _loadAdminDomain(main, 'bastions'); return; }
+  if (tab === 'economy')    { await _loadAdminDomain(main, 'economy'); return; }
+  if (tab === 'broadcasts') { await _loadAdminDomain(main, 'broadcasts'); return; }
+  if (tab === 'system')     { await _loadAdminDomain(main, 'system'); return; }
+  if (tab === 'feedback')   { await _loadAdminFeedback(main); return; }
+  // Legacy "platform" id (deep links / bookmarks) → System by default
+  if (tab === 'platform')   { await _loadAdminDomain(main, 'system'); return; }
 
   // ── OVERVIEW (dashboard) ──
   if (tab === 'dashboard') {
@@ -19986,7 +20012,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   // ── Old tab IDs redirect to new consolidated tabs ──
   else if (tab === 'reports' || tab === 'bans' || tab === 'suspensions' || tab === 'nsfw_queue') { await _loadAdminModeration(main, tab); return; }
   else if (tab === 'users' || tab === 'all_users') { await _loadAdminMembers(main, tab); return; }
-  else if (tab === 'bastions' || tab === 'economy' || tab === 'broadcast' || tab === 'scheduled_actions' || tab === 'audit' || tab === 'network_monitor' || tab === 'analytics' || tab === 'backup_restore' || tab === 'settings' || tab === 'staff' || tab === 'ads') { await _loadAdminPlatform(main, tab); return; }
+  // Legacy sub-tab ids (deep links from outside the console) — route to the
+  // domain that now owns them via the _SC_SUB_TO_DOMAIN map.
+  else if (_SC_SUB_TO_DOMAIN[tab]) { await _loadAdminDomain(main, _SC_SUB_TO_DOMAIN[tab], tab); return; }
   else if (tab === 'support_tickets' || tab === 'place_where' || tab === 'onboarding') { await _loadAdminFeedback(main, tab); return; }
   else if (tab === '_place_where') { await _loadAdminPlaceFeedback(); return; }
   else if (tab === '_onboarding') { await _loadAdminOnboardingStats(); return; }
@@ -21005,52 +21033,94 @@ async function _loadAdminModeration(main, subTab) {
 }
 
 async function _loadAdminMembers(main, subTab) {
-  const role = getStaffRole(CU.username);
-  const active = subTab || _adminSubTab.members || 'users';
-  _adminSubTab.members = active;
+  const isSup = isSuperAdmin();
+  const isAdm = isAdmin();
   const tabs = [
     {id:'users', label:'Lookup'},
-    ...(role!=='moderator'?[{id:'all_users', label:'All Members'}]:[]),
+    ...(isAdm ? [{id:'all_users', label:'All Members'}] : []),
+    ...(isSup ? [{id:'staff', label:'Staff'}] : []),
   ];
+  const valid = tabs.map(t => t.id);
+  let active = subTab && valid.includes(subTab) ? subTab : (_adminSubTab.members && valid.includes(_adminSubTab.members) ? _adminSubTab.members : tabs[0].id);
+  _adminSubTab.members = active;
   main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'members') + '<div id="adm-sub-content"></div></div>';
   await _loadAdminPage('_' + active);
 }
 
-async function _loadAdminPlatform(main, subTab) {
-  FortizedSocial.adminInvalidateCache(); // Always fetch fresh from Supabase
-  const role = getStaffRole(CU.username);
-  const active = subTab || _adminSubTab.platform || (isSuperAdmin() ? 'staff' : 'bastions');
-  _adminSubTab.platform = active;
-  // Grouped IA (Stripe/Linear style): Core > Content & Growth > Operations.
-  // Dividers between groups make scanning easier than a flat pill soup.
-  const coreTabs = [
-    ...(isSuperAdmin()?[{id:'staff', label:'Staff'}]:[]),
-    ...(isSuperAdmin()?[{id:'settings', label:'Configuration'}]:[]),
-    ...(isAdmin()?[{id:'economy', label:'Economy'}]:[]),
-  ];
-  const growthTabs = [
-    {id:'bastions', label:'Bastions'},
-    ...(isAdmin()?[{id:'ads', label:'Ads'}]:[]),
-    ...(isSuperAdmin()?[{id:'broadcast', label:'Broadcast'}]:[]),
-    ...(isAdmin()?[{id:'scheduled_actions', label:'Scheduled'}]:[]),
-  ];
-  const opsTabs = [
-    ...(isAdmin()?[{id:'audit', label:'Activity Log'}]:[]),
-    ...(isSuperAdmin()?[{id:'analytics', label:'Analytics'}]:[]),
-    ...(isAdmin()?[{id:'network_monitor', label:'Network'}]:[]),
-    ...(isSuperAdmin()?[{id:'backup_restore', label:'Backup'}]:[]),
-  ];
-  const tabs = [];
-  if (coreTabs.length) tabs.push(...coreTabs);
-  if (growthTabs.length) { if (tabs.length) tabs.push({_divider:true}); tabs.push(...growthTabs); }
-  if (opsTabs.length) { if (tabs.length) tabs.push({_divider:true}); tabs.push(...opsTabs); }
-  // Refresh staff data from Supabase for legacy renderers
-  const staff = await FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]}));
-  localStorage.setItem('ftz_staff', JSON.stringify(staff));
-  const auditLog = await FortizedSocial.adminGetAuditLog().catch(()=>[]);
-  localStorage.setItem('ftz_audit_log', JSON.stringify(auditLog));
-  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'platform') + '<div id="adm-sub-content"></div></div>';
+// Map every legacy sub-tab id to the new top-level domain that owns it.
+// Used both for routing and for the deprecated _loadAdminPlatform shim.
+const _SC_SUB_TO_DOMAIN = {
+  // Platform → Bastions
+  bastions:'bastions',
+  // Platform → Economy
+  economy:'economy',
+  // Platform → Broadcasts (one home for everything pushed to users)
+  ads:'broadcasts', broadcast:'broadcasts', scheduled_actions:'broadcasts',
+  // Platform → System (operational tools)
+  settings:'system', audit:'system', analytics:'system',
+  network_monitor:'system', backup_restore:'system',
+  // Platform → Members
+  staff:'members',
+};
+
+// Returns the sub-tab list for a given top-level domain.
+function _scDomainSubs(domainKey) {
+  const isAdm = isAdmin();
+  const isSup = isSuperAdmin();
+  switch (domainKey) {
+    case 'bastions':
+      return [{id:'bastions', label:'All Bastions'}];
+    case 'economy':
+      return isAdm ? [{id:'economy', label:'Economy'}] : [];
+    case 'broadcasts':
+      // Single home for everything pushed out to users — replaces the old
+      // Ads / Broadcast / Scheduled trio that lived in two different places.
+      return [
+        ...(isAdm ? [{id:'ads', label:'Banner Ads'}] : []),
+        ...(isSup ? [{id:'broadcast', label:'System Messages'}] : []),
+        ...(isAdm ? [{id:'scheduled_actions', label:'Scheduled'}] : []),
+      ];
+    case 'system':
+      return [
+        ...(isSup ? [{id:'settings', label:'Configuration'}] : []),
+        ...(isAdm ? [{id:'audit', label:'Activity Log'}] : []),
+        ...(isSup ? [{id:'analytics', label:'Analytics'}] : []),
+        ...(isAdm ? [{id:'network_monitor', label:'Network'}] : []),
+        ...(isSup ? [{id:'backup_restore', label:'Backup'}] : []),
+      ];
+    default: return [];
+  }
+}
+
+// Generic per-domain renderer. Replaces the old _loadAdminPlatform mega-tab.
+async function _loadAdminDomain(main, domainKey, subTab) {
+  if (!main) return;
+  const tabs = _scDomainSubs(domainKey);
+  if (!tabs.length) {
+    main.innerHTML = '<div style="padding:32px;text-align:center;color:rgba(255,255,255,.4);font-size:13px;">Nothing here for your role.</div>';
+    return;
+  }
+  const valid = tabs.map(t => t.id);
+  let active = subTab && valid.includes(subTab) ? subTab : (_adminSubTab[domainKey] && valid.includes(_adminSubTab[domainKey]) ? _adminSubTab[domainKey] : tabs[0].id);
+  _adminSubTab[domainKey] = active;
+
+  // Refresh dependent caches only when the domain that needs them opens.
+  if (domainKey === 'system') {
+    try { const auditLog = await FortizedSocial.adminGetAuditLog(); if (Array.isArray(auditLog)) localStorage.setItem('ftz_audit_log', JSON.stringify(auditLog)); } catch(_){}
+  }
+  if (tabs.some(t => t.id === 'staff')) {
+    try { const staff = await FortizedSocial.adminGetStaff(); if (staff) localStorage.setItem('ftz_staff', JSON.stringify(staff)); } catch(_){}
+  }
+
+  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, domainKey) + '<div id="adm-sub-content"></div></div>';
   await _loadAdminPage('_' + active);
+}
+
+// Backward-compat shim: anything still calling _loadAdminPlatform routes
+// through to the new domain router based on the sub-tab it requested.
+async function _loadAdminPlatform(main, subTab) {
+  const domain = subTab ? (_SC_SUB_TO_DOMAIN[subTab] || 'system') : 'system';
+  return _loadAdminDomain(main, domain, subTab);
 }
 
 // ─────────── ADS MANAGEMENT (ADMIN) ───────────
@@ -22705,8 +22775,10 @@ function addStaff(role) {
     FortizedSocial.adminSetSignal('staff_granted_' + username, Date.now()).catch(()=>{});
     logAudit('add_'+role, username, 'Added by super admin');
     toast(`${username} is now a ${roleLabel}`, 'success');
-    _loadAdminPage('platform');
-    setTimeout(() => { _adminSubTab.platform = 'staff'; _loadAdminPage('_staff'); }, 100);
+    // Staff now lives inside the Members tab — land there with the
+    // Staff sub-pill pre-selected.
+    _adminSubTab.members = 'staff';
+    _loadAdminPage('members');
   });
 }
 
@@ -22732,8 +22804,10 @@ function removeStaff(role, idx) {
     FortizedSocial.adminSetSignal('staff_revoked_' + username, Date.now()).catch(()=>{});
     logAudit('remove_'+role, username, 'Removed by super admin');
     toast(`${username} removed from ${roleLabel}s`, 'success');
-    _loadAdminPage('platform');
-    setTimeout(() => { _adminSubTab.platform = 'staff'; _loadAdminPage('_staff'); }, 100);
+    // Staff now lives inside the Members tab — land there with the
+    // Staff sub-pill pre-selected.
+    _adminSubTab.members = 'staff';
+    _loadAdminPage('members');
   });
 }
 

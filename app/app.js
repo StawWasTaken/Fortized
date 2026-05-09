@@ -40303,7 +40303,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Avatar row: avatar + custom status pill + streak chip on the same line -->
     <div class="mpp-av-area">
       <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 64)}</div>
+        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 80)}</div>
         ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
         <span class="profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="18" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 18)}</span>
       </div>

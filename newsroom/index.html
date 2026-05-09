@@ -144,17 +144,15 @@ a{text-decoration:none;color:inherit}
 #blog-list-view.hidden{display:none}
 .article-back{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--mu-l);cursor:pointer;margin-bottom:32px;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:100px;border:1px solid #1a2030;background:rgba(255,255,255,.02);transition:.15s}
 .article-back:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.05)}
-.article-full-banner{width:100%;min-height:300px;border-radius:24px;overflow:hidden;margin-bottom:34px;background:#0c0f1a center/cover no-repeat;border:1px solid #1a2030;position:relative;display:flex;align-items:flex-end;padding:36px;isolation:isolate}
-.article-full-banner::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(to top,rgba(8,10,15,.85),rgba(8,10,15,.1) 65%,transparent);z-index:0}
-.banner-content{position:relative;z-index:1;width:100%}
+.article-banner-card{border-radius:24px;overflow:hidden;border:1px solid #1a2030;background:#11141e;margin-bottom:34px}
+.article-banner-img{width:100%;height:280px;background:#0c0f1a center/cover no-repeat;display:block}
+.article-banner-meta{padding:28px 32px 30px}
 .article-eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.18);border-radius:100px;padding:5px 12px;margin-bottom:14px}
 .article-eyebrow::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--acc)}
 .article-full-title{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;color:#fff;letter-spacing:-1.2px;line-height:1.05;margin-bottom:12px}
 .article-full-meta{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--mu-l)}
 .article-from-badge{display:inline-flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--acc);background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.18);border-radius:100px;padding:3px 9px;margin-top:14px}
-.article-byline{display:flex;align-items:center;gap:14px;padding:18px 22px;background:linear-gradient(160deg,rgba(18,22,34,.95) 0%,rgba(10,13,20,.92) 100%);border:1px solid #1a2030;border-radius:18px;margin-bottom:44px;position:relative;isolation:isolate}
-.article-byline::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 90% -20%,rgba(255,249,62,.10),transparent 55%);pointer-events:none;z-index:0}
-.article-byline > *{position:relative;z-index:1}
+.article-byline{display:flex;align-items:center;gap:14px;padding:18px 22px;background:#11141e;border:1px solid #1a2030;border-radius:18px;margin-bottom:44px}
 .byline-av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,rgba(255,249,62,.25),rgba(255,249,62,.06));border:2px solid rgba(255,249,62,.28);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--acc);flex-shrink:0;overflow:hidden}
 .byline-av img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;user-select:none}
 .byline-info .byline-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;letter-spacing:-.2px}
@@ -828,14 +826,14 @@ const ARTICLES = {
 function renderArticle(id) {
   const a = ARTICLES[id]; if (!a) return false;
   const banner = a.banner || (typeof FALLBACK_BANNER !== 'undefined' ? FALLBACK_BANNER : '/Fortized banner.png?v=2');
-  const bannerStyle = `style="background-image:url('${banner}');"`;
   const username = a.authorUsername ? slugifyUsername(a.authorUsername) : slugifyUsername(a.bylineName);
   const fromBadge = a.fromAnnouncement
     ? `<div class="article-from-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M3 11v2l13 4V7L3 11zm15-1v4l3-1v-2l-3-1z"/></svg>From announcement${a.fromBastion ? ' · ' + a.fromBastion : ''}</div>`
     : '';
   document.getElementById('article-content').innerHTML = `
-    <div class="article-full-banner" ${bannerStyle}>
-      <div class="banner-content">
+    <div class="article-banner-card">
+      <div class="article-banner-img" style="background-image:url('${banner}');"></div>
+      <div class="article-banner-meta">
         <div class="article-eyebrow">${a.tagLabel || a.category || 'News'}</div>
         <div class="article-full-title">${a.title}</div>
         <div class="article-full-meta">

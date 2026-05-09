@@ -99,68 +99,16 @@ body::before {
 @media (max-width: 600px) { .nav-btn-login { display: none; } }
 @media (max-width: 768px) { .nav-root { padding: 0 18px; } }
 
-/* ── Auth shell ── */
+/* ── Auth shell (single centered card, Discord-style) ── */
 .auth-shell {
   position: relative; z-index: 2;
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   align-items: center;
-  gap: 64px;
-  padding: 120px 72px 80px;
-  max-width: 1280px;
-  margin: 0 auto;
+  justify-content: center;
+  padding: 110px 24px 60px;
 }
-.auth-pane-brand { display: flex; flex-direction: column; gap: 28px; max-width: 520px; }
-.brand-eyebrow {
-  display: inline-flex; align-items: center; gap: 9px;
-  font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--accent);
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-mid);
-  border-radius: 100px; padding: 5px 14px;
-  width: fit-content;
-}
-.brand-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-.brand-h1 {
-  font-family: var(--font-display);
-  font-size: 56px; font-weight: 800; line-height: .98;
-  letter-spacing: -2px; color: #fff;
-}
-.brand-h1 em { font-style: normal; color: var(--accent); }
-.brand-sub {
-  font-size: 16px; line-height: 1.65;
-  color: var(--muted-light); max-width: 460px;
-}
-.brand-perks {
-  display: flex; flex-direction: column; gap: 14px;
-  margin-top: 8px;
-}
-.brand-perk {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 18px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  font-size: 13.5px;
-  color: var(--text);
-  transition: border-color .2s, transform .2s;
-}
-.brand-perk:hover { border-color: rgba(255,249,62,.18); transform: translateY(-1px); }
-.brand-perk-ic {
-  width: 36px; height: 36px; flex-shrink: 0;
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-mid);
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--accent);
-}
-.brand-perk-ic svg { width: 16px; height: 16px; }
-.brand-perk-title { font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: #fff; letter-spacing: -.2px; margin-bottom: 1px; }
-.brand-perk-desc { font-size: 12.5px; color: var(--muted-light); }
-
-/* ── Auth card ── */
-.auth-pane-form { display: flex; flex-direction: column; gap: 16px; max-width: 460px; justify-self: end; width: 100%; }
+.auth-pane-form { display: flex; flex-direction: column; gap: 14px; max-width: 440px; width: 100%; }
 .auth-card {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -309,16 +257,9 @@ body::before {
 .status-item { display: flex; align-items: center; gap: 6px; }
 
 /* Responsive */
-@media (max-width: 1024px) {
-  .auth-shell { grid-template-columns: 1fr; gap: 40px; padding: 110px 32px 60px; }
-  .auth-pane-form { justify-self: stretch; max-width: none; }
-  .brand-h1 { font-size: 44px; letter-spacing: -1.4px; }
-  .brand-perks { display: none; }
-}
 @media (max-width: 600px) {
   .auth-card { padding: 28px 22px 26px; border-radius: 20px; }
-  .brand-h1 { font-size: 36px; }
-  .auth-shell { padding: 100px 22px 56px; }
+  .auth-shell { padding: 100px 18px 56px; }
 }
 img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
 </style>
@@ -349,49 +290,12 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
 <main class="auth-shell">
 
-  <!-- ── Brand pane ── -->
-  <section class="auth-pane-brand">
-    <div class="brand-eyebrow"><span class="brand-eyebrow-dot"></span>Welcome back</div>
-    <h1 class="brand-h1">Step back into your <em>fortress.</em></h1>
-    <p class="brand-sub">Your bastions, your squad, your Onyx — all where you left them. Sign in to pick up exactly where you stopped.</p>
-
-    <div class="brand-perks">
-      <div class="brand-perk">
-        <div class="brand-perk-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <div>
-          <div class="brand-perk-title">Defended by design</div>
-          <div class="brand-perk-desc">AutoMod, raid lockdown, and per-rank controls baked in.</div>
-        </div>
-      </div>
-      <div class="brand-perk">
-        <div class="brand-perk-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-        </div>
-        <div>
-          <div class="brand-perk-title">Your daily Onyx is ready</div>
-          <div class="brand-perk-desc">Sign in today to keep your streak alive.</div>
-        </div>
-      </div>
-      <div class="brand-perk">
-        <div class="brand-perk-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        </div>
-        <div>
-          <div class="brand-perk-title">Free, forever</div>
-          <div class="brand-perk-desc">No credit card. No paywall. No catch.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Form pane ── -->
+  <!-- ── Single centered form card ── -->
   <section class="auth-pane-form">
     <div class="auth-card" id="authCard">
       <div class="card-eyebrow">Sign in</div>
-      <h2 class="card-h2">Enter the fortress.</h2>
-      <p class="card-sub">Use your username or email and password to continue.</p>
+      <h2 class="card-h2">Welcome back.</h2>
+      <p class="card-sub">Sign in with your username or email to pick up where you left off.</p>
 
       <div class="field">
         <label class="field-label" for="identifier">Username or email</label>
@@ -423,7 +327,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
       <button class="btn-primary" id="loginBtn">
         <div class="spinner"></div>
-        <span class="btn-label">Enter the Fortress</span>
+        <span class="btn-label">Sign in</span>
       </button>
 
       <div class="auth-divider">or</div>
@@ -433,8 +337,6 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
     <div class="auth-status">
       <div class="status-item"><span class="status-dot green"></span>Systems online</div>
-      <div class="status-sep"></div>
-      <div class="status-item"><span class="status-dot yellow"></span>Daily Onyx ready</div>
     </div>
   </section>
 

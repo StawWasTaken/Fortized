@@ -14371,195 +14371,6 @@ function _dismissWhatsNew() {
   }
 }
 
-// Admin: create announcement
-let _annImageData = null;
-async function _adminCreateAnnouncement() {
-  if (!isAdmin()) { toast('Access denied','error'); return; }
-  _annImageData = null;
-  const overlay = document.createElement('div');
-  overlay.id = 'modal-create-announcement';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;';
-  overlay.innerHTML = `
-    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:520px;width:94%;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative;">
-      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;margin-bottom:18px;">New Announcement</div>
-      <div style="margin-bottom:12px;">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Title</div>
-        <input id="ann-title" class="field-input" placeholder="What's new?" maxlength="120">
-      </div>
-      <div style="margin-bottom:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;">Body</div>
-          <button onclick="_annToggleEmojiPicker()" style="padding:3px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:4px;color:rgba(255,255,255,.5);transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='rgba(255,255,255,.06)'" title="Insert emoji">😀 <span style="font-size:10px;">Emoji</span></button>
-        </div>
-        <div style="position:relative;">
-          <textarea id="ann-body" class="field-input" rows="6" placeholder="Write your announcement... Use **bold**, • for bullets" style="resize:vertical;min-height:100px;"></textarea>
-          <div id="ann-emoji-picker" style="display:none;position:absolute;right:0;top:100%;z-index:10;margin-top:4px;background:#1e2130;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px;width:300px;max-height:260px;box-shadow:0 12px 40px rgba(0,0,0,.5);">
-            <div style="display:flex;gap:4px;margin-bottom:8px;overflow-x:auto;padding-bottom:4px;" id="ann-emoji-tabs"></div>
-            <div id="ann-emoji-grid" style="display:flex;flex-wrap:wrap;gap:2px;max-height:180px;overflow-y:auto;"></div>
-          </div>
-        </div>
-      </div>
-      <div style="margin-bottom:12px;">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Banner Image</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface-1,rgba(255,255,255,.04));border:1px solid var(--surface-border,rgba(255,255,255,.08));border-radius:8px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--surface-border,rgba(255,255,255,.08))'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-            <span id="ann-file-label" style="font-size:12px;color:rgba(255,255,255,.4);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Choose image... (optional)</span>
-            <input type="file" accept="image/*" id="ann-image-upload" style="display:none;" onchange="_annImagePreview(event)">
-          </label>
-          ${_annImageData ? `<div id="ann-image-thumb" style="width:40px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.08);"><img src="" style="width:100%;height:100%;object-fit:cover;"></div>` : ''}
-        </div>
-      </div>
-      <div style="display:flex;gap:12px;margin-bottom:16px;">
-        <div style="flex:1;">
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Author</div>
-          <input id="ann-author" class="field-input" value="${escapeHTML(CU?.displayName||CU?.username||'')}" placeholder="Author name">
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;">
-        <button onclick="document.getElementById('modal-create-announcement')?.remove()" style="padding:9px 20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;">Cancel</button>
-        <button onclick="_submitAnnouncement()" style="padding:9px 20px;background:var(--accent);border:none;border-radius:9px;color:var(--rail);cursor:pointer;font-weight:700;font-family:inherit;">Publish</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  // Close emoji picker on outside click
-  overlay.addEventListener('click', e => {
-    const picker = document.getElementById('ann-emoji-picker');
-    if (picker && picker.style.display !== 'none' && !picker.contains(e.target) && !e.target.closest('[onclick*="_annToggleEmojiPicker"]')) {
-      picker.style.display = 'none';
-    }
-  });
-}
-
-function _annImagePreview(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    _annImageData = ev.target.result;
-    const label = document.getElementById('ann-file-label');
-    if (label) label.textContent = file.name;
-    // Add/update thumbnail
-    let thumb = document.getElementById('ann-image-thumb');
-    if (!thumb) {
-      thumb = document.createElement('div');
-      thumb.id = 'ann-image-thumb';
-      thumb.style.cssText = 'width:40px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.08);';
-      e.target.closest('div[style*="display:flex"]')?.appendChild(thumb);
-    }
-    thumb.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-  };
-  reader.readAsDataURL(file);
-}
-
-let _annEmojiTab = 'smileys';
-function _annToggleEmojiPicker() {
-  const picker = document.getElementById('ann-emoji-picker');
-  if (!picker) return;
-  if (picker.style.display === 'none') {
-    picker.style.display = 'block';
-    _annRenderEmojiPicker();
-  } else {
-    picker.style.display = 'none';
-  }
-}
-function _annRenderEmojiPicker() {
-  const tabs = document.getElementById('ann-emoji-tabs');
-  const grid = document.getElementById('ann-emoji-grid');
-  if (!tabs || !grid) return;
-  const cats = EMOJI_PICKER_TABS.filter(t => t.emojis && t.emojis.length);
-  tabs.innerHTML = cats.map(c => `<button onclick="_annSetEmojiTab('${c.id}')" style="padding:4px 6px;border-radius:5px;border:none;cursor:pointer;font-size:14px;background:${_annEmojiTab===c.id?'rgba(255,249,62,.15)':'transparent'};" title="${c.label||c.id}">${c.icon}</button>`).join('');
-  _annRenderEmojiGrid();
-}
-function _annSetEmojiTab(tab) {
-  _annEmojiTab = tab;
-  _annRenderEmojiPicker();
-}
-function _annRenderEmojiGrid() {
-  const grid = document.getElementById('ann-emoji-grid');
-  if (!grid) return;
-  const cat = EMOJI_PICKER_TABS.find(t => t.id === _annEmojiTab);
-  const emojis = cat?.emojis || [];
-  grid.innerHTML = emojis.map(em => `<button onclick="_annInsertEmoji('${em}')" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;font-size:18px;border-radius:5px;transition:background .1s;" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='transparent'">${em}</button>`).join('');
-}
-function _annInsertEmoji(emoji) {
-  const ta = document.getElementById('ann-body');
-  if (!ta) return;
-  const start = ta.selectionStart;
-  const end = ta.selectionEnd;
-  const text = ta.value;
-  ta.value = text.slice(0, start) + emoji + text.slice(end);
-  ta.selectionStart = ta.selectionEnd = start + emoji.length;
-  ta.focus();
-}
-
-async function _submitAnnouncement() {
-  const title = document.getElementById('ann-title')?.value?.trim();
-  const body = document.getElementById('ann-body')?.value?.trim();
-  const image = _annImageData || '';
-  const author = document.getElementById('ann-author')?.value?.trim();
-  if (!title) { toast('Title required','error'); return; }
-  if (!body) { toast('Body required','error'); return; }
-  const announcement = {
-    id: 'ann_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
-    title, body, image: image||undefined, author: author||CU?.username,
-    createdAt: new Date().toISOString(),
-    createdBy: CU?.username,
-    published: true
-  };
-  try {
-    const all = await FortizedSocial.getAnnouncements() || [];
-    all.unshift(announcement);
-    await FortizedSocial.saveAnnouncements(all.slice(0,50));
-    logAudit('announcement_create', title, 'Published by '+CU?.username);
-    document.getElementById('modal-create-announcement')?.remove();
-    toast('Announcement published! It will also appear on the newsroom.','success');
-  } catch(e) { toast('Failed to publish: '+e.message,'error'); }
-}
-
-// View all announcements (admin)
-async function _adminViewAnnouncements() {
-  if (!isAdmin()) { toast('Access denied','error'); return; }
-  const all = await FortizedSocial.getAnnouncements() || [];
-  const overlay = document.createElement('div');
-  overlay.id = 'modal-view-announcements';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;';
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); } catch { return ''; } };
-  overlay.innerHTML = `
-    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:560px;width:94%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 14px;border-bottom:1px solid rgba(255,255,255,.06);">
-        <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;">All Announcements (${all.length})</div>
-        <button onclick="this.closest('#modal-view-announcements').remove()" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;">&times;</button>
-      </div>
-      <div style="overflow-y:auto;padding:16px 24px;flex:1;">
-        ${all.length === 0 ? '<div style="text-align:center;padding:32px;color:rgba(255,255,255,.25);">No announcements yet.</div>' : all.map(a => `
-          <div style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:flex-start;gap:12px;">
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(a.title||'Untitled')}</div>
-              <div style="font-size:11px;color:rgba(255,255,255,.3);">${fmtDate(a.createdAt)} · by ${escapeHTML(a.author||a.createdBy||'Unknown')}</div>
-            </div>
-            <button onclick="_deleteAnnouncement('${a.id}')" style="flex-shrink:0;padding:5px 10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);border-radius:7px;color:#ef4444;cursor:pointer;font-size:11px;font-weight:600;">Delete</button>
-          </div>
-        `).join('')}
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-}
-
-async function _deleteAnnouncement(id) {
-  if (!isAdmin()) return;
-  showCustomConfirm('Delete this announcement?', async () => {
-    try {
-      let all = await FortizedSocial.getAnnouncements() || [];
-      all = all.filter(a => a.id !== id);
-      await FortizedSocial.saveAnnouncements(all);
-      toast('Announcement deleted','success');
-      document.getElementById('modal-view-announcements')?.remove();
-    } catch(e) { toast('Delete failed: '+e.message,'error'); }
-  });
-}
-
 // Load announcement preview in broadcast tab
 async function _loadAnnouncementPreview() {
   const el = document.getElementById('admin-announcements-preview');
@@ -19813,30 +19624,47 @@ async function submitReport() {
 // ════════════════════════════════════════════
 
 // ── Admin data sync helpers ──
+// Each fetch lands in localStorage independently as soon as it resolves, so
+// one slow/failed table never gates the others. The console can render with
+// the cached copy immediately while the slow ones trickle in.
+function _admWithTimeout(promise, ms, fallback) {
+  return Promise.race([
+    promise,
+    new Promise(resolve => setTimeout(() => resolve(fallback), ms))
+  ]);
+}
 async function _syncAdminData() {
-  try {
-    const [reports, bans, staff, auditLog, gs, nsfwQueue, bannedHashes, tickets] = await Promise.all([
-      FortizedSocial.adminGetReports().catch(()=>[]),
-      FortizedSocial.adminGetBans().catch(()=>[]),
-      FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]})),
-      FortizedSocial.adminGetAuditLog().catch(()=>[]),
-      FortizedSocial.adminGetGlobalSettings().catch(()=>({})),
-      FortizedSocial.adminGetNsfwQueue().catch(()=>[]),
-      FortizedSocial.adminGetNsfwBannedHashes().catch(()=>[]),
-      FortizedSocial.adminGetSupportTickets().catch(()=>({})),
-    ]);
-    localStorage.setItem('ftz_reports', JSON.stringify(reports));
-    localStorage.setItem('ftz_bans', JSON.stringify(bans));
-    localStorage.setItem('ftz_staff', JSON.stringify(staff));
-    localStorage.setItem('ftz_audit_log', JSON.stringify(auditLog));
-    localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
-    _globalSettings = gs;
-    localStorage.setItem('ftz_nsfw_queue', JSON.stringify(nsfwQueue));
-    const mergedHashes = [...new Set([..._nsfwBannedHashes, ...bannedHashes])];
-    _nsfwBannedHashes = mergedHashes;
-    localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(mergedHashes));
-    localStorage.setItem('ftz_support_tickets', JSON.stringify(tickets));
-  } catch(e) { _wrn('Admin sync partial fail:', e); }
+  const TIMEOUT = 8000;
+  const tasks = [
+    ['ftz_reports',          FortizedSocial.adminGetReports,            []],
+    ['ftz_bans',             FortizedSocial.adminGetBans,               []],
+    ['ftz_staff',            FortizedSocial.adminGetStaff,              {admins:[],moderators:[]}],
+    ['ftz_audit_log',        FortizedSocial.adminGetAuditLog,           []],
+    ['ftz_global_settings',  FortizedSocial.adminGetGlobalSettings,     {}],
+    ['ftz_nsfw_queue',       FortizedSocial.adminGetNsfwQueue,          []],
+    ['ftz_nsfw_banned_hashes', FortizedSocial.adminGetNsfwBannedHashes, []],
+    ['ftz_support_tickets',  FortizedSocial.adminGetSupportTickets,     {}],
+  ];
+  // Kick all of them off in parallel and persist as each resolves.
+  const settled = await Promise.allSettled(tasks.map(([key, fn, fb]) =>
+    _admWithTimeout(
+      Promise.resolve().then(() => fn ? fn.call(FortizedSocial) : fb).catch(() => fb),
+      TIMEOUT,
+      fb
+    ).then(value => {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch(_) {}
+      // Side effects for the values that drive in-memory state
+      if (key === 'ftz_global_settings') _globalSettings = value || {};
+      if (key === 'ftz_nsfw_banned_hashes') {
+        const merged = [...new Set([...(_nsfwBannedHashes||[]), ...(value||[])])];
+        _nsfwBannedHashes = merged;
+        try { localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(merged)); } catch(_) {}
+      }
+      return { key, ok: true };
+    }).catch(err => { _wrn('[Staff] sync failed for', key, err?.message); return { key, ok: false }; })
+  ));
+  const failed = settled.filter(r => r.value && r.value.ok === false).length;
+  if (failed) _wrn('[Staff] sync finished with', failed, 'failed table(s) — cached values still in use');
 }
 
 async function _saveBanToServer(banObj) {
@@ -19889,7 +19717,15 @@ function openAdminPanel() {
 
 async function _openAdminUI() {
   document.getElementById('admin-panel-overlay')?.remove();
-  await _syncAdminData().catch(()=>{});
+  // Kick the data sync off in the background — DON'T block the UI on it.
+  // The current tab will re-render automatically from _setupAdminLiveSync's
+  // poll once fresh data lands. This fixes the "console takes forever to
+  // open / shows blank" bug when one Supabase table is slow.
+  _syncAdminData().then(() => {
+    if (typeof adminTab !== 'undefined' && adminTab) {
+      try { _renderAdminNav(adminTab); _loadAdminPage(adminTab, true); } catch(_) {}
+    }
+  }).catch(()=>{});
   const role = getStaffRole(CU.username);
   const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
   const roleColor = role === 'superadmin' ? '#ffd93e' : role === 'admin' ? '#f87171' : '#60a5fa';
@@ -19903,8 +19739,8 @@ async function _openAdminUI() {
           <img src="/FortizedSecurity logo.png" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='<svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'var(--accent)\\' stroke-width=\\'2\\'><path d=\\'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\\'/></svg>'">
         </div>
         <div>
-          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:.04em;line-height:1;">ADMIN CONTROL CENTER</div>
-          <div style="font-size:9px;color:var(--accent-mid);font-weight:600;letter-spacing:.1em;margin-top:2px;">FORTIZED ADMINISTRATION</div>
+          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:.04em;line-height:1;">STAFF CONSOLE</div>
+          <div style="font-size:9px;color:var(--accent-mid);font-weight:600;letter-spacing:.1em;margin-top:2px;">FORTIZED · INTERNAL</div>
         </div>
       </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
@@ -20034,7 +19870,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg);">
         <div>
           <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-xs);">
-            <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Admin Control Center</div>
+            <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Staff Console</div>
             <div class="hq-threat ${threat.cls}">${threat.icon} THREAT: ${threat.level}</div>
           </div>
           <div style="font-size:11.5px;color:rgba(255,255,255,.3);">Operator: <span style="color:var(--accent);">${escapeHTML(CU.displayName||CU.username)}</span> · ${new Date().toLocaleString()} · Session Active</div>

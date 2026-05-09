@@ -8521,4 +8521,14 @@ select:focus-visible {
 }
 .msg-retry-btn:hover{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.35);}
 .msg-retry-btn svg{flex-shrink:0;}
+
+/* ── Member list search ─────────────────────── */
+.member-search-wrap{padding:8px 12px;border-bottom:1px solid var(--glass-border);position:sticky;top:0;background:var(--glass-mid);z-index:1;}
+.member-search-input{
+  width:100%;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:8px;
+  color:var(--text);font-size:12.5px;outline:none;transition:all .15s;
+}
+.member-search-input:focus{background:rgba(255,255,255,.06);border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,249,62,.1);}
+.member-search-input::placeholder{color:var(--muted);}
+.member-search-empty{padding:20px 12px;text-align:center;color:var(--muted);font-size:12.5px;}
 </style>

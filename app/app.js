@@ -116,6 +116,31 @@ if (!window._faviconFocusHooked) {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) _refreshBadge(); });
 }
 
+// ══════════════════════════════════════════════
+// OFFLINE DETECTOR & STATUS INDICATOR
+// ══════════════════════════════════════════════
+let _offlineIndicatorEl = null;
+function _showOfflineIndicator() {
+  if (_offlineIndicatorEl && _offlineIndicatorEl.parentElement) return;
+  const container = document.getElementById('toast-container') || document.body;
+  const el = document.createElement('div');
+  el.id = 'offline-indicator';
+  el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(135deg,rgba(248,113,113,.9),rgba(220,38,38,.9));color:#fff;padding:8px 16px;text-align:center;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;';
+  el.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg><span>You appear to be offline. Some features may not work.</span>';
+  document.body.insertBefore(el, document.body.firstChild);
+  _offlineIndicatorEl = el;
+}
+function _hideOfflineIndicator() {
+  if (_offlineIndicatorEl) { _offlineIndicatorEl.remove(); _offlineIndicatorEl = null; }
+}
+function _setupOfflineDetector() {
+  window.addEventListener('online', _hideOfflineIndicator);
+  window.addEventListener('offline', _showOfflineIndicator);
+  // Initial check
+  if (!navigator.onLine) _showOfflineIndicator();
+}
+_setupOfflineDetector();
+
 // ════════════════════════════════════════════
 // GLOBAL STATE
 // ════════════════════════════════════════════
@@ -134,6 +159,30 @@ const _profileCache = (() => {
   } catch {}
   return {};
 })();
+const _PROFILE_CACHE_MAX = 200; // Max cached profiles to prevent unbounded localStorage
+let _profileCacheOrder = []; // Track access order for LRU eviction
+let _profileCacheSaveTimer = null;
+// Initialize access order from existing cache
+(() => { _profileCacheOrder = Object.keys(_profileCache).slice(0, _PROFILE_CACHE_MAX); })();
+function _evictProfileCacheIfNeeded() {
+  if (_profileCacheOrder.length > _PROFILE_CACHE_MAX) {
+    const toRemove = _profileCacheOrder.slice(0, _profileCacheOrder.length - _PROFILE_CACHE_MAX);
+    toRemove.forEach(u => { delete _profileCache[u]; });
+    _profileCacheOrder = _profileCacheOrder.slice(-_PROFILE_CACHE_MAX);
+  }
+}
+function _updateProfileAccess(username) {
+  const idx = _profileCacheOrder.indexOf(username);
+  if (idx > -1) _profileCacheOrder.splice(idx, 1);
+  _profileCacheOrder.push(username);
+  _evictProfileCacheIfNeeded();
+  _updateProfileAccess = u => { // Optimized: just update order after init
+    const idx = _profileCacheOrder.indexOf(u);
+    if (idx > -1) _profileCacheOrder.splice(idx, 1);
+    _profileCacheOrder.push(u);
+    _evictProfileCacheIfNeeded();
+  };
+}
 let _profileCacheSaveTimer = null;
 function _persistProfileCache() {
   if (_profileCacheSaveTimer) return;
@@ -154,8 +203,12 @@ function rememberProfile(u) {
     _persistProfileCache();
     if (u.pfp) _pfpCache[u.username] = u.pfp; // keep legacy cache aligned
   }
+  // Track access for LRU eviction
+  _updateProfileAccess(u.username);
 }
 function cachedProfile(username) {
+  // Track access for LRU eviction
+  if (username) _updateProfileAccess(username);
   return _profileCache[username] || _profileCache[(username||'').toLowerCase()] || null;
 }
 // Legacy in-memory PFP cache retained for backwards compatibility — now
@@ -593,8 +646,14 @@ const FtzStatus = (() => {
     try {
       const uname = (CU.username || '').toLowerCase();
       if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(cs);
-    } catch(e) { console.warn('[Status] Custom status write failed:', e?.message); }
-    saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
+    } catch(e) { 
+      console.warn('[Status] Custom status write failed:', e?.message);
+      toast('Failed to set status. Check connection.', 'error');
+    }
+    saveUser().catch(e => {
+      console.warn('[Save] Failed:', e?.message);
+      toast('Failed to save user data.', 'error');
+    });
     refreshCustomStatusBubble();
     if (typeof _logJoysterEvent === 'function') {
       _logJoysterEvent(`set custom status ${cs.emoji || ''} "${text}"`);
@@ -932,7 +991,21 @@ async function saveUser(immediate) {
       } catch(e) {
         console.warn('saveUser failed, retrying:', e);
         try { await new Promise(r => setTimeout(r, 1000)); await FortizedSocial.saveUserObject(CU); }
-        catch(e2) { console.error('saveUser retry failed:', e2); toast('Failed to save data. Check your connection.', 'error'); }
+        catch(e2) { 
+          console.error('saveUser retry failed:', e2); 
+          toast('Failed to save data. Check your connection.', 'error');
+          // Show retry button
+          setTimeout(() => {
+            const errEl = document.querySelector('.ftz-toast.error:last-child');
+            if (!errEl) return;
+            const retryBtn = document.createElement('button');
+            retryBtn.textContent = 'Retry';
+            retryBtn.className = 'ftz-toast-retry';
+            retryBtn.style.cssText = 'margin-left:12px;padding:4px 12px;background:rgba(255,255,255,0.15);border:none;border-radius:6px;color:inherit;cursor:pointer;font-size:12px;font-weight:600;';
+            retryBtn.onclick = () => { saveUser(true); errEl.remove(); };
+            errEl.appendChild(retryBtn);
+          }, 100);
+        }
       } finally { _saveUserPromise = null; _isSaving = false; }
     })();
     return _saveUserPromise;
@@ -967,8 +1040,12 @@ async function _syncBastionToGlobal(bastionIdx) {
     FortizedSocial.socketEmit('bastion:update', { bastionId: bid, field: 'sync' });
   } catch(e) {
     console.warn('Bastion sync to global failed:', e);
+    toast('Failed to sync bastion. Check connection.', 'error');
     // Retry once
-    try { await new Promise(r => setTimeout(r, 1000)); const b2 = CU?.bastions?.[bastionIdx]; if (b2?.globalId) await FortizedSocial.saveGlobalBastion(b2.globalId, {...b2, id: b2.globalId, owner: b2.owner || CU.username}); } catch(e2) { console.warn('[Bastion] Retry sync also failed:', e2?.message); }
+    try { await new Promise(r => setTimeout(r, 1000)); const b2 = CU?.bastions?.[bastionIdx]; if (b2?.globalId) await FortizedSocial.saveGlobalBastion(b2.globalId, {...b2, id: b2.globalId, owner: b2.owner || CU.username}); } catch(e2) { 
+      console.warn('[Bastion] Retry sync also failed:', e2?.message);
+      toast('Bastion sync failed after retry.', 'error');
+    }
   }
 }
 // Pull fresh bastion data from global for non-owners so banner/emblem/roles/moods stay current
@@ -1118,7 +1195,10 @@ async function refreshCU() {
       // Check for admin force-logout flag
       _checkForceLogout(fresh);
     }
-  } catch(e) { console.warn('[RefreshCU] Failed to refresh user data:', e?.message); }
+  } catch(e) { 
+    console.warn('[RefreshCU] Failed to refresh user data:', e?.message);
+    toast('Failed to refresh data. Check connection.', 'error');
+  }
   // Pre-warm the friend profile cache in the background. By the time the
   // user opens the DM list / Friends view, every friend's pfp + display
   // name + status is already in _profileCache and paints on the first

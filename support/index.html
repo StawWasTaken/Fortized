@@ -19,6 +19,8 @@
 <link rel="icon" type="image/png" href="/Fortized icon2.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/FortizedSocial-supabase.js?v=20260430e"></script>
 <style>
 ::selection{background:rgba(255,249,62,.2);}
 :root{
@@ -516,13 +518,50 @@ function updateCharCount(){
   document.getElementById('cf-chars').textContent=document.getElementById('cf-msg').value.length;
 }
 
-/* Contact form */
-function submitContact(){
+/* Contact form — pushes the ticket into the Staff Console queue */
+async function submitContact(){
   const email=document.getElementById('cf-email').value.trim();
+  const uname=document.getElementById('cf-uname').value.trim();
+  const cat=document.getElementById('cf-cat').value;
+  const subject=document.getElementById('cf-subject').value.trim();
   const msg=document.getElementById('cf-msg').value.trim();
   if(!email||!msg)return;
+
+  const btn=document.querySelector('#contact-form .submit-btn');
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+
+  const ticket={
+    id:'tkt_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
+    email,
+    username:uname||'',
+    category:cat||'general',
+    subject:subject||'(no subject)',
+    message:msg,
+    source:'support_page',
+    status:'open',
+    createdAt:new Date().toISOString(),
+    userAgent:navigator.userAgent||''
+  };
+
+  try{
+    if(window.FortizedSocial && typeof FortizedSocial.adminSubmitSupportTicket==='function'){
+      await FortizedSocial.adminSubmitSupportTicket(ticket);
+    } else {
+      // Library not loaded — keep a local copy so it isn't lost
+      const queue=JSON.parse(localStorage.getItem('ftz_support_outbox')||'[]');
+      queue.push(ticket);
+      localStorage.setItem('ftz_support_outbox',JSON.stringify(queue.slice(-50)));
+    }
+  }catch(e){
+    console.warn('[Support] ticket submit failed, queuing locally:',e);
+    const queue=JSON.parse(localStorage.getItem('ftz_support_outbox')||'[]');
+    queue.push(ticket);
+    localStorage.setItem('ftz_support_outbox',JSON.stringify(queue.slice(-50)));
+  }
+
   document.getElementById('contact-form').style.display='none';
   document.getElementById('contact-success').style.display='block';
+  if(btn){btn.disabled=false;btn.textContent='Send Message';}
 }
 function resetContact(){
   document.getElementById('contact-form').style.display='block';

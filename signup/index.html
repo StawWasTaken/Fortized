@@ -139,9 +139,16 @@ body::before {
   color: #080a0f;
   border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
   flex-shrink: 0;
   box-shadow: 0 0 28px var(--accent-glow);
+}
+.bonus-icon img {
+  width: 28px; height: 28px;
+  object-fit: contain;
+  /* Force the Onyx badge to render in pure black on the yellow tile */
+  filter: brightness(0);
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 .bonus-text { font-size: 13.5px; color: var(--text); line-height: 1.55; }
 .bonus-text strong { color: #fff; font-family: var(--font-display); font-weight: 700; }
@@ -417,7 +424,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <p class="brand-sub">Spin up a community in minutes. Pick rooms, set ranks, write the rules. Free forever, yours forever.</p>
 
     <div class="bonus-card">
-      <div class="bonus-icon">💎</div>
+      <div class="bonus-icon"><img src="/Onyx.png" alt="Onyx" draggable="false" oncontextmenu="return false"></div>
       <div class="bonus-text"><strong>Welcome bonus:</strong> Get <span class="accent">25 Onyx</span> free when you sign up — spend them in the Atelier.</div>
     </div>
 

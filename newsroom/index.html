@@ -156,7 +156,7 @@ a{text-decoration:none;color:inherit}
 .article-byline::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 90% -20%,rgba(255,249,62,.10),transparent 55%);pointer-events:none;z-index:0}
 .article-byline > *{position:relative;z-index:1}
 .byline-av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,rgba(255,249,62,.25),rgba(255,249,62,.06));border:2px solid rgba(255,249,62,.28);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--acc);flex-shrink:0;overflow:hidden}
-.byline-av img{width:100%;height:100%;object-fit:cover;display:block}
+.byline-av img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;user-select:none}
 .byline-info .byline-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;letter-spacing:-.2px}
 .byline-info .byline-role{font-size:12.5px;color:var(--mu-l)}
 .byline-org{margin-left:auto;font-size:11.5px;color:var(--mu);letter-spacing:.04em}
@@ -531,7 +531,7 @@ body::before {
   overflow: hidden;
   border: 1px solid rgba(255,249,62,.2);
 }
-.news-card-pfp img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.news-card-pfp img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; -webkit-user-drag: none; user-select: none; }
 .news-card-author { font-size: 13px; color: #8b95a8; font-weight: 500; }
 .news-card-dot { color: #2d3548; }
 .news-card-date { font-size: 12px; color: #4a5568; }
@@ -949,6 +949,11 @@ function renderCategories() {
 }
 
 const FALLBACK_BANNER = '/FortNovelHeader.png';
+const HIDDEN_AUTHORS = new Set(['maus']);
+function isHiddenAuthor(a) {
+  const u = (a.authorUsername || a.bylineName || '').toLowerCase().trim();
+  return HIDDEN_AUTHORS.has(u);
+}
 function extractImageFromText(text) {
   if (!text) return null;
   const md = text.match(/!\[[^\]]*\]\(([^)\s]+)\)/);
@@ -993,6 +998,7 @@ function renderGrid() {
   const q = searchQuery.toLowerCase().trim();
   const sorted = Object.entries(ARTICLES).sort((a, b) => articleTime(b[1]) - articleTime(a[1]));
   const filtered = sorted.filter(([id, a]) => {
+    if (isHiddenAuthor(a)) return false;
     const matchesCat = activeCategory === 'All' || (a.category||'').toLowerCase() === activeCategory.toLowerCase();
     if (!matchesCat) return false;
     if (!q) return true;
@@ -1029,7 +1035,7 @@ function applyPfp(username, pfp) {
   const bylineSel = `.byline-av[data-username="${CSS.escape(username)}"]`;
   document.querySelectorAll(cardSel + ',' + bylineSel).forEach(el => {
     const fallback = (el.textContent || '?').trim().charAt(0).replace(/['"\\]/g,'');
-    el.innerHTML = `<img src="${pfp}" alt="" onerror="this.parentNode.textContent='${fallback}'">`;
+    el.innerHTML = `<img src="${pfp}" alt="" draggable="false" oncontextmenu="return false" onerror="this.parentNode.textContent='${fallback}'">`;
   });
 }
 
@@ -1090,6 +1096,7 @@ async function loadAdminAnnouncements() {
         dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       } catch { dateStr = 'Recent'; }
       const authorName = a.author || a.createdBy || 'Fortized';
+      if (HIDDEN_AUTHORS.has(authorName.toLowerCase().trim())) continue;
       const banner = a.image || extractImageFromText(a.body) || FALLBACK_BANNER;
       ARTICLES[slug] = {
         category: 'Announcement', date: dateStr, readTime: Math.max(1, Math.ceil((a.body||'').split(/\s+/).length / 200)) + ' min read',
@@ -1143,6 +1150,7 @@ async function loadForumAnnouncementPosts() {
         if (!Array.isArray(msgs) || msgs.length === 0) break;
         for (const m of msgs) {
           if (!m || !m.text) continue;
+          if (HIDDEN_AUTHORS.has(String(m.from || '').toLowerCase().trim())) continue;
           const slug = 'forum_' + slugifyUsername(c.bastionId) + '_' + slugifyUsername(c.channelId) + '_' + slugifyUsername(m.id);
           if (ARTICLES[slug]) continue;
           const text = String(m.text);

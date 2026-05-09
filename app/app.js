@@ -40298,28 +40298,53 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Banner -->
     <div class="mpp-banner">
       ${bannerBg}
+      ${profileTheme ? `<div class="mpp-banner-accent"></div>` : ''}
     </div>
-    <!-- Avatar - centered, clicking opens full profile -->
+    <!-- Avatar + decorations + status -->
     <div class="mpp-av-area">
       <div class="mpp-av" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
         ${buildAvatarHTML(u.pfp, u.displayName||u.username, 90)}
+        ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="mpp-decoration" onerror="this.style.display='none'">` : ''}
       </div>
+      <span class="mpp-status-dot">${FtzStatus.dotSvg(status, 16)}</span>
     </div>
-    <!-- Identity centered -->
+    <!-- Identity + badges -->
     <div class="mpp-identity">
       <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
-      <div class="mpp-username">@${escapeHTML(u.username)}</div>
-      <!-- Badges - now visible and centered -->
-      <div class="mpp-badges-inline">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
+      <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` · ${u.pronouns}` : ''}</div>
+      <div class="mpp-badges">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
     </div>
-    <!-- Custom status (if any) -->
-    ${customStatus?.text ? `<div style="text-align:center;margin-top:8px;padding:6px 12px;background:rgba(255,255,255,.04);border-radius:20px;font-size:12px;color:rgba(255,255,255,.6);">${customStatus.emoji||''} ${escapeHTML(customStatus.text).slice(0,50)}</div>` : ''}
-    <!-- Simple actions -->
+    <!-- Status row -->
+    <div class="mpp-status-row">
+      <span class="mpp-status-label" style="color:${sc}">${FtzStatus.publicLabel(status)}</span>
+      ${customStatus?.text ? `<span class="mpp-cs">${customStatus.emoji||''} ${escapeHTML(customStatus.text).slice(0,40)}</span>` : ''}
+      ${(+u.dailyStreak) ? `<span class="mpp-streak">${typeof _streakFlameSvg === 'function' ? _streakFlameSvg(12) : '🔥'} ${+u.dailyStreak} day streak</span>` : ''}
+    </div>
+    <!-- Bio -->
+    ${u.bio ? `<div class="mpp-bio">${parseBioMD(u.bio.slice(0,200))}${u.bio.length>200?'…':''}</div>` : ''}
+    <!-- Member since -->
+    ${_memberSince ? `<div class="mpp-meta">Member since ${_memberSince}</div>` : ''}
+    <!-- Roles in current bastion -->
+    ${(_currentView === 'bastion' && curBastion !== null) ? (() => {
+      const _roleTags = renderUserRoleTags(username);
+      return _roleTags ? `<div class="mpp-roles">${_roleTags}</div>` : '';
+    })() : ''}
+    <!-- Games -->
+    ${_previewGames.length ? `<div class="mpp-games"><span>Games</span>${_previewGames.slice(0,5).map(g => {
+      const cover = g.coverUrl || g.cover || g.icon || '';
+      const safeName = String(g.name || '?');
+      if (cover && (cover.startsWith('http') || cover.startsWith('/'))) {
+        return `<img src="${cover}" title="${safeName}" onerror="this.style.display='none'">`;
+      }
+      return `<span>${safeName.charAt(0).toUpperCase()}</span>`;
+    }).join('')}${_previewGames.length>5?`<span>+${_previewGames.length-5}</span>`:''}</div>` : ''}
+    <!-- Actions -->
     <div class="mpp-actions">
       ${isOwn
-        ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Edit Profile</button>`
-        : `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')">Message</button>`}
-      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">Profile</button>
+        ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Edit Profile</button>
+           <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()">Status</button>`
+        : `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')">Message</button>
+           <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">Profile</button>`}
     </div>`;
 
   // Position near the anchor element

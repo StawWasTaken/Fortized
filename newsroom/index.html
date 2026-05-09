@@ -184,6 +184,10 @@ a{text-decoration:none;color:inherit}
 .perk-body .perk-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:3px}
 .perk-body .perk-desc{font-size:12px;color:var(--mu-l);line-height:1.5;font-family:'DM Sans',sans-serif}
 .article-prose .sign-off{color:var(--mu);font-size:13.5px;font-style:italic;border-top:1px solid var(--bd);padding-top:22px;margin-top:8px;font-family:'DM Sans',sans-serif}
+.article-prose .hl{background:rgba(255,249,62,.18);color:#fff93e;padding:0 5px;border-radius:4px;font-weight:600;font-family:'DM Sans',sans-serif}
+.article-prose q{font-style:italic;color:#c8d0dc}
+.article-prose a{color:var(--acc);text-decoration:underline;text-decoration-color:rgba(255,249,62,.35);text-underline-offset:2px}
+.article-prose a:hover{text-decoration-color:var(--acc)}
 
 /* ── Animations ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -1106,87 +1110,82 @@ async function loadAdminAnnouncements() {
   } catch(e) { console.warn('[Newsroom] admin announcements load failed:', e); return 0; }
 }
 
-// ── Auto-import announcement-room posts from Bastions ──
+// ── Convert forum-flavoured markdown to article HTML ──
+function forumBodyToHtml(text) {
+  if (!text) return '';
+  // Drop any embedded image markdown (we surface the first image as the banner)
+  let s = String(text).replace(/!\[[^\]]*\]\([^)\s]+\)/g, '');
+  // Escape HTML so user content is safe
+  s = s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // Forum inline formatting: **bold**, //italic//, ==highlight==, ''quote''
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/\/\/([^/\n][^\n/]*?)\/\//g, '<em>$1</em>');
+  s = s.replace(/==([^=\n]+)==/g, '<span class="hl">$1</span>');
+  s = s.replace(/&#39;&#39;([^\n]+?)&#39;&#39;/g, '<q>$1</q>');
+  // Linkify bare URLs
+  s = s.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?])/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  // Build paragraphs / bulleted lists
+  const lines = s.split(/\n+/);
+  let html = '';
+  let inUl = false;
+  let firstPara = true;
+  for (const raw of lines) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    if (/^[•\-]\s+/.test(trimmed)) {
+      if (!inUl) { html += '<ul>'; inUl = true; }
+      html += '<li>' + trimmed.replace(/^[•\-]\s+/, '') + '</li>';
+    } else {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (firstPara) { html += '<p class="lead">' + trimmed + '</p>'; firstPara = false; }
+      else html += '<p>' + trimmed + '</p>';
+    }
+  }
+  if (inUl) html += '</ul>';
+  return html;
+}
+
+// ── Auto-import announcement-category forum threads (the Forum app, not bastions) ──
 async function loadForumAnnouncementPosts() {
   try {
-    const r = await fetch(SB_URL + '/rest/v1/global_bastions?select=id,data&limit=200', { headers: SB_HEADERS });
+    const r = await fetch(`${SB_URL}/rest/v1/forum_threads?category=eq.announcements&select=id,title,author,content,image,created_at,updated_at,pinned,locked&order=created_at.desc&limit=500`, { headers: SB_HEADERS });
     if (!r.ok) return 0;
-    const bastions = await r.json();
-    if (!Array.isArray(bastions)) return 0;
-
-    // Find channels typed/categorised as announcement
-    const annChannels = [];
-    for (const b of bastions) {
-      const name = (b.data && (b.data.name || b.data.title)) || 'Bastion';
-      // Bastions sometimes store channels under various keys
-      const buckets = [b.data && b.data.channels, b.data && b.data.rooms, b.data && b.data.chambers].filter(Array.isArray);
-      const list = [].concat(...buckets);
-      for (const ch of list) {
-        const t = String((ch && (ch.type || ch.kind || ch.category)) || '').toLowerCase();
-        if (t === 'announcement' || t === 'announcements') {
-          // bastion_msgs.channel_id is keyed by channel.name when channel.id is missing
-          const channelKey = (ch && (ch.id || ch.name)) || null;
-          if (channelKey) annChannels.push({ bastionId: b.id, bastionName: name, channelId: channelKey, channelName: ch.name || channelKey });
-        }
-      }
-    }
-    if (!annChannels.length) return 0;
-
+    const threads = await r.json();
+    if (!Array.isArray(threads) || !threads.length) return 0;
     let added = 0;
-    for (const c of annChannels) {
-      // Pull ALL messages from each announcement channel (paged), not just the latest.
-      let offset = 0; const PAGE = 200;
-      while (true) {
-        const r2 = await fetch(`${SB_URL}/rest/v1/bastion_msgs?bastion_id=eq.${encodeURIComponent(c.bastionId)}&channel_id=eq.${encodeURIComponent(c.channelId)}&select=id,from,text,timestamp,time&order=timestamp.desc&limit=${PAGE}&offset=${offset}`, { headers: SB_HEADERS });
-        if (!r2.ok) break;
-        const msgs = await r2.json();
-        if (!Array.isArray(msgs) || msgs.length === 0) break;
-        for (const m of msgs) {
-          if (!m || !m.text) continue;
-          if (HIDDEN_AUTHORS.has(String(m.from || '').toLowerCase().trim())) continue;
-          const slug = 'forum_' + slugifyUsername(c.bastionId) + '_' + slugifyUsername(c.channelId) + '_' + slugifyUsername(m.id);
-          if (ARTICLES[slug]) continue;
-          const text = String(m.text);
-          // Strip embedded image markdown from displayed body so we don't double-render
-          const cleaned = text.replace(/!\[[^\]]*\]\([^)\s]+\)/g, '').trim();
-          const lines = cleaned.split(/\n+/).filter(Boolean);
-          const title = (lines[0] || 'Announcement').slice(0, 140);
-          const restLines = lines.slice(1);
-          let content = '<p class="lead">' + escAttr(lines[0] || '') + '</p>';
-          for (const line of restLines) content += '<p>' + escAttr(line) + '</p>';
-          let ts = Date.now();
-          try {
-            ts = m.timestamp ? (Number.isFinite(+m.timestamp) ? +m.timestamp : new Date(m.timestamp).getTime()) : Date.now();
-          } catch {}
-          const dateStr = new Date(ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-          const banner = extractImageFromText(text) || FALLBACK_BANNER;
-          ARTICLES[slug] = {
-            category: 'Announcement',
-            date: dateStr,
-            createdAt: ts,
-            readTime: Math.max(1, Math.ceil(text.split(/\s+/).length / 200)) + ' min read',
-            authorInitial: (m.from || 'F').charAt(0).toUpperCase(),
-            authorPillLabel: c.bastionName,
-            title,
-            bylineName: m.from || 'Fortized',
-            authorUsername: m.from || '',
-            bylineRole: c.bastionName + ' · ' + c.channelName,
-            tagClass: 'tag-announce',
-            tagLabel: 'Announcement',
-            banner,
-            fromAnnouncement: true,
-            fromBastion: c.bastionName,
-            content
-          };
-          added++;
-        }
-        if (msgs.length < PAGE) break;
-        offset += PAGE;
-      }
+    for (const t of threads) {
+      if (!t || !t.id || !t.title) continue;
+      const author = t.author || 'Fortized';
+      if (HIDDEN_AUTHORS.has(String(author).toLowerCase().trim())) continue;
+      const slug = 'forum_thread_' + slugifyUsername(t.id);
+      if (ARTICLES[slug]) continue;
+      const ts = Number.isFinite(+t.created_at) ? +t.created_at : Date.now();
+      const dateStr = new Date(ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const banner = t.image || extractImageFromText(t.content || '') || FALLBACK_BANNER;
+      const content = forumBodyToHtml(t.content || '');
+      ARTICLES[slug] = {
+        category: 'Announcement',
+        date: dateStr,
+        createdAt: ts,
+        readTime: Math.max(1, Math.ceil(String(t.content||'').split(/\s+/).length / 200)) + ' min read',
+        authorInitial: (author || 'F').charAt(0).toUpperCase(),
+        authorPillLabel: 'Fortized Forum',
+        title: t.title,
+        bylineName: author,
+        authorUsername: author,
+        bylineRole: 'Forum announcement',
+        tagClass: 'tag-announce',
+        tagLabel: 'Announcement',
+        banner,
+        fromAnnouncement: true,
+        fromBastion: 'Forum',
+        content
+      };
+      added++;
     }
     return added;
   } catch (e) {
-    console.warn('[Newsroom] forum announcements load failed:', e);
+    console.warn('[Newsroom] forum_threads announcements load failed:', e);
     return 0;
   }
 }

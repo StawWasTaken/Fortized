@@ -284,7 +284,7 @@ let isMuted = false;
 let isDeafened = false;
 let notifPanelOpen = false;
 let notifSettings = {messages:true,friendRequests:true,bastionActivity:true,mentions:true,sounds:true,priorityOnly:false,digestMode:false,priorityChannels:[]};
-let _globalSettings = (() => { try { return JSON.parse(localStorage.getItem('ftz_global_settings')||'{"disableEmoticonConversion":false}'); } catch(e) { console.warn('[Settings] Parse failed, using defaults:', e); return {disableEmoticonConversion:false}; } })();
+let _globalSettings = (() => { try { return JSON.parse(localStorage.getItem('ftz_global_settings')||'{"disableEmoticonConversion":false,"newProfileDesign":false}'); } catch(e) { console.warn('[Settings] Parse failed, using defaults:', e); return {disableEmoticonConversion:false,newProfileDesign:false}; } })();
 function saveGlobalSettings() { localStorage.setItem('ftz_global_settings', JSON.stringify(_globalSettings)); }
 let replyingTo = null;
 let forwardMsgText = '';
@@ -17525,6 +17525,17 @@ function _buildProfileView(tab) {
           </div>
           <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
             <div class="toggle ${!_globalSettings?.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this)"></div>
+          </div>
+        </div>
+
+        <div class="settings-section-title" style="margin-top:20px;">APPEARANCE</div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <div class="srl-name">New Profile Preview</div>
+            <div class="srl-desc">Cleaner, minimal profile cards</div>
+          </div>
+          <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
+            <div class="toggle ${_globalSettings?.newProfileDesign?'on':''}" onclick="toggleNewProfileDesign(this)"></div>
           </div>
         </div>
 
@@ -38605,6 +38616,15 @@ function toggleEmoticonConversion(el) {
   toast('Emoticon conversion ' + (_globalSettings.disableEmoticonConversion ? 'disabled' : 'enabled'), 'info');
 }
 
+function toggleNewProfileDesign(el) {
+  _globalSettings.newProfileDesign = !_globalSettings.newProfileDesign;
+  el.classList.toggle('on', _globalSettings.newProfileDesign);
+  saveGlobalSettings();
+  toast('New profile preview ' + (_globalSettings.newProfileDesign ? 'enabled' : 'disabled'), 'info');
+  // Refresh any open profile
+  document.getElementById('mini-profile-preview')?.remove();
+}
+
 // ════════════════════════════════════════════════════════
 // TEXT SELECTION FORMATTING PANEL
 // ════════════════════════════════════════════════════════
@@ -40310,13 +40330,162 @@ function closeOwnProfilePanel() {
 }
 
 
+}
+
+// ═════════════════════════════════════════════════════════════
+// NEW Profile Preview - Clean, minimal redesign
+// ═════════════════════════════════════════════════════════════
+async function showMiniProfilePreviewNew(username, anchorEl) {
+  document.getElementById('mini-profile-preview')?.remove();
+  
+  let u = null;
+  try { u = await FortizedSocial.getUserByName(username); } catch(e) {}
+  if (!u) u = { username, displayName: username };
+  
+  const isOwn = username === CU?.username;
+  const status = isOwn ? (CU.status || 'online') : 'offline';
+  const sc = FtzStatus.color(status);
+  
+  const panel = document.createElement('div');
+  panel.id = 'mini-profile-preview';
+  panel.className = 'mini-profile-preview';
+  panel.setAttribute('role', 'dialog');
+  
+  // Custom theme support
+  const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+  const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
+  
+  if (profileTheme) {
+    panel.style.borderColor = 'transparent';
+    panel.style.backgroundImage = `linear-gradient(160deg,${profileTheme.color1}08,var(--panel) 35%,var(--panel) 70%,${profileTheme.color2}08),linear-gradient(135deg,${profileTheme.color1}30,${profileTheme.color2}30)`;
+  }
+  
+  // Banner
+  const bannerHtml = profileTheme 
+    ? `<div class="mppr-banner" style="background:linear-gradient(135deg,${profileTheme.color1}30,${profileTheme.color2}20);"><div class="mppr-banner-accent"></div></div>`
+    : `<div class="mppr-banner"></div>`;
+  
+  // Avatar with glow effect
+  const avatarHtml = `<div class="mppr-avatar-wrap">
+    <div class="mppr-avatar" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
+      ${buildAvatarHTML(u.pfp, u.displayName||u.username, 80)}
+      <div class="mppr-status-dot">${FtzStatus.dotSvg(status, 14)}</div>
+    </div>
+  </div>`;
+  
+  // Identity - centered, clean
+  const displayNameHtml = `<div class="mppr-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
+    ${escapeHTML(u.displayName || u.username)}
+  </div>`;
+  
+  const handleHtml = `<div class="mppr-handle">@${escapeHTML(u.username)}</div>`;
+  
+  // Badges - simplified
+  const badgeHtml = (renderBadgesHTML ? renderBadgesHTML(u) : '').replace(/class="/g, 'class="mppr-badge ');
+  
+  // Activity - only show when active
+  let activityHtml = '';
+  if (u.gameActivity?.name || u.activityState?.activities?.length) {
+    const act = u.activityState?.activities?.[0] || { name: u.gameActivity.name, type: 'playing', icon: '🎮' };
+    const verb = act.type === 'listening' ? 'Listening to' : act.type === 'watching' ? 'Watching' : 'Playing';
+    activityHtml = `<div class="mppr-activity">
+      <div class="mppr-activity-icon">${act.icon || '🎮'}</div>
+      <div class="mppr-activity-info">
+        <div class="mppr-activity-label">${verb}</div>
+        <div class="mppr-activity-name">${escapeHTML(act.name)}</div>
+      </div>
+    </div>`;
+  }
+  
+  // Custom status - optional pill
+  let statusPillHtml = '';
+  if (u.customStatus?.text || isOwn) {
+    statusPillHtml = `<div class="mppr-status-pill" ${isOwn ? `onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()"` : ''}>
+      ${u.customStatus?.emoji ? `<span>${u.customStatus.emoji}</span>` : ''}
+      <span>${u.customStatus?.text || (isOwn ? 'Set a status' : '')}</span>
+    </div>`;
+  }
+  
+  // Quick actions - max 2
+  let actionsHtml = '';
+  if (isOwn) {
+    actionsHtml = `<div class="mppr-actions">
+      <button class="mppr-btn mppr-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Edit Profile</button>
+    </div>`;
+  } else {
+    actionsHtml = `<div class="mppr-actions">
+      <button class="mppr-btn mppr-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')">Message</button>
+    </div>`;
+  }
+  
+  // Compact sections - roles, games count only
+  let sectionsHtml = '';
+  const _roleTags = renderUserRoleTags ? renderUserRoleTags(username) : '';
+  if (_roleTags) {
+    sectionsHtml += `<div class="mppr-divider"></div><div class="mppr-roles">${_roleTags}</div>`;
+  }
+  const gameCount = (u.gameCollection || u.registeredGames || []).length;
+  if (gameCount > 0) {
+    sectionsHtml += `<div class="mppr-section"><span class="mppr-game-chip">${gameCount} games</span></div>`;
+  }
+  
+  panel.innerHTML = bannerHtml + avatarHtml + 
+    `<div class="mppr-identity">${displayNameHtml}${handleHtml}${badgeHtml ? `<div class="mppr-badges">${badgeHtml}</div>` : ''}</div>` +
+    (statusPillHtml || activityHtml ? statusPillHtml + activityHtml : '') +
+    sectionsHtml + actionsHtml;
+  
+  document.body.appendChild(panel);
+  
+  // Position - reuse existing logic
+  const rect = anchorEl?.getBoundingClientRect() || {left:100, top:100, width:40, bottom:140};
+  const PW = panel.offsetWidth || 280;
+  const PH = panel.offsetHeight || 280;
+  let left, top;
+  
+  const isUserbarAnchor = anchorEl && (anchorEl.id === 'ua-clickable' || anchorEl.closest?.('#ua-clickable'));
+  const isNearBottom = rect.top > window.innerHeight - 240;
+  
+  if (isUserbarAnchor || isNearBottom) {
+    left = rect.left;
+    top = rect.top - PH - 10;
+    if (top < 8) top = 8;
+    if (left + PW > window.innerWidth - 8) left = window.innerWidth - PW - 8;
+  } else {
+    left = rect.left + rect.width + 8;
+    top = rect.top;
+    if (left + PW > window.innerWidth - 8) left = rect.left - PW - 8;
+    if (top + PH > window.innerHeight - 8) top = window.innerHeight - PH - 8;
+    if (top < 8) top = 8;
+  }
+  
+  panel.style.left = Math.max(8, left) + 'px';
+  panel.style.top = Math.max(8, top) + 'px';
+  
+  // Close handlers
+  setTimeout(() => {
+    function _closePanel() { panel.remove(); document.removeEventListener('mousedown', _closeMouse); document.removeEventListener('keydown', _closeKey); }
+    function _closeMouse(e) { if (!panel.contains(e.target) && e.target !== anchorEl) _closePanel(); }
+    function _closeKey(e) { if (e.key === 'Escape') { e.stopPropagation(); _closePanel(); } }
+    document.addEventListener('mousedown', _closeMouse);
+    document.addEventListener('keydown', _closeKey);
+  }, 100);
+}
+
+
 // ════════════════════════════════════════════════════════════
 // MINI PROFILE PREVIEW (first click) → full card (second click)
 // ════════════════════════════════════════════════════════════
 async function showMiniProfilePreview(username, anchorEl) {
   document.getElementById('mini-profile-preview')?.remove();
-  // Userbar anchor → compact "own profile" popover (Discord parity).
-  // Everywhere else → fuller original layout (chat hover, member list, etc).
+  
+  // Check if we should use the new cleaner design (opt-in via settings)
+  const _useNewProfileDesign = _globalSettings?.newProfileDesign === true;
+  
+  if (_useNewProfileDesign) {
+    return showMiniProfilePreviewNew(username, anchorEl);
+  }
+  
+  // Original rendering continues below...
   const _isUserbarAnchor = !!(anchorEl && (anchorEl.id === 'ua-clickable' || anchorEl.closest?.('#ua-clickable')));
   let u = null;
   try { u = await FortizedSocial.getUserByName(username); } catch(e) { _dbg('[Profile] user lookup failed', e); }

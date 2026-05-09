@@ -40298,123 +40298,29 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Banner -->
     <div class="mpp-banner">
       ${bannerBg}
-      ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.7;z-index:1;"></div>` : ''}
     </div>
-    <!-- Avatar row: avatar + custom status pill + streak chip on the same line -->
+    <!-- Avatar - centered, clicking opens full profile -->
     <div class="mpp-av-area">
-      <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 80)}</div>
-        ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
-        <span class="profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="18" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 18)}</span>
+      <div class="mpp-av" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
+        ${buildAvatarHTML(u.pfp, u.displayName||u.username, 90)}
       </div>
-      ${(customStatus?.text || isOwn) ? `<button class="profile-custom-status cloud-status-bubble mpp-cs-pill ${customStatus?.text ? '' : 'mpp-cs-pill--empty'}" data-for="${escapeHTML(username)}" ${isOwn ? `onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()"` : 'tabindex="-1"'}>${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,40)}</span>` : `<span class="mpp-cs-plus">+</span><span class="csb-text">Add a status</span>`}</button>` : `<div class="profile-custom-status mpp-cs-pill" data-for="${escapeHTML(username)}" style="display:none;"></div>`}
-      ${(+u.dailyStreak) ? `<div class="mpp-streak-chip" oncontextmenu="${isOwn ? 'onStreakCtxMenu(event);return false;' : 'return false;'}">${typeof _streakFlameSvg === 'function' ? _streakFlameSvg(11) : '🔥'}<span>${+u.dailyStreak}</span></div>` : ''}
     </div>
-    <!-- Identity: name on top, then handle row with pronouns + badges right -->
+    <!-- Identity centered -->
     <div class="mpp-identity">
       <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
-      <div class="mpp-handle-row">
-        <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? `<span class="mpp-handle-dot">·</span>${escapeHTML(u.pronouns)}` : ''}</div>
-        <div class="mpp-badges-inline">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
-      </div>
+      <div class="mpp-username">@${escapeHTML(u.username)}</div>
+      <!-- Badges - now visible and centered -->
+      <div class="mpp-badges-inline">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
     </div>
-    <!-- Activity Status - Multi-activity support -->
-    ${(() => {
-      let activitiesToShow = [];
-      if (u.activityState?.activities?.length) {
-        activitiesToShow = u.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2)).slice(0, 2);
-      } else if (u.gameActivity?.name) {
-        activitiesToShow = [{
-          id: u.gameActivity._spotify ? 'spotify' : 'game',
-          type: u.gameActivity._spotify ? 'listening' : 'playing',
-          name: u.gameActivity.name,
-          icon: u.gameActivity.icon || '🎮',
-          since: u.gameActivity.since,
-          priority: u.gameActivity._spotify ? 3 : 2,
-          metadata: {
-            coverThumb: u.gameActivity.coverThumb,
-            genre: u.gameActivity.genre,
-            spotifyAlbumArt: u.gameActivity.spotifyAlbumArt
-          }
-        }];
-      }
-
-      if (!activitiesToShow.length) return '';
-
-      const a = activitiesToShow[0];
-      const verb = a.type === 'listening' ? 'Listening to' : a.type === 'watching' ? 'Watching' : 'Playing';
-      const coverThumb = a.metadata?.coverThumb || a.metadata?.spotifyAlbumArt;
-      const _coverHTML = coverThumb
-        ? `<img src="${escapeHTML(coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.outerHTML='<span style=font-size:18px>${a.icon||'🎮'}</span>'">`
-        : `<span style="font-size:18px;">${a.icon||'🎮'}</span>`;
-      return `<div class="mpp-card mpp-activity-card">
-        <div class="mpp-card-label">${verb}</div>
-        <div class="mpp-activity-body">
-          <div class="mpp-activity-cover">${_coverHTML}</div>
-          <div class="mpp-activity-info">
-            <div class="mpp-activity-name">${escapeHTML(a.name)}</div>
-            ${a.metadata?.genre ? `<div class="mpp-activity-meta">${escapeHTML(typeof a.metadata.genre==='string' ? a.metadata.genre : (a.metadata.genre[0]||''))}</div>` : ''}
-            ${a.since ? `<div class="mpp-activity-meta">${_formatActivityElapsed(a.since)}</div>` : ''}
-          </div>
-        </div>
-      </div>`;
-    })()}
-    <!-- (badges moved into the handle row above) -->
-    <!-- Bio: userbar uses lightweight inline parseBioMD with empty CTA;
-         chat/memberlist uses the older parseMD with 150-char truncation
-         (the design the user was used to before the unification pass). -->
-    ${_isUserbarAnchor
-      ? (u.bio
-          ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio">${parseBioMD(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>`
-          : (isOwn ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio mpp-bio-empty" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Click to add a bio…</div></div>` : ''))
-      : (u.bio
-          ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${parseMD(escapeHTML(u.bio.slice(0,150)))}${u.bio.length>150?'…':''}</div></div>`
-          : '')}
-    ${(_isUserbarAnchor ? !isOwn : true) && _memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
-    <!-- Roles: userbar hides them on own popover (compact). Chat/memberlist
-         shows them whenever in bastion context, matching the old design. -->
-    ${((_isUserbarAnchor ? !isOwn : true) && _currentView === 'bastion' && curBastion !== null) ? (() => {
-      const _canManageRoles = hasPerm('manage_roles') || (CU?.bastions?.[curBastion]?.owner === CU?.username);
-      const _roleTags = renderUserRoleTags(username);
-      const _addBtn = (_canManageRoles && !isOwn) ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" style="width:22px;height:22px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;margin-top:4px;" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.3)'">+</button>` : '';
-      return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="display:flex;align-items:center;justify-content:space-between;">Roles</div><div class="mpp-roles-row" id="mpp-roles-container">${_roleTags}${_addBtn}</div><div id="mpp-role-picker" style="display:none;"></div></div>`;
-    })() : ''}
-    <!-- Game collection — userbar says "Games I like", others say
-         "Game Collection" (the original label). -->
-    ${_previewGames.length ? `<div class="mpp-card mpp-game-card">
-      <span class="mpp-card-inline-label">${_isUserbarAnchor ? 'Games I like' : 'Game Collection'}</span>
-      <div class="mpp-game-thumbs">${_previewGames.slice(0,3).map(g => {
-        const cover = g.coverUrl || g.cover || g.icon || g.iconUrl || '';
-        const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));
-        // Defensive: g.name can be a non-string in some legacy rows; coerce
-        // via String() + charAt() so a single bad row doesn't blow up the
-        // entire popover render with a TypeError on .toUpperCase().
-        const safeName = String(g.name || '?');
-        const initial = (safeName.charAt(0) || '?').toUpperCase();
-        const titleAttr = `title="${escapeHTML(safeName)}"`;
-        if (isUrl) {
-          const fb = `<span class=&quot;mpp-game-thumb mpp-game-thumb--fallback&quot; title=&quot;${escapeHTML(safeName)}&quot;>${escapeHTML(initial)}</span>`;
-          return `<img class="mpp-game-thumb" src="${escapeHTML(cover)}" alt="${escapeHTML(safeName)}" ${titleAttr} onerror="this.outerHTML='${fb}'">`;
-        }
-        return `<span class="mpp-game-thumb mpp-game-thumb--fallback" ${titleAttr}>${escapeHTML(initial)}</span>`;
-      }).join('')}${_previewGames.length>3?`<span class="mpp-game-thumb mpp-game-thumb--more">+${_previewGames.length-3}</span>`:''}</div>
-    </div>` : ''}
-    <!-- Widgets -->
-    <div id="mpp-widgets-area"></div>
-    <div class="mpp-divider"></div>
-    <!-- Actions: userbar (own user only) gets Discord-style 3-stack
-         (Edit Profile + status pill + switch-accounts pill). Chat /
-         memberlist popovers use the original single-row pair. -->
-    ${(_isUserbarAnchor && isOwn) ? `<div class="mpp-actions mpp-actions-own">
-      <button class="mpp-btn-primary mpp-btn-fullwidth" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>
-      <button class="mpp-pill-action" onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()" title="Set status"><span class="mpp-pill-dot" style="background:${FtzStatus.color(u.status||'online')};"></span><span class="mpp-pill-label">${escapeHTML(FtzStatus.publicLabel(u.status||'online'))}</span><svg class="mpp-pill-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
-      <button class="mpp-pill-action" onclick="document.getElementById('mini-profile-preview')?.remove();toggleAccountSwitcher()" title="Switch accounts"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><span class="mpp-pill-label">Switch Accounts</span><svg class="mpp-pill-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
-    </div>` : `<div class="mpp-actions">
+    <!-- Custom status (if any) -->
+    ${customStatus?.text ? `<div style="text-align:center;margin-top:8px;padding:6px 12px;background:rgba(255,255,255,.04);border-radius:20px;font-size:12px;color:rgba(255,255,255,.6);">${customStatus.emoji||''} ${escapeHTML(customStatus.text).slice(0,50)}</div>` : ''}
+    <!-- Simple actions -->
+    <div class="mpp-actions">
       ${isOwn
-        ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>`
-        : `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
-      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
-    </div>`}`;
+        ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Edit Profile</button>`
+        : `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')">Message</button>`}
+      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">Profile</button>
+    </div>`;
 
   // Position near the anchor element
   document.body.appendChild(panel);

@@ -19882,6 +19882,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>
 
       <!-- Primary Stats Row -->
+      <div class="sc-section-label">Threat &amp; Activity</div>
       <div class="ftz-grid cols-5" style="margin-bottom:var(--space-sm);">
         ${[
           {l:'Total Users',v:totalUsers,c:'#60a5fa',t:'all_users'},
@@ -19895,6 +19896,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           ${s.sub?`<div style="font-size:9px;color:rgba(255,255,255,.2);margin-top:3px;">${s.sub}</div>`:''}
         </div>`).join('')}
       </div>
+      <div class="sc-section-label">Community Health</div>
       <div class="ftz-grid cols-5" style="margin-bottom:var(--space-xl);">
         ${[
           {l:'Radiance',v:radianceCount,c:'#ffd93e'},
@@ -19909,6 +19911,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>
 
       <!-- Three-column bottom section -->
+      <div class="sc-section-label">Live Operations</div>
       <div class="ftz-grid cols-3">
         <!-- Recent Reports -->
         <div class="hq-panel">

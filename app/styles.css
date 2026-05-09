@@ -8541,4 +8541,225 @@ select:focus-visible {
 }
 .msg-retry-btn:hover{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.35);}
 .msg-retry-btn svg{flex-shrink:0;}
+
+/* ════════════════════════════════════════════════════════════════
+   STAFF CONSOLE — V2 VISUAL LAYER
+   Polishes the existing .admin-* / .adm-* / .hq-* surface so every
+   tab feels like the same product. Pure CSS — no JS rewrites needed.
+   ════════════════════════════════════════════════════════════════ */
+:root {
+  --sc-bg: #0d1015;
+  --sc-surface: #14171f;
+  --sc-surface-2: #181c25;
+  --sc-border: rgba(255,255,255,.06);
+  --sc-border-strong: rgba(255,255,255,.10);
+  --sc-text-dim: rgba(255,255,255,.50);
+  --sc-text-muted: rgba(255,255,255,.32);
+  --sc-radius: 14px;
+}
+
+/* ── Shell ─────────────────────────────────────────── */
+#view-admin .admin-wrap{background:var(--sc-bg);}
+#view-admin .admin-header-bar{
+  height:54px;min-height:54px;
+  padding:0 22px;gap:16px;
+  background:linear-gradient(180deg,#11141b 0%,#0d1015 100%);
+  border-bottom:1px solid var(--sc-border);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+#view-admin .admin-header-bar::after{
+  background:linear-gradient(90deg,transparent 5%,rgba(255,249,62,.18) 50%,transparent 95%);
+}
+#view-admin .admin-body{background:var(--sc-bg);}
+#view-admin .admin-nav{
+  width:236px;min-width:236px;
+  background:var(--sc-surface);
+  border-right:1px solid var(--sc-border);
+  padding:18px 12px 24px;
+  gap:2px;
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+#view-admin .admin-main{
+  background:var(--sc-bg);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  padding:0;
+}
+
+/* ── Sidebar tabs ──────────────────────────────────── */
+#view-admin .adm-tab{
+  font-family:var(--font-ui);
+  font-size:13px;font-weight:500;
+  color:var(--sc-text-dim);
+  padding:9px 12px;border-radius:10px;gap:11px;
+  border:1px solid transparent;
+  letter-spacing:0;
+}
+#view-admin .adm-tab svg{width:16px;height:16px;opacity:.55;stroke-width:2;}
+#view-admin .adm-tab:hover{background:rgba(255,255,255,.04);color:#fff;}
+#view-admin .adm-tab:hover svg{opacity:.85;}
+#view-admin .adm-tab.active{
+  background:rgba(255,249,62,.07);
+  color:var(--accent);
+  font-weight:700;
+  border-color:transparent;
+}
+#view-admin .adm-tab.active svg{opacity:1;}
+#view-admin .adm-tab.active::before{
+  width:3px;height:18px;border-radius:0 3px 3px 0;
+  box-shadow:none;
+}
+#view-admin .adm-sec-label{
+  font-size:9.5px;
+  letter-spacing:.18em;
+  color:rgba(255,255,255,.18);
+  padding:18px 12px 8px;
+}
+
+/* ── Sub-nav (Platform Management groups) ─────────── */
+#view-admin .adm-sub-nav{
+  margin:0 28px 22px;
+  padding:0 0 14px;
+  background:transparent;
+  border:none;border-bottom:1px solid var(--sc-border);
+  border-radius:0;
+  gap:2px;
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  flex-wrap:wrap;
+}
+#view-admin .adm-sub-tab{
+  padding:7px 13px;border-radius:8px;
+  font-size:12.5px;font-weight:600;
+  color:var(--sc-text-dim);
+  border:1px solid transparent;background:transparent;
+}
+#view-admin .adm-sub-tab:hover{background:rgba(255,255,255,.04);color:#fff;}
+#view-admin .adm-sub-tab.active{
+  background:rgba(255,249,62,.08);color:var(--accent);
+  border-color:transparent;
+  box-shadow:none;
+}
+#view-admin .adm-sub-divider{display:none;}
+
+/* ── Page wrappers — normalise inline padding ─────── */
+#view-admin .admin-main > div{padding:24px 28px 56px;}
+#view-admin .admin-main > div > div[style*="padding:var(--space-xl)"],
+#view-admin .admin-main > div > div[style*="padding: var(--space-xl)"]{padding:0 !important;}
+
+/* ── Stat tiles ────────────────────────────────────── */
+#view-admin .hq-stat{
+  background:var(--sc-surface);
+  border:1px solid var(--sc-border);
+  border-radius:var(--sc-radius);
+  padding:18px 20px;
+  box-shadow:none;
+}
+#view-admin .hq-stat:hover{
+  border-color:var(--sc-border-strong);
+  background:var(--sc-surface-2);
+  transform:none;
+  box-shadow:none;
+}
+#view-admin .hq-stat::before{height:2px;opacity:.55;}
+#view-admin .hq-stat:hover::before{opacity:1;}
+#view-admin .hq-stat-val{
+  font-family:var(--font-display);
+  font-size:26px;font-weight:800;line-height:1;
+}
+#view-admin .hq-stat-label{
+  font-size:10.5px;font-weight:600;
+  color:var(--sc-text-muted);
+  text-transform:uppercase;letter-spacing:.08em;
+  margin-top:8px;
+}
+
+/* ── Panels ────────────────────────────────────────── */
+#view-admin .hq-panel{
+  background:var(--sc-surface);
+  border:1px solid var(--sc-border);
+  border-radius:var(--sc-radius);
+  box-shadow:none;
+  overflow:hidden;
+}
+#view-admin .hq-panel-head{
+  padding:14px 18px;
+  border-bottom:1px solid var(--sc-border);
+  background:linear-gradient(180deg,rgba(255,255,255,.015) 0%,transparent 100%);
+}
+#view-admin .hq-panel-head h3{
+  font-family:var(--font-display);
+  font-size:13px;font-weight:700;
+  color:rgba(255,255,255,.78);
+  letter-spacing:-.1px;
+  text-transform:none;
+}
+#view-admin .hq-panel-head svg{width:14px;height:14px;flex-shrink:0;}
+
+/* Header threat pill */
+#view-admin .hq-threat{
+  font-size:10.5px;
+  padding:4px 10px;
+  border-radius:100px;
+  letter-spacing:.04em;
+}
+
+/* ── Quick action button ───────────────────────────── */
+#view-admin .hq-quick-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--font-ui);
+  font-size:12px;font-weight:600;
+  color:var(--sc-text-dim);
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--sc-border);
+  padding:7px 12px;border-radius:9px;cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;
+}
+#view-admin .hq-quick-btn:hover{
+  background:rgba(255,249,62,.06);
+  border-color:rgba(255,249,62,.2);
+  color:var(--accent);
+}
+
+/* ── Lists / rows ──────────────────────────────────── */
+#view-admin .hq-user-row,
+#view-admin .hq-feed-item{
+  padding:11px 18px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  gap:10px;
+  transition:background .12s;
+}
+#view-admin .hq-user-row:last-child,
+#view-admin .hq-feed-item:last-child{border-bottom:none;}
+#view-admin .hq-user-row:hover{background:rgba(255,255,255,.025);}
+
+/* ── Header exit button ────────────────────────────── */
+#view-admin .admin-exit-btn{
+  font-size:11px;
+  padding:6px 12px;
+  border-radius:8px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--sc-border);
+  display:inline-flex;align-items:center;gap:6px;
+}
+#view-admin .admin-exit-btn:hover{
+  background:rgba(248,113,113,.08);
+  border-color:rgba(248,113,113,.25);
+  color:#f87171;opacity:1;
+}
+
+/* ── Spacing rhythm ────────────────────────────────── */
+#view-admin .ftz-grid{gap:14px;}
+#view-admin .ftz-grid + .ftz-grid{margin-top:14px;}
+
+/* ── Generic Staff Console group label (for use in JS) ── */
+#view-admin .sc-section-label{
+  font-family:var(--font-display);
+  font-size:11px;font-weight:800;
+  letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.32);
+  margin:24px 0 12px;
+  display:flex;align-items:center;gap:10px;
+}
+#view-admin .sc-section-label::before{
+  content:'';width:14px;height:1px;background:rgba(255,255,255,.18);
+}
 </style>

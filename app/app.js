@@ -14371,195 +14371,6 @@ function _dismissWhatsNew() {
   }
 }
 
-// Admin: create announcement
-let _annImageData = null;
-async function _adminCreateAnnouncement() {
-  if (!isAdmin()) { toast('Access denied','error'); return; }
-  _annImageData = null;
-  const overlay = document.createElement('div');
-  overlay.id = 'modal-create-announcement';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;';
-  overlay.innerHTML = `
-    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:520px;width:94%;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative;">
-      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;margin-bottom:18px;">New Announcement</div>
-      <div style="margin-bottom:12px;">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Title</div>
-        <input id="ann-title" class="field-input" placeholder="What's new?" maxlength="120">
-      </div>
-      <div style="margin-bottom:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;">Body</div>
-          <button onclick="_annToggleEmojiPicker()" style="padding:3px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:4px;color:rgba(255,255,255,.5);transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='rgba(255,255,255,.06)'" title="Insert emoji">😀 <span style="font-size:10px;">Emoji</span></button>
-        </div>
-        <div style="position:relative;">
-          <textarea id="ann-body" class="field-input" rows="6" placeholder="Write your announcement... Use **bold**, • for bullets" style="resize:vertical;min-height:100px;"></textarea>
-          <div id="ann-emoji-picker" style="display:none;position:absolute;right:0;top:100%;z-index:10;margin-top:4px;background:#1e2130;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px;width:300px;max-height:260px;box-shadow:0 12px 40px rgba(0,0,0,.5);">
-            <div style="display:flex;gap:4px;margin-bottom:8px;overflow-x:auto;padding-bottom:4px;" id="ann-emoji-tabs"></div>
-            <div id="ann-emoji-grid" style="display:flex;flex-wrap:wrap;gap:2px;max-height:180px;overflow-y:auto;"></div>
-          </div>
-        </div>
-      </div>
-      <div style="margin-bottom:12px;">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Banner Image</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface-1,rgba(255,255,255,.04));border:1px solid var(--surface-border,rgba(255,255,255,.08));border-radius:8px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--surface-border,rgba(255,255,255,.08))'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-            <span id="ann-file-label" style="font-size:12px;color:rgba(255,255,255,.4);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Choose image... (optional)</span>
-            <input type="file" accept="image/*" id="ann-image-upload" style="display:none;" onchange="_annImagePreview(event)">
-          </label>
-          ${_annImageData ? `<div id="ann-image-thumb" style="width:40px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.08);"><img src="" style="width:100%;height:100%;object-fit:cover;"></div>` : ''}
-        </div>
-      </div>
-      <div style="display:flex;gap:12px;margin-bottom:16px;">
-        <div style="flex:1;">
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Author</div>
-          <input id="ann-author" class="field-input" value="${escapeHTML(CU?.displayName||CU?.username||'')}" placeholder="Author name">
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;">
-        <button onclick="document.getElementById('modal-create-announcement')?.remove()" style="padding:9px 20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;">Cancel</button>
-        <button onclick="_submitAnnouncement()" style="padding:9px 20px;background:var(--accent);border:none;border-radius:9px;color:var(--rail);cursor:pointer;font-weight:700;font-family:inherit;">Publish</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  // Close emoji picker on outside click
-  overlay.addEventListener('click', e => {
-    const picker = document.getElementById('ann-emoji-picker');
-    if (picker && picker.style.display !== 'none' && !picker.contains(e.target) && !e.target.closest('[onclick*="_annToggleEmojiPicker"]')) {
-      picker.style.display = 'none';
-    }
-  });
-}
-
-function _annImagePreview(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    _annImageData = ev.target.result;
-    const label = document.getElementById('ann-file-label');
-    if (label) label.textContent = file.name;
-    // Add/update thumbnail
-    let thumb = document.getElementById('ann-image-thumb');
-    if (!thumb) {
-      thumb = document.createElement('div');
-      thumb.id = 'ann-image-thumb';
-      thumb.style.cssText = 'width:40px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.08);';
-      e.target.closest('div[style*="display:flex"]')?.appendChild(thumb);
-    }
-    thumb.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-  };
-  reader.readAsDataURL(file);
-}
-
-let _annEmojiTab = 'smileys';
-function _annToggleEmojiPicker() {
-  const picker = document.getElementById('ann-emoji-picker');
-  if (!picker) return;
-  if (picker.style.display === 'none') {
-    picker.style.display = 'block';
-    _annRenderEmojiPicker();
-  } else {
-    picker.style.display = 'none';
-  }
-}
-function _annRenderEmojiPicker() {
-  const tabs = document.getElementById('ann-emoji-tabs');
-  const grid = document.getElementById('ann-emoji-grid');
-  if (!tabs || !grid) return;
-  const cats = EMOJI_PICKER_TABS.filter(t => t.emojis && t.emojis.length);
-  tabs.innerHTML = cats.map(c => `<button onclick="_annSetEmojiTab('${c.id}')" style="padding:4px 6px;border-radius:5px;border:none;cursor:pointer;font-size:14px;background:${_annEmojiTab===c.id?'rgba(255,249,62,.15)':'transparent'};" title="${c.label||c.id}">${c.icon}</button>`).join('');
-  _annRenderEmojiGrid();
-}
-function _annSetEmojiTab(tab) {
-  _annEmojiTab = tab;
-  _annRenderEmojiPicker();
-}
-function _annRenderEmojiGrid() {
-  const grid = document.getElementById('ann-emoji-grid');
-  if (!grid) return;
-  const cat = EMOJI_PICKER_TABS.find(t => t.id === _annEmojiTab);
-  const emojis = cat?.emojis || [];
-  grid.innerHTML = emojis.map(em => `<button onclick="_annInsertEmoji('${em}')" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;font-size:18px;border-radius:5px;transition:background .1s;" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='transparent'">${em}</button>`).join('');
-}
-function _annInsertEmoji(emoji) {
-  const ta = document.getElementById('ann-body');
-  if (!ta) return;
-  const start = ta.selectionStart;
-  const end = ta.selectionEnd;
-  const text = ta.value;
-  ta.value = text.slice(0, start) + emoji + text.slice(end);
-  ta.selectionStart = ta.selectionEnd = start + emoji.length;
-  ta.focus();
-}
-
-async function _submitAnnouncement() {
-  const title = document.getElementById('ann-title')?.value?.trim();
-  const body = document.getElementById('ann-body')?.value?.trim();
-  const image = _annImageData || '';
-  const author = document.getElementById('ann-author')?.value?.trim();
-  if (!title) { toast('Title required','error'); return; }
-  if (!body) { toast('Body required','error'); return; }
-  const announcement = {
-    id: 'ann_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
-    title, body, image: image||undefined, author: author||CU?.username,
-    createdAt: new Date().toISOString(),
-    createdBy: CU?.username,
-    published: true
-  };
-  try {
-    const all = await FortizedSocial.getAnnouncements() || [];
-    all.unshift(announcement);
-    await FortizedSocial.saveAnnouncements(all.slice(0,50));
-    logAudit('announcement_create', title, 'Published by '+CU?.username);
-    document.getElementById('modal-create-announcement')?.remove();
-    toast('Announcement published! It will also appear on the newsroom.','success');
-  } catch(e) { toast('Failed to publish: '+e.message,'error'); }
-}
-
-// View all announcements (admin)
-async function _adminViewAnnouncements() {
-  if (!isAdmin()) { toast('Access denied','error'); return; }
-  const all = await FortizedSocial.getAnnouncements() || [];
-  const overlay = document.createElement('div');
-  overlay.id = 'modal-view-announcements';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;';
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); } catch { return ''; } };
-  overlay.innerHTML = `
-    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:560px;width:94%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 14px;border-bottom:1px solid rgba(255,255,255,.06);">
-        <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;">All Announcements (${all.length})</div>
-        <button onclick="this.closest('#modal-view-announcements').remove()" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;">&times;</button>
-      </div>
-      <div style="overflow-y:auto;padding:16px 24px;flex:1;">
-        ${all.length === 0 ? '<div style="text-align:center;padding:32px;color:rgba(255,255,255,.25);">No announcements yet.</div>' : all.map(a => `
-          <div style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:flex-start;gap:12px;">
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(a.title||'Untitled')}</div>
-              <div style="font-size:11px;color:rgba(255,255,255,.3);">${fmtDate(a.createdAt)} · by ${escapeHTML(a.author||a.createdBy||'Unknown')}</div>
-            </div>
-            <button onclick="_deleteAnnouncement('${a.id}')" style="flex-shrink:0;padding:5px 10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);border-radius:7px;color:#ef4444;cursor:pointer;font-size:11px;font-weight:600;">Delete</button>
-          </div>
-        `).join('')}
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-}
-
-async function _deleteAnnouncement(id) {
-  if (!isAdmin()) return;
-  showCustomConfirm('Delete this announcement?', async () => {
-    try {
-      let all = await FortizedSocial.getAnnouncements() || [];
-      all = all.filter(a => a.id !== id);
-      await FortizedSocial.saveAnnouncements(all);
-      toast('Announcement deleted','success');
-      document.getElementById('modal-view-announcements')?.remove();
-    } catch(e) { toast('Delete failed: '+e.message,'error'); }
-  });
-}
-
 // Load announcement preview in broadcast tab
 async function _loadAnnouncementPreview() {
   const el = document.getElementById('admin-announcements-preview');
@@ -19813,30 +19624,50 @@ async function submitReport() {
 // ════════════════════════════════════════════
 
 // ── Admin data sync helpers ──
+// Each fetch lands in localStorage independently as soon as it resolves, so
+// one slow/failed table never gates the others. Crucially: a timeout or
+// failure NEVER stomps the cached copy — we keep the last good data.
+const _ADM_SYNC_SENTINEL = Symbol('adm-sync-fallback');
+function _admWithTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise(resolve => setTimeout(() => resolve(_ADM_SYNC_SENTINEL), ms))
+  ]);
+}
 async function _syncAdminData() {
-  try {
-    const [reports, bans, staff, auditLog, gs, nsfwQueue, bannedHashes, tickets] = await Promise.all([
-      FortizedSocial.adminGetReports().catch(()=>[]),
-      FortizedSocial.adminGetBans().catch(()=>[]),
-      FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]})),
-      FortizedSocial.adminGetAuditLog().catch(()=>[]),
-      FortizedSocial.adminGetGlobalSettings().catch(()=>({})),
-      FortizedSocial.adminGetNsfwQueue().catch(()=>[]),
-      FortizedSocial.adminGetNsfwBannedHashes().catch(()=>[]),
-      FortizedSocial.adminGetSupportTickets().catch(()=>({})),
-    ]);
-    localStorage.setItem('ftz_reports', JSON.stringify(reports));
-    localStorage.setItem('ftz_bans', JSON.stringify(bans));
-    localStorage.setItem('ftz_staff', JSON.stringify(staff));
-    localStorage.setItem('ftz_audit_log', JSON.stringify(auditLog));
-    localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
-    _globalSettings = gs;
-    localStorage.setItem('ftz_nsfw_queue', JSON.stringify(nsfwQueue));
-    const mergedHashes = [...new Set([..._nsfwBannedHashes, ...bannedHashes])];
-    _nsfwBannedHashes = mergedHashes;
-    localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(mergedHashes));
-    localStorage.setItem('ftz_support_tickets', JSON.stringify(tickets));
-  } catch(e) { _wrn('Admin sync partial fail:', e); }
+  const TIMEOUT = 12000;
+  const tasks = [
+    ['ftz_reports',          () => FortizedSocial.adminGetReports()],
+    ['ftz_bans',             () => FortizedSocial.adminGetBans()],
+    ['ftz_staff',            () => FortizedSocial.adminGetStaff()],
+    ['ftz_audit_log',        () => FortizedSocial.adminGetAuditLog()],
+    ['ftz_global_settings',  () => FortizedSocial.adminGetGlobalSettings()],
+    ['ftz_nsfw_queue',       () => FortizedSocial.adminGetNsfwQueue()],
+    ['ftz_nsfw_banned_hashes', () => FortizedSocial.adminGetNsfwBannedHashes()],
+    ['ftz_support_tickets',  () => FortizedSocial.adminGetSupportTickets()],
+  ];
+  const results = await Promise.allSettled(tasks.map(([key, fn]) =>
+    _admWithTimeout(
+      Promise.resolve().then(() => fn()),
+      TIMEOUT
+    ).then(value => {
+      // Sentinel = timed out. Don't touch the cache.
+      if (value === _ADM_SYNC_SENTINEL) { _wrn('[Staff] sync timeout for', key, '— keeping cached value'); return { key, ok: false, reason: 'timeout' }; }
+      // Skip writes for null/undefined too — keep the cached value rather than stomping it.
+      if (value === null || value === undefined) { return { key, ok: false, reason: 'empty' }; }
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch(_) {}
+      // In-memory side effects only on success
+      if (key === 'ftz_global_settings') _globalSettings = value || {};
+      if (key === 'ftz_nsfw_banned_hashes') {
+        const merged = [...new Set([...(_nsfwBannedHashes||[]), ...(value||[])])];
+        _nsfwBannedHashes = merged;
+        try { localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(merged)); } catch(_) {}
+      }
+      return { key, ok: true };
+    }).catch(err => { _wrn('[Staff] sync failed for', key, err?.message, '— keeping cached value'); return { key, ok: false, reason: err?.message }; })
+  ));
+  const failed = results.filter(r => r.value && r.value.ok === false).length;
+  if (failed) _wrn('[Staff] sync finished with', failed, 'partial(s) — cached values preserved');
 }
 
 async function _saveBanToServer(banObj) {
@@ -19889,7 +19720,15 @@ function openAdminPanel() {
 
 async function _openAdminUI() {
   document.getElementById('admin-panel-overlay')?.remove();
-  await _syncAdminData().catch(()=>{});
+  // Kick the data sync off in the background — DON'T block the UI on it.
+  // The current tab will re-render automatically from _setupAdminLiveSync's
+  // poll once fresh data lands. This fixes the "console takes forever to
+  // open / shows blank" bug when one Supabase table is slow.
+  _syncAdminData().then(() => {
+    if (typeof adminTab !== 'undefined' && adminTab) {
+      try { _renderAdminNav(adminTab); _loadAdminPage(adminTab, true); } catch(_) {}
+    }
+  }).catch(()=>{});
   const role = getStaffRole(CU.username);
   const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
   const roleColor = role === 'superadmin' ? '#ffd93e' : role === 'admin' ? '#f87171' : '#60a5fa';
@@ -19903,8 +19742,8 @@ async function _openAdminUI() {
           <img src="/FortizedSecurity logo.png" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='<svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'var(--accent)\\' stroke-width=\\'2\\'><path d=\\'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\\'/></svg>'">
         </div>
         <div>
-          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:.04em;line-height:1;">ADMIN CONTROL CENTER</div>
-          <div style="font-size:9px;color:var(--accent-mid);font-weight:600;letter-spacing:.1em;margin-top:2px;">FORTIZED ADMINISTRATION</div>
+          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:.04em;line-height:1;">STAFF CONSOLE</div>
+          <div style="font-size:9px;color:var(--accent-mid);font-weight:600;letter-spacing:.1em;margin-top:2px;">FORTIZED · INTERNAL</div>
         </div>
       </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
@@ -19956,21 +19795,39 @@ function _renderAdminNav(active) {
   const _admSvg = {
     dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
     moderation:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
-    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    management:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    members:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    bastions:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    economy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    broadcasts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2l13 4V7L3 11zm15-1v4l3-1v-2l-3-1z"/></svg>',
     feedback:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    system:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   };
-  // Simplified 5-tab structure
-  const tabs = [
-    {id:'dashboard', svg:_admSvg.dashboard, label:'Overview'},
+
+  // 8 top-level tabs in 3 grouped sections. The old "Platform Management"
+  // was a 11-sub-tab dumping ground — split into Bastions / Economy /
+  // Broadcasts / System so each domain stands on its own. The Broadcasts
+  // tab is the single home for everything pushed out to users (banner ads,
+  // system messages, scheduled actions) so the duplication is gone.
+  const operations = [
+    {id:'dashboard',  svg:_admSvg.dashboard,  label:'Overview'},
     {id:'moderation', svg:_admSvg.moderation, label:'Moderation'},
-    {id:'members', svg:_admSvg.users, label:'Members'},
-    ...(role!=='moderator'?[{id:'platform', svg:_admSvg.management, label:'Platform Management'}]:[]),
-    {id:'feedback', svg:_admSvg.feedback, label:'Feedback'},
+    {id:'members',    svg:_admSvg.members,    label:'Members'},
   ];
-  nav.innerHTML = tabs.map(t=>`<div id="adm-tab-${t.id}" class="adm-tab${active===t.id?' active':''}" onclick="_loadAdminPage('${t.id}')">
-    ${t.svg}<span>${t.label}</span>
-  </div>`).join('');
+  const platform = [
+    {id:'bastions',   svg:_admSvg.bastions,   label:'Bastions'},
+    ...(role!=='moderator' ? [{id:'economy',    svg:_admSvg.economy,    label:'Economy'}] : []),
+    ...(role!=='moderator' ? [{id:'broadcasts', svg:_admSvg.broadcasts, label:'Broadcasts'}] : []),
+  ];
+  const support = [
+    {id:'feedback', svg:_admSvg.feedback, label:'Feedback'},
+    ...(role!=='moderator' ? [{id:'system', svg:_admSvg.system, label:'System'}] : []),
+  ];
+
+  const _renderTab = t => `<div id="adm-tab-${t.id}" class="adm-tab${active===t.id?' active':''}" onclick="_loadAdminPage('${t.id}')">${t.svg}<span>${t.label}</span></div>`;
+  let html = '<div class="adm-sec-label">Operations</div>' + operations.map(_renderTab).join('');
+  if (platform.length) html += '<div class="adm-sec-label">Platform</div>' + platform.map(_renderTab).join('');
+  if (support.length)  html += '<div class="adm-sec-label">Support</div>'  + support.map(_renderTab).join('');
+  nav.innerHTML = html;
 }
 
 function renderAdminPanel() { _renderAdminNav('dashboard'); _loadAdminPage('dashboard'); }
@@ -19991,11 +19848,16 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     }, 30000);
   }
 
-  // ── Consolidated tab routing (new tabs map to old rendering) ──
+  // ── Top-level domain routing (one tab per domain) ──
   if (tab === 'moderation') { await _loadAdminModeration(main); return; }
-  if (tab === 'members') { await _loadAdminMembers(main); return; }
-  if (tab === 'platform') { await _loadAdminPlatform(main); return; }
-  if (tab === 'feedback') { await _loadAdminFeedback(main); return; }
+  if (tab === 'members')    { await _loadAdminMembers(main); return; }
+  if (tab === 'bastions')   { await _loadAdminDomain(main, 'bastions'); return; }
+  if (tab === 'economy')    { await _loadAdminDomain(main, 'economy'); return; }
+  if (tab === 'broadcasts') { await _loadAdminDomain(main, 'broadcasts'); return; }
+  if (tab === 'system')     { await _loadAdminDomain(main, 'system'); return; }
+  if (tab === 'feedback')   { await _loadAdminFeedback(main); return; }
+  // Legacy "platform" id (deep links / bookmarks) → System by default
+  if (tab === 'platform')   { await _loadAdminDomain(main, 'system'); return; }
 
   // ── OVERVIEW (dashboard) ──
   if (tab === 'dashboard') {
@@ -20034,7 +19896,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg);">
         <div>
           <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-xs);">
-            <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Admin Control Center</div>
+            <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Staff Console</div>
             <div class="hq-threat ${threat.cls}">${threat.icon} THREAT: ${threat.level}</div>
           </div>
           <div style="font-size:11.5px;color:rgba(255,255,255,.3);">Operator: <span style="color:var(--accent);">${escapeHTML(CU.displayName||CU.username)}</span> · ${new Date().toLocaleString()} · Session Active</div>
@@ -20046,6 +19908,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>
 
       <!-- Primary Stats Row -->
+      <div class="sc-section-label">Threat &amp; Activity</div>
       <div class="ftz-grid cols-5" style="margin-bottom:var(--space-sm);">
         ${[
           {l:'Total Users',v:totalUsers,c:'#60a5fa',t:'all_users'},
@@ -20059,6 +19922,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           ${s.sub?`<div style="font-size:9px;color:rgba(255,255,255,.2);margin-top:3px;">${s.sub}</div>`:''}
         </div>`).join('')}
       </div>
+      <div class="sc-section-label">Community Health</div>
       <div class="ftz-grid cols-5" style="margin-bottom:var(--space-xl);">
         ${[
           {l:'Radiance',v:radianceCount,c:'#ffd93e'},
@@ -20073,6 +19937,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>
 
       <!-- Three-column bottom section -->
+      <div class="sc-section-label">Live Operations</div>
       <div class="ftz-grid cols-3">
         <!-- Recent Reports -->
         <div class="hq-panel">
@@ -20147,7 +20012,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   // ── Old tab IDs redirect to new consolidated tabs ──
   else if (tab === 'reports' || tab === 'bans' || tab === 'suspensions' || tab === 'nsfw_queue') { await _loadAdminModeration(main, tab); return; }
   else if (tab === 'users' || tab === 'all_users') { await _loadAdminMembers(main, tab); return; }
-  else if (tab === 'bastions' || tab === 'economy' || tab === 'broadcast' || tab === 'scheduled_actions' || tab === 'audit' || tab === 'network_monitor' || tab === 'analytics' || tab === 'backup_restore' || tab === 'settings' || tab === 'staff' || tab === 'ads') { await _loadAdminPlatform(main, tab); return; }
+  // Legacy sub-tab ids (deep links from outside the console) — route to the
+  // domain that now owns them via the _SC_SUB_TO_DOMAIN map.
+  else if (_SC_SUB_TO_DOMAIN[tab]) { await _loadAdminDomain(main, _SC_SUB_TO_DOMAIN[tab], tab); return; }
   else if (tab === 'support_tickets' || tab === 'place_where' || tab === 'onboarding') { await _loadAdminFeedback(main, tab); return; }
   else if (tab === '_place_where') { await _loadAdminPlaceFeedback(); return; }
   else if (tab === '_onboarding') { await _loadAdminOnboardingStats(); return; }
@@ -21166,52 +21033,94 @@ async function _loadAdminModeration(main, subTab) {
 }
 
 async function _loadAdminMembers(main, subTab) {
-  const role = getStaffRole(CU.username);
-  const active = subTab || _adminSubTab.members || 'users';
-  _adminSubTab.members = active;
+  const isSup = isSuperAdmin();
+  const isAdm = isAdmin();
   const tabs = [
     {id:'users', label:'Lookup'},
-    ...(role!=='moderator'?[{id:'all_users', label:'All Members'}]:[]),
+    ...(isAdm ? [{id:'all_users', label:'All Members'}] : []),
+    ...(isSup ? [{id:'staff', label:'Staff'}] : []),
   ];
+  const valid = tabs.map(t => t.id);
+  let active = subTab && valid.includes(subTab) ? subTab : (_adminSubTab.members && valid.includes(_adminSubTab.members) ? _adminSubTab.members : tabs[0].id);
+  _adminSubTab.members = active;
   main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'members') + '<div id="adm-sub-content"></div></div>';
   await _loadAdminPage('_' + active);
 }
 
-async function _loadAdminPlatform(main, subTab) {
-  FortizedSocial.adminInvalidateCache(); // Always fetch fresh from Supabase
-  const role = getStaffRole(CU.username);
-  const active = subTab || _adminSubTab.platform || (isSuperAdmin() ? 'staff' : 'bastions');
-  _adminSubTab.platform = active;
-  // Grouped IA (Stripe/Linear style): Core > Content & Growth > Operations.
-  // Dividers between groups make scanning easier than a flat pill soup.
-  const coreTabs = [
-    ...(isSuperAdmin()?[{id:'staff', label:'Staff'}]:[]),
-    ...(isSuperAdmin()?[{id:'settings', label:'Configuration'}]:[]),
-    ...(isAdmin()?[{id:'economy', label:'Economy'}]:[]),
-  ];
-  const growthTabs = [
-    {id:'bastions', label:'Bastions'},
-    ...(isAdmin()?[{id:'ads', label:'Ads'}]:[]),
-    ...(isSuperAdmin()?[{id:'broadcast', label:'Broadcast'}]:[]),
-    ...(isAdmin()?[{id:'scheduled_actions', label:'Scheduled'}]:[]),
-  ];
-  const opsTabs = [
-    ...(isAdmin()?[{id:'audit', label:'Activity Log'}]:[]),
-    ...(isSuperAdmin()?[{id:'analytics', label:'Analytics'}]:[]),
-    ...(isAdmin()?[{id:'network_monitor', label:'Network'}]:[]),
-    ...(isSuperAdmin()?[{id:'backup_restore', label:'Backup'}]:[]),
-  ];
-  const tabs = [];
-  if (coreTabs.length) tabs.push(...coreTabs);
-  if (growthTabs.length) { if (tabs.length) tabs.push({_divider:true}); tabs.push(...growthTabs); }
-  if (opsTabs.length) { if (tabs.length) tabs.push({_divider:true}); tabs.push(...opsTabs); }
-  // Refresh staff data from Supabase for legacy renderers
-  const staff = await FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]}));
-  localStorage.setItem('ftz_staff', JSON.stringify(staff));
-  const auditLog = await FortizedSocial.adminGetAuditLog().catch(()=>[]);
-  localStorage.setItem('ftz_audit_log', JSON.stringify(auditLog));
-  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'platform') + '<div id="adm-sub-content"></div></div>';
+// Map every legacy sub-tab id to the new top-level domain that owns it.
+// Used both for routing and for the deprecated _loadAdminPlatform shim.
+const _SC_SUB_TO_DOMAIN = {
+  // Platform → Bastions
+  bastions:'bastions',
+  // Platform → Economy
+  economy:'economy',
+  // Platform → Broadcasts (one home for everything pushed to users)
+  ads:'broadcasts', broadcast:'broadcasts', scheduled_actions:'broadcasts',
+  // Platform → System (operational tools)
+  settings:'system', audit:'system', analytics:'system',
+  network_monitor:'system', backup_restore:'system',
+  // Platform → Members
+  staff:'members',
+};
+
+// Returns the sub-tab list for a given top-level domain.
+function _scDomainSubs(domainKey) {
+  const isAdm = isAdmin();
+  const isSup = isSuperAdmin();
+  switch (domainKey) {
+    case 'bastions':
+      return [{id:'bastions', label:'All Bastions'}];
+    case 'economy':
+      return isAdm ? [{id:'economy', label:'Economy'}] : [];
+    case 'broadcasts':
+      // Single home for everything pushed out to users — replaces the old
+      // Ads / Broadcast / Scheduled trio that lived in two different places.
+      return [
+        ...(isAdm ? [{id:'ads', label:'Banner Ads'}] : []),
+        ...(isSup ? [{id:'broadcast', label:'System Messages'}] : []),
+        ...(isAdm ? [{id:'scheduled_actions', label:'Scheduled'}] : []),
+      ];
+    case 'system':
+      return [
+        ...(isSup ? [{id:'settings', label:'Configuration'}] : []),
+        ...(isAdm ? [{id:'audit', label:'Activity Log'}] : []),
+        ...(isSup ? [{id:'analytics', label:'Analytics'}] : []),
+        ...(isAdm ? [{id:'network_monitor', label:'Network'}] : []),
+        ...(isSup ? [{id:'backup_restore', label:'Backup'}] : []),
+      ];
+    default: return [];
+  }
+}
+
+// Generic per-domain renderer. Replaces the old _loadAdminPlatform mega-tab.
+async function _loadAdminDomain(main, domainKey, subTab) {
+  if (!main) return;
+  const tabs = _scDomainSubs(domainKey);
+  if (!tabs.length) {
+    main.innerHTML = '<div style="padding:32px;text-align:center;color:rgba(255,255,255,.4);font-size:13px;">Nothing here for your role.</div>';
+    return;
+  }
+  const valid = tabs.map(t => t.id);
+  let active = subTab && valid.includes(subTab) ? subTab : (_adminSubTab[domainKey] && valid.includes(_adminSubTab[domainKey]) ? _adminSubTab[domainKey] : tabs[0].id);
+  _adminSubTab[domainKey] = active;
+
+  // Refresh dependent caches only when the domain that needs them opens.
+  if (domainKey === 'system') {
+    try { const auditLog = await FortizedSocial.adminGetAuditLog(); if (Array.isArray(auditLog)) localStorage.setItem('ftz_audit_log', JSON.stringify(auditLog)); } catch(_){}
+  }
+  if (tabs.some(t => t.id === 'staff')) {
+    try { const staff = await FortizedSocial.adminGetStaff(); if (staff) localStorage.setItem('ftz_staff', JSON.stringify(staff)); } catch(_){}
+  }
+
+  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, domainKey) + '<div id="adm-sub-content"></div></div>';
   await _loadAdminPage('_' + active);
+}
+
+// Backward-compat shim: anything still calling _loadAdminPlatform routes
+// through to the new domain router based on the sub-tab it requested.
+async function _loadAdminPlatform(main, subTab) {
+  const domain = subTab ? (_SC_SUB_TO_DOMAIN[subTab] || 'system') : 'system';
+  return _loadAdminDomain(main, domain, subTab);
 }
 
 // ─────────── ADS MANAGEMENT (ADMIN) ───────────
@@ -22866,8 +22775,10 @@ function addStaff(role) {
     FortizedSocial.adminSetSignal('staff_granted_' + username, Date.now()).catch(()=>{});
     logAudit('add_'+role, username, 'Added by super admin');
     toast(`${username} is now a ${roleLabel}`, 'success');
-    _loadAdminPage('platform');
-    setTimeout(() => { _adminSubTab.platform = 'staff'; _loadAdminPage('_staff'); }, 100);
+    // Staff now lives inside the Members tab — land there with the
+    // Staff sub-pill pre-selected.
+    _adminSubTab.members = 'staff';
+    _loadAdminPage('members');
   });
 }
 
@@ -22893,8 +22804,10 @@ function removeStaff(role, idx) {
     FortizedSocial.adminSetSignal('staff_revoked_' + username, Date.now()).catch(()=>{});
     logAudit('remove_'+role, username, 'Removed by super admin');
     toast(`${username} removed from ${roleLabel}s`, 'success');
-    _loadAdminPage('platform');
-    setTimeout(() => { _adminSubTab.platform = 'staff'; _loadAdminPage('_staff'); }, 100);
+    // Staff now lives inside the Members tab — land there with the
+    // Staff sub-pill pre-selected.
+    _adminSubTab.members = 'staff';
+    _loadAdminPage('members');
   });
 }
 
@@ -40298,123 +40211,54 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Banner -->
     <div class="mpp-banner">
       ${bannerBg}
-      ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.7;z-index:1;"></div>` : ''}
+      ${profileTheme ? `<div class="mpp-banner-accent"></div>` : ''}
     </div>
-    <!-- Avatar row: avatar + custom status pill + streak chip on the same line -->
+    <!-- Avatar + decorations + status -->
     <div class="mpp-av-area">
-      <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 64)}</div>
-        ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
-        <span class="profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="18" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 18)}</span>
+      <div class="mpp-av" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
+        ${buildAvatarHTML(u.pfp, u.displayName||u.username, 90)}
+        ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="mpp-decoration" onerror="this.style.display='none'">` : ''}
       </div>
-      ${(customStatus?.text || isOwn) ? `<button class="profile-custom-status cloud-status-bubble mpp-cs-pill ${customStatus?.text ? '' : 'mpp-cs-pill--empty'}" data-for="${escapeHTML(username)}" ${isOwn ? `onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()"` : 'tabindex="-1"'}>${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,40)}</span>` : `<span class="mpp-cs-plus">+</span><span class="csb-text">Add a status</span>`}</button>` : `<div class="profile-custom-status mpp-cs-pill" data-for="${escapeHTML(username)}" style="display:none;"></div>`}
-      ${(+u.dailyStreak) ? `<div class="mpp-streak-chip" oncontextmenu="${isOwn ? 'onStreakCtxMenu(event);return false;' : 'return false;'}">${typeof _streakFlameSvg === 'function' ? _streakFlameSvg(11) : '🔥'}<span>${+u.dailyStreak}</span></div>` : ''}
+      <span class="mpp-status-dot">${FtzStatus.dotSvg(status, 16)}</span>
     </div>
-    <!-- Identity: name on top, then handle row with pronouns + badges right -->
+    <!-- Identity + badges -->
     <div class="mpp-identity">
       <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
-      <div class="mpp-handle-row">
-        <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? `<span class="mpp-handle-dot">·</span>${escapeHTML(u.pronouns)}` : ''}</div>
-        <div class="mpp-badges-inline">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
-      </div>
+      <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` · ${u.pronouns}` : ''}</div>
+      <div class="mpp-badges">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
     </div>
-    <!-- Activity Status - Multi-activity support -->
-    ${(() => {
-      let activitiesToShow = [];
-      if (u.activityState?.activities?.length) {
-        activitiesToShow = u.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2)).slice(0, 2);
-      } else if (u.gameActivity?.name) {
-        activitiesToShow = [{
-          id: u.gameActivity._spotify ? 'spotify' : 'game',
-          type: u.gameActivity._spotify ? 'listening' : 'playing',
-          name: u.gameActivity.name,
-          icon: u.gameActivity.icon || '🎮',
-          since: u.gameActivity.since,
-          priority: u.gameActivity._spotify ? 3 : 2,
-          metadata: {
-            coverThumb: u.gameActivity.coverThumb,
-            genre: u.gameActivity.genre,
-            spotifyAlbumArt: u.gameActivity.spotifyAlbumArt
-          }
-        }];
-      }
-
-      if (!activitiesToShow.length) return '';
-
-      const a = activitiesToShow[0];
-      const verb = a.type === 'listening' ? 'Listening to' : a.type === 'watching' ? 'Watching' : 'Playing';
-      const coverThumb = a.metadata?.coverThumb || a.metadata?.spotifyAlbumArt;
-      const _coverHTML = coverThumb
-        ? `<img src="${escapeHTML(coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.outerHTML='<span style=font-size:18px>${a.icon||'🎮'}</span>'">`
-        : `<span style="font-size:18px;">${a.icon||'🎮'}</span>`;
-      return `<div class="mpp-card mpp-activity-card">
-        <div class="mpp-card-label">${verb}</div>
-        <div class="mpp-activity-body">
-          <div class="mpp-activity-cover">${_coverHTML}</div>
-          <div class="mpp-activity-info">
-            <div class="mpp-activity-name">${escapeHTML(a.name)}</div>
-            ${a.metadata?.genre ? `<div class="mpp-activity-meta">${escapeHTML(typeof a.metadata.genre==='string' ? a.metadata.genre : (a.metadata.genre[0]||''))}</div>` : ''}
-            ${a.since ? `<div class="mpp-activity-meta">${_formatActivityElapsed(a.since)}</div>` : ''}
-          </div>
-        </div>
-      </div>`;
-    })()}
-    <!-- (badges moved into the handle row above) -->
-    <!-- Bio: userbar uses lightweight inline parseBioMD with empty CTA;
-         chat/memberlist uses the older parseMD with 150-char truncation
-         (the design the user was used to before the unification pass). -->
-    ${_isUserbarAnchor
-      ? (u.bio
-          ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio">${parseBioMD(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>`
-          : (isOwn ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-bio mpp-bio-empty" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Click to add a bio…</div></div>` : ''))
-      : (u.bio
-          ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${parseMD(escapeHTML(u.bio.slice(0,150)))}${u.bio.length>150?'…':''}</div></div>`
-          : '')}
-    ${(_isUserbarAnchor ? !isOwn : true) && _memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
-    <!-- Roles: userbar hides them on own popover (compact). Chat/memberlist
-         shows them whenever in bastion context, matching the old design. -->
-    ${((_isUserbarAnchor ? !isOwn : true) && _currentView === 'bastion' && curBastion !== null) ? (() => {
-      const _canManageRoles = hasPerm('manage_roles') || (CU?.bastions?.[curBastion]?.owner === CU?.username);
+    <!-- Status row -->
+    <div class="mpp-status-row">
+      <span class="mpp-status-label" style="color:${sc}">${FtzStatus.publicLabel(status)}</span>
+      ${customStatus?.text ? `<span class="mpp-cs">${customStatus.emoji||''} ${escapeHTML(customStatus.text).slice(0,40)}</span>` : ''}
+      ${(+u.dailyStreak) ? `<span class="mpp-streak">${typeof _streakFlameSvg === 'function' ? _streakFlameSvg(12) : '🔥'} ${+u.dailyStreak} day streak</span>` : ''}
+    </div>
+    <!-- Bio -->
+    ${u.bio ? `<div class="mpp-bio">${parseBioMD(u.bio.slice(0,200))}${u.bio.length>200?'…':''}</div>` : ''}
+    <!-- Member since -->
+    ${_memberSince ? `<div class="mpp-meta">Member since ${_memberSince}</div>` : ''}
+    <!-- Roles in current bastion -->
+    ${(_currentView === 'bastion' && curBastion !== null) ? (() => {
       const _roleTags = renderUserRoleTags(username);
-      const _addBtn = (_canManageRoles && !isOwn) ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" style="width:22px;height:22px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;margin-top:4px;" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.3)'">+</button>` : '';
-      return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="display:flex;align-items:center;justify-content:space-between;">Roles</div><div class="mpp-roles-row" id="mpp-roles-container">${_roleTags}${_addBtn}</div><div id="mpp-role-picker" style="display:none;"></div></div>`;
+      return _roleTags ? `<div class="mpp-roles">${_roleTags}</div>` : '';
     })() : ''}
-    <!-- Game collection — userbar says "Games I like", others say
-         "Game Collection" (the original label). -->
-    ${_previewGames.length ? `<div class="mpp-card mpp-game-card">
-      <span class="mpp-card-inline-label">${_isUserbarAnchor ? 'Games I like' : 'Game Collection'}</span>
-      <div class="mpp-game-thumbs">${_previewGames.slice(0,3).map(g => {
-        const cover = g.coverUrl || g.cover || g.icon || g.iconUrl || '';
-        const isUrl = typeof cover === 'string' && (cover.startsWith('http') || cover.startsWith('/') || cover.startsWith('data:'));
-        // Defensive: g.name can be a non-string in some legacy rows; coerce
-        // via String() + charAt() so a single bad row doesn't blow up the
-        // entire popover render with a TypeError on .toUpperCase().
-        const safeName = String(g.name || '?');
-        const initial = (safeName.charAt(0) || '?').toUpperCase();
-        const titleAttr = `title="${escapeHTML(safeName)}"`;
-        if (isUrl) {
-          const fb = `<span class=&quot;mpp-game-thumb mpp-game-thumb--fallback&quot; title=&quot;${escapeHTML(safeName)}&quot;>${escapeHTML(initial)}</span>`;
-          return `<img class="mpp-game-thumb" src="${escapeHTML(cover)}" alt="${escapeHTML(safeName)}" ${titleAttr} onerror="this.outerHTML='${fb}'">`;
-        }
-        return `<span class="mpp-game-thumb mpp-game-thumb--fallback" ${titleAttr}>${escapeHTML(initial)}</span>`;
-      }).join('')}${_previewGames.length>3?`<span class="mpp-game-thumb mpp-game-thumb--more">+${_previewGames.length-3}</span>`:''}</div>
-    </div>` : ''}
-    <!-- Widgets -->
-    <div id="mpp-widgets-area"></div>
-    <div class="mpp-divider"></div>
-    <!-- Actions: userbar (own user only) gets Discord-style 3-stack
-         (Edit Profile + status pill + switch-accounts pill). Chat /
-         memberlist popovers use the original single-row pair. -->
-    ${(_isUserbarAnchor && isOwn) ? `<div class="mpp-actions mpp-actions-own">
-      <button class="mpp-btn-primary mpp-btn-fullwidth" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>
-      <button class="mpp-pill-action" onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()" title="Set status"><span class="mpp-pill-dot" style="background:${FtzStatus.color(u.status||'online')};"></span><span class="mpp-pill-label">${escapeHTML(FtzStatus.publicLabel(u.status||'online'))}</span><svg class="mpp-pill-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
-      <button class="mpp-pill-action" onclick="document.getElementById('mini-profile-preview')?.remove();toggleAccountSwitcher()" title="Switch accounts"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><span class="mpp-pill-label">Switch Accounts</span><svg class="mpp-pill-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
-    </div>` : `<div class="mpp-actions">
+    <!-- Games -->
+    ${_previewGames.length ? `<div class="mpp-games"><span>Games</span>${_previewGames.slice(0,5).map(g => {
+      const cover = g.coverUrl || g.cover || g.icon || '';
+      const safeName = String(g.name || '?');
+      if (cover && (cover.startsWith('http') || cover.startsWith('/'))) {
+        return `<img src="${cover}" title="${safeName}" onerror="this.style.display='none'">`;
+      }
+      return `<span>${safeName.charAt(0).toUpperCase()}</span>`;
+    }).join('')}${_previewGames.length>5?`<span>+${_previewGames.length-5}</span>`:''}</div>` : ''}
+    <!-- Actions -->
+    <div class="mpp-actions">
       ${isOwn
-        ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>`
-        : `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
-      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
-    </div>`}`;
+        ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Edit Profile</button>
+           <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()">Status</button>`
+        : `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')">Message</button>
+           <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">Profile</button>`}
+    </div>`;
 
   // Position near the anchor element
   document.body.appendChild(panel);

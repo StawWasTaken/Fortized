@@ -22048,17 +22048,18 @@ function _listenGlobalSettingsConsolidated() {
             return;
           }
           
-          // Insert at top of mainWrap
-          
           // Insert at top of mainWrap - append to first position
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.className = 'sys-announce-bar';
-          bar.style.cssText = 'width:100%;min-height:36px;';
+          bar.style.cssText = 'width:100%;';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">X</button><span>${escapeHTML(text)}</span>`;
-          
-          // Add at beginning
-          if (mainWrap.firstChild) {
+
+          // Try .main element first
+          const main = document.querySelector('.main');
+          if (main) {
+            main.insertBefore(bar, main.firstChild);
+          } else if (mainWrap.firstChild) {
             mainWrap.insertBefore(bar, mainWrap.firstChild);
           } else {
             mainWrap.appendChild(bar);

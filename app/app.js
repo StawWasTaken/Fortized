@@ -21733,6 +21733,11 @@ async function _deleteTicket(id) {
 }
 
 // ── New Command Center tool helpers ──
+function _setQuickMessage(msg, iconUrl) {
+  if(document.getElementById("_broadcast-msg")) document.getElementById("_broadcast-msg").value = msg;
+  if(document.getElementById("_broadcast-icon")) document.getElementById("_broadcast-icon").value = iconUrl;
+}
+
 async function _broadcastAnnouncement() {
   const msg = (document.getElementById('_broadcast-msg')?.value?.trim()) || (document.getElementById('gs-announcement')?.value?.trim());
   if (!msg) { toast('Enter a message first','error'); return; }
@@ -22028,19 +22033,17 @@ function _listenGlobalSettingsConsolidated() {
   // Function to check and show announcement
   const _checkAnnouncement = async () => {
     try {
-      // First try localStorage for immediate show
-      let gs = null;
-      try { gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}'); } catch {}
+      // Always fetch from server for ALL users
       let iconSvg = "https://www.svgrepo.com/show/473092/speaker.svg";
-      let text = gs?.announcement || null;
-      
-      // Also try to fetch from server
-      if (!text) {
-        try { const gsServer = await FortizedSocial.adminGetGlobalSettings();
+      let text = null;
+
+      // Fetch from server (works for all users)
+      try {
+        const gsServer = await FortizedSocial.adminGetGlobalSettings();
         text = gsServer?.announcement || null;
-        if (gsServer?.announcementIcon) iconSvg = gsServer.announcementIcon; } catch {}
-      }
-      
+        if (gsServer?.announcementIcon) iconSvg = gsServer.announcementIcon;
+      } catch {}
+      if (text !== _lastAnnText) {
       if (text !== _lastAnnText) {
         _lastAnnText = text;
         const existing = document.getElementById('sys-announce-bar');
@@ -22066,7 +22069,7 @@ function _listenGlobalSettingsConsolidated() {
           bar.className = 'sys-announce-bar';
           // Fixed position to overlay all main children
           bar.style.cssText = 'position:absolute;top:0;left:0;right:0;height:40px;z-index:100;';
-          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><div class="sa-icon">${iconSvg}</div><span>${escapeHTML(text)}</span>`;
+          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><div class="sa-icon"><img src="${iconSvg}" style="width:18px;height:18px;filter:grayscale(100%);"></div><span>${escapeHTML(text)}</span>`;
           
           // Insert at top of main
           if (main.firstChild) {

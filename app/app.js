@@ -22040,19 +22040,19 @@ function _listenGlobalSettingsConsolidated() {
           const main = document.querySelector('.main');
           if (!main) return;
 
-          // Create bar
+          // Create bar and insert as 4th child with flex-shrink:0
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.className = 'sys-announce-bar';
+          bar.style.cssText = 'flex-shrink:0;width:100%;min-height:40px;';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
           
-          // Create bar with fixed position matching main's position/size
-          const mainRect = main.getBoundingClientRect();
-          bar.style.cssText = `position:fixed;top:${mainRect.top}px;left:${mainRect.left}px;width:${mainRect.width}px;z-index:9998;`;
-          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
-          
-          // Add to body
-          document.body.appendChild(bar);
+          // Insert as first child of main
+          if (main.firstChild) {
+            main.insertBefore(bar, main.firstChild);
+          } else {
+            main.appendChild(bar);
+          }
         }
       }
     } catch (e) { console.warn('[Broadcast] Error:', e); }

@@ -22033,25 +22033,36 @@ function _listenGlobalSettingsConsolidated() {
         } else if (text !== _dismissedAnnouncement) {
           if (existing) existing.remove();
           
-          const mainWrap = document.querySelector('.main-wrap');
-          console.log('[Broadcast] Found mainWrap:', !!mainWrap, 'Text:', text);
-          if (!mainWrap || !text) return;
+          // Force test message
+          if (!text) text = 'TEST BROADCAST - Announcements are working!';
           
-          // Create the bar element first
+          const mainWrap = document.querySelector('.main-wrap');
+          if (!mainWrap) {
+            // No container - show as fixed
+            const bar = document.createElement('div');
+            bar.id = 'sys-announce-bar';
+            bar.className = 'sys-announce-bar';
+            bar.style.cssText = 'position:fixed;top:42px;left:72px;right:0;z-index:9999;';
+            bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">X</button><span>${escapeHTML(text)}</span>`;
+            document.body.appendChild(bar);
+            return;
+          }
+          
+          // Insert at top of mainWrap
+          
+          // Insert at top of mainWrap - append to first position
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.className = 'sys-announce-bar';
           bar.style.cssText = 'width:100%;min-height:36px;';
-          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" title="Dismiss"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="sa-body"><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span class="sa-text">${escapeHTML(text)}</span></div>`;
+          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">X</button><span>${escapeHTML(text)}</span>`;
           
-          // Insert as first child - before existing content
-          const firstChild = mainWrap.firstChild;
-          if (firstChild) {
-            mainWrap.insertBefore(bar, firstChild);
+          // Add at beginning
+          if (mainWrap.firstChild) {
+            mainWrap.insertBefore(bar, mainWrap.firstChild);
           } else {
             mainWrap.appendChild(bar);
           }
-          console.log('[Broadcast] Inserted bar');
         }
       }
     } catch (e) { console.warn('[Broadcast] Error:', e); }

@@ -22044,21 +22044,14 @@ function _listenGlobalSettingsConsolidated() {
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.className = 'sys-announce-bar';
+          bar.style.cssText = 'width:100%;flex-shrink:0;';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
-
-          // Undo .main flex changes and wrap bar in container
-          main.style.flexDirection = '';
-          main.style.justifyContent = '';
           
-          // Create wrapper for bar
-          const wrapper = document.createElement('div');
-          wrapper.style.cssText = 'width:100%;display:flex;flex-direction:column;align-items:stretch;';
-          wrapper.appendChild(bar);
-          
+          // Insert at top
           if (main.firstChild) {
-            main.insertBefore(wrapper, main.firstChild);
+            main.insertBefore(bar, main.firstChild);
           } else {
-            main.appendChild(wrapper);
+            main.appendChild(bar);
           }
         }
       }

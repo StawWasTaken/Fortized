@@ -22048,21 +22048,17 @@ function _listenGlobalSettingsConsolidated() {
             return;
           }
           
-          // Insert at top of mainWrap - append to first position
+          // Create bar
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.className = 'sys-announce-bar';
-          bar.style.cssText = 'width:100%;';
-          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">X</button><span>${escapeHTML(text)}</span>`;
+          bar.innerHTML = `<span>${escapeHTML(text)}</span><button onclick="_dismissAnnouncement()" style="float:right;padding:8px;">X</button>`;
 
-          // Try .main element first
-          const main = document.querySelector('.main');
-          if (main) {
-            main.insertBefore(bar, main.firstChild);
-          } else if (mainWrap.firstChild) {
-            mainWrap.insertBefore(bar, mainWrap.firstChild);
+          const mainWrap = document.querySelector('.main-wrap');
+          if (mainWrap) {
+            mainWrap.prepend(bar);
           } else {
-            mainWrap.appendChild(bar);
+            document.body.prepend(bar);
           }
         }
       }

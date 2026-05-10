@@ -22046,11 +22046,25 @@ function _listenGlobalSettingsConsolidated() {
           bar.className = 'sys-announce-bar';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
           
-          // Insert at top of main
-          if (main.firstChild) {
-            main.insertBefore(bar, main.firstChild);
+          // Find the actual content container (first child of main that has content)
+          let contentChild = null;
+          
+          if (main.children.length > 0) {
+            // Get first direct child that has substantial content
+            for (let el of main.children) {
+              if (el.children && el.children.length > 0) {
+                contentChild = el;
+                break;
+              }
+            }
+          }
+          
+          // Insert bar at top of content child (NOT main, to avoid flex issues)
+          const target = contentChild || main;
+          if (target.firstChild) {
+            target.insertBefore(bar, target.firstChild);
           } else {
-            main.appendChild(bar);
+            target.appendChild(bar);
           }
         }
       }

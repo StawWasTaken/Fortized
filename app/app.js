@@ -22047,7 +22047,7 @@ function _listenGlobalSettingsConsolidated() {
           bar.className = 'sys-announce-bar';
           // Fixed position to overlay all main children
           bar.style.cssText = 'position:absolute;top:0;left:0;right:0;height:40px;z-index:100;';
-          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
+          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span>${escapeHTML(text)}</span>`;
           
           // Insert at top of main
           if (main.firstChild) {

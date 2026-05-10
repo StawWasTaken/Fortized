@@ -2852,11 +2852,10 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .ctx-menu{position:fixed;z-index:var(--z-max);background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:var(--radius-md);padding:6px 0;min-width:220px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:ctxIn .14s var(--ease-out);display:none;overflow:hidden;}
 .ctx-menu.ctx-visible{display:block;}
 /* ── System Announcement Banner ─────────────────── */
-.sys-announce-bar{display:flex;width:100%;min-height:36px;background:#3ecf6e;background-image:url('https://cdn.polytoria.com/assets/48VK9iyM9VB8fMA3VWGQDfGa4OrSbolq.png');background-repeat:repeat;background-size:24px 24px;border-bottom:1px solid rgba(62,207,110,.3);align-items:center;gap:0;padding:0;}
-@keyframes announceDrop{from{opacity:0;transform:translateY(-100%);}to{opacity:1;transform:none}}
-.sys-announce-bar .sa-close{width:36px;height:36px;background:rgba(62,207,110,.15);border:none;border-right:1px solid rgba(255,255,255,.2);color:rgba(0,0,0,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
-.sys-announce-bar .sa-close:hover{background:rgba(255,255,255,.2);color:#000;}
-.sys-announce-bar .sa-body{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px;min-width:0;overflow:hidden;}
+.sys-announce-bar{display:flex;align-items:center;justify-content:center;width:100%;min-height:36px;background:#3ecf6e;background-image:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,0.15) 10px,rgba(255,255,255,0.15) 20px);border-bottom:1px solid rgba(62,207,110,.3);}
+.sys-announce-bar .sa-close{position:absolute;left:0;width:36px;height:36px;background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.sys-announce-bar .sa-close:hover{color:#000;}
+.sys-announce-bar span{color:#fff;font-weight:500;text-align:center;}
 .sys-announce-bar .sa-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .sys-announce-bar .sa-icon svg{width:14px;height:14px;color:#000;}
 .sys-announce-bar .sa-label{font-size:11px;font-weight:800;color:#000;white-space:nowrap;flex-shrink:0;}

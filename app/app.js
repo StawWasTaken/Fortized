@@ -22034,7 +22034,7 @@ function _listenGlobalSettingsConsolidated() {
           if (existing) existing.remove();
           
           // Force test message
-          if (!text) text = 'TEST BROADCAST - Announcements are working!';
+          if (!text) text = 'Fortized will undergo scheduled maintenance shortly. Please save your work.';
           
           
           const mainWrap = document.querySelector('.main-wrap');
@@ -22044,7 +22044,7 @@ function _listenGlobalSettingsConsolidated() {
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.className = 'sys-announce-bar';
-          bar.innerHTML = `<span>${escapeHTML(text)}</span><button onclick="_dismissAnnouncement()" style="float:right;padding:8px;">X</button>`;
+          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
 
           // Insert as first child
           if (mainWrap.firstChild) {

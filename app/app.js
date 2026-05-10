@@ -22046,13 +22046,19 @@ function _listenGlobalSettingsConsolidated() {
           bar.className = 'sys-announce-bar';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
 
-          // Insert as first child of main
-          main.style.flexDirection = 'column';
-          main.style.justifyContent = 'flex-start';
+          // Undo .main flex changes and wrap bar in container
+          main.style.flexDirection = '';
+          main.style.justifyContent = '';
+          
+          // Create wrapper for bar
+          const wrapper = document.createElement('div');
+          wrapper.style.cssText = 'display:flex;flex-direction:column;align-items:stretch;';
+          wrapper.appendChild(bar);
+          
           if (main.firstChild) {
-            main.insertBefore(bar, main.firstChild);
+            main.insertBefore(wrapper, main.firstChild);
           } else {
-            main.appendChild(bar);
+            main.appendChild(wrapper);
           }
         }
       }

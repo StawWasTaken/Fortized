@@ -22052,7 +22052,7 @@ function _listenGlobalSettingsConsolidated() {
           
           // Create wrapper for bar
           const wrapper = document.createElement('div');
-          wrapper.style.cssText = 'display:flex;flex-direction:column;align-items:stretch;';
+          wrapper.style.cssText = 'width:100%;display:flex;flex-direction:column;align-items:stretch;';
           wrapper.appendChild(bar);
           
           if (main.firstChild) {

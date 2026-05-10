@@ -22047,11 +22047,22 @@ function _listenGlobalSettingsConsolidated() {
           bar.style.cssText = 'width:100%;flex-shrink:0;';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
           
+          // Find child elements and check for vertical layout
+          let target = main;
+          const children = main.children;
+          for (let el of children) {
+            const style = window.getComputedStyle(el);
+            if (style.flexDirection === 'column' || style.display === 'block') {
+              target = el;
+              break;
+            }
+          }
+          
           // Insert at top
-          if (main.firstChild) {
-            main.insertBefore(bar, main.firstChild);
+          if (target.firstChild) {
+            target.insertBefore(bar, target.firstChild);
           } else {
-            main.appendChild(bar);
+            target.appendChild(bar);
           }
         }
       }

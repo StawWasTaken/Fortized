@@ -20811,15 +20811,15 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div class="hq-panel-head"><h3>Quick Messages</h3></div>
         <div style="padding:var(--space-lg);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);">
           ${[
-            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.',s:'<img src="https://www.svgrepo.com/show/498076/health.svg" width="22" height="22">'},
-            {t:'Update',m:'A new update is available with multiple new features! Refresh your page to get the latest.',s:'<img src="https://www.svgrepo.com/show/527693/download-minimalistic.svg" width="22" height="22">'},
-            {t:'Welcome',m:'Welcome to the community! Check out the latest events in your Bastion.',s:'<img src="https://www.svgrepo.com/show/524897/rocket.svg" width="22" height="22">'},
-            {t:'Emergency',m:'We are aware of current issues and working on a fix. Thank you for your patience.',s:'<img src="https://www.svgrepo.com/show/497913/danger.svg" width="22" height="22">'},
-            {t:'Celebration',m:'Thank you for being part of Fortized! Enjoy special perks today.',s:'<img src="https://www.svgrepo.com/show/528914/confetti-minimalistic.svg" width="22" height="22">'},
-            {t:'Experimental',m:'We are testing something new (experimental)! Give us feedback.',s:'<img src="https://www.svgrepo.com/show/455734/chemical-lab.svg" width="22" height="22">'},
-          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:6px;" onclick="document.getElementById('_broadcast-msg').value='${q.m.replace(/'/g,"\\'")}'; document.getElementById('_broadcast-icon').value='${q.s.replace(/'/g,"\\'")}';">
-            <span style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;">${q.s}<span>${q.t}</span></span>
-            <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,50)}…</span>
+            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.',i:'https://www.svgrepo.com/show/498076/health.svg'},
+            {t:'Update',m:'A new update is available with multiple new features! Refresh your page.',i:'https://www.svgrepo.com/show/527693/download-minimalistic.svg'},
+            {t:'Welcome',m:'Welcome to the community! Check out the latest events.',i:'https://www.svgrepo.com/show/524897/rocket.svg'},
+            {t:'Emergency',m:'We are aware of issues and working on a fix. Thank you for patience.',i:'https://www.svgrepo.com/show/497913/danger.svg'},
+            {t:'Celebration',m:'Thank you for being part of Fortized! Enjoy special perks today.',i:'https://www.svgrepo.com/show/528914/confetti-minimalistic.svg'},
+            {t:'Experimental',m:'We are testing something new (experimental)! Give us feedback.',i:'https://www.svgrepo.com/show/455734/chemical-lab.svg'},
+          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="_setQuickMessage('${q.m.replace(/'/g,"\\'")}', '${q.i}');">
+            <span style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:12px;"><img src="${q.i}" style="width:18px;height:18px;filter:grayscale(100%);"><span>${q.t}</span></span>
+            <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,45)}…</span>
           </button>`).join('')}
         </div>
       </div>

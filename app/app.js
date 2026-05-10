@@ -22040,22 +22040,16 @@ function _listenGlobalSettingsConsolidated() {
           const main = document.querySelector('.main');
           if (!main) return;
 
-          // Create bar and insert as 4th child with flex-shrink:0
+          // Create bar as fixed position overlay INSIDE main container (notbody)
+          // This keeps bar as part of main but overlays content
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.className = 'sys-announce-bar';
-          bar.style.cssText = 'flex-shrink:0;width:100%;min-height:40px;';
+          // Fixed position to overlay all main children
+          bar.style.cssText = 'position:absolute;top:0;left:0;right:0;height:40px;z-index:100;';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
           
-          // Make sure existing children fill remaining space
-          Array.from(main.children).forEach(child => {
-            if (child.id !== 'sys-announce-bar') {
-              child.style.flexGrow = '1';
-              child.style.flexShrink = '1';
-            }
-          });
-          
-          // Insert as first child of main
+          // Insert at top of main
           if (main.firstChild) {
             main.insertBefore(bar, main.firstChild);
           } else {

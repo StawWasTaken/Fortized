@@ -22033,14 +22033,23 @@ function _listenGlobalSettingsConsolidated() {
         } else if (text !== _dismissedAnnouncement) {
           if (existing) existing.remove();
           
+          // Insert into main-wrap which has column flex layout
+          const mainWrap = document.querySelector('.main-wrap');
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
-          // Fixed position - below topbar (42px), spans main area (left:72px from sidebar to right edge)
-          bar.style.cssText = 'position:fixed;top:42px;left:72px;right:0;z-index:50;height:36px;';
+          bar.style.cssText = 'border-radius:0;width:100%;';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" title="Dismiss"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="sa-body"><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span class="sa-text">${escapeHTML(text)}</span></div>`;
           bar.className = 'sys-announce-bar';
-          document.body.appendChild(bar);
-          console.log('[Broadcast] Added fixed bar');
+          
+          if (mainWrap) {
+            // Insert at beginning of main-wrap to push content down
+            mainWrap.insertBefore(bar, mainWrap.firstChild);
+            console.log('[Broadcast] Added to main-wrap');
+          } else {
+            // Fallback to body
+            document.body.appendChild(bar);
+            console.log('[Broadcast] Fallback to body');
+          }
         }
       }
     } catch (e) { console.warn('[Broadcast] Error:', e); }

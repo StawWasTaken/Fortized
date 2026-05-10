@@ -10713,8 +10713,10 @@ function initFortizedUXResilience() {
   // Check & listen for maintenance mode
   try { checkMaintenanceMode(); } catch(e) { _wrn('[init] checkMaintenanceMode:', e); }
   try { _listenGlobalSettingsConsolidated(); } catch(e) { _wrn('[init] _listenGlobalSettingsConsolidated:', e); }
-  // Run again immediately to show any existing broadcast
-  setTimeout(_listenGlobalSettingsConsolidated, 100);
+  // Run again after page fully loads to ensure DOM ready
+  setTimeout(() => {
+    try { _listenGlobalSettingsConsolidated(); } catch(e) { console.warn('[init] delayed broadcast check:', e); }
+  }, 500);
   // Listen for force-refresh and session-clear signals from admin
   try { _listenForceRefresh(); } catch(e) { _wrn('[init] _listenForceRefresh:', e); }
   try { _listenClearSessions(); } catch(e) { _wrn('[init] _listenClearSessions:', e); }
@@ -22009,19 +22011,19 @@ let _dismissedAnnouncement = null;
 let _lastAnnText = null;
 let _globalSettingsInterval = null;
 function _listenGlobalSettingsConsolidated() {
-  if (_globalSettingsInterval) clearInterval(_globalSettingsInterval);
-  _globalSettingsInterval = setInterval(async () => {
-    if (document.hidden) return; // skip when tab hidden — cut egress
+  // Function to check and show announcement
+  const _checkAnnouncement = async () => {
     try {
-      const gs = await FortizedSocial.adminGetGlobalSettings();
-      // Maintenance mode check
-      if (gs.maintenanceMode && !hasStaffAccess()) {
-        _showMaintenanceScreen();
-      } else {
-        document.getElementById('maintenance-overlay')?.remove();
+      // First try localStorage for immediate show
+      let gs = null;
+      try { gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}'); } catch {}
+      let text = gs?.announcement || null;
+      
+      // Also try to fetch from server
+      if (!text) {
+        try { gs = await FortizedSocial.adminGetGlobalSettings(); text = gs?.announcement || null; } catch {}
       }
-      // Announcement check
-      const text = gs.announcement || null;
+      
       if (text !== _lastAnnText) {
         _lastAnnText = text;
         const existing = document.getElementById('sys-announce-bar');
@@ -22030,17 +22032,28 @@ function _listenGlobalSettingsConsolidated() {
           _dismissedAnnouncement = null;
         } else if (text !== _dismissedAnnouncement) {
           if (existing) existing.remove();
-          const main = document.querySelector('.main[role="main"]') || document.getElementById('main') || document.querySelector('.main-wrap');
+          const main = document.querySelector('.main[role="main"]');
+          // Find proper insertion point - after topbar if exists
+          let insertBeforeEl = main?.querySelector('.home-topbar') || main?.firstElementChild;
           const bar = document.createElement('div');
           bar.className = 'sys-announce-bar';
           bar.id = 'sys-announce-bar';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" title="Dismiss"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="sa-body"><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span class="sa-text">${escapeHTML(text)}</span></div>`;
-          if (main) main.insertBefore(bar, main.firstChild);
-          else document.body.appendChild(bar);
+          if (main) {
+            if (insertBeforeEl) main.insertBefore(bar, insertBeforeEl);
+            else main.appendChild(bar);
+          } else { console.warn('[Broadcast] Could not find main element'); document.body.appendChild(bar); }
         }
       }
-    } catch (e) { _dbg('[Settings] global settings poll failed', e); }
-  }, 60000);
+    } catch (e) { console.warn('[Broadcast] Error:', e); }
+  };
+  
+  // Run check immediately
+  _checkAnnouncement();
+  
+  // Then poll every 60s
+  if (_globalSettingsInterval) clearInterval(_globalSettingsInterval);
+  _globalSettingsInterval = setInterval(_checkAnnouncement, 60000);
 }
 // Keep old function names as no-ops since init code calls them separately
 function _listenMaintenanceMode() { /* consolidated into _listenGlobalSettingsConsolidated */ }

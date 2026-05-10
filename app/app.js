@@ -22046,26 +22046,13 @@ function _listenGlobalSettingsConsolidated() {
           bar.className = 'sys-announce-bar';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
           
-          // Find the actual content container (first child of main that has content)
-          let contentChild = null;
+          // Create bar with fixed position matching main's position/size
+          const mainRect = main.getBoundingClientRect();
+          bar.style.cssText = `position:fixed;top:${mainRect.top}px;left:${mainRect.left}px;width:${mainRect.width}px;z-index:9998;`;
+          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
           
-          if (main.children.length > 0) {
-            // Get first direct child that has substantial content
-            for (let el of main.children) {
-              if (el.children && el.children.length > 0) {
-                contentChild = el;
-                break;
-              }
-            }
-          }
-          
-          // Insert bar at top of content child (NOT main, to avoid flex issues)
-          const target = contentChild || main;
-          if (target.firstChild) {
-            target.insertBefore(bar, target.firstChild);
-          } else {
-            target.appendChild(bar);
-          }
+          // Add to body
+          document.body.appendChild(bar);
         }
       }
     } catch (e) { console.warn('[Broadcast] Error:', e); }

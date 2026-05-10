@@ -20765,12 +20765,12 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">This banner is shown to ALL users at the top of the app.</div>
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Icon</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-sm);">
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/498076/health.svg" width="22" height="22"></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/527693/download-minimalistic.svg" width="22" height="22"></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/524897/rocket.svg" width="22" height="22"></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/497913/danger.svg" width="22" height="22"></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/528914/confetti-minimalistic.svg" width="22" height="22"></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/455734/chemical-lab.svg" width="22" height="22"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/498076/health.svg" width="18" height="18" style="filter:invert(1);"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/527693/download-minimalistic.svg" width="18" height="18" style="filter:invert(1);"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/524897/rocket.svg" width="18" height="18" style="filter:invert(1);"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/497913/danger.svg" width="18" height="18" style="filter:invert(1);"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/528914/confetti-minimalistic.svg" width="18" height="18" style="filter:invert(1);"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/455734/chemical-lab.svg" width="18" height="18" style="filter:invert(1);"></button>
             </div>
             <input type="hidden" id="_broadcast-icon" value="${escapeHTML(announcementIcon)}">            <textarea id="_broadcast-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(currentMsg)}</textarea>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
@@ -20811,15 +20811,15 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div class="hq-panel-head"><h3>Quick Messages</h3></div>
         <div style="padding:var(--space-lg);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);">
           ${[
-            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.',s:'<img src="https://www.svgrepo.com/show/498076/health.svg" width="22" height="22">'},
-            {t:'Update',m:'A new update is available with multiple new features! Refresh your page to get the latest.',s:'<img src="https://www.svgrepo.com/show/527693/download-minimalistic.svg" width="22" height="22">'},
-            {t:'Welcome',m:'Welcome to the community! Check out the latest events in your Bastion.',s:'<img src="https://www.svgrepo.com/show/524897/rocket.svg" width="22" height="22">'},
-            {t:'Emergency',m:'We are aware of current issues and working on a fix. Thank you for your patience.',s:'<img src="https://www.svgrepo.com/show/497913/danger.svg" width="22" height="22">'},
-            {t:'Celebration',m:'Thank you for being part of Fortized! Enjoy special perks today.',s:'<img src="https://www.svgrepo.com/show/528914/confetti-minimalistic.svg" width="22" height="22">'},
-            {t:'Experimental',m:'We are testing something new (experimental)! Give us feedback.',s:'<img src="https://www.svgrepo.com/show/455734/chemical-lab.svg" width="22" height="22">'},
-          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:6px;" onclick="document.getElementById('_broadcast-msg').value='${q.m.replace(/'/g,"\\'")}'; document.getElementById('_broadcast-icon').value='${q.s.replace(/'/g,"\\'")}';">
-            <span style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;">${q.s}<span>${q.t}</span></span>
-            <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,50)}…</span>
+            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.',i:'https://www.svgrepo.com/show/498076/health.svg'},
+            {t:'Update',m:'A new update is available with multiple new features! Refresh your page.',i:'https://www.svgrepo.com/show/527693/download-minimalistic.svg'},
+            {t:'Welcome',m:'Welcome to the community! Check out the latest events in your Bastion.',i:'https://www.svgrepo.com/show/524897/rocket.svg'},
+            {t:'Emergency',m:'We are aware of current issues and working on a fix. Thank you for your patience.',i:'https://www.svgrepo.com/show/497913/danger.svg'},
+            {t:'Celebration',m:'Thank you for being part of Fortized! Enjoy special perks today.',i:'https://www.svgrepo.com/show/528914/confetti-minimalistic.svg'},
+            {t:'Experimental',m:'We are testing something new (experimental)! Give us feedback.',i:'https://www.svgrepo.com/show/455734/chemical-lab.svg'},
+          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="_setQuickMessage('${q.m.replace(/'/g,"\\'")}', '${q.i}');">
+            <span style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:12px;"><img src="${q.i}" style="width:18px;height:18px;filter:invert(1);"><span>${q.t}</span></span>
+            <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,45)}…</span>
           </button>`).join('')}
         </div>
       </div>
@@ -21733,6 +21733,13 @@ async function _deleteTicket(id) {
 }
 
 // ── New Command Center tool helpers ──
+function _setQuickMessage(msg, iconUrl) {
+  const msgEl = document.getElementById("_broadcast-msg");
+  const iconEl = document.getElementById("_broadcast-icon");
+  if (msgEl) msgEl.value = msg;
+  if (iconEl) { iconEl.value = iconUrl; iconEl.dispatchEvent(new Event("input")); }
+}
+
 async function _broadcastAnnouncement() {
   const msg = (document.getElementById('_broadcast-msg')?.value?.trim()) || (document.getElementById('gs-announcement')?.value?.trim());
   if (!msg) { toast('Enter a message first','error'); return; }
@@ -22066,7 +22073,7 @@ function _listenGlobalSettingsConsolidated() {
           bar.className = 'sys-announce-bar';
           // Fixed position to overlay all main children
           bar.style.cssText = 'position:absolute;top:0;left:0;right:0;height:40px;z-index:100;';
-          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><div class="sa-icon">${iconSvg}</div><span>${escapeHTML(text)}</span>`;
+          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><div class="sa-icon"><img src="${iconSvg}" style="width:18px;height:18px;"></div><span>${escapeHTML(text)}</span>`;
           
           // Insert at top of main
           if (main.firstChild) {

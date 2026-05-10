@@ -22047,6 +22047,14 @@ function _listenGlobalSettingsConsolidated() {
           bar.style.cssText = 'flex-shrink:0;width:100%;min-height:40px;';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
           
+          // Make sure existing children fill remaining space
+          Array.from(main.children).forEach(child => {
+            if (child.id !== 'sys-announce-bar') {
+              child.style.flexGrow = '1';
+              child.style.flexShrink = '1';
+            }
+          });
+          
           // Insert as first child of main
           if (main.firstChild) {
             main.insertBefore(bar, main.firstChild);

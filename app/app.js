@@ -20808,23 +20808,8 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           </button>`).join('')}
         </div>
       </div>
-      <div class="hq-panel" style="margin-top:var(--space-lg);">
-        <div class="hq-panel-head"><h3>Broadcast Preview</h3></div>
-        <div style="padding:var(--space-lg);">
-          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Preview how the broadcast banner looks to users:</div>
-          <div style="background:rgba(var(--accent-rgb,254,248,61),.08);border:1px solid rgba(var(--accent-rgb,254,248,61),.12);border-radius:10px;height:36px;display:flex;align-items:center;overflow:hidden;">
-            <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-right:1px solid rgba(var(--accent-rgb,254,248,61),.1);color:rgba(255,255,255,.35);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-            <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px;min-width:0;overflow:hidden;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg><span style="font-size:11px;font-weight:800;color:var(--accent);white-space:nowrap;">BROADCAST</span><span style="width:1px;height:14px;background:rgba(var(--accent-rgb,254,248,61),.18);flex-shrink:0;"></span><span style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.82);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="_bc-preview-text">${currentMsg ? escapeHTML(currentMsg) : 'Your broadcast message will appear here…'}</span></div>
-          </div>
-        </div>
-      </div>
+      
     </div>`;
-    // Live preview update
-    document.getElementById('_broadcast-msg')?.addEventListener('input', e => {
-      const prev = document.getElementById('_bc-preview-text');
-      if (prev) prev.textContent = e.target.value || 'Your broadcast message will appear here…';
-    });
-    _loadAnnouncementPreview();
   }
 
   else if (tab === '_analytics') {

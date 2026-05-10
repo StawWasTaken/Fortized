@@ -22037,8 +22037,8 @@ function _listenGlobalSettingsConsolidated() {
           if (!text) text = 'Fortized will undergo scheduled maintenance shortly. Please save your work.';
           
           
-          const mainWrap = document.querySelector('.main-wrap');
-          if (!mainWrap) return;
+          const main = document.querySelector('.main');
+          if (!main) return;
 
           // Create bar
           const bar = document.createElement('div');
@@ -22047,10 +22047,10 @@ function _listenGlobalSettingsConsolidated() {
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
 
           // Insert as first child
-          if (mainWrap.firstChild) {
-            mainWrap.insertBefore(bar, mainWrap.firstChild);
+          if (main.firstChild) {
+            main.insertBefore(bar, main.firstChild);
           } else {
-            mainWrap.appendChild(bar);
+            main.appendChild(bar);
           }
         }
       }

@@ -20723,19 +20723,21 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   else if (tab === '_broadcast') {
     if (!isSuperAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
     // Fetch latest from Supabase to ensure we have current state
-    let currentMsg = '', statusMsg = '';
+    let currentMsg = '', statusMsg = '', announcementIcon = '';
     try {
       const gs2 = await FortizedSocial.adminGetGlobalSettings();
       currentMsg = gs2.announcement || '';
       statusMsg = gs2.platformStatus || '';
+      announcementIcon = gs2.announcementIcon || '';
       // Sync to localStorage
       const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
-      gs.announcement = currentMsg; gs.platformStatus = statusMsg; gs.announcementIcon = gs2.announcementIcon || '';
+      gs.announcement = currentMsg; gs.platformStatus = statusMsg; gs.announcementIcon = announcementIcon;
       localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
     } catch {
       const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
       currentMsg = gs.announcement || '';
       statusMsg = gs.platformStatus || '';
+      announcementIcon = gs.announcementIcon || '';
     }
     main.innerHTML = `<div style="padding:var(--space-xl);">
       <div style="display:flex;align-items:center;gap:var(--space-md);margin-bottom:var(--space-xs);">
@@ -20762,7 +20764,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div style="padding:var(--space-lg);">
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">This banner is shown to ALL users at the top of the app.</div>
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Icon SVG (paste from svgrepo)</div>
-            <input id="_broadcast-icon" type="text" value="${escapeHTML(gs?.announcementIcon || '')}" placeholder="<svg...></svg>" style="width:100%;font-size:12px;padding:6px 8px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;">
+            <input id="_broadcast-icon" type="text" value="${escapeHTML(announcementIcon)}" placeholder="<svg...></svg>" style="width:100%;font-size:12px;padding:6px 8px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;">
             <textarea id="_broadcast-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(currentMsg)}</textarea>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
               <button class="hq-quick-btn" onclick="_broadcastAnnouncement()" style="background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);font-weight:700;">🔴 Broadcast</button>

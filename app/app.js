@@ -22044,18 +22044,13 @@ function _listenGlobalSettingsConsolidated() {
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.className = 'sys-announce-bar';
-          bar.style.cssText = 'width:100%;min-width:100%;flex-shrink:0;box-sizing:border-box;';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
           
-          // Find the main content scroll area
-          const scrollArea = main.querySelector('.home-content, .content-scroll, main, [class*="content"]');
-          
-          // Insert at top
-          const target = scrollArea || main;
-          if (target.firstChild) {
-            target.insertBefore(bar, target.firstChild);
+          // Insert at top of main
+          if (main.firstChild) {
+            main.insertBefore(bar, main.firstChild);
           } else {
-            target.appendChild(bar);
+            main.appendChild(bar);
           }
         }
       }

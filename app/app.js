@@ -22046,7 +22046,9 @@ function _listenGlobalSettingsConsolidated() {
           bar.className = 'sys-announce-bar';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
 
-          // Insert as first child
+          // Insert as first child of main
+          main.style.flexDirection = 'column';
+          main.style.justifyContent = 'flex-start';
           if (main.firstChild) {
             main.insertBefore(bar, main.firstChild);
           } else {

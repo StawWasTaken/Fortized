@@ -22032,20 +22032,22 @@ function _listenGlobalSettingsConsolidated() {
           _dismissedAnnouncement = null;
         } else if (text !== _dismissedAnnouncement) {
           if (existing) existing.remove();
+          // Try main-wrap which has column flex direction
+          const mainWrap = document.querySelector('.main-wrap');
+          console.log('[Broadcast] mainWrap found:', !!mainWrap);
           const main = document.querySelector('.main[role="main"]');
           console.log('[Broadcast] main found:', !!main, 'children:', main?.children?.length);
-          const topbarEl = main?.querySelector('.home-topbar');
-          console.log('[Broadcast] topbar found:', !!topbarEl);
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" title="Dismiss"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="sa-body"><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span class="sa-text">${escapeHTML(text)}</span></div>`;
           bar.className = 'sys-announce-bar';
-          if (main && topbarEl) {
-            main.insertBefore(bar, topbarEl.nextSibling);
+          // Insert into main-wrap (column layout) to push all content down
+          if (mainWrap) {
+            mainWrap.insertBefore(bar, mainWrap.firstChild);
           } else if (main) {
             main.prepend(bar);
           } else {
-            console.warn('[Broadcast] Could not find main element');
+            console.warn('[Broadcast] Could not find elements');
             document.body.appendChild(bar);
           }
         }

@@ -22033,25 +22033,14 @@ function _listenGlobalSettingsConsolidated() {
         } else if (text !== _dismissedAnnouncement) {
           if (existing) existing.remove();
           
-          // Try to find a suitable container
-          const containers = [
-            document.querySelector('.home-main-scroll'),
-            document.querySelector('.home-topbar')?.parentElement,
-            document.querySelector('.main-wrap')
-          ];
-          const target = containers.find(c => !!c);
-          console.log('[Broadcast] target container:', !!target);
-          
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
+          // Fixed position - below topbar (42px), spans main area (left:72px from sidebar to right edge)
+          bar.style.cssText = 'position:fixed;top:42px;left:72px;right:0;z-index:50;height:36px;';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" title="Dismiss"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="sa-body"><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span class="sa-text">${escapeHTML(text)}</span></div>`;
           bar.className = 'sys-announce-bar';
-          
-          if (target) {
-            target.insertBefore(bar, target.firstChild);
-          } else {
-            document.body.appendChild(bar);
-          }
+          document.body.appendChild(bar);
+          console.log('[Broadcast] Added fixed bar');
         }
       }
     } catch (e) { console.warn('[Broadcast] Error:', e); }

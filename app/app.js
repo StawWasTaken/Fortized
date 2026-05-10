@@ -20763,7 +20763,16 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           </div>
           <div style="padding:var(--space-lg);">
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">This banner is shown to ALL users at the top of the app.</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Icon SVG (paste from svgrepo)</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Icon</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-sm);">
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l-7 7a1 1 0 01-1.4 1.4l-3.3-3.3a1 1 0 011.4-1.4l2.9 2.9"/></svg></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg></button>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Or paste custom SVG</div>
             <input id="_broadcast-icon" type="text" value="${escapeHTML(announcementIcon)}" placeholder="<svg...></svg>" style="width:100%;font-size:12px;padding:6px 8px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;">
             <textarea id="_broadcast-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(currentMsg)}</textarea>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
@@ -22024,11 +22033,14 @@ function _listenGlobalSettingsConsolidated() {
       // First try localStorage for immediate show
       let gs = null;
       try { gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}'); } catch {}
+      let iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"></svg>';
       let text = gs?.announcement || null;
       
       // Also try to fetch from server
       if (!text) {
-        try { gs = await FortizedSocial.adminGetGlobalSettings(); text = gs?.announcement || null; } catch {}
+        try { const gsServer = await FortizedSocial.adminGetGlobalSettings();
+        text = gsServer?.announcement || null;
+        if (gsServer?.announcementIcon) iconSvg = gsServer.announcementIcon; } catch {}
       }
       
       if (text !== _lastAnnText) {
@@ -22038,8 +22050,8 @@ function _listenGlobalSettingsConsolidated() {
           if (existing) { existing.style.opacity='0'; existing.style.transform='translateY(-100%)'; setTimeout(()=>existing.remove(),300); }
           _dismissedAnnouncement = null;
         } else if (text !== _dismissedAnnouncement) {
+          if (gs?.announcementIcon) iconSvg = gs.announcementIcon;
           // Get custom SVG icon from gs
-          const iconSvg = gs?.announcementIcon || '<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"></svg>';
           if (existing) existing.remove();
           
           // Force test message

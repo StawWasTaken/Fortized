@@ -22036,29 +22036,21 @@ function _listenGlobalSettingsConsolidated() {
           // Force test message
           if (!text) text = 'TEST BROADCAST - Announcements are working!';
           
-          const mainWrap = document.querySelector('.main-wrap');
-          if (!mainWrap) {
-            // No container - show as fixed
-            const bar = document.createElement('div');
-            bar.id = 'sys-announce-bar';
-            bar.className = 'sys-announce-bar';
-            bar.style.cssText = 'position:fixed;top:42px;left:72px;right:0;z-index:9999;';
-            bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">X</button><span>${escapeHTML(text)}</span>`;
-            document.body.appendChild(bar);
-            return;
-          }
           
+          const mainWrap = document.querySelector('.main-wrap');
+          if (!mainWrap) return;
+
           // Create bar
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.className = 'sys-announce-bar';
           bar.innerHTML = `<span>${escapeHTML(text)}</span><button onclick="_dismissAnnouncement()" style="float:right;padding:8px;">X</button>`;
 
-          const mainWrap = document.querySelector('.main-wrap');
-          if (mainWrap) {
-            mainWrap.prepend(bar);
+          // Insert as first child
+          if (mainWrap.firstChild) {
+            mainWrap.insertBefore(bar, mainWrap.firstChild);
           } else {
-            document.body.prepend(bar);
+            mainWrap.appendChild(bar);
           }
         }
       }

@@ -2852,17 +2852,17 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .ctx-menu{position:fixed;z-index:var(--z-max);background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:var(--radius-md);padding:6px 0;min-width:220px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:ctxIn .14s var(--ease-out);display:none;overflow:hidden;}
 .ctx-menu.ctx-visible{display:block;}
 /* ── System Announcement Banner ─────────────────── */
-.sys-announce-bar{position:fixed;top:0;left:72px;right:0;z-index:var(--z-overlay);background:rgba(var(--accent-rgb,254,248,61),.08);border-bottom:1px solid rgba(var(--accent-rgb,254,248,61),.12);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;align-items:center;gap:0;padding:0;height:36px;animation:announceDrop .4s cubic-bezier(.22,1,.36,1);transform-origin:top;}
+.sys-announce-bar{position:fixed;top:0;left:72px;right:0;z-index:var(--z-overlay);background:#3ecf6e;background-image:url('https://cdn.polytoria.com/assets/48VK9iyM9VB8fMA3VWGQDfGa4OrSbolq.png');background-repeat:repeat;background-size:24px 24px;border-bottom:1px solid rgba(62,207,110,.3);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;align-items:center;gap:0;padding:0;height:36px;animation:announceDrop .4s cubic-bezier(.22,1,.36,1);transform-origin:top;}
 body.is-desktop-app .sys-announce-bar{padding-right:140px;}
-@keyframes announceDrop{from{opacity:0;transform:translateY(-100%);}to{opacity:1;transform:none;}}
-.sys-announce-bar .sa-close{width:36px;height:36px;background:rgba(255,255,255,.04);border:none;border-right:1px solid rgba(var(--accent-rgb,254,248,61),.1);color:rgba(255,255,255,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
-.sys-announce-bar .sa-close:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.9);}
+@keyframes announceDrop{from{opacity:0;transform:translateY(-100%);}to{opacity:1;transform:none}}
+.sys-announce-bar .sa-close{width:36px;height:36px;background:rgba(62,207,110,.15);border:none;border-right:1px solid rgba(255,255,255,.2);color:rgba(0,0,0,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.sys-announce-bar .sa-close:hover{background:rgba(255,255,255,.2);color:#000;}
 .sys-announce-bar .sa-body{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px;min-width:0;overflow:hidden;}
 .sys-announce-bar .sa-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sys-announce-bar .sa-icon svg{width:14px;height:14px;color:var(--accent);}
-.sys-announce-bar .sa-label{font-size:11px;font-weight:800;color:var(--accent);white-space:nowrap;flex-shrink:0;}
-.sys-announce-bar .sa-divider{width:1px;height:14px;background:rgba(var(--accent-rgb,254,248,61),.18);flex-shrink:0;}
-.sys-announce-bar .sa-text{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.82);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.sys-announce-bar .sa-icon svg{width:14px;height:14px;color:#000;}
+.sys-announce-bar .sa-label{font-size:11px;font-weight:800;color:#000;white-space:nowrap;flex-shrink:0;}
+.sys-announce-bar .sa-divider{width:1px;height:14px;background:rgba(0,0,0,.25);flex-shrink:0;}
+.sys-announce-bar .sa-text{font-size:12.5px;font-weight:600;color:rgba(0,0,0,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 /* ── Announcement Room UI ───────────────────────── */
 .ann-room{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .ann-room .room-topbar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--channel);}

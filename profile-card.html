@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Full Profile Card</title>
+<style>
+:root{--panel:#0e1117;--panel2:#161a28;--channel:#13161d;--accent:#fff93e;--font-display:'Outfit',sans-serif;--font-ui:'Inter',sans-serif}
+body{background:#000;padding:20px;font-family:var(--font-ui)}
+.up-card{display:grid;grid-template-columns:280px 1fr;min-height:500px;width:820px;margin:0 auto}
+.up-left{background:var(--panel)}
+.up-left-banner{height:120px;position:relative;overflow:hidden}
+.up-left-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to top,var(--panel),transparent)}
+.up-left-av-area{padding:0 20px;margin-top:-36px;position:relative;z-index:2}
+.up-left-av{width:88px;height:88px;border-radius:50%;overflow:hidden;border:6px solid var(--panel);background:#161a28}
+.up-left-av img{width:100%;height:100%;object-fit:cover}
+.profile-decoration-overlay-lg{position:absolute;top:-10px;left:-10px;width:108px !important}
+.profile-status-dot{position:absolute;bottom:3px;right:3px;width:22px;height:22px;background:var(--panel);border-radius:50%;border:3px solid var(--panel)}
+.up-left-info{padding:12px 20px 0}
+.up-left-name{font-size:24px;font-weight:800;color:#fff}
+.up-left-uname{font-size:14px;color:rgba(255,255,255,.4);margin-top:2px}
+.up-left-streak{margin-top:8px}
+.up-left-streak span{padding:4px 10px;background:rgba(255,138,62,.1);border:1px solid rgba(255,138,62,.2);border-radius:20px;color:#ff9d5e;font-size:12px;font-weight:700}
+.up-left-status{padding:8px 20px;display:flex;gap:8px;flex-wrap:wrap}
+.up-left-status span{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:20px}
+.up-left-badges{padding:8px 20px;display:flex;gap:6px}
+.up-left-divider{height:1px;background:rgba(255,255,255,.06);margin:12px 20px}
+.up-left-section{padding:0 20px 16px}
+.up-left-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);margin-bottom:8px}
+.up-left-bio{font-size:14px;color:rgba(255,255,255,.65);line-height:1.6}
+.up-left-actions{padding:16px 20px 20px;display:flex;flex-direction:column;gap:8px}
+.up-action-edit,.up-action-msg,.up-action-add{padding:12px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.up-action-edit{background:var(--accent);color:#13161d}
+.up-action-msg{background:#5865f2;color:#fff}
+.up-action-add{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7)}
+.up-right{background:var(--channel)}
+.up-right-tabs{display:flex;gap:4px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.up-right-tab{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;color:rgba(255,255,255,.5);cursor:pointer}
+.up-right-tab.active{background:rgba(255,255,255,.06);color:#fff}
+.up-right-content{padding:16px}
+.up-right-section{margin-bottom:20px}
+.up-right-section-title{font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:12px}
+.activity-card{display:flex;gap:12px;padding:12px;background:rgba(255,255,255,.03);border-radius:10px;border-left:3px solid #3ecf6e;margin-bottom:8px}
+.ac-icon{width:40px;height:40px;background:rgba(255,255,255,.05);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.ac-content{flex:1}
+.ac-title{font-size:14px;font-weight:600;color:#fff}
+.ac-detail{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+.up-games-section{padding:14px 16px 16px}
+.up-games-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.up-game-cover{aspect-ratio:1;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid rgba(255,255,255,.05)}
+</style>
+</head>
+<body>
+<!-- EXACT FROM APP: full profile card modal -->
+<div class="up-card">
+  <div class="up-left">
+    <div class="up-left-banner"><div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a2e,#0f3460);"></div></div>
+    <div class="up-left-av-area">
+      <div class="up-left-av"><img src="/Onyx.png"></div>
+      <span class="profile-status-dot"><span style="width:12px;height:12px;background:#3ecf6e;border-radius:50%;"></span></span>
+    </div>
+    <div class="up-left-info">
+      <div class="up-left-name">FortizedUser</div>
+      <div class="up-left-uname">@fortizeduser · @they/them</div>
+      <div class="up-left-streak"><span>🔥 42 day streak</span></div>
+    </div>
+    <div class="up-left-status">
+      <span><span style="width:8px;height:8px;background:#3ecf6e;border-radius:50%;"></span> Online</span>
+      <span>🎮 Playing Minecraft</span>
+    </div>
+    <div class="up-left-badges"><img src="/Onyx.png" width="28"><img src="/AtelierBadge.png" width="28"></div>
+    <div class="up-left-divider"></div>
+    <div class="up-left-section">
+      <div class="up-left-section-title">About Me</div>
+      <div class="up-left-bio">Hello! Welcome to Fortized 🌟 Building the coziest community!</div>
+    </div>
+    <div class="up-left-section">
+      <div class="up-left-section-title">Member Since</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.45);">15 March 2024</div>
+    </div>
+    <div class="up-left-divider"></div>
+    <div class="up-left-section">
+      <div class="up-left-section-title">Roles</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <span style="padding:5px 10px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);border-radius:20px;font-size:12px;color:#60a5fa;">Moderator</span>
+        <span style="padding:5px 10px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:20px;font-size:12px;color:#f59e0b;">Developer</span>
+      </div>
+    </div>
+    <div class="up-left-actions">
+      <button class="up-action-msg">Message</button>
+      <div style="display:flex;gap:8px;">
+        <button style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;">Block</button>
+        <button style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;">Report</button>
+      </div>
+    </div>
+  </div>
+  <div class="up-right">
+    <div class="up-right-tabs">
+      <div class="up-right-tab active">Board</div>
+      <div class="up-right-tab">Activity</div>
+      <div class="up-right-tab">Mutual Friends</div>
+    </div>
+    <div class="up-right-content">
+      <div class="up-right-section">
+        <div class="up-right-section-title">Active Now</div>
+        <div class="activity-card">
+          <div class="ac-icon">🎮</div>
+          <div class="ac-content">
+            <div class="ac-title">Playing Minecraft</div>
+            <div class="ac-detail">General Gaming</div>
+          </div>
+        </div>
+      </div>
+      <div class="up-right-section">
+        <div class="up-right-section-title">Games I Like</div>
+        <div class="up-games-section">
+          <div class="up-games-grid">
+            <div class="up-game-cover"></div>
+            <div class="up-game-cover"></div>
+            <div class="up-game-cover"></div>
+            <div class="up-game-cover"></div>
+          </div>
+        </div>
+      </div>
+      <div class="up-right-section">
+        <div class="up-right-section-title">Wishlist</div>
+        <div style="padding:20px;text-align:center;color:rgba(255,255,255,.3);font-size:13px;">Wishlist is empty</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

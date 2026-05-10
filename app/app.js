@@ -22043,11 +22043,13 @@ function _listenGlobalSettingsConsolidated() {
           _dismissedAnnouncement = null;
         } else if (text !== _dismissedAnnouncement) {
           if (existing) existing.remove();
+          const main = document.querySelector('.main[role="main"]') || document.getElementById('main') || document.querySelector('.main-wrap');
           const bar = document.createElement('div');
           bar.className = 'sys-announce-bar';
           bar.id = 'sys-announce-bar';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" title="Dismiss"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="sa-body"><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span class="sa-text">${escapeHTML(text)}</span></div>`;
-          document.body.appendChild(bar);
+          if (main) main.insertBefore(bar, main.firstChild);
+          else document.body.appendChild(bar);
         }
       }
     } catch (e) { _dbg('[Settings] global settings poll failed', e); }

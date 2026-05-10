@@ -22046,26 +22046,20 @@ function _listenGlobalSettingsConsolidated() {
           bar.className = 'sys-announce-bar';
           bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
           
-          // Find the actual content container (first child of main that has content)
-          let contentChild = null;
+          // Create bar - calculate position to span full main content
+          const mainRect = main.getBoundingClientRect();
           
-          if (main.children.length > 0) {
-            // Get first direct child that has substantial content
-            for (let el of main.children) {
-              if (el.children && el.children.length > 0) {
-                contentChild = el;
-                break;
-              }
-            }
-          }
+          const bar = document.createElement('div');
+          bar.id = 'sys-announce-bar';
+          bar.className = 'sys-announce-bar';
+          bar.style.cssText = `position:fixed;top:${mainRect.top + window.scrollY}px;left:${mainRect.left}px;width:${mainRect.width}px;z-index:9998;`;
+          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()">×</button><span>${escapeHTML(text)}</span>`;
           
-          // Insert bar at top of content child (NOT main, to avoid flex issues)
-          const target = contentChild || main;
-          if (target.firstChild) {
-            target.insertBefore(bar, target.firstChild);
-          } else {
-            target.appendChild(bar);
-          }
+          // Remove existing and add
+          const existing = document.getElementById('sys-announce-bar');
+          if (existing) existing.remove();
+          
+          document.body.appendChild(bar);
         }
       }
     } catch (e) { console.warn('[Broadcast] Error:', e); }

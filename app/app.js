@@ -22034,7 +22034,9 @@ function _listenGlobalSettingsConsolidated() {
           if (existing) existing.remove();
           
           const mainWrap = document.querySelector('.main-wrap');
+          console.log('[Broadcast] mainWrap:', !!mainWrap, 'text:', text);
           if (!mainWrap) { console.warn('[Broadcast] main-wrap not found'); return; }
+          if (!text) { console.log('[Broadcast] no text'); return; }
           
           // Create bar as first child - prepend pushes existing content down
           const bar = document.createElement('div');

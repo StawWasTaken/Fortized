@@ -20780,7 +20780,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           </div>
           <div style="padding:var(--space-lg);">
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Set a status message visible on the platform status page.</div>
-            <textarea id="_status-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(statusMsg)}</textarea>
+            <div style="display:flex;gap:var(--space-sm);margin-bottom:var(--space-sm);">
+              <textarea id="_status-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(statusMsg)}</textarea>
+            </div>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
               <button class="hq-quick-btn" onclick="_updatePlatformStatus()" style="background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.15);color:var(--green);">Update Status</button>
               <button class="hq-quick-btn" onclick="document.getElementById('_status-msg').value='';_updatePlatformStatus()">Clear Status</button>
@@ -20802,14 +20804,14 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div class="hq-panel-head"><h3>Quick Messages</h3></div>
         <div style="padding:var(--space-lg);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);">
           ${[
-            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.',s:'<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l-7 7a1 1 0 01-1.4 1.4l-3.3-3.3a1 1 0 011.4-1.4l2.9 2.9"/></svg>'},
-            {t:'Update',m:'A new update is available! Refresh your page to get the latest features.',s:'<svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>'},
-            {t:'Welcome',m:'Welcome to the community! Check out the latest events in your Bastion.',s:'<svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>'},
-            {t:'Emergency',m:'We are aware of current issues and working on a fix. Thank you for your patience.',s:'<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'},
-            {t:'Celebration',m:'Thank you for being part of Fortized! Enjoy special perks today.',s:'<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>'},
-            {t:'New Feature',m:'We just launched something new! Check it out and let us know what you think.',s:'<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'},
-          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="document.getElementById('_broadcast-msg').value='${q.m.replace(/'/g,"\\'")}'">
-            <span style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:12px;"><span style="width:18px;height:18px;flex-shrink:0;">${q.s}</span><span>${q.t}</span></span>
+            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l-7 7a1 1 0 01-1.4 1.4l-3.3-3.3a1 1 0 011.4-1.4l2.9 2.9"/></svg>'},
+            {t:'Update',m:'A new update is available! Refresh your page to get the latest features.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>'},
+            {t:'Welcome',m:'Welcome to the community! Check out the latest events in your Bastion.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>'},
+            {t:'Emergency',m:'We are aware of current issues and working on a fix. Thank you for your patience.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'},
+            {t:'Celebration',m:'Thank you for being part of Fortized! Enjoy special perks today.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>'},
+            {t:'New Feature',m:'We just launched something new! Check it out and let us know what you think.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'},
+          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:6px;" onclick="document.getElementById('_broadcast-msg').value='${q.m.replace(/'/g,"\\'")}'">
+            <span style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;">${q.s}<span>${q.t}</span></span>
             <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,50)}…</span>
           </button>`).join('')}
         </div>

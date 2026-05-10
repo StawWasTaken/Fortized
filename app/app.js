@@ -20730,7 +20730,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       statusMsg = gs2.platformStatus || '';
       // Sync to localStorage
       const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
-      gs.announcement = currentMsg; gs.platformStatus = statusMsg;
+      gs.announcement = currentMsg; gs.platformStatus = statusMsg; gs.announcementIcon = gs2.announcementIcon || '';
       localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
     } catch {
       const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
@@ -20807,7 +20807,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             {t:'Celebration',m:'Thank you for being part of Fortized! Enjoy special perks today.',s:'<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>'},
             {t:'New Feature',m:'We just launched something new! Check it out and let us know what you think.',s:'<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'},
           ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="document.getElementById('_broadcast-msg').value='${q.m.replace(/'/g,"\\'")}'">
-            <span style="display:flex;align-items:center;gap:5px;font-weight:700;font-size:11px;">${q.s}<span>${q.t}</span></span>
+            <span style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:12px;"><span style="width:18px;height:18px;flex-shrink:0;">${q.s}</span><span>${q.t}</span></span>
             <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,50)}…</span>
           </button>`).join('')}
         </div>

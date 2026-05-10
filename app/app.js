@@ -20765,12 +20765,12 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">This banner is shown to ALL users at the top of the app.</div>
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Icon</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-sm);">
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5"><path d="M8.97 22h6c5 0 7-2 7-7V9c0-5-2-7-7-7H8.97c-5 0-7 2-7 7v6c0 5 2 7 7 7z"/><path d="M8.97 12.7l-1 0c-.75 0-1.4-.56-1.4-1.25v-2.5c0-.69.65-1.25 1.4-1.25h1"/><line x1="8.97" y1="17" x2="8.97" y2="19"/><circle cx="14" cy="9" r="1"/></svg></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5"><path d="M12 17V3"/><path d="M7 10l5 5 5-5"/><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/></svg></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="1.5"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.3 6-3c-.7-.8-.7-2.1-.1-2.9a2.1 2.1 0 012.9-.1c1.1.3 1.8 1.5 1.8 1.5s1.3-3.5 2-6c.6.7 1.5 1.1 2.4 1.4a12 12 0 01-6.7 4.6c-1.6.5-2.4-1.1-2.4-1.1z"/><path d="M8.5 11.5c1.5-1.3 2-5 2-5s-3.7.3-6 3c.7.8.7 2.1.1 2.9a2.1 2.1 0 01-2.9.1c-1.1-.3-1.8-1.5-1.8-1.5s-1.3 3.5-2 6c-.6-.7-1.5-1.1-2.4-1.4a12 12 0 016.7-4.6c1.6-.5 2.4 1.1 2.4 1.1z"/></svg></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.3 6-3c-.7-.8-.7-2.1-.1-2.9a2.1 2.1 0 012.9-.1c1.1.3 1.8 1.5 1.8 1.5s1.3-3.5 2-6c.6.7 1.5 1.1 2.4 1.4a12 12 0 01-6.7 4.6c-1.6.5-2.4-1.1-2.4-1.1z"/><path d="M8.5 11.5c1.5-1.3 2-5 2-5s-3.7.3-6 3c.7.8.7 2.1.1 2.9a2.1 2.1 0 01-2.9.1c-1.1-.3-1.8-1.5-1.8-1.5s-1.3 3.5-2 6c-.6-.7-1.5-1.1-2.4-1.4a12 12 0 016.7-4.6c1.6-.5 2.4 1.1 2.4 1.1z"/></svg></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.5"><path d="M13.3 18.3L8.2 20c-2.7.9-4.1 1.4-3.4.7-.7-.7-.2-2.1 1.6-4.9l1.7-5.1c.8-2.3 1.2-3.5 2.1-3.7.9-.2 1.8.7 3.5 2.4l3.4 3.4c1.7 1.7 2.6 2.6 2.4 3.5-.3 1-.9 1.6-1.6 2"/><path d="M12.2 18.3v-6.8M8.1 19.5v-12.1"/></svg></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.innerHTML"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5"><line x1="7.23" y1="1.5" x2="16.77" y2="1.5"/><path d="M14.86 6.27V1.5H9.14v4.77L2.7 19.15a2.3 2.3 0 00-.25 1h0a2.32 2.32 0 002.32 2.32h11.46a2.32 2.32 0 002.32-2.32h0a2.3 2.3 0 00-.25-1z"/><path d="M6.89 10.76c5-2.17 5.31 1.9 10.42.41"/><line x1="7.23" y1="18.68" x2="9.14" y2="18.68"/></svg></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/498076/health.svg" width="22" height="22"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/527693/download-minimalistic.svg" width="22" height="22"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/524897/rocket.svg" width="22" height="22"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/524897/rocket.svg" width="22" height="22"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/528914/confetti-minimalistic.svg" width="22" height="22"></button>
+              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/455734/chemical-lab.svg" width="22" height="22"></button>
             </div>
             <input type="hidden" id="_broadcast-icon" value="${escapeHTML(announcementIcon)}">            <textarea id="_broadcast-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(currentMsg)}</textarea>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
@@ -20811,13 +20811,13 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div class="hq-panel-head"><h3>Quick Messages</h3></div>
         <div style="padding:var(--space-lg);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);">
           ${[
-            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5"><path d="M8.97 22h6c5 0 7-2 7-7V9c0-5-2-7-7-7H8.97c-5 0-7 2-7 7v6c0 5 2 7 7 7z"/><path d="M8.97 12.7l-1 0c-.75 0-1.4-.56-1.4-1.25v-2.5c0-.69.65-1.25 1.4-1.25h1"/><line x1="8.97" y1="17" x2="8.97" y2="19"/><circle cx="14" cy="9" r="1"/></svg>'},
-            {t:'Update',m:'A new update is available with multiple new features! Refresh your page to get the latest.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5"><path d="M12 17V3"/><path d="M7 10l5 5 5-5"/><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/></svg>'},
-            {t:'Welcome',m:'Welcome to the community! Check out the latest events in your Bastion.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="1.5"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.3 6-3c-.7-.8-.7-2.1-.1-2.9a2.1 2.1 0 012.9-.1c1.1.3 1.8 1.5 1.8 1.5s1.3-3.5 2-6c.6.7 1.5 1.1 2.4 1.4a12 12 0 01-6.7 4.6c-1.6.5-2.4-1.1-2.4-1.1z"/><path d="M8.5 11.5c1.5-1.3 2-5 2-5s-3.7.3-6 3c.7.8.7 2.1.1 2.9a2.1 2.1 0 01-2.9.1c-1.1-.3-1.8-1.5-1.8-1.5s-1.3 3.5-2 6c-.6-.7-1.5-1.1-2.4-1.4a12 12 0 016.7-4.6c1.6-.5 2.4 1.1 2.4 1.1z"/></svg>'},
-            {t:'Emergency',m:'We are aware of current issues and working on a fix. Thank you for your patience.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.3 6-3c-.7-.8-.7-2.1-.1-2.9a2.1 2.1 0 012.9-.1c1.1.3 1.8 1.5 1.8 1.5s1.3-3.5 2-6c.6.7 1.5 1.1 2.4 1.4a12 12 0 01-6.7 4.6c-1.6.5-2.4-1.1-2.4-1.1z"/><path d="M8.5 11.5c1.5-1.3 2-5 2-5s-3.7.3-6 3c.7.8.7 2.1.1 2.9a2.1 2.1 0 01-2.9.1c-1.1-.3-1.8-1.5-1.8-1.5s-1.3 3.5-2 6c-.6-.7-1.5-1.1-2.4-1.4a12 12 0 016.7-4.6c1.6-.5 2.4 1.1 2.4 1.1z"/></svg>'},
-            {t:'Celebration',m:'Thank you for being part of Fortized! Enjoy special perks today.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.5"><path d="M13.3 18.3L8.2 20c-2.7.9-4.1 1.4-3.4.7-.7-.7-.2-2.1 1.6-4.9l1.7-5.1c.8-2.3 1.2-3.5 2.1-3.7.9-.2 1.8.7 3.5 2.4l3.4 3.4c1.7 1.7 2.6 2.6 2.4 3.5-.3 1-.9 1.6-1.6 2"/><path d="M12.2 18.3v-6.8M8.1 19.5v-12.1"/></svg>'},
-            {t:'Experimental',m:'We are testing something new (experimental)! Give us feedback.',s:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5"><line x1="7.23" y1="1.5" x2="16.77" y2="1.5"/><path d="M14.86 6.27V1.5H9.14v4.77L2.7 19.15a2.3 2.3 0 00-.25 1h0a2.32 2.32 0 002.32 2.32h11.46a2.32 2.32 0 002.32-2.32h0a2.3 2.3 0 00-.25-1z"/><path d="M6.89 10.76c5-2.17 5.31 1.9 10.42.41"/><line x1="7.23" y1="18.68" x2="9.14" y2="18.68"/></svg>'},
-          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:6px;" onclick="document.getElementById('_broadcast-msg').value='${q.m.replace(/'/g,"\\'")}'">
+            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.',s:'<img src="https://www.svgrepo.com/show/498076/health.svg" width="22" height="22">'},
+            {t:'Update',m:'A new update is available with multiple new features! Refresh your page to get the latest.',s:'<img src="https://www.svgrepo.com/show/527693/download-minimalistic.svg" width="22" height="22">'},
+            {t:'Welcome',m:'Welcome to the community! Check out the latest events in your Bastion.',s:'<img src="https://www.svgrepo.com/show/524897/rocket.svg" width="22" height="22">'},
+            {t:'Emergency',m:'We are aware of current issues and working on a fix. Thank you for your patience.',s:'<img src="https://www.svgrepo.com/show/524897/rocket.svg" width="22" height="22">'},
+            {t:'Celebration',m:'Thank you for being part of Fortized! Enjoy special perks today.',s:'<img src="https://www.svgrepo.com/show/528914/confetti-minimalistic.svg" width="22" height="22">'},
+            {t:'Experimental',m:'We are testing something new (experimental)! Give us feedback.',s:'<img src="https://www.svgrepo.com/show/455734/chemical-lab.svg" width="22" height="22">'},
+          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:6px;" onclick="document.getElementById('_broadcast-msg').value='${q.m.replace(/'/g,"\\'")}'; document.getElementById('_broadcast-icon').value='${q.s.replace(/'/g,"\\'")}';">
             <span style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;">${q.s}<span>${q.t}</span></span>
             <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,50)}…</span>
           </button>`).join('')}
@@ -21742,7 +21742,7 @@ async function _broadcastAnnouncement() {
     gs.announcementIcon = (document.getElementById("_broadcast-icon")?.value?.trim()) || gs.announcementIcon || '';
     localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
     await FortizedSocial.adminSaveGlobalSettings(gs);
-    FortizedSocial.socketEmit('announcement:broadcast', { text: msg });
+    FortizedSocial.socketEmit('announcement:broadcast', { text: msg, icon: gs.announcementIcon });
     logAudit('broadcast', 'all', msg.slice(0,80));
     toast('Announcement broadcast!','success');
     // Refresh the broadcast tab if it's open
@@ -22084,7 +22084,27 @@ function _listenGlobalSettingsConsolidated() {
   
   // Then poll every 60s
   if (_globalSettingsInterval) clearInterval(_globalSettingsInterval);
-  _globalSettingsInterval = setInterval(_checkAnnouncement, 10000);
+  _globalSettingsInterval = setInterval(_checkAnnouncement, 5000);
+  // Listen for instant broadcast via socket
+  if (FortizedSocial.socketOn) {
+    FortizedSocial.socketOn("announcement:broadcast", d => {
+      if (d?.text) {
+        const gs = JSON.parse(localStorage.getItem("ftz_global_settings")||"{}");
+        gs.announcement = d.text;
+        gs.announcementIcon = d.icon || "";
+        localStorage.setItem("ftz_global_settings", JSON.stringify(gs));
+        _lastAnnText = null;
+        _checkAnnouncement();
+      }
+    });
+    FortizedSocial.socketOn("announcement:clear", () => {
+      const gs = JSON.parse(localStorage.getItem("ftz_global_settings")||"{}");
+      delete gs.announcement;
+      localStorage.setItem("ftz_global_settings", JSON.stringify(gs));
+      _lastAnnText = null;
+      _checkAnnouncement();
+    });
+  }
 }
 // Keep old function names as no-ops since init code calls them separately
 function _listenMaintenanceMode() { /* consolidated into _listenGlobalSettingsConsolidated */ }

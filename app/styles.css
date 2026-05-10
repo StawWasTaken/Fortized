@@ -2857,7 +2857,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .sys-announce-bar .sa-close:hover{color:#000;opacity:0.7;}
 .sys-announce-bar span{color:#000;font-weight:500;text-align:center;}
 .sys-announce-bar .sa-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sys-announce-bar .sa-icon svg{width:14px;height:14px;color:#000;}
+.sys-announce-bar .sa-icon svg,.sys-announce-bar .sa-icon img{width:18px;height:18px;display:block;}
 .sys-announce-bar .sa-label{font-size:11px;font-weight:800;color:#000;white-space:nowrap;flex-shrink:0;}
 .sys-announce-bar .sa-divider{width:1px;height:14px;background:rgba(0,0,0,.25);flex-shrink:0;}
 .sys-announce-bar .sa-text{font-size:12.5px;font-weight:600;color:rgba(0,0,0,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}

@@ -10713,6 +10713,8 @@ function initFortizedUXResilience() {
   // Check & listen for maintenance mode
   try { checkMaintenanceMode(); } catch(e) { _wrn('[init] checkMaintenanceMode:', e); }
   try { _listenGlobalSettingsConsolidated(); } catch(e) { _wrn('[init] _listenGlobalSettingsConsolidated:', e); }
+  // Run again immediately to show any existing broadcast
+  setTimeout(_listenGlobalSettingsConsolidated, 100);
   // Listen for force-refresh and session-clear signals from admin
   try { _listenForceRefresh(); } catch(e) { _wrn('[init] _listenForceRefresh:', e); }
   try { _listenClearSessions(); } catch(e) { _wrn('[init] _listenClearSessions:', e); }
@@ -20735,16 +20737,16 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     }
     main.innerHTML = `<div style="padding:var(--space-xl);">
       <div style="display:flex;align-items:center;gap:var(--space-md);margin-bottom:var(--space-xs);">
-        <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(255,200,62,.06));border:1px solid rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;font-size:20px;">📡</div>
+        <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(62,207,110,.2),rgba(62,207,110,.08));border:1px solid rgba(62,207,110,.3);display:flex;align-items:center;justify-content:center;font-size:20px;">📡</div>
         <div>
           <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Broadcast Center</div>
           <div style="font-size:12px;color:rgba(255,255,255,.35);">Send system-wide announcements and manage platform messaging.</div>
         </div>
       </div>
-      ${currentMsg ? `<div style="margin:var(--space-lg) 0;padding:14px 18px;background:linear-gradient(90deg,rgba(255,249,62,.08),rgba(255,200,62,.04));border:1px solid rgba(255,249,62,.15);border-radius:14px;display:flex;align-items:center;gap:12px;">
-        <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:adm-badge-pulse 2s infinite;flex-shrink:0;"></div>
-        <div style="flex:1;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:2px;">LIVE BROADCAST</div><div style="font-size:13px;color:rgba(255,255,255,.8);">${escapeHTML(currentMsg)}</div></div>
-        <button class="hq-quick-btn" onclick="_clearAnnouncement()" style="flex-shrink:0;">End Broadcast</button>
+      ${currentMsg ? `<div style="margin:var(--space-lg) 0;padding:14px 18px;background:#3ecf6e;background-image:url('https://cdn.polytoria.com/assets/48VK9iyM9VB8fMA3VWGQDfGa4OrSbolq.png');background-repeat:repeat;background-size:24px 24px;border:1px solid rgba(62,207,110,.4);border-radius:14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#000;box-shadow:0 0 8px rgba(0,0,0,.5);flex-shrink:0;"></div>
+        <div style="flex:1;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(0,0,0,.6);margin-bottom:2px;">LIVE BROADCAST</div><div style="font-size:13px;color:rgba(0,0,0,.85);">${escapeHTML(currentMsg)}</div></div>
+        <button class="hq-quick-btn" onclick="_clearAnnouncement()" style="flex-shrink:0;background:rgba(0,0,0,.1);border-color:rgba(0,0,0,.2);color:#000;">End Broadcast</button>
       </div>` : `<div style="margin:var(--space-lg) 0;padding:14px 18px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;display:flex;align-items:center;gap:12px;">
         <div style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;"></div>
         <div style="font-size:13px;color:var(--muted);">No active broadcast</div>

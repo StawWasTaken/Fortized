@@ -66,10 +66,30 @@ input,textarea,select{font-family:inherit}
 .contact-card .sub{font-size:13.5px;color:var(--mu-l)}
 .form-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
 .form-field label{font-size:12px;font-weight:600;color:var(--mu-l);letter-spacing:.02em}
+.form-field label .req{color:var(--acc);margin-left:2px}
+.form-field label .opt{font-weight:400;color:var(--mu);font-size:11px}
 .form-field input,.form-field textarea,.form-field select{background:rgba(255,255,255,.04);border:1.5px solid var(--bd);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--tx);outline:none;transition:border-color .18s var(--ease),box-shadow .18s var(--ease)}
 .form-field input:focus,.form-field textarea:focus,.form-field select:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.06)}
 .form-field input::placeholder,.form-field textarea::placeholder{color:rgba(255,255,255,.18)}
 .form-field textarea{resize:vertical;min-height:120px}
+
+/* Custom Dropdown (Fortized UI) */
+.custom-dropdown{position:relative}
+.custom-dropdown .dd-trigger{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1.5px solid var(--bd);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--tx);cursor:pointer;transition:border-color .18s}
+.custom-dropdown .dd-trigger:hover{border-color:rgba(255,255,255,.1)}
+.custom-dropdown .dd-trigger .dd-value{opacity:.5}
+.custom-dropdown .dd-trigger .dd-value.selected{opacity:1}
+.custom-dropdown .dd-trigger .dd-arrow{width:16px;height:16px;color:var(--mu);transition:transform .2s}
+.custom-dropdown.open .dd-trigger{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.06)}
+.custom-dropdown.open .dd-trigger .dd-arrow{transform:rotate(180deg)}
+.custom-dropdown .dd-menu{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:8px;z-index:100;display:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.custom-dropdown.open .dd-menu{display:block}
+.custom-dropdown .dd-search{padding:0 8px 8px;border-bottom:1px solid var(--bd);margin-bottom:8px}
+.custom-dropdown .dd-search input{width:100%;background:transparent;border:none;font-size:13px;color:var(--tx);outline:none}
+.custom-dropdown .dd-options{max-height:220px;overflow-y:auto}
+.custom-dropdown .dd-opt{padding:10px 12px;border-radius:8px;font-size:14px;color:var(--tx);cursor:pointer;transition:background .15s}
+.custom-dropdown .dd-opt:hover{background:rgba(255,255,255,.06)}
+.custom-dropdown .dd-opt.highlighted{background:rgba(255,249,62,.1);color:var(--acc)}
 .form-field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b95a8' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:10px;padding-right:36px}
 .char-count{font-size:11px;color:var(--mu);text-align:right;margin-top:-8px}
 .submit-btn{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#0a0d14;background:var(--acc);padding:12px 28px;border-radius:12px;width:100%;border:none;cursor:pointer;transition:all .18s var(--ease);box-shadow:0 2px 12px rgba(255,249,62,.18)}
@@ -148,7 +168,7 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 <div class="contact-shell">
   <div class="contact-card">
     <div class="contact-card-header">
-      <h2>Submit a Ticket</h2>
+      <h2>Contact us</h2>
       <p class="sub">Describe your issue and we'll help you resolve it.</p>
     </div>
     
@@ -157,28 +177,119 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     </div>
     
     <form id="ticketForm">
+      <!-- Username (required) -->
       <div class="form-field">
-        <label for="category">Category</label>
-        <select id="category" required>
-          <option value="">Select a category...</option>
-          <option value="account">Account & Login</option>
-          <option value="bastion">Bastion / Community</option>
-          <option value="messaging">Messaging & DMs</option>
-          <option value="atelier">Atelier & Radiance</option>
-          <option value="safety">Safety & Moderation</option>
-          <option value="bug">Bug Report</option>
-          <option value="billing">Billing & Payments</option>
-          <option value="other">Other</option>
-        </select>
+        <label for="username">Username <span class="req">*</span></label>
+        <input type="text" id="username" placeholder="Your Fortized username" required maxlength="30">
       </div>
       
+      <!-- First Name (optional) -->
+      <div class="form-field">
+        <label for="firstName">First Name <span class="opt">(optional)</span></label>
+        <input type="text" id="firstName" placeholder="Your first name" maxlength="50">
+      </div>
+      
+      <!-- Country (optional) -->
+      <div class="form-field">
+        <label for="country">Country <span class="opt">(optional)</span></label>
+        <div class="custom-dropdown" id="countryDropdown">
+          <div class="dd-trigger" onclick="toggleDropdown('countryDropdown')">
+            <span class="dd-value" data-placeholder="Select your country">Select your country</span>
+            <svg class="dd-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="dd-menu">
+            <div class="dd-search"><input type="text" placeholder="Search..." oninput="filterDropdown(this, 'countryDropdown')"></div>
+            <div class="dd-options">
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', '', 'Select your country')">Prefer not to say</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'US', 'United States')">United States</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'GB', 'United Kingdom')">United Kingdom</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FR', 'France')">France</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DE', 'Germany')">Germany</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ES', 'Spain')">Spain</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IT', 'Italy')">Italy</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CA', 'Canada')">Canada</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AU', 'Australia')">Australia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'BR', 'Brazil')">Brazil</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'JP', 'Japan')">Japan</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'KR', 'South Korea')">South Korea</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IN', 'India')">India</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MX', 'Mexico')">Mexico</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NL', 'Netherlands')">Netherlands</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SE', 'Sweden')">Sweden</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NO', 'Norway')">Norway</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DK', 'Denmark')">Denmark</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FI', 'Finland')">Finland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PL', 'Poland')">Poland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'RU', 'Russia')">Russia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CN', 'China')">China</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SG', 'Singapore')">Singapore</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'HK', 'Hong Kong')">Hong Kong</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NZ', 'New Zealand')">New Zealand</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'OTHER', 'Other')">Other</div>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="country" value="">
+      </div>
+      
+      <!-- Device -->
+      <div class="form-field">
+        <label for="device">What device are you having the problem on? <span class="req">*</span></label>
+        <div class="custom-dropdown" id="deviceDropdown">
+          <div class="dd-trigger" onclick="toggleDropdown('deviceDropdown')">
+            <span class="dd-value" data-placeholder="Select your device">Select your device</span>
+            <svg class="dd-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="dd-menu">
+            <div class="dd-options">
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'PC', 'PC / Computer')">PC / Computer</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'PHONE', 'Phone')">Phone</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'TABLET', 'Tablet')">Tablet</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'WEB', 'Web Browser')">Web Browser</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'CONSOLE', 'Game Console')">Game Console</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'VR', 'VR Headset')">VR Headset</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'OTHER', 'Other')">Other</div>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="device" value="">
+      </div>
+      
+      <!-- Category -->
+      <div class="form-field">
+        <label for="category">Type of help <span class="req">*</span></label>
+        <div class="custom-dropdown" id="categoryDropdown">
+          <div class="dd-trigger" onclick="toggleDropdown('categoryDropdown')">
+            <span class="dd-value" data-placeholder="Select a category">Select a category</span>
+            <svg class="dd-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="dd-menu">
+            <div class="dd-search"><input type="text" placeholder="Search..." oninput="filterDropdown(this, 'categoryDropdown')"></div>
+            <div class="dd-options">
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'account', 'Account & Login')">Account & Login</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'bastion', 'Bastion / Community')">Bastion / Community</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'messaging', 'Messaging & DMs')">Messaging & DMs</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'atelier', 'Atelier & Radiance')">Atelier & Radiance</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'safety', 'Safety & Moderation')">Safety & Moderation</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'bug', 'Bug Report')">Bug Report</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'billing', 'Billing & Payments')">Billing & Payments</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'feature', 'Feature Request')">Feature Request</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'other', 'Other')">Other</div>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="category" value="">
+      </div>
+      
+      <!-- Subject -->
       <div class="form-field">
         <label for="subject">Subject</label>
         <input type="text" id="subject" placeholder="Brief description of your issue" required maxlength="100">
       </div>
       
+      <!-- Description -->
       <div class="form-field">
-        <label for="description">Description</label>
+        <label for="description">Please describe your issue <span class="req">*</span></label>
         <textarea id="description" placeholder="Provide as much detail as possible about your issue..." required maxlength="2000"></textarea>
         <div class="char-count"><span id="charNum">0</span>/2000</div>
       </div>
@@ -294,7 +405,49 @@ function resetForm() {
   document.getElementById('successView').classList.remove('on');
   document.getElementById('submitBtn').disabled = false;
   document.getElementById('submitBtn').textContent = 'Submit Ticket';
+  // Reset dropdowns
+  document.querySelectorAll('.custom-dropdown').forEach(dd => {
+    const val = dd.querySelector('.dd-value');
+    if (val) {
+      val.textContent = val.dataset.placeholder;
+      val.classList.remove('selected');
+    }
+    dd.classList.remove('open');
+  });
 }
+
+// Custom Dropdown Functions
+function toggleDropdown(id) {
+  const dd = document.getElementById(id);
+  const wasOpen = dd.classList.contains('open');
+  document.querySelectorAll('.custom-dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!wasOpen) dd.classList.add('open');
+}
+
+function selectDropdown(id, value, text) {
+  const dd = document.getElementById(id);
+  const val = dd.querySelector('.dd-value');
+  const hidden = dd.parentElement.querySelector('input[type="hidden"]');
+  val.textContent = text;
+  val.classList.add('selected');
+  hidden.value = value;
+  dd.classList.remove('open');
+}
+
+function filterDropdown(input, id) {
+  const dd = document.getElementById(id);
+  const filter = input.value.toLowerCase();
+  const options = dd.querySelectorAll('.dd-opt');
+  options.forEach(opt => {
+    opt.style.display = opt.textContent.toLowerCase().includes(filter) ? '' : 'none';
+  });
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.custom-dropdown')) {
+    document.querySelectorAll('.custom-dropdown.open').forEach(dd => dd.classList.remove('open'));
+  }
+});
 
 // Initialize
 checkAuth();

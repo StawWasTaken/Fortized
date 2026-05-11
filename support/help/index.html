@@ -77,8 +77,12 @@ input,textarea,select{font-family:inherit}
 .kb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:40px}
 .kb-card{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;cursor:pointer;transition:all .2s var(--ease);display:flex;gap:14px;align-items:flex-start}
 .kb-card:hover{border-color:rgba(255,255,255,.1);background:var(--panel-r);transform:translateY(-2px)}
+.kb-card.expanded{background:var(--panel-r);border-color:var(--acc);padding-bottom:16px}
+.kb-card.expanded .kb-content p{max-height:200px;opacity:1;margin-top:10px}
 .kb-ic{width:36px;height:36px;border-radius:10px;background:var(--acc-dim);border:1px solid var(--acc-b);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .kb-ic svg{width:18px;height:18px;color:var(--acc)}
+.kb-content{overflow:hidden}
+.kb-content p{max-height:0;opacity:0;overflow:hidden;transition:all .3s}
 .kb-card h4{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#fff;margin-bottom:3px}
 .kb-card p{font-size:12px;color:var(--mu-l);line-height:1.5}
 
@@ -160,30 +164,30 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
   <!-- Knowledge Base -->
   <h2 class="section-h">Step-by-Step Guides</h2>
   <div class="kb-grid">
-    <a href="/support/help/bastion" class="kb-card">
+    <div class="kb-card" onclick="toggleGuide(this)">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-      <div><h4>Creating Your First Bastion</h4><p>Create, configure, and manage your community server. Set up chambers, ranks, and roles.</p></div>
-    </a>
-    <a href="/support/help/messaging" class="kb-card">
+      <div class="kb-content"><h4>Creating Your First Bastion</h4><p>Create, configure, and manage your community server. Set up chambers, ranks, and roles.</p></div>
+    </div>
+    <div class="kb-card" onclick="toggleGuide(this)">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-      <div><h4>Direct Messaging & Groups</h4><p>Send DMs, create group chats, and use typing indicators. All messages are encrypted.</p></div>
-    </a>
-    <a href="/support/help/atelier" class="kb-card">
+      <div class="kb-content"><h4>Direct Messaging & Groups</h4><p>Send DMs, create group chats, and use typing indicators. All messages are encrypted.</p></div>
+    </div>
+    <div class="kb-card" onclick="toggleGuide(this)">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
-      <div><h4>The Atelier & Radiance</h4><p>Earn Onyx, unlock Radiance perks, custom appearances, badges, and custom emojis.</p></div>
-    </a>
-    <a href="/support/help/roles" class="kb-card">
+      <div class="kb-content"><h4>The Atelier & Radiance</h4><p>Earn Onyx, unlock Radiance perks, custom appearances, badges, and custom emojis.</p></div>
+    </div>
+    <div class="kb-card" onclick="toggleGuide(this)">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-      <div><h4>Ranks, Roles &amp; Permissions</h4><p>Create custom ranks, assign roles, and control who can access what in your Bastion.</p></div>
-    </a>
-    <a href="/support/help/safety" class="kb-card">
+      <div class="kb-content"><h4>Ranks, Roles &amp; Permissions</h4><p>Create custom ranks, assign roles, and control who can access what in your Bastion.</p></div>
+    </div>
+    <div class="kb-card" onclick="toggleGuide(this)">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
-      <div><h4>Safety, Moderation &amp; Reporting</h4><p>Use AutoMod, block users, report content, and contact the Security Department.</p></div>
-    </a>
-    <a href="/support/help/account" class="kb-card">
+      <div class="kb-content"><h4>Safety, Moderation &amp; Reporting</h4><p>Use AutoMod, block users, report content, and contact the Security Department.</p></div>
+    </div>
+    <div class="kb-card" onclick="toggleGuide(this)">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4"/></svg></div>
-      <div><h4>Account & Profile Settings</h4><p>Customize your profile, manage your account, adjust privacy, and delete your account.</p></div>
-    </a>
+      <div class="kb-content"><h4>Account & Profile Settings</h4><p>Customize your profile, manage your account, adjust privacy, and delete your account.</p></div>
+    </div>
   </div>
 
   <!-- FAQ -->
@@ -262,6 +266,12 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     <a href="/support/status">Status</a>
   </div>
 </footer>
+
+<script>
+function toggleGuide(el) {
+  el.classList.toggle('expanded');
+}
+</script>
 
 </body>
 </html>

@@ -87,6 +87,17 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
 /* ── Status Cards ── */
 .status-shell{max-width:900px;margin:0 auto;padding:48px 40px 80px}
+.platform-status-card{background:var(--panel);border:2px solid var(--bd);border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:32px;transition:all .2s}
+.platform-status-card.ind-ok{border-color:#4ade80;background:linear-gradient(135deg,rgba(74,222,128,.08),rgba(74,222,128,.02))}
+.platform-status-card.ind-degraded{border-color:#fbbf24;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02))}
+.platform-status-card.ind-down{border-color:#f87171;background:linear-gradient(135deg,rgba(248,113,113,.08),rgba(248,113,113,.02))}
+.platform-status-card{display:none}
+.platform-status-card.show{display:flex}
+.platform-status-icon{width:48px;height:48px;border-radius:12px;background:rgba(74,222,128,.15);display:flex;align-items:center;justify-content:center;font-size:24px;color:#4ade80;flex-shrink:0}
+.platform-status-content{flex:1}
+.platform-status-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
+.platform-status-desc{font-size:13px;color:var(--mu-l)}
+.platform-status-meta{font-size:11px;color:var(--mu);text-align:right}
 .status-section-h{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:18px;color:#fff}
 .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .status-card{background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:24px;transition:all .2s var(--ease)}
@@ -190,6 +201,17 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 </div>
 
 <div class="status-shell">
+
+  <!-- Live Status Card -->
+  <div id="platformStatusCard" class="platform-status-card ind-ok" style="display:none">
+    <div class="platform-status-icon">✓</div>
+    <div class="platform-status-content">
+      <div class="platform-status-title">All Systems Operational</div>
+      <div class="platform-status-desc">All platform services are running normally</div>
+    </div>
+    <div class="platform-status-meta">Last updated: <span id="statusLastUpdate">--</span></div>
+  </div>
+  
   <h2 class="status-section-h">Service Status</h2>
   
   <div class="status-grid">
@@ -336,14 +358,22 @@ async function loadPlatformStatus() {
     
     if (error) throw error;
     
-    const banner = document.getElementById('platformStatusBanner');
-    const text = document.getElementById('platformStatusText');
+    const card = document.getElementById('platformStatusCard');
+    const lastUpdate = document.getElementById('statusLastUpdate');
     
     if (data?.platformStatus) {
-      text.textContent = data.platformStatus;
-      banner.classList.add('show');
+      card.classList.remove('ind-ok', 'ind-degraded', 'ind-down');
+      if (data.platformStatus.toLowerCase().includes('down')) {
+        card.classList.add('ind-down');
+      } else if (data.platformStatus.toLowerCase().includes('degraded')) {
+        card.classList.add('ind-degraded');
+      } else {
+        card.classList.add('ind-ok');
+      }
+      card.classList.add('show');
+      lastUpdate.textContent = new Date().toLocaleTimeString();
     } else {
-      banner.classList.remove('show');
+      card.classList.remove('show');
     }
   } catch (e) {
     console.log('[Status] Could not load platform status:', e?.message);
@@ -354,13 +384,18 @@ async function loadPlatformStatus() {
 try {
   const cached = JSON.parse(localStorage.getItem('ftz_global_settings') || '{}');
   if (cached.platformStatus) {
-    document.getElementById('platformStatusText').textContent = cached.platformStatus;
-    document.getElementById('platformStatusBanner').classList.add('show');
+    const card = document.getElementById('platformStatusCard');
+    const title = card.querySelector('.platform-status-title');
+    const desc = card.querySelector('.platform-status-desc');
+    title.textContent = cached.platformStatus;
+    desc.textContent = 'Loaded from cache';
+    card.classList.add('show');
   }
 } catch (e) {}
 
-// Load platform status on page load
+// Load platform status on page load + every 30s
 loadPlatformStatus();
+setInterval(loadPlatformStatus, 30000);
 </script>
 
 </body>

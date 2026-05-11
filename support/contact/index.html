@@ -75,6 +75,11 @@ input,textarea,select{font-family:inherit}
 .form-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
 .form-field label{font-size:12px;font-weight:600;color:var(--mu-l);letter-spacing:.02em}
 .form-field label .req{color:var(--acc);margin-left:2px}
+.form-field label .opt{color:var(--mu);font-weight:400;font-size:11px;margin-left:4px}
+.verify-status{font-size:11px;display:flex;align-items:center;gap:6px;min-height:18px;margin-top:2px}
+.verify-status.valid{color:#4ade80}
+.verify-status.invalid{color:#f87171}
+.verify-status.loading{color:var(--mu)}
 .form-field label .opt{font-weight:400;color:var(--mu);font-size:11px}
 .form-field input,.form-field textarea,.form-field select{background:rgba(255,255,255,.04);border:1.5px solid var(--bd);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--tx);outline:none;transition:border-color .18s var(--ease),box-shadow .18s var(--ease)}
 .form-field input:focus,.form-field textarea:focus,.form-field select:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.06)}
@@ -193,6 +198,7 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
       <div class="form-field">
         <label for="username">Username <span class="req">*</span></label>
         <input type="text" id="username" placeholder="Your Fortized username" required maxlength="30">
+        <div id="usernameVerify" class="verify-status"></div>
       </div>
       
       <!-- First Name (optional) -->
@@ -362,6 +368,41 @@ async function checkAuth() {
   }
 }
 
+// Username verification
+let usernameTimeout;
+document.getElementById('username').addEventListener('input', function() {
+  clearTimeout(usernameTimeout);
+  const verify = document.getElementById('usernameVerify');
+  verify.textContent = '';
+  verify.className = 'verify-status';
+  
+  if (this.value.length < 2) return;
+  
+  verify.textContent = 'Checking...';
+  verify.className = 'verify-status loading';
+  
+  usernameTimeout = setTimeout(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, display_name')
+        .ilike('username', this.value)
+        .single();
+      
+      if (data) {
+        verify.textContent = '✓ Account found: ' + (data.display_name || data.username);
+        verify.className = 'verify-status valid';
+      } else {
+        verify.textContent = '✗ No account found - you can still submit a ticket';
+        verify.className = 'verify-status invalid';
+      }
+    } catch(e) {
+      verify.textContent = 'Unable to verify - you can still submit a ticket';
+      verify.className = 'verify-status invalid';
+    }
+  }, 800);
+});
+
 // Character count
 document.getElementById('description').addEventListener('input', function() {
   document.getElementById('charNum').textContent = this.value.length;
@@ -429,14 +470,16 @@ function resetForm() {
 }
 
 // Custom Dropdown Functions
-function toggleDropdown(id) {
+function toggleDropdown(id, e) {
+  if(e) e.stopPropagation();
   const dd = document.getElementById(id);
   const wasOpen = dd.classList.contains('open');
   document.querySelectorAll('.custom-dropdown.open').forEach(d => d.classList.remove('open'));
   if (!wasOpen) dd.classList.add('open');
 }
 
-function selectDropdown(id, value, text) {
+function selectDropdown(id, value, text, e) {
+  if(e) e.stopPropagation();
   const dd = document.getElementById(id);
   const val = dd.querySelector('.dd-value');
   const hidden = dd.parentElement.querySelector('input[type="hidden"]');
@@ -455,14 +498,6 @@ function filterDropdown(input, id) {
   });
 }
 
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.custom-dropdown')) {
-    document.querySelectorAll('.custom-dropdown.open').forEach(dd => dd.classList.remove('open'));
-  }
-});
-
-// Initialize
-checkAuth();
 </script>
 
 </body>

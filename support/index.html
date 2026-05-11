@@ -306,9 +306,9 @@ body::before {
   </a>
   <div class="nav-pill-group">
     <a href="/newsroom" class="nav-pill">Newsroom</a>
+    <a href="/legal" class="nav-pill">Legal</a>
     <a href="/support" class="nav-pill active">Support</a>
     <a href="/download" class="nav-pill">Download</a>
-    <a href="/legal" class="nav-pill">Legal</a>
   </div>
   <div class="nav-sep"></div>
   <div class="nav-spacer"></div>
@@ -353,51 +353,25 @@ body::before {
   </div>
 
   <!-- Help Center Resources -->
-  <h2 class="section-h">Help Center</h2>
+  <h2 class="section-h">How can we help?</h2>
   <div class="help-grid">
-    <div class="help-card" onclick="location.hash='faq'">
+    <a href="/support/status" class="help-card">
+      <div class="help-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9l-5-9l-5 9l-3-9H2"/><path d="M5.5 21h13"/></svg></div>
+      <h3>Status</h3>
+      <p>Real-time platform status and incident history.</p>
+    </a>
+    <a href="/support/help" class="help-card">
       <div class="help-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-      <h3>FAQ</h3>
-      <p>Quick answers to the most common questions about Fortized.</p>
-    </div>
-    <div class="help-card" onclick="location.hash='guides'">
-      <div class="help-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-      <h3>Guides</h3>
-      <p>Step-by-step walkthroughs for features, tools, and settings.</p>
-    </div>
-    <div class="help-card" onclick="location.hash='contact'">
+      <h3>Help Center</h3>
+      <p>FAQ and step-by-step guides for all features.</p>
+    </a>
+    <a href="/support/contact" class="help-card">
       <div class="help-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
       <h3>Contact Us</h3>
-      <p>Reach our support team directly for help with your account.</p>
-    </div>
+      <p>Submit a support ticket and get help.</p>
+    </a>
   </div>
 
-  <!-- FAQ -->
-  <h2 class="section-h" id="faq">Common Questions</h2>
-
-  <div class="faq" onclick="toggleFaq(this)">
-    <div class="faq-q">What is Fortized?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-    <div class="faq-a"><div class="faq-a-inner">Fortized is a next-gen social platform where communities come to life. Create or join Bastions (community servers), chat with friends via DMs, customize your presence with the Atelier, and build the community culture you want — all in a safe, beautifully designed environment.</div></div>
-  </div>
-  <div class="faq" onclick="toggleFaq(this)">
-    <div class="faq-q">What is a Bastion?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-    <div class="faq-a"><div class="faq-a-inner">A Bastion is a community server you create or join. It's your fortress with organized chambers (Text, Voice, Forum, Announcement, Poll), member ranks with custom roles, and complete control over who can do what. Owners manage everything; members engage in their spaces.</div></div>
-  </div>
-  <div class="faq" onclick="toggleFaq(this)">
-    <div class="faq-q">How do I send a DM?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-    <div class="faq-a"><div class="faq-a-inner">Click any user's profile and tap "Send Message" — or find them in your Friends list and message directly. Group DMs are available too. All messages are encrypted end-to-end, and you control who can message you with friend request safety checks.</div></div>
-  </div>
-  <div class="faq" onclick="toggleFaq(this)">
-    <div class="faq-q">What is Radiance and the Atelier?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-    <div class="faq-a"><div class="faq-a-inner">The Atelier is where you customize your Fortized experience. Earn Onyx currency through quests and daily rewards to unlock Radiance perks: premium appearances (Midnight Citadel, Obsidian, etc.), exclusive badges, 100MB file uploads, custom emojis, and more. No paid subscription required.</div></div>
-  </div>
-  <div class="faq" onclick="toggleFaq(this)">
-    <div class="faq-q">Is my data stored securely?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-    <div class="faq-a"><div class="faq-a-inner">Absolutely. Fortized uses Firebase with real-time encryption for all data storage. Your messages and account information are encrypted and protected. We never sell your data to third parties. We comply with GDPR and DSA. For details, see our Privacy Policy.</div></div>
-  </div>
-  <div class="faq" onclick="toggleFaq(this)">
-    <div class="faq-q">How do I stay safe on Fortized?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-    <div class="faq-a"><div class="faq-a-inner">Fortized has multi-layer safety: mutual-friend checks for DMs, raid protection auto-lockdown for Bastions, advanced AutoMod for message scanning, granular permission controls, and age restriction enforcement. Report any issues via the in-app report system. The Fortized Security Department monitors 24/7.</div></div>
   </div>
 
   <!-- Knowledge Base -->

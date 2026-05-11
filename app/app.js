@@ -39094,10 +39094,25 @@ function initCrossDeviceSync() {
     saveLocal();
   });
 
-  // 2. Presence/Status updates — when user changes status on another device
+  // 2. Presence/Status updates — when user changes status OR another user changes status
   socket.on('presence:update', (data) => {
+    if (!data || !data.username) return;
+    // Always cache the status for all users so member lists show real-time updates
+    _liveStatusCache[data.username] = data.status;
+    if (data.gameActivity !== undefined) {
+      _liveGameActivityCache[data.username] = data.gameActivity || null;
+    }
+    
+    // Update UI for online status indicators
+    const statusDot = document.querySelector(`.profile-status-dot[data-for="${data.username}"]`);
+    if (statusDot) {
+      const color = data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#f87171':'rgba(255,255,255,.15)';
+      statusDot.style.background = color;
+      statusDot.setAttribute('data-dot-status', data.status);
+    }
+    
+    // SELF STATUS SYNC (cross-tab/device)
     if (data.username === CU.username) {
-      // Status changed on another device
       if (data.status && data.status !== CU.status) {
         CU.status = data.status;
         updateUserbar();
@@ -39108,6 +39123,12 @@ function initCrossDeviceSync() {
       if (data.activityState !== undefined) {
         CU.activityState = data.activityState;
       }
+    }
+    
+    // Optionally refresh active views if they're showing this user
+    // This is deferred to avoid excessive DOM updates
+    if (curView === 'chat' && activeGC === _getGCMatch(data.username)) {
+      setTimeout(() => { _refreshGCMemberList && _refreshGCMemberList(); }, 50);
     }
   });
 

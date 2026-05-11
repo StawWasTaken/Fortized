@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>System Status - Fortized</title>
+<meta name="description" content="Real-time system status for Fortized platform services."/>
+<meta name="theme-color" content="#fff93e"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Fortized"/>
+<meta property="og:title" content="System Status - Fortized"/>
+<meta property="og:description" content="Real-time system status for Fortized platform services."/>
+<meta property="og:image" content="https://fortized.com/Fortized banner.png?v=2"/>
+<meta property="og:url" content="https://fortized.com/support/status"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="System Status - Fortized"/>
+<meta name="twitter:description" content="Real-time system status for Fortized platform services."/>
+<meta name="twitter:image" content="https://fortized.com/Fortized banner.png?v=2"/>
+<link rel="icon" type="image/png" href="/Fortized icon2.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/FortizedSocial-supabase.js?v=20260430e"></script>
+<style>
+::selection{background:rgba(255,249,62,.2);}
+:root{
+  --acc:#fff93e;--acc-dim:rgba(255,249,62,.08);--acc-b:rgba(255,249,62,.18);--acc-g:rgba(255,249,62,.3);
+  --bg:#080a0f;--panel:#0c0f1a;--panel-r:#0f1220;--bd:rgba(255,255,255,.06);--bd2:#1a2030;
+  --mu:#4a5568;--mu-l:#8b95a8;--tx:#c8d0dc;--nav-h:68px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+img{-webkit-user-drag:none;user-select:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px}
+
+/* ── Nav ── */
+.nav{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid rgba(255,255,255,.05)}
+.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:32px}
+.nav-logo img{height:28px;width:28px;object-fit:contain}
+.nav-logo-word{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:4px;gap:1px}
+.nav-pill{font-size:13.5px;font-weight:500;color:var(--mu-l);padding:7px 14px;border-radius:9px;transition:color .15s,background .15s}
+.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-pill.active{color:var(--acc);background:var(--acc-dim)}
+.nav-sp{flex:1}
+.nav-btn{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#101010;background:var(--acc);padding:9px 20px;border-radius:10px;transition:.15s}
+.nav-btn:hover{background:#ffe55c;box-shadow:0 0 20px var(--acc-g)}
+
+/* ── Status Banner ── */
+.status-banner{padding:80px 72px 56px;position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.05);text-align:center}
+.status-banner::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,10,15,1) 40%,rgba(8,10,15,.84) 100%);z-index:1}
+.status-banner-bg{position:absolute;inset:0;z-index:0}
+.status-banner-bg img{width:100%;height:100%;object-fit:cover;opacity:.12}
+.status-grid-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(rgba(255,249,62,.009) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.009) 1px,transparent 1px);background-size:64px 64px}
+.status-banner-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center}
+.status-pill{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border-radius:100px;padding:5px 14px;margin-bottom:22px}
+.status-pill-ok{color:var(--acc);background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18)}
+.status-pill-ok::before{content:'';width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.4)}
+.status-pill-warn{color:#fbbf24;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.18)}
+.status-pill-warn::before{content:'';width:5px;height:5px;border-radius:50%;background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.4);animation:pulse-dot 2s infinite}
+.status-pill-err{color:#f87171;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18)}
+.status-pill-err::before{content:'';width:5px;height:5px;border-radius:50%;background:#f87171;box-shadow:0 0 8px rgba(248,113,113,.4)}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+
+.status-h1{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;letter-spacing:-2.5px;line-height:.96;margin-bottom:14px;color:#fff}
+.status-h1 span{font-style:normal}
+.status-h1 .accent{color:var(--acc)}
+.status-sub{font-size:15px;color:var(--mu-l);line-height:1.65;max-width:520px;margin:0 auto}
+
+/* ── Status Cards ── */
+.status-shell{max-width:900px;margin:0 auto;padding:48px 40px 80px}
+.status-section-h{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:18px;color:#fff}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.status-card{background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:24px;transition:all .2s var(--ease)}
+.status-card:hover{border-color:rgba(255,255,255,.1);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.status-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.status-card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff}
+.status-indicator{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:6px;padding:4px 10px}
+.status-indicator .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ind-ok .status-indicator{color:#4ade80;background:rgba(74,222,128,.08)}
+.ind-ok .dot{background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.4)}
+.ind-warn .status-indicator{color:#fbbf24;background:rgba(251,191,36,.08)}
+.ind-warn .dot{background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.4);animation:pulse-dot 2s infinite}
+.ind-err .status-indicator{color:#f87171;background:rgba(248,113,113,.08)}
+.ind-err .dot{background:#f87171;box-shadow:0 0 8px rgba(248,113,113,.4)}
+.ind-off .status-indicator{color:#4a5568;background:rgba(74,85,104,.08)}
+.ind-off .dot{background:#4a5568}
+
+/* Platform Status Banner (from admin) */
+.platform-status-banner{display:none;padding:16px 24px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.18);border-radius:12px;margin:0 40px 32px}
+.platform-status-banner.show{display:flex;align-items:center;gap:12px}
+.platform-status-icon{width:20px;height:20px;flex-shrink:0}
+.platform-status-text{font-size:14px;color:var(--tx);flex:1}
+
+.status-services{display:flex;flex-direction:column;gap:10px}
+.status-service{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd)}
+.status-service:last-child{border-bottom:none}
+.status-service-name{font-size:13.5px;font-weight:500}
+.status-service-status{font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:5px;padding:3px 8px}
+.st-ok{color:#4ade80;background:rgba(74,222,128,.08)}
+.st-warn{color:#fbbf24;background:rgba(251,191,36,.08)}
+.st-err{color:#f87171;background:rgba(248,113,113,.08)}
+
+/* ── Incident History ── */
+.incident-section{margin-top:40px}
+.incident-list{display:flex;flex-direction:column;gap:12px}
+.incident-card{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;cursor:pointer;transition:all .2s var(--ease)}
+.incident-card:hover{border-color:rgba(255,255,255,.1)}
+.incident-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.incident-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff}
+.incident-date{font-size:12px;color:var(--mu)}
+.incident-status-resolved{color:#4ade80;background:rgba(74,222,128,.08);font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:5px;padding:3px 8px}
+.incident-status-monitoring{color:#fbbf24;background:rgba(251,191,36,.08);font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:5px;padding:3px 8px}
+.incident-desc{font-size:13px;color:var(--mu-l);line-height:1.5}
+
+/* ── Footer ── */
+footer{border-top:1px solid rgba(255,255,255,.05);padding:36px 72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
+.footer-left{display:flex;align-items:center;gap:16px}
+.footer-logo{display:flex;align-items:center;gap:10px}
+.footer-logo img{height:22px;opacity:.45}
+.footer-logo span{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#374151}
+.footer-socials{display:flex;align-items:center;gap:10px;padding-left:6px;border-left:1px solid rgba(255,255,255,.06)}
+.footer-socials a{color:#374151;transition:color .2s;display:flex;align-items:center}
+.footer-socials a:hover{color:var(--mu-l)}
+footer .copy{font-size:12px;color:#2d3548;text-align:center}
+.footer-links{display:flex;gap:20px;justify-content:flex-end}
+.footer-links a{font-size:12px;color:#374151;transition:color .15s}
+.footer-links a:hover{color:var(--mu-l)}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .nav{padding:0 20px}
+  .status-banner{padding:56px 24px 40px}
+  .status-h1{font-size:36px}
+  .status-shell{padding:32px 20px 56px}
+  .status-grid{grid-template-columns:1fr}
+  footer{padding:24px 20px;grid-template-columns:1fr;gap:16px;text-align:center}
+  .footer-left,.footer-links{justify-content:center}
+  .footer-socials{border-left:none;padding-left:0;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
+    <span class="nav-logo-word">Fortized</span>
+  </a>
+  <div class="nav-pill-group">
+    <a href="/newsroom" class="nav-pill">Newsroom</a>
+    <a href="/legal" class="nav-pill">Legal</a>
+    <a href="/support" class="nav-pill active">Support</a>
+    <a href="/download" class="nav-pill">Download</a>
+  </div>
+  <div class="nav-sp"></div>
+  <a href="/signup" class="nav-btn">Join the Fortress →</a>
+</nav>
+
+<div class="status-banner">
+  <div class="status-banner-bg"><img src="/Fortized banner.png?v=2" alt=""/></div>
+  <div class="status-grid-overlay"></div>
+  <div class="status-banner-inner">
+    <div class="platform-status-banner" id="platformStatusBanner">
+      <svg class="platform-status-icon" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="platform-status-text" id="platformStatusText"></span>
+    </div>
+    <div class="status-pill status-pill-ok">All Systems Operational</div>
+    <h1 class="status-h1">System <span class="accent">Status</span></h1>
+    <p class="status-sub">Real-time status of Fortized platform services. Last updated: Just now.</p>
+  </div>
+</div>
+
+<div class="status-shell">
+  <h2 class="status-section-h">Service Status</h2>
+  
+  <div class="status-grid">
+    <!-- Platform -->
+    <div class="status-card ind-ok">
+      <div class="status-card-header">
+        <span class="status-card-title">Platform</span>
+        <div class="status-indicator"><div class="dot"></div>Operational</div>
+      </div>
+      <div class="status-services">
+        <div class="status-service">
+          <span class="status-service-name">Website & Web App</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+        <div class="status-service">
+          <span class="status-service-name">Mobile App</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+        <div class="status-service">
+          <span class="status-service-name">Desktop App</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Core Services -->
+    <div class="status-card ind-ok">
+      <div class="status-card-header">
+        <span class="status-card-title">Core Services</span>
+        <div class="status-indicator"><div class="dot"></div>Operational</div>
+      </div>
+      <div class="status-services">
+        <div class="status-service">
+          <span class="status-service-name">Messaging</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+        <div class="status-service">
+          <span class="status-service-name">Real-time Events</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+        <div class="status-service">
+          <span class="status-service-name">Notifications</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Community -->
+    <div class="status-card ind-ok">
+      <div class="status-card-header">
+        <span class="status-card-title">Community</span>
+        <div class="status-indicator"><div class="dot"></div>Operational</div>
+      </div>
+      <div class="status-services">
+        <div class="status-service">
+          <span class="status-service-name">Bastions</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+        <div class="status-service">
+          <span class="status-service-name">Channels</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+        <div class="status-service">
+          <span class="status-service-name">Voice Chat</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- API & Auth -->
+    <div class="status-card ind-ok">
+      <div class="status-card-header">
+        <span class="status-card-title">API & Authentication</span>
+        <div class="status-indicator"><div class="dot"></div>Operational</div>
+      </div>
+      <div class="status-services">
+        <div class="status-service">
+          <span class="status-service-name">Authentication</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+        <div class="status-service">
+          <span class="status-service-name">REST API</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+        <div class="status-service">
+          <span class="status-service-name">WebSocket</span>
+          <span class="status-service-status st-ok">Operational</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Past Incidents -->
+  <div class="incident-section">
+    <h2 class="status-section-h">Past Incidents</h2>
+    <div class="incident-list">
+      <div class="incident-card">
+        <div class="incident-header">
+          <span class="incident-title">No recent incidents</span>
+          <span class="incident-status-resolved">Resolved</span>
+        </div>
+        <p class="incident-desc">There have been no reported incidents in the past 30 days.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-left">
+    <a href="/" class="footer-logo">
+      <img src="/Fortized icon.png" alt="" onerror="this.style.display='none'">
+      <span>Fortized</span>
+    </a>
+    <div class="footer-socials">
+      <a href="https://x.com/Fortized" target="_blank" rel="noopener" title="Fortized on X">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+      <a href="https://www.reddit.com/r/fortized/" target="_blank" rel="noopener" title="Reddit">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.385 4.859-7.181 4.859-3.796 0-7.182-2.165-7.182-4.859a3.5 3.5 0 0 1 .476-1.565c-.424-.372-.652-.905-.652-1.487 0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.53l.531-2.407 3.074.464 1.33 2.869c.297 0 .656-.021.656-.021.968 0 1.767.766 1.767 1.692 0 .906-.718 1.647-1.596 1.647-.797 0-1.48-.521-1.679-1.216l-2.541.341c.159.597.581 1.062 1.11 1.062.881 0 1.592-.727 1.592-1.608 0-.878-.718-1.6-1.596-1.6-.717 0-1.33.392-1.592.966l-2.074-.31c.159.022.34.09.518.09.881 0 1.599-.726 1.599-1.607 0-.878-.718-1.6-1.599-1.6-.881 0-1.599.722-1.599 1.6 0 .881.718 1.607 1.599 1.607.178 0 .36-.068.519-.09l2.073.311c-.262.574-.915.966-1.592.966-.878 0-1.596.722-1.596 1.6 0 .881.718 1.608 1.596 1.608.881 0 1.599-.727 1.599-1.608 0-.876-.719-1.599-1.599-1.599zm4.969-9.86c0 .733-.60 1.333-1.333 1.333-.733 0-1.333-.6-1.333-1.333 0-.734.6-1.334 1.333-1.334.733 0 1.333.6 1.333 1.334z"/></svg>
+      </a>
+      <a href="https://www.youtube.com/@swiftaw" target="_blank" rel="noopener" title="YouTube">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      </a>
+    </div>
+  </div>
+  <span class="copy">&copy; 2026 Swiftaw SAS. All rights reserved.</span>
+  <div class="footer-links">
+    <a href="/legal">Legal</a>
+    <a href="/support">Support</a>
+    <a href="/support/status">Status</a>
+  </div>
+</footer>
+
+<script>
+// Fetch and display platform status from admin
+async function loadPlatformStatus() {
+  try {
+    const { supabase } = window;
+    const { data, error } = await supabase
+      .from('global_settings')
+      .select('platformStatus')
+      .limit(1)
+      .single();
+    
+    if (error) throw error;
+    
+    const banner = document.getElementById('platformStatusBanner');
+    const text = document.getElementById('platformStatusText');
+    
+    if (data?.platformStatus) {
+      text.textContent = data.platformStatus;
+      banner.classList.add('show');
+    } else {
+      banner.classList.remove('show');
+    }
+  } catch (e) {
+    console.log('[Status] Could not load platform status:', e?.message);
+  }
+}
+
+// Also try to get from cached localStorage
+try {
+  const cached = JSON.parse(localStorage.getItem('ftz_global_settings') || '{}');
+  if (cached.platformStatus) {
+    document.getElementById('platformStatusText').textContent = cached.platformStatus;
+    document.getElementById('platformStatusBanner').classList.add('show');
+  }
+} catch (e) {}
+
+// Load platform status on page load
+loadPlatformStatus();
+</script>
+
+</body>
+</html>

@@ -741,6 +741,11 @@ app.get('/blog/{*rest}', (req, res) => res.redirect(301, '/newsroom'));
   app.get(`/${route}/{*rest}`,    (_req, res) => sendHtmlNoCache(res, path.join(__dirname, route, 'index.html')));
 });
 
+// Explicit no-cache for all support subpages
+['support/status', 'support/help', 'support/contact', 'support/contact/index'].forEach(route => {
+  app.get(`/${route}`, (_req, res) => sendHtmlNoCache(res, path.join(__dirname, route.replace('/contact/index', '/contact') + '.html')));
+});
+
 // ── Custom 404 page for unknown routes ────────────
 app.use((req, res, next) => {
   // Let API routes and socket.io pass through

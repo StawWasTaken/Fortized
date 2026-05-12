@@ -6,9 +6,6 @@
 <title>Support - Fortized</title>
 <meta name="description" content="Get help with your Fortized account, Bastions, and more."/>
 <meta name="theme-color" content="#fff93e"/>
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<meta http-equiv="Pragma" content="no-cache"/>
-<meta http-equiv="Expires" content="0"/>
 <meta property="og:type" content="website"/>
 <meta property="og:site_name" content="Fortized"/>
 <meta property="og:title" content="Support - Fortized"/>
@@ -33,7 +30,7 @@ a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer;b
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px}
 
 /* Nav */
-\.nav-root {position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid rgba(255,255,255,.05)}
+.nav{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid rgba(255,255,255,.05)}
 .nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:32px}
 .nav-logo img{height:28px;width:28px;object-fit:contain}
 .nav-logo-word{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px}
@@ -90,7 +87,7 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 .footer-links a:hover{color:var(--mu-l)}
 
 @media (max-width: 900px) {
-  \.nav-root {padding:0 20px}
+  .nav{padding:0 20px}
   .hero{padding:56px 24px 40px}
   .hero h1{font-size:36px}
   .wrap{padding:32px 20px 56px}
@@ -102,7 +99,7 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 </head>
 <body>
 
-<nav class="nav-root">
+<nav class="nav">
   <a href="/" class="nav-logo">
     <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
     <span class="nav-logo-word">Fortized</span>

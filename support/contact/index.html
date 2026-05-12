@@ -34,7 +34,7 @@ input,textarea,select{font-family:inherit}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px}
 
 /* Nav */
-.nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:56px;display:flex;align-items:center;padding:0 36px;background:rgba(8,10,15,.0);transition:background .35s,border-color .35s,box-shadow .35s}
+.nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--nav-h);display:flex;align-items:center;padding:0 36px;background:rgba(8,10,15,.0);transition:background .35s,border-color .35s,box-shadow .35s}
 .nav-root.scrolled{background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid #1a2030;box-shadow:0 1px 40px rgba(0,0,0,.5)}
 .nav-logo{display:flex;align-items:center;gap:9px;flex-shrink:0;margin-right:28px}
 .nav-logo img{height:24px;width:24px;object-fit:contain}
@@ -53,7 +53,7 @@ input,textarea,select{font-family:inherit}
 @media(max-width:900px){.nav-pill-group{display:none}.nav-sep{display:none}}
 @media(max-width:600px){.nav-btn-login{display:none}}
 @media(max-width:768px){.nav-root{padding:0 18px}}
-body{padding-top:56px}
+body{padding-top:var(--nav-h)}
 
 /* Legal-style Hero */
 .hero{padding:72px 72px 56px;border-bottom:1px solid rgba(255,255,255,.05);position:relative;overflow:hidden}
@@ -185,7 +185,7 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
   <div class="hero-banner"><img src="/Fortized banner.png?v=2" alt=""/></div>
   <div class="grid-overlay"></div>
   <div class="hero-inner">
-    <div class="hero-breadcrumb"><a href="/">Home</a> / <a href="/support">Support</a> / Contact</div>
+    <div class="hero-breadcrumb"><a href="/">Home</a> / <a href="/support">Support</a> / <span style="color:var(--acc)">Contact</span></div>
     <h1>Contact <em>Us</em></h1>
     <p class="hero-sub">Fill out the form below and our team will get back to you as soon as possible.</p>
     <div class="hero-meta">

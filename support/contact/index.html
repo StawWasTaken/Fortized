@@ -224,39 +224,39 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
       <div class="form-field">
         <label for="country">Country <span class="opt">(optional)</span></label>
         <div class="custom-dropdown" id="countryDropdown">
-          <div class="dd-trigger" onclick="toggleDropdown('countryDropdown')">
+          <div class="dd-trigger" onclick="toggleDropdown('countryDropdown', event)">
             <span class="dd-value" data-placeholder="Select your country">Select your country</span>
             <svg class="dd-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-menu">
-            <div class="dd-search"><input type="text" placeholder="Search..." oninput="filterDropdown(this, 'countryDropdown')"></div>
+            <div class="dd-search"><input type="text" placeholder="Search..." oninput="filterDropdown(this, 'countryDropdown' , event)"></div>
             <div class="dd-options">
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', '', 'Select your country')">Prefer not to say</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'US', 'United States')">United States</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'GB', 'United Kingdom')">United Kingdom</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FR', 'France')">France</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DE', 'Germany')">Germany</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ES', 'Spain')">Spain</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IT', 'Italy')">Italy</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CA', 'Canada')">Canada</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AU', 'Australia')">Australia</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'BR', 'Brazil')">Brazil</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'JP', 'Japan')">Japan</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'KR', 'South Korea')">South Korea</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IN', 'India')">India</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MX', 'Mexico')">Mexico</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NL', 'Netherlands')">Netherlands</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SE', 'Sweden')">Sweden</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NO', 'Norway')">Norway</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DK', 'Denmark')">Denmark</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FI', 'Finland')">Finland</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PL', 'Poland')">Poland</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'RU', 'Russia')">Russia</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CN', 'China')">China</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SG', 'Singapore')">Singapore</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'HK', 'Hong Kong')">Hong Kong</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NZ', 'New Zealand')">New Zealand</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'OTHER', 'Other')">Other</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', '', 'Select your country', event)">Prefer not to say</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'US', 'United States', event)">United States</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'GB', 'United Kingdom', event)">United Kingdom</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FR', 'France', event)">France</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DE', 'Germany', event)">Germany</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ES', 'Spain', event)">Spain</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IT', 'Italy', event)">Italy</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CA', 'Canada', event)">Canada</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AU', 'Australia', event)">Australia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'BR', 'Brazil', event)">Brazil</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'JP', 'Japan', event)">Japan</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'KR', 'South Korea', event)">South Korea</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IN', 'India', event)">India</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MX', 'Mexico', event)">Mexico</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NL', 'Netherlands', event)">Netherlands</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SE', 'Sweden', event)">Sweden</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NO', 'Norway', event)">Norway</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DK', 'Denmark', event)">Denmark</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FI', 'Finland', event)">Finland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PL', 'Poland', event)">Poland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'RU', 'Russia', event)">Russia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CN', 'China', event)">China</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SG', 'Singapore', event)">Singapore</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'HK', 'Hong Kong', event)">Hong Kong</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NZ', 'New Zealand', event)">New Zealand</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'OTHER', 'Other', event)">Other</div>
             </div>
           </div>
         </div>
@@ -267,19 +267,19 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
       <div class="form-field">
         <label for="device">What device are you having the problem on? <span class="req">*</span></label>
         <div class="custom-dropdown" id="deviceDropdown">
-          <div class="dd-trigger" onclick="toggleDropdown('deviceDropdown')">
+          <div class="dd-trigger" onclick="toggleDropdown('deviceDropdown', event)">
             <span class="dd-value" data-placeholder="Select your device">Select your device</span>
             <svg class="dd-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-menu">
             <div class="dd-options">
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'PC', 'PC / Computer')">PC / Computer</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'PHONE', 'Phone')">Phone</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'TABLET', 'Tablet')">Tablet</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'WEB', 'Web Browser')">Web Browser</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'CONSOLE', 'Game Console')">Game Console</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'VR', 'VR Headset')">VR Headset</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'OTHER', 'Other')">Other</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'PC', 'PC / Computer' , event)">PC / Computer</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'PHONE', 'Phone' , event)">Phone</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'TABLET', 'Tablet' , event)">Tablet</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'WEB', 'Web Browser' , event)">Web Browser</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'CONSOLE', 'Game Console' , event)">Game Console</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'VR', 'VR Headset' , event)">VR Headset</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'OTHER', 'Other' , event)">Other</div>
             </div>
           </div>
         </div>
@@ -290,22 +290,22 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
       <div class="form-field">
         <label for="category">Type of help <span class="req">*</span></label>
         <div class="custom-dropdown" id="categoryDropdown">
-          <div class="dd-trigger" onclick="toggleDropdown('categoryDropdown')">
+          <div class="dd-trigger" onclick="toggleDropdown('categoryDropdown', event)">
             <span class="dd-value" data-placeholder="Select a category">Select a category</span>
             <svg class="dd-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-menu">
-            <div class="dd-search"><input type="text" placeholder="Search..." oninput="filterDropdown(this, 'categoryDropdown')"></div>
+            <div class="dd-search"><input type="text" placeholder="Search..." oninput="filterDropdown(this, 'categoryDropdown' , event)"></div>
             <div class="dd-options">
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'account', 'Account & Login')">Account & Login</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'bastion', 'Bastion / Community')">Bastion / Community</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'messaging', 'Messaging & DMs')">Messaging & DMs</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'atelier', 'Atelier & Radiance')">Atelier & Radiance</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'safety', 'Safety & Moderation')">Safety & Moderation</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'bug', 'Bug Report')">Bug Report</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'billing', 'Billing & Payments')">Billing & Payments</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'feature', 'Feature Request')">Feature Request</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'other', 'Other')">Other</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'account', 'Account & Login' , event)">Account & Login</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'bastion', 'Bastion / Community' , event)">Bastion / Community</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'messaging', 'Messaging & DMs' , event)">Messaging & DMs</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'atelier', 'Atelier & Radiance' , event)">Atelier & Radiance</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'safety', 'Safety & Moderation' , event)">Safety & Moderation</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'bug', 'Bug Report' , event)">Bug Report</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'billing', 'Billing & Payments' , event)">Billing & Payments</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'feature', 'Feature Request' , event)">Feature Request</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'other', 'Other' , event)">Other</div>
             </div>
           </div>
         </div>
@@ -364,13 +364,14 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 </footer>
 
 <script>
-// Check if user is logged in
-const { supabase } = window;
+// Check if user is logged in - use FortizedSocial which wraps Supabase
+const supabase = window.FortizedSocial;
 let user = null;
 
 async function checkAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
-  user = session?.user || null;
+  // FortizedSocial doesn't have getSession, check localStorage for user
+  const storedUser = localStorage.getItem('ftz_user');
+  user = storedUser ? JSON.parse(storedUser) : null;
   
   if (!user) {
     document.getElementById('loginNote').style.display = 'block';
@@ -396,21 +397,20 @@ document.getElementById('username').addEventListener('input', function() {
   
   usernameTimeout = setTimeout(async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, display_name')
-        .ilike('username', this.value)
-        .single();
+      const usernameToCheck = this.value.trim().toLowerCase();
+      if (usernameToCheck.length < 2) return;
       
-      if (data) {
-        verify.textContent = '✓ Account found: ' + (data.display_name || data.username);
+      const user = await FortizedSocial.getUserByName(usernameToCheck);
+      
+      if (user?.username) {
+        verify.textContent = '✓ Account found: ' + (user.display_name || user.username);
         verify.className = 'verify-status valid';
       } else {
-        verify.textContent = '✗ No account found - you can still submit a ticket';
+        verify.textContent = '✗ No account found - you can still submit';
         verify.className = 'verify-status invalid';
       }
     } catch(e) {
-      verify.textContent = 'Unable to verify - you can still submit a ticket';
+      verify.textContent = 'Verification unavailable - you can still submit';
       verify.className = 'verify-status invalid';
     }
   }, 800);

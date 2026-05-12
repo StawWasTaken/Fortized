@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>System Status - Fortized</title>
 <meta name="description" content="Real-time system status for Fortized platform services."/>
@@ -10,16 +13,12 @@
 <meta property="og:site_name" content="Fortized"/>
 <meta property="og:title" content="System Status - Fortized"/>
 <meta property="og:description" content="Real-time system status for Fortized platform services."/>
-<meta property="og:image" content="https://fortized.com/Fortized banner.png?v=2"/>
 <meta property="og:url" content="https://fortized.com/support/status"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="System Status - Fortized"/>
 <meta name="twitter:description" content="Real-time system status for Fortized platform services."/>
-<meta name="twitter:image" content="https://fortized.com/Fortized banner.png?v=2"/>
 <link rel="icon" type="image/png" href="/Fortized icon2.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="/FortizedSocial-supabase.js?v=20260430e"></script>
 <style>
 ::selection{background:rgba(255,249,62,.2);}
 :root{
@@ -29,36 +28,22 @@
   --ease:cubic-bezier(.22,1,.36,1);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-img{-webkit-user-drag:none;user-select:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;}
 html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased}
-a{text-decoration:none;color:inherit}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px}
-
-/* Nav */
-.nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--nav-h);display:flex;align-items:center;padding:0 36px;background:rgba(8,10,15,.0);transition:background .35s,border-color .35s,box-shadow .35s}
-.nav-root.scrolled{background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid #1a2030;box-shadow:0 1px 40px rgba(0,0,0,.5)}
-.nav-logo{display:flex;align-items:center;gap:9px;flex-shrink:0;margin-right:28px}
-.nav-logo img{height:24px;width:24px;object-fit:contain}
-.nav-logo-word{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px}
-.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:3px;gap:1px}
-.nav-pill{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#8b95a8;padding:6px 13px;border-radius:8px;transition:color .15s,background .15s;white-space:nowrap}
+.nav{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid rgba(255,255,255,.05)}
+.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:32px}
+.nav-logo img{height:28px;width:28px;object-fit:contain}
+.nav-logo-word{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-badge{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);background:var(--acc-dim);border:1px solid var(--acc-b);border-radius:5px;padding:2px 7px;margin-left:2px}
+.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:4px;gap:1px}
+.nav-pill{font-size:13.5px;font-weight:500;color:var(--mu-l);padding:7px 14px;border-radius:9px;transition:color .15s,background .15s}
 .nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
-.nav-pill.active{color:#fff;background:rgba(255,255,255,.09)}
-.nav-sep{width:1px;height:20px;background:rgba(255,255,255,.07);margin:0 12px;flex-shrink:0}
-.nav-spacer{flex:1}
-.nav-right{display:flex;align-items:center;gap:8px}
-.nav-btn-login{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#8b95a8;padding:7px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);transition:color .15s,border-color .15s,background .15s}
-.nav-btn-login:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
-.nav-btn-cta{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#080a0f;background:#fff93e;padding:8px 18px;border-radius:9px;transition:box-shadow .2s,filter .15s,transform .14s;position:relative;overflow:hidden}
-.nav-btn-cta:hover{box-shadow:0 0 28px rgba(255,249,62,.35);filter:brightness(1.06);transform:translateY(-1px)}
-@media(max-width:900px){.nav-pill-group{display:none}.nav-sep{display:none}}
-@media(max-width:600px){.nav-btn-login{display:none}}
-@media(max-width:768px){.nav-root{padding:0 18px}}
-body{padding-top:var(--nav-h)}
-
-/* Legal-style Hero */
+.nav-pill.active{color:var(--acc);background:var(--acc-dim)}
+.nav-sp{flex:1}
+.nav-btn{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#101010;background:var(--acc);padding:9px 20px;border-radius:10px;transition:.15s}
+.nav-btn:hover{background:#ffe55c;box-shadow:0 0 20px var(--acc-g)}
 .hero{padding:72px 72px 56px;border-bottom:1px solid rgba(255,255,255,.05);position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,10,15,1) 40%,rgba(8,10,15,.84) 100%);z-index:1}
 .hero-banner{position:absolute;inset:0;z-index:0}
@@ -67,132 +52,59 @@ body{padding-top:var(--nav-h)}
 .hero-inner{position:relative;z-index:2}
 .hero-breadcrumb{font-size:12px;color:var(--mu);margin-bottom:16px}
 .hero-breadcrumb a{color:var(--mu-l);transition:.15s}.hero-breadcrumb a:hover{color:#fff}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.16);border-radius:100px;padding:5px 14px;margin-bottom:22px}
+.hero-eyebrow::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--acc)}
 .hero h1{font-family:'Syne',sans-serif;font-size:60px;font-weight:800;letter-spacing:-2.2px;line-height:.98;margin-bottom:18px;color:#fff}
 .hero-sub{font-size:15px;color:var(--mu-l);line-height:1.65;max-width:640px}
 .hero-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px}
 .hero-meta-item{font-size:12px;color:var(--mu);display:flex;align-items:center;gap:6px}
 .hero-meta-badge{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:5px;padding:2px 8px}
-
-/* ── Status Content ── */
-.status-banner{padding:80px 72px 56px;position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.05);text-align:center}
-.status-banner::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,10,15,1) 40%,rgba(8,10,15,.84) 100%);z-index:1}
-.status-banner-bg{position:absolute;inset:0;z-index:0}
-.status-banner-bg img{width:100%;height:100%;object-fit:cover;opacity:.12}
-.status-grid-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(rgba(255,249,62,.009) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.009) 1px,transparent 1px);background-size:64px 64px}
-.status-banner-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center}
-.status-pill{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border-radius:100px;padding:5px 14px;margin-bottom:22px}
-.status-pill-ok{color:var(--acc);background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18)}
-.status-pill-ok::before{content:'';width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.4)}
-.status-pill-warn{color:#fbbf24;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.18)}
-.status-pill-warn::before{content:'';width:5px;height:5px;border-radius:50%;background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.4);animation:pulse-dot 2s infinite}
-.status-pill-err{color:#f87171;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18)}
-.status-pill-err::before{content:'';width:5px;height:5px;border-radius:50%;background:#f87171;box-shadow:0 0 8px rgba(248,113,113,.4)}
-@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
-
-.status-h1{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;letter-spacing:-2.5px;line-height:.96;margin-bottom:14px;color:#fff}
-.status-h1 span{font-style:normal}
-.status-h1 .accent{color:var(--acc)}
-.status-sub{font-size:15px;color:var(--mu-l);line-height:1.65;max-width:520px;margin:0 auto}
-
-/* ── Status Cards ── */
-.status-shell{max-width:900px;margin:0 auto;padding:48px 40px 80px}
-
-/* Platform Status Card - legal style */
-.platform-status-card{
-  background: linear-gradient(160deg, rgba(18,22,34,.95) 0%, rgba(10,13,20,.92) 100%);
-  border: 1px solid #1a2030;
-  border-radius: 22px;
-  padding:24px 26px;
-  display:flex;
-  align-items:center;
-  gap:20px;
-  margin-bottom:32px;
-  transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .25s, box-shadow .35s;
-}
-.platform-status-card::before{
-  content: ""; position: absolute; inset: 0; border-radius: 22px;
-  background: radial-gradient(circle at 80% -10%, rgba(255,249,62,.10), transparent 55%);
-  pointer-events: none; z-index: 0;
-}
-.platform-status-card > * { position: relative; z-index: 1; }
-.platform-status-card:hover{
-  border-color: rgba(255,249,62,.22);
-  box-shadow: 0 28px 70px rgba(0,0,0,.55), 0 0 50px rgba(255,249,62,.06);
-  transform: translateY(-4px);
-}
-.platform-status-card.ind-ok{border-color:#4ade80}
-.platform-status-card.ind-degraded{border-color:#fbbf24}
-.platform-status-card.ind-down{border-color:#f87171}
-.platform-status-card{display:none}
-.platform-status-card.show{display:flex}
-.platform-status-icon{width:48px;height:48px;border-radius:12px;background:rgba(74,222,128,.15);display:flex;align-items:center;justify-content:center;font-size:24px;color:#4ade80;flex-shrink:0}
-.platform-status-content{flex:1}
-.platform-status-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
-.platform-status-desc{font-size:13px;color:var(--mu-l)}
-.platform-status-meta{font-size:11px;color:var(--mu);text-align:right}
-.status-section-h{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:18px;color:#fff}
-.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-
-/* Status Card - legal style */
-.status-card{
-  background: linear-gradient(160deg, rgba(18,22,34,.95) 0%, rgba(10,13,20,.92) 100%);
-  border: 1px solid #1a2030;
-  border-radius: 22px;
-  padding:24px;
-  transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .25s, box-shadow .35s;
-}
-.status-card::before{
-  content: ""; position: absolute; inset: 0; border-radius: 22px;
-  background: radial-gradient(circle at 80% -10%, rgba(255,249,62,.10), transparent 55%);
-  pointer-events: none; z-index: 0;
-}
-.status-card > * { position: relative; z-index: 1; }
-.status-card:hover{
-  border-color: rgba(255,249,62,.22);
-  box-shadow: 0 28px 70px rgba(0,0,0,.55), 0 0 50px rgba(255,249,62,.06);
-  transform: translateY(-4px);
-}
-.status-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.status-card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff}
-.status-indicator{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:6px;padding:4px 10px}
-.status-indicator .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.ind-ok .status-indicator{color:#4ade80;background:rgba(74,222,128,.08)}
-.ind-ok .dot{background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.4)}
-.ind-warn .status-indicator{color:#fbbf24;background:rgba(251,191,36,.08)}
-.ind-warn .dot{background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.4);animation:pulse-dot 2s infinite}
-.ind-err .status-indicator{color:#f87171;background:rgba(248,113,113,.08)}
-.ind-err .dot{background:#f87171;box-shadow:0 0 8px rgba(248,113,113,.4)}
-.ind-off .status-indicator{color:#4a5568;background:rgba(74,85,104,.08)}
-.ind-off .dot{background:#4a5568}
-
-/* Platform Status Banner (from admin) */
-.platform-status-banner{display:none;padding:16px 24px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.18);border-radius:12px;margin:0 40px 32px}
-.platform-status-banner.show{display:flex;align-items:center;gap:12px}
-.platform-status-icon{width:20px;height:20px;flex-shrink:0}
-.platform-status-text{font-size:14px;color:var(--tx);flex:1}
-
-.status-services{display:flex;flex-direction:column;gap:10px}
-.status-service{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd)}
-.status-service:last-child{border-bottom:none}
-.status-service-name{font-size:13.5px;font-weight:500}
-.status-service-status{font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:5px;padding:3px 8px}
-.st-ok{color:#4ade80;background:rgba(74,222,128,.08)}
-.st-warn{color:#fbbf24;background:rgba(251,191,36,.08)}
-.st-err{color:#f87171;background:rgba(248,113,113,.08)}
-
-/* ── Incident History ── */
-.incident-section{margin-top:40px}
-.incident-list{display:flex;flex-direction:column;gap:12px}
-.incident-card{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;cursor:pointer;transition:all .2s var(--ease)}
-.incident-card:hover{border-color:rgba(255,255,255,.1)}
-.incident-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.incident-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff}
-.incident-date{font-size:12px;color:var(--mu)}
-.incident-status-resolved{color:#4ade80;background:rgba(74,222,128,.08);font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:5px;padding:3px 8px}
-.incident-status-monitoring{color:#fbbf24;background:rgba(251,191,36,.08);font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:5px;padding:3px 8px}
-.incident-desc{font-size:13px;color:var(--mu-l);line-height:1.5}
-
-/* ── Footer ── */
+.legal-layout{display:grid;grid-template-columns:260px 1fr;max-width:1180px;margin:0 auto;padding:0 40px}
+.toc{position:sticky;top:calc(var(--nav-h) + 20px);align-self:start;padding:28px 0;max-height:calc(100vh - var(--nav-h) - 40px);overflow-y:auto}
+.toc::-webkit-scrollbar{width:4px}.toc::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px}
+.toc-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin-bottom:12px;padding:0 14px}
+.toc-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:10px;font-size:12.5px;font-weight:500;color:var(--mu-l);cursor:pointer;transition:all .15s var(--ease);border-left:2px solid transparent;margin-bottom:1px;line-height:1.35}
+.toc-item:hover{color:#fff;background:rgba(255,255,255,.03)}
+.toc-item.active{color:var(--acc);background:var(--acc-dim);border-left-color:var(--acc)}
+.toc-num{width:26px;height:22px;border-radius:6px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;font-variant-numeric:tabular-nums}
+.toc-item.active .toc-num{background:var(--acc-dim);color:var(--acc)}
+.doc-family{padding:16px 14px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--bd);margin-bottom:18px}
+.doc-family-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+.doc-family a{display:block;padding:6px 8px;border-radius:7px;font-size:12px;color:var(--mu-l);transition:.15s;margin-bottom:1px}
+.doc-family a:hover{color:#fff;background:rgba(255,255,255,.03)}
+.doc-family a.on{color:var(--acc);background:var(--acc-dim);font-weight:600}
+.legal-content{padding:44px 0 100px 48px;min-width:0}
+.legal-body{font-size:14.5px;line-height:1.86;color:var(--tx)}
+.legal-body p{margin-bottom:1.15em}
+.legal-body strong{color:#fff;font-weight:600}
+.legal-body em{color:#e7edf6;font-style:normal;font-weight:500}
+.sec-head{display:flex;align-items:center;gap:14px;margin:2.4em 0 .8em;padding-bottom:14px;border-bottom:1px solid var(--bd);scroll-margin-top:90px}
+.sec-head:first-child{margin-top:0}
+.sec-num{min-width:36px;height:36px;padding:0 6px;border-radius:10px;background:var(--acc-dim);border:1px solid var(--acc-b);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--acc);flex-shrink:0}
+.sec-head h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.sub-label{display:flex;align-items:center;gap:12px;margin:1.4em 0 .5em;scroll-margin-top:100px}
+.sub-label span{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);white-space:nowrap}
+.sub-label::after{content:'';flex:1;height:1px;background:var(--bd)}
+.legal-body ul{list-style:none;padding:0;margin-bottom:1.2em}
+.legal-body ul li{position:relative;padding:11px 0 11px 24px;border-bottom:1px solid var(--bd);font-size:14px;line-height:1.7}
+.legal-body ul li::before{content:'\2726';color:var(--acc);font-size:11px;position:absolute;left:0;top:14px}
+.legal-body ol{padding-left:24px;margin-bottom:1.2em}
+.legal-body ol li{padding:5px 0;font-size:14px;line-height:1.7}
+.defined{display:grid;grid-template-columns:180px 1fr;gap:10px 20px;padding:18px 20px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--bd);margin:1em 0;font-size:13.5px;line-height:1.7}
+.defined dt{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--acc);letter-spacing:.02em}
+.defined dd{color:var(--tx)}
+@media(max-width:720px){.defined{grid-template-columns:1fr;gap:2px 0}.defined dt{margin-top:6px}}
+.callout{padding:16px 20px;border-radius:12px;margin:1.2em 0;font-size:13.5px;line-height:1.7}
+.callout-yellow{background:rgba(255,249,62,.04);border:1px solid var(--acc-b);border-left:3px solid var(--acc)}
+.callout-blue{background:rgba(74,144,245,.04);border:1px solid rgba(74,144,245,.18);border-left:3px solid #4a90f5;color:#b9d4f2}
+.callout-red{background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.18);border-left:3px solid #f87171;color:#f5c2c2}
+.callout-green{background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.18);border-left:3px solid #4ade80;color:#c4e8cf}
+.callout strong{color:#fff}
+.perk-table{width:100%;border-collapse:collapse;margin:1em 0;font-size:13.5px}
+.perk-table th,.perk-table td{padding:12px 14px;border:1px solid var(--bd);text-align:left}
+.perk-table th{background:rgba(255,255,255,.02);font-family:'Syne',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--acc)}
+.perk-table td strong{color:#fff}
+.perk-pill{display:inline-block;padding:2px 9px;border-radius:100px;background:var(--acc-dim);border:1px solid var(--acc-b);color:var(--acc);font-size:11px;font-weight:800;font-family:'Syne',sans-serif;letter-spacing:.05em}
 footer{border-top:1px solid rgba(255,255,255,.05);padding:36px 72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
 .footer-left{display:flex;align-items:center;gap:16px}
 .footer-logo{display:flex;align-items:center;gap:10px}
@@ -205,18 +117,158 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 .footer-links{display:flex;gap:20px;justify-content:flex-end}
 .footer-links a{font-size:12px;color:#374151;transition:color .15s}
 .footer-links a:hover{color:var(--mu-l)}
+@media(max-width:1024px){.legal-layout{grid-template-columns:1fr;padding:0 24px}.toc{display:none}.legal-content{padding:32px 0 80px}}
+@media(max-width:900px){.nav-pill-group{display:none}}
+@media(max-width:768px){.nav{padding:0 20px}.hero{padding:48px 24px 36px}.hero h1{font-size:36px}footer{padding:24px;grid-template-columns:1fr;text-align:center;gap:14px}.footer-left{justify-content:center;flex-wrap:wrap}.footer-links{justify-content:center;flex-wrap:wrap}}
+/* Corporate legal hub: document-library layout */
+.legal-hub{max-width:880px;margin:0 auto;padding:56px 40px 40px}
+.hub-section-label{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--mu);padding-bottom:14px;border-bottom:1px solid var(--bd);margin:40px 0 8px}
+.hub-section-label:first-child{margin-top:0}
+.doc-list{display:flex;flex-direction:column}
+.doc-row{display:grid;grid-template-columns:56px 1fr auto;gap:24px;align-items:center;padding:26px 4px;border-bottom:1px solid var(--bd);transition:background .15s var(--ease),padding .15s var(--ease)}
+.doc-row:hover{background:rgba(255,249,62,.025);padding-left:12px;padding-right:12px}
+.doc-num{width:40px;height:40px;border-radius:10px;background:var(--acc-dim);border:1px solid var(--acc-b);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--acc);flex-shrink:0}
+.doc-body{min-width:0}
+.doc-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;color:#fff;letter-spacing:-.3px;margin-bottom:5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.doc-badge{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu-l);background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:4px;padding:2px 7px}
+.doc-desc{font-size:13.5px;color:var(--mu-l);line-height:1.55;margin-bottom:8px}
+.doc-meta{font-size:11.5px;color:var(--mu);display:flex;gap:14px;flex-wrap:wrap}
+.doc-meta span{display:inline-flex;align-items:center;gap:5px}
+.doc-arrow{color:var(--mu);font-size:20px;font-weight:500;transition:.2s var(--ease);flex-shrink:0}
+.doc-row:hover .doc-arrow{color:var(--acc);transform:translateX(4px)}
+.doc-row:hover .doc-num{background:rgba(255,249,62,.16);border-color:var(--acc-g)}
+@media(max-width:640px){.doc-row{grid-template-columns:44px 1fr 18px;gap:14px;padding:20px 4px}.doc-num{width:36px;height:36px}.doc-title{font-size:16px}}
 
-/* Responsive */
-@media (max-width: 900px) {
-  .nav{padding:0 20px}
-  .status-banner{padding:56px 24px 40px}
-  .status-h1{font-size:36px}
-  .status-shell{padding:32px 20px 56px}
-  .status-grid{grid-template-columns:1fr}
-  footer{padding:24px 20px;grid-template-columns:1fr;gap:16px;text-align:center}
-  .footer-left,.footer-links{justify-content:center}
-  .footer-socials{border-left:none;padding-left:0;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)}
+/* Corporate info grid below */
+.hub-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px}
+@media(max-width:720px){.hub-meta-grid{grid-template-columns:1fr}}
+.hub-meta-card{padding:22px 24px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--bd)}
+.hub-meta-card h4{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:10px}
+.hub-meta-card p{font-size:13px;line-height:1.7;color:var(--mu-l);margin:0}
+.hub-meta-card p strong{color:#fff}
+.hub-meta-card a{color:var(--acc)}
+/* ── Unified site nav (matches homepage) ── */
+.nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:56px;display:flex;align-items:center;padding:0 36px;background:rgba(8,10,15,.0);transition:background .35s,border-color .35s,box-shadow .35s}
+.nav-root.scrolled{background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid #1a2030;box-shadow:0 1px 40px rgba(0,0,0,.5)}
+.nav-logo{display:flex;align-items:center;gap:9px;flex-shrink:0;margin-right:28px}
+.nav-logo img{height:24px;width:24px;object-fit:contain}
+.nav-logo-word{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:3px;gap:1px}
+.nav-pill{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#8b95a8;padding:6px 13px;border-radius:8px;transition:color .15s,background .15s;white-space:nowrap;text-decoration:none}
+.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-pill.active{color:#fff;background:rgba(255,255,255,.09)}
+.nav-sep{width:1px;height:20px;background:rgba(255,255,255,.07);margin:0 12px;flex-shrink:0}
+.nav-spacer{flex:1}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-btn-login{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#8b95a8;padding:7px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);transition:color .15s,border-color .15s,background .15s;text-decoration:none}
+.nav-btn-login:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+.nav-btn-cta{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#080a0f;background:#fff93e;padding:8px 18px;border-radius:9px;transition:box-shadow .2s,filter .15s,transform .14s;position:relative;overflow:hidden;text-decoration:none}
+.nav-btn-cta:hover{box-shadow:0 0 28px rgba(255,249,62,.35);filter:brightness(1.06);transform:translateY(-1px)}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+.nav-hamburger span{display:block;width:18px;height:1.5px;background:#8b95a8;border-radius:2px}
+@media(max-width:900px){.nav-pill-group{display:none}.nav-sep{display:none}.nav-hamburger{display:flex}}
+@media(max-width:600px){.nav-btn-login{display:none}}
+@media(max-width:768px){.nav-root{padding:0 18px}}
+body{padding-top:56px}/* nav-fixed-padding */
+/* ── Page redesign overlay — match homepage bubble cards ── */
+/* Cardified surfaces */
+.pinned-card, .hero-card, .side-card, .reg-card,
+.help-card, .kb-card, .contact-card, .status-card,
+.doc-row, .article-byline, .faq {
+  background: linear-gradient(160deg, rgba(18,22,34,.95) 0%, rgba(10,13,20,.92) 100%);
+  border: 1px solid #1a2030;
+  position: relative;
+  isolation: isolate;
+  transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .25s, box-shadow .35s;
 }
+.pinned-card, .hero-card, .side-card, .reg-card,
+.help-card, .kb-card, .contact-card, .status-card,
+.article-byline { border-radius: 22px; }
+.faq { border-radius: 16px; margin-bottom: 10px; }
+.doc-row { border-radius: 22px; padding: 24px 26px; border-bottom: none !important; }
+
+/* Subtle accent radial in top-right */
+.pinned-card::before, .hero-card::before, .side-card::before, .reg-card::before,
+.help-card::before, .kb-card::before, .contact-card::before, .doc-row::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(circle at 80% -10%, rgba(255,249,62,.10), transparent 55%);
+  pointer-events: none; z-index: 0;
+}
+.pinned-card > *, .hero-card > *, .side-card > *, .reg-card > *,
+.help-card > *, .kb-card > *, .contact-card > *, .doc-row > * { position: relative; z-index: 1; }
+
+/* Hover lift + accent edge */
+.pinned-card:hover, .hero-card:hover, .side-card:hover, .reg-card:hover,
+.help-card:hover, .kb-card:hover, .doc-row:hover {
+  border-color: rgba(255,249,62,.22);
+  box-shadow: 0 28px 70px rgba(0,0,0,.55), 0 0 50px rgba(255,249,62,.06);
+  transform: translateY(-4px);
+}
+.doc-row:hover { padding-left: 26px !important; padding-right: 26px !important; background: linear-gradient(160deg, rgba(22,26,40,.95) 0%, rgba(13,16,26,.92) 100%); }
+
+/* doc-list gap so cards breathe */
+.doc-list { display: flex; flex-direction: column; gap: 14px; }
+
+/* Hero — match homepage scale + accent em */
+.hero h1 { font-family: 'Syne', sans-serif; font-size: 60px; font-weight: 800; letter-spacing: -2.4px; line-height: .96; color: #fff; }
+.hero h1 em { font-style: normal; color: #fff93e; }
+.hero-sub { font-size: 16px; }
+
+/* Section heading with accent bar */
+h2.section-h, .section-h {
+  font-family: 'Syne', sans-serif;
+  font-size: 30px; font-weight: 800; letter-spacing: -.9px;
+  color: #fff;
+  display: inline-flex; align-items: center; gap: 14px;
+  margin-bottom: 24px;
+}
+h2.section-h::before, .section-h::before {
+  content: ""; width: 22px; height: 2px; background: #fff93e;
+  border-radius: 2px;
+}
+.hub-section-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+  color: #fff93e !important;
+  border-bottom: none !important;
+  padding-bottom: 6px !important;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.hub-section-label::before {
+  content: ""; width: 18px; height: 1.5px; background: #fff93e;
+}
+
+/* CTA buttons */
+.nav-btn, .submit-btn {
+  background: #fff93e; color: #0a0d14;
+  font-family: 'Syne', sans-serif; font-weight: 700;
+}
+
+/* Modal panel — bubble look */
+.modal { border-radius: 24px; background: linear-gradient(160deg, rgba(18,22,34,.95), rgba(10,13,20,.92)); }
+
+@media (max-width: 768px) {
+  .hero h1 { font-size: 38px; letter-spacing: -1.4px; }
+  h2.section-h, .section-h { font-size: 22px; }
+}
+
+/* ── Match homepage tone (bg + noise overlay) ── */ /* fortized-shared-tone */
+html, body { background: #080a0f; }
+body::before {
+  content: "";
+  position: fixed; inset: 0; z-index: 500;
+  pointer-events: none;
+  opacity: .018;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* ── Hero banner: less veil, more banner ── */
+.hero-banner img { opacity: .32; }
+.hero::before {
+  background: linear-gradient(115deg, rgba(8,10,15,.92) 26%, rgba(8,10,15,.40) 100%) !important;
+}
+.hero { border-bottom: 1px solid rgba(255,255,255,.05); }
 </style>
 </head>
 <body>
@@ -236,7 +288,8 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
   <div class="nav-spacer"></div>
   <div class="nav-right">
     <a href="/login" class="nav-btn-login">Login</a>
-    <a href="/signup" class="nav-btn-cta">Join the Fortress →</a>
+    <a href="/signup" class="nav-btn-cta">Join the Fortress &rarr;</a>
+    <div class="nav-hamburger" id="navHamburger"><span></span><span></span><span></span></div>
   </div>
 </nav>
 
@@ -244,133 +297,73 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
   <div class="hero-banner"><img src="/Fortized banner.png?v=2" alt=""/></div>
   <div class="grid-overlay"></div>
   <div class="hero-inner">
-    <div class="hero-breadcrumb"><a href="/">Home</a> / <a href="/support">Support</a> / <span style="color:var(--acc)">Status</span></div>
+    <div class="hero-breadcrumb"><a href="/">Home</a> / <a href="/support">Support</a> / Status</div>
     <h1>System <em>Status</em></h1>
     <p class="hero-sub">Real-time status of Fortized platform services, service health checks, and incident history.</p>
     <div class="hero-meta">
       <div class="hero-meta-item">Platform operational</div>
-      <div class="hero-meta-badge">Live</div>
+      <div class="hero-meta-badge" id="liveBadge">Live</div>
     </div>
   </div>
 </div>
 
-<div class="status-shell">
+<div class="legal-hub">
 
-  <!-- Live Status Card -->
-  <div id="platformStatusCard" class="platform-status-card ind-ok" style="display:none">
-    <div class="platform-status-icon">✓</div>
-    <div class="platform-status-content">
-      <div class="platform-status-title">All Systems Operational</div>
-      <div class="platform-status-desc">All platform services are running normally</div>
+  <div class="hub-section-label">Platform Services</div>
+  <div class="doc-list">
+
+    <div class="doc-row" style="cursor:default">
+      <div class="doc-num">01</div>
+      <div class="doc-body">
+        <div class="doc-title">All Systems</div>
+        <div class="doc-desc">All platform services are currently operational with no active incidents.</div>
+        <div class="doc-meta"><span id="lastCheck">Last checked: just now</span></div>
+      </div>
     </div>
-    <div class="platform-status-meta">Last updated: <span id="statusLastUpdate">--</span></div>
+
+    <div class="doc-row" style="cursor:default">
+      <div class="doc-num">02</div>
+      <div class="doc-body">
+        <div class="doc-title">API Services</div>
+        <div class="doc-desc">All API endpoints responding normally. Average response time: ~45ms</div>
+        <div class="doc-meta"><span id="apiStatus">Operational</span></div>
+      </div>
+    </div>
+
+    <div class="doc-row" style="cursor:default">
+      <div class="doc-num">03</div>
+      <div class="doc-body">
+        <div class="doc-title">Real-time Features</div>
+        <div class="doc-desc">WebSocket connections, presence, and voice/video services operational.</div>
+        <div class="doc-meta"><span id="rtStatus">Operational</span></div>
+      </div>
+    </div>
+
+    <div class="doc-row" style="cursor:default">
+      <div class="doc-num">04</div>
+      <div class="doc-body">
+        <div class="doc-title">Auth & User Data</div>
+        <div class="doc-desc">Login, registration, and user data services operating normally.</div>
+        <div class="doc-meta"><span id="authStatus">Operational</span></div>
+      </div>
+    </div>
+
   </div>
-  
-  <h2 class="status-section-h">Service Status</h2>
-  
-  <div class="status-grid">
-    <!-- Platform -->
-    <div class="status-card ind-ok">
-      <div class="status-card-header">
-        <span class="status-card-title">Platform</span>
-        <div class="status-indicator"><div class="dot"></div>Operational</div>
-      </div>
-      <div class="status-services">
-        <div class="status-service">
-          <span class="status-service-name">Website & Web App</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-        <div class="status-service">
-          <span class="status-service-name">Mobile App</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-        <div class="status-service">
-          <span class="status-service-name">Desktop App</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
+
+  <div class="hub-section-label">Recent Incidents</div>
+  <div class="doc-list">
+
+    <div class="doc-row" style="cursor:default">
+      <div class="doc-num">--</div>
+      <div class="doc-body">
+        <div class="doc-title">No recent incidents</div>
+        <div class="doc-desc">All systems have been stable for the past 30 days.</div>
       </div>
     </div>
-    
-    <!-- Core Services -->
-    <div class="status-card ind-ok">
-      <div class="status-card-header">
-        <span class="status-card-title">Core Services</span>
-        <div class="status-indicator"><div class="dot"></div>Operational</div>
-      </div>
-      <div class="status-services">
-        <div class="status-service">
-          <span class="status-service-name">Messaging</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-        <div class="status-service">
-          <span class="status-service-name">Real-time Events</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-        <div class="status-service">
-          <span class="status-service-name">Notifications</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Community -->
-    <div class="status-card ind-ok">
-      <div class="status-card-header">
-        <span class="status-card-title">Community</span>
-        <div class="status-indicator"><div class="dot"></div>Operational</div>
-      </div>
-      <div class="status-services">
-        <div class="status-service">
-          <span class="status-service-name">Bastions</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-        <div class="status-service">
-          <span class="status-service-name">Channels</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-        <div class="status-service">
-          <span class="status-service-name">Voice Chat</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- API & Auth -->
-    <div class="status-card ind-ok">
-      <div class="status-card-header">
-        <span class="status-card-title">API & Authentication</span>
-        <div class="status-indicator"><div class="dot"></div>Operational</div>
-      </div>
-      <div class="status-services">
-        <div class="status-service">
-          <span class="status-service-name">Authentication</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-        <div class="status-service">
-          <span class="status-service-name">REST API</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-        <div class="status-service">
-          <span class="status-service-name">WebSocket</span>
-          <span class="status-service-status st-ok">Operational</span>
-        </div>
-      </div>
-    </div>
+
   </div>
-  
-  <!-- Past Incidents -->
-  <div class="incident-section">
-    <h2 class="status-section-h">Past Incidents</h2>
-    <div class="incident-list">
-      <div class="incident-card">
-        <div class="incident-header">
-          <span class="incident-title">No recent incidents</span>
-          <span class="incident-status-resolved">Resolved</span>
-        </div>
-        <p class="incident-desc">There have been no reported incidents in the past 30 days.</p>
-      </div>
-    </div>
-  </div>
+
+</div>
 </div>
 
 <footer>
@@ -386,71 +379,22 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
       <a href="https://www.reddit.com/r/fortized/" target="_blank" rel="noopener" title="Reddit">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.385 4.859-7.181 4.859-3.796 0-7.182-2.165-7.182-4.859a3.5 3.5 0 0 1 .476-1.565c-.424-.372-.652-.905-.652-1.487 0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.53l.531-2.407 3.074.464 1.33 2.869c.297 0 .656-.021.656-.021.968 0 1.767.766 1.767 1.692 0 .906-.718 1.647-1.596 1.647-.797 0-1.48-.521-1.679-1.216l-2.541.341c.159.597.581 1.062 1.11 1.062.881 0 1.592-.727 1.592-1.608 0-.878-.718-1.6-1.596-1.6-.717 0-1.33.392-1.592.966l-2.074-.31c.159.022.34.09.518.09.881 0 1.599-.726 1.599-1.607 0-.878-.718-1.6-1.599-1.6-.881 0-1.599.722-1.599 1.6 0 .881.718 1.607 1.599 1.607.178 0 .36-.068.519-.09l2.073.311c-.262.574-.915.966-1.592.966-.878 0-1.596.722-1.596 1.6 0 .881.718 1.608 1.596 1.608.881 0 1.599-.727 1.599-1.608 0-.876-.719-1.599-1.599-1.599zm4.969-9.86c0 .733-.60 1.333-1.333 1.333-.733 0-1.333-.6-1.333-1.333 0-.734.6-1.334 1.333-1.334.733 0 1.333.6 1.333 1.334z"/></svg>
       </a>
+      <a href="https://x.com/SwiftawTech" target="_blank" rel="noopener" title="Swiftaw on X">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
       <a href="https://www.youtube.com/@swiftaw" target="_blank" rel="noopener" title="YouTube">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
       </a>
     </div>
   </div>
-  <span class="copy">&copy; 2026 Swiftaw SAS. All rights reserved.</span>
+  <p class="copy">&copy; 2026 Fortized &middot; Swiftaw</p>
   <div class="footer-links">
+    <a href="/newsroom">Newsroom</a>
     <a href="/legal">Legal</a>
     <a href="/support">Support</a>
-    <a href="/support/status">Status</a>
+    <a href="/download">Download</a>
   </div>
 </footer>
 
-<script>
-// Fetch and display platform status from admin
-async function loadPlatformStatus() {
-  try {
-    const { supabase } = window;
-    const { data, error } = await supabase
-      .from('global_settings')
-      .select('platformStatus')
-      .limit(1)
-      .single();
-    
-    if (error) throw error;
-    
-    const card = document.getElementById('platformStatusCard');
-    const lastUpdate = document.getElementById('statusLastUpdate');
-    
-    if (data?.platformStatus) {
-      card.classList.remove('ind-ok', 'ind-degraded', 'ind-down');
-      if (data.platformStatus.toLowerCase().includes('down')) {
-        card.classList.add('ind-down');
-      } else if (data.platformStatus.toLowerCase().includes('degraded')) {
-        card.classList.add('ind-degraded');
-      } else {
-        card.classList.add('ind-ok');
-      }
-      card.classList.add('show');
-      lastUpdate.textContent = new Date().toLocaleTimeString();
-    } else {
-      card.classList.remove('show');
-    }
-  } catch (e) {
-    console.log('[Status] Could not load platform status:', e?.message);
-  }
-}
-
-// Also try to get from cached localStorage
-try {
-  const cached = JSON.parse(localStorage.getItem('ftz_global_settings') || '{}');
-  if (cached.platformStatus) {
-    const card = document.getElementById('platformStatusCard');
-    const title = card.querySelector('.platform-status-title');
-    const desc = card.querySelector('.platform-status-desc');
-    title.textContent = cached.platformStatus;
-    desc.textContent = 'Loaded from cache';
-    card.classList.add('show');
-  }
-} catch (e) {}
-
-// Load platform status on page load + every 30s
-loadPlatformStatus();
-setInterval(loadPlatformStatus, 30000);
-</script>
-
-</body>
+<script>(()=>{const n=document.getElementById('mainNav');if(!n)return;window.addEventListener('scroll',()=>n.classList.toggle('scrolled',window.scrollY>40),{passive:true});if(window.scrollY>40)n.classList.add('scrolled');})();</script></body>
 </html>

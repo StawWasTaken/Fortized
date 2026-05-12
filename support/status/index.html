@@ -169,6 +169,26 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 }
 </style>
 </head>
+
+/* ── Cardified surfaces (new design for status/help/contact) ── */
+.status-card,.help-card,.faq,.contact-card,.reg-card,.platform-status-card,.faq.open {
+  background: linear-gradient(160deg, rgba(20,23,33,.95) 0%, rgba(10,12,16,.92) 100%) !important;
+  border: 1px solid #1a2030 !important;
+  position: relative;
+  isolation: z-index;
+}
+.status-card::before,.help-card::before,.faq::before,.contact-card::before,.platform-status-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(circle at 80% -10%, rgba(255,249,62,.10), transparent 55%);
+  pointer-events: none; z-index: 0;
+}
+.status-card > *,.help-card > *,.faq > *,.contact-card > *,.platform-status-card > * { position: relative; z-index: 1; }
+.status-card:hover,.help-card:hover,.faq:hover,.contact-card:hover,.platform-status-card:hover {
+  border-color: rgba(255,249,62,.22) !important;
+  box-shadow: 0 28px 70px rgba(0,0,0,.55), 0 0 50px rgba(255,249,62,.06);
+  transform: translateY(-4px);
+}
+.faq,.faq.open { border-radius: 16px; }
 <body>
 
 <nav class="nav-root">

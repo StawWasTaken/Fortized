@@ -363,10 +363,8 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 (()=>{
   const n=document.getElementById('mainNav');
   if(!n)return;
-  const hero=document.querySelector('.hero');
   function update(){
-    const threshold=hero?hero.getBoundingClientRect().bottom:40;
-    n.classList.toggle('scrolled',threshold<=56);
+    n.classList.toggle('scrolled', window.scrollY > 40)
   }
   window.addEventListener('scroll',update,{passive:true});
   update();
@@ -478,7 +476,7 @@ function toggleDropdown(id) {
 function selectDropdown(id, value, text) {
   const dd = document.getElementById(id);
   const val = dd.querySelector('.dd-value');
-  const hidden = dd.parentElement.querySelector('input[type="hidden"]');
+  const hidden = dd.nextElementSibling.querySelector('input[type="hidden"']);
   val.textContent = text;
   val.classList.add('selected');
   if (hidden) hidden.value = value;

@@ -188,7 +188,6 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     <p class="hero-sub">Real-time status of Fortized platform services, service health checks, and incident history.</p>
     <div class="hero-meta">
       <div class="hero-meta-item">Updated every 30s</div>
-
     </div>
   </div>
 </div>
@@ -305,10 +304,8 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 (()=>{
   const n=document.getElementById('mainNav');
   if(!n)return;
-  const hero=document.querySelector('.hero');
-  function update(){const t=hero?hero.getBoundingClientRect().bottom:40;n.classList.toggle('scrolled',t<=56);}
-  window.addEventListener('scroll',update,{passive:true});
-  update();
+  window.addEventListener('scroll',()=>n.classList.toggle('scrolled',window.scrollY>40),{passive:true});
+  if(window.scrollY>40)n.classList.add('scrolled');
 })();
 
 async function loadPlatformStatus() {

@@ -854,7 +854,7 @@ function renderArticle(id) {
     </div>
     <div class="article-prose">${a.content}</div>
   `;
-  document.title = `${a.title} — Fortized Newsroom`;
+  document.title = `${a.title} - Fortized Newsroom`;
   document.getElementById('blog-list-view').classList.add('hidden');
   document.getElementById('article-view').classList.add('open');
   if (typeof twemoji !== 'undefined') twemoji.parse(document.getElementById('article-content'), { folder: 'svg', ext: '.svg' });

@@ -12,72 +12,82 @@
 <meta property="og:description" content="Find answers and guides for Fortized platform features."/>
 <meta property="og:image" content="https://fortized.com/Fortized banner.png?v=2"/>
 <meta property="og:url" content="https://fortized.com/support/help"/>
-<link rel="icon" type="image/png" href="/Fortized icon2.png"/>
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/YOUR_ORG/YOUR_REPO/main/public/Fortized%20icon2.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
 <style>
 ::selection{background:rgba(255,249,62,.2);}
 :root{
   --acc:#fff93e;--acc-dim:rgba(255,249,62,.08);--acc-b:rgba(255,249,62,.18);--acc-g:rgba(255,249,62,.3);
   --bg:#080a0f;--panel:#0c0f1a;--panel-r:#0f1220;--bd:rgba(255,255,255,.06);--bd2:#1a2030;
-  --mu:#4a5568;--mu-l:#8b95a8;--tx:#c8d0dc;--nav-h:68px;
+  --mu:#4a5568;--mu-l:#8b95a8;--tx:#c8d0dc;
   --ease:cubic-bezier(.22,1,.36,1);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 img{-webkit-user-drag:none;user-select:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;}
 html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased;padding-top:56px}
 a{text-decoration:none;color:inherit}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,textarea,select{font-family:inherit}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px}
 
-/* ── Nav ── */
-.nav{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid rgba(255,255,255,.05)}
-.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:32px}
-.nav-logo img{height:28px;width:28px;object-fit:contain}
-.nav-logo-word{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px}
-.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:4px;gap:1px}
-.nav-pill{font-size:13.5px;font-weight:500;color:var(--mu-l);padding:7px 14px;border-radius:9px;transition:color .15s,background .15s}
-.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
-.nav-pill.active{color:var(--acc);background:var(--acc-dim)}
-.nav-sp{flex:1}
-.nav-btn{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#101010;background:var(--acc);padding:9px 20px;border-radius:10px;transition:.15s}
-.nav-btn:hover{background:#ffe55c;box-shadow:0 0 20px var(--acc-g)}
+/* ── Noise overlay ── */
+body::before{content:"";position:fixed;inset:0;z-index:500;pointer-events:none;opacity:.018;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:256px 256px}
 
-/* Legal-style Hero */
+/* ── Nav ── */
+.nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:56px;display:flex;align-items:center;padding:0 36px;background:rgba(8,10,15,0);transition:background .35s,border-color .35s,box-shadow .35s}
+.nav-root.scrolled{background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid #1a2030;box-shadow:0 1px 40px rgba(0,0,0,.5)}
+.nav-logo{display:flex;align-items:center;gap:9px;flex-shrink:0;margin-right:28px}
+.nav-logo img{height:24px;width:24px;object-fit:contain}
+.nav-logo-word{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:3px;gap:1px}
+.nav-pill{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#8b95a8;padding:6px 13px;border-radius:8px;transition:color .15s,background .15s;white-space:nowrap;text-decoration:none}
+.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-pill.active{color:#fff;background:rgba(255,255,255,.09)}
+.nav-sep{width:1px;height:20px;background:rgba(255,255,255,.07);margin:0 12px;flex-shrink:0}
+.nav-spacer{flex:1}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-btn-login{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#8b95a8;padding:7px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);transition:color .15s,border-color .15s,background .15s;text-decoration:none}
+.nav-btn-login:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+.nav-btn-cta{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#080a0f;background:#fff93e;padding:8px 18px;border-radius:9px;transition:box-shadow .2s,filter .15s,transform .14s;text-decoration:none}
+.nav-btn-cta:hover{box-shadow:0 0 28px rgba(255,249,62,.35);filter:brightness(1.06);transform:translateY(-1px)}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+.nav-hamburger span{display:block;width:18px;height:1.5px;background:#8b95a8;border-radius:2px}
+@media(max-width:900px){.nav-pill-group{display:none}.nav-sep{display:none}.nav-hamburger{display:flex}}
+@media(max-width:600px){.nav-btn-login{display:none}}
+@media(max-width:768px){.nav-root{padding:0 18px}}
+
+/* ── Hero ── */
 .hero{padding:72px 72px 56px;border-bottom:1px solid rgba(255,255,255,.05);position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,10,15,1) 40%,rgba(8,10,15,.84) 100%);z-index:1}
+.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,10,15,.92) 26%,rgba(8,10,15,.40) 100%);z-index:1}
 .hero-banner{position:absolute;inset:0;z-index:0}
-.hero-banner img{width:100%;height:100%;object-fit:cover;opacity:.12}
+.hero-banner img{width:100%;height:100%;object-fit:cover;opacity:.32}
 .grid-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(rgba(255,249,62,.009) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.009) 1px,transparent 1px);background-size:64px 64px}
 .hero-inner{position:relative;z-index:2}
 .hero-breadcrumb{font-size:12px;color:var(--mu);margin-bottom:16px}
 .hero-breadcrumb a{color:var(--mu-l);transition:.15s}.hero-breadcrumb a:hover{color:#fff}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.16);border-radius:100px;padding:5px 14px;margin-bottom:22px}
+.hero-eyebrow::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--acc)}
 .hero h1{font-family:'Syne',sans-serif;font-size:60px;font-weight:800;letter-spacing:-2.2px;line-height:.98;margin-bottom:18px;color:#fff}
+.hero h1 em{font-style:normal;color:#fff93e}
 .hero-sub{font-size:15px;color:var(--mu-l);line-height:1.65;max-width:640px}
 .hero-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px}
 .hero-meta-item{font-size:12px;color:var(--mu);display:flex;align-items:center;gap:6px}
 .hero-meta-badge{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:5px;padding:2px 8px}
+@media(max-width:768px){.hero{padding:48px 24px 36px}.hero h1{font-size:38px;letter-spacing:-1.4px}}
 
-/* ── Wrap & Section ── */
-.help-hero-banner img{width:100%;height:100%;object-fit:cover;opacity:.12}
-.help-hero-grid{position:absolute;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(rgba(255,249,62,.009) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.009) 1px,transparent 1px);background-size:64px 64px}
-.help-hero-inner{position:relative;z-index:2}
-.help-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.16);border-radius:100px;padding:5px 14px;margin-bottom:22px}
-.help-eyebrow::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--acc)}
-.help-h1{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;letter-spacing:-2px;line-height:.96;margin-bottom:14px;color:#fff}
-.help-h1 span{color:var(--acc)}
-.help-sub{font-size:15px;color:var(--mu-l);line-height:1.65;max-width:520px;margin:0 auto}
-
-/* ── Wrap & Section ── */
+/* ── Help Content ── */
 .help-wrap{max-width:960px;margin:0 auto;padding:48px 40px 80px}
 .section-h{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:18px;color:#fff}
 
-/* ── Knowledge Base Cards ── */
+/* Knowledge Base Cards */
 .kb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:40px}
-.kb-card{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;cursor:pointer;transition:all .2s var(--ease);display:flex;gap:14px;align-items:flex-start}
-.kb-card:hover{border-color:rgba(255,255,255,.1);background:var(--panel-r);transform:translateY(-2px)}
-.kb-card.expanded{background:var(--panel-r);border-color:var(--acc);padding-bottom:16px}
+@media(max-width:680px){.kb-grid{grid-template-columns:1fr}}
+
+.kb-card{background:linear-gradient(160deg,rgba(18,22,34,.95) 0%,rgba(10,13,20,.92) 100%);border:1px solid #1a2030;border-radius:14px;padding:20px;cursor:pointer;position:relative;isolation:isolate;transition:transform .35s var(--ease),border-color .25s,box-shadow .35s;display:flex;gap:14px;align-items:flex-start}
+.kb-card::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 80% -10%,rgba(255,249,62,.10),transparent 55%);pointer-events:none;z-index:0}
+.kb-card > *{position:relative;z-index:1}
+.kb-card:hover{border-color:rgba(255,249,62,.22);box-shadow:0 28px 70px rgba(0,0,0,.55),0 0 50px rgba(255,249,62,.06);transform:translateY(-4px)}
+.kb-card.expanded{border-color:var(--acc-b)}
 .kb-card.expanded .kb-content p{max-height:200px;opacity:1;margin-top:10px}
 .kb-ic{width:36px;height:36px;border-radius:10px;background:var(--acc-dim);border:1px solid var(--acc-b);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .kb-ic svg{width:18px;height:18px;color:var(--acc)}
@@ -86,8 +96,12 @@ input,textarea,select{font-family:inherit}
 .kb-card h4{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#fff;margin-bottom:3px}
 .kb-card p{font-size:12px;color:var(--mu-l);line-height:1.5}
 
-/* ── FAQ Accordion ── */
-.faq{background:var(--panel);border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-bottom:6px}
+/* FAQ Accordion */
+.faq{background:linear-gradient(160deg,rgba(18,22,34,.95) 0%,rgba(10,13,20,.92) 100%);border:1px solid #1a2030;border-radius:14px;overflow:hidden;margin-bottom:6px;position:relative;isolation:isolate;transition:border-color .2s}
+.faq::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 80% -10%,rgba(255,249,62,.10),transparent 55%);pointer-events:none;z-index:0}
+.faq > *{position:relative;z-index:1}
+.faq:hover{border-color:rgba(255,249,62,.22)}
+.faq.open{border-color:rgba(255,249,62,.18)}
 .faq-q{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;font-size:14px;font-weight:600;color:#fff;transition:background .15s var(--ease)}
 .faq-q:hover{background:rgba(255,255,255,.02)}
 .faq-q svg{width:16px;height:16px;color:var(--mu);transition:transform .25s var(--ease);flex-shrink:0}
@@ -96,7 +110,7 @@ input,textarea,select{font-family:inherit}
 .faq.open .faq-a{max-height:400px;padding:0 20px 16px}
 .faq-a-inner{font-size:13.5px;color:var(--mu-l);line-height:1.7}
 
-/* ── Quick Links ── */
+/* Quick Links */
 .quick-links{display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap}
 .quick-link{font-size:12.5px;color:var(--mu-l);padding:8px 16px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);transition:all .15s var(--ease)}
 .quick-link:hover{color:#fff;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)}
@@ -114,25 +128,14 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 .footer-links{display:flex;gap:20px;justify-content:flex-end}
 .footer-links a{font-size:12px;color:#374151;transition:color .15s}
 .footer-links a:hover{color:var(--mu-l)}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .nav{padding:0 20px}
-  .help-hero{padding:56px 24px 40px}
-  .help-h1{font-size:32px}
-  .help-wrap{padding:32px 20px 56px}
-  .kb-grid{grid-template-columns:1fr}
-  footer{padding:24px 20px;grid-template-columns:1fr;gap:16px;text-align:center}
-  .footer-left,.footer-links{justify-content:center}
-  .footer-socials{border-left:none;padding-left:0;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)}
-}
+@media(max-width:768px){footer{padding:24px;grid-template-columns:1fr;text-align:center;gap:14px}.footer-left{justify-content:center;flex-wrap:wrap}.footer-links{justify-content:center;flex-wrap:wrap}.help-wrap{padding:32px 20px 56px}}
 </style>
 </head>
 <body>
 
-<nav class="nav-root">
+<nav class="nav-root" id="mainNav">
   <a href="/" class="nav-logo">
-    <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
+    <img src="https://raw.githubusercontent.com/YOUR_ORG/YOUR_REPO/main/public/Fortized%20icon.png" alt="Fortized" onerror="this.style.display='none'">
     <span class="nav-logo-word">Fortized</span>
   </a>
   <div class="nav-pill-group">
@@ -141,7 +144,8 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     <a href="/support" class="nav-pill active">Support</a>
     <a href="/download" class="nav-pill">Download</a>
   </div>
-  <div class="nav-sp"></div>
+  <div class="nav-sep"></div>
+  <div class="nav-spacer"></div>
   <div class="nav-right">
     <a href="/login" class="nav-btn-login">Login</a>
     <a href="/signup" class="nav-btn-cta">Join the Fortress &rarr;</a>
@@ -154,7 +158,8 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
   <div class="grid-overlay"></div>
   <div class="hero-inner">
     <div class="hero-breadcrumb"><a href="/">Home</a> / <a href="/support">Support</a> / Help Center</div>
-    <h1>Help <em>Center</em></h1>
+    <div class="hero-eyebrow">Knowledge Base</div>
+    <h1>Help <em>Center.</em></h1>
     <p class="hero-sub">Search for answers, browse guides, or find what you need below.</p>
     <div class="hero-meta">
       <div class="hero-meta-item">FAQs updated weekly</div>
@@ -165,93 +170,71 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 
 <div class="help-wrap">
 
-  <!-- Knowledge Base -->
   <h2 class="section-h">Step-by-Step Guides</h2>
   <div class="kb-grid">
-    <div class="kb-card" onclick="toggleGuide(this)">
-
-/* ── Cardified surfaces (new design for status/help/contact) ── */
-.status-card,.help-card,.faq,.contact-card,.reg-card,.platform-status-card,.faq.open {
-  background: linear-gradient(160deg, rgba(20,23,33,.95) 0%, rgba(10,12,16,.92) 100%) !important;
-  border: 1px solid #1a2030 !important;
-  position: relative;
-  isolation: z-index;
-}
-.status-card::before,.help-card::before,.faq::before,.contact-card::before,.platform-status-card::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit;
-  background: radial-gradient(circle at 80% -10%, rgba(255,249,62,.10), transparent 55%);
-  pointer-events: none; z-index: 0;
-}
-.status-card > *,.help-card > *,.faq > *,.contact-card > *,.platform-status-card > * { position: relative; z-index: 1; }
-.status-card:hover,.help-card:hover,.faq:hover,.contact-card:hover,.platform-status-card:hover {
-  border-color: rgba(255,249,62,.22) !important;
-  box-shadow: 0 28px 70px rgba(0,0,0,.55), 0 0 50px rgba(255,249,62,.06);
-  transform: translateY(-4px);
-}
-.faq,.faq.open { border-radius: 16px; }
+    <div class="kb-card" onclick="this.classList.toggle('expanded')">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
       <div class="kb-content"><h4>Creating Your First Bastion</h4><p>Create, configure, and manage your community server. Set up chambers, ranks, and roles.</p></div>
     </div>
-    <div class="kb-card" onclick="toggleGuide(this)">
+    <div class="kb-card" onclick="this.classList.toggle('expanded')">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-      <div class="kb-content"><h4>Direct Messaging & Groups</h4><p>Send DMs, create group chats, and use typing indicators. All messages are encrypted.</p></div>
+      <div class="kb-content"><h4>Direct Messaging &amp; Groups</h4><p>Send DMs, create group chats, and use typing indicators. All messages are encrypted.</p></div>
     </div>
-    <div class="kb-card" onclick="toggleGuide(this)">
+    <div class="kb-card" onclick="this.classList.toggle('expanded')">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
-      <div class="kb-content"><h4>The Atelier & Radiance</h4><p>Earn Onyx, unlock Radiance perks, custom appearances, badges, and custom emojis.</p></div>
+      <div class="kb-content"><h4>The Atelier &amp; Radiance</h4><p>Earn Onyx, unlock Radiance perks, custom appearances, badges, and custom emojis.</p></div>
     </div>
-    <div class="kb-card" onclick="toggleGuide(this)">
+    <div class="kb-card" onclick="this.classList.toggle('expanded')">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
       <div class="kb-content"><h4>Ranks, Roles &amp; Permissions</h4><p>Create custom ranks, assign roles, and control who can access what in your Bastion.</p></div>
     </div>
-    <div class="kb-card" onclick="toggleGuide(this)">
+    <div class="kb-card" onclick="this.classList.toggle('expanded')">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
       <div class="kb-content"><h4>Safety, Moderation &amp; Reporting</h4><p>Use AutoMod, block users, report content, and contact the Security Department.</p></div>
     </div>
-    <div class="kb-card" onclick="toggleGuide(this)">
+    <div class="kb-card" onclick="this.classList.toggle('expanded')">
       <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4"/></svg></div>
-      <div class="kb-content"><h4>Account & Profile Settings</h4><p>Customize your profile, manage your account, adjust privacy, and delete your account.</p></div>
+      <div class="kb-content"><h4>Account &amp; Profile Settings</h4><p>Customize your profile, manage your account, adjust privacy, and delete your account.</p></div>
     </div>
   </div>
 
-  <!-- FAQ -->
   <h2 class="section-h" style="margin-top:40px">Frequently Asked Questions</h2>
 
   <div class="faq" onclick="this.classList.toggle('open')">
     <div class="faq-q">What is Fortized?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
     <div class="faq-a"><div class="faq-a-inner">Fortized is a next-gen social platform where communities come to life. Create or join Bastions (community servers), chat with friends via DMs, customize your presence with the Atelier, and build the community culture you want — all in a safe, beautifully designed environment.</div></div>
   </div>
-  
+
   <div class="faq" onclick="this.classList.toggle('open')">
     <div class="faq-q">What is a Bastion?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
     <div class="faq-a"><div class="faq-a-inner">A Bastion is a community server you create or join. It's your fortress with organized chambers (Text, Voice, Forum, Announcement, Poll), member ranks with custom roles, and complete control over who can do what. Owners manage everything; members engage in their spaces.</div></div>
   </div>
-  
+
   <div class="faq" onclick="this.classList.toggle('open')">
     <div class="faq-q">How do I send a DM?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
     <div class="faq-a"><div class="faq-a-inner">Click any user's profile and tap "Send Message" — or find them in your Friends list and message directly. Group DMs are available too. All messages are encrypted end-to-end, and you control who can message you with friend request safety checks.</div></div>
   </div>
-  
+
   <div class="faq" onclick="this.classList.toggle('open')">
     <div class="faq-q">What is Radiance and the Atelier?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
     <div class="faq-a"><div class="faq-a-inner">The Atelier is where you customize your Fortized experience. Earn Onyx currency through quests and daily rewards to unlock Radiance perks: premium appearances (Midnight Citadel, Obsidian, etc.), exclusive badges, 100MB file uploads, custom emojis, and more. No paid subscription required.</div></div>
   </div>
-  
+
   <div class="faq" onclick="this.classList.toggle('open')">
     <div class="faq-q">Is my data stored securely?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-    <div class="faq-a"><div class="faq-a-inner">Absolutely. Fortified uses secure storage with encryption for all data. Your messages and account information are protected. We never sell your data to third parties. We comply with GDPR and DSA. For details, see our Privacy Policy.</div></div>
+    <div class="faq-a"><div class="faq-a-inner">Absolutely. Fortized uses secure storage with encryption for all data. Your messages and account information are protected. We never sell your data to third parties. We comply with GDPR and DSA. For details, see our Privacy Policy.</div></div>
   </div>
-  
+
   <div class="faq" onclick="this.classList.toggle('open')">
     <div class="faq-q">How do I stay safe on Fortized?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
     <div class="faq-a"><div class="faq-a-inner">Fortized has multi-layer safety: mutual-friend checks for DMs, raid protection auto-lockdown for Bastions, advanced AutoMod for message scanning, granular permission controls, and age restriction enforcement. Report any issues via the in-app report system. The Fortized Security Department monitors 24/7.</div></div>
   </div>
-  
+
   <div class="faq" onclick="this.classList.toggle('open')">
     <div class="faq-q">How do I create a Bastion?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
     <div class="faq-a"><div class="faq-a-inner">Tap the + button in the sidebar or on your profile, select "Create Bastion", choose a name and icon, and you're in. From there, add chambers (text, voice, forum), set up ranks, and invite members. Your fortress, your rules.</div></div>
   </div>
-  
+
   <div class="faq" onclick="this.classList.toggle('open')">
     <div class="faq-q">How do I report a user or message?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
     <div class="faq-a"><div class="faq-a-inner">Hover over any message and click the three dots, or tap the flag icon on a user's profile. Select your reason, add details, and submit. Our moderation team reviews all reports. You can also block users directly from their profile or in DMs.</div></div>
@@ -268,7 +251,7 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 <footer>
   <div class="footer-left">
     <a href="/" class="footer-logo">
-      <img src="/Fortized icon.png" alt="" onerror="this.style.display='none'">
+      <img src="https://raw.githubusercontent.com/YOUR_ORG/YOUR_REPO/main/public/Fortized%20icon.png" alt="" onerror="this.style.display='none'">
       <span>Fortized</span>
     </a>
     <div class="footer-socials">
@@ -276,28 +259,34 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
       </a>
       <a href="https://www.reddit.com/r/fortized/" target="_blank" rel="noopener" title="Reddit">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.385 4.859-7.181 4.859-3.796 0-7.182-2.165-7.182-4.859a3.5 3.5 0 0 1 .476-1.565c-.424-.372-.652-.905-.652-1.487 0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.53l.531-2.407 3.074.464 1.33 2.869c.297 0 .656-.021.656-.021.968 0 1.767.766 1.767 1.692 0 .906-.718 1.647-1.596 1.647-.797 0-1.48-.521-1.679-1.216l-2.541.341c.159.597.581 1.062 1.11 1.062.881 0 1.592-.727 1.592-1.608 0-.878-.718-1.6-1.596-1.6-.717 0-1.33.392-1.592.966l-2.074-.31c.159.022.34.09.518.09.881 0 1.599-.726 1.599-1.607 0-.878-.718-1.6-1.599-1.6-.881 0-1.599.722-1.599 1.6 0 .881.718 1.607 1.599 1.607.178 0 .36-.068.519-.09l2.073.311c-.262.574-.915.966-1.592.966-.878 0-1.596.722-1.596 1.6 0 .881.718 1.608 1.596 1.608.881 0 1.599-.727 1.599-1.608 0-.876-.719-1.599-1.599-1.599zm4.969-9.86c0 .733-.60 1.333-1.333 1.333-.733 0-1.333-.6-1.333-1.333 0-.734.6-1.334 1.333-1.334.733 0 1.333.6 1.333 1.334z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.385 4.859-7.181 4.859-3.796 0-7.182-2.165-7.182-4.859a3.5 3.5 0 0 1 .476-1.565c-.424-.372-.652-.905-.652-1.487 0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.53l.531-2.407 3.074.464 1.33 2.869c.297 0 .656-.021.656-.021.968 0 1.767.766 1.767 1.692 0 .906-.718 1.647-1.596 1.647-.797 0-1.48-.521-1.679-1.216l-2.541.341c.159.597.581 1.062 1.11 1.062.881 0 1.592-.727 1.592-1.608 0-.878-.718-1.6-1.596-1.6-.717 0-1.33.392-1.592.966l-2.074-.31c.159.022.34.09.518.09.881 0 1.599-.726 1.599-1.607 0-.878-.718-1.6-1.599-1.6-.881 0-1.599.722-1.599 1.6 0 .881.718 1.607 1.599 1.607.178 0 .36-.068.519-.09l2.073.311c-.262.574-.915.966-1.592.966-.878 0-1.596.722-1.596 1.6 0 .881.718 1.608 1.596 1.608.881 0 1.599-.727 1.599-1.608 0-.876-.719-1.599-1.599-1.599z"/></svg>
+      </a>
+      <a href="https://x.com/SwiftawTech" target="_blank" rel="noopener" title="Swiftaw on X">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
       </a>
       <a href="https://www.youtube.com/@swiftaw" target="_blank" rel="noopener" title="YouTube">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
       </a>
     </div>
   </div>
-  <span class="copy">&copy; 2026 Fortized &middot; Swiftaw</span>
+  <p class="copy">&copy; 2026 Fortized &middot; Swiftaw</p>
   <div class="footer-links">
+    <a href="/newsroom">Newsroom</a>
     <a href="/legal">Legal</a>
     <a href="/support">Support</a>
-    <a href="/support/status">Status</a>
+    <a href="/download">Download</a>
   </div>
 </footer>
 
 <script>
-function toggleGuide(el) {
-  el.classList.toggle('expanded');
-}
+(()=>{
+  const n=document.getElementById('mainNav');
+  if(!n)return;
+  const hero=document.querySelector('.hero');
+  function update(){const t=hero?hero.getBoundingClientRect().bottom:40;n.classList.toggle('scrolled',t<=56);}
+  window.addEventListener('scroll',update,{passive:true});
+  update();
+})();
 </script>
-
 </body>
 </html>
-
-

@@ -20815,9 +20815,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             {t:'Update',m:'A new update is available with multiple new features!\nPlease refresh your page to enjoy the latest improvements.',i:'https://www.svgrepo.com/show/527693/download-minimalistic.svg'},
             {t:'Welcome',m:'Welcome to the community!\nCheck out the latest events in Forum under "Announcements", or visit our blog for updates!',i:'https://www.svgrepo.com/show/524897/rocket.svg'},
             {t:'Emergency',m:'We are aware of current issues and are working on a fix.\nThank you for your patience while we resolve this!',i:'https://www.svgrepo.com/show/497913/danger.svg'},
-            {t:'Celebration',m:"Thank you for being part of Fortized! We're so grateful to have you in our realm!",i:'https://www.svgrepo.com/show/528914/confetti-minimalistic.svg'},
+            {t:'Celebration',m:"Thank you for being part of Fortized! We are so grateful to have you in our realm!",i:'https://www.svgrepo.com/show/528914/confetti-minimalistic.svg'},
             {t:'Experimental',m:'We are testing something new!\nShare your feedback in Forum under Suggestions - it helps shape Fortized!',i:'https://www.svgrepo.com/show/455734/chemical-lab.svg'},
-          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="_setQuickMessage('${q.m.replace(/'/g,"\\'")}', '${q.i}');">
+          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="_setQuickMessage('${q.m.replace(/'/g,"\\'").replace(/\n/g,"\\n")}', '${q.i}');">
             <span style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:12px;margin-left:4px;"><img src="${q.i}" style="width:22px;height:22px;filter:brightness(0)invert(1);"><span>${q.t}</span></span>
             <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,50)}…</span>
           </button>`).join('')}
@@ -21736,7 +21736,7 @@ async function _deleteTicket(id) {
 function _setQuickMessage(msg, iconUrl) {
   const msgEl = document.getElementById("_broadcast-msg");
   const iconEl = document.getElementById("_broadcast-icon");
-  if (msgEl) msgEl.value = msg;
+  if (msgEl) msgEl.value = msg.replace(/\\n/g, '\n');
   if (iconEl) { iconEl.value = iconUrl; iconEl.dispatchEvent(new Event("input")); }
 }
 

@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-:root{--nav-h:68px;--nav-bg:rgba(8,10,15,.0);--nav-bg-scrolled:rgba(8,10,15,.96);--border:#1a2030;--font-display:Syne,sans-serif;--font-body:"DM Sans",sans-serif;--muted-light:#8b95a8}
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -130,25 +129,6 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 .footer-links a{font-size:12px;color:#374151;transition:color .15s}
 .footer-links a:hover{color:var(--mu-l)}
 @media(max-width:768px){footer{padding:24px;grid-template-columns:1fr;text-align:center;gap:14px}.footer-left{justify-content:center;flex-wrap:wrap}.footer-links{justify-content:center;flex-wrap:wrap}.help-wrap{padding:32px 20px 56px}}
-
-/* ── Unified nav (matches homepage) ── */
-.nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--nav-h);display:flex;align-items:center;padding:0 36px;background:var(--nav-bg);transition:background .35s,border-color .35s,box-shadow .35s}
-.nav-root.scrolled{background:var(--nav-bg-scrolled);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid var(--border);box-shadow:0 1px 40px rgba(0,0,0,.5)}
-.nav-logo{display:flex;align-items:center;gap:9px;flex-shrink:0;margin-right:28px}
-.nav-logo img{height:24px;width:24px;object-fit:contain}
-.nav-logo-word{font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px}
-.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:3px;gap:1px}
-.nav-pill{font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--muted-light);padding:6px 13px;border-radius:8px;transition:color .15s,background .15s;white-space:nowrap;text-decoration:none}
-.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
-.nav-pill.active{color:#fff;background:rgba(255,255,255,.09)}
-.nav-sep{width:1px;height:20px;background:rgba(255,255,255,.07);margin:0 12px;flex-shrink:0}
-.nav-spacer{flex:1}
-.nav-right{display:flex;align-items:center;gap:8px}
-.nav-btn-login{font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--muted-light);padding:7px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);transition:color .15s,border-color .15s,background .15s;text-decoration:none}
-.nav-btn-login:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
-.nav-btn-cta{font-family:var(--font-display);font-size:13px;font-weight:700;color:#080a0f;background:#fff93e;padding:8px 18px;border-radius:9px;transition:box-shadow .2s,filter .15s,transform .14s;position:relative;overflow:hidden;text-decoration:none}
-.nav-btn-cta:hover{box-shadow:0 0 28px rgba(255,249,62,.35);filter:brightness(1.06);transform:translateY(-1px)}
-body{padding-top:var(--nav-h)}
 </style>
 </head>
 <body>
@@ -173,8 +153,12 @@ body{padding-top:var(--nav-h)}
   </div>
 </nav>
 
-<div class="hero">
-
+<div class="hero" style="min-height:362px">
+  <div class="hero-banner"><img src="/Fortized banner.png?v=2" alt=""/></div>
+  <div class="grid-overlay"></div>
+  <div class="hero-inner">
+    <div class="hero-breadcrumb"><a href="/">Home</a> / <a href="/support">Support</a> / Help Center</div>
+    <div class="hero-eyebrow">Knowledge Base</div>
     <h1>Help <em>Center.</em></h1>
     <p class="hero-sub">Search for answers, browse guides, or find what you need below.</p>
     <div class="hero-meta">

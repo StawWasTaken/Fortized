@@ -476,7 +476,7 @@ function toggleDropdown(id) {
 function selectDropdown(id, value, text) {
   const dd = document.getElementById(id);
   const val = dd.querySelector('.dd-value');
-  const hidden = dd.nextElementSibling.querySelector('input[type="hidden"']);
+  const hidden = dd.nextElementSibling.querySelector('input[type="hidden"]');
   val.textContent = text;
   val.classList.add('selected');
   if (hidden) hidden.value = value;

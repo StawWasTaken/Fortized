@@ -2592,8 +2592,11 @@ async function _checkStreakValidity() {
 // through automatically. Size is px; color is optional (defaults to inherit).
 function _streakFlameSvg(size, color) {
   const s = size || 18;
-  // Use currentColor so it inherits from parent (orange when active, grey when inactive)
-  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block;vertical-align:middle;"><path d="M13.73 2.2a.75.75 0 0 1 1.18-.35c2.64 2.2 4.86 5.23 4.86 8.93 0 4.9-3.8 8.47-8.27 8.47-4.38 0-7.5-3.3-7.5-7.55 0-2.2 1.17-4.4 3.07-6.13a.75.75 0 0 1 1.23.45c.2 1.4.88 2.4 1.65 2.95.08-2.4 1-4.5 2.3-5.9 1-1.08 1.45-1.56 1.48-.87ZM12 17.5c1.9 0 3.5-1.53 3.5-3.53 0-1.5-.83-2.5-1.72-3.4-.2.7-.7 1.1-1.3 1.1-.8-1.8-.3-3.5-1.08-5.7-.8 1.3-1.9 2.9-1.9 5.1 0 .85.28 1.5.75 1.95-.8-.2-1.42-.95-1.58-1.85C8.1 11.7 7.75 12.6 7.75 13.6c0 2.2 1.8 3.9 4.25 3.9Z"/></svg>`;
+  // SVGRepo flame-solid (id 371895) — uses currentColor so the glyph
+  // inherits from the parent (orange when active streak, grey when
+  // dormant), and the surrounding rect keeps the original 36x36 viewBox
+  // padding identical to the source icon.
+  return `<svg width="${s}" height="${s}" viewBox="0 0 36 36" fill="currentColor" style="display:inline-block;vertical-align:middle;"><path d="M31.3,16.32c-1.19-2.09-7.94-14.15-7.94-14.15a1,1,0,0,0-1.75,0l-6,10.64-3-5.28a1,1,0,0,0-1.75,0S5.4,17.43,4.42,19.15A9.3,9.3,0,0,0,3,24.26c0,5.11,3.88,9.65,8.67,9.74H22.48C28.28,34,33,28.62,33,22.44A11.13,11.13,0,0,0,31.3,16.32ZM21.48,32H14.54A4.68,4.68,0,0,1,10,27.41a3.91,3.91,0,0,1,.75-2.34l3.35-5.21a.5.5,0,0,1,.84,0l1.78,2.77,0-.08c.63-1.11,4.23-7.48,4.23-7.48a.5.5,0,0,1,.87,0s3.6,6.38,4.23,7.48A5.83,5.83,0,0,1,27,25.76C27,32,22.1,32,21.48,32Z"/></svg>`;
 }
 // Back-compat alias: _streakFlameSvgSolid(size, color) — same glyph.
 function _streakFlameSvgSolid(size, color) { return _streakFlameSvg(size || 12, color || 'currentColor'); }
@@ -34155,18 +34158,20 @@ function renderAtelierTopNav() {
   const navContainer = document.getElementById('atelier-top-nav');
   if (!navContainer) return;
 
+  // All four icons render as inline <svg> with stroke/fill "currentColor"
+  // so they inherit the parent button's color — grey when inactive,
+  // yellow when active — exactly like the Fortshop icon already does.
   const tabs = [
-    { id: 'radiance', name: 'Radiance Dwelling', icon: '<img src="/radiance-logo.png" width="18" height="18" class="tab-icon-img" style="object-fit:contain;">' },
-    { id: 'quests', name: 'Quests', svg: '<img src="https://www.svgrepo.com/show/163588/laurel.svg" width="18" height="18" class="tab-icon-img" style="object-fit:contain;">' },
+    { id: 'radiance', name: 'Radiance Dwelling', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5l1.96 7.04L21 10.5l-7.04 1.96L12 19.5l-1.96-7.04L3 10.5l7.04-1.96L12 1.5zm6.5 13l.85 3.15L22.5 18.5l-3.15.85-.85 3.15-.85-3.15L14.5 18.5l3.15-.85.85-3.15zM5 14l.6 2.2 2.2.6-2.2.6L5 19.4l-.6-2-2.2-.6 2.2-.6L5 14z"/></svg>' },
+    { id: 'quests', name: 'Quests', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg>' },
     { id: 'shop', name: 'Fortshop', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' },
-    { id: 'creator', name: 'Creator', svg: '<img src="https://www.svgrepo.com/show/326997/color-palette-sharp.svg" width="18" height="18" class="tab-icon-img" style="object-fit:contain;">' }
+    { id: 'creator', name: 'Creator', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.8" fill="currentColor" stroke="none"/><circle cx="17.5" cy="10.5" r="1.8" fill="currentColor" stroke="none"/><circle cx="8.5" cy="7.5" r="1.8" fill="currentColor" stroke="none"/><circle cx="6.5" cy="12.5" r="1.8" fill="currentColor" stroke="none"/><path d="M12 22a10 10 0 1 1 0-20c5.5 0 10 4 10 9 0 3-2 5-5 5h-1.5c-1.4 0-2.5 1.1-2.5 2.5 0 .8.3 1.5.8 2 .3.3.2.5-.3.5z"/></svg>' }
   ];
 
   navContainer.innerHTML = tabs.map(t => {
     const isActive = tab === t.id;
-    const iconHTML = t.icon || `<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;color:currentColor;">${t.svg}</span>`;
     return `<button class="atel-top-nav-btn ${isActive ? 'active' : ''}" onclick="switchAtelierTab('${t.id}')" style="display:flex;align-items:center;gap:8px;padding:12px 16px;border:none;background:${isActive ? 'rgba(255,249,62,.08)' : 'transparent'};border-bottom:${isActive ? '2px solid var(--accent)' : '1px solid transparent'};color:${isActive ? 'var(--accent)' : 'rgba(255,255,255,.5)'};cursor:pointer;transition:all .2s;font-size:13px;font-weight:600;font-family:var(--font-display);position:relative;white-space:nowrap;">
-      ${t.icon ? iconHTML : `<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;color:currentColor;">${t.svg}</span>`}
+      <span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;color:currentColor;flex-shrink:0;">${t.svg}</span>
       <span>${t.name}</span>
     </button>`;
   }).join('');

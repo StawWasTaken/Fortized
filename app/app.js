@@ -55,7 +55,7 @@ function ftzIcon(name, size, color) {
   return out;
 }
 // Shorthand icon helpers — Radiance & Onyx use PNG images (displayed inline like SVGs), Boost uses SVG
-function _onyxImg(size){const s=size||'18';return '<img src="/fortized%20badges/onyx.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Onyx">';}
+function _onyxImg(size){const s=size||'18';return '<img src="/badges/onyx.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Onyx">';}
 function _radianceImg(size){const s=size||'16';return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;object-fit:contain;" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="radianceGrad-'+Math.random()+'" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ff77e4;stop-opacity:1" /><stop offset="100%" style="stop-color:#fff93e;stop-opacity:1" /></linearGradient></defs><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#radianceGrad-'+Math.random()+')" /></svg>';}
 function _radiancePlusImg(size){return _radianceImg(size)}
 function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
@@ -2443,7 +2443,7 @@ function onOnyxCtxMenu(ev) {
   const onyxIcon = '<img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
   const shopIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
   const questIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
-  const radIcon = '<img src="/fortized%20badges/radiance.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
+  const radIcon = '<img src="/badges/radiance.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
   const items = [
     { icon: onyxIcon, label: `${balance.toLocaleString()} Onyx`, hint: 'Balance', disabled: true },
     {
@@ -8419,7 +8419,7 @@ async function renderMemberList() {
   }
 
   if (deployedBots.length) {
-    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><img src="/fortized%20badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>` });
+    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><img src="/badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>` });
     deployedBots.forEach(bot => items.push({ type:'bot', height:_MLH_ENTRY, bot }));
   }
 
@@ -8568,7 +8568,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
     }, 50);
   }
   const staffRole = getStaffRole(u);
-  const staffBadge = staffRole ? `<img src="/fortized%20badges/${staffRole === 'superadmin' ? 'superadmin' : staffRole === 'admin' ? 'admin' : 'moderator'}.png" style="width:14px;height:14px;object-fit:contain;" title="${staffRole}">` : '';
+  const staffBadge = staffRole ? `<img src="/badges/${staffRole === 'superadmin' ? 'superadmin' : staffRole === 'admin' ? 'admin' : 'moderator'}.png" style="width:14px;height:14px;object-fit:contain;" title="${staffRole}">` : '';
   const dimStyle = isOffline ? 'opacity:.4;' : '';
 
   return `<div class="ml-entry" data-member="${escapeHTML(u)}" data-status="${status}" style="${dimStyle}">
@@ -13122,7 +13122,7 @@ function renderBSettingsMain(tab) {
             <div class="bot-card" style="margin-bottom:8px;">
               <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
               <div class="bot-meta">
-                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
                 <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
                 <div class="bot-stats"><span>Owner: @${escapeHTML(bot.owner||CU.username)}</span><span>•</span><span>${(bot.commands||[]).length} commands</span></div>
               </div>
@@ -13146,7 +13146,7 @@ function renderBSettingsMain(tab) {
           <div class="bot-card" style="margin-bottom:8px;cursor:pointer;" onclick="openBotEditor(${i})">
             <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
             <div class="bot-meta">
-              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"><span class="badge-tooltip">Bot</span></span>
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/badges/bot.png" alt="bot"><span class="badge-tooltip">Bot</span></span>
                 ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">🔒 Private</span>'}
               </div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
@@ -13283,7 +13283,7 @@ function renderBSettingsMain(tab) {
             <div class="bot-card" style="margin-bottom:8px;cursor:pointer;" onclick="openBotEditor(${i})">
               <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
               <div class="bot-meta">
-                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"></span>
+                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/badges/bot.png" alt="bot"></span>
                   ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">Private</span>'}
                   ${bot.listedForSale?`<span style="font-size:9px;color:#fbbf24;background:rgba(251,191,36,.1);padding:2px 6px;border-radius:4px;">On Sale · ${bot.salePrice||0} Onyx</span>`:''}
                 </div>
@@ -15233,7 +15233,7 @@ function renderMyBotsView(main) {
           <div class="bot-card" style="margin-bottom:10px;" onclick="openBotEditor(${i})">
             <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
             <div class="bot-meta">
-              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span>
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span>
                 ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">🔒 Private</span>'}
               </div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
@@ -15405,7 +15405,7 @@ function openBotEditor(idx) {
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
         <div class="bot-av" style="width:56px;height:56px;font-size:26px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
         <div>
-          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
           <div style="font-size:12px;color:var(--muted);">Owner: @${escapeHTML(bot.owner)} · Created ${new Date(bot.createdAt).toLocaleDateString()} · v${bot.version}</div>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px;">
@@ -15624,7 +15624,7 @@ function renderArsenalCard(bot) {
     <div style="display:flex;gap:12px;align-items:center;">
       <div class="bot-av">${bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
       <div style="flex:1;min-width:0;">
-        <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized%20badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+        <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
         <div style="font-size:11px;color:var(--muted);">by @${escapeHTML(bot.owner)} · v${bot.version}</div>
       </div>
       <div style="display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold);">⭐ ${bot.rating}</div>
@@ -20811,13 +20811,13 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div class="hq-panel-head"><h3>Quick Messages</h3></div>
         <div style="padding:var(--space-lg);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);">
           ${[
-            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly.\nPlease save your work and prepare for a brief interruption.',i:'https://www.svgrepo.com/show/498076/health.svg'},
-            {t:'Update',m:'A new update is available with multiple new features!\nPlease refresh your page to enjoy the latest improvements.',i:'https://www.svgrepo.com/show/527693/download-minimalistic.svg'},
-            {t:'Welcome',m:'Welcome to the community!\nCheck out the latest events in Forum under "Announcements", or visit our blog for updates!',i:'https://www.svgrepo.com/show/524897/rocket.svg'},
-            {t:'Emergency',m:'We are aware of current issues and are working on a fix.\nThank you for your patience while we resolve this!',i:'https://www.svgrepo.com/show/497913/danger.svg'},
-            {t:'Celebration',m:"Thank you for being part of Fortized! We are so grateful to have you in our realm!",i:'https://www.svgrepo.com/show/528914/confetti-minimalistic.svg'},
-            {t:'Experimental',m:'We are testing something new!\nShare your feedback in Forum under Suggestions - it helps shape Fortized!',i:'https://www.svgrepo.com/show/455734/chemical-lab.svg'},
-          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="_setQuickMessage('${q.m.replace(/'/g,"\\'").replace(/\n/g,"\\n")}', '${q.i}');">
+            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly. Please save your work and prepare for a brief interruption.',i:'https://www.svgrepo.com/show/498076/health.svg'},
+            {t:'Update',m:'A new update is available! Please refresh your page to enjoy latest improvements.',i:'https://www.svgrepo.com/show/527693/download-minimalistic.svg'},
+            {t:'Welcome',m:'Welcome to the community! Check out the Forum or blog for updates.',i:'https://www.svgrepo.com/show/524897/rocket.svg'},
+            {t:'Emergency',m:'We are aware of issues and working on a fix. Thank you for your patience!',i:'https://www.svgrepo.com/show/497913/danger.svg'},
+            {t:'Celebration',m:'Thank you for being part of Fortized! We are so grateful to have you!',i:'https://www.svgrepo.com/show/528914/confetti-minimalistic.svg'},
+            {t:'Experimental',m:'We are testing something new! Share feedback in Forum - it helps shape Fortized!',i:'https://www.svgrepo.com/show/455734/chemical-lab.svg'},
+          ].map((q,i)=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" data-msg="${q.m}" data-icon="${q.i}" onclick="_setQuickMessage(this.dataset.msg, this.dataset.icon)">
             <span style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:12px;margin-left:4px;"><img src="${q.i}" style="width:22px;height:22px;filter:brightness(0)invert(1);"><span>${q.t}</span></span>
             <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,50)}…</span>
           </button>`).join('')}
@@ -34262,7 +34262,7 @@ function renderAtelierTab(tab) {
     const PERK_CARDS = [
       {img:'/AtelierCustomEmoji.png',title:'Custom Emojis Everywhere',desc:'Use exclusive custom emojis across all your messages and reactions.',color:'#ff77e4',colorRgb:'255,119,228'},
       {img:'/Atelier100MbUploads.png',title:'100MB Uploads',desc:'Upload files up to 100MB for seamless sharing and media management.',color:'#ffd93e',colorRgb:'255,217,62'},
-      {img:'/AtelierBadge.png',title:'Radiance Badge',desc:'Display your exclusive Radiance badge on your profile.',color:'#fff93e',colorRgb:'255,249,62'},
+      {img:'/badges/AtelierBadge.png',title:'Radiance Badge',desc:'Display your exclusive Radiance badge on your profile.',color:'#fff93e',colorRgb:'255,249,62'},
       {img:'/AtelierGift.png',title:'Gift Radiance',desc:'Send Radiance subscriptions to your friends as a gift.',color:'#f472b6',colorRgb:'244,114,182'},
     ];
 
@@ -34279,7 +34279,7 @@ function renderAtelierTab(tab) {
         <!-- Wrap background overlay -->
         <div style="position:absolute;inset:0;background:url('/wrapBackground.png');background-size:cover;background-position:center;opacity:.6;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;display:flex;align-items:center;gap:24px;">
-          <img src="/fortized%20badges/radiance.png" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));"/>
+          <img src="/badges/radiance.png" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));"/>
           <div>
             <h1 style="font-family:var(--font-display);font-size:36px;font-weight:900;color:#fff;margin:0;letter-spacing:-.03em;text-shadow:0 2px 16px rgba(0,0,0,.4);">Welcome to your Radiance Dwelling</h1>
             <p style="font-size:14px;color:rgba(255,255,255,.7);margin:8px 0 0 0;">Your premium membership is active. Enjoy all your exclusive perks.</p>
@@ -34300,7 +34300,7 @@ function renderAtelierTab(tab) {
 
         <div style="position:relative;z-index:1;">
           <div style="margin-bottom:16px;">
-            <img src="/fortized%20badges/radiance.png" style="width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(255,119,228,.25));"/>
+            <img src="/badges/radiance.png" style="width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(255,119,228,.25));"/>
           </div>
           <div style="font-family:var(--font-display);font-size:20px;font-weight:900;background:linear-gradient(90deg,#ff77e4,#fff93e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;letter-spacing:-.01em;">Share Radiance</div>
           <p style="font-size:13px;color:rgba(255,255,255,.6);margin:0 0 24px 0;line-height:1.6;">Gift your friends a Radiance subscription and let them enjoy all the premium perks together.</p>
@@ -37101,19 +37101,19 @@ function refreshAtelierBalance() {
 const BADGE_DEFS = {
   // URLs are pre-encoded — express.static handles %20 fine, while raw spaces
   // sometimes 404 on certain CDN edge caches and quietly hid the badges.
-  superadmin: { img:'/fortized%20badges/superadmin.png', tooltip:'Superadmin - Highest level of platform authority in Fortized.', cls:'badge-superadmin', order:0 },
-  admin:      { img:'/fortized%20badges/admin.png', tooltip:'Admin - Platform administrator with elevated permissions.', cls:'badge-admin', order:1 },
-  moderator:  { img:'/fortized%20badges/moderator.png', tooltip:'Moderator - Helps maintain safety and order.', cls:'badge-moderator', order:2 },
+  superadmin: { img:'/badges/superadmin.png', tooltip:'Superadmin - Highest level of platform authority in Fortized.', cls:'badge-superadmin', order:0 },
+  admin:      { img:'/badges/admin.png', tooltip:'Admin - Platform administrator with elevated permissions.', cls:'badge-admin', order:1 },
+  moderator:  { img:'/badges/moderator.png', tooltip:'Moderator - Helps maintain safety and order.', cls:'badge-moderator', order:2 },
   verified:   { img:null, tooltip:'Verified - Identity confirmed by Fortized staff.', cls:'badge-verified', order:3 },
-  bot:        { img:'/fortized%20badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:4 },
+  bot:        { img:'/badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:4 },
   // Both radiance tiers point at the only radiance art that actually ships in
-  // /fortized%20badges/ — radiance+.png and basic radiance.png never existed in
+  // /badges/ — radiance+.png and basic radiance.png never existed in
   // the repo, so previously the badge img was 404ing and the row stayed blank.
-  'radiance-plus': { img:'/fortized%20badges/radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance-plus', order:5 },
-  radiance:   { img:'/fortized%20badges/radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance', order:6 },
-  beta:       { img:'/fortized%20badges/beta%20user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
-  quest:      { img:'/fortized%20badges/quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
-  onyx:       { img:'/fortized%20badges/onyx.png', cls:'badge-onyx', order:8 },
+  'radiance-plus': { img:'/badges/radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance-plus', order:5 },
+  radiance:   { img:'/badges/radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance', order:6 },
+  beta:       { img:'/badges/beta%20user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
+  quest:      { img:'/badges/quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
+  onyx:       { img:'/badges/onyx.png', cls:'badge-onyx', order:8 },
 };
 const ONYX_TIERS = [
   { name:'Onyx Apprentice', min:0 },

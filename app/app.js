@@ -2443,7 +2443,7 @@ function onOnyxCtxMenu(ev) {
   const onyxIcon = '<img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
   const shopIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
   const questIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
-  const radIcon = '<img src="/badges/radiance.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
+  const radIcon = '<img src="/radiance-logo.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
   const items = [
     { icon: onyxIcon, label: `${balance.toLocaleString()} Onyx`, hint: 'Balance', disabled: true },
     {
@@ -34279,7 +34279,7 @@ function renderAtelierTab(tab) {
         <!-- Wrap background overlay -->
         <div style="position:absolute;inset:0;background:url('/wrapBackground.png');background-size:cover;background-position:center;opacity:.6;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;display:flex;align-items:center;gap:24px;">
-          <img src="/badges/radiance.png" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));"/>
+          <img src="/radiance-logo.png" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));"/>
           <div>
             <h1 style="font-family:var(--font-display);font-size:36px;font-weight:900;color:#fff;margin:0;letter-spacing:-.03em;text-shadow:0 2px 16px rgba(0,0,0,.4);">Welcome to your Radiance Dwelling</h1>
             <p style="font-size:14px;color:rgba(255,255,255,.7);margin:8px 0 0 0;">Your premium membership is active. Enjoy all your exclusive perks.</p>
@@ -34300,7 +34300,7 @@ function renderAtelierTab(tab) {
 
         <div style="position:relative;z-index:1;">
           <div style="margin-bottom:16px;">
-            <img src="/badges/radiance.png" style="width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(255,119,228,.25));"/>
+            <img src="/radiance-logo.png" style="width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(255,119,228,.25));"/>
           </div>
           <div style="font-family:var(--font-display);font-size:20px;font-weight:900;background:linear-gradient(90deg,#ff77e4,#fff93e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;letter-spacing:-.01em;">Share Radiance</div>
           <p style="font-size:13px;color:rgba(255,255,255,.6);margin:0 0 24px 0;line-height:1.6;">Gift your friends a Radiance subscription and let them enjoy all the premium perks together.</p>
@@ -37109,8 +37109,8 @@ const BADGE_DEFS = {
   // Both radiance tiers point at the only radiance art that actually ships in
   // /badges/ — radiance+.png and basic radiance.png never existed in
   // the repo, so previously the badge img was 404ing and the row stayed blank.
-  'radiance-plus': { img:'/badges/radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance-plus', order:5 },
-  radiance:   { img:'/badges/radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance', order:6 },
+  'radiance-plus': { img:'/radiance-logo.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance-plus', order:5 },
+  radiance:   { img:'/radiance-logo.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance', order:6 },
   beta:       { img:'/badges/beta%20user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
   quest:      { img:'/badges/quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
   onyx:       { img:'/badges/onyx.png', cls:'badge-onyx', order:8 },

@@ -2593,7 +2593,7 @@ async function _checkStreakValidity() {
 function _streakFlameSvg(size, color) {
   const s = size || 18;
   const fill = color || 'currentColor';
-  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${fill}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.73 2.2a.75.75 0 0 1 1.18-.35c2.64 2.2 4.86 5.23 4.86 8.93 0 4.9-3.8 8.47-8.27 8.47-4.38 0-7.5-3.3-7.5-7.55 0-2.2 1.17-4.4 3.07-6.13a.75.75 0 0 1 1.23.45c.2 1.4.88 2.4 1.65 2.95.08-2.4 1-4.5 2.3-5.9 1-1.08 1.45-1.56 1.48-.87ZM12 17.5c1.9 0 3.5-1.53 3.5-3.53 0-1.5-.83-2.5-1.72-3.4-.2.7-.7 1.1-1.3 1.1-.8-1.8-.3-3.5-1.08-5.7-.8 1.3-1.9 2.9-1.9 5.1 0 .85.28 1.5.75 1.95-.8-.2-1.42-.95-1.58-1.85C8.1 11.7 7.75 12.6 7.75 13.6c0 2.2 1.8 3.9 4.25 3.9Z"/></svg>`;
+  return `<img src="https://www.svgrepo.com/show/371895/flame.svg" width="${s}" height="${s}" style="filter:brightness(0)invert(1);fill:${fill};">`;
 }
 // Back-compat alias: _streakFlameSvgSolid(size, color) — same glyph.
 function _streakFlameSvgSolid(size, color) { return _streakFlameSvg(size || 12, color || 'currentColor'); }

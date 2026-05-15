@@ -40,10 +40,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=20260509c';
+  s3.src = '/FortizedSocial-supabase.js?v=20260515a';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=20260509c';
+    s4.src = '/firebase-compat-shim.js?v=20260515a';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -52,14 +52,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=20260509c">
+<link rel="stylesheet" href="/app/styles.css?v=20260515a">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=20260509c', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=20260515a', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -316,7 +316,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
         <span class="tb-cap-lbl">Onyx</span>
       </div>
       <div class="tb-cap tb-cap--streak is-zero" id="streak-display" onclick="showView('atelier');setTimeout(()=>switchAtelierTab&amp;&amp;switchAtelierTab('quests'),80)" oncontextmenu="onStreakCtxMenu&amp;&amp;onStreakCtxMenu(event);return false;" title="Daily streak · click to claim daily · right-click for options">
-        <div class="tb-cap-ic" id="streak-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.73 2.2a.75.75 0 0 1 1.18-.35c2.64 2.2 4.86 5.23 4.86 8.93 0 4.9-3.8 8.47-8.27 8.47-4.38 0-7.5-3.3-7.5-7.55 0-2.2 1.17-4.4 3.07-6.13a.75.75 0 0 1 1.23.45c.2 1.4.88 2.4 1.65 2.95.08-2.4 1-4.5 2.3-5.9 1-1.08 1.45-1.56 1.48-.87ZM12 17.5c1.9 0 3.5-1.53 3.5-3.53 0-1.5-.83-2.5-1.72-3.4-.2.7-.7 1.1-1.3 1.1-.8-1.8-.3-3.5-1.08-5.7-.8 1.3-1.9 2.9-1.9 5.1 0 .85.28 1.5.75 1.95-.8-.2-1.42-.95-1.58-1.85C8.1 11.7 7.75 12.6 7.75 13.6c0 2.2 1.8 3.9 4.25 3.9Z"/></svg></div>
+        <div class="tb-cap-ic" id="streak-ic"></div>
         <span id="streak-val" class="tb-cap-val">0</span>
         <span class="tb-cap-lbl">Days</span>
         <span class="tb-streak-shield" style="display:none;" title="Streak protected"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></span>
@@ -1225,10 +1225,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=20260509c"></script>
-<script src="/app/app.js?v=20260509c"></script>
-<script src="/app/joy-system.js?v=20260509c"></script>
-<script src="/app/chronicle-games.js?v=20260509c"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=20260515a"></script>
+<script src="/app/app.js?v=20260515a"></script>
+<script src="/app/joy-system.js?v=20260515a"></script>
+<script src="/app/chronicle-games.js?v=20260515a"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

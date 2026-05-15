@@ -2605,7 +2605,13 @@ function _streakFlameSvgSolid(size, color) { return _streakFlameSvg(size || 12, 
 function updateStreakDisplay() {
   const valEl = document.getElementById('streak-val');
   const pillEl = document.getElementById('streak-display');
+  const iconEl = document.getElementById('streak-ic');
   if (!pillEl) return;
+  // Pull the flame from the same _streakFlameSvg helper every other call site
+  // uses, so swapping the icon glyph only ever needs one source-of-truth edit.
+  if (iconEl && !iconEl.firstChild && typeof _streakFlameSvg === 'function') {
+    iconEl.innerHTML = _streakFlameSvg(18);
+  }
   const streak = +CU?.dailyStreak || 0;
   const protected_ = _isStreakProtected();
   if (valEl) valEl.textContent = streak;
@@ -34158,20 +34164,23 @@ function renderAtelierTopNav() {
   const navContainer = document.getElementById('atelier-top-nav');
   if (!navContainer) return;
 
-  // All four icons render as inline <svg> with stroke/fill "currentColor"
-  // so they inherit the parent button's color — grey when inactive,
-  // yellow when active — exactly like the Fortshop icon already does.
+  // Each tab gets the exact icon URL/glyph the team picked. Radiance, Quests
+  // and Creator are rendered through CSS mask-image so the icon shape comes
+  // from the URL but the colour comes from currentColor — same grey/yellow
+  // state as Fortshop (which is inline SVG with stroke="currentColor").
+  const _maskIcon = (url) =>
+    `<span style="display:inline-block;width:18px;height:18px;flex-shrink:0;background-color:currentColor;-webkit-mask:url('${url}') center/contain no-repeat;mask:url('${url}') center/contain no-repeat;"></span>`;
   const tabs = [
-    { id: 'radiance', name: 'Radiance Dwelling', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5l1.96 7.04L21 10.5l-7.04 1.96L12 19.5l-1.96-7.04L3 10.5l7.04-1.96L12 1.5zm6.5 13l.85 3.15L22.5 18.5l-3.15.85-.85 3.15-.85-3.15L14.5 18.5l3.15-.85.85-3.15zM5 14l.6 2.2 2.2.6-2.2.6L5 19.4l-.6-2-2.2-.6 2.2-.6L5 14z"/></svg>' },
-    { id: 'quests', name: 'Quests', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg>' },
-    { id: 'shop', name: 'Fortshop', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' },
-    { id: 'creator', name: 'Creator', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.8" fill="currentColor" stroke="none"/><circle cx="17.5" cy="10.5" r="1.8" fill="currentColor" stroke="none"/><circle cx="8.5" cy="7.5" r="1.8" fill="currentColor" stroke="none"/><circle cx="6.5" cy="12.5" r="1.8" fill="currentColor" stroke="none"/><path d="M12 22a10 10 0 1 1 0-20c5.5 0 10 4 10 9 0 3-2 5-5 5h-1.5c-1.4 0-2.5 1.1-2.5 2.5 0 .8.3 1.5.8 2 .3.3.2.5-.3.5z"/></svg>' }
+    { id: 'radiance', name: 'Radiance Dwelling', html: _maskIcon('/radiance-logo.png') },
+    { id: 'quests',   name: 'Quests',            html: _maskIcon('https://www.svgrepo.com/show/17305/laurel.svg') },
+    { id: 'shop',     name: 'Fortshop',          html: '<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;color:currentColor;flex-shrink:0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span>' },
+    { id: 'creator',  name: 'Creator',           html: _maskIcon('https://www.svgrepo.com/show/326997/color-palette-sharp.svg') }
   ];
 
   navContainer.innerHTML = tabs.map(t => {
     const isActive = tab === t.id;
     return `<button class="atel-top-nav-btn ${isActive ? 'active' : ''}" onclick="switchAtelierTab('${t.id}')" style="display:flex;align-items:center;gap:8px;padding:12px 16px;border:none;background:${isActive ? 'rgba(255,249,62,.08)' : 'transparent'};border-bottom:${isActive ? '2px solid var(--accent)' : '1px solid transparent'};color:${isActive ? 'var(--accent)' : 'rgba(255,255,255,.5)'};cursor:pointer;transition:all .2s;font-size:13px;font-weight:600;font-family:var(--font-display);position:relative;white-space:nowrap;">
-      <span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;color:currentColor;flex-shrink:0;">${t.svg}</span>
+      ${t.html}
       <span>${t.name}</span>
     </button>`;
   }).join('');

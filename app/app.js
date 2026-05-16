@@ -1021,7 +1021,8 @@ async function refreshCU() {
           'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
           'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
           'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
-          'onyxBadge','onyxBadgeSpent','createdAt','customStatus','verified','appearance'
+          'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
+          'createdAt','customStatus','verified','appearance'
         ];
         const _recentEdits = window._recentlyEditedFields || {};
         const _now = Date.now();
@@ -3077,7 +3078,14 @@ document.addEventListener('mouseover', function(e) {
   _badgeTipRemove();
   const tip = document.createElement('div');
   tip.className = 'ftz-badge-tip';
-  tip.textContent = tooltipEl.textContent;
+  // Preserve the structured two-line layout (.badge-tooltip-name + optional
+  // .badge-tooltip-sub) so level info renders on its own line. Falls back
+  // to plain text for legacy badges that only have a flat tooltip string.
+  if (tooltipEl.querySelector && tooltipEl.querySelector('.badge-tooltip-name')) {
+    tip.innerHTML = tooltipEl.innerHTML;
+  } else {
+    tip.textContent = tooltipEl.textContent;
+  }
   document.body.appendChild(tip);
   _badgeTipEl = tip;
   const rect = badge.getBoundingClientRect();
@@ -9834,7 +9842,8 @@ function initFortizedUXResilience() {
               'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
               'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
               'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
-              'onyxBadge','onyxBadgeSpent','createdAt','customStatus','verified','appearance',
+              'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
+              'createdAt','customStatus','verified','appearance',
               'completedQuests','questsRewarded','questsDailyLog','dailyStreak'
             ];
             for (const k of protectFields) {
@@ -37112,29 +37121,55 @@ function refreshAtelierBalance() {
 // ════════════════════════════════════════════════════
 // BADGE SYSTEM
 // ════════════════════════════════════════════════════
+// ── Badge definitions ────────────────────────────────────────────────────
+// Canonical render order (top-to-bottom = most important first):
+//   Staff → Bot → Verified → Creator → Radiance → Onyx → Dedicated Flame → Beta → Quest
+// A few badges have "levels" (Discord-style hover tooltip with tier info):
+//   - staff   : Moderator / Admin / Superadmin
+//   - creator : 1 / 10 / 100 / 1000+ items created
+//   - onyx    : Initiate / Apprentice / Adept / Master / Grandmaster
+//   - flame   : the user's all-time best streak (max-ever days)
+// Each non-levelled badge keeps a static tooltip.
 const BADGE_DEFS = {
-  // URLs are pre-encoded — express.static handles %20 fine, while raw spaces
-  // sometimes 404 on certain CDN edge caches and quietly hid the badges.
-  superadmin: { img:'/badges/superadmin.png', tooltip:'Superadmin - Highest level of platform authority in Fortized.', cls:'badge-superadmin', order:0 },
-  admin:      { img:'/badges/admin.png', tooltip:'Admin - Platform administrator with elevated permissions.', cls:'badge-admin', order:1 },
-  moderator:  { img:'/badges/moderator.png', tooltip:'Moderator - Helps maintain safety and order.', cls:'badge-moderator', order:2 },
-  verified:   { img:null, tooltip:'Verified - Identity confirmed by Fortized staff.', cls:'badge-verified', order:3 },
-  bot:        { img:'/badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:4 },
-  // Both radiance tiers point at the only radiance art that actually ships in
-  // /badges/ — radiance+.png and basic radiance.png never existed in
-  // the repo, so previously the badge img was 404ing and the row stayed blank.
-  'radiance-plus': { img:'/radiance-logo.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance-plus', order:5 },
-  radiance:   { img:'/radiance-logo.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance', order:6 },
-  beta:       { img:'/badges/beta%20user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
-  quest:      { img:'/badges/quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
-  onyx:       { img:'/badges/onyx.png', cls:'badge-onyx', order:8 },
+  staff:     { img:'/badges/staff.png',                 cls:'badge-staff',     order:0, tooltip:'Staff' },
+  bot:       { img:'/badges/bot.png',                   cls:'badge-bot',       order:1, tooltip:'Bot - Automated or system-managed account.' },
+  verified:  { img:null,                                cls:'badge-verified',  order:2, tooltip:'Verified - Identity confirmed by Fortized staff.' },
+  creator:   { img:'/badges/creator.png',               cls:'badge-creator',   order:3, tooltip:'Creator' },
+  radiance:  { img:'/badges/radiance.png',              cls:'badge-radiance',  order:4, tooltip:'Radiance - Active Radiance subscriber.' },
+  onyx:      { img:'/badges/onyx.png',                  cls:'badge-onyx',      order:5, tooltip:'Onyx' },
+  flame:     { img:'/badges/dedicated%20flame.png',     cls:'badge-flame',     order:6, tooltip:'Dedicated Flame' },
+  beta:      { img:'/badges/beta-user.png',             cls:'badge-beta',      order:7, tooltip:'Beta User - Early supporter of Fortized (account created before 25 August 2026).' },
+  quest:     { img:'/badges/quest.png',                 cls:'badge-quest',     order:8, tooltip:'Completed a Quest' },
 };
+
+// Onyx badge tier ladder. Each tier is unlocked by reaching its cumulative
+// `min` total spent (the initial purchase counts toward `Initiate`). Picked
+// round numbers; tune freely.
 const ONYX_TIERS = [
-  { name:'Onyx Apprentice', min:0 },
-  { name:'Onyx Adept', min:500 },
-  { name:'Onyx Artisan', min:2000 },
-  { name:'Onyx Master', min:10000 },
+  { name:'Initiate',    min:0      },
+  { name:'Apprentice',  min:500    },
+  { name:'Adept',       min:1500   },
+  { name:'Master',      min:4000   },
+  { name:'Grandmaster', min:10000  },
 ];
+// 24h cooldown between Onyx-badge investments so the tier ladder isn't
+// raced through in one transaction.
+const ONYX_BADGE_UPGRADE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+// Creator badge ladder. `min` is the number of creator items the user has
+// published; the user keeps the highest tier they have reached.
+const CREATOR_TIERS = [
+  { name:'Apprentice Creator', min:1    },
+  { name:'Seasoned Creator',   min:10   },
+  { name:'Master Creator',     min:100  },
+  { name:'Legendary Creator',  min:1000 },
+];
+
+function _resolveTier(tiers, value) {
+  let match = null;
+  for (const t of tiers) { if ((value||0) >= t.min) match = t; }
+  return match;
+}
 // ── Seasonal events ──────────────────────────────────────────────────────
 // Seasonal items are sold DIRECTLY in Fortshop only while their season is
 // active. Once the season ends, the item is pulled from direct sale — but
@@ -37413,35 +37448,73 @@ function getUserBadges(user) {
   if (!user) return [];
   const badges = [];
   const uname = user.username || '';
-  // Staff badges — separate superadmin, admin, moderator
+
+  // 0. Staff — single unified badge, role goes in the level tooltip
   const staffRole = getStaffRole(uname);
-  if (staffRole === 'superadmin') badges.push({ id:'superadmin', ...BADGE_DEFS.superadmin });
-  else if (staffRole === 'admin') badges.push({ id:'admin', ...BADGE_DEFS.admin });
-  else if (staffRole === 'moderator') badges.push({ id:'moderator', ...BADGE_DEFS.moderator });
-  // Verified badge
-  if (user.verified) badges.push({ id:'verified', ...BADGE_DEFS.verified });
-  // Bot badge
+  if (staffRole) {
+    const roleName = staffRole === 'superadmin' ? 'Superadmin'
+                   : staffRole === 'admin'      ? 'Admin'
+                   : 'Moderator';
+    badges.push({
+      id:'staff', ...BADGE_DEFS.staff,
+      level: roleName,
+      tooltip: 'Staff · ' + roleName
+    });
+  }
+
+  // 1. Bot
   if (user.isBot) badges.push({ id:'bot', ...BADGE_DEFS.bot });
-  // Subscription badges
-  const hasRadiancePlus = user.radiancePlus && new Date(user.radiancePlus) > new Date();
+
+  // 2. Verified (inline SVG)
+  if (user.verified) badges.push({ id:'verified', ...BADGE_DEFS.verified });
+
+  // 3. Creator — one item published = badge, level evolves at 1 / 10 / 100 / 1000
+  const creatorCount = +user.creatorItemCount || 0;
+  if (creatorCount >= 1) {
+    const tier = _resolveTier(CREATOR_TIERS, creatorCount);
+    badges.push({
+      id:'creator', ...BADGE_DEFS.creator,
+      level: tier ? tier.name : 'Creator',
+      tooltip: `Creator · ${tier ? tier.name : 'Creator'} · ${creatorCount} item${creatorCount===1?'':'s'} created`
+    });
+  }
+
+  // 4. Radiance — auto-tied to active subscription, no separate +tier
   const hasRadiance = user.radianceUntil && new Date(user.radianceUntil) > new Date();
-  if (hasRadiancePlus) badges.push({ id:'radiance-plus', ...BADGE_DEFS['radiance-plus'] });
-  else if (hasRadiance) badges.push({ id:'radiance', ...BADGE_DEFS.radiance });
-  // Beta badge — accounts created between 21 Feb 2026 and 25 Aug 2026
+  if (hasRadiance) badges.push({ id:'radiance', ...BADGE_DEFS.radiance });
+
+  // 5. Onyx — purchased, level = current tier name
+  if (user.onyxBadge) {
+    const spent = +user.onyxBadgeSpent || 0;
+    const tier = _getOnyxTier(spent);
+    badges.push({
+      id:'onyx', ...BADGE_DEFS.onyx,
+      level: tier.name,
+      tooltip: `Onyx · ${tier.name} · ${spent.toLocaleString()} Onyx invested`
+    });
+  }
+
+  // 6. Dedicated Flame — awarded once max-ever streak hits 5; level = max-ever
+  const streakBest = Math.max(+user.streakBest || 0, +user.dailyStreak || 0);
+  if (streakBest >= 5) {
+    badges.push({
+      id:'flame', ...BADGE_DEFS.flame,
+      level: streakBest + '-day record',
+      tooltip: `Dedicated Flame · Best streak: ${streakBest} day${streakBest===1?'':'s'}`
+    });
+  }
+
+  // 7. Beta — accounts created before 25 August 2026
   const created = user.createdAt ? new Date(user.createdAt) : null;
-  if (user.isBeta || user.betaUser || (created && created >= BETA_START && created <= BETA_END)) {
+  if (user.isBeta || user.betaUser || (created && created <= BETA_END)) {
     badges.push({ id:'beta', ...BADGE_DEFS.beta });
   }
-  // Quest badge
+
+  // 8. Quest — completed at least one quest
   if (user.questsBadge || (user.completedQuests && user.completedQuests.length > 0)) {
     badges.push({ id:'quest', ...BADGE_DEFS.quest });
   }
-  // Onyx progression badge — only if user has purchased it
-  if (user.onyxBadge) {
-    const spent = user.onyxBadgeSpent || 0;
-    const tier = _getOnyxTier(spent);
-    badges.push({ id:'onyx', ...BADGE_DEFS.onyx, tooltip: tier.name + ' - Progression badge that evolves with investment.' });
-  }
+
   badges.sort((a,b) => (a.order||99) - (b.order||99));
   return badges;
 }
@@ -37449,9 +37522,18 @@ function getUserBadges(user) {
 function renderBadgesHTML(user) {
   const badges = getUserBadges(user);
   if (!badges.length) return '';
+  // Tooltip layout matches the Discord-style two-line popover the team
+  // asked for: bold name on top, optional level/role on the line below.
+  // Badges without an image (or whose file isn't uploaded yet) hide
+  // gracefully via onerror so a missing asset never leaves a broken
+  // square in the badge row.
   return '<span class="ftz-badge-row">' + badges.map(b => {
-    const icon = b.id === 'verified' ? _verifiedBadge(16) : `<img src="${b.img}" alt="${b.id}">`;
-    return `<span class="ftz-badge ${b.cls}">${icon}<span class="badge-tooltip">${escapeHTML(b.tooltip||'')}</span></span>`;
+    const icon = b.id === 'verified'
+      ? _verifiedBadge(16)
+      : (b.img ? `<img src="${b.img}" alt="${b.id}" onerror="this.parentNode.style.display='none'">` : '');
+    const name = escapeHTML((b.tooltip || '').split(' · ')[0] || b.id);
+    const sub  = b.level ? `<span class="badge-tooltip-sub">${escapeHTML(b.level)}</span>` : '';
+    return `<span class="ftz-badge ${b.cls}${b.level?' has-level':''}">${icon}<span class="badge-tooltip"><span class="badge-tooltip-name">${name}</span>${sub}</span></span>`;
   }).join('') + '</span>';
 }
 
@@ -39631,6 +39713,10 @@ async function claimDailyQuest() {
     CU.dailyStreak = 1;
   }
   CU.streakDate = todayStr;
+  // Track the all-time best for the Dedicated Flame badge. Once recorded it
+  // never goes down — the badge level reflects the user's personal record
+  // even after a streak resets.
+  CU.streakBest = Math.max(+CU.streakBest || 0, +CU.dailyStreak || 0);
 
   const streakBonus = CU.dailyStreak >= 7 ? 25 : CU.dailyStreak >= 3 ? 10 : 0;
   const totalReward = 50 + streakBonus;
@@ -41007,35 +41093,58 @@ async function buyBundle(bundleId, cost) {
   });
 }
 // ── Onyx Badge Purchase & Upgrade ──
+// Initial unlock cost; subsequent upgrades hit ONYX_TIERS thresholds.
+const ONYX_BADGE_BASE_COST = 100;
+
+// Returns ms until the next allowed upgrade, or 0 if ready now.
+function _onyxBadgeCooldownLeft() {
+  const last = +CU?.onyxBadgeLastUpgrade || 0;
+  if (!last) return 0;
+  const left = (last + ONYX_BADGE_UPGRADE_COOLDOWN_MS) - Date.now();
+  return left > 0 ? left : 0;
+}
+
 async function buyOnyxBadge() {
-  const cost = 100;
+  const cost = ONYX_BADGE_BASE_COST;
   const bal = CU?.onyx||0;
+  if (CU?.onyxBadge) { toast('You already own the Onyx Badge — invest more to climb tiers.', 'info'); return; }
   if (bal < cost) { toast('Not enough Onyx! Need '+cost+' Onyx','error'); return; }
-  showCustomConfirm('Buy Onyx Badge for '+cost+' Onyx?', async () => {
+  showCustomConfirm('Buy the Onyx Badge for '+cost+' Onyx?', async () => {
     CU.onyx = bal - cost;
     CU.onyxBadge = true;
     CU.onyxBadgeSpent = cost;
+    CU.onyxBadgeLastUpgrade = Date.now();
     await saveUser(true); updateOnyxDisplay();
     distributeOnyxRevenue(cost);
-    toast('Onyx Badge unlocked! You are now an Onyx Apprentice.','success');
+    const tier = _getOnyxTier(cost);
+    toast('Onyx Badge unlocked! You are now an Onyx '+tier.name+'.','success');
     renderAtelierTab('shop');
   });
 }
+
 async function upgradeOnyxBadge(amount) {
+  if (!CU?.onyxBadge) { toast('Buy the Onyx Badge first.', 'error'); return; }
+  const cooldown = _onyxBadgeCooldownLeft();
+  if (cooldown > 0) {
+    const hrs = Math.ceil(cooldown / 3600000);
+    toast('Onyx Badge upgrades are on cooldown — try again in ~'+hrs+'h.', 'info');
+    return;
+  }
   const bal = CU?.onyx||0;
   if (bal < amount) { toast('Not enough Onyx! Need '+amount+' Onyx','error'); return; }
   const newSpent = (CU.onyxBadgeSpent||0) + amount;
   const oldTier = _getOnyxTier(CU.onyxBadgeSpent||0);
   const newTier = _getOnyxTier(newSpent);
-  showCustomConfirm('Invest '+amount+' Onyx into your badge?', async () => {
+  showCustomConfirm('Invest '+amount+' Onyx into your badge? (24h cooldown until the next upgrade.)', async () => {
     CU.onyx = bal - amount;
     CU.onyxBadgeSpent = newSpent;
+    CU.onyxBadgeLastUpgrade = Date.now();
     await saveUser(true); updateOnyxDisplay();
     distributeOnyxRevenue(amount);
     if (newTier.name !== oldTier.name) {
-      toast('Badge evolved! You are now '+newTier.name+'!','success');
+      toast('Badge evolved! You are now an Onyx '+newTier.name+'!','success');
     } else {
-      toast(amount+' Onyx invested into badge. Total: '+newSpent,'success');
+      toast(amount+' Onyx invested into badge. Total: '+newSpent.toLocaleString(),'success');
     }
     renderAtelierTab('shop');
   });

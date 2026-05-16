@@ -57,7 +57,26 @@ function ftzIcon(name, size, color) {
 // Shorthand icon helpers — Radiance & Onyx use PNG images (displayed inline like SVGs), Boost uses SVG
 function _onyxImg(size){const s=size||'18';return '<img src="/badges/onyx.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Onyx">';}
 function _radianceImg(size){const s=size||'16';return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;object-fit:contain;" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="radianceGrad-'+Math.random()+'" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ff77e4;stop-opacity:1" /><stop offset="100%" style="stop-color:#fff93e;stop-opacity:1" /></linearGradient></defs><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#radianceGrad-'+Math.random()+')" /></svg>';}
-function _radiancePlusImg(size){return _radianceImg(size)}
+// Radiance basic + Radiance Plus were merged into a single Radiance tier
+// a long time ago. `radiancePlus` is kept as a legacy field for back-compat
+// — the canonical check is "does this user have ANY active Radiance window".
+function _hasRadiance(u) {
+  if (!u) return false;
+  const now = Date.now();
+  const a = u.radianceUntil ? +new Date(u.radianceUntil) : 0;
+  const b = u.radiancePlus  ? +new Date(u.radiancePlus)  : 0;
+  return a > now || b > now;
+}
+// Latest of either field — used wherever code needs to know when Radiance
+// expires (stacking purchases, expiry pills, etc.).
+function _radianceExpiry(u) {
+  if (!u) return 0;
+  const a = u.radianceUntil ? +new Date(u.radianceUntil) : 0;
+  const b = u.radiancePlus  ? +new Date(u.radiancePlus)  : 0;
+  return Math.max(a, b);
+}
+// Legacy alias — kept so any old caller keeps rendering the right glyph.
+function _radiancePlusImg(size){return _radianceImg(size);}
 function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
 
 // ══════════════════════════════════════════════════════════
@@ -10817,8 +10836,8 @@ function initFortizedUXResilience() {
       if(fresh?.username){
         // Preserve radiance data if the DB returned null but local has valid values
         // (migration safety — ensures we never lose radiance on refresh)
-        if(!fresh.radianceUntil && CU.radianceUntil && new Date(CU.radianceUntil)>new Date()) fresh.radianceUntil=CU.radianceUntil;
-        if(!fresh.radiancePlus && CU.radiancePlus && new Date(CU.radiancePlus)>new Date()) fresh.radiancePlus=CU.radiancePlus;
+        if(!fresh.radianceUntil && _hasRadiance(CU)) fresh.radianceUntil=CU.radianceUntil;
+        if(!fresh.radiancePlus && _hasRadiance(CU)) fresh.radiancePlus=CU.radiancePlus;
         // Preserve quest/onyx data — local is source of truth since saves may be in-flight
         if (CU.onyx !== undefined && (fresh.onyx === undefined || fresh.onyx < CU.onyx)) fresh.onyx = CU.onyx;
         if (CU.lastDailyReward && !fresh.lastDailyReward) fresh.lastDailyReward = CU.lastDailyReward;
@@ -16732,8 +16751,8 @@ function insertEmoji(emoji) {
 
 // ═══ Radiance helper ═══
 function _hasActiveRadiance() {
-  return (CU?.radianceUntil && new Date(CU.radianceUntil) > new Date()) ||
-         (CU?.radiancePlus && new Date(CU.radiancePlus) > new Date());
+  return (_hasRadiance(CU)) ||
+         (_hasRadiance(CU));
 }
 
 // ═══ Emoji & Sticker Usage ═══
@@ -16929,7 +16948,7 @@ function _buildProfileView(tab) {
   document.querySelectorAll('.profile-nav-item').forEach(el => el.classList.remove('active'));
   const navItem = document.getElementById('pnav-' + tab);
   if (navItem) navItem.classList.add('active');
-  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const hasRadiance = _hasRadiance(CU);
 
   if (tab === 'myprofile') {
     const cs = CU.customStatus;
@@ -17805,7 +17824,7 @@ function _buildProfileView(tab) {
   }
 
   else if (tab === 'profile_theme') {
-    const hasPlus = CU?.radiancePlus && new Date(CU.radiancePlus) > new Date();
+    const hasPlus = _hasRadiance(CU);
     const pt = CU?.profileTheme || { color1: '#a855f7', color2: '#3b82f6' };
     const ptHero = `
       <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
@@ -18214,7 +18233,7 @@ async function updatePfp(e) {
 }
 async function updateBanner(e) {
   // Require Basic Radiance or Radiance+ to change banner
-  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const hasRadiance = _hasRadiance(CU);
   if (!hasRadiance) {
     toast('Custom banners require a Radiance subscription!', 'error');
     e.target.value = '';
@@ -18269,7 +18288,7 @@ function _stackFromExpiry(existingIso, days) {
 
 async function buyRadiance(days, cost) {
   if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
-  const stacking = CU.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const stacking = _hasRadiance(CU);
   const msg = stacking
     ? `Extend Radiance by ${days} days for ${cost} Onyx?`
     : `Buy ${days}-day Radiance for ${cost} Onyx?`;
@@ -18284,7 +18303,7 @@ async function buyRadiance(days, cost) {
 }
 
 async function buyRadiancePlus(days, cost) {
-  const stacking = CU.radiancePlus && new Date(CU.radiancePlus) > new Date();
+  const stacking = _hasRadiance(CU);
   const msg = stacking
     ? `Extend Radiance+ by ${days} days for ${cost} Onyx?`
     : `Buy ${days}-day Radiance for ${cost} Onyx?`;
@@ -18574,7 +18593,7 @@ async function _viewUserProfile(username) {
   const hasPending = (CU.friendRequestsSent||[]).includes(username);
   const isBlocked = isUserBlocked(username);
   const ignored = isUserIgnored(username);
-  const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+  const hasRadiancePlus = _hasRadiance(u);
   const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
   // Auto-generate profile card background from blended theme colors
   const profileCardBg = profileTheme && profileTheme.color1 && profileTheme.color2
@@ -18591,7 +18610,7 @@ async function _viewUserProfile(username) {
     ? `background:linear-gradient(135deg,${profileTheme.color1},${profileTheme.color2});padding:3px;border-radius:20px;`
     : '';
   // Show custom banner if user has Radiance + banner, otherwise a nice gradient
-  const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
+  const hasUserRadiance = _hasRadiance(u);
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
   // Identity-cohesive banner: same Fortized icons pattern as the popover, just
   // taller. Theme-tinted overlay when the user has Radiance+.
@@ -19892,7 +19911,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     try {
       const usersList = await FortizedSocial.getUsers();
       totalUsers = usersList.length;
-      radianceCount = usersList.filter(u => u.radianceUntil && new Date(u.radianceUntil) > new Date()).length;
+      radianceCount = usersList.filter(u => _hasRadiance(u)).length;
       newestUsers = usersList.filter(u=>u.createdAt||u.joinedAt).sort((a,b)=>new Date(b.createdAt||b.joinedAt)-new Date(a.createdAt||a.joinedAt)).slice(0,5);
       topOnyx = [...usersList].sort((a,b)=>(b.onyx||0)-(a.onyx||0)).slice(0,5);
       // Count by status
@@ -20850,7 +20869,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     let totalUsers=0,onlineNow=0,totalBastions=0,totalMsgs='–',radianceCount=0,topBastions=[];
     try {
       const usersSnap = await firebase.database().ref('users').get();
-      if (usersSnap.exists()) { const ul=Object.values(usersSnap.val()); totalUsers=ul.length; radianceCount=ul.filter(u=>u.radianceUntil&&new Date(u.radianceUntil)>new Date()).length; }
+      if (usersSnap.exists()) { const ul=Object.values(usersSnap.val()); totalUsers=ul.length; radianceCount=ul.filter(u=>_hasRadiance(u)).length; }
       const statSnap = await firebase.database().ref('statuses').get();
       if (statSnap.exists()) onlineNow=Object.values(statSnap.val()).filter(s=>s==='online'||s==='away'||s==='dnd').length;
       const bastSnap = await firebase.database().ref('bastions').get();
@@ -22412,8 +22431,8 @@ async function adminSearchUser() {
   const isBanned = bans.some(b=>b.username===username);
   const banInfo = bans.find(b=>b.username===username);
   const ageTier = getAgeTier(u.dateOfBirth);
-  const hasRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
-  const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+  const hasRadiance = _hasRadiance(u);
+  const hasRadiancePlus = _hasRadiance(u);
   const alreadyFriends = (CU.friends||[]).includes(username);
   const isMe = username === CU.username;
   let userStatus = 'offline';
@@ -23397,7 +23416,7 @@ function _copyInviteLink(btn) {
 
 // ── Radiance Gift Modal ──────────────
 async function openRadianceGiftModal() {
-  if (!CU?.radianceUntil && !CU?.radiancePlus) {
+  if (!_hasRadiance(CU)) {
     toast('You need Radiance to gift subscriptions', 'error');
     return;
   }
@@ -24446,8 +24465,8 @@ function renderAllUsersList(users) {
   const bannedNames = bans.map(b => (b.username||'').toLowerCase());
 
   list.innerHTML = sorted.slice(0, 200).map((u,i) => {
-    const hasRad = u.radianceUntil && new Date(u.radianceUntil) > new Date();
-    const hasRadPlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+    const hasRad = _hasRadiance(u);
+    const hasRadPlus = _hasRadiance(u);
     const staffRole = getStaffRole(u.username);
     const isBanned = bannedNames.includes((u.username||'').toLowerCase());
     const risk = _calcUserRisk(u);
@@ -26385,7 +26404,7 @@ function _openDisplayNameStyleModal() {
   const avHtml = CU.pfp
     ? `<img src="${escapeHTML(CU.pfp)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
     : `<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:var(--rail);border-radius:50%;">${dn[0].toUpperCase()}</div>`;
-  const profileTheme = (CU.radiancePlus && new Date(CU.radiancePlus) > new Date()) ? CU.profileTheme : null;
+  const profileTheme = (_hasRadiance(CU)) ? CU.profileTheme : null;
 
   document.querySelector('.dns-modal-overlay')?.remove();
   const overlay = document.createElement('div');
@@ -27331,14 +27350,14 @@ function trackRadianceTime() {
 }
 function radianceBadgeHTML(user) {
   if (!user) return '';
-  const active = user.radianceUntil && new Date(user.radianceUntil) > new Date();
+  const active = _hasRadiance(user);
   const totalDays = user.radianceTotalMs ? Math.floor(user.radianceTotalMs / 86400000) : 0;
   if (!active && totalDays < 1) return '';
-  const isPlus = user.radiancePlus && new Date(user.radiancePlus) > new Date();
-  const icon = isPlus ? _radiancePlusImg('12') : _radianceImg('12');
+  // Radiance basic + Plus were merged — single chip now.
+  const icon = _radianceImg('12');
   const label = active ? ' Radiance Active' : (' ' + totalDays + 'd Radiance');
-  const badgeColor = isPlus ? '#ffd93e' : '#ff9d3e';
-  const badgeBg = isPlus ? 'rgba(255,220,62,.15),rgba(255,249,62,.1)' : 'rgba(255,160,62,.15),rgba(255,180,62,.1)';
+  const badgeColor = '#ffd93e';
+  const badgeBg = 'rgba(255,220,62,.15),rgba(255,249,62,.1)';
   const badgeBorder = isPlus ? 'rgba(255,220,62,.3)' : 'rgba(255,160,62,.3)';
   return '<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,'+badgeBg+');border:1px solid '+badgeBorder+';border-radius:var(--radius-pill);padding:2px 9px;font-size:10px;font-weight:700;color:'+badgeColor+';">' + icon + label + '</span>';
 }
@@ -29406,8 +29425,8 @@ async function showDMUserPanel(username) {
     else { try { status = await FortizedSocial.getStatus(username); } catch(e) { _dbg('[DM] status fallback failed', e); } }
   } catch(e) { _dbg('[DM] presence query failed', e); try { status = await FortizedSocial.getStatus(username); } catch(e2) { _dbg('[DM] status fallback failed', e2); } }
   const sc = FtzStatus.color(status);
-  const hasR = u.radianceUntil && new Date(u.radianceUntil) > new Date();
-  const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+  const hasR = _hasRadiance(u);
+  const hasRadiancePlus = _hasRadiance(u);
   const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
   const socials = u.socials || {};
   const customStatus = u.customStatus;
@@ -30088,7 +30107,7 @@ function _botcmdOutsideClose(e) {
 // FILE UPLOAD (30MB / 45MB for Radiance)
 // ════════════════════════════════════════════
 function openFileUpload(context) {
-  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const hasRadiance = _hasRadiance(CU);
   const maxMB = hasRadiance ? 45 : 30;
   document.getElementById('ftz-file-input')?.remove();
   const fileInp = document.createElement('input');
@@ -30320,7 +30339,7 @@ function openStatusPicker() {
   const _csbHandle = escapeHTML('@' + (_csbForUser.username || ''));
   const _csbPronouns = _csbForUser.pronouns ? `<span class="sp-prev-dot">·</span>${escapeHTML(_csbForUser.pronouns)}` : '';
   const _csbBadges = typeof renderBadgesHTML === 'function' ? renderBadgesHTML(_csbForUser) : '';
-  const _csbBanner = (_csbForUser.banner && _csbForUser.radianceUntil && new Date(_csbForUser.radianceUntil) > new Date())
+  const _csbBanner = (_csbForUser.banner && _hasRadiance(_csbForUser))
     ? `<img src="${escapeHTML(_csbForUser.banner)}" style="width:100%;height:100%;object-fit:cover;">`
     : `<div style="width:100%;height:100%;background:url('/wrapBackground.png') center/cover no-repeat,linear-gradient(135deg,#1a1a2e,#0f3460);"></div>`;
 
@@ -34271,10 +34290,12 @@ function renderAtelierTab(tab) {
   const el = document.getElementById('atelier-content');
   if (!el) return;
   const bal = CU?.onyx || 0;
-  const hasRad   = !!(CU?.radianceUntil   && new Date(CU.radianceUntil)   > new Date());
-  const hasPlus  = !!(CU?.radiancePlus    && new Date(CU.radiancePlus)    > new Date());
-  const daysRad  = hasRad  ? Math.ceil((new Date(CU.radianceUntil)-Date.now())/86400000) : 0;
-  const daysPlus = hasPlus ? Math.ceil((new Date(CU.radiancePlus)-Date.now())/86400000)  : 0;
+  // Radiance basic + Plus merged — single window, single day-count.
+  const hasRad   = _hasRadiance(CU);
+  const hasPlus  = hasRad; // legacy alias for downstream code in this block
+  const radExp   = _radianceExpiry(CU);
+  const daysRad  = hasRad ? Math.ceil((radExp - Date.now()) / 86400000) : 0;
+  const daysPlus = daysRad; // legacy alias
   const today    = new Date().toDateString();
   const dailyDone = CU?.lastDailyReward===today || CU?.lastDaily===today;
 
@@ -35995,7 +36016,12 @@ async function _forumViewThread(threadId, opts) {
                 <div class="forum-user-name">${escapeHTML(author?.displayName || thread.author)}</div>
                 <div class="forum-user-handle">@${escapeHTML(thread.author)}</div>
                 <div class="forum-user-streak" data-streak-for="${escapeHTML(thread.author||'')}" style="margin-top:6px;">${(+author?.dailyStreak) ? renderStreakChip(+author.dailyStreak) : ''}</div>
-                ${(function(){const r=getStaffRole(thread.author);return r?`<div class="forum-user-role forum-user-role--${escapeHTML(r)}">${r==='superadmin'?'Superadmin':r==='admin'?'Admin':'Moderator'}</div>`:'';})()}
+                ${(function(){
+                  // Was a Mod/Admin/Superadmin capsule under the PFP — replaced
+                  // by a badge card that shows every badge the user has earned
+                  // in the canonical order. Hydrated by _forumHydratePfps.
+                  return `<div class="forum-author-badges" data-badges-for="${escapeHTML(thread.author||'')}">${typeof renderBadgesHTML==='function' ? renderBadgesHTML({username:thread.author}) : ''}</div>`;
+                })()}
                 ${author?.createdAt ? `<div class="forum-user-joined">Joined ${_forumTimeAgo(new Date(author.createdAt).getTime())}</div>` : ''}
               </div>
               <div class="forum-op-content">
@@ -36265,7 +36291,7 @@ function _forumRenderPostCard(post, threadId, thread) {
         <div class="forum-user-name">${escapeHTML(post.author_displayName || post.author)}</div>
         <div class="forum-user-handle">@${escapeHTML(post.author)}</div>
         <div class="forum-user-streak" data-streak-for="${escapeHTML(post.author||'')}" style="margin-top:6px;"></div>
-        ${staffRole?`<div class="forum-user-role forum-user-role--${escapeHTML(staffRole)}">${staffRole==='superadmin'?'Superadmin':staffRole==='admin'?'Admin':'Moderator'}</div>`:''}
+        <div class="forum-author-badges" data-badges-for="${escapeHTML(post.author||'')}">${typeof renderBadgesHTML==='function' ? renderBadgesHTML({username:post.author}) : ''}</div>
       </div>
       <div class="forum-reply-content">
         <div class="frc-meta">
@@ -36322,15 +36348,39 @@ async function _forumHydratePfps(root) {
     if (!scope) return;
     const imgs = scope.querySelectorAll('img[data-forum-author]');
     const streakHosts = scope.querySelectorAll('[data-streak-for]');
+    const badgeHosts  = scope.querySelectorAll('[data-badges-for]');
     const authors = new Set();
     imgs.forEach(i => { const a = i.getAttribute('data-forum-author'); if (a) authors.add(a); });
     streakHosts.forEach(h => { const a = h.getAttribute('data-streak-for'); if (a) authors.add(a); });
+    badgeHosts.forEach(h => { const a = h.getAttribute('data-badges-for'); if (a) authors.add(a); });
     await Promise.all([...authors].map(async a => {
       if (_forumAuthorCache.has(a)) return;
       try {
         const u = await FortizedSocial.getUserByName(a);
-        _forumAuthorCache.set(a, { pfp: u?.pfp || '', streak: +u?.dailyStreak || 0 });
-      } catch(_) { _forumAuthorCache.set(a, { pfp: '', streak: 0 }); }
+        // Cache the fields getUserBadges() needs so badge cards render
+        // accurately for forum authors without refetching per render.
+        _forumAuthorCache.set(a, {
+          pfp: u?.pfp || '',
+          streak: +u?.dailyStreak || 0,
+          user: u ? {
+            username: a,
+            isBot: !!u.isBot,
+            verified: !!u.verified,
+            radianceUntil: u.radianceUntil || null,
+            radiancePlus:  u.radiancePlus  || null, // legacy field, _hasRadiance handles it
+            dailyStreak: +u.dailyStreak || 0,
+            streakBest:  +u.streakBest  || 0,
+            creatorItemCount: +u.creatorItemCount || 0,
+            onyxBadge: !!u.onyxBadge,
+            onyxBadgeSpent: +u.onyxBadgeSpent || 0,
+            isBeta: !!u.isBeta,
+            betaUser: !!u.betaUser,
+            createdAt: u.createdAt || null,
+            questsBadge: !!u.questsBadge,
+            completedQuests: Array.isArray(u.completedQuests) ? u.completedQuests : [],
+          } : { username: a },
+        });
+      } catch(_) { _forumAuthorCache.set(a, { pfp: '', streak: 0, user: { username: a } }); }
     }));
     imgs.forEach(i => {
       const a = i.getAttribute('data-forum-author');
@@ -36345,6 +36395,18 @@ async function _forumHydratePfps(root) {
         h.innerHTML = renderStreakChip(streak);
       } else {
         h.innerHTML = '';
+      }
+    });
+    badgeHosts.forEach(h => {
+      const a = h.getAttribute('data-badges-for');
+      const entry = _forumAuthorCache.get(a);
+      const u = entry?.user || { username: a };
+      if (typeof renderBadgesHTML === 'function') {
+        const html = renderBadgesHTML(u);
+        // Empty row → keep the host empty so the column doesn't reserve
+        // visual space for users with no badges.
+        h.innerHTML = html || '';
+        h.style.display = html ? '' : 'none';
       }
     });
   } catch(e) { console.warn('[Forum] pfp hydrate failed:', e); }
@@ -37480,7 +37542,7 @@ function getUserBadges(user) {
   }
 
   // 4. Radiance — auto-tied to active subscription, no separate +tier
-  const hasRadiance = user.radianceUntil && new Date(user.radianceUntil) > new Date();
+  const hasRadiance = _hasRadiance(user);
   if (hasRadiance) badges.push({ id:'radiance', ...BADGE_DEFS.radiance });
 
   // 5. Onyx — purchased, level = current tier name
@@ -38753,7 +38815,7 @@ function handlePaste(e, inputId) {
 
 function processUploadedFile(file, inputId) {
   if (!file) return;
-  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const hasRadiance = _hasRadiance(CU);
   const maxMB = hasRadiance ? 45 : 30;
   if (file.size > maxMB * 1024 * 1024) { toast(`Max ${maxMB}MB`, 'error'); return; }
   const reader = new FileReader();
@@ -39933,7 +39995,7 @@ function updateProfilePreview() {
   }
 
   // Banner: user banner if Radiance, else theme-tinted Fortized icons pattern
-  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const hasRadiance = _hasRadiance(CU);
   const userBanner = (CU.banner && hasRadiance) ? CU.banner : null;
   const bannerEl = previewContainer.querySelector('.mpp-banner');
   if (bannerEl) {
@@ -40355,7 +40417,7 @@ async function showMiniProfilePreview(username, anchorEl) {
 
   const sc = FtzStatus.color(status);
   const isOwn = username === CU?.username;
-  const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+  const hasRadiancePlus = _hasRadiance(u);
   const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
   const customStatus = u.customStatus;
 
@@ -40373,7 +40435,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     panel.style.borderStyle = 'solid';
     panel.style.boxShadow = `0 20px 60px rgba(0,0,0,.6),0 4px 20px rgba(0,0,0,.35)`;
   }
-  const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
+  const hasUserRadiance = _hasRadiance(u);
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
   // Userbar popover keeps the new Fortized-icons banner. Chat / member-list
   // popovers revert to the older flat gradient — what the user was used to
@@ -41862,7 +41924,7 @@ const _defaultSounds = [
 ];
 let _sbPlaying = null;
 function openSoundboard() {
-  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const hasRadiance = _hasRadiance(CU);
   if (!hasRadiance) { toast('Soundboard is a Radiance feature','info'); return; }
   document.querySelector('.soundboard-panel')?.remove();
   const customs = JSON.parse(localStorage.getItem('ftz_soundboard_' + CU.username) || '[]');
@@ -43431,7 +43493,7 @@ function _fortshopScrollToBundles() {
 // Radiance: 10% | Streak (20+ days): 5% | IOTD: 35% | Max: 50% (additive)
 function _getActiveDiscounts() {
   const discounts = {};
-  if (CU?.radianceUntil && new Date(CU.radianceUntil) > new Date()) {
+  if (_hasRadiance(CU)) {
     discounts.radiance = 0.10;
   }
   if ((CU?.dailyStreak || 0) >= 20) {
@@ -43504,7 +43566,16 @@ function _renderItemOfTheDay(appearances, ownedAppearances) {
       <div class="iotd-body">
         <div class="iotd-type" style="${typeStyle}">${pick.kind === 'appearance' ? 'APPEARANCE' : 'AVATAR DECORATION'}</div>
         <div class="iotd-name">${escapeHTML(it.name)}</div>
-        ${calc.breakdown.radiance || calc.breakdown.streak ? `<div style="font-size:11px;color:rgba(255,249,62,.7);margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap;">${calc.breakdown.radiance ? '<span style="padding:1px 6px;background:rgba(255,119,228,.15);border:1px solid rgba(255,119,228,.3);border-radius:3px;">Radiance 10%</span>' : ''}${calc.breakdown.streak ? '<span style="padding:1px 6px;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:3px;">Streak 5%</span>' : ''}<span style="padding:1px 6px;background:rgba(255,249,62,.15);border:1px solid rgba(255,249,62,.3);border-radius:3px;">IOTD 35%</span></div>` : '<div style="font-size:11px;color:rgba(255,249,62,.7);margin-bottom:8px;"><span style="padding:1px 6px;background:rgba(255,249,62,.15);border:1px solid rgba(255,249,62,.3);border-radius:3px;">IOTD 35%</span></div>'}
+        ${(function(){
+          // Was three pill-capsules ("Radiance 10% · Streak 5% · IOTD 35%").
+          // Per the team spec the Radiance line now leads with the actual
+          // badge image + a plain "X% off" text — Streak and IOTD keep
+          // their small chips so the row stays informative.
+          const radLine = calc.breakdown.radiance ? `<span class="sic-discount-radiance"><img src="/badges/radiance.png" alt="Radiance" onerror="this.style.display='none'"><span>10% off · Radiance</span></span>` : '';
+          const streakChip = calc.breakdown.streak ? '<span style="padding:1px 6px;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:3px;">Streak 5%</span>' : '';
+          const iotdChip = '<span style="padding:1px 6px;background:rgba(255,249,62,.15);border:1px solid rgba(255,249,62,.3);border-radius:3px;">IOTD 35%</span>';
+          return `<div style="font-size:11px;color:rgba(255,249,62,.7);margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">${radLine}${streakChip}${iotdChip}</div>`;
+        })()}
         <div class="iotd-price-row">
           <span class="iotd-price-orig"><img src="/Onyx.png" alt="">${origPrice}</span>
           <span class="iotd-price-now"><img src="/Onyx.png" alt="">${dealPrice}</span>
@@ -44034,7 +44105,7 @@ function _fsRenderItemDetail(it, kind) {
           <div class="sim-buy-price">
             <div class="sim-buy-price-lbl">Price</div>
             <div class="sim-buy-price-num"><img src="/Onyx.png" alt="">${priceLabel}</div>
-            ${discCalc.totalDiscount > 0 ? `<div style="font-size:11px;color:rgba(255,249,62,.7);margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">${discCalc.breakdown.radiance ? '<span style="padding:1px 6px;background:rgba(255,119,228,.15);border:1px solid rgba(255,119,228,.3);border-radius:3px;">Radiance 10%</span>' : ''}${discCalc.breakdown.streak ? '<span style="padding:1px 6px;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:3px;">Streak 5%</span>' : ''}</div>` : ''}
+            ${discCalc.totalDiscount > 0 ? `<div style="font-size:11px;color:rgba(255,249,62,.7);margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">${discCalc.breakdown.radiance ? `<span class="sic-discount-radiance"><img src="/badges/radiance.png" alt="Radiance" onerror="this.style.display='none'"><span>10% off · Radiance</span></span>` : ''}${discCalc.breakdown.streak ? '<span style="padding:1px 6px;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:3px;">Streak 5%</span>' : ''}</div>` : ''}
           </div>
           <div class="sim-buy-actions">
             ${isOwned

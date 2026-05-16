@@ -3101,7 +3101,7 @@ body.is-desktop-app .notif-panel{top:0;}
 .ftz-badge.badge-moderator { color:var(--blue); }
 .ftz-badge.badge-bot { color:var(--blue); }
 .ftz-badge.badge-radiance { color:#ff9c3c; }
-.ftz-badge.badge-radiance-plus { color:var(--accent); }
+/* badge-radiance-plus class is dead — Radiance Plus was merged into Radiance. */
 .ftz-badge.badge-beta { color:var(--red); }
 .ftz-badge.badge-quest { color:#9ca3af; }
 .ftz-badge.badge-onyx { color:var(--accent); }
@@ -3475,10 +3475,31 @@ body.is-desktop-app .notif-panel{top:0;}
 .forum-user-col .forum-reply-avatar { width:58px;height:58px;border-radius:10px;margin-bottom:8px;border:1px solid var(--border); }
 .forum-user-name { font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--text);line-height:1.2;word-break:break-word;max-width:100%;overflow-wrap:anywhere; }
 .forum-user-handle { font-size:11px;color:var(--muted);font-weight:500;margin-bottom:6px; }
-.forum-user-role { display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-top:4px; }
-.forum-user-role--superadmin { background:rgba(251,191,36,.14);color:#fbbf24;border:1px solid rgba(251,191,36,.35); }
-.forum-user-role--admin { background:rgba(167,139,250,.14);color:#a78bfa;border:1px solid rgba(167,139,250,.3); }
-.forum-user-role--moderator { background:rgba(96,165,250,.12);color:#60a5fa;border:1px solid rgba(96,165,250,.25); }
+/* forum-user-role capsules are gone — replaced by .forum-author-badges, which
+   renders the user's full canonical badge stack under the PFP. */
+.forum-author-badges {
+  /* Roughly the width of the PFP column so badge rows wrap cleanly under it. */
+  margin-top: 8px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 4px;
+  max-width: 80px;
+}
+.forum-author-badges:empty { display: none; }
+.forum-author-badges .ftz-badge { width: 20px; height: 20px; margin: 0; }
+
+/* Fortshop discount line: the Radiance row now leads with the actual badge
+   image + plain "X% off · Radiance" text instead of a coloured capsule. */
+.sic-discount-radiance {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700;
+  color: #ffd93e;
+  padding: 0;
+}
+.sic-discount-radiance img {
+  width: 14px; height: 14px;
+  object-fit: contain;
+  display: inline-block;
+}
 .forum-user-joined { font-size:10px;color:var(--muted);margin-top:6px;font-style:italic; }
 
 /* Staff Response — embedded INSIDE the OP card, not a standalone block */

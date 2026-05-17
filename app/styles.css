@@ -3473,19 +3473,32 @@ body.is-desktop-app .notif-panel{top:0;}
 /* Polytoria-style left user column (Forum OP + replies share this) */
 .forum-user-col { display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;flex-shrink:0;width:148px;padding-right:18px;border-right:1px solid var(--border);position:relative; }
 .forum-user-col .forum-reply-avatar { width:58px;height:58px;border-radius:10px;margin-bottom:8px;border:1px solid var(--border); }
-.forum-user-name { font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--text);line-height:1.2;word-break:break-word;max-width:100%;overflow-wrap:anywhere; }
+/* Display name on ONE line, with ellipsis fallback. Long names get a
+   smaller font size via the .is-long / .is-very-long modifiers set by
+   the forum hydration pass. */
+.forum-user-name {
+  font-family:var(--font-display);
+  font-size:14px;font-weight:800;color:var(--text);line-height:1.2;
+  max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:block;
+}
+.forum-user-name.is-long      { font-size:12px; }
+.forum-user-name.is-very-long { font-size:10.5px; }
 .forum-user-handle { font-size:11px;color:var(--muted);font-weight:500;margin-bottom:6px; }
 /* forum-user-role capsules are gone — replaced by .forum-author-badges, which
-   renders the user's full canonical badge stack under the PFP. */
+   renders the user's full canonical badge stack under the PFP. Sized to use
+   the whole PFP column (148px wide minus padding) so up to ~4 badges fit per
+   row at the 26px icon size, and 8+ badges wrap cleanly across 2 rows. */
 .forum-author-badges {
-  /* Roughly the width of the PFP column so badge rows wrap cleanly under it. */
-  margin-top: 8px;
+  margin-top: 10px;
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-  gap: 4px;
-  max-width: 80px;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
 }
 .forum-author-badges:empty { display: none; }
-.forum-author-badges .ftz-badge { width: 20px; height: 20px; margin: 0; }
+.forum-author-badges .ftz-badge { width: 26px; height: 26px; margin: 0; }
 
 /* Fortshop discount line: the Radiance row now leads with the actual badge
    image + plain "X% off · Radiance" text instead of a coloured capsule. */

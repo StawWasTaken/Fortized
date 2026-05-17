@@ -278,6 +278,10 @@ const SUPER_ADMINS = ['staw', 'fortized', 'joyster'];
 const SUPER_ADMIN = 'staw'; // legacy compat
 const JOYSTER_ACCOUNT = 'joyster';
 const FORTIZED_ACCOUNT = 'fortized';
+// User accounts the team operates as system/bot personalities. Each one gets
+// the Bot badge in getUserBadges() in addition to anyone with `isBot: true`
+// on their user record.
+const MANUAL_BOTS = ['fortized', 'joyster'];
 // Role hierarchy: superadmin > admin > moderator
 // superadmin: maximum power, access to private data, can enable important stuff, has access to the privacy of the users (precise age)
 // admin: set by superadmins, limited data access, limited power, can do important stuff but with limits, only see age tier
@@ -36409,6 +36413,16 @@ async function _forumHydratePfps(root) {
         h.style.display = html ? '' : 'none';
       }
     });
+    // Auto-shrink long forum display names so they fit on one line. The
+    // CSS handles the actual ellipsis fallback; this just picks a smaller
+    // font size at known character thresholds so the name stays readable
+    // before truncation kicks in.
+    scope.querySelectorAll('.forum-user-name').forEach(el => {
+      const len = (el.textContent || '').trim().length;
+      el.classList.remove('is-long', 'is-very-long');
+      if (len > 14) el.classList.add('is-very-long');
+      else if (len > 10) el.classList.add('is-long');
+    });
   } catch(e) { console.warn('[Forum] pfp hydrate failed:', e); }
 }
 
@@ -37524,8 +37538,11 @@ function getUserBadges(user) {
     });
   }
 
-  // 1. Bot
-  if (user.isBot) badges.push({ id:'bot', ...BADGE_DEFS.bot });
+  // 1. Bot — opt-in via user.isBot, plus the manual list of human-managed
+  //    "system" accounts that the team operates as bots.
+  if (user.isBot || MANUAL_BOTS.includes(uname.toLowerCase())) {
+    badges.push({ id:'bot', ...BADGE_DEFS.bot });
+  }
 
   // 2. Verified (inline SVG)
   if (user.verified) badges.push({ id:'verified', ...BADGE_DEFS.verified });
@@ -37566,9 +37583,14 @@ function getUserBadges(user) {
     });
   }
 
-  // 7. Beta — accounts created before 25 August 2026
-  const created = user.createdAt ? new Date(user.createdAt) : null;
-  if (user.isBeta || user.betaUser || (created && created <= BETA_END)) {
+  // 7. Beta — accounts whose earliest known date is on/before 25 August 2026.
+  //    Falls back to `joinedAt` when `createdAt` is missing (the field was
+  //    introduced later), and treats accounts with NEITHER date as beta on
+  //    the assumption that they pre-date date tracking entirely.
+  const _earliestDate = user.createdAt || user.joinedAt || null;
+  const _earliest = _earliestDate ? new Date(_earliestDate) : null;
+  const _isLegacyAccount = !_earliestDate; // truly old account, no record
+  if (user.isBeta || user.betaUser || _isLegacyAccount || (_earliest && _earliest <= BETA_END)) {
     badges.push({ id:'beta', ...BADGE_DEFS.beta });
   }
 

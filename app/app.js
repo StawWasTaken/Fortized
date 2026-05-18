@@ -36019,7 +36019,6 @@ async function _forumViewThread(threadId, opts) {
                 <img class="forum-op-avatar" data-forum-author="${escapeHTML(thread.author||'')}" src="${escapeHTML(author?.pfp || _defaultPfpUrl(thread.author))}" onerror="this.src='${_defaultPfpUrl(thread.author)}'">
                 <div class="forum-user-name">${escapeHTML(author?.displayName || thread.author)}</div>
                 <div class="forum-user-handle">@${escapeHTML(thread.author)}</div>
-                <div class="forum-user-streak" data-streak-for="${escapeHTML(thread.author||'')}" style="margin-top:6px;">${(+author?.dailyStreak) ? renderStreakChip(+author.dailyStreak) : ''}</div>
                 ${(function(){
                   // Was a Mod/Admin/Superadmin capsule under the PFP — replaced
                   // by a badge card that shows every badge the user has earned
@@ -36203,7 +36202,6 @@ function _forumRenderStaffResponseCard(thread, staffPost) {
             <strong>${escapeHTML(staffPost.author_displayName || staffPost.author)}</strong>
             <span class="forum-staff-handle">@${escapeHTML(staffPost.author || '')}</span>
             <span class="forum-staff-role forum-staff-role--${escapeHTML(role)}">${escapeHTML(roleLabel)}</span>
-            <span data-streak-for="${escapeHTML(staffPost.author||'')}" style="display:inline-flex;"></span>
             <span class="forum-staff-time">${_forumTimeAgo(staffPost.created_at)}</span>
             ${staffPost.edited_at ? `<span class="forum-edited" title="Edited ${new Date(staffPost.edited_at).toLocaleString()}">edited</span>` : ''}
           </div>
@@ -36294,7 +36292,6 @@ function _forumRenderPostCard(post, threadId, thread) {
         <img class="forum-reply-avatar" data-forum-author="${escapeHTML(post.author||'')}" src="${escapeHTML(post.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
         <div class="forum-user-name">${escapeHTML(post.author_displayName || post.author)}</div>
         <div class="forum-user-handle">@${escapeHTML(post.author)}</div>
-        <div class="forum-user-streak" data-streak-for="${escapeHTML(post.author||'')}" style="margin-top:6px;"></div>
         <div class="forum-author-badges" data-badges-for="${escapeHTML(post.author||'')}">${typeof renderBadgesHTML==='function' ? renderBadgesHTML({username:post.author}) : ''}</div>
       </div>
       <div class="forum-reply-content">
@@ -36351,11 +36348,9 @@ async function _forumHydratePfps(root) {
     const scope = (typeof root === 'string') ? document.querySelector(root) : (root || document);
     if (!scope) return;
     const imgs = scope.querySelectorAll('img[data-forum-author]');
-    const streakHosts = scope.querySelectorAll('[data-streak-for]');
     const badgeHosts  = scope.querySelectorAll('[data-badges-for]');
     const authors = new Set();
     imgs.forEach(i => { const a = i.getAttribute('data-forum-author'); if (a) authors.add(a); });
-    streakHosts.forEach(h => { const a = h.getAttribute('data-streak-for'); if (a) authors.add(a); });
     badgeHosts.forEach(h => { const a = h.getAttribute('data-badges-for'); if (a) authors.add(a); });
     await Promise.all([...authors].map(async a => {
       if (_forumAuthorCache.has(a)) return;
@@ -36380,6 +36375,7 @@ async function _forumHydratePfps(root) {
             isBeta: !!u.isBeta,
             betaUser: !!u.betaUser,
             createdAt: u.createdAt || null,
+            joinedAt:  u.joinedAt  || null,
             questsBadge: !!u.questsBadge,
             completedQuests: Array.isArray(u.completedQuests) ? u.completedQuests : [],
           } : { username: a },
@@ -36390,16 +36386,6 @@ async function _forumHydratePfps(root) {
       const a = i.getAttribute('data-forum-author');
       const entry = _forumAuthorCache.get(a);
       if (entry?.pfp) i.src = entry.pfp;
-    });
-    streakHosts.forEach(h => {
-      const a = h.getAttribute('data-streak-for');
-      const entry = _forumAuthorCache.get(a);
-      const streak = entry?.streak || 0;
-      if (streak > 0 && typeof renderStreakChip === 'function') {
-        h.innerHTML = renderStreakChip(streak);
-      } else {
-        h.innerHTML = '';
-      }
     });
     badgeHosts.forEach(h => {
       const a = h.getAttribute('data-badges-for');

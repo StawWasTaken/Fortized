@@ -3,36 +3,39 @@
 Carried forward from the "redesign profile previews + fix bugs" sessions.
 Items here were explicitly deferred — they are not blocked, just not done yet.
 
-## Profile previews redesign (the big visual pass) — NOT STARTED
+## Profile previews redesign — VISUAL UNIFICATION DONE
 
-Goal: unify all four variants on the GamesCard design language, with a
-consistent information hierarchy. Higher number = less info shown.
+Landed a single retrofit block at the bottom of `app/styles.css` that
+gives every profile-preview surface the `.pw-widget` GamesCard
+treatment — theme-aware `var(--panel)` base + corner accent wash +
+single thin glowing top rule + matching section-title typography +
+ghost-accent action buttons. Profile Card (rank 1) gets the strongest
+treatment; Mini / DM / Own / Settings get a dialed-back version
+closer to Discord proportions.
 
-| Rank | Variant                          | File                          |
-|------|----------------------------------|-------------------------------|
-| 1    | Profile Card (full modal)        | `profile-card.html`, rendered in `app/app.js` |
-| 2    | Userbar own-profile panel        | `own-profile-panel.html`, rendered ~`app/app.js:40320` |
-| 2    | Chat/memberlist mini preview     | `profile-preview.html` (`.mini-profile-preview`) |
-| 2    | DM sidebar panel                 | `dm-profile-panel.html` |
-| 3    | Settings profile preview         | `app/app.js:17150` (variant of mini) |
+| Rank | Variant                          | Rendering site                     | Status |
+|------|----------------------------------|------------------------------------|--------|
+| 1    | Profile Card (full modal)        | `_viewUserProfile()` ~`app/app.js:18758` | retrofit applied |
+| 2    | Userbar own-profile panel        | delegates to mini, fallback ~`:40339`     | retrofit applied |
+| 2    | Chat/memberlist mini preview     | `showMiniProfilePreview()` ~`:40456`      | retrofit applied |
+| 2    | DM sidebar panel                 | `showDMUserPanel()` ~`:29467`             | retrofit applied + Games strip added |
+| 3    | Settings profile preview         | `buildProfileView('myprofile')` ~`:17209` | retrofit applied |
 
-Required info on every variant (the "main infos"):
-- banner, pfp + status dot, display name, @username, pronouns, custom status
+### Remaining nice-to-haves (deferred)
 
-Tier-2 variants add: badges, "about me" snippet, member since, game collection.
-Tier-1 (Profile Card) adds: full bio, roles, activity tab, mutual friends tab,
-full game collection grid, action buttons.
-
-Visual direction: match the `.pw-widget` GamesCard look — subtle dark
-surface, top-left accent wash, single thin glowing rule on top, no
-shimmer — but lean a bit closer to Discord's proportions for the
-smaller previews. Reference screenshots: see the session attachments
-(Discord profile modal — inspiration only, not the custom-themed
-version).
-
-Also wire up: status switcher (online/idle/dnd/invisible), "Edit Custom
-Status", "Edit Profile", "Switch Accounts" — only on the userbar own-profile
-panel.
+- The userbar own-profile panel currently delegates to the mini
+  popover. Status switching is reachable via the popover's "Status"
+  button (opens `openStatusPicker`), not inline. If you want
+  Discord-style inline status radios in the userbar popover, that
+  needs new HTML in `showMiniProfilePreview` gated on
+  `_isUserbarAnchor`.
+- Settings preview "Switch Accounts" CTA isn't surfaced anywhere
+  outside the legacy own-profile-panel fallback. If you want it
+  on the userbar popover too, add to the `isOwn` actions row in
+  `showMiniProfilePreview`.
+- Full visual rewrite of the inline-styled banner/avatar/status-row
+  structure (vs. the current CSS retrofit) would clean up the JS
+  but isn't necessary to match the spec.
 
 ## Status-system — partial fix landed, monitor for repros
 

@@ -29531,6 +29531,20 @@ async function showDMUserPanel(username) {
     + (u.bio ? '<div class="dm-up-card"><div class="dm-up-card-title">About Me</div><div class="dm-up-bio" style="padding:0;">' + parseBioMD(u.bio.slice(0,300)) + (u.bio.length>300?'\u2026':'') + '</div></div>' : '')
     // Member Since (compact card)
     + (memberSince ? '<div class="dm-up-card"><div class="dm-up-card-title">Member Since</div><div class="dm-up-card-body">' + memberSince + '</div></div>' : '')
+    // Games collection (rank-2 hierarchy parity with the mini popover)
+    + ((u.gameCollection||u.registeredGames||[]).length
+        ? '<div class="dm-up-card"><div class="dm-up-card-title">Games</div><div class="mpp-games" style="padding:0;">'
+          + ((u.gameCollection||u.registeredGames||[]).slice(0,5).map(g => {
+              const cover = g.coverUrl || g.cover || g.icon || '';
+              const safeName = String(g.name || '?');
+              if (cover && (cover.startsWith('http') || cover.startsWith('/'))) {
+                return '<img src="'+escapeHTML(cover)+'" title="'+escapeHTML(safeName)+'" onerror="this.style.display=\'none\'">';
+              }
+              return '<span title="'+escapeHTML(safeName)+'">'+escapeHTML(safeName.charAt(0).toUpperCase())+'</span>';
+            }).join(''))
+          + (((u.gameCollection||u.registeredGames||[]).length > 5) ? '<span>+'+((u.gameCollection||u.registeredGames||[]).length-5)+'</span>' : '')
+          + '</div></div>'
+        : '')
     // Connections (kept \u2014 DM-context useful)
     + connHtml
     // View Full Profile (primary, fits the design language)

@@ -8805,5 +8805,277 @@ select:focus-visible {
 #view-admin .sc-section-label::before{
   content:'';width:14px;height:1px;background:rgba(255,255,255,.18);
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   UNIFIED PROFILE-PREVIEW DESIGN LANGUAGE
+   ════════════════════════════════════════════════════════════════════
+   One retrofit block that gives every profile surface — the modal
+   Profile Card, the mini popover, the DM sidebar panel, the userbar
+   own-profile popover, and the settings preview — the same
+   pw-widget GamesCard treatment: theme-aware surface (var(--panel)
+   shows through so the user's Appearance bleeds in), subtle dark
+   film, top-left accent wash, single thin glowing accent rule on
+   top, and matching section/title typography.
+
+   Profile Card (rank 1) gets the strongest treatment.
+   Mini / DM / Own / Settings (rank 2 / 3) get a dialed-back version
+   that's a bit closer to Discord proportions, per the spec.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Mini Profile Preview ──────────────────────────────────────────── */
+.mini-profile-preview{
+  background:
+    radial-gradient(520px 90px at 15% 0%, rgba(255,249,62,.045), transparent 70%),
+    linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
+    var(--panel) !important;
+  border:1px solid var(--border) !important;
+  border-radius:16px !important;
+  width:340px !important;
+  box-shadow:0 24px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04) !important;
+  position:fixed;
+}
+.mini-profile-preview::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
+  box-shadow:0 0 14px rgba(255,249,62,.35);
+  pointer-events:none; z-index:5;
+}
+.mini-profile-preview .mpp-banner{
+  height:84px;
+  background:transparent;
+}
+.mini-profile-preview .mpp-banner::after{
+  background:linear-gradient(to top, var(--panel), transparent);
+}
+.mini-profile-preview--compact{ width:300px !important; }
+
+/* Section titles match .pw-widget-title — display font, uppercase, muted. */
+.mpp-section-title,
+.dm-up-card-title,
+.up-left-section-title{
+  font-family:var(--font-display) !important;
+  font-size:10.5px !important;
+  font-weight:800 !important;
+  letter-spacing:.12em !important;
+  text-transform:uppercase !important;
+  color:var(--muted-light) !important;
+  margin-bottom:8px !important;
+  opacity:.85;
+}
+
+/* Mini popover buttons → ghost-accent like .pw-gc-add-btn (gamescard CTA). */
+.mini-profile-preview .mpp-btn-primary{
+  background:rgba(255,249,62,.08) !important;
+  border:1px solid rgba(255,249,62,.22) !important;
+  color:var(--accent) !important;
+  box-shadow:none !important;
+  font-family:var(--font-display);
+  letter-spacing:.06em; text-transform:uppercase;
+  border-radius:10px;
+}
+.mini-profile-preview .mpp-btn-primary:hover{
+  background:var(--accent) !important;
+  color:var(--rail) !important;
+  border-color:var(--accent) !important;
+  transform:none !important;
+  filter:none !important;
+}
+.mini-profile-preview .mpp-btn-secondary{
+  background:rgba(255,255,255,.03) !important;
+  border:1px solid var(--border) !important;
+  color:var(--muted-light) !important;
+  font-family:var(--font-display);
+  letter-spacing:.06em; text-transform:uppercase;
+  border-radius:10px;
+}
+.mini-profile-preview .mpp-btn-secondary:hover{
+  background:rgba(255,255,255,.06) !important;
+  color:var(--text) !important;
+  border-color:var(--surface-border-hover) !important;
+}
+
+/* Games strip — restyle as the gamescard pill grid. */
+.mpp-games{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  padding:6px 18px 4px;
+}
+.mpp-games > span:first-child{
+  font-family:var(--font-display);
+  font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted-light); margin-right:4px;
+}
+.mpp-games img,
+.mpp-games > span:not(:first-child){
+  width:28px;height:28px;border-radius:6px;object-fit:cover;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--muted-light);
+}
+
+/* ── DM Sidebar Profile Panel ──────────────────────────────────────── */
+#dm-user-panel{
+  position:relative;
+  background:
+    radial-gradient(520px 90px at 15% 0%, rgba(255,249,62,.045), transparent 70%),
+    linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
+    var(--panel) !important;
+  border-left:1px solid var(--border);
+  overflow:hidden;
+}
+#dm-user-panel::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
+  box-shadow:0 0 14px rgba(255,249,62,.35);
+  pointer-events:none; z-index:5;
+}
+.dm-up-banner::after{ background:linear-gradient(to top, var(--panel), transparent); }
+.dm-up-card{
+  background:rgba(0,0,0,.22) !important;
+  border:1px solid var(--border) !important;
+  border-radius:10px !important;
+}
+#dm-user-panel .mpp-btn-primary{
+  background:rgba(255,249,62,.08) !important;
+  border:1px solid rgba(255,249,62,.22) !important;
+  color:var(--accent) !important;
+  font-family:var(--font-display);
+  letter-spacing:.06em; text-transform:uppercase;
+  box-shadow:none !important;
+  border-radius:10px;
+}
+#dm-user-panel .mpp-btn-primary:hover{
+  background:var(--accent) !important;
+  color:var(--rail) !important;
+  border-color:var(--accent) !important;
+  transform:none !important; filter:none !important;
+}
+
+/* ── Userbar Own-Profile Panel (legacy fallback) ───────────────────── */
+.own-profile-panel{
+  background:
+    radial-gradient(520px 90px at 15% 0%, rgba(255,249,62,.045), transparent 70%),
+    linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
+    var(--panel) !important;
+  backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+  border:1px solid var(--border) !important;
+  border-radius:16px !important;
+  position:fixed;
+}
+.own-profile-panel::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
+  box-shadow:0 0 14px rgba(255,249,62,.35);
+  pointer-events:none; z-index:5;
+}
+
+/* ── Profile Card (modal, rank 1) — strongest pw-widget treatment ──── */
+.up-card{
+  background:
+    radial-gradient(800px 140px at 18% 0%, rgba(255,249,62,.06), transparent 70%),
+    linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,.22)),
+    var(--panel) !important;
+  border:1px solid var(--border) !important;
+  border-radius:20px !important;
+  box-shadow:0 40px 100px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.04) !important;
+  position:relative;
+}
+.up-card::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
+  box-shadow:0 0 18px rgba(255,249,62,.4);
+  pointer-events:none; z-index:5;
+}
+.up-left{
+  background:rgba(0,0,0,.14) !important;
+  border-right:1px solid var(--border) !important;
+}
+.up-left-banner::after{ background:linear-gradient(transparent, rgba(0,0,0,.55)); }
+.up-right{
+  background:transparent !important;
+}
+.up-right-tabs{ border-bottom:1px solid var(--border) !important; }
+.up-left-divider{ background:var(--border) !important; }
+/* Tab pills match the gamescard CTA family. */
+.up-right-tab{
+  font-family:var(--font-display);
+  font-size:11px; font-weight:800;
+  letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted-light);
+  border-radius:8px;
+  padding:8px 14px;
+  transition:background .15s, color .15s;
+}
+.up-right-tab:hover{ background:rgba(255,255,255,.04); color:var(--text); }
+.up-right-tab.active{
+  background:rgba(255,249,62,.08);
+  color:var(--accent);
+  border:1px solid rgba(255,249,62,.22);
+  padding:7px 13px;
+}
+
+/* Profile card action buttons match gamescard CTAs. */
+.up-action-edit{
+  background:rgba(255,249,62,.08) !important;
+  color:var(--accent) !important;
+  border:1px solid rgba(255,249,62,.22) !important;
+  font-family:var(--font-display);
+  letter-spacing:.06em; text-transform:uppercase;
+  border-radius:10px;
+}
+.up-action-edit:hover{
+  background:var(--accent) !important;
+  color:var(--rail) !important;
+  border-color:var(--accent) !important;
+}
+.up-action-msg{
+  background:rgba(255,249,62,.08) !important;
+  color:var(--accent) !important;
+  border:1px solid rgba(255,249,62,.22) !important;
+  font-family:var(--font-display);
+  letter-spacing:.06em; text-transform:uppercase;
+  border-radius:10px;
+}
+.up-action-msg:hover{
+  background:var(--accent) !important;
+  color:var(--rail) !important;
+  border-color:var(--accent) !important;
+}
+.up-action-add,
+.up-action-unfriend,
+.up-action-util{
+  background:rgba(255,255,255,.03) !important;
+  border:1px solid var(--border) !important;
+  color:var(--muted-light) !important;
+  font-family:var(--font-display);
+  letter-spacing:.06em; text-transform:uppercase;
+  font-size:11px; font-weight:800;
+  border-radius:10px;
+}
+.up-action-add:hover,
+.up-action-unfriend:hover,
+.up-action-util:hover{
+  background:rgba(255,255,255,.06) !important;
+  color:var(--text) !important;
+}
+
+/* ── Settings profile preview ───────────────────────────────────────── */
+.settings-profile-preview{
+  background:
+    radial-gradient(520px 90px at 15% 0%, rgba(255,249,62,.045), transparent 70%),
+    linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
+    var(--panel) !important;
+  border:1px solid var(--border) !important;
+  border-radius:16px !important;
+  position:relative;
+  overflow:hidden;
+}
+.settings-profile-preview::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
+  box-shadow:0 0 14px rgba(255,249,62,.35);
+  pointer-events:none; z-index:5;
+}
+
 </style>
 

@@ -1761,7 +1761,10 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Daily Quest Popup — "Hearken" overlay */
 .quest-popup-overlay{position:fixed;inset:0;z-index:var(--z-max,9999);display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(0,0,0,.85),rgba(0,0,0,.88));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;transition:opacity .4s cubic-bezier(.22,1,.36,1);pointer-events:none;}
 .quest-popup-overlay.visible{opacity:1;pointer-events:all;}
-.quest-popup-card{width:440px;max-width:92vw;background:var(--glass-heavy,rgba(20,22,30,.92));backdrop-filter:var(--blur-heavy,blur(20px));-webkit-backdrop-filter:var(--blur-heavy,blur(20px));border:1.5px solid var(--glass-border,rgba(255,255,255,.06));border-radius:var(--radius-xl);overflow:hidden;transform:scale(.94) translateY(16px);transition:transform .45s cubic-bezier(.22,1,.36,1);box-shadow:0 16px 48px rgba(0,0,0,.65),0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.08),0 0 60px rgba(255,249,62,.04);}
+/* Hearken card — built on the unified GamesCard "pw-widget" design language:
+   radial gradient surface + accent top bar that softly glows. */
+.quest-popup-card{width:440px;max-width:92vw;position:relative;background:radial-gradient(ellipse at top,rgba(255,249,62,.06),transparent 60%),linear-gradient(180deg,rgba(22,26,40,.96),rgba(14,17,23,.98));border:1px solid rgba(255,249,62,.18);border-radius:18px;overflow:hidden;transform:scale(.94) translateY(16px);transition:transform .45s cubic-bezier(.22,1,.36,1);box-shadow:0 20px 60px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.06),0 0 60px rgba(255,249,62,.05);}
+.quest-popup-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 12px rgba(255,249,62,.55),0 0 24px rgba(255,249,62,.25);z-index:2;}
 .quest-popup-overlay.visible .quest-popup-card{transform:scale(1) translateY(0);}
 .quest-popup-bar{height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);position:relative;z-index:1;}
 .quest-popup-hero{width:100%;padding:20px 40px 4px;background:radial-gradient(ellipse at center top,rgba(255,249,62,.07),transparent 70%);display:flex;align-items:center;justify-content:center;}
@@ -5204,9 +5207,24 @@ button[disabled],
 .rail-nav-tooltip{position:fixed;left:0;top:0;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:6px 12px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:var(--z-max);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.45);font-size:12px;font-weight:600;color:rgba(255,255,255,.9);display:flex;align-items:center;gap:6px;}
 .rail-nav-tooltip.visible{opacity:1;}
 .rail-nav-tooltip .rnt-hint{font-size:9px;color:rgba(255,255,255,.25);font-weight:500;padding:1px 5px;background:rgba(255,255,255,.04);border-radius:4px;border:1px solid rgba(255,255,255,.06);margin-left:4px;}
-/* Global custom tooltip (replaces browser title) */
-.ftz-tooltip{position:fixed;left:0;top:0;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;z-index:var(--z-max);white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.45);font-size:12px;font-weight:600;color:rgba(255,255,255,.9);transform:translateY(2px);}
+/* Global custom tooltip (replaces browser title) — Discord-style dark + arrow */
+.ftz-tooltip{position:fixed;left:0;top:0;background:#05060a;border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:6px 10px;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;z-index:var(--z-max);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:12px;font-weight:600;color:#f2f3f5;transform:translateY(2px);}
 .ftz-tooltip.visible{opacity:1;transform:translateY(0);}
+/* Tooltip arrow — solid triangle pointing at the hovered element. */
+.ftz-tooltip::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border:5px solid transparent;pointer-events:none;}
+/* Default placement: tooltip below the element → arrow on top, pointing up */
+.ftz-tooltip[data-place="bottom"]::after{bottom:100%;border-bottom-color:#05060a;border-top:0;}
+/* Above the element → arrow on bottom, pointing down */
+.ftz-tooltip[data-place="top"]::after{top:100%;border-top-color:#05060a;border-bottom:0;}
+/* Left of the element → arrow on right */
+.ftz-tooltip[data-place="left"]::after{left:auto;right:-10px;top:50%;transform:translateY(-50%);border-left-color:#05060a;border-right:0;}
+/* Right of the element → arrow on left */
+.ftz-tooltip[data-place="right"]::after{left:-10px;top:50%;transform:translateY(-50%);border-right-color:#05060a;border-left:0;}
+/* When the tooltip has been horizontally clamped to the viewport, the
+   arrow's centered 50% offset stops aligning with the source element.
+   We let JS write --arrow-x (a pixel offset from the tooltip's left
+   edge) and snap the arrow there instead. */
+.ftz-tooltip[style*="--arrow-x"]::after{left:var(--arrow-x);transform:none;}
 /* Reaction tooltip (Discord-style) */
 .ftz-reaction-tip{position:fixed;left:0;top:0;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:var(--z-max);box-shadow:0 8px 28px rgba(0,0,0,.5);max-width:260px;transform:translateY(4px);}
 .ftz-reaction-tip.visible{opacity:1;transform:translateY(0);}

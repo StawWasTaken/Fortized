@@ -3026,13 +3026,23 @@ function _ftzTipShow(e) {
     _ftzTipEl = tip;
     const rect = el.getBoundingClientRect();
     const tipRect = tip.getBoundingClientRect();
-    let left = rect.left + rect.width / 2 - tipRect.width / 2;
+    const centerX = rect.left + rect.width / 2;
+    let left = centerX - tipRect.width / 2;
     let top = rect.bottom + 8;
-    // If tooltip goes below viewport, show above
-    if (top + tipRect.height > window.innerHeight) top = rect.top - tipRect.height - 8;
-    // Clamp to viewport
+    let place = 'bottom';
+    // If tooltip would overflow the viewport bottom, flip above
+    if (top + tipRect.height > window.innerHeight - 4) {
+      top = rect.top - tipRect.height - 8;
+      place = 'top';
+    }
+    // Clamp horizontally to viewport
     if (left < 4) left = 4;
     if (left + tipRect.width > window.innerWidth - 4) left = window.innerWidth - tipRect.width - 4;
+    tip.dataset.place = place;
+    // Pin the arrow to the source element's center when horizontal
+    // clamping has knocked the tooltip off-center.
+    const arrowX = Math.max(8, Math.min(tipRect.width - 8, centerX - left));
+    tip.style.setProperty('--arrow-x', arrowX + 'px');
     tip.style.left = left + 'px';
     tip.style.top = top + 'px';
     requestAnimationFrame(() => tip.classList.add('visible'));
@@ -9846,28 +9856,27 @@ function initFortizedUXResilience() {
         new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),7000))
       ]);
       // ── DATA-LOSS GUARD ────────────────────────────────────────────────
-      // The protected-account merge in saveUserObject defends DB writes,
-      // but the load path never had its own guard. Result: when a stale
-      // or partial DB row was returned here, it silently clobbered the
-      // user's local good state — the source of "my onyx reset to 100,
-      // pfp/banner/bio gone" reports for staw/fortized/joyster. We now
-      // mirror refreshCU()'s SUPER_ADMIN protection: any cosmetic /
-      // economy field that's empty on `fresh` but populated in the
-      // localStorage snapshot is restored from local before assignment.
-      if (CU?.username && SUPER_ADMINS.includes((CU.username||'').toLowerCase())) {
+      // A stale or partial DB row returned here silently clobbered the
+      // user's good state — source of "my onyx reset, pfp/banner/bio
+      // gone, friends list emptied" reports. Run the merge for ALL users,
+      // not just SUPER_ADMINS: any cosmetic / economy / social field
+      // that's empty on `fresh` but populated in the localStorage
+      // snapshot is restored from local before assignment.
+      if (CU?.username) {
         try {
           const cachedRaw = localStorage.getItem('ftz_user_' + CU.username);
           const local = cachedRaw ? JSON.parse(cachedRaw) : null;
           if (local) {
             const protectFields = [
-              'pfp','banner','bio','displayName','friends','friendRequestsSent','friendRequestsReceived',
+              'pfp','banner','bio','displayName','pronouns','friends','friendRequestsSent','friendRequestsReceived',
               'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme','activeDecoration',
               'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
               'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
               'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
               'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
-              'createdAt','customStatus','verified','appearance',
-              'completedQuests','questsRewarded','questsDailyLog','dailyStreak'
+              'createdAt','customStatus','verified','appearance','badges',
+              'completedQuests','questsRewarded','questsDailyLog','dailyStreak','streakDate',
+              'lastDailyReward','lastDaily'
             ];
             for (const k of protectFields) {
               const nv = CU[k], lv = local[k];
@@ -9877,17 +9886,16 @@ function initFortizedUXResilience() {
                 || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && lv && typeof lv === 'object' && Object.keys(lv).length > 0);
               if (isEmpty && lv != null) CU[k] = lv;
             }
-            // Onyx is a write-allowed field for protected accounts (so admin
-            // grants flow through), which means a stale DB read with a low
-            // value would otherwise stomp the user's real balance. Take the
-            // higher of the two so balances only grow on read, never shrink.
+            // Onyx: take the higher of (cache vs. DB) so a stale read can
+            // never shrink the user's balance. The server still wins for
+            // *increases* (admin grants, server-side awards).
             if (typeof local.onyx === 'number' && (typeof CU.onyx !== 'number' || CU.onyx < local.onyx)) {
               CU.onyx = local.onyx;
             }
             // Schedule a save so the recovered state heals the DB row too.
             setTimeout(() => { try { saveUser(true); } catch {} }, 1500);
           }
-        } catch(e) { console.warn('[Init] Protected-account merge failed:', e?.message); }
+        } catch(e) { console.warn('[Init] Data-loss guard merge failed:', e?.message); }
       }
       // Auto-prune any legacy malformed gameCollection rows (e.g. entries
       // where g.name ended up as an object, which rendered as
@@ -18272,14 +18280,11 @@ async function saveNotifSettings(){const btn=document.querySelector('[onclick*="
 // ATELIER
 // ════════════════════════════════════════════
 async function claimDaily() {
-  const lastClaim=CU.lastDailyReward;
-  const now=new Date(); const today=now.toDateString();
-  if(lastClaim===today){toast('Already claimed today! Come back tomorrow.','info');return;}
-  CU.onyx=(CU.onyx||0)+50; CU.lastDailyReward=today;
-  await saveUser(); updateOnyxDisplay();
-  const btn=document.getElementById('daily-btn');
-  if(btn){btn.classList.add('claimed');btn.innerHTML='<span>✓ Claimed!</span><strong>+50 Onyx</strong>';}
-  toast('🎉 +50 Onyx claimed!','success');
+  // Legacy entry point — the Atelier "Claim Now" button and the
+  // "Hearken, Hearken" daily-quest card and the quests-tab daily
+  // claim are all the *same* reward. Route everything through
+  // claimDailyQuest() so we can't double-credit.
+  await claimDailyQuest();
 }
 
 // Stacks from the later of (now, existing expiry) so repeat purchases extend
@@ -34437,7 +34442,7 @@ function renderAtelierTab(tab) {
     const streakBonus = streak >= 7 ? 25 : streak >= 3 ? 10 : 0;
 
     const QUESTS_DEF = [
-      { id:'daily_claim', icon:'🎁', title:'Daily Claim', category:'Daily', daily:true, desc:`Claim your free 50 Onyx${streakBonus ? ' (+'+streakBonus+' streak bonus!)' : ''}. Resets at midnight.`, reward:50+streakBonus, unit:'Onyx', done: dailyClaimDone, action:`claimDailyQuest()` },
+      { id:'daily_claim', icon:'🎁', title:'Daily Claim', category:'Daily', daily:true, desc:`Claim your free 20 Onyx. Resets at midnight.`, reward:20, unit:'Onyx', done: dailyClaimDone, action:`claimDailyQuest()` },
       { id:'send_msg', icon:'💬', title:'Send a Message', category:'Daily', daily:true, desc:'Chat with someone today. Stay connected!', reward:10, unit:'Onyx', done: isDailyQuestDone('send_msg'), action:`showView('dms')` },
       { id:'invite', icon:'🔗', title:'Invite a Friend', category:'Daily', daily:true, desc:'+9 Onyx per friend who joins. Copy your invite link!', reward:9, unit:'Onyx/friend', done: inviteDone, action:`_showInviteFriendsPanel()` },
       { id:'join_bastion', icon:'🏰', title:'Join a Bastion', category:'Beginner', daily:false, desc:'Find and join any public Bastion community.', reward:25, unit:'Onyx', done: completed.includes('join_bastion') || (CU?.bastions||[]).length > 0, action:`showView('discover')` },
@@ -38219,7 +38224,7 @@ function refreshDailyBtn() {
     btn.innerHTML = '<span>✓ Claimed!</span><strong>Come back tomorrow</strong>';
   } else {
     btn.classList.remove('claimed');
-    btn.innerHTML = '<span>Claim Now</span><strong>+50 Onyx</strong>';
+    btn.innerHTML = '<span>Claim Now</span><strong>+20 Onyx</strong>';
   }
 }
 
@@ -39788,20 +39793,22 @@ async function claimDailyQuest() {
   // even after a streak resets.
   CU.streakBest = Math.max(+CU.streakBest || 0, +CU.dailyStreak || 0);
 
-  const streakBonus = CU.dailyStreak >= 7 ? 25 : CU.dailyStreak >= 3 ? 10 : 0;
-  const totalReward = 50 + streakBonus;
+  // Flat daily reward — the streak counter is a separate, motivational
+  // metric (and feeds the Dedicated Flame badge). It does NOT inflate
+  // the daily payout. Card + quest are the same claim, worth 20 Onyx.
+  const totalReward = 20;
   CU.onyx = (CU.onyx || 0) + totalReward;
   CU.lastDailyReward = today;
   CU.lastDaily = today;
-  // Mark daily quest as done for today (not permanently — resets each day)
   if (!CU.questsDailyLog) CU.questsDailyLog = {};
   CU.questsDailyLog.daily_claim = today;
   updateOnyxDisplay();
-  // Save immediately (bypass debounce) so Firebase doesn't overwrite with old onyx
   await saveUser(true);
   if (typeof animateOnyxGain === 'function') animateOnyxGain(totalReward);
-  toast(`🎁 +${totalReward} Onyx claimed!${streakBonus ? ' ('+streakBonus+' streak bonus!)' : ''}`, 'success');
-  renderAtelierTab('quests');
+  toast(`🎁 +${totalReward} Onyx claimed!`, 'success');
+  // Refresh dependent UI (atelier quests tab + the legacy daily button)
+  try { renderAtelierTab('quests'); } catch {}
+  try { refreshDailyBtn(); } catch {}
 }
 
 // Check if a daily-renewing quest is done today
@@ -39856,10 +39863,10 @@ function _showDailyQuestPopup() {
       <div class="quest-popup-body">
         <div class="quest-popup-label">DAILY QUEST</div>
         <div class="quest-popup-title">Hearken, Hearken!<br>A new quest is available to you!</div>
-        <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">50 Onyx</strong> and continue your conquest. Consistency is the key to greatness.</div>
+        <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">20 Onyx</strong> and continue your conquest. Consistency is the key to greatness.</div>
         <div class="quest-popup-reward">
           <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;">
-          +50 Onyx
+          +20 Onyx
         </div>
         <div class="quest-popup-btns">
           <button class="qp-btn qp-close" onclick="_dismissDailyPopup(false)">Complete Later</button>

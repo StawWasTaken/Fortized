@@ -1,9 +1,9 @@
 # Fortized — Pending Work
 
-Carried forward from the "redesign profile previews + fix bugs" session.
+Carried forward from the "redesign profile previews + fix bugs" sessions.
 Items here were explicitly deferred — they are not blocked, just not done yet.
 
-## Profile previews redesign (the big visual pass)
+## Profile previews redesign (the big visual pass) — NOT STARTED
 
 Goal: unify all four variants on the GamesCard design language, with a
 consistent information hierarchy. Higher number = less info shown.
@@ -11,7 +11,7 @@ consistent information hierarchy. Higher number = less info shown.
 | Rank | Variant                          | File                          |
 |------|----------------------------------|-------------------------------|
 | 1    | Profile Card (full modal)        | `profile-card.html`, rendered in `app/app.js` |
-| 2    | Userbar own-profile panel        | `own-profile-panel.html`, rendered ~`app/app.js:40313` |
+| 2    | Userbar own-profile panel        | `own-profile-panel.html`, rendered ~`app/app.js:40320` |
 | 2    | Chat/memberlist mini preview     | `profile-preview.html` (`.mini-profile-preview`) |
 | 2    | DM sidebar panel                 | `dm-profile-panel.html` |
 | 3    | Settings profile preview         | `app/app.js:17150` (variant of mini) |
@@ -23,53 +23,63 @@ Tier-2 variants add: badges, "about me" snippet, member since, game collection.
 Tier-1 (Profile Card) adds: full bio, roles, activity tab, mutual friends tab,
 full game collection grid, action buttons.
 
-Visual direction: match the `.pw-widget` GamesCard look — radial gradient
-surface + glowing accent top bar — but lean a bit closer to Discord's
-proportions for the smaller previews. Reference screenshots: see the
-session attachments (Discord profile modal — inspiration only, not the
-custom-themed version).
+Visual direction: match the `.pw-widget` GamesCard look — subtle dark
+surface, top-left accent wash, single thin glowing rule on top, no
+shimmer — but lean a bit closer to Discord's proportions for the
+smaller previews. Reference screenshots: see the session attachments
+(Discord profile modal — inspiration only, not the custom-themed
+version).
 
 Also wire up: status switcher (online/idle/dnd/invisible), "Edit Custom
 Status", "Edit Profile", "Switch Accounts" — only on the userbar own-profile
 panel.
 
-## Status-system fixes
+## Status-system — partial fix landed, monitor for repros
 
-`FtzStatus` module looks structurally sound (`app/app.js:296+`), so I
-didn't make speculative changes. Need a concrete repro for each symptom
-before fixing:
-- which status (online/idle/dnd/invisible) misbehaves and how
-- whether it's the local display, the broadcast to other clients, or
-  the persistence across reload
-- distinction between "status" (presence) and "custom status" (free-text
-  message) — possible rename pending per user
+Done: `_broadcast()` now guards against `FortizedSocial` being undefined
+and against `socketEmit` throwing synchronously — the previous code
+would let one bad emit abort the whole `set()` call, leaving the user's
+new status unsaved. Local dot is also force-refreshed without waiting
+on the server.
 
-Once we have a repro, likely suspects are:
-- `_broadcast()` (`app/app.js:435`) silently swallows socket failures
-- auto-away restore at `_resetIdle()` (`:497`) — could fight with
+Still open if symptoms persist:
+- distinguish "status" (presence) from "custom status" — possible rename
+- auto-away restore at `_resetIdle()` (`app/app.js:497`) may fight with
   manual changes during the same animation frame
 - Firebase `onDisconnect` setup at `:572` — wrapped in try/catch but
   may need a retry on auth-change
 
-## Loading "stuck on loading Fortized"
+## Loading "stuck on loading Fortized" — partial fix landed
 
-Fixed the most likely root cause (data-loss guard was super-admin only).
-Remaining suspects if it still happens:
-- `appInit` 10s safety timer (`app/app.js:9785`) can race past the
-  inner 7s + 1.5s + 5s retry chain → loader hides while init is still
-  running. Could collapse to a single bounded loop.
+Done:
+- Data-loss guard on init now runs for all users (was super-admin only).
+- Safety timer raised from 10s → 20s so the inner retry chain
+  (max ~18s) can actually complete before the loader is force-hidden.
+
+Still open if symptoms persist:
+- Collapse the inner `5s + 7s + 1.5s + 5s` retry chain into a single
+  bounded loop — easier to reason about and bail from.
 - `FortizedSocial`-undefined branch sets a label but never returns,
-  then falls through into the online path that re-checks it. Fine
+  then falls through into the online path that re-checks it. Works
   today but fragile.
 - Need a console log dump from a real stuck session to know which
   phase actually hangs.
 
-## Tooltip — possible follow-ups
+## Tooltips — DONE
 
-Done in this pass: darker, less rounded, arrow pointing at element.
-Not done:
-- `.rail-tooltip` and `.rail-nav-tooltip` still use the old rounder
-  glass style. Decide whether they should match `.ftz-tooltip` or
-  intentionally stay distinct (rail tooltips have icons + hint keys,
-  which is a different content shape).
-- Reaction tooltip (`.ftz-reaction-tip`) likewise.
+All three tooltip variants (`ftz-tooltip`, `rail-tooltip`,
+`rail-nav-tooltip`, `ftz-reaction-tip`) now share:
+- `#05060a` background, 1px subtle border, 4px radius, tight shadow
+- CSS arrow via `::after` pointing at the source element
+- `data-place="top|bottom|left|right"` + `--arrow-x` for re-aligning
+  after viewport clamping.
+
+## Hearken card — DONE (v2)
+
+Rebuilt on the exact `.pw-widget` treatment: 360px wide, dark surface,
+top-left accent wash, single thin glowing top rule. Removed the
+shimmer animation, the centered radial halo, and the bottom radial
+gradient. Title is now display-font 15px (not 22px/900). Buttons are
+the same compact ghost-accent style as `.pw-gc-add-btn`. Reward chip
+matches the gamescard pill treatment. Hero image scaled down to
+96px tall.

@@ -435,12 +435,28 @@ const FtzStatus = (() => {
   function _broadcast(status) {
     if (!CU?.username) return;
     const vis = visible(status);
-    // Real-time: emit status:set so server broadcasts presence:update to all clients
-    FortizedSocial.socketEmit('status:set', { status: status });
-    // Persistence: write to Supabase (async, non-blocking)
-    FortizedSocial.setStatus(CU.username, vis).catch(e => {
-      console.warn('[FtzStatus] broadcast failed:', e);
-    });
+    // Guard every external call: if FortizedSocial hasn't loaded (slow CDN,
+    // offline, blocked) or socketEmit throws synchronously, the old code
+    // would propagate the error and abort the rest of `set()` — including
+    // the saveUser() call below it. Result: the user picks "Idle", the
+    // dropdown closes, but the choice never persists and the next refresh
+    // pops them back to "Online". Swallow everything so the local update
+    // always wins.
+    try {
+      if (typeof FortizedSocial !== 'undefined' && typeof FortizedSocial.socketEmit === 'function') {
+        FortizedSocial.socketEmit('status:set', { status });
+      }
+    } catch (e) { console.warn('[FtzStatus] socket emit failed:', e?.message); }
+    try {
+      if (typeof FortizedSocial !== 'undefined' && typeof FortizedSocial.setStatus === 'function') {
+        FortizedSocial.setStatus(CU.username, vis).catch(e => {
+          console.warn('[FtzStatus] broadcast failed:', e?.message);
+        });
+      }
+    } catch (e) { console.warn('[FtzStatus] setStatus threw:', e?.message); }
+    // Update every dot in the DOM so the local user sees the change
+    // immediately without waiting on the server round-trip.
+    try { updateDots(CU.username, vis); } catch {}
   }
 
   function set(status) {
@@ -3081,11 +3097,16 @@ document.addEventListener('mouseover', function(e) {
     _rTipEl = tip;
     const rect = pill.getBoundingClientRect();
     const tipRect = tip.getBoundingClientRect();
-    let left = rect.left + rect.width / 2 - tipRect.width / 2;
+    const centerX = rect.left + rect.width / 2;
+    let left = centerX - tipRect.width / 2;
     let top = rect.top - tipRect.height - 8;
-    if (top < 4) top = rect.bottom + 8;
+    let place = 'top';
+    if (top < 4) { top = rect.bottom + 8; place = 'bottom'; }
     if (left < 4) left = 4;
     if (left + tipRect.width > window.innerWidth - 4) left = window.innerWidth - tipRect.width - 4;
+    tip.dataset.place = place;
+    const arrowX = Math.max(8, Math.min(tipRect.width - 8, centerX - left));
+    tip.style.setProperty('--arrow-x', arrowX + 'px');
     tip.style.left = left + 'px';
     tip.style.top = top + 'px';
     requestAnimationFrame(() => tip.classList.add('visible'));
@@ -9792,8 +9813,20 @@ function initFortizedUXResilience() {
 // ════════════════════════════════════════════
 (async function appInit(){
   const _sl=document.getElementById('app-loading');
-  const _st=setTimeout(()=>{if(_sl){_sl.style.opacity='0';setTimeout(()=>{_sl.style.display='none';},300);}},10000);
+  // The inner appInit retry chain can take up to ~18s in the worst case
+  // (5s FortizedSocial wait + 7s fetch race + 1.5s pause + 5s retry).
+  // The old 10s safety timer fired *inside* that window, fading the
+  // loader while init was still running — users then saw a blank app
+  // shell or were silently redirected to /login. Give the chain time
+  // to actually complete; if it really hangs, utils.js already swaps
+  // in a Retry button at 8s, which is the right escalation point.
+  const _hideLoader = () => { if(_sl){_sl.style.opacity='0';setTimeout(()=>{_sl.style.display='none';},300);} };
+  const _st=setTimeout(_hideLoader, 20000);
   window._loadingSafetyTimer = _st;
+  // Hide the loader as soon as init finishes — successful or not —
+  // so we don't keep the overlay up for the full safety window when
+  // the app is already ready behind it.
+  window._hideAppLoader = _hideLoader;
   try{
   if (document.readyState==='loading') await new Promise(r=>document.addEventListener('DOMContentLoaded',r));
 
@@ -39854,23 +39887,21 @@ function _showDailyQuestPopup() {
   overlay.id = 'daily-quest-popup';
   overlay.className = 'quest-popup-overlay';
   overlay.innerHTML = `
-    <div class="quest-popup-card" style="position:relative;">
-      <div class="quest-popup-bar"></div>
-      <div class="quest-popup-shimmer"></div>
+    <div class="quest-popup-card">
       <div class="quest-popup-hero">
-        <img src="/Fortized Conquer.png" class="quest-popup-img" alt="Fortized Conquer">
+        <img src="/Fortized Conquer.png" class="quest-popup-img" alt="">
       </div>
       <div class="quest-popup-body">
-        <div class="quest-popup-label">DAILY QUEST</div>
-        <div class="quest-popup-title">Hearken, Hearken!<br>A new quest is available to you!</div>
-        <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">20 Onyx</strong> and continue your conquest. Consistency is the key to greatness.</div>
+        <div class="quest-popup-label">Daily Quest</div>
+        <div class="quest-popup-title">Hearken, hearken — a new quest awaits.</div>
+        <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">20 Onyx</strong>. Resets at midnight.</div>
         <div class="quest-popup-reward">
-          <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;">
+          <img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;">
           +20 Onyx
         </div>
         <div class="quest-popup-btns">
-          <button class="qp-btn qp-close" onclick="_dismissDailyPopup(false)">Complete Later</button>
-          <button class="qp-btn qp-claim" onclick="_dismissDailyPopup(true)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>Claim Now</button>
+          <button class="qp-btn qp-close" onclick="_dismissDailyPopup(false)">Later</button>
+          <button class="qp-btn qp-claim" onclick="_dismissDailyPopup(true)">Claim</button>
         </div>
       </div>
     </div>`;

@@ -8807,274 +8807,716 @@ select:focus-visible {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   UNIFIED PROFILE-PREVIEW DESIGN LANGUAGE
+   FORTIZED PROFILE PREVIEW COMPONENT LIBRARY (.fpp-*)
    ════════════════════════════════════════════════════════════════════
-   One retrofit block that gives every profile surface — the modal
-   Profile Card, the mini popover, the DM sidebar panel, the userbar
-   own-profile popover, and the settings preview — the same
-   pw-widget GamesCard treatment: theme-aware surface (var(--panel)
-   shows through so the user's Appearance bleeds in), subtle dark
-   film, top-left accent wash, single thin glowing accent rule on
-   top, and matching section/title typography.
+   Single source of truth for every profile-preview surface in the
+   app. All five variants — Profile Card modal, mini popover (chat /
+   memberlist), DM sidebar panel, userbar own-profile popover, and
+   the settings preview stack — are composed from the primitives
+   defined here. No !important hacks; no per-variant inline styling.
 
-   Profile Card (rank 1) gets the strongest treatment.
-   Mini / DM / Own / Settings (rank 2 / 3) get a dialed-back version
-   that's a bit closer to Discord proportions, per the spec.
+   Surface treatment matches the .pw-widget GamesCard family:
+     - var(--panel) base (so the user's Appearance bleeds through)
+     - subtle translucent black film over the base
+     - top-left accent radial wash
+     - single thin glowing accent rule pinned via ::before
+
+   Variants are switched via wrapper modifier classes:
+     .fpp--mini       chat / memberlist popover         340px
+     .fpp--own        userbar own-profile popover       340px
+     .fpp--dm         DM right sidebar column           full width
+     .fpp--settings   settings sticky preview wrapper   variable
+     .fpp-card-modal  full Profile Card modal           900px 2-panel
    ════════════════════════════════════════════════════════════════════ */
 
-/* ── Mini Profile Preview ──────────────────────────────────────────── */
-.mini-profile-preview{
+/* ── Surface ───────────────────────────────────────────────────────── */
+.fpp{
+  position:relative;
   background:
-    radial-gradient(520px 90px at 15% 0%, rgba(255,249,62,.045), transparent 70%),
-    linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
-    var(--panel) !important;
-  border:1px solid var(--border) !important;
-  border-radius:16px !important;
-  width:340px !important;
-  box-shadow:0 24px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04) !important;
-  position:fixed;
+    radial-gradient(620px 110px at 16% 0%, rgba(255,249,62,.05), transparent 70%),
+    linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
+    var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  color:var(--text);
+  box-shadow:0 22px 56px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
 }
-.mini-profile-preview::before{
+.fpp::before{
   content:""; position:absolute; top:0; left:0; right:0; height:2px;
   background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
   box-shadow:0 0 14px rgba(255,249,62,.35);
   pointer-events:none; z-index:5;
 }
-.mini-profile-preview .mpp-banner{
-  height:84px;
-  background:transparent;
-}
-.mini-profile-preview .mpp-banner::after{
-  background:linear-gradient(to top, var(--panel), transparent);
-}
-.mini-profile-preview--compact{ width:300px !important; }
 
-/* Section titles match .pw-widget-title — display font, uppercase, muted. */
-.mpp-section-title,
-.dm-up-card-title,
-.up-left-section-title{
-  font-family:var(--font-display) !important;
-  font-size:10.5px !important;
-  font-weight:800 !important;
-  letter-spacing:.12em !important;
-  text-transform:uppercase !important;
-  color:var(--muted-light) !important;
-  margin-bottom:8px !important;
-  opacity:.85;
-}
-
-/* Mini popover buttons → ghost-accent like .pw-gc-add-btn (gamescard CTA). */
-.mini-profile-preview .mpp-btn-primary{
-  background:rgba(255,249,62,.08) !important;
-  border:1px solid rgba(255,249,62,.22) !important;
-  color:var(--accent) !important;
-  box-shadow:none !important;
-  font-family:var(--font-display);
-  letter-spacing:.06em; text-transform:uppercase;
-  border-radius:10px;
-}
-.mini-profile-preview .mpp-btn-primary:hover{
-  background:var(--accent) !important;
-  color:var(--rail) !important;
-  border-color:var(--accent) !important;
-  transform:none !important;
-  filter:none !important;
-}
-.mini-profile-preview .mpp-btn-secondary{
-  background:rgba(255,255,255,.03) !important;
-  border:1px solid var(--border) !important;
-  color:var(--muted-light) !important;
-  font-family:var(--font-display);
-  letter-spacing:.06em; text-transform:uppercase;
-  border-radius:10px;
-}
-.mini-profile-preview .mpp-btn-secondary:hover{
-  background:rgba(255,255,255,.06) !important;
-  color:var(--text) !important;
-  border-color:var(--surface-border-hover) !important;
-}
-
-/* Games strip — restyle as the gamescard pill grid. */
-.mpp-games{
-  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
-  padding:6px 18px 4px;
-}
-.mpp-games > span:first-child{
-  font-family:var(--font-display);
-  font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--muted-light); margin-right:4px;
-}
-.mpp-games img,
-.mpp-games > span:not(:first-child){
-  width:28px;height:28px;border-radius:6px;object-fit:cover;
-  background:rgba(255,255,255,.04);
-  border:1px solid var(--border);
-  display:inline-flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;color:var(--muted-light);
-}
-
-/* ── DM Sidebar Profile Panel ──────────────────────────────────────── */
-#dm-user-panel{
+/* ── Banner ────────────────────────────────────────────────────────── */
+.fpp__banner{
   position:relative;
-  background:
-    radial-gradient(520px 90px at 15% 0%, rgba(255,249,62,.045), transparent 70%),
-    linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
-    var(--panel) !important;
-  border-left:1px solid var(--border);
+  height:108px;
   overflow:hidden;
 }
-#dm-user-panel::before{
-  content:""; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
-  box-shadow:0 0 14px rgba(255,249,62,.35);
-  pointer-events:none; z-index:5;
+.fpp__banner > img{ width:100%; height:100%; object-fit:cover; display:block; }
+.fpp__banner-fallback{
+  width:100%; height:100%;
+  background:url('/wrapBackground.png') center/cover no-repeat, #0e1117;
 }
-.dm-up-banner::after{ background:linear-gradient(to top, var(--panel), transparent); }
-.dm-up-card{
-  background:rgba(0,0,0,.22) !important;
-  border:1px solid var(--border) !important;
-  border-radius:10px !important;
+.fpp__banner-fallback--themed{
+  background-blend-mode:normal;
 }
-#dm-user-panel .mpp-btn-primary{
-  background:rgba(255,249,62,.08) !important;
-  border:1px solid rgba(255,249,62,.22) !important;
-  color:var(--accent) !important;
+.fpp__banner::after{
+  content:""; position:absolute; bottom:0; left:0; right:0; height:62px;
+  background:linear-gradient(to top, var(--panel) 8%, transparent);
+  pointer-events:none;
+}
+
+/* ── Avatar row (avatar + custom-status bubble) ───────────────────── */
+.fpp__av-row{
+  position:relative; z-index:2;
+  display:flex; align-items:flex-end; gap:10px;
+  padding:0 18px;
+  margin-top:-36px;
+}
+.fpp__av-wrap{ position:relative; flex-shrink:0; }
+.fpp__av{
+  width:80px; height:80px; border-radius:50%;
+  border:5px solid var(--panel);
+  background:var(--panel2);
+  overflow:hidden; flex-shrink:0;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,.45);
+  transition:transform .18s cubic-bezier(.22,1,.36,1);
+}
+.fpp__av:hover{ transform:scale(1.03); }
+.fpp__av img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+.fpp__decoration{
+  position:absolute; inset:-8px;
+  width:calc(100% + 16px); height:calc(100% + 16px);
+  pointer-events:none; z-index:2;
+}
+.fpp__status-dot{
+  position:absolute; bottom:2px; right:2px;
+  width:22px; height:22px; z-index:3;
+  display:flex; align-items:center; justify-content:center;
+}
+/* Custom-status bubble — overlaps the avatar like Discord */
+.fpp__cs-bubble{
+  margin-bottom:10px;
+  display:inline-flex; align-items:center; gap:6px;
+  max-width:200px;
+  padding:6px 12px;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:18px;
+  font-size:12px; font-weight:500;
+  color:var(--text);
+  box-shadow:0 6px 18px rgba(0,0,0,.4);
+  cursor:pointer;
+  transition:background .15s, border-color .15s;
+}
+.fpp__cs-bubble:hover{ background:rgba(255,255,255,.05); border-color:var(--surface-border-hover); }
+.fpp__cs-bubble--empty{ color:var(--muted-light); font-style:italic; }
+.fpp__cs-bubble .fpp__cs-emoji{ display:inline-flex; align-items:center; }
+.fpp__cs-bubble .fpp__cs-emoji img{ width:14px; height:14px; display:block; }
+.fpp__cs-bubble .fpp__cs-text{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* ── Identity (name + handle row + badges) ────────────────────────── */
+.fpp__identity{ padding:12px 18px 0; }
+.fpp__name{
   font-family:var(--font-display);
-  letter-spacing:.06em; text-transform:uppercase;
-  box-shadow:none !important;
+  font-size:18px; font-weight:800;
+  color:var(--text); line-height:1.2;
+  cursor:pointer;
+  letter-spacing:-.005em;
+  word-break:break-word;
+}
+.fpp__name:hover{ opacity:.85; }
+.fpp__handle-row{
+  display:flex; align-items:center; gap:6px;
+  margin-top:4px;
+  font-size:12.5px; color:var(--muted-light);
+  font-weight:500;
+  min-width:0;
+}
+.fpp__handle{
+  flex:0 1 auto; min-width:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.fpp__handle-sep{ color:var(--muted); flex-shrink:0; }
+.fpp__pronouns{ flex-shrink:0; }
+.fpp__badges{
+  display:inline-flex; align-items:center; gap:3px;
+  margin-left:auto; flex-shrink:0;
+}
+.fpp__badges .ftz-badge-row{ display:inline-flex !important; gap:3px; margin:0; }
+.fpp__badges .ftz-badge{
+  width:18px !important; height:18px !important;
+  margin:0 !important; flex-shrink:0;
+  display:inline-flex !important; align-items:center; justify-content:center;
+}
+.fpp__badges .ftz-badge img,
+.fpp__badges .ftz-badge svg{
+  width:100% !important; height:100% !important;
+  display:block; object-fit:contain;
+}
+
+/* ── Boxed sub-card (Bio, Member Since, Mutual Friends, etc.) ─────── */
+.fpp-card{
+  margin:14px 16px 0;
+  padding:12px 14px;
+  background:rgba(0,0,0,.22);
+  border:1px solid var(--border);
   border-radius:10px;
 }
-#dm-user-panel .mpp-btn-primary:hover{
-  background:var(--accent) !important;
-  color:var(--rail) !important;
-  border-color:var(--accent) !important;
-  transform:none !important; filter:none !important;
+.fpp-card__title{
+  font-family:var(--font-display);
+  font-size:10.5px; font-weight:800;
+  letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted-light); opacity:.85;
+  margin-bottom:6px;
+}
+.fpp-card__body{
+  font-size:12.5px; color:var(--text); line-height:1.55;
+  word-break:break-word;
+}
+.fpp-card__body--muted{ color:var(--muted-light); font-weight:500; }
+.fpp-card__body strong{ color:var(--text); font-weight:700; }
+.fpp-card__body a{ color:var(--accent); text-decoration:none; }
+.fpp-card__body a:hover{ text-decoration:underline; }
+.fpp-card__body p{ margin:0 0 6px; }
+.fpp-card__body p:last-child{ margin-bottom:0; }
+
+/* ── Interactive row (status, switch accounts, mutuals → submenu) ── */
+.fpp-row{
+  margin:8px 16px 0;
+  padding:10px 14px;
+  background:rgba(0,0,0,.22);
+  border:1px solid var(--border);
+  border-radius:10px;
+  display:flex; align-items:center; gap:10px;
+  cursor:pointer;
+  font-size:12.5px; color:var(--text); font-weight:500;
+  transition:background .15s, border-color .15s;
+}
+.fpp-row:hover{
+  background:rgba(0,0,0,.32);
+  border-color:var(--surface-border-hover);
+}
+.fpp-row__icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.fpp-row__icon svg{ display:block; }
+.fpp-row__label{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fpp-row__chevron{ color:var(--muted-light); flex-shrink:0; display:inline-flex; }
+
+/* Inline bio under identity (Discord-style — no card box) */
+.fpp__inline-bio{
+  padding:10px 18px 0;
+  font-size:12.5px; color:var(--text); line-height:1.55;
+  word-break:break-word;
+}
+.fpp__inline-bio strong{ color:var(--text); font-weight:700; }
+.fpp__inline-bio a{ color:var(--accent); text-decoration:none; }
+.fpp__inline-bio a:hover{ text-decoration:underline; }
+.fpp__inline-bio p{ margin:0 0 6px; }
+.fpp__inline-bio p:last-child{ margin-bottom:0; }
+
+/* ── Games strip ──────────────────────────────────────────────────── */
+.fpp-card.fpp-card--games .fpp-card__body{ padding-top:2px; }
+.fpp__games-strip{
+  display:flex; gap:6px; align-items:center; flex-wrap:nowrap;
+}
+.fpp__game-tile{
+  width:36px; height:36px;
+  border-radius:6px; overflow:hidden;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:var(--muted-light);
+  flex-shrink:0;
+}
+.fpp__game-tile img{ width:100%; height:100%; object-fit:cover; }
+.fpp__game-tile--more{
+  background:rgba(255,249,62,.06);
+  border-color:rgba(255,249,62,.22);
+  color:var(--accent);
 }
 
-/* ── Userbar Own-Profile Panel (legacy fallback) ───────────────────── */
-.own-profile-panel{
-  background:
-    radial-gradient(520px 90px at 15% 0%, rgba(255,249,62,.045), transparent 70%),
-    linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
-    var(--panel) !important;
-  backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
-  border:1px solid var(--border) !important;
-  border-radius:16px !important;
-  position:fixed;
+/* ── Action row — [Message wide] [+ square] [⋯ square] ────────────── */
+.fpp__actions{
+  display:flex; align-items:center; gap:8px;
+  padding:14px 16px;
 }
-.own-profile-panel::before{
+.fpp__btn{
+  height:36px;
+  padding:0 14px;
+  border-radius:8px;
+  font-family:var(--font-display);
+  font-size:11.5px; font-weight:800;
+  letter-spacing:.06em; text-transform:uppercase;
+  cursor:pointer;
+  border:1px solid transparent;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  transition:background .15s, color .15s, border-color .15s, transform .15s;
+  font-family:var(--font-display);
+}
+.fpp__btn--primary{
+  flex:1; min-width:0;
+  background:rgba(255,249,62,.08);
+  border-color:rgba(255,249,62,.22);
+  color:var(--accent);
+}
+.fpp__btn--primary:hover{
+  background:var(--accent);
+  color:var(--rail);
+  border-color:var(--accent);
+}
+.fpp__btn--wide{ flex:1; min-width:0; }
+.fpp__btn--square{
+  width:36px; padding:0; flex-shrink:0;
+  background:rgba(255,255,255,.04);
+  border-color:var(--border);
+  color:var(--muted-light);
+}
+.fpp__btn--square:hover{
+  background:rgba(255,255,255,.08);
+  color:var(--text);
+  border-color:var(--surface-border-hover);
+}
+.fpp__btn--square.is-friend{
+  color:var(--green);
+  border-color:rgba(62,207,110,.25);
+  background:rgba(62,207,110,.06);
+}
+.fpp__btn--square.is-pending{
+  color:var(--muted);
+  cursor:default;
+}
+.fpp__btn--square svg{ display:block; }
+
+/* ── Dropdown menu (popped from ⋯) ─────────────────────────────────── */
+.fpp-menu{
+  position:fixed;
+  min-width:220px; max-width:280px;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:6px;
+  z-index:6500;
+  box-shadow:0 16px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.03);
+}
+.fpp-menu__item{
+  display:flex; align-items:center; gap:10px;
+  padding:8px 10px; border-radius:6px;
+  font-size:13px; color:var(--text); font-weight:500;
+  cursor:pointer; transition:background .12s, color .12s;
+}
+.fpp-menu__item:hover{ background:rgba(255,255,255,.06); }
+.fpp-menu__item svg{ flex-shrink:0; color:var(--muted-light); }
+.fpp-menu__item--danger{ color:var(--red); }
+.fpp-menu__item--danger:hover{ background:rgba(248,113,113,.12); }
+.fpp-menu__item--danger svg{ color:var(--red); }
+.fpp-menu__item--has-sub{ justify-content:space-between; }
+.fpp-menu__item--has-sub .fpp-menu__chev{
+  margin-left:auto; color:var(--muted-light); flex-shrink:0;
+}
+.fpp-menu__divider{ height:1px; background:var(--border); margin:4px 2px; }
+.fpp-menu__group-label{
+  padding:6px 10px 4px;
+  font-family:var(--font-display);
+  font-size:9.5px; font-weight:800;
+  letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted);
+}
+
+/* ── Message composer (pinned bottom) ─────────────────────────────── */
+.fpp__msg-input{
+  margin:12px 16px 16px;
+  padding:10px 14px;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  font-size:12.5px;
+  color:var(--muted-light);
+  cursor:pointer;
+  transition:background .15s, border-color .15s, color .15s;
+  display:flex; align-items:center; gap:8px;
+}
+.fpp__msg-input:hover{
+  background:rgba(255,255,255,.04);
+  border-color:var(--surface-border-hover);
+  color:var(--text);
+}
+.fpp__msg-input svg{ flex-shrink:0; opacity:.5; }
+
+/* ── Mutual-friends pill (mini popover only) ──────────────────────── */
+.fpp__mutuals-chip{
+  display:inline-flex; align-items:center; gap:6px;
+  margin:10px 16px 0;
+  padding:6px 10px;
+  background:rgba(0,0,0,.22);
+  border:1px solid var(--border);
+  border-radius:999px;
+  font-size:11.5px; color:var(--muted-light); font-weight:600;
+  cursor:pointer;
+  transition:background .15s, border-color .15s, color .15s;
+}
+.fpp__mutuals-chip:hover{ background:rgba(255,255,255,.05); color:var(--text); }
+.fpp__mutuals-chip svg{ color:var(--muted-light); }
+
+/* ══════════════════════════════════════════════════════════════════
+   VARIANT MODIFIERS
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Mini popover (chat / memberlist) ─────────────────────────────── */
+.fpp--mini{
+  position:fixed;
+  width:340px;
+  z-index:4000;
+  animation:fppPopIn .2s cubic-bezier(.22,1,.36,1);
+}
+.fpp--mini .fpp__banner{ height:96px; }
+.fpp--mini .fpp__av{ width:72px; height:72px; border-width:4px; }
+.fpp--mini .fpp__av-row{ margin-top:-32px; }
+
+/* ── Userbar own-profile popover ──────────────────────────────────── */
+.fpp--own{
+  position:fixed;
+  width:340px;
+  z-index:4000;
+  animation:fppPopIn .2s cubic-bezier(.22,1,.36,1);
+}
+.fpp--own .fpp__banner{ height:96px; }
+.fpp--own .fpp__av{ width:72px; height:72px; border-width:4px; }
+.fpp--own .fpp__av-row{ margin-top:-32px; }
+.fpp--own .fpp__actions{ padding-top:6px; padding-bottom:6px; }
+
+/* ── DM right sidebar column ──────────────────────────────────────── */
+.fpp--dm{
+  width:100%;
+  border:none;
+  border-radius:0;
+  border-left:1px solid var(--border);
+  box-shadow:none;
+  background:
+    radial-gradient(620px 110px at 16% 0%, rgba(255,249,62,.05), transparent 70%),
+    linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
+    var(--panel);
+  overflow-y:auto;
+  height:100%;
+  display:flex; flex-direction:column;
+}
+.fpp--dm .fpp__banner{ height:100px; }
+.fpp--dm > *:last-child{ margin-bottom:0; }
+.fpp--dm .fpp__msg-input{ margin-top:auto; }
+
+/* ── Settings preview stack (three small stacked previews) ────────── */
+.fpp-settings-stack{
+  display:flex; flex-direction:column; gap:18px;
+  max-width:380px;
+}
+.fpp-settings-stack .fpp{ width:100%; }
+.fpp-settings-stack .fpp--settings{ animation:none; }
+.fpp-settings-stack__label{
+  font-family:var(--font-display);
+  font-size:10px; font-weight:800;
+  letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted-light); opacity:.7;
+  margin-bottom:8px;
+}
+.fpp--settings{ position:relative; }
+.fpp--settings .fpp__banner{ height:96px; cursor:pointer; }
+.fpp--settings .fpp__banner:hover{ filter:brightness(1.08); }
+.fpp--settings .fpp__av{ width:72px; height:72px; border-width:4px; cursor:pointer; }
+.fpp--settings .fpp__av-row{ margin-top:-32px; }
+
+/* Example button shown beneath the settings profile preview */
+.fpp-settings-example-btn{
+  margin:12px 16px 16px;
+  width:calc(100% - 32px);
+  padding:9px 14px;
+  background:rgba(255,249,62,.08);
+  border:1px solid rgba(255,249,62,.22);
+  border-radius:8px;
+  font-family:var(--font-display);
+  font-size:11.5px; font-weight:800;
+  letter-spacing:.06em; text-transform:uppercase;
+  color:var(--accent);
+  cursor:default;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+
+/* Message-preview mini card (settings) */
+.fpp-msg-preview{
+  position:relative;
+  padding:14px 16px;
+  background:
+    radial-gradient(620px 110px at 16% 0%, rgba(255,249,62,.05), transparent 70%),
+    linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
+    var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+}
+.fpp-msg-preview::before{
   content:""; position:absolute; top:0; left:0; right:0; height:2px;
   background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
-  box-shadow:0 0 14px rgba(255,249,62,.35);
-  pointer-events:none; z-index:5;
+  pointer-events:none;
+}
+.fpp-msg-preview__row{
+  display:flex; gap:10px; align-items:flex-start;
+  padding:6px 0;
+}
+.fpp-msg-preview__av{
+  width:36px; height:36px; border-radius:50%; overflow:hidden;
+  background:var(--panel2); flex-shrink:0;
+}
+.fpp-msg-preview__av img{ width:100%; height:100%; object-fit:cover; }
+.fpp-msg-preview__body{ flex:1; min-width:0; }
+.fpp-msg-preview__name-row{
+  display:flex; align-items:baseline; gap:8px; margin-bottom:2px;
+}
+.fpp-msg-preview__name{
+  font-family:var(--font-display);
+  font-size:14px; font-weight:800;
+  line-height:1.2;
+}
+.fpp-msg-preview__time{
+  font-size:10.5px; color:var(--muted); font-weight:500;
+}
+.fpp-msg-preview__text{
+  font-size:13px; color:var(--text); line-height:1.45;
 }
 
-/* ── Profile Card (modal, rank 1) — strongest pw-widget treatment ──── */
-.up-card{
-  background:
-    radial-gradient(800px 140px at 18% 0%, rgba(255,249,62,.06), transparent 70%),
-    linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,.22)),
-    var(--panel) !important;
-  border:1px solid var(--border) !important;
-  border-radius:20px !important;
-  box-shadow:0 40px 100px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.04) !important;
+/* Nameplate preview card */
+.fpp-nameplate-preview{
   position:relative;
+  padding:10px 14px;
+  background:
+    radial-gradient(620px 110px at 16% 0%, rgba(255,249,62,.05), transparent 70%),
+    linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
+    var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  display:flex; align-items:center; gap:10px;
 }
-.up-card::before{
+.fpp-nameplate-preview::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
+  pointer-events:none;
+}
+.fpp-nameplate-preview__av{
+  width:32px; height:32px; border-radius:50%; overflow:hidden;
+  background:var(--panel2); flex-shrink:0;
+}
+.fpp-nameplate-preview__av img{ width:100%; height:100%; object-fit:cover; }
+.fpp-nameplate-preview__name{
+  font-family:var(--font-display);
+  font-size:13px; font-weight:800;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  flex:1; min-width:0;
+}
+.fpp-nameplate-preview__dot{
+  width:8px; height:8px; border-radius:50%; flex-shrink:0;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PROFILE CARD MODAL (largest variant, 2-panel like Discord)
+   ══════════════════════════════════════════════════════════════════ */
+.fpp-card-modal{
+  display:grid;
+  grid-template-columns:320px 1fr;
+  width:900px; max-width:94vw;
+  min-height:540px; max-height:85vh;
+  border-radius:20px;
+  overflow:hidden;
+  position:relative;
+  background:
+    radial-gradient(800px 140px at 18% 0%, rgba(255,249,62,.05), transparent 70%),
+    linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,.22)),
+    var(--panel);
+  border:1px solid var(--border);
+  box-shadow:0 40px 100px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.fpp-card-modal::before{
   content:""; position:absolute; top:0; left:0; right:0; height:2px;
   background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
   box-shadow:0 0 18px rgba(255,249,62,.4);
   pointer-events:none; z-index:5;
 }
-.up-left{
-  background:rgba(0,0,0,.14) !important;
-  border-right:1px solid var(--border) !important;
+.fpp-card-modal__left{
+  background:rgba(0,0,0,.16);
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  display:flex; flex-direction:column;
+  position:relative;
 }
-.up-left-banner::after{ background:linear-gradient(transparent, rgba(0,0,0,.55)); }
-.up-right{
-  background:transparent !important;
+.fpp-card-modal__left::-webkit-scrollbar{ width:4px; }
+.fpp-card-modal__left::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.08); border-radius:4px; }
+.fpp-card-modal__left .fpp__banner{ height:130px; }
+.fpp-card-modal__left .fpp__av{ width:92px; height:92px; border-width:5px; }
+.fpp-card-modal__left .fpp__av-row{ margin-top:-44px; }
+.fpp-card-modal__right{
+  display:flex; flex-direction:column; overflow:hidden;
 }
-.up-right-tabs{ border-bottom:1px solid var(--border) !important; }
-.up-left-divider{ background:var(--border) !important; }
-/* Tab pills match the gamescard CTA family. */
-.up-right-tab{
+.fpp-card-modal__tabs{
+  display:flex; gap:4px;
+  padding:14px 18px 12px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.fpp-card-modal__tab{
+  padding:7px 13px;
+  border-radius:8px;
   font-family:var(--font-display);
   font-size:11px; font-weight:800;
   letter-spacing:.08em; text-transform:uppercase;
   color:var(--muted-light);
-  border-radius:8px;
-  padding:8px 14px;
-  transition:background .15s, color .15s;
+  cursor:pointer;
+  border:1px solid transparent;
+  transition:background .15s, color .15s, border-color .15s;
 }
-.up-right-tab:hover{ background:rgba(255,255,255,.04); color:var(--text); }
-.up-right-tab.active{
+.fpp-card-modal__tab:hover{ background:rgba(255,255,255,.04); color:var(--text); }
+.fpp-card-modal__tab.is-active{
   background:rgba(255,249,62,.08);
   color:var(--accent);
+  border-color:rgba(255,249,62,.22);
+}
+.fpp-card-modal__content{
+  flex:1; overflow-y:auto; padding:18px;
+}
+.fpp-card-modal__section{
+  margin-bottom:22px;
+}
+.fpp-card-modal__section-head{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:12px;
+}
+.fpp-card-modal__section-title{
+  font-family:var(--font-display);
+  font-size:10.5px; font-weight:800;
+  letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted-light); opacity:.85;
+}
+.fpp-card-modal__section-sub{
+  font-size:11px; color:var(--muted);
+}
+.fpp-card-modal__games-grid{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;
+}
+.fpp-card-modal__game-cell{
+  aspect-ratio:1; border-radius:10px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  overflow:hidden; cursor:pointer;
+  transition:transform .15s, box-shadow .15s, border-color .15s;
+}
+.fpp-card-modal__game-cell:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 22px rgba(0,0,0,.3);
+  border-color:rgba(255,249,62,.22);
+}
+.fpp-card-modal__game-cell img{ width:100%; height:100%; object-fit:cover; }
+.fpp-card-modal__add-btn{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:6px 12px;
+  background:rgba(255,249,62,.08);
   border:1px solid rgba(255,249,62,.22);
-  padding:7px 13px;
+  color:var(--accent);
+  border-radius:8px;
+  font-family:var(--font-display);
+  font-size:10.5px; font-weight:800;
+  letter-spacing:.06em; text-transform:uppercase;
+  cursor:pointer;
+  transition:background .15s, color .15s, border-color .15s;
+}
+.fpp-card-modal__add-btn:hover{
+  background:var(--accent);
+  color:var(--rail);
+  border-color:var(--accent);
+}
+.fpp-card-modal__activity-card{
+  display:flex; gap:12px;
+  padding:12px;
+  background:rgba(0,0,0,.22);
+  border:1px solid var(--border);
+  border-radius:10px;
+  margin-bottom:8px;
+  transition:border-color .15s, background .15s;
+}
+.fpp-card-modal__activity-card:hover{
+  border-color:var(--surface-border-hover);
+  background:rgba(0,0,0,.3);
+}
+.fpp-card-modal__activity-icon{
+  width:40px; height:40px;
+  border-radius:8px; overflow:hidden;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.fpp-card-modal__activity-icon img{ width:100%; height:100%; object-fit:cover; }
+.fpp-card-modal__activity-body{ flex:1; min-width:0; }
+.fpp-card-modal__activity-title{
+  font-family:var(--font-display);
+  font-size:13px; font-weight:800;
+  color:var(--text); margin-bottom:2px;
+}
+.fpp-card-modal__activity-detail{
+  font-size:11.5px; color:var(--muted-light);
+  display:flex; gap:8px; align-items:center;
+}
+/* Profile card left-panel sections — inline (no card box) like Discord */
+.fpp-card-modal__left .fpp__inline-bio{ padding:12px 18px 0; }
+.fpp-card-modal__left-section{
+  padding:14px 18px 0;
+}
+.fpp-card-modal__left-section-title{
+  font-family:var(--font-display);
+  font-size:10.5px; font-weight:800;
+  letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted-light); opacity:.85;
+  margin-bottom:6px;
+}
+.fpp-card-modal__left-section-body{
+  font-size:12.5px; color:var(--text); line-height:1.55;
+}
+.fpp-card-modal__connection{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:7px 10px;
+  background:rgba(0,0,0,.22);
+  border:1px solid var(--border);
+  border-radius:8px;
+  margin-bottom:4px;
+  text-decoration:none;
+  transition:background .15s, border-color .15s;
+}
+.fpp-card-modal__connection:hover{
+  background:rgba(0,0,0,.32);
+  border-color:var(--surface-border-hover);
+}
+.fpp-card-modal__connection-label{
+  display:flex; align-items:center; gap:8px;
+  font-size:12px; font-weight:600;
+}
+.fpp-card-modal__connection-arrow{ color:var(--muted-light); font-size:12px; }
+.fpp-card-modal__note{
+  padding:14px 18px 18px;
+  cursor:pointer;
+}
+.fpp-card-modal__note:hover .fpp-card-modal__note-body{ color:var(--text); }
+.fpp-card-modal__note-body{
+  font-size:12px; color:var(--muted);
+  font-style:italic; line-height:1.5;
+  transition:color .15s;
 }
 
-/* Profile card action buttons match gamescard CTAs. */
-.up-action-edit{
-  background:rgba(255,249,62,.08) !important;
-  color:var(--accent) !important;
-  border:1px solid rgba(255,249,62,.22) !important;
-  font-family:var(--font-display);
-  letter-spacing:.06em; text-transform:uppercase;
-  border-radius:10px;
-}
-.up-action-edit:hover{
-  background:var(--accent) !important;
-  color:var(--rail) !important;
-  border-color:var(--accent) !important;
-}
-.up-action-msg{
-  background:rgba(255,249,62,.08) !important;
-  color:var(--accent) !important;
-  border:1px solid rgba(255,249,62,.22) !important;
-  font-family:var(--font-display);
-  letter-spacing:.06em; text-transform:uppercase;
-  border-radius:10px;
-}
-.up-action-msg:hover{
-  background:var(--accent) !important;
-  color:var(--rail) !important;
-  border-color:var(--accent) !important;
-}
-.up-action-add,
-.up-action-unfriend,
-.up-action-util{
-  background:rgba(255,255,255,.03) !important;
-  border:1px solid var(--border) !important;
-  color:var(--muted-light) !important;
-  font-family:var(--font-display);
-  letter-spacing:.06em; text-transform:uppercase;
-  font-size:11px; font-weight:800;
-  border-radius:10px;
-}
-.up-action-add:hover,
-.up-action-unfriend:hover,
-.up-action-util:hover{
-  background:rgba(255,255,255,.06) !important;
-  color:var(--text) !important;
-}
-
-/* ── Settings profile preview ───────────────────────────────────────── */
-.settings-profile-preview{
-  background:
-    radial-gradient(520px 90px at 15% 0%, rgba(255,249,62,.045), transparent 70%),
-    linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
-    var(--panel) !important;
-  border:1px solid var(--border) !important;
-  border-radius:16px !important;
-  position:relative;
-  overflow:hidden;
-}
-.settings-profile-preview::before{
-  content:""; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
-  box-shadow:0 0 14px rgba(255,249,62,.35);
-  pointer-events:none; z-index:5;
+/* Animations */
+@keyframes fppPopIn{
+  from{ opacity:0; transform:scale(.96) translateY(4px); }
+  to{ opacity:1; transform:scale(1) translateY(0); }
 }
 
 </style>

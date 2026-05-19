@@ -3,39 +3,70 @@
 Carried forward from the "redesign profile previews + fix bugs" sessions.
 Items here were explicitly deferred — they are not blocked, just not done yet.
 
-## Profile previews redesign — VISUAL UNIFICATION DONE
+## Profile previews redesign — FULL REWRITE DONE
 
-Landed a single retrofit block at the bottom of `app/styles.css` that
-gives every profile-preview surface the `.pw-widget` GamesCard
-treatment — theme-aware `var(--panel)` base + corner accent wash +
-single thin glowing top rule + matching section-title typography +
-ghost-accent action buttons. Profile Card (rank 1) gets the strongest
-treatment; Mini / DM / Own / Settings get a dialed-back version
-closer to Discord proportions.
+Component library: `.fpp-*` ("Fortized Profile Preview"). Single
+source of truth at the bottom of `app/styles.css`. No `!important`
+hacks, no inline-styled per-variant overrides — all five surfaces
+are composed from the same primitives.
 
-| Rank | Variant                          | Rendering site                     | Status |
-|------|----------------------------------|------------------------------------|--------|
-| 1    | Profile Card (full modal)        | `_viewUserProfile()` ~`app/app.js:18758` | retrofit applied |
-| 2    | Userbar own-profile panel        | delegates to mini, fallback ~`:40339`     | retrofit applied |
-| 2    | Chat/memberlist mini preview     | `showMiniProfilePreview()` ~`:40456`      | retrofit applied |
-| 2    | DM sidebar panel                 | `showDMUserPanel()` ~`:29467`             | retrofit applied + Games strip added |
-| 3    | Settings profile preview         | `buildProfileView('myprofile')` ~`:17209` | retrofit applied |
+| Rank | Variant                       | Class            | Width   | Rendering site                                |
+|------|-------------------------------|------------------|---------|-----------------------------------------------|
+| 1    | Profile Card (full modal)     | `.fpp-card-modal`| 900px   | `_viewUserProfile()` ~`app/app.js:18758`      |
+| 2    | Userbar own-profile popover   | `.fpp.fpp--own`  | 340px   | `_renderOwnProfilePopover()`                  |
+| 2    | Chat/memberlist mini popover  | `.fpp.fpp--mini` | 340px   | `showMiniProfilePreview()`                    |
+| 2    | DM sidebar panel              | `.fpp.fpp--dm`   | full    | `showDMUserPanel()` ~`:29467`                 |
+| 3    | Settings preview stack        | 3 stacked cards  | 380px   | `buildProfileView('myprofile')` ~`:17209`     |
 
-### Remaining nice-to-haves (deferred)
+### What landed
 
-- The userbar own-profile panel currently delegates to the mini
-  popover. Status switching is reachable via the popover's "Status"
-  button (opens `openStatusPicker`), not inline. If you want
-  Discord-style inline status radios in the userbar popover, that
-  needs new HTML in `showMiniProfilePreview` gated on
-  `_isUserbarAnchor`.
-- Settings preview "Switch Accounts" CTA isn't surfaced anywhere
-  outside the legacy own-profile-panel fallback. If you want it
-  on the userbar popover too, add to the `isOwn` actions row in
-  `showMiniProfilePreview`.
-- Full visual rewrite of the inline-styled banner/avatar/status-row
-  structure (vs. the current CSS retrofit) would clean up the JS
-  but isn't necessary to match the spec.
+- **Shared primitives**: `.fpp__banner`, `.fpp__av-row`, `.fpp__av`,
+  `.fpp__cs-bubble` (Discord-style chat bubble overlapping the
+  avatar), `.fpp__identity`, `.fpp-card` (boxed sub-card for Bio /
+  Member Since / Games), `.fpp-row` (interactive chevron row),
+  `.fpp__games-strip`, `.fpp__actions` (`[Message wide] [+ square]
+  [⋯ square]`), `.fpp-menu` (dropdown for ⋯), `.fpp__msg-input`
+  (pinned-bottom composer).
+- **Theme-aware surface**: every variant uses `var(--panel)` under a
+  translucent black film + corner accent wash, so the user's chosen
+  Appearance bleeds through automatically.
+- **Single glowing top rule** via `::before` on every surface, matching
+  the gamescards.
+- **Discord-style action row**: `[Message]` (flex 1) + `[+ / ✓ / ⏳]`
+  square friend-state button + `[⋯]` square that opens a dropdown
+  menu containing Invite to Bastion ▶ (with nested sub-menu of the
+  user's bastions), Ignore, Block, Report.
+- **Userbar own-profile popover**: status row + chevron that opens
+  a nested submenu (NOT 4 inline radios). Switch-accounts row with
+  the same pattern, showing all saved accounts + Add account + Log
+  out. Inline bio, game-collection strip, Edit Profile primary CTA.
+- **Settings preview replaced** with the Discord triple-preview:
+  (1) profile preview — banner + pfp + cs bubble + identity +
+  "Example Button" only, no bio/badges/games. (2) Message preview —
+  chat bubble using the user's display style. (3) Nameplate preview
+  — 32px row.
+- **DM sidebar panel** uses Bio / Member Since / Games / Mutual
+  Friends as boxed cards + a pinned-bottom Message input.
+- **Profile Card modal** is 900px 2-panel: left = banner + pfp + cs
+  bubble + identity + inline bio + member since + roles +
+  connections + note + actions; right = Board (widgets + Games I
+  Like 4-col grid) / Activity / Wishlist / Mutual Friends tabs.
+
+### Helpers added
+- `_fppFormatDate`, `_fppBannerHTML`, `_fppAvatarHTML`,
+  `_fppCSBubbleHTML`, `_fppIdentityHTML`, `_fppBioCardHTML`,
+  `_fppMemberSinceCardHTML`, `_fppGamesCardHTML`, `_fppActionRowHTML`
+- `_fppClose`, `_fppShowMoreMenu`, `_fppShowInviteSub`,
+  `_fppShowStatusSubmenu`, `_fppShowAccountsSubmenu`,
+  `_fppPositionPopover`, `_fppSwitchTab`
+
+### What was deleted
+- All `.mpp-*`, `.up-left-*`, `.up-right-*`, `.up-card`, `.dm-up-*`,
+  `.own-profile-panel`, `.settings-profile-preview` rendering HTML.
+  Their CSS stays in `styles.css` for now (dead code; safe to garbage-
+  collect in a future pass).
+- The legacy 4-radio own-profile panel + `_closeOwnProfileOutside` +
+  `_ownProfileOpen` state tracking.
 
 ## Status-system — partial fix landed, monitor for repros
 

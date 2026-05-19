@@ -17201,60 +17201,75 @@ function _buildProfileView(tab) {
 
           </div>
 
-          <!-- RIGHT: sticky preview — mirrors the popover visual language so
-               every Fortized profile surface reads as the same family. -->
+          <!-- RIGHT: sticky preview stack (Discord triple-preview pattern):
+               1) Profile preview — banner + pfp + cs bubble + identity +
+                  "Example Button" only. No bio / badges / games here, so
+                  the surface stays focused on what the user is actually
+                  configuring in the settings inputs.
+               2) Message preview — chat-bubble using the user's display style.
+               3) Nameplate preview — 32px row, the chat-list rendering.
+               All three share the .fpp surface treatment so they read as
+               the same family. -->
           <div style="position:sticky;top:20px;">
+            <div class="fpp-settings-stack">
 
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:10px;">Preview</div>
-            <div class="settings-profile-preview mini-profile-preview" style="position:relative;width:auto;max-height:none;animation:none;${themeC1?'border-color:transparent;background-image:linear-gradient(160deg,'+themeC1+'0a,var(--panel) 30%,var(--panel) 70%,'+(themeC2||themeC1)+'08),linear-gradient(135deg,'+themeC1+'40,'+(themeC2||themeC1)+'40);background-origin:border-box;background-clip:padding-box,border-box;border-width:1.5px;border-style:solid;':''}margin-bottom:18px;">
-              <!-- Banner: Fortized icons pattern (or user banner if Radiance), click→upload -->
-              <div class="mpp-banner" style="cursor:pointer;" onclick="document.getElementById('banner-file-inp')?.click();" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'" title="Change banner">
-                ${(CU.banner && hasRadiance) ? '<img src="'+escapeHTML(CU.banner)+'">' : '<div style="width:100%;height:100%;background:'+(themeC1?'linear-gradient(135deg,'+themeC1+'55,'+(themeC2||themeC1)+'33),':'')+"url('/wrapBackground.png') center/cover no-repeat,#0e1117;\"></div>"}
-                ${themeC1 ? '<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+themeC1+','+(themeC2||themeC1)+');opacity:.7;z-index:1;"></div>' : ''}
-              </div>
-              <!-- Avatar row: avatar + custom-status pill + streak chip -->
-              <div class="mpp-av-area">
-                <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;position:relative;" onclick="_showAvatarPickerMenu(event)" title="Change avatar">
-                  <div class="mpp-av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 64)}</div>
-                  ${CU.activeDecoration ? (()=>{const d=PROFILE_DECORATIONS.find(dec=>dec.id===CU.activeDecoration);return d?'<img src="'+escapeHTML(d.src)+'" class="profile-decoration-overlay" onerror="this.style.display=\'none\'">':'';})() : ''}
-                  <span class="profile-status-dot" data-for="${escapeHTML(CU.username)}" data-dot-size="18" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;z-index:3;">${FtzStatus.dotSvg(CU.status||'online', 18)}</span>
-                </div>
-                <button class="profile-custom-status mpp-cs-pill ${cs&&cs.text ? '' : 'mpp-cs-pill--empty'}" data-for="${escapeHTML(CU.username)}" onclick="openStatusPicker()">${cs&&cs.text ? '<span class="csb-emoji">'+(cs.emoji?'<img src="'+emojiToTwemojiUrl(cs.emoji)+'" onerror="this.outerHTML=\''+escapeHTML(cs.emoji)+'\'">':'')+'</span><span class="csb-text">'+escapeHTML(cs.text).slice(0,40)+'</span>' : '<span class="mpp-cs-plus">+</span><span class="csb-text">Add a status</span>'}</button>
-                ${(+CU.dailyStreak) ? '<div class="mpp-streak-chip">'+(typeof _streakFlameSvg==='function' ? _streakFlameSvg(11) : '🔥')+'<span>'+(+CU.dailyStreak)+'</span></div>' : ''}
-              </div>
-              <!-- Identity: display name + handle row with badges right-aligned -->
-              <div class="mpp-identity">
-                <div class="mpp-displayname" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
-                <div class="mpp-handle-row">
-                  <div class="mpp-username">@${escapeHTML(CU.username)}${CU.pronouns ? '<span class="mpp-handle-dot">·</span>'+escapeHTML(CU.pronouns) : ''}</div>
-                  <div class="mpp-badges-inline">${renderBadgesHTML(CU)}</div>
-                </div>
-              </div>
-              <!-- About Me section — matches popover/modal layout -->
-              <div id="preview-bio-section" style="${CU.bio?'':'display:none;'}">
-                <div class="mpp-divider"></div>
-                <div class="mpp-section">
-                  <div class="mpp-section-title">About Me</div>
-                  <div class="mpp-bio" id="preview-bio-body">${CU.bio ? (parseBioMD(CU.bio.slice(0,300))+(CU.bio.length>300?'…':'')) : ''}</div>
+              <!-- (1) PROFILE PREVIEW -->
+              <div>
+                <div class="fpp-settings-stack__label">Preview</div>
+                <div class="fpp fpp--settings settings-profile-preview" data-fpp-settings-card>
+                  <div class="fpp__banner" onclick="document.getElementById('banner-file-inp')?.click();" title="Change banner" style="cursor:pointer;">
+                    ${(CU.banner && hasRadiance) ? '<img src="'+escapeHTML(CU.banner)+'" alt="">' : '<div class="fpp__banner-fallback"></div>'}
+                  </div>
+                  <div class="fpp__av-row">
+                    <div class="fpp__av-wrap" onclick="_showAvatarPickerMenu(event)" title="Change avatar" style="cursor:pointer;">
+                      <div class="fpp__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 72)}</div>
+                      ${CU.activeDecoration ? (()=>{ const d = PROFILE_DECORATIONS.find(dec => dec.id === CU.activeDecoration); return d ? '<img src="'+escapeHTML(d.src)+'" class="fpp__decoration" onerror="this.style.display=\'none\'">' : ''; })() : ''}
+                      <span class="fpp__status-dot profile-status-dot" data-for="${escapeHTML(CU.username)}" data-dot-size="22">${FtzStatus.dotSvg(CU.status||'online', 22)}</span>
+                    </div>
+                    ${cs && cs.text
+                      ? '<div class="fpp__cs-bubble profile-custom-status" data-for="'+escapeHTML(CU.username)+'" onclick="openStatusPicker()">'+(cs.emoji?'<span class="fpp__cs-emoji"><img src="'+emojiToTwemojiUrl(cs.emoji)+'" alt="" onerror="this.outerHTML=\''+escapeHTML(cs.emoji).replace(/\'/g, "\\\'")+'\'"></span>':'')+'<span class="fpp__cs-text">'+escapeHTML(cs.text).slice(0,40)+'</span></div>'
+                      : '<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="'+escapeHTML(CU.username)+'" onclick="openStatusPicker()"><span class="fpp__cs-text">+ Add status</span></div>'}
+                  </div>
+                  <div class="fpp__identity">
+                    <div class="fpp__name" id="preview-displayname" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
+                    <div class="fpp__handle-row" id="preview-handle-row">
+                      <span class="fpp__handle">@${escapeHTML(CU.username)}</span>
+                      ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">'+escapeHTML(CU.pronouns)+'</span>' : ''}
+                      <span class="fpp__badges">${renderBadgesHTML(CU)}</span>
+                    </div>
+                  </div>
+                  <button class="fpp-settings-example-btn" type="button">Example Button</button>
                 </div>
               </div>
-              ${(CU.joinedAt||CU.createdAt) ? '<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">'+new Date(CU.joinedAt||CU.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</div></div>' : ''}
-              <div id="preview-widgets-container"></div>
-              <div style="height:14px;"></div>
+
+              <!-- (2) MESSAGE PREVIEW -->
+              <div>
+                <div class="fpp-settings-stack__label">Message preview</div>
+                <div class="fpp-msg-preview">
+                  <div class="fpp-msg-preview__row">
+                    <div class="fpp-msg-preview__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 36)}</div>
+                    <div class="fpp-msg-preview__body">
+                      <div class="fpp-msg-preview__name-row">
+                        <span class="fpp-msg-preview__name" id="preview-msg-name" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
+                        <span class="fpp-msg-preview__time">Today at 12:34</span>
+                      </div>
+                      <div class="fpp-msg-preview__text">Hey! This is what your messages look like.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- (3) NAMEPLATE PREVIEW -->
+              <div>
+                <div class="fpp-settings-stack__label">Nameplate</div>
+                <div class="fpp-nameplate-preview">
+                  <div class="fpp-nameplate-preview__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 32)}</div>
+                  <div class="fpp-nameplate-preview__name" id="preview-nameplate-name" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
+                  <span class="fpp-nameplate-preview__dot" style="background:${sc};"></span>
+                </div>
+              </div>
+
             </div>
-
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:10px;">Nameplate</div>
-            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
-              <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--panel2);flex-shrink:0;">
-                ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<div style="width:100%;height:100%;background:'+(themeC1||'rgba(255,255,255,.06)')+';display:flex;align-items:center;justify-content:center;font-size:12px;font-family:var(--font-display);font-weight:800;color:'+(themeC1?'#fff':'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</div>'}
-              </div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
-                <div style="font-size:10px;color:rgba(255,255,255,.25);">@${escapeHTML(CU.username)}</div>
-              </div>
-              <span style="width:8px;height:8px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
-            </div>
-
           </div>
 
         </div>
@@ -18755,173 +18770,190 @@ async function _viewUserProfile(username) {
   if (_mutualFriends.length) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${_mutualFriends.slice(0,12).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>12?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-12}</div>`:''}</div></div>`);
   if (!_activityContent.length) _activityContent.push(`<div class="ftz-empty"><div class="ftz-empty-icon">🎮</div><div class="ftz-empty-text">No recent activity</div></div>`);
 
+  // ════════════════════════════════════════════════════════════════
+  // Profile Card modal — single .fpp-card-modal surface, 2-panel
+  // Discord-style. Left panel: identity + bio + member since +
+  // connections + note + actions. Right panel: tabs (Board / Activity
+  // / Wishlist / Mutual Friends) + content.
+  // ════════════════════════════════════════════════════════════════
+  const _connectionsHTML = (() => {
+    const active = _CONN_PLATFORMS.filter(p => socials[p.key]);
+    if (!active.length) return '';
+    return `<div class="fpp-card-modal__left-section">
+      <div class="fpp-card-modal__left-section-title">Connections</div>
+      ${active.map(p => `<a href="#" class="fpp-card-modal__connection" onclick="openExternalLink(event,'${escapeHTML(socials[p.key])}')">
+        <span class="fpp-card-modal__connection-label" style="color:${p.color};">${_connIcon(p.key)} ${p.label}</span>
+        <span class="fpp-card-modal__connection-arrow">↗</span>
+      </a>`).join('')}
+    </div>`;
+  })();
+
+  const _rolesHTML = (_currentView === 'bastion' && curBastion !== null)
+    ? `<div class="fpp-card-modal__left-section">
+         <div class="fpp-card-modal__left-section-title">Roles</div>
+         <div style="display:flex;flex-wrap:wrap;gap:5px;">${renderUserRoleTags(username) || '<span style="font-size:12px;color:var(--muted);">No roles</span>'}</div>
+       </div>` : '';
+
+  const _noteHTML = !isOwn ? `<div class="fpp-card-modal__note" onclick="_openUserNote('${escapeHTML(username)}')">
+    <div class="fpp-card-modal__left-section-title" style="display:flex;align-items:center;gap:6px;">Note
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.5;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </div>
+    <div class="fpp-card-modal__note-body">${_userNote ? escapeHTML(_userNote.slice(0, 200)) : 'Click to add a note…'}</div>
+  </div>` : '';
+
+  // Tabs visibility
+  const wl = Array.isArray(u.wishlist) ? u.wishlist : [];
+  const wlPriv = !!u.wishlistPrivate;
+  const showWishlistTab = isOwn || (!wlPriv && wl.length > 0);
+  const showMutualsTab = !isOwn;
+
+  // Inject the modal scaffold
   modalEl.innerHTML = `
-    <div style="${themeBorder}">
-    <div class="up-card" style="position:relative;${profileCardBg ? `background:${profileCardBg};` : ''}">
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
       <div class="pbo-icon" style="font-size:32px;color:rgba(248,113,113,.5);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
       <div class="pbo-text">You blocked ${escapeHTML(username)}</div>
       <div class="pbo-sub">Their profile is hidden</div>
       <button class="pbo-reveal" onclick="document.getElementById('profile-blocked-overlay').style.display='none'">Show Profile</button>
     </div>` : ''}
-    <!-- LEFT PANEL -->
-    <div class="up-left">
-      <!-- Banner -->
-      <div class="up-left-banner" style="background:${bannerBg};">
-        ${userBanner ? `<img src="${escapeHTML(userBanner)}" style="width:100%;height:100%;object-fit:cover;">` : ''}
-        ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.6;z-index:1;"></div>` : ''}
-      </div>
-      <!-- Avatar -->
-      <div class="up-left-av-area">
-        <div class="profile-decoration-wrap" style="position:relative;">
-          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 88)}</div>
-          ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay-lg" onerror="this.style.display='none'">` : ''}
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22" style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 22)}</span>
+    <div class="fpp-card-modal">
+      <!-- LEFT PANEL: identity + bio + member since + connections + actions -->
+      <div class="fpp-card-modal__left">
+        <div class="fpp__banner">${_fppBannerHTML(u, hasUserRadiance)}</div>
+        <div class="fpp__av-row">
+          <div class="fpp__av-wrap">${_fppAvatarHTML(u, 92)}</div>
+          ${_fppCSBubbleHTML(u, isOwn)}
         </div>
-      </div>
-      <!-- Name -->
-      <div class="up-left-info">
-        <div class="up-left-name" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">
-          ${escapeHTML(u.displayName||u.username)}
-        </div>
-        <div class="up-left-uname">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.25);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
-        ${(+u.dailyStreak) ? `<div class="up-left-streak" style="margin-top:8px;">${renderStreakChip(+u.dailyStreak, { size: 'lg' })}</div>` : ''}
-      </div>
-      <!-- Status -->
-      <div class="up-left-status">
-        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);">
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="10" style="width:10px;height:10px;display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 10)}</span>
-          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
-        </div>
-        ${customStatus?.text ? `<div style="font-size:10.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);color:rgba(255,255,255,.4);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text)}</div>` : `<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
-      </div>
-      <!-- Badges -->
-      <div class="up-left-badges">${renderBadgesHTML(u)}</div>
-      <div class="up-left-divider"></div>
-      <!-- Bio: headerless, polished markdown — leaves room for "Role at
-           Company" + signup-link content like a business card. -->
-      ${u.bio ? `<div class="up-left-section"><div class="up-left-section-title">About Me</div><div class="up-left-bio">${parseBioMD(u.bio.slice(0,500))}${u.bio.length>500?'…':''}</div></div>` : ''}
-      <!-- Member Since -->
-      ${_memberSince ? `<div class="up-left-section"><div class="up-left-section-title">Member Since</div><div style="font-size:12.5px;color:rgba(255,255,255,.45);font-weight:500;">${_memberSince}</div></div>` : ''}
-      <!-- Roles -->
-      ${_currentView === 'bastion' && curBastion !== null ? `<div class="up-left-divider"></div><div class="up-left-section"><div class="up-left-section-title">Roles</div><div style="display:flex;flex-wrap:wrap;gap:5px;">${renderUserRoleTags(username)}</div></div>` : ''}
-      <!-- Connections -->
-      ${Object.values(socials).some(Boolean) ? `<div class="up-left-divider"></div><div class="up-left-section"><div class="up-left-section-title">Connections</div><div style="display:flex;flex-direction:column;gap:5px;">${_CONN_PLATFORMS.filter(p=>socials[p.key]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.key])}')" class="up-social-link" style="background:${p.color}0a;color:${p.color};border-color:${p.color}18;padding:7px 14px;font-size:11.5px;display:flex;align-items:center;gap:8px;">${_connIcon(p.key)} ${p.label}</a>`).join('')}</div></div>` : ''}
-      <!-- Note -->
-      ${!isOwn ? `<div class="up-left-section" onclick="_openUserNote('${escapeHTML(username)}')" style="cursor:pointer;" title="Click to edit note">
-        <div class="up-left-section-title" style="display:flex;align-items:center;gap:6px;">Note <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.3;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
-        <div style="font-size:12px;color:rgba(255,255,255,.32);font-style:italic;line-height:1.55;">${_userNote ? escapeHTML(_userNote.slice(0,200)) : 'Click to add a note...'}</div>
-      </div>` : ''}
-      <!-- Actions at bottom -->
-      <div class="up-left-actions">
-        ${isOwn ? `<button class="up-action-edit" onclick="closeModal('modal-user');showView('profile')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
-         `<div style="display:flex;gap:8px;flex-wrap:wrap;">
-            ${isBlocked ? '' : `<button class="up-action-msg" onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
-            ${isBlocked ? '' :
-              isFriend ? `<button class="up-action-unfriend" onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')">Unfriend</button>` :
-              hasPending ? `<button disabled style="padding:10px 16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:12px;color:rgba(255,255,255,.25);font-size:12px;">Pending…</button>` :
-              `<button class="up-action-add" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add</button>`}
-          </div>
-          <div style="display:flex;gap:6px;margin-top:10px;">
-            <button class="up-action-util ${isBlocked?'blocked':''}" onclick="toggleBlockUser('${escapeHTML(username)}')">${isBlocked?'Unblock':'Block'}</button>
-            ${!isBlocked ? (ignored
-              ? `<button class="up-action-util ignored" onclick="unignoreUser('${escapeHTML(username)}')">Unignore</button>`
-              : `<button class="up-action-util" onclick="showIgnorePicker('${escapeHTML(username)}')">Ignore</button>`)
-            : ''}
-            <button class="up-action-util" onclick="reportUser('${escapeHTML(username)}')">Report</button>
-          </div>`}
-      </div>
-    </div>
-    <!-- RIGHT PANEL -->
-    <div class="up-right">
-      <div class="up-right-tabs">
-        <div class="up-right-tab active" onclick="_upSwitchTab(this,'up-tab-activity')">Board</div>
-        <div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-activity-detail')">Activity</div>
-        ${(() => {
-          const wl = Array.isArray(u.wishlist) ? u.wishlist : [];
-          const priv = !!u.wishlistPrivate;
-          if (!isOwn && priv) return '';
-          if (!isOwn && !wl.length) return '';
-          return `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-wishlist')">Wishlist${wl.length ? ` · ${wl.length}` : ''}</div>`;
-        })()}
-        ${!isOwn ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-mutuals')">Mutual Friends</div>` : ''}
-      </div>
-      <div class="up-right-content">
-        <!-- Board tab: widgets only. The standalone "Games I like" section
-             used to render here too, but it duplicated the data already
-             surfaced by the Games I like widget — leaving it caused two
-             grids on the same page. The widget is the single source. -->
-        <div id="up-tab-activity">
-          <div class="up-right-section" id="up-widgets-container"></div>
-          ${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;text-align:center;"><button onclick="_openAddWidgetPanel()" class="add-widget-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Widgets</button></div>` : ''}
-        </div>
-        <!-- Wishlist tab: its own page on the profile card -->
-        ${(() => {
-          const wl = Array.isArray(u.wishlist) ? u.wishlist : [];
-          const priv = !!u.wishlistPrivate;
-          if (!isOwn && priv) return '';
-          if (!isOwn && !wl.length) return '';
-          // Hide items the viewed user already owns — no point wishing for
-          // something you've unlocked. Checks both appearance and decoration
-          // catalogues against the user's owned lists.
-          const ownedA = Array.isArray(u.unlockedAppearances) ? u.unlockedAppearances : [];
-          const ownedD = Array.isArray(u.ownedDecorations) ? u.ownedDecorations : [];
-          const items = wl
-            .map(id => ({ id, it: (typeof _getShopItemById==='function' ? _getShopItemById(id) : null) }))
-            .filter(x => x.it && !ownedA.includes(x.id) && !ownedD.includes(x.id));
-          return `<div id="up-tab-wishlist" style="display:none;">
-            <div class="up-right-section" id="up-wishlist-section">
-              <div class="up-right-section-title" style="display:flex;align-items:center;gap:8px;">
-                <span>Wishlist${items.length ? ` · ${items.length}` : ''}</span>
-                ${isOwn ? `<label style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--muted);cursor:pointer;">
-                  <input type="checkbox" ${priv?'checked':''} onchange="setWishlistPrivacy(this.checked)" style="accent-color:var(--accent);"> Private
-                </label>` : `<span style="margin-left:auto;font-size:10px;color:var(--muted);font-weight:600;">Public</span>`}
-              </div>
-              ${items.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:8px;margin-top:8px;">
-                ${items.map(({id, it}) => `<div class="up-wl-card" style="padding:8px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:4px;">
-                  <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(it.name||id)}</div>
-                  <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:10px;height:10px;">${it.price || '-'}</div>
-                  ${isOwn ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}','wishlist'),60);" style="background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:4px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
-                  : `<button onclick="openGiftModal('${escapeHTML(id)}','${escapeHTML(u.username)}')" style="background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.2);border-radius:6px;padding:4px 8px;font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;justify-content:center;">${_svgIcon('gift',10)} Gift</button>`}
-                </div>`).join('')}
-              </div>` : `<div style="padding:14px;text-align:center;font-size:11.5px;color:var(--muted);">${isOwn ? 'Your wishlist is empty. Heart items in the Fortshop to add them.' : 'Wishlist is empty.'}</div>`}
-            </div>
-          </div>`;
-        })()}
-        <!-- Activity tab: current game activity -->
-        <div id="up-tab-activity-detail" style="display:none;">${_activityContent.join('')}</div>
-        <!-- Mutual Friends tab -->
-        ${!isOwn ? `<div id="up-tab-mutuals" style="display:none;">
-          ${_mutualFriends.length ? `<div class="up-right-section">
-            <div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div>
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              ${_mutualFriends.slice(0,20).map(f => { const mfd = _mutualFriendsData[f]; const mfPfp = mfd?.pfp || null; const mfDisplay = mfd?.displayName || f; return `<div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .14s;" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" class="up-mutual-row"><div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(mfPfp,mfDisplay,30)}</div><div style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(mfDisplay)}</div></div>`; }).join('')}
-            </div>
-          </div>` : `<div class="ftz-empty"><div class="ftz-empty-icon">👥</div><div class="ftz-empty-text">No mutual friends</div></div>`}
+        ${_fppIdentityHTML(u)}
+        ${u.bio ? `<div class="fpp__inline-bio">${parseBioMD(u.bio.slice(0, 500))}${u.bio.length > 500 ? '…' : ''}</div>` : ''}
+        ${_memberSince ? `<div class="fpp-card-modal__left-section">
+          <div class="fpp-card-modal__left-section-title">Member Since</div>
+          <div class="fpp-card-modal__left-section-body">${_memberSince}</div>
         </div>` : ''}
+        ${_rolesHTML}
+        ${_connectionsHTML}
+        ${_noteHTML}
+        ${_fppActionRowHTML(username, isOwn)}
       </div>
-    </div>
-    </div>
+      <!-- RIGHT PANEL: tabs + content -->
+      <div class="fpp-card-modal__right">
+        <div class="fpp-card-modal__tabs">
+          <div class="fpp-card-modal__tab is-active" data-fpp-tab="board" onclick="_fppSwitchTab(this,'board')">Board</div>
+          <div class="fpp-card-modal__tab" data-fpp-tab="activity" onclick="_fppSwitchTab(this,'activity')">Activity</div>
+          ${showWishlistTab ? `<div class="fpp-card-modal__tab" data-fpp-tab="wishlist" onclick="_fppSwitchTab(this,'wishlist')">Wishlist${wl.length ? ` · ${wl.length}` : ''}</div>` : ''}
+          ${showMutualsTab ? `<div class="fpp-card-modal__tab" data-fpp-tab="mutuals" onclick="_fppSwitchTab(this,'mutuals')">Mutual Friends${_mutualFriends.length ? ` · ${_mutualFriends.length}` : ''}</div>` : ''}
+        </div>
+        <div class="fpp-card-modal__content">
+          <!-- BOARD: widgets + games -->
+          <div data-fpp-panel="board">
+            <div class="fpp-card-modal__section">
+              <div class="fpp-card-modal__section-head">
+                <span class="fpp-card-modal__section-title">Your Widgets</span>
+                ${isOwn ? `<button class="fpp-card-modal__add-btn" onclick="_openAddWidgetPanel()">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Widget
+                </button>` : ''}
+              </div>
+              <div id="up-widgets-container"></div>
+            </div>
+            ${(u.gameCollection || []).length || isOwn ? `<div class="fpp-card-modal__section">
+              <div class="fpp-card-modal__section-head">
+                <span class="fpp-card-modal__section-title">Games I Like</span>
+                ${isOwn ? `<button class="fpp-card-modal__add-btn" onclick="closeModal('modal-user');showView('profile')">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Game
+                </button>` : ''}
+              </div>
+              <div class="fpp-card-modal__games-grid">
+                ${(u.gameCollection || []).slice(0, 12).map(g => {
+                  const cover = g.coverUrl || g.cover || g.icon || '';
+                  const safeName = escapeHTML(String(g.name || '?'));
+                  return `<div class="fpp-card-modal__game-cell" title="${safeName}">${cover && (cover.startsWith('http') || cover.startsWith('/'))
+                    ? `<img src="${escapeHTML(cover)}" alt="${safeName}" onerror="this.style.display='none'">`
+                    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:var(--muted-light);">${safeName.charAt(0).toUpperCase()}</div>`}
+                  </div>`;
+                }).join('') || (isOwn ? '<div style="grid-column:1/-1;padding:18px;text-align:center;font-size:12px;color:var(--muted);">No games yet. Add some from your profile.</div>' : '')}
+              </div>
+            </div>` : ''}
+          </div>
+          <!-- ACTIVITY: recent activity list -->
+          <div data-fpp-panel="activity" style="display:none;">
+            ${_activityContent.join('')}
+          </div>
+          <!-- WISHLIST -->
+          ${showWishlistTab ? `<div data-fpp-panel="wishlist" style="display:none;">
+            <div class="fpp-card-modal__section">
+              <div class="fpp-card-modal__section-head">
+                <span class="fpp-card-modal__section-title">Wishlist${wl.length ? ` · ${wl.length}` : ''}</span>
+                ${isOwn ? `<label style="display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--muted-light);cursor:pointer;">
+                  <input type="checkbox" ${wlPriv?'checked':''} onchange="setWishlistPrivacy(this.checked)" style="accent-color:var(--accent);"> Private
+                </label>` : `<span style="font-size:10.5px;color:var(--muted);font-weight:600;">Public</span>`}
+              </div>
+              ${(() => {
+                const ownedA = Array.isArray(u.unlockedAppearances) ? u.unlockedAppearances : [];
+                const ownedD = Array.isArray(u.ownedDecorations) ? u.ownedDecorations : [];
+                const items = wl
+                  .map(id => ({ id, it: (typeof _getShopItemById === 'function' ? _getShopItemById(id) : null) }))
+                  .filter(x => x.it && !ownedA.includes(x.id) && !ownedD.includes(x.id));
+                if (!items.length) return `<div style="padding:18px;text-align:center;font-size:12px;color:var(--muted);">${isOwn ? 'Your wishlist is empty. Heart items in the Fortshop to add them.' : 'Wishlist is empty.'}</div>`;
+                return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:8px;">
+                  ${items.map(({ id, it }) => `<div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:rgba(0,0,0,.22);display:flex;flex-direction:column;gap:6px;">
+                    <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);">${escapeHTML(it.name || id)}</div>
+                    <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:10px;height:10px;">${it.price || '-'}</div>
+                    ${isOwn
+                      ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}','wishlist'),60);" style="background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.22);border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
+                      : `<button onclick="openGiftModal('${escapeHTML(id)}','${escapeHTML(u.username)}')" style="background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.22);border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;justify-content:center;">${_svgIcon('gift', 10)} Gift</button>`}
+                  </div>`).join('')}
+                </div>`;
+              })()}
+            </div>
+          </div>` : ''}
+          <!-- MUTUAL FRIENDS -->
+          ${showMutualsTab ? `<div data-fpp-panel="mutuals" style="display:none;">
+            ${_mutualFriends.length ? `<div class="fpp-card-modal__section">
+              <div class="fpp-card-modal__section-title" style="margin-bottom:10px;">Mutual Friends — ${_mutualFriends.length}</div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                ${_mutualFriends.slice(0, 20).map(f => {
+                  const mfd = _mutualFriendsData[f];
+                  const mfPfp = mfd?.pfp || null;
+                  const mfDisplay = mfd?.displayName || f;
+                  return `<div onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='transparent'">
+                    <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel2);">${buildAvatarHTML(mfPfp, mfDisplay, 30)}</div>
+                    <div style="font-size:13px;color:var(--text);font-weight:600;">${escapeHTML(mfDisplay)}</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>` : `<div style="padding:30px;text-align:center;color:var(--muted);">
+              <div style="font-size:32px;margin-bottom:8px;opacity:.5;">👥</div>
+              <div style="font-size:13px;">No mutual friends</div>
+            </div>`}
+          </div>` : ''}
+        </div>
+      </div>
     </div>`;
 
   openModal('modal-user');
-  // Deep-link to a specific profile-card tab if a caller set window._upPendingTab.
   if (window._upPendingTab) {
     const pending = window._upPendingTab;
     window._upPendingTab = null;
     setTimeout(() => {
-      const targetId = 'up-tab-' + pending;
-      const targetTab = document.querySelector(`.up-right-tab[onclick*="${targetId}"]`);
-      if (targetTab) _upSwitchTab(targetTab, targetId);
+      const targetTab = document.querySelector(`.fpp-card-modal__tab[data-fpp-tab="${pending}"]`);
+      if (targetTab) _fppSwitchTab(targetTab, pending);
     }, 40);
   }
-  // Render profile widgets if the user has any enabled. Wrapped so a
-  // misconfigured widget can't unwind the whole open-profile flow.
   try {
     const widgetsContainer = document.getElementById('up-widgets-container');
     if (widgetsContainer) renderProfileWidgetsOnCard(u, widgetsContainer);
   } catch (e) { console.warn('[Profile] widget render failed', e?.message); }
-  // Widget manager is the "Add Widgets" button (already in HTML above)
+}
+
+function _fppSwitchTab(tabEl, panelId) {
+  tabEl.parentElement.querySelectorAll('.fpp-card-modal__tab').forEach(t => t.classList.remove('is-active'));
+  tabEl.classList.add('is-active');
+  const modal = tabEl.closest('.fpp-card-modal');
+  if (!modal) return;
+  modal.querySelectorAll('[data-fpp-panel]').forEach(p => p.style.display = 'none');
+  const target = modal.querySelector(`[data-fpp-panel="${panelId}"]`);
+  if (target) target.style.display = '';
 }
 
 function _upSwitchTab(tabEl, panelId) {
@@ -29468,89 +29500,62 @@ async function showDMUserPanel(username) {
   const panel = document.getElementById('dm-user-panel');
   if (!panel) return;
   panel.style.display = 'block';
-  panel.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">Loading\u2026</div>';
+  panel.className = 'fpp fpp--dm';
+  panel.innerHTML = '<div style="padding:24px;color:var(--muted-light);font-size:13px;text-align:center;">Loading\u2026</div>';
   subscribeProfileStatus(username);
+
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch(e) { _dbg('[DM] user lookup failed', e); }
+  try { u = await FortizedSocial.getUserByName(username); } catch (e) { _dbg('[DM] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
+
   // Update DM welcome area with actual pfp
   const _wAv = document.getElementById('dm-welcome-av');
-  if (_wAv) _wAv.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||username, 60);
+  if (_wAv) _wAv.innerHTML = buildAvatarHTML(u.pfp || null, u.displayName || username, 60);
   const _wName = document.getElementById('dm-welcome-name');
   if (_wName) _wName.textContent = u.displayName || username;
+
   let status = 'offline';
   try {
     const pr = await FortizedSocial.queryPresence([username]);
     if (pr && pr[username]) { status = pr[username].status || 'offline'; }
-    else { try { status = await FortizedSocial.getStatus(username); } catch(e) { _dbg('[DM] status fallback failed', e); } }
-  } catch(e) { _dbg('[DM] presence query failed', e); try { status = await FortizedSocial.getStatus(username); } catch(e2) { _dbg('[DM] status fallback failed', e2); } }
-  const sc = FtzStatus.color(status);
-  const hasR = _hasRadiance(u);
-  const hasRadiancePlus = _hasRadiance(u);
-  const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
-  const socials = u.socials || {};
-  const customStatus = u.customStatus;
-  // Build connections HTML
-  const activeConns = _CONN_PLATFORMS.filter(p=>socials[p.key]);
-  const connHtml = activeConns.length ? '<div style="padding:12px 16px;"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;">Connections</div><div style="display:flex;flex-direction:column;gap:4px;">'
-    + activeConns.map(p=>'<a href="#" onclick="openExternalLink(event,\'' + escapeHTML(socials[p.key]) + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);text-decoration:none;transition:background .15s;" onmouseenter="this.style.background=\'rgba(255,255,255,.06)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.03)\'"><span style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:'+p.color+';">'+_connIcon(p.key)+' '+p.label+'</span><span style="font-size:12px;color:rgba(255,255,255,.25);">\u2192</span></a>').join('')
-    + '</div></div>' : '';
-  // Banner: same Fortized icons pattern as popover/modal \u2014 keeps every
-  // profile surface visually cohesive. User banner overrides if Radiance.
-  const userBanner = (u.banner && hasR) ? u.banner : null;
-  const bannerInner = userBanner
-    ? '<img src="' + escapeHTML(userBanner) + '" style="width:100%;height:100%;object-fit:cover;">'
-    : '<div style="width:100%;height:100%;background:' + (profileTheme?'linear-gradient(135deg,'+profileTheme.color1+'55,'+(profileTheme.color2||profileTheme.color1)+'33),':'') + "url('/wrapBackground.png') center/cover no-repeat,#0e1117;\"></div>";
-  const memberSince = (u.joinedAt||u.createdAt) ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null;
-  panel.innerHTML =
-    // Banner
-    '<div class="dm-up-banner">'
-    +   bannerInner
-    +   (profileTheme ? '<div class="dm-up-banner-stripe" style="background:linear-gradient(90deg,'+profileTheme.color1+','+profileTheme.color2+');"></div>' : '')
-    + '</div>'
-    // Avatar row: avatar + custom-status pill on same line
-    + '<div class="dm-up-av-area">'
-    +   '<div class="profile-decoration-wrap" style="position:relative;flex-shrink:0;">'
-    +     '<div class="dm-up-av">' + buildAvatarHTML(u.pfp, u.displayName||u.username, 72) + '</div>'
-    +     (u.activeDecoration ? '<img src="'+(getDecorationSrc(u.activeDecoration)||'')+'" class="profile-decoration-overlay" onerror="this.style.display=\'none\'">' : '')
-    +     '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" data-dot-size="20" style="position:absolute;bottom:2px;right:2px;width:20px;height:20px;z-index:3;">' + FtzStatus.dotSvg(u.status||'offline', 20) + '</span>'
-    +   '</div>'
-    +   (customStatus?.text
-        ? '<div class="cloud-status-bubble profile-custom-status mpp-cs-pill" data-for="'+escapeHTML(u.username)+'" tabindex="-1"><span class="csb-emoji">'+(customStatus.emoji?'<img src="'+emojiToTwemojiUrl(customStatus.emoji)+'" onerror="this.outerHTML=\''+escapeHTML(customStatus.emoji)+'\'">':'')+'</span><span class="csb-text">'+escapeHTML(customStatus.text).slice(0,40)+'</span></div>'
-        : '<div class="profile-custom-status mpp-cs-pill" data-for="'+escapeHTML(u.username)+'" style="display:none;"></div>')
-    + '</div>'
-    // Identity: display name + handle row with badges right-aligned
-    + '<div class="dm-up-identity">'
-    +   '<div class="dm-up-displayname" style="font-family:'+getDisplayFont(u)+';'+_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')+'">' + escapeHTML(u.displayName||u.username) + '</div>'
-    +   '<div class="mpp-handle-row">'
-    +     '<div class="dm-up-handle">@' + escapeHTML(u.username) + (u.pronouns ? '<span class="mpp-handle-dot">\u00b7</span>'+escapeHTML(u.pronouns) : '') + '</div>'
-    +     '<div class="mpp-badges-inline">' + (typeof renderBadgesHTML==='function' ? renderBadgesHTML(u) : '') + '</div>'
-    +   '</div>'
-    + '</div>'
-    // Bio (headerless markdown \u2014 Discord-style business card)
-    + (u.bio ? '<div class="dm-up-card"><div class="dm-up-card-title">About Me</div><div class="dm-up-bio" style="padding:0;">' + parseBioMD(u.bio.slice(0,300)) + (u.bio.length>300?'\u2026':'') + '</div></div>' : '')
-    // Member Since (compact card)
-    + (memberSince ? '<div class="dm-up-card"><div class="dm-up-card-title">Member Since</div><div class="dm-up-card-body">' + memberSince + '</div></div>' : '')
-    // Games collection (rank-2 hierarchy parity with the mini popover)
-    + ((u.gameCollection||u.registeredGames||[]).length
-        ? '<div class="dm-up-card"><div class="dm-up-card-title">Games</div><div class="mpp-games" style="padding:0;">'
-          + ((u.gameCollection||u.registeredGames||[]).slice(0,5).map(g => {
-              const cover = g.coverUrl || g.cover || g.icon || '';
-              const safeName = String(g.name || '?');
-              if (cover && (cover.startsWith('http') || cover.startsWith('/'))) {
-                return '<img src="'+escapeHTML(cover)+'" title="'+escapeHTML(safeName)+'" onerror="this.style.display=\'none\'">';
-              }
-              return '<span title="'+escapeHTML(safeName)+'">'+escapeHTML(safeName.charAt(0).toUpperCase())+'</span>';
-            }).join(''))
-          + (((u.gameCollection||u.registeredGames||[]).length > 5) ? '<span>+'+((u.gameCollection||u.registeredGames||[]).length-5)+'</span>' : '')
-          + '</div></div>'
-        : '')
-    // Connections (kept \u2014 DM-context useful)
-    + connHtml
-    // View Full Profile (primary, fits the design language)
-    + '<div class="dm-up-actions">'
-    +   '<button class="mpp-btn-primary" onclick="viewUserProfile(\'' + escapeHTML(username) + '\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View Full Profile</button>'
-    + '</div>';
+    else { try { status = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[DM] status fallback failed', e); } }
+  } catch (e) {
+    _dbg('[DM] presence query failed', e);
+    try { status = await FortizedSocial.getStatus(username); } catch (e2) { _dbg('[DM] status fallback failed', e2); }
+  }
+  u.status = status;
+
+  const isOwn = username === CU?.username;
+  const hasRadiance = _hasRadiance(u);
+  const mutualFriends = isOwn ? [] : (CU?.friends || []).filter(f => f !== CU?.username && f !== username && (u.friends || []).includes(f));
+  const mutualsRow = mutualFriends.length
+    ? `<div class="fpp-row" onclick="_fppClose();viewUserProfile('${escapeHTML(username)}','mutuals')">
+         <span class="fpp-row__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+         <span class="fpp-row__label">Mutual Friends \u2014 ${mutualFriends.length}</span>
+         <span class="fpp-row__chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+       </div>`
+    : '';
+
+  panel.innerHTML = `
+    <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
+    <div class="fpp__av-row">
+      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 72)}</div>
+      ${_fppCSBubbleHTML(u, isOwn)}
+    </div>
+    ${_fppIdentityHTML(u)}
+    ${_fppBioCardHTML(u, 200, `viewUserProfile('${escapeHTML(username)}')`)}
+    ${_fppMemberSinceCardHTML(u)}
+    ${_fppGamesCardHTML(u)}
+    ${mutualsRow}
+    <div style="flex:1;"></div>
+    ${!isOwn ? `<div class="fpp__msg-input" onclick="openDMView('${escapeHTML(username)}')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      Message @${escapeHTML(u.displayName || u.username)}
+    </div>` : ''}`;
+
+  panel.querySelectorAll('[data-action="open-profile"]').forEach(el => {
+    el.addEventListener('click', () => viewUserProfile(username));
+  });
 }
 
 
@@ -40043,79 +40048,48 @@ function _blendColorsForProfileCard(color1, color2) {
   return '#' + [r, g, b].map(x => ('0' + x.toString(16)).slice(-2)).join('');
 }
 function updateProfilePreview() {
-  // Live-update the settings sticky preview as the user edits inputs.
-  const previewContainer = document.querySelector('.settings-profile-preview');
-  if (!previewContainer) return;
+  // Live-update the settings triple-preview as the user edits inputs.
+  // Touches all three previews (profile card, message bubble, nameplate)
+  // so they stay in sync with the live form state without a re-render.
+  const settingsCard = document.querySelector('[data-fpp-settings-card]');
+  if (!settingsCard) return;
 
   const dnInp = document.getElementById('dn-input');
-  const bioInp = document.getElementById('bio-input');
   const pronounsInp = document.getElementById('pronouns-input');
   const displayName = dnInp ? (dnInp.value.trim() || CU.username) : (CU.displayName || CU.username);
-  const bio = bioInp ? bioInp.value.trim() : (CU.bio || '');
   const pronouns = pronounsInp ? pronounsInp.value.trim() : (CU.pronouns || '');
 
-  const themeC1 = CU.profileTheme?.color1 || null;
-  const themeC2 = CU.profileTheme?.color2 || themeC1 || null;
+  const fontCss = _getDisplayFontCSS(CU.displayFont || 'default');
+  const effectCss = _getDisplayEffectCSS(CU.displayEffect || 'solid', CU.displayColor || '#fff');
+  const fullStyle = `font-family:${fontCss};${effectCss}`;
 
-  // Border/theme treatment on the card wrapper
-  if (themeC1) {
-    previewContainer.style.borderColor = 'transparent';
-    previewContainer.style.backgroundImage = `linear-gradient(160deg,${themeC1}0a,var(--panel) 30%,var(--panel) 70%,${themeC2||themeC1}08),linear-gradient(135deg,${themeC1}40,${themeC2||themeC1}40)`;
-    previewContainer.style.backgroundOrigin = 'border-box';
-    previewContainer.style.backgroundClip = 'padding-box,border-box';
-    previewContainer.style.borderWidth = '1.5px';
-    previewContainer.style.borderStyle = 'solid';
-  } else {
-    previewContainer.style.borderColor = '';
-    previewContainer.style.backgroundImage = '';
-    previewContainer.style.backgroundOrigin = '';
-    previewContainer.style.backgroundClip = '';
-  }
-
-  // Banner: user banner if Radiance, else theme-tinted Fortized icons pattern
+  // (1) Banner (profile preview only)
   const hasRadiance = _hasRadiance(CU);
   const userBanner = (CU.banner && hasRadiance) ? CU.banner : null;
-  const bannerEl = previewContainer.querySelector('.mpp-banner');
+  const bannerEl = settingsCard.querySelector('.fpp__banner');
   if (bannerEl) {
-    const existingImg = bannerEl.querySelector('img');
-    const existingFallback = bannerEl.querySelector('div');
-    if (userBanner) {
-      if (existingFallback) existingFallback.remove();
-      if (existingImg) existingImg.src = userBanner;
-      else bannerEl.insertAdjacentHTML('afterbegin', `<img src="${escapeHTML(userBanner)}">`);
-    } else {
-      if (existingImg) existingImg.remove();
-      const fallbackBg = `${themeC1?`linear-gradient(135deg,${themeC1}55,${themeC2||themeC1}33),`:''}url('/wrapBackground.png') center/cover no-repeat,#0e1117`;
-      if (existingFallback) existingFallback.style.background = fallbackBg;
-      else bannerEl.insertAdjacentHTML('afterbegin', `<div style="width:100%;height:100%;background:${fallbackBg};"></div>`);
-    }
+    bannerEl.innerHTML = userBanner
+      ? `<img src="${escapeHTML(userBanner)}" alt="">`
+      : `<div class="fpp__banner-fallback"></div>`;
   }
 
-  // Display name (with current font + effect)
-  const dnEl = previewContainer.querySelector('.mpp-displayname');
-  if (dnEl) {
-    dnEl.textContent = displayName;
-    const effectCss = _getDisplayEffectCSS(CU.displayEffect || 'solid', CU.displayColor || '#fff');
-    dnEl.style.cssText = `font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${effectCss}`;
+  // (1) Identity (profile preview)
+  const dnEl = document.getElementById('preview-displayname');
+  if (dnEl) { dnEl.textContent = displayName; dnEl.style.cssText = fullStyle; }
+  const handleRow = document.getElementById('preview-handle-row');
+  if (handleRow) {
+    handleRow.innerHTML = `<span class="fpp__handle">@${escapeHTML(CU.username)}</span>`
+      + (pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">${escapeHTML(pronouns)}</span>` : '')
+      + `<span class="fpp__badges">${renderBadgesHTML(CU)}</span>`;
   }
 
-  // Handle row (username + pronouns)
-  const handleEl = previewContainer.querySelector('.mpp-username');
-  if (handleEl) {
-    handleEl.innerHTML = `@${escapeHTML(CU.username)}${pronouns ? `<span class="mpp-handle-dot">·</span>${escapeHTML(pronouns)}` : ''}`;
-  }
+  // (2) Message preview name
+  const msgName = document.getElementById('preview-msg-name');
+  if (msgName) { msgName.textContent = displayName; msgName.style.cssText = fullStyle; }
 
-  // Bio
-  const bioSection = previewContainer.querySelector('#preview-bio-section');
-  const bioBody = previewContainer.querySelector('#preview-bio-body');
-  if (bioBody) {
-    if (bio) {
-      bioBody.innerHTML = parseBioMD(bio.slice(0, 300)) + (bio.length > 300 ? '…' : '');
-      if (bioSection) bioSection.style.display = '';
-    } else if (bioSection) {
-      bioSection.style.display = 'none';
-    }
-  }
+  // (3) Nameplate preview name
+  const npName = document.getElementById('preview-nameplate-name');
+  if (npName) { npName.textContent = displayName; npName.style.cssText = fullStyle; }
 
   markSettingsDirty();
 }
@@ -40351,274 +40325,328 @@ function _subscribeFriendStatuses() {
 // ════════════════════════════════════════════════════════════
 let _ownProfileOpen = false;
 function toggleOwnProfilePanel() {
-  // Use the canonical mini-profile popover so own + others' profile UIs
-  // are identical, AND so the popover's "Profile" button reliably opens
-  // the full profile card. The legacy bespoke own-profile panel below
-  // never wired its avatar/name onclicks consistently — users reported
-  // "I can open everyone else's profile card but not mine". Status
-  // switching is still reachable via the status pill in the popover.
-  if (_ownProfileOpen) { closeOwnProfilePanel(); return; }
+  // Single canonical implementation: delegate to the .fpp--own popover
+  // which renders the Discord-style userbar profile (banner + pfp + cs
+  // bubble + identity + inline bio + games + Edit Profile + status row
+  // → submenu + Switch Accounts row → submenu). The legacy bespoke
+  // 4-radio panel and all its state tracking are gone.
+  if (document.getElementById('fpp-own')) { _fppClose(); return; }
   if (!CU?.username) return;
   const anchor = document.getElementById('ua-clickable');
-  try {
-    if (typeof showMiniProfilePreview === 'function') {
-      showMiniProfilePreview(CU.username, anchor);
-      return;
-    }
-  } catch(e) { console.warn('[Userbar] mini profile failed, falling back:', e?.message); }
-  // Fallback: legacy bespoke panel (kept as a safety net).
-  _ownProfileOpen = true;
-  document.getElementById('own-profile-panel')?.remove();
-  
-  const STATUS_OPTS = [
-    {id:'online',   label:'Online',          color:'#3ecf6e'},
-    {id:'away',     label:'Away',            color:'#f59e0b'},
-    {id:'dnd',      label:'Do Not Disturb',  color:'#f87171'},
-    {id:'invisible',label:'Invisible',       color:'#6b7280'},
-  ];
-  const st = CU?.status || 'online';
-  const cs = CU?.customStatus;
-  
-  const panel = document.createElement('div');
-  panel.id = 'own-profile-panel';
-  panel.className = 'own-profile-panel';
-  panel.innerHTML = `
-    <!-- Banner -->
-    <div style="height:100px;position:relative;background:${CU?.banner?`url('${CU.banner}') center/cover no-repeat`:'linear-gradient(135deg,#161a2e 0%,#0d1a3a 50%,#1a1030 100%)'};cursor:pointer;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">
-      <div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,rgba(12,14,24,.4) 55%,transparent 100%);"></div>
-    </div>
-    <!-- Avatar row -->
-    <div style="display:flex;align-items:flex-end;gap:11px;padding:0 18px;margin-top:-32px;position:relative;z-index:2;">
-      <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:#161a28;box-shadow:0 6px 20px rgba(0,0,0,.6);flex-shrink:0;transition:transform .18s cubic-bezier(.22,1,.36,1);" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">
-        ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(CU?.displayName||CU?.username||'')}'">` : `<img src="${_defaultPfpUrl(CU?.displayName||CU?.username||'')}" style="width:100%;height:100%;object-fit:cover;">`}
-      </div>
-      <div style="display:flex;align-items:center;gap:7px;padding-bottom:7px;">
-        <span style="width:10px;height:10px;border-radius:50%;background:${{online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280'}[st]||'#3ecf6e'};box-shadow:0 0 8px ${{online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280'}[st]||'#3ecf6e'}55;flex-shrink:0;"></span>
-        <span style="font-size:12px;color:rgba(255,255,255,.5);font-weight:500;">${{online:'Online',away:'Idle',dnd:'Do Not Disturb',invisible:'Invisible'}[st]||'Online'}</span>
-      </div>
-    </div>
-    <!-- Name block -->
-    <div style="padding:10px 18px 0;">
-      <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;cursor:pointer;line-height:1.2;transition:color .12s;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='#fff'">${escapeHTML(CU?.displayName||CU?.username||'')}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.28);margin-top:3px;">@${escapeHTML(CU?.username||'')}</div>
-      ${cs?.text?`<div style="display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:5px 13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-pill);font-size:12px;color:rgba(255,255,255,.5);">${cs.emoji||''} ${escapeHTML(cs.text)}</div>`:''}
-    </div>
-    <!-- Divider -->
-    <div style="height:1px;background:rgba(255,255,255,.06);margin:13px 18px 7px;"></div>
-    <!-- Status options -->
-    <div style="padding:2px 10px;">
-      ${[
-        {id:'online',    label:'Online',           color:'#3ecf6e', desc:null},
-        {id:'away',      label:'Idle',             color:'#f59e0b', desc:null},
-        {id:'dnd',       label:'Do Not Disturb',   color:'#f87171', desc:'You will not receive desktop notifications'},
-        {id:'invisible', label:'Invisible',        color:'#6b7280', desc:'You will appear offline'},
-      ].map(s=>`
-        <div onclick="setMyStatus('${s.id}');closeOwnProfilePanel()" style="display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;cursor:pointer;transition:all .14s;${st===s.id?'background:rgba(255,255,255,.06);':''}" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='${st===s.id?'rgba(255,255,255,.06)':'transparent'}'">
-          <span style="width:12px;height:12px;border-radius:50%;background:${s.color};flex-shrink:0;${st===s.id?'box-shadow:0 0 10px '+s.color+'55;':''}"></span>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:${st===s.id?'700':'500'};color:${st===s.id?'#fff':'rgba(255,255,255,.6)'};">${s.label}</div>
-            ${s.desc?`<div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;">${s.desc}</div>`:''}
-          </div>
-          ${st===s.id?'<svg style="flex-shrink:0;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>':''}
-        </div>`).join('')}
-    </div>
-    <!-- Custom Status -->
-    <div style="height:1px;background:rgba(255,255,255,.06);margin:5px 18px;"></div>
-    <div onclick="openStatusPicker();closeOwnProfilePanel()" style="display:flex;align-items:center;gap:11px;padding:9px 11px;margin:3px 10px;border-radius:10px;cursor:pointer;transition:all .14s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='transparent'">
-      <span style="font-size:13px;display:flex;">${ftzIcon('pencil','14')}</span>
-      <span style="font-size:13px;color:rgba(255,255,255,.5);font-weight:500;">${cs?.text?'Edit Custom Status':'Set Custom Status'}</span>
-    </div>
-    <!-- Actions -->
-    <div style="padding:7px 10px 12px;display:flex;gap:7px;">
-      <button onclick="closeOwnProfilePanel();showView('profile')" style="flex:1;padding:8px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:rgba(255,255,255,.55);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .14s;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
-        Edit Profile
-      </button>
-      <button onclick="closeOwnProfilePanel();toggleAccountSwitcher()" style="flex:1;padding:8px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:rgba(255,255,255,.55);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .14s;white-space:nowrap;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-        Switch
-      </button>
-    </div>`;
-  
-  document.body.appendChild(panel);
-  // Close on outside click
-  setTimeout(() => {
-    document.addEventListener('mousedown', _closeOwnProfileOutside, {once:true});
-  }, 50);
+  try { _renderOwnProfilePopover(anchor); }
+  catch (e) { console.warn('[Userbar] own profile popover failed:', e?.message); }
 }
 
-function _closeOwnProfileOutside(e) {
-  const panel = document.getElementById('own-profile-panel');
-  const btn = document.getElementById('ua-clickable');
-  if (panel && !panel.contains(e.target) && !btn?.contains(e.target)) {
-    closeOwnProfilePanel();
-  } else if (panel && (panel.contains(e.target) || btn?.contains(e.target))) {
-    // Re-register the listener
-    document.addEventListener('mousedown', _closeOwnProfileOutside, {once:true});
-  }
-}
-
-function closeOwnProfilePanel() {
-  _ownProfileOpen = false;
-  document.getElementById('own-profile-panel')?.remove();
-}
+function closeOwnProfilePanel() { _fppClose(); }
 
 
 // ════════════════════════════════════════════════════════════
 // MINI PROFILE PREVIEW (first click) → full card (second click)
 // ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// PROFILE PREVIEW HELPERS — shared across all .fpp-* variants
+// ════════════════════════════════════════════════════════════
+function _fppFormatDate(ts) {
+  if (!ts) return null;
+  try { return new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
+  catch { return null; }
+}
+
+function _fppBannerHTML(u, hasRadiance) {
+  const userBanner = (u.banner && hasRadiance) ? u.banner : null;
+  if (userBanner) return `<img src="${escapeHTML(userBanner)}" alt="">`;
+  return `<div class="fpp__banner-fallback"></div>`;
+}
+
+function _fppAvatarHTML(u, size) {
+  const dec = u.activeDecoration ? (getDecorationSrc(u.activeDecoration) || '') : '';
+  return `<div class="fpp__av" data-action="open-profile">${buildAvatarHTML(u.pfp, u.displayName || u.username, size)}</div>
+    ${dec ? `<img src="${escapeHTML(dec)}" class="fpp__decoration" onerror="this.style.display='none'">` : ''}
+    <span class="fpp__status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22">${FtzStatus.dotSvg(u.status || 'offline', 22)}</span>`;
+}
+
+function _fppCSBubbleHTML(u, isOwn) {
+  const cs = u.customStatus;
+  if (cs?.text) {
+    const emojiHTML = cs.emoji
+      ? `<span class="fpp__cs-emoji"><img src="${emojiToTwemojiUrl(cs.emoji)}" alt="" onerror="this.outerHTML='${escapeHTML(cs.emoji).replace(/'/g, "\\'")}'"></span>`
+      : '';
+    const onClick = isOwn ? ' onclick="openStatusPicker()"' : '';
+    return `<div class="fpp__cs-bubble profile-custom-status" data-for="${escapeHTML(u.username)}"${onClick}>${emojiHTML}<span class="fpp__cs-text">${escapeHTML(cs.text).slice(0, 60)}</span></div>`;
+  }
+  if (isOwn) {
+    return `<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="${escapeHTML(u.username)}" onclick="openStatusPicker()"><span class="fpp__cs-text">+ Add status</span></div>`;
+  }
+  return '';
+}
+
+function _fppIdentityHTML(u) {
+  const dn = u.displayName || u.username;
+  const dnStyle = `font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor || '#fff')}`;
+  return `
+    <div class="fpp__identity">
+      <div class="fpp__name" data-action="open-profile" style="${dnStyle}">${escapeHTML(dn)}</div>
+      <div class="fpp__handle-row">
+        <span class="fpp__handle">@${escapeHTML(u.username)}</span>
+        ${u.pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">${escapeHTML(u.pronouns)}</span>` : ''}
+        <span class="fpp__badges">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</span>
+      </div>
+    </div>`;
+}
+
+function _fppBioCardHTML(u, maxLen, openFull) {
+  if (!u.bio) return '';
+  const snippet = u.bio.length > maxLen ? u.bio.slice(0, maxLen) + '…' : u.bio;
+  const viewFull = (openFull && u.bio.length > maxLen)
+    ? `<a href="#" onclick="event.preventDefault();${openFull}" style="color:var(--accent);text-decoration:none;font-size:11.5px;display:inline-block;margin-top:6px;">View Full Bio</a>`
+    : '';
+  return `<div class="fpp-card"><div class="fpp-card__title">Bio</div><div class="fpp-card__body">${parseBioMD(snippet)}${viewFull}</div></div>`;
+}
+
+function _fppMemberSinceCardHTML(u) {
+  const date = _fppFormatDate(u.joinedAt || u.createdAt);
+  if (!date) return '';
+  return `<div class="fpp-card"><div class="fpp-card__title">Member Since</div><div class="fpp-card__body fpp-card__body--muted">${date}</div></div>`;
+}
+
+function _fppGamesCardHTML(u) {
+  const games = u.gameCollection || u.registeredGames || [];
+  if (!games.length) return '';
+  const tiles = games.slice(0, 5).map(g => {
+    const cover = g.coverUrl || g.cover || g.icon || '';
+    const safeName = escapeHTML(String(g.name || '?'));
+    if (cover && (cover.startsWith('http') || cover.startsWith('/'))) {
+      return `<div class="fpp__game-tile" title="${safeName}"><img src="${escapeHTML(cover)}" alt="${safeName}" onerror="this.style.display='none'"></div>`;
+    }
+    return `<div class="fpp__game-tile" title="${safeName}">${safeName.charAt(0).toUpperCase()}</div>`;
+  }).join('');
+  const more = games.length > 5 ? `<div class="fpp__game-tile fpp__game-tile--more">+${games.length - 5}</div>` : '';
+  return `<div class="fpp-card fpp-card--games"><div class="fpp-card__title">Game Collection</div><div class="fpp-card__body"><div class="fpp__games-strip">${tiles}${more}</div></div></div>`;
+}
+
+function _fppMutualsChipHTML(username) {
+  if (!CU?.username || username === CU.username) return '';
+  // We need the target user's friends list — best-effort, may be empty
+  // until lookup completes. The chip is hidden if there are 0 mutuals.
+  const myFriends = CU?.friends || [];
+  // The caller passes mutual count; placeholder for now.
+  return '';
+}
+
+function _fppActionRowHTML(username, isOwn) {
+  if (isOwn) {
+    return `<div class="fpp__actions">
+      <button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();showView('profile')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit Profile
+      </button>
+    </div>`;
+  }
+  const isFriend = (CU?.friends || []).includes(username);
+  const hasPendingOut = (CU?.friendRequestsSent || []).includes(username);
+  const hasPendingIn = (CU?.friendRequestsReceived || []).includes(username);
+  const friendBtn = isFriend
+    ? `<button class="fpp__btn fpp__btn--square is-friend" data-tip="Friends — click to unfriend" onclick="_fppClose();removeFriend('${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>`
+    : hasPendingOut
+      ? `<button class="fpp__btn fpp__btn--square is-pending" data-tip="Friend request sent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>`
+      : hasPendingIn
+        ? `<button class="fpp__btn fpp__btn--square" data-tip="Accept friend request" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>`
+        : `<button class="fpp__btn fpp__btn--square" data-tip="Add friend" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
+  return `<div class="fpp__actions">
+    <button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();openDMView('${escapeHTML(username)}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      Message
+    </button>
+    ${friendBtn}
+    <button class="fpp__btn fpp__btn--square" data-tip="More" onclick="_fppShowMoreMenu(event,'${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+  </div>`;
+}
+
+function _fppClose() {
+  document.getElementById('fpp-mini')?.remove();
+  document.getElementById('fpp-own')?.remove();
+  document.getElementById('fpp-menu')?.remove();
+  document.getElementById('fpp-status-submenu')?.remove();
+  document.getElementById('fpp-accounts-submenu')?.remove();
+}
+
+// Discord-style ⋯ menu: Invite to Bastion ▶ / Ignore / Block / Report
+function _fppShowMoreMenu(evt, username) {
+  evt.stopPropagation();
+  document.getElementById('fpp-menu')?.remove();
+  const isBlocked = (CU?.blockedUsers || []).includes(username);
+  const isIgnored = (CU?.ignoredUsers || []).includes(username);
+  const myBastions = (CU?.bastions || []).filter(b => b && b.name);
+  const inviteItems = myBastions.length
+    ? `<div class="fpp-menu__item fpp-menu__item--has-sub" onmouseenter="_fppShowInviteSub(event,'${escapeHTML(username)}')">
+         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+         Invite to Bastion
+         <svg class="fpp-menu__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+       </div>
+       <div class="fpp-menu__divider"></div>`
+    : '';
+  const menuHTML = `
+    ${inviteItems}
+    <div class="fpp-menu__item" onclick="${isIgnored ? `unignoreUser('${escapeHTML(username)}')` : `showIgnorePicker('${escapeHTML(username)}')`};_fppClose()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+      ${isIgnored ? 'Unignore' : 'Ignore'}
+    </div>
+    <div class="fpp-menu__item fpp-menu__item--danger" onclick="toggleBlockUser('${escapeHTML(username)}');_fppClose()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      ${isBlocked ? 'Unblock' : 'Block'}
+    </div>
+    <div class="fpp-menu__item fpp-menu__item--danger" onclick="reportUser('${escapeHTML(username)}');_fppClose()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+      Report
+    </div>`;
+  const menu = document.createElement('div');
+  menu.id = 'fpp-menu';
+  menu.className = 'fpp-menu';
+  menu.innerHTML = menuHTML;
+  document.body.appendChild(menu);
+  const rect = evt.currentTarget.getBoundingClientRect();
+  let left = rect.right - menu.offsetWidth;
+  let top = rect.bottom + 6;
+  if (top + menu.offsetHeight > window.innerHeight - 8) top = rect.top - menu.offsetHeight - 6;
+  if (left < 8) left = 8;
+  menu.style.left = Math.max(8, left) + 'px';
+  menu.style.top = Math.max(8, top) + 'px';
+  setTimeout(() => {
+    const offClick = (e) => {
+      if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', offClick); }
+    };
+    document.addEventListener('mousedown', offClick);
+  }, 50);
+}
+
+function _fppShowInviteSub(evt, username) {
+  document.getElementById('fpp-invite-sub')?.remove();
+  const myBastions = (CU?.bastions || []).filter(b => b && b.name);
+  if (!myBastions.length) return;
+  const sub = document.createElement('div');
+  sub.id = 'fpp-invite-sub';
+  sub.className = 'fpp-menu';
+  sub.innerHTML = myBastions.map((b, idx) => `
+    <div class="fpp-menu__item" onclick="inviteUserToBastion('${escapeHTML(username)}',${idx});_fppClose()">
+      ${b.emblem ? `<img src="${escapeHTML(b.emblem)}" style="width:18px;height:18px;border-radius:4px;object-fit:cover;">` : '<span style="width:18px;height:18px;background:rgba(255,255,255,.06);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;">🏰</span>'}
+      ${escapeHTML(b.name)}
+    </div>`).join('');
+  document.body.appendChild(sub);
+  const rect = evt.currentTarget.getBoundingClientRect();
+  sub.style.left = (rect.right + 4) + 'px';
+  sub.style.top = rect.top + 'px';
+  if (rect.right + sub.offsetWidth + 8 > window.innerWidth) {
+    sub.style.left = (rect.left - sub.offsetWidth - 4) + 'px';
+  }
+  evt.currentTarget.addEventListener('mouseleave', () => {
+    setTimeout(() => { if (!sub.matches(':hover')) sub.remove(); }, 200);
+  }, { once: true });
+}
+
+// Default fallback if inviteUserToBastion isn't already defined elsewhere
+if (typeof window.inviteUserToBastion !== 'function') {
+  window.inviteUserToBastion = function(username, bastionIdx) {
+    const b = (CU?.bastions || [])[bastionIdx];
+    if (!b) { toast('Bastion not found', 'error'); return; }
+    toast('Invite link copied for ' + (b.name || 'bastion'), 'success');
+  };
+}
+
 async function showMiniProfilePreview(username, anchorEl) {
-  document.getElementById('mini-profile-preview')?.remove();
-  // Userbar anchor → compact "own profile" popover (Discord parity).
-  // Everywhere else → fuller original layout (chat hover, member list, etc).
+  _fppClose();
+  // Userbar anchor → dedicated own-profile popover (Discord parity).
   const _isUserbarAnchor = !!(anchorEl && (anchorEl.id === 'ua-clickable' || anchorEl.closest?.('#ua-clickable')));
+  if (_isUserbarAnchor && username === CU?.username) {
+    return _renderOwnProfilePopover(anchorEl);
+  }
+
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch(e) { _dbg('[Profile] user lookup failed', e); }
+  try { u = await FortizedSocial.getUserByName(username); } catch (e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   let status = 'offline';
-  // Use live Socket.IO presence first, fallback to DB
   if (username === CU?.username) {
-    u = { ...u, ...CU }; status = CU.status || 'online';
+    u = { ...u, ...CU };
+    status = CU.status || 'online';
   } else {
     try {
       const presenceResult = await FortizedSocial.queryPresence([username]);
       if (presenceResult && presenceResult[username]) {
         status = presenceResult[username].status || 'offline';
       } else {
-        try { status = await FortizedSocial.getStatus(username); } catch(e) { _dbg('[Profile] status fallback failed', e); }
+        try { status = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[Profile] status fallback failed', e); }
       }
-    } catch(e) { _dbg('[Profile] presence query failed', e);
-      try { status = await FortizedSocial.getStatus(username); } catch(e2) { _dbg('[Profile] status fallback failed', e2); }
+    } catch (e) {
+      _dbg('[Profile] presence query failed', e);
+      try { status = await FortizedSocial.getStatus(username); } catch (e2) { _dbg('[Profile] status fallback failed', e2); }
     }
   }
+  u.status = status;
   subscribeProfileStatus(username);
 
-  const sc = FtzStatus.color(status);
   const isOwn = username === CU?.username;
-  const hasRadiancePlus = _hasRadiance(u);
-  const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
-  const customStatus = u.customStatus;
+  const hasRadiance = _hasRadiance(u);
+  const mutualFriends = isOwn ? [] : (CU?.friends || []).filter(f => f !== CU?.username && f !== username && (u.friends || []).includes(f));
+  const mutualsChip = mutualFriends.length
+    ? `<div class="fpp__mutuals-chip" onclick="_fppClose();viewUserProfile('${escapeHTML(username)}','mutuals')">
+         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+         ${mutualFriends.length} Mutual Friend${mutualFriends.length === 1 ? '' : 's'}
+       </div>`
+    : '';
 
   const panel = document.createElement('div');
-  panel.id = 'mini-profile-preview';
-  panel.className = 'mini-profile-preview' + (_isUserbarAnchor ? ' mini-profile-preview--compact' : '');
+  panel.id = 'fpp-mini';
+  panel.className = 'fpp fpp--mini';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-label', 'Profile preview for ' + (u.displayName || u.username));
-  if (profileTheme) {
-    panel.style.borderColor = 'transparent';
-    panel.style.backgroundImage = `linear-gradient(160deg,${profileTheme.color1}0a,var(--panel) 30%,var(--panel) 70%,${profileTheme.color2}08),linear-gradient(135deg,${profileTheme.color1}40,${profileTheme.color2}40)`;
-    panel.style.backgroundOrigin = 'border-box';
-    panel.style.backgroundClip = 'padding-box,border-box';
-    panel.style.borderWidth = '1.5px';
-    panel.style.borderStyle = 'solid';
-    panel.style.boxShadow = `0 20px 60px rgba(0,0,0,.6),0 4px 20px rgba(0,0,0,.35)`;
-  }
-  const hasUserRadiance = _hasRadiance(u);
-  const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
-  // Userbar popover keeps the new Fortized-icons banner. Chat / member-list
-  // popovers revert to the older flat gradient — what the user was used to
-  // before the unification pass.
-  const bannerBg = userBanner
-    ? `<img src="${escapeHTML(userBanner)}" style="width:100%;height:100%;object-fit:cover;">`
-    : (_isUserbarAnchor
-        ? `<div style="width:100%;height:100%;background:${profileTheme?`linear-gradient(135deg,${profileTheme.color1}55,${(profileTheme.color2||profileTheme.color1)}33),`:''}url('/wrapBackground.png') center/cover no-repeat,#0e1117;"></div>`
-        : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#1a1a2e'},${profileTheme?profileTheme.color2+'33':'#0f3460'});"></div>`);
-  const _previewGames = u.gameCollection || u.registeredGames || [];
-  const _previewMutuals = isOwn ? [] : (CU?.friends||[]).filter(f => f !== CU?.username && f !== username && (u.friends||[]).includes(f));
-  const _memberSince = u.joinedAt||u.createdAt ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null;
-  const _isFriend = (CU?.friends||[]).includes(username);
-  const _hasPending = (CU?.friendRequestsSent||[]).includes(username) || (CU?.friendRequestsReceived||[]).includes(username);
   panel.innerHTML = `
-    <!-- Banner -->
-    <div class="mpp-banner">
-      ${bannerBg}
-      ${profileTheme ? `<div class="mpp-banner-accent"></div>` : ''}
+    <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
+    <div class="fpp__av-row">
+      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 72)}</div>
+      ${_fppCSBubbleHTML(u, isOwn)}
     </div>
-    <!-- Avatar + decorations + status -->
-    <div class="mpp-av-area">
-      <div class="mpp-av" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-        ${buildAvatarHTML(u.pfp, u.displayName||u.username, 90)}
-        ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="mpp-decoration" onerror="this.style.display='none'">` : ''}
-      </div>
-      <span class="mpp-status-dot">${FtzStatus.dotSvg(status, 16)}</span>
-    </div>
-    <!-- Identity + badges -->
-    <div class="mpp-identity">
-      <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
-      <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` · ${u.pronouns}` : ''}</div>
-      <div class="mpp-badges">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
-    </div>
-    <!-- Status row -->
-    <div class="mpp-status-row">
-      <span class="mpp-status-label" style="color:${sc}">${FtzStatus.publicLabel(status)}</span>
-      ${customStatus?.text ? `<span class="mpp-cs">${customStatus.emoji||''} ${escapeHTML(customStatus.text).slice(0,40)}</span>` : ''}
-      ${(+u.dailyStreak) ? `<span class="mpp-streak">${typeof _streakFlameSvg === 'function' ? _streakFlameSvg(12) : '🔥'} ${+u.dailyStreak} day streak</span>` : ''}
-    </div>
-    <!-- Bio -->
-    ${u.bio ? `<div class="mpp-bio">${parseBioMD(u.bio.slice(0,200))}${u.bio.length>200?'…':''}</div>` : ''}
-    <!-- Member since -->
-    ${_memberSince ? `<div class="mpp-meta">Member since ${_memberSince}</div>` : ''}
-    <!-- Roles in current bastion -->
-    ${(_currentView === 'bastion' && curBastion !== null) ? (() => {
-      const _roleTags = renderUserRoleTags(username);
-      return _roleTags ? `<div class="mpp-roles">${_roleTags}</div>` : '';
-    })() : ''}
-    <!-- Games -->
-    ${_previewGames.length ? `<div class="mpp-games"><span>Games</span>${_previewGames.slice(0,5).map(g => {
-      const cover = g.coverUrl || g.cover || g.icon || '';
-      const safeName = String(g.name || '?');
-      if (cover && (cover.startsWith('http') || cover.startsWith('/'))) {
-        return `<img src="${cover}" title="${safeName}" onerror="this.style.display='none'">`;
-      }
-      return `<span>${safeName.charAt(0).toUpperCase()}</span>`;
-    }).join('')}${_previewGames.length>5?`<span>+${_previewGames.length-5}</span>`:''}</div>` : ''}
-    <!-- Actions -->
-    <div class="mpp-actions">
-      ${isOwn
-        ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')">Edit Profile</button>
-           <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();openStatusPicker()">Status</button>`
-        : `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')">Message</button>
-           <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">Profile</button>`}
-    </div>`;
+    ${_fppIdentityHTML(u)}
+    ${mutualsChip}
+    ${_fppBioCardHTML(u, 180, `viewUserProfile('${escapeHTML(username)}')`)}
+    ${_fppActionRowHTML(username, isOwn)}
+    ${!isOwn ? `<div class="fpp__msg-input" onclick="_fppClose();openDMView('${escapeHTML(username)}')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      Message @${escapeHTML(u.displayName || u.username)}
+    </div>` : ''}`;
 
-  // Position near the anchor element
+  panel.querySelectorAll('[data-action="open-profile"]').forEach(el => {
+    el.addEventListener('click', () => { _fppClose(); viewUserProfile(username); });
+  });
+
   document.body.appendChild(panel);
-  // Render mini widgets (favourite game & primary bastion only, compact)
-  const _mppWidgetArea = panel.querySelector('#mpp-widgets-area');
-  if (_mppWidgetArea && (u.profileWidgets||[]).some(w => w.enabled && (w.id === 'favourite_game' || w.id === 'primary_bastion'))) {
-    let _mwHtml = '<div class="mpp-divider"></div>';
-    (u.profileWidgets||[]).forEach(w => {
-      if (!w.enabled) return;
-      if (w.id === 'favourite_game' && w.config?.gameName) {
-        const fg = (u.gameCollection||[]).find(g => g.name === w.config.gameName);
-        if (fg) _mwHtml += `<div class="mpp-section"><div class="mpp-section-title">Favourite Game</div><div class="mpp-game-row"><div class="mpp-game-chip" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.15);color:rgba(245,158,11,.8);">${fg.coverUrl ? `<img src="${escapeHTML(fg.coverUrl)}" style="width:14px;height:18px;border-radius:2px;object-fit:cover;">` : '⭐'} ${escapeHTML(fg.name)}</div></div></div>`;
-      }
-      if (w.id === 'primary_bastion' && w.config?.bastionIdx !== undefined) {
-        const b = u.bastions?.[w.config.bastionIdx];
-        if (b) _mwHtml += `<div class="mpp-section"><div class="mpp-section-title">Primary Bastion</div><div class="mpp-game-row"><div class="mpp-game-chip" style="background:rgba(96,165,250,.06);border-color:rgba(96,165,250,.15);color:rgba(96,165,250,.8);cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();joinBastionFromWidget('${escapeHTML(b.name||'')}',${w.config.bastionIdx})">${b.emblem ? `<img src="${escapeHTML(b.emblem)}" style="width:14px;height:14px;border-radius:3px;object-fit:cover;">` : '🏰'} ${escapeHTML(b.name||'Bastion')}</div></div></div>`;
-      }
-    });
-    _mppWidgetArea.innerHTML = _mwHtml;
-  }
-  const rect = anchorEl?.getBoundingClientRect() || {left:100, top:100, width:40, bottom:140};
+  _fppPositionPopover(panel, anchorEl);
+
+  setTimeout(() => {
+    function _close() { panel.remove(); document.removeEventListener('mousedown', _onMouse); document.removeEventListener('keydown', _onKey); }
+    function _onMouse(e) {
+      if (panel.contains(e.target) || e.target === anchorEl) return;
+      if (document.getElementById('fpp-menu')?.contains(e.target)) return;
+      if (document.getElementById('fpp-invite-sub')?.contains(e.target)) return;
+      _close();
+    }
+    function _onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); _close(); } }
+    document.addEventListener('mousedown', _onMouse);
+    document.addEventListener('keydown', _onKey);
+  }, 100);
+}
+
+function _fppPositionPopover(panel, anchorEl) {
+  const rect = anchorEl?.getBoundingClientRect() || { left: 100, top: 100, width: 40, bottom: 140, right: 140 };
   const PW = panel.offsetWidth || 340;
-  const PH = panel.offsetHeight || 300;
-  // Userbar context: the popover should rise UP from the anchor (Discord-
-  // style), aligned to the same column. Detect the userbar by id and the
-  // friend-row activity layout by anchor position near the bottom of the
-  // viewport. Otherwise fall back to the side-by-side default.
+  const PH = panel.offsetHeight || 380;
   const isUserbarAnchor = anchorEl && (anchorEl.id === 'ua-clickable' || anchorEl.closest?.('#ua-clickable'));
-  const isNearBottom = rect.top > window.innerHeight - 240;
+  const isNearBottom = rect.top > window.innerHeight - 260;
   let left, top;
   if (isUserbarAnchor || isNearBottom) {
-    // Place above the anchor, left-aligned with it. 10px gap so the popover
-    // visibly floats above the userbar like Discord does.
     left = rect.left;
     top = rect.top - PH - 10;
-    if (top < 8) top = 8; // viewport guard
+    if (top < 8) top = 8;
     if (left + PW > window.innerWidth - 8) left = window.innerWidth - PW - 8;
   } else {
-    // Default: side-by-side to the right of the anchor (chat hover, etc.)
     left = rect.left + rect.width + 8;
     top = rect.top;
     if (left + PW > window.innerWidth - 8) left = rect.left - PW - 8;
@@ -40627,15 +40655,162 @@ async function showMiniProfilePreview(username, anchorEl) {
   }
   panel.style.left = Math.max(8, left) + 'px';
   panel.style.top = Math.max(8, top) + 'px';
+}
 
-  // Close on outside click or Escape key
+// ────────────────────────────────────────────────────────────
+// Userbar OWN-profile popover (Discord pattern: profile preview
+// + status row → submenu + switch-accounts row → submenu)
+// ────────────────────────────────────────────────────────────
+function _renderOwnProfilePopover(anchorEl) {
+  _fppClose();
+  if (!CU?.username) return;
+  const u = CU;
+  const hasRadiance = _hasRadiance(u);
+  const status = u.status || 'online';
+  const statusLabel = FtzStatus.publicLabel(status);
+  const statusColor = FtzStatus.color(status);
+  const memberSinceTxt = _fppFormatDate(u.joinedAt || u.createdAt);
+
+  const panel = document.createElement('div');
+  panel.id = 'fpp-own';
+  panel.className = 'fpp fpp--own';
+  panel.innerHTML = `
+    <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
+    <div class="fpp__av-row">
+      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 72)}</div>
+      ${_fppCSBubbleHTML(u, true)}
+    </div>
+    ${_fppIdentityHTML(u)}
+    ${u.bio ? `<div class="fpp__inline-bio">${parseBioMD(u.bio.slice(0, 160))}${u.bio.length > 160 ? '…' : ''}</div>` : ''}
+    ${_fppGamesCardHTML(u)}
+    <div class="fpp__actions">
+      <button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();showView('profile')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit Profile
+      </button>
+    </div>
+    <div class="fpp-row" id="fpp-own-status-row" onclick="_fppShowStatusSubmenu(event)">
+      <span class="fpp-row__icon"><span style="width:10px;height:10px;border-radius:50%;background:${statusColor};display:inline-block;box-shadow:0 0 8px ${statusColor}66;"></span></span>
+      <span class="fpp-row__label">${statusLabel}</span>
+      <span class="fpp-row__chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </div>
+    <div class="fpp-row" onclick="_fppShowAccountsSubmenu(event)">
+      <span class="fpp-row__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></span>
+      <span class="fpp-row__label">Switch Accounts</span>
+      <span class="fpp-row__chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </div>
+    <div style="height:12px;"></div>`;
+
+  panel.querySelectorAll('[data-action="open-profile"]').forEach(el => {
+    el.addEventListener('click', () => { _fppClose(); viewUserProfile(u.username); });
+  });
+
+  document.body.appendChild(panel);
+  _fppPositionPopover(panel, anchorEl);
+
   setTimeout(() => {
-    function _closePanel() { panel.remove(); document.removeEventListener('mousedown', _closeMouse); document.removeEventListener('keydown', _closeKey); }
-    function _closeMouse(e) { if (!panel.contains(e.target) && e.target !== anchorEl) _closePanel(); }
-    function _closeKey(e) { if (e.key === 'Escape') { e.stopPropagation(); _closePanel(); } }
-    document.addEventListener('mousedown', _closeMouse);
-    document.addEventListener('keydown', _closeKey);
+    function _close() { panel.remove(); document.removeEventListener('mousedown', _onMouse); document.removeEventListener('keydown', _onKey); }
+    function _onMouse(e) {
+      if (panel.contains(e.target) || e.target === anchorEl) return;
+      if (document.getElementById('fpp-status-submenu')?.contains(e.target)) return;
+      if (document.getElementById('fpp-accounts-submenu')?.contains(e.target)) return;
+      _close();
+    }
+    function _onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); _close(); } }
+    document.addEventListener('mousedown', _onMouse);
+    document.addEventListener('keydown', _onKey);
   }, 100);
+}
+
+function _fppShowStatusSubmenu(evt) {
+  evt.stopPropagation();
+  document.getElementById('fpp-status-submenu')?.remove();
+  const STATUS_OPTS = [
+    { id: 'online',    label: 'Online',         color: '#3ecf6e', desc: null },
+    { id: 'away',      label: 'Idle',           color: '#f59e0b', desc: null },
+    { id: 'dnd',       label: 'Do Not Disturb', color: '#f87171', desc: 'You will not receive desktop notifications.' },
+    { id: 'invisible', label: 'Invisible',      color: '#6b7280', desc: 'You will appear offline.' },
+  ];
+  const cur = CU?.status || 'online';
+  const sub = document.createElement('div');
+  sub.id = 'fpp-status-submenu';
+  sub.className = 'fpp-menu';
+  sub.style.minWidth = '260px';
+  sub.innerHTML = STATUS_OPTS.map(o => `
+    <div class="fpp-menu__item" style="align-items:flex-start;padding:9px 10px;" onclick="setMyStatus('${o.id}');_fppClose()">
+      <span style="width:10px;height:10px;border-radius:50%;background:${o.color};flex-shrink:0;display:inline-block;margin-top:4px;${cur===o.id?'box-shadow:0 0 8px '+o.color+'66;':''}"></span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:${cur===o.id?'700':'500'};color:${cur===o.id?'var(--text)':'var(--muted-light)'};">${o.label}</div>
+        ${o.desc ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">${o.desc}</div>` : ''}
+      </div>
+      ${cur===o.id?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px;"><polyline points="20 6 9 17 4 12"/></svg>':''}
+    </div>`).join('') + `
+    <div class="fpp-menu__divider"></div>
+    <div class="fpp-menu__item" onclick="openStatusPicker();_fppClose()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      ${CU?.customStatus?.text ? 'Edit Custom Status' : 'Set Custom Status'}
+    </div>`;
+  document.body.appendChild(sub);
+  const rect = evt.currentTarget.getBoundingClientRect();
+  let left = rect.right + 6;
+  let top = rect.top;
+  if (left + sub.offsetWidth > window.innerWidth - 8) left = rect.left - sub.offsetWidth - 6;
+  if (top + sub.offsetHeight > window.innerHeight - 8) top = window.innerHeight - sub.offsetHeight - 8;
+  sub.style.left = Math.max(8, left) + 'px';
+  sub.style.top = Math.max(8, top) + 'px';
+  setTimeout(() => {
+    const offClick = (e) => {
+      if (sub.contains(e.target)) return;
+      const row = document.getElementById('fpp-own-status-row');
+      if (row && row.contains(e.target)) return;
+      sub.remove();
+      document.removeEventListener('mousedown', offClick);
+    };
+    document.addEventListener('mousedown', offClick);
+  }, 50);
+}
+
+function _fppShowAccountsSubmenu(evt) {
+  evt.stopPropagation();
+  document.getElementById('fpp-accounts-submenu')?.remove();
+  const accounts = (typeof getSavedAccounts === 'function') ? getSavedAccounts() : [];
+  const sub = document.createElement('div');
+  sub.id = 'fpp-accounts-submenu';
+  sub.className = 'fpp-menu';
+  sub.style.minWidth = '260px';
+  sub.innerHTML = (accounts.length
+    ? accounts.map(a => `
+      <div class="fpp-menu__item" onclick="${a.username === CU?.username ? '_fppClose()' : `switchToAccount('${escapeHTML(a.username)}')`}">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--panel);overflow:hidden;flex-shrink:0;">${buildAvatarHTML(a.pfp || null, a.username, 28)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(a.displayName || a.username)}</div>
+          <div style="font-size:10.5px;color:var(--muted-light);">@${escapeHTML(a.username)}</div>
+        </div>
+        ${a.username === CU?.username ? '<span style="font-size:9px;font-weight:800;color:var(--accent);background:var(--accent-dim);padding:2px 6px;border-radius:999px;letter-spacing:.08em;">ACTIVE</span>' : ''}
+      </div>`).join('')
+    : '<div style="padding:14px 10px;font-size:12px;color:var(--muted);text-align:center;">No other accounts saved.</div>')
+    + `
+    <div class="fpp-menu__divider"></div>
+    <div class="fpp-menu__item" onclick="window.location.href='/login?add=1'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add an account
+    </div>
+    <div class="fpp-menu__item fpp-menu__item--danger" onclick="if(confirm('Log out of @${escapeHTML(CU?.username || '')}?')) doLogout();">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Log Out
+    </div>`;
+  document.body.appendChild(sub);
+  const rect = evt.currentTarget.getBoundingClientRect();
+  let left = rect.right + 6;
+  let top = rect.top;
+  if (left + sub.offsetWidth > window.innerWidth - 8) left = rect.left - sub.offsetWidth - 6;
+  if (top + sub.offsetHeight > window.innerHeight - 8) top = window.innerHeight - sub.offsetHeight - 8;
+  sub.style.left = Math.max(8, left) + 'px';
+  sub.style.top = Math.max(8, top) + 'px';
+  setTimeout(() => {
+    const offClick = (e) => { if (!sub.contains(e.target)) { sub.remove(); document.removeEventListener('mousedown', offClick); } };
+    document.addEventListener('mousedown', offClick);
+  }, 50);
 }
 
 // Inline role picker for mini profile preview

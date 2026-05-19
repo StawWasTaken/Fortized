@@ -9883,11 +9883,48 @@ function initFortizedUXResilience() {
     // Online — fetch fresh data from database (bypass cache to ensure latest)
     const lbl=document.querySelector('#app-loading .lbl');
     if(lbl)lbl.textContent='Fetching your profile…';
-    try{
-      CU=await Promise.race([
-        FortizedSocial.getUserByName(username, { noCache: true }),
-        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),7000))
-      ]);
+    // ── BOUNDED FETCH LOOP ────────────────────────────────────────────
+    // The old code did a 7s race → catch → 1.5s sleep → 5s race, all
+    // hard-coded and hard to reason about. Replaced with a single
+    // bounded loop: up to FETCH_ATTEMPTS tries, FETCH_TIMEOUT_MS each,
+    // with a short backoff between attempts. Worst case is bounded by
+    // FETCH_ATTEMPTS * (FETCH_TIMEOUT_MS + FETCH_BACKOFF_MS) so the
+    // 20s loader safety timer above always has time to spare.
+    const FETCH_ATTEMPTS = 2;
+    const FETCH_TIMEOUT_MS = 6000;
+    const FETCH_BACKOFF_MS = 1200;
+    let _fetchErr = null;
+    for (let attempt = 0; attempt < FETCH_ATTEMPTS && !CU?.username; attempt++) {
+      if (attempt > 0) {
+        if (lbl) lbl.textContent = `Retrying… (${attempt + 1}/${FETCH_ATTEMPTS})`;
+        await new Promise(r => setTimeout(r, FETCH_BACKOFF_MS));
+      }
+      try {
+        CU = await Promise.race([
+          FortizedSocial.getUserByName(username, { noCache: true }),
+          new Promise((_, r) => setTimeout(() => r(new Error('timeout')), FETCH_TIMEOUT_MS))
+        ]);
+      } catch (e) {
+        _fetchErr = e;
+        CU = null;
+        console.warn(`[Init] fetch attempt ${attempt + 1} failed:`, e?.message);
+      }
+    }
+    if (!CU?.username) {
+      // Every attempt failed — fall back to localStorage cache so the
+      // user can at least see their last-known state instead of being
+      // bounced to /login.
+      if (lbl) lbl.textContent = '⚠️ Connection issue — loading cached data…';
+      const cached = localStorage.getItem('ftz_user_' + username);
+      if (cached) {
+        try { CU = JSON.parse(cached); } catch { CU = null; }
+        if (CU?.username) {
+          usedCache = true;
+          _wrn('[Init] Cache fallback after all fetch attempts failed:', _fetchErr?.message);
+        }
+      }
+    }
+    try {
       // ── DATA-LOSS GUARD ────────────────────────────────────────────────
       // A stale or partial DB row returned here silently clobbered the
       // user's good state — source of "my onyx reset, pfp/banner/bio
@@ -9943,28 +9980,9 @@ function initFortizedUXResilience() {
           setTimeout(() => { try { saveUser(true); } catch {} }, 2000);
         }
       }
-    }catch(e){
-      CU=null;
-      if(lbl)lbl.textContent='⚠️ Connection timeout. Trying cache…';
-      // Fall back to cache if database fetch times out
-      const cached=localStorage.getItem('ftz_user_'+username);
-      if (cached){
-        try{CU=JSON.parse(cached);}catch{CU=null;}
-        usedCache = true;
-        _wrn('[Init] Cache fallback after timeout:', e?.message);
-      }
-    }
-    if (!CU?.username){
-      // Last attempt with longer timeout
-      try{
-        await new Promise(r=>setTimeout(r,1500));
-        CU=await Promise.race([
-          FortizedSocial.getUserByName(username, { noCache: true }),
-          new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))
-        ]);
-      }catch(e){
-        console.warn('[Init] Retry failed:', e?.message);
-      }
+    } catch (e) {
+      // Data-loss guard / gameCollection prune itself failed — non-fatal.
+      console.warn('[Init] post-fetch processing failed:', e?.message);
     }
     if (!CU?.username){
       localStorage.removeItem('ftz_current');
@@ -39893,7 +39911,7 @@ function _showDailyQuestPopup() {
       </div>
       <div class="quest-popup-body">
         <div class="quest-popup-label">Daily Quest</div>
-        <div class="quest-popup-title">Hearken, hearken — a new quest awaits.</div>
+        <div class="quest-popup-title">Hearken, Hearken!</div>
         <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">20 Onyx</strong>. Resets at midnight.</div>
         <div class="quest-popup-reward">
           <img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;">

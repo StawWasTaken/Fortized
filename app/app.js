@@ -34366,7 +34366,7 @@ function renderAtelierTab(tab) {
     const PERK_CARDS = [
       {img:'/AtelierCustomEmoji.png?v=20260519a',title:'Custom Emojis Everywhere',desc:'Use exclusive custom emojis across all your messages and reactions.',color:'#ff77e4',colorRgb:'255,119,228'},
       {img:'/Atelier100MbUploads.png?v=20260519a',title:'100MB Uploads',desc:'Upload files up to 100MB for seamless sharing and media management.',color:'#ffd93e',colorRgb:'255,217,62'},
-      {img:'/badges/AtelierBadge.png?v=20260519a',title:'Radiance Badge',desc:'Display your exclusive Radiance badge on your profile.',color:'#fff93e',colorRgb:'255,249,62'},
+      {img:'/AtelierBadge.png?v=20260519a',title:'Radiance Badge',desc:'Display your exclusive Radiance badge on your profile.',color:'#fff93e',colorRgb:'255,249,62'},
       {img:'/AtelierGift.png?v=20260519a',title:'Gift Radiance',desc:'Send Radiance subscriptions to your friends as a gift.',color:'#f472b6',colorRgb:'244,114,182'},
     ];
 

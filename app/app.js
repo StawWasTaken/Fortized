@@ -468,8 +468,14 @@ const FtzStatus = (() => {
     CU.status = status;
     // Save manual status to localStorage for persistence across reloads
     try { localStorage.setItem('ftz_manual_status_' + CU.username, status); } catch (e) { _dbg('[Status] localStorage write failed', e); }
+    // Mark for refreshCU recent-edit guard so a stale refresh doesn't
+    // revert us to the previous status mid-flight.
+    window._recentlyEditedFields = window._recentlyEditedFields || {};
+    window._recentlyEditedFields.status = Date.now();
     _broadcast(status);
-    saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
+    // Immediate save (no 300 ms debounce) — status is a high-frequency
+    // visible change; a fast refresh after click must not lose it.
+    saveUser(true).catch(e => console.warn('[Save] Failed:', e?.message));
     updateUserbar();
     refreshCustomStatusBubble();
     if (prev !== status && typeof _logJoysterEvent === 'function') {
@@ -1050,30 +1056,39 @@ async function refreshCU() {
     if (fresh?.username) {
       _dbg('[refreshCU] Fresh data from DB:', { username: fresh.username, pfp: fresh.pfp ? 'set' : 'null', friends: fresh.friends?.length || 0 });
 
-      // Hard-protected accounts: never let a refresh clobber profile data.
-      // If the DB returned a falsy/empty value, keep whatever the local CU has.
-      // Only badges + admin/moderation fields are allowed to change freely.
+      // Recent-edit guard applies to ALL users (not just admins). Without
+      // this, a refresh that races a just-fired save would re-read the
+      // stale DB value and clobber the local change — the "I changed my
+      // status / removed my decoration / picked a new banner and it came
+      // back on refresh" class of bug. We mark fields in
+      // window._recentlyEditedFields at the call sites that mutate them
+      // (equipDecoration, setMyStatus, updateBanner, updatePfp, etc.).
+      const protectFields = [
+        'pfp','pfpCrop','banner','bio','displayName','status','pronouns',
+        'friends','friendRequestsSent','friendRequestsReceived',
+        'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme','activeDecoration',
+        'connections','socials','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
+        'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
+        'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
+        'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
+        'createdAt','customStatus','verified','appearance','wishlist','wishlistPrivate'
+      ];
+      const _recentEdits = window._recentlyEditedFields || {};
+      const _now = Date.now();
+      for (const k of protectFields) {
+        // If the user just edited this field locally (within 10s), trust
+        // the local copy regardless of what DB returned. Stops the race
+        // where a stale DB read undoes a just-cleared field. Window is
+        // longer than typical save round-trip + Firebase replication.
+        if (_recentEdits[k] && (_now - _recentEdits[k]) < 10000) {
+          fresh[k] = CU[k];
+          continue;
+        }
+      }
+      // Stricter protection for super-admins: also rescue from "DB returned
+      // empty/falsy" cases (covers migration races and badge-vs-write conflicts).
       if (SUPER_ADMINS.includes((fresh.username || '').toLowerCase())) {
-        const protectFields = [
-          'pfp','banner','bio','displayName','friends','friendRequestsSent','friendRequestsReceived',
-          'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme','activeDecoration',
-          'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
-          'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
-          'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
-          'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
-          'createdAt','customStatus','verified','appearance'
-        ];
-        const _recentEdits = window._recentlyEditedFields || {};
-        const _now = Date.now();
         for (const k of protectFields) {
-          // If the user just edited this field locally (within 8s), trust
-          // the local copy regardless of what DB returned. Stops the race
-          // where a stale DB read undoes a just-cleared field — eg. "I
-          // removed my decoration but it came back".
-          if (_recentEdits[k] && (_now - _recentEdits[k]) < 8000) {
-            fresh[k] = CU[k];
-            continue;
-          }
           const nv = fresh[k], lv = CU[k];
           const isEmpty = nv == null
             || (Array.isArray(nv) && nv.length === 0 && Array.isArray(lv) && lv.length > 0)
@@ -17242,10 +17257,20 @@ function _buildProfileView(tab) {
                       <span class="fpp__badges">${renderBadgesHTML(CU)}</span>
                     </div>
                   </div>
-                  <div id="preview-bio-section" style="${CU.bio?'':'display:none;'}">
-                    <div class="fpp-card"><div class="fpp-card__title">Bio</div><div class="fpp-card__body" id="preview-bio-body">${CU.bio ? (parseBioMD(CU.bio.slice(0,300))+(CU.bio.length>300?'…':'')) : ''}</div></div>
+                  <!-- Bio + Member Since share a single card so the
+                       preview doesn't read as two stacked half-empty
+                       frames. Both sub-sections live in the same body. -->
+                  <div class="fpp-card fpp-card--about" id="preview-about-card" style="${(CU.bio||CU.joinedAt||CU.createdAt)?'':'display:none;'}">
+                    <div id="preview-bio-section" style="${CU.bio?'':'display:none;'}">
+                      <div class="fpp-card__title">About Me</div>
+                      <div class="fpp-card__body" id="preview-bio-body">${CU.bio ? (parseBioMD(CU.bio.slice(0,300))+(CU.bio.length>300?'…':'')) : ''}</div>
+                    </div>
+                    ${(CU.joinedAt||CU.createdAt) ? `
+                      ${CU.bio ? '<div class="fpp-card__sep"></div>' : ''}
+                      <div class="fpp-card__title" style="${CU.bio?'margin-top:10px;':''}">Member Since</div>
+                      <div class="fpp-card__body fpp-card__body--muted">${new Date(CU.joinedAt||CU.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+                    ` : ''}
                   </div>
-                  ${(CU.joinedAt||CU.createdAt) ? '<div class="fpp-card"><div class="fpp-card__title">Member Since</div><div class="fpp-card__body fpp-card__body--muted">'+new Date(CU.joinedAt||CU.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</div></div>' : ''}
                   <button class="fpp-settings-example-btn" type="button">Example Button</button>
                 </div>
               </div>
@@ -18065,10 +18090,16 @@ function _showAvatarPickerModal() {
   });
 }
 
-function _pickRecentAvatar(url) {
+async function _pickRecentAvatar(url) {
   CU.pfp = url;
+  CU.pfpCrop = null;
+  delete _pfpCropCache[CU.username];
+  window._recentlyEditedFields = window._recentlyEditedFields || {};
+  window._recentlyEditedFields.pfp = Date.now();
+  window._recentlyEditedFields.pfpCrop = Date.now();
   _saveRecentAvatar(url);
-  saveUser();
+  await saveUser(true);
+  try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, pfp: url, pfpCrop: null, field: 'pfp' }); } catch (e) {}
   try { updateUserbar(); } catch(_){}
   try { buildProfileView('myprofile'); } catch(_){}
   document.querySelector('.ftz-confirm-overlay')?.remove();
@@ -18288,12 +18319,12 @@ async function _applyGifAvatar(url) {
 
   if (mode === 'banner') {
     showCropModal(gifData, 16/5, async (cropped) => {
-      // Banner crop path: result is either canvas data (static) or
-      // {gifData, crop} (animated). Either shape is fine — we just
-      // store whatever data URL came back so the banner animates.
       const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
       CU.banner = finalBanner;
-      await saveUser();
+      window._recentlyEditedFields = window._recentlyEditedFields || {};
+      window._recentlyEditedFields.banner = Date.now();
+      await saveUser(true);
+      try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, banner: CU.banner, field: 'banner' }); } catch (e) {}
       try { updateUserbar(); } catch(_){}
       try { buildProfileView('myprofile'); } catch(_){}
       toast('Banner updated! ✓', 'success');
@@ -18314,7 +18345,10 @@ async function _applyGifAvatar(url) {
       CU.pfpCrop = null;
       delete _pfpCropCache[CU.username];
     }
-    await saveUser();
+    window._recentlyEditedFields = window._recentlyEditedFields || {};
+    window._recentlyEditedFields.pfp = Date.now();
+    window._recentlyEditedFields.pfpCrop = Date.now();
+    await saveUser(true);
     try { updateUserbar(); } catch(_){}
     try { buildProfileView('myprofile'); } catch(_){}
     try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, pfp: CU.pfp, pfpCrop: CU.pfpCrop, field: 'pfp' }); } catch (e) {}
@@ -18354,27 +18388,30 @@ async function updatePfp(e) {
     if (isGif) {
       // Show crop modal for GIF — applyCrop will return CSS crop params instead of canvas data
       showCropModal(fileData, 1, async (result) => {
-        // result is {gifData, crop} from the GIF path in applyCrop
         CU.pfp = result.gifData;
         CU.pfpCrop = result.crop;
         _pfpCropCache[CU.username] = result.crop;
-        await saveUser();
+        window._recentlyEditedFields = window._recentlyEditedFields || {};
+        window._recentlyEditedFields.pfp = Date.now();
+        window._recentlyEditedFields.pfpCrop = Date.now();
+        await saveUser(true);
         updateUserbar();
         buildProfileView('myprofile');
         try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: result.gifData, pfpCrop: result.crop, field: 'pfp' }); } catch(e){}
         _saveRecentAvatar(result.gifData);
         toast('Animated avatar updated! ✓', 'success');
       });
-      // Set the GIF flag on _cropData after showCropModal initializes it
       _cropData._isGif = true;
       _cropData._gifSrc = fileData;
     } else {
-      // Clear pfpCrop for non-GIF avatars
       CU.pfpCrop = null;
       delete _pfpCropCache[CU.username];
       showCropModal(fileData, 1, async (cropped) => {
         CU.pfp = cropped;
-        await saveUser();
+        window._recentlyEditedFields = window._recentlyEditedFields || {};
+        window._recentlyEditedFields.pfp = Date.now();
+        window._recentlyEditedFields.pfpCrop = Date.now();
+        await saveUser(true);
         updateUserbar();
         buildProfileView('myprofile');
         try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: cropped, pfpCrop: null, field: 'pfp' }); } catch(e){}
@@ -18400,8 +18437,12 @@ async function updateBanner(e) {
   reader.onload = async ev => {
     const fileData = ev.target.result;
     showCropModal(fileData, 16/5, async (cropped) => {
-      CU.banner = cropped;
-      await saveUser();
+      const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
+      CU.banner = finalBanner;
+      window._recentlyEditedFields = window._recentlyEditedFields || {};
+      window._recentlyEditedFields.banner = Date.now();
+      await saveUser(true);
+      try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, banner: CU.banner, field: 'banner' }); } catch (e) {}
       buildProfileView('myprofile');
       toast('Banner updated! ✓', 'success');
     });
@@ -37406,7 +37447,7 @@ const BADGE_DEFS = {
   radiance:  { img:'/badges/radiance.png',              cls:'badge-radiance',  order:4, tooltip:'Radiance - Active Radiance subscriber.' },
   onyx:      { img:'/badges/onyx.png',                  cls:'badge-onyx',      order:5, tooltip:'Onyx' },
   flame:     { img:'/badges/dedicated%20flame.png',     cls:'badge-flame',     order:6, tooltip:'Dedicated Flame' },
-  beta:      { img:'/badges/beta-user.png',             cls:'badge-beta',      order:7, tooltip:'Beta User - Early supporter of Fortized (account created before 25 August 2026).' },
+  beta:      { img:'/badges/beta%20user.png',           cls:'badge-beta',      order:7, tooltip:'Beta User - Early supporter of Fortized (account created before 25 August 2026).' },
   quest:     { img:'/badges/quest.png',                 cls:'badge-quest',     order:8, tooltip:'Completed a Quest' },
 };
 
@@ -40224,9 +40265,12 @@ function updateProfilePreview() {
   const npName = document.getElementById('preview-nameplate-name');
   if (npName) { npName.textContent = displayName; npName.style.cssText = fullStyle; }
 
-  // (1) Bio card — shown only when there's content, hidden otherwise.
+  // (1) Bio sub-section inside the combined About card — show/hide the
+  // sub-section based on content. The card itself stays visible while
+  // Member Since still has a value to show.
   const bioSection = document.getElementById('preview-bio-section');
   const bioBody = document.getElementById('preview-bio-body');
+  const aboutCard = document.getElementById('preview-about-card');
   if (bioBody) {
     if (bio) {
       bioBody.innerHTML = parseBioMD(bio.slice(0, 300)) + (bio.length > 300 ? '…' : '');
@@ -40234,6 +40278,10 @@ function updateProfilePreview() {
     } else if (bioSection) {
       bioSection.style.display = 'none';
     }
+  }
+  if (aboutCard) {
+    const hasMemberSince = !!(CU.joinedAt || CU.createdAt);
+    aboutCard.style.display = (bio || hasMemberSince) ? '' : 'none';
   }
 
   markSettingsDirty();

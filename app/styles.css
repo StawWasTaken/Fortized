@@ -8850,9 +8850,15 @@ select:focus-visible {
 }
 
 /* ── Banner ────────────────────────────────────────────────────────── */
+/* Banner frame is always 680 × 235 (≈2.894 : 1) — the canonical
+   Fortized banner ratio. height auto-derives from the container's
+   width so every variant gets the same proportions regardless of
+   wrapper size. height:auto would have been ideal but Safari + a
+   flex parent need aspect-ratio + an explicit width:100%. */
 .fpp__banner{
   position:relative;
-  height:108px;
+  width:100%;
+  aspect-ratio:680 / 235;
   overflow:hidden;
 }
 .fpp__banner > img{ width:100%; height:100%; object-fit:cover; display:block; }
@@ -8863,15 +8869,14 @@ select:focus-visible {
 .fpp__banner-fallback--themed{
   background-blend-mode:normal;
 }
-/* Top-down darkening shade so avatars/identity over the banner pop —
-   matches Discord's banner treatment. Strong at top (where the
-   accent rule sits), fades to nothing mid-banner, then re-darkens
-   into the panel below the avatar. */
+/* No shade over the banner — banners are presented at their true
+   colours so the user's chosen artwork (or the default Fortized
+   transparent pattern) reads cleanly. Identity contrast is achieved
+   via the bottom fade into var(--panel) only (kept very subtle, just
+   enough to anchor the avatar). */
 .fpp__banner::after{
-  content:""; position:absolute; inset:0;
-  background:
-    linear-gradient(to top, var(--panel) 0%, rgba(0,0,0,.05) 35%, transparent 55%),
-    linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,.12) 32%, transparent 60%);
+  content:""; position:absolute; bottom:0; left:0; right:0; height:38px;
+  background:linear-gradient(to top, var(--panel) 4%, transparent);
   pointer-events:none;
 }
 
@@ -8987,17 +8992,26 @@ select:focus-visible {
   border:1px solid var(--border);
   border-radius:10px;
 }
+/* Section titles: lighter than before — normal bold (600), no
+   display font, gentler letter-spacing. Used to be display/800 which
+   read as a sledgehammer next to the body text. */
 .fpp-card__title{
-  font-family:var(--font-display);
-  font-size:10.5px; font-weight:800;
-  letter-spacing:.12em; text-transform:uppercase;
-  color:var(--muted-light); opacity:.85;
+  font-size:11px; font-weight:600;
+  letter-spacing:.04em; text-transform:uppercase;
+  color:var(--muted-light); opacity:.7;
   margin-bottom:6px;
 }
 .fpp-card__body{
   font-size:12.5px; color:var(--text); line-height:1.55;
   word-break:break-word;
 }
+.fpp-card__sep{
+  height:1px;
+  background:var(--border);
+  margin:10px -14px;
+  opacity:.6;
+}
+.fpp-card--about > div + .fpp-card__title{ margin-top:0; }
 .fpp-card__body--muted{ color:var(--muted-light); font-weight:500; }
 .fpp-card__body strong{ color:var(--text); font-weight:700; }
 .fpp-card__body a{ color:var(--accent); text-decoration:none; }
@@ -9195,7 +9209,7 @@ select:focus-visible {
   z-index:4000;
   animation:fppPopIn .2s cubic-bezier(.22,1,.36,1);
 }
-.fpp--mini .fpp__banner{ height:96px; }
+/* mini banner inherits the 680:235 aspect from .fpp__banner */
 .fpp--mini .fpp__av{ width:72px; height:72px; border-width:4px; }
 .fpp--mini .fpp__av-row{ margin-top:-32px; }
 
@@ -9206,7 +9220,7 @@ select:focus-visible {
   z-index:4000;
   animation:fppPopIn .2s cubic-bezier(.22,1,.36,1);
 }
-.fpp--own .fpp__banner{ height:96px; }
+/* own banner inherits the 680:235 aspect from .fpp__banner */
 .fpp--own .fpp__av{ width:72px; height:72px; border-width:4px; }
 .fpp--own .fpp__av-row{ margin-top:-32px; }
 .fpp--own .fpp__actions{ padding-top:6px; padding-bottom:6px; }
@@ -9226,7 +9240,7 @@ select:focus-visible {
   height:100%;
   display:flex; flex-direction:column;
 }
-.fpp--dm .fpp__banner{ height:100px; }
+/* dm banner inherits the 680:235 aspect from .fpp__banner */
 .fpp--dm > *:last-child{ margin-bottom:0; }
 .fpp--dm .fpp__msg-input{ margin-top:auto; }
 
@@ -9238,14 +9252,13 @@ select:focus-visible {
 .fpp-settings-stack .fpp{ width:100%; }
 .fpp-settings-stack .fpp--settings{ animation:none; }
 .fpp-settings-stack__label{
-  font-family:var(--font-display);
-  font-size:10px; font-weight:800;
-  letter-spacing:.12em; text-transform:uppercase;
-  color:var(--muted-light); opacity:.7;
+  font-size:11px; font-weight:600;
+  letter-spacing:.04em; text-transform:uppercase;
+  color:var(--muted-light); opacity:.65;
   margin-bottom:8px;
 }
 .fpp--settings{ position:relative; }
-.fpp--settings .fpp__banner{ height:96px; cursor:pointer; transition:filter .15s; }
+.fpp--settings .fpp__banner{ cursor:pointer; transition:filter .15s; }
 .fpp--settings .fpp__banner:hover{ filter:brightness(1.08); }
 .fpp--settings .fpp__banner:hover::before{
   content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
@@ -9267,11 +9280,18 @@ select:focus-visible {
 }
 /* Settings preview: badges sized so they're actually readable
    (default .fpp__badges is 18 px — fine for the dense profile-card
-   modal but disappears at this scale). */
+   modal but disappears at this scale). Tight 2 px gap so they sit
+   together like Discord's badge cluster instead of floating apart. */
 .fpp--settings .fpp__badges .ftz-badge{
-  width:24px !important; height:24px !important;
+  width:28px !important; height:28px !important;
 }
-.fpp--settings .fpp__badges{ gap:4px; }
+.fpp--settings .fpp__badges{ gap:2px; }
+.fpp--settings .fpp__handle-row{ font-size:13px; gap:5px; }
+.fpp--settings .fpp__handle{
+  color:var(--text);
+  font-weight:600;
+}
+.fpp--settings .fpp__pronouns{ color:var(--muted-light); }
 
 /* Example button shown beneath the settings profile preview */
 .fpp-settings-example-btn{
@@ -9419,9 +9439,9 @@ select:focus-visible {
    ══════════════════════════════════════════════════════════════════ */
 .fpp-card-modal{
   display:grid;
-  grid-template-columns:320px 1fr;
-  width:900px; max-width:94vw;
-  min-height:540px; max-height:85vh;
+  grid-template-columns:340px 1fr;
+  width:970px; max-width:94vw;
+  height:800px; max-height:90vh;
   border-radius:20px;
   overflow:hidden;
   position:relative;
@@ -9447,7 +9467,7 @@ select:focus-visible {
 }
 .fpp-card-modal__left::-webkit-scrollbar{ width:4px; }
 .fpp-card-modal__left::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.08); border-radius:4px; }
-.fpp-card-modal__left .fpp__banner{ height:130px; }
+/* card-modal left banner inherits the 680:235 aspect from .fpp__banner */
 .fpp-card-modal__left .fpp__av{ width:92px; height:92px; border-width:5px; }
 .fpp-card-modal__left .fpp__av-row{ margin-top:-44px; }
 .fpp-card-modal__right{
@@ -9487,10 +9507,9 @@ select:focus-visible {
   margin-bottom:12px;
 }
 .fpp-card-modal__section-title{
-  font-family:var(--font-display);
-  font-size:10.5px; font-weight:800;
-  letter-spacing:.12em; text-transform:uppercase;
-  color:var(--muted-light); opacity:.85;
+  font-size:11px; font-weight:600;
+  letter-spacing:.04em; text-transform:uppercase;
+  color:var(--muted-light); opacity:.7;
 }
 .fpp-card-modal__section-sub{
   font-size:11px; color:var(--muted);
@@ -9567,10 +9586,9 @@ select:focus-visible {
   padding:14px 18px 0;
 }
 .fpp-card-modal__left-section-title{
-  font-family:var(--font-display);
-  font-size:10.5px; font-weight:800;
-  letter-spacing:.12em; text-transform:uppercase;
-  color:var(--muted-light); opacity:.85;
+  font-size:11px; font-weight:600;
+  letter-spacing:.04em; text-transform:uppercase;
+  color:var(--muted-light); opacity:.7;
   margin-bottom:6px;
 }
 .fpp-card-modal__left-section-body{

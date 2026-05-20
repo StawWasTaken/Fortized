@@ -17031,8 +17031,17 @@ function _buildProfileView(tab) {
   if (tab === 'myprofile') {
     const cs = CU.customStatus;
     const sc = FtzStatus.color(CU.status||'online');
-    const themeC1 = CU.profileTheme?.color1 || null;
-    const themeC2 = CU.profileTheme?.color2 || themeC1 || null;
+    // Theme keys: prefer the new shape (main/accent/bannerColor/bannerGradient),
+    // fall back to the legacy color1/color2 for users who'd set the old picker.
+    const _pt = CU.profileTheme || null;
+    const themeMain = (_pt && (_pt.main || _pt.color1)) || null;
+    const themeAccent = (_pt && (_pt.accent || _pt.color2)) || null;
+    const themeBannerColor = (_pt && _pt.bannerColor) || themeMain || null;
+    const themeBannerGrad = (_pt && _pt.bannerGradient) || null;
+    // Legacy var names kept so anything below that still reads them
+    // (the picker block is being rewritten further down) doesn't break.
+    const themeC1 = themeMain;
+    const themeC2 = themeAccent || themeMain;
     const previewBg = themeC1 ? `linear-gradient(135deg,${themeC1}ee,${themeC2||themeC1}bb)` : `linear-gradient(135deg,#141a2e,#1a1035,#0f1828)`;
     const sep = `<div style="height:1px;background:rgba(255,255,255,.05);margin:22px 0;"></div>`;
 
@@ -17155,42 +17164,51 @@ function _buildProfileView(tab) {
             <div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Theme</div>
-                <span style="font-size:9px;font-weight:700;background:linear-gradient(90deg,rgba(255,160,62,.1),rgba(167,139,250,.1));color:#c084fc;border:1px solid rgba(167,139,250,.2);border-radius:5px;padding:2px 7px;">RADIANCE+</span>
+                ${hasRadiance ? '' : '<span style="font-size:9px;font-weight:700;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:2px 7px;">FREE</span>'}
               </div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Customise the colours of your profile card border, banner gradient, and accents. Visible to others with Radiance.</div>
-              <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;">
-                <div style="text-align:center;">
-                  <label style="cursor:pointer;display:block;">
-                    <div style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeC1?themeC1+'55':'rgba(255,255,255,.1)'};overflow:hidden;position:relative;transition:border-color .15s;">
-                      <input type="color" value="${themeC1||'#6366f1'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;this.closest('div[style*=border]').style.borderColor=this.value+'55';if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color1=this.value;_updateProfileThemePreview();markSettingsDirty();updateProfilePreview()">
-                      <div style="width:100%;height:100%;background:${themeC1||'#6366f1'};display:flex;align-items:center;justify-content:center;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      </div>
-                    </div>
-                    <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Primary</div>
-                  </label>
-                </div>
-                <div style="text-align:center;">
-                  <label style="cursor:pointer;display:block;">
-                    <div style="width:60px;height:60px;border-radius:12px;border:2px solid ${(themeC2||themeC1)?((themeC2||themeC1)+'55'):'rgba(255,255,255,.1)'};overflow:hidden;position:relative;transition:border-color .15s;">
-                      <input type="color" value="${themeC2||themeC1||'#8b5cf6'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;this.closest('div[style*=border]').style.borderColor=this.value+'55';if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color2=this.value;_updateProfileThemePreview();markSettingsDirty();updateProfilePreview()">
-                      <div style="width:100%;height:100%;background:${themeC2||themeC1||'#8b5cf6'};display:flex;align-items:center;justify-content:center;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      </div>
-                    </div>
-                    <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Accent</div>
-                  </label>
-                </div>
-                <div style="text-align:center;">
-                  <div style="width:60px;height:60px;border-radius:12px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;">
-                    <div style="width:100%;height:100%;background:${themeC1?'linear-gradient(135deg,'+themeC1+'66,'+( themeC2||themeC1)+'66)':'linear-gradient(135deg,#666,#888)'};display:flex;align-items:center;justify-content:center;">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                    </div>
-                  </div>
-                  <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Card Bg<br><span style="font-size:8px;color:rgba(255,255,255,.2);">(auto)</span></div>
-                </div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;">
+                ${hasRadiance
+                  ? 'Pick separate Main and Accent colours, or set a gradient banner. Visible on your profile card everywhere.'
+                  : 'Pick a banner colour — your card accent is auto-tuned from it. <a href="#" onclick="event.preventDefault();showRadianceUpsell&&showRadianceUpsell()" style="color:#ff9d3e;text-decoration:none;">Radiance</a> unlocks separate Main + Accent + gradient banners.'}
               </div>
-              ${themeC1 ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" class="reset-theme-btn">Reset Theme</button>' : ''}
+              <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;">
+                <div style="text-align:center;">
+                  <button type="button" id="ftz-theme-swatch-main" onclick="_openThemeSwatch(this,'main')" style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeMain?themeMain+'55':'rgba(255,255,255,.1)'};overflow:hidden;position:relative;cursor:pointer;padding:0;background:${themeMain||'#6366f1'};display:flex;align-items:center;justify-content:center;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">${hasRadiance ? 'Main' : 'Banner Color'}</div>
+                </div>
+                ${hasRadiance ? `
+                <div style="text-align:center;">
+                  <button type="button" id="ftz-theme-swatch-accent" onclick="_openThemeSwatch(this,'accent')" style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeAccent?themeAccent+'55':'rgba(255,255,255,.1)'};overflow:hidden;position:relative;cursor:pointer;padding:0;background:${themeAccent||themeMain||'#8b5cf6'};display:flex;align-items:center;justify-content:center;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">Accent</div>
+                </div>
+                <div style="text-align:center;">
+                  <button type="button" id="ftz-theme-swatch-banner-from" onclick="_openThemeSwatch(this,'gradFrom')" style="width:60px;height:60px;border-radius:12px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;cursor:pointer;padding:0;background:${(themeBannerGrad&&themeBannerGrad.from)||themeMain||'#888'};"></button>
+                  <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">Gradient ▸</div>
+                </div>
+                <div style="text-align:center;">
+                  <button type="button" id="ftz-theme-swatch-banner-to" onclick="_openThemeSwatch(this,'gradTo')" style="width:60px;height:60px;border-radius:12px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;cursor:pointer;padding:0;background:${(themeBannerGrad&&themeBannerGrad.to)||themeAccent||themeMain||'#888'};"></button>
+                  <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">▸ to</div>
+                </div>` : ''}
+              </div>
+              ${hasRadiance ? `
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;font-size:12px;color:rgba(255,255,255,.5);">
+                  <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+                    <input type="checkbox" id="ftz-theme-grad-on" ${themeBannerGrad?'checked':''} onchange="_toggleThemeGradient(this.checked)">
+                    Use gradient banner
+                  </label>
+                  <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;${themeBannerGrad?'':'opacity:.4;pointer-events:none;'}" id="ftz-theme-grad-anim-wrap">
+                    <input type="checkbox" id="ftz-theme-grad-anim" ${(themeBannerGrad&&themeBannerGrad.animate)?'checked':''} onchange="_setThemeGradientAnimate(this.checked)">
+                    Animate
+                  </label>
+                  <label style="display:inline-flex;align-items:center;gap:6px;${themeBannerGrad?'':'opacity:.4;pointer-events:none;'}" id="ftz-theme-grad-angle-wrap">
+                    Angle <input type="number" id="ftz-theme-grad-angle" value="${(themeBannerGrad&&Number.isFinite(themeBannerGrad.angle))?themeBannerGrad.angle:135}" min="0" max="360" style="width:54px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:3px 6px;color:#fff;font-size:11px;" onchange="_setThemeGradientAngle(this.value)">°
+                  </label>
+                </div>` : ''}
+              ${themeMain ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" class="reset-theme-btn">Reset Theme</button>' : ''}
             </div>
             ${sep}
 
@@ -26614,6 +26632,65 @@ function getDisplayFont(user) {
   if (!user?.displayFont) return RADIANCE_FONTS[0].css;
   const f = RADIANCE_FONTS.find(f => f.id === user.displayFont) || (typeof DISPLAY_NAME_FONTS !== 'undefined' ? DISPLAY_NAME_FONTS.find(f => f.id === user.displayFont) : null);
   return f ? f.css : RADIANCE_FONTS[0].css;
+}
+
+// ── Settings → Profile theme controls ────────────────────────
+// These bridge the swatch buttons + gradient toggles in the
+// settings panel to CU.profileTheme + the live preview.
+function _openThemeSwatch(btn, slot) {
+  if (!CU.profileTheme) CU.profileTheme = {};
+  const t = CU.profileTheme;
+  const current =
+    slot === 'main'     ? (t.main || t.color1 || '#6366f1') :
+    slot === 'accent'   ? (t.accent || t.color2 || t.main || '#8b5cf6') :
+    slot === 'gradFrom' ? ((t.bannerGradient && t.bannerGradient.from) || t.main || '#6366f1') :
+    slot === 'gradTo'   ? ((t.bannerGradient && t.bannerGradient.to) || t.accent || '#8b5cf6') :
+    '#ffffff';
+  _ftzColorPicker(btn, current, (hex) => {
+    // Live-update CU + swatch + preview as the user drags.
+    if (slot === 'main')    { t.main = hex; delete t.color1; }
+    if (slot === 'accent')  { t.accent = hex; delete t.color2; }
+    if (slot === 'gradFrom'){ t.bannerGradient = t.bannerGradient || { angle: 135 }; t.bannerGradient.from = hex; }
+    if (slot === 'gradTo')  { t.bannerGradient = t.bannerGradient || { angle: 135 }; t.bannerGradient.to = hex; }
+    btn.style.background = hex;
+    btn.style.borderColor = hex + '55';
+    markSettingsDirty();
+    if (typeof updateProfilePreview === 'function') updateProfilePreview();
+  });
+}
+function _toggleThemeGradient(on) {
+  if (!CU.profileTheme) CU.profileTheme = {};
+  const t = CU.profileTheme;
+  if (on) {
+    if (!t.bannerGradient) {
+      t.bannerGradient = {
+        from: t.main || t.color1 || '#6366f1',
+        to:   t.accent || t.color2 || t.main || '#8b5cf6',
+        angle: 135, animate: false
+      };
+    }
+  } else {
+    delete t.bannerGradient;
+  }
+  ['ftz-theme-grad-anim-wrap','ftz-theme-grad-angle-wrap'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.opacity = on ? '' : '.4'; el.style.pointerEvents = on ? '' : 'none'; }
+  });
+  markSettingsDirty();
+  if (typeof updateProfilePreview === 'function') updateProfilePreview();
+}
+function _setThemeGradientAnimate(on) {
+  if (!CU.profileTheme || !CU.profileTheme.bannerGradient) return;
+  CU.profileTheme.bannerGradient.animate = !!on;
+  markSettingsDirty();
+  if (typeof updateProfilePreview === 'function') updateProfilePreview();
+}
+function _setThemeGradientAngle(v) {
+  if (!CU.profileTheme || !CU.profileTheme.bannerGradient) return;
+  const n = Math.max(0, Math.min(360, parseInt(v, 10) || 0));
+  CU.profileTheme.bannerGradient.angle = n;
+  markSettingsDirty();
+  if (typeof updateProfilePreview === 'function') updateProfilePreview();
 }
 
 function _updateProfileThemePreview() {
@@ -40659,6 +40736,163 @@ function _fppResolveTheme(u) {
     }
   }
   return { main, accent, bannerImage, bannerStyle, hasRadiance };
+}
+
+// ── Custom colour-picker popover ─────────────────────────────
+// HSV square + hue slider + hex field + recents — Discord-style
+// without the swatch presets. Reusable: anchor anywhere, get a
+// callback on every change. Mounts once at a time; opening a
+// second picker closes the first.
+function _ftzColorPickerClose() {
+  const ex = document.getElementById('ftz-color-picker'); if (ex) ex.remove();
+  document.removeEventListener('mousedown', _ftzColorPicker._onOutside, true);
+  document.removeEventListener('keydown', _ftzColorPicker._onKey, true);
+}
+function _ftzColorPickerRecents() {
+  try { return (JSON.parse(localStorage.getItem('ftzRecentColors') || '[]') || []).filter(c => typeof c === 'string').slice(0, 8); }
+  catch { return []; }
+}
+function _ftzColorPickerPushRecent(hex) {
+  if (!hex || typeof hex !== 'string') return;
+  const norm = hex.toLowerCase();
+  let arr = _ftzColorPickerRecents().filter(c => c.toLowerCase() !== norm);
+  arr.unshift(norm); arr = arr.slice(0, 8);
+  try { localStorage.setItem('ftzRecentColors', JSON.stringify(arr)); } catch {}
+}
+
+function _ftzColorPicker(anchorEl, currentHex, onChange, onCommit) {
+  _ftzColorPickerClose();
+  const startHex = (typeof currentHex === 'string' && _fppHexToRgb(currentHex)) ? currentHex : '#ffffff';
+  const startRgb = _fppHexToRgb(startHex);
+  const startHsv = (() => {
+    const r = startRgb.r/255, g = startRgb.g/255, b = startRgb.b/255;
+    const mx = Math.max(r,g,b), mn = Math.min(r,g,b), d = mx - mn;
+    let h = 0; const v = mx, s = mx === 0 ? 0 : d / mx;
+    if (d) {
+      switch (mx) {
+        case r: h = ((g - b) / d) % 6; break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h *= 60; if (h < 0) h += 360;
+    }
+    return { h, s, v };
+  })();
+  const state = { h: startHsv.h, s: startHsv.s, v: startHsv.v };
+  function hsvToRgb(h, s, v) {
+    const c = v * s, x = c * (1 - Math.abs(((h/60) % 2) - 1)), m = v - c;
+    let r=0,g=0,b=0;
+    if (h<60){r=c;g=x;}else if(h<120){r=x;g=c;}else if(h<180){g=c;b=x;}
+    else if(h<240){g=x;b=c;}else if(h<300){r=x;b=c;}else{r=c;b=x;}
+    return { r:(r+m)*255, g:(g+m)*255, b:(b+m)*255 };
+  }
+  function curHex() {
+    const rgb = hsvToRgb(state.h, state.s, state.v);
+    return _fppRgbToHex(rgb.r, rgb.g, rgb.b);
+  }
+  function hueRgb() { const rgb = hsvToRgb(state.h, 1, 1); return _fppRgbToHex(rgb.r, rgb.g, rgb.b); }
+
+  const pop = document.createElement('div');
+  pop.id = 'ftz-color-picker';
+  pop.setAttribute('role', 'dialog');
+  pop.style.cssText = 'position:fixed;z-index:9000;width:248px;background:var(--panel2,#161a28);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:12px;padding:12px;box-shadow:0 18px 48px rgba(0,0,0,.6);user-select:none;';
+  pop.innerHTML = `
+    <div class="ftz-cp-square" style="position:relative;width:224px;height:140px;border-radius:8px;overflow:hidden;cursor:crosshair;background:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,${hueRgb()});">
+      <div class="ftz-cp-thumb" style="position:absolute;width:12px;height:12px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.4);transform:translate(-50%,-50%);pointer-events:none;left:${state.s*100}%;top:${(1-state.v)*100}%;"></div>
+    </div>
+    <div class="ftz-cp-hue" style="position:relative;width:224px;height:14px;border-radius:8px;margin-top:10px;cursor:pointer;background:linear-gradient(to right,#f00 0%,#ff0 17%,#0f0 33%,#0ff 50%,#00f 67%,#f0f 83%,#f00 100%);">
+      <div class="ftz-cp-hue-thumb" style="position:absolute;width:6px;height:18px;border:2px solid #fff;border-radius:4px;box-shadow:0 0 0 1px rgba(0,0,0,.5);top:-4px;transform:translateX(-50%);pointer-events:none;left:${(state.h/360)*100}%;background:transparent;"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+      <div class="ftz-cp-swatch" style="width:28px;height:28px;border-radius:6px;background:${curHex()};border:1px solid rgba(255,255,255,.12);flex-shrink:0;"></div>
+      <input class="ftz-cp-hex" type="text" value="${curHex()}" maxlength="7" spellcheck="false" style="flex:1;min-width:0;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:6px 8px;color:var(--text,#fff);font-family:'JetBrains Mono',monospace;font-size:12px;text-transform:lowercase;">
+    </div>
+    <div class="ftz-cp-recents-row" style="display:flex;gap:5px;margin-top:10px;min-height:22px;flex-wrap:wrap;">
+      ${_ftzColorPickerRecents().map(c => `<button type="button" class="ftz-cp-recent" data-c="${escapeHTML(c)}" style="width:22px;height:22px;border-radius:5px;background:${escapeHTML(c)};border:1px solid rgba(255,255,255,.12);cursor:pointer;padding:0;"></button>`).join('') || '<span style="font-size:10.5px;color:rgba(255,255,255,.3);align-self:center;">No recent colours yet</span>'}
+    </div>`;
+  document.body.appendChild(pop);
+
+  // Position near anchor
+  const r = anchorEl?.getBoundingClientRect?.() || { left: 100, top: 100, bottom: 140, right: 140 };
+  let left = r.left, top = r.bottom + 6;
+  const PW = 248 + 24, PH = pop.offsetHeight + 24;
+  if (left + PW > window.innerWidth - 8) left = window.innerWidth - PW - 8;
+  if (top + PH > window.innerHeight - 8) top = r.top - PH;
+  pop.style.left = Math.max(8, left) + 'px';
+  pop.style.top = Math.max(8, top) + 'px';
+
+  const sq = pop.querySelector('.ftz-cp-square');
+  const sqThumb = pop.querySelector('.ftz-cp-thumb');
+  const hueBar = pop.querySelector('.ftz-cp-hue');
+  const hueThumb = pop.querySelector('.ftz-cp-hue-thumb');
+  const swatch = pop.querySelector('.ftz-cp-swatch');
+  const hexInp = pop.querySelector('.ftz-cp-hex');
+
+  function refresh() {
+    const hex = curHex();
+    swatch.style.background = hex;
+    hexInp.value = hex;
+    sqThumb.style.left = (state.s*100) + '%';
+    sqThumb.style.top = ((1-state.v)*100) + '%';
+    sq.style.background = `linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,${hueRgb()})`;
+    hueThumb.style.left = ((state.h/360)*100) + '%';
+    try { onChange && onChange(hex); } catch {}
+  }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function sqDrag(e) {
+    const b = sq.getBoundingClientRect();
+    state.s = clamp((e.clientX - b.left) / b.width, 0, 1);
+    state.v = clamp(1 - (e.clientY - b.top) / b.height, 0, 1);
+    refresh();
+  }
+  function hueDrag(e) {
+    const b = hueBar.getBoundingClientRect();
+    state.h = clamp((e.clientX - b.left) / b.width, 0, 1) * 360;
+    refresh();
+  }
+  function bindDrag(el, handler) {
+    el.addEventListener('mousedown', e => {
+      e.preventDefault(); handler(e);
+      function mv(ev) { handler(ev); }
+      function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); try { onCommit && onCommit(curHex()); } catch {} _ftzColorPickerPushRecent(curHex()); }
+      document.addEventListener('mousemove', mv);
+      document.addEventListener('mouseup', up);
+    });
+  }
+  bindDrag(sq, sqDrag);
+  bindDrag(hueBar, hueDrag);
+
+  hexInp.addEventListener('input', () => {
+    let v = hexInp.value.trim();
+    if (v && v[0] !== '#') v = '#' + v;
+    const rgb = _fppHexToRgb(v); if (!rgb) return;
+    // back to HSV
+    const r=rgb.r/255,g=rgb.g/255,b=rgb.b/255;
+    const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn;
+    let h=0; const vv=mx, s=mx===0?0:d/mx;
+    if (d) {
+      switch(mx){case r:h=((g-b)/d)%6;break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}
+      h*=60; if(h<0)h+=360;
+    }
+    state.h=h; state.s=s; state.v=vv; refresh();
+  });
+  hexInp.addEventListener('change', () => { try { onCommit && onCommit(curHex()); } catch {} _ftzColorPickerPushRecent(curHex()); });
+  pop.querySelectorAll('.ftz-cp-recent').forEach(btn => {
+    btn.addEventListener('click', () => {
+      hexInp.value = btn.dataset.c;
+      hexInp.dispatchEvent(new Event('input'));
+      try { onCommit && onCommit(curHex()); } catch {}
+    });
+  });
+
+  _ftzColorPicker._onOutside = (e) => {
+    if (pop.contains(e.target) || (anchorEl && anchorEl.contains(e.target))) return;
+    _ftzColorPickerClose();
+  };
+  _ftzColorPicker._onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); _ftzColorPickerClose(); } };
+  document.addEventListener('mousedown', _ftzColorPicker._onOutside, true);
+  document.addEventListener('keydown', _ftzColorPicker._onKey, true);
+  return pop;
 }
 
 function _fppApplyTheme(el, u) {

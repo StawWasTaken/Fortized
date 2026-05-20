@@ -8876,6 +8876,11 @@ select:focus-visible {
 .fpp__banner-fallback--themed{
   background-blend-mode:normal;
 }
+@keyframes fppBannerShift{
+  0%   { background-position:0% 50%; }
+  50%  { background-position:100% 50%; }
+  100% { background-position:0% 50%; }
+}
 /* No shade over the banner — banners are presented at their true
    colours so the user's chosen artwork (or the default Fortized
    transparent pattern) reads cleanly. Identity contrast is achieved

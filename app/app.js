@@ -17130,7 +17130,7 @@ function _buildProfileView(tab) {
               </div>
               <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event);markSettingsDirty()">
               <div style="display:flex;gap:8px;">
-                <button onclick="${hasRadiance?"document.getElementById('banner-file-inp').click()":"toast('Custom banners require Radiance','error')"}" class="settings-save-btn">Change Banner</button>
+                <button onclick="${hasRadiance?"_showBannerPickerMenu(event)":"toast('Custom banners require Radiance','error')"}" class="settings-save-btn">Change Banner</button>
                 ${hasRadiance && CU.banner ? '<button onclick="CU.banner=&#39;&#39;;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Banner</button>' : ''}
               </div>
             </div>
@@ -17213,16 +17213,20 @@ function _buildProfileView(tab) {
           <div style="position:sticky;top:20px;">
             <div class="fpp-settings-stack">
 
-              <!-- (1) PROFILE PREVIEW -->
+              <!-- (1) PROFILE PREVIEW
+                   Mirrors what other people see when they open your card:
+                   banner → pfp + custom-status bubble → name + handle + pronouns
+                   + badges → Bio card → Member Since card → Example Button.
+                   Updates live as the user edits the inputs on the left. -->
               <div>
                 <div class="fpp-settings-stack__label">Preview</div>
                 <div class="fpp fpp--settings settings-profile-preview" data-fpp-settings-card>
-                  <div class="fpp__banner" onclick="document.getElementById('banner-file-inp')?.click();" title="Change banner" style="cursor:pointer;">
+                  <div class="fpp__banner" onclick="_showBannerPickerMenu(event)" title="${hasRadiance?'Change banner — upload or pick a GIF':'Custom banners require Radiance'}" style="cursor:pointer;">
                     ${(CU.banner && hasRadiance) ? '<img src="'+escapeHTML(CU.banner)+'" alt="">' : '<div class="fpp__banner-fallback"></div>'}
                   </div>
                   <div class="fpp__av-row">
                     <div class="fpp__av-wrap" onclick="_showAvatarPickerMenu(event)" title="Change avatar" style="cursor:pointer;">
-                      <div class="fpp__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 72)}</div>
+                      <div class="fpp__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 64, CU.pfpCrop)}</div>
                       ${CU.activeDecoration ? (()=>{ const d = PROFILE_DECORATIONS.find(dec => dec.id === CU.activeDecoration); return d ? '<img src="'+escapeHTML(d.src)+'" class="fpp__decoration" onerror="this.style.display=\'none\'">' : ''; })() : ''}
                       <span class="fpp__status-dot profile-status-dot" data-for="${escapeHTML(CU.username)}" data-dot-size="22">${FtzStatus.dotSvg(CU.status||'online', 22)}</span>
                     </div>
@@ -17238,20 +17242,28 @@ function _buildProfileView(tab) {
                       <span class="fpp__badges">${renderBadgesHTML(CU)}</span>
                     </div>
                   </div>
+                  <div id="preview-bio-section" style="${CU.bio?'':'display:none;'}">
+                    <div class="fpp-card"><div class="fpp-card__title">Bio</div><div class="fpp-card__body" id="preview-bio-body">${CU.bio ? (parseBioMD(CU.bio.slice(0,300))+(CU.bio.length>300?'…':'')) : ''}</div></div>
+                  </div>
+                  ${(CU.joinedAt||CU.createdAt) ? '<div class="fpp-card"><div class="fpp-card__title">Member Since</div><div class="fpp-card__body fpp-card__body--muted">'+new Date(CU.joinedAt||CU.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</div></div>' : ''}
                   <button class="fpp-settings-example-btn" type="button">Example Button</button>
                 </div>
               </div>
 
-              <!-- (2) MESSAGE PREVIEW -->
+              <!-- (2) MESSAGE PREVIEW
+                   Exact mirror of the real .msg-row in chat — same 38 px
+                   avatar, same 14 px / weight 600 author with optional
+                   display-font + effect, same "· {time}" timestamp, same
+                   14.5 px / .88 white body text at line-height 1.65. -->
               <div>
                 <div class="fpp-settings-stack__label">Message preview</div>
                 <div class="fpp-msg-preview">
                   <div class="fpp-msg-preview__row">
-                    <div class="fpp-msg-preview__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 36)}</div>
+                    <div class="fpp-msg-preview__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 38, CU.pfpCrop)}</div>
                     <div class="fpp-msg-preview__body">
                       <div class="fpp-msg-preview__name-row">
                         <span class="fpp-msg-preview__name" id="preview-msg-name" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
-                        <span class="fpp-msg-preview__time">Today at 12:34</span>
+                        <span class="fpp-msg-preview__time">·  Today at 12:34</span>
                       </div>
                       <div class="fpp-msg-preview__text">Hey! This is what your messages look like.</div>
                     </div>
@@ -17259,13 +17271,20 @@ function _buildProfileView(tab) {
                 </div>
               </div>
 
-              <!-- (3) NAMEPLATE PREVIEW -->
+              <!-- (3) NAMEPLATE PREVIEW
+                   Exact mirror of the real .ml-entry in the memberlist —
+                   5 px / 10 px row, 32 px avatar with status dot riding
+                   the lower-right, 13 px / weight 600 name at .55 white. -->
               <div>
                 <div class="fpp-settings-stack__label">Nameplate</div>
                 <div class="fpp-nameplate-preview">
-                  <div class="fpp-nameplate-preview__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 32)}</div>
-                  <div class="fpp-nameplate-preview__name" id="preview-nameplate-name" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
-                  <span class="fpp-nameplate-preview__dot" style="background:${sc};"></span>
+                  <div class="fpp-nameplate-preview__row">
+                    <div class="fpp-nameplate-preview__av-wrap">
+                      <div class="fpp-nameplate-preview__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 32, CU.pfpCrop)}</div>
+                      <span class="fpp-nameplate-preview__dot" style="background:${sc};"></span>
+                    </div>
+                    <div class="fpp-nameplate-preview__name" id="preview-nameplate-name" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
+                  </div>
                 </div>
               </div>
 
@@ -18240,13 +18259,70 @@ function _renderAvatarGifResults(items) {
 
 async function _applyGifAvatar(url) {
   if (!url) return;
-  CU.pfp = url;
-  _saveRecentAvatar(url);
-  await saveUser();
-  try { updateUserbar(); } catch(_){}
-  try { buildProfileView('myprofile'); } catch(_){}
+  // Mode flag set by _openBannerGifPicker — routes the same picker
+  // through banner crop (16:5 → CU.banner) instead of avatar crop
+  // (1:1 → CU.pfp + pfpCrop). One-shot: cleared after dispatch.
+  const mode = window._fppGifPickerMode === 'banner' ? 'banner' : 'avatar';
+  window._fppGifPickerMode = null;
+  // Fetch the GIF as a data URL so the crop modal can load it onto a
+  // canvas. Tenor/Giphy return CORS-allowed URLs; if the fetch fails
+  // we fall back to the URL directly with no crop (preserves
+  // animation, just centered).
+  let gifData = url;
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (res.ok) {
+      const blob = await res.blob();
+      gifData = await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = reject;
+        fr.readAsDataURL(blob);
+      });
+    }
+  } catch (e) {
+    _dbg('[GIF picker] fetch failed, using URL directly', e);
+  }
+
   document.querySelectorAll('.ftz-confirm-overlay').forEach(el => el.remove());
-  toast('Avatar updated!', 'success');
+
+  if (mode === 'banner') {
+    showCropModal(gifData, 16/5, async (cropped) => {
+      // Banner crop path: result is either canvas data (static) or
+      // {gifData, crop} (animated). Either shape is fine — we just
+      // store whatever data URL came back so the banner animates.
+      const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
+      CU.banner = finalBanner;
+      await saveUser();
+      try { updateUserbar(); } catch(_){}
+      try { buildProfileView('myprofile'); } catch(_){}
+      toast('Banner updated! ✓', 'success');
+    });
+    _cropData._isGif = true;
+    _cropData._gifSrc = gifData;
+    return;
+  }
+
+  // Avatar GIF path — matches the file-upload GIF flow at updatePfp().
+  showCropModal(gifData, 1, async (result) => {
+    if (result && typeof result === 'object' && result.gifData) {
+      CU.pfp = result.gifData;
+      CU.pfpCrop = result.crop;
+      _pfpCropCache[CU.username] = result.crop;
+    } else {
+      CU.pfp = result || gifData;
+      CU.pfpCrop = null;
+      delete _pfpCropCache[CU.username];
+    }
+    await saveUser();
+    try { updateUserbar(); } catch(_){}
+    try { buildProfileView('myprofile'); } catch(_){}
+    try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, pfp: CU.pfp, pfpCrop: CU.pfpCrop, field: 'pfp' }); } catch (e) {}
+    _saveRecentAvatar(CU.pfp);
+    toast('Animated avatar updated! ✓', 'success');
+  });
+  _cropData._isGif = true;
+  _cropData._gifSrc = gifData;
 }
 
 // Save recent avatar to localStorage (most-recent first, capped at 5)
@@ -18331,6 +18407,61 @@ async function updateBanner(e) {
     });
   };
   reader.readAsDataURL(file);
+}
+
+// ── Banner picker (mirrors the avatar picker UX: Upload Image |
+// Choose GIF, both crop-aware via showCropModal at 16:5). Clicking
+// the banner thumbnail in the settings preview lands here. ──
+function _showBannerPickerMenu(event) {
+  event?.stopPropagation();
+  const hasRadiance = _hasRadiance(CU);
+  if (!hasRadiance) {
+    toast('Custom banners require a Radiance subscription', 'error');
+    return;
+  }
+  document.querySelector('.ftz-banner-picker-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay ftz-banner-picker-overlay';
+  ov.innerHTML = `<div class="ftz-confirm-card" style="max-width:520px;padding:0;overflow:hidden;">
+    <div style="padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;">Choose a Banner</div>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;">&times;</button>
+    </div>
+    <div style="padding:0 24px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div onclick="this.closest('.ftz-confirm-overlay').remove();document.getElementById('banner-file-inp')?.click();" style="padding:24px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:border-color .15s,background .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.background='rgba(255,249,62,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.03)'">
+        <svg width="34" height="22" viewBox="0 0 40 28" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.6"><rect x="2" y="3" width="36" height="22" rx="3"/><circle cx="11" cy="11" r="2.5"/><polyline points="38 21 27 12 12 25"/></svg>
+        <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);">Upload Image</span>
+        <span style="font-size:10px;color:rgba(255,255,255,.28);">PNG · JPG · GIF</span>
+      </div>
+      <div onclick="this.closest('.ftz-confirm-overlay').remove();_openBannerGifPicker();" style="padding:24px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:border-color .15s,background .15s;position:relative;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.background='rgba(255,249,62,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.03)'">
+        <span style="position:absolute;top:8px;right:8px;font-size:9px;font-weight:800;padding:2px 6px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:4px;color:rgba(255,249,62,.7);">GIF</span>
+        <svg width="34" height="22" viewBox="0 0 40 28" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="36" height="22" rx="3"/><text x="20" y="19" text-anchor="middle" font-family="'Inter','Helvetica',sans-serif" font-size="10" font-weight="800" fill="rgba(255,255,255,.55)" stroke="none" letter-spacing=".5">GIF</text></svg>
+        <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);">Choose GIF</span>
+        <span style="font-size:10px;color:rgba(255,255,255,.28);">Crop &amp; preview</span>
+      </div>
+    </div>
+    ${CU.banner ? `<div style="padding:0 24px 16px;">
+      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:8px;">Current</div>
+      <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.06);aspect-ratio:16/5;background:#0e1117;">
+        <img src="${escapeHTML(CU.banner)}" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';saveUser();markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.35);color:#fca5a5;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
+      </div>
+    </div>` : ''}
+    <div style="padding:12px 24px 16px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:rgba(255,255,255,.28);">Banners are cropped to 16:5. Upload up to 8 MB or pick an animated GIF.</div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+}
+
+// Banner GIF picker — same Tenor/Giphy-backed flow as the avatar GIF
+// picker, just routed through showCropModal at 16:5 instead of 1:1
+// so the result lands on CU.banner via the same crop-aware pipeline.
+function _openBannerGifPicker() {
+  if (typeof _openAvatarGifPicker !== 'function') { toast('GIF picker unavailable', 'error'); return; }
+  // Stash a one-shot flag the picker checks before dispatching the URL.
+  // Pattern matches the existing avatar picker's internal routing.
+  window._fppGifPickerMode = 'banner';
+  _openAvatarGifPicker();
 }
 async function setMyStatus(s) {
   if (!CU?.username) return;
@@ -40055,8 +40186,10 @@ function updateProfilePreview() {
   if (!settingsCard) return;
 
   const dnInp = document.getElementById('dn-input');
+  const bioInp = document.getElementById('bio-input');
   const pronounsInp = document.getElementById('pronouns-input');
   const displayName = dnInp ? (dnInp.value.trim() || CU.username) : (CU.displayName || CU.username);
+  const bio = bioInp ? bioInp.value.trim() : (CU.bio || '');
   const pronouns = pronounsInp ? pronounsInp.value.trim() : (CU.pronouns || '');
 
   const fontCss = _getDisplayFontCSS(CU.displayFont || 'default');
@@ -40090,6 +40223,18 @@ function updateProfilePreview() {
   // (3) Nameplate preview name
   const npName = document.getElementById('preview-nameplate-name');
   if (npName) { npName.textContent = displayName; npName.style.cssText = fullStyle; }
+
+  // (1) Bio card — shown only when there's content, hidden otherwise.
+  const bioSection = document.getElementById('preview-bio-section');
+  const bioBody = document.getElementById('preview-bio-body');
+  if (bioBody) {
+    if (bio) {
+      bioBody.innerHTML = parseBioMD(bio.slice(0, 300)) + (bio.length > 300 ? '…' : '');
+      if (bioSection) bioSection.style.display = '';
+    } else if (bioSection) {
+      bioSection.style.display = 'none';
+    }
+  }
 
   markSettingsDirty();
 }

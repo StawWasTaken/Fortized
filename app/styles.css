@@ -8863,10 +8863,30 @@ select:focus-visible {
 .fpp__banner-fallback--themed{
   background-blend-mode:normal;
 }
+/* Top-down darkening shade so avatars/identity over the banner pop —
+   matches Discord's banner treatment. Strong at top (where the
+   accent rule sits), fades to nothing mid-banner, then re-darkens
+   into the panel below the avatar. */
 .fpp__banner::after{
-  content:""; position:absolute; bottom:0; left:0; right:0; height:62px;
-  background:linear-gradient(to top, var(--panel) 8%, transparent);
+  content:""; position:absolute; inset:0;
+  background:
+    linear-gradient(to top, var(--panel) 0%, rgba(0,0,0,.05) 35%, transparent 55%),
+    linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,.12) 32%, transparent 60%);
   pointer-events:none;
+}
+
+/* Avatar img/div sizing — buildAvatarHTML emits a fixed-pixel <img>
+   that gets clipped by the .fpp__av border. Force the inner element
+   to fill the visible interior so the pfp is always rendered round
+   and full-size regardless of the size value passed. */
+.fpp__av > img,
+.fpp__av > div,
+.fpp__av > span{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover;
+  border-radius:50%;
+  display:block;
 }
 
 /* ── Avatar row (avatar + custom-status bubble) ───────────────────── */
@@ -9225,10 +9245,33 @@ select:focus-visible {
   margin-bottom:8px;
 }
 .fpp--settings{ position:relative; }
-.fpp--settings .fpp__banner{ height:96px; cursor:pointer; }
+.fpp--settings .fpp__banner{ height:96px; cursor:pointer; transition:filter .15s; }
 .fpp--settings .fpp__banner:hover{ filter:brightness(1.08); }
+.fpp--settings .fpp__banner:hover::before{
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:rgba(0,0,0,.25)
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg>")
+    center/24px no-repeat;
+  opacity:0; animation:fppFadeIn .15s forwards;
+}
+@keyframes fppFadeIn{ to{ opacity:1; } }
 .fpp--settings .fpp__av{ width:72px; height:72px; border-width:4px; cursor:pointer; }
 .fpp--settings .fpp__av-row{ margin-top:-32px; }
+/* Settings preview: tighter decoration so it hugs the avatar instead
+   of dwarfing it. -8px gave a ~18% halo (way too big for the small
+   72 px settings av); -4px keeps Discord-tier proportions. */
+.fpp--settings .fpp__decoration{
+  inset:-4px;
+  width:calc(100% + 8px);
+  height:calc(100% + 8px);
+}
+/* Settings preview: badges sized so they're actually readable
+   (default .fpp__badges is 18 px — fine for the dense profile-card
+   modal but disappears at this scale). */
+.fpp--settings .fpp__badges .ftz-badge{
+  width:24px !important; height:24px !important;
+}
+.fpp--settings .fpp__badges{ gap:4px; }
 
 /* Example button shown beneath the settings profile preview */
 .fpp-settings-example-btn{
@@ -9246,16 +9289,22 @@ select:focus-visible {
   display:flex; align-items:center; justify-content:center; gap:6px;
 }
 
-/* Message-preview mini card (settings) */
+/* ── Message preview (mirrors the real .msg-row exactly) ───────────
+   Real values lifted from app/styles.css:710-728 so what you see in
+   the preview is what other people see when you send a message:
+   - 38 px avatar
+   - 14 px / weight 600 author (display font/effect applied via JS)
+   - 10 px timestamp with leading "·"
+   - 14.5 px / .88 white text, line-height 1.65 */
 .fpp-msg-preview{
   position:relative;
-  padding:14px 16px;
+  padding:12px 14px 14px;
   background:
     radial-gradient(620px 110px at 16% 0%, rgba(255,249,62,.05), transparent 70%),
     linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
     var(--panel);
   border:1px solid var(--border);
-  border-radius:16px;
+  border-radius:14px;
   overflow:hidden;
 }
 .fpp-msg-preview::before{
@@ -9264,34 +9313,54 @@ select:focus-visible {
   pointer-events:none;
 }
 .fpp-msg-preview__row{
-  display:flex; gap:10px; align-items:flex-start;
-  padding:6px 0;
+  display:flex; gap:14px; align-items:flex-start;
 }
 .fpp-msg-preview__av{
-  width:36px; height:36px; border-radius:50%; overflow:hidden;
-  background:var(--panel2); flex-shrink:0;
+  width:38px; height:38px; min-width:38px;
+  border-radius:50%;
+  background:var(--panel);
+  overflow:hidden;
+  flex-shrink:0;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
-.fpp-msg-preview__av img{ width:100%; height:100%; object-fit:cover; }
-.fpp-msg-preview__body{ flex:1; min-width:0; }
+.fpp-msg-preview__av > img,
+.fpp-msg-preview__av > div,
+.fpp-msg-preview__av > span{
+  width:100% !important; height:100% !important;
+  object-fit:cover; border-radius:50%; display:block;
+}
+.fpp-msg-preview__body{ flex:1; min-width:0; padding-left:0; }
 .fpp-msg-preview__name-row{
-  display:flex; align-items:baseline; gap:8px; margin-bottom:2px;
+  display:flex; align-items:baseline; gap:4px;
+  margin-bottom:3px; flex-wrap:wrap;
 }
 .fpp-msg-preview__name{
-  font-family:var(--font-display);
-  font-size:14px; font-weight:800;
-  line-height:1.2;
+  font-size:14px; font-weight:600;
+  color:#fff;
+  line-height:1.3;
+  cursor:pointer;
 }
+.fpp-msg-preview__name:hover{ text-decoration:underline; }
 .fpp-msg-preview__time{
-  font-size:10.5px; color:var(--muted); font-weight:500;
+  font-size:10px; color:rgba(255,255,255,.3);
+  margin-left:4px; font-weight:500;
 }
 .fpp-msg-preview__text{
-  font-size:13px; color:var(--text); line-height:1.45;
+  font-size:14.5px; color:rgba(221,227,237,.88);
+  line-height:1.65; letter-spacing:.01em;
+  word-break:break-word;
 }
 
-/* Nameplate preview card */
+/* ── Nameplate preview (mirrors the real memberlist .ml-entry) ─────
+   Lifted from .ml-entry @ app/styles.css:1093-1100:
+   - 5 px 10 px row, 6 px radius, 10 px gap
+   - 13 px / weight 600 name at .55 white
+   - status dot sits on the avatar
+   The preview is wrapped in a card surface so it reads as a unit;
+   the inner row is the actual .ml-entry recreation. */
 .fpp-nameplate-preview{
   position:relative;
-  padding:10px 14px;
+  padding:6px 8px;
   background:
     radial-gradient(620px 110px at 16% 0%, rgba(255,249,62,.05), transparent 70%),
     linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
@@ -9299,26 +9368,50 @@ select:focus-visible {
   border:1px solid var(--border);
   border-radius:14px;
   overflow:hidden;
-  display:flex; align-items:center; gap:10px;
 }
 .fpp-nameplate-preview::before{
   content:""; position:absolute; top:0; left:0; right:0; height:2px;
   background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
   pointer-events:none;
 }
-.fpp-nameplate-preview__av{
-  width:32px; height:32px; border-radius:50%; overflow:hidden;
-  background:var(--panel2); flex-shrink:0;
+.fpp-nameplate-preview__row{
+  display:flex; align-items:center; gap:10px;
+  padding:5px 10px 5px 12px;
+  border-radius:6px;
+  transition:background .12s;
+  position:relative;
 }
-.fpp-nameplate-preview__av img{ width:100%; height:100%; object-fit:cover; }
-.fpp-nameplate-preview__name{
-  font-family:var(--font-display);
-  font-size:13px; font-weight:800;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  flex:1; min-width:0;
+.fpp-nameplate-preview__row:hover{ background:rgba(255,255,255,.04); }
+.fpp-nameplate-preview__av-wrap{
+  position:relative; flex-shrink:0;
+}
+.fpp-nameplate-preview__av{
+  width:32px; height:32px; border-radius:50%;
+  background:var(--panel2);
+  overflow:hidden;
+  display:block;
+}
+.fpp-nameplate-preview__av > img,
+.fpp-nameplate-preview__av > div,
+.fpp-nameplate-preview__av > span{
+  width:100% !important; height:100% !important;
+  object-fit:cover; border-radius:50%; display:block;
 }
 .fpp-nameplate-preview__dot{
-  width:8px; height:8px; border-radius:50%; flex-shrink:0;
+  position:absolute; bottom:-2px; right:-2px;
+  width:12px; height:12px; border-radius:50%;
+  border:2.5px solid var(--panel);
+  flex-shrink:0;
+}
+.fpp-nameplate-preview__name{
+  font-size:13px; font-weight:600;
+  color:rgba(255,255,255,.55);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  flex:1; min-width:0;
+  transition:color .12s;
+}
+.fpp-nameplate-preview__row:hover .fpp-nameplate-preview__name{
+  color:rgba(255,255,255,.9);
 }
 
 /* ══════════════════════════════════════════════════════════════════

@@ -1141,7 +1141,13 @@ async function refreshCU() {
         const merged = new Set([...(fresh.ownedDecorations||[]), ...CU.ownedDecorations]);
         fresh.ownedDecorations = [...merged];
       }
-      if (CU.activeDecoration && !fresh.activeDecoration) fresh.activeDecoration = CU.activeDecoration;
+      // activeDecoration is client-canonical. CU's value (written
+      // synchronously to localStorage via saveLocal the moment the
+      // user equipped/cleared) wins over what the DB read returned —
+      // DB reads can lag a fresh write by enough to resurrect a
+      // just-cleared decoration. Previously this only restored CU→
+      // fresh when CU was truthy, so cleared decorations came back.
+      if ('activeDecoration' in CU) fresh.activeDecoration = CU.activeDecoration;
       if (CU.onyxBadge && !fresh.onyxBadge) { fresh.onyxBadge = true; fresh.onyxBadgeSpent = Math.max(fresh.onyxBadgeSpent||0, CU.onyxBadgeSpent||0); }
       // Preserve display name style settings
       if (CU.displayFont && !fresh.displayFont) fresh.displayFont = CU.displayFont;
@@ -10927,7 +10933,13 @@ function initFortizedUXResilience() {
         // Preserve shop inventory — local is source of truth since saves may be in-flight
         if (CU.unlockedAppearances?.length) { const m = new Set([...(fresh.unlockedAppearances||[]), ...CU.unlockedAppearances]); fresh.unlockedAppearances = [...m]; }
         if (CU.ownedDecorations?.length) { const m = new Set([...(fresh.ownedDecorations||[]), ...CU.ownedDecorations]); fresh.ownedDecorations = [...m]; }
-        if (CU.activeDecoration && !fresh.activeDecoration) fresh.activeDecoration = CU.activeDecoration;
+        // activeDecoration is client-canonical. CU's value (written
+      // synchronously to localStorage via saveLocal the moment the
+      // user equipped/cleared) wins over what the DB read returned —
+      // DB reads can lag a fresh write by enough to resurrect a
+      // just-cleared decoration. Previously this only restored CU→
+      // fresh when CU was truthy, so cleared decorations came back.
+      if ('activeDecoration' in CU) fresh.activeDecoration = CU.activeDecoration;
         if (CU.onyxBadge && !fresh.onyxBadge) { fresh.onyxBadge = true; fresh.onyxBadgeSpent = Math.max(fresh.onyxBadgeSpent||0, CU.onyxBadgeSpent||0); }
         if (CU.displayFont && !fresh.displayFont) fresh.displayFont = CU.displayFont;
         if (CU.displayEffect && !fresh.displayEffect) fresh.displayEffect = CU.displayEffect;
@@ -17158,23 +17170,16 @@ function _buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- Profile Theme — derived from your banner + avatar.
-                 Main = banner's dominant colour (or your picked banner
-                 colour). Accent = avatar's dominant colour. The only
-                 user-pickable control here is the Banner Color (free
-                 users + Radiance users without a banner image). -->
+            <!-- Profile Theme — Main = banner colour/dominant,
+                 Accent = avatar dominant. The only pickable control
+                 is the Banner Color (free + Radiance without image). -->
             <div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Theme</div>
+                <span style="font-size:9px;font-weight:800;letter-spacing:.08em;background:#fff93e;color:#13161d;border-radius:5px;padding:2px 7px;">NEW</span>
               </div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;">
-                Your <strong style="color:rgba(255,255,255,.7);">Main</strong> colour comes from your banner${hasRadiance?' (upload an image or pick a colour below)':' colour below'}, and your <strong style="color:rgba(255,255,255,.7);">Accent</strong> is sampled from your avatar. Card stripe + Message button use Main; card background gets a subtle Accent tint${hasRadiance?'. Radiance adds a Main-coloured stroke around your card.':''}
-              </div>
-              <!-- Banner-colour swatch: hidden if the user has a banner
-                   image (Radiance), since image wins. Free users always
-                   see it; default is Fortized brand yellow. -->
               ${CU.banner && hasRadiance
-                ? `<div style="margin-bottom:14px;padding:8px 12px;background:rgba(255,160,62,.06);border:1px solid rgba(255,160,62,.18);border-radius:8px;font-size:11.5px;color:rgba(255,255,255,.6);">Banner image is set — Main is sampled from the image. Remove the banner to pick a flat banner colour instead.</div>`
+                ? ''
                 : `<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;">
                     <div style="text-align:center;">
                       <button type="button" id="ftz-theme-swatch-bannerColor" onclick="_openThemeSwatch(this,'bannerColor')" style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeBannerColor+'55'};overflow:hidden;position:relative;cursor:pointer;padding:0;background:${themeBannerColor};display:flex;align-items:center;justify-content:center;">

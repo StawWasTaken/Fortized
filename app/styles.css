@@ -8838,14 +8838,19 @@ select:focus-visible {
   --fpp-main-rgb:255,249,62;
   --fpp-accent:#fff93e;
   --fpp-accent-rgb:255,249,62;
+  /* Composite background colour usable by sub-elements (avatar ring,
+     status-dot ring) so they match the themed card surface instead
+     of reading as separate plain-panel decals. */
+  --fpp-surface:rgba(var(--fpp-accent-rgb),.025);
   position:relative;
-  /* Accent tint: visible but not overpowering. Sits as a soft
-     full-card wash plus a slightly stronger lift in the top-left
-     corner so the card reads as themed without fighting the
-     content for attention. */
+  /* Subtle accent wash — present but not loud. The user said "slight
+     tint (not that much but still visible)" so we keep this just
+     above the noise floor: a flat 2.5% tint across the whole card
+     plus a 6% lift in the top-left corner where the banner fades
+     into the body. */
   background:
-    radial-gradient(680px 240px at 18% 0%, rgba(var(--fpp-accent-rgb),.16), transparent 70%),
-    linear-gradient(0deg, rgba(var(--fpp-accent-rgb),.05), rgba(var(--fpp-accent-rgb),.05)),
+    radial-gradient(540px 140px at 18% 0%, rgba(var(--fpp-accent-rgb),.06), transparent 70%),
+    linear-gradient(0deg, rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)),
     linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
     var(--panel);
   border:1px solid var(--border);
@@ -8896,16 +8901,10 @@ select:focus-visible {
   50%  { background-position:100% 50%; }
   100% { background-position:0% 50%; }
 }
-/* No shade over the banner — banners are presented at their true
-   colours so the user's chosen artwork (or the default Fortized
-   transparent pattern) reads cleanly. Identity contrast is achieved
-   via the bottom fade into var(--panel) only (kept very subtle, just
-   enough to anchor the avatar). */
-.fpp__banner::after{
-  content:""; position:absolute; bottom:0; left:0; right:0; height:38px;
-  background:linear-gradient(to top, var(--panel) 4%, transparent);
-  pointer-events:none;
-}
+/* No bottom shade — the banner ends with a hard edge against the
+   card. The avatar + status dot now use the themed card surface
+   for their rings, so they blend into the body half and only
+   cut out cleanly against the banner half. */
 
 /* Avatar img/div sizing — buildAvatarHTML emits a fixed-pixel <img>
    that gets clipped by the .fpp__av border. Force the inner element
@@ -8929,13 +8928,22 @@ select:focus-visible {
   margin-top:-36px;
 }
 .fpp__av-wrap{ position:relative; flex-shrink:0; }
+/* Avatar + status-dot ring share the themed card surface so they
+   melt into the body half of the card (Discord-style — pfp + status
+   read as one block belonging to the card, not as a floating decal
+   stuck on top). The ring is composed as a layer stack matching the
+   .fpp surface so it stays consistent even with the accent tint. */
 .fpp__av{
   width:80px; height:80px; border-radius:50%;
-  border:5px solid var(--panel);
-  background:var(--panel2);
+  border:5px solid transparent;
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    radial-gradient(540px 140px at 18% 0%, rgba(var(--fpp-accent-rgb),.06), transparent 70%) border-box,
+    linear-gradient(0deg, rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)) border-box,
+    linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)) border-box,
+    var(--panel) border-box;
   overflow:hidden; flex-shrink:0;
   cursor:pointer;
-  box-shadow:0 6px 18px rgba(0,0,0,.45);
   transition:transform .18s cubic-bezier(.22,1,.36,1);
 }
 .fpp__av:hover{ transform:scale(1.03); }
@@ -8945,9 +8953,18 @@ select:focus-visible {
   width:calc(100% + 16px); height:calc(100% + 16px);
   pointer-events:none; z-index:2;
 }
+/* Status-dot ring matches the avatar ring — same composite surface
+   so the dot sits flush with the avatar inside the same visual block
+   instead of looking like a separate sticker. */
 .fpp__status-dot{
   position:absolute; bottom:2px; right:2px;
   width:22px; height:22px; z-index:3;
+  border-radius:50%;
+  background:
+    radial-gradient(540px 140px at 18% 0%, rgba(var(--fpp-accent-rgb),.06), transparent 70%),
+    linear-gradient(0deg, rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)),
+    linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
+    var(--panel);
   display:flex; align-items:center; justify-content:center;
 }
 /* Custom-status bubble — overlaps the avatar like Discord */
@@ -9348,13 +9365,13 @@ select:focus-visible {
   margin:12px 16px 16px;
   width:calc(100% - 32px);
   padding:9px 14px;
-  background:rgba(255,249,62,.08);
-  border:1px solid rgba(255,249,62,.22);
+  background:rgba(var(--fpp-main-rgb),.08);
+  border:1px solid rgba(var(--fpp-main-rgb),.22);
   border-radius:8px;
   font-family:var(--font-display);
   font-size:11.5px; font-weight:800;
   letter-spacing:.06em; text-transform:uppercase;
-  color:var(--accent);
+  color:var(--fpp-main);
   cursor:default;
   display:flex; align-items:center; justify-content:center; gap:6px;
 }

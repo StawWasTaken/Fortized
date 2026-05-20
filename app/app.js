@@ -37742,6 +37742,9 @@ async function equipDecoration(decoId) {
 function _refreshOwnDecorationOverlays() {
   if (!CU?.username) return;
   const decoSrc = CU.activeDecoration ? (typeof getDecorationSrc === 'function' ? (getDecorationSrc(CU.activeDecoration) || '') : '') : '';
+  // Legacy surfaces still used outside the .fpp system (memberlist,
+  // chat rows, userbar, etc.) — these wrap their avatar in a host
+  // and we inject .profile-decoration-overlay* into the host.
   const ownSelectors = [
     `.ml-entry[data-member="${CSS.escape(CU.username)}"]`,
     `.msg-row[data-from="${CSS.escape(CU.username)}"] .msg-av-inner`,
@@ -37753,10 +37756,8 @@ function _refreshOwnDecorationOverlays() {
   ];
   ownSelectors.forEach(sel => {
     document.querySelectorAll(sel).forEach(host => {
-      // Remove any existing decoration overlay
       host.querySelectorAll('.profile-decoration-overlay,.profile-decoration-overlay-sm,.profile-decoration-overlay-lg,.profile-decoration-overlay-ml')
         .forEach(el => el.remove());
-      // If equipping a new decoration, inject the overlay
       if (decoSrc) {
         const cls = host.classList?.contains('msg-av-inner') ? 'profile-decoration-overlay-sm'
           : host.id === 'mini-profile-preview' ? 'profile-decoration-overlay'
@@ -37767,6 +37768,43 @@ function _refreshOwnDecorationOverlays() {
         img.alt = '';
         img.draggable = false;
         host.appendChild(img);
+      }
+    });
+  });
+  // .fpp surfaces: settings preview, mini popover, own-profile popover,
+  // DM right sidebar panel, full Profile Card modal. Each renders the
+  // decoration as <img class="fpp__decoration"> inside .fpp__av-wrap.
+  // Previously we never touched these, which is why equipping/clearing
+  // had no visible effect on the new profile cards until you reloaded
+  // (and even then a stale value would sometimes come back). We scope
+  // to the user's OWN cards only via the embedded data-for hint.
+  const fppHosts = [
+    document.querySelector('[data-fpp-settings-card]'),
+    document.getElementById('fpp-mini'),
+    document.getElementById('fpp-own'),
+  ].filter(Boolean);
+  // DM panel + modal aren't tagged with a user identifier in the DOM,
+  // but they only ever show ONE user at a time, so we look them up by
+  // the avatar's data-for status-dot attribute.
+  document.querySelectorAll('.fpp .fpp__status-dot, .fpp-card-modal .fpp__status-dot').forEach(dot => {
+    if (dot.dataset?.for === CU.username) {
+      const fpp = dot.closest('.fpp, .fpp-card-modal');
+      if (fpp) fppHosts.push(fpp);
+    }
+  });
+  fppHosts.forEach(card => {
+    card.querySelectorAll('.fpp__av-wrap').forEach(wrap => {
+      wrap.querySelectorAll('.fpp__decoration').forEach(el => el.remove());
+      if (decoSrc) {
+        const img = document.createElement('img');
+        img.src = decoSrc;
+        img.className = 'fpp__decoration';
+        img.alt = '';
+        img.onerror = () => { img.style.display = 'none'; };
+        // Insert before the status-dot span so the decoration sits
+        // beneath the dot (matches the render order in _fppAvatarHTML).
+        const dot = wrap.querySelector('.fpp__status-dot');
+        if (dot) wrap.insertBefore(img, dot); else wrap.appendChild(img);
       }
     });
   });

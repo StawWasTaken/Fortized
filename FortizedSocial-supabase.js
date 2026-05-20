@@ -69,7 +69,18 @@ const FortizedSocial = (() => {
     } catch {}
   }
 
-  function _cacheDel(key) { delete _cache[key]; }
+  function _cacheDel(key) {
+    delete _cache[key];
+    // Also evict from localStorage — _cacheSet persists certain keys
+    // there as an offline fallback (see the persistence branch above),
+    // and without this matching delete the stale copy survives a save
+    // and gets served back to the next getUserByName via
+    // _cacheGetWithFallback. That's the "I cleared my decoration and
+    // it came back after refresh" bug — the DB was actually written
+    // correctly, but the page load read the cached row instead of
+    // hitting the DB at all.
+    try { localStorage.removeItem('ftz_cache_' + key); } catch {}
+  }
 
   // Try localStorage fallback if memory cache is empty (page reload scenario)
   function _cacheGetWithFallback(key, ttl) {

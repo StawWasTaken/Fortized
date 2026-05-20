@@ -9882,6 +9882,20 @@ function initFortizedUXResilience() {
   username=username.replace(/^["']|["']$/g,'').trim();
   if (!username){window.location.href='/login';return;}
 
+  // One-shot scrub of the current user's cached row in
+  // ftz_cache_user:<name>. _cacheSet persists certain keys to
+  // localStorage as an offline fallback, and until the matching
+  // _cacheDel fix landed those entries could outlive a save and
+  // resurrect stale fields (decoration, theme) on the next boot
+  // because getUserByName served the cache instead of hitting the
+  // DB. Always start a session with a clean local cache for CU; the
+  // very next getUserByName call refills it with fresh data.
+  try {
+    const nk = username.toLowerCase();
+    localStorage.removeItem('ftz_cache_user:' + nk);
+    localStorage.removeItem('ftz_cache_userEnf:' + nk);
+  } catch {}
+
   // CRITICAL: Always fetch fresh user data from database on page load
   // This ensures PFP changes, messages, and friends sync properly across sessions
   // Only use localStorage as a fallback if database fetch fails

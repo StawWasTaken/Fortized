@@ -370,6 +370,7 @@ const FortizedSocial = (() => {
 
   async function saveUserObject(user) {
     if (!user?.username) return;
+    console.log('[DECO][saveUserObject] called for', user.username, '— activeDecoration =', JSON.stringify(user.activeDecoration));
     _cacheDel('user:' + norm(user.username));
     _cacheDel('userEnf:' + norm(user.username));
     let row = _userToRow(user);
@@ -391,11 +392,13 @@ const FortizedSocial = (() => {
       banner: row.banner ? 'set' : 'null',
       onyx: row.onyx
     });
+    console.log('[DECO][saveUserObject] about to upsert row.active_decoration =', JSON.stringify(row.active_decoration));
     const { data, error } = await sb.from('users').upsert(row, { onConflict: 'username' });
     if (error) {
       console.error('[saveUserObject] UPSERT FAILED:', error.message, error.code);
       throw new Error(`Upsert failed: ${error.message}`);
     }
+    console.log('[DECO][saveUserObject] upsert ok');
     console.debug('[saveUserObject] ✓ Successfully saved user data');
   }
 

@@ -938,6 +938,9 @@ function _trimCUForStorage(cu) {
 }
 function saveLocal() {
   if (!CU?.username) return;
+  if (CU.activeDecoration !== undefined) {
+    console.log('[DECO][saveLocal] writing ftz_user_'+CU.username+' with activeDecoration =', JSON.stringify(CU.activeDecoration), '; _recentlyEditedFields.activeDecoration =', window._recentlyEditedFields?.activeDecoration);
+  }
   try {
     localStorage.setItem('ftz_current', CU.username);
     localStorage.setItem('fortized_current_user', CU.username);
@@ -9999,6 +10002,7 @@ function initFortizedUXResilience() {
           } catch {}
           const recent = window._recentlyEditedFields || {};
           const _nowR = Date.now();
+          console.log('[DECO][boot] DB fetch returned activeDecoration =', JSON.stringify(CU.activeDecoration), '| localStorage ftz_user activeDecoration =', JSON.stringify(local?.activeDecoration), '| ftz_recent_edits activeDecoration =', recent.activeDecoration ? Math.round((_nowR - recent.activeDecoration)/1000)+'s ago' : 'none');
           if (local) {
             // Trust local over the freshly-fetched DB row for any
             // field the user edited in the last 10 minutes. This is
@@ -10013,8 +10017,14 @@ function initFortizedUXResilience() {
             ];
             for (const k of recentEditFields) {
               if (recent[k] && (_nowR - recent[k]) < 600000 && k in local) {
+                if (k === 'activeDecoration') console.log('[DECO][boot] recent-edit guard OVERRODE CU.activeDecoration from', JSON.stringify(CU[k]), '→', JSON.stringify(local[k]));
                 CU[k] = local[k];
               }
+            }
+            if (recent.activeDecoration && (_nowR - recent.activeDecoration) >= 600000) {
+              console.log('[DECO][boot] recent-edit timestamp is too old (',Math.round((_nowR-recent.activeDecoration)/1000),'s) — guard NOT triggering');
+            } else if (!recent.activeDecoration) {
+              console.log('[DECO][boot] no recent-edit timestamp for activeDecoration — guard NOT triggering. Final CU.activeDecoration =', JSON.stringify(CU.activeDecoration));
             }
           }
           if (local) {
@@ -10035,8 +10045,12 @@ function initFortizedUXResilience() {
                 || (Array.isArray(nv) && nv.length === 0 && Array.isArray(lv) && lv.length > 0)
                 || (typeof nv === 'string' && nv === '' && typeof lv === 'string' && lv !== '')
                 || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && lv && typeof lv === 'object' && Object.keys(lv).length > 0);
-              if (isEmpty && lv != null) CU[k] = lv;
+              if (isEmpty && lv != null) {
+                if (k === 'activeDecoration') console.log('[DECO][boot] isEmpty guard restored activeDecoration from local:', JSON.stringify(lv));
+                CU[k] = lv;
+              }
             }
+            console.log('[DECO][boot] FINAL CU.activeDecoration after both guards =', JSON.stringify(CU.activeDecoration));
             // Onyx: take the higher of (cache vs. DB) so a stale read can
             // never shrink the user's balance. The server still wins for
             // *increases* (admin grants, server-side awards).
@@ -37762,6 +37776,8 @@ async function buyDecoration(decoId, price) {
   });
 }
 async function equipDecoration(decoId) {
+  const _prev = CU.activeDecoration;
+  console.log('[DECO][equip] called with', JSON.stringify(decoId), '— was', JSON.stringify(_prev));
   CU.activeDecoration = decoId || null;
   // Mark this field as freshly user-edited so a concurrent refreshCU
   // can't silently restore the old value from a stale DB read while
@@ -37783,10 +37799,17 @@ async function equipDecoration(decoId) {
   // visible state.
   let saveOk = true;
   try {
+    console.log('[DECO][equip] saveUser(true) starting — CU.activeDecoration =', JSON.stringify(CU.activeDecoration));
     await saveUser(true);
+    console.log('[DECO][equip] saveUser returned ok');
+    // After the save, peek back at DB to see what actually landed.
+    try {
+      const verify = await FortizedSocial.getUserByName(CU.username, { noCache: true });
+      console.log('[DECO][equip] post-save DB read activeDecoration =', JSON.stringify(verify?.activeDecoration));
+    } catch (e) { console.warn('[DECO][equip] verify read failed', e?.message); }
   } catch (e) {
     saveOk = false;
-    console.warn('[Deco] save failed', e?.message);
+    console.warn('[DECO][equip] save failed', e?.message);
   }
   toast(
     saveOk ? (decoId ? 'Decoration equipped!' : 'Decoration removed') : 'Decoration save failed — try again',

@@ -942,6 +942,17 @@ function saveLocal() {
     localStorage.setItem('ftz_current', CU.username);
     localStorage.setItem('fortized_current_user', CU.username);
   } catch {}
+  // Persist recent-edit timestamps too — without this they live only
+  // in window memory, so a refresh between a save and Supabase's
+  // replica catching up leaves the boot guard with no signal that
+  // local should win over a stale DB read. The map is small (a few
+  // bytes per field × ~12 fields) so we just dump the whole thing.
+  try {
+    const r = window._recentlyEditedFields;
+    if (r && typeof r === 'object') {
+      localStorage.setItem('ftz_recent_edits_' + CU.username, JSON.stringify(r));
+    }
+  } catch {}
   try {
     localStorage.setItem('ftz_user_' + CU.username, JSON.stringify(CU));
   } catch (e) {
@@ -9971,6 +9982,41 @@ function initFortizedUXResilience() {
         try {
           const cachedRaw = localStorage.getItem('ftz_user_' + CU.username);
           const local = cachedRaw ? JSON.parse(cachedRaw) : null;
+          // Restore the persisted recent-edits map so the guard below
+          // can apply the same "trust local for recently-touched
+          // fields" rule that refreshCU uses — covers the case where
+          // a save lands and the user reloads before Supabase's read
+          // replica catches up, returning a stale row that would
+          // otherwise resurrect just-cleared values.
+          try {
+            const rawEdits = localStorage.getItem('ftz_recent_edits_' + CU.username);
+            if (rawEdits) {
+              const parsed = JSON.parse(rawEdits);
+              if (parsed && typeof parsed === 'object') {
+                window._recentlyEditedFields = { ...(window._recentlyEditedFields || {}), ...parsed };
+              }
+            }
+          } catch {}
+          const recent = window._recentlyEditedFields || {};
+          const _nowR = Date.now();
+          if (local) {
+            // Trust local over the freshly-fetched DB row for any
+            // field the user edited in the last 10 minutes. This is
+            // wider than the in-memory refreshCU window (which only
+            // had to cover a save's network round-trip) because here
+            // we're also covering a full page reload's worth of
+            // replica lag.
+            const recentEditFields = [
+              'activeDecoration','profileTheme','banner','pfp','pfpCrop',
+              'bio','displayName','pronouns','status','customStatus',
+              'displayFont','displayEffect','displayColor'
+            ];
+            for (const k of recentEditFields) {
+              if (recent[k] && (_nowR - recent[k]) < 600000 && k in local) {
+                CU[k] = local[k];
+              }
+            }
+          }
           if (local) {
             const protectFields = [
               'pfp','banner','bio','displayName','pronouns','friends','friendRequestsSent','friendRequestsReceived',

@@ -17171,9 +17171,10 @@ function _buildProfileView(tab) {
                   ? 'Pick separate Main and Accent colours, or set a gradient banner. Visible on your profile card everywhere.'
                   : 'Pick a banner colour — your card accent is auto-tuned from it. <a href="#" onclick="event.preventDefault();showRadianceUpsell&&showRadianceUpsell()" style="color:#ff9d3e;text-decoration:none;">Radiance</a> unlocks separate Main + Accent + gradient banners.'}
               </div>
+              ${CU.banner && hasRadiance ? `<div style="margin-bottom:10px;padding:8px 12px;background:rgba(255,160,62,.06);border:1px solid rgba(255,160,62,.18);border-radius:8px;font-size:11.5px;color:rgba(255,255,255,.6);">Banner image is set — banner colour controls are disabled. Card Accent is sampled from the image; remove the image to use a flat colour or gradient banner.</div>` : ''}
               <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;">
-                <div style="text-align:center;">
-                  <button type="button" id="ftz-theme-swatch-main" onclick="_openThemeSwatch(this,'main')" style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeMain?themeMain+'55':'rgba(255,255,255,.1)'};overflow:hidden;position:relative;cursor:pointer;padding:0;background:${themeMain||'#6366f1'};display:flex;align-items:center;justify-content:center;">
+                <div style="text-align:center;${CU.banner?'opacity:.4;':''}">
+                  <button type="button" id="ftz-theme-swatch-main" onclick="_openThemeSwatch(this,'main')" style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeMain?themeMain+'55':'rgba(255,255,255,.1)'};overflow:hidden;position:relative;${CU.banner?'cursor:not-allowed;':'cursor:pointer;'}padding:0;background:${themeMain||'#6366f1'};display:flex;align-items:center;justify-content:center;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">${hasRadiance ? 'Main' : 'Banner Color'}</div>
@@ -17185,12 +17186,12 @@ function _buildProfileView(tab) {
                   </button>
                   <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">Accent</div>
                 </div>
-                <div style="text-align:center;">
-                  <button type="button" id="ftz-theme-swatch-banner-from" onclick="_openThemeSwatch(this,'gradFrom')" style="width:60px;height:60px;border-radius:12px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;cursor:pointer;padding:0;background:${(themeBannerGrad&&themeBannerGrad.from)||themeMain||'#888'};"></button>
+                <div style="text-align:center;${CU.banner?'opacity:.4;':''}">
+                  <button type="button" id="ftz-theme-swatch-banner-from" onclick="_openThemeSwatch(this,'gradFrom')" style="width:60px;height:60px;border-radius:12px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;${CU.banner?'cursor:not-allowed;':'cursor:pointer;'}padding:0;background:${(themeBannerGrad&&themeBannerGrad.from)||themeMain||'#888'};"></button>
                   <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">Gradient ▸</div>
                 </div>
-                <div style="text-align:center;">
-                  <button type="button" id="ftz-theme-swatch-banner-to" onclick="_openThemeSwatch(this,'gradTo')" style="width:60px;height:60px;border-radius:12px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;cursor:pointer;padding:0;background:${(themeBannerGrad&&themeBannerGrad.to)||themeAccent||themeMain||'#888'};"></button>
+                <div style="text-align:center;${CU.banner?'opacity:.4;':''}">
+                  <button type="button" id="ftz-theme-swatch-banner-to" onclick="_openThemeSwatch(this,'gradTo')" style="width:60px;height:60px;border-radius:12px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;${CU.banner?'cursor:not-allowed;':'cursor:pointer;'}padding:0;background:${(themeBannerGrad&&themeBannerGrad.to)||themeAccent||themeMain||'#888'};"></button>
                   <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">▸ to</div>
                 </div>` : ''}
               </div>
@@ -18457,6 +18458,17 @@ async function updateBanner(e) {
     showCropModal(fileData, 16/5, async (cropped) => {
       const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
       CU.banner = finalBanner;
+      // Auto-sample a card accent from the new banner so the rest of
+      // the profile card harmonises with the image. Best-effort —
+      // failure is fine, the resolver falls back to the default.
+      try {
+        const sampled = await _fppSampleImageColor(finalBanner);
+        if (sampled) {
+          if (!CU.profileTheme) CU.profileTheme = {};
+          CU.profileTheme.main = sampled;
+          delete CU.profileTheme.color1;
+        }
+      } catch {}
       window._recentlyEditedFields = window._recentlyEditedFields || {};
       window._recentlyEditedFields.banner = Date.now();
       await saveUser(true);
@@ -26634,10 +26646,66 @@ function getDisplayFont(user) {
   return f ? f.css : RADIANCE_FONTS[0].css;
 }
 
+// Sample the dominant colour of an image (best-effort via canvas).
+// Used when the user sets a banner image — the card accent then
+// matches the image so the theme stays cohesive without making the
+// user fiddle with two pickers.
+function _fppSampleImageColor(url) {
+  return new Promise(resolve => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const w = 32, h = Math.max(1, Math.round(32 * img.height / Math.max(1, img.width)));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        // Average non-transparent, non-near-grey pixels with a slight
+        // weight toward more-saturated colours so a tiny pop of colour
+        // in the banner wins over the muted neutral background.
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const pa = data[i + 3]; if (pa < 200) continue;
+          const pr = data[i], pg = data[i + 1], pb = data[i + 2];
+          const mx = Math.max(pr, pg, pb), mn = Math.min(pr, pg, pb);
+          const sat = mx === 0 ? 0 : (mx - mn) / mx;
+          const w = 1 + sat * 3;
+          r += pr * w; g += pg * w; b += pb * w; n += w;
+        }
+        if (!n) return resolve(null);
+        resolve(_fppRgbToHex(r / n, g / n, b / n));
+      } catch { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+// Inline upsell trigger used by the free-tier Profile Theme blurb.
+// Routes to the Atelier → Radiance Dwelling view where users can
+// actually buy the subscription.
+function showRadianceUpsell() {
+  try {
+    if (typeof switchAtelierTab === 'function') switchAtelierTab('radiance');
+    if (typeof showView === 'function') showView('atelier');
+  } catch {}
+}
+
 // ── Settings → Profile theme controls ────────────────────────
 // These bridge the swatch buttons + gradient toggles in the
 // settings panel to CU.profileTheme + the live preview.
 function _openThemeSwatch(btn, slot) {
+  // XOR with banner image: a banner image overrides any colour for
+  // the banner background. If the user picks a banner-related colour
+  // while an image is set, ask them to clear the image first — the
+  // alternative is a colour they can never see.
+  if (CU.banner && (slot === 'main' || slot === 'gradFrom' || slot === 'gradTo')) {
+    if (typeof toast === 'function') toast('Remove your banner image first to set a banner colour.', 'info');
+    return;
+  }
   if (!CU.profileTheme) CU.profileTheme = {};
   const t = CU.profileTheme;
   const current =

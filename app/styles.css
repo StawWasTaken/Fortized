@@ -8839,8 +8839,13 @@ select:focus-visible {
   --fpp-accent:#fff93e;
   --fpp-accent-rgb:255,249,62;
   position:relative;
+  /* Accent tint: visible but not overpowering. Sits as a soft
+     full-card wash plus a slightly stronger lift in the top-left
+     corner so the card reads as themed without fighting the
+     content for attention. */
   background:
-    radial-gradient(620px 110px at 16% 0%, rgba(var(--fpp-accent-rgb),.05), transparent 70%),
+    radial-gradient(680px 240px at 18% 0%, rgba(var(--fpp-accent-rgb),.16), transparent 70%),
+    linear-gradient(0deg, rgba(var(--fpp-accent-rgb),.05), rgba(var(--fpp-accent-rgb),.05)),
     linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
     var(--panel);
   border:1px solid var(--border);
@@ -8848,6 +8853,16 @@ select:focus-visible {
   overflow:hidden;
   color:var(--text);
   box-shadow:0 22px 56px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+}
+/* Radiance-only: a coloured stroke around the card in the user's
+   Main colour. Doubled border (outer translucent halo + inner
+   crisp ring) so it reads as deliberate rather than a fat outline. */
+.fpp.fpp--stroked{
+  border-color:rgba(var(--fpp-main-rgb),.55);
+  box-shadow:
+    0 0 0 1px rgba(var(--fpp-main-rgb),.22),
+    0 22px 56px rgba(0,0,0,.6),
+    inset 0 1px 0 rgba(255,255,255,.04);
 }
 .fpp::before{
   content:""; position:absolute; top:0; left:0; right:0; height:2px;

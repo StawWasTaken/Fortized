@@ -17031,17 +17031,15 @@ function _buildProfileView(tab) {
   if (tab === 'myprofile') {
     const cs = CU.customStatus;
     const sc = FtzStatus.color(CU.status||'online');
-    // Theme keys: prefer the new shape (main/accent/bannerColor/bannerGradient),
-    // fall back to the legacy color1/color2 for users who'd set the old picker.
+    // Theme keys: bannerColor is what the user picks (free + radiance-
+    // without-image). main/accent are auto-derived & cached at upload
+    // time (main = banner colour, accent = avatar colour). Legacy
+    // color1/color2 read as a fallback so old data still resolves.
     const _pt = CU.profileTheme || null;
     const themeMain = (_pt && (_pt.main || _pt.color1)) || null;
     const themeAccent = (_pt && (_pt.accent || _pt.color2)) || null;
-    const themeBannerColor = (_pt && _pt.bannerColor) || themeMain || null;
-    const themeBannerGrad = (_pt && _pt.bannerGradient) || null;
-    // Legacy var names kept so anything below that still reads them
-    // (the picker block is being rewritten further down) doesn't break.
-    const themeC1 = themeMain;
-    const themeC2 = themeAccent || themeMain;
+    const themeBannerColor = (_pt && _pt.bannerColor) || _FPP_BRAND_YELLOW;
+    const themeC1 = themeMain, themeC2 = themeAccent || themeMain;  // legacy aliases for code below
     const previewBg = themeC1 ? `linear-gradient(135deg,${themeC1}ee,${themeC2||themeC1}bb)` : `linear-gradient(135deg,#141a2e,#1a1035,#0f1828)`;
     const sep = `<div style="height:1px;background:rgba(255,255,255,.05);margin:22px 0;"></div>`;
 
@@ -17160,56 +17158,51 @@ function _buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- Profile Theme -->
+            <!-- Profile Theme — derived from your banner + avatar.
+                 Main = banner's dominant colour (or your picked banner
+                 colour). Accent = avatar's dominant colour. The only
+                 user-pickable control here is the Banner Color (free
+                 users + Radiance users without a banner image). -->
             <div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Theme</div>
-                ${hasRadiance ? '' : '<span style="font-size:9px;font-weight:700;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:2px 7px;">FREE</span>'}
               </div>
               <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;">
-                ${hasRadiance
-                  ? 'Pick separate Main and Accent colours, or set a gradient banner. Visible on your profile card everywhere.'
-                  : 'Pick a banner colour — your card accent is auto-tuned from it. <a href="#" onclick="event.preventDefault();showRadianceUpsell&&showRadianceUpsell()" style="color:#ff9d3e;text-decoration:none;">Radiance</a> unlocks separate Main + Accent + gradient banners.'}
+                Your <strong style="color:rgba(255,255,255,.7);">Main</strong> colour comes from your banner${hasRadiance?' (upload an image or pick a colour below)':' colour below'}, and your <strong style="color:rgba(255,255,255,.7);">Accent</strong> is sampled from your avatar. Card stripe + Message button use Main; card background gets a subtle Accent tint${hasRadiance?'. Radiance adds a Main-coloured stroke around your card.':''}
               </div>
-              ${CU.banner && hasRadiance ? `<div style="margin-bottom:10px;padding:8px 12px;background:rgba(255,160,62,.06);border:1px solid rgba(255,160,62,.18);border-radius:8px;font-size:11.5px;color:rgba(255,255,255,.6);">Banner image is set — banner colour controls are disabled. Card Accent is sampled from the image; remove the image to use a flat colour or gradient banner.</div>` : ''}
-              <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;">
-                <div style="text-align:center;${CU.banner?'opacity:.4;':''}">
-                  <button type="button" id="ftz-theme-swatch-main" onclick="_openThemeSwatch(this,'main')" style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeMain?themeMain+'55':'rgba(255,255,255,.1)'};overflow:hidden;position:relative;${CU.banner?'cursor:not-allowed;':'cursor:pointer;'}padding:0;background:${themeMain||'#6366f1'};display:flex;align-items:center;justify-content:center;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">${hasRadiance ? 'Main' : 'Banner Color'}</div>
+              <!-- Banner-colour swatch: hidden if the user has a banner
+                   image (Radiance), since image wins. Free users always
+                   see it; default is Fortized brand yellow. -->
+              ${CU.banner && hasRadiance
+                ? `<div style="margin-bottom:14px;padding:8px 12px;background:rgba(255,160,62,.06);border:1px solid rgba(255,160,62,.18);border-radius:8px;font-size:11.5px;color:rgba(255,255,255,.6);">Banner image is set — Main is sampled from the image. Remove the banner to pick a flat banner colour instead.</div>`
+                : `<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;">
+                    <div style="text-align:center;">
+                      <button type="button" id="ftz-theme-swatch-bannerColor" onclick="_openThemeSwatch(this,'bannerColor')" style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeBannerColor+'55'};overflow:hidden;position:relative;cursor:pointer;padding:0;background:${themeBannerColor};display:flex;align-items:center;justify-content:center;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">Banner Color</div>
+                    </div>
+                  </div>`}
+              <!-- Read-only derived swatches so the user sees what they
+                   actually got from their banner + avatar combination. -->
+              <div style="display:flex;gap:18px;align-items:center;padding:10px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:10px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:22px;height:22px;border-radius:5px;background:${themeMain||_FPP_BRAND_YELLOW};border:1px solid rgba(255,255,255,.12);"></div>
+                  <div>
+                    <div style="font-size:11px;color:#fff;font-weight:600;line-height:1.1;">Main</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,.4);">${(themeMain||_FPP_BRAND_YELLOW).toLowerCase()}</div>
+                  </div>
                 </div>
-                ${hasRadiance ? `
-                <div style="text-align:center;">
-                  <button type="button" id="ftz-theme-swatch-accent" onclick="_openThemeSwatch(this,'accent')" style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeAccent?themeAccent+'55':'rgba(255,255,255,.1)'};overflow:hidden;position:relative;cursor:pointer;padding:0;background:${themeAccent||themeMain||'#8b5cf6'};display:flex;align-items:center;justify-content:center;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">Accent</div>
+                <div style="width:1px;align-self:stretch;background:var(--border);"></div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:22px;height:22px;border-radius:5px;background:${themeAccent||_fppDeriveAccent(themeMain||_FPP_BRAND_YELLOW)};border:1px solid rgba(255,255,255,.12);"></div>
+                  <div>
+                    <div style="font-size:11px;color:#fff;font-weight:600;line-height:1.1;">Accent</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,.4);">${(themeAccent||_fppDeriveAccent(themeMain||_FPP_BRAND_YELLOW)).toLowerCase()}</div>
+                  </div>
                 </div>
-                <div style="text-align:center;${CU.banner?'opacity:.4;':''}">
-                  <button type="button" id="ftz-theme-swatch-banner-from" onclick="_openThemeSwatch(this,'gradFrom')" style="width:60px;height:60px;border-radius:12px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;${CU.banner?'cursor:not-allowed;':'cursor:pointer;'}padding:0;background:${(themeBannerGrad&&themeBannerGrad.from)||themeMain||'#888'};"></button>
-                  <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">Gradient ▸</div>
-                </div>
-                <div style="text-align:center;${CU.banner?'opacity:.4;':''}">
-                  <button type="button" id="ftz-theme-swatch-banner-to" onclick="_openThemeSwatch(this,'gradTo')" style="width:60px;height:60px;border-radius:12px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;${CU.banner?'cursor:not-allowed;':'cursor:pointer;'}padding:0;background:${(themeBannerGrad&&themeBannerGrad.to)||themeAccent||themeMain||'#888'};"></button>
-                  <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">▸ to</div>
-                </div>` : ''}
               </div>
-              ${hasRadiance ? `
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;font-size:12px;color:rgba(255,255,255,.5);">
-                  <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-                    <input type="checkbox" id="ftz-theme-grad-on" ${themeBannerGrad?'checked':''} onchange="_toggleThemeGradient(this.checked)">
-                    Use gradient banner
-                  </label>
-                  <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;${themeBannerGrad?'':'opacity:.4;pointer-events:none;'}" id="ftz-theme-grad-anim-wrap">
-                    <input type="checkbox" id="ftz-theme-grad-anim" ${(themeBannerGrad&&themeBannerGrad.animate)?'checked':''} onchange="_setThemeGradientAnimate(this.checked)">
-                    Animate
-                  </label>
-                  <label style="display:inline-flex;align-items:center;gap:6px;${themeBannerGrad?'':'opacity:.4;pointer-events:none;'}" id="ftz-theme-grad-angle-wrap">
-                    Angle <input type="number" id="ftz-theme-grad-angle" value="${(themeBannerGrad&&Number.isFinite(themeBannerGrad.angle))?themeBannerGrad.angle:135}" min="0" max="360" style="width:54px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:3px 6px;color:#fff;font-size:11px;" onchange="_setThemeGradientAngle(this.value)">°
-                  </label>
-                </div>` : ''}
-              ${themeMain ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" class="reset-theme-btn">Reset Theme</button>' : ''}
+              ${(CU.profileTheme && (CU.profileTheme.bannerColor || CU.profileTheme.main || CU.profileTheme.accent)) ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" class="reset-theme-btn" style="margin-top:12px;">Reset Theme</button>' : ''}
             </div>
             ${sep}
 
@@ -18410,6 +18403,16 @@ async function updatePfp(e) {
         CU.pfp = result.gifData;
         CU.pfpCrop = result.crop;
         _pfpCropCache[CU.username] = result.crop;
+        // Cache the avatar's dominant colour as the card accent —
+        // see _fppResolveTheme: accent = avatar colour, main = banner.
+        try {
+          const sampled = await _fppSampleImageColor(result.gifData);
+          if (sampled) {
+            if (!CU.profileTheme) CU.profileTheme = {};
+            CU.profileTheme.accent = sampled;
+            delete CU.profileTheme.color2;
+          }
+        } catch {}
         window._recentlyEditedFields = window._recentlyEditedFields || {};
         window._recentlyEditedFields.pfp = Date.now();
         window._recentlyEditedFields.pfpCrop = Date.now();
@@ -18427,6 +18430,14 @@ async function updatePfp(e) {
       delete _pfpCropCache[CU.username];
       showCropModal(fileData, 1, async (cropped) => {
         CU.pfp = cropped;
+        try {
+          const sampled = await _fppSampleImageColor(cropped);
+          if (sampled) {
+            if (!CU.profileTheme) CU.profileTheme = {};
+            CU.profileTheme.accent = sampled;
+            delete CU.profileTheme.color2;
+          }
+        } catch {}
         window._recentlyEditedFields = window._recentlyEditedFields || {};
         window._recentlyEditedFields.pfp = Date.now();
         window._recentlyEditedFields.pfpCrop = Date.now();
@@ -26698,67 +26709,30 @@ function showRadianceUpsell() {
 // These bridge the swatch buttons + gradient toggles in the
 // settings panel to CU.profileTheme + the live preview.
 function _openThemeSwatch(btn, slot) {
-  // XOR with banner image: a banner image overrides any colour for
-  // the banner background. If the user picks a banner-related colour
-  // while an image is set, ask them to clear the image first — the
-  // alternative is a colour they can never see.
-  if (CU.banner && (slot === 'main' || slot === 'gradFrom' || slot === 'gradTo')) {
-    if (typeof toast === 'function') toast('Remove your banner image first to set a banner colour.', 'info');
+  // Only one slot is user-pickable now: bannerColor (the flat colour
+  // used when there's no banner image). Everything else — main and
+  // accent — is derived from the user's banner/avatar at upload time.
+  if (slot !== 'bannerColor') return;
+  if (CU.banner) {
+    if (typeof toast === 'function') toast('Remove your banner image first to pick a banner colour.', 'info');
     return;
   }
   if (!CU.profileTheme) CU.profileTheme = {};
   const t = CU.profileTheme;
-  const current =
-    slot === 'main'     ? (t.main || t.color1 || '#6366f1') :
-    slot === 'accent'   ? (t.accent || t.color2 || t.main || '#8b5cf6') :
-    slot === 'gradFrom' ? ((t.bannerGradient && t.bannerGradient.from) || t.main || '#6366f1') :
-    slot === 'gradTo'   ? ((t.bannerGradient && t.bannerGradient.to) || t.accent || '#8b5cf6') :
-    '#ffffff';
+  const current = t.bannerColor || _FPP_BRAND_YELLOW;
   _ftzColorPicker(btn, current, (hex) => {
-    // Live-update CU + swatch + preview as the user drags.
-    if (slot === 'main')    { t.main = hex; delete t.color1; }
-    if (slot === 'accent')  { t.accent = hex; delete t.color2; }
-    if (slot === 'gradFrom'){ t.bannerGradient = t.bannerGradient || { angle: 135 }; t.bannerGradient.from = hex; }
-    if (slot === 'gradTo')  { t.bannerGradient = t.bannerGradient || { angle: 135 }; t.bannerGradient.to = hex; }
+    t.bannerColor = hex;
+    // bannerColor IS the main colour for users without a banner image,
+    // so cache it as main too — the resolver reads main first when an
+    // image is present (which it isn't here), but writing both keeps
+    // the data consistent for any downstream reader.
+    t.main = hex;
+    delete t.color1; delete t.color2;
     btn.style.background = hex;
     btn.style.borderColor = hex + '55';
     markSettingsDirty();
     if (typeof updateProfilePreview === 'function') updateProfilePreview();
   });
-}
-function _toggleThemeGradient(on) {
-  if (!CU.profileTheme) CU.profileTheme = {};
-  const t = CU.profileTheme;
-  if (on) {
-    if (!t.bannerGradient) {
-      t.bannerGradient = {
-        from: t.main || t.color1 || '#6366f1',
-        to:   t.accent || t.color2 || t.main || '#8b5cf6',
-        angle: 135, animate: false
-      };
-    }
-  } else {
-    delete t.bannerGradient;
-  }
-  ['ftz-theme-grad-anim-wrap','ftz-theme-grad-angle-wrap'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.style.opacity = on ? '' : '.4'; el.style.pointerEvents = on ? '' : 'none'; }
-  });
-  markSettingsDirty();
-  if (typeof updateProfilePreview === 'function') updateProfilePreview();
-}
-function _setThemeGradientAnimate(on) {
-  if (!CU.profileTheme || !CU.profileTheme.bannerGradient) return;
-  CU.profileTheme.bannerGradient.animate = !!on;
-  markSettingsDirty();
-  if (typeof updateProfilePreview === 'function') updateProfilePreview();
-}
-function _setThemeGradientAngle(v) {
-  if (!CU.profileTheme || !CU.profileTheme.bannerGradient) return;
-  const n = Math.max(0, Math.min(360, parseInt(v, 10) || 0));
-  CU.profileTheme.bannerGradient.angle = n;
-  markSettingsDirty();
-  if (typeof updateProfilePreview === 'function') updateProfilePreview();
 }
 
 function _updateProfileThemePreview() {
@@ -40781,28 +40755,23 @@ function _fppDefaultMain(u) {
 function _fppResolveTheme(u) {
   const t = (u && typeof u.profileTheme === 'object' && u.profileTheme) ? u.profileTheme : null;
   const hasRadiance = _hasRadiance(u);
-  // New keys preferred; legacy color1/color2 read as a fallback so
-  // anyone who'd already set the old picker keeps their look.
-  const rawMain = (t && (t.main || t.color1)) || null;
-  const rawAccent = (t && (t.accent || t.color2)) || null;
-  const main = rawMain || _fppDefaultMain(u);
-  // Free users always get an auto-derived accent. Radiance users
-  // can override it; otherwise we still auto-derive.
-  const accent = (hasRadiance && rawAccent) ? rawAccent : _fppDeriveAccent(main);
-  // Banner: image > radiance-gradient > flat colour > brand fallback.
+  // Banner is an image (Radiance only — they uploaded one) or a flat
+  // colour. Free users get a single picker that writes bannerColor;
+  // default is brand yellow ("yelized") if they've never touched it.
   const bannerImage = (u && u.banner && hasRadiance) ? u.banner : null;
-  let bannerStyle = '';
-  if (!bannerImage) {
-    const grad = hasRadiance && t && t.bannerGradient;
-    if (grad && grad.from && grad.to) {
-      const ang = Number.isFinite(grad.angle) ? grad.angle : 135;
-      bannerStyle = `background:linear-gradient(${ang}deg, ${grad.from}, ${grad.to});`;
-      if (grad.animate) bannerStyle += 'background-size:200% 200%;animation:fppBannerShift 14s linear infinite;';
-    } else {
-      const flat = (t && t.bannerColor) || main;
-      bannerStyle = `background:${flat};`;
-    }
-  }
+  const bannerColor = (t && t.bannerColor) || _FPP_BRAND_YELLOW;
+  // Main colour = the banner's dominant colour. For images that means
+  // the cached sampled hex (written at upload time). For a flat-colour
+  // banner the bannerColor IS the dominant colour, no sampling needed.
+  // Legacy color1/main keys still satisfy this for old data.
+  const cachedMain = (t && (t.main || t.color1)) || null;
+  const main = bannerImage ? (cachedMain || _FPP_BRAND_YELLOW) : bannerColor;
+  // Accent colour = avatar's dominant colour, sampled at upload time
+  // and stored in profileTheme.accent. If we have no sample (legacy
+  // user, no avatar) we derive a tasteful accent off the main instead.
+  const cachedAccent = (t && (t.accent || t.color2)) || null;
+  const accent = cachedAccent || _fppDeriveAccent(main);
+  const bannerStyle = bannerImage ? '' : `background:${bannerColor};`;
   return { main, accent, bannerImage, bannerStyle, hasRadiance };
 }
 
@@ -40875,7 +40844,12 @@ function _ftzColorPicker(anchorEl, currentHex, onChange, onCommit) {
       <div class="ftz-cp-swatch" style="width:28px;height:28px;border-radius:6px;background:${curHex()};border:1px solid rgba(255,255,255,.12);flex-shrink:0;"></div>
       <input class="ftz-cp-hex" type="text" value="${curHex()}" maxlength="7" spellcheck="false" style="flex:1;min-width:0;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:6px 8px;color:var(--text,#fff);font-family:'JetBrains Mono',monospace;font-size:12px;text-transform:lowercase;">
     </div>
-    <div class="ftz-cp-recents-row" style="display:flex;gap:5px;margin-top:10px;min-height:22px;flex-wrap:wrap;">
+    <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin:12px 0 6px;">Palette</div>
+    <div class="ftz-cp-palette-row" style="display:flex;gap:5px;flex-wrap:wrap;">
+      ${['#fff93e','#ff77e4','#ff5e5e','#ff9d3e','#ffd23f','#5eea8a','#3ecf6e','#5ecbff','#6366f1','#a855f7','#ec4899','#ffffff','#9ca3af','#0e1117'].map(c => `<button type="button" class="ftz-cp-recent" data-c="${c}" style="width:22px;height:22px;border-radius:5px;background:${c};border:1px solid rgba(255,255,255,.12);cursor:pointer;padding:0;"></button>`).join('')}
+    </div>
+    <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin:12px 0 6px;">Recent</div>
+    <div class="ftz-cp-recents-row" style="display:flex;gap:5px;min-height:22px;flex-wrap:wrap;">
       ${_ftzColorPickerRecents().map(c => `<button type="button" class="ftz-cp-recent" data-c="${escapeHTML(c)}" style="width:22px;height:22px;border-radius:5px;background:${escapeHTML(c)};border:1px solid rgba(255,255,255,.12);cursor:pointer;padding:0;"></button>`).join('') || '<span style="font-size:10.5px;color:rgba(255,255,255,.3);align-self:center;">No recent colours yet</span>'}
     </div>`;
   document.body.appendChild(pop);
@@ -40976,6 +40950,10 @@ function _fppApplyTheme(el, u) {
     el.style.setProperty('--fpp-accent', th.accent);
     el.style.setProperty('--fpp-accent-rgb', `${accRgb.r},${accRgb.g},${accRgb.b}`);
   }
+  // Radiance-exclusive: a Main-coloured stroke around the card.
+  // Toggled via class so it costs nothing for free users.
+  if (th.hasRadiance) el.classList.add('fpp--stroked');
+  else el.classList.remove('fpp--stroked');
 }
 
 function _fppFormatDate(ts) {

@@ -8830,10 +8830,17 @@ select:focus-visible {
    ════════════════════════════════════════════════════════════════════ */
 
 /* ── Surface ───────────────────────────────────────────────────────── */
+/* Per-card theme channels — JS sets these to the resolved theme colours
+   (main + accent) for the user being rendered. Defaults fall back to
+   the brand-yellow values so an unthemed card looks identical to before. */
 .fpp{
+  --fpp-main:#fff93e;
+  --fpp-main-rgb:255,249,62;
+  --fpp-accent:#fff93e;
+  --fpp-accent-rgb:255,249,62;
   position:relative;
   background:
-    radial-gradient(620px 110px at 16% 0%, rgba(255,249,62,.05), transparent 70%),
+    radial-gradient(620px 110px at 16% 0%, rgba(var(--fpp-accent-rgb),.05), transparent 70%),
     linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
     var(--panel);
   border:1px solid var(--border);
@@ -8844,8 +8851,8 @@ select:focus-visible {
 }
 .fpp::before{
   content:""; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
-  box-shadow:0 0 14px rgba(255,249,62,.35);
+  background:linear-gradient(90deg, transparent 0%, rgba(var(--fpp-main-rgb),.25) 12%, var(--fpp-main) 50%, rgba(var(--fpp-main-rgb),.25) 88%, transparent 100%);
+  box-shadow:0 0 14px rgba(var(--fpp-main-rgb),.35);
   pointer-events:none; z-index:5;
 }
 
@@ -9014,7 +9021,30 @@ select:focus-visible {
 .fpp-card--about > div + .fpp-card__title{ margin-top:0; }
 .fpp-card__body--muted{ color:var(--muted-light); font-weight:500; }
 .fpp-card__body strong{ color:var(--text); font-weight:700; }
-.fpp-card__body a{ color:var(--accent); text-decoration:none; }
+.fpp-card__body a{ color:var(--fpp-main); text-decoration:none; }
+/* ── Badges frame (own .fpp-card section) ──────────────────────────────
+   Badges used to live inline next to the handle — they ended up
+   crowding the username off-screen on tighter variants. Now they
+   render as their own framed section so the identity row stays
+   readable AND every badge is visible. */
+.fpp-card--badges{ padding:10px 14px; }
+.fpp-card--badges .fpp-card__body{
+  display:flex; flex-wrap:wrap; gap:4px;
+  align-items:center;
+}
+.fpp-card--badges .ftz-badge-row{
+  display:flex !important; flex-wrap:wrap; gap:4px; margin:0;
+}
+.fpp-card--badges .ftz-badge{
+  width:28px !important; height:28px !important;
+  margin:0 !important; flex-shrink:0;
+  display:inline-flex !important; align-items:center; justify-content:center;
+}
+.fpp-card--badges .ftz-badge img,
+.fpp-card--badges .ftz-badge svg{
+  width:100% !important; height:100% !important;
+  display:block; object-fit:contain;
+}
 .fpp-card__body a:hover{ text-decoration:underline; }
 .fpp-card__body p{ margin:0 0 6px; }
 .fpp-card__body p:last-child{ margin-bottom:0; }
@@ -9050,7 +9080,7 @@ select:focus-visible {
   word-break:break-word;
 }
 .fpp__inline-bio strong{ color:var(--text); font-weight:700; }
-.fpp__inline-bio a{ color:var(--accent); text-decoration:none; }
+.fpp__inline-bio a{ color:var(--fpp-main); text-decoration:none; }
 .fpp__inline-bio a:hover{ text-decoration:underline; }
 .fpp__inline-bio p{ margin:0 0 6px; }
 .fpp__inline-bio p:last-child{ margin-bottom:0; }
@@ -9071,9 +9101,9 @@ select:focus-visible {
 }
 .fpp__game-tile img{ width:100%; height:100%; object-fit:cover; }
 .fpp__game-tile--more{
-  background:rgba(255,249,62,.06);
-  border-color:rgba(255,249,62,.22);
-  color:var(--accent);
+  background:rgba(var(--fpp-main-rgb),.06);
+  border-color:rgba(var(--fpp-main-rgb),.22);
+  color:var(--fpp-main);
 }
 
 /* ── Action row — [Message wide] [+ square] [⋯ square] ────────────── */
@@ -9096,14 +9126,14 @@ select:focus-visible {
 }
 .fpp__btn--primary{
   flex:1; min-width:0;
-  background:rgba(255,249,62,.08);
-  border-color:rgba(255,249,62,.22);
-  color:var(--accent);
+  background:rgba(var(--fpp-main-rgb),.08);
+  border-color:rgba(var(--fpp-main-rgb),.22);
+  color:var(--fpp-main);
 }
 .fpp__btn--primary:hover{
-  background:var(--accent);
+  background:var(--fpp-main);
   color:var(--rail);
-  border-color:var(--accent);
+  border-color:var(--fpp-main);
 }
 .fpp__btn--wide{ flex:1; min-width:0; }
 .fpp__btn--square{
@@ -9233,7 +9263,7 @@ select:focus-visible {
   border-left:1px solid var(--border);
   box-shadow:none;
   background:
-    radial-gradient(620px 110px at 16% 0%, rgba(255,249,62,.05), transparent 70%),
+    radial-gradient(620px 110px at 16% 0%, rgba(var(--fpp-accent-rgb),.05), transparent 70%),
     linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
     var(--panel);
   overflow-y:auto;

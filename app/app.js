@@ -17237,7 +17237,7 @@ function _buildProfileView(tab) {
                 <div class="fpp-settings-stack__label">Preview</div>
                 <div class="fpp fpp--settings settings-profile-preview" data-fpp-settings-card>
                   <div class="fpp__banner" onclick="_showBannerPickerMenu(event)" title="${hasRadiance?'Change banner — upload or pick a GIF':'Custom banners require Radiance'}" style="cursor:pointer;">
-                    ${(CU.banner && hasRadiance) ? '<img src="'+escapeHTML(CU.banner)+'" alt="">' : '<div class="fpp__banner-fallback"></div>'}
+                    ${_fppBannerHTML(CU, hasRadiance)}
                   </div>
                   <div class="fpp__av-row">
                     <div class="fpp__av-wrap" onclick="_showAvatarPickerMenu(event)" title="Change avatar" style="cursor:pointer;">
@@ -17254,7 +17254,6 @@ function _buildProfileView(tab) {
                     <div class="fpp__handle-row" id="preview-handle-row">
                       <span class="fpp__handle">@${escapeHTML(CU.username)}</span>
                       ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">'+escapeHTML(CU.pronouns)+'</span>' : ''}
-                      <span class="fpp__badges">${renderBadgesHTML(CU)}</span>
                     </div>
                   </div>
                   <!-- Bio + Member Since share a single card so the
@@ -17271,6 +17270,7 @@ function _buildProfileView(tab) {
                       <div class="fpp-card__body fpp-card__body--muted">${new Date(CU.joinedAt||CU.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
                     ` : ''}
                   </div>
+                  ${_fppBadgesCardHTML(CU)}
                   <button class="fpp-settings-example-btn" type="button">Example Button</button>
                 </div>
               </div>
@@ -19001,6 +19001,7 @@ async function _viewUserProfile(username) {
           <div class="fpp-card-modal__left-section-title">Member Since</div>
           <div class="fpp-card-modal__left-section-body">${_memberSince}</div>
         </div>` : ''}
+        ${_fppBadgesCardHTML(u)}
         ${_rolesHTML}
         ${_connectionsHTML}
         ${_noteHTML}
@@ -19103,6 +19104,7 @@ async function _viewUserProfile(username) {
       </div>
     </div>`;
 
+  _fppApplyTheme(modalEl.querySelector('.fpp-card-modal'), u);
   openModal('modal-user');
   if (window._upPendingTab) {
     const pending = window._upPendingTab;
@@ -29717,6 +29719,7 @@ async function showDMUserPanel(username) {
     ${_fppIdentityHTML(u)}
     ${_fppBioCardHTML(u, 200, `viewUserProfile('${escapeHTML(username)}')`)}
     ${_fppMemberSinceCardHTML(u)}
+    ${_fppBadgesCardHTML(u)}
     ${_fppGamesCardHTML(u)}
     ${mutualsRow}
     <div style="flex:1;"></div>
@@ -29725,6 +29728,7 @@ async function showDMUserPanel(username) {
       Message @${escapeHTML(u.displayName || u.username)}
     </div>` : ''}`;
 
+  _fppApplyTheme(panel, u);
   panel.querySelectorAll('[data-action="open-profile"]').forEach(el => {
     el.addEventListener('click', () => viewUserProfile(username));
   });
@@ -40237,24 +40241,25 @@ function updateProfilePreview() {
   const effectCss = _getDisplayEffectCSS(CU.displayEffect || 'solid', CU.displayColor || '#fff');
   const fullStyle = `font-family:${fontCss};${effectCss}`;
 
-  // (1) Banner (profile preview only)
+  // (1) Banner (profile preview only) — routes through the shared
+  // resolver so colour/gradient theming preview matches the real card.
   const hasRadiance = _hasRadiance(CU);
-  const userBanner = (CU.banner && hasRadiance) ? CU.banner : null;
   const bannerEl = settingsCard.querySelector('.fpp__banner');
   if (bannerEl) {
-    bannerEl.innerHTML = userBanner
-      ? `<img src="${escapeHTML(userBanner)}" alt="">`
-      : `<div class="fpp__banner-fallback"></div>`;
+    bannerEl.innerHTML = _fppBannerHTML(CU, hasRadiance);
   }
+  // Apply theme CSS vars to the live preview so the accent/wash on
+  // buttons + sub-cards updates the moment the user pokes the picker.
+  _fppApplyTheme(settingsCard, CU);
 
-  // (1) Identity (profile preview)
+  // (1) Identity (profile preview) — badges live in their own card
+  // section now, so the handle row stays clean (name · pronouns only).
   const dnEl = document.getElementById('preview-displayname');
   if (dnEl) { dnEl.textContent = displayName; dnEl.style.cssText = fullStyle; }
   const handleRow = document.getElementById('preview-handle-row');
   if (handleRow) {
     handleRow.innerHTML = `<span class="fpp__handle">@${escapeHTML(CU.username)}</span>`
-      + (pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">${escapeHTML(pronouns)}</span>` : '')
-      + `<span class="fpp__badges">${renderBadgesHTML(CU)}</span>`;
+      + (pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">${escapeHTML(pronouns)}</span>` : '');
   }
 
   // (2) Message preview name
@@ -40539,6 +40544,138 @@ function closeOwnProfilePanel() { _fppClose(); }
 // ════════════════════════════════════════════════════════════
 // PROFILE PREVIEW HELPERS — shared across all .fpp-* variants
 // ════════════════════════════════════════════════════════════
+
+// ── Profile-theme resolver / applier ─────────────────────────
+// Free tier  : user picks ONE colour ("banner colour"). The card
+//              accent is auto-derived from it (HSL: +14 lightness,
+//              -8 saturation). Banner is that flat colour unless
+//              a banner image is set (XOR — image wins, and accent
+//              is sampled from the image's dominant hue at render
+//              time elsewhere; for now we just fall back to default
+//              accent until sampling is wired).
+// Radiance   : separate main + accent, plus optional gradient
+//              (two stops + angle, optionally animated). Image
+//              still wins over colour for the banner background.
+// Unset      : a stable per-user default — 10% chance of brand
+//              yellow #fff93e, otherwise a deterministic HSL hue
+//              derived from the username so the same user always
+//              gets the same default colour.
+const _FPP_BRAND_YELLOW = '#fff93e';
+
+function _fppHexToRgb(hex) {
+  if (!hex || typeof hex !== 'string') return null;
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  if (h.length !== 6) return null;
+  const n = parseInt(h, 16);
+  if (Number.isNaN(n)) return null;
+  return { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff };
+}
+function _fppRgbToHex(r, g, b) {
+  const c = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+  return '#' + c(r) + c(g) + c(b);
+}
+function _fppRgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > .5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h *= 60;
+  }
+  return { h, s, l };
+}
+function _fppHslToRgb(h, s, l) {
+  h = ((h % 360) + 360) % 360;
+  s = Math.max(0, Math.min(1, s));
+  l = Math.max(0, Math.min(1, l));
+  if (s === 0) { const v = l * 255; return { r: v, g: v, b: v }; }
+  const q = l < .5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const hk = h / 360;
+  const hue2rgb = (p, q, t) => {
+    if (t < 0) t += 1; if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  };
+  return { r: hue2rgb(p, q, hk + 1/3) * 255, g: hue2rgb(p, q, hk) * 255, b: hue2rgb(p, q, hk - 1/3) * 255 };
+}
+// Derive a tasteful accent from the main colour — same hue, a bit
+// lighter and slightly desaturated. Keeps the card cohesive without
+// the user having to pick two colours.
+function _fppDeriveAccent(mainHex) {
+  const rgb = _fppHexToRgb(mainHex); if (!rgb) return mainHex;
+  const hsl = _fppRgbToHsl(rgb.r, rgb.g, rgb.b);
+  const out = _fppHslToRgb(hsl.h, Math.max(0, hsl.s - 0.08), Math.min(0.78, hsl.l + 0.14));
+  return _fppRgbToHex(out.r, out.g, out.b);
+}
+// Stable hash so the same username always gets the same default
+// colour — avoids the card flickering between page loads.
+function _fppHashStr(s) {
+  let h = 2166136261; s = String(s || '');
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function _fppDefaultMain(u) {
+  const seed = _fppHashStr(u?.username || u?.id || '');
+  // 10% chance of brand yellow — Fortized identity peeks through.
+  if ((seed % 100) < 10) return _FPP_BRAND_YELLOW;
+  const hue = seed % 360;
+  const rgb = _fppHslToRgb(hue, 0.65, 0.55);
+  return _fppRgbToHex(rgb.r, rgb.g, rgb.b);
+}
+
+function _fppResolveTheme(u) {
+  const t = (u && typeof u.profileTheme === 'object' && u.profileTheme) ? u.profileTheme : null;
+  const hasRadiance = _hasRadiance(u);
+  // New keys preferred; legacy color1/color2 read as a fallback so
+  // anyone who'd already set the old picker keeps their look.
+  const rawMain = (t && (t.main || t.color1)) || null;
+  const rawAccent = (t && (t.accent || t.color2)) || null;
+  const main = rawMain || _fppDefaultMain(u);
+  // Free users always get an auto-derived accent. Radiance users
+  // can override it; otherwise we still auto-derive.
+  const accent = (hasRadiance && rawAccent) ? rawAccent : _fppDeriveAccent(main);
+  // Banner: image > radiance-gradient > flat colour > brand fallback.
+  const bannerImage = (u && u.banner && hasRadiance) ? u.banner : null;
+  let bannerStyle = '';
+  if (!bannerImage) {
+    const grad = hasRadiance && t && t.bannerGradient;
+    if (grad && grad.from && grad.to) {
+      const ang = Number.isFinite(grad.angle) ? grad.angle : 135;
+      bannerStyle = `background:linear-gradient(${ang}deg, ${grad.from}, ${grad.to});`;
+      if (grad.animate) bannerStyle += 'background-size:200% 200%;animation:fppBannerShift 14s linear infinite;';
+    } else {
+      const flat = (t && t.bannerColor) || main;
+      bannerStyle = `background:${flat};`;
+    }
+  }
+  return { main, accent, bannerImage, bannerStyle, hasRadiance };
+}
+
+function _fppApplyTheme(el, u) {
+  if (!el) return;
+  const th = _fppResolveTheme(u);
+  const mainRgb = _fppHexToRgb(th.main);
+  const accRgb = _fppHexToRgb(th.accent);
+  if (mainRgb) {
+    el.style.setProperty('--fpp-main', th.main);
+    el.style.setProperty('--fpp-main-rgb', `${mainRgb.r},${mainRgb.g},${mainRgb.b}`);
+  }
+  if (accRgb) {
+    el.style.setProperty('--fpp-accent', th.accent);
+    el.style.setProperty('--fpp-accent-rgb', `${accRgb.r},${accRgb.g},${accRgb.b}`);
+  }
+}
+
 function _fppFormatDate(ts) {
   if (!ts) return null;
   try { return new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
@@ -40546,9 +40683,12 @@ function _fppFormatDate(ts) {
 }
 
 function _fppBannerHTML(u, hasRadiance) {
-  const userBanner = (u.banner && hasRadiance) ? u.banner : null;
-  if (userBanner) return `<img src="${escapeHTML(userBanner)}" alt="">`;
-  return `<div class="fpp__banner-fallback"></div>`;
+  const th = _fppResolveTheme(u);
+  if (th.bannerImage) return `<img src="${escapeHTML(th.bannerImage)}" alt="">`;
+  // Themed colour or gradient banner. The fallback div carries the
+  // inline background so it tints with the user's main colour by
+  // default — no banner image needed for a card to feel "themed".
+  return `<div class="fpp__banner-fallback fpp__banner-fallback--themed" style="${th.bannerStyle}"></div>`;
 }
 
 function _fppAvatarHTML(u, size) {
@@ -40576,15 +40716,24 @@ function _fppCSBubbleHTML(u, isOwn) {
 function _fppIdentityHTML(u) {
   const dn = u.displayName || u.username;
   const dnStyle = `font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor || '#fff')}`;
+  // Badges live in their own .fpp-card section now — they used to
+  // cram the handle row and push the username off-screen on narrow
+  // variants. The identity row stays focused on name + handle +
+  // pronouns; badges render below via _fppBadgesCardHTML.
   return `
     <div class="fpp__identity">
       <div class="fpp__name" data-action="open-profile" style="${dnStyle}">${escapeHTML(dn)}</div>
       <div class="fpp__handle-row">
         <span class="fpp__handle">@${escapeHTML(u.username)}</span>
         ${u.pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">${escapeHTML(u.pronouns)}</span>` : ''}
-        <span class="fpp__badges">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</span>
       </div>
     </div>`;
+}
+
+function _fppBadgesCardHTML(u) {
+  const html = typeof renderBadgesHTML === 'function' ? renderBadgesHTML(u) : '';
+  if (!html || !html.trim()) return '';
+  return `<div class="fpp-card fpp-card--badges"><div class="fpp-card__body">${html}</div></div>`;
 }
 
 function _fppBioCardHTML(u, maxLen, openFull) {
@@ -40800,6 +40949,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     ${_fppIdentityHTML(u)}
     ${mutualsChip}
     ${_fppBioCardHTML(u, 180, `viewUserProfile('${escapeHTML(username)}')`)}
+    ${_fppBadgesCardHTML(u)}
     ${_fppActionRowHTML(username, isOwn)}
     ${!isOwn ? `<div class="fpp__msg-input" onclick="_fppClose();openDMView('${escapeHTML(username)}')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
@@ -40810,6 +40960,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     el.addEventListener('click', () => { _fppClose(); viewUserProfile(username); });
   });
 
+  _fppApplyTheme(panel, u);
   document.body.appendChild(panel);
   _fppPositionPopover(panel, anchorEl);
 
@@ -40875,6 +41026,7 @@ function _renderOwnProfilePopover(anchorEl) {
     </div>
     ${_fppIdentityHTML(u)}
     ${u.bio ? `<div class="fpp__inline-bio">${parseBioMD(u.bio.slice(0, 160))}${u.bio.length > 160 ? '…' : ''}</div>` : ''}
+    ${_fppBadgesCardHTML(u)}
     ${_fppGamesCardHTML(u)}
     <div class="fpp__actions">
       <button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();showView('profile')">
@@ -40898,6 +41050,7 @@ function _renderOwnProfilePopover(anchorEl) {
     el.addEventListener('click', () => { _fppClose(); viewUserProfile(u.username); });
   });
 
+  _fppApplyTheme(panel, u);
   document.body.appendChild(panel);
   _fppPositionPopover(panel, anchorEl);
 

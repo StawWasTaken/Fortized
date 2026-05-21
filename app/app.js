@@ -3080,10 +3080,17 @@ function _ftzTipShow(e) {
     const tipRect = tip.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     let left = centerX - tipRect.width / 2;
-    let top = rect.bottom + 8;
-    let place = 'bottom';
-    // If tooltip would overflow the viewport bottom, flip above
-    if (top + tipRect.height > window.innerHeight - 4) {
+    // Source elements can opt into above-placement via data-tip-above
+    // (e.g. profile pronouns, where below would collide with the bio
+    // card directly underneath). Otherwise default below.
+    const preferAbove = el.hasAttribute('data-tip-above');
+    let top = preferAbove ? (rect.top - tipRect.height - 8) : (rect.bottom + 8);
+    let place = preferAbove ? 'top' : 'bottom';
+    // If above doesn't fit, fall back to below — and vice-versa.
+    if (place === 'top' && top < 4) {
+      top = rect.bottom + 8;
+      place = 'bottom';
+    } else if (place === 'bottom' && top + tipRect.height > window.innerHeight - 4) {
       top = rect.top - tipRect.height - 8;
       place = 'top';
     }
@@ -17370,13 +17377,13 @@ function _buildProfileView(tab) {
                     </div>
                     ${cs && cs.text
                       ? '<div class="fpp__cs-bubble profile-custom-status" data-for="'+escapeHTML(CU.username)+'" onclick="openStatusPicker()">'+(cs.emoji?'<span class="fpp__cs-emoji"><img src="'+emojiToTwemojiUrl(cs.emoji)+'" alt="" onerror="this.outerHTML=\''+escapeHTML(cs.emoji).replace(/\'/g, "\\\'")+'\'"></span>':'')+'<span class="fpp__cs-text">'+escapeHTML(cs.text).slice(0,40)+'</span></div>'
-                      : '<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="'+escapeHTML(CU.username)+'" onclick="openStatusPicker()"><span class="fpp__cs-text">+ Add status</span></div>'}
+                      : '<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="'+escapeHTML(CU.username)+'" onclick="openStatusPicker()"><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
                   </div>
                   <div class="fpp__identity">
                     <div class="fpp__name" id="preview-displayname" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
                     <div class="fpp__handle-row" id="preview-handle-row">
                       <span class="fpp__handle">@${escapeHTML(CU.username)}</span>
-                      ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns">'+escapeHTML(CU.pronouns)+'</span>' : ''}
+                      ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns" data-tip-above>'+escapeHTML(CU.pronouns)+'</span>' : ''}
                     </div>
                   </div>
                   <!-- Bio + Member Since share a single card so the
@@ -40562,7 +40569,7 @@ function updateProfilePreview() {
   const handleRow = document.getElementById('preview-handle-row');
   if (handleRow) {
     handleRow.innerHTML = `<span class="fpp__handle">@${escapeHTML(CU.username)}</span>`
-      + (pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns">${escapeHTML(pronouns)}</span>` : '');
+      + (pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns" data-tip-above>${escapeHTML(pronouns)}</span>` : '');
   }
 
   // (2) Message preview name
@@ -41162,6 +41169,28 @@ function _fppAvatarHTML(u, size) {
     <span class="fpp__status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22">${FtzStatus.dotSvg(u.status || 'offline', 22)}</span>`;
 }
 
+// Playful placeholder prompts for the empty custom-status bubble. A
+// new one is picked at every render so the bubble feels alive — the
+// previous static "+ Add status" was visually fine but read as a
+// chore button rather than an invitation.
+const _FPP_CS_PROMPTS = [
+  "What are you feeling right now?",
+  "Add a status",
+  "What Fortized character would you be?",
+  "What's your most useless talent?",
+  "What's your username origin story?",
+  "Introduce yourself with cool adjectives!",
+  "Drop your best terrible joke!",
+  "If your life had a loading screen, what tip would it show?",
+  "What song is currently living rent-free in your head?",
+  "Shower thoughts?!",
+  "What emoji represents you perfectly today?",
+  "If your life had a theme song?"
+];
+function _fppRandomCSPrompt() {
+  return _FPP_CS_PROMPTS[Math.floor(Math.random() * _FPP_CS_PROMPTS.length)];
+}
+
 function _fppCSBubbleHTML(u, isOwn) {
   const cs = u.customStatus;
   if (cs?.text) {
@@ -41172,7 +41201,7 @@ function _fppCSBubbleHTML(u, isOwn) {
     return `<div class="fpp__cs-bubble profile-custom-status" data-for="${escapeHTML(u.username)}"${onClick}>${emojiHTML}<span class="fpp__cs-text">${escapeHTML(cs.text).slice(0, 60)}</span></div>`;
   }
   if (isOwn) {
-    return `<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="${escapeHTML(u.username)}" onclick="openStatusPicker()"><span class="fpp__cs-text">+ Add status</span></div>`;
+    return `<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="${escapeHTML(u.username)}" onclick="openStatusPicker()"><span class="fpp__cs-text">${escapeHTML(_fppRandomCSPrompt())}</span></div>`;
   }
   return '';
 }
@@ -41189,7 +41218,7 @@ function _fppIdentityHTML(u) {
       <div class="fpp__name" data-action="open-profile" style="${dnStyle}">${escapeHTML(dn)}</div>
       <div class="fpp__handle-row">
         <span class="fpp__handle">@${escapeHTML(u.username)}</span>
-        ${u.pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns">${escapeHTML(u.pronouns)}</span>` : ''}
+        ${u.pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns" data-tip-above>${escapeHTML(u.pronouns)}</span>` : ''}
       </div>
     </div>`;
 }

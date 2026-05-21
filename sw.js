@@ -1,11 +1,16 @@
 // Fortized Service Worker
 // Handles push notifications + ensures fresh HTML is always served
 
-const SW_VERSION = '20260519e';
+const SW_VERSION = '2026fix2';
 const CACHE_NAME = 'ftz-shell-' + SW_VERSION;
 
-// ── Install: skip waiting immediately so new SW takes over fast ──
+// ── Install: skip waiting + wipe ALL caches so a stale versioned asset
+// (e.g. an older ?v=... entry that snuck in mid-deploy) can't survive
+// the upgrade. Belt-and-braces with the activate step below.
 self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
+  );
   self.skipWaiting();
 });
 

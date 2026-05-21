@@ -1080,7 +1080,8 @@ async function refreshCU() {
       const protectFields = [
         'pfp','pfpCrop','banner','bio','displayName','status','pronouns',
         'friends','friendRequestsSent','friendRequestsReceived',
-        'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme','activeDecoration',
+        'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme',
+        // 'activeDecoration' omitted — owned by ftz_deco_<name> key (see equipDecoration)
         'connections','socials','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
         'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
         'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
@@ -10055,7 +10056,13 @@ function initFortizedUXResilience() {
           if (local) {
             const protectFields = [
               'pfp','banner','bio','displayName','pronouns','friends','friendRequestsSent','friendRequestsReceived',
-              'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme','activeDecoration',
+              'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme',
+              // 'activeDecoration' INTENTIONALLY OMITTED — owned by the
+              // dedicated ftz_deco_<name> key (handled above). Leaving it
+              // here would cause this isEmpty guard to "restore" a
+              // just-cleared-to-null decoration from a stale ftz_user
+              // blob whose write may have quota-failed — re-equipping
+              // an old decoration the user explicitly wanted gone.
               'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
               'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
               'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',

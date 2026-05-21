@@ -8887,6 +8887,11 @@ select:focus-visible {
   width:100%;
   aspect-ratio:680 / 235;
   overflow:hidden;
+  /* Hard delimitation between banner and card body — a thin Main-
+     tinted line + a soft glow under it. Reads as deliberate without
+     drawing too much attention. */
+  border-bottom:1px solid rgba(var(--fpp-main-rgb), .35);
+  box-shadow:0 1px 0 rgba(var(--fpp-main-rgb), .12);
 }
 .fpp__banner > img{ width:100%; height:100%; object-fit:cover; display:block; }
 .fpp__banner-fallback{
@@ -8928,19 +8933,19 @@ select:focus-visible {
   margin-top:-36px;
 }
 .fpp__av-wrap{ position:relative; flex-shrink:0; }
-/* Avatar + status-dot ring share the themed card surface so they
-   melt into the body half of the card (Discord-style — pfp + status
-   read as one block belonging to the card, not as a floating decal
-   stuck on top). The ring is composed as a layer stack matching the
-   .fpp surface so it stays consistent even with the accent tint. */
+/* Avatar + status-dot rings use the SAME composite as the card body,
+   but flat (no positional radial — the radial would be cropped weirdly
+   on these small elements and never visually match the card's). The
+   stack is exactly the non-radial layers of .fpp, so when the ring
+   sits over the body half it disappears into the surface and the pfp
+   reads as embedded in the card rather than stuck on top. */
 .fpp__av{
   width:80px; height:80px; border-radius:50%;
   border:5px solid transparent;
   background:
     linear-gradient(var(--panel), var(--panel)) padding-box,
-    radial-gradient(540px 140px at 18% 0%, rgba(var(--fpp-accent-rgb),.06), transparent 70%) border-box,
-    linear-gradient(0deg, rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)) border-box,
-    linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)) border-box,
+    linear-gradient(rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)) border-box,
+    linear-gradient(rgba(0,0,0,.20), rgba(0,0,0,.20)) border-box,
     var(--panel) border-box;
   overflow:hidden; flex-shrink:0;
   cursor:pointer;
@@ -8953,34 +8958,57 @@ select:focus-visible {
   width:calc(100% + 16px); height:calc(100% + 16px);
   pointer-events:none; z-index:2;
 }
-/* Status-dot ring matches the avatar ring — same composite surface
-   so the dot sits flush with the avatar inside the same visual block
-   instead of looking like a separate sticker. */
 .fpp__status-dot{
   position:absolute; bottom:2px; right:2px;
   width:22px; height:22px; z-index:3;
   border-radius:50%;
   background:
-    radial-gradient(540px 140px at 18% 0%, rgba(var(--fpp-accent-rgb),.06), transparent 70%),
-    linear-gradient(0deg, rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)),
-    linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
+    linear-gradient(rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)),
+    linear-gradient(rgba(0,0,0,.20), rgba(0,0,0,.20)),
     var(--panel);
   display:flex; align-items:center; justify-content:center;
 }
-/* Custom-status bubble — overlaps the avatar like Discord */
+/* Custom-status bubble — speech-bubble style. Sits vertically
+   centred on the banner/body boundary line, with two trailing dots
+   ascending from the avatar so the text reads as "spoken" by the
+   user (comic speech-bubble convention). Less pill-round than
+   before (10px corners) so it reads as a bubble rather than a tag. */
 .fpp__cs-bubble{
-  margin-bottom:10px;
+  position:relative;
+  margin-bottom:36px;
   display:inline-flex; align-items:center; gap:6px;
   max-width:200px;
   padding:6px 12px;
   background:var(--panel2);
   border:1px solid var(--border);
-  border-radius:18px;
+  border-radius:10px;
   font-size:12px; font-weight:500;
   color:var(--text);
   box-shadow:0 6px 18px rgba(0,0,0,.4);
   cursor:pointer;
   transition:background .15s, border-color .15s;
+}
+/* Trail dot #1 — anchored to the bottom-left of the bubble like a
+   speech-bubble tail. Matches the bubble surface so it reads as
+   part of the bubble itself. */
+.fpp__cs-bubble::before{
+  content:""; position:absolute;
+  left:6px; bottom:-7px;
+  width:10px; height:10px; border-radius:50%;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  pointer-events:none;
+}
+/* Trail dot #2 — smaller, between dot #1 and the avatar so the
+   eye reads a clear trail from pfp → bubble. Sits just outside
+   the bubble's bottom-left. */
+.fpp__cs-bubble::after{
+  content:""; position:absolute;
+  left:-4px; bottom:-18px;
+  width:6px; height:6px; border-radius:50%;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  pointer-events:none;
 }
 .fpp__cs-bubble:hover{ background:rgba(255,255,255,.05); border-color:var(--surface-border-hover); }
 .fpp__cs-bubble--empty{ color:var(--muted-light); font-style:italic; }

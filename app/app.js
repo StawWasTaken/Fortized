@@ -17376,7 +17376,7 @@ function _buildProfileView(tab) {
                     <div class="fpp__name" id="preview-displayname" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
                     <div class="fpp__handle-row" id="preview-handle-row">
                       <span class="fpp__handle">@${escapeHTML(CU.username)}</span>
-                      ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">'+escapeHTML(CU.pronouns)+'</span>' : ''}
+                      ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns">'+escapeHTML(CU.pronouns)+'</span>' : ''}
                     </div>
                   </div>
                   <!-- Bio + Member Since share a single card so the
@@ -40562,7 +40562,7 @@ function updateProfilePreview() {
   const handleRow = document.getElementById('preview-handle-row');
   if (handleRow) {
     handleRow.innerHTML = `<span class="fpp__handle">@${escapeHTML(CU.username)}</span>`
-      + (pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">${escapeHTML(pronouns)}</span>` : '');
+      + (pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns">${escapeHTML(pronouns)}</span>` : '');
   }
 
   // (2) Message preview name
@@ -41189,7 +41189,7 @@ function _fppIdentityHTML(u) {
       <div class="fpp__name" data-action="open-profile" style="${dnStyle}">${escapeHTML(dn)}</div>
       <div class="fpp__handle-row">
         <span class="fpp__handle">@${escapeHTML(u.username)}</span>
-        ${u.pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">${escapeHTML(u.pronouns)}</span>` : ''}
+        ${u.pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns">${escapeHTML(u.pronouns)}</span>` : ''}
       </div>
     </div>`;
 }

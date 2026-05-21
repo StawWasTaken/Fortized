@@ -17377,7 +17377,7 @@ function _buildProfileView(tab) {
                     </div>
                     ${cs && cs.text
                       ? '<div class="fpp__cs-bubble profile-custom-status" data-for="'+escapeHTML(CU.username)+'" onclick="openStatusPicker()">'+(cs.emoji?'<span class="fpp__cs-emoji"><img src="'+emojiToTwemojiUrl(cs.emoji)+'" alt="" onerror="this.outerHTML=\''+escapeHTML(cs.emoji).replace(/\'/g, "\\\'")+'\'"></span>':'')+'<span class="fpp__cs-text">'+escapeHTML(cs.text).slice(0,40)+'</span></div>'
-                      : '<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="'+escapeHTML(CU.username)+'" onclick="openStatusPicker()"><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
+                      : '<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="'+escapeHTML(CU.username)+'" onclick="openStatusPicker()"><span class="fpp__cs-plus">'+_FPP_CS_PLUS_SVG+'</span><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
                   </div>
                   <div class="fpp__identity">
                     <div class="fpp__name" id="preview-displayname" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
@@ -41190,6 +41190,9 @@ const _FPP_CS_PROMPTS = [
 function _fppRandomCSPrompt() {
   return _FPP_CS_PROMPTS[Math.floor(Math.random() * _FPP_CS_PROMPTS.length)];
 }
+// plus-circle icon (svgrepo /show/491465/plus-circle.svg) — inlined so
+// it tints with currentColor and doesn't require a network fetch.
+const _FPP_CS_PLUS_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8.5v7M8.5 12h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
 
 function _fppCSBubbleHTML(u, isOwn) {
   const cs = u.customStatus;
@@ -41201,7 +41204,7 @@ function _fppCSBubbleHTML(u, isOwn) {
     return `<div class="fpp__cs-bubble profile-custom-status" data-for="${escapeHTML(u.username)}"${onClick}>${emojiHTML}<span class="fpp__cs-text">${escapeHTML(cs.text).slice(0, 60)}</span></div>`;
   }
   if (isOwn) {
-    return `<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="${escapeHTML(u.username)}" onclick="openStatusPicker()"><span class="fpp__cs-text">${escapeHTML(_fppRandomCSPrompt())}</span></div>`;
+    return `<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="${escapeHTML(u.username)}" onclick="openStatusPicker()"><span class="fpp__cs-plus">${_FPP_CS_PLUS_SVG}</span><span class="fpp__cs-text">${escapeHTML(_fppRandomCSPrompt())}</span></div>`;
   }
   return '';
 }

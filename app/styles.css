@@ -8983,19 +8983,19 @@ select:focus-visible {
 .fpp__cs-bubble{
   position:relative;
   margin-bottom:36px;
-  display:inline-flex; align-items:center; gap:6px;
-  max-width:200px;
-  padding:7px 13px;
+  display:inline-flex; align-items:center; gap:7px;
+  max-width:180px;
+  padding:6px 11px;
   background:var(--panel2);
-  border:1px solid rgba(var(--fpp-main-rgb), .25);
+  /* Neutral grey-dark border — used to be Main-tinted, which read
+     as a yellow halo on bright themes. Keeping the bubble neutral
+     so the avatar + card body do the colour-carrying. */
+  border:1px solid var(--border);
   border-radius:10px;
-  font-size:12px; font-weight:500;
+  font-size:11.5px; font-weight:500;
   color:var(--text);
-  /* Layered shadow: deeper drop for elevation + subtle Main-tinted
-     glow so the bubble feels themed without being loud. */
   box-shadow:
     0 8px 22px rgba(0,0,0,.45),
-    0 0 0 1px rgba(var(--fpp-main-rgb), .08),
     inset 0 1px 0 rgba(255,255,255,.04);
   cursor:pointer;
   transition:background .15s, border-color .15s, transform .15s, box-shadow .15s;
@@ -9006,7 +9006,7 @@ select:focus-visible {
 .fpp__cs-bubble::after{
   content:""; position:absolute;
   background:var(--panel2);
-  border:1px solid rgba(var(--fpp-main-rgb), .25);
+  border:1px solid var(--border);
   box-shadow:0 4px 10px rgba(0,0,0,.4);
   border-radius:50%;
   pointer-events:none;
@@ -9020,27 +9020,44 @@ select:focus-visible {
   width:7px; height:7px;
 }
 /* Hover: no transparency. Lift the bubble a hair, brighten the
-   panel, intensify the Main-tinted border + glow so it reads as
-   interactive without the washed-out feel the previous .05 alpha
-   white wash gave it. */
+   panel, intensify the border so it reads as interactive without
+   the washed-out look the previous .05 alpha white wash gave it. */
 .fpp__cs-bubble:hover{
   background:var(--panel-elev, #1c2030);
-  border-color:rgba(var(--fpp-main-rgb), .45);
+  border-color:var(--surface-border-hover);
   transform:translateY(-1px);
   box-shadow:
     0 10px 26px rgba(0,0,0,.55),
-    0 0 0 1px rgba(var(--fpp-main-rgb), .22),
     inset 0 1px 0 rgba(255,255,255,.06);
 }
 .fpp__cs-bubble:hover::before,
 .fpp__cs-bubble:hover::after{
   background:var(--panel-elev, #1c2030);
-  border-color:rgba(var(--fpp-main-rgb), .45);
+  border-color:var(--surface-border-hover);
 }
 .fpp__cs-bubble--empty{ color:var(--muted-light); font-style:italic; }
-.fpp__cs-bubble .fpp__cs-emoji{ display:inline-flex; align-items:center; }
+.fpp__cs-bubble .fpp__cs-emoji{ display:inline-flex; align-items:center; flex-shrink:0; }
 .fpp__cs-bubble .fpp__cs-emoji img{ width:14px; height:14px; display:block; }
-.fpp__cs-bubble .fpp__cs-text{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* Allow up to two wrapped lines so longer prompts don't truncate
+   on the first ellipsis. The pill stays compact at 180 px wide. */
+.fpp__cs-bubble .fpp__cs-text{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  line-height:1.3;
+  word-break:break-word;
+}
+/* The "+" plus-circle icon that hints "click to set your status".
+   Only present in the empty state. */
+.fpp__cs-bubble .fpp__cs-plus{
+  display:inline-flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  width:14px; height:14px;
+  color:var(--muted-light);
+  opacity:.85;
+}
+.fpp__cs-bubble:hover .fpp__cs-plus{ color:var(--text); opacity:1; }
 
 /* ── Identity (name + handle row + badges) ────────────────────────── */
 .fpp__identity{ padding:12px 18px 0; }

@@ -37777,8 +37777,9 @@ async function buyDecoration(decoId, price) {
 }
 async function equipDecoration(decoId) {
   const _prev = CU.activeDecoration;
+  const newVal = decoId || null;
   console.log('[DECO][equip] called with', JSON.stringify(decoId), '— was', JSON.stringify(_prev));
-  CU.activeDecoration = decoId || null;
+  CU.activeDecoration = newVal;
   // Mark this field as freshly user-edited so a concurrent refreshCU
   // can't silently restore the old value from a stale DB read while
   // saveUser is still in flight. The protected-merge in refreshCU
@@ -37797,20 +37798,34 @@ async function equipDecoration(decoId) {
   // exact bug staw reported. UI is already correct from the sync code
   // above; awaiting here only blocks the picker close briefly, not the
   // visible state.
+  // Persist the field via a direct single-column UPDATE. Avoids the
+  // full saveUserObject pipeline so a deco change can't be silently
+  // clobbered by an in-flight cosmetic save, a protected-row merge,
+  // or a stale CU snapshot. The full saveUser still runs afterwards
+  // to keep the rest of CU in sync (ftz_user_<name>, etc.) but the
+  // decoration field is already safely committed by then.
+  saveLocal(); // ensure ftz_user_<name> matches new CU before any other code reads it
   let saveOk = true;
   try {
-    console.log('[DECO][equip] saveUser(true) starting — CU.activeDecoration =', JSON.stringify(CU.activeDecoration));
-    await saveUser(true);
-    console.log('[DECO][equip] saveUser returned ok');
-    // After the save, peek back at DB to see what actually landed.
+    const ok = await FortizedSocial.saveActiveDecoration(CU.username, newVal);
+    if (!ok) saveOk = false;
+    // Verify the row actually has the new value before we tell the
+    // user the save worked.
     try {
       const verify = await FortizedSocial.getUserByName(CU.username, { noCache: true });
       console.log('[DECO][equip] post-save DB read activeDecoration =', JSON.stringify(verify?.activeDecoration));
+      if (verify && verify.activeDecoration !== newVal) {
+        console.error('[DECO][equip] DB MISMATCH — expected', JSON.stringify(newVal), 'got', JSON.stringify(verify.activeDecoration));
+        saveOk = false;
+      }
     } catch (e) { console.warn('[DECO][equip] verify read failed', e?.message); }
   } catch (e) {
     saveOk = false;
     console.warn('[DECO][equip] save failed', e?.message);
   }
+  // Fire-and-forget the full CU save so other fields stay in sync,
+  // but don't await it — we already persisted what we needed.
+  try { saveUser(true).catch(()=>{}); } catch {}
   toast(
     saveOk ? (decoId ? 'Decoration equipped!' : 'Decoration removed') : 'Decoration save failed — try again',
     saveOk ? 'success' : 'error'

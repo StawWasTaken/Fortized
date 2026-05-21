@@ -2227,6 +2227,39 @@ const FortizedSocial = (() => {
     } catch(e) { console.warn('[Forum] search failed:', e?.message); return []; }
   }
 
+  // Direct single-column write for active_decoration. Bypasses the full
+  // saveUserObject pipeline (no _userToRow round-trip, no protected-row
+  // merge against the existing DB row, no risk of an in-flight CU save
+  // racing this one). Used by equipDecoration so a deco change can't be
+  // dropped by an unrelated cosmetic save that happens to fire at the
+  // same time. RLS-friendly: we only update the row matching the caller.
+  async function saveActiveDecoration(username, decoId) {
+    if (!username) return false;
+    const value = decoId || null;
+    console.log('[DECO][direct] UPDATE active_decoration =', JSON.stringify(value), 'for', username);
+    try {
+      const { data, error } = await sb
+        .from('users')
+        .update({ active_decoration: value })
+        .eq('username', norm(username))
+        .select('username, active_decoration')
+        .maybeSingle();
+      if (error) {
+        console.error('[DECO][direct] UPDATE failed:', error.message, error.code);
+        return false;
+      }
+      console.log('[DECO][direct] UPDATE ok — row now has active_decoration =', JSON.stringify(data?.active_decoration));
+      // Evict both cache layers so the next getUserByName re-reads the
+      // fresh value instead of serving the pre-update row.
+      _cacheDel('user:' + norm(username));
+      _cacheDel('userEnf:' + norm(username));
+      return true;
+    } catch (e) {
+      console.error('[DECO][direct] UPDATE threw:', e?.message);
+      return false;
+    }
+  }
+
   // ── Public API ───────────────────────────────────────
   return {
     sb, // Expose supabase client for direct calls in app code
@@ -2245,7 +2278,7 @@ const FortizedSocial = (() => {
       return result;
     },
     getUsersByNames,
-    getUserByName, saveUserObject, invalidateUserCache,
+    getUserByName, saveUserObject, saveActiveDecoration, invalidateUserCache,
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,

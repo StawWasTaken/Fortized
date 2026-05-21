@@ -10002,6 +10002,26 @@ function initFortizedUXResilience() {
           } catch {}
           const recent = window._recentlyEditedFields || {};
           const _nowR = Date.now();
+          // Dedicated decoration key wins over EVERYTHING else (DB,
+          // ftz_user blob, recent-edits guard). It's the only storage
+          // small enough to be reliable for a user with a huge CU
+          // hitting localStorage quota — and crucially, it accepts a
+          // null value as legitimate, so a just-cleared decoration
+          // stays cleared even if the ftz_user blob write quota-failed
+          // and still carries the previous value.
+          try {
+            const decoRaw = localStorage.getItem('ftz_deco_' + CU.username);
+            if (decoRaw) {
+              const parsed = JSON.parse(decoRaw);
+              if (parsed && typeof parsed === 'object' && 'val' in parsed) {
+                const ageMs = _nowR - (parsed.ts || 0);
+                if (ageMs < 600000) {
+                  console.log('[DECO][boot] dedicated key wins: CU.activeDecoration', JSON.stringify(CU.activeDecoration), '→', JSON.stringify(parsed.val), '(', Math.round(ageMs/1000), 's old)');
+                  CU.activeDecoration = parsed.val;
+                }
+              }
+            }
+          } catch {}
           console.log('[DECO][boot] DB fetch returned activeDecoration =', JSON.stringify(CU.activeDecoration), '| localStorage ftz_user activeDecoration =', JSON.stringify(local?.activeDecoration), '| ftz_recent_edits activeDecoration =', recent.activeDecoration ? Math.round((_nowR - recent.activeDecoration)/1000)+'s ago' : 'none');
           if (local) {
             // Trust local over the freshly-fetched DB row for any
@@ -10010,8 +10030,13 @@ function initFortizedUXResilience() {
             // had to cover a save's network round-trip) because here
             // we're also covering a full page reload's worth of
             // replica lag.
+            // activeDecoration intentionally OMITTED here — it has its
+            // own dedicated key (ftz_deco_<name>) which is the
+            // authoritative source. Including it would let a stale
+            // ftz_user_<name> blob (whose write may have quota-failed)
+            // override the dedicated key's correct value.
             const recentEditFields = [
-              'activeDecoration','profileTheme','banner','pfp','pfpCrop',
+              'profileTheme','banner','pfp','pfpCrop',
               'bio','displayName','pronouns','status','customStatus',
               'displayFont','displayEffect','displayColor'
             ];
@@ -37780,6 +37805,17 @@ async function equipDecoration(decoId) {
   const newVal = decoId || null;
   console.log('[DECO][equip] called with', JSON.stringify(decoId), '— was', JSON.stringify(_prev));
   CU.activeDecoration = newVal;
+  // Persist to a DEDICATED tiny localStorage key, separate from the
+  // ftz_user_<name> blob. The full-CU write in saveLocal can silently
+  // fail with QuotaExceeded on large profiles (huge pfp data-URIs +
+  // bastions + friends easily hit the ~5 MB limit), which used to
+  // leave a stale activeDecoration in localStorage that the boot
+  // recent-edits guard would then restore on top of a perfectly
+  // correct DB value — the source of the "decoration won't change"
+  // bug. This dedicated key is ~50 bytes, no quota risk.
+  try {
+    localStorage.setItem('ftz_deco_' + CU.username, JSON.stringify({ val: newVal, ts: Date.now() }));
+  } catch {}
   // Mark this field as freshly user-edited so a concurrent refreshCU
   // can't silently restore the old value from a stale DB read while
   // saveUser is still in flight. The protected-merge in refreshCU

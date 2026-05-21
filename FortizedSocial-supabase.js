@@ -485,7 +485,13 @@ const FortizedSocial = (() => {
     if (!user) return { ok: false, msg: looksLikeEmail ? 'No account found for that email.' : 'User not found.' };
     if (user.password !== password) return { ok: false, msg: 'Wrong password.' };
     setCurrentUsername(user.username);
-    await setStatus(user.username, 'online');
+    // setStatus does a network round-trip to the statuses table + a
+    // users.status update. A flake there used to fail the whole login
+    // — but by this point the username is already persisted, so the
+    // login was actually successful. Don't await + don't let it
+    // bubble; let the app's normal presence loop handle it on next
+    // load if it failed here.
+    setStatus(user.username, 'online').catch(e => console.warn('[login] presence set failed (login still succeeded):', e?.message));
     return { ok: true, user };
   }
 

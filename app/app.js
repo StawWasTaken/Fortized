@@ -41181,10 +41181,9 @@ const _FPP_CS_PROMPTS = [
   "What's your username origin story?",
   "Introduce yourself with cool adjectives!",
   "Drop your best terrible joke!",
-  "If your life had a loading screen, what tip would it show?",
-  "What song is currently living rent-free in your head?",
+  "If your life had a loading screen?",
   "Shower thoughts?!",
-  "What emoji represents you perfectly today?",
+  "What emoji would represent you?",
   "If your life had a theme song?"
 ];
 function _fppRandomCSPrompt() {

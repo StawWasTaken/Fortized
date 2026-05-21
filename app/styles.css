@@ -8982,7 +8982,11 @@ select:focus-visible {
    before (10px corners) so it reads as a bubble rather than a tag. */
 .fpp__cs-bubble{
   position:relative;
-  margin-bottom:36px;
+  /* Sits low on the avatar row so the banner stays mostly
+     unobstructed — the trail dots (drawn below the bubble) extend
+     the silhouette downward toward the avatar without the bubble
+     itself cutting into the banner image. */
+  margin-bottom:8px;
   display:inline-flex; align-items:center; gap:7px;
   max-width:180px;
   padding:6px 11px;

@@ -622,24 +622,104 @@ togglePw.addEventListener('click', () => {
     : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>';
 });
 
-// Client-side protected username check
-const PROTECTED_BASES = ['staw'];
-function isProtectedUsername(name) {
-  const clean = name.toLowerCase().replace(/[^a-z]/g, '');
-  for (const base of PROTECTED_BASES) {
-    if (clean === base) return true;
-    if (clean.length > base.length && clean.startsWith(base)) return true;
-  }
-  return false;
+// ── Fortized Username Rules & Enforcement (Final) ──
+// Character set: a-z A-Z 0-9 and the single underscore. No
+// consecutive underscores, no leading/trailing underscore. 3–30
+// chars. Plus content / impersonation / spam screens. Only two
+// rejection messages, rotated, per spec.
+const USERNAME_REJECT_MESSAGES = [
+  'Chosen username is unavailable or violates our rules.',
+  'This username is not allowed.'
+];
+function _usernameRejection() {
+  return USERNAME_REJECT_MESSAGES[Math.floor(Math.random() * USERNAME_REJECT_MESSAGES.length)];
 }
 
-usernameInput.addEventListener('input', () => {
-  const val = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-  if (val && isProtectedUsername(val)) {
-    userErrorDiv.textContent = 'This username is not available.';
-  } else {
-    userErrorDiv.textContent = '';
+// CEO / founder + variants — always blocked regardless of staff list.
+const FOUNDER_BASES = ['staw','stawrer','stawrerr','lemonstaw','croistaw'];
+// Permanently reserved generic names.
+const RESERVED_NAMES = [
+  'admin','administrator','moderator','mod','fortized','staff','support',
+  'system','owner','founder','ceo','dev','developer','superadmin','root',
+  'official','help','team','bot'
+];
+// Blacklisted figures / refs (matched case-insensitively and against
+// the underscore-stripped form). Light political / NSFW / violence
+// content stays permitted per spec — only these specific items go.
+const BLACKLISTED_SUBSTRINGS = [
+  'donaldtrump','trumpdonald','melenchon','mélenchon','melanchon',
+  'communedeparis',
+  'epstein','jeffreyepstein',
+  // CSAM-adjacent acronyms
+  'cp','csam','pedo','pedophile'
+];
+// Spam / low-effort patterns.
+const SPAM_PATTERNS = [
+  /^([a-z0-9])\1{4,}$/i,             // aaaaa, 11111
+  /^qwerty(?:uiop)?$/i, /^asdfgh(?:jkl)?$/i, /^zxcvbn(?:m)?$/i,
+  /^[0-9]{8,}$/,                      // 12345678+
+  /^[a-z]+[0-9]{5,}$/i                // word followed by 5+ digits
+];
+
+// Returns { ok: bool, reason: string|null }. Reason is one of the two
+// canonical rejection messages when ok is false.
+function validateUsername(raw) {
+  const v = (raw || '').trim();
+  if (!v) return { ok: false, reason: _usernameRejection() };
+  // Technical rules.
+  if (v.length < 3 || v.length > 30) return { ok: false, reason: _usernameRejection() };
+  if (!/^[A-Za-z0-9_]+$/.test(v)) return { ok: false, reason: _usernameRejection() };
+  if (v.startsWith('_') || v.endsWith('_')) return { ok: false, reason: _usernameRejection() };
+  if (/__/.test(v)) return { ok: false, reason: _usernameRejection() };
+  // Normalise for content / impersonation checks.
+  const norm = v.toLowerCase();
+  const stripped = norm.replace(/[_0-9]/g, ''); // letters only — defeats "Staw1" / "M0d" tricks
+  // Spam.
+  for (const re of SPAM_PATTERNS) { if (re.test(v)) return { ok: false, reason: _usernameRejection() }; }
+  // Reserved names + close variations.
+  for (const r of RESERVED_NAMES) {
+    if (stripped === r) return { ok: false, reason: _usernameRejection() };
+    // "adminn", "modd" etc. — letters-only matches start with the
+    // reserved word and the trailing chars are all the same letter
+    // or empty (i.e. very small variation).
+    if (stripped.startsWith(r) && stripped.length - r.length <= 2) return { ok: false, reason: _usernameRejection() };
   }
+  // Founder / CEO bases.
+  for (const b of FOUNDER_BASES) {
+    if (stripped === b) return { ok: false, reason: _usernameRejection() };
+    if (stripped.startsWith(b)) return { ok: false, reason: _usernameRejection() };
+  }
+  // Blacklisted content.
+  for (const bad of BLACKLISTED_SUBSTRINGS) {
+    if (norm.includes(bad) || stripped.includes(bad)) return { ok: false, reason: _usernameRejection() };
+  }
+  // Dynamic staff check — current admins / mods at the moment the
+  // account is created. Read from the cache populated by the app's
+  // staff-poll loop; if it's missing we still apply the FOUNDER +
+  // RESERVED checks above as a baseline.
+  let staff = { admins: [], moderators: [] };
+  try { staff = JSON.parse(localStorage.getItem('ftz_staff') || '{}'); } catch {}
+  const staffNames = [...(staff.admins || []), ...(staff.moderators || [])]
+    .map(s => (typeof s === 'string' ? s : (s?.username || '')).toLowerCase());
+  for (const sName of staffNames) {
+    if (!sName) continue;
+    const sStripped = sName.replace(/[_0-9]/g, '');
+    if (norm === sName) return { ok: false, reason: _usernameRejection() };
+    if (stripped === sStripped) return { ok: false, reason: _usernameRejection() };
+    // Variation: "<staffname>X" where X is up to 2 chars
+    if (stripped.startsWith(sStripped) && stripped.length - sStripped.length <= 2) return { ok: false, reason: _usernameRejection() };
+  }
+  return { ok: true, reason: null };
+}
+
+// Live validation as the user types — only shows the rejection
+// message once they've typed at least 3 chars, so they're not
+// scolded before they've started.
+usernameInput.addEventListener('input', () => {
+  const val = usernameInput.value.trim();
+  if (val.length < 3) { userErrorDiv.textContent = ''; return; }
+  const r = validateUsername(val);
+  userErrorDiv.textContent = r.ok ? '' : r.reason;
 });
 
 // Enter key submission
@@ -669,9 +749,11 @@ async function doSignup() {
     }
   } catch(e) { /* continue if check fails — don't block on network error */ }
 
-  // Client-side block before hitting the server
-  if (isProtectedUsername(username.toLowerCase().replace(/[^a-z0-9_]/g, ''))) {
-    userErrorDiv.textContent = 'This username is not available.';
+  // Client-side block before hitting the server — runs the full
+  // Fortized Username Rules validator.
+  const _vr = validateUsername(username);
+  if (!_vr.ok) {
+    userErrorDiv.textContent = _vr.reason;
     return;
   }
 

@@ -2823,15 +2823,21 @@ function buildAvatarHTML(pfp, name, size, cropData) {
   const defaultUrl = _defaultPfpUrl(name);
   const initial = (name||'?')[0].toUpperCase();
   const fs = Math.floor(size/2.2);
-  const fallbackJS = 'this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)';
+  // Two-stage onerror: if a user-set pfp 404s, fall through to the
+  // deterministic default pfp instead of jumping straight to the
+  // initial-letter SVG. Initial letter is reserved as the very last
+  // resort (in case even the default png can't load — broken host).
+  const defaultFallbackJS = 'this.onerror=null;this.src=\''+defaultUrl+'\';this.onerror=function(){this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this);};';
+  // Default-only fallback (when the SRC was already the default pfp): jump straight to initial.
+  const initialFallbackJS = 'this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)';
   // GIF avatar with CSS-based crop (preserves animation)
   if (pfp && cropData && cropData.widthPct) {
     return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:block;">'
-      + '<img src="'+pfp+'" style="position:absolute;left:'+cropData.leftPct+'%;top:'+cropData.topPct+'%;width:'+cropData.widthPct+'%;height:auto;" onerror="'+fallbackJS+'">'
+      + '<img src="'+pfp+'" style="position:absolute;left:'+cropData.leftPct+'%;top:'+cropData.topPct+'%;width:'+cropData.widthPct+'%;height:auto;" onerror="'+defaultFallbackJS+'">'
       + '</div>';
   }
-  if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="'+fallbackJS+'">';
-  return '<img src="'+defaultUrl+'" style="'+s+'" onerror="'+fallbackJS+'">';
+  if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="'+defaultFallbackJS+'">';
+  return '<img src="'+defaultUrl+'" style="'+s+'" onerror="'+initialFallbackJS+'">';
 }
 function renderRailBastions() {
   const cont = document.getElementById('rail-bastions');
@@ -22694,9 +22700,13 @@ function _dismissAnnouncement() {
 // Shows a non-intrusive feedback toast for platform actions.
 // Not every action triggers it — controlled by probability + cooldown.
 let _lastFeedbackTime = 0;
-const _FEEDBACK_COOLDOWN = 900000; // 15 min cooldown between feedback prompts
-const _FEEDBACK_CHANCE = 0.3; // 30% chance per eligible action
-const _FEEDBACK_MAX_PER_DAY = 3;
+// Bumped per user request: feedback was too rare to read as
+// "platform is asking me what I think" — now fires roughly twice
+// as often within a much shorter cooldown. Max/day raised so an
+// engaged user session can leave more signal.
+const _FEEDBACK_COOLDOWN = 300000; // 5 min cooldown (was 15)
+const _FEEDBACK_CHANCE   = 0.6;    // 60% chance per eligible action (was 30%)
+const _FEEDBACK_MAX_PER_DAY = 8;   // (was 3)
 function _getFeedbackCountToday() {
   try { const d = JSON.parse(localStorage.getItem('ftz_fb_daily')||'{}'); if (d.date === new Date().toDateString()) return d.count || 0; } catch {} return 0;
 }

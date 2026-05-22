@@ -2,11 +2,18 @@
 /* ── Layered Depth Architecture tokens ── */
 --canvas-color:#13161d;--glass-heavy:rgba(19,22,29,.96);--glass-mid:rgba(19,22,29,.82);--glass-light:rgba(19,22,29,.68);--glass-ultra-light:rgba(19,22,29,.50);--glass-border:rgba(255,255,255,.06);--glass-border-hover:rgba(255,255,255,.12);--blur-heavy:blur(32px) saturate(160%);--blur-mid:blur(24px) saturate(150%);--blur-light:blur(18px) saturate(140%);}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-/* Suppress browser-default focus rings only on mouse interactions; preserve
-   the per-element :focus-visible accent rings that ship through the rest of
-   the stylesheet (they were silently disabled by a global `outline:none
-   !important` here, killing keyboard-nav visibility). */
-*:focus:not(:focus-visible){outline:none;}
+/* Kill the browser's default focus ring entirely. The user found the
+   yellow / blue / square outlines that appeared on text fields,
+   buttons, and links (especially via keyboard Tab navigation) loud
+   and inconsistent with the design language. Replaced with nothing —
+   keyboard focus is conveyed via existing per-element :hover/active
+   transitions instead. Note: this DOES reduce keyboard-nav
+   accessibility; the cost is intentional per the design call. */
+*:focus,*:focus-visible{outline:none !important;box-shadow:none;}
+button:focus,input:focus,textarea:focus,select:focus,a:focus,
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{
+  outline:none !important;
+}
 img{-webkit-user-drag:none;user-select:none;pointer-events:auto;draggable:false;}
 html,body{height:100%;overflow:hidden;}
 body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui);display:flex;flex-direction:row;position:relative;
@@ -348,7 +355,27 @@ body.is-desktop-app .topbar{padding-right:0;}
 .notif-panel-header{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
 .notif-mark-read-btn{font-size:11px;padding:4px 10px;}
 /* ── Userbar (bottom of sidebar-ctx, parallel with chatbar) ── */
-.userbar{display:flex;flex-direction:column;flex-shrink:0;padding:0 12px 8px;gap:0;box-sizing:border-box;z-index:15;width:100%;}
+/* Userbar pulled out of the sidebar-ctx column and pinned across
+   the bottom of both sidebars (Fortized rail 72px + sidebar-ctx
+   380px = 452px). z-index is above the sidebars but below modals,
+   so it floats over both as a single horizontal strip — Discord-
+   like footer. .sidebar-scroll pads its bottom to compensate. */
+.userbar{
+  position:fixed;
+  left:0; bottom:0;
+  width:452px;
+  display:flex; flex-direction:column;
+  padding:8px 12px;
+  gap:0;
+  box-sizing:border-box;
+  z-index:300;
+  background:var(--glass-heavy);
+  backdrop-filter:var(--blur-heavy);
+  -webkit-backdrop-filter:var(--blur-heavy);
+  border-top:1px solid var(--glass-border);
+  border-right:1px solid var(--glass-border);
+}
+.sidebar-scroll{ padding-bottom:88px; }
 .ub-activity-row{display:none;align-items:center;gap:7px;padding:6px 10px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.08);border-radius:10px 10px 0 0;margin:0 2px;}
 .ub-activity-row.active{display:flex;}
 .ub-activity-icon{width:26px;height:26px;border-radius:7px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.18);flex-shrink:0;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--green);}

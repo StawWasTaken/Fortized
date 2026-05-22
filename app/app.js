@@ -931,9 +931,21 @@ const AGE_TIERS = {CHILD:'child',TEEN:'teen',ADULT:'adult'};
 // ── Helpers ──────────────────────────────────────────────────
 function _trimCUForStorage(cu) {
   const t = { ...cu };
-  if (typeof t.pfp === 'string' && t.pfp.startsWith('data:') && t.pfp.length > 200_000) delete t.pfp;
+  // Trim the LARGEST field first instead of dropping pfp + banner +
+  // backgroundImage indiscriminately. Pfp is much more identity-
+  // critical than banner, so when only one needs to go we keep pfp
+  // and drop banner. backgroundImage isn't avatar-tier — drop it
+  // alongside banner. Only fall back to dropping pfp if even after
+  // dropping banner + backgroundImage we'd still likely exceed
+  // quota.
   if (typeof t.banner === 'string' && t.banner.startsWith('data:') && t.banner.length > 200_000) delete t.banner;
   if (typeof t.backgroundImage === 'string' && t.backgroundImage.startsWith('data:') && t.backgroundImage.length > 200_000) delete t.backgroundImage;
+  // Pfp only dropped if it's enormous (>1.5 MB data URL). Anything
+  // smaller fits comfortably even alongside other fields. Without
+  // this, picking a banner used to silently strip pfp from the
+  // localStorage snapshot and any boot path that fell back to
+  // local saw "no avatar" until next DB read landed.
+  if (typeof t.pfp === 'string' && t.pfp.startsWith('data:') && t.pfp.length > 1_500_000) delete t.pfp;
   return t;
 }
 function saveLocal() {
@@ -38356,40 +38368,50 @@ function saveCurrentToAccounts() {
   localStorage.setItem('ftz_saved_accounts', JSON.stringify(accounts));
 }
 async function switchToAccount(username) {
-  if (username === CU?.username) { toggleAccountSwitcher(); return; }
+  console.log('[ACCT] switchToAccount called with', JSON.stringify(username));
+  if (username === CU?.username) {
+    // Same user — close the popover and bail.
+    _fppClose();
+    return;
+  }
+  // Always snapshot the current account before swapping, regardless
+  // of whether the target has a cached blob — without this you can
+  // bounce to another account but losing the current one's
+  // localStorage entry means you can never come back without re-
+  // signing-in.
+  try { saveCurrentToAccounts(); } catch (e) { console.warn('[ACCT] saveCurrentToAccounts failed', e?.message); }
+  if (CU?.username) {
+    try { localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(CU)); } catch (e) {
+      // Quota — at least keep the trimmed version so the row exists.
+      try { localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(_trimCUForStorage(CU))); } catch {}
+    }
+  }
   const cached = localStorage.getItem('ftz_user_'+username);
   if (cached) {
-    // Save current user's full data and account entry before switching
-    saveCurrentToAccounts();
-    if (CU?.username) {
-      localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(CU));
-    }
-    // Set old account away, new account online
     try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch(e) { _dbg('[Account] status set away failed', e); }
     try { await FortizedSocial.setStatus(username, 'online'); } catch(e) { _dbg('[Account] status set online failed', e); }
-    // Set both localStorage keys for consistency
     localStorage.setItem('ftz_current', username);
     localStorage.setItem('fortized_current_user', username);
-    window.location.reload();
-  } else {
-    // No cached data — try fetching from server before giving up
-    try {
-      const user = await FortizedSocial.getUserByName(username);
-      if (user?.username) {
-        saveCurrentToAccounts();
-        if (CU?.username) localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(CU));
-        localStorage.setItem('ftz_user_'+user.username, JSON.stringify(user));
-        localStorage.setItem('ftz_current', user.username);
-        localStorage.setItem('fortized_current_user', user.username);
-        try { await FortizedSocial.setStatus(user.username, 'online'); } catch(e) { _dbg('[Account] status set online failed', e); }
-        window.location.reload();
-        return;
-      }
-    } catch(e) { console.warn('[Account] switch fetch failed', e); }
-    toast('Account not found — please sign in again', 'error');
-    toggleAccountSwitcher();
-    showAddAccountModal();
+    console.log('[ACCT] switching to', username, '— reloading');
+    // location.href is more forceful than reload — guarantees a full
+    // navigation even if a beforeunload handler tries to interject.
+    window.location.href = '/app';
+    return;
   }
+  // No cached data — try fetching from server before giving up.
+  try {
+    const user = await FortizedSocial.getUserByName(username);
+    if (user?.username) {
+      try { localStorage.setItem('ftz_user_'+user.username, JSON.stringify(user)); } catch {}
+      localStorage.setItem('ftz_current', user.username);
+      localStorage.setItem('fortized_current_user', user.username);
+      try { await FortizedSocial.setStatus(user.username, 'online'); } catch(e) { _dbg('[Account] status set online failed', e); }
+      window.location.href = '/app';
+      return;
+    }
+  } catch(e) { console.warn('[ACCT] switch fetch failed', e); }
+  toast('Account not found — please sign in again', 'error');
+  showAddAccountModal();
 }
 function addAnotherAccount() {
   toggleAccountSwitcher();
@@ -38418,7 +38440,6 @@ function showAddAccountModal() {
         <div style="margin-top:14px;">
           <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:6px;">Password <span style="color:#f87171;">*</span></label>
           <input id="add-acct-pass" type="password" class="field-input" placeholder="Enter password" style="width:100%;" autocomplete="current-password">
-          <a href="#" onclick="event.preventDefault();toast('Use the main login page to recover your password.','info');" style="display:inline-block;margin-top:6px;font-size:12px;color:var(--fpp-main, var(--accent));text-decoration:none;">Forgot your password?</a>
         </div>
         <div id="add-acct-err" style="font-size:12.5px;color:var(--red);margin-top:14px;display:none;border-radius:9px;padding:9px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);"></div>
         <div class="ftz-onboarding-btns">

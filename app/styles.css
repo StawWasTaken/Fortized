@@ -8940,7 +8940,11 @@ select:focus-visible {
    banner, 45% hanging below into the card body. */
 .fpp__av-row{
   position:relative; z-index:2;
-  display:flex; align-items:center; gap:12px;
+  /* flex-end so the CS bubble's bottom aligns with the avatar's
+     bottom — bubble sits down at the pfp's lower portion, leaving
+     the upper half of the avatar (the face) clear, and the trail
+     dots can rise from the bubble up toward the avatar. */
+  display:flex; align-items:flex-end; gap:12px;
   padding:0 18px;
   margin-top:-53px;
 }
@@ -8971,7 +8975,12 @@ select:focus-visible {
   pointer-events:none; z-index:2;
 }
 .fpp__status-dot{
-  position:absolute; bottom:4px; right:4px;
+  /* Sits at the avatar's bottom-right corner — roughly half inside,
+     half outside the avatar disc. Previously at +4/+4 it sat too
+     far INTO the pfp; flush at 0/0 gives the Discord-correct ratio
+     where the dot kisses the avatar edge without eating into the
+     face. */
+  position:absolute; bottom:0; right:0;
   width:26px; height:26px; z-index:3;
   border-radius:50%;
   background:
@@ -9008,16 +9017,16 @@ select:focus-visible {
   cursor:pointer;
   transition:background .15s, border-color .15s, transform .15s, box-shadow .15s;
 }
-/* Trail dots — sit on the bubble's LEFT side at the bubble's
-   vertical centre, so the eye reads a horizontal trail from the
-   avatar's right edge into the bubble. Previously they were anchored
-   to the bubble's bottom and "fell" downward past the avatar
-   without ever visually touching it — looked like the username was
-   speaking, not the avatar. */
+/* Trail dots rise UP-LEFT from the bubble toward the avatar.
+   Bubble now sits at the avatar's lower edge (align-items:flex-end
+   on the row), so the upper portion of the avatar is clear and the
+   dots have somewhere to go. Matches Discord's tail convention:
+   one bigger dot sticking out the bubble's top-left like a
+   speech-tail anchor, one smaller dot floating up-left between
+   that anchor and the avatar. */
 .fpp__cs-bubble::before,
 .fpp__cs-bubble::after{
   content:""; position:absolute;
-  top:50%;
   background:var(--panel2);
   border:1px solid var(--border);
   box-shadow:0 4px 10px rgba(0,0,0,.4);
@@ -9025,16 +9034,14 @@ select:focus-visible {
   pointer-events:none;
 }
 .fpp__cs-bubble::before{
-  /* Bigger dot closest to the bubble, attached like a tail */
-  left:-6px;
-  width:10px; height:10px;
-  transform:translateY(-50%);
+  /* Bigger anchor dot sticking out of bubble's top-left corner */
+  top:-6px; left:6px;
+  width:11px; height:11px;
 }
 .fpp__cs-bubble::after{
-  /* Smaller dot bridging toward the avatar's right edge */
-  left:-15px;
+  /* Smaller floater bridging the anchor and the avatar */
+  top:-16px; left:-2px;
   width:6px; height:6px;
-  transform:translateY(-50%);
 }
 /* Hover: no transparency. Lift the bubble a hair, brighten the
    panel, intensify the border so it reads as interactive without

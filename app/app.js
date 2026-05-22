@@ -17252,6 +17252,11 @@ function buildProfileView(tab) {
 function _buildProfileView(tab) {
   const main = document.getElementById('profile-main');
   if (!main) return;
+  // Capture any in-progress typed inputs from the previous render
+  // BEFORE we blow away the DOM — otherwise a pfp/banner change (or
+  // any internal rebuild) silently wipes the user's typed display
+  // name / bio / pronouns / socials.
+  try { _syncSettingsInputsToCU(); } catch(_){}
   // Hide unsaved bar when switching tabs (only show on myprofile tab with actual changes)
   if (tab !== 'myprofile') {
     document.getElementById('unsaved-bar')?.classList.remove('show');
@@ -17362,7 +17367,7 @@ function _buildProfileView(tab) {
             <div>
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:12px;">Avatar</div>
               <div style="display:flex;gap:8px;">
-                <label style="cursor:pointer;"><div class="settings-save-btn">Change Avatar</div><input id="pfp-file-inp" type="file" accept="image/*" style="display:none;" onchange="updatePfp(event);markSettingsDirty()"></label>
+                <label style="cursor:pointer;"><div class="settings-save-btn">Change Avatar</div><input id="pfp-file-inp" type="file" accept="image/*" style="display:none;" onchange="updatePfp(event)"></label>
                 ${CU.pfp ? '<button onclick="CU.pfp=&#39;&#39;;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Avatar</button>' : ''}
               </div>
             </div>
@@ -17384,7 +17389,7 @@ function _buildProfileView(tab) {
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Banner</div>
                 ${hasRadiance ? '' : '<span style="font-size:9px;font-weight:700;background:rgba(255,160,62,.1);color:#ff9d3e;border:1px solid rgba(255,160,62,.2);border-radius:5px;padding:2px 7px;">RADIANCE</span>'}
               </div>
-              <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event);markSettingsDirty()">
+              <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)">
               <div style="display:flex;gap:8px;">
                 <button onclick="${hasRadiance?"_showBannerPickerMenu(event)":"toast('Custom banners require Radiance','error')"}" class="settings-save-btn">Change Banner</button>
                 ${hasRadiance && CU.banner ? '<button onclick="CU.banner=&#39;&#39;;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Banner</button>' : ''}
@@ -18337,12 +18342,16 @@ async function _pickRecentAvatar(url) {
   window._recentlyEditedFields.pfp = Date.now();
   window._recentlyEditedFields.pfpCrop = Date.now();
   _saveRecentAvatar(url);
-  await saveUser(true);
-  try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, pfp: url, pfpCrop: null, field: 'pfp' }); } catch (e) {}
+  // Queue the change (Discord-style): local draft survives a refresh
+  // via saveLocal, but the Supabase row + socket broadcast wait for
+  // saveAllSettings (the Save Changes button) so the user can preview
+  // the avatar against the rest of their unsaved edits and confirm.
+  saveLocal();
   try { updateUserbar(); } catch(_){}
   try { buildProfileView('myprofile'); } catch(_){}
   document.querySelector('.ftz-confirm-overlay')?.remove();
-  toast('Avatar updated!', 'success');
+  markSettingsDirty();
+  toast('Avatar set — click Save Changes to keep', 'info');
 }
 
 function _removeRecentAvatar(url) {
@@ -18562,11 +18571,11 @@ async function _applyGifAvatar(url) {
       CU.banner = finalBanner;
       window._recentlyEditedFields = window._recentlyEditedFields || {};
       window._recentlyEditedFields.banner = Date.now();
-      await saveUser(true);
-      try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, banner: CU.banner, field: 'banner' }); } catch (e) {}
+      saveLocal();
       try { updateUserbar(); } catch(_){}
       try { buildProfileView('myprofile'); } catch(_){}
-      toast('Banner updated! ✓', 'success');
+      markSettingsDirty();
+      toast('Banner set — click Save Changes to keep', 'info');
     });
     _cropData._isGif = true;
     _cropData._gifSrc = gifData;
@@ -18587,12 +18596,12 @@ async function _applyGifAvatar(url) {
     window._recentlyEditedFields = window._recentlyEditedFields || {};
     window._recentlyEditedFields.pfp = Date.now();
     window._recentlyEditedFields.pfpCrop = Date.now();
-    await saveUser(true);
+    _saveRecentAvatar(CU.pfp);
+    saveLocal();
     try { updateUserbar(); } catch(_){}
     try { buildProfileView('myprofile'); } catch(_){}
-    try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, pfp: CU.pfp, pfpCrop: CU.pfpCrop, field: 'pfp' }); } catch (e) {}
-    _saveRecentAvatar(CU.pfp);
-    toast('Animated avatar updated! ✓', 'success');
+    markSettingsDirty();
+    toast('Animated avatar set — click Save Changes to keep', 'info');
   });
   _cropData._isGif = true;
   _cropData._gifSrc = gifData;
@@ -18643,12 +18652,12 @@ async function updatePfp(e) {
         window._recentlyEditedFields = window._recentlyEditedFields || {};
         window._recentlyEditedFields.pfp = Date.now();
         window._recentlyEditedFields.pfpCrop = Date.now();
-        await saveUser(true);
+        _saveRecentAvatar(result.gifData);
+        saveLocal();
         updateUserbar();
         buildProfileView('myprofile');
-        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: result.gifData, pfpCrop: result.crop, field: 'pfp' }); } catch(e){}
-        _saveRecentAvatar(result.gifData);
-        toast('Animated avatar updated! ✓', 'success');
+        markSettingsDirty();
+        toast('Animated avatar set — click Save Changes to keep', 'info');
       });
       _cropData._isGif = true;
       _cropData._gifSrc = fileData;
@@ -18668,12 +18677,12 @@ async function updatePfp(e) {
         window._recentlyEditedFields = window._recentlyEditedFields || {};
         window._recentlyEditedFields.pfp = Date.now();
         window._recentlyEditedFields.pfpCrop = Date.now();
-        await saveUser(true);
+        _saveRecentAvatar(cropped);
+        saveLocal();
         updateUserbar();
         buildProfileView('myprofile');
-        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: cropped, pfpCrop: null, field: 'pfp' }); } catch(e){}
-        _saveRecentAvatar(cropped);
-        toast('Avatar updated! ✓', 'success');
+        markSettingsDirty();
+        toast('Avatar set — click Save Changes to keep', 'info');
       });
     }
   };
@@ -18709,10 +18718,10 @@ async function updateBanner(e) {
       } catch {}
       window._recentlyEditedFields = window._recentlyEditedFields || {};
       window._recentlyEditedFields.banner = Date.now();
-      await saveUser(true);
-      try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, banner: CU.banner, field: 'banner' }); } catch (e) {}
+      saveLocal();
       buildProfileView('myprofile');
-      toast('Banner updated! ✓', 'success');
+      markSettingsDirty();
+      toast('Banner set — click Save Changes to keep', 'info');
     });
   };
   reader.readAsDataURL(file);
@@ -40584,6 +40593,30 @@ async function _dismissDailyPopup(claim) {
 // ════════════════════════════════════════════════════════════
 let _settingsOriginal = null; // snapshot of CU before editing
 let _settingsDirty = false;
+
+// Capture the user's typed-but-unsaved settings inputs into CU so a
+// view rebuild (buildProfileView, pfp/banner change handlers, etc.)
+// doesn't wipe their work. saveAllSettings does the same input read
+// on Save Changes — this lets any other path that rebuilds the form
+// keep the same draft state in the DOM.
+function _syncSettingsInputsToCU() {
+  if (!CU) return;
+  const dnInp = document.getElementById('dn-input');
+  const bioInp = document.getElementById('bio-input');
+  const emailInp = document.getElementById('email-input');
+  const pronounsInp = document.getElementById('pronouns-input');
+  if (dnInp && dnInp.value.trim()) CU.displayName = dnInp.value.trim();
+  if (bioInp) CU.bio = bioInp.value.trim().slice(0, 300);
+  if (emailInp && emailInp.value.trim()) CU.email = emailInp.value.trim();
+  if (pronounsInp) CU.pronouns = pronounsInp.value.trim().slice(0, 40);
+  ['youtube','roblox','spotify','twitter'].forEach(key => {
+    const inp = document.getElementById('social-' + key);
+    if (!inp) return;
+    CU.socials = CU.socials || {};
+    if (inp.value.trim()) CU.socials[key] = inp.value.trim();
+    else delete CU.socials[key];
+  });
+}
 
 function markSettingsDirty() {
   // Compare current input values against original snapshot to detect real changes

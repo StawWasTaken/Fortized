@@ -296,8 +296,8 @@ const MANUAL_BOTS = ['fortized', 'joyster'];
 const FtzStatus = (() => {
   const MODES = Object.freeze({
     online:    { color: '#3ecf6e', label: 'Online',          order: 0 },
-    away:      { color: '#f59e0b', label: 'Idle',            order: 1 },
-    dnd:       { color: '#f87171', label: 'Do Not Disturb',  order: 2 },
+    away:      { color: '#fff93e', label: 'Idle',            order: 1 },
+    dnd:       { color: '#eb4545', label: 'Do Not Disturb',  order: 2 },
     invisible: { color: '#6b7280', label: 'Invisible',       order: 3 },
     offline:   { color: '#6b7280', label: 'Offline',         order: 4 },
   });

@@ -9392,13 +9392,19 @@ select:focus-visible {
 /* ── Userbar own-profile popover ──────────────────────────────────── */
 .fpp--own{
   position:fixed;
-  width:340px;
+  width:300px;
   z-index:4000;
   animation:fppPopIn .2s cubic-bezier(.22,1,.36,1);
 }
-.fpp--own .fpp__av{ width:80px; height:80px; border-width:4px; }
-.fpp--own .fpp__av-row{ margin-top:-44px; }
+/* At 300px width the avatar is sized down a touch (was 80 at 340)
+   so it stays in scale with the narrower card. */
+.fpp--own .fpp__av{ width:72px; height:72px; border-width:4px; }
+.fpp--own .fpp__av-row{ margin-top:-40px; }
 .fpp--own .fpp__actions{ padding-top:6px; padding-bottom:6px; }
+/* Radiance stroke on this variant: drop the inner dark border so
+   we don't read as two stacked rings. The outer Main outline + halo
+   carry the look on its own. */
+.fpp--own.fpp--stroked{ border-color:transparent; }
 
 /* ── DM right sidebar column ──────────────────────────────────────── */
 .fpp--dm{

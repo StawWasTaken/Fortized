@@ -38437,15 +38437,20 @@ function showAddAccountModal() {
 }
 
 async function submitAddAccount() {
-  // Identifier is preserved as typed (FortizedSocial.login handles email vs
-  // username), but trimmed; password is also trimmed because mobile/desktop
-  // password managers commonly leak trailing whitespace.
   const identifier = document.getElementById('add-acct-user')?.value?.trim();
   const password = document.getElementById('add-acct-pass')?.value?.trim();
   const errEl = document.getElementById('add-acct-err');
   const btn = document.getElementById('add-acct-btn');
   if (!identifier || !password) {
     if(errEl){errEl.textContent='Please enter both your username/email and password.';errEl.style.display='block';}
+    return;
+  }
+  // 5-account cap. Counted BEFORE login so the user gets a clear
+  // error instead of authenticating and then silently being unable
+  // to save the new account into the rotation.
+  const _existing = (typeof getSavedAccounts === 'function') ? getSavedAccounts() : [];
+  if (_existing.length >= 5 && !_existing.some(a => a.username.toLowerCase() === identifier.toLowerCase())) {
+    if (errEl) { errEl.textContent = 'You can keep up to 5 accounts signed in. Remove one first.'; errEl.style.display = 'block'; }
     return;
   }
   if (btn) { btn.disabled=true; btn.textContent='Signing in…'; }
@@ -41380,7 +41385,7 @@ function _fppGamesCardHTML(u) {
     return `<div class="fpp__game-tile" title="${safeName}">${safeName.charAt(0).toUpperCase()}</div>`;
   }).join('');
   const more = games.length > 5 ? `<div class="fpp__game-tile fpp__game-tile--more">+${games.length - 5}</div>` : '';
-  return `<div class="fpp-card fpp-card--games"><div class="fpp-card__title">Game Collection</div><div class="fpp-card__body"><div class="fpp__games-strip">${tiles}${more}</div></div></div>`;
+  return `<div class="fpp-card fpp-card--games"><div class="fpp-card__title">Games I Like</div><div class="fpp-card__body"><div class="fpp__games-strip">${tiles}${more}</div></div></div>`;
 }
 
 function _fppMutualsChipHTML(username) {
@@ -41640,11 +41645,15 @@ function _renderOwnProfilePopover(anchorEl) {
   panel.innerHTML = `
     <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
     <div class="fpp__av-row">
-      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 72)}</div>
+      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 80)}</div>
       ${_fppCSBubbleHTML(u, true)}
     </div>
     ${_fppIdentityHTML(u)}
-    ${u.bio ? `<div class="fpp__inline-bio">${parseBioMD(u.bio.slice(0, 160))}${u.bio.length > 160 ? '…' : ''}</div>` : ''}
+    ${(u.bio || memberSinceTxt) ? `<div class="fpp-card fpp-card--about">
+      ${u.bio ? `<div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div>` : ''}
+      ${u.bio && memberSinceTxt ? '<div class="fpp-card__sep"></div>' : ''}
+      ${memberSinceTxt ? `<div class="fpp-card__title"${u.bio ? ' style="margin-top:10px;"' : ''}>Member Since</div><div class="fpp-card__body fpp-card__body--muted">${memberSinceTxt}</div>` : ''}
+    </div>` : ''}
     ${_fppBadgesCardHTML(u)}
     ${_fppGamesCardHTML(u)}
     <div class="fpp__actions">
@@ -41654,7 +41663,7 @@ function _renderOwnProfilePopover(anchorEl) {
       </button>
     </div>
     <div class="fpp-row" id="fpp-own-status-row" onclick="_fppShowStatusSubmenu(event)">
-      <span class="fpp-row__icon"><span style="width:10px;height:10px;border-radius:50%;background:${statusColor};display:inline-block;box-shadow:0 0 8px ${statusColor}66;"></span></span>
+      <span class="fpp-row__icon">${FtzStatus.dotSvg(status, 18)}</span>
       <span class="fpp-row__label">${statusLabel}</span>
       <span class="fpp-row__chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
     </div>
@@ -41690,11 +41699,15 @@ function _renderOwnProfilePopover(anchorEl) {
 function _fppShowStatusSubmenu(evt) {
   evt.stopPropagation();
   document.getElementById('fpp-status-submenu')?.remove();
+  // Pulling labels + descriptions inline but routing icons through
+  // FtzStatus.dotSvg so the submenu uses the SAME icon (moon for
+  // idle, ban-circle for DND, hollow ring for invisible) as the
+  // userbar dot — not flat colour discs.
   const STATUS_OPTS = [
-    { id: 'online',    label: 'Online',         color: '#3ecf6e', desc: null },
-    { id: 'away',      label: 'Idle',           color: '#f59e0b', desc: null },
-    { id: 'dnd',       label: 'Do Not Disturb', color: '#f87171', desc: 'You will not receive desktop notifications.' },
-    { id: 'invisible', label: 'Invisible',      color: '#6b7280', desc: 'You will appear offline.' },
+    { id: 'online',    label: 'Online',         desc: null },
+    { id: 'away',      label: 'Idle',           desc: null },
+    { id: 'dnd',       label: 'Do Not Disturb', desc: 'You will not receive desktop notifications.' },
+    { id: 'invisible', label: 'Invisible',      desc: 'You will appear offline.' },
   ];
   const cur = CU?.status || 'online';
   const sub = document.createElement('div');
@@ -41703,12 +41716,12 @@ function _fppShowStatusSubmenu(evt) {
   sub.style.minWidth = '260px';
   sub.innerHTML = STATUS_OPTS.map(o => `
     <div class="fpp-menu__item" style="align-items:flex-start;padding:9px 10px;" onclick="setMyStatus('${o.id}');_fppClose()">
-      <span style="width:10px;height:10px;border-radius:50%;background:${o.color};flex-shrink:0;display:inline-block;margin-top:4px;${cur===o.id?'box-shadow:0 0 8px '+o.color+'66;':''}"></span>
+      <span style="flex-shrink:0;display:inline-flex;align-items:center;margin-top:2px;">${FtzStatus.dotSvg(o.id, 16)}</span>
       <div style="flex:1;min-width:0;">
         <div style="font-weight:${cur===o.id?'700':'500'};color:${cur===o.id?'var(--text)':'var(--muted-light)'};">${o.label}</div>
         ${o.desc ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">${o.desc}</div>` : ''}
       </div>
-      ${cur===o.id?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px;"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      ${cur===o.id?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fpp-main, var(--accent))" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px;"><polyline points="20 6 9 17 4 12"/></svg>':''}
     </div>`).join('') + `
     <div class="fpp-menu__divider"></div>
     <div class="fpp-menu__item" onclick="openStatusPicker();_fppClose()">
@@ -41738,6 +41751,11 @@ function _fppShowStatusSubmenu(evt) {
 function _fppShowAccountsSubmenu(evt) {
   evt.stopPropagation();
   document.getElementById('fpp-accounts-submenu')?.remove();
+  // Make sure the current account is always represented in the list,
+  // even if the user freshly logged in this session and saveCurrentToAccounts
+  // hasn't fired yet. Without this the submenu can show "no other accounts"
+  // even while you're logged in.
+  try { if (typeof saveCurrentToAccounts === 'function') saveCurrentToAccounts(); } catch {}
   const accounts = (typeof getSavedAccounts === 'function') ? getSavedAccounts() : [];
   const sub = document.createElement('div');
   sub.id = 'fpp-accounts-submenu';
@@ -41756,11 +41774,14 @@ function _fppShowAccountsSubmenu(evt) {
     : '<div style="padding:14px 10px;font-size:12px;color:var(--muted);text-align:center;">No other accounts saved.</div>')
     + `
     <div class="fpp-menu__divider"></div>
-    <div class="fpp-menu__item" onclick="window.location.href='/login?add=1'">
+    ${accounts.length < 5 ? `<div class="fpp-menu__item" onclick="_fppClose();showAddAccountModal()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add an account
-    </div>
-    <div class="fpp-menu__item fpp-menu__item--danger" onclick="if(confirm('Log out of @${escapeHTML(CU?.username || '')}?')) doLogout();">
+    </div>` : `<div class="fpp-menu__item" style="opacity:.45;cursor:default;" onclick="event.stopPropagation();toast('Maximum 5 accounts','info');">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Account limit reached (5/5)
+    </div>`}
+    <div class="fpp-menu__item fpp-menu__item--danger" onclick="_fppClose();showCustomConfirm('Log out of @${escapeHTML(CU?.username || '')}?', doLogout);">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Log Out
     </div>`;

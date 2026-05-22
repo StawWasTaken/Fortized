@@ -9008,11 +9008,16 @@ select:focus-visible {
   cursor:pointer;
   transition:background .15s, border-color .15s, transform .15s, box-shadow .15s;
 }
-/* Trail dots inherit the bubble's exact look so they read as part
-   of the bubble's tail rather than separate floating circles. */
+/* Trail dots — sit on the bubble's LEFT side at the bubble's
+   vertical centre, so the eye reads a horizontal trail from the
+   avatar's right edge into the bubble. Previously they were anchored
+   to the bubble's bottom and "fell" downward past the avatar
+   without ever visually touching it — looked like the username was
+   speaking, not the avatar. */
 .fpp__cs-bubble::before,
 .fpp__cs-bubble::after{
   content:""; position:absolute;
+  top:50%;
   background:var(--panel2);
   border:1px solid var(--border);
   box-shadow:0 4px 10px rgba(0,0,0,.4);
@@ -9020,12 +9025,16 @@ select:focus-visible {
   pointer-events:none;
 }
 .fpp__cs-bubble::before{
-  left:6px; bottom:-8px;
-  width:11px; height:11px;
+  /* Bigger dot closest to the bubble, attached like a tail */
+  left:-6px;
+  width:10px; height:10px;
+  transform:translateY(-50%);
 }
 .fpp__cs-bubble::after{
-  left:-5px; bottom:-22px;
-  width:7px; height:7px;
+  /* Smaller dot bridging toward the avatar's right edge */
+  left:-15px;
+  width:6px; height:6px;
+  transform:translateY(-50%);
 }
 /* Hover: no transparency. Lift the bubble a hair, brighten the
    panel, intensify the border so it reads as interactive without
@@ -9414,8 +9423,8 @@ select:focus-visible {
   opacity:0; animation:fppFadeIn .15s forwards;
 }
 @keyframes fppFadeIn{ to{ opacity:1; } }
-.fpp--settings .fpp__av{ width:96px; height:96px; border-width:5px; cursor:pointer; }
-.fpp--settings .fpp__av-row{ margin-top:-53px; }
+.fpp--settings .fpp__av{ width:72px; height:72px; border-width:4px; cursor:pointer; }
+.fpp--settings .fpp__av-row{ margin-top:-40px; }
 /* Settings preview: tighter decoration so it hugs the avatar instead
    of dwarfing it. -8px gave a ~18% halo (way too big for the small
    72 px settings av); -4px keeps Discord-tier proportions. */

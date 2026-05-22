@@ -9383,9 +9383,11 @@ select:focus-visible {
   z-index:4000;
   animation:fppPopIn .2s cubic-bezier(.22,1,.36,1);
 }
-/* mini banner inherits the 680:235 aspect from .fpp__banner */
-.fpp--mini .fpp__av{ width:88px; height:88px; border-width:5px; }
-.fpp--mini .fpp__av-row{ margin-top:-48px; }
+/* Matches the settings preview proportions: 80px avatar / -44 margin
+   so 55% sits on the banner and 45% hangs below. Border 4 + status
+   dot at the 2/3-inside ratio carry through the base .fpp__av rules. */
+.fpp--mini .fpp__av{ width:80px; height:80px; border-width:4px; }
+.fpp--mini .fpp__av-row{ margin-top:-44px; }
 
 /* ── Userbar own-profile popover ──────────────────────────────────── */
 .fpp--own{
@@ -9394,9 +9396,8 @@ select:focus-visible {
   z-index:4000;
   animation:fppPopIn .2s cubic-bezier(.22,1,.36,1);
 }
-/* own banner inherits the 680:235 aspect from .fpp__banner */
-.fpp--own .fpp__av{ width:88px; height:88px; border-width:5px; }
-.fpp--own .fpp__av-row{ margin-top:-48px; }
+.fpp--own .fpp__av{ width:80px; height:80px; border-width:4px; }
+.fpp--own .fpp__av-row{ margin-top:-44px; }
 .fpp--own .fpp__actions{ padding-top:6px; padding-bottom:6px; }
 
 /* ── DM right sidebar column ──────────────────────────────────────── */
@@ -9406,17 +9407,28 @@ select:focus-visible {
   border-radius:0;
   border-left:1px solid var(--border);
   box-shadow:none;
+  /* Same accent wash + flat panel + dark overlay stack as the base
+     .fpp, just without the radial since the panel is much taller
+     than wide — a radial originating from 18% top would look
+     awkwardly cropped against this aspect ratio. */
   background:
-    radial-gradient(620px 110px at 16% 0%, rgba(var(--fpp-accent-rgb),.05), transparent 70%),
-    linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,.18)),
+    linear-gradient(rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)),
+    linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)),
     var(--panel);
   overflow-y:auto;
   height:100%;
   display:flex; flex-direction:column;
 }
-/* dm banner inherits the 680:235 aspect from .fpp__banner */
+/* DM panel is narrower than the popovers (~280px column), so the
+   avatar scales down a touch to keep the same visual weight. */
+.fpp--dm .fpp__av{ width:72px; height:72px; border-width:4px; }
+.fpp--dm .fpp__av-row{ margin-top:-40px; }
 .fpp--dm > *:last-child{ margin-bottom:0; }
 .fpp--dm .fpp__msg-input{ margin-top:auto; }
+/* DM panel is a sidebar column, not a freestanding card — a Main-
+   coloured halo extending past the viewport edge would look wrong.
+   The accent tint + top stripe already carry the theme. */
+.fpp--dm.fpp--stroked{ box-shadow:none; }
 
 /* ── Settings preview stack (three small stacked previews) ────────── */
 .fpp-settings-stack{
@@ -9612,6 +9624,12 @@ select:focus-visible {
    PROFILE CARD MODAL (largest variant, 2-panel like Discord)
    ══════════════════════════════════════════════════════════════════ */
 .fpp-card-modal{
+  /* CSS-var defaults mirror .fpp so _fppApplyTheme can target the
+     modal root the same way it does the popovers. */
+  --fpp-main:#fff93e;
+  --fpp-main-rgb:255,249,62;
+  --fpp-accent:#fff93e;
+  --fpp-accent-rgb:255,249,62;
   display:grid;
   grid-template-columns:340px 1fr;
   width:970px; max-width:94vw;
@@ -9619,18 +9637,34 @@ select:focus-visible {
   border-radius:20px;
   overflow:hidden;
   position:relative;
+  /* Same accent wash + flat-tint + dark-overlay stack as .fpp,
+     scaled up for the modal's larger surface. Keeps the modal in
+     family with the popovers instead of feeling like a separate
+     visual system. */
   background:
-    radial-gradient(800px 140px at 18% 0%, rgba(255,249,62,.05), transparent 70%),
-    linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,.22)),
+    radial-gradient(800px 240px at 18% 0%, rgba(var(--fpp-accent-rgb),.06), transparent 70%),
+    linear-gradient(rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)),
+    linear-gradient(rgba(0,0,0,.22), rgba(0,0,0,.22)),
     var(--panel);
   border:1px solid var(--border);
   box-shadow:0 40px 100px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.04);
 }
+/* Top stripe themed through the Main CSS var (was hardcoded yellow). */
 .fpp-card-modal::before{
   content:""; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
-  box-shadow:0 0 18px rgba(255,249,62,.4);
+  background:linear-gradient(90deg, transparent 0%, rgba(var(--fpp-main-rgb),.25) 12%, var(--fpp-main) 50%, rgba(var(--fpp-main-rgb),.25) 88%, transparent 100%);
+  box-shadow:0 0 18px rgba(var(--fpp-main-rgb),.4);
   pointer-events:none; z-index:5;
+}
+/* Radiance stroke for the modal — same treatment as .fpp--stroked
+   on the smaller surfaces, sized up a notch to match the modal's
+   border radius / chrome. */
+.fpp-card-modal.fpp--stroked{
+  box-shadow:
+    0 0 0 2px var(--fpp-main),
+    0 0 0 7px rgba(var(--fpp-main-rgb),.18),
+    0 40px 100px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(255,255,255,.04);
 }
 .fpp-card-modal__left{
   background:rgba(0,0,0,.16);
@@ -9641,9 +9675,11 @@ select:focus-visible {
 }
 .fpp-card-modal__left::-webkit-scrollbar{ width:4px; }
 .fpp-card-modal__left::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.08); border-radius:4px; }
-/* card-modal left banner inherits the 680:235 aspect from .fpp__banner */
-.fpp-card-modal__left .fpp__av{ width:112px; height:112px; border-width:6px; }
-.fpp-card-modal__left .fpp__av-row{ margin-top:-62px; }
+/* Avatar slightly bigger than the popover/settings preview (the
+   modal's left column is 340px and the chrome is sparser, so we
+   give the pfp more presence). Keeps the 55/45 banner/body split. */
+.fpp-card-modal__left .fpp__av{ width:96px; height:96px; border-width:5px; }
+.fpp-card-modal__left .fpp__av-row{ margin-top:-53px; }
 .fpp-card-modal__right{
   display:flex; flex-direction:column; overflow:hidden;
 }

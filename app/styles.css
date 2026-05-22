@@ -8975,12 +8975,12 @@ select:focus-visible {
   pointer-events:none; z-index:2;
 }
 .fpp__status-dot{
-  /* Sits at the avatar's bottom-right corner — roughly half inside,
-     half outside the avatar disc. Previously at +4/+4 it sat too
-     far INTO the pfp; flush at 0/0 gives the Discord-correct ratio
-     where the dot kisses the avatar edge without eating into the
-     face. */
-  position:absolute; bottom:0; right:0;
+  /* Sits at the avatar's bottom-right corner — ~45% inside the
+     avatar disc, 55% outside. Previously at 0/0 it ended up too
+     deep inside the face because a circular avatar curves away
+     from its bounding-box corner; pushing -4/-4 places the dot's
+     centre right at the avatar edge so the colour stays readable. */
+  position:absolute; bottom:-4px; right:-4px;
   width:26px; height:26px; z-index:3;
   border-radius:50%;
   background:
@@ -9039,8 +9039,10 @@ select:focus-visible {
   width:11px; height:11px;
 }
 .fpp__cs-bubble::after{
-  /* Smaller floater bridging the anchor and the avatar */
-  top:-16px; left:-2px;
+  /* Smaller floater bridging the anchor and the avatar — sits just
+     above the bigger ::before anchor so the trail feels tight and
+     deliberate (a wider gap read as two unrelated decorations). */
+  top:-12px; left:-2px;
   width:6px; height:6px;
 }
 /* Hover: no transparency. Lift the bubble a hair, brighten the
@@ -9430,8 +9432,8 @@ select:focus-visible {
   opacity:0; animation:fppFadeIn .15s forwards;
 }
 @keyframes fppFadeIn{ to{ opacity:1; } }
-.fpp--settings .fpp__av{ width:72px; height:72px; border-width:4px; cursor:pointer; }
-.fpp--settings .fpp__av-row{ margin-top:-40px; }
+.fpp--settings .fpp__av{ width:80px; height:80px; border-width:4px; cursor:pointer; }
+.fpp--settings .fpp__av-row{ margin-top:-44px; }
 /* Settings preview: tighter decoration so it hugs the avatar instead
    of dwarfing it. -8px gave a ~18% halo (way too big for the small
    72 px settings av); -4px keeps Discord-tier proportions. */

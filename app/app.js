@@ -10782,6 +10782,97 @@ function initFortizedUXResilience() {
             }
           });
         }
+
+        // ── REAL-TIME COSMETIC SYNC for OPEN .fpp surfaces ──
+        // When pronouns / bio / banner / theme / decoration / badges
+        // change on a user we're currently rendering (mini popover,
+        // own popover, DM panel, profile card modal), patch the
+        // visible elements in-place so the change shows immediately,
+        // exactly like Discord. Previously these fields only
+        // updated after the surface re-rendered organically, which
+        // is why people couldn't see each other's pronouns etc.
+        try {
+          // Build a candidate user object that downstream renderers
+          // can use to refresh themed pieces (theme resolver expects
+          // a user object with banner / profileTheme).
+          const _u = {
+            username: data.username,
+            displayName: data.displayName || data.username,
+            pronouns: data.pronouns,
+            bio: data.bio,
+            banner: data.banner,
+            profileTheme: data.profileTheme,
+            activeDecoration: data.activeDecoration,
+            badges: data.badges,
+            // Resolver needs to know if the user has Radiance to
+            // honour their banner image / gradient. Best-effort:
+            // probe the cached user we just patched.
+            radianceUntil: undefined,
+            radiancePlus: undefined,
+          };
+          // .fpp surfaces tag themselves with data-fpp-user so we
+          // can target a specific user's cards without traversing
+          // the whole DOM by class.
+          const fppCards = document.querySelectorAll('.fpp[data-fpp-user="'+data.username+'"], .fpp-card-modal[data-fpp-user="'+data.username+'"]');
+          fppCards.forEach(card => {
+            // Pronouns: update text + visibility of the pronoun span.
+            const handleRow = card.querySelector('.fpp__handle-row');
+            if (handleRow && data.pronouns !== undefined) {
+              const existingPron = handleRow.querySelector('.fpp__pronouns');
+              const existingSep = handleRow.querySelector('.fpp__handle-sep');
+              if (data.pronouns) {
+                if (existingPron) existingPron.textContent = data.pronouns;
+                else {
+                  handleRow.insertAdjacentHTML('beforeend',
+                    '<span class="fpp__handle-sep">·</span>' +
+                    '<span class="fpp__pronouns" data-tip="Pronouns" data-tip-above>'+escapeHTML(data.pronouns)+'</span>');
+                }
+              } else {
+                existingPron?.remove();
+                existingSep?.remove();
+              }
+            }
+            // Bio (inline + framed): update or add.
+            if (data.bio !== undefined) {
+              const inlineBio = card.querySelector('.fpp__inline-bio');
+              if (inlineBio) {
+                if (data.bio) inlineBio.innerHTML = parseBioMD(data.bio.slice(0, 500)) + (data.bio.length > 500 ? '…' : '');
+                else inlineBio.remove();
+              }
+            }
+            // Banner: re-render via the resolver (handles image vs colour).
+            const bannerEl = card.querySelector('.fpp__banner');
+            if (bannerEl && (data.banner !== undefined || data.profileTheme !== undefined)) {
+              try { bannerEl.innerHTML = _fppBannerHTML(_u, _hasRadiance(_u)); } catch {}
+            }
+            // Theme: re-apply CSS vars + Radiance stroke.
+            if (data.profileTheme !== undefined) {
+              try { _fppApplyTheme(card, _u); } catch {}
+            }
+            // Decoration: swap or remove the .fpp__decoration img.
+            if (data.activeDecoration !== undefined) {
+              const wraps = card.querySelectorAll('.fpp__av-wrap');
+              const src = data.activeDecoration ? (typeof getDecorationSrc === 'function' ? (getDecorationSrc(data.activeDecoration) || '') : '') : '';
+              wraps.forEach(wrap => {
+                wrap.querySelectorAll('.fpp__decoration').forEach(el => el.remove());
+                if (src) {
+                  const img = document.createElement('img');
+                  img.src = src;
+                  img.className = 'fpp__decoration';
+                  img.alt = '';
+                  img.onerror = () => { img.style.display = 'none'; };
+                  const dot = wrap.querySelector('.fpp__status-dot');
+                  if (dot) wrap.insertBefore(img, dot); else wrap.appendChild(img);
+                }
+              });
+            }
+            // Badges: regenerate the framed badges card if visible.
+            if (data.badges !== undefined && typeof renderBadgesHTML === 'function') {
+              const badgesBody = card.querySelector('.fpp-card--badges .fpp-card__body');
+              if (badgesBody) badgesBody.innerHTML = renderBadgesHTML({ username: data.username, badges: data.badges });
+            }
+          });
+        } catch (e) { _dbg('[Profile] real-time fpp patch failed:', e?.message); }
       },
       onBastionUpdate: function(data) {
         if (!CU?.bastions || !data?.bastionId) return;
@@ -19146,7 +19237,7 @@ async function _viewUserProfile(username) {
       <div class="pbo-sub">Their profile is hidden</div>
       <button class="pbo-reveal" onclick="document.getElementById('profile-blocked-overlay').style.display='none'">Show Profile</button>
     </div>` : ''}
-    <div class="fpp-card-modal">
+    <div class="fpp-card-modal" data-fpp-user="${escapeHTML(u.username)}">
       <!-- LEFT PANEL: identity + bio + member since + connections + actions -->
       <div class="fpp-card-modal__left">
         <div class="fpp__banner">${_fppBannerHTML(u, hasUserRadiance)}</div>
@@ -29912,6 +30003,7 @@ async function showDMUserPanel(username) {
   if (!panel) return;
   panel.style.display = 'block';
   panel.className = 'fpp fpp--dm';
+  panel.setAttribute('data-fpp-user', username);
   panel.innerHTML = '<div style="padding:24px;color:var(--muted-light);font-size:13px;text-align:center;">Loading\u2026</div>';
   subscribeProfileStatus(username);
 
@@ -37876,6 +37968,12 @@ async function equipDecoration(decoId) {
   // Fire-and-forget the full CU save so other fields stay in sync,
   // but don't await it — we already persisted what we needed.
   try { saveUser(true).catch(()=>{}); } catch {}
+  // Broadcast to other clients so they update their cached view of
+  // CU's avatar (decoration overlay) in real time.
+  try {
+    const s = FortizedSocial.getSocket();
+    if (s) s.emit('profile:update', { username: CU.username, activeDecoration: newVal, field: 'activeDecoration' });
+  } catch {}
   toast(
     saveOk ? (decoId ? 'Decoration equipped!' : 'Decoration removed') : 'Decoration save failed — try again',
     saveOk ? 'success' : 'error'
@@ -40661,6 +40759,30 @@ async function saveAllSettings() {
     }
   });
   await saveUser();
+  // Broadcast all editable cosmetic + identity fields so other
+  // clients see the changes in real time without waiting for a
+  // page reload. Previously saveAllSettings was silent over the
+  // socket, which is why pronouns/bio/theme/decoration changes
+  // never propagated to friends + memberlist.
+  try {
+    const s = FortizedSocial.getSocket();
+    if (s) s.emit('profile:update', {
+      username: CU.username,
+      displayName: CU.displayName,
+      pronouns: CU.pronouns || '',
+      bio: CU.bio || '',
+      pfp: CU.pfp,
+      pfpCrop: CU.pfpCrop || null,
+      banner: CU.banner || '',
+      profileTheme: CU.profileTheme || null,
+      activeDecoration: CU.activeDecoration || null,
+      displayFont: CU.displayFont || 'default',
+      displayEffect: CU.displayEffect || 'solid',
+      displayColor: CU.displayColor || '#fff',
+      socials: CU.socials || {},
+      field: 'settings'
+    });
+  } catch (e) { _dbg('[Profile] broadcast failed:', e?.message); }
   updateUserbar();
   applyRadianceFont();
   // Update snapshot so future edits compare against saved state
@@ -41433,6 +41555,7 @@ async function showMiniProfilePreview(username, anchorEl) {
   const panel = document.createElement('div');
   panel.id = 'fpp-mini';
   panel.className = 'fpp fpp--mini';
+  panel.setAttribute('data-fpp-user', u.username);
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-label', 'Profile preview for ' + (u.displayName || u.username));
   panel.innerHTML = `
@@ -41513,6 +41636,7 @@ function _renderOwnProfilePopover(anchorEl) {
   const panel = document.createElement('div');
   panel.id = 'fpp-own';
   panel.className = 'fpp fpp--own';
+  panel.setAttribute('data-fpp-user', u.username);
   panel.innerHTML = `
     <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
     <div class="fpp__av-row">

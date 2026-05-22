@@ -8868,7 +8868,11 @@ select:focus-visible {
        and always opaque so it reads against any banner content)
      · a Main-tinted glow further out for the "halo" effect
      · the normal drop shadow for elevation
-   The base .fpp border is kept dark for the inner edge contrast. */
+   The base .fpp border is kept dark for the inner edge contrast.
+   (Currently inert — _fppApplyTheme stopped adding this class
+   because the stroke was visually loud. Left in place so we can
+   bring it back as an opt-in Radiance setting later without
+   re-writing the CSS.) */
 .fpp.fpp--stroked{
   box-shadow:
     0 0 0 2px var(--fpp-main),
@@ -9212,8 +9216,14 @@ select:focus-visible {
 .fpp-row__icon{
   display:inline-flex; align-items:center; justify-content:center;
   flex-shrink:0;
+  /* Fixed 18×18 footprint so every row's icon column lines up
+     vertically — the status dot SVG and the people SVG have
+     different intrinsic sizes, so without this each row's label
+     starts at a slightly different x. */
+  width:18px; height:18px;
 }
 .fpp-row__icon svg{ display:block; }
+.fpp-row__icon svg:not([width]){ width:100%; height:100%; }
 .fpp-row__label{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .fpp-row__chevron{ color:var(--muted-light); flex-shrink:0; display:inline-flex; }
 
@@ -9662,16 +9672,10 @@ select:focus-visible {
   box-shadow:0 0 18px rgba(var(--fpp-main-rgb),.4);
   pointer-events:none; z-index:5;
 }
-/* Radiance stroke for the modal — same treatment as .fpp--stroked
-   on the smaller surfaces, sized up a notch to match the modal's
-   border radius / chrome. */
-.fpp-card-modal.fpp--stroked{
-  box-shadow:
-    0 0 0 2px var(--fpp-main),
-    0 0 0 7px rgba(var(--fpp-main-rgb),.18),
-    0 40px 100px rgba(0,0,0,.7),
-    inset 0 1px 0 rgba(255,255,255,.04);
-}
+/* (Radiance stroke removed across all .fpp surfaces — the yellow
+   halo was visually loud and clashed with arbitrary Main colours.
+   The accent wash + top stripe + Message-button colour carry the
+   theme on their own.) */
 .fpp-card-modal__left{
   background:rgba(0,0,0,.16);
   border-right:1px solid var(--border);

@@ -38398,39 +38398,37 @@ function addAnotherAccount() {
 
 function showAddAccountModal() {
   document.getElementById('add-acct-modal')?.remove();
+  // Re-uses the .ftz-onboarding-* card system so the look matches
+  // the "Personalize Your Experience" sheet — same backdrop blur,
+  // same accent bar, same display-font title, same button stack.
   const overlay = document.createElement('div');
   overlay.id = 'add-acct-modal';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.92);backdrop-filter:blur(18px);z-index:9800;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.className = 'ftz-onboarding-overlay';
   overlay.innerHTML = `
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:24px;max-width:400px;width:100%;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.8);">
-      <div style="height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);"></div>
-      <div style="padding:28px 28px 20px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-          <div style="width:46px;height:46px;border-radius:14px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:22px;">👤</div>
-          <div>
-            <div style="font-family:var(--font-display);font-size:18px;font-weight:800;">Add Account</div>
-            <div style="font-size:12px;color:var(--muted);">Sign in with another Fortized account</div>
-          </div>
-        </div>
-        <div style="margin-bottom:12px;">
-          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:6px;">Username or email</label>
+    <div class="ftz-onboarding-card" style="max-width:420px;">
+      <div class="ftz-onboarding-bar"></div>
+      <div class="ftz-onboarding-body">
+        <div class="ftz-onboarding-eyebrow">ACCOUNT</div>
+        <div class="ftz-onboarding-title">Add Account</div>
+        <div class="ftz-onboarding-sub">Signing in to another account will let you switch easily between accounts on this device.</div>
+        <div style="margin-top:18px;">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:6px;">Username or Email <span style="color:#f87171;">*</span></label>
           <input id="add-acct-user" class="field-input" placeholder="username or email" style="width:100%;" autocomplete="username">
         </div>
-        <div style="margin-bottom:20px;">
-          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:6px;">Password</label>
-          <input id="add-acct-pass" type="password" class="field-input" placeholder="Enter password…" style="width:100%;" autocomplete="current-password">
+        <div style="margin-top:14px;">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:6px;">Password <span style="color:#f87171;">*</span></label>
+          <input id="add-acct-pass" type="password" class="field-input" placeholder="Enter password" style="width:100%;" autocomplete="current-password">
+          <a href="#" onclick="event.preventDefault();toast('Use the main login page to recover your password.','info');" style="display:inline-block;margin-top:6px;font-size:12px;color:var(--fpp-main, var(--accent));text-decoration:none;">Forgot your password?</a>
         </div>
-        <div id="add-acct-err" style="font-size:12.5px;color:var(--red);margin-bottom:10px;display:none;border-radius:9px;padding:8px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);"></div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-a" id="add-acct-btn" style="flex:1;" onclick="submitAddAccount()">Sign In & Switch</button>
-          <button class="btn-g" style="padding:10px 18px;" onclick="document.getElementById('add-acct-modal').remove()">Cancel</button>
+        <div id="add-acct-err" style="font-size:12.5px;color:var(--red);margin-top:14px;display:none;border-radius:9px;padding:9px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);"></div>
+        <div class="ftz-onboarding-btns">
+          <button class="ftz-ob-btn ftz-ob-skip" onclick="document.getElementById('add-acct-modal').remove()">Back</button>
+          <button class="ftz-ob-btn ftz-ob-next" id="add-acct-btn" onclick="submitAddAccount()">Continue</button>
         </div>
-      </div>
-      <div style="padding:12px 28px;border-top:1px solid var(--border);background:rgba(0,0,0,.15);">
-        <div style="font-size:11.5px;color:var(--muted);text-align:center;">Signed in as <strong style="color:var(--accent);">@${escapeHTML(CU?.username||'')}</strong></div>
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('visible')));
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   setTimeout(() => document.getElementById('add-acct-user')?.focus(), 60);
   document.getElementById('add-acct-pass')?.addEventListener('keydown', e => { if(e.key==='Enter') submitAddAccount(); });
@@ -41268,10 +41266,12 @@ function _fppApplyTheme(el, u) {
     el.style.setProperty('--fpp-accent', th.accent);
     el.style.setProperty('--fpp-accent-rgb', `${accRgb.r},${accRgb.g},${accRgb.b}`);
   }
-  // Radiance-exclusive: a Main-coloured stroke around the card.
-  // Toggled via class so it costs nothing for free users.
-  if (th.hasRadiance) el.classList.add('fpp--stroked');
-  else el.classList.remove('fpp--stroked');
+  // Radiance stroke removed — the yellow halo around the card was
+  // visually loud and clashed with whatever Main colour the user
+  // picked. The card already reads as themed via the top stripe,
+  // accent wash, and Message-button colour; the outer ring was
+  // overkill.
+  el.classList.remove('fpp--stroked');
 }
 
 function _fppFormatDate(ts) {

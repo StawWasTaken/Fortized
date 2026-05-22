@@ -8975,12 +8975,12 @@ select:focus-visible {
   pointer-events:none; z-index:2;
 }
 .fpp__status-dot{
-  /* Sits at the avatar's bottom-right corner — ~45% inside the
-     avatar disc, 55% outside. Previously at 0/0 it ended up too
-     deep inside the face because a circular avatar curves away
-     from its bounding-box corner; pushing -4/-4 places the dot's
-     centre right at the avatar edge so the colour stays readable. */
-  position:absolute; bottom:-4px; right:-4px;
+  /* ~2/3 inside the avatar, 1/3 outside. A circular avatar curves
+     away from its bounding-box corner, so a positive 2px offset
+     brings the dot's centre to ~36 px from the avatar's centre —
+     just inside the 40 px radius — for the deeper inset Discord
+     uses (most of the dot reads as overlapping the pfp). */
+  position:absolute; bottom:2px; right:2px;
   width:26px; height:26px; z-index:3;
   border-radius:50%;
   background:
@@ -9033,17 +9033,27 @@ select:focus-visible {
   border-radius:50%;
   pointer-events:none;
 }
+/* Bigger anchor — sits MERGED into the bubble's top-left like
+   two soap bubbles touching. Implementation: a full circle whose
+   bottom half is clipped off + a 1 px overlap into the bubble's
+   border. The clip eats the lower arc that would otherwise draw
+   inside the bubble (the "line cutting the dot off from the
+   capsule" the user reported), while the 1 px overlap lets the
+   anchor's bg cover the bubble's top border at the meeting point.
+   The bubble's outer outline and the anchor's outer arc form one
+   continuous silhouette. */
 .fpp__cs-bubble::before{
-  /* Bigger anchor dot sticking out of bubble's top-left corner */
-  top:-6px; left:6px;
-  width:11px; height:11px;
+  top:-7px; left:8px;
+  width:14px; height:14px;
+  clip-path:inset(0 0 calc(50% - 1px) 0);
+  z-index:1;
 }
 .fpp__cs-bubble::after{
-  /* Smaller floater bridging the anchor and the avatar — sits just
-     above the bigger ::before anchor so the trail feels tight and
-     deliberate (a wider gap read as two unrelated decorations). */
-  top:-12px; left:-2px;
-  width:6px; height:6px;
+  /* Smaller floater bridging the anchor and the avatar's right
+     edge. Lower, further left, slightly bigger than before so it
+     reads as a clear intermediate dot rather than a stray speck. */
+  top:-12px; left:-4px;
+  width:8px; height:8px;
 }
 /* Hover: no transparency. Lift the bubble a hair, brighten the
    panel, intensify the border so it reads as interactive without

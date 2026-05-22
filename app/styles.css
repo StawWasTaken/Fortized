@@ -8933,11 +8933,16 @@ select:focus-visible {
 }
 
 /* ── Avatar row (avatar + custom-status bubble) ───────────────────── */
+/* align-items: center so the speech bubble centers vertically on the
+   avatar's middle (Discord pattern — the bubble reads as the avatar
+   speaking, not the username talking).
+   margin-top: -53px = 55% of the 96 px avatar overlapping into the
+   banner, 45% hanging below into the card body. */
 .fpp__av-row{
   position:relative; z-index:2;
-  display:flex; align-items:flex-end; gap:10px;
+  display:flex; align-items:center; gap:12px;
   padding:0 18px;
-  margin-top:-36px;
+  margin-top:-53px;
 }
 .fpp__av-wrap{ position:relative; flex-shrink:0; }
 /* Avatar + status-dot rings use the SAME composite as the card body,
@@ -8947,7 +8952,7 @@ select:focus-visible {
    sits over the body half it disappears into the surface and the pfp
    reads as embedded in the card rather than stuck on top. */
 .fpp__av{
-  width:80px; height:80px; border-radius:50%;
+  width:96px; height:96px; border-radius:50%;
   border:5px solid transparent;
   background:
     linear-gradient(var(--panel), var(--panel)) padding-box,
@@ -8966,8 +8971,8 @@ select:focus-visible {
   pointer-events:none; z-index:2;
 }
 .fpp__status-dot{
-  position:absolute; bottom:2px; right:2px;
-  width:22px; height:22px; z-index:3;
+  position:absolute; bottom:4px; right:4px;
+  width:26px; height:26px; z-index:3;
   border-radius:50%;
   background:
     linear-gradient(rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)),
@@ -8982,11 +8987,10 @@ select:focus-visible {
    before (10px corners) so it reads as a bubble rather than a tag. */
 .fpp__cs-bubble{
   position:relative;
-  /* Sits low on the avatar row so the banner stays mostly
-     unobstructed — the trail dots (drawn below the bubble) extend
-     the silhouette downward toward the avatar without the bubble
-     itself cutting into the banner image. */
-  margin-bottom:8px;
+  /* Vertically centred on the avatar by .fpp__av-row's align-items:
+     center. Trail dots descend down-left from the bubble's bottom
+     edge toward the avatar's lower-right, so the bubble reads as
+     "spoken by the avatar" rather than the username. */
   display:inline-flex; align-items:center; gap:7px;
   max-width:180px;
   padding:6px 11px;
@@ -9352,8 +9356,8 @@ select:focus-visible {
   animation:fppPopIn .2s cubic-bezier(.22,1,.36,1);
 }
 /* mini banner inherits the 680:235 aspect from .fpp__banner */
-.fpp--mini .fpp__av{ width:72px; height:72px; border-width:4px; }
-.fpp--mini .fpp__av-row{ margin-top:-32px; }
+.fpp--mini .fpp__av{ width:88px; height:88px; border-width:5px; }
+.fpp--mini .fpp__av-row{ margin-top:-48px; }
 
 /* ── Userbar own-profile popover ──────────────────────────────────── */
 .fpp--own{
@@ -9363,8 +9367,8 @@ select:focus-visible {
   animation:fppPopIn .2s cubic-bezier(.22,1,.36,1);
 }
 /* own banner inherits the 680:235 aspect from .fpp__banner */
-.fpp--own .fpp__av{ width:72px; height:72px; border-width:4px; }
-.fpp--own .fpp__av-row{ margin-top:-32px; }
+.fpp--own .fpp__av{ width:88px; height:88px; border-width:5px; }
+.fpp--own .fpp__av-row{ margin-top:-48px; }
 .fpp--own .fpp__actions{ padding-top:6px; padding-bottom:6px; }
 
 /* ── DM right sidebar column ──────────────────────────────────────── */
@@ -9410,8 +9414,8 @@ select:focus-visible {
   opacity:0; animation:fppFadeIn .15s forwards;
 }
 @keyframes fppFadeIn{ to{ opacity:1; } }
-.fpp--settings .fpp__av{ width:72px; height:72px; border-width:4px; cursor:pointer; }
-.fpp--settings .fpp__av-row{ margin-top:-32px; }
+.fpp--settings .fpp__av{ width:96px; height:96px; border-width:5px; cursor:pointer; }
+.fpp--settings .fpp__av-row{ margin-top:-53px; }
 /* Settings preview: tighter decoration so it hugs the avatar instead
    of dwarfing it. -8px gave a ~18% halo (way too big for the small
    72 px settings av); -4px keeps Discord-tier proportions. */
@@ -9610,8 +9614,8 @@ select:focus-visible {
 .fpp-card-modal__left::-webkit-scrollbar{ width:4px; }
 .fpp-card-modal__left::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.08); border-radius:4px; }
 /* card-modal left banner inherits the 680:235 aspect from .fpp__banner */
-.fpp-card-modal__left .fpp__av{ width:92px; height:92px; border-width:5px; }
-.fpp-card-modal__left .fpp__av-row{ margin-top:-44px; }
+.fpp-card-modal__left .fpp__av{ width:112px; height:112px; border-width:6px; }
+.fpp-card-modal__left .fpp__av-row{ margin-top:-62px; }
 .fpp-card-modal__right{
   display:flex; flex-direction:column; overflow:hidden;
 }

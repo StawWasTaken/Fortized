@@ -1,7 +1,7 @@
 // Fortized Service Worker
 // Handles push notifications + ensures fresh HTML is always served
 
-const SW_VERSION = '2026fix20';
+const SW_VERSION = '2026fix21';
 const CACHE_NAME = 'ftz-shell-' + SW_VERSION;
 
 // ── Install: skip waiting + wipe ALL caches so a stale versioned asset
@@ -50,19 +50,25 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Versioned assets (?v=...): cache-first (they never change content for a given version)
+  // Versioned assets (?v=...): NETWORK-FIRST with no-store. Cache-first
+  // was returning stale bytes on soft refresh whenever an upstream CDN
+  // briefly served the old payload for a new ?v= URL — once that landed
+  // in the SW cache, every subsequent soft reload kept getting the stale
+  // copy until a hard refresh. With { cache: 'no-store' } the browser's
+  // HTTP cache is bypassed too, so we always go to origin. SW cache is
+  // still written on every successful fetch so offline reloads keep
+  // working, but it's only ever read as a network fallback.
   if (url.searchParams.has('v')) {
     event.respondWith(
-      caches.match(req).then(cached => {
-        if (cached) return cached;
-        return fetch(req).then(resp => {
-          if (resp.ok) {
+      fetch(req, { cache: 'no-store' })
+        .then(resp => {
+          if (resp && resp.ok) {
             const clone = resp.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
+            caches.open(CACHE_NAME).then(cache => cache.put(req, clone)).catch(() => {});
           }
           return resp;
-        });
-      })
+        })
+        .catch(() => caches.match(req).then(c => c || Response.error()))
     );
     return;
   }

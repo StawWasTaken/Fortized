@@ -5210,6 +5210,14 @@ function onChatInput(el, context, inputId) {
   // Persist draft text immediately.
   try {
     const text = (typeof el.value === 'string' ? el.value : (el.textContent || ''));
+    // contenteditable leaves a stray <br> behind when the user deletes
+    // every character, so :empty stops matching and the placeholder
+    // never comes back. Reset to a truly empty innerHTML in that case
+    // so the .chat-input-rich:empty::before placeholder rule fires.
+    if (el.classList && el.classList.contains('chat-input-rich') && !text.trim()) {
+      const inner = el.innerHTML.replace(/<br\s*\/?>/gi, '').trim();
+      if (!inner) el.innerHTML = '';
+    }
     const key = _draftKeyFor(context, inputId);
     const att = window._pendingAttachment || null;
     _saveDraft(key, { text: text, attachment: att });
@@ -30116,11 +30124,10 @@ async function showDMUserPanel(username) {
   const isOwn = username === CU?.username;
   const hasRadiance = _hasRadiance(u);
   const mutualFriends = isOwn ? [] : (CU?.friends || []).filter(f => f !== CU?.username && f !== username && (u.friends || []).includes(f));
-  const mutualsRow = mutualFriends.length
-    ? `<div class="fpp-row" onclick="_fppClose();viewUserProfile('${escapeHTML(username)}','mutuals')">
-         <span class="fpp-row__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-         <span class="fpp-row__label">Mutual Friends \u2014 ${mutualFriends.length}</span>
-         <span class="fpp-row__chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+  const mutualsChip = mutualFriends.length
+    ? `<div class="fpp__mutuals-chip" onclick="viewUserProfile('${escapeHTML(username)}','mutuals')">
+         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+         ${mutualFriends.length} Mutual Friend${mutualFriends.length === 1 ? '' : 's'}
        </div>`
     : '';
 
@@ -30131,16 +30138,12 @@ async function showDMUserPanel(username) {
       ${_fppCSBubbleHTML(u, isOwn)}
     </div>
     ${_fppIdentityHTML(u)}
-    ${_fppBioCardHTML(u, 200, `viewUserProfile('${escapeHTML(username)}')`)}
-    ${_fppMemberSinceCardHTML(u)}
+    ${mutualsChip}
+    ${_fppAboutCardHTML(u)}
     ${_fppBadgesCardHTML(u)}
     ${_fppGamesCardHTML(u)}
-    ${mutualsRow}
     <div style="flex:1;"></div>
-    ${!isOwn ? `<div class="fpp__msg-input" onclick="openDMView('${escapeHTML(username)}')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-      Message @${escapeHTML(u.displayName || u.username)}
-    </div>` : ''}`;
+    ${_fppActionRowHTML(username, isOwn)}`;
 
   _fppApplyTheme(panel, u);
   panel.querySelectorAll('[data-action="open-profile"]').forEach(el => {

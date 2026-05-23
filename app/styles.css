@@ -9397,15 +9397,16 @@ select:focus-visible {
 /* ── Mini popover (chat / memberlist) ─────────────────────────────── */
 .fpp--mini{
   position:fixed;
-  width:340px;
+  width:300px;
   z-index:4000;
   animation:fppPopIn .2s cubic-bezier(.22,1,.36,1);
 }
-/* Matches the settings preview proportions: 80px avatar / -44 margin
-   so 55% sits on the banner and 45% hangs below. Border 4 + status
-   dot at the 2/3-inside ratio carry through the base .fpp__av rules. */
-.fpp--mini .fpp__av{ width:80px; height:80px; border-width:4px; }
-.fpp--mini .fpp__av-row{ margin-top:-44px; }
+/* Mini matches the own popover at 300px — same proportions: 72px avatar
+   with -40 margin so 55% sits on the banner and 45% hangs into the
+   body. Border 4 + status dot offset carry through the base .fpp__av
+   rules. */
+.fpp--mini .fpp__av{ width:72px; height:72px; border-width:4px; }
+.fpp--mini .fpp__av-row{ margin-top:-40px; }
 
 /* ── Userbar own-profile popover ──────────────────────────────────── */
 .fpp--own{

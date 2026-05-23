@@ -41726,7 +41726,7 @@ async function showMiniProfilePreview(username, anchorEl) {
   panel.innerHTML = `
     <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
     <div class="fpp__av-row">
-      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 80)}</div>
+      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 72)}</div>
       ${_fppCSBubbleHTML(u, isOwn)}
     </div>
     ${_fppIdentityHTML(u)}
@@ -41734,11 +41734,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     ${_fppAboutCardHTML(u)}
     ${_fppBadgesCardHTML(u)}
     ${_fppGamesCardHTML(u)}
-    ${_fppActionRowHTML(username, isOwn)}
-    ${!isOwn ? `<div class="fpp__msg-input" onclick="_fppClose();openDMView('${escapeHTML(username)}')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-      Message @${escapeHTML(u.displayName || u.username)}
-    </div>` : ''}`;
+    ${_fppActionRowHTML(username, isOwn)}`;
 
   panel.querySelectorAll('[data-action="open-profile"]').forEach(el => {
     el.addEventListener('click', () => { _fppClose(); viewUserProfile(username); });

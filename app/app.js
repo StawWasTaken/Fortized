@@ -929,6 +929,38 @@ const REPORT_REASONS = ['Harassment','Hate Speech','NSFW / Explicit Content','Sp
 const AGE_TIERS = {CHILD:'child',TEEN:'teen',ADULT:'adult'};
 
 // ── Helpers ──────────────────────────────────────────────────
+// Dedicated banner storage (mirrors ftz_deco_<name> pattern). The
+// banner is the largest single field on a user row — when the main
+// ftz_user_<name> blob hits localStorage quota, _trimCUForStorage
+// drops banner first. That left a "set banner → refresh → old banner"
+// bug when the Supabase write also lagged or rejected the row. The
+// dedicated key is just the banner string + a timestamp — tiny, no
+// quota competition with the main blob. Boot/refresh reads this and
+// trusts it over the DB value for ~24h, long enough that the DB
+// write reliably catches up.
+function _persistBannerLocal(username, banner) {
+  if (!username) return;
+  try {
+    localStorage.setItem('ftz_banner_' + username, JSON.stringify({ val: banner || '', ts: Date.now() }));
+  } catch {}
+}
+function _readPersistedBannerLocal(username) {
+  if (!username) return null;
+  try {
+    const raw = localStorage.getItem('ftz_banner_' + username);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !('val' in parsed)) return null;
+    // 24h freshness window. Anything older is stale enough that the DB
+    // should be the authoritative source again.
+    if ((Date.now() - (parsed.ts || 0)) > 86400000) {
+      try { localStorage.removeItem('ftz_banner_' + username); } catch {}
+      return null;
+    }
+    return parsed;
+  } catch { return null; }
+}
+
 function _trimCUForStorage(cu) {
   const t = { ...cu };
   // Trim the LARGEST field first instead of dropping pfp + banner +
@@ -5210,13 +5242,16 @@ function onChatInput(el, context, inputId) {
   // Persist draft text immediately.
   try {
     const text = (typeof el.value === 'string' ? el.value : (el.textContent || ''));
-    // contenteditable leaves a stray <br> behind when the user deletes
-    // every character, so :empty stops matching and the placeholder
-    // never comes back. Reset to a truly empty innerHTML in that case
-    // so the .chat-input-rich:empty::before placeholder rule fires.
-    if (el.classList && el.classList.contains('chat-input-rich') && !text.trim()) {
-      const inner = el.innerHTML.replace(/<br\s*\/?>/gi, '').trim();
-      if (!inner) el.innerHTML = '';
+    // contenteditable inserts a stray <br> to seat the caret after the
+    // last character is deleted, which keeps :empty from matching and
+    // hides the placeholder forever. Strip ONLY <br> tags from the
+    // innerHTML — if anything else remains (a space, an emoji <img>,
+    // any real content), we leave it alone. This way the placeholder
+    // comes back when truly empty without swallowing whitespace or
+    // inline emoji as the user types.
+    if (el.classList && el.classList.contains('chat-input-rich')) {
+      const stripped = el.innerHTML.replace(/<br\s*\/?>/gi, '');
+      if (!stripped) el.innerHTML = '';
     }
     const key = _draftKeyFor(context, inputId);
     const att = window._pendingAttachment || null;
@@ -10054,6 +10089,17 @@ function initFortizedUXResilience() {
                   CU.activeDecoration = parsed.val;
                 }
               }
+            }
+          } catch {}
+          // Same dedicated-key pattern for banner. The main ftz_user blob
+          // drops banner first under quota pressure (see _trimCUForStorage),
+          // and Supabase row-size limits sometimes silently swallow large
+          // data-URL banners — without this guard the user would see their
+          // old banner come back on every refresh.
+          try {
+            const bannerEntry = _readPersistedBannerLocal(CU.username);
+            if (bannerEntry && CU.banner !== bannerEntry.val) {
+              CU.banner = bannerEntry.val;
             }
           } catch {}
           console.log('[DECO][boot] DB fetch returned activeDecoration =', JSON.stringify(CU.activeDecoration), '| localStorage ftz_user activeDecoration =', JSON.stringify(local?.activeDecoration), '| ftz_recent_edits activeDecoration =', recent.activeDecoration ? Math.round((_nowR - recent.activeDecoration)/1000)+'s ago' : 'none');
@@ -17443,7 +17489,7 @@ function _buildProfileView(tab) {
               <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)">
               <div style="display:flex;gap:8px;">
                 <button onclick="${hasRadiance?"_showBannerPickerMenu(event)":"toast('Custom banners require Radiance','error')"}" class="settings-save-btn">Change Banner</button>
-                ${hasRadiance && CU.banner ? '<button onclick="CU.banner=&#39;&#39;;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Banner</button>' : ''}
+                ${hasRadiance && CU.banner ? '<button onclick="CU.banner=&#39;&#39;;_persistBannerLocal(CU.username,&#39;&#39;);markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Banner</button>' : ''}
               </div>
             </div>
             ${sep}
@@ -18622,6 +18668,7 @@ async function _applyGifAvatar(url) {
       _syncSettingsInputsToCU();
       const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
       CU.banner = finalBanner;
+      _persistBannerLocal(CU.username, finalBanner);
       window._recentlyEditedFields = window._recentlyEditedFields || {};
       window._recentlyEditedFields.banner = Date.now();
       await saveUser(true);
@@ -18766,6 +18813,7 @@ async function updateBanner(e) {
       _syncSettingsInputsToCU();
       const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
       CU.banner = finalBanner;
+      _persistBannerLocal(CU.username, finalBanner);
       // Auto-sample a card accent from the new banner so the rest of
       // the profile card harmonises with the image. Best-effort —
       // failure is fine, the resolver falls back to the default.
@@ -18824,7 +18872,7 @@ function _showBannerPickerMenu(event) {
       <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:8px;">Current</div>
       <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.06);aspect-ratio:16/5;background:#0e1117;">
         <img src="${escapeHTML(CU.banner)}" style="width:100%;height:100%;object-fit:cover;display:block;">
-        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';saveUser();markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.35);color:#fca5a5;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
+        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';_persistBannerLocal(CU.username,'');saveUser();markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.35);color:#fca5a5;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
       </div>
     </div>` : ''}
     <div style="padding:12px 24px 16px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:rgba(255,255,255,.28);">Banners are cropped to 16:5. Upload up to 8 MB or pick an animated GIF.</div>
@@ -41572,17 +41620,26 @@ function _fppActionRowHTML(username, isOwn) {
   const isFriend = (CU?.friends || []).includes(username);
   const hasPendingOut = (CU?.friendRequestsSent || []).includes(username);
   const hasPendingIn = (CU?.friendRequestsReceived || []).includes(username);
+  // isFriend now uses UserCheck (person silhouette + small check beside
+  // it) so it's visually distinguishable from the bare checkmark used
+  // for "accept incoming request". Before, both states rendered the
+  // same checkmark glyph and you couldn't tell at a glance whether
+  // you were already friends or being asked to accept.
   const friendBtn = isFriend
-    ? `<button class="fpp__btn fpp__btn--square is-friend" data-tip="Friends — click to unfriend" onclick="_fppClose();removeFriend('${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>`
+    ? `<button class="fpp__btn fpp__btn--square is-friend" data-tip="Friends — click to unfriend" onclick="_fppClose();removeFriend('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></button>`
     : hasPendingOut
       ? `<button class="fpp__btn fpp__btn--square is-pending" data-tip="Friend request sent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>`
       : hasPendingIn
         ? `<button class="fpp__btn fpp__btn--square" data-tip="Accept friend request" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>`
         : `<button class="fpp__btn fpp__btn--square" data-tip="Add friend" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
+  // Primary action is "View Full Profile" (opens the Profile Card
+  // modal) — the wider full-card view is the natural deep link for
+  // anything this compact popover doesn't have room for. Message
+  // moves into the More menu below.
   return `<div class="fpp__actions">
-    <button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();openDMView('${escapeHTML(username)}')">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-      Message
+    <button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();viewUserProfile('${escapeHTML(username)}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2"/></svg>
+      View Full Profile
     </button>
     ${friendBtn}
     <button class="fpp__btn fpp__btn--square" data-tip="More" onclick="_fppShowMoreMenu(event,'${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
@@ -41597,53 +41654,77 @@ function _fppClose() {
   document.getElementById('fpp-accounts-submenu')?.remove();
 }
 
-// Discord-style ⋯ menu: Invite to Bastion ▶ / Ignore / Block / Report
+// Discord-style ⋯ menu: Message / Invite to Bastion ▶ / Ignore / Block / Report
 function _fppShowMoreMenu(evt, username) {
-  evt.stopPropagation();
-  document.getElementById('fpp-menu')?.remove();
-  const isBlocked = (CU?.blockedUsers || []).includes(username);
-  const isIgnored = (CU?.ignoredUsers || []).includes(username);
-  const myBastions = (CU?.bastions || []).filter(b => b && b.name);
-  const inviteItems = myBastions.length
-    ? `<div class="fpp-menu__item fpp-menu__item--has-sub" onmouseenter="_fppShowInviteSub(event,'${escapeHTML(username)}')">
-         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-         Invite to Bastion
-         <svg class="fpp-menu__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-       </div>
-       <div class="fpp-menu__divider"></div>`
-    : '';
-  const menuHTML = `
-    ${inviteItems}
-    <div class="fpp-menu__item" onclick="${isIgnored ? `unignoreUser('${escapeHTML(username)}')` : `showIgnorePicker('${escapeHTML(username)}')`};_fppClose()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
-      ${isIgnored ? 'Unignore' : 'Ignore'}
-    </div>
-    <div class="fpp-menu__item fpp-menu__item--danger" onclick="toggleBlockUser('${escapeHTML(username)}');_fppClose()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-      ${isBlocked ? 'Unblock' : 'Block'}
-    </div>
-    <div class="fpp-menu__item fpp-menu__item--danger" onclick="reportUser('${escapeHTML(username)}');_fppClose()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-      Report
-    </div>`;
-  const menu = document.createElement('div');
-  menu.id = 'fpp-menu';
-  menu.className = 'fpp-menu';
-  menu.innerHTML = menuHTML;
-  document.body.appendChild(menu);
-  const rect = evt.currentTarget.getBoundingClientRect();
-  let left = rect.right - menu.offsetWidth;
-  let top = rect.bottom + 6;
-  if (top + menu.offsetHeight > window.innerHeight - 8) top = rect.top - menu.offsetHeight - 6;
-  if (left < 8) left = 8;
-  menu.style.left = Math.max(8, left) + 'px';
-  menu.style.top = Math.max(8, top) + 'px';
-  setTimeout(() => {
+  try {
+    if (evt) { try { evt.stopPropagation(); } catch{} try { evt.preventDefault(); } catch{} }
+    document.getElementById('fpp-menu')?.remove();
+    // Resolve the anchor button defensively — the click can land on the
+    // inner SVG (event.target = svg) but we always want the button's
+    // bounding rect for positioning. Walk up from target, fall back to
+    // currentTarget, then to the original event target as a last resort.
+    const anchorBtn = (evt?.target && (evt.target.closest?.('button') || evt.target)) || evt?.currentTarget;
+    if (!anchorBtn || !anchorBtn.getBoundingClientRect) {
+      console.warn('[fpp] More menu: no anchor button found');
+      return;
+    }
+    const isBlocked = (CU?.blockedUsers || []).includes(username);
+    const isIgnored = (CU?.ignoredUsers || []).includes(username);
+    const myBastions = (CU?.bastions || []).filter(b => b && b.name);
+    const safeUser = escapeHTML(username);
+    const messageItem = `
+      <div class="fpp-menu__item" onclick="_fppClose();openDMView('${safeUser}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        Message
+      </div>
+      <div class="fpp-menu__divider"></div>`;
+    const inviteItems = myBastions.length
+      ? `<div class="fpp-menu__item fpp-menu__item--has-sub" onmouseenter="_fppShowInviteSub(event,'${safeUser}')">
+           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+           Invite to Bastion
+           <svg class="fpp-menu__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+         </div>
+         <div class="fpp-menu__divider"></div>`
+      : '';
+    const ignoreCall = isIgnored ? `unignoreUser('${safeUser}')` : `showIgnorePicker('${safeUser}')`;
+    const menuHTML = `
+      ${messageItem}
+      ${inviteItems}
+      <div class="fpp-menu__item" onclick="${ignoreCall};_fppClose()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+        ${isIgnored ? 'Unignore' : 'Ignore'}
+      </div>
+      <div class="fpp-menu__item fpp-menu__item--danger" onclick="toggleBlockUser('${safeUser}');_fppClose()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        ${isBlocked ? 'Unblock' : 'Block'}
+      </div>
+      <div class="fpp-menu__item fpp-menu__item--danger" onclick="reportUser('${safeUser}');_fppClose()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        Report
+      </div>`;
+    const menu = document.createElement('div');
+    menu.id = 'fpp-menu';
+    menu.className = 'fpp-menu';
+    menu.innerHTML = menuHTML;
+    document.body.appendChild(menu);
+    const rect = anchorBtn.getBoundingClientRect();
+    let left = rect.right - menu.offsetWidth;
+    let top = rect.bottom + 6;
+    if (top + menu.offsetHeight > window.innerHeight - 8) top = rect.top - menu.offsetHeight - 6;
+    if (left < 8) left = 8;
+    menu.style.left = Math.max(8, left) + 'px';
+    menu.style.top = Math.max(8, top) + 'px';
+    // Off-click closer. Attached with capture:true so it fires before
+    // any panel-level mousedown listener, which means a click outside
+    // the menu can dismiss the menu without racing the popover's own
+    // close logic.
     const offClick = (e) => {
-      if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', offClick); }
+      if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', offClick, true); }
     };
-    document.addEventListener('mousedown', offClick);
-  }, 50);
+    document.addEventListener('mousedown', offClick, true);
+  } catch (err) {
+    console.warn('[fpp] More menu failed:', err?.message || err);
+  }
 }
 
 function _fppShowInviteSub(evt, username) {

@@ -864,12 +864,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .chat-input-wrap{padding:0 12px 10px;flex-shrink:0;box-sizing:border-box;}
 /* Typing indicator — Discord-style: subtle bouncing dots + small text. */
 /* Typing indicator sits in the gap between the message stream and the
-   composer. Mask fades the indicator from solid at its bottom (touching
-   the textbox) to fully transparent at its top, so it reads as rising
-   out of the textbox instead of slamming into a solid stripe under it. */
+   composer. Background gradient fades from a subtle glass tint at the
+   bottom (textbox edge) to fully transparent at the top, so it reads
+   like the composer's surface drifts upward and dissolves instead of
+   slamming into a hard solid stripe between messages + textbox. */
 .typing-indicator{display:flex;align-items:center;gap:8px;padding:4px 20px 6px;min-height:20px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;
-  -webkit-mask-image:linear-gradient(to top, #000 0%, transparent 100%);
-          mask-image:linear-gradient(to top, #000 0%, transparent 100%);
+  background:linear-gradient(to top, rgba(19,22,29,.55), transparent);
 }
 .typing-indicator strong{color:#fff;font-weight:700;}
 .typing-dots{display:flex;gap:3px;align-items:center;}

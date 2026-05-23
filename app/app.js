@@ -10767,8 +10767,17 @@ function initFortizedUXResilience() {
           // DM friends home avatars
           const dmHomeAv = document.getElementById('dm-home-av-'+data.username);
           if (dmHomeAv) dmHomeAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 42, _upCrop);
-          // Message avatars in active chat (if visible)
-          document.querySelectorAll('.msg-av-inner[data-av-for="'+data.username+'"] img').forEach(img => { img.src = data.pfp; });
+          // DM home preview avatar (active row's hover-preview)
+          const dmHomePav = document.getElementById('dm-home-pav-'+data.username);
+          if (dmHomePav) dmHomePav.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 40, _upCrop);
+          // Message avatars in active chat — the old selector targeted a
+          // data-av-for attribute that no msg-row actually emits. Use the
+          // row's data-from instead and re-render the whole .msg-av-inner
+          // (so the crop-wrapped variant is rebuilt correctly when the new
+          // pfp uses a crop and the old one didn't, or vice versa).
+          document.querySelectorAll('.msg-row[data-from="'+data.username+'"] .msg-av-inner').forEach(inner => {
+            inner.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 38, _upCrop);
+          });
         }
 
         // ── UPDATE DISPLAY NAME EVERYWHERE ──
@@ -10818,6 +10827,8 @@ function initFortizedUXResilience() {
             displayName: data.displayName || data.username,
             pronouns: data.pronouns,
             bio: data.bio,
+            pfp: data.pfp,
+            pfpCrop: data.pfpCrop,
             banner: data.banner,
             profileTheme: data.profileTheme,
             activeDecoration: data.activeDecoration,
@@ -10862,6 +10873,18 @@ function initFortizedUXResilience() {
             const bannerEl = card.querySelector('.fpp__banner');
             if (bannerEl && (data.banner !== undefined || data.profileTheme !== undefined)) {
               try { bannerEl.innerHTML = _fppBannerHTML(_u, _hasRadiance(_u)); } catch {}
+            }
+            // Pfp: re-render every .fpp__av in this card. Use the actual
+            // rendered avatar size so the crop wrapper math stays correct
+            // across variants (mini 80, own/dm 72, profile-card 96).
+            if (data.pfp !== undefined) {
+              const _avCrop = data.pfpCrop !== undefined
+                ? data.pfpCrop
+                : (_pfpCropCache[data.username] || null);
+              card.querySelectorAll('.fpp__av').forEach(av => {
+                const _size = av.offsetWidth || 80;
+                av.innerHTML = buildAvatarHTML(data.pfp, _u.displayName, _size, _avCrop);
+              });
             }
             // Theme: re-apply CSS vars + Radiance stroke.
             if (data.profileTheme !== undefined) {
@@ -18335,6 +18358,10 @@ function _showAvatarPickerModal() {
 }
 
 async function _pickRecentAvatar(url) {
+  // Preserve any typed-but-unsaved fields (displayName, bio, etc.) by
+  // pulling them into CU before the save so the auto-save commits the
+  // user's draft rather than the stale pre-edit value.
+  _syncSettingsInputsToCU();
   CU.pfp = url;
   CU.pfpCrop = null;
   delete _pfpCropCache[CU.username];
@@ -18342,16 +18369,13 @@ async function _pickRecentAvatar(url) {
   window._recentlyEditedFields.pfp = Date.now();
   window._recentlyEditedFields.pfpCrop = Date.now();
   _saveRecentAvatar(url);
-  // Queue the change (Discord-style): local draft survives a refresh
-  // via saveLocal, but the Supabase row + socket broadcast wait for
-  // saveAllSettings (the Save Changes button) so the user can preview
-  // the avatar against the rest of their unsaved edits and confirm.
-  saveLocal();
+  await saveUser(true);
+  try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, pfp: url, pfpCrop: null, field: 'pfp' }); } catch (e) {}
   try { updateUserbar(); } catch(_){}
   try { buildProfileView('myprofile'); } catch(_){}
   document.querySelector('.ftz-confirm-overlay')?.remove();
-  markSettingsDirty();
-  toast('Avatar set — click Save Changes to keep', 'info');
+  _refreshSettingsBaseline();
+  toast('Avatar updated!', 'success');
 }
 
 function _removeRecentAvatar(url) {
@@ -18567,15 +18591,17 @@ async function _applyGifAvatar(url) {
 
   if (mode === 'banner') {
     showCropModal(gifData, 16/5, async (cropped) => {
+      _syncSettingsInputsToCU();
       const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
       CU.banner = finalBanner;
       window._recentlyEditedFields = window._recentlyEditedFields || {};
       window._recentlyEditedFields.banner = Date.now();
-      saveLocal();
+      await saveUser(true);
+      try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, banner: CU.banner, field: 'banner' }); } catch (e) {}
       try { updateUserbar(); } catch(_){}
       try { buildProfileView('myprofile'); } catch(_){}
-      markSettingsDirty();
-      toast('Banner set — click Save Changes to keep', 'info');
+      _refreshSettingsBaseline();
+      toast('Banner updated! ✓', 'success');
     });
     _cropData._isGif = true;
     _cropData._gifSrc = gifData;
@@ -18584,6 +18610,7 @@ async function _applyGifAvatar(url) {
 
   // Avatar GIF path — matches the file-upload GIF flow at updatePfp().
   showCropModal(gifData, 1, async (result) => {
+    _syncSettingsInputsToCU();
     if (result && typeof result === 'object' && result.gifData) {
       CU.pfp = result.gifData;
       CU.pfpCrop = result.crop;
@@ -18597,11 +18624,12 @@ async function _applyGifAvatar(url) {
     window._recentlyEditedFields.pfp = Date.now();
     window._recentlyEditedFields.pfpCrop = Date.now();
     _saveRecentAvatar(CU.pfp);
-    saveLocal();
+    await saveUser(true);
+    try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, pfp: CU.pfp, pfpCrop: CU.pfpCrop, field: 'pfp' }); } catch (e) {}
     try { updateUserbar(); } catch(_){}
     try { buildProfileView('myprofile'); } catch(_){}
-    markSettingsDirty();
-    toast('Animated avatar set — click Save Changes to keep', 'info');
+    _refreshSettingsBaseline();
+    toast('Animated avatar updated! ✓', 'success');
   });
   _cropData._isGif = true;
   _cropData._gifSrc = gifData;
@@ -18636,6 +18664,7 @@ async function updatePfp(e) {
     if (isGif) {
       // Show crop modal for GIF — applyCrop will return CSS crop params instead of canvas data
       showCropModal(fileData, 1, async (result) => {
+        _syncSettingsInputsToCU();
         CU.pfp = result.gifData;
         CU.pfpCrop = result.crop;
         _pfpCropCache[CU.username] = result.crop;
@@ -18653,11 +18682,12 @@ async function updatePfp(e) {
         window._recentlyEditedFields.pfp = Date.now();
         window._recentlyEditedFields.pfpCrop = Date.now();
         _saveRecentAvatar(result.gifData);
-        saveLocal();
+        await saveUser(true);
+        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: result.gifData, pfpCrop: result.crop, field: 'pfp' }); } catch(e){}
         updateUserbar();
         buildProfileView('myprofile');
-        markSettingsDirty();
-        toast('Animated avatar set — click Save Changes to keep', 'info');
+        _refreshSettingsBaseline();
+        toast('Animated avatar updated! ✓', 'success');
       });
       _cropData._isGif = true;
       _cropData._gifSrc = fileData;
@@ -18665,6 +18695,7 @@ async function updatePfp(e) {
       CU.pfpCrop = null;
       delete _pfpCropCache[CU.username];
       showCropModal(fileData, 1, async (cropped) => {
+        _syncSettingsInputsToCU();
         CU.pfp = cropped;
         try {
           const sampled = await _fppSampleImageColor(cropped);
@@ -18678,11 +18709,12 @@ async function updatePfp(e) {
         window._recentlyEditedFields.pfp = Date.now();
         window._recentlyEditedFields.pfpCrop = Date.now();
         _saveRecentAvatar(cropped);
-        saveLocal();
+        await saveUser(true);
+        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: cropped, pfpCrop: null, field: 'pfp' }); } catch(e){}
         updateUserbar();
         buildProfileView('myprofile');
-        markSettingsDirty();
-        toast('Avatar set — click Save Changes to keep', 'info');
+        _refreshSettingsBaseline();
+        toast('Avatar updated! ✓', 'success');
       });
     }
   };
@@ -18703,6 +18735,7 @@ async function updateBanner(e) {
   reader.onload = async ev => {
     const fileData = ev.target.result;
     showCropModal(fileData, 16/5, async (cropped) => {
+      _syncSettingsInputsToCU();
       const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
       CU.banner = finalBanner;
       // Auto-sample a card accent from the new banner so the rest of
@@ -18718,10 +18751,11 @@ async function updateBanner(e) {
       } catch {}
       window._recentlyEditedFields = window._recentlyEditedFields || {};
       window._recentlyEditedFields.banner = Date.now();
-      saveLocal();
+      await saveUser(true);
+      try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, banner: CU.banner, field: 'banner' }); } catch (e) {}
       buildProfileView('myprofile');
-      markSettingsDirty();
-      toast('Banner set — click Save Changes to keep', 'info');
+      _refreshSettingsBaseline();
+      toast('Banner updated! ✓', 'success');
     });
   };
   reader.readAsDataURL(file);
@@ -40616,6 +40650,29 @@ function _syncSettingsInputsToCU() {
     if (inp.value.trim()) CU.socials[key] = inp.value.trim();
     else delete CU.socials[key];
   });
+}
+
+// Reset the unsaved-changes baseline to the current CU state. Call
+// after a partial auto-save (pfp/banner upload) so the bar correctly
+// hides — without this, _settingsOriginal would still hold the
+// pre-upload pfp and markSettingsDirty would keep flagging the card
+// as dirty even though everything's persisted.
+function _refreshSettingsBaseline() {
+  if (!CU) return;
+  _settingsOriginal = structuredClone({
+    displayName: CU.displayName,
+    bio: CU.bio,
+    email: CU.email,
+    password: CU.password,
+    pfp: CU.pfp,
+    banner: CU.banner,
+    socials: CU.socials,
+    notifSettings: CU.notifSettings,
+    pronouns: CU.pronouns,
+    profileTheme: CU.profileTheme
+  });
+  _settingsDirty = false;
+  document.getElementById('unsaved-bar')?.classList.remove('show');
 }
 
 function markSettingsDirty() {

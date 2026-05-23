@@ -7458,7 +7458,7 @@ function appendMessage(container, msg, context, prevAuthor) {
       <div class="msg-content-col ${outlineWrap}">
         ${fwdHTML}${replyHTML}
         <div class="msg-header">
-          <span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;${roleColor?'color:'+roleColor+';':''}" data-author="${safeFrom}">${safeFrom}</span>
+          <span class="msg-author" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;${roleColor?'color:'+roleColor+';':''}" data-author="${safeFrom}">${safeFrom}</span>
           ${getMsgRoleTag(msg.from, context)}
           <span class="msg-timestamp" data-tip="${escapeHTML(fullTime)}">·  ${time}</span>
         </div>
@@ -7952,7 +7952,7 @@ async function _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _c
             const existingContent = col ? col.innerHTML : '';
             const avWrap = next.querySelector('.msg-av-wrap');
             if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
-            if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
+            if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
             FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}if(u?.activeDecoration){const el=document.getElementById(avId);if(el){el.style.position='relative';el.style.overflow='visible';el.insertAdjacentHTML('beforeend',buildDecorationOverlay(u.activeDecoration,'profile-decoration-overlay-sm'));}}}).catch(()=>{});
           }
         }
@@ -10867,6 +10867,26 @@ function initFortizedUXResilience() {
               if (inlineBio) {
                 if (data.bio) inlineBio.innerHTML = parseBioMD(data.bio.slice(0, 500)) + (data.bio.length > 500 ? '…' : '');
                 else inlineBio.remove();
+              }
+              // About card variant (mini popover / own popover): swap
+              // just the bio body so Member Since underneath stays put.
+              // First non-muted .fpp-card__body in .fpp-card--about is
+              // the bio; bio is cleared → strip title + body + sep too.
+              const aboutCard = card.querySelector('.fpp-card--about');
+              if (aboutCard) {
+                const aboutBody = aboutCard.querySelector('.fpp-card__body:not(.fpp-card__body--muted)');
+                if (data.bio) {
+                  if (aboutBody) aboutBody.innerHTML = parseBioMD(data.bio.slice(0, 300)) + (data.bio.length > 300 ? '…' : '');
+                  // If bio was absent originally there's nothing to swap; the
+                  // next organic re-render will pick it up.
+                } else if (aboutBody) {
+                  const aboutTitle = aboutBody.previousElementSibling;
+                  const sep = aboutCard.querySelector('.fpp-card__sep');
+                  aboutBody.remove();
+                  if (aboutTitle && aboutTitle.classList.contains('fpp-card__title') && aboutTitle.textContent === 'About Me') aboutTitle.remove();
+                  sep?.remove();
+                  if (!aboutCard.children.length) aboutCard.remove();
+                }
               }
             }
             // Banner: re-render via the resolver (handles image vs colour).
@@ -41494,6 +41514,25 @@ function _fppMemberSinceCardHTML(u) {
   return `<div class="fpp-card"><div class="fpp-card__title">Member Since</div><div class="fpp-card__body fpp-card__body--muted">${date}</div></div>`;
 }
 
+// Combined About Me + Member Since card used by every preview surface
+// that wants the own-popover / settings-preview look. Bio is capped at
+// 300 chars (matches own popover) so it never blows past the card
+// height on bigger surfaces. Both sections share one .fpp-card-- about
+// frame with a thin separator between them.
+function _fppAboutCardHTML(u) {
+  const memberSinceTxt = _fppFormatDate(u.joinedAt || u.createdAt);
+  const hasBio = !!u.bio;
+  if (!hasBio && !memberSinceTxt) return '';
+  const bioBlock = hasBio
+    ? `<div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(u.bio.slice(0, 300))}${u.bio.length > 300 ? '…' : ''}</div>`
+    : '';
+  const sep = (hasBio && memberSinceTxt) ? '<div class="fpp-card__sep"></div>' : '';
+  const memberBlock = memberSinceTxt
+    ? `<div class="fpp-card__title"${hasBio ? ' style="margin-top:10px;"' : ''}>Member Since</div><div class="fpp-card__body fpp-card__body--muted">${memberSinceTxt}</div>`
+    : '';
+  return `<div class="fpp-card fpp-card--about">${bioBlock}${sep}${memberBlock}</div>`;
+}
+
 function _fppGamesCardHTML(u) {
   const games = u.gameCollection || u.registeredGames || [];
   if (!games.length) return '';
@@ -41687,13 +41726,14 @@ async function showMiniProfilePreview(username, anchorEl) {
   panel.innerHTML = `
     <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
     <div class="fpp__av-row">
-      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 72)}</div>
+      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 80)}</div>
       ${_fppCSBubbleHTML(u, isOwn)}
     </div>
     ${_fppIdentityHTML(u)}
     ${mutualsChip}
-    ${_fppBioCardHTML(u, 180, `viewUserProfile('${escapeHTML(username)}')`)}
+    ${_fppAboutCardHTML(u)}
     ${_fppBadgesCardHTML(u)}
+    ${_fppGamesCardHTML(u)}
     ${_fppActionRowHTML(username, isOwn)}
     ${!isOwn ? `<div class="fpp__msg-input" onclick="_fppClose();openDMView('${escapeHTML(username)}')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
@@ -41756,8 +41796,6 @@ function _renderOwnProfilePopover(anchorEl) {
   const hasRadiance = _hasRadiance(u);
   const status = u.status || 'online';
   const statusLabel = FtzStatus.publicLabel(status);
-  const statusColor = FtzStatus.color(status);
-  const memberSinceTxt = _fppFormatDate(u.joinedAt || u.createdAt);
 
   const panel = document.createElement('div');
   panel.id = 'fpp-own';
@@ -41770,11 +41808,7 @@ function _renderOwnProfilePopover(anchorEl) {
       ${_fppCSBubbleHTML(u, true)}
     </div>
     ${_fppIdentityHTML(u)}
-    ${(u.bio || memberSinceTxt) ? `<div class="fpp-card fpp-card--about">
-      ${u.bio ? `<div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div>` : ''}
-      ${u.bio && memberSinceTxt ? '<div class="fpp-card__sep"></div>' : ''}
-      ${memberSinceTxt ? `<div class="fpp-card__title"${u.bio ? ' style="margin-top:10px;"' : ''}>Member Since</div><div class="fpp-card__body fpp-card__body--muted">${memberSinceTxt}</div>` : ''}
-    </div>` : ''}
+    ${_fppAboutCardHTML(u)}
     ${_fppBadgesCardHTML(u)}
     ${_fppGamesCardHTML(u)}
     <div class="fpp__actions">

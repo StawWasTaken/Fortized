@@ -864,12 +864,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .chat-input-wrap{padding:0 12px 10px;flex-shrink:0;box-sizing:border-box;}
 /* Typing indicator — Discord-style: subtle bouncing dots + small text. */
 /* Typing indicator sits in the gap between the message stream and the
-   composer. Background gradient fades from a subtle glass tint at the
-   bottom (textbox edge) to fully transparent at the top, so it reads
-   like the composer's surface drifts upward and dissolves instead of
-   slamming into a hard solid stripe between messages + textbox. */
-.typing-indicator{display:flex;align-items:center;gap:8px;padding:4px 20px 6px;min-height:20px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;
-  background:linear-gradient(to top, rgba(19,22,29,.55), transparent);
+   composer. Background gradient fades from the canvas color at the
+   bottom (textbox edge) to fully transparent at the top — Discord-
+   style soft transition so the last message dissolves into it rather
+   than slamming into a hard solid stripe. */
+.typing-indicator{display:flex;align-items:center;gap:8px;padding:6px 20px 6px;min-height:22px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;
+  background:linear-gradient(to top, var(--canvas-color, #13161d) 35%, transparent);
 }
 .typing-indicator strong{color:#fff;font-weight:700;}
 .typing-dots{display:flex;gap:3px;align-items:center;}
@@ -901,9 +901,13 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .ml-typing-bubble span:nth-child(2){animation-delay:.2s;}
 .ml-typing-bubble span:nth-child(3){animation-delay:.4s;}
 @keyframes typingBubbleIn{from{opacity:0;transform:scale(.6);}to{opacity:1;transform:scale(1);}}
-/* When typing, hide the underlying status dot so the bubble takes over. */
+/* When typing, hide the underlying status dot so the capsule takes over.
+   Covers all three surfaces that render typing capsules: bastion + GC
+   memberlist entries (ml-entry), announcement avatar rows (an-row),
+   and the DM left sidebar entries (friend-item.dm-sortable). */
 .ml-entry[data-typing="1"] .profile-status-dot{display:none;}
 .an-row[data-typing="1"] .profile-status-dot{display:none;}
+.friend-item.dm-sortable[data-typing="1"] .profile-status-dot{display:none;}
 /* Chat input redesign — inline layout */
 .chat-input-outer{background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border:1.5px solid var(--glass-border);border-radius:12px;overflow:visible;transition:border-color .18s, box-shadow .18s;display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(0,0,0,.2);position:relative;}
 .chat-input-outer:focus-within{border-color:rgba(255,255,255,.12);box-shadow:0 6px 24px rgba(0,0,0,.28);}
@@ -9324,9 +9328,17 @@ select:focus-visible {
   background:rgba(62,207,110,.06);
 }
 .fpp__btn--square.is-pending{
-  color:var(--muted);
+  color:var(--yellow);
+  border-color:rgba(245,158,11,.22);
+  background:rgba(245,158,11,.05);
   cursor:default;
 }
+.fpp__btn--square.is-incoming{
+  color:var(--green);
+  border-color:rgba(62,207,110,.3);
+  background:rgba(62,207,110,.10);
+}
+.fpp__btn--square.is-incoming:hover{ background:rgba(62,207,110,.16); }
 .fpp__btn--square svg{ display:block; }
 
 /* ── Dropdown menu (popped from ⋯) ─────────────────────────────────── */

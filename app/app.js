@@ -4580,6 +4580,10 @@ async function renderDMSidebar(scroll) {
   }
 
   scroll.innerHTML = html;
+  // Newly-rendered DM sidebar — re-apply typing capsules so anyone
+  // currently typing in a DM to me shows up immediately instead of
+  // waiting for the next typing broadcast tick.
+  try { _renderTypingBubbles(); } catch(_) {}
 
   // ── Async: fetch last message timestamps, PFPs, display names, status, then sort ─────────
   // Load all friends and GCs in parallel (no staggered delays)
@@ -5312,26 +5316,53 @@ function _activeTypingUsers() {
 // after re-renders of the member list.
 function _renderTypingBubbles() {
   const active = _activeTypingUsers();
-  const all = document.querySelectorAll('.ml-entry, .an-row, .gc-ml-av');
-  all.forEach(node => {
+  const meLow = String(CU?.username || '').toLowerCase();
+
+  // ── In-room surfaces: bastion ML, GC ML, announcement avatar row ──
+  document.querySelectorAll('.ml-entry, .an-row, .gc-ml-av').forEach(node => {
     const entry = node.classList.contains('ml-entry') || node.classList.contains('an-row') ? node : node.closest('.ml-entry, .an-row');
     const username = (entry?.dataset.member || entry?.dataset.username || '').toLowerCase();
     const wrap = node.classList.contains('gc-ml-av') ? node : node.querySelector('.gc-ml-av, .ml-av, .ml-av-wrap');
     if (!username || !wrap) return;
-    let bubble = wrap.querySelector('.ml-typing-bubble');
-    if (active.has(username)) {
-      if (!bubble) {
-        bubble = document.createElement('div');
-        bubble.className = 'ml-typing-bubble';
-        bubble.innerHTML = '<span></span><span></span><span></span>';
-        wrap.appendChild(bubble);
-      }
-      if (entry) entry.dataset.typing = '1';
-    } else {
-      if (bubble) bubble.remove();
-      if (entry?.dataset.typing) delete entry.dataset.typing;
-    }
+    _toggleTypingCapsule(wrap, entry, active.has(username), username);
   });
+
+  // ── DM left sidebar: capsule appears whenever the friend is typing
+  //    in their DM to me, regardless of what view I'm currently on.
+  document.querySelectorAll('.friend-item.dm-sortable').forEach(entry => {
+    const dmId = entry.dataset.dmId || '';
+    if (!dmId.startsWith('dm_')) return;
+    const friendLow = dmId.slice(3).toLowerCase();
+    const roomKey = 'dm:' + [meLow, friendLow].sort().join('__');
+    const typing = _typingByRoom.get(roomKey)?.has(friendLow) || false;
+    // Avatar wrapper is the first positioned div inside the friend-item.
+    const wrap = entry.querySelector('div[style*="position:relative"]') || entry.firstElementChild;
+    if (wrap) _toggleTypingCapsule(wrap, entry, typing, friendLow);
+  });
+}
+
+// Adds / removes a typing capsule over a user's avatar wrapper and
+// colors it to match their current presence status (green=online,
+// yellow=idle, red=dnd, grey=offline). Underlying status dot is hidden
+// via the [data-typing="1"] selector while the capsule is up.
+function _toggleTypingCapsule(wrap, entry, show, username) {
+  let bubble = wrap.querySelector('.ml-typing-bubble');
+  if (show) {
+    if (!bubble) {
+      bubble = document.createElement('div');
+      bubble.className = 'ml-typing-bubble';
+      bubble.innerHTML = '<span></span><span></span><span></span>';
+      wrap.appendChild(bubble);
+    }
+    const status = (typeof _liveStatusCache !== 'undefined' && _liveStatusCache[username])
+      || (typeof _liveStatusCache !== 'undefined' && _liveStatusCache[String(username).toLowerCase()])
+      || 'offline';
+    try { bubble.style.background = FtzStatus.color(status); } catch(_) {}
+    if (entry) entry.dataset.typing = '1';
+  } else {
+    if (bubble) bubble.remove();
+    if (entry?.dataset.typing) delete entry.dataset.typing;
+  }
 }
 
 // Belt-and-braces: bind a programmatic 'input' listener too. The inline
@@ -9029,10 +9060,19 @@ async function removeFriend(username){
   showCustomConfirm('Remove '+username+' from friends?', async()=>{
     try{
       await FortizedSocial.removeFriend(CU.username, username);
+      // Bilateral notify: the server-side removeFriend already updates
+      // both users' friends arrays in Supabase. This emit is what makes
+      // the other user's UI reflect that in real time instead of only
+      // on their next refresh.
+      try {
+        const s = FortizedSocial.getSocket();
+        if (s) s.emit('friend:removed', { from: CU.username, to: username });
+      } catch(_){}
       await refreshCU();
       toast('Removed '+username,'info');
       renderFriendsList();
       renderDMSidebar(document.getElementById('sidebar-scroll'));
+      try { _refreshFppFriendButton(username); } catch(_){}
     } catch(e){ console.error(e); toast('An error occurred. Please try again.','error'); }
   });
 }
@@ -19535,6 +19575,23 @@ async function quickAddFriend(username) {
     toast(r.msg,r.ok?'success':'error');
     if(r.ok){
       await refreshCU();
+      // Real-time fanout: tell the other client whether this was a
+      // brand-new request or an immediate accept (when there was already
+      // a pending request from them, sendFriendRequest auto-accepts).
+      const wasAccept = (CU?.friends || []).includes(username);
+      try {
+        const s = FortizedSocial.getSocket();
+        if (s) {
+          if (wasAccept) {
+            s.emit('friend:accepted', { from: username, to: CU.username });
+          } else {
+            s.emit('friend:request', { from: CU.username, to: username });
+          }
+        }
+      } catch(_){}
+      // Patch any open .fpp friend buttons for this user without a full
+      // re-render of the surrounding popover.
+      try { _refreshFppFriendButton(username); } catch(_){}
       // Friend add animations
       spawnHeartAnimation(window.innerWidth/2-20, window.innerHeight/2);
       setTimeout(()=>spawnHeartAnimation(window.innerWidth/2+30, window.innerHeight/2-30), 120);
@@ -30191,7 +30248,7 @@ async function showDMUserPanel(username) {
     ${_fppBadgesCardHTML(u)}
     ${_fppGamesCardHTML(u)}
     <div style="flex:1;"></div>
-    ${_fppActionRowHTML(username, isOwn)}`;
+    ${_fppActionRowHTML(username, isOwn, 'dm')}`;
 
   _fppApplyTheme(panel, u);
   panel.querySelectorAll('[data-action="open-profile"]').forEach(el => {
@@ -40135,15 +40192,22 @@ function initCrossDeviceSync() {
       playNotifSound('message');
       // Refresh CU + friends UI so the pending request appears without a reload
       try {
-        FortizedSocial.getUserByUsername(CU.username).then(u => {
+        FortizedSocial.getUserByName(CU.username, { noCache: true }).then(u => {
           if (u) {
             if (u.friendRequestsReceived) CU.friendRequestsReceived = u.friendRequestsReceived;
             if (u.friends) CU.friends = u.friends;
             try { saveLocal?.(); } catch(_){}
             try { renderFriendsList?.(); } catch(_){}
+            try { _refreshFppFriendButton(data.from); } catch(_){}
           }
         }).catch(()=>{});
       } catch(_){}
+    }
+    // Also patch any popover open for the sender on THIS device — covers
+    // the rare case where the sender opens a 2nd tab and we receive our
+    // own request echo while a popover is open.
+    if (data.from === CU.username) {
+      try { _refreshFppFriendButton(data.to); } catch(_){}
     }
   });
 
@@ -40151,10 +40215,36 @@ function initCrossDeviceSync() {
   socket.on('friend:accepted', (data) => {
     if (data.from === CU.username || data.to === CU.username) {
       // Refresh friend list
-      try { FortizedSocial.getUserByUsername(CU.username).then(user => {
-        if (user?.friends) { CU.friends = user.friends; saveLocal(); }
+      try { FortizedSocial.getUserByName(CU.username, { noCache: true }).then(user => {
+        if (user?.friends) {
+          CU.friends = user.friends;
+          CU.friendRequestsSent = user.friendRequestsSent || [];
+          CU.friendRequestsReceived = user.friendRequestsReceived || [];
+          saveLocal();
+          try { renderFriendsList?.(); } catch(_){}
+          try { renderDMSidebar?.(document.getElementById('sidebar-scroll')); } catch(_){}
+          // Patch the OTHER user's friend button on every open popover.
+          const other = data.from === CU.username ? data.to : data.from;
+          try { _refreshFppFriendButton(other); } catch(_){}
+        }
       }).catch(()=>{}); } catch(e) { _dbg('[Friend] refresh failed', e); }
     }
+  });
+
+  // 5b. Friend removed (bilateral — server already pruned both rows,
+  // this is just the real-time signal so the other user's UI updates
+  // without a page reload).
+  socket.on('friend:removed', (data) => {
+    if (!data || (data.from !== CU.username && data.to !== CU.username)) return;
+    const other = data.from === CU.username ? data.to : data.from;
+    if (!other) return;
+    CU.friends = (CU.friends || []).filter(u => u !== other);
+    CU.friendRequestsSent = (CU.friendRequestsSent || []).filter(u => u !== other);
+    CU.friendRequestsReceived = (CU.friendRequestsReceived || []).filter(u => u !== other);
+    try { saveLocal?.(); } catch(_){}
+    try { renderFriendsList?.(); } catch(_){}
+    try { renderDMSidebar?.(document.getElementById('sidebar-scroll')); } catch(_){}
+    try { _refreshFppFriendButton(other); } catch(_){}
   });
 
   // 6. Notification broadcast
@@ -41608,7 +41698,24 @@ function _fppMutualsChipHTML(username) {
   return '';
 }
 
-function _fppActionRowHTML(username, isOwn) {
+// Live-patch the friend button on every open .fpp surface that's
+// rendering this user — called by the cross-device friend:request /
+// friend:accepted / friend:removed receivers so the button flips
+// state in real time without re-rendering the surrounding popover.
+function _refreshFppFriendButton(username) {
+  if (!username) return;
+  const isOwn = username === CU?.username;
+  const safe = CSS.escape(username);
+  document.querySelectorAll('.fpp[data-fpp-user="'+safe+'"] .fpp__actions, .fpp-card-modal[data-fpp-user="'+safe+'"] .fpp__actions').forEach(actions => {
+    const variant = actions.dataset?.variant || (actions.closest('.fpp--dm') ? 'dm' : 'mini');
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = _fppActionRowHTML(username, isOwn, variant);
+    const newActions = wrapper.firstElementChild;
+    if (newActions) actions.replaceWith(newActions);
+  });
+}
+
+function _fppActionRowHTML(username, isOwn, variant) {
   if (isOwn) {
     return `<div class="fpp__actions">
       <button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();showView('profile')">
@@ -41620,29 +41727,39 @@ function _fppActionRowHTML(username, isOwn) {
   const isFriend = (CU?.friends || []).includes(username);
   const hasPendingOut = (CU?.friendRequestsSent || []).includes(username);
   const hasPendingIn = (CU?.friendRequestsReceived || []).includes(username);
-  // isFriend now uses UserCheck (person silhouette + small check beside
-  // it) so it's visually distinguishable from the bare checkmark used
-  // for "accept incoming request". Before, both states rendered the
-  // same checkmark glyph and you couldn't tell at a glance whether
-  // you were already friends or being asked to accept.
+  // Uniformized "person + small glyph" family so all four friend
+  // states read as one family:
+  //   add friend   → person + small plus    (action: send request)
+  //   pending out  → person + small clock   (you sent, waiting)
+  //   pending in   → person + small check   (they sent, click to accept)
+  //   friends      → person + small check w/ filled badge (you're friends)
   const friendBtn = isFriend
     ? `<button class="fpp__btn fpp__btn--square is-friend" data-tip="Friends — click to unfriend" onclick="_fppClose();removeFriend('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></button>`
     : hasPendingOut
-      ? `<button class="fpp__btn fpp__btn--square is-pending" data-tip="Friend request sent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>`
+      ? `<button class="fpp__btn fpp__btn--square is-pending" data-tip="Friend request sent — waiting"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><circle cx="19" cy="13" r="3.5"/><polyline points="19 11.2 19 13 20.2 13.9"/></svg></button>`
       : hasPendingIn
-        ? `<button class="fpp__btn fpp__btn--square" data-tip="Accept friend request" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>`
-        : `<button class="fpp__btn fpp__btn--square" data-tip="Add friend" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
-  // Primary action is "View Full Profile" (opens the Profile Card
-  // modal) — the wider full-card view is the natural deep link for
-  // anything this compact popover doesn't have room for. Message
-  // moves into the More menu below.
-  return `<div class="fpp__actions">
-    <button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();viewUserProfile('${escapeHTML(username)}')">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2"/></svg>
-      View Full Profile
-    </button>
+        ? `<button class="fpp__btn fpp__btn--square is-incoming" data-tip="Accept friend request" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><circle cx="19" cy="13" r="3.5" fill="currentColor" fill-opacity=".15"/><polyline points="17.5 13 18.5 14 20.5 12"/></svg></button>`
+        : `<button class="fpp__btn fpp__btn--square" data-tip="Add friend" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="19" y1="10" x2="19" y2="16"/><line x1="22" y1="13" x2="16" y2="13"/></svg></button>`;
+  // Primary action: most surfaces use "Message" (the natural CTA when
+  // you're previewing someone you might want to DM). The DM right-side
+  // panel is the exception — there you're already in a DM, so the
+  // useful next step is "View Full Profile" (open the Profile Card
+  // modal). The variant flag toggles the primary button accordingly.
+  const isDM = variant === 'dm';
+  const safeUser = escapeHTML(username);
+  const primaryBtn = isDM
+    ? `<button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="viewUserProfile('${safeUser}')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2"/></svg>
+        View Full Profile
+      </button>`
+    : `<button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();openDMView('${safeUser}')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        Message
+      </button>`;
+  return `<div class="fpp__actions" data-variant="${isDM ? 'dm' : 'mini'}">
+    ${primaryBtn}
     ${friendBtn}
-    <button class="fpp__btn fpp__btn--square" data-tip="More" onclick="_fppShowMoreMenu(event,'${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+    <button class="fpp__btn fpp__btn--square" data-tip="More" onclick="_fppShowMoreMenu(event,'${safeUser}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
   </div>`;
 }
 

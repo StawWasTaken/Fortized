@@ -41746,7 +41746,7 @@ function _fppActionRowHTML(username, isOwn, variant) {
   const safeUser = escapeHTML(username);
   const primaryBtn = isDM
     ? `<button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="viewUserProfile('${safeUser}')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 19c0-2.5 2.2-4 5-4s5 1.5 5 4"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 4a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zm0 13.4a8 8 0 0 1-6.5-3.34c.03-2.16 4.33-3.34 6.5-3.34 2.16 0 6.47 1.18 6.5 3.34A8 8 0 0 1 12 19.4z"/></svg>
         View Profile
       </button>`
     : `<button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();openDMView('${safeUser}')">
@@ -41766,6 +41766,7 @@ function _fppClose() {
   document.getElementById('fpp-menu')?.remove();
   document.getElementById('fpp-status-submenu')?.remove();
   document.getElementById('fpp-accounts-submenu')?.remove();
+  document.getElementById('fpp-invite-sub')?.remove();
 }
 
 // Discord-style ⋯ menu: Message / Invite to Bastion ▶ / Ignore / Block / Report
@@ -41794,12 +41795,6 @@ function _fppShowMoreMenu(evt, username) {
     const isIgnored = _asArr(CU?.ignoredUsers).includes(username);
     const myBastions = _asArr(CU?.bastions).filter(b => b && b.name);
     const safeUser = escapeHTML(username);
-    const messageItem = `
-      <div class="fpp-menu__item" onclick="_fppClose();openDMView('${safeUser}')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-        Message
-      </div>
-      <div class="fpp-menu__divider"></div>`;
     const inviteItems = myBastions.length
       ? `<div class="fpp-menu__item fpp-menu__item--has-sub" onmouseenter="_fppShowInviteSub(event,'${safeUser}')">
            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
@@ -41810,7 +41805,6 @@ function _fppShowMoreMenu(evt, username) {
       : '';
     const ignoreCall = isIgnored ? `unignoreUser('${safeUser}')` : `showIgnorePicker('${safeUser}')`;
     const menuHTML = `
-      ${messageItem}
       ${inviteItems}
       <div class="fpp-menu__item" onclick="${ignoreCall};_fppClose()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
@@ -41839,9 +41833,16 @@ function _fppShowMoreMenu(evt, username) {
     // Off-click closer. Attached with capture:true so it fires before
     // any panel-level mousedown listener, which means a click outside
     // the menu can dismiss the menu without racing the popover's own
-    // close logic.
+    // close logic. Also clears the Invite sub when clicking elsewhere
+    // — without this it stayed open over the chat after the parent
+    // menu closed.
     const offClick = (e) => {
-      if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', offClick, true); }
+      const sub = document.getElementById('fpp-invite-sub');
+      if (menu.contains(e.target)) return;
+      if (sub && sub.contains(e.target)) return;
+      menu.remove();
+      sub?.remove();
+      document.removeEventListener('mousedown', offClick, true);
     };
     document.addEventListener('mousedown', offClick, true);
   } catch (err) {
@@ -41851,16 +41852,24 @@ function _fppShowMoreMenu(evt, username) {
 
 function _fppShowInviteSub(evt, username) {
   document.getElementById('fpp-invite-sub')?.remove();
-  const myBastions = (CU?.bastions || []).filter(b => b && b.name);
+  const myBastions = (Array.isArray(CU?.bastions) ? CU.bastions : []).filter(b => b && b.name);
   if (!myBastions.length) return;
   const sub = document.createElement('div');
   sub.id = 'fpp-invite-sub';
   sub.className = 'fpp-menu';
-  sub.innerHTML = myBastions.map((b, idx) => `
-    <div class="fpp-menu__item" onclick="inviteUserToBastion('${escapeHTML(username)}',${idx});_fppClose()">
-      ${b.emblem ? `<img src="${escapeHTML(b.emblem)}" style="width:18px;height:18px;border-radius:4px;object-fit:cover;">` : '<span style="width:18px;height:18px;background:rgba(255,255,255,.06);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;">🏰</span>'}
+  sub.innerHTML = myBastions.map((b, idx) => {
+    // Stamp each row with the bastion's globalId so the async emblem
+    // refresh below can target it without index/name collisions.
+    const bid = (b.globalId || b.name || '').toString();
+    const emblem = b.emblem || '';
+    const iconInner = emblem
+      ? `<img src="${escapeHTML(emblem)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=&quot;font-size:10px;&quot;>🏰</span>'">`
+      : '<span style="font-size:10px;">🏰</span>';
+    return `<div class="fpp-menu__item" onclick="inviteUserToBastion('${escapeHTML(username)}',${idx});_fppClose()">
+      <span class="fpp-bastion-icon" data-bid="${escapeHTML(bid)}" style="width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);overflow:hidden;flex-shrink:0;">${iconInner}</span>
       ${escapeHTML(b.name)}
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.body.appendChild(sub);
   const rect = evt.currentTarget.getBoundingClientRect();
   sub.style.left = (rect.right + 4) + 'px';
@@ -41871,6 +41880,21 @@ function _fppShowInviteSub(evt, username) {
   evt.currentTarget.addEventListener('mouseleave', () => {
     setTimeout(() => { if (!sub.matches(':hover')) sub.remove(); }, 200);
   }, { once: true });
+  // Real-time emblem refresh: re-pull each bastion's global row (the
+  // local b.emblem on CU.bastions can lag behind admin/owner edits).
+  // Updates the icon slot in place once the fetch resolves; failures
+  // leave the local copy showing, no toast.
+  myBastions.forEach(b => {
+    const bid = b.globalId;
+    if (!bid || typeof FortizedSocial?.getGlobalBastion !== 'function') return;
+    FortizedSocial.getGlobalBastion(bid).then(g => {
+      const liveEmblem = g?.emblem;
+      if (!liveEmblem) return;
+      const slot = sub.querySelector('.fpp-bastion-icon[data-bid="' + CSS.escape(bid) + '"]');
+      if (!slot) return;
+      slot.innerHTML = `<img src="${escapeHTML(liveEmblem)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`;
+    }).catch(() => {});
+  });
 }
 
 // Default fallback if inviteUserToBastion isn't already defined elsewhere
@@ -46347,4 +46371,146 @@ setInterval(() => {
   const cutoff = Date.now() - 30000; // 30s window — well past the 8s used by refreshCU
   for (const k in m) { if (m[k] < cutoff) delete m[k]; }
 }, 60000);
+
+// ════════════════════════════════════════════════════════════
+// STAW INSPECTOR — provisional dev helper, gated to the staw
+// account. Right-click the topbar Staff Console button to open
+// a one-item menu with "Inspect UI"; toggling it on highlights
+// the element under the cursor with a green outline and shows
+// its tag/classes/id/size on click. Esc or "Exit" closes.
+// ════════════════════════════════════════════════════════════
+function _isStaw() {
+  return (CU?.username || '').toLowerCase() === 'staw';
+}
+
+function _stawWireInspector() {
+  if (!_isStaw()) return;
+  const btn = document.getElementById('tb-admin-btn');
+  if (!btn) { setTimeout(_stawWireInspector, 600); return; }
+  if (btn._stawWired) return;
+  btn._stawWired = true;
+  btn.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    _stawShowMenu(e.clientX, e.clientY);
+  });
+}
+setTimeout(_stawWireInspector, 1500);
+
+function _stawShowMenu(x, y) {
+  document.getElementById('staw-menu')?.remove();
+  const menu = document.createElement('div');
+  menu.id = 'staw-menu';
+  menu.style.cssText = 'position:fixed;z-index:99999;background:#0f1119;border:1px solid #2a2f3a;border-radius:8px;padding:5px;min-width:200px;box-shadow:0 14px 40px rgba(0,0,0,.7);font-family:var(--font-ui);font-size:12px;color:#dde3ed;';
+  const label = _stawInspectorOn ? '✓ Inspector ON — click to disable' : 'Inspect UI';
+  menu.innerHTML = `<div id="staw-menu-toggle" style="padding:9px 12px;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span>${label}</span>
+  </div>`;
+  menu.querySelector('#staw-menu-toggle').onmouseenter = (e) => e.currentTarget.style.background = 'rgba(255,255,255,.05)';
+  menu.querySelector('#staw-menu-toggle').onmouseleave = (e) => e.currentTarget.style.background = '';
+  menu.querySelector('#staw-menu-toggle').onclick = () => { menu.remove(); _stawToggleInspector(); };
+  document.body.appendChild(menu);
+  const left = Math.min(x, window.innerWidth - menu.offsetWidth - 8);
+  const top = Math.min(y, window.innerHeight - menu.offsetHeight - 8);
+  menu.style.left = Math.max(8, left) + 'px';
+  menu.style.top = Math.max(8, top) + 'px';
+  const off = (e) => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', off, true); } };
+  document.addEventListener('mousedown', off, true);
+}
+
+let _stawInspectorOn = false;
+let _stawHoverBox = null;
+
+function _stawToggleInspector() {
+  _stawInspectorOn = !_stawInspectorOn;
+  if (_stawInspectorOn) {
+    document.documentElement.style.cursor = 'crosshair';
+    document.addEventListener('mouseover', _stawOnHover, true);
+    document.addEventListener('click', _stawOnPick, true);
+    document.addEventListener('keydown', _stawOnKey, true);
+    toast?.('Inspector ON — click to pick, Esc to exit', 'info');
+  } else {
+    document.documentElement.style.cursor = '';
+    document.removeEventListener('mouseover', _stawOnHover, true);
+    document.removeEventListener('click', _stawOnPick, true);
+    document.removeEventListener('keydown', _stawOnKey, true);
+    _stawHoverBox?.remove(); _stawHoverBox = null;
+    toast?.('Inspector OFF', 'info');
+  }
+}
+
+function _stawOnHover(e) {
+  if (!_stawInspectorOn) return;
+  const el = e.target;
+  if (!el || el === _stawHoverBox) return;
+  if (el.id === 'staw-inspect-panel' || el.closest?.('#staw-inspect-panel')) return;
+  const r = el.getBoundingClientRect();
+  if (!_stawHoverBox) {
+    _stawHoverBox = document.createElement('div');
+    _stawHoverBox.id = 'staw-inspect-hover';
+    _stawHoverBox.style.cssText = 'position:fixed;border:2px solid #3ecf6e;background:rgba(62,207,110,.10);pointer-events:none;z-index:99996;box-sizing:border-box;transition:left .05s,top .05s,width .05s,height .05s;';
+    document.body.appendChild(_stawHoverBox);
+  }
+  _stawHoverBox.style.left = r.left + 'px';
+  _stawHoverBox.style.top = r.top + 'px';
+  _stawHoverBox.style.width = r.width + 'px';
+  _stawHoverBox.style.height = r.height + 'px';
+}
+
+function _stawOnPick(e) {
+  if (!_stawInspectorOn) return;
+  if (e.target?.closest?.('#staw-inspect-panel')) return; // clicks inside the info panel pass through to its own buttons
+  e.preventDefault(); e.stopPropagation();
+  const el = e.target;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const cls = (el.className && typeof el.className === 'string') ? el.className.trim() : '';
+  // Walk up the tree to build a short selector path for context.
+  const path = [];
+  let n = el;
+  for (let i = 0; n && n !== document.body && i < 8; i++, n = n.parentElement) {
+    let bit = n.tagName?.toLowerCase() || '?';
+    if (n.id) bit += '#' + n.id;
+    if (n.className && typeof n.className === 'string') {
+      const top = n.className.trim().split(/\s+/).slice(0, 2).join('.');
+      if (top) bit += '.' + top;
+    }
+    path.unshift(bit);
+  }
+  document.getElementById('staw-inspect-panel')?.remove();
+  const p = document.createElement('div');
+  p.id = 'staw-inspect-panel';
+  p.style.cssText = 'position:fixed;width:320px;max-height:340px;overflow:auto;background:#0a0d14;border:2px solid #3ecf6e;border-radius:10px;padding:12px 14px;z-index:99997;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#dde3ed;box-shadow:0 16px 44px rgba(0,0,0,.7);';
+  const left = Math.min(e.clientX + 14, window.innerWidth - 340);
+  const top = Math.min(e.clientY + 14, window.innerHeight - 360);
+  p.style.left = Math.max(8, left) + 'px';
+  p.style.top = Math.max(8, top) + 'px';
+  const tagLabel = el.tagName.toLowerCase() + (el.id ? '#' + el.id : '');
+  p.innerHTML = `
+    <div style="font-weight:700;color:#3ecf6e;font-size:13px;margin-bottom:8px;">${tagLabel}</div>
+    <div style="margin-bottom:5px;"><span style="color:#7d8a9e;">classes:</span> ${cls || '<i style="color:#4e5a6f;">none</i>'}</div>
+    <div style="margin-bottom:5px;"><span style="color:#7d8a9e;">size:</span> ${Math.round(r.width)} × ${Math.round(r.height)} px</div>
+    <div style="margin-bottom:5px;"><span style="color:#7d8a9e;">at:</span> ${Math.round(r.left)}, ${Math.round(r.top)}</div>
+    <div style="color:#7d8a9e;margin-top:8px;margin-bottom:4px;">path:</div>
+    <div style="line-height:1.5;color:#a3acb8;word-break:break-all;font-size:10.5px;">${path.join(' › ')}</div>
+    <div style="display:flex;gap:6px;margin-top:12px;">
+      <button id="staw-copy" style="flex:1;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);color:#3ecf6e;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Copy path</button>
+      <button id="staw-close" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#dde3ed;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Close</button>
+      <button id="staw-exit" style="flex:1;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);color:#f87171;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>
+    </div>`;
+  document.body.appendChild(p);
+  p.querySelector('#staw-copy').onclick = () => { try { navigator.clipboard.writeText(path.join(' > ')); toast?.('Path copied', 'success'); } catch(_) {} };
+  p.querySelector('#staw-close').onclick = () => p.remove();
+  p.querySelector('#staw-exit').onclick = () => { p.remove(); _stawToggleInspector(); };
+  console.log('[Inspector]', el, { tag: tagLabel, classes: cls, rect: r, path });
+}
+
+function _stawOnKey(e) {
+  if (!_stawInspectorOn) return;
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    document.getElementById('staw-inspect-panel')?.remove();
+    _stawToggleInspector();
+  }
+}
 

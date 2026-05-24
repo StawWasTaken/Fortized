@@ -46373,18 +46373,27 @@ setInterval(() => {
 }, 60000);
 
 // ════════════════════════════════════════════════════════════
-// STAW INSPECTOR — provisional dev helper, gated to the staw
-// account. Right-click the topbar Staff Console button to open
-// a one-item menu with "Inspect UI"; toggling it on highlights
-// the element under the cursor with a green outline and shows
-// its tag/classes/id/size on click. Esc or "Exit" closes.
+// SUPERADMIN INSPECTOR — provisional dev helper, gated to
+// isSuperAdmin(). Right-click the topbar Staff Console button to
+// open a small menu with "Inspect UI" and (when active) "Pause".
+// Toggling it on highlights the element under the cursor with a
+// green outline and shows tag / classes / computed CSS / parent
+// path on click. A small toolbar pinned to the top centre tracks
+// the inspecting/paused state and offers Pause + Exit. The info
+// panel adds Copy selector (a uniquely-targeting CSS selector) +
+// Copy path (the readable parent-walk string).
+//   Keys: P = pause/resume, Esc = exit.
+//   The "P" shortcut is suppressed inside <input>/<textarea>/
+//   contenteditable so it can't eat keystrokes during typing.
 // ════════════════════════════════════════════════════════════
-function _isStaw() {
-  return (CU?.username || '').toLowerCase() === 'staw';
+// Gate: any superadmin (was 'staw' only) so the rest of the staff
+// team has access to the same debugging affordance.
+function _inspectorAllowed() {
+  return typeof isSuperAdmin === 'function' ? !!isSuperAdmin() : false;
 }
 
 function _stawWireInspector() {
-  if (!_isStaw()) return;
+  if (!_inspectorAllowed()) return;
   const btn = document.getElementById('tb-admin-btn');
   if (!btn) { setTimeout(_stawWireInspector, 600); return; }
   if (btn._stawWired) return;
@@ -46400,15 +46409,24 @@ function _stawShowMenu(x, y) {
   document.getElementById('staw-menu')?.remove();
   const menu = document.createElement('div');
   menu.id = 'staw-menu';
-  menu.style.cssText = 'position:fixed;z-index:99999;background:#0f1119;border:1px solid #2a2f3a;border-radius:8px;padding:5px;min-width:200px;box-shadow:0 14px 40px rgba(0,0,0,.7);font-family:var(--font-ui);font-size:12px;color:#dde3ed;';
+  menu.style.cssText = 'position:fixed;z-index:99999;background:#0f1119;border:1px solid #2a2f3a;border-radius:8px;padding:5px;min-width:220px;box-shadow:0 14px 40px rgba(0,0,0,.7);font-family:var(--font-ui);font-size:12px;color:#dde3ed;';
   const label = _stawInspectorOn ? '✓ Inspector ON — click to disable' : 'Inspect UI';
-  menu.innerHTML = `<div id="staw-menu-toggle" style="padding:9px 12px;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:8px;">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <span>${label}</span>
-  </div>`;
-  menu.querySelector('#staw-menu-toggle').onmouseenter = (e) => e.currentTarget.style.background = 'rgba(255,255,255,.05)';
-  menu.querySelector('#staw-menu-toggle').onmouseleave = (e) => e.currentTarget.style.background = '';
+  const pauseLabel = _stawInspectorPaused ? '▶ Resume inspector' : '⏸ Pause inspector';
+  menu.innerHTML = `
+    <div id="staw-menu-toggle" class="staw-mi" style="padding:9px 12px;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>${label}</span>
+    </div>
+    ${_stawInspectorOn ? `<div id="staw-menu-pause" class="staw-mi" style="padding:9px 12px;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+      <span style="width:14px;text-align:center;">${_stawInspectorPaused ? '▶' : '⏸'}</span>
+      <span>${pauseLabel.replace(/^[▶⏸]\s*/, '')}</span>
+    </div>` : ''}`;
+  menu.querySelectorAll('.staw-mi').forEach(mi => {
+    mi.onmouseenter = (e) => e.currentTarget.style.background = 'rgba(255,255,255,.05)';
+    mi.onmouseleave = (e) => e.currentTarget.style.background = '';
+  });
   menu.querySelector('#staw-menu-toggle').onclick = () => { menu.remove(); _stawToggleInspector(); };
+  menu.querySelector('#staw-menu-pause')?.addEventListener('click', () => { menu.remove(); _stawToggleInspectorPause(); });
   document.body.appendChild(menu);
   const left = Math.min(x, window.innerWidth - menu.offsetWidth - 8);
   const top = Math.min(y, window.innerHeight - menu.offsetHeight - 8);
@@ -46419,31 +46437,85 @@ function _stawShowMenu(x, y) {
 }
 
 let _stawInspectorOn = false;
+let _stawInspectorPaused = false;
 let _stawHoverBox = null;
+let _stawToolbar = null;
 
 function _stawToggleInspector() {
   _stawInspectorOn = !_stawInspectorOn;
   if (_stawInspectorOn) {
+    _stawInspectorPaused = false;
     document.documentElement.style.cursor = 'crosshair';
     document.addEventListener('mouseover', _stawOnHover, true);
     document.addEventListener('click', _stawOnPick, true);
     document.addEventListener('keydown', _stawOnKey, true);
-    toast?.('Inspector ON — click to pick, Esc to exit', 'info');
+    _stawShowToolbar();
+    toast?.('Inspector ON — click to pick, P to pause, Esc to exit', 'info');
   } else {
     document.documentElement.style.cursor = '';
     document.removeEventListener('mouseover', _stawOnHover, true);
     document.removeEventListener('click', _stawOnPick, true);
     document.removeEventListener('keydown', _stawOnKey, true);
     _stawHoverBox?.remove(); _stawHoverBox = null;
+    _stawToolbar?.remove(); _stawToolbar = null;
+    _stawInspectorPaused = false;
     toast?.('Inspector OFF', 'info');
   }
 }
 
-function _stawOnHover(e) {
+function _stawToggleInspectorPause() {
   if (!_stawInspectorOn) return;
+  _stawInspectorPaused = !_stawInspectorPaused;
+  document.documentElement.style.cursor = _stawInspectorPaused ? '' : 'crosshair';
+  if (_stawInspectorPaused) _stawHoverBox?.remove();
+  _stawHoverBox = null;
+  _stawUpdateToolbar();
+  toast?.(_stawInspectorPaused ? 'Inspector paused (interact with the page)' : 'Inspector resumed', 'info');
+}
+
+function _stawShowToolbar() {
+  _stawToolbar?.remove();
+  const tb = document.createElement('div');
+  tb.id = 'staw-inspect-toolbar';
+  tb.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99998;background:#0a0d14;border:1px solid #3ecf6e;border-radius:24px;padding:6px 10px;display:flex;align-items:center;gap:8px;font-family:var(--font-ui);font-size:11.5px;color:#dde3ed;box-shadow:0 12px 36px rgba(0,0,0,.6);';
+  tb.innerHTML = `
+    <span id="staw-tb-status" style="display:inline-flex;align-items:center;gap:6px;padding:0 8px;">
+      <span id="staw-tb-dot" style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px #3ecf6e;display:inline-block;"></span>
+      <span id="staw-tb-label" style="font-weight:600;letter-spacing:.02em;">Inspecting</span>
+    </span>
+    <button id="staw-tb-pause" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#dde3ed;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Pause</button>
+    <button id="staw-tb-exit" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);color:#f87171;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>`;
+  document.body.appendChild(tb);
+  tb.querySelector('#staw-tb-pause').onclick = (e) => { e.stopPropagation(); _stawToggleInspectorPause(); };
+  tb.querySelector('#staw-tb-exit').onclick = (e) => { e.stopPropagation(); _stawToggleInspector(); };
+  _stawToolbar = tb;
+}
+
+function _stawUpdateToolbar() {
+  if (!_stawToolbar) return;
+  const dot = _stawToolbar.querySelector('#staw-tb-dot');
+  const label = _stawToolbar.querySelector('#staw-tb-label');
+  const pauseBtn = _stawToolbar.querySelector('#staw-tb-pause');
+  if (_stawInspectorPaused) {
+    if (dot) { dot.style.background = '#fbbf24'; dot.style.boxShadow = '0 0 6px #fbbf24'; }
+    if (label) label.textContent = 'Paused';
+    if (pauseBtn) pauseBtn.textContent = 'Resume';
+  } else {
+    if (dot) { dot.style.background = '#3ecf6e'; dot.style.boxShadow = '0 0 6px #3ecf6e'; }
+    if (label) label.textContent = 'Inspecting';
+    if (pauseBtn) pauseBtn.textContent = 'Pause';
+  }
+}
+
+function _stawIsOwnUI(el) {
+  if (!el || !el.closest) return false;
+  return !!el.closest('#staw-inspect-panel, #staw-inspect-toolbar, #staw-inspect-hover, #staw-menu');
+}
+
+function _stawOnHover(e) {
+  if (!_stawInspectorOn || _stawInspectorPaused) return;
   const el = e.target;
-  if (!el || el === _stawHoverBox) return;
-  if (el.id === 'staw-inspect-panel' || el.closest?.('#staw-inspect-panel')) return;
+  if (!el || _stawIsOwnUI(el)) return;
   const r = el.getBoundingClientRect();
   if (!_stawHoverBox) {
     _stawHoverBox = document.createElement('div');
@@ -46457,52 +46529,99 @@ function _stawOnHover(e) {
   _stawHoverBox.style.height = r.height + 'px';
 }
 
+// Build a uniquely-targeting CSS selector for the element by walking up
+// the tree, preferring #id when available and adding :nth-of-type only
+// when needed for disambiguation. Stops at body.
+function _stawSelectorFor(el) {
+  if (!el || el === document.body) return 'body';
+  const parts = [];
+  for (let n = el; n && n !== document.body && parts.length < 10; n = n.parentElement) {
+    if (n.id) { parts.unshift('#' + n.id); break; }
+    let seg = n.tagName.toLowerCase();
+    if (n.className && typeof n.className === 'string') {
+      const cls = n.className.trim().split(/\s+/).filter(Boolean).slice(0, 3).join('.');
+      if (cls) seg += '.' + cls;
+    }
+    const parent = n.parentElement;
+    if (parent) {
+      const same = Array.from(parent.children).filter(c => c.tagName === n.tagName);
+      if (same.length > 1) {
+        const idx = same.indexOf(n) + 1;
+        seg += `:nth-of-type(${idx})`;
+      }
+    }
+    parts.unshift(seg);
+  }
+  return parts.join(' > ');
+}
+
 function _stawOnPick(e) {
-  if (!_stawInspectorOn) return;
-  if (e.target?.closest?.('#staw-inspect-panel')) return; // clicks inside the info panel pass through to its own buttons
+  if (!_stawInspectorOn || _stawInspectorPaused) return;
+  if (_stawIsOwnUI(e.target)) return; // clicks inside the inspector UI pass through to its own buttons
   e.preventDefault(); e.stopPropagation();
   const el = e.target;
   if (!el) return;
   const r = el.getBoundingClientRect();
   const cls = (el.className && typeof el.className === 'string') ? el.className.trim() : '';
-  // Walk up the tree to build a short selector path for context.
-  const path = [];
-  let n = el;
-  for (let i = 0; n && n !== document.body && i < 8; i++, n = n.parentElement) {
+  const cs = getComputedStyle(el);
+  // Walk the tree for a readable parent path (display only — short).
+  const pathBits = [];
+  for (let n = el, i = 0; n && n !== document.body && i < 8; i++, n = n.parentElement) {
     let bit = n.tagName?.toLowerCase() || '?';
     if (n.id) bit += '#' + n.id;
     if (n.className && typeof n.className === 'string') {
       const top = n.className.trim().split(/\s+/).slice(0, 2).join('.');
       if (top) bit += '.' + top;
     }
-    path.unshift(bit);
+    pathBits.unshift(bit);
   }
+  const fullSelector = _stawSelectorFor(el);
+  const tagLabel = el.tagName.toLowerCase() + (el.id ? '#' + el.id : '');
+  // Computed-style rows worth seeing for a UI bug hunt. Trimmed to
+  // the values that explain layout / color problems at a glance.
+  const styleRows = [
+    ['color', cs.color],
+    ['background', cs.backgroundColor],
+    ['font', `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily.split(',')[0].replace(/['"]/g,'')}`],
+    ['padding', cs.padding],
+    ['margin', cs.margin],
+    ['border', cs.borderWidth === '0px' ? 'none' : `${cs.borderWidth} ${cs.borderStyle} ${cs.borderColor}`],
+    ['display', `${cs.display}${cs.position!=='static' ? ' / '+cs.position : ''}`],
+    ['z-index', cs.zIndex === 'auto' ? 'auto' : cs.zIndex],
+  ];
+  const styleHTML = styleRows.map(([k,v]) => `<div style="display:flex;gap:6px;margin-bottom:3px;"><span style="color:#7d8a9e;min-width:78px;">${k}:</span><span style="word-break:break-all;color:#dde3ed;">${v || '<i style=\"color:#4e5a6f;\">—</i>'}</span></div>`).join('');
+
   document.getElementById('staw-inspect-panel')?.remove();
   const p = document.createElement('div');
   p.id = 'staw-inspect-panel';
-  p.style.cssText = 'position:fixed;width:320px;max-height:340px;overflow:auto;background:#0a0d14;border:2px solid #3ecf6e;border-radius:10px;padding:12px 14px;z-index:99997;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#dde3ed;box-shadow:0 16px 44px rgba(0,0,0,.7);';
-  const left = Math.min(e.clientX + 14, window.innerWidth - 340);
-  const top = Math.min(e.clientY + 14, window.innerHeight - 360);
+  p.style.cssText = 'position:fixed;width:360px;max-height:420px;overflow:auto;background:#0a0d14;border:2px solid #3ecf6e;border-radius:10px;padding:12px 14px;z-index:99997;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#dde3ed;box-shadow:0 16px 44px rgba(0,0,0,.7);';
+  const left = Math.min(e.clientX + 14, window.innerWidth - 380);
+  const top = Math.min(e.clientY + 14, window.innerHeight - 440);
   p.style.left = Math.max(8, left) + 'px';
   p.style.top = Math.max(8, top) + 'px';
-  const tagLabel = el.tagName.toLowerCase() + (el.id ? '#' + el.id : '');
   p.innerHTML = `
-    <div style="font-weight:700;color:#3ecf6e;font-size:13px;margin-bottom:8px;">${tagLabel}</div>
-    <div style="margin-bottom:5px;"><span style="color:#7d8a9e;">classes:</span> ${cls || '<i style="color:#4e5a6f;">none</i>'}</div>
-    <div style="margin-bottom:5px;"><span style="color:#7d8a9e;">size:</span> ${Math.round(r.width)} × ${Math.round(r.height)} px</div>
-    <div style="margin-bottom:5px;"><span style="color:#7d8a9e;">at:</span> ${Math.round(r.left)}, ${Math.round(r.top)}</div>
-    <div style="color:#7d8a9e;margin-top:8px;margin-bottom:4px;">path:</div>
-    <div style="line-height:1.5;color:#a3acb8;word-break:break-all;font-size:10.5px;">${path.join(' › ')}</div>
-    <div style="display:flex;gap:6px;margin-top:12px;">
-      <button id="staw-copy" style="flex:1;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);color:#3ecf6e;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Copy path</button>
-      <button id="staw-close" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#dde3ed;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Close</button>
-      <button id="staw-exit" style="flex:1;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);color:#f87171;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div style="font-weight:700;color:#3ecf6e;font-size:13px;">${tagLabel}</div>
+      <span style="font-size:10px;color:#7d8a9e;">${Math.round(r.width)} × ${Math.round(r.height)} @ ${Math.round(r.left)},${Math.round(r.top)}</span>
+    </div>
+    <div style="margin-bottom:8px;"><span style="color:#7d8a9e;">classes:</span> ${cls ? cls.split(/\s+/).map(c => `<span style="display:inline-block;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);color:#3ecf6e;padding:1px 6px;border-radius:4px;margin:0 3px 3px 0;font-size:10.5px;">.${c}</span>`).join('') : '<i style="color:#4e5a6f;">none</i>'}</div>
+    <div style="margin-top:10px;padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:6px;">
+      ${styleHTML}
+    </div>
+    <div style="color:#7d8a9e;margin-top:10px;margin-bottom:4px;font-size:10.5px;">path:</div>
+    <div style="line-height:1.5;color:#a3acb8;word-break:break-all;font-size:10.5px;">${pathBits.join(' › ')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px;">
+      <button id="staw-copy-sel" style="background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);color:#3ecf6e;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Copy selector</button>
+      <button id="staw-copy-path" style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:#60a5fa;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Copy path</button>
+      <button id="staw-close" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#dde3ed;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Close</button>
+      <button id="staw-exit" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);color:#f87171;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>
     </div>`;
   document.body.appendChild(p);
-  p.querySelector('#staw-copy').onclick = () => { try { navigator.clipboard.writeText(path.join(' > ')); toast?.('Path copied', 'success'); } catch(_) {} };
+  p.querySelector('#staw-copy-sel').onclick = () => { try { navigator.clipboard.writeText(fullSelector); toast?.('Selector copied', 'success'); } catch(_) {} };
+  p.querySelector('#staw-copy-path').onclick = () => { try { navigator.clipboard.writeText(pathBits.join(' > ')); toast?.('Path copied', 'success'); } catch(_) {} };
   p.querySelector('#staw-close').onclick = () => p.remove();
   p.querySelector('#staw-exit').onclick = () => { p.remove(); _stawToggleInspector(); };
-  console.log('[Inspector]', el, { tag: tagLabel, classes: cls, rect: r, path });
+  console.log('[Inspector]', el, { tag: tagLabel, classes: cls, rect: r, selector: fullSelector, path: pathBits });
 }
 
 function _stawOnKey(e) {
@@ -46511,6 +46630,13 @@ function _stawOnKey(e) {
     e.preventDefault();
     document.getElementById('staw-inspect-panel')?.remove();
     _stawToggleInspector();
+  } else if ((e.key === 'p' || e.key === 'P') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    // Skip if the user is typing in an input/textarea/contenteditable.
+    const t = e.target;
+    const tag = t?.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || t?.isContentEditable) return;
+    e.preventDefault();
+    _stawToggleInspectorPause();
   }
 }
 

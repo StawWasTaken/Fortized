@@ -863,13 +863,14 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Chat input */
 .chat-input-wrap{padding:0 12px 10px;flex-shrink:0;box-sizing:border-box;}
 /* Typing indicator — Discord-style: subtle bouncing dots + small text. */
-/* Typing indicator sits in the gap between the message stream and the
-   composer. Background gradient fades from the canvas color at the
-   bottom (textbox edge) to fully transparent at the top — Discord-
-   style soft transition so the last message dissolves into it rather
-   than slamming into a hard solid stripe. */
-.typing-indicator{display:flex;align-items:center;gap:8px;padding:6px 20px 6px;min-height:22px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;
-  background:linear-gradient(to top, var(--canvas-color, #13161d) 35%, transparent);
+/* Typing indicator — full canvas color at the textbox edge fading to
+   transparent at the top. The taller min-height + stronger gradient
+   give messages enough vertical space to visibly fade as they scroll
+   up into the indicator area, instead of being cut off by a hard
+   rectangle. Matches Discord's "messages dissolve into the textbox"
+   pattern. */
+.typing-indicator{display:flex;align-items:center;gap:8px;padding:8px 20px 10px;min-height:34px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;
+  background:linear-gradient(to top, var(--canvas-color, #13161d) 30%, rgba(19,22,29,.6) 65%, transparent 100%);
 }
 .typing-indicator strong{color:#fff;font-weight:700;}
 .typing-dots{display:flex;gap:3px;align-items:center;}
@@ -885,7 +886,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
   position:absolute;
   bottom:-3px;right:-8px;
   width:22px;height:13px;
-  border-radius:10px 10px 10px 3px;
+  border-radius:10px;
   background:var(--accent);
   display:flex;align-items:center;justify-content:center;
   gap:2px;

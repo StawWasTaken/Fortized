@@ -19423,12 +19423,9 @@ async function _viewUserProfile(username) {
           ${_fppCSBubbleHTML(u, isOwn)}
         </div>
         ${_fppIdentityHTML(u)}
-        ${u.bio ? `<div class="fpp__inline-bio">${parseBioMD(u.bio.slice(0, 500))}${u.bio.length > 500 ? '…' : ''}</div>` : ''}
-        ${_memberSince ? `<div class="fpp-card-modal__left-section">
-          <div class="fpp-card-modal__left-section-title">Member Since</div>
-          <div class="fpp-card-modal__left-section-body">${_memberSince}</div>
-        </div>` : ''}
+        ${_fppAboutCardHTML(u)}
         ${_fppBadgesCardHTML(u)}
+        ${_fppGamesCardHTML(u)}
         ${_rolesHTML}
         ${_connectionsHTML}
         ${_noteHTML}
@@ -41749,8 +41746,8 @@ function _fppActionRowHTML(username, isOwn, variant) {
   const safeUser = escapeHTML(username);
   const primaryBtn = isDM
     ? `<button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="viewUserProfile('${safeUser}')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2"/></svg>
-        View Full Profile
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="9.5" r="3.2"/><path d="M5.6 19.2c.9-2.6 3.3-4.2 6.4-4.2s5.5 1.6 6.4 4.2"/></svg>
+        View Profile
       </button>`
     : `<button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();openDMView('${safeUser}')">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>

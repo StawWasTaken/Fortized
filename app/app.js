@@ -41721,9 +41721,9 @@ function _fppActionRowHTML(username, isOwn, variant) {
       </button>
     </div>`;
   }
-  const isFriend = (CU?.friends || []).includes(username);
-  const hasPendingOut = (CU?.friendRequestsSent || []).includes(username);
-  const hasPendingIn = (CU?.friendRequestsReceived || []).includes(username);
+  const isFriend = Array.isArray(CU?.friends) && CU.friends.includes(username);
+  const hasPendingOut = Array.isArray(CU?.friendRequestsSent) && CU.friendRequestsSent.includes(username);
+  const hasPendingIn = Array.isArray(CU?.friendRequestsReceived) && CU.friendRequestsReceived.includes(username);
   // Uniformized "person + small glyph" family so all four friend
   // states read as one family:
   //   add friend   → person + small plus    (action: send request)
@@ -41746,7 +41746,7 @@ function _fppActionRowHTML(username, isOwn, variant) {
   const safeUser = escapeHTML(username);
   const primaryBtn = isDM
     ? `<button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="viewUserProfile('${safeUser}')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="9.5" r="3.2"/><path d="M5.6 19.2c.9-2.6 3.3-4.2 6.4-4.2s5.5 1.6 6.4 4.2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 19c0-2.5 2.2-4 5-4s5 1.5 5 4"/></svg>
         View Profile
       </button>`
     : `<button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();openDMView('${safeUser}')">
@@ -41782,9 +41782,17 @@ function _fppShowMoreMenu(evt, username) {
       console.warn('[fpp] More menu: no anchor button found');
       return;
     }
-    const isBlocked = (CU?.blockedUsers || []).includes(username);
-    const isIgnored = (CU?.ignoredUsers || []).includes(username);
-    const myBastions = (CU?.bastions || []).filter(b => b && b.name);
+    // CU.blockedUsers / ignoredUsers / bastions can legitimately be
+    // missing OR — more dangerously — be a non-array value left over
+    // from an older data shape (object, string, number). `||  []`
+    // only catches falsy values, so a truthy non-array would fall
+    // through to `.includes()` and blow up the whole menu with a
+    // "(intermediate value).includes is not a function" TypeError.
+    // Explicit Array.isArray guard.
+    const _asArr = v => Array.isArray(v) ? v : [];
+    const isBlocked = _asArr(CU?.blockedUsers).includes(username);
+    const isIgnored = _asArr(CU?.ignoredUsers).includes(username);
+    const myBastions = _asArr(CU?.bastions).filter(b => b && b.name);
     const safeUser = escapeHTML(username);
     const messageItem = `
       <div class="fpp-menu__item" onclick="_fppClose();openDMView('${safeUser}')">

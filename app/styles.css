@@ -863,15 +863,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Chat input */
 .chat-input-wrap{padding:0 12px 10px;flex-shrink:0;box-sizing:border-box;}
 /* Typing indicator — Discord-style: subtle bouncing dots + small text. */
-/* Typing indicator — full canvas color at the textbox edge fading to
-   transparent at the top. The taller min-height + stronger gradient
-   give messages enough vertical space to visibly fade as they scroll
-   up into the indicator area, instead of being cut off by a hard
-   rectangle. Matches Discord's "messages dissolve into the textbox"
-   pattern. */
-.typing-indicator{display:flex;align-items:center;gap:8px;padding:8px 20px 10px;min-height:34px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;
-  background:linear-gradient(to top, var(--canvas-color, #13161d) 30%, rgba(19,22,29,.6) 65%, transparent 100%);
-}
+/* Typing indicator — sits ON TOP of the chat-input-outer's fade
+   pseudo (so the typing text is readable against the fade). The fade
+   itself is owned by .chat-input-outer::before, not by this element,
+   so the indicator can keep its opacity transition without hiding
+   the fade when nobody is typing. */
+.typing-indicator{position:relative;z-index:2;display:flex;align-items:center;gap:8px;padding:4px 20px 6px;min-height:20px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;background:transparent;}
 .typing-indicator strong{color:#fff;font-weight:700;}
 .typing-dots{display:flex;gap:3px;align-items:center;}
 .typing-dots span{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);animation:typingBounce 1.4s infinite ease-in-out;}
@@ -911,6 +908,20 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .friend-item.dm-sortable[data-typing="1"] .profile-status-dot{display:none;}
 /* Chat input redesign — inline layout */
 .chat-input-outer{background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border:1.5px solid var(--glass-border);border-radius:12px;overflow:visible;transition:border-color .18s, box-shadow .18s;display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(0,0,0,.2);position:relative;}
+/* Soft fade sitting ABOVE the textbox frame so messages don't get
+   cut by the textbox's hard top edge — the textbox's glass tint
+   visually rises ~36 px into the chat and dissolves into transparency.
+   Always present (independent of the typing indicator's opacity)
+   so the fade is visible whether someone is typing or not. */
+.chat-input-outer::before{
+  content:'';
+  position:absolute;
+  left:-1.5px; right:-1.5px;
+  bottom:100%;
+  height:42px;
+  background:linear-gradient(to top, var(--glass-mid), transparent);
+  pointer-events:none;
+}
 .chat-input-outer:focus-within{border-color:rgba(255,255,255,.12);box-shadow:0 6px 24px rgba(0,0,0,.28);}
 .chat-input-outer, .chat-input-row, .chat-input-row textarea, .ci-preview-wrap, .ci-preview-wrap textarea{outline:none!important;}
 .chat-input-row textarea:focus, .chat-input-row textarea:focus-visible{outline:none!important;box-shadow:none!important;}
@@ -9297,8 +9308,8 @@ select:focus-visible {
   cursor:pointer;
   border:1px solid transparent;
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  white-space:nowrap;
   transition:background .15s, color .15s, border-color .15s, transform .15s;
-  font-family:var(--font-display);
 }
 .fpp__btn--primary{
   flex:1; min-width:0;

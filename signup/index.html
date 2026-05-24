@@ -78,9 +78,8 @@ body::before {
 /* ── Unified site nav ── */
 .nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:56px;display:flex;align-items:center;padding:0 36px;background:rgba(8,10,15,.0);transition:background .35s,border-color .35s,box-shadow .35s}
 .nav-root.scrolled{background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid var(--border);box-shadow:0 1px 40px rgba(0,0,0,.5)}
-.nav-logo{display:flex;align-items:center;gap:9px;flex-shrink:0;margin-right:28px}
-.nav-logo img{height:24px;width:24px;object-fit:contain}
-.nav-logo-word{font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-logo{display:flex;align-items:center;flex-shrink:0;margin-right:28px}
+.nav-logo .nav-logo-mark{height:26px;width:auto;object-fit:contain}
 .nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:3px;gap:1px}
 .nav-pill{font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--muted-light);padding:6px 13px;border-radius:8px;transition:color .15s,background .15s;white-space:nowrap}
 .nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
@@ -399,8 +398,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
 <nav class="nav-root" id="mainNav">
   <a href="/" class="nav-logo">
-    <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
-    <span class="nav-logo-word">Fortized</span>
+    <img src="/Fortized logo2026.png?v=2026" alt="Fortized" class="nav-logo-mark" onerror="this.style.display='none'">
   </a>
   <div class="nav-pill-group">
     <a href="/newsroom" class="nav-pill">Newsroom</a>

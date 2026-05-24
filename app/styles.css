@@ -861,29 +861,17 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .reply-bar-text strong{color:var(--accent);}
 .reply-bar button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}
 /* Chat input */
-/* Chat input wrap — the frame that holds the typing indicator + the
-   textbox. A pseudo sits ABOVE the wrap (in the chat-msgs area) so
-   the wrap's hard top edge dissolves into the message stream as a
-   soft fade. Always visible, independent of typing-indicator state.
-   Discord-style "messages fade into the textbox region". */
-.chat-input-wrap{padding:0 12px 10px;flex-shrink:0;box-sizing:border-box;position:relative;}
-.chat-input-wrap::before{
-  content:'';
-  position:absolute;
-  left:0; right:0;
-  bottom:100%;
-  height:44px;
-  background:linear-gradient(to top, var(--canvas-color) 0%, rgba(19,22,29,.6) 45%, transparent 100%);
-  pointer-events:none;
-  z-index:1;
-}
+.chat-input-wrap{padding:0 12px 10px;flex-shrink:0;box-sizing:border-box;}
 /* Typing indicator — Discord-style: subtle bouncing dots + small text. */
-/* Typing indicator — sits ON TOP of the chat-input-outer's fade
-   pseudo (so the typing text is readable against the fade). The fade
-   itself is owned by .chat-input-outer::before, not by this element,
-   so the indicator can keep its opacity transition without hiding
-   the fade when nobody is typing. */
-.typing-indicator{position:relative;z-index:2;display:flex;align-items:center;gap:8px;padding:4px 20px 6px;min-height:20px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;background:transparent;}
+/* Typing indicator — the frame the user pointed at as the source of
+   the hard cut. Background fades from canvas color at the BOTTOM
+   (touching the textbox edge) to fully transparent at the TOP, so
+   when typing is visible (opacity:1) the indicator dissolves into
+   the message stream above it instead of stamping a hard rectangle
+   over the last messages. */
+.typing-indicator{position:relative;display:flex;align-items:center;gap:8px;padding:6px 20px 8px;min-height:30px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;
+  background:linear-gradient(to top, var(--canvas-color, #13161d) 0%, var(--canvas-color, #13161d) 35%, transparent 100%);
+}
 .typing-indicator strong{color:#fff;font-weight:700;}
 .typing-dots{display:flex;gap:3px;align-items:center;}
 .typing-dots span{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);animation:typingBounce 1.4s infinite ease-in-out;}

@@ -35,9 +35,8 @@ a{text-decoration:none;color:inherit}
 
 /* ── Nav (Clipode-unified) ── */
 .nav{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid rgba(255,255,255,.05)}
-.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:32px}
-.nav-logo img{height:28px;width:28px;object-fit:contain}
-.nav-logo-word{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-logo{display:flex;align-items:center;flex-shrink:0;margin-right:32px}
+.nav-logo .nav-logo-mark{height:30px;width:auto;object-fit:contain}
 .nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:4px;gap:1px}
 .nav-pill{font-size:13.5px;font-weight:500;color:var(--mu-l);padding:7px 14px;border-radius:9px;transition:color .15s,background .15s}
 .nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
@@ -195,9 +194,8 @@ a{text-decoration:none;color:inherit}
 /* ── Footer (Clipode-unified) ── */
 footer{border-top:1px solid rgba(255,255,255,.05);padding:36px 72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
 .footer-left{display:flex;align-items:center;gap:16px}
-.footer-logo{display:flex;align-items:center;gap:10px}
-.footer-logo img{height:22px;opacity:.45}
-.footer-logo span{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#374151}
+.footer-logo{display:flex;align-items:center}
+.footer-logo .footer-logo-mark{height:26px;width:auto;object-fit:contain;opacity:.55}
 .footer-socials{display:flex;align-items:center;gap:10px;padding-left:6px;border-left:1px solid rgba(255,255,255,.06)}
 .footer-socials a{color:#374151;transition:color .2s;display:flex;align-items:center}
 .footer-socials a:hover{color:var(--mu-l)}
@@ -235,9 +233,8 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
 /* ── Unified site nav (matches homepage) ── */
 .nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:56px;display:flex;align-items:center;padding:0 36px;background:rgba(8,10,15,.0);transition:background .35s,border-color .35s,box-shadow .35s}
 .nav-root.scrolled{background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid #1a2030;box-shadow:0 1px 40px rgba(0,0,0,.5)}
-.nav-logo{display:flex;align-items:center;gap:9px;flex-shrink:0;margin-right:28px}
-.nav-logo img{height:24px;width:24px;object-fit:contain}
-.nav-logo-word{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-logo{display:flex;align-items:center;flex-shrink:0;margin-right:28px}
+.nav-logo .nav-logo-mark{height:26px;width:auto;object-fit:contain}
 .nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:3px;gap:1px}
 .nav-pill{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#8b95a8;padding:6px 13px;border-radius:8px;transition:color .15s,background .15s;white-space:nowrap;text-decoration:none}
 .nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
@@ -582,8 +579,7 @@ body::before {
 
 <nav class="nav-root" id="mainNav">
   <a href="/" class="nav-logo">
-    <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
-    <span class="nav-logo-word">Fortized</span>
+    <img src="/Fortized logo2026.png?v=2026" alt="Fortized" class="nav-logo-mark" onerror="this.style.display='none'">
   </a>
   <div class="nav-pill-group">
     <a href="/newsroom" class="nav-pill active">Newsroom</a>
@@ -639,8 +635,7 @@ body::before {
 <footer>
   <div class="footer-left">
     <a href="/" class="footer-logo">
-      <img src="/Fortized icon.png" alt="" onerror="this.style.display='none'">
-      <span>Fortized</span>
+      <img src="/Fortized logo2026.png?v=2026" alt="Fortized" class="footer-logo-mark" onerror="this.style.display='none'">
     </a>
     <div class="footer-socials">
       <a href="https://x.com/Fortized" target="_blank" rel="noopener" title="Fortized on X">
@@ -674,7 +669,7 @@ const ARTICLES = {
     title:'The Fortized Roadmap — Where We\'re Headed in 2025', bylineName:'Staw',
     bylineRole:'Chief Executive Officer, Swiftaw',
     tagClass:'tag-announce', tagLabel:'Company',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">A letter to the community. As we close out Q1, I want to share where Fortized is going — and what you can expect from us in the months ahead.</p><p>When we launched Fortized, we had a vision: build a platform where communities are sovereign, identity is earned, and nobody has to pay to belong. That vision hasn't changed — it's only grown sharper.</p><h2>What We've Built So Far</h2><p>In just a few months, we've shipped Bastions 2.0, a complete Atelier economy, the Desktop app, Living Bastions with mood and reputation systems, and a full safety infrastructure led by our Security Department. That's a lot of ground covered in a short time.</p><h2>What's Coming Next</h2><ul><li><strong>Mobile App (iOS & Android)</strong> — Native apps are in active development. Expect a beta this summer.</li><li><strong>Voice & Video Overhaul</strong> — We're rebuilding Party Rooms from the ground up with spatial audio and screen sharing.</li><li><strong>Bastion Discovery</strong> — A curated directory to find public Bastions by interest, game, and community type.</li><li><strong>Creator Tools</strong> — Streaming integration, subscriber channels, and monetisation features for content creators.</li><li><strong>API v2</strong> — A complete developer platform with webhooks, bot hosting, and marketplace.</li></ul><div class="highlight-box"><strong>Community-first, always.</strong> Every feature we ship is designed to strengthen communities — not extract value from them.</div><p>We're still small. We're still scrappy. But we're building something that matters. Thank you for being part of this fortress.</p><p class="sign-off">— Staw, Chief Executive Officer · Swiftaw</p>`
   },
   encryption_update: {
@@ -683,7 +678,7 @@ const ARTICLES = {
     title:'End-to-End Encryption: Our Approach to Private Messaging', bylineName:'Weaverdant',
     bylineRole:'Chief Security Officer, Swiftaw',
     tagClass:'tag-safety', tagLabel:'Security',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">Privacy isn't a feature — it's a foundation. Today I want to walk through how Fortized handles encryption, what we're building next, and what our commitments are to your data.</p><h2>How DMs Work Today</h2><p>Direct messages on Fortized are encrypted in transit using TLS 1.3. Messages stored on-device use browser localStorage with no server-side persistence in the current architecture. This means your conversations never leave your machine unless you explicitly share them.</p><h2>What We're Building</h2><p>As we transition to server-backed infrastructure, we're implementing full end-to-end encryption for direct messages. This means:</p><ul><li><strong>Only you and the recipient can read messages</strong> — not Fortized, not Swiftaw, not anyone else</li><li><strong>Forward secrecy</strong> — each message session uses ephemeral keys, so compromising one session doesn't expose others</li><li><strong>Verified identities</strong> — users can verify each other's encryption keys to prevent impersonation</li><li><strong>Zero-knowledge architecture</strong> — we cannot decrypt your messages even if compelled to</li></ul><div class="highlight-box"><strong>Your messages are yours.</strong> We designed our system so that we literally cannot read your private conversations. That's not a policy — it's a technical guarantee.</div><h2>Bastion Messages</h2><p>Community channels in Bastions use a different model. Since these are shared spaces, messages are encrypted in transit but readable by authorised moderators and admins. This is necessary for content moderation and community safety — but we're transparent about it.</p><h2>Third-Party Auditing</h2><p>We're in the process of engaging an independent security firm to audit our encryption implementation. Results will be published publicly. We believe transparency in security is just as important as the security itself.</p><p class="sign-off">— Weaverdant, Chief Security Officer · Swiftaw Safety Department</p>`
   },
   game_detection: {
@@ -692,7 +687,7 @@ const ARTICLES = {
     title:'How Game Detection Works — Behind the Scenes', bylineName:'Tyrianum',
     bylineRole:'Chief Research & Development Officer, Swiftaw',
     tagClass:'tag-rd', tagLabel:'R&D',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">One of the most-loved features in Fortized Desktop is automatic game detection. Today I want to pull back the curtain on how it actually works.</p><h2>The Detection Pipeline</h2><p>When you launch the Fortized Desktop app, a lightweight process monitor runs in the background. It scans your running processes every 15 seconds, comparing them against our curated game database and IGDB's catalogue of over 200,000 titles.</p><ul><li><strong>Process Matching</strong> — We match executable names against known game binaries. No file content is ever read.</li><li><strong>IGDB Enrichment</strong> — When a match is found, we pull cover art, genre info, and metadata from IGDB to display on your profile.</li><li><strong>Privacy First</strong> — The process list never leaves your machine. Detection runs entirely client-side.</li></ul><h2>Cover Art Integration</h2><p>We partnered with IGDB to bring high-quality cover art to your game collection. When you add a game — whether manually or through detection — we fetch artwork automatically. This makes your profile's game collection look polished without any extra effort.</p><div class="highlight-box"><strong>Zero telemetry.</strong> Your running processes are never sent to our servers. Game detection is 100% local.</div><h2>What's Next</h2><p>We're working on time-tracking integration, so you can see how many hours you've spent in each game. We're also building a "Currently Playing" status that automatically updates when you launch a game — visible to your friends on the platform.</p><p class="sign-off">— Tyrianum, Chief Research & Development Officer · Swiftaw R&D Department</p>`
   },
   community_growth: {
@@ -701,7 +696,7 @@ const ARTICLES = {
     title:'Growing the Fortress — Our Community Philosophy', bylineName:'Staw',
     bylineRole:'Chief Executive Officer, Swiftaw',
     tagClass:'tag-announce', tagLabel:'Company',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">Communities are the heart of Fortized. Today I want to share how we think about growth — and why we do things differently.</p><h2>Quality Over Quantity</h2><p>We've seen what happens when platforms optimise for user count above all else. Communities get noisy. Moderation breaks down. Identity gets lost in the crowd. At Fortized, we measure success differently.</p><p>Our growth metrics focus on <strong>engagement depth</strong> — how many meaningful conversations happen, how many Bastions are actively moderated, how many members earn reputation through genuine participation.</p><h2>The Onyx Economy</h2><p>Our Onyx system is designed to make growth sustainable. When existing members invite new allies, both parties earn Onyx. This creates a natural incentive for bringing in people who will actually engage — not just inflate numbers.</p><ul><li><strong>Recruitment rewards</strong> — Earn Onyx for every friend who joins and stays active</li><li><strong>Daily engagement</strong> — Consistent participation earns daily Onyx bonuses</li><li><strong>Quest system</strong> — Community challenges that drive meaningful engagement</li></ul><div class="highlight-box"><strong>Growth that matters.</strong> We'd rather have 10,000 engaged members than 100,000 silent accounts.</div><h2>Partnerships</h2><p>We're actively building partnerships with gaming communities, content creators, and esports organisations. If you're interested in bringing your community to Fortized, reach out to us through our Support page.</p><p class="sign-off">— Staw, Chief Executive Officer · Swiftaw</p>`
   },
   security_audit: {
@@ -710,7 +705,7 @@ const ARTICLES = {
     title:'Q1 Security Report — Protecting the Fortress', bylineName:'Weaverdant',
     bylineRole:'Chief Security Officer, Swiftaw',
     tagClass:'tag-safety', tagLabel:'Security',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">Transparency is a core value of the Swiftaw Safety Department. Here's our first quarterly security report — what we've done, what we've found, and what we're improving.</p><h2>Infrastructure Hardening</h2><p>Over the past quarter, we've made significant improvements to our security posture:</p><ul><li><strong>Content Security Policy</strong> — Strict CSP headers now prevent XSS attacks across all Fortized web properties</li><li><strong>Rate Limiting</strong> — API endpoints are now protected with intelligent rate limiting that adapts to traffic patterns</li><li><strong>Session Management</strong> — Sessions now expire after 30 days of inactivity and support forced revocation</li><li><strong>Input Sanitisation</strong> — All user inputs are sanitised at both client and server level</li></ul><h2>AutoMod Performance</h2><p>Since deploying AutoMod 2.0, we've seen significant improvements in automated moderation:</p><ul><li>Spam detection accuracy: 97.3%</li><li>Raid prevention: 12 attacks blocked in the first month</li><li>False positive rate: under 0.4%</li></ul><h2>Bug Bounty Programme</h2><p>We're launching a responsible disclosure programme for security researchers. If you find a vulnerability in Fortized, we want to hear about it — and we'll reward you for it.</p><div class="highlight-box"><strong>Security is everyone's job.</strong> We encourage all Bastion admins to enable AutoMod, use strong passwords, and report suspicious activity through the in-app reporting system.</div><h2>What's Next</h2><p>In Q2, we're focusing on two-factor authentication, login notifications, and advanced audit logging for Bastion owners. Your fortress will be even more defensible.</p><p class="sign-off">— Weaverdant, Chief Security Officer · Swiftaw Safety Department</p>`
   },
   performance: {
@@ -719,7 +714,7 @@ const ARTICLES = {
     title:'Under the Hood — Performance Improvements in March', bylineName:'Tyrianum',
     bylineRole:'Chief Research & Development Officer, Swiftaw',
     tagClass:'tag-rd', tagLabel:'R&D',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">Speed matters. This month, we shipped a series of performance optimisations that make Fortized feel significantly faster. Here's a technical overview of what we changed and why.</p><h2>Rendering Pipeline</h2><p>We rebuilt the message rendering pipeline to use virtual scrolling. Previously, all visible messages were rendered as DOM nodes. Now, only messages in the viewport (plus a buffer of 20 above and below) are rendered. The result:</p><ul><li><strong>70% reduction</strong> in DOM node count for channels with 1000+ messages</li><li><strong>Smooth 60fps scrolling</strong> even in the busiest Bastions</li><li><strong>Lower memory usage</strong> — particularly noticeable on devices with limited RAM</li></ul><h2>Asset Loading</h2><p>Profile pictures, cover art, and emoji are now loaded with intersection observers — meaning they only fetch when they're about to become visible. Combined with aggressive caching, this reduces initial load times by approximately 40%.</p><h2>WebSocket Optimisation</h2><p>Our real-time messaging layer now uses binary WebSocket frames instead of JSON text frames. This reduces bandwidth per message by roughly 35% and improves parsing speed on the client.</p><div class="highlight-box"><strong>Engineering philosophy:</strong> We don't add features and worry about performance later. We optimise continuously so the platform stays fast as it grows.</div><h2>The Atelier</h2><p>The Atelier shop now uses lazy rendering for item grids. Shop categories load on demand, and appearance previews are generated using CSS custom properties instead of full re-renders. The shop opens 3x faster than before.</p><p class="sign-off">— Tyrianum, Chief Research & Development Officer · Swiftaw R&D Department</p>`
   },
   data_protection: {
@@ -728,7 +723,7 @@ const ARTICLES = {
     title:'Your Data, Your Rules — How We Handle Privacy', bylineName:'Weaverdant',
     bylineRole:'Chief Security Officer, Swiftaw',
     tagClass:'tag-safety', tagLabel:'Security',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">Data privacy isn't just a checkbox for us — it's embedded in every decision we make. Here's exactly how Fortized handles your personal information.</p><h2>What We Collect</h2><p>Fortized collects the minimum data necessary to provide the service:</p><ul><li><strong>Account data</strong> — username, email, display name, and password (hashed, never stored in plain text)</li><li><strong>Profile data</strong> — avatar, bio, pronouns, connections, and customisation preferences</li><li><strong>Activity data</strong> — Bastion memberships, friends list, and message metadata</li><li><strong>Technical data</strong> — browser type, session tokens, and error logs</li></ul><h2>What We Don't Collect</h2><ul><li>We don't track your browsing outside of Fortized</li><li>We don't sell or share data with advertisers</li><li>We don't use data for targeted advertising</li><li>We don't read your DMs — ever</li></ul><h2>Local-First Architecture</h2><p>In the current architecture, most user data lives in your browser's localStorage. This gives you direct control — you can inspect, export, or delete your data at any time through your browser's developer tools or through your Fortized account settings.</p><div class="highlight-box"><strong>Compliant everywhere.</strong> Our data practices are designed to comply with privacy regulations in every jurisdiction where Fortized is available, including GDPR, CCPA, and LGPD.</div><h2>Your Rights</h2><p>Regardless of where you live, you have the right to access your data, correct inaccuracies, request deletion, and export a copy. These rights are available through your account settings or by contacting our support team.</p><p class="sign-off">— Weaverdant, Chief Security Officer · Swiftaw Safety Department</p>`
   },
   atelier_evolution: {
@@ -746,7 +741,7 @@ const ARTICLES = {
     title:'From Zero to Fortress — Our Journey So Far', bylineName:'Staw',
     bylineRole:'Chief Executive Officer, Swiftaw',
     tagClass:'tag-launch', tagLabel:'Company',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">Every fortress starts with a single stone. Here's how Fortized went from an idea to a living platform.</p><h2>The Beginning</h2><p>Fortized started as a conversation between friends frustrated with existing platforms. We wanted something that put communities first — not advertisers, not shareholders, not algorithms. Just people building spaces together.</p><p>The name "Fortized" comes from "fortified" — because we believe communities should be strong, defensible, and owned by the people who build them. That's why we call servers "Bastions." That's why admins have complete sovereignty. That's why our economy is earned, not bought.</p><h2>Key Milestones</h2><ul><li><strong>Concept & Design</strong> — Architecture planning, UI design language, brand identity</li><li><strong>Core Platform</strong> — Bastions, channels, roles, messaging, friend system</li><li><strong>The Atelier</strong> — Onyx economy, Radiance system, cosmetic marketplace</li><li><strong>Safety Infrastructure</strong> — AutoMod, raid protection, reporting system</li><li><strong>Desktop App</strong> — Native desktop client for Windows, macOS, and Linux</li><li><strong>Living Bastions</strong> — Mood, reputation, Joyster, focus mode</li></ul><div class="highlight-box"><strong>Built by the community, for the community.</strong> Every feature request, bug report, and piece of feedback during Beta has directly shaped what Fortized is today.</div><h2>Thank You</h2><p>To everyone who joined early, tested features, reported bugs, and helped shape this platform — thank you. You're not just users. You're builders. And the fortress is stronger because of you.</p><p>We're just getting started.</p><p class="sign-off">— Staw, Chief Executive Officer · Swiftaw</p>`
   },
   desktop: {
@@ -764,7 +759,7 @@ const ARTICLES = {
     title:'Fortized Beta is LIVE!', bylineName:'Staw',
     bylineRole:'Chief Executive Officer, Swiftaw',
     tagClass:'tag-launch', tagLabel:'Launch',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">Today is the day. As of February 22, 2026, the Fortized Beta is officially open.</p><p>After months of hard work from the whole team, we're finally moving from internal testing to a live environment. This isn't just another chat app — it's a modern space built for how we actually play and hang out today.</p><h2>What's in the Box?</h2><ul><li><strong>The Atelier:</strong> Our R&D team nailed the integration. You can start earning Onyx through quests right now and trade them for Radiance perks — no credit card required.</li><li><strong>Real Security:</strong> We built walls that actually hold. From AutoMod to Raid Protection, your Bastion is genuinely yours to defend.</li><li><strong>Sovereign Control:</strong> You get full power over your ranks and chambers — no compromises, no fine print.</li></ul><h2>Why Beta?</h2><p>We're open, but we're still refining. This phase is all about stress-testing the tech and listening to your feedback. We want to make sure the foundation is rock solid before the full release.</p><div class="highlight-box"><strong>Your feedback shapes the Fortress.</strong> Every bug report, feature request, and community discussion during Beta directly influences what we build next. This is your platform — help us make it right.</div><p>Big thanks to everyone who helped us get here — the team, the testers, and everyone waiting at the gates. The Fortress is ready to be claimed.</p><p class="sign-off">— Staw, Chief Executive Officer · Swiftaw</p>`
   },
   atelier: {
@@ -782,7 +777,7 @@ const ARTICLES = {
     title:'How Swiftaw Safety Protects Your Bastion', bylineName:'Weaverdant',
     bylineRole:'Chief Safety Officer, Swiftaw',
     tagClass:'tag-safety', tagLabel:'Safety',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">As head of the Swiftaw Safety Department, my role is to ensure that every Bastion within Fortized remains under the complete sovereignty of its owner.</p><p>The Fortized Security Department operates as a dedicated force within the broader Swiftaw Safety framework. Our mission is simple: keep the Fortress standing, no matter what.</p><h2>Layered Defense Infrastructure</h2><p>We approach platform security the same way a military engineer approaches a fortification — in layers. Each layer is designed to stop threats before they reach the next.</p><div class="highlight-box"><strong>Bastion Sovereignty.</strong> Your Bastion is yours. Our security architecture is designed to ensure that admins retain full, uncompromised control over their communities at all times.</div><h2>Trust &amp; Transparency</h2><p>We believe that security only works when it's visible. That's why the Safety Department publishes regular updates on our practices, incident responses, and ongoing improvements.</p><p class="sign-off">— Weaverdant, Chief Safety Officer · Swiftaw Safety Department</p>`
   },
   gates: {
@@ -791,7 +786,7 @@ const ARTICLES = {
     title:'The Gates are Unlocking', bylineName:'Maus',
     bylineRole:'Chief Community Officer, Swiftaw',
     tagClass:'tag-announce', tagLabel:'Announcement',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">After months of intensive development and rigorous security testing, we are officially on the horizon of a new era. The Fortized Beta is live — and the gates are finally unlocking.</p><p>This is a moment we've been building toward since the very first line of code. Today, we're opening the Fortress to the community.</p><h2>What's Inside</h2><p>The Beta gives you access to the core Fortized experience: Bastions, Chambers, Roles, and the early implementation of our Onyx economy.</p><div class="highlight-box"><strong>Beta means builder.</strong> Your feedback during this phase directly shapes the Fortress.</div><h2>How to Get In</h2><p>Access to the Beta is rolling out progressively. Stay tuned to official channels for your invitation.</p><p class="sign-off">— Maus, Chief Community Officer · Swiftaw</p>`
   },
   bastions2: {
@@ -800,7 +795,7 @@ const ARTICLES = {
     title:'Bastions 2.0 — Channels, Roles & Beyond', bylineName:'Tyrianum',
     bylineRole:'Chief R&D Officer, Swiftaw',
     tagClass:'tag-rd', tagLabel:'R&D',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">Today we ship the biggest update to Bastions since launch. Bastions 2.0 is the result of weeks of intensive engineering from the R&D department, and it fundamentally changes what your community can be.</p><p>This isn't a patch. It's a rebuild of nearly every subsystem that powers a Bastion — from the way channels work to how roles are structured, from the boost economy to the moderation toolchain. Let's walk through it.</p><h2>🏰 Bastion Shell</h2><p>Every Bastion now has a <strong>Shell</strong> — a rich header that communicates identity at a glance. The Shell displays your banner, tagline, visibility badge (public or private), boost level, and member count directly in the sidebar. Think of it as your Bastion's front door — visitors see it before they even open a channel.</p><h2>📢 New Room Types</h2><p>Text and voice were just the beginning. Bastions 2.0 introduces four entirely new channel types:</p><ul><li><strong>Announcement Channels</strong> — Restricted posting for owners only. Perfect for updates that shouldn't get buried.</li><li><strong>Poll Channels</strong> — Built-in voting rooms where members can create and participate in polls.</li><li><strong>Event Channels</strong> — Schedule and manage community events with a dedicated calendar view.</li><li><strong>Automation Channels</strong> — Bot-integrated rooms for automated workflows and log outputs.</li></ul><p>All six templates — Game Hall, Fellowship, Guild, Study Circle, Artisans, and Academy — have been rebuilt from scratch with these new channel types baked in.</p><h2>🛡️ Roles 2.0</h2><p>Roles have been completely overhauled. Permissions are now organized into six categories: <strong>General, Text, Voice/Party, Automation, Moderation, and Boost</strong>. Each role gets a priority value (0–100) that determines override order, and a new "Display as Tag" toggle that renders the role as a visible badge next to usernames.</p><p>We also expanded the permission set significantly — new entries include Timeout Members, Connect to Voice, Manage Events, Manage Polls, Manage Bots, View Audit Log, Manage Emojis, and Use Custom Emojis.</p><h2>😊 Custom Emoji Manager</h2><p>The emoji system now features a proper manager with a usage progress bar, quick-reference panel showing all shortcodes, and seamless integration with the boost tier system. Slot counts scale from 15 (default) up to 50 at Sovereign level.</p><h2><img src="/Fortized Bot.png" style="width:20px;height:20px;vertical-align:middle;"> AutoMod 2.0</h2><p>AutoMod is no longer just "block links and caps." The new modular AutoMod introduces eight independent safety toggles:</p><ul><li>Block Links, Anti-Spam, Anti-Raid, Slow Mode</li><li>Block Invite Links, Image-Only Mode, New Account Filter, Profanity Filter</li></ul><p>Each toggle operates independently — turn on what you need, leave off what you don't. Combined with the existing keyword blocklist and mention limiter, this is the most granular moderation toolkit we've ever shipped.</p><h2>🔗 Invites Rework</h2><p>The invite system now supports configurable expiry (1 hour to 30 days), max-use limits, usage tracking per invite, and creator attribution. Expired and maxed-out invites are visually flagged and easy to clean up.</p><h2>⚡ Bastion Boosts 2.0</h2><p>Boosts have been restructured around an Onyx-based subscription model — 90 Onyx per level per month. The three tiers are:</p><ul><li><strong>Level 1 — Reinforced:</strong> 25 emoji slots, animated icon, custom invite background, 128kbps voice</li><li><strong>Level 2 — Fortified:</strong> 35 emoji slots, HD banner, 256kbps voice, custom role icons</li><li><strong>Level 3 — Sovereign:</strong> 50 emoji slots, vanity URL, 384kbps voice, custom splash, priority badge</li></ul><p>Your Onyx fuels the Fortress. No credit card. No paywall. Just community engagement.</p><h2>⚠️ Danger Zone</h2><p>The Danger Zone now includes ownership transfer alongside leave and delete actions. If you're stepping down, you can hand the keys to a trusted member without nuking the Bastion.</p><div class="highlight-box"><strong>Bastions 2.0 is live now.</strong> Every existing Bastion automatically gains access to the new room types, Roles 2.0, AutoMod 2.0, and the full Boost tier system. New Bastions created from templates will include the updated channel presets out of the box.</div><p>This update represents our vision for what community infrastructure should look like — powerful enough for serious teams, accessible enough for casual hangouts, and earned entirely through participation.</p><p>We're just getting started. The Fortress grows stronger.</p><p class="sign-off">— Tyrianum, Chief R&D Officer · Swiftaw R&D Department</p>`
   },
   livingbastions: {
@@ -809,7 +804,7 @@ const ARTICLES = {
     title:'Living Bastions — Mood, Reputation & Focus', bylineName:'Tyrianum',
     bylineRole:'Chief R&D Officer, Swiftaw',
     tagClass:'tag-rd', tagLabel:'R&D',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">Today, Bastions evolve. We're introducing features that make communities feel alive, structured, and uniquely Fortized.</p><p>This isn't about adding more buttons. It's about giving your Bastion a pulse — an atmosphere that responds to the people inside it. Four new systems ship today, each designed to deepen community identity without adding noise.</p><h2>🏰 Bastion Mood</h2><p>Every Bastion now has a live <strong>Mood State</strong> — a dynamic indicator displayed at the top of your channel list that reflects your community's current energy.</p><p>Moods are calculated from emoji usage patterns, message velocity, Party Room activity, poll engagement, and time of day. The result is one of six states:</p><ul><li><strong>🟢 Strategic</strong> — Focused discussion, planning mode</li><li><strong>🔥 Chaotic</strong> — High energy, rapid messages</li><li><strong>🎉 Celebrating</strong> — Events active, reactions flying</li><li><strong>📚 Focused</strong> — Study circles, deep work</li><li><strong>😌 Chill</strong> — Late night, relaxed vibes</li><li><strong>⚡ Hype</strong> — Big community, lots of activity</li></ul><p>Mood changes are subtle but meaningful — they affect the sidebar banner tint, ambient background particles, and even Joyster's expression in that Bastion.</p><p>Admins can lock a mood manually, disable automatic mood entirely, or set custom moods at Boost Level 2+.</p><div class="highlight-box"><strong>No one else does this.</strong> Bastions aren't just chat rooms — they're atmospheres.</div><h2>🎭 Joyster Interventions</h2><p>Joyster now joins the conversation — optionally. When enabled, Joyster becomes a lightweight, playful system presence that reacts to community moments:</p><ul><li>Chat goes silent for 2 hours? <em>"It's quiet in here… plotting something? 👀"</em></li><li>50+ messages in 5 minutes? <em>"Alright alright, save some energy for the raid."</em></li><li>Someone boosts? <em>"Power increased. Walls reinforced."</em></li><li>New member joins? <em>"A new ally has arrived! Welcome to the Bastion!"</em></li></ul><p>Joyster never interrupts conversation. He only appears as subtle system-style messages — building identity and culture without adding friction.</p><p>Admins can set frequency (Low / Normal / Chaos), restrict to Party Rooms only, or disable entirely.</p><h2>🛡️ Bastion Reputation</h2><p>Communities now recognize contribution. Every member earns <strong>Reputation</strong> inside a Bastion through:</p><ul><li>Message reactions received (+2)</li><li>Poll participation (+5)</li><li>Event attendance (+3)</li><li>Boosting (+25)</li><li>Daily messages (+1, capped at 30/day)</li></ul><p>Reputation is displayed as a small shield icon next to your name in the member list. Hover to see your score and tier — from <em>New</em> to <em>Legendary</em>.</p><p>This is Bastion-specific. Not global clout farming. Your reputation in one community doesn't inflate your status in another.</p><p>Admins can use reputation as a permission gate, reward high-rep members with cosmetic badges, and reset reputation per season.</p><div class="highlight-box"><strong>Community progression without pay-to-win.</strong> Reputation is earned through genuine engagement.</div><h2>🧭 Focus Mode</h2><p>A new optional room setting. When enabled on any channel:</p><ul><li>No reactions</li><li>No GIFs</li><li>No emoji bursts</li><li>Clean, minimal UI</li><li>Typing indicator simplified</li></ul><p>Perfect for Study Circles, Academies, and serious Guild planning. The chat background shifts slightly lighter with reduced UI noise — an intentional environment shift, not just slow mode.</p><p>Admins can toggle Focus Mode per channel from Bastion Settings → Channels.</p><h2>What's Next</h2><p>These four systems represent our vision of what community infrastructure should feel like — alive, responsive, and earned. Bastions aren't static containers anymore. They breathe.</p><p>The Fortress grows stronger.</p><p class="sign-off">— Tyrianum, Chief R&D Officer · Swiftaw R&D Department</p>`
   },
   whatisfortized: {
@@ -818,7 +813,7 @@ const ARTICLES = {
     title:'What is Fortized?', bylineName:'Tyrianum',
     bylineRole:'Chief R&D Officer, Swiftaw',
     tagClass:'tag-rd', tagLabel:'R&D',
-    banner:'/FortNovelHeader.png',
+    banner:'/FortNovelHeader.png?v=2026',
     content:`<p class="lead">Fortized started with a simple question: why does building a community feel harder than it should?</p><p>Most platforms give you chat rooms. Some give you tools. A few give you customization. But very few give you <strong>identity</strong>.</p><p>Fortized is our answer to that gap. We call servers <strong>Bastions</strong> because they're meant to be defended, built upon, and strengthened over time.</p><h2>Three Pillars</h2><ul><li><strong>Structure</strong> — Your Bastions don't turn into chaos. Roles are ranks. Channels are chambers.</li><li><strong>Identity</strong> — With systems like Onyx and Radiance, engagement actually changes how you appear.</li><li><strong>Progression</strong> — Members earn Onyx through daily rewards and quests, exchangeable for Radiance.</li></ul><h2>Earned, Not Bought</h2><div class="highlight-box"><strong>No payment required.</strong> Radiance is unlocked through participation alone.</div><p class="sign-off">— Tyrianum, Chief R&D Officer · Swiftaw R&D Department</p>`
   }
 };
@@ -941,7 +936,7 @@ function renderCategories() {
   }));
 }
 
-const FALLBACK_BANNER = '/FortNovelHeader.png';
+const FALLBACK_BANNER = '/FortNovelHeader.png?v=2026';
 const HIDDEN_AUTHORS = new Set(['maus']);
 function isHiddenAuthor(a) {
   const u = (a.authorUsername || a.bylineName || '').toLowerCase().trim();

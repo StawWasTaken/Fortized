@@ -1525,7 +1525,11 @@ function _initChatScroll(msgsEl){
       _chatAutoScroll[id].atBottom=atBot;
       const pastBar=msgsEl.querySelector('.chat-past-bar');
       if(pastBar){
-        const scrolledUp=msgsEl.scrollTop<msgsEl.scrollHeight-msgsEl.clientHeight-300;
+        // Threshold bumped 300 → 900 so the "You're viewing older
+        // messages" pill doesn't pop up the moment you scroll a couple
+        // of lines up. Discord waits until you're meaningfully out of
+        // the live area before offering Jump-to-Present.
+        const scrolledUp=msgsEl.scrollTop<msgsEl.scrollHeight-msgsEl.clientHeight-900;
         pastBar.classList.toggle('show',scrolledUp);
       }
       if(atBot){
@@ -5075,7 +5079,7 @@ function openDMView(username) {
         <span class="rt-name">${escapeHTML(username)}</span>
       </div>
       <div class="chat-msgs" id="dm-msgs">
-        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Jump to Present</button></div>
+        <div class="chat-past-bar"><span class="cpb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Jump to Present</button></div>
         <div class="new-messages-bar" id="dm-new-msgs-bar"><span id="dm-new-msgs-text">1 new message</span><button onclick="markDMRead()">Mark as Read</button></div>
         <div class="chat-welcome">
           <div class="w-av" id="dm-welcome-av">${(() => { const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {}; return buildAvatarHTML(_cp.pfp || null, _cp.displayName || username, 60); })()}</div>
@@ -5699,7 +5703,7 @@ async function openGroupChatView(gcId) {
         <span class="rt-desc">${(meta.members||[]).length} members</span>
       </div>
       <div class="chat-msgs" id="gc-msgs">
-        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('gc-msgs')">Jump to Present</button></div>
+        <div class="chat-past-bar"><span class="cpb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>You're viewing older messages</span><button onclick="scrollBottom('gc-msgs')">Jump to Present</button></div>
         <div class="new-messages-bar" id="gc-new-msgs-bar"><span id="gc-new-msgs-text">1 new message</span><button onclick="markGCRead()">Mark as Read</button></div>
         <div class="chat-welcome">
           <div class="w-av" style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:32px;">${meta.emoji||'👥'}</div>
@@ -6672,7 +6676,7 @@ function loadChatChannel(idx) {
         ${nsfwBadge}
       </div>
       <div class="chat-msgs" id="ch-msgs-${idx}">
-        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Jump to Present</button></div>
+        <div class="chat-past-bar"><span class="cpb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Jump to Present</button></div>
         <div class="new-messages-bar" id="ch-new-msgs-bar-${idx}"><span id="ch-new-msgs-text-${idx}">1 new message</span><button onclick="markChannelRead(${idx})">Mark as Read</button></div>
         ${bannerSafe ? `<div style="width:100%;height:140px;position:relative;flex-shrink:0;overflow:hidden;margin-top:-20px;">
           <img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'">
@@ -8054,7 +8058,7 @@ function _showUndoDelete(ref, msgSnapshot, msgId, ctx, dm, gc, bastion, channel)
   clearTimeout(_undoDeleteTimer);
   const el = document.createElement('div');
   el.className = 'undo-toast';
-  el.innerHTML = `<span class="ut-text">Message deleted</span><button class="ut-btn" onclick="_undoDelete()">Undo</button><div class="ut-progress"></div>`;
+  el.innerHTML = `<span class="ut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></span><span class="ut-text">Message deleted</span><button class="ut-btn" onclick="_undoDelete()">Undo</button><div class="ut-progress"></div>`;
   document.body.appendChild(el);
   _undoDeleteTimer = setTimeout(() => {
     _undoDeleteQueue = [];

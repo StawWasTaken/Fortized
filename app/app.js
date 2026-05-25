@@ -926,6 +926,9 @@ const ONBOARDING_INTERESTS = [
 // Constants for moderation and age tiers
 
 const REPORT_REASONS = ['Harassment','Hate Speech','NSFW / Explicit Content','Spam or Scam','Threats or Violence','Self-Harm or Suicide','Illegal Content','Other'];
+const BASTION_REPORT_REASONS = ['Harassment by owner / staff','Hate-speech community','NSFW content / unmarked','Scam or impersonation','Illegal content','Spam / raid','Underage members','Other'];
+const GAME_ISSUE_REASONS = ['Game listed incorrectly','Broken cover / images','Wrong metadata','Inappropriate content','Spam / fake entry','Copyright violation','Other'];
+const GAME_REVIEW_REASONS = ['Harassment','Hate speech','Spam or fake review','Unrelated content','Doxxing / personal info','Inappropriate content','Other'];
 const AGE_TIERS = {CHILD:'child',TEEN:'teen',ADULT:'adult'};
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -7169,9 +7172,9 @@ function renderMessages(container, msgs, context) {
   if (msgs.length >= 20) {
     const loadMore = document.createElement('div');
     loadMore.className = 'load-more-bar';
-    loadMore.innerHTML = '<button class="load-more-btn" onclick="_loadOlderMessages(this)">Load older messages</button>';
     loadMore.dataset.context = context;
     loadMore.dataset.offset = '20';
+    loadMore.innerHTML = _renderSkelMessages(3);
     container.appendChild(loadMore);
   }
 
@@ -7267,72 +7270,136 @@ async function _resyncActiveChat() {
   }
 }
 
-async function _loadOlderMessages(btn) {
-  const bar = btn.closest('.load-more-bar');
-  if (!bar) return;
+// Skeleton row markup — n placeholder rows that mimic the .msg-row
+// layout (circular avatar + variable-width text bars). Uses CSS
+// keyframes for the shimmer (see .msg-skel class block in styles.css).
+// Random-but-stable bar widths via a deterministic table so the
+// shimmer doesn't tear when the skeleton re-renders between batches.
+const _SKEL_BAR_WIDTHS = [
+  ['38%','82%','55%'],
+  ['62%','46%','71%','30%'],
+  ['28%','90%','40%'],
+  ['48%','68%','58%','22%'],
+  ['34%','78%','61%'],
+];
+function _renderSkelMessages(n) {
+  const rows = [];
+  for (let i = 0; i < (n || 3); i++) {
+    const widths = _SKEL_BAR_WIDTHS[i % _SKEL_BAR_WIDTHS.length];
+    const bars = widths.map(w => `<span class="msg-skel-line" style="width:${w};"></span>`).join('');
+    rows.push(`<div class="msg-skel"><span class="msg-skel-av"></span><div class="msg-skel-lines"><span class="msg-skel-name"></span>${bars}</div></div>`);
+  }
+  return `<div class="msg-skel-stack" aria-hidden="true">${rows.join('')}</div>`;
+}
+
+// Replaces the load-more-bar's content with a single retry button —
+// used when the API call fails so the user can re-trigger manually.
+function _renderLoadMoreRetry() {
+  return '<button class="load-more-btn" type="button" onclick="_loadOlderMessages(this.closest(\'.load-more-bar\'))">Failed — try again</button>';
+}
+
+async function _loadOlderMessages(barOrBtn) {
+  // Accepts either the bar or a child button (legacy callers); resolve to bar.
+  const bar = barOrBtn?.classList?.contains('load-more-bar') ? barOrBtn : barOrBtn?.closest?.('.load-more-bar');
+  if (!bar || bar._loading) return;
+  bar._loading = true;
   const context = bar.dataset.context;
   const offset = parseInt(bar.dataset.offset) || 50;
-  btn.textContent = 'Loading...';
-  btn.disabled = true;
+  // Make sure the skeleton is showing while we fetch (retry path replaces
+  // it with a button, then back to skeleton here).
+  if (!bar.querySelector('.msg-skel-stack')) bar.innerHTML = _renderSkelMessages(3);
   try {
     let older = [];
     if (context === 'ch' && curBastion !== null && curChannel !== null) {
       const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
-      if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId||b.name, ch.name, 50, offset);
+      if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId || b.name, ch.name, 50, offset);
     } else if (context === 'dm' && curDM) {
       older = await FortizedSocial.getDMMessages(CU.username, curDM, 50);
     }
     if (older.length) {
       const container = bar.parentElement;
-      // Anchor scroll to the first existing message so prepending doesn't
-      // visually "jump" the user away from what they were reading.
+      // Anchor: capture the first real message's offsetTop BEFORE prepending
+      // so we can restore the scroll position relative to it. Browsers'
+      // built-in overflow-anchor handles most cases; this is the fallback.
       const anchor = container.querySelector('.msg-row');
       const anchorOffsetTop = anchor ? anchor.offsetTop : 0;
       const scrollTopBefore = container.scrollTop;
-      // Insert older messages immediately AFTER the load-more bar, in
-      // chronological order. Each appendMessage with prevAuthor=null lets
-      // _getLastAuthor compute grouping against the next-older row that
-      // was just inserted.
+      // Insert older messages immediately AFTER the load-more bar so the
+      // skeleton stays at the very top.
       older.forEach(msg => {
         appendMessage(container, msg, context, null);
         const appended = container.lastChild;
         if (appended && anchor && appended !== anchor) container.insertBefore(appended, anchor);
       });
-      // Restore scroll so the previous top message stays visually in place.
       if (anchor) {
         const newAnchorOffsetTop = anchor.offsetTop;
         container.scrollTop = scrollTopBefore + (newAnchorOffsetTop - anchorOffsetTop);
       }
       bar.dataset.offset = (offset + older.length).toString();
-      btn.textContent = 'Load older messages';
-      btn.disabled = false;
-      if (older.length < 50) bar.remove();
+      // If we got fewer than the page size, history is exhausted — remove
+      // the bar so the IntersectionObserver stops firing.
+      if (older.length < 50) { _detachOlderObserver(container); bar.remove(); }
+      else bar.innerHTML = _renderSkelMessages(3); // ready for the next round
     } else {
+      _detachOlderObserver(bar.parentElement);
       bar.remove();
     }
-  } catch(e) {
-    btn.textContent = 'Failed — try again';
-    btn.disabled = false;
+  } catch (e) {
+    console.warn('[Chat] load older failed:', e);
+    bar.innerHTML = _renderLoadMoreRetry();
+  } finally {
+    bar._loading = false;
   }
 }
 
-// Discord-style lazy load: when the user scrolls within ~120px of the top,
-// auto-fire the existing _loadOlderMessages for the load-more bar. Idle
-// otherwise so older history isn't fetched eagerly.
+// IntersectionObserver-driven auto-load. Fires when the load-more-bar
+// scrolls into view (rootMargin pushes the trigger ~200 px before the
+// bar actually crosses the viewport top so the skeleton can paint a
+// beat before the user gets there). Cleaner + cheaper than a scroll
+// listener that fires every frame.
 function _attachLazyLoadOlder(container, context) {
-  if (!container || container._lazyLoadAttached) return;
-  container._lazyLoadAttached = true;
-  let firing = false;
-  container.addEventListener('scroll', () => {
-    if (firing) return;
-    if (container.scrollTop > 120) return;
+  if (!container || container._lazyIO) return;
+  if (typeof IntersectionObserver !== 'function') {
+    // Old-browser fallback: scroll listener.
+    let firing = false;
+    container.addEventListener('scroll', () => {
+      if (firing) return;
+      if (container.scrollTop > 200) return;
+      const bar = container.querySelector('.load-more-bar');
+      if (!bar || bar._loading) return;
+      firing = true;
+      Promise.resolve(_loadOlderMessages(bar)).finally(() => { firing = false; });
+    }, { passive: true });
+    container._lazyIO = { disconnect() {} };
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const bar = entry.target;
+        if (!bar._loading) _loadOlderMessages(bar);
+      }
+    }
+  }, { root: container, rootMargin: '200px 0px 0px 0px', threshold: 0 });
+  container._lazyIO = io;
+  // Observe the current bar (if any) + watch the container for new bars
+  // added later (e.g. after _renderMsgs re-renders).
+  const observeBar = () => {
     const bar = container.querySelector('.load-more-bar');
-    if (!bar) return;
-    const btn = bar.querySelector('.load-more-btn');
-    if (!btn || btn.disabled) return;
-    firing = true;
-    Promise.resolve(_loadOlderMessages(btn)).finally(() => { firing = false; });
-  }, { passive: true });
+    if (bar && !bar._observed) { bar._observed = true; io.observe(bar); }
+  };
+  observeBar();
+  const mo = new MutationObserver(observeBar);
+  mo.observe(container, { childList: true });
+  container._lazyMO = mo;
+}
+
+function _detachOlderObserver(container) {
+  if (!container) return;
+  try { container._lazyIO?.disconnect?.(); } catch (_) {}
+  try { container._lazyMO?.disconnect?.(); } catch (_) {}
+  container._lazyIO = null;
+  container._lazyMO = null;
 }
 
 
@@ -20045,9 +20112,16 @@ function handleContextMenu(e) {
         bastionItems.push({ icon: _ctxSvg('settings'), label: 'Bastion Settings', action: () => openBastionSettings() });
       }
       if (bastionItems.length) groups.push({ label: 'Bastion', items: bastionItems });
-      groups.push({ items: [
-        { icon: _ctxSvg('leave'), label: 'Leave Bastion', danger: true, action: () => leaveBastion(curBastion) },
-      ]});
+      // Bottom group — Report (non-owners only — you can't report your own bastion) + Leave.
+      const danger = [];
+      if (!isOwner) {
+        danger.push({ icon: _ctxSvg('report'), label: 'Report Bastion', action: () => {
+          const b = CU?.bastions?.[curBastion];
+          if (b) reportBastion(b.globalId || b.name, b.name);
+        }});
+      }
+      danger.push({ icon: _ctxSvg('leave'), label: 'Leave Bastion', danger: true, action: () => leaveBastion(curBastion) });
+      groups.push({ items: danger });
     }
 
     showCtxMenu(e.clientX, e.clientY, groups);
@@ -20356,6 +20430,58 @@ function reportUser(username) {
     subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
     reasons: REPORT_REASONS,
     placeholder: 'Tell us what this user did…',
+    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+  });
+}
+
+// Report a bastion (server). Caller passes the bastion's globalId
+// + display name so the report payload includes both. Falls through
+// to the same submit pipeline (FortizedSocial.adminSaveReport + local
+// cache) as every other report variant.
+function reportBastion(bastionId, bastionName) {
+  activeReportData = { type: 'bastion', bastionId, bastionName, reportedAt: new Date().toISOString() };
+  showReport({
+    type: 'bastion',
+    title: 'Report Bastion',
+    subjectLabel: 'Reported Bastion',
+    subjectText: escapeHTML(bastionName || bastionId || 'Unnamed bastion'),
+    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    reasons: BASTION_REPORT_REASONS,
+    placeholder: "Describe what's wrong with this bastion…",
+    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+  });
+}
+
+// Report an inaccuracy or problem with a game listing.
+function reportGameIssue(gameId, gameName) {
+  activeReportData = { type: 'game-issue', gameId, gameName, reportedAt: new Date().toISOString() };
+  showReport({
+    type: 'game-issue',
+    title: 'Report Issue',
+    subtitle: 'Tell us what\'s wrong with this game',
+    subjectLabel: 'Game',
+    subjectText: escapeHTML(gameName || gameId || 'Unknown game'),
+    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><line x1="8" y1="11" x2="8" y2="15"/><line x1="6" y1="13" x2="10" y2="13"/><circle cx="15.5" cy="12" r="1"/><circle cx="17.5" cy="14.5" r="1"/></svg>',
+    reasons: GAME_ISSUE_REASONS,
+    placeholder: 'Describe the issue (wrong cover, broken link, etc.)…',
+    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+  });
+}
+
+// Report a user-written review on a game card.
+function reportGameReview(reviewId, opts) {
+  opts = opts || {};
+  activeReportData = { type: 'game-review', reviewId, gameId: opts.gameId, reviewAuthor: opts.author, reportedAt: new Date().toISOString() };
+  const preview = (opts.text || '').slice(0, 160);
+  showReport({
+    type: 'game-review',
+    title: 'Report Review',
+    subjectLabel: 'Reported Review',
+    subjectText: preview ? `"${escapeHTML(preview)}${(opts.text || '').length > 160 ? '…' : ''}"` : `Review #${escapeHTML(String(reviewId || ''))}`,
+    subjectMeta: opts.author ? `by @${opts.author}${opts.gameName ? ' · ' + opts.gameName : ''}` : (opts.gameName || ''),
+    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    reasons: GAME_REVIEW_REASONS,
+    placeholder: 'Tell us why this review breaks the rules…',
     onSubmit: ({ reason, context }) => submitReport({ reason, context }),
   });
 }

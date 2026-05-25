@@ -14533,66 +14533,35 @@ async function _cmEditAdSave(adId) {
 }
 const AD_REPORT_REASONS = ['Inappropriate content','Misleading or scam','Offensive imagery','Spam','Impersonation','Other'];
 function _reportAd(adId, adTitle, adBastion) {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay open';
-  overlay.id = 'modal-report-ad';
-  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
-  overlay.innerHTML = `
-    <div style="max-width:440px;width:100%;border-radius:24px;background:linear-gradient(165deg,#15171e,#13161d);border:1.5px solid rgba(248,113,113,.08);box-shadow:0 24px 80px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .15s cubic-bezier(.22,1,.36,1);">
-      <div style="background:linear-gradient(135deg,rgba(248,113,113,.06),rgba(248,113,113,.02));padding:22px 26px 18px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:40px;height:40px;border-radius:14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-          </div>
-          <div style="flex:1;">
-            <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Report Ad</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.35);">Help us keep Fortized safe</div>
-          </div>
-          <button onclick="this.closest('.modal-overlay').remove()" style="width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        </div>
-      </div>
-      <div style="padding:20px 26px 24px;max-height:65vh;overflow-y:auto;">
-        <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);border-radius:12px;margin-bottom:18px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          <div style="min-width:0;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(248,113,113,.5);margin-bottom:3px;">Reported Ad</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.6);word-break:break-word;line-height:1.5;">"${escapeHTML((adTitle||'Untitled').slice(0,100))}"</div>
-            ${adBastion?`<div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:4px;">from ${escapeHTML(adBastion)}</div>`:''}
-          </div>
-        </div>
-        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(248,113,113,.45);margin-bottom:10px;">What's the issue?</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px;">
-          ${AD_REPORT_REASONS.map((r,i)=>`
-            <label id="adr-label-${i}" class="report-reason-label">
-              <input type="radio" name="ad-report-reason" value="${r}" onchange="document.querySelectorAll('[id^=adr-label-]').forEach((el,j)=>{el.style.borderColor=j===${i}?'rgba(248,113,113,.3)':'rgba(255,255,255,.06)';el.style.background=j===${i}?'rgba(248,113,113,.06)':'rgba(255,255,255,.02)';const sp=el.querySelector('span');if(sp)sp.style.color=j===${i}?'rgba(255,255,255,.85)':'rgba(255,255,255,.65)';})" style="accent-color:var(--red);">
-              <span style="font-size:12.5px;font-weight:500;color:rgba(255,255,255,.65);">${r}</span>
-            </label>`).join('')}
-        </div>
-        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:8px;">Additional Context <span style="font-weight:500;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.15);">(optional)</span></div>
-        <textarea class="field-input" id="ad-report-context" placeholder="Describe what's wrong with this ad..." rows="3" style="resize:none;margin-bottom:14px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:12px;padding:11px 14px;width:100%;color:#fff;font-family:var(--font-ui);font-size:13px;outline:none;transition:border-color .2s;"></textarea>
-        <div id="ad-report-error" style="font-size:12px;color:var(--red);margin-bottom:8px;min-height:16px;"></div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="_submitAdReport('${escapeHTML(adId)}')" class="report-submit-btn">Submit Report</button>
-          <button onclick="this.closest('.modal-overlay').remove()" style="padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;">Cancel</button>
-        </div>
-        <div style="margin-top:14px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;display:flex;align-items:center;gap:8px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span style="font-size:11px;color:rgba(255,255,255,.25);">Your report is anonymous and reviewed by our Safety team.</span>
-        </div>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
+  showReport({
+    type: 'ad',
+    title: 'Report Ad',
+    subjectLabel: 'Reported Ad',
+    subjectText: `"${escapeHTML(String(adTitle || 'Untitled').slice(0, 120))}"`,
+    subjectMeta: adBastion ? `from ${adBastion}` : '',
+    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/><path d="M9 13h6"/><path d="M9 16h3"/></svg>',
+    reasons: AD_REPORT_REASONS,
+    placeholder: "Describe what's wrong with this ad…",
+    onSubmit: ({ reason, context }) => _submitAdReport(adId, { reason, context }),
+  });
 }
-async function _submitAdReport(adId) {
-  const reason = document.querySelector('input[name="ad-report-reason"]:checked')?.value;
-  const context = document.getElementById('ad-report-context')?.value?.trim();
-  const errEl = document.getElementById('ad-report-error');
-  if (!reason) { if (errEl) errEl.textContent = 'Please select a reason.'; return; }
+// Now called by showReport() with {reason, context}; falls back to DOM
+// lookups for any legacy caller. Same payload, same backend write.
+async function _submitAdReport(adId, payload) {
+  let reason, context;
+  if (payload && typeof payload === 'object') {
+    reason = payload.reason;
+    context = payload.context || '';
+  } else {
+    reason = document.querySelector('input[name="ad-report-reason"]:checked')?.value;
+    context = (document.getElementById('ad-report-context')?.value || '').trim();
+  }
+  if (!reason) throw new Error('Please select a reason.');
   let adSnap = null;
   try {
     const ads = await FortizedSocial.getGlobalAds();
     adSnap = (ads || []).find(a => a && (a.id === adId || a.adId === adId)) || null;
-  } catch(_){}
+  } catch (_) {}
   const now = new Date().toISOString();
   const report = {
     id: 'rpt_' + Date.now(),
@@ -14612,13 +14581,12 @@ async function _submitAdReport(adId) {
     status: 'pending'
   };
   try { await FortizedSocial.adminSaveReport(report); }
-  catch(e) { console.warn('[Report] Ad report save failed:', e); }
+  catch (e) { console.warn('[Report] Ad report save failed:', e); }
   try {
-    const existing = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+    const existing = JSON.parse(localStorage.getItem('ftz_reports') || '[]');
     if (!existing.find(r => r.id === report.id)) existing.push(report);
     localStorage.setItem('ftz_reports', JSON.stringify(existing));
-  } catch(_){}
-  document.getElementById('modal-report-ad')?.remove();
+  } catch (_) {}
   toast('Ad reported. Our Safety team will review it.', 'success');
 }
 
@@ -20259,129 +20227,182 @@ function confirmNSFWView() {
 
 
 
-function reportMessage(msgId, msgText, msgFrom) {
-  activeReportData = { type: 'message', msgId, msgText, msgFrom: msgFrom || null, reportedAt: new Date().toISOString() };
-  showReportModal();
-}
+// ════════════════════════════════════════════════════════════
+// UNIFIED REPORT MODAL — one renderer, every variant. See the
+// .rpt-modal CSS block in styles.css for the design system. The
+// type-specific functions below (reportMessage, reportUser,
+// _reportAd, reportBastion, reportForumPost, reportGameComment,
+// reportGameIssue) all hand opts → showReport().
+//
+// opts shape:
+//   type            string id ('message' | 'user' | 'ad' | …)
+//   title           header label ('Report Message')
+//   subtitle        small grey line under title (defaults to
+//                   "Help us keep Fortized safe")
+//   subjectLabel    uppercase pill in the subject card ('Reported Message')
+//   subjectText     main text of the subject card (quote, name, etc.)
+//   subjectMeta     small grey line under subject text (optional)
+//   subjectIcon     svg path / markup for the subject chip
+//   reasons         string[] of reason options
+//   placeholder     textarea placeholder
+//   onSubmit({reason, context}) → Promise (throws → shows .rpt-modal__error)
+//
+// Header chip icon defaults to the megaphone flag (Lucide). The
+// "Submit" button is disabled until a reason is picked so the user
+// can't fire an empty report.
+// ════════════════════════════════════════════════════════════
+const _RPT_DEFAULT_HEADER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
+const _RPT_DEFAULT_SUBJECT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
 
-function reportUser(username) {
-  activeReportData = { type: 'user', username, reportedAt: new Date().toISOString() };
-  showReportModal();
-}
-
-function showReportModal() {
+function showReport(opts) {
+  if (!opts || typeof opts !== 'object') return;
+  document.getElementById('modal-report-unified')?.remove();
+  const subjectHTML = (opts.subjectLabel || opts.subjectText)
+    ? `<div class="rpt-modal__subject">
+        <div class="rpt-modal__subject-icon">${opts.subjectIcon || _RPT_DEFAULT_SUBJECT_SVG}</div>
+        <div class="rpt-modal__subject-body">
+          ${opts.subjectLabel ? `<div class="rpt-modal__subject-label">${escapeHTML(opts.subjectLabel)}</div>` : ''}
+          ${opts.subjectText ? `<div class="rpt-modal__subject-text">${opts.subjectText}</div>` : ''}
+          ${opts.subjectMeta ? `<div class="rpt-modal__subject-meta">${escapeHTML(opts.subjectMeta)}</div>` : ''}
+        </div>
+      </div>`
+    : '';
+  const reasons = Array.isArray(opts.reasons) ? opts.reasons : [];
+  const reasonsHTML = reasons.map((r, i) => `
+    <label class="rpt-modal__reason">
+      <input type="radio" name="rpt-reason" value="${escapeHTML(r)}" data-i="${i}">
+      <span>${escapeHTML(r)}</span>
+    </label>`).join('');
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
-  overlay.id = 'modal-report-dynamic';
-  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
-
-  const isMsg = activeReportData?.type === 'message';
-  const targetLabel = isMsg ? 'Message' : 'User';
-  const targetInfo = isMsg
-    ? `<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);border-radius:12px;margin-bottom:18px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        <div style="min-width:0;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(248,113,113,.5);margin-bottom:3px;">Reported Message</div><div style="font-size:12.5px;color:rgba(255,255,255,.6);word-break:break-word;line-height:1.5;">"${escapeHTML(activeReportData.msgText.slice(0,150))}${activeReportData.msgText.length>150?'…':''}"</div>
-        ${activeReportData.msgFrom?`<div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:4px;">from @${escapeHTML(activeReportData.msgFrom)}</div>`:''}</div>
-      </div>`
-    : activeReportData?.username
-      ? `<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);border-radius:12px;margin-bottom:18px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(248,113,113,.5);margin-bottom:2px;">Reported User</div><div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.7);">@${escapeHTML(activeReportData.username)}</div></div>
-        </div>`
-      : '';
-
+  overlay.id = 'modal-report-unified';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
-    <div style="max-width:440px;width:100%;border-radius:24px;background:linear-gradient(165deg,#15171e,#13161d);border:1.5px solid rgba(248,113,113,.08);box-shadow:0 24px 80px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .15s cubic-bezier(.22,1,.36,1);">
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg,rgba(248,113,113,.06),rgba(248,113,113,.02));padding:22px 26px 18px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:40px;height:40px;border-radius:14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-          </div>
-          <div style="flex:1;">
-            <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Report ${targetLabel}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.35);">Help us keep Fortized safe</div>
-          </div>
-          <button onclick="this.closest('.modal-overlay').remove()" style="width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="rpt-modal" role="dialog" aria-label="${escapeHTML(opts.title || 'Report')}">
+      <div class="rpt-modal__header">
+        <div class="rpt-modal__icon">${opts.headerIcon || _RPT_DEFAULT_HEADER_SVG}</div>
+        <div class="rpt-modal__title-block">
+          <div class="rpt-modal__title">${escapeHTML(opts.title || 'Report')}</div>
+          <div class="rpt-modal__subtitle">${escapeHTML(opts.subtitle || 'Help us keep Fortized safe')}</div>
         </div>
+        <button class="rpt-modal__close" aria-label="Close" onclick="this.closest('.modal-overlay').remove()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
-
-      <div style="padding:20px 26px 24px;max-height:65vh;overflow-y:auto;">
-        ${targetInfo}
-
-        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(248,113,113,.45);margin-bottom:10px;">What's the issue?</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px;">
-          ${REPORT_REASONS.map((r,i)=>`
-            <label id="rr-label-${i}" class="report-reason-label">
-              <input type="radio" name="report-reason" value="${r}" onchange="selectReportReason(${i})" style="accent-color:var(--red);">
-              <span style="font-size:12.5px;font-weight:500;color:rgba(255,255,255,.65);">${r}</span>
-            </label>`).join('')}
+      <div class="rpt-modal__body">
+        ${subjectHTML}
+        <div class="rpt-modal__section-label rpt-modal__section-label--accent">What's the issue?</div>
+        <div class="rpt-modal__reasons">${reasonsHTML}</div>
+        <div class="rpt-modal__section-label">Additional Context<span class="rpt-modal__hint">(optional)</span></div>
+        <textarea class="rpt-modal__textarea" placeholder="${escapeHTML(opts.placeholder || 'Describe what happened in more detail…')}" rows="3"></textarea>
+        <div class="rpt-modal__error" role="alert"></div>
+        <div class="rpt-modal__actions">
+          <button class="rpt-modal__submit" disabled>Submit Report</button>
+          <button class="rpt-modal__cancel" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
         </div>
-
-        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:8px;">Additional Context <span style="font-weight:500;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.15);">(optional)</span></div>
-        <textarea class="field-input" id="report-context" placeholder="Describe what happened in more detail…" rows="3" style="resize:none;margin-bottom:14px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:12px;padding:11px 14px;width:100%;color:#fff;font-family:var(--font-ui);font-size:13px;outline:none;transition:border-color .2s;"></textarea>
-        <div id="report-error" style="font-size:12px;color:var(--red);margin-bottom:8px;min-height:16px;"></div>
-
-        <div style="display:flex;gap:8px;">
-          <button onclick="submitReport()" class="report-submit-btn">Submit Report</button>
-          <button onclick="this.closest('.modal-overlay').remove()" style="padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;">Cancel</button>
-        </div>
-
-        <div style="margin-top:14px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;display:flex;align-items:center;gap:8px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span style="font-size:11px;color:rgba(255,255,255,.25);">Your report is anonymous and reviewed by our Safety team.</span>
+        <div class="rpt-modal__footer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Your report is anonymous and reviewed by our Safety team.</span>
         </div>
       </div>
     </div>`;
   document.body.appendChild(overlay);
-}
-
-function selectReportReason(idx) {
-  document.querySelectorAll('[id^="rr-label-"]').forEach((el,i)=>{
-    if (i===idx) {
-      el.style.borderColor = 'rgba(248,113,113,.3)';
-      el.style.background = 'rgba(248,113,113,.06)';
-      const sp = el.querySelector('span');
-      if (sp) sp.style.color = 'rgba(255,255,255,.85)';
-    } else {
-      el.style.borderColor = 'rgba(255,255,255,.06)';
-      el.style.background = 'rgba(255,255,255,.02)';
-      const sp = el.querySelector('span');
-      if (sp) sp.style.color = 'rgba(255,255,255,.65)';
+  const submitBtn = overlay.querySelector('.rpt-modal__submit');
+  const errEl = overlay.querySelector('.rpt-modal__error');
+  const textarea = overlay.querySelector('.rpt-modal__textarea');
+  overlay.querySelectorAll('input[name="rpt-reason"]').forEach(input => {
+    input.addEventListener('change', () => { submitBtn.disabled = false; if (errEl) errEl.textContent = ''; });
+  });
+  submitBtn.addEventListener('click', async () => {
+    const sel = overlay.querySelector('input[name="rpt-reason"]:checked');
+    if (!sel) { errEl.textContent = 'Please select a reason.'; return; }
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting…';
+    try {
+      await Promise.resolve(opts.onSubmit?.({ reason: sel.value, context: (textarea?.value || '').trim() }));
+      overlay.remove();
+    } catch (e) {
+      console.error('[Report] submit failed:', e);
+      errEl.textContent = e?.message || 'Failed to submit. Please try again.';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Report';
     }
   });
 }
 
-async function submitReport() {
-  const selected = document.querySelector('input[name="report-reason"]:checked');
-  const err = document.getElementById('report-error');
-  if (!selected) { if(err) err.textContent='Please select a reason'; return; }
-  const context = document.getElementById('report-context')?.value || '';
+function reportMessage(msgId, msgText, msgFrom) {
+  activeReportData = { type: 'message', msgId, msgText, msgFrom: msgFrom || null, reportedAt: new Date().toISOString() };
+  showReport({
+    type: 'message',
+    title: 'Report Message',
+    headerIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    subjectLabel: 'Reported Message',
+    subjectText: `"${escapeHTML(String(msgText || '').slice(0, 200))}${(msgText || '').length > 200 ? '…' : ''}"`,
+    subjectMeta: msgFrom ? `from @${msgFrom}` : '',
+    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    reasons: REPORT_REASONS,
+    placeholder: 'Describe what happened in more detail…',
+    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+  });
+}
 
+function reportUser(username) {
+  activeReportData = { type: 'user', username, reportedAt: new Date().toISOString() };
+  showReport({
+    type: 'user',
+    title: 'Report User',
+    subjectLabel: 'Reported User',
+    subjectText: `@${escapeHTML(username || '')}`,
+    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    reasons: REPORT_REASONS,
+    placeholder: 'Tell us what this user did…',
+    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+  });
+}
+
+// showReportModal / selectReportReason removed — replaced by showReport()
+// above which renders the unified .rpt-modal design. Both reportMessage
+// and reportUser now feed showReport() directly with their own subject
+// payloads.
+
+// Signature changed: called by showReport() with {reason, context} so
+// it no longer pokes the DOM for values. Falls back to the old DOM
+// lookups if called with no args (legacy callers).
+async function submitReport(payload) {
+  let reason, context;
+  if (payload && typeof payload === 'object') {
+    reason = payload.reason;
+    context = payload.context || '';
+  } else {
+    const selected = document.querySelector('input[name="report-reason"]:checked');
+    if (!selected) {
+      const err = document.getElementById('report-error');
+      if (err) err.textContent = 'Please select a reason';
+      throw new Error('Please select a reason');
+    }
+    reason = selected.value;
+    context = document.getElementById('report-context')?.value || '';
+  }
   const report = {
     id: 'rpt_' + Date.now(),
     reporter: CU.username,
-    reason: selected.value,
+    reason,
     context,
     ...activeReportData,
     status: 'pending',
     createdAt: new Date().toISOString(),
     bastionId: curBastion !== null ? CU.bastions[curBastion]?.name : null,
   };
-
-  // Save to Supabase reports queue (primary) + localStorage (cache)
   try {
     await FortizedSocial.adminSaveReport(report);
-  } catch(e) { console.warn('Report save failed:', e); }
+  } catch (e) { console.warn('Report save failed:', e); }
   // Always store locally too as cache
-  const existing = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+  const existing = JSON.parse(localStorage.getItem('ftz_reports') || '[]');
   if (!existing.find(r => r.id === report.id)) existing.push(report);
   localStorage.setItem('ftz_reports', JSON.stringify(existing));
-
-  document.getElementById('modal-report-dynamic')?.remove();
   activeReportData = null;
-  toast('✅ Report submitted. Thank you for keeping Fortized safe.', 'success');
-  showFeedbackToast('submitting a report', 'report_submit');
+  toast('Report submitted. Thank you for keeping Fortized safe.', 'success');
+  try { showFeedbackToast?.('submitting a report', 'report_submit'); } catch (_) {}
 }
 
 

@@ -964,6 +964,33 @@ function _readPersistedBannerLocal(username) {
   } catch { return null; }
 }
 
+// Dedicated pfp storage — same pattern as banner. The main ftz_user_<name>
+// blob can get trimmed under localStorage quota pressure (_trimCUForStorage
+// drops pfp at >1.5MB) which is the "avatar appears transparent on
+// reload" bug. The dedicated key sits outside that storage and the boot
+// guard trusts it for 24h, so even if the row gets trimmed locally the
+// pfp survives the refresh.
+function _persistPfpLocal(username, pfp, pfpCrop) {
+  if (!username) return;
+  try {
+    localStorage.setItem('ftz_pfp_' + username, JSON.stringify({ val: pfp || '', crop: pfpCrop || null, ts: Date.now() }));
+  } catch {}
+}
+function _readPersistedPfpLocal(username) {
+  if (!username) return null;
+  try {
+    const raw = localStorage.getItem('ftz_pfp_' + username);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !('val' in parsed)) return null;
+    if ((Date.now() - (parsed.ts || 0)) > 86400000) {
+      try { localStorage.removeItem('ftz_pfp_' + username); } catch {}
+      return null;
+    }
+    return parsed;
+  } catch { return null; }
+}
+
 function _trimCUForStorage(cu) {
   const t = { ...cu };
   // Trim the LARGEST field first instead of dropping pfp + banner +
@@ -10238,6 +10265,17 @@ function initFortizedUXResilience() {
               CU.banner = bannerEntry.val;
             }
           } catch {}
+          // Same guard for pfp — covers the "avatar appears transparent
+          // after refresh" case where _trimCUForStorage stripped the
+          // data-URL out of ftz_user_<name> to fit the localStorage
+          // quota, or where Supabase rejected the oversized row.
+          try {
+            const pfpEntry = _readPersistedPfpLocal(CU.username);
+            if (pfpEntry && pfpEntry.val && CU.pfp !== pfpEntry.val) {
+              CU.pfp = pfpEntry.val;
+              if (pfpEntry.crop !== undefined) CU.pfpCrop = pfpEntry.crop;
+            }
+          } catch {}
           console.log('[DECO][boot] DB fetch returned activeDecoration =', JSON.stringify(CU.activeDecoration), '| localStorage ftz_user activeDecoration =', JSON.stringify(local?.activeDecoration), '| ftz_recent_edits activeDecoration =', recent.activeDecoration ? Math.round((_nowR - recent.activeDecoration)/1000)+'s ago' : 'none');
           if (local) {
             // Trust local over the freshly-fetched DB row for any
@@ -18591,9 +18629,11 @@ function _showAvatarPickerModal() {
 }
 
 async function _pickRecentAvatar(url) {
-  // Preserve any typed-but-unsaved fields (displayName, bio, etc.) by
-  // pulling them into CU before the save so the auto-save commits the
-  // user's draft rather than the stale pre-edit value.
+  // QUEUE the pfp change instead of auto-saving so the unsaved-changes
+  // bar shows up — user clicks Save Changes to commit + broadcast. The
+  // dedicated ftz_pfp_<name> key persists the draft locally so a
+  // refresh mid-draft doesn't lose the avatar to localStorage quota
+  // trimming (the "avatar appears transparent on reload" bug).
   _syncSettingsInputsToCU();
   CU.pfp = url;
   CU.pfpCrop = null;
@@ -18602,13 +18642,13 @@ async function _pickRecentAvatar(url) {
   window._recentlyEditedFields.pfp = Date.now();
   window._recentlyEditedFields.pfpCrop = Date.now();
   _saveRecentAvatar(url);
-  await saveUser(true);
-  try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, pfp: url, pfpCrop: null, field: 'pfp' }); } catch (e) {}
+  _persistPfpLocal(CU.username, url, null);
+  try { saveLocal(); } catch(_){}
   try { updateUserbar(); } catch(_){}
   try { buildProfileView('myprofile'); } catch(_){}
   document.querySelector('.ftz-confirm-overlay')?.remove();
-  _refreshSettingsBaseline();
-  toast('Avatar updated!', 'success');
+  markSettingsDirty();
+  toast('Avatar set — click Save Changes to keep', 'info');
 }
 
 function _removeRecentAvatar(url) {
@@ -18858,12 +18898,12 @@ async function _applyGifAvatar(url) {
     window._recentlyEditedFields.pfp = Date.now();
     window._recentlyEditedFields.pfpCrop = Date.now();
     _saveRecentAvatar(CU.pfp);
-    await saveUser(true);
-    try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, pfp: CU.pfp, pfpCrop: CU.pfpCrop, field: 'pfp' }); } catch (e) {}
+    _persistPfpLocal(CU.username, CU.pfp, CU.pfpCrop);
+    try { saveLocal(); } catch(_){}
     try { updateUserbar(); } catch(_){}
     try { buildProfileView('myprofile'); } catch(_){}
-    _refreshSettingsBaseline();
-    toast('Animated avatar updated! ✓', 'success');
+    markSettingsDirty();
+    toast('Animated avatar set — click Save Changes to keep', 'info');
   });
   _cropData._isGif = true;
   _cropData._gifSrc = gifData;
@@ -18916,12 +18956,12 @@ async function updatePfp(e) {
         window._recentlyEditedFields.pfp = Date.now();
         window._recentlyEditedFields.pfpCrop = Date.now();
         _saveRecentAvatar(result.gifData);
-        await saveUser(true);
-        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: result.gifData, pfpCrop: result.crop, field: 'pfp' }); } catch(e){}
+        _persistPfpLocal(CU.username, result.gifData, result.crop);
+        try { saveLocal(); } catch(_){}
         updateUserbar();
         buildProfileView('myprofile');
-        _refreshSettingsBaseline();
-        toast('Animated avatar updated! ✓', 'success');
+        markSettingsDirty();
+        toast('Animated avatar set — click Save Changes to keep', 'info');
       });
       _cropData._isGif = true;
       _cropData._gifSrc = fileData;
@@ -18943,12 +18983,12 @@ async function updatePfp(e) {
         window._recentlyEditedFields.pfp = Date.now();
         window._recentlyEditedFields.pfpCrop = Date.now();
         _saveRecentAvatar(cropped);
-        await saveUser(true);
-        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { username: CU.username, pfp: cropped, pfpCrop: null, field: 'pfp' }); } catch(e){}
+        _persistPfpLocal(CU.username, cropped, null);
+        try { saveLocal(); } catch(_){}
         updateUserbar();
         buildProfileView('myprofile');
-        _refreshSettingsBaseline();
-        toast('Avatar updated! ✓', 'success');
+        markSettingsDirty();
+        toast('Avatar set — click Save Changes to keep', 'info');
       });
     }
   };
@@ -34625,14 +34665,32 @@ async function _gdmSubmitReview(gameName) {
   all[key].unshift(entry);
   all[key] = all[key].slice(0, 200);
   _gdmSaveReviews(all);
-  // Cross-user write: push to Supabase so everyone else's game card
-  // shows this review. Silent on failure (the local copy already saved).
+  // Cross-user write: push to Supabase so other users' open game
+  // cards pick it up on next read. The Supabase write requires a
+  // `game_reviews` table (id text pk, game_key text, data jsonb) —
+  // if it doesn't exist the save returns ok:false with a "relation
+  // does not exist" error, which we surface in console so it's
+  // visible during setup.
   try {
     if (typeof FortizedSocial?.saveGameReview === 'function') {
       const r = await FortizedSocial.saveGameReview(entry);
-      if (r && r.ok === false && r.msg) console.warn('[GDM] saveGameReview:', r.msg);
+      if (r && r.ok === false) {
+        console.warn('[GDM] saveGameReview rejected:', r.msg || '(no message)');
+        console.warn('[GDM] Create the table with:\n' +
+          '  create table if not exists game_reviews (id text primary key, game_key text, data jsonb);\n' +
+          '  create index if not exists game_reviews_key_idx on game_reviews (game_key);');
+      }
     }
   } catch (e) { console.warn('[GDM] saveGameReview failed', e?.message); }
+  // Real-time fanout: broadcast over the socket so users with this
+  // game card already open see the new review without re-opening.
+  // Server may not have a handler for this event yet — emit is best-
+  // effort; if the server doesn't forward it, the Supabase read on
+  // next open is the fallback path.
+  try {
+    const s = (typeof FortizedSocial?.getSocket === 'function') ? FortizedSocial.getSocket() : null;
+    if (s) s.emit('review:new', { gameKey: (entry.game || '').toLowerCase(), review: entry });
+  } catch (_) {}
   // Reset the form, refresh the carousel with the new entry at the front.
   _gdmPickedVote = null;
   document.querySelectorAll('.gdm-thumb').forEach(b => b.classList.remove('gdm-thumb--active'));
@@ -40515,6 +40573,32 @@ function initCrossDeviceSync() {
     try { _refreshFppFriendButton(other); } catch(_){}
   });
 
+  // 5c. Game review broadcast — when ANY user posts a review, every
+  // client gets a live push so an open game card can prepend it
+  // without waiting on the next Supabase read. Skip our own echoes.
+  socket.on('review:new', (data) => {
+    if (!data || !data.review || !data.gameKey) return;
+    if (data.review.user === CU?.username) return; // already in our cache
+    try {
+      const all = (typeof _gdmLoadReviews === 'function') ? _gdmLoadReviews() : {};
+      const k = data.gameKey.toLowerCase();
+      const list = Array.isArray(all[k]) ? all[k] : [];
+      // De-dupe by user (one review per user per game).
+      const next = [data.review, ...list.filter(r => (r.user || '').toLowerCase() !== (data.review.user || '').toLowerCase())].slice(0, 200);
+      all[k] = next;
+      if (typeof _gdmSaveReviews === 'function') _gdmSaveReviews(all);
+      // Stash for the report-review lookup.
+      window._gdmReviewIndex = window._gdmReviewIndex || {};
+      window._gdmReviewIndex[data.review.id] = data.review;
+      // Re-render the carousel + community embed if this is the open card.
+      if (typeof _gdmLastGame !== 'undefined' && _gdmLastGame && (_gdmLastGame.name || '').toLowerCase() === k) {
+        try { _gdmStartReviewCarousel(_gdmLastGame.name); } catch (_) {}
+        const host = document.getElementById('gdm-reviews-embed');
+        if (host && typeof _gdmRenderEmbedHTML === 'function') host.innerHTML = _gdmRenderEmbedHTML(_gdmLastGame);
+      }
+    } catch (e) { console.warn('[GDM] review:new handler failed', e?.message); }
+  });
+
   // 6. Notification broadcast
   socket.on('notification:new', (notif) => {
     if (notif.username === CU.username || notif.to === CU.username) {
@@ -41338,6 +41422,12 @@ async function saveAllSettings() {
   } catch (e) { _dbg('[Profile] broadcast failed:', e?.message); }
   updateUserbar();
   applyRadianceFont();
+  // Refresh dedicated banner/pfp keys so the 24h fallback window
+  // restarts at "now". The DB is authoritative once Save lands but
+  // these keep working if Supabase rejects a future row or local-
+  // Storage trims under quota pressure.
+  try { _persistBannerLocal(CU.username, CU.banner || ''); } catch (_) {}
+  try { _persistPfpLocal(CU.username, CU.pfp || '', CU.pfpCrop || null); } catch (_) {}
   // Update snapshot so future edits compare against saved state
   _settingsOriginal = CU ? structuredClone({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme}) : null;
   clearSettingsDirty();
@@ -46646,6 +46736,25 @@ setInterval(() => {
   const cutoff = Date.now() - 30000; // 30s window — well past the 8s used by refreshCU
   for (const k in m) { if (m[k] < cutoff) delete m[k]; }
 }, 60000);
+
+// ════════════════════════════════════════════════════════════
+// IMAGE DRAG OFF — block the browser's "grab an image and toss it
+// anywhere" gesture for img / svg / video / picture inside the app.
+// CSS user-drag:none isn't always honoured (Firefox image-link
+// dragging in particular) so we cancel at the dragstart event level.
+// Real draggable surfaces (rail-bastion ordering, dm-sortable, file
+// uploads in the composer) still work because we only cancel for the
+// image/video tags themselves, not for the wrapping divs.
+// ════════════════════════════════════════════════════════════
+document.addEventListener('dragstart', (e) => {
+  const t = e.target;
+  if (!t || !t.tagName) return;
+  const tag = t.tagName.toLowerCase();
+  if (tag === 'img' || tag === 'svg' || tag === 'video' || tag === 'picture' || tag === 'canvas') {
+    e.preventDefault();
+    return false;
+  }
+}, true);
 
 // ════════════════════════════════════════════════════════════
 // SUPERADMIN INSPECTOR — provisional dev helper, gated to

@@ -1843,7 +1843,18 @@ const FortizedSocial = (() => {
         .eq('game_key', key)
         .order('id', { ascending: false })
         .limit(200);
-      if (error) return [];
+      if (error) {
+        // Surface the underlying error so the table-missing case is
+        // visible (instead of silently returning [] which looked like
+        // "everyone has no reviews"). Only log once per session so we
+        // don't spam the console.
+        if (!getGameReviews._loggedError) {
+          getGameReviews._loggedError = true;
+          console.warn('[FortizedSocial] getGameReviews failed:', error.message || error);
+          console.warn('[FortizedSocial] Create the table with:\n  create table if not exists game_reviews (id text primary key, game_key text, data jsonb);\n  create index if not exists game_reviews_key_idx on game_reviews (game_key);');
+        }
+        return [];
+      }
       return (data || []).map(r => r.data || r).filter(Boolean);
     } catch (_) { return []; }
   }

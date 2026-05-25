@@ -733,6 +733,11 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .msg-skel-lines{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;padding-top:4px;}
 .msg-skel-name{height:11px;width:24%;border-radius:5px;margin-bottom:3px;background:linear-gradient(90deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.12) 50%, rgba(255,255,255,.06) 100%);background-size:200% 100%;animation:skel-shimmer 1.4s linear infinite;}
 .msg-skel-line{height:9px;border-radius:5px;}
+.msg-skel-image{display:block;width:180px;height:120px;border-radius:10px;margin-top:8px;
+  background:linear-gradient(90deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.04) 100%);
+  background-size:200% 100%;
+  animation:skel-shimmer 1.4s linear infinite;
+}
 @keyframes skel-shimmer{
   from { background-position: 200% 0; }
   to   { background-position: -200% 0; }

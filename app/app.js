@@ -7271,23 +7271,31 @@ async function _resyncActiveChat() {
 }
 
 // Skeleton row markup — n placeholder rows that mimic the .msg-row
-// layout (circular avatar + variable-width text bars). Uses CSS
-// keyframes for the shimmer (see .msg-skel class block in styles.css).
-// Random-but-stable bar widths via a deterministic table so the
-// shimmer doesn't tear when the skeleton re-renders between batches.
-const _SKEL_BAR_WIDTHS = [
-  ['38%','82%','55%'],
-  ['62%','46%','71%','30%'],
-  ['28%','90%','40%'],
-  ['48%','68%','58%','22%'],
-  ['34%','78%','61%'],
+// layout (circular avatar + author bar + variable-width text bars,
+// with the occasional embedded-image rectangle to break up the
+// rhythm). Shimmer is a CSS linear-gradient sweep (see .msg-skel
+// block in styles.css). Width pattern is deterministic so re-renders
+// don't tear the shimmer offset.
+//
+// Each entry: { lines: ['38%','82%',…], image?: true }
+const _SKEL_ROW_PATTERNS = [
+  { lines: ['38%','82%','55%'] },
+  { lines: ['62%','46%','71%','30%'] },
+  { lines: ['28%','64%'], image: true },                  // row with embedded image
+  { lines: ['48%','68%','58%','22%'] },
+  { lines: ['34%','78%','61%'] },
+  { lines: ['52%','40%'], image: true },                  // shorter row with image
+  { lines: ['44%','86%','52%','34%'] },
+  { lines: ['30%','58%'] },                               // short single-line message
 ];
 function _renderSkelMessages(n) {
   const rows = [];
-  for (let i = 0; i < (n || 3); i++) {
-    const widths = _SKEL_BAR_WIDTHS[i % _SKEL_BAR_WIDTHS.length];
-    const bars = widths.map(w => `<span class="msg-skel-line" style="width:${w};"></span>`).join('');
-    rows.push(`<div class="msg-skel"><span class="msg-skel-av"></span><div class="msg-skel-lines"><span class="msg-skel-name"></span>${bars}</div></div>`);
+  const count = n || 6;
+  for (let i = 0; i < count; i++) {
+    const p = _SKEL_ROW_PATTERNS[i % _SKEL_ROW_PATTERNS.length];
+    const bars = p.lines.map(w => `<span class="msg-skel-line" style="width:${w};"></span>`).join('');
+    const img = p.image ? '<span class="msg-skel-image"></span>' : '';
+    rows.push(`<div class="msg-skel"><span class="msg-skel-av"></span><div class="msg-skel-lines"><span class="msg-skel-name"></span>${bars}${img}</div></div>`);
   }
   return `<div class="msg-skel-stack" aria-hidden="true">${rows.join('')}</div>`;
 }
@@ -11113,6 +11121,61 @@ function initFortizedUXResilience() {
             if (data.badges !== undefined && typeof renderBadgesHTML === 'function') {
               const badgesBody = card.querySelector('.fpp-card--badges .fpp-card__body');
               if (badgesBody) badgesBody.innerHTML = renderBadgesHTML({ username: data.username, badges: data.badges });
+            }
+            // Games strip (.fpp-card--games) — re-render via the helper
+            // so a freshly-added / removed game shows up live without
+            // a page refresh. The card is removed entirely if the new
+            // games list is empty (matches first-render behaviour).
+            if (data.gameCollection !== undefined || data.registeredGames !== undefined) {
+              const gameUser = { ...(_u || {}), gameCollection: data.gameCollection, registeredGames: data.registeredGames };
+              const existing = card.querySelector('.fpp-card--games');
+              const newHTML = (typeof _fppGamesCardHTML === 'function') ? _fppGamesCardHTML(gameUser) : '';
+              if (existing) {
+                if (newHTML) {
+                  const tmp = document.createElement('div');
+                  tmp.innerHTML = newHTML;
+                  if (tmp.firstElementChild) existing.replaceWith(tmp.firstElementChild);
+                } else {
+                  existing.remove();
+                }
+              } else if (newHTML) {
+                const badges = card.querySelector('.fpp-card--badges');
+                if (badges) badges.insertAdjacentHTML('afterend', newHTML);
+              }
+            }
+            // Custom status — bubble next to the avatar. Re-render via
+            // the helper so the random-empty-state prompt + emoji stay
+            // consistent across surfaces.
+            if (data.customStatus !== undefined && typeof _fppCSBubbleHTML === 'function') {
+              const csUser = { ...(_u || {}), customStatus: data.customStatus };
+              const avRow = card.querySelector('.fpp__av-row');
+              if (avRow) {
+                const oldBubble = avRow.querySelector('.fpp__cs-bubble');
+                const newHTML = _fppCSBubbleHTML(csUser, false);
+                const tmp = document.createElement('div');
+                tmp.innerHTML = newHTML;
+                if (oldBubble && tmp.firstElementChild) oldBubble.replaceWith(tmp.firstElementChild);
+                else if (tmp.firstElementChild) avRow.appendChild(tmp.firstElementChild);
+              }
+            }
+            // Display name + style (font / effect / colour). Patch the
+            // .fpp__name span — the cosmetic display rules above this
+            // block already covered .ml-name / .msg-author but missed
+            // the profile-card / popover display names.
+            if (data.displayName !== undefined || data.displayFont !== undefined || data.displayEffect !== undefined || data.displayColor !== undefined) {
+              const nameEl = card.querySelector('.fpp__name');
+              if (nameEl) {
+                if (data.displayName) nameEl.textContent = data.displayName;
+                if (data.displayFont) nameEl.style.fontFamily = (typeof _getDisplayFontCSS === 'function') ? _getDisplayFontCSS(data.displayFont) : '';
+                if (data.displayColor || data.displayEffect) {
+                  try {
+                    const effectCss = (typeof _getDisplayEffectCSS === 'function') ? _getDisplayEffectCSS(data.displayEffect || 'solid', data.displayColor || '#fff') : '';
+                    // _getDisplayEffectCSS returns a string of CSS declarations.
+                    // Replace any prior effect declarations on the element.
+                    nameEl.style.cssText = (nameEl.style.cssText || '').replace(/(text-shadow|background-image|-webkit-background-clip|background-clip|-webkit-text-fill-color)\s*:[^;]+;?/g, '') + ';' + effectCss;
+                  } catch (_) {}
+                }
+              }
             }
           });
         } catch (e) { _dbg('[Profile] real-time fpp patch failed:', e?.message); }
@@ -19294,7 +19357,9 @@ async function _viewUserProfile(username) {
   if (!username) throw new Error('No username provided');
   if (!CU?.username) throw new Error('Not signed in');
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch (e) { _dbg('[Profile] user lookup failed', e); }
+  // noCache so the Profile Card modal always opens with the user's
+  // CURRENT data instead of a 5-minute-old cached snapshot.
+  try { u = await FortizedSocial.getUserByName(username, { noCache: true }); } catch (e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   if (username === (CU.username||'').toLowerCase()) u = { ...u, ...CU };
 
@@ -24757,7 +24822,10 @@ function showRailBastionCtx(e, idx) {
     { items: [
       ...(isOwner
         ? [{ icon: _ctxSvg('leave'), label: 'Delete Bastion', action: () => confirmDeleteBastion(idx), danger: true }]
-        : [{ icon: _ctxSvg('leave'), label: 'Leave Bastion', action: () => leaveBastion(idx), danger: true }]
+        : [
+            { icon: _ctxSvg('report'), label: 'Report Bastion', action: () => reportBastion(b.globalId || b.name, b.name) },
+            { icon: _ctxSvg('leave'), label: 'Leave Bastion', action: () => leaveBastion(idx), danger: true },
+          ]
       ),
     ]},
   ];
@@ -30371,7 +30439,9 @@ async function showDMUserPanel(username) {
   subscribeProfileStatus(username);
 
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch (e) { _dbg('[DM] user lookup failed', e); }
+  // noCache so the DM right-side profile panel always shows current
+  // pfp / banner / bio / pronouns — Discord-style live read.
+  try { u = await FortizedSocial.getUserByName(username, { noCache: true }); } catch (e) { _dbg('[DM] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
 
   // Update DM welcome area with actual pfp
@@ -34235,6 +34305,46 @@ function _renderGameDetailsModal(overlay, requestedName, game) {
   _gdmStartReviewCarousel(game.name);
   _gdmRenderHero();
   try { if (typeof window._twemojiReparse === 'function') window._twemojiReparse(card); } catch(_){}
+  // Pull cross-user reviews from Supabase (the localStorage cache only
+  // holds reviews this device has written). Merges into the local
+  // cache and re-renders the carousel + community embed once they land
+  // so other users' votes / comments actually show up here.
+  _gdmRefreshReviewsFromCloud(game.name).catch(() => {});
+}
+
+async function _gdmRefreshReviewsFromCloud(gameName) {
+  if (!gameName || typeof FortizedSocial?.getGameReviews !== 'function') return;
+  let cloud;
+  try { cloud = await FortizedSocial.getGameReviews(gameName); }
+  catch (_) { return; }
+  if (!Array.isArray(cloud) || !cloud.length) return;
+  // Merge: cloud is authoritative for any review with a known id;
+  // local-only entries (older format without deterministic id) stay too.
+  const all = _gdmLoadReviews();
+  const key = (gameName || '').toLowerCase();
+  const local = Array.isArray(all[key]) ? all[key] : [];
+  const cloudIds = new Set(cloud.map(r => r.id).filter(Boolean));
+  const merged = [
+    ...cloud,
+    ...local.filter(r => !cloudIds.has(r.id)),
+  ];
+  // De-dupe by user (keep the newest per user — cloud first, then local).
+  const seenUsers = new Set();
+  const out = [];
+  for (const r of merged) {
+    const u = (r.user || '').toLowerCase();
+    if (u && seenUsers.has(u)) continue;
+    seenUsers.add(u);
+    out.push(r);
+  }
+  all[key] = out.slice(0, 200);
+  _gdmSaveReviews(all);
+  // Re-render the carousel + community embed if this is still the open card.
+  if (_gdmLastGame && (_gdmLastGame.name || '').toLowerCase() === key) {
+    try { _gdmStartReviewCarousel(_gdmLastGame.name); } catch (_) {}
+    const host = document.getElementById('gdm-reviews-embed');
+    if (host) host.innerHTML = _gdmRenderEmbedHTML(_gdmLastGame);
+  }
 }
 
 let _gdmLastGame = null;
@@ -34273,56 +34383,20 @@ function _gdmOpenVideo(index) {
   document.body.appendChild(overlay);
 }
 
+// Game-issue + game-review report flows now route through the same
+// unified showReport() renderer everything else uses. The old bespoke
+// .gdm-report-overlay / .gdm-report-card markup was visually drifted
+// from the rest of the report family — different padding, different
+// button style, different copy. Routing through showReport() unifies
+// the look and reuses GAME_ISSUE_REASONS / GAME_REVIEW_REASONS.
 function _gdmReportIssue() {
   const g = _gdmLastGame;
-  const gameName = g ? g.name : '';
-  document.getElementById('gdm-report-modal')?.remove();
   const m = document.getElementById('gdm-menu'); if (m) m.style.display = 'none';
-  const overlay = document.createElement('div');
-  overlay.id = 'gdm-report-modal';
-  overlay.className = 'gdm-report-overlay';
-  overlay.innerHTML = `
-    <div class="gdm-report-card" onclick="event.stopPropagation()">
-      <button class="gdm-report-close" onclick="document.getElementById('gdm-report-modal').remove()" aria-label="Close">×</button>
-      <div class="gdm-report-title">What went wrong?</div>
-      <div class="gdm-report-sub">Please select your issue for <strong>${escapeHTML(gameName || 'this game')}</strong></div>
-      <label class="gdm-report-opt"><input type="radio" name="gdm-report" value="wrong_game"><span>Wrong game is shown</span></label>
-      <label class="gdm-report-opt"><input type="radio" name="gdm-report" value="missing_info"><span>Missing or outdated info</span></label>
-      <label class="gdm-report-opt"><input type="radio" name="gdm-report" value="bad_media"><span>Bad or broken screenshots / video</span></label>
-      <label class="gdm-report-opt"><input type="radio" name="gdm-report" value="other"><span>Other feedback</span></label>
-      <textarea class="gdm-report-text" id="gdm-report-text" placeholder="Optional: tell us more…" maxlength="500"></textarea>
-      <div class="gdm-report-actions">
-        <button class="gdm-report-cancel" onclick="document.getElementById('gdm-report-modal').remove()">Cancel</button>
-        <button class="gdm-report-submit" onclick="_gdmSubmitReport('${escapeHTML(gameName).replace(/'/g, "\\'")}')">Send report</button>
-      </div>
-    </div>`;
-  overlay.onclick = () => overlay.remove();
-  document.body.appendChild(overlay);
+  reportGameIssue(g?.id || g?.name || '', g?.name || '');
 }
 
 function _gdmReportReview(reviewId, reviewUser, gameName) {
-  document.getElementById('gdm-report-modal')?.remove();
-  const overlay = document.createElement('div');
-  overlay.id = 'gdm-report-modal';
-  overlay.className = 'gdm-report-overlay';
-  overlay.innerHTML = `
-    <div class="gdm-report-card" onclick="event.stopPropagation()">
-      <button class="gdm-report-close" onclick="document.getElementById('gdm-report-modal').remove()" aria-label="Close">×</button>
-      <div class="gdm-report-title">Report this review</div>
-      <div class="gdm-report-sub">By <strong>@${escapeHTML(reviewUser || 'unknown')}</strong> on <strong>${escapeHTML(gameName || 'this game')}</strong></div>
-      <label class="gdm-report-opt"><input type="radio" name="gdm-rev-report" value="spam"><span>Spam or advertising</span></label>
-      <label class="gdm-report-opt"><input type="radio" name="gdm-rev-report" value="offensive"><span>Offensive language or harassment</span></label>
-      <label class="gdm-report-opt"><input type="radio" name="gdm-rev-report" value="off_topic"><span>Off-topic / not about the game</span></label>
-      <label class="gdm-report-opt"><input type="radio" name="gdm-rev-report" value="false_info"><span>Misleading or false information</span></label>
-      <label class="gdm-report-opt"><input type="radio" name="gdm-rev-report" value="other"><span>Other</span></label>
-      <textarea class="gdm-report-text" id="gdm-rev-report-text" placeholder="Optional: tell us more…" maxlength="500"></textarea>
-      <div class="gdm-report-actions">
-        <button class="gdm-report-cancel" onclick="document.getElementById('gdm-report-modal').remove()">Cancel</button>
-        <button class="gdm-report-submit" onclick="_gdmSubmitReviewReport('${escapeHTML(reviewId).replace(/'/g, "\\'")}','${escapeHTML(reviewUser).replace(/'/g, "\\'")}','${escapeHTML(gameName).replace(/'/g, "\\'")}')">Send report</button>
-      </div>
-    </div>`;
-  overlay.onclick = () => overlay.remove();
-  document.body.appendChild(overlay);
+  reportGameReview(reviewId, { author: reviewUser, gameName });
 }
 
 async function _gdmSubmitReviewReport(reviewId, reviewUser, gameName) {
@@ -34517,8 +34591,12 @@ function _gdmPickVote(btn, vote) {
 async function _gdmSubmitReview(gameName) {
   if (!_gdmPickedVote) { toast('Pick 👍, ✋ or 👎 first', 'error'); return; }
   const text = (document.getElementById('gdm-review-text')?.value || '').trim().slice(0, 280);
+  // ID is deterministic per (user, game) so re-voting replaces the row
+  // in Supabase instead of stacking duplicate entries from the same user.
+  const userKey = (CU?.username || 'anon').toLowerCase();
+  const gameKey = (gameName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60);
   const entry = {
-    id: 'rev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    id: 'rev_' + userKey + '_' + gameKey,
     game: gameName,
     vote: _gdmPickedVote,
     text,
@@ -34527,6 +34605,8 @@ async function _gdmSubmitReview(gameName) {
     pfp: CU?.pfp || null,
     at: Date.now(),
   };
+  // Local-first write so the user sees their review instantly even on
+  // a flaky network.
   const all = _gdmLoadReviews();
   const key = (gameName || '').toLowerCase();
   if (!Array.isArray(all[key])) all[key] = [];
@@ -34535,6 +34615,14 @@ async function _gdmSubmitReview(gameName) {
   all[key].unshift(entry);
   all[key] = all[key].slice(0, 200);
   _gdmSaveReviews(all);
+  // Cross-user write: push to Supabase so everyone else's game card
+  // shows this review. Silent on failure (the local copy already saved).
+  try {
+    if (typeof FortizedSocial?.saveGameReview === 'function') {
+      const r = await FortizedSocial.saveGameReview(entry);
+      if (r && r.ok === false && r.msg) console.warn('[GDM] saveGameReview:', r.msg);
+    }
+  } catch (e) { console.warn('[GDM] saveGameReview failed', e?.message); }
   // Reset the form, refresh the carousel with the new entry at the front.
   _gdmPickedVote = null;
   document.querySelectorAll('.gdm-thumb').forEach(b => b.classList.remove('gdm-thumb--active'));
@@ -42083,7 +42171,11 @@ async function showMiniProfilePreview(username, anchorEl) {
   }
 
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch (e) { _dbg('[Profile] user lookup failed', e); }
+  // noCache so the mini popover always shows the user's CURRENT pfp /
+  // banner / bio / pronouns / etc. — cached lookups can be up to TTL
+  // minutes stale and that's the "user A still sees the elephant after
+  // user B changed to a giraffe" bug.
+  try { u = await FortizedSocial.getUserByName(username, { noCache: true }); } catch (e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   let status = 'offline';
   if (username === CU?.username) {

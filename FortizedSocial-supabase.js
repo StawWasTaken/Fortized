@@ -32,7 +32,15 @@ const FortizedSocial = (() => {
   // query avoided keeps the site alive.
   const _cache = {};
   const _CACHE_TTL = {
-    user: 300000,           // 5 min — user profiles (was 2min)
+    user: 30000,            // 30 s — user profiles. Profile surfaces
+                            // (mini popover / DM panel / profile card)
+                            // pass {noCache:true} for guaranteed-fresh
+                            // reads anyway; this TTL just bounds how
+                            // long any other cached lookup (memberlist,
+                            // avatar refresh, etc.) can stay stale
+                            // before naturally aging out — was 5 min,
+                            // which was the "user A still sees the
+                            // elephant" bug.
     userEnforce: 120000,    // 2 min — ban/suspension checks (was 1min)
     notifications: 300000,  // 5 min — notification list (was 2min)
     unreadCount: 120000,    // 2 min — unread badge count (was 1min)
@@ -1815,6 +1823,47 @@ const FortizedSocial = (() => {
     await sb.from('reports').upsert({ id: report.id, data: report }, { onConflict: 'id' });
   }
 
+  // -- Game reviews (shared across all users) --
+  // Table shape: `game_reviews` with columns:
+  //   id text PK, game_key text, data jsonb
+  // game_key is the lower-cased game name so we can range-query by game
+  // without parsing JSONB. Reviews land in `data` as the full review
+  // object (id, game, vote, text, user, displayName, pfp, at).
+  //
+  // Both methods swallow Supabase errors silently so the localStorage
+  // fallback path keeps working if the table doesn't exist yet —
+  // letting the schema be added on the backend without breaking the
+  // client.
+  async function getGameReviews(gameName) {
+    const key = norm(gameName);
+    if (!key) return [];
+    try {
+      const { data, error } = await sb.from('game_reviews')
+        .select('id,data')
+        .eq('game_key', key)
+        .order('id', { ascending: false })
+        .limit(200);
+      if (error) return [];
+      return (data || []).map(r => r.data || r).filter(Boolean);
+    } catch (_) { return []; }
+  }
+  async function saveGameReview(review) {
+    if (!review?.id || !review?.game) return { ok: false };
+    try {
+      const { error } = await sb.from('game_reviews').upsert({
+        id: review.id,
+        game_key: norm(review.game),
+        data: review,
+      }, { onConflict: 'id' });
+      if (error) return { ok: false, msg: error.message };
+      return { ok: true };
+    } catch (e) { return { ok: false, msg: e?.message }; }
+  }
+  async function deleteGameReview(reviewId) {
+    if (!reviewId) return;
+    try { await sb.from('game_reviews').delete().eq('id', reviewId); } catch (_) {}
+  }
+
   // -- Bans (stored as admin_kv key 'bans' array AND on user row) --
   async function adminGetBans() {
     return (await _adminKVGet('bans')) || [];
@@ -2298,6 +2347,7 @@ const FortizedSocial = (() => {
     submitReport,
     // Admin API
     adminGetReports, adminSaveReport,
+    getGameReviews, saveGameReview, deleteGameReview,
     adminGetBans, adminSaveBan, adminRemoveBan,
     adminSuspendUser, adminUnsuspendUser,
     adminWarnUser, adminClearWarning,

@@ -863,16 +863,11 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Chat input */
 .chat-input-wrap{padding:0 12px 10px;flex-shrink:0;box-sizing:border-box;}
 /* Typing indicator — Discord-style: subtle bouncing dots + small text. */
-/* Typing indicator — exactly what you described: chat-colour at the
-   bottom (matching the chat bg so it dissolves seamlessly into the
-   message stream below) fading to fully transparent at the top.
-   The fade itself is invisible against the chat — what it provides
-   is a soft transition zone so the typing text appears against the
-   chat without a hard rectangle. min-height bumped to 40px so the
-   fade has visible vertical room. */
-.typing-indicator{position:relative;display:flex;align-items:center;gap:8px;padding:8px 20px 10px;min-height:40px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;
-  background:linear-gradient(to top, var(--canvas-color, #13161d) 0%, transparent 100%);
-}
+/* Typing indicator — no background, no gradient. The dots + text
+   sit directly on the chat. If a "hard block" still appears above
+   the textbox the source is a different element (right-click the
+   Staff Console button → Inspect UI → click it to find out). */
+.typing-indicator{position:relative;display:flex;align-items:center;gap:8px;padding:4px 20px 8px;min-height:22px;font-size:13px;color:rgba(255,255,255,.55);transition:opacity .25s;letter-spacing:.01em;font-weight:500;background:transparent;}
 .typing-indicator strong{color:#fff;font-weight:700;}
 .typing-dots{display:flex;gap:3px;align-items:center;}
 .typing-dots span{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);animation:typingBounce 1.4s infinite ease-in-out;}
@@ -4852,17 +4847,20 @@ button[disabled],
 .unsaved-bar-save{background:var(--accent);color:#13161d;border:none;border-radius:8px;font-family:var(--font-display);font-size:12.5px;font-weight:800;padding:7px 18px;cursor:pointer;transition:.14s;}
 .unsaved-bar-save:hover{filter:brightness(1.08);}
 
-/* Discord-style notification toasts */
-.ftz-notif-toast{position:fixed;bottom:24px;right:24px;background:rgba(14,17,24,.97);border:1px solid rgba(239,68,68,.12);border-radius:16px;padding:14px 18px;display:flex;align-items:flex-start;gap:14px;max-width:360px;z-index:9800;box-shadow:0 12px 40px rgba(0,0,0,.7),0 0 0 1px rgba(239,68,68,.06);animation:notifSlideIn .3s cubic-bezier(.22,1,.36,1);cursor:pointer;backdrop-filter:blur(20px);}
-.ftz-notif-toast:hover{background:rgba(20,23,30,.98);border-color:rgba(239,68,68,.2);}
-@keyframes notifSlideIn{from{opacity:0;transform:translateX(100%) scale(.95)}to{opacity:1;transform:none}}
-@keyframes notifSlideOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(100%) scale(.95)}}
-.ftz-notif-av{width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:17px;position:relative;border:2.5px solid rgba(239,68,68,.3);box-shadow:0 0 0 3px rgba(239,68,68,.08);}
+/* ── Notification toast — same panel2-pill family as .undo-toast /
+   .chat-past-bar / .ftz-toast, just wider and with an avatar instead
+   of an icon chip. Slides up from the bottom-right corner. */
+.ftz-notif-toast{position:fixed;bottom:24px;right:24px;background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:12px 14px 12px 12px;display:flex;align-items:center;gap:12px;width:340px;max-width:calc(100vw - 48px);z-index:9800;box-shadow:var(--elev-2);animation:notifSlideIn .25s cubic-bezier(.22,1,.36,1);cursor:pointer;transition:transform .15s,border-color .15s;}
+.ftz-notif-toast:hover{transform:translateY(-2px);border-color:var(--surface-border-hover);}
+@keyframes notifSlideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes notifSlideOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(20px)}}
+.ftz-notif-av{width:38px;height:38px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.ftz-notif-av img{width:100%;height:100%;object-fit:cover;}
 .ftz-notif-body{flex:1;min-width:0;}
-.ftz-notif-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ftz-notif-text{font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.ftz-notif-close{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:16px;padding:2px;line-height:1;flex-shrink:0;margin-top:-2px;border-radius:6px;transition:all .12s;}
-.ftz-notif-close:hover{color:#fff;background:rgba(255,255,255,.06);}
+.ftz-notif-title{font-size:13.5px;font-weight:700;color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ftz-notif-text{font-size:12px;color:rgba(255,255,255,.6);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ftz-notif-close{background:rgba(255,255,255,.04);border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:14px;line-height:1;flex-shrink:0;width:24px;height:24px;border-radius:6px;transition:background .12s,color .12s;display:inline-flex;align-items:center;justify-content:center;}
+.ftz-notif-close:hover{color:#fff;background:rgba(255,255,255,.1);}
 
 /* ── Mini Profile Preview — Guilded-inspired popup card ── */
 .mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.05);border-radius:14px;z-index:4000;box-shadow:0 24px 80px rgba(0,0,0,.7),0 8px 32px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.02);overflow:hidden;animation:mppSlideIn .22s cubic-bezier(.16,1,.3,1);width:300px;}
@@ -6307,50 +6305,42 @@ select:focus-visible,
   border-radius: var(--radius-md);
 }
 
-/* ── Improved toast styling ── */
+/* ── Toast — same panel2-pill family as .undo-toast / .chat-past-bar
+   / .ftz-notif-toast. The icon SVG is wrapped in a coloured chip on
+   the left so the toast's category (success / error / info / warning)
+   reads at a glance without changing the whole pill's background. */
 .ftz-toast {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 18px;
-  border-radius: var(--radius-md);
+  padding: 10px 14px 10px 10px;
+  border-radius: 14px;
   font-size: 13px;
   font-weight: 600;
   font-family: var(--font-ui);
-  backdrop-filter: var(--blur-heavy);
-  -webkit-backdrop-filter: var(--blur-heavy);
-  border: 1px solid rgba(255,255,255,.08);
-  box-shadow: 0 12px 40px rgba(0,0,0,.5);
-  animation: toastIn 0.3s var(--ease-out), toastOut 0.3s var(--ease-out) forwards;
+  color: rgba(255,255,255,.85);
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  box-shadow: var(--elev-2);
+  animation: toastIn 0.22s cubic-bezier(.22,1,.36,1), toastOut 0.22s ease forwards;
   animation-delay: 0s, var(--toast-duration, 3s);
   pointer-events: auto;
   max-width: 380px;
   line-height: 1.4;
 }
-
-.ftz-toast.success {
-  background: linear-gradient(135deg, rgba(62,207,110,.15), rgba(62,207,110,.05));
-  color: var(--green);
-  border-color: rgba(62,207,110,.2);
+.ftz-toast > svg:first-child{
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  padding: 7px;
+  border-radius: 8px;
+  background: var(--toast-chip-bg, rgba(255,255,255,.06));
+  color: var(--toast-chip-color, rgba(255,255,255,.7));
+  box-sizing: border-box;
 }
-
-.ftz-toast.error {
-  background: linear-gradient(135deg, rgba(248,113,113,.15), rgba(248,113,113,.05));
-  color: var(--red);
-  border-color: rgba(248,113,113,.2);
-}
-
-.ftz-toast.info {
-  background: linear-gradient(135deg, rgba(96,165,250,.15), rgba(96,165,250,.05));
-  color: var(--blue);
-  border-color: rgba(96,165,250,.2);
-}
-
-.ftz-toast.warning {
-  background: linear-gradient(135deg, rgba(245,158,11,.15), rgba(245,158,11,.05));
-  color: var(--yellow);
-  border-color: rgba(245,158,11,.2);
-}
+.ftz-toast.success { --toast-chip-bg: rgba(62,207,110,.12); --toast-chip-color: var(--green); }
+.ftz-toast.error   { --toast-chip-bg: rgba(248,113,113,.12); --toast-chip-color: var(--red);   }
+.ftz-toast.info    { --toast-chip-bg: rgba(96,165,250,.12); --toast-chip-color: var(--blue);  }
+.ftz-toast.warning { --toast-chip-bg: rgba(245,158,11,.12); --toast-chip-color: var(--yellow); }
 
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(20px) scale(0.95); }

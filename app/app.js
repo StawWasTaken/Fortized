@@ -1523,15 +1523,13 @@ function _initChatScroll(msgsEl){
       _chatScrollDebounce[id]=false;
       const atBot=msgsEl.scrollHeight-msgsEl.scrollTop-msgsEl.clientHeight<150;
       _chatAutoScroll[id].atBottom=atBot;
-      const pastBar=msgsEl.querySelector('.chat-past-bar');
-      if(pastBar){
-        // Threshold bumped 300 → 900 so the "You're viewing older
-        // messages" pill doesn't pop up the moment you scroll a couple
-        // of lines up. Discord waits until you're meaningfully out of
-        // the live area before offering Jump-to-Present.
-        const scrolledUp=msgsEl.scrollTop<msgsEl.scrollHeight-msgsEl.clientHeight-900;
-        pastBar.classList.toggle('show',scrolledUp);
-      }
+      // Past-bar (Jump-to-Present pill) lives at the body level so it
+      // actually floats at the viewport bottom. The inline one inside
+      // chat-msgs would have been anchored to the scroll container by
+      // its position:fixed because chat-msgs has transform:translateZ(0)
+      // and that creates a containing block.
+      const scrolledUp = msgsEl.scrollTop < msgsEl.scrollHeight - msgsEl.clientHeight - 900;
+      _setPastBar(scrolledUp ? msgsEl.id : null);
       if(atBot){
         _chatAutoScroll[id].newCount=0;
         // Remove the NEW bar when user scrolls to bottom
@@ -1685,6 +1683,26 @@ async function logAudit(action, target, note='') {
 // TOAST
 // ════════════════════════════════════════════
 let _lastToast = { key: '', at: 0, el: null, count: 0 };
+// Past-bar floater — single body-level pill that floats at the same
+// position as .undo-toast. Pass the msgsId to show it (the Jump-to-
+// Present button scrolls that scroller to bottom); pass null to hide.
+function _setPastBar(msgsId) {
+  let bar = document.getElementById('chat-past-bar-floater');
+  if (!msgsId) { bar?.remove(); return; }
+  if (bar && bar.dataset.target === msgsId) return; // already showing for this scroller
+  if (bar) bar.remove();
+  bar = document.createElement('div');
+  bar.id = 'chat-past-bar-floater';
+  bar.className = 'chat-past-bar show';
+  bar.dataset.target = msgsId;
+  bar.innerHTML = `<span class="cpb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>You're viewing older messages</span><button type="button">Jump to Present</button>`;
+  bar.querySelector('button').addEventListener('click', () => {
+    if (typeof scrollBottom === 'function') scrollBottom(msgsId);
+    bar.remove();
+  });
+  document.body.appendChild(bar);
+}
+
 function toast(msg, type='info') {
   const container = document.getElementById('toast-container') || (() => {
     const c = document.createElement('div');
@@ -1708,7 +1726,9 @@ function toast(msg, type='info') {
   const icons = {success:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',error:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',info:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',warning:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'};
   el.className = 'ftz-toast ' + (type || 'info');
   el.style.setProperty('--toast-duration', '3s');
-  el.innerHTML = `<span style="flex-shrink:0;display:flex;">${icons[type]||icons.info}</span><span>${typeof msg==='string'?msg.replace(/</g,'&lt;'):msg}</span>`;
+  // SVG as direct first child so the unified .ftz-toast > svg:first-child
+  // CSS chips it in a coloured box; the wrapping span used to break that.
+  el.innerHTML = `${icons[type]||icons.info}<span class="ftz-toast-msg">${typeof msg==='string'?msg.replace(/</g,'&lt;'):msg}</span>`;
   container.appendChild(el);
   _lastToast = { key, at: now, el, count: 0 };
   setTimeout(() => el.remove(), 3500);
@@ -5079,7 +5099,6 @@ function openDMView(username) {
         <span class="rt-name">${escapeHTML(username)}</span>
       </div>
       <div class="chat-msgs" id="dm-msgs">
-        <div class="chat-past-bar"><span class="cpb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Jump to Present</button></div>
         <div class="new-messages-bar" id="dm-new-msgs-bar"><span id="dm-new-msgs-text">1 new message</span><button onclick="markDMRead()">Mark as Read</button></div>
         <div class="chat-welcome">
           <div class="w-av" id="dm-welcome-av">${(() => { const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {}; return buildAvatarHTML(_cp.pfp || null, _cp.displayName || username, 60); })()}</div>
@@ -5703,7 +5722,6 @@ async function openGroupChatView(gcId) {
         <span class="rt-desc">${(meta.members||[]).length} members</span>
       </div>
       <div class="chat-msgs" id="gc-msgs">
-        <div class="chat-past-bar"><span class="cpb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>You're viewing older messages</span><button onclick="scrollBottom('gc-msgs')">Jump to Present</button></div>
         <div class="new-messages-bar" id="gc-new-msgs-bar"><span id="gc-new-msgs-text">1 new message</span><button onclick="markGCRead()">Mark as Read</button></div>
         <div class="chat-welcome">
           <div class="w-av" style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:32px;">${meta.emoji||'👥'}</div>
@@ -6676,7 +6694,6 @@ function loadChatChannel(idx) {
         ${nsfwBadge}
       </div>
       <div class="chat-msgs" id="ch-msgs-${idx}">
-        <div class="chat-past-bar"><span class="cpb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Jump to Present</button></div>
         <div class="new-messages-bar" id="ch-new-msgs-bar-${idx}"><span id="ch-new-msgs-text-${idx}">1 new message</span><button onclick="markChannelRead(${idx})">Mark as Read</button></div>
         ${bannerSafe ? `<div style="width:100%;height:140px;position:relative;flex-shrink:0;overflow:hidden;margin-top:-20px;">
           <img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'">

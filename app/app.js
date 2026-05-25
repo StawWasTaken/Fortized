@@ -34395,8 +34395,18 @@ function _gdmReportIssue() {
   reportGameIssue(g?.id || g?.name || '', g?.name || '');
 }
 
-function _gdmReportReview(reviewId, reviewUser, gameName) {
-  reportGameReview(reviewId, { author: reviewUser, gameName });
+// Resolves the rest of the review from window._gdmReviewIndex (stashed
+// by the carousel renderer when each card is built) so the call site
+// only has to pass the id. Avoids escaping issues with newlines /
+// quotes / emoji in the review body.
+function _gdmReportReview(reviewId) {
+  const r = (window._gdmReviewIndex || {})[reviewId] || {};
+  reportGameReview(reviewId, {
+    author: r.user || '',
+    gameName: r.game || (_gdmLastGame?.name || ''),
+    gameId: _gdmLastGame?.id || null,
+    text: r.text || '',
+  });
 }
 
 async function _gdmSubmitReviewReport(reviewId, reviewUser, gameName) {
@@ -34646,6 +34656,11 @@ function _gdmStartReviewCarousel(gameName) {
   const host = document.getElementById('gdm-review-carousel');
   if (!host) return;
   const reviews = _gdmGetReviewsFor(gameName);
+  // Stash each review by id so _gdmReportReview() can resolve the full
+  // body (text, author, game) without us having to escape newlines /
+  // quotes / emoji through the onclick string.
+  window._gdmReviewIndex = window._gdmReviewIndex || {};
+  reviews.forEach(r => { if (r && r.id) window._gdmReviewIndex[r.id] = r; });
   if (!reviews.length) { host.innerHTML = '<div class="gdm-review-empty">No reviews yet — be the first to share what you think.</div>'; return; }
   let idx = 0;
   const labelFor = v => v === 'up' ? 'Great' : v === 'down' ? 'Bad' : 'OK';
@@ -34664,7 +34679,7 @@ function _gdmStartReviewCarousel(gameName) {
             <div class="gdm-rc-handle">@${escapeHTML(r.user)}</div>
           </div>
           <div class="gdm-rc-vote"><span class="gdm-rc-emoji">${emojiFor(r.vote)}</span><span>${labelFor(r.vote)}</span></div>
-          <button class="gdm-rc-flag" title="Report this review" onclick="event.stopPropagation();_gdmReportReview('${escapeHTML(r.id).replace(/'/g, "\\'")}','${escapeHTML(r.user || '').replace(/'/g, "\\'")}','${escapeHTML(r.game || '').replace(/'/g, "\\'")}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
+          <button class="gdm-rc-flag" title="Report this review" onclick="event.stopPropagation();_gdmReportReview('${escapeHTML(r.id).replace(/'/g, "\\'")}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
         </div>
         ${r.text ? `<div class="gdm-rc-body">${escapeHTML(r.text)}</div>` : ''}
       </div>`;

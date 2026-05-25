@@ -1,3 +1,15 @@
+/* App-wide: kill native image / SVG drag. The "grab an image with your
+   mouse and toss it anywhere" gesture is a browser default that bleeds
+   into chat avatars, banners, sticker previews, game covers, etc. and
+   ends up dragging out as a ghost of the asset. Web pages don't load
+   this stylesheet so the native gesture stays available there. */
+img, svg, video, [draggable="true"]:is(.fpp__banner-fallback, .fpp__av, .fpp__decoration) {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+img, .fpp__av, .fpp__decoration {
+  -webkit-touch-callout: none;
+}
 :root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.08);--accent-mid:rgba(255,249,62,.18);--bg:#13161d;--rail:#0f1119;--sidebar:#181a1f;--sidebar-ctx:#15171d;--channel:#15171e;--panel:#1b1e25;--panel2:#1f232b;--panel3:#23272f;--border:#252b3a;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-xs:4px;--space-sm:8px;--space-md:14px;--space-lg:20px;--space-xl:28px;--space-2xl:40px;--space-3xl:56px;--font-ui:'DM Sans',sans-serif;--font-display:'Syne',sans-serif;--font-xs:10.5px;--font-sm:12px;--font-md:13.5px;--font-lg:16px;--font-xl:20px;--font-2xl:28px;--font-hdr:10px;--surface-1:rgba(255,255,255,.03);--surface-2:rgba(255,255,255,.05);--surface-3:rgba(255,255,255,.08);--surface-4:rgba(255,255,255,.12);--surface-border:rgba(255,255,255,.05);--surface-border-hover:rgba(255,255,255,.1);--state-success:var(--green);--state-danger:var(--red);--state-warning:var(--yellow);--state-info:var(--blue);--state-success-dim:rgba(62,207,110,.08);--state-danger-dim:rgba(248,113,113,.08);--state-warning-dim:rgba(245,158,11,.08);--state-info-dim:rgba(96,165,250,.08);--purple:#a78bfa;--gold:#fbbf24;--spotify-green:#1DB954;--spotify-green-dim:rgba(29,185,84,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:22px;--radius-pill:100px;--elev-1:0 1px 4px rgba(0,0,0,.2);--elev-2:0 4px 16px rgba(0,0,0,.25);--elev-3:0 8px 32px rgba(0,0,0,.4);--ease-out:cubic-bezier(.22,1,.36,1);--shadow-sm:0 1px 4px rgba(0,0,0,.15);--shadow-md:0 4px 16px rgba(0,0,0,.2);--shadow-lg:0 8px 32px rgba(0,0,0,.35);--z-dropdown:2000;--z-modal:5000;--z-tooltip:6000;--z-overlay:8000;--z-max:9999;
 /* ── Layered Depth Architecture tokens ── */
 --canvas-color:#13161d;--glass-heavy:rgba(19,22,29,.96);--glass-mid:rgba(19,22,29,.82);--glass-light:rgba(19,22,29,.68);--glass-ultra-light:rgba(19,22,29,.50);--glass-border:rgba(255,255,255,.06);--glass-border-hover:rgba(255,255,255,.12);--blur-heavy:blur(32px) saturate(160%);--blur-mid:blur(24px) saturate(150%);--blur-light:blur(18px) saturate(140%);}
@@ -720,9 +732,14 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    white-transparency layers so the skeleton reads against any
    appearance theme without a hard repaint.
    ════════════════════════════════════════════════════════════════ */
-.load-more-bar{padding:0;border-bottom:1px solid var(--border);margin-bottom:6px;overflow-anchor:none;}
-.msg-skel-stack{display:flex;flex-direction:column;gap:14px;padding:14px 20px 16px;}
-.msg-skel{display:flex;gap:12px;align-items:flex-start;}
+.load-more-bar{padding:0;margin-bottom:6px;overflow-anchor:none;}
+/* Explicit left-alignment + overflow-anchor:none on every inner skeleton
+   element so the browser's scroll-anchor never picks a placeholder bar
+   as the anchor (which would cause the visible content to jump when the
+   skeleton re-renders between fetches). The chat is left-aligned by
+   convention; the skeleton mirrors that — no centering. */
+.msg-skel-stack{display:flex;flex-direction:column;align-items:stretch;gap:14px;padding:14px 20px 16px;overflow-anchor:none;}
+.msg-skel{display:flex;gap:12px;align-items:flex-start;overflow-anchor:none;}
 .msg-skel-av,.msg-skel-line,.msg-skel-name{
   background:linear-gradient(90deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.04) 100%);
   background-size:200% 100%;
@@ -4883,8 +4900,14 @@ button[disabled],
 .role-tag::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
 
 /* Unsaved changes bar */
-.unsaved-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--panel);border:1px solid rgba(255,249,62,.3);border-radius:14px;padding:12px 20px;display:flex;align-items:center;gap:14px;z-index:var(--z-overlay);box-shadow:0 8px 32px rgba(0,0,0,.6);transition:transform .3s cubic-bezier(.22,1,.36,1);pointer-events:none;min-width:380px;}
-.unsaved-bar.show{transform:translateX(-50%) translateY(0);pointer-events:auto;}
+/* Unsaved-changes bar — always in the DOM, fully transparent + non-
+   interactive when there's nothing to save. Using opacity instead of
+   a translate-off-screen hide because on smaller viewports the
+   translated-down state was still poking 20+ px back into the page
+   bottom. Visibility flips with opacity so screen readers + pointer
+   targets match the visual state. */
+.unsaved-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(6px);background:var(--panel);border:1px solid rgba(255,249,62,.3);border-radius:14px;padding:12px 20px;display:flex;align-items:center;gap:14px;z-index:var(--z-overlay);box-shadow:0 8px 32px rgba(0,0,0,.6);transition:opacity .25s cubic-bezier(.22,1,.36,1),transform .25s cubic-bezier(.22,1,.36,1),visibility .25s;opacity:0;visibility:hidden;pointer-events:none;min-width:380px;}
+.unsaved-bar.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(-50%) translateY(0);}
 .unsaved-bar-msg{flex:1;font-size:13px;color:rgba(255,255,255,.8);}
 .unsaved-bar-msg strong{color:var(--accent);}
 .unsaved-bar-reset{background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:8px;color:rgba(255,255,255,.6);font-size:12.5px;padding:7px 14px;cursor:pointer;transition:.14s;}
@@ -7590,6 +7613,12 @@ button[style*="background: var(--accent)"]:active {
    colours, paddings, radii, fonts everywhere — so unifying via
    these classes keeps every variant pixel-identical.
    ════════════════════════════════════════════════════════════════ */
+/* Report modal MUST sit above the gdm-overlay (z-index 9999) so a
+   "Report Issue" or "Report this Review" click from the game detail
+   modal doesn't open behind it. The base .modal-overlay is z-index
+   1000 by default — bump just this id so we don't lift every
+   modal-overlay above the game modal. */
+#modal-report-unified{z-index:10020;}
 .rpt-modal{max-width:460px;width:100%;border-radius:22px;background:var(--panel2);border:1px solid var(--border);box-shadow:0 28px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(248,113,113,.06);overflow:hidden;animation:rptIn .18s cubic-bezier(.22,1,.36,1);position:relative;}
 .rpt-modal::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg, transparent 0%, rgba(248,113,113,.45) 50%, transparent 100%);pointer-events:none;}
 @keyframes rptIn{from{opacity:0;transform:translateY(12px) scale(.985);}to{opacity:1;transform:translateY(0) scale(1);}}

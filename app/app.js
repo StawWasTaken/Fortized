@@ -11061,6 +11061,7 @@ function initFortizedUXResilience() {
             profileTheme: data.profileTheme,
             activeDecoration: data.activeDecoration,
             badges: data.badges,
+            mentionPolicy: data.mentionPolicy,
             // Resolver needs to know if the user has Radiance to
             // honour their banner image / gradient. Best-effort:
             // probe the cached user we just patched.
@@ -11093,7 +11094,7 @@ function initFortizedUXResilience() {
             if (data.bio !== undefined) {
               const inlineBio = card.querySelector('.fpp__inline-bio');
               if (inlineBio) {
-                if (data.bio) inlineBio.innerHTML = parseBioMD(data.bio.slice(0, 500)) + (data.bio.length > 500 ? '…' : '');
+                if (data.bio) inlineBio.innerHTML = parseBioMD(data.bio.slice(0, 500), data.username) + (data.bio.length > 500 ? '…' : '');
                 else inlineBio.remove();
               }
               // About card variant (mini popover / own popover): swap
@@ -11104,7 +11105,7 @@ function initFortizedUXResilience() {
               if (aboutCard) {
                 const aboutBody = aboutCard.querySelector('.fpp-card__body:not(.fpp-card__body--muted)');
                 if (data.bio) {
-                  if (aboutBody) aboutBody.innerHTML = parseBioMD(data.bio.slice(0, 300)) + (data.bio.length > 300 ? '…' : '');
+                  if (aboutBody) aboutBody.innerHTML = parseBioMD(data.bio.slice(0, 300), data.username) + (data.bio.length > 300 ? '…' : '');
                   // If bio was absent originally there's nothing to swap; the
                   // next organic re-render will pick it up.
                 } else if (aboutBody) {
@@ -17732,14 +17733,26 @@ function _buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- Bio -->
+            <!-- About Me -->
             <div>
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Bio</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">You can use markdown and links if you'd like.</div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">About Me</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">Markdown, links, <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">:emoji:</code> and <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">@username</code> mentions are all supported.</div>
               <div style="position:relative;">
                 <textarea class="settings-input" id="bio-input" rows="4" maxlength="300" style="resize:none;padding-bottom:28px;" oninput="markSettingsDirty();updateProfilePreview();document.getElementById('bio-char-count').textContent=(300-this.value.length)">${escapeHTML(CU.bio||'')}</textarea>
                 <span id="bio-char-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:rgba(255,255,255,.25);">${300-(CU.bio||'').length}</span>
                 <button onclick="toggleEmojiPicker('bio-input')" class="emoji-insert-btn" style="position:absolute;bottom:8px;right:50px;" data-tip="Add emoji">😀</button>
+              </div>
+              <!-- Mention policy: who can @-tag me in their About Me. -->
+              <div style="margin-top:14px;display:flex;align-items:center;gap:14px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;">
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:12.5px;font-weight:600;color:#fff;margin-bottom:2px;">Who can mention me in their About Me</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,.4);">Blocked users can never mention you. Disallowed mentions render as <code style="background:rgba(255,255,255,.04);padding:1px 4px;border-radius:3px;font-size:10.5px;">#########</code>.</div>
+                </div>
+                <select id="mention-policy" class="settings-input" style="width:auto;min-width:140px;padding:6px 10px;font-size:12.5px;" onchange="CU.mentionPolicy=this.value;markSettingsDirty()">
+                  <option value="everyone" ${(CU.mentionPolicy||'everyone')==='everyone'?'selected':''}>Everyone</option>
+                  <option value="friends" ${CU.mentionPolicy==='friends'?'selected':''}>Friends only</option>
+                  <option value="none" ${CU.mentionPolicy==='none'?'selected':''}>Nobody</option>
+                </select>
               </div>
             </div>
             ${sep}
@@ -18870,12 +18883,11 @@ async function _applyGifAvatar(url) {
       _persistBannerLocal(CU.username, finalBanner);
       window._recentlyEditedFields = window._recentlyEditedFields || {};
       window._recentlyEditedFields.banner = Date.now();
-      await saveUser(true);
-      try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, banner: CU.banner, field: 'banner' }); } catch (e) {}
+      try { saveLocal(); } catch (_) {}
       try { updateUserbar(); } catch(_){}
       try { buildProfileView('myprofile'); } catch(_){}
-      _refreshSettingsBaseline();
-      toast('Banner updated! ✓', 'success');
+      markSettingsDirty();
+      toast('Banner set — click Save Changes to keep', 'info');
     });
     _cropData._isGif = true;
     _cropData._gifSrc = gifData;
@@ -19009,6 +19021,10 @@ async function updateBanner(e) {
   reader.onload = async ev => {
     const fileData = ev.target.result;
     showCropModal(fileData, 16/5, async (cropped) => {
+      // QUEUE the banner change (mirrors the avatar flow): set CU.banner,
+      // persist via the dedicated ftz_banner_<name> key, save locally,
+      // mark the unsaved-changes bar. Supabase write + socket emit
+      // happen on Save Changes (saveAllSettings).
       _syncSettingsInputsToCU();
       const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
       CU.banner = finalBanner;
@@ -19026,11 +19042,10 @@ async function updateBanner(e) {
       } catch {}
       window._recentlyEditedFields = window._recentlyEditedFields || {};
       window._recentlyEditedFields.banner = Date.now();
-      await saveUser(true);
-      try { const s = FortizedSocial.getSocket(); if (s) s.emit('profile:update', { username: CU.username, banner: CU.banner, field: 'banner' }); } catch (e) {}
+      try { saveLocal(); } catch (_) {}
       buildProfileView('myprofile');
-      _refreshSettingsBaseline();
-      toast('Banner updated! ✓', 'success');
+      markSettingsDirty();
+      toast('Banner set — click Save Changes to keep', 'info');
     });
   };
   reader.readAsDataURL(file);
@@ -26558,7 +26573,25 @@ function _augmentShortcodes() {
 // into full ftz-embed cards which is overkill for a 300px popover —
 // the bio just wants a clean styled link). Used by popover, settings
 // preview, modal, DM sidebar.
-function parseBioMD(s) {
+// Parse the About-Me / Bio markdown into HTML. Supports:
+//   [label](url) + bare https URLs  →  external anchors
+//   **bold** / *italic* / `code`
+//   :emoji_name:                    →  inline emoji <img>
+//   @username                       →  yellow mention chip that opens
+//                                      the full Profile Card modal on
+//                                      click (closes any other open
+//                                      card first). Subject user can
+//                                      restrict mentions via their
+//                                      mentionPolicy ('everyone'/
+//                                      'friends'/'none'); blocked
+//                                      users + disallowed mentions
+//                                      render as ######### per the
+//                                      privacy spec.
+//
+// authorUsername (optional) is the user whose About-Me this is — needed
+// for the mention-policy check (the mentioned user filters mentions
+// from the author, not the viewer).
+function parseBioMD(s, authorUsername) {
   if (!s) return '';
   let out = String(s);
   // Escape HTML first so user-supplied content can't inject markup.
@@ -26574,6 +26607,24 @@ function parseBioMD(s) {
     const label = m.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40) + (m.length > 45 ? '…' : '');
     return `<a href="${safe}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${label}</a>`;
   });
+  // @mentions — yellow chip, clickable → opens Profile Card modal.
+  // The (^|\W) lookbehind-ish anchor stops us matching inside an
+  // email address or URL. We also apply the mentioned user's privacy
+  // policy via _bioMentionAllowed(): if the mentioner can't tag the
+  // mentioned user, the @handle gets replaced with #########.
+  out = out.replace(/(^|[^A-Za-z0-9_])@([A-Za-z0-9_]{2,32})/g, (full, prefix, handle) => {
+    const allowed = _bioMentionAllowed(authorUsername, handle);
+    if (!allowed) return prefix + '#########';
+    const safe = handle.toLowerCase().replace(/'/g, "\\'");
+    return prefix + `<a class="bio-mention" data-mention="${escapeHTML(handle.toLowerCase())}" href="#" onclick="event.preventDefault();event.stopPropagation();_openBioMention('${safe}')">@${escapeHTML(handle)}</a>`;
+  });
+  // :emoji_name: → inline emoji <img>. Reuses the same lookup the
+  // chat composer uses so a custom server emoji + a unicode short-
+  // code resolve to the same asset.
+  out = out.replace(/:([a-zA-Z0-9_+-]{2,40}):/g, (m, name) => {
+    const r = _bioEmojiHTML(name);
+    return r || m;
+  });
   // **bold** and *italic*
   out = out.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
@@ -26582,6 +26633,83 @@ function parseBioMD(s) {
   // Line breaks
   out = out.replace(/\n/g, '<br>');
   return out;
+}
+
+// Mention-policy gate. Called by parseBioMD for every @mention. The
+// MENTIONED user's mentionPolicy decides who can tag them:
+//   'everyone' (default) → anyone, except users in their blockedUsers
+//   'friends'            → only people on their friends list
+//   'none'               → no one (replaced with #########)
+// authorUsername is the user who wrote the bio (the mentioner);
+// mentionedHandle is the @target.
+function _bioMentionAllowed(authorUsername, mentionedHandle) {
+  if (!mentionedHandle) return true;
+  const mention = String(mentionedHandle).toLowerCase();
+  const author = String(authorUsername || '').toLowerCase();
+  // Without author info (legacy callers) we render the mention rather
+  // than blocking — defaults are permissive on the read side.
+  if (!author) return true;
+  // Resolve the mentioned user's settings synchronously from any
+  // cached source we have. cachedProfile() / FortizedSocial cache is
+  // populated on hover / open / memberlist render so by the time
+  // someone opens a profile most mention targets are warm.
+  let u = null;
+  try { u = (typeof cachedProfile === 'function') ? cachedProfile(mention) : null; } catch (_) {}
+  if (!u && typeof FortizedSocial?._userCacheGet === 'function') {
+    try { u = FortizedSocial._userCacheGet(mention); } catch (_) {}
+  }
+  if (!u) return true; // unknown target → render as link (graceful default)
+  // Blocked users can never mention.
+  const blocked = Array.isArray(u.blockedUsers) ? u.blockedUsers.map(s => String(s).toLowerCase()) : [];
+  if (blocked.includes(author)) return false;
+  const policy = u.mentionPolicy || 'everyone';
+  if (policy === 'none') return false;
+  if (policy === 'friends') {
+    const friends = Array.isArray(u.friends) ? u.friends.map(s => String(s).toLowerCase()) : [];
+    return friends.includes(author);
+  }
+  return true; // 'everyone' or unknown policy
+}
+
+// Resolve :name: → emoji <img>. Reuses the same emoji shortcode map
+// the chat composer uses so :sob: + :knight_vomito: + custom server
+// emojis all render identically. Returns '' if the shortcode is unknown
+// (caller leaves the raw text in place).
+function _bioEmojiHTML(name) {
+  if (!name) return '';
+  const lower = String(name).toLowerCase();
+  // Try the chat composer's resolver if present — gives us unicode +
+  // custom emoji in one call.
+  try {
+    if (typeof _resolveEmojiShortcode === 'function') {
+      const r = _resolveEmojiShortcode(lower);
+      if (r) return r;
+    }
+  } catch (_) {}
+  // Fall back to the FORTIZED_EMOJI_MAP that the chat input also uses
+  // for typed-in :shortcodes:.
+  try {
+    if (typeof FORTIZED_EMOJI_MAP === 'object' && FORTIZED_EMOJI_MAP[lower]) {
+      const src = FORTIZED_EMOJI_MAP[lower];
+      return `<img class="rci-emoji bio-emoji" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(src)}" alt=":${escapeHTML(lower)}:" draggable="false" title=":${escapeHTML(lower)}:">`;
+    }
+  } catch (_) {}
+  return '';
+}
+
+// Click handler for a @mention link in a rendered About-Me. Closes
+// any open profile card first so the new card replaces it cleanly
+// instead of stacking, then opens the mentioned user's Profile Card
+// modal (not the popover — per the spec the mention always lands on
+// the full card).
+function _openBioMention(username) {
+  if (!username) return;
+  try { document.querySelectorAll('.fpp, #fpp-menu, #fpp-invite-sub').forEach(el => el.remove()); } catch (_) {}
+  try { closeModal?.('modal-user'); } catch (_) {}
+  // Defer one tick so the closeModal teardown doesn't race the new open.
+  setTimeout(() => {
+    try { viewUserProfile(username); } catch (_) {}
+  }, 30);
 }
 
 function parseMD(s) {
@@ -41323,7 +41451,7 @@ function updateProfilePreview() {
   const aboutCard = document.getElementById('preview-about-card');
   if (bioBody) {
     if (bio) {
-      bioBody.innerHTML = parseBioMD(bio.slice(0, 300)) + (bio.length > 300 ? '…' : '');
+      bioBody.innerHTML = parseBioMD(bio.slice(0, 300), CU?.username) + (bio.length > 300 ? '…' : '');
       if (bioSection) bioSection.style.display = '';
     } else if (bioSection) {
       bioSection.style.display = 'none';
@@ -41386,6 +41514,9 @@ async function saveAllSettings() {
   // Save pronouns
   const pronounsInp = document.getElementById('pronouns-input');
   if (pronounsInp) CU.pronouns = pronounsInp.value.trim().slice(0,40);
+  // Save About-Me mention policy
+  const mentionSel = document.getElementById('mention-policy');
+  if (mentionSel) CU.mentionPolicy = mentionSel.value || 'everyone';
   // Save socials if present
   ['youtube','roblox','twitter'].forEach(key => {
     const inp = document.getElementById('social-' + key);
@@ -41417,6 +41548,7 @@ async function saveAllSettings() {
       displayEffect: CU.displayEffect || 'solid',
       displayColor: CU.displayColor || '#fff',
       socials: CU.socials || {},
+      mentionPolicy: CU.mentionPolicy || 'everyone',
       field: 'settings'
     });
   } catch (e) { _dbg('[Profile] broadcast failed:', e?.message); }
@@ -42004,7 +42136,7 @@ function _fppBioCardHTML(u, maxLen, openFull) {
   const viewFull = (openFull && u.bio.length > maxLen)
     ? `<a href="#" onclick="event.preventDefault();${openFull}" style="color:var(--accent);text-decoration:none;font-size:11.5px;display:inline-block;margin-top:6px;">View Full Bio</a>`
     : '';
-  return `<div class="fpp-card"><div class="fpp-card__title">Bio</div><div class="fpp-card__body">${parseBioMD(snippet)}${viewFull}</div></div>`;
+  return `<div class="fpp-card"><div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(snippet, u.username)}${viewFull}</div></div>`;
 }
 
 function _fppMemberSinceCardHTML(u) {
@@ -42023,7 +42155,7 @@ function _fppAboutCardHTML(u) {
   const hasBio = !!u.bio;
   if (!hasBio && !memberSinceTxt) return '';
   const bioBlock = hasBio
-    ? `<div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(u.bio.slice(0, 300))}${u.bio.length > 300 ? '…' : ''}</div>`
+    ? `<div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(u.bio.slice(0, 300), u.username)}${u.bio.length > 300 ? '…' : ''}</div>`
     : '';
   const sep = (hasBio && memberSinceTxt) ? '<div class="fpp-card__sep"></div>' : '';
   const memberBlock = memberSinceTxt

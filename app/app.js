@@ -17530,7 +17530,14 @@ function buildProfileNav(scroll) {
 
 function buildProfileView(tab) {
   try {
-    return _buildProfileView(tab);
+    const r = _buildProfileView(tab);
+    // Wire emoji autocomplete on the About-Me textarea after it's
+    // mounted so typing ":sob" suggests :sob: + the same picker
+    // chip works in settings as in chat.
+    if (tab === 'myprofile' && typeof setupEmojiAutocomplete === 'function') {
+      try { setupEmojiAutocomplete('bio-input'); } catch (_) {}
+    }
+    return r;
   } catch (e) {
     console.error('[buildProfileView] Tab "' + tab + '" failed to render:', e);
     const main = document.getElementById('profile-main');
@@ -17740,19 +17747,24 @@ function _buildProfileView(tab) {
               <div style="position:relative;">
                 <textarea class="settings-input" id="bio-input" rows="4" maxlength="300" style="resize:none;padding-bottom:28px;" oninput="markSettingsDirty();updateProfilePreview();document.getElementById('bio-char-count').textContent=(300-this.value.length)">${escapeHTML(CU.bio||'')}</textarea>
                 <span id="bio-char-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:rgba(255,255,255,.25);">${300-(CU.bio||'').length}</span>
-                <button onclick="toggleEmojiPicker('bio-input')" class="emoji-insert-btn" style="position:absolute;bottom:8px;right:50px;" data-tip="Add emoji">😀</button>
+                <button onclick="toggleEmojiPicker('bio-input')" class="emoji-insert-btn" style="position:absolute;bottom:8px;right:50px;" data-tip="Add emoji" type="button"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm-3.75-9c.69 0 1.25-.56 1.25-1.25S8.94 10.5 8.25 10.5 7 11.06 7 11.75 7.56 13 8.25 13zm7.5 0c.69 0 1.25-.56 1.25-1.25s-.56-1.25-1.25-1.25S14.5 11.06 14.5 11.75 15.06 13 15.75 13zM12 18a5 5 0 0 1-4.546-2.916.75.75 0 0 1 1.364-.628 3.5 3.5 0 0 0 6.364 0 .75.75 0 0 1 1.364.628A5 5 0 0 1 12 18z"/></svg></button>
               </div>
-              <!-- Mention policy: who can @-tag me in their About Me. -->
-              <div style="margin-top:14px;display:flex;align-items:center;gap:14px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;">
+              <!-- Mention policy: who can @-tag me in their About Me.
+                   Custom dropdown (.ftz-select) instead of a native
+                   <select> so it matches the rest of the Fortized
+                   settings UI. The hidden input holds the persisted
+                   value; markSettingsDirty fires on every pick so the
+                   unsaved-changes bar appears. -->
+              <div style="margin-top:14px;display:flex;align-items:center;gap:14px;padding:12px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;">
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:12.5px;font-weight:600;color:#fff;margin-bottom:2px;">Who can mention me in their About Me</div>
-                  <div style="font-size:11px;color:rgba(255,255,255,.4);">Blocked users can never mention you. Disallowed mentions render as <code style="background:rgba(255,255,255,.04);padding:1px 4px;border-radius:3px;font-size:10.5px;">#########</code>.</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,.4);">Blocked users can never mention you. Disallowed mentions are masked with hashtags (e.g. <code style="background:rgba(255,255,255,.04);padding:1px 4px;border-radius:3px;font-size:10.5px;">######</code>).</div>
                 </div>
-                <select id="mention-policy" class="settings-input" style="width:auto;min-width:140px;padding:6px 10px;font-size:12.5px;" onchange="CU.mentionPolicy=this.value;markSettingsDirty()">
-                  <option value="everyone" ${(CU.mentionPolicy||'everyone')==='everyone'?'selected':''}>Everyone</option>
-                  <option value="friends" ${CU.mentionPolicy==='friends'?'selected':''}>Friends only</option>
-                  <option value="none" ${CU.mentionPolicy==='none'?'selected':''}>Nobody</option>
-                </select>
+                ${_ftzSelectHTML('mention-policy', CU.mentionPolicy || 'everyone', [
+                  { value:'everyone', label:'Everyone' },
+                  { value:'friends',  label:'Friends only' },
+                  { value:'none',     label:'Nobody' },
+                ], 'CU.mentionPolicy=__VALUE__;markSettingsDirty()')}
               </div>
             </div>
             ${sep}
@@ -26185,7 +26197,7 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="14 3 14 9 21 9"/><circle cx="9" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1" fill="currentColor" stroke="none"/><path d="M9 17c1 1 2 1.5 3 1.5s2-.5 3-1.5"/></svg>
             </button>
             <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" title="Emoji" data-tooltip="Emoji">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"/><circle cx="9" cy="9.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1" fill="currentColor" stroke="none"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm-3.75-9c.69 0 1.25-.56 1.25-1.25S8.94 10.5 8.25 10.5 7 11.06 7 11.75 7.56 13 8.25 13zm7.5 0c.69 0 1.25-.56 1.25-1.25s-.56-1.25-1.25-1.25S14.5 11.06 14.5 11.75 15.06 13 15.75 13zM12 18a5 5 0 0 1-4.546-2.916.75.75 0 0 1 1.364-.628 3.5 3.5 0 0 0 6.364 0 .75.75 0 0 1 1.364.628A5 5 0 0 1 12 18z"/></svg>
             </button>
             <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3"/><line x1="13" y1="15" x2="17" y2="15"/></svg>
@@ -26607,22 +26619,26 @@ function parseBioMD(s, authorUsername) {
     const label = m.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40) + (m.length > 45 ? '…' : '');
     return `<a href="${safe}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${label}</a>`;
   });
-  // @mentions — yellow chip, clickable → opens Profile Card modal.
-  // The (^|\W) lookbehind-ish anchor stops us matching inside an
-  // email address or URL. We also apply the mentioned user's privacy
-  // policy via _bioMentionAllowed(): if the mentioner can't tag the
-  // mentioned user, the @handle gets replaced with #########.
+  // @mentions — plain yellow link (no chip / no border) like a URL,
+  // clickable → opens the full Profile Card modal. The mention-policy
+  // gate (_bioMentionAllowed) decides whether to render: disallowed
+  // mentions get character-for-character hashtag masking (the @ +
+  // every char of the username turns into '#', preserving length so
+  // the layout stays stable).
   out = out.replace(/(^|[^A-Za-z0-9_])@([A-Za-z0-9_]{2,32})/g, (full, prefix, handle) => {
-    const allowed = _bioMentionAllowed(authorUsername, handle);
-    if (!allowed) return prefix + '#########';
+    if (!_bioMentionAllowed(authorUsername, handle)) {
+      // '@username' → '#' repeated (len + 1 for the @)
+      return prefix + '#'.repeat(handle.length + 1);
+    }
     const safe = handle.toLowerCase().replace(/'/g, "\\'");
     return prefix + `<a class="bio-mention" data-mention="${escapeHTML(handle.toLowerCase())}" href="#" onclick="event.preventDefault();event.stopPropagation();_openBioMention('${safe}')">@${escapeHTML(handle)}</a>`;
   });
-  // :emoji_name: → inline emoji <img>. Reuses the same lookup the
-  // chat composer uses so a custom server emoji + a unicode short-
-  // code resolve to the same asset.
+  // :emoji_name: → inline emoji <img>. Custom bastion emojis are
+  // Radiance-only when used in an About Me (matches the chat rule
+  // where non-Radiance can only use bastion emojis inside that
+  // bastion — About Me is a global surface so Radiance is required).
   out = out.replace(/:([a-zA-Z0-9_+-]{2,40}):/g, (m, name) => {
-    const r = _bioEmojiHTML(name);
+    const r = _bioEmojiHTML(name, authorUsername);
     return r || m;
   });
   // **bold** and *italic*
@@ -26671,40 +26687,150 @@ function _bioMentionAllowed(authorUsername, mentionedHandle) {
   return true; // 'everyone' or unknown policy
 }
 
-// Resolve :name: → emoji <img>. Reuses the same emoji shortcode map
-// the chat composer uses so :sob: + :knight_vomito: + custom server
-// emojis all render identically. Returns '' if the shortcode is unknown
-// (caller leaves the raw text in place).
-function _bioEmojiHTML(name) {
+// Resolve :name: → emoji <img>. Unicode emojis + the global
+// FORTIZED_EMOJI_MAP are free for everyone. Custom BASTION emojis
+// are gated on the AUTHOR'S Radiance (mirrors the chat rule: non-
+// Radiance users can only use a bastion's emoji INSIDE that bastion;
+// an About Me is a global surface so Radiance is required to use any
+// bastion emoji there). Returns '' for unknown shortcodes — caller
+// leaves the raw ':name:' text in place.
+function _bioEmojiHTML(name, authorUsername) {
   if (!name) return '';
   const lower = String(name).toLowerCase();
-  // Try the chat composer's resolver if present — gives us unicode +
-  // custom emoji in one call.
+  // 1) Unicode shortcode (always free)
   try {
-    if (typeof _resolveEmojiShortcode === 'function') {
-      const r = _resolveEmojiShortcode(lower);
-      if (r) return r;
+    if (typeof _resolveEmojiUnicode === 'function') {
+      const uni = _resolveEmojiUnicode(lower);
+      if (uni) {
+        const url = (typeof emojiToTwemojiUrl === 'function') ? emojiToTwemojiUrl(uni) : '';
+        if (url) return `<img class="rci-emoji bio-emoji" data-emoji-uni="${escapeHTML(uni)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(url)}" alt="${escapeHTML(uni)}" draggable="false" title=":${escapeHTML(lower)}:">`;
+      }
     }
   } catch (_) {}
-  // Fall back to the FORTIZED_EMOJI_MAP that the chat input also uses
-  // for typed-in :shortcodes:.
+  // 2) Official FORTIZED_EMOJI_MAP (always free)
   try {
     if (typeof FORTIZED_EMOJI_MAP === 'object' && FORTIZED_EMOJI_MAP[lower]) {
       const src = FORTIZED_EMOJI_MAP[lower];
       return `<img class="rci-emoji bio-emoji" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(src)}" alt=":${escapeHTML(lower)}:" draggable="false" title=":${escapeHTML(lower)}:">`;
     }
   } catch (_) {}
+  // 3) Custom bastion emoji — Radiance gate on the AUTHOR.
+  //    Look up author's Radiance via cached profile (self renders trust
+  //    CU; cross-user renders trust whatever the userCache has). If we
+  //    can't determine, default to permissive (render) so we don't drop
+  //    a legitimate emoji on a flaky cache.
+  const author = (authorUsername || '').toLowerCase();
+  const isSelf = author && CU?.username && author === CU.username.toLowerCase();
+  let authorObj = null;
+  if (isSelf) authorObj = CU;
+  else if (typeof cachedProfile === 'function') {
+    try { authorObj = cachedProfile(author) || null; } catch (_) {}
+  }
+  // Walk every bastion to find the emoji.
+  for (let bi = 0; bi < (CU?.bastions || []).length; bi++) {
+    const ce = (CU.bastions[bi]?.customEmojis || []).find(e => e.name === lower);
+    if (!ce) continue;
+    // Radiance gate. If we have author info AND they're not Radiance,
+    // refuse to render (caller falls back to the literal :name:).
+    if (authorObj && !_hasRadiance(authorObj)) return '';
+    return `<img class="rci-emoji bio-emoji" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(ce.data)}" alt=":${escapeHTML(lower)}:" draggable="false" title=":${escapeHTML(lower)}:">`;
+  }
   return '';
 }
 
-// Click handler for a @mention link in a rendered About-Me. Closes
-// any open profile card first so the new card replaces it cleanly
-// instead of stacking, then opens the mentioned user's Profile Card
-// modal (not the popover — per the spec the mention always lands on
-// the full card).
+// ────────────────────────────────────────────────────────────
+// .ftz-select — small custom dropdown used by settings (mention
+// policy, etc.). Renders as a styled button + popover with options
+// instead of a native <select>, so it inherits the platform's
+// panel2 surface + accent yellow on hover. The selected value is
+// kept in a hidden <input> so saveAllSettings can read it the same
+// way it reads other inputs.
+//
+// Usage:
+//   ${_ftzSelectHTML(id, currentValue, [{value,label},…], 'jsExpr')}
+//   jsExpr can include __VALUE__ which gets replaced with the
+//   selected option's value at click time.
+// ────────────────────────────────────────────────────────────
+function _ftzSelectHTML(id, currentValue, options, onChangeExpr) {
+  const cur = options.find(o => o.value === currentValue) || options[0];
+  const safeId = String(id);
+  const safeChange = (onChangeExpr || '').replace(/"/g, '&quot;');
+  const itemsHTML = options.map((o, i) => `
+    <div class="ftz-select__item${o.value === currentValue ? ' is-selected' : ''}"
+         data-value="${escapeHTML(o.value)}"
+         onclick="_ftzSelectPick('${safeId}','${escapeHTML(o.value).replace(/'/g,"\\'")}','${escapeHTML(o.label).replace(/'/g,"\\'")}',&quot;${safeChange}&quot;)">
+      <span>${escapeHTML(o.label)}</span>
+      ${o.value === currentValue ? '<svg class="ftz-select__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+    </div>`).join('');
+  return `
+    <div class="ftz-select" id="ftz-sel-${safeId}">
+      <input type="hidden" id="${safeId}" value="${escapeHTML(currentValue)}">
+      <button type="button" class="ftz-select__trigger" onclick="_ftzSelectToggle('${safeId}')">
+        <span class="ftz-select__label">${escapeHTML(cur.label)}</span>
+        <svg class="ftz-select__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="ftz-select__menu" role="listbox">${itemsHTML}</div>
+    </div>`;
+}
+
+function _ftzSelectToggle(id) {
+  const wrap = document.getElementById('ftz-sel-' + id);
+  if (!wrap) return;
+  const open = wrap.classList.toggle('is-open');
+  if (!open) return;
+  // Close on outside click — bound after a frame so the opening click
+  // doesn't immediately re-close us.
+  setTimeout(() => {
+    const off = (e) => {
+      if (!wrap.contains(e.target)) {
+        wrap.classList.remove('is-open');
+        document.removeEventListener('mousedown', off, true);
+      }
+    };
+    document.addEventListener('mousedown', off, true);
+  }, 0);
+}
+
+function _ftzSelectPick(id, value, label, onChangeExpr) {
+  const wrap = document.getElementById('ftz-sel-' + id);
+  const hidden = document.getElementById(id);
+  if (hidden) hidden.value = value;
+  if (wrap) {
+    const labelEl = wrap.querySelector('.ftz-select__label');
+    if (labelEl) labelEl.textContent = label;
+    wrap.querySelectorAll('.ftz-select__item').forEach(el => {
+      const match = el.dataset.value === value;
+      el.classList.toggle('is-selected', match);
+      const existingCheck = el.querySelector('.ftz-select__check');
+      if (match && !existingCheck) {
+        el.insertAdjacentHTML('beforeend', '<svg class="ftz-select__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
+      } else if (!match && existingCheck) {
+        existingCheck.remove();
+      }
+    });
+    wrap.classList.remove('is-open');
+  }
+  if (onChangeExpr) {
+    try {
+      // Replace __VALUE__ with a JS-string literal of the value.
+      const expr = onChangeExpr.replace(/__VALUE__/g, JSON.stringify(value));
+      // eslint-disable-next-line no-new-func
+      (new Function(expr))();
+    } catch (e) { console.warn('[ftz-select] onChange threw', e); }
+  }
+}
+
+// Click handler for a @mention link in a rendered About-Me. Removes
+// just the floating popovers (.fpp--mini, .fpp--own, .fpp--dm,
+// .fpp-card-modal, the More menu + invite sub) so the FULL profile
+// card opens cleanly without stacking. CRITICALLY does NOT touch the
+// settings preview (.fpp--settings) — that's the user's own card sitting
+// inside Settings and shouldn't disappear when they test mentions.
 function _openBioMention(username) {
   if (!username) return;
-  try { document.querySelectorAll('.fpp, #fpp-menu, #fpp-invite-sub').forEach(el => el.remove()); } catch (_) {}
+  try {
+    document.querySelectorAll('.fpp--mini, .fpp--own, .fpp--dm, .fpp-card-modal, #fpp-menu, #fpp-invite-sub, #fpp-status-submenu, #fpp-accounts-submenu').forEach(el => el.remove());
+  } catch (_) {}
   try { closeModal?.('modal-user'); } catch (_) {}
   // Defer one tick so the closeModal teardown doesn't race the new open.
   setTimeout(() => {

@@ -2808,7 +2808,11 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .vc-btn.muted-btn.active{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);}
 .vc-btn.disc-btn{background:var(--red);color:#fff;}
 /* ── Emoji Picker 4.0 — professional, icon-only sidebar ─────────── */
-.emoji-picker-panel{position:fixed;width:448px;max-width:calc(100vw - 16px);max-height:520px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:14px;padding:0;z-index:9000;box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.035);display:none;flex-direction:row;overflow:hidden;font-family:var(--font-ui);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
+/* Emoji picker — z-index bumped to 11000 so it sits above ALL modal
+   variants (modal-overlay at 1000, .gdm-overlay at 9999, the unified
+   .rpt-modal at 10020). Without this the picker opened BEHIND the
+   settings modal when triggered from the About-Me textarea. */
+.emoji-picker-panel{position:fixed;width:448px;max-width:calc(100vw - 16px);max-height:520px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:14px;padding:0;z-index:11000;box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.035);display:none;flex-direction:row;overflow:hidden;font-family:var(--font-ui);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
 .emoji-picker-panel.show{display:flex;}
 /* Icon-only right sidebar — Discord-style, 48px wide. No text labels; the
    button's title attribute provides an on-hover native tooltip. */
@@ -2842,7 +2846,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .epp-main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 @keyframes emojiPanelIn{from{opacity:0;transform:translateY(8px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
 /* Emoji autocomplete dropdown */
-.emoji-autocomplete{position:fixed;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 36px rgba(0,0,0,.5);max-width:380px;display:none;backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);}
+.emoji-autocomplete{position:fixed;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:12px;padding:6px;z-index:11050;box-shadow:0 12px 36px rgba(0,0,0,.5);max-width:380px;display:none;backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);}
 .emoji-autocomplete.show{display:flex;flex-wrap:wrap;gap:3px;}
 .ema-item{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text);min-width:140px;flex:1;transition:background .12s;}
 .ema-item:hover,.ema-item.selected{background:rgba(255,249,62,.08);color:var(--accent);}
@@ -3032,7 +3036,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .ctx-section-label{padding:8px 12px 3px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.15);}
 .ctx-sep{height:1px;background:rgba(255,255,255,.04);margin:3px 10px;}
 /* ── Emoji Tooltip (Discord-style) ─────────────── */
-.emoji-tooltip{position:fixed;z-index:9000;background:var(--glass-heavy);border:1.5px solid var(--glass-border);border-radius:var(--radius-md);padding:var(--space-md);box-shadow:var(--shadow-lg);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);pointer-events:auto;animation:emojiTipIn .15s var(--ease-out);min-width:200px;max-width:260px;}
+.emoji-tooltip{position:fixed;z-index:11100;background:var(--glass-heavy);border:1.5px solid var(--glass-border);border-radius:var(--radius-md);padding:var(--space-md);box-shadow:var(--shadow-lg);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);pointer-events:auto;animation:emojiTipIn .15s var(--ease-out);min-width:200px;max-width:260px;}
 @keyframes emojiTipIn{from{opacity:0;transform:translateY(4px) scale(.97);}to{opacity:1;transform:none;}}
 .emoji-tooltip .et-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 .emoji-tooltip .et-big{width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -7859,23 +7863,25 @@ button[style*="background: var(--accent)"]:active {
 }
 .reset-theme-btn:hover { border-color: rgba(248,113,113,.2); color: rgba(248,113,113,.6); }
 
-/* ── Emoji insert button (small accent) ── */
+/* ── Emoji insert button — plain svg smiley, no background, no box.
+   Used by the About-Me textarea + the chat composer's emoji button.
+   Inherits the same color/opacity treatment so settings and chat
+   feel like one family. */
 .emoji-insert-btn {
-  background: rgba(255,249,62,.1);
-  border: 1px solid rgba(255,249,62,.2);
-  color: rgba(255,249,62,.7);
-  border-radius: 6px;
-  width: 24px;
-  height: 24px;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,.45);
   padding: 0;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  transition: all .12s;
+  transition: color .12s, transform .1s;
+  line-height: 0;
 }
-.emoji-insert-btn:hover { background: rgba(255,249,62,.15); border-color: rgba(255,249,62,.3); color: rgba(255,249,62,.9); }
+.emoji-insert-btn svg { width: 18px; height: 18px; display: block; }
+.emoji-insert-btn:hover { color: var(--accent); }
+.emoji-insert-btn:active { transform: scale(.95); }
 
 /* ── Quick action card (settings about page) ── */
 .quick-action-card {
@@ -9327,20 +9333,72 @@ select:focus-visible {
    open card first). Inline emoji inside an About-Me body uses the same
    .rci-emoji styling as the chat composer so :sob: + :knight_vomito:
    render identically across the platform. */
+/* @mention in an About Me — plain yellow link, no chip, no rectangle.
+   Reads like a URL. Hover bumps brightness a touch for affordance
+   without changing the text flow. Click opens the full Profile Card
+   modal (handled by _openBioMention). */
 .bio-mention{
-  display:inline-block;
   color:var(--accent);
-  background:var(--accent-dim);
-  border:1px solid rgba(255,249,62,.22);
-  border-radius:5px;
-  padding:0 5px;
+  background:transparent;
+  border:none;
+  padding:0;
   font-weight:600;
   text-decoration:none;
   cursor:pointer;
-  transition:background .12s, border-color .12s, color .12s;
+  transition:filter .12s;
 }
-.bio-mention:hover{ background:rgba(255,249,62,.18); border-color:rgba(255,249,62,.4); }
+.bio-mention:hover{ filter:brightness(1.15); text-decoration:underline; text-underline-offset:2px; }
 .bio-emoji{ width:1.25em; height:1.25em; vertical-align:-.22em; margin:0 1px; }
+
+/* ── .ftz-select — custom dropdown matching the Fortized settings UI.
+   Trigger is a panel2 pill with the current label + chevron; the
+   options menu drops below with hover + selected states. Used by the
+   About-Me mention-policy dropdown; reusable anywhere a native
+   <select> would feel out of place. */
+.ftz-select{ position:relative; min-width:160px; }
+.ftz-select__trigger{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  width:100%;
+  padding:8px 12px;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--text);
+  font-family:var(--font-ui); font-size:12.5px; font-weight:600;
+  cursor:pointer;
+  transition:border-color .12s, background .12s;
+}
+.ftz-select__trigger:hover{ border-color:var(--surface-border-hover); background:var(--panel3); }
+.ftz-select.is-open .ftz-select__trigger{ border-color:rgba(255,249,62,.35); background:var(--panel3); }
+.ftz-select__chev{ color:var(--muted-light); transition:transform .15s; flex-shrink:0; }
+.ftz-select.is-open .ftz-select__chev{ transform:rotate(180deg); }
+.ftz-select__menu{
+  display:none;
+  position:absolute; top:calc(100% + 6px); right:0;
+  min-width:100%;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:5px;
+  box-shadow:0 16px 48px rgba(0,0,0,.5);
+  z-index:200;
+  animation:ftzSelectIn .14s cubic-bezier(.22,1,.36,1);
+}
+.ftz-select.is-open .ftz-select__menu{ display:block; }
+@keyframes ftzSelectIn{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:translateY(0); } }
+.ftz-select__item{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:8px 10px;
+  border-radius:7px;
+  font-size:12.5px; font-weight:500;
+  color:var(--text);
+  cursor:pointer;
+  transition:background .1s, color .1s;
+  white-space:nowrap;
+}
+.ftz-select__item:hover{ background:rgba(255,249,62,.06); color:#fff; }
+.ftz-select__item.is-selected{ color:var(--accent); font-weight:600; }
+.ftz-select__check{ color:var(--accent); flex-shrink:0; }
 /* ── Badges frame (own .fpp-card section) ──────────────────────────────
    Badges used to live inline next to the handle — they ended up
    crowding the username off-screen on tighter variants. Now they

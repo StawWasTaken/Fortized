@@ -213,11 +213,10 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 
     <form id="ticketForm">
       <div class="form-field">
-        <label for="username">Username <span class="req">*</span></label>
+        <label for="username">Username <span class="req">*</span> <span class="username-warning">Enter the username of the account related to this issue. If this isn't an account you own, action may be taken against your account.</span></label>
         <input type="text" id="username" placeholder="Your Fortized username" required maxlength="30">
         <div id="usernameVerify" class="verify-status"></div>
         <div id="userFrame" class="user-frame"></div>
-        <div class="username-warning">Enter the username of the account related to this issue. If this isn\'t an account you own, action may be taken against your account.</div>
       </div>
 
       <div class="form-field">
@@ -233,7 +232,6 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
             <svg class="dd-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-menu">
-            <div class="dd-search"><input type="text" placeholder="Search..." oninput="filterDropdown(this, 'countryDropdown')"></div>
             <div class="dd-options">
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', '', 'Prefer not to say')">Prefer not to say</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'US', 'United States')">United States</div>
@@ -255,6 +253,30 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DK', 'Denmark')">Denmark</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FI', 'Finland')">Finland</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PL', 'Poland')">Poland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PT', 'Portugal')">Portugal</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CH', 'Switzerland')">Switzerland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AT', 'Austria')">Austria</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'BE', 'Belgium')">Belgium</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IE', 'Ireland')">Ireland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'TH', 'Thailand')">Thailand</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ID', 'Indonesia')">Indonesia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MY', 'Malaysia')">Malaysia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PH', 'Philippines')">Philippines</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'VN', 'Vietnam')">Vietnam</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ZA', 'South Africa')">South Africa</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'EG', 'Egypt')">Egypt</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IL', 'Israel')">Israel</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'TR', 'Turkey')">Turkey</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AR', 'Argentina')">Argentina</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CL', 'Chile')">Chile</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CO', 'Colombia')">Colombia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PE', 'Peru')">Peru</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'VE', 'Venezuela')">Venezuela</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NG', 'Nigeria')">Nigeria</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'KE', 'Kenya')">Kenya</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MA', 'Morocco')">Morocco</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SA', 'Saudi Arabia')">Saudi Arabia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AE', 'UAE')">UAE</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'RU', 'Russia')">Russia</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CN', 'China')">China</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SG', 'Singapore')">Singapore</div>
@@ -277,12 +299,8 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
           <div class="dd-menu">
             <div class="dd-options">
               <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'PC', 'PC / Computer')">PC / Computer</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'PHONE', 'Phone')">Phone</div>
               <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'TABLET', 'Tablet')">Tablet</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'WEB', 'Web Browser')">Web Browser</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'CONSOLE', 'Game Console')">Game Console</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'VR', 'VR Headset')">VR Headset</div>
-              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'OTHER', 'Other')">Other</div>
+              <div class="dd-opt" onclick="selectDropdown('deviceDropdown', 'PHONE', 'Phone')">Phone</div>
             </div>
           </div>
         </div>
@@ -297,16 +315,13 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
             <svg class="dd-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-menu">
-            <div class="dd-search"><input type="text" placeholder="Search..." oninput="filterDropdown(this, 'categoryDropdown')"></div>
             <div class="dd-options">
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'account', 'Account &amp; Login')">Account &amp; Login</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'bastion', 'Bastion / Community')">Bastion / Community</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'messaging', 'Messaging &amp; DMs')">Messaging &amp; DMs</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'atelier', 'Atelier &amp; Radiance')">Atelier &amp; Radiance</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'safety', 'Safety &amp; Moderation')">Safety &amp; Moderation</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'bug', 'Bug Report')">Bug Report</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'billing', 'Billing &amp; Payments')">Billing &amp; Payments</div>
-              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'feature', 'Feature Request')">Feature Request</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'account', 'Account & Login')">Account & Login</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'bastion', 'Bastion')">Bastion</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'messaging', 'Messaging & DMs')">Messaging & DMs</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'atelier', 'Atelier')">Atelier</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'radiance', 'Radiance & Onyx')">Radiance & Onyx</div>
+              <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'safety', 'Safety & Moderation')">Safety & Moderation</div>
               <div class="dd-opt" onclick="selectDropdown('categoryDropdown', 'other', 'Other')">Other</div>
             </div>
           </div>
@@ -412,8 +427,12 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     verify.className = 'verify-status loading';
     usernameTimeout = setTimeout(async () => {
       try {
-        const { data } = await supabase.from('profiles').select('username, display_name, avatar_url').ilike('username', this.value).single();
-        if (data) {
+        const { data, error } = await supabase.from('profiles').select('username, display_name, avatar_url').ilike('username', this.value).maybeSingle();
+        if (error) {
+          verify.textContent = 'Unable to verify — you can still submit a ticket';
+          verify.className = 'verify-status invalid';
+          if(userFrame) userFrame.style.display = 'none';
+        } else if (data) {
           verify.textContent = '✓ Account found';
           verify.className = 'verify-status valid';
           // Show user frame with pfp/name
@@ -426,7 +445,7 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
               '<div class="user-frame-un">@'+data.username+'</div></div>';
             userFrame.style.display = 'flex';
           }
-        } else {
+        } else if (!data) {
           verify.textContent = '✗ No user found with that username';
           verify.className = 'verify-status invalid';
           verify.style.color = '#eb4545';
@@ -496,10 +515,18 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     btn.disabled = true;
     btn.textContent = 'Submitting...';
     try {
+      const usernameVal = document.getElementById('username').value.trim();
       const categoryVal = document.getElementById('category').value;
       const subjectVal = document.getElementById('subject').value.trim();
       const descriptionVal = document.getElementById('description').value.trim();
+      const deviceVal = document.getElementById('device').value;
       
+      if (!usernameVal) {
+        alert('Please enter a username.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Ticket';
+        return;
+      }
       if (!categoryVal) {
         alert('Please select a category for your ticket.');
         btn.disabled = false;
@@ -518,17 +545,30 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
         btn.textContent = 'Submit Ticket';
         return;
       }
+      if (!deviceVal) {
+        alert('Please select your device.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Ticket';
+        return;
+      }
       
       const ticket = {
         id: 'TKT-' + Date.now().toString(36).toUpperCase(),
         user_id: user.id,
         user_email: user.email,
+        username: document.getElementById('username').value,
+        first_name: document.getElementById('firstName').value,
+        country: document.getElementById('country').value,
+        device: document.getElementById('device').value,
         category: document.getElementById('category').value,
         subject: document.getElementById('subject').value,
         description: document.getElementById('description').value,
         status: 'open',
         created_at: new Date().toISOString()
       };
+      // Save to admin panel via FortizedSocial
+      await FortizedSocial.adminSubmitSupportTicket(ticket);
+      // Also keep local backup
       const tickets = JSON.parse(localStorage.getItem('fortized_tickets') || '[]');
       tickets.push(ticket);
       localStorage.setItem('fortized_tickets', JSON.stringify(tickets));

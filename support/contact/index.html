@@ -103,7 +103,8 @@ body::before{content:"";position:fixed;inset:0;z-index:500;pointer-events:none;o
 .user-frame-name{font-size:14px;font-weight:600;color:#fff}
 .user-frame-un{font-size:12px;color:var(--mu-l)}
 .user-frame-error{font-size:13px;color:#eb4545;font-weight:500}
-.username-warning{font-size:11px;color:var(--mu);margin-top:6px;line-height:1.45;padding:8px 10px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.12);border-radius:8px}
+.username-warning{font-size:11px;color:var(--mu);margin-top:8px;line-height:1.4}
+.username-warning::before{content:"Note: "}
 .form-field input,.form-field textarea,.form-field select{background:rgba(255,255,255,.04);border:1.5px solid var(--bd);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--tx);outline:none;transition:border-color .18s var(--ease),box-shadow .18s var(--ease)}
 .form-field input:focus,.form-field textarea:focus,.form-field select:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.06)}
 .form-field input::placeholder,.form-field textarea::placeholder{color:rgba(255,255,255,.18)}
@@ -234,54 +235,71 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
           <div class="dd-menu">
             <div class="dd-options">
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', '', 'Prefer not to say')">Prefer not to say</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'US', 'United States')">United States</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'GB', 'United Kingdom')">United Kingdom</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FR', 'France')">France</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DE', 'Germany')">Germany</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ES', 'Spain')">Spain</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IT', 'Italy')">Italy</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CA', 'Canada')">Canada</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AR', 'Argentina')">Argentina</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AU', 'Australia')">Australia</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'BR', 'Brazil')">Brazil</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'JP', 'Japan')">Japan</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'KR', 'South Korea')">South Korea</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IN', 'India')">India</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MX', 'Mexico')">Mexico</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NL', 'Netherlands')">Netherlands</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SE', 'Sweden')">Sweden</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NO', 'Norway')">Norway</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DK', 'Denmark')">Denmark</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FI', 'Finland')">Finland</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PL', 'Poland')">Poland</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PT', 'Portugal')">Portugal</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CH', 'Switzerland')">Switzerland</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AT', 'Austria')">Austria</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'BE', 'Belgium')">Belgium</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IE', 'Ireland')">Ireland</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'TH', 'Thailand')">Thailand</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ID', 'Indonesia')">Indonesia</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MY', 'Malaysia')">Malaysia</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PH', 'Philippines')">Philippines</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'VN', 'Vietnam')">Vietnam</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ZA', 'South Africa')">South Africa</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'EG', 'Egypt')">Egypt</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IL', 'Israel')">Israel</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'TR', 'Turkey')">Turkey</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AR', 'Argentina')">Argentina</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'BR', 'Brazil')">Brazil</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'BG', 'Bulgaria')">Bulgaria</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CA', 'Canada')">Canada</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CL', 'Chile')">Chile</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CO', 'Colombia')">Colombia</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PE', 'Peru')">Peru</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'VE', 'Venezuela')">Venezuela</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NG', 'Nigeria')">Nigeria</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'KE', 'Kenya')">Kenya</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MA', 'Morocco')">Morocco</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SA', 'Saudi Arabia')">Saudi Arabia</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AE', 'UAE')">UAE</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'RU', 'Russia')">Russia</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CN', 'China')">China</div>
-              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SG', 'Singapore')">Singapore</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CO', 'Colombia')">Colombia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'HR', 'Croatia')">Croatia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CY', 'Cyprus')">Cyprus</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CZ', 'Czech Republic')">Czech Republic</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DK', 'Denmark')">Denmark</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'EG', 'Egypt')">Egypt</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'EE', 'Estonia')">Estonia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FI', 'Finland')">Finland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'FR', 'France')">France</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'DE', 'Germany')">Germany</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'GR', 'Greece')">Greece</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'HK', 'Hong Kong')">Hong Kong</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'HU', 'Hungary')">Hungary</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IN', 'India')">India</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ID', 'Indonesia')">Indonesia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IE', 'Ireland')">Ireland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IL', 'Israel')">Israel</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'IT', 'Italy')">Italy</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'JP', 'Japan')">Japan</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'KE', 'Kenya')">Kenya</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'KR', 'South Korea')">South Korea</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'LV', 'Latvia')">Latvia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'LT', 'Lithuania')">Lithuania</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'LU', 'Luxembourg')">Luxembourg</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MY', 'Malaysia')">Malaysia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MT', 'Malta')">Malta</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MX', 'Mexico')">Mexico</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'MA', 'Morocco')">Morocco</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NL', 'Netherlands')">Netherlands</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NZ', 'New Zealand')">New Zealand</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NG', 'Nigeria')">Nigeria</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'NO', 'Norway')">Norway</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PK', 'Pakistan')">Pakistan</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PE', 'Peru')">Peru</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PH', 'Philippines')">Philippines</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PL', 'Poland')">Poland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'PT', 'Portugal')">Portugal</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'RO', 'Romania')">Romania</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'RU', 'Russia')">Russia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SA', 'Saudi Arabia')">Saudi Arabia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SG', 'Singapore')">Singapore</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SK', 'Slovakia')">Slovakia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SI', 'Slovenia')">Slovenia</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ZA', 'South Africa')">South Africa</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'ES', 'Spain')">Spain</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'SE', 'Sweden')">Sweden</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'CH', 'Switzerland')">Switzerland</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'TW', 'Taiwan')">Taiwan</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'TH', 'Thailand')">Thailand</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'TR', 'Turkey')">Turkey</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'UA', 'Ukraine')">Ukraine</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'AE', 'UAE')">UAE</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'GB', 'United Kingdom')">United Kingdom</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'US', 'United States')">United States</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'VE', 'Venezuela')">Venezuela</div>
+              <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'VN', 'Vietnam')">Vietnam</div>
               <div class="dd-opt" onclick="selectDropdown('countryDropdown', 'OTHER', 'Other')">Other</div>
             </div>
           </div>
@@ -401,19 +419,34 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     }
   });
 
-  // Auth check
-  const { supabase } = window;
+  // Auth check - wait for supabase to be ready
   let user = null;
-
+  const _supabaseReady = window._supabaseReady || new Promise(r => window._supabaseReady = r);
+  
   async function checkAuth() {
-    const { data: { session } } = await supabase.auth.getSession();
-    user = session?.user || null;
-    document.getElementById('loginNote').style.display = user ? 'none' : 'block';
-    document.getElementById('ticketForm').style.display = user ? 'block' : 'none';
+    try {
+      await _supabaseReady.catch(() => {});
+      if (!window.supabase) {
+        // Wait a bit for supabase to load
+        await new Promise(r => setTimeout(r, 500));
+      }
+      const sb = window.supabase;
+      if (!sb || !sb.auth) {
+        document.getElementById('loginNote').innerHTML = '<span style="color:#eb4545;">Unable to load authentication. Please refresh the page.</span>';
+        return;
+      }
+      const { data: { session } } = await sb.auth.getSession();
+      user = session?.user || null;
+      document.getElementById('loginNote').style.display = user ? 'none' : 'block';
+      document.getElementById('ticketForm').style.display = user ? 'block' : 'none';
+    } catch(e) {
+      console.error('Auth error:', e);
+      document.getElementById('loginNote').innerHTML = '<span style="color:#eb4545;">Authentication error. Please refresh.</span>';
+    }
   }
   checkAuth();
 
-  // Username verification with enhanced UI
+  // Username verification - wait for supabase, use window.supabase safely
   let usernameTimeout;
   document.getElementById('username').addEventListener('input', function() {
     clearTimeout(usernameTimeout);
@@ -427,7 +460,12 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     verify.className = 'verify-status loading';
     usernameTimeout = setTimeout(async () => {
       try {
-        const { data, error } = await supabase.from('profiles').select('username, display_name, avatar_url').ilike('username', this.value).maybeSingle();
+        const sb = window.supabase;
+        if (!sb || !sb.from) {
+          verify.textContent = 'Checking... (loading)';
+          return;
+        }
+        const { data, error } = await sb.from('profiles').select('username, display_name, avatar_url').ilike('username', this.value).maybeSingle();
         if (error) {
           verify.textContent = 'Unable to verify — you can still submit a ticket';
           verify.className = 'verify-status invalid';
@@ -498,6 +536,28 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     if (hidden) hidden.value = value;
     dd.classList.remove('open');
   };
+
+  // Keyboard navigation for dropdowns - press first letter to jump to option
+  document.addEventListener('keydown', function(e) {
+    if (!e.key || e.ctrlKey || e.metaKey || e.altKey) return;
+    const key = e.key.toLowerCase();
+    const activeDd = document.querySelector('.custom-dropdown.open');
+    if (!activeDd) return;
+    const opts = activeDd.querySelectorAll('.dd-opt');
+    let found = null;
+    for (const opt of opts) {
+      const txt = opt.textContent.toLowerCase();
+      if (txt.startsWith(key)) {
+        found = opt;
+        break;
+      }
+    }
+    if (found) {
+      found.focus();
+      found.style.background = 'rgba(255,249,62,.15)';
+      setTimeout(() => found.style.background = '', 200);
+    }
+  });
 
   window.filterDropdown = function(input, id) {
     const dd = document.getElementById(id);

@@ -97,6 +97,13 @@ body::before{content:"";position:fixed;inset:0;z-index:500;pointer-events:none;o
 .verify-status.valid{color:#4ade80}
 .verify-status.invalid{color:#f87171}
 .verify-status.loading{color:var(--mu)}
+.user-frame{display:none;flex-direction:row;align-items:center;gap:12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-top:8px}
+.user-frame img.user-frame-pfp{width:44px;height:44px;border-radius:50%;object-fit:cover}
+.user-frame-info{display:flex;flex-direction:column;gap:2px}
+.user-frame-name{font-size:14px;font-weight:600;color:#fff}
+.user-frame-un{font-size:12px;color:var(--mu-l)}
+.user-frame-error{font-size:13px;color:#eb4545;font-weight:500}
+.username-warning{font-size:11px;color:var(--mu);margin-top:6px;line-height:1.45;padding:8px 10px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.12);border-radius:8px}
 .form-field input,.form-field textarea,.form-field select{background:rgba(255,255,255,.04);border:1.5px solid var(--bd);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--tx);outline:none;transition:border-color .18s var(--ease),box-shadow .18s var(--ease)}
 .form-field input:focus,.form-field textarea:focus,.form-field select:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.06)}
 .form-field input::placeholder,.form-field textarea::placeholder{color:rgba(255,255,255,.18)}
@@ -209,6 +216,8 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
         <label for="username">Username <span class="req">*</span></label>
         <input type="text" id="username" placeholder="Your Fortized username" required maxlength="30">
         <div id="usernameVerify" class="verify-status"></div>
+        <div id="userFrame" class="user-frame"></div>
+        <div class="username-warning">Enter the username of the account related to this issue. If this isn\'t an account you own, action may be taken against your account.</div>
       </div>
 
       <div class="form-field">
@@ -358,160 +367,181 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 </footer>
 
 <script>
+// Expose functions to global scope for onclick handlers
 (()=>{
+  // Nav scroll handler (local)
   const n=document.getElementById('mainNav');
-  if(!n)return;
-  function update(){
-    n.classList.toggle('scrolled', window.scrollY > 40)
+  if(n){
+    function update(){
+      n.classList.toggle('scrolled', window.scrollY > 40)
+    }
+    window.addEventListener('scroll',update,{passive:true});
+    update();
   }
-  window.addEventListener('scroll',update,{passive:true});
-  update();
-})();
 
-// Close dropdowns on outside click
-document.addEventListener('click', e => {
-  if (!e.target.closest('.custom-dropdown')) {
-    document.querySelectorAll('.custom-dropdown.open').forEach(d => d.classList.remove('open'));
+  // Close dropdowns on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.custom-dropdown')) {
+      document.querySelectorAll('.custom-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+  });
+
+  // Auth check
+  const { supabase } = window;
+  let user = null;
+
+  async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    user = session?.user || null;
+    document.getElementById('loginNote').style.display = user ? 'none' : 'block';
+    document.getElementById('ticketForm').style.display = user ? 'block' : 'none';
   }
-});
+  checkAuth();
 
-// Auth check
-const { supabase } = window;
-let user = null;
-
-async function checkAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
-  user = session?.user || null;
-  document.getElementById('loginNote').style.display = user ? 'none' : 'block';
-  document.getElementById('ticketForm').style.display = user ? 'block' : 'none';
-}
-checkAuth();
-
-// Username verification
-let usernameTimeout;
-document.getElementById('username').addEventListener('input', function() {
-  clearTimeout(usernameTimeout);
-  const verify = document.getElementById('usernameVerify');
-  verify.textContent = '';
-  verify.className = 'verify-status';
-  if (this.value.length < 2) return;
-  verify.textContent = 'Checking...';
-  verify.className = 'verify-status loading';
-  usernameTimeout = setTimeout(async () => {
-    try {
-      const { data } = await supabase.from('profiles').select('username, display_name').ilike('username', this.value).single();
-      if (data) {
-        verify.textContent = '✓ Account found: ' + (data.display_name || data.username);
-        verify.className = 'verify-status valid';
-      } else {
-        verify.textContent = '✗ No account found — you can still submit a ticket';
+  // Username verification with enhanced UI
+  let usernameTimeout;
+  document.getElementById('username').addEventListener('input', function() {
+    clearTimeout(usernameTimeout);
+    const verify = document.getElementById('usernameVerify');
+    const userFrame = document.getElementById('userFrame');
+    verify.textContent = '';
+    verify.className = 'verify-status';
+    if(userFrame) userFrame.style.display = 'none';
+    if (this.value.length < 2) return;
+    verify.textContent = 'Checking...';
+    verify.className = 'verify-status loading';
+    usernameTimeout = setTimeout(async () => {
+      try {
+        const { data } = await supabase.from('profiles').select('username, display_name, avatar_url').ilike('username', this.value).single();
+        if (data) {
+          verify.textContent = '✓ Account found';
+          verify.className = 'verify-status valid';
+          // Show user frame with pfp/name
+          if(userFrame) {
+            const pf = userFrame.querySelector('.user-frame-pfp') || document.createElement('img');
+            const nd = userFrame.querySelector('.user-frame-name');
+            const un = userFrame.querySelector('.user-frame-un');
+            userFrame.innerHTML = '<img class="user-frame-pfp" src="'+(data.avatar_url||'/default pfp.png')+'" alt="">'+
+              '<div class="user-frame-info"><div class="user-frame-name">'+(data.display_name||'')+'</div>'+
+              '<div class="user-frame-un">@'+data.username+'</div></div>';
+            userFrame.style.display = 'flex';
+          }
+        } else {
+          verify.textContent = '✗ No user found with that username';
+          verify.className = 'verify-status invalid';
+          verify.style.color = '#eb4545';
+          if(userFrame) {
+            userFrame.innerHTML = '<div class="user-frame-error">No user found with that username</div>';
+            userFrame.style.display = 'flex';
+          }
+        }
+      } catch(e) {
+        verify.textContent = 'Unable to verify — you can still submit a ticket';
         verify.className = 'verify-status invalid';
+        if(userFrame) userFrame.style.display = 'none';
       }
-    } catch(e) {
-      verify.textContent = 'Unable to verify — you can still submit a ticket';
-      verify.className = 'verify-status invalid';
-    }
-  }, 800);
-});
+    }, 800);
+  });
 
-// Char count
-document.getElementById('description').addEventListener('input', function() {
-  document.getElementById('charNum').textContent = this.value.length;
-});
+  // Char count
+  document.getElementById('description').addEventListener('input', function() {
+    document.getElementById('charNum').textContent = this.value.length;
+  });
 
-// Submit
-document.getElementById('ticketForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  if (!user) return;
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = 'Submitting...';
-  try {
-    // Validate required fields
-    const categoryVal = document.getElementById('category').value;
-    const subjectVal = document.getElementById('subject').value.trim();
-    const descriptionVal = document.getElementById('description').value.trim();
-    
-    if (!categoryVal) {
-      alert('Please select a category for your ticket.');
-      btn.disabled = false;
-      btn.textContent = 'Submit Ticket';
-      return;
-    }
-    if (!subjectVal) {
-      alert('Please provide a subject for your ticket.');
-      btn.disabled = false;
-      btn.textContent = 'Submit Ticket';
-      return;
-    }
-    if (!descriptionVal) {
-      alert('Please describe your issue.');
-      btn.disabled = false;
-      btn.textContent = 'Submit Ticket';
-      return;
-    }
-    
-    const ticket = {
-      id: 'TKT-' + Date.now().toString(36).toUpperCase(),
-      user_id: user.id,
-      user_email: user.email,
-      category: document.getElementById('category').value,
-      subject: document.getElementById('subject').value,
-      description: document.getElementById('description').value,
-      status: 'open',
-      created_at: new Date().toISOString()
-    };
-    const tickets = JSON.parse(localStorage.getItem('fortized_tickets') || '[]');
-    tickets.push(ticket);
-    localStorage.setItem('fortized_tickets', JSON.stringify(tickets));
-    document.getElementById('ticketForm').style.display = 'none';
-    document.getElementById('successView').classList.add('on');
-  } catch(err) {
-    console.error('Error submitting ticket:', err);
-    alert('There was an error submitting your ticket. Please try again.');
-    btn.disabled = false;
-    btn.textContent = 'Submit Ticket';
-  }
-});
+  // Global functions exposed to window
+  window.resetForm = function() {
+    document.getElementById('ticketForm').reset();
+    document.getElementById('charNum').textContent = '0';
+    document.getElementById('ticketForm').style.display = 'block';
+    document.getElementById('successView').classList.remove('on');
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtn').textContent = 'Submit Ticket';
+    document.querySelectorAll('.custom-dropdown').forEach(dd => {
+      const val = dd.querySelector('.dd-value');
+      if (val) { val.textContent = val.dataset.placeholder; val.classList.remove('selected'); }
+      dd.classList.remove('open');
+    });
+  };
 
-function resetForm() {
-  document.getElementById('ticketForm').reset();
-  document.getElementById('charNum').textContent = '0';
-  document.getElementById('ticketForm').style.display = 'block';
-  document.getElementById('successView').classList.remove('on');
-  document.getElementById('submitBtn').disabled = false;
-  document.getElementById('submitBtn').textContent = 'Submit Ticket';
-  document.querySelectorAll('.custom-dropdown').forEach(dd => {
+  window.toggleDropdown = function(id) {
+    const dd = document.getElementById(id);
+    const wasOpen = dd.classList.contains('open');
+    document.querySelectorAll('.custom-dropdown.open').forEach(d => d.classList.remove('open'));
+    if (!wasOpen) dd.classList.add('open');
+  };
+
+  window.selectDropdown = function(id, value, text) {
+    const dd = document.getElementById(id);
     const val = dd.querySelector('.dd-value');
-    if (val) { val.textContent = val.dataset.placeholder; val.classList.remove('selected'); }
+    const hidden = dd.nextElementSibling.querySelector('input[type="hidden"]');
+    val.textContent = text;
+    val.classList.add('selected');
+    if (hidden) hidden.value = value;
     dd.classList.remove('open');
+  };
+
+  window.filterDropdown = function(input, id) {
+    const dd = document.getElementById(id);
+    const filter = input.value.toLowerCase();
+    dd.querySelectorAll('.dd-opt').forEach(opt => {
+      opt.style.display = opt.textContent.toLowerCase().includes(filter) ? '' : 'none';
+    });
+  };
+
+  // Form submit with validation
+  document.getElementById('ticketForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!user) return;
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    try {
+      const categoryVal = document.getElementById('category').value;
+      const subjectVal = document.getElementById('subject').value.trim();
+      const descriptionVal = document.getElementById('description').value.trim();
+      
+      if (!categoryVal) {
+        alert('Please select a category for your ticket.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Ticket';
+        return;
+      }
+      if (!subjectVal) {
+        alert('Please provide a subject for your ticket.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Ticket';
+        return;
+      }
+      if (!descriptionVal) {
+        alert('Please describe your issue.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Ticket';
+        return;
+      }
+      
+      const ticket = {
+        id: 'TKT-' + Date.now().toString(36).toUpperCase(),
+        user_id: user.id,
+        user_email: user.email,
+        category: document.getElementById('category').value,
+        subject: document.getElementById('subject').value,
+        description: document.getElementById('description').value,
+        status: 'open',
+        created_at: new Date().toISOString()
+      };
+      const tickets = JSON.parse(localStorage.getItem('fortized_tickets') || '[]');
+      tickets.push(ticket);
+      localStorage.setItem('fortized_tickets', JSON.stringify(tickets));
+      document.getElementById('ticketForm').style.display = 'none';
+      document.getElementById('successView').classList.add('on');
+    } catch(err) {
+      console.error('Error submitting ticket:', err);
+      alert('There was an error submitting your ticket. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Submit Ticket';
+    }
   });
-}
-
-function toggleDropdown(id) {
-  const dd = document.getElementById(id);
-  const wasOpen = dd.classList.contains('open');
-  document.querySelectorAll('.custom-dropdown.open').forEach(d => d.classList.remove('open'));
-  if (!wasOpen) dd.classList.add('open');
-}
-
-function selectDropdown(id, value, text) {
-  const dd = document.getElementById(id);
-  const val = dd.querySelector('.dd-value');
-  const hidden = dd.nextElementSibling.querySelector('input[type="hidden"]');
-  val.textContent = text;
-  val.classList.add('selected');
-  if (hidden) hidden.value = value;
-  dd.classList.remove('open');
-}
-
-function filterDropdown(input, id) {
-  const dd = document.getElementById(id);
-  const filter = input.value.toLowerCase();
-  dd.querySelectorAll('.dd-opt').forEach(opt => {
-    opt.style.display = opt.textContent.toLowerCase().includes(filter) ? '' : 'none';
-  });
-}
+})();
 </script>
 </body>
 </html>

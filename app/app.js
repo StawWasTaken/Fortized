@@ -17154,7 +17154,7 @@ document.addEventListener('click', function(e) {
   const img = e.target.closest('.msg-emoji, .msg-emoji-native, .emoji');
   if (!img) return;
   // Only show tooltip for emojis inside user-generated content areas
-  if (!img.closest('.msg-text, .msg-reply-ref, .up-left-section-body, .ann-body, .forum-detail-content, .frc-body')) return;
+  if (!img.closest('.msg-text, .msg-reply-ref, .up-left-section-body, .ann-body, .forum-detail-content, .frc-body, .fpp-card__body, .fpp__inline-bio')) return;
   const emoji = img.dataset?.emoji || img.alt || img.textContent?.trim();
   if (emoji) { e.stopPropagation(); _showEmojiTooltip(emoji, img); }
 });
@@ -26703,7 +26703,7 @@ function _bioEmojiHTML(name, authorUsername) {
       const uni = _resolveEmojiUnicode(lower);
       if (uni) {
         const url = (typeof emojiToTwemojiUrl === 'function') ? emojiToTwemojiUrl(uni) : '';
-        if (url) return `<img class="rci-emoji bio-emoji" data-emoji-uni="${escapeHTML(uni)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(url)}" alt="${escapeHTML(uni)}" draggable="false" title=":${escapeHTML(lower)}:">`;
+        if (url) return `<img class="rci-emoji bio-emoji emoji" data-emoji="${escapeHTML(lower)}" data-emoji-uni="${escapeHTML(uni)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(url)}" alt="${escapeHTML(uni)}" draggable="false" title=":${escapeHTML(lower)}:">`;
       }
     }
   } catch (_) {}
@@ -26711,7 +26711,7 @@ function _bioEmojiHTML(name, authorUsername) {
   try {
     if (typeof FORTIZED_EMOJI_MAP === 'object' && FORTIZED_EMOJI_MAP[lower]) {
       const src = FORTIZED_EMOJI_MAP[lower];
-      return `<img class="rci-emoji bio-emoji" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(src)}" alt=":${escapeHTML(lower)}:" draggable="false" title=":${escapeHTML(lower)}:">`;
+      return `<img class="rci-emoji bio-emoji emoji" data-emoji="${escapeHTML(lower)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(src)}" alt=":${escapeHTML(lower)}:" draggable="false" title=":${escapeHTML(lower)}:">`;
     }
   } catch (_) {}
   // 3) Custom bastion emoji — Radiance gate on the AUTHOR.
@@ -26733,7 +26733,7 @@ function _bioEmojiHTML(name, authorUsername) {
     // Radiance gate. If we have author info AND they're not Radiance,
     // refuse to render (caller falls back to the literal :name:).
     if (authorObj && !_hasRadiance(authorObj)) return '';
-    return `<img class="rci-emoji bio-emoji" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(ce.data)}" alt=":${escapeHTML(lower)}:" draggable="false" title=":${escapeHTML(lower)}:">`;
+    return `<img class="rci-emoji bio-emoji emoji" data-emoji="${escapeHTML(lower)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(ce.data)}" alt=":${escapeHTML(lower)}:" draggable="false" title=":${escapeHTML(lower)}:">`;
   }
   return '';
 }

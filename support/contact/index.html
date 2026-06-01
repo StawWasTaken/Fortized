@@ -212,17 +212,17 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
       <p>You need to be <a href="/login">logged in</a> to submit a support ticket. <a href="/login">Log in</a> or <a href="/signup">create an account</a>.</p>
     </div>
 
-    <form id="ticketForm">
+    <form id="ticketForm" autocomplete="off">
       <div class="form-field">
         <label for="username">Username <span class="req">*</span> <span class="username-warning">Enter the username of the account related to this issue. If this isn't an account you own, action may be taken against your account.</span></label>
-        <input type="text" id="username" placeholder="Your Fortized username" required maxlength="30">
+        <input type="text" id="username" placeholder="Your Fortized username" required maxlength="30" autocomplete="off">
         <div id="usernameVerify" class="verify-status"></div>
         <div id="userFrame" class="user-frame"></div>
       </div>
 
       <div class="form-field">
         <label for="firstName">First Name <span class="opt">(optional)</span></label>
-        <input type="text" id="firstName" placeholder="Your first name" maxlength="50">
+        <input type="text" id="firstName" placeholder="Your first name" maxlength="50" autocomplete="off">
       </div>
 
       <div class="form-field">
@@ -349,12 +349,12 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
 
       <div class="form-field">
         <label for="subject">Subject <span class="req">*</span></label>
-        <input type="text" id="subject" placeholder="Brief description of your issue" required maxlength="100">
+        <input type="text" id="subject" placeholder="Brief description of your issue" required maxlength="100" autocomplete="off">
       </div>
 
       <div class="form-field">
         <label for="description">Please describe your issue <span class="req">*</span></label>
-        <textarea id="description" placeholder="Provide as much detail as possible about your issue..." required maxlength="2000"></textarea>
+        <textarea id="description" placeholder="Provide as much detail as possible about your issue..." required maxlength="2000" autocomplete="off"></textarea>
         <div class="char-count"><span id="charNum">0</span>/2000</div>
       </div>
 

@@ -419,31 +419,37 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     }
   });
 
-  // Auth check - wait for supabase to be ready with retry
-  let user = null;
+  // Auth check using FortizedSocial
+  let currentUser = null;
+  let currentEmail = null;
   
   async function checkAuth() {
+    // Wait for FortizedSocial to be ready
     for (let i = 0; i < 10; i++) {
-      if (window.sb && window.sb.auth) break;
+      if (window.FortizedSocial && window.FortizedSocial.getCurrentUsername) break;
       await new Promise(r => setTimeout(r, 300));
     }
-    const sb = window.sb;
-    if (!sb || !sb.auth) {
+    if (!window.FortizedSocial || !window.FortizedSocial.getCurrentUsername) {
       document.getElementById('loginNote').innerHTML = '<span style="color:#eb4545;">Unable to load. Refresh the page.</span>';
       return;
     }
     try {
-      const { data: { session } } = await sb.auth.getSession();
-      user = session?.user || null;
+      const username = await FortizedSocial.getCurrentUsername();
+      if (username) {
+        currentUser = username;
+        // Try to get user data for email
+        const userData = await FortizedSocial.getUserByName(username);
+        currentEmail = userData?.email || '';
+      }
     } catch(e) {
       console.error('Auth error:', e);
     }
-    document.getElementById('loginNote').style.display = user ? 'none' : 'block';
-    document.getElementById('ticketForm').style.display = user ? 'block' : 'none';
+    document.getElementById('loginNote').style.display = currentUser ? 'none' : 'block';
+    document.getElementById('ticketForm').style.display = currentUser ? 'block' : 'none';
   }
   checkAuth();
 
-  // Username verification with retry
+  // Username verification using FortizedSocial.getUserByName
   let usernameTimeout;
   document.getElementById('username').addEventListener('input', function() {
     clearTimeout(usernameTimeout);
@@ -456,31 +462,13 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     verify.textContent = 'Checking...';
     verify.className = 'verify-status loading';
     usernameTimeout = setTimeout(async () => {
-      // Wait for supabase (sb)
-      for (let i = 0; i < 10; i++) {
-        if (window.sb && window.sb.from) break;
-        await new Promise(r => setTimeout(r, 200));
-      }
-      const sb = window.sb;
-      if (!sb || !sb.from) {
-        verify.textContent = 'Loading...';
-        return;
-      }
       try {
-        const { data, error } = await sb.from('profiles').select('username, display_name, avatar_url').ilike('username', this.value).maybeSingle();
-        if (error) {
-          verify.textContent = 'Unable to verify — you can still submit a ticket';
-          verify.className = 'verify-status invalid';
-          if(userFrame) userFrame.style.display = 'none';
-        } else if (data) {
+        const data = await FortizedSocial.getUserByName(this.value);
+        if (data) {
           verify.textContent = '✓ Account found';
           verify.className = 'verify-status valid';
-          // Show user frame with pfp/name
           if(userFrame) {
-            const pf = userFrame.querySelector('.user-frame-pfp') || document.createElement('img');
-            const nd = userFrame.querySelector('.user-frame-name');
-            const un = userFrame.querySelector('.user-frame-un');
-            userFrame.innerHTML = '<img class="user-frame-pfp" src="'+(data.avatar_url||'/default pfp.png')+'" alt="">'+
+            userFrame.innerHTML = '<img class="user-frame-pfp" src="'+(data.pfp||'/default pfp.png')+'" alt="">'+
               '<div class="user-frame-info"><div class="user-frame-name">'+(data.display_name||'')+'</div>'+
               '<div class="user-frame-un">@'+data.username+'</div></div>';
             userFrame.style.display = 'flex';
@@ -572,7 +560,7 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
   // Form submit with validation
   document.getElementById('ticketForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    if (!user) return;
+    if (!currentUser) return;
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.textContent = 'Submitting...';
@@ -616,8 +604,8 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
       
       const ticket = {
         id: 'TKT-' + Date.now().toString(36).toUpperCase(),
-        user_id: user.id,
-        user_email: user.email,
+        user_id: currentUser,
+        user_email: currentEmail,
         username: document.getElementById('username').value,
         first_name: document.getElementById('firstName').value,
         country: document.getElementById('country').value,

@@ -424,10 +424,10 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
   
   async function checkAuth() {
     for (let i = 0; i < 10; i++) {
-      if (window.supabase && window.supabase.auth) break;
+      if (window.sb && window.sb.auth) break;
       await new Promise(r => setTimeout(r, 300));
     }
-    const sb = window.supabase;
+    const sb = window.sb;
     if (!sb || !sb.auth) {
       document.getElementById('loginNote').innerHTML = '<span style="color:#eb4545;">Unable to load. Refresh the page.</span>';
       return;
@@ -456,12 +456,12 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
     verify.textContent = 'Checking...';
     verify.className = 'verify-status loading';
     usernameTimeout = setTimeout(async () => {
-      // Wait for supabase
+      // Wait for supabase (sb)
       for (let i = 0; i < 10; i++) {
-        if (window.supabase && window.supabase.from) break;
+        if (window.sb && window.sb.from) break;
         await new Promise(r => setTimeout(r, 200));
       }
-      const sb = window.supabase;
+      const sb = window.sb;
       if (!sb || !sb.from) {
         verify.textContent = 'Loading...';
         return;

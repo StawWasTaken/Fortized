@@ -94,15 +94,13 @@ body::before{content:"";position:fixed;inset:0;z-index:500;pointer-events:none;o
 .form-field label .req{color:var(--acc);margin-left:2px}
 .form-field label .opt{color:var(--mu);font-weight:400;font-size:11px;margin-left:4px}
 .verify-status{font-size:11px;display:flex;align-items:center;gap:6px;min-height:18px;margin-top:2px}
-.verify-status.valid{color:#4ade80}
-.verify-status.invalid{color:#f87171}
-.verify-status.loading{color:var(--mu)}
-.user-frame{display:none;flex-direction:row;align-items:center;gap:12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-top:8px}
-.user-frame img.user-frame-pfp{width:44px;height:44px;border-radius:50%;object-fit:cover}
-.user-frame-info{display:flex;flex-direction:column;gap:2px}
-.user-frame-name{font-size:14px;font-weight:600;color:#fff}
-.user-frame-un{font-size:12px;color:var(--mu-l)}
-.user-frame-error{font-size:13px;color:#eb4545;font-weight:500}
+.user-frame{display:none;flex-direction:row;align-items:center;gap:0;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-top:8px}
+.user-frame img.user-frame-pfp{width:44px;height:44px;border-radius:50%;object-fit:cover;-webkit-user-drag:none;user-drag:none;pointer-events:none}
+.user-frame-details{display:flex;flex-direction:column;gap:0;padding-left:12px;border-left:1px solid var(--bd);margin-left:0}
+.user-frame-found{font-size:13px;color:#4ade80;font-weight:500}
+.user-frame-status{font-size:12px;color:var(--mu)}
+.user-frame-status.loading{color:var(--mu)}
+.user-frame-error{font-size:13px;color:#eb4545;font-weight:500;padding-left:12px}
 .username-warning{font-size:11px;color:var(--mu);margin-top:8px;line-height:1.4}
 .username-warning::before{content:"Note: "}
 .form-field input,.form-field textarea,.form-field select{background:rgba(255,255,255,.04);border:1.5px solid var(--bd);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--tx);outline:none;transition:border-color .18s var(--ease),box-shadow .18s var(--ease)}
@@ -216,7 +214,6 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
       <div class="form-field">
         <label for="username">Username <span class="req">*</span> <span class="username-warning">Enter the username of the account related to this issue. If this isn't an account you own, action may be taken against your account.</span></label>
         <input type="text" id="username" placeholder="Your Fortized username" required maxlength="30" autocomplete="off">
-        <div id="usernameVerify" class="verify-status"></div>
         <div id="userFrame" class="user-frame"></div>
       </div>
 
@@ -453,39 +450,25 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center}
   let usernameTimeout;
   document.getElementById('username').addEventListener('input', function() {
     clearTimeout(usernameTimeout);
-    const verify = document.getElementById('usernameVerify');
     const userFrame = document.getElementById('userFrame');
-    verify.textContent = '';
-    verify.className = 'verify-status';
-    if(userFrame) userFrame.style.display = 'none';
+    userFrame.innerHTML = '';
+    userFrame.style.display = 'none';
     if (this.value.length < 2) return;
-    verify.textContent = 'Checking...';
-    verify.className = 'verify-status loading';
+    userFrame.innerHTML = '<div class="user-frame-status loading">Checking...</div>';
+    userFrame.style.display = 'flex';
     usernameTimeout = setTimeout(async () => {
       try {
         const data = await FortizedSocial.getUserByName(this.value);
         if (data) {
-          verify.textContent = '✓ Account found';
-          verify.className = 'verify-status valid';
-          if(userFrame) {
-            userFrame.innerHTML = '<img class="user-frame-pfp" src="'+(data.pfp||'/default pfp.png')+'" alt="">'+
-              '<div class="user-frame-info"><div class="user-frame-name">'+(data.display_name||'')+'</div>'+
-              '<div class="user-frame-un">@'+data.username+'</div></div>';
-            userFrame.style.display = 'flex';
-          }
+          userFrame.innerHTML = '<img class="user-frame-pfp" src="'+(data.pfp||'/default pfp.png')+'" alt="" ondragstart="return false" ondragend="return false" draggable="false" oncontextmenu="return false">' +
+            '<div class="user-frame-details"><div class="user-frame-found">✓ Account found: @'+data.username+'</div></div>';
+          userFrame.style.display = 'flex';
         } else if (!data) {
-          verify.textContent = '✗ No user found with that username';
-          verify.className = 'verify-status invalid';
-          verify.style.color = '#eb4545';
-          if(userFrame) {
-            userFrame.innerHTML = '<div class="user-frame-error">No user found with that username</div>';
-            userFrame.style.display = 'flex';
-          }
+          userFrame.innerHTML = '<div class="user-frame-error">✗ No user found with that username</div>';
+          userFrame.style.display = 'flex';
         }
       } catch(e) {
-        verify.textContent = 'Unable to verify — you can still submit a ticket';
-        verify.className = 'verify-status invalid';
-        if(userFrame) userFrame.style.display = 'none';
+        userFrame.innerHTML = '<div class="user-frame-status">Unable to verify — you can still submit</div>';
       }
     }, 800);
   });

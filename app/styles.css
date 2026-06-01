@@ -796,6 +796,8 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .msg-text code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:5px;font-size:12px;font-family:monospace;}
 .msg-edited{font-size:9.5px;color:rgba(255,255,255,.25);margin-left:4px;cursor:default;transition:color .15s;font-weight:500;letter-spacing:.01em;}
 .msg-edited:hover{color:rgba(255,255,255,.45);text-decoration:underline;text-decoration-style:dotted;}
+.msg-rephrased{font-size:9.5px;color:rgba(255,249,62,.5);margin-left:4px;cursor:default;transition:color .15s;font-weight:500;letter-spacing:.01em;}
+.msg-rephrased:hover{color:rgba(255,249,62,.8);text-decoration:underline;text-decoration-style:dotted;}
 /* Reactions */
 .msg-reactions{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
 .r-pill{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-pill);padding:3px 10px;font-size:12px;cursor:pointer;transition:all .15s;position:relative;}

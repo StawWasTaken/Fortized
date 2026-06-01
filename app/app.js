@@ -5459,8 +5459,36 @@ async function sendDM() {
   if (!inp||!curDM) return;
   let text=preprocessMessageText(_readChatInput(inp));
   if (!text && !window._pendingAttachment) return;
+  
+  // Get recent messages for context
+  const dmMsgsEl = document.getElementById('dm-msgs');
+  const recentMsgs = [];
+  if (dmMsgsEl) {
+    const rows = dmMsgsEl.querySelectorAll('.msg-row');
+    for (const row of rows) {
+      if (row.dataset.text) {
+        try { recentMsgs.push({ text: row.dataset.text }); } catch(e) {}
+      }
+    }
+  }
+  
+  // Run automod check
+  const automod = runAutomod(text, recentMsgs);
+  if (automod.isRephrased) {
+    text = automod.rephrased;
+    // Show toast that message was rephrased
+    toast('🔄 Message rephrased for safety', 'info');
+  } else if (automod.warning) {
+    toast(automod.warning, 'warning');
+  }
+  
+  // Add rephrased flag to message if needed
+  const msgFlags = [];
+  if (automod.isRephrased) msgFlags.push('rephrased');
+  
+  if (!text && !window._pendingAttachment) return;
   // Safety pre-check
-  if (text) { const sw = contentSafetyCheck(text); if (sw) showContentWarning(sw); }
+  if (text) { const sw = contentSafetyCheck(text); if (sw) showContentWarning(sw) }
   // Remove any old friend-gate bar if present
   document.getElementById('dm-not-friends-bar')?.remove();
   if (!text) return;
@@ -5470,7 +5498,7 @@ async function sendDM() {
   _removeNewMsgBar('dm-msgs');
   const isOutline = _outlineMode;
   _outlineMode = false;
-  const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
+  const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline,flags:msgFlags.length ? msgFlags : undefined};
   // Optimistic render — show message immediately for sender
   const msgsEl = document.getElementById('dm-msgs');
   if (msgsEl) {
@@ -5975,8 +6003,31 @@ function _attachGCLiveEdits(gcId) {
 async function sendGCMessage() {
   const inp = document.getElementById('gc-input');
   if (!inp || !curGC) return;
-  const text = preprocessMessageText(_readChatInput(inp));
+  let text = preprocessMessageText(_readChatInput(inp));
   if (!text && !window._pendingAttachment) return;
+  
+  // Get context for automod
+  const gcMsgsEl = document.getElementById('gc-msgs');
+  const recentMsgs = [];
+  if (gcMsgsEl) {
+    const rows = gcMsgsEl.querySelectorAll('.msg-row');
+    for (const row of rows) {
+      if (row.dataset.text) { try { recentMsgs.push({ text: row.dataset.text }); } catch(e) {} }
+    }
+  }
+  
+  // Run automod check
+  const automod = runAutomod(text, recentMsgs);
+  if (automod.isRephrased) {
+    text = automod.rephrased;
+    toast('🔄 Message rephrased for safety', 'info');
+  } else if (automod.warning) {
+    toast(automod.warning, 'warning');
+  }
+  
+  const msgFlags = [];
+  if (automod.isRephrased) msgFlags.push('rephrased');
+  
   clearChatInput(inp);
   _stopGCTypingBroadcast();
   const rep = replyingTo;
@@ -5991,6 +6042,7 @@ async function sendGCMessage() {
     time: now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
     timestamp: now.toISOString(),
     ...(rep ? {replyTo: rep} : {}),
+    ...(msgFlags.length ? {flags: msgFlags} : {}),
   };
   _removeNewMsgBar('gc-msgs');
   // Optimistic render — show message immediately for sender
@@ -7629,6 +7681,7 @@ function appendMessage(container, msg, context, prevAuthor) {
   const replyHTML=msg.replyTo?`<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;opacity:.5;"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg> <strong>${escapeHTML(msg.replyTo.from||'')}</strong><span style="opacity:.6;">: ${escapeHTML((msg.replyTo.text||'').slice(0,60))}</span></div>`:'';
   const fwdHTML = msg.forwarded ? _renderForwardedCard(msg) : '';
   const editTag=msg.edited?`<span class="msg-edited" title="Edited${msg.editedAt ? ' at '+new Date(msg.editedAt).toLocaleString() : ''}">(edited)</span>`:'';
+  const rephrasedTag=msg.flags?.includes('rephrased')?`<span class="msg-rephrased" title="Fortized rephrases messages that violate our core safety rules.">(rephrased)</span>`:'';
   const reactHTML=msg.reactions?Object.entries(msg.reactions).map(([emoji,users])=>{
     const arr=Array.isArray(users)?users:Object.values(users);
     if (!arr.length) return '';
@@ -7659,7 +7712,7 @@ function appendMessage(container, msg, context, prevAuthor) {
           ${getMsgRoleTag(msg.from, context)}
           <span class="msg-timestamp" data-tip="${escapeHTML(fullTime)}">·  ${time}</span>
         </div>
-        <div class="msg-text" id="mt-${avId}">${parseMD(escapeHTML(msg.text||''))}${editTag}</div>
+        <div class="msg-text" id="mt-${avId}">${parseMD(escapeHTML(msg.text||''))}${rephrasedTag}${editTag}</div>
         ${reactHTML?`<div class="msg-reactions">${reactHTML}</div>`:''}
         <div class="msg-thread-slot" id="thread-slot-${safeId}"></div>
       </div>
@@ -7699,7 +7752,7 @@ function appendMessage(container, msg, context, prevAuthor) {
       <div class="msg-av-wrap"><span class="msg-time-small" data-tip="${escapeHTML(fullTime)}">${time}</span></div>
       <div class="msg-content-col">
         ${fwdHTML}${replyHTML}
-        <div class="msg-text" id="${textId}">${parseMD(escapeHTML(msg.text||''))}${editTag}</div>
+        <div class="msg-text" id="${textId}">${parseMD(escapeHTML(msg.text||''))}${rephrasedTag}${editTag}</div>
         ${reactHTML?`<div class="msg-reactions">${reactHTML}</div>`:''}
         <div class="msg-thread-slot" id="thread-slot-${safeId}"></div>
       </div>
@@ -26237,6 +26290,192 @@ function preprocessMessageText(text) {
     if (curBastion !== null && (CU?.bastions?.[curBastion]?.customEmojis||[]).some(e => e.name === name)) return match;
     return match;
   });
+}
+
+// ═══════ Fortized Light Automod System ═══════
+// Rephrasing triggers (severe content only - will be replaced with silly versions)
+const _AUTOMOD_REPHRASE_TRIGGERS = [
+  // Rape references
+  /\brape\b/i, /\braped\b/i, /\braping\b/i, /\brapist\b/i,
+  // Child sexual abuse
+  /\bchild\s*(?:sex|porn|abuse)\b/i, /\bpedo\b/i, /\bpedophile\b/i, /\bpedophilia\b/i,
+  /\bcsam\b/i, /\bcsa\b/i,
+  // Glorification of genocide
+  /\bgenocide\s*(?:is\s*)?(?:good|okay|right|cool|based)\b/i,
+  /\bholocaust\s*(?:is\s*)?(?:good|okay|right|cool|based)\b/i,
+  // Child rape
+  /\bchild\s*rap/i, /\brap(?:e|ed|ing)?\s*child/i,
+];
+
+// Silly rephrasings for severe content (keep it ridiculous and light)
+const _AUTOMOD_REPHRASES = [
+  "I pooed my pants and slipped on a banana 🍌",
+  "I accidentally screamed 'POTATO' in a library 📚",
+  "I tried to hug a cactus and forgot my arms exist 🌵",
+  "I whispered sweet nothings to my toaster 🍞",
+  "I declared war on a rubber duck and lost 🦆",
+  "I attempted to high-five a ceiling fan 💨",
+  "I told my cat I'm pregnant (I'm not) 🐱",
+  "I slid down a rainbow into a puddle 🌈",
+  "I challenged a mailbox to a duel and surrendered �邮箱",
+  "I screamed 'LEMON' at the moon and missed 🌙",
+  "I tried to tickle a firewall and got arrested 🔥",
+  "I sang karaoke to my microwave and it left me 🥛",
+  "I fought a pillow and the pillow won 🛏️",
+  "I tried to 1v1 a cloud and it rained on me ☁️",
+  "I submitted my resignation to a door handle 🚪",
+  "I played hide and seek with a brick and it found me first 🧱",
+  "I threatened to unicycle into the sun ☀️",
+  "I told a potato it was adopted and it cried 🥔",
+  "I tried to reason with a traffic cone but it was stubborn 🚧",
+  "I declared my love for a mailbox and it rejected me 📮",
+];
+
+// Real threat patterns (must be lenient - only severe credible threats)
+const _AUTOMOD_THREAT_PATTERNS = [
+  { pattern: /i[' ]?(?:will|m going to|ma?m)\s+(?:doxx?|expose)\s+you/i, weight: 0.9 },
+  { pattern: /i[' ]?(?:will|m going to)\s+(?:come\s+to\s+your\s+(?:house|home|place)|kill\s+you|end\s+your\s+(?:life|bloodline|family))/i, weight: 0.95 },
+  { pattern: /(?:i[' ]?ll|going to)\s+(?:kill|murder|attack|assault)\s+you\s+(?:later|tomorrow|soon|at\s+school)/i, weight: 0.85 },
+  { pattern: /your\s+(?:address|phone|email|dox)\s+(?:is|belongs)\s+to\s+me/i, weight: 0.8 },
+  { pattern: /(?:i|we)[' ]?(?:have|know)\s+your\s+(?:address|real\s+name|location)\b/i, weight: 0.75 },
+  { pattern: /swatting\s+you/i, weight: 0.95 },
+  { pattern: /(?:i[' ]?m|going to)\s+(?:snitch|drop\s+dime)\s+on\s+you/i, weight: 0.5 },
+];
+
+// Check if text matches any rephrase trigger
+function _checkAutomodRephrase(text) {
+  if (!text) return null;
+  for (const trigger of _AUTOMOD_REPHRASE_TRIGGERS) {
+    if (trigger.test(text)) {
+      const randomRephrase = _AUTOMOD_REPHRASES[Math.floor(Math.random() * _AUTOMOD_REPHRASES.length)];
+      return randomRephrase;
+    }
+  }
+  return null;
+}
+
+// Check if text is a severe real threat (analyze context)
+function _checkAutomodThreat(text, contextMessages = []) {
+  if (!text) return { isThreat: false, reason: null, context: [] };
+  const lowerText = text.toLowerCase();
+  let totalWeight = 0;
+  let matchedPatterns = [];
+  
+  // Check patterns
+  for (const { pattern, weight } of _AUTOMOD_THREAT_PATTERNS) {
+    if (pattern.test(text)) {
+      totalWeight += weight;
+      matchedPatterns.push(pattern.source);
+    }
+  }
+  
+  // Context analysis: look at previous messages for escalation
+  const recentMessages = contextMessages.slice(-20);
+  let escalationCount = 0;
+  let threatLanguageCount = 0;
+  
+  for (const msg of recentMessages) {
+    const msgText = (msg.text || '').toLowerCase();
+    if (/threat|kill|die|attack|harm|doxx/i.test(msgText)) {
+      threatLanguageCount++;
+      if (msgText.includes(text.toLowerCase())) {
+        escalationCount++;
+      }
+    }
+  }
+  
+  // Only trigger on high combined score (severe content + context)
+  const finalScore = totalWeight + (escalationCount * 0.1) + (threatLanguageCount * 0.05);
+  
+  if (finalScore >= 0.8) {
+    return {
+      isThreat: true,
+      reason: matchedPatterns.join(', '),
+      context: recentMessages.map(m => m.text || ''),
+      score: finalScore
+    };
+  }
+  
+  return { isThreat: false, reason: null, context: [], score: finalScore };
+}
+
+// Run automod on message (returns { original, rephrased, threat, warning })
+function runAutomod(text, contextMessages = []) {
+  const result = {
+    original: text,
+    rephrased: null,
+    isRephrased: false,
+    threat: null,
+    warning: null,
+    logged: false
+  };
+  
+  // Check for severe content that needs rephrasing
+  const rephrase = _checkAutomodRephrase(text);
+  if (rephrase) {
+    result.rephrased = rephrase;
+    result.isRephrased = true;
+    // Log for admin review
+    _logAutomodAction('rephrase', text, rephrase, null);
+    result.logged = true;
+    return result;
+  }
+  
+  // Check for real threats (context-aware)
+  const threatCheck = _checkAutomodThreat(text, contextMessages);
+  if (threatCheck.isThreat) {
+    result.threat = threatCheck;
+    result.warning = "⚠️ Your message triggered our safety system. Please keep conversations respectful.";
+    // Log for admin review
+    _logAutomodAction('threat', text, null, threatCheck);
+    result.logged = true;
+  }
+  
+  return result;
+}
+
+// Log automod actions for admin review
+const _automodLogQueue = [];
+function _logAutomodAction(type, originalText, rephrasedText, threatData) {
+  const entry = {
+    id: 'AM-' + Date.now().toString(36).toUpperCase(),
+    type,
+    timestamp: new Date().toISOString(),
+    user: CU?.username || 'unknown',
+    originalText: originalText?.substring(0, 500),
+    rephasedText: rephrasedText,
+    threatReason: threatData?.reason,
+    threatContext: threatData?.context,
+    threatScore: threatData?.score,
+    status: 'pending_review'
+  };
+  
+  _automodLogQueue.push(entry);
+  
+  // Send to server/admin panel
+  try {
+    FortizedSocial.adminSubmitSupportTicket({
+      id: entry.id,
+      automod_type: 'log',
+      automod_action: type,
+      automod_user: entry.user,
+      automod_original: entry.originalText,
+      automod_rephrased: entry.rephasedText,
+      automod_threat_reason: entry.threatReason,
+      automod_threat_context: entry.threatContext?.slice(0, 20),
+      automod_timestamp: entry.timestamp,
+      status: 'pending_review'
+    });
+  } catch (e) {
+    console.error('[Automod] Failed to log:', e);
+  }
+  
+  // Also save locally
+  try {
+    const existing = JSON.parse(localStorage.getItem('ftz_automod_log') || '[]');
+    existing.push(entry);
+    localStorage.setItem('ftz_automod_log', JSON.stringify(existing.slice(-100)));
+  } catch (e) {}
 }
 // ═══════ Media Lightbox (Discord-style image/GIF preview) ═══════
 // Extract author/timestamp/filename context from the clicked element so the

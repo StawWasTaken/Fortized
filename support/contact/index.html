@@ -94,7 +94,7 @@ body::before{content:"";position:fixed;inset:0;z-index:500;pointer-events:none;o
 .form-field label .req{color:var(--acc);margin-left:2px}
 .form-field label .opt{color:var(--mu);font-weight:400;font-size:11px;margin-left:4px}
 .verify-status{font-size:11px;display:flex;align-items:center;gap:6px;min-height:18px;margin-top:2px}
-.user-frame{display:none;flex-direction:row;align-items:center;gap:0;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-top:none;border-radius:0 0 12px 12px;padding:10px 12px;margin-top:-1px}
+.user-frame{display:none;flex-direction:row;align-items:center;gap:0;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-top:none;border-radius:0 0 10px 10px;padding:10px 12px;margin-top:-1px}
 .user-frame img.user-frame-pfp{width:44px;height:44px;border-radius:50%;object-fit:cover;-webkit-user-drag:none;user-drag:none;pointer-events:none}
 .user-frame-divider{width:1px;height:40px;background:var(--bd);margin:0 10px}
 .user-frame-info{display:flex;flex-direction:column;gap:2px}
@@ -107,6 +107,7 @@ body::before{content:"";position:fixed;inset:0;z-index:500;pointer-events:none;o
 .username-warning{font-size:11px;color:var(--mu);margin-top:8px;line-height:1.4}
 .username-warning::before{content:"Note: "}
 .form-field input,.form-field textarea,.form-field select{background:rgba(255,255,255,.04);border:1.5px solid var(--bd);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--tx);outline:none;transition:border-color .18s var(--ease),box-shadow .18s var(--ease)}
+#username{border-radius:10px 10px 0 0}
 .form-field input:focus,.form-field textarea:focus,.form-field select:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.06)}
 .form-field input::placeholder,.form-field textarea::placeholder{color:rgba(255,255,255,.18)}
 .form-field textarea{resize:vertical;min-height:120px}

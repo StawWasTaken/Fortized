@@ -39580,6 +39580,12 @@ function enforceAgeGate(contentEl, channelName, onAllow) {
 
 // Content scan warning for suspicious uploads
 function showContentWarning(reason) {
+  // Special handling for rate limiting - Discord-style popup
+  if (reason === 'WHOA_EASY') {
+    _showRateLimitPopup();
+    return;
+  }
+  
   const banner = document.createElement('div');
   banner.className = 'safety-banner warn';
   banner.style.cssText = 'position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:8000;max-width:520px;width:90%;animation:embedIn .2s cubic-bezier(.22,1,.36,1);';
@@ -39587,6 +39593,30 @@ function showContentWarning(reason) {
   banner.style.display = 'flex';
   document.body.appendChild(banner);
   setTimeout(() => banner.remove(), 5000);
+}
+
+// Discord-style rate limit popup
+function _showRateLimitPopup() {
+  // Remove existing popup if any
+  document.getElementById('rate-limit-popup')?.remove();
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'rate-limit-popup';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.onclick = () => overlay.remove();
+  
+  const card = document.createElement('div');
+  card.style.cssText = 'background:#2b2d31;border-radius:8px;padding:24px;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
+  card.onclick = (e) => e.stopPropagation();
+  card.innerHTML = `
+    <div style="font-size:48px;margin-bottom:16px;">🚫</div>
+    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">WHOA, EASY THERE!</div>
+    <div style="font-size:14px;color:#949ba4;margin-bottom:20px;">You're sending messages too quickly!</div>
+    <button onclick="this.closest('#rate-limit-popup').remove()" style="background:#5865f2;color:#fff;border:none;border-radius:4px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;">Back to chat</button>
+  `;
+  
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
 }
 
 // Message content pre-scan (keywords)
@@ -39597,6 +39627,11 @@ function getLiveStatus(username) {
   return _liveStatusCache[username] || 'offline';
 }
 
+// Rate limiting: track message timestamps
+const _msgTimestamps = [];
+const RATE_LIMIT_COUNT = 5;
+const RATE_LIMIT_WINDOW_MS = 3000; // 3 seconds
+
 function contentSafetyCheck(text) {
   if (!text) return null;
   // Skip safety check for messages with file attachment tokens (base64 data is naturally repetitive)
@@ -39606,6 +39641,18 @@ function contentSafetyCheck(text) {
   // Check for excessive caps
   const caps = (text.match(/[A-Z]/g)||[]).length;
   if (text.length > 20 && caps/text.length > 0.7) return 'Excessive capitalization detected.';
+  
+  // Rate limiting check - 5+ messages in 3 seconds
+  const now = Date.now();
+  _msgTimestamps.push(now);
+  // Clean old timestamps
+  while (_msgTimestamps.length && _msgTimestamps[0] < now - RATE_LIMIT_WINDOW_MS) {
+    _msgTimestamps.shift();
+  }
+  if (_msgTimestamps.length >= RATE_LIMIT_COUNT) {
+    return 'WHOA_EASY'; // Special code for rate limit
+  }
+  
   return null;
 }
 

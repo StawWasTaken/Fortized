@@ -6046,7 +6046,6 @@ async function sendGCMessage() {
   };
   _removeNewMsgBar('gc-msgs');
   // Optimistic render — show message immediately for sender
-  const gcMsgsEl = document.getElementById('gc-msgs');
   if (gcMsgsEl) {
     const lastRows = gcMsgsEl.querySelectorAll('.msg-row');
     const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;

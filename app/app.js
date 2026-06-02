@@ -3952,6 +3952,60 @@ function _renderAdHTML(ad, size) {
     </div>`;
   }
 }
+  
+// Ad 3-dot menu
+function _showAdMenu(e, adId, productName, paidBy) {
+  e.stopPropagation();
+  // Remove existing menu
+  document.getElementById('ad-menu-popup')?.remove();
+  
+  const menu = document.createElement('div');
+  menu.id = 'ad-menu-popup';
+  menu.style.cssText = 'position:fixed;z-index:9999;background:#2b2d31;border-radius:8px;padding:6px 0;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+  
+  const rect = e.target.getBoundingClientRect();
+  menu.style.top = (rect.bottom + 4) + 'px';
+  menu.style.right = (window.innerWidth - rect.right) + 'px';
+  
+  menu.innerHTML = `
+    <div onclick="this.closest('#ad-menu-popup').remove();_rotateHomeAd();" style="padding:10px 16px;font-size:14px;color:#fff;cursor:pointer;">Not interested</div>
+    <div onclick="this.closest('#ad-menu-popup').remove();_showWhyAd('${escapeHTML(productName)}', '${escapeHTML(paidBy)}')" style="padding:10px 16px;font-size:14px;color:#fff;cursor:pointer;">Why this ad</div>
+    <div onclick="this.closest('#ad-menu-popup').remove();_reportAd('${escapeHTML(adId)}', '', '')" style="padding:10px 16px;font-size:14px;color:#f87171;cursor:pointer;">Report ad</div>
+  `;
+  
+  document.body.appendChild(menu);
+  
+  // Close on click outside
+  const closeMenu = (ev) => {
+    if (!menu.contains(ev.target)) {
+      menu.remove();
+      document.removeEventListener('click', closeMenu);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeMenu), 0);
+}
+
+function _showWhyAd(productName, paidBy) {
+  document.getElementById('ad-why-popup')?.remove();
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'ad-why-popup';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.onclick = () => overlay.remove();
+  
+  const card = document.createElement('div');
+  card.style.cssText = 'background:#2b2d31;border-radius:8px;padding:24px;max-width:320px;text-align:center;';
+  card.onclick = (e) => e.stopPropagation();
+  card.innerHTML = `
+    <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:12px;">Why this ad?</div>
+    <div style="font-size:13px;color:#949ba4;line-height:1.6;margin-bottom:16px;">You are seeing sponsored content for ${escapeHTML(productName)}, paid by ${escapeHTML(paidBy)}.</div>
+    <button onclick="this.closest('#ad-why-popup').remove()" style="background:#5865f2;color:#fff;border:none;border-radius:4px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;">OK</button>
+  `;
+  
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+}
+
 let _homeAdTimer = null;
 async function _renderHomeAds() {
   if (_homeAdTimer) { clearInterval(_homeAdTimer); _homeAdTimer = null; }
@@ -11445,6 +11499,26 @@ function initFortizedUXResilience() {
   // Poll for ban/suspension/warning enforcement via Supabase (every 15s)
   let _wasBanned = CU.banned || false;
   let _wasSuspended = !!(CU.suspension || CU.suspendedUntil);
+  
+  // Check immediately on load
+  (async () => {
+    try {
+      const u = await FortizedSocial.getUserByName(CU.username, { columns: 'username,banned,ban_reason,suspension,suspended_until,active_warning,raw' });
+      if (u) {
+        if (u.banned) { _wasBanned = true; _showBanScreen({ reason: u.banReason || 'You have been banned.' }); }
+        else if (_wasBanned) { location.reload(); }
+        const suspData = u.suspension || (u.suspendedUntil ? { until: u.suspendedUntil } : null);
+        if (suspData && suspData.until && new Date(suspData.until) > new Date()) { _wasSuspended = true; _showSuspendScreen(suspData); }
+        else if (_wasSuspended && !suspData) { location.reload(); }
+        if (u.activeWarning) {
+          const w = u.activeWarning;
+          _showWarningOverlay(w.reason || 'Violation of Terms of Use', w.issuedBy, w.contentData || null);
+          FortizedSocial.adminClearWarning(CU.username).catch(()=>{});
+        }
+      }
+    } catch(e) { console.warn('[enforcement] initial check failed:', e); }
+  })();
+  
   try {
     setInterval(async () => {
       if (document.hidden) return; // skip when tab hidden — cut egress
@@ -11467,7 +11541,7 @@ function initFortizedUXResilience() {
         // Force logout check
         _checkForceLogout(u);
       } catch (e) { _dbg('[Init] enforcement poll failed', e); }
-    }, 120000); // Reduced to 2min (was 15s) — egress emergency
+    }, 15000); // Check every 15 seconds
   } catch(e) { _wrn('[init] enforcement poller:', e); }
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling for all staff

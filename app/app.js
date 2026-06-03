@@ -3912,6 +3912,15 @@ async function _getAllActiveAds() {
   try { ads = await FortizedSocial.getGlobalAds(); } catch(e) {}
   let blocked = new Set();
   try { blocked = await FortizedSocial.getTakenDownAdIds?.() || new Set(); } catch(e) {}
+  // Session-level "Not interested" blocklist — populated by
+  // _adNotInterested() when the user dismisses an ad via the 3-dot
+  // menu. Merged with the global takedown set so dismissed ads are
+  // filtered out of every rotation for the rest of the session.
+  try {
+    if (window._adBlocklist instanceof Set) window._adBlocklist.forEach(id => blocked.add(id));
+    const raw = sessionStorage.getItem('ftz_ad_blocklist');
+    if (raw) JSON.parse(raw).forEach(id => blocked.add(id));
+  } catch (_) {}
   const localAds = (CU?.ads||[]).filter(a => _isAdLive(a) && !blocked.has(a.id));
   const allAds = ads.filter(a => !blocked.has(a.id));
   localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
@@ -3925,12 +3934,20 @@ function _renderAdHTML(ad, size) {
   // Prefer the ad's own title; only show bastion name/icon for actual bastion invites
   const label = ad.title || (isBastionInvite ? ad.bastionName : '') || 'Sponsored';
   const showBastionIcon = isBastionInvite && ad.bastionIcon;
-  const meta = `<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 2px 0;">
-          <div style="display:flex;align-items:center;gap:5px;min-width:0;">
+  // 3-dot affordance — opens the .ad-menu popover with Not interested
+  // / Why this ad? / Report ad. The previous "Report ad" text link
+  // was a single dead-end action; the menu surfaces the same report
+  // flow + the "I don't want to see this" + "explain this to me"
+  // affordances OpenHands added to other ad surfaces.
+  const dotsBtn = `<button class="ad-dots" type="button" aria-label="Ad options" onclick="event.stopPropagation();event.preventDefault();_adOpenMenu(event,'${adKey}')">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+  </button>`;
+  const meta = `<div class="ad-meta">
+          <div class="ad-meta__label">
             ${showBastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:13px;height:13px;border-radius:4px;flex-shrink:0;">`:''}
-            <span style="font-size:10px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(label)} · Sponsored</span>
+            <span>${escapeHTML(label)} · Sponsored</span>
           </div>
-          <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(isBastionInvite?(ad.bastionName||''):'')}')">Report ad</span>
+          ${dotsBtn}
         </div>`;
   if (isBanner) {
     // The 728:90 aspect lock lives on the wrapper (.home-banner-ad .ad-banner-inner > a)
@@ -14319,7 +14336,7 @@ function renderBSettingsMain(tab) {
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
                   <span style="font-size:10px;color:rgba(255,255,255,.3);" id="cm-ad-preview-label">${escapeHTML(b.name)} · Sponsored</span>
-                  <span style="font-size:10px;color:rgba(255,255,255,.2);">Report ad</span>
+                  <span style="display:inline-flex;align-items:center;gap:2px;color:rgba(255,255,255,.2);"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></span>
                 </div>
               </div>
             </div>
@@ -14529,7 +14546,7 @@ function _cmUpdateAdPreview() {
           ${bastionIcon?`<img src="${escapeHTML(bastionIcon)}" style="width:14px;height:14px;border-radius:4px;">`:''}
           <span style="font-size:10px;color:rgba(255,255,255,.3);">${escapeHTML(title||bastionName)} · Sponsored</span>
         </div>
-        <span style="font-size:10px;color:rgba(255,255,255,.2);">Report ad</span>
+        <span style="display:inline-flex;align-items:center;gap:2px;color:rgba(255,255,255,.2);"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></span>
       </div>
     </div>`;
 }
@@ -14827,6 +14844,129 @@ async function _cmEditAdSave(adId) {
   }
 }
 const AD_REPORT_REASONS = ['Inappropriate content','Misleading or scam','Offensive imagery','Spam','Impersonation','Other'];
+// 3-dot menu on banner + rectangle ads. Three actions in this order
+// (matches the OpenHands ad-menu design used on other surfaces):
+//   "Not interested" — adds the ad id to a session blocklist and
+//                      rotates the slot to a different ad immediately.
+//   "Why this ad?"   — opens a small explainer card describing what
+//                      kind of sponsor the ad represents + who paid
+//                      for it.
+//   "Report ad"      — fires the existing _reportAd() flow.
+function _adOpenMenu(evt, adKey) {
+  document.getElementById('ad-menu')?.remove();
+  const ad = window[adKey];
+  if (!ad) return;
+  const menu = document.createElement('div');
+  menu.id = 'ad-menu';
+  menu.className = 'ad-menu';
+  menu.innerHTML = `
+    <button type="button" class="ad-menu__item" onclick="event.stopPropagation();_adNotInterested('${adKey}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      Not interested
+    </button>
+    <button type="button" class="ad-menu__item" onclick="event.stopPropagation();_adWhyThisAd('${adKey}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Why this ad?
+    </button>
+    <div class="ad-menu__divider"></div>
+    <button type="button" class="ad-menu__item ad-menu__item--danger" onclick="event.stopPropagation();_adMenuReport('${adKey}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+      Report ad
+    </button>`;
+  document.body.appendChild(menu);
+  const btn = evt?.target?.closest?.('button') || evt?.currentTarget;
+  const rect = btn?.getBoundingClientRect?.() || { right: 100, bottom: 100, top: 100, left: 100 };
+  let left = rect.right - menu.offsetWidth;
+  let top = rect.bottom + 6;
+  if (top + menu.offsetHeight > window.innerHeight - 8) top = rect.top - menu.offsetHeight - 6;
+  if (left < 8) left = 8;
+  menu.style.left = Math.max(8, left) + 'px';
+  menu.style.top = Math.max(8, top) + 'px';
+  const off = (e) => {
+    if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', off, true); }
+  };
+  document.addEventListener('mousedown', off, true);
+}
+
+function _adCloseMenu() {
+  document.getElementById('ad-menu')?.remove();
+  document.getElementById('ad-why-card')?.remove();
+}
+
+// "Not interested" — record the ad in the session blocklist (read by
+// _getAllActiveAds via the blocked-ad filter) so it's skipped from
+// here on, then trigger an immediate rotation so the slot doesn't sit
+// on the now-unwanted ad. Best-effort: if the rotation helper isn't
+// available, the page refresh will catch up.
+function _adNotInterested(adKey) {
+  const ad = window[adKey];
+  _adCloseMenu();
+  if (!ad) return;
+  try {
+    window._adBlocklist = window._adBlocklist || new Set();
+    window._adBlocklist.add(ad.id);
+    // Also persist for the session so a quick rotate doesn't re-pull
+    // the same ad before the in-memory set is read.
+    try {
+      const raw = sessionStorage.getItem('ftz_ad_blocklist') || '[]';
+      const arr = JSON.parse(raw);
+      if (!arr.includes(ad.id)) { arr.push(ad.id); sessionStorage.setItem('ftz_ad_blocklist', JSON.stringify(arr)); }
+    } catch (_) {}
+  } catch (_) {}
+  // Rotate now if the helper exists; otherwise just remove the visible
+  // ad container's children so the slot reads as empty until next tick.
+  try { _rotateHomeAd?.(); } catch (_) {}
+  try { _rotateForumAd?.(); } catch (_) {}
+  // Tell the user we acted on their feedback.
+  try { toast?.("Got it — we'll show you fewer ads like that.", 'info'); } catch (_) {}
+}
+
+// "Why this ad?" — small card explaining the sponsor type + who paid
+// for it. The "product" string is derived from the ad payload:
+//   bastion invite → bastion name
+//   external link  → "an external website"
+//   in-app link    → the page title
+// Paid-by line uses ad.owner / .createdBy / .author with a fallback
+// to "an advertiser".
+function _adWhyThisAd(adKey) {
+  const ad = window[adKey];
+  _adCloseMenu();
+  if (!ad) return;
+  const isBastion = _adIsBastionInvite(ad);
+  let product;
+  if (isBastion && ad.bastionName) product = `the bastion ${ad.bastionName}`;
+  else if (ad.title) product = ad.title;
+  else if (ad.target && /^https?:\/\//i.test(ad.target) && !/fortized\.com/i.test(ad.target)) product = 'an external website';
+  else if (ad.link && /^https?:\/\//i.test(ad.link) && !/fortized\.com/i.test(ad.link)) product = 'an external website';
+  else product = 'a sponsored page on Fortized';
+  const payerRaw = ad.owner || ad.createdBy || ad.author || ad.bastionOwner;
+  const payer = payerRaw ? '@' + payerRaw : 'an advertiser';
+  const card = document.createElement('div');
+  card.id = 'ad-why-card';
+  card.className = 'ad-why-card';
+  card.innerHTML = `
+    <button type="button" class="ad-why-card__close" aria-label="Close" onclick="_adCloseMenu()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="ad-why-card__title">Why this ad?</div>
+    <p class="ad-why-card__body">
+      You're seeing sponsored content for <strong>${escapeHTML(product)}</strong>, paid for by <strong>${escapeHTML(payer)}</strong>.
+      Ads on Fortized are weighted by reach + spend so they reflect the platform's current sponsor mix — nothing about your personal data is used to target you.
+    </p>`;
+  document.body.appendChild(card);
+  const off = (e) => {
+    if (!card.contains(e.target)) { card.remove(); document.removeEventListener('mousedown', off, true); }
+  };
+  setTimeout(() => document.addEventListener('mousedown', off, true), 0);
+}
+
+function _adMenuReport(adKey) {
+  const ad = window[adKey];
+  _adCloseMenu();
+  if (!ad) return;
+  _reportAd(ad.id, ad.title || '', _adIsBastionInvite(ad) ? (ad.bastionName || '') : '');
+}
+
 function _reportAd(adId, adTitle, adBastion) {
   showReport({
     type: 'ad',

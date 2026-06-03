@@ -525,6 +525,35 @@ body.is-desktop-app .topbar{padding-right:0;}
 .ad-empty{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.55;border-radius:10px;background:rgba(255,255,255,.02);border:1px dashed var(--border);min-height:100px;}
 .ad-empty-banner{min-height:100px;}
 
+/* ── Ad meta row + 3-dot menu + "Why this ad?" card ──────────────────
+   Replaces the old "Report ad" plain-text link with the same 3-dot
+   affordance OpenHands added to the other ad surfaces (Discover,
+   Fortshop, sidebar). Click the dots → .ad-menu pops with Not
+   interested / Why this ad? / Report ad. Same panel2-pill family as
+   the rest of the floating menus on the platform. */
+.ad-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 2px 0;}
+.ad-meta__label{display:flex;align-items:center;gap:5px;min-width:0;font-size:10px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ad-meta__label > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ad-dots{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:22px;height:18px;padding:0;border:none;background:transparent;border-radius:6px;color:rgba(255,255,255,.35);cursor:pointer;transition:background .12s,color .12s;}
+.ad-dots svg{width:14px;height:14px;display:block;}
+.ad-dots:hover{background:rgba(255,255,255,.06);color:#fff;}
+.ad-menu{position:fixed;z-index:6500;min-width:200px;max-width:240px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:5px;box-shadow:0 16px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.03);animation:ftzSelectIn .14s cubic-bezier(.22,1,.36,1);}
+.ad-menu__item{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border-radius:7px;background:transparent;border:none;color:var(--text);font-family:var(--font-ui);font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;transition:background .12s,color .12s;}
+.ad-menu__item svg{flex-shrink:0;width:14px;height:14px;color:var(--muted-light);transition:color .12s;}
+.ad-menu__item:hover{background:rgba(255,255,255,.06);}
+.ad-menu__item:hover svg{color:#fff;}
+.ad-menu__item--danger{color:var(--red);}
+.ad-menu__item--danger svg{color:var(--red);}
+.ad-menu__item--danger:hover{background:rgba(248,113,113,.1);}
+.ad-menu__divider{height:1px;background:var(--border);margin:4px 2px;}
+.ad-why-card{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6600;max-width:380px;width:calc(100% - 32px);background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:18px 22px 20px;box-shadow:0 28px 80px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.03);animation:rptIn .18s cubic-bezier(.22,1,.36,1);}
+.ad-why-card__close{position:absolute;top:10px;right:10px;width:28px;height:28px;border:1px solid transparent;background:rgba(255,255,255,.04);border-radius:8px;color:var(--muted-light);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .12s,color .12s,border-color .12s;}
+.ad-why-card__close svg{width:13px;height:13px;display:block;}
+.ad-why-card__close:hover{background:rgba(255,255,255,.08);color:#fff;border-color:var(--surface-border-hover);}
+.ad-why-card__title{font-family:var(--font-display);font-size:15px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-.01em;}
+.ad-why-card__body{font-size:12.5px;color:var(--text);line-height:1.55;margin:0;}
+.ad-why-card__body strong{color:var(--accent);font-weight:700;}
+
 /* Home friends-today horizontal strip (main column) */
 .home-friends-today{padding:4px 28px 2px;display:flex;gap:10px;overflow-x:auto;scrollbar-width:thin;}
 .home-friends-today::-webkit-scrollbar{height:6px;}

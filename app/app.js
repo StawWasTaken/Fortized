@@ -10663,6 +10663,17 @@ function initFortizedUXResilience() {
   const _hideLoader = () => { if(_sl){_sl.style.opacity='0';setTimeout(()=>{_sl.style.display='none';},300);} };
   const _st=setTimeout(_hideLoader, 20000);
   window._loadingSafetyTimer = _st;
+  // Surface unhandled init errors so the loader never silently sits
+  // for the full 20s safety window — if init throws, log + hide.
+  window.addEventListener('error', (ev) => {
+    if (window._appInitDone) return;
+    console.error('[INIT FATAL]', ev?.error || ev?.message);
+    _hideLoader();
+  });
+  window.addEventListener('unhandledrejection', (ev) => {
+    if (window._appInitDone) return;
+    console.error('[INIT REJECT]', ev?.reason);
+  });
   // Hide the loader as soon as init finishes — successful or not —
   // so we don't keep the overlay up for the full safety window when
   // the app is already ready behind it.
@@ -11014,6 +11025,7 @@ function initFortizedUXResilience() {
   const loader=document.getElementById('app-loading');
   if(loader)loader.style.display='none';
   if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
+  window._appInitDone = true;
 
   // Route to the correct view based on URL (or home as fallback)
   _ftzRouter._initialLoad = true;

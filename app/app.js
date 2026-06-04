@@ -20174,25 +20174,6 @@ async function _viewUserProfile(username) {
               </div>
               <div id="up-widgets-container"></div>
             </div>
-            ${(u.gameCollection || []).length || isOwn ? `<div class="fpp-card-modal__section">
-              <div class="fpp-card-modal__section-head">
-                <span class="fpp-card-modal__section-title">Games I Like</span>
-                ${isOwn ? `<button class="fpp-card-modal__add-btn" onclick="closeModal('modal-user');showView('profile')">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Add Game
-                </button>` : ''}
-              </div>
-              <div class="fpp-card-modal__games-grid">
-                ${(u.gameCollection || []).slice(0, 12).map(g => {
-                  const cover = g.coverUrl || g.cover || g.icon || '';
-                  const safeName = escapeHTML(String(g.name || '?'));
-                  return `<div class="fpp-card-modal__game-cell" title="${safeName}">${cover && (cover.startsWith('http') || cover.startsWith('/'))
-                    ? `<img src="${escapeHTML(cover)}" alt="${safeName}" onerror="this.style.display='none'">`
-                    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:var(--muted-light);">${safeName.charAt(0).toUpperCase()}</div>`}
-                  </div>`;
-                }).join('') || (isOwn ? '<div style="grid-column:1/-1;padding:18px;text-align:center;font-size:12px;color:var(--muted);">No games yet. Add some from your profile.</div>' : '')}
-              </div>
-            </div>` : ''}
           </div>
           <!-- ACTIVITY: recent activity list -->
           <div data-fpp-panel="activity" style="display:none;">
@@ -30632,63 +30613,116 @@ function renderProfileWidgetsOnCard(u, containerEl) {
       });
     } catch (_) {}
     _wireWidgetDnD(containerEl);
+    // Inner DnD: game cells inside Games I Like (.pw-gc-masonry) and
+    // Want to Play (.pw-wp-list). Users can drag individual game
+    // tiles inside their widget to reorder the underlying collection.
+    try {
+      containerEl.querySelectorAll('.pw-gc-masonry').forEach(grid => {
+        _wireGameCellDnD(grid, 'gameCollection', ':scope > .pw-gc-card');
+      });
+      containerEl.querySelectorAll('.pw-wp-list, .pw-wp-grid').forEach(grid => {
+        _wireGameCellDnD(grid, 'wantToPlay', ':scope > .pw-wp-card, :scope > .pw-wp-item');
+      });
+    } catch (_) {}
   }
+}
+
+// Shared HTML5 DnD setup used for both widget cards (Board canvas)
+// and inner game cells (Games I Like / Want to Play). onReorder is
+// called with (orderedNodes, srcNode) AFTER the drop has been applied
+// to the DOM — callers can derive the new id order and persist.
+function _setupDnD(items, containerEl, onReorder) {
+  if (!items || !items.length) return;
+  let dragSrc = null;
+  items.forEach((node, idx) => {
+    node.classList.add('fpp-widget-dnd');
+    node.setAttribute('draggable', 'true');
+    node.dataset.dndIdx = idx;
+    node.addEventListener('dragstart', e => {
+      dragSrc = node;
+      node.classList.add('is-dragging');
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', node.dataset.dndIdx); } catch(_){}
+    });
+    node.addEventListener('dragend', () => {
+      node.classList.remove('is-dragging');
+      containerEl.querySelectorAll('.is-drop-target').forEach(el => el.classList.remove('is-drop-target'));
+      dragSrc = null;
+    });
+    node.addEventListener('dragover', e => {
+      if (!dragSrc || dragSrc === node) return;
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = 'move'; } catch(_){}
+      node.classList.add('is-drop-target');
+    });
+    node.addEventListener('dragleave', () => node.classList.remove('is-drop-target'));
+    node.addEventListener('drop', e => {
+      e.preventDefault();
+      node.classList.remove('is-drop-target');
+      if (!dragSrc || dragSrc === node) return;
+      const rect = node.getBoundingClientRect();
+      // Horizontal vs vertical drop hit: gamecard grids are 2D, widget
+      // stack is vertical. Pick the dominant axis automatically.
+      const horiz = rect.width > rect.height * 1.2;
+      const after = horiz
+        ? (e.clientX - rect.left) > rect.width / 2
+        : (e.clientY - rect.top) > rect.height / 2;
+      if (after) node.after(dragSrc); else node.before(dragSrc);
+      try { onReorder?.(Array.from(containerEl.querySelectorAll(':scope > .fpp-widget-dnd')), dragSrc); } catch(err) { console.warn('[DnD] onReorder failed:', err?.message); }
+      // Re-index dataset.dndIdx after reorder so later drops have
+      // consistent indices.
+      containerEl.querySelectorAll(':scope > .fpp-widget-dnd').forEach((el, i) => el.dataset.dndIdx = i);
+    });
+  });
 }
 
 function _wireWidgetDnD(containerEl) {
   if (!containerEl) return;
-  const cards = containerEl.querySelectorAll(':scope > .pw-widget, :scope > [class*="pw-widget"]');
+  const cards = Array.from(containerEl.querySelectorAll(':scope > .pw-widget'));
   if (!cards.length) return;
-  let dragSrc = null;
-  cards.forEach((card, idx) => {
-    card.classList.add('fpp-widget-dnd');
-    card.setAttribute('draggable', 'true');
-    card.dataset.dndIdx = idx;
-    card.addEventListener('dragstart', e => {
-      dragSrc = card;
-      card.classList.add('is-dragging');
-      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', card.dataset.dndIdx); } catch(_){}
-    });
-    card.addEventListener('dragend', () => {
-      card.classList.remove('is-dragging');
-      containerEl.querySelectorAll('.is-drop-target').forEach(el => el.classList.remove('is-drop-target'));
-      dragSrc = null;
-    });
-    card.addEventListener('dragover', e => {
-      if (!dragSrc || dragSrc === card) return;
-      e.preventDefault();
-      card.classList.add('is-drop-target');
-    });
-    card.addEventListener('dragleave', () => card.classList.remove('is-drop-target'));
-    card.addEventListener('drop', e => {
-      e.preventDefault();
-      card.classList.remove('is-drop-target');
-      if (!dragSrc || dragSrc === card) return;
-      const srcIdx = Number(dragSrc.dataset.dndIdx);
-      const tgtIdx = Number(card.dataset.dndIdx);
-      const rect = card.getBoundingClientRect();
-      const after = (e.clientY - rect.top) > rect.height / 2;
-      // Reorder DOM
-      if (after) card.after(dragSrc); else card.before(dragSrc);
-      // Persist the new order into CU.profileWidgets. We rebuild from
-      // the current DOM sequence — widgets without ids (Games I Like /
-      // Now Playing) stay implicit and don't enter the array.
-      try {
-        if (CU?.profileWidgets && Array.isArray(CU.profileWidgets)) {
-          const orderedIds = Array.from(containerEl.querySelectorAll(':scope > [data-widget-id]')).map(el => el.dataset.widgetId);
-          if (orderedIds.length) {
-            const byId = new Map(CU.profileWidgets.map(w => [w.id, w]));
-            const reordered = orderedIds.map(id => byId.get(id)).filter(Boolean);
-            const rest = CU.profileWidgets.filter(w => !orderedIds.includes(w.id));
-            CU.profileWidgets = [...reordered, ...rest];
-            saveLocal();
-            if (typeof saveUser === 'function') saveUser().catch(()=>{});
-          }
-        }
-      } catch(err) { console.warn('[ProfileCard] widget reorder save failed:', err?.message); }
-      // Re-index dataset.dndIdx after reorder
-      containerEl.querySelectorAll(':scope > .fpp-widget-dnd').forEach((el, i) => el.dataset.dndIdx = i);
-    });
+  _setupDnD(cards, containerEl, (orderedNodes) => {
+    // Persist the new widget order into CU.profileWidgets. Always-on
+    // widgets (Now Playing, Games I Like) carry no data-widget-id and
+    // stay implicit — we only reorder the configurable ones.
+    if (!CU?.profileWidgets || !Array.isArray(CU.profileWidgets)) return;
+    const orderedIds = orderedNodes.map(el => el.dataset.widgetId).filter(Boolean);
+    if (!orderedIds.length) return;
+    const byId = new Map(CU.profileWidgets.map(w => [w.id, w]));
+    const reordered = orderedIds.map(id => byId.get(id)).filter(Boolean);
+    const rest = CU.profileWidgets.filter(w => !orderedIds.includes(w.id));
+    CU.profileWidgets = [...reordered, ...rest];
+    // Force-save: bypass any throttling so close-then-reopen reflects
+    // the new order even if the user is fast.
+    try { saveLocal(); } catch(_){}
+    try { localStorage.setItem('ftz_user_' + CU.username, JSON.stringify(CU)); } catch(_){}
+    if (typeof saveUser === 'function') { try { saveUser(true).catch(()=>{}); } catch(_){ try { saveUser().catch(()=>{}); } catch(_){} } }
+  });
+}
+
+// DnD for game cells inside an arbitrary container (Games I Like
+// masonry, Want to Play list). The matching array on CU is the
+// source of truth; we splice in the new order and persist.
+function _wireGameCellDnD(container, sourceArrayName, scopeSelector) {
+  if (!container) return;
+  const cells = Array.from(container.querySelectorAll(scopeSelector));
+  if (!cells.length) return;
+  // Tag each cell with the underlying game name so we can rebuild
+  // the array order after reorder. Stored once at wire time.
+  const src = CU?.[sourceArrayName];
+  if (!Array.isArray(src)) return;
+  cells.forEach((cell, i) => {
+    const titleAttr = cell.getAttribute('title') || '';
+    if (titleAttr) cell.dataset.gameName = titleAttr;
+  });
+  _setupDnD(cells, container, (orderedNodes) => {
+    const orderedNames = orderedNodes.map(el => el.dataset.gameName).filter(Boolean);
+    if (!orderedNames.length) return;
+    const byName = new Map((CU[sourceArrayName] || []).map(g => [g.name, g]));
+    const reordered = orderedNames.map(n => byName.get(n)).filter(Boolean);
+    const rest = (CU[sourceArrayName] || []).filter(g => !orderedNames.includes(g.name));
+    CU[sourceArrayName] = [...reordered, ...rest];
+    try { saveLocal(); } catch(_){}
+    try { localStorage.setItem('ftz_user_' + CU.username, JSON.stringify(CU)); } catch(_){}
+    if (typeof saveUser === 'function') { try { saveUser(true).catch(()=>{}); } catch(_){ try { saveUser().catch(()=>{}); } catch(_){} } }
   });
 }
 

@@ -4741,7 +4741,7 @@ async function renderDMSidebar(scroll) {
         const dnEl = document.getElementById('dm-dn-'+f);
         if (dnEl) {
           dnEl.textContent = u.displayName || f;
-          if (u.displayFont && u.displayFont !== 'default') dnEl.style.fontFamily = _getDisplayFontCSS(u.displayFont);
+          if (u.displayFont && u.displayFont !== 'default') { dnEl.style.fontFamily = _getDisplayFontCSS(u.displayFont); dnEl.style.fontWeight = _getDisplayFontWeight(u.displayFont); }
           if (u.displayColor && u.displayColor !== '#fff') dnEl.style.cssText += _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor);
         }
         // Use live Socket.IO presence — if query failed (null), trust DB as initial display
@@ -5968,7 +5968,7 @@ async function showGCMemberPanel(meta) {
         const nameEl = entry.querySelector('.ml-name');
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
         if (nameEl) {
-          if (ud.displayFont && ud.displayFont !== 'default') nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont);
+          if (ud.displayFont && ud.displayFont !== 'default') { nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont); nameEl.style.fontWeight = _getDisplayFontWeight(ud.displayFont); }
           if (ud.displayColor && ud.displayColor !== '#fff') nameEl.style.cssText += _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor);
         }
         if (ud.pfp) {
@@ -7808,6 +7808,7 @@ function appendMessage(container, msg, context, prevAuthor) {
       if (authorEl) {
         if (u.displayFont && u.displayFont !== 'default') {
           authorEl.style.fontFamily = _getDisplayFontCSS(u.displayFont);
+          authorEl.style.fontWeight = _getDisplayFontWeight(u.displayFont);
         }
         if (u.displayColor && u.displayColor !== '#fff' && !roleColor) {
           const effectCSS = _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor);
@@ -8969,7 +8970,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         }
         // Apply display name styles (font, effect, color) for other users
         if (nameEl) {
-          if (ud.displayFont && ud.displayFont !== 'default') nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont);
+          if (ud.displayFont && ud.displayFont !== 'default') { nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont); nameEl.style.fontWeight = _getDisplayFontWeight(ud.displayFont); }
           if (ud.displayColor && ud.displayColor !== '#fff') {
             const _eCss = _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor);
             nameEl.style.cssText += _eCss;
@@ -11153,6 +11154,7 @@ function initFortizedUXResilience() {
           _styleEls.forEach(el => {
             if (data.displayFont && data.displayFont !== 'default') {
               el.style.fontFamily = _getDisplayFontCSS(data.displayFont);
+              el.style.fontWeight = _getDisplayFontWeight(data.displayFont);
             }
             if (data.displayColor && data.displayColor !== '#fff') {
               const _eCss = _getDisplayEffectCSS(data.displayEffect || 'solid', data.displayColor);
@@ -11328,7 +11330,7 @@ function initFortizedUXResilience() {
               const nameEl = card.querySelector('.fpp__name');
               if (nameEl) {
                 if (data.displayName) nameEl.textContent = data.displayName;
-                if (data.displayFont) nameEl.style.fontFamily = (typeof _getDisplayFontCSS === 'function') ? _getDisplayFontCSS(data.displayFont) : '';
+                if (data.displayFont) { nameEl.style.fontFamily = (typeof _getDisplayFontCSS === 'function') ? _getDisplayFontCSS(data.displayFont) : ''; nameEl.style.fontWeight = (typeof _getDisplayFontWeight === 'function') ? _getDisplayFontWeight(data.displayFont) : ''; }
                 if (data.displayColor || data.displayEffect) {
                   try {
                     const effectCss = (typeof _getDisplayEffectCSS === 'function') ? _getDisplayEffectCSS(data.displayEffect || 'solid', data.displayColor || '#fff') : '';
@@ -14891,6 +14893,7 @@ function _adOpenMenu(evt, adKey) {
 function _adCloseMenu() {
   document.getElementById('ad-menu')?.remove();
   document.getElementById('ad-why-card')?.remove();
+  document.getElementById('ad-why-overlay')?.remove();
 }
 
 // "Not interested" — record the ad in the session blocklist (read by
@@ -14913,10 +14916,12 @@ function _adNotInterested(adKey) {
       if (!arr.includes(ad.id)) { arr.push(ad.id); sessionStorage.setItem('ftz_ad_blocklist', JSON.stringify(arr)); }
     } catch (_) {}
   } catch (_) {}
-  // Rotate now if the helper exists; otherwise just remove the visible
-  // ad container's children so the slot reads as empty until next tick.
-  try { _rotateHomeAd?.(); } catch (_) {}
-  try { _rotateForumAd?.(); } catch (_) {}
+  // Rotate the visible slots so the user immediately sees a different
+  // ad instead of the one they dismissed. _renderHomeAds() + _forumRenderAd()
+  // are the top-level renderers; the inner rotate closures live in
+  // their scope so we can't call them directly.
+  try { _renderHomeAds?.(); } catch (_) {}
+  try { _forumRenderAd?.(); } catch (_) {}
   // Tell the user we acted on their feedback.
   try { toast?.("Got it — we'll show you fewer ads like that.", 'info'); } catch (_) {}
 }
@@ -14941,23 +14946,25 @@ function _adWhyThisAd(adKey) {
   else product = 'a sponsored page on Fortized';
   const payerRaw = ad.owner || ad.createdBy || ad.author || ad.bastionOwner;
   const payer = payerRaw ? '@' + payerRaw : 'an advertiser';
-  const card = document.createElement('div');
-  card.id = 'ad-why-card';
-  card.className = 'ad-why-card';
-  card.innerHTML = `
-    <button type="button" class="ad-why-card__close" aria-label="Close" onclick="_adCloseMenu()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <div class="ad-why-card__title">Why this ad?</div>
-    <p class="ad-why-card__body">
-      You're seeing sponsored content for <strong>${escapeHTML(product)}</strong>, paid for by <strong>${escapeHTML(payer)}</strong>.
-      Ads on Fortized are weighted by reach + spend so they reflect the platform's current sponsor mix — nothing about your personal data is used to target you.
-    </p>`;
-  document.body.appendChild(card);
-  const off = (e) => {
-    if (!card.contains(e.target)) { card.remove(); document.removeEventListener('mousedown', off, true); }
-  };
-  setTimeout(() => document.addEventListener('mousedown', off, true), 0);
+  // Wrap in a .modal-overlay so the entrance + backdrop blur match the
+  // .rpt-modal flow ("Why this ad?" now reads as the same family as
+  // the report card the user reaches from the same menu).
+  const overlay = document.createElement('div');
+  overlay.id = 'ad-why-overlay';
+  overlay.className = 'modal-overlay open';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="ad-why-card" id="ad-why-card" role="dialog" aria-label="Why this ad?">
+      <button type="button" class="ad-why-card__close" aria-label="Close" onclick="_adCloseMenu()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="ad-why-card__title">Why this ad?</div>
+      <p class="ad-why-card__body">
+        You're seeing sponsored content for <strong>${escapeHTML(product)}</strong>, paid for by <strong>${escapeHTML(payer)}</strong>.
+        Ads on Fortized are weighted by reach + spend so they reflect the platform's current sponsor mix — nothing about your personal data is used to target you.
+      </p>
+    </div>`;
+  document.body.appendChild(overlay);
 }
 
 function _adMenuReport(adKey) {
@@ -17915,7 +17922,7 @@ function _buildProfileView(tab) {
               <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Customise your display name font, effect, and colour. Free for everyone!</div>
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
                 <div style="padding:8px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;flex:1;">
-                  <span id="dn-style-preview" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};font-size:16px;font-weight:700;${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
+                  <span id="dn-style-preview" style="font-size:16px;${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
                 </div>
                 <button onclick="_openDisplayNameStyleModal()" class="settings-save-btn" style="padding:8px 18px;font-size:12px;">Change Style</button>
               </div>
@@ -18079,7 +18086,7 @@ function _buildProfileView(tab) {
                       : '<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="'+escapeHTML(CU.username)+'" onclick="openStatusPicker()"><span class="fpp__cs-plus">'+_FPP_CS_PLUS_SVG+'</span><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
                   </div>
                   <div class="fpp__identity">
-                    <div class="fpp__name" id="preview-displayname" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
+                    <div class="fpp__name" id="preview-displayname" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
                     <div class="fpp__handle-row" id="preview-handle-row">
                       <span class="fpp__handle">@${escapeHTML(CU.username)}</span>
                       ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns" data-tip-above>'+escapeHTML(CU.pronouns)+'</span>' : ''}
@@ -18116,7 +18123,7 @@ function _buildProfileView(tab) {
                     <div class="fpp-msg-preview__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 38, CU.pfpCrop)}</div>
                     <div class="fpp-msg-preview__body">
                       <div class="fpp-msg-preview__name-row">
-                        <span class="fpp-msg-preview__name" id="preview-msg-name" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
+                        <span class="fpp-msg-preview__name" id="preview-msg-name" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
                         <span class="fpp-msg-preview__time">·  Today at 12:34</span>
                       </div>
                       <div class="fpp-msg-preview__text">Hey! This is what your messages look like.</div>
@@ -18137,7 +18144,7 @@ function _buildProfileView(tab) {
                       <div class="fpp-nameplate-preview__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 32, CU.pfpCrop)}</div>
                       <span class="fpp-nameplate-preview__dot" style="background:${sc};"></span>
                     </div>
-                    <div class="fpp-nameplate-preview__name" id="preview-nameplate-name" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
+                    <div class="fpp-nameplate-preview__name" id="preview-nameplate-name" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
                   </div>
                 </div>
               </div>
@@ -28128,15 +28135,19 @@ function _updateProfileThemePreview() {
   if (prev) prev.innerHTML = '<div style="height:100%;background:linear-gradient(135deg,'+c1+'ee,'+c2+'bb);display:flex;align-items:center;justify-content:center;"><span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7);">Profile Border Preview</span></div>';
 }
 
+// Each entry's `weight` is enforced everywhere the display name is
+// rendered (chat, member list, profile card, mini popover, settings
+// preview) so a "Bold" font reads bold in every surface — the same
+// way Discord locks the look of nickname styles. _getDisplayFontStyle()
+// returns "font-family:…;font-weight:…;" so callers can drop one
+// string into an inline style attribute and get both at once.
 const DISPLAY_NAME_FONTS = [
-  {id:'default', name:'Default', css:"'DM Sans',sans-serif", weight:'400', sample:'Gg'},
-  {id:'syne',    name:'Bold',    css:"'Syne',sans-serif",    weight:'800', sample:'Gg'},
-  {id:'serif',   name:'Serif',   css:"Georgia,serif",        weight:'600', sample:'Gg'},
-  {id:'mono',    name:'Mono',    css:"'Courier New',monospace", weight:'600', sample:'Gg'},
-  {id:'cursive', name:'Script',  css:"cursive",              weight:'600', sample:'Gg'},
-  {id:'rounded', name:'Round',   css:"'Comic Sans MS','Comic Sans',cursive", weight:'700', sample:'Qg'},
-  {id:'gothic',  name:'Gothic',  css:"'Palatino Linotype','Book Antiqua',Palatino,serif", weight:'700', sample:'Gg'},
-  {id:'block',   name:'Block',   css:"Impact,'Arial Black',sans-serif", weight:'900', sample:'Bg'},
+  {id:'default',     name:'Default',       css:"'DM Sans',sans-serif",        weight:'500', sample:'Gg'},
+  {id:'syne',        name:'Syne',          css:"'Syne',sans-serif",           weight:'700', sample:'Gg'},
+  {id:'dynapuff',    name:'DynaPuff',      css:"'DynaPuff',cursive",          weight:'700', sample:'Gg'},
+  {id:'medieval',    name:'MedievalSharp', css:"'MedievalSharp',serif",       weight:'800', sample:'Gg'},
+  {id:'pixelify',    name:'Pixelify Sans', css:"'Pixelify Sans',monospace",   weight:'700', sample:'Gg'},
+  {id:'chicle',      name:'Chicle',        css:"'Chicle',cursive",            weight:'400', sample:'Gg'},
 ];
 
 const DISPLAY_NAME_EFFECTS = [
@@ -28156,6 +28167,16 @@ const DISPLAY_NAME_COLORS = [
 function _getDisplayFontCSS(fontId) {
   const f = DISPLAY_NAME_FONTS.find(f => f.id === fontId);
   return f ? f.css : DISPLAY_NAME_FONTS[0].css;
+}
+function _getDisplayFontWeight(fontId) {
+  const f = DISPLAY_NAME_FONTS.find(f => f.id === fontId);
+  return f ? f.weight : DISPLAY_NAME_FONTS[0].weight;
+}
+// Returns "font-family:…;font-weight:…;" — drop this into an inline
+// style attribute so both the face AND the weight follow the user
+// everywhere the display name is rendered.
+function _getDisplayFontStyle(fontId) {
+  return `font-family:${_getDisplayFontCSS(fontId)};font-weight:${_getDisplayFontWeight(fontId)};`;
 }
 
 function _getDisplayEffectCSS(effect, color) {
@@ -28180,53 +28201,55 @@ function _openDisplayNameStyleModal() {
   document.querySelector('.dns-modal-overlay')?.remove();
   const overlay = document.createElement('div');
   overlay.className = 'dns-modal-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);animation:fadeIn .15s;';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 
-  overlay.innerHTML = `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:20px;width:92%;max-width:800px;max-height:88vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);display:flex;">
+  overlay.innerHTML = `<div class="dns-modal">
     <!-- Left: Controls -->
-    <div style="flex:1;padding:28px 24px;overflow-y:auto;min-width:0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-        <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Display Name Style</div>
-        <button onclick="this.closest('.dns-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
+    <div class="dns-modal__pane">
+      <div class="dns-modal__header">
+        <div>
+          <div class="dns-modal__title">Display Name Style</div>
+          <div class="dns-modal__subtitle">Personalise how your name reads everywhere on Fortized.</div>
+        </div>
+        <button class="dns-modal__close" onclick="this.closest('.dns-modal-overlay').remove()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
 
       <!-- Choose Font -->
-      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Font</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:20px;" id="dns-font-grid">
+      <div class="dns-modal__section-label">Font</div>
+      <div class="dns-font-grid" id="dns-font-grid">
         ${DISPLAY_NAME_FONTS.map(f => `
-          <div class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')" style="padding:10px 6px;border-radius:10px;border:1.5px solid ${curFont===f.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curFont===f.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;text-align:center;transition:all .12s;">
-            <div style="font-family:${f.css};font-weight:${f.weight};font-size:18px;color:#fff;margin-bottom:2px;">${f.sample}</div>
-            <div style="font-size:9px;color:rgba(255,255,255,.3);font-weight:600;">${f.name}</div>
-          </div>`).join('')}
+          <button type="button" class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')">
+            <div class="dns-font-tile__sample" style="font-family:${f.css};font-weight:${f.weight};">${f.sample}</div>
+            <div class="dns-font-tile__label">${f.name}</div>
+          </button>`).join('')}
       </div>
 
       <!-- Choose Effect -->
-      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Effect</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;" id="dns-effect-grid">
+      <div class="dns-modal__section-label">Effect</div>
+      <div class="dns-effect-grid" id="dns-effect-grid">
         ${DISPLAY_NAME_EFFECTS.map(e => `
-          <div class="dns-effect-tile ${curEffect===e.id?'sel':''}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')" style="padding:7px 16px;border-radius:10px;border:1.5px solid ${curEffect===e.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curEffect===e.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;font-size:12px;font-weight:600;transition:all .12s;${_getDisplayEffectCSS(e.id,curColor)}">${e.name}</div>`).join('')}
+          <button type="button" class="dns-effect-tile ${curEffect===e.id?'sel':''}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')" style="${_getDisplayEffectCSS(e.id,curColor)}">${e.name}</button>`).join('')}
       </div>
 
       <!-- Choose Colour -->
-      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Colour</div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="dns-color-grid">
+      <div class="dns-modal__section-label">Colour</div>
+      <div class="dns-color-grid" id="dns-color-grid">
         ${DISPLAY_NAME_COLORS.map(c => `
-          <div class="dns-color-tile" data-color="${c}" onclick="_dnSelectColor('${c}')" style="width:26px;height:26px;border-radius:7px;background:${c};cursor:pointer;border:2px solid ${curColor===c?'#fff':'transparent'};transition:all .1s;display:flex;align-items:center;justify-content:center;">
-            ${curColor===c ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-          </div>`).join('')}
+          <button type="button" class="dns-color-tile ${curColor===c?'sel':''}" data-color="${c}" onclick="_dnSelectColor('${c}')" style="background:${c};">
+            ${curColor===c ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+          </button>`).join('')}
+        <label class="dns-color-tile dns-color-tile--custom" title="Custom colour">
+          <div class="dns-color-tile__wheel"></div>
+          <input type="color" value="${curColor}" oninput="_dnSelectColor(this.value)">
+        </label>
       </div>
-      <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;margin-top:4px;">
-        <div style="position:relative;width:26px;height:26px;border-radius:7px;overflow:hidden;border:2px solid rgba(255,255,255,.15);background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);">
-          <input type="color" value="${curColor}" style="position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);cursor:pointer;opacity:0;" oninput="_dnSelectColor(this.value)">
-        </div>
-        <span style="font-size:11px;color:rgba(255,255,255,.3);font-weight:600;">Custom</span>
-      </label>
     </div>
 
     <!-- Right: Real Previews -->
-    <div style="width:320px;background:rgba(0,0,0,.2);border-left:1px solid rgba(255,255,255,.04);padding:20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);">Live Preview</div>
+    <div class="dns-modal__preview">
+      <div class="dns-modal__preview-label">Live Preview</div>
 
       <!-- 1: Profile Card Preview (mini replica) -->
       <div style="border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:var(--panel,#1b1e25);">
@@ -28238,7 +28261,7 @@ function _openDisplayNameStyleModal() {
           <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:8px;">
             <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:3px solid var(--panel,#1b1e25);flex-shrink:0;background:var(--panel);">${avHtml}</div>
             <div style="padding-bottom:4px;">
-              <div id="dns-preview-name" style="font-size:14px;font-weight:700;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</div>
+              <div id="dns-preview-name" style="font-size:14px;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</div>
               <div style="font-size:9.5px;color:rgba(255,255,255,.25);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; '+escapeHTML(CU.pronouns) : ''}</div>
             </div>
           </div>
@@ -28256,7 +28279,7 @@ function _openDisplayNameStyleModal() {
           <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;">${avHtml}</div>
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;">
-              <span id="dns-preview-chat-name" style="font-size:12.5px;font-weight:700;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</span>
+              <span id="dns-preview-chat-name" style="font-size:12.5px;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</span>
               <span style="font-size:9px;color:rgba(255,255,255,.15);">Today at 20:33</span>
             </div>
             <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.45;">hey, has anyone tried this new game?</div>
@@ -28273,7 +28296,7 @@ function _openDisplayNameStyleModal() {
             <span style="position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:var(--green);border:2px solid rgba(12,14,24,.98);"></span>
           </div>
           <div style="flex:1;min-width:0;">
-            <div id="dns-preview-nameplate" style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</div>
+            <div id="dns-preview-nameplate" style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</div>
           </div>
         </div>
         <!-- Second member for context -->
@@ -28288,9 +28311,12 @@ function _openDisplayNameStyleModal() {
 
       <div style="flex:1;"></div>
       <!-- Actions -->
-      <div style="display:flex;gap:8px;margin-top:4px;">
-        <button onclick="_dnSurpriseMe()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-family:var(--font-display);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg> Randomise</button>
-        <button onclick="_dnApplyStyle()" class="ftz-btn-apply" style="flex:1;padding:10px;font-size:12px;">Apply Style</button>
+      <div class="dns-modal__actions">
+        <button class="dns-modal__btn dns-modal__btn--ghost" onclick="_dnSurpriseMe()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+          Randomise
+        </button>
+        <button class="dns-modal__btn dns-modal__btn--primary" onclick="_dnApplyStyle()">Apply Style</button>
       </div>
     </div>
   </div>`;
@@ -28304,23 +28330,16 @@ function _dnSelectFont(fontId) {
   _dnTempFont = fontId;
   const grid = document.getElementById('dns-font-grid');
   if (grid) grid.querySelectorAll('.dns-font-tile').forEach(el => {
-    const isSel = el.dataset.font === fontId;
-    el.classList.toggle('sel', isSel);
-    el.style.borderColor = isSel ? 'var(--accent)' : 'rgba(255,255,255,.06)';
-    el.style.background = isSel ? 'rgba(255,249,62,.06)' : 'rgba(255,255,255,.02)';
+    el.classList.toggle('sel', el.dataset.font === fontId);
   });
   _dnUpdatePreview();
 }
 
 function _dnSelectEffect(effectId) {
   _dnTempEffect = effectId;
-  const color = _dnTempColor || CU.displayColor || '#fff';
   const grid = document.getElementById('dns-effect-grid');
   if (grid) grid.querySelectorAll('.dns-effect-tile').forEach(el => {
-    const isSel = el.dataset.effect === effectId;
-    el.classList.toggle('sel', isSel);
-    el.style.borderColor = isSel ? 'var(--accent)' : 'rgba(255,255,255,.06)';
-    el.style.background = isSel ? 'rgba(255,249,62,.06)' : 'rgba(255,255,255,.02)';
+    el.classList.toggle('sel', el.dataset.effect === effectId);
   });
   _dnUpdatePreview();
 }
@@ -28328,17 +28347,16 @@ function _dnSelectEffect(effectId) {
 function _dnSelectColor(color) {
   _dnTempColor = color;
   const grid = document.getElementById('dns-color-grid');
-  if (grid) grid.querySelectorAll('.dns-color-tile').forEach(el => {
+  if (grid) grid.querySelectorAll('.dns-color-tile:not(.dns-color-tile--custom)').forEach(el => {
     const isSel = el.dataset.color?.toLowerCase() === color?.toLowerCase();
-    el.style.borderColor = isSel ? '#fff' : 'transparent';
-    el.innerHTML = isSel ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+    el.classList.toggle('sel', isSel);
+    el.innerHTML = isSel ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
   });
-  // Also update the effect tiles to reflect the new colour
+  // Recolour effect-tile previews so Gradient/Neon/etc. show the new colour
   const effectGrid = document.getElementById('dns-effect-grid');
   if (effectGrid) effectGrid.querySelectorAll('.dns-effect-tile').forEach(el => {
     const eff = el.dataset.effect;
-    const isSel = el.classList.contains('sel');
-    el.style.cssText = 'padding:8px 18px;border-radius:10px;border:1.5px solid '+(isSel?'var(--accent)':'rgba(255,255,255,.06)')+';background:'+(isSel?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)')+';cursor:pointer;font-size:13px;font-weight:600;transition:all .12s;'+_getDisplayEffectCSS(eff,color);
+    el.style.cssText = _getDisplayEffectCSS(eff, color);
   });
   _dnUpdatePreview();
 }
@@ -28347,14 +28365,14 @@ function _dnUpdatePreview() {
   const font = _dnTempFont || CU.displayFont || 'default';
   const effect = _dnTempEffect || CU.displayEffect || 'solid';
   const color = _dnTempColor || CU.displayColor || '#fff';
-  const fontCSS = _getDisplayFontCSS(font);
+  const fontStyle = _getDisplayFontStyle(font);
   const effectCSS = _getDisplayEffectCSS(effect, color);
   const nameEl = document.getElementById('dns-preview-name');
   const chatEl = document.getElementById('dns-preview-chat-name');
   const plateEl = document.getElementById('dns-preview-nameplate');
-  if (nameEl) { nameEl.style.cssText = 'font-size:14px;font-weight:700;font-family:'+fontCSS+';'+effectCSS; }
-  if (chatEl) { chatEl.style.cssText = 'font-size:12px;font-weight:700;font-family:'+fontCSS+';'+effectCSS; }
-  if (plateEl) { plateEl.style.cssText = 'font-family:var(--font-display);font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'+fontCSS+';'+effectCSS; }
+  if (nameEl) nameEl.style.cssText = 'font-size:14px;'+fontStyle+effectCSS;
+  if (chatEl) chatEl.style.cssText = 'font-size:12.5px;'+fontStyle+effectCSS;
+  if (plateEl) plateEl.style.cssText = 'font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'+fontStyle+effectCSS;
 }
 
 function _dnSurpriseMe() {
@@ -28426,7 +28444,7 @@ function applyRadianceFont() {
       else if (CU.displayEffect === 'pop') effectCSS = `text-shadow: 2px 2px 0 rgba(0,0,0,.3), -1px -1px 0 rgba(255,255,255,.1) !important;`;
       else if (CU.displayEffect === 'gradient') effectCSS = `background: linear-gradient(90deg, ${color}, #fff) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; background-clip: text !important;`;
       const colorCSS = hasColor && CU.displayEffect !== 'gradient' ? `color: ${color} !important;` : '';
-      const fontCSS = hasFont ? `font-family: ${font} !important;` : '';
+      const fontCSS = hasFont ? `font-family: ${font} !important; font-weight: ${_getDisplayFontWeight(CU.displayFont)} !important;` : '';
       styleEl.textContent = `
         .ua-name { ${fontCSS} ${colorCSS} ${effectCSS} }
         .msg-author[data-author="${u}"] { ${fontCSS} ${colorCSS} ${effectCSS} }
@@ -42035,9 +42053,9 @@ function updateProfilePreview() {
   const bio = bioInp ? bioInp.value.trim() : (CU.bio || '');
   const pronouns = pronounsInp ? pronounsInp.value.trim() : (CU.pronouns || '');
 
-  const fontCss = _getDisplayFontCSS(CU.displayFont || 'default');
+  const fontStyle = _getDisplayFontStyle(CU.displayFont || 'default');
   const effectCss = _getDisplayEffectCSS(CU.displayEffect || 'solid', CU.displayColor || '#fff');
-  const fullStyle = `font-family:${fontCss};${effectCss}`;
+  const fullStyle = `${fontStyle}${effectCss}`;
 
   // (1) Banner (profile preview only) — routes through the shared
   // resolver so colour/gradient theming preview matches the real card.

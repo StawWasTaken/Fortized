@@ -10142,5 +10142,67 @@ select:focus,select:focus-visible,
 .field-input:focus,.field-input:focus-visible{
   border-color:var(--border) !important;
 }
+
+/* ── DISPLAY NAME STYLE MODAL ─────────────────────────────────────────
+   Replaces the inline-styled "ugly" frame with a uniform panel that
+   matches the rest of the design system (.rpt-modal vibe — soft panel,
+   accent rim, clean section labels). Two-column layout: controls on
+   the left, live previews on the right. */
+.dns-modal-overlay{position:fixed;inset:0;background:linear-gradient(135deg,rgba(0,0,0,.78),rgba(0,0,0,.85));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:9000;display:flex;align-items:center;justify-content:center;animation:overlayFadeIn .2s ease-out;padding:24px;}
+.dns-modal{width:100%;max-width:820px;max-height:88vh;background:var(--panel2);border:1px solid var(--border);border-radius:22px;box-shadow:0 28px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,249,62,.04);overflow:hidden;display:flex;animation:rptIn .2s cubic-bezier(.22,1,.36,1);position:relative;}
+.dns-modal::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.4) 50%,transparent 100%);pointer-events:none;}
+.dns-modal__pane{flex:1;padding:24px 26px 22px;overflow-y:auto;min-width:0;}
+.dns-modal__header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.dns-modal__title{font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;letter-spacing:-.01em;}
+.dns-modal__subtitle{font-size:12px;color:var(--muted-light);margin-top:3px;}
+.dns-modal__close{flex-shrink:0;background:rgba(255,255,255,.04);border:1px solid var(--surface-border);border-radius:10px;color:var(--muted-light);cursor:pointer;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;transition:background .12s,color .12s,border-color .12s;}
+.dns-modal__close svg{width:14px;height:14px;}
+.dns-modal__close:hover{background:rgba(255,255,255,.08);color:#fff;border-color:var(--surface-border-hover);}
+.dns-modal__section-label{font-size:10.5px;font-weight:800;color:var(--muted-light);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.08em;}
+.dns-modal__section-label:first-of-type{margin-top:0;}
+
+.dns-font-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.dns-font-tile{padding:14px 8px 10px;border-radius:12px;border:1.5px solid var(--surface-border);background:var(--surface-1);cursor:pointer;text-align:center;transition:border-color .14s,background .14s,transform .14s;font-family:var(--font-ui);}
+.dns-font-tile:hover{background:var(--surface-2);border-color:var(--surface-border-hover);}
+.dns-font-tile.sel{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+.dns-font-tile__sample{font-size:22px;color:#fff;line-height:1;margin-bottom:6px;}
+.dns-font-tile__label{font-size:10.5px;color:var(--muted-light);font-weight:700;letter-spacing:.02em;}
+.dns-font-tile.sel .dns-font-tile__label{color:var(--accent);}
+
+.dns-effect-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.dns-effect-tile{padding:8px 18px;border-radius:10px;border:1.5px solid var(--surface-border);background:var(--surface-1);cursor:pointer;font-family:var(--font-display);font-size:12.5px;font-weight:700;transition:border-color .14s,background .14s;}
+.dns-effect-tile:hover{border-color:var(--surface-border-hover);}
+.dns-effect-tile.sel{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+
+.dns-color-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.dns-color-tile{position:relative;width:28px;height:28px;border-radius:8px;cursor:pointer;border:2px solid transparent;padding:0;display:inline-flex;align-items:center;justify-content:center;transition:transform .12s,border-color .12s;}
+.dns-color-tile:hover{transform:scale(1.08);}
+.dns-color-tile.sel{border-color:#fff;}
+.dns-color-tile svg{width:13px;height:13px;}
+.dns-color-tile--custom{overflow:hidden;border-color:rgba(255,255,255,.15);background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);}
+.dns-color-tile--custom .dns-color-tile__wheel{position:absolute;inset:0;}
+.dns-color-tile--custom input[type=color]{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);cursor:pointer;opacity:0;border:none;background:transparent;}
+
+.dns-modal__preview{width:300px;flex-shrink:0;background:rgba(0,0,0,.22);border-left:1px solid var(--border);padding:22px 20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.dns-modal__preview-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-light);}
+
+.dns-modal__actions{display:flex;gap:8px;margin-top:8px;}
+.dns-modal__btn{flex:1;padding:11px 14px;border-radius:11px;font-family:var(--font-display);font-size:12.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .14s,color .14s,border-color .14s,transform .14s;border:1px solid transparent;}
+.dns-modal__btn svg{width:14px;height:14px;}
+.dns-modal__btn--ghost{background:var(--surface-1);border-color:var(--surface-border);color:var(--muted-light);}
+.dns-modal__btn--ghost:hover{background:var(--surface-2);color:#fff;border-color:var(--surface-border-hover);}
+.dns-modal__btn--primary{background:var(--accent);color:var(--rail);}
+.dns-modal__btn--primary:hover{transform:translateY(-1px);box-shadow:0 8px 22px -8px rgba(255,249,62,.45);}
+
+@media (max-width:720px){
+  .dns-modal{flex-direction:column;max-height:92vh;}
+  .dns-modal__preview{width:auto;border-left:none;border-top:1px solid var(--border);}
+}
+
+/* ── "Why this ad?" card — uniformised with .rpt-modal so the
+   backdrop blur + entrance match the report flow. The card itself
+   reuses the .ad-why-card classes defined above but is wrapped by a
+   .modal-overlay shell at runtime so it gets the same dim+blur. */
+.modal-overlay .ad-why-card{position:relative;top:auto;left:auto;transform:none;}
 </style>
 

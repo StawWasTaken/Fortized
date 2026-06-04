@@ -9964,16 +9964,21 @@ select:focus-visible {
 /* Left column is a single framed sub-card (matches the user's
    sketch). One rounded border around the whole profile card. Hidden
    scrollbar — scroll still works for trackpad/wheel but never paints
-   a visible bar. */
+   a visible bar. Theming: border + soft glow pick up the user's
+   profile-theme accent (--fpp-main / --fpp-accent) so the card
+   feels owned by them, not generic. */
 .fpp-card-modal__left{
-  background:rgba(0,0,0,.32);
-  border:1px solid var(--border);
+  background:
+    linear-gradient(rgba(var(--fpp-accent-rgb),.04), rgba(var(--fpp-accent-rgb),.015)),
+    rgba(0,0,0,.32);
+  border:1px solid rgba(var(--fpp-main-rgb),.22);
   border-radius:16px;
   overflow-y:auto;
   display:flex; flex-direction:column;
   position:relative;
   min-height:0;
   scrollbar-width:none;
+  box-shadow:inset 0 1px 0 rgba(var(--fpp-main-rgb),.06);
 }
 .fpp-card-modal__left::-webkit-scrollbar{ width:0; height:0; display:none; }
 /* Banner inside the left frame keeps the native ratio it was uploaded
@@ -10012,17 +10017,20 @@ select:focus-visible {
   color:var(--accent);
   border-color:rgba(255,249,62,.22);
 }
-/* Right-pane content area is now a SINGLE framed canvas wrapping
-   the widgets, instead of one frame per widget. Matches the sketch:
-   one inner box, "+ Add Widget" at top right, widgets stack borderless
-   inside it. */
+/* Right-pane content area is the widget canvas: one outer frame,
+   each widget is its own smaller framed card inside. Theming: same
+   accent border + soft inner glow as the left frame so both halves
+   share the profile theme. */
 .fpp-card-modal__content{
   flex:1; overflow:hidden; padding:14px;
-  background:rgba(0,0,0,.22);
-  border:1px solid var(--border);
+  background:
+    linear-gradient(rgba(var(--fpp-accent-rgb),.04), rgba(var(--fpp-accent-rgb),.015)),
+    rgba(0,0,0,.22);
+  border:1px solid rgba(var(--fpp-main-rgb),.22);
   border-radius:14px;
   min-height:0;
   display:flex; flex-direction:column;
+  box-shadow:inset 0 1px 0 rgba(var(--fpp-main-rgb),.06);
 }
 .fpp-card-modal__section{
   margin-bottom:0;

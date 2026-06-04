@@ -9916,9 +9916,13 @@ select:focus-visible {
   --fpp-accent:#fff93e;
   --fpp-accent-rgb:255,249,62;
   display:grid;
-  grid-template-columns:340px 1fr;
-  width:970px; max-width:94vw;
-  height:800px; max-height:90vh;
+  grid-template-columns:300px 1fr;
+  /* Strict 731:517 aspect ratio (≈1.414:1). The modal scales with
+     viewport but never breaks proportion. min(94vw, …) caps the
+     wide-screen size; the aspect-ratio property derives height. */
+  width:min(94vw, 86vh * 731 / 517, 920px);
+  aspect-ratio: 731 / 517;
+  height:auto; max-height:90vh;
   border-radius:20px;
   overflow:hidden;
   position:relative;
@@ -9934,13 +9938,27 @@ select:focus-visible {
   border:1px solid var(--border);
   box-shadow:0 40px 100px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.04);
 }
-/* Top stripe themed through the Main CSS var (was hardcoded yellow). */
-.fpp-card-modal::before{
-  content:""; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg, transparent 0%, rgba(var(--fpp-main-rgb),.25) 12%, var(--fpp-main) 50%, rgba(var(--fpp-main-rgb),.25) 88%, transparent 100%);
-  box-shadow:0 0 18px rgba(var(--fpp-main-rgb),.4);
-  pointer-events:none; z-index:5;
+/* The hardcoded yellow top stripe used to stack on top of the user's
+   own decoration line in their settings, giving the card two
+   parallel accent lines. The user's custom decoration carries the
+   theme on its own — keep only that one. */
+.fpp-card-modal__close{
+  position:absolute; top:12px; right:12px; z-index:30;
+  width:30px; height:30px; border-radius:9px;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.55); backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.7); cursor:pointer;
+  transition:background .14s,color .14s,border-color .14s,transform .14s;
 }
+.fpp-card-modal__close svg{ width:14px; height:14px; display:block; }
+.fpp-card-modal__close:hover{ background:rgba(248,113,113,.15); color:#fff; border-color:rgba(248,113,113,.4); }
+.fpp-card-modal__close:active{ transform:scale(.94); }
+/* Drag-and-drop affordances for the Board widgets canvas. */
+.fpp-widget-dnd{ cursor:grab; transition:transform .14s, box-shadow .14s, opacity .14s; }
+.fpp-widget-dnd:active{ cursor:grabbing; }
+.fpp-widget-dnd.is-dragging{ opacity:.55; box-shadow:0 22px 50px rgba(0,0,0,.55); transform:rotate(-.6deg) scale(1.01); }
+.fpp-widget-dnd.is-drop-target{ outline:2px dashed rgba(var(--fpp-main-rgb),.45); outline-offset:4px; }
 /* (Radiance stroke removed across all .fpp surfaces — the yellow
    halo was visually loud and clashed with arbitrary Main colours.
    The accent wash + top stripe + Message-button colour carry the

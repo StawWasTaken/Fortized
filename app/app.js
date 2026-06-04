@@ -20130,7 +20130,15 @@ async function _viewUserProfile(username) {
       <button class="pbo-reveal" onclick="document.getElementById('profile-blocked-overlay').style.display='none'">Show Profile</button>
     </div>` : ''}
     <div class="fpp-card-modal" data-fpp-user="${escapeHTML(u.username)}">
-      <!-- LEFT PANEL: identity + bio + member since + connections + actions -->
+      <!-- X close button — matches the gamescard style, sits above the
+           banner so it's always reachable regardless of left/right
+           content height. -->
+      <button class="fpp-card-modal__close" aria-label="Close" onclick="closeModal('modal-user')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <!-- LEFT PANEL: identity + bio + member since + connections + actions.
+           Games I Like is intentionally NOT here — game collections live
+           as modular widgets in the right-side canvas only. -->
       <div class="fpp-card-modal__left">
         <div class="fpp__banner">${_fppBannerHTML(u, hasUserRadiance)}</div>
         <div class="fpp__av-row">
@@ -20140,7 +20148,6 @@ async function _viewUserProfile(username) {
         ${_fppIdentityHTML(u)}
         ${_fppAboutCardHTML(u)}
         ${_fppBadgesCardHTML(u)}
-        ${_fppGamesCardHTML(u)}
         ${_rolesHTML}
         ${_connectionsHTML}
         ${_noteHTML}
@@ -30608,6 +30615,81 @@ function renderProfileWidgetsOnCard(u, containerEl) {
   }
 
   containerEl.innerHTML = html;
+  // Tag rendered widget cards with their underlying widget id so the
+  // DnD reorder can persist back to CU.profileWidgets. The first two
+  // .pw-widget elements (Now-Playing activity card, Games I Like) are
+  // always-on and don't have a widget-array entry — they get tagged
+  // with a sentinel id and stay implicit during reorder.
+  if (isOwnProfile) {
+    try {
+      const allCards = containerEl.querySelectorAll(':scope > .pw-widget');
+      const enabledIds = widgets.filter(w => w.enabled && w.id !== 'game_collection').map(w => w.id);
+      const hasActivity = !!(u.gameActivity?.name && !u.gameActivity._spotify);
+      const offset = (hasActivity ? 1 : 0) + 1; // +1 for Games I Like
+      enabledIds.forEach((id, i) => {
+        const card = allCards[offset + i];
+        if (card) card.dataset.widgetId = id;
+      });
+    } catch (_) {}
+    _wireWidgetDnD(containerEl);
+  }
+}
+
+function _wireWidgetDnD(containerEl) {
+  if (!containerEl) return;
+  const cards = containerEl.querySelectorAll(':scope > .pw-widget, :scope > [class*="pw-widget"]');
+  if (!cards.length) return;
+  let dragSrc = null;
+  cards.forEach((card, idx) => {
+    card.classList.add('fpp-widget-dnd');
+    card.setAttribute('draggable', 'true');
+    card.dataset.dndIdx = idx;
+    card.addEventListener('dragstart', e => {
+      dragSrc = card;
+      card.classList.add('is-dragging');
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', card.dataset.dndIdx); } catch(_){}
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('is-dragging');
+      containerEl.querySelectorAll('.is-drop-target').forEach(el => el.classList.remove('is-drop-target'));
+      dragSrc = null;
+    });
+    card.addEventListener('dragover', e => {
+      if (!dragSrc || dragSrc === card) return;
+      e.preventDefault();
+      card.classList.add('is-drop-target');
+    });
+    card.addEventListener('dragleave', () => card.classList.remove('is-drop-target'));
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      card.classList.remove('is-drop-target');
+      if (!dragSrc || dragSrc === card) return;
+      const srcIdx = Number(dragSrc.dataset.dndIdx);
+      const tgtIdx = Number(card.dataset.dndIdx);
+      const rect = card.getBoundingClientRect();
+      const after = (e.clientY - rect.top) > rect.height / 2;
+      // Reorder DOM
+      if (after) card.after(dragSrc); else card.before(dragSrc);
+      // Persist the new order into CU.profileWidgets. We rebuild from
+      // the current DOM sequence — widgets without ids (Games I Like /
+      // Now Playing) stay implicit and don't enter the array.
+      try {
+        if (CU?.profileWidgets && Array.isArray(CU.profileWidgets)) {
+          const orderedIds = Array.from(containerEl.querySelectorAll(':scope > [data-widget-id]')).map(el => el.dataset.widgetId);
+          if (orderedIds.length) {
+            const byId = new Map(CU.profileWidgets.map(w => [w.id, w]));
+            const reordered = orderedIds.map(id => byId.get(id)).filter(Boolean);
+            const rest = CU.profileWidgets.filter(w => !orderedIds.includes(w.id));
+            CU.profileWidgets = [...reordered, ...rest];
+            saveLocal();
+            if (typeof saveUser === 'function') saveUser().catch(()=>{});
+          }
+        }
+      } catch(err) { console.warn('[ProfileCard] widget reorder save failed:', err?.message); }
+      // Re-index dataset.dndIdx after reorder
+      containerEl.querySelectorAll(':scope > .fpp-widget-dnd').forEach((el, i) => el.dataset.dndIdx = i);
+    });
+  });
 }
 
 // PKCE helpers for Spotify OAuth

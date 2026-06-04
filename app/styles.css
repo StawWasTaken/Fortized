@@ -10616,3 +10616,227 @@ select:focus,select:focus-visible,
 .staff-timeline{ font-size:11px; color:rgba(255,255,255,.55); }
 .staff-timeline__row{ padding:4px 0; border-bottom:1px solid rgba(255,255,255,.03); font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; }
 .staff-timeline__row span{ color:rgba(255,255,255,.3); }
+
+/* ════════════════════════════════════════════════════════════════════
+   STAFF CONSOLE — Tactical visual revamp
+   ──────────────────────────────────────────────────────────────────
+   Retargets every existing admin class inside #view-admin so the
+   whole console matches the Live Ops aesthetic without losing any
+   functionality. High specificity (#view-admin .x) so it overrides
+   the legacy 2024-era rules without us having to delete them.
+   Tokens: #0a0d14 background, #0d1018 cards, accent rim left,
+   JetBrains Mono numerics, dense rows, uppercase micro-labels.
+   ════════════════════════════════════════════════════════════════ */
+
+/* Root frame */
+#view-admin { background:#0a0d14 !important; color:#dde3ed; }
+#view-admin .admin-wrap { background:#0a0d14 !important; }
+#view-admin .admin-header-bar {
+  background:#0d1018 !important; backdrop-filter:none !important;
+  border-bottom:1px solid rgba(255,255,255,.06) !important;
+  height:50px; min-height:50px;
+}
+#view-admin .admin-header-bar::after{ display:none; }
+#view-admin .admin-body { background:#0a0d14 !important; }
+#view-admin .admin-nav {
+  background:#0d1018 !important; backdrop-filter:none !important;
+  border-right:1px solid rgba(255,255,255,.05) !important;
+  width:200px; min-width:200px; padding:10px 8px;
+}
+#view-admin .admin-main {
+  background:#0a0d14 !important; backdrop-filter:none !important;
+}
+
+/* Side nav tabs */
+#view-admin .adm-tab {
+  padding:8px 11px; border-radius:7px;
+  font-size:12.5px; font-weight:600;
+  color:rgba(255,255,255,.55);
+  border:1px solid transparent;
+  gap:9px;
+}
+#view-admin .adm-tab svg{ width:15px; height:15px; opacity:.55; }
+#view-admin .adm-tab:hover{ background:rgba(255,255,255,.04); color:#fff; }
+#view-admin .adm-tab:hover svg{ opacity:.85; }
+#view-admin .adm-tab.active{
+  background:rgba(255,249,62,.06) !important;
+  color:var(--accent) !important;
+  border:1px solid rgba(255,249,62,.18) !important;
+  font-weight:700;
+}
+#view-admin .adm-tab.active::before{
+  width:2px; height:14px; box-shadow:none;
+}
+#view-admin .adm-sec-label {
+  font-size:9px; font-weight:800; letter-spacing:.16em;
+  color:rgba(255,255,255,.3) !important;
+  padding:16px 12px 6px;
+}
+
+/* Sub-tabs */
+#view-admin .adm-sub-nav {
+  background:#0d1018 !important; backdrop-filter:none !important;
+  border:1px solid rgba(255,255,255,.05) !important;
+  border-radius:9px; padding:5px 7px;
+  margin:0 18px 14px;
+}
+#view-admin .adm-sub-tab {
+  padding:6px 11px; border-radius:6px;
+  font-size:11.5px; font-weight:600;
+  color:rgba(255,255,255,.55);
+}
+#view-admin .adm-sub-tab svg{ width:13px; height:13px; }
+#view-admin .adm-sub-tab:hover{ background:rgba(255,255,255,.05); color:#fff; }
+#view-admin .adm-sub-tab.active{
+  background:rgba(255,249,62,.08) !important;
+  color:var(--accent) !important;
+  border-color:rgba(255,249,62,.22) !important;
+  box-shadow:none !important;
+}
+
+/* Section labels in the page body */
+#view-admin .sc-section-label {
+  font-family:var(--font-display);
+  font-size:10px !important; font-weight:800 !important;
+  letter-spacing:.16em !important; text-transform:uppercase;
+  color:rgba(255,255,255,.4) !important;
+  margin:14px 0 8px;
+}
+
+/* HQ stat cards — tactical counter look (left accent rim, JBM numerics) */
+#view-admin .hq-stat {
+  background:#0d1018 !important;
+  border:1px solid rgba(255,255,255,.05) !important;
+  border-left:3px solid var(--stat-accent, var(--accent)) !important;
+  border-radius:8px !important;
+  padding:11px 13px !important;
+  transition:background .14s, transform .14s;
+  position:relative; overflow:hidden;
+}
+#view-admin .hq-stat::before{ display:none !important; }
+#view-admin .hq-stat:hover{
+  background:#11151f !important; transform:none !important;
+  box-shadow:none !important; border-color:rgba(255,255,255,.08) !important;
+}
+#view-admin .hq-stat-val {
+  font-family:var(--font-display) !important;
+  font-size:22px !important; font-weight:900 !important;
+  font-variant-numeric:tabular-nums; line-height:1;
+}
+#view-admin .hq-stat-label {
+  font-size:10px !important; font-weight:700 !important;
+  text-transform:uppercase; letter-spacing:.08em;
+  color:rgba(255,255,255,.45) !important;
+  margin-top:5px !important;
+}
+
+/* HQ panels — dark cards */
+#view-admin .hq-panel {
+  background:#0d1018 !important;
+  border:1px solid rgba(255,255,255,.05) !important;
+  border-radius:9px !important;
+}
+#view-admin .hq-panel-head {
+  padding:10px 14px !important;
+  border-bottom:1px solid rgba(255,255,255,.05) !important;
+}
+#view-admin .hq-panel-head h3 {
+  font-size:11px !important; font-weight:800 !important;
+  letter-spacing:.12em; text-transform:uppercase;
+  color:rgba(255,255,255,.65) !important;
+}
+
+/* Threat chip */
+#view-admin .hq-threat {
+  padding:4px 10px !important;
+  font-size:10px !important; font-weight:800 !important;
+  letter-spacing:.1em; text-transform:uppercase;
+  border-radius:5px !important;
+  font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+
+/* Quick buttons — tactical chip */
+#view-admin .hq-quick-btn {
+  background:rgba(255,255,255,.05) !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  color:#fff !important;
+  padding:6px 11px !important; border-radius:7px !important;
+  font-size:11px !important; font-weight:700 !important;
+  display:inline-flex; align-items:center; gap:6px;
+  font-family:var(--font-ui); cursor:pointer;
+  transition:background .14s;
+}
+#view-admin .hq-quick-btn svg{ width:12px; height:12px; }
+#view-admin .hq-quick-btn:hover{ background:rgba(255,255,255,.1) !important; }
+
+/* Command Center header — tighter, more tactical */
+#view-admin .ftz-grid.cols-5 { gap:8px !important; }
+#view-admin .ftz-grid.cols-3 { gap:10px !important; }
+
+/* Activity feed row */
+#view-admin .hq-feed-item {
+  padding:7px 10px; border-radius:6px;
+  border-left:2px solid transparent;
+  transition:background .12s;
+}
+#view-admin .hq-feed-item:hover{
+  background:rgba(255,255,255,.03);
+}
+
+/* User rows in panels */
+#view-admin .hq-user-row {
+  padding:8px 12px !important;
+  border-radius:6px !important;
+  display:flex; gap:10px; align-items:center;
+  cursor:pointer; transition:background .12s;
+}
+#view-admin .hq-user-row:hover{ background:rgba(255,255,255,.03); }
+
+/* Inputs across the admin pages */
+#view-admin input[type=text], #view-admin input[type=search], #view-admin textarea, #view-admin select {
+  background:#11151f !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  color:#fff !important;
+  border-radius:7px !important;
+  font-family:var(--font-ui) !important;
+  font-size:12.5px !important;
+}
+#view-admin input:focus, #view-admin textarea:focus, #view-admin select:focus {
+  outline:none !important;
+  border-color:rgba(255,249,62,.4) !important;
+  box-shadow:0 0 0 2px rgba(255,249,62,.08) !important;
+}
+
+/* All numeric-looking tabular text gets monospace */
+#view-admin .hq-stat-val,
+#view-admin .hq-stat-label + div,
+#view-admin .adm-stats-row > div > div:first-child {
+  font-variant-numeric:tabular-nums;
+}
+
+/* Make any free-floating "card" wrapper match */
+#view-admin [style*="background:var(--panel)"],
+#view-admin [style*="background:var(--panel2)"],
+#view-admin [style*="background: var(--panel)"],
+#view-admin [style*="background: var(--panel2)"] {
+  background:#0d1018 !important;
+  border-color:rgba(255,255,255,.05) !important;
+}
+
+/* Page chrome inside .admin-main: narrower default padding so the
+   tactical density actually reads. */
+#view-admin .admin-main > div:first-child {
+  padding:14px 18px !important;
+}
+
+/* Audit feed timestamps + actions use JBM */
+#view-admin .hq-feed-item span,
+#view-admin .hq-user-row > div > div:nth-child(2) {
+  font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size:10.5px;
+}
+
+/* Scrollbars: thin, dark accent */
+#view-admin ::-webkit-scrollbar { width:6px; height:6px; }
+#view-admin ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:3px; }
+#view-admin ::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,.16); }

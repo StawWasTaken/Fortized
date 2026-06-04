@@ -3834,7 +3834,11 @@ function _pickWeightedAd(ads, ratioFilter) {
     else if (role === 'admin') w = 3;
     else if (a.ownerVerified) w = 2;
     const boost = Math.max(0.1, Math.min(10, Number(a.adminBoost) || 1));
-    w = w * boost;
+    // User-paid boost (set from the Creator tab via _cmBoostAd) stacks
+    // on top of any admin boost. Capped to 3x so a single advertiser
+    // can't blow out the whole rotation.
+    const userBoost = Math.max(1, Math.min(3, Number(a.userBoost) || 1));
+    w = w * boost * userBoost;
     return { ad: a, weight: w };
   });
   const total = weighted.reduce((s, w) => s + w.weight, 0);
@@ -3922,7 +3926,10 @@ async function _getAllActiveAds() {
     if (raw) JSON.parse(raw).forEach(id => blocked.add(id));
   } catch (_) {}
   const localAds = (CU?.ads||[]).filter(a => _isAdLive(a) && !blocked.has(a.id));
-  const allAds = ads.filter(a => !blocked.has(a.id));
+  // _isAdLive() keeps superadmin ads alive even when expiresAt has passed,
+  // so applying it here (rather than letting the server filter by expiry)
+  // is what guarantees superadmin ads never fall out of rotation.
+  const allAds = ads.filter(a => _isAdLive(a) && !blocked.has(a.id));
   localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
   return allAds;
 }
@@ -14772,6 +14779,90 @@ async function _cmCancelAd(adIdx) {
     setTimeout(() => _switchCreatorSub('creations'), 50);
   });
 }
+// User-side ad boost tiers. Capped at 3x so a single user can't
+// monopolise the rotation; admin boost stacks on top of this in
+// _pickWeightedAd(). Costs are paid in Onyx and the boost lives for
+// the rest of the ad's run (no separate expiry — when the ad expires
+// or is cancelled, the boost goes with it).
+const _AD_USER_BOOST_TIERS = [
+  { tier: 1, mult: 1.5, cost: 50,  label: 'Lift',     desc: '1.5× more impressions' },
+  { tier: 2, mult: 2,   cost: 100, label: 'Push',     desc: '2× more impressions' },
+  { tier: 3, mult: 3,   cost: 200, label: 'Spotlight',desc: '3× more impressions (max)' },
+];
+
+async function _cmBoostAd(adIdx) {
+  const ad = CU.ads?.[adIdx];
+  if (!ad) return;
+  const currentTier = Math.max(0, Math.min(3, Number(ad.userBoostTier) || 0));
+  const balance = CU.onyx || 0;
+  document.querySelector('.ftz-confirm-overlay[data-id=boost-ad]')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.setAttribute('data-id', 'boost-ad');
+  const tilesHTML = _AD_USER_BOOST_TIERS.map(t => {
+    const isCurrent = t.tier === currentTier;
+    const isLocked = t.tier <= currentTier;
+    const tooPoor = balance < t.cost;
+    const disabled = isLocked || tooPoor;
+    return `<button class="ad-boost-tile ${isCurrent?'is-current':''}" ${disabled?'disabled':''} data-tier="${t.tier}">
+      <div class="ad-boost-tile__head">
+        <span class="ad-boost-tile__label">Tier ${t.tier} · ${t.label}</span>
+        <span class="ad-boost-tile__mult">${t.mult}×</span>
+      </div>
+      <div class="ad-boost-tile__desc">${t.desc}</div>
+      <div class="ad-boost-tile__cost">
+        ${isCurrent ? '<span class="ad-boost-tile__current">Current tier</span>' : `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> ${t.cost} Onyx${tooPoor?' <span class="ad-boost-tile__short">(short)</span>':''}`}
+      </div>
+    </button>`;
+  }).join('');
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px;">
+      <div>
+        <div class="ftz-confirm-title" style="margin-bottom:2px;">Boost this ad</div>
+        <div style="font-size:12px;color:var(--muted-light);">Spend Onyx to push <strong style="color:#fff;">${escapeHTML(ad.title||'Untitled')}</strong> higher in rotation.</div>
+      </div>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:18px;line-height:1;padding:4px;">&times;</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:14px 0 12px;padding:9px 12px;background:rgba(255,249,62,.05);border:1px solid rgba(255,249,62,.12);border-radius:10px;font-size:12px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)"><circle cx="12" cy="12" r="10"/></svg>
+      <span style="color:var(--muted-light);">Your balance</span>
+      <span style="color:var(--accent);font-weight:800;margin-left:auto;">${balance} Onyx</span>
+    </div>
+    <div class="ad-boost-grid">${tilesHTML}</div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.5;">Boost lasts as long as the ad does. Cancel or let it expire and the boost goes with it.</div>
+    <div class="ftz-confirm-actions" style="margin-top:14px;">
+      <button class="ftz-btn ftz-btn-ghost" onclick="this.closest('.ftz-confirm-overlay').remove()">Close</button>
+    </div>
+  </div>`;
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.querySelectorAll('.ad-boost-tile:not([disabled])').forEach(btn => {
+    btn.onclick = async () => {
+      const tier = Number(btn.dataset.tier);
+      const cfg = _AD_USER_BOOST_TIERS.find(t => t.tier === tier);
+      if (!cfg) return;
+      if ((CU.onyx||0) < cfg.cost) { toast('Not enough Onyx.', 'error'); return; }
+      CU.onyx = (CU.onyx||0) - cfg.cost;
+      ad.userBoost = cfg.mult;
+      ad.userBoostTier = cfg.tier;
+      ad.userBoostBy = CU?.username;
+      ad.userBoostAt = new Date().toISOString();
+      saveLocal();
+      try { await saveUser(); } catch(_) {}
+      try { await FortizedSocial.upsertGlobalAd(ad); } catch(_) {}
+      overlay.remove();
+      toast(`Boosted to Tier ${cfg.tier} — ${cfg.mult}× rotation weight.`, 'success');
+      try { updateOnyxDisplay?.(); } catch(_) {}
+      try { _renderAdminAdsListIfOpen?.(); } catch(_) {}
+      // Re-render the creator ads list so the new tier shows on the row
+      try {
+        const list = document.getElementById('cr-ads-list');
+        if (list && typeof _hydrateMyAdsAndRender === 'function') _hydrateMyAdsAndRender();
+      } catch(_) {}
+    };
+  });
+  document.body.appendChild(overlay);
+}
+
 async function _cmRenewAd(adIdx) {
   const ad = CU.ads?.[adIdx];
   if (!ad) return;
@@ -36901,10 +36992,14 @@ async function _hydrateMyAdsAndRender() {
     const expired = !neverExpires && (ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date()));
     const statusLabel = ad.status==='cancelled'?'Cancelled':ad.status==='taken_down'?'Taken down':neverExpires?'Permanent':expired?'Expired':isActive?'Active':'Inactive';
     const statusColor = isActive?'#3ecf6e':(ad.status==='cancelled'||ad.status==='taken_down')?'#f87171':'#6b7280';
+    const boostTier = Math.max(0, Math.min(3, Number(ad.userBoostTier) || 0));
+    const boostChip = boostTier > 0
+      ? `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;background:linear-gradient(135deg,rgba(255,249,62,.18),rgba(255,249,62,.06));border:1px solid rgba(255,249,62,.25);color:var(--accent);font-weight:800;font-size:10px;letter-spacing:.02em;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1 2-5z"/></svg>Boost T${boostTier}</span>`
+      : '';
     return `<div style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
       ${ad.image?`<img src="${escapeHTML(ad.image)}" style="width:48px;height:${ad.ratio==='rectangle'?'40px':'28px'};object-fit:cover;border-radius:6px;flex-shrink:0;">`:''}
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.title||'Untitled')}</div>
+        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;">${escapeHTML(ad.title||'Untitled')} ${boostChip}</div>
         <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;margin-top:2px;">
           <span style="color:${statusColor};font-weight:700;">${statusLabel}</span>
           <span>${ad.ratio==='rectangle'?'Rectangle':'Banner'}</span>
@@ -36912,6 +37007,7 @@ async function _hydrateMyAdsAndRender() {
         </div>
       </div>
       ${isActive?`
+        <button onclick="_cmBoostAd(${i})" style="padding:5px 12px;font-size:11px;background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(255,249,62,.04));border:1px solid rgba(255,249,62,.2);border-radius:8px;color:var(--accent);cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1 2-5z"/></svg>${boostTier>0?'Upgrade':'Boost'}</button>
         <button onclick="_cmEditAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--muted-light);cursor:pointer;">Edit (5 Onyx)</button>
         <button onclick="_cmRenewAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;">Renew</button>
         <button onclick="_cmCancelAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:#f87171;cursor:pointer;">Cancel</button>

@@ -2121,20 +2121,17 @@ const FortizedSocial = (() => {
   }
 
   // ── Ads API ──────────────────────────────────────────
+  // Returns every ad with status='active'. Expiry filtering is done
+  // client-side via _isAdLive() so superadmin-owned ads stay in
+  // rotation regardless of expiresAt (per spec: superadmin ads never
+  // disappear). The role list lives on the client, so the server
+  // query intentionally doesn't try to apply it.
   async function getGlobalAds() {
     try {
       const { data } = await sb.from('global_ads').select('*').eq('status', 'active');
-      const now = Date.now();
       return (data||[]).map(r => {
         try { return typeof r.data === 'string' ? JSON.parse(r.data) : r.data; } catch { return r; }
-      }).filter(a => {
-        if (!a) return false;
-        // Superadmin (and anyone else flagged never-expire) ads have a null
-        // expiresAt and should always be considered in rotation.
-        if (!a.expiresAt) return true;
-        const t = new Date(a.expiresAt).getTime();
-        return !isNaN(t) && t > now;
-      });
+      }).filter(a => !!a);
     } catch(e) { console.warn('[Ads] getGlobalAds failed:', e?.message); return []; }
   }
   // Return EVERY ad owned by a user, regardless of status or expiry. Used by

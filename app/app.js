@@ -48905,3 +48905,622 @@ function staffActionLog({ label, detail, undo }) {
   }
 }
 
+
+// ════════════════════════════════════════════════════════════════════
+// STAFF CONSOLE — Phases 3–9 (homepage, inspectors, watchlist,
+// live thread viewer, analytics + world map, economy investigation,
+// threat scoring, incidents). Built on Phase 1 (capabilities) +
+// Phase 2 (inspector dock / palette / action log). LocalStorage
+// backs the new tables until DB migrations land — every store
+// here also writes through to Supabase via existing FortizedSocial
+// helpers when one exists, otherwise the store is local-only.
+// Open the new shell via Cmd+K → "Live Ops" or call openStaffOps().
+// ════════════════════════════════════════════════════════════════════
+
+// ── Tiny localStorage table helper (used by watchlist + incidents) ──
+function _staffStoreRead(key) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
+function _staffStoreWrite(key, rows) { try { localStorage.setItem(key, JSON.stringify(rows.slice(0, 1000))); } catch (_) {} }
+function _staffNewId(prefix) { return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+// ── Country detection (Phase 6 dependency) ──────────────────────────
+// Timezone first (free, ~85% accurate, no network). IP fallback only
+// once per session, cached. Country stamped onto CU.countryCode on
+// boot so the choropleth has fresh data immediately.
+const _TZ_TO_COUNTRY = {
+  'Europe/Paris':'FR','Europe/London':'GB','Europe/Berlin':'DE','Europe/Madrid':'ES','Europe/Rome':'IT',
+  'Europe/Amsterdam':'NL','Europe/Brussels':'BE','Europe/Lisbon':'PT','Europe/Dublin':'IE',
+  'Europe/Stockholm':'SE','Europe/Helsinki':'FI','Europe/Oslo':'NO','Europe/Copenhagen':'DK',
+  'Europe/Warsaw':'PL','Europe/Prague':'CZ','Europe/Athens':'GR','Europe/Vienna':'AT','Europe/Zurich':'CH',
+  'Europe/Moscow':'RU','Europe/Istanbul':'TR','Europe/Kiev':'UA','Europe/Kyiv':'UA','Europe/Bucharest':'RO',
+  'America/New_York':'US','America/Chicago':'US','America/Denver':'US','America/Los_Angeles':'US',
+  'America/Phoenix':'US','America/Anchorage':'US','Pacific/Honolulu':'US',
+  'America/Toronto':'CA','America/Vancouver':'CA','America/Edmonton':'CA','America/Montreal':'CA',
+  'America/Mexico_City':'MX','America/Sao_Paulo':'BR','America/Argentina/Buenos_Aires':'AR',
+  'America/Bogota':'CO','America/Lima':'PE','America/Santiago':'CL',
+  'Asia/Tokyo':'JP','Asia/Seoul':'KR','Asia/Shanghai':'CN','Asia/Hong_Kong':'HK','Asia/Taipei':'TW',
+  'Asia/Singapore':'SG','Asia/Bangkok':'TH','Asia/Jakarta':'ID','Asia/Manila':'PH','Asia/Kuala_Lumpur':'MY',
+  'Asia/Kolkata':'IN','Asia/Calcutta':'IN','Asia/Karachi':'PK','Asia/Dhaka':'BD',
+  'Asia/Dubai':'AE','Asia/Riyadh':'SA','Asia/Tel_Aviv':'IL','Asia/Jerusalem':'IL',
+  'Africa/Cairo':'EG','Africa/Lagos':'NG','Africa/Johannesburg':'ZA','Africa/Nairobi':'KE','Africa/Casablanca':'MA',
+  'Australia/Sydney':'AU','Australia/Melbourne':'AU','Australia/Perth':'AU','Australia/Brisbane':'AU',
+  'Pacific/Auckland':'NZ',
+};
+function _detectCountryFromTZ() {
+  try { return _TZ_TO_COUNTRY[Intl.DateTimeFormat().resolvedOptions().timeZone] || null; }
+  catch { return null; }
+}
+async function _detectCountryFromIP() {
+  try {
+    const cached = sessionStorage.getItem('ftz_country_ip');
+    if (cached) return cached;
+    const res = await fetch('https://ipapi.co/country/', { cache:'no-store' });
+    if (!res.ok) return null;
+    const cc = (await res.text() || '').trim().slice(0, 2).toUpperCase();
+    if (cc && /^[A-Z]{2}$/.test(cc)) { sessionStorage.setItem('ftz_country_ip', cc); return cc; }
+  } catch (_) {}
+  return null;
+}
+async function _ensureUserCountry() {
+  if (!CU?.username) return;
+  if (CU.countryCode && CU.countryCode.length === 2) return;
+  let cc = _detectCountryFromTZ();
+  if (!cc) cc = await _detectCountryFromIP();
+  if (!cc) return;
+  CU.countryCode = cc;
+  try { saveLocal(); } catch (_) {}
+  try { if (typeof saveUser === 'function') saveUser().catch(()=>{}); } catch (_) {}
+}
+// Kick off once on boot, deferred so we don't compete with init traffic.
+setTimeout(() => { _ensureUserCountry().catch(()=>{}); }, 8000);
+
+// ════════════════════════════════════════════════════════════════════
+// Phase 8 — Threat scoring engine
+// ────────────────────────────────────────────────────────────────────
+// Per-user composite score from signals we already track. Returns
+// {trust, risk, spam, abuse, scam} each in 0–100. Phase 4's user
+// dossier renders this as a chip row. The numbers are deliberately
+// simple — meant as a moderation hint, not a verdict.
+// ════════════════════════════════════════════════════════════════════
+function computeThreatScore(user) {
+  if (!user) return { trust:50, risk:0, spam:0, abuse:0, scam:0 };
+  const now = Date.now();
+  const ageDays = user.createdAt ? Math.max(0, (now - new Date(user.createdAt).getTime()) / 86400000) : 0;
+  const reports = (() => {
+    try { return JSON.parse(localStorage.getItem('ftz_reports') || '[]').filter(r => r && (r.username === user.username || r.msgFrom === user.username)).length; }
+    catch { return 0; }
+  })();
+  const automodHits = (() => {
+    try { return JSON.parse(localStorage.getItem('ftz_automod_log') || '[]').filter(e => e.user === user.username).length; }
+    catch { return 0; }
+  })();
+  const isBanned = !!user.banned;
+  const isSuspended = !!(user.suspension && user.suspension.until && new Date(user.suspension.until) > new Date());
+
+  // Spam P: heavy lean on automod rephrase hits + report volume
+  const spam = Math.min(100, Math.round(automodHits * 12 + reports * 4));
+  // Abuse P: report-driven, scaled by recency
+  const abuse = Math.min(100, Math.round(reports * 8 + (isSuspended ? 30 : 0)));
+  // Scam P: hard to compute without backend signals; placeholder uses
+  // new-account + zero-mutual heuristic (same one we use for friend
+  // requests).
+  const friendsCount = Array.isArray(user.friends) ? user.friends.length : 0;
+  const scam = Math.min(100, Math.round((ageDays < 7 ? 30 : 0) + (friendsCount === 0 ? 20 : 0) + reports * 6));
+  // Risk: max of the three contributors + ban bonus
+  const risk = Math.min(100, Math.max(spam, abuse, scam) + (isBanned ? 30 : 0));
+  // Trust: inverse of risk, biased up by account age
+  const trust = Math.max(0, Math.min(100, Math.round(100 - risk + Math.min(20, ageDays / 30 * 5))));
+  return { trust, risk, spam, abuse, scam };
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Phase 9 — Incidents
+// ────────────────────────────────────────────────────────────────────
+// An incident bundles reports + users + bastions + actions under one
+// case file. Phase 9 is intentionally minimal — create, list, link,
+// status — so we don't ship a "framework" before we have real ops
+// using it. The inspector lets you drill into each one.
+// ════════════════════════════════════════════════════════════════════
+const STAFF_INCIDENT_KEY = 'ftz_incidents';
+function incidentsList() { return _staffStoreRead(STAFF_INCIDENT_KEY); }
+function incidentCreate({ title, severity = 'medium', summary = '', userIds = [], bastionIds = [], reportIds = [] }) {
+  if (!hasCap(STAFF_CAPS.INCIDENTS_MANAGE)) { requireCap(STAFF_CAPS.INCIDENTS_MANAGE); }
+  const inc = {
+    id: _staffNewId('inc'),
+    title: String(title || 'Untitled').slice(0, 120),
+    severity, summary: String(summary || '').slice(0, 800),
+    status: 'open',
+    userIds, bastionIds, reportIds,
+    timeline: [{ at: new Date().toISOString(), by: CU?.username, kind: 'created' }],
+    createdAt: new Date().toISOString(),
+    createdBy: CU?.username,
+    assignedTo: null,
+  };
+  const list = incidentsList(); list.unshift(inc); _staffStoreWrite(STAFF_INCIDENT_KEY, list);
+  logAudit('incident.create', inc.id, inc.title, { cap: STAFF_CAPS.INCIDENTS_MANAGE, targetEntity: 'incident', targetId: inc.id });
+  staffActionLog({ label: 'Incident created', detail: inc.title });
+  return inc;
+}
+function incidentUpdate(id, patch) {
+  if (!hasCap(STAFF_CAPS.INCIDENTS_MANAGE)) return;
+  const list = incidentsList();
+  const i = list.findIndex(x => x.id === id);
+  if (i < 0) return;
+  const old = list[i];
+  list[i] = { ...old, ...patch };
+  list[i].timeline = [...(old.timeline||[]), { at: new Date().toISOString(), by: CU?.username, kind: 'update', patch: Object.keys(patch).join(',') }];
+  _staffStoreWrite(STAFF_INCIDENT_KEY, list);
+  logAudit('incident.update', id, JSON.stringify(patch), { cap: STAFF_CAPS.INCIDENTS_MANAGE, targetEntity: 'incident', targetId: id });
+}
+function incidentLink(id, kind, refId) {
+  const list = incidentsList();
+  const i = list.findIndex(x => x.id === id);
+  if (i < 0) return;
+  const key = kind === 'user' ? 'userIds' : kind === 'bastion' ? 'bastionIds' : kind === 'report' ? 'reportIds' : null;
+  if (!key) return;
+  if (!list[i][key].includes(refId)) list[i][key].push(refId);
+  list[i].timeline = [...(list[i].timeline||[]), { at: new Date().toISOString(), by: CU?.username, kind: 'link', refKind: kind, refId }];
+  _staffStoreWrite(STAFF_INCIDENT_KEY, list);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Phase 5 — Watchlist
+// ────────────────────────────────────────────────────────────────────
+// Four escalation levels per the pro. Local-first; later phases push
+// to a `watchlist` table. Adding a user logs an audit row with the
+// required reason; the live thread viewer is gated on
+// VIEW_LIVE_THREADS with the same reason gate.
+// ════════════════════════════════════════════════════════════════════
+const STAFF_WATCH_KEY = 'ftz_watchlist';
+const STAFF_WATCH_LEVELS = ['observe', 'elevated', 'critical', 'lockdown'];
+function watchlistList() { return _staffStoreRead(STAFF_WATCH_KEY).filter(w => !w.expiresAt || new Date(w.expiresAt) > new Date()); }
+function watchlistAdd(username, level, reason, ttlHours = 0) {
+  if (!hasCap(STAFF_CAPS.WATCHLIST_ADD)) return requireCap(STAFF_CAPS.WATCHLIST_ADD);
+  if (!username || !reason) throw new Error('Username and reason are required.');
+  if (!STAFF_WATCH_LEVELS.includes(level)) level = 'observe';
+  const rows = _staffStoreRead(STAFF_WATCH_KEY);
+  const existingIdx = rows.findIndex(r => r.username === username);
+  const entry = {
+    id: _staffNewId('w'),
+    username, level, reason: String(reason).slice(0, 400),
+    by: CU?.username, at: new Date().toISOString(),
+    expiresAt: ttlHours > 0 ? new Date(Date.now() + ttlHours * 3600000).toISOString() : null,
+    notes: [],
+  };
+  if (existingIdx >= 0) rows[existingIdx] = { ...rows[existingIdx], ...entry, id: rows[existingIdx].id };
+  else rows.unshift(entry);
+  _staffStoreWrite(STAFF_WATCH_KEY, rows);
+  logAudit('watchlist.add', username, `${level}: ${reason}`, { cap: STAFF_CAPS.WATCHLIST_ADD, targetEntity: 'user', targetId: username, reason });
+  staffActionLog({ label: `Watching @${username}`, detail: `${level} · ${reason}` });
+  return entry;
+}
+function watchlistRemove(username) {
+  if (!hasCap(STAFF_CAPS.WATCHLIST_ADD)) return;
+  const rows = _staffStoreRead(STAFF_WATCH_KEY).filter(r => r.username !== username);
+  _staffStoreWrite(STAFF_WATCH_KEY, rows);
+  logAudit('watchlist.remove', username, '', { cap: STAFF_CAPS.WATCHLIST_ADD, targetEntity: 'user', targetId: username });
+}
+function watchlistStatus(username) {
+  return watchlistList().find(w => w.username === username) || null;
+}
+
+// Live thread viewer — superadmin only, mandatory reason. Opens a
+// read-only inspector over an existing DM/GC/channel.
+async function openLiveThreadViewer(kind, key) {
+  if (!hasCap(STAFF_CAPS.VIEW_LIVE_THREADS)) {
+    toast('You don\'t hold "view live conversations". Action blocked.', 'error');
+    return;
+  }
+  const reason = prompt('Reason for opening this thread (audit-logged):');
+  if (!reason || !reason.trim()) { toast('Reason required.', 'info'); return; }
+  logAudit('live_thread.open', kind + ':' + key, reason.trim(), { cap: STAFF_CAPS.VIEW_LIVE_THREADS, targetEntity: 'thread', targetId: kind + ':' + key, reason: reason.trim() });
+  openInspector('liveThread', kind + ':' + key, { reason: reason.trim(), openedAt: new Date().toISOString() });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Phase 4 — Entity inspector renderers
+// ────────────────────────────────────────────────────────────────────
+// Each renderer is registered against the kind passed to
+// openInspector(). They share helpers below for chips, sections,
+// quick-action rails. None of them mutate without going through a
+// capability-gated function (so demoted staff see the controls but
+// can't fire them).
+// ════════════════════════════════════════════════════════════════════
+function _sectHTML(title, body) {
+  return `<div class="staff-sect"><div class="staff-sect__head">${escapeHTML(title)}</div><div class="staff-sect__body">${body}</div></div>`;
+}
+function _kvHTML(rows) {
+  return `<div class="staff-kv">${rows.map(([k, v]) => `<div class="staff-kv__row"><span>${escapeHTML(k)}</span><span class="staff-kv__v">${v == null ? '—' : (typeof v === 'string' ? escapeHTML(v) : v)}</span></div>`).join('')}</div>`;
+}
+function _scoreChipHTML(label, val) {
+  const c = val > 70 ? '#f87171' : val > 40 ? '#f59e0b' : val > 20 ? '#fbbf24' : '#3ecf6e';
+  return `<div class="staff-score" style="--c:${c};"><div class="staff-score__l">${escapeHTML(label)}</div><div class="staff-score__v">${val}</div></div>`;
+}
+
+// USER DOSSIER
+registerInspectorRenderer('user', async (body, username, opts) => {
+  body.innerHTML = `<div class="staff-loading">Loading dossier for <b>@${escapeHTML(username)}</b>…</div>`;
+  let u = null;
+  try { u = await FortizedSocial.getUserByName?.(username, { noCache: true }); } catch (_) {}
+  if (!u) { body.innerHTML = `<div class="staff-inspector__error">User @${escapeHTML(username)} not found.</div>`; return; }
+  const scores = computeThreatScore(u);
+  const watch = watchlistStatus(username);
+  const role = getStaffRole(username);
+  const reports = (() => {
+    try { return JSON.parse(localStorage.getItem('ftz_reports') || '[]').filter(r => r && (r.username === username || r.msgFrom === username)); }
+    catch { return []; }
+  })();
+  const ageDays = u.createdAt ? Math.floor((Date.now() - new Date(u.createdAt).getTime()) / 86400000) : 0;
+  body.innerHTML = `
+    <div class="staff-dossier__head">
+      <div class="staff-dossier__av">${u.pfp ? `<img src="${escapeHTML(u.pfp)}">` : (u.username||'?').charAt(0).toUpperCase()}</div>
+      <div class="staff-dossier__id">
+        <div class="staff-dossier__name">${escapeHTML(u.displayName || u.username)}</div>
+        <div class="staff-dossier__handle">@${escapeHTML(u.username)} ${role ? `· <span style="color:var(--accent);font-weight:700;">${role}</span>` : ''}</div>
+      </div>
+    </div>
+    <div class="staff-scores">
+      ${_scoreChipHTML('Risk', scores.risk)}
+      ${_scoreChipHTML('Spam', scores.spam)}
+      ${_scoreChipHTML('Abuse', scores.abuse)}
+      ${_scoreChipHTML('Scam', scores.scam)}
+      <div class="staff-score" style="--c:#60a5fa;"><div class="staff-score__l">Trust</div><div class="staff-score__v">${scores.trust}</div></div>
+    </div>
+    ${watch ? `<div class="staff-banner staff-banner--watch">Watchlist · <b>${escapeHTML(watch.level)}</b> · ${escapeHTML(watch.reason)} <span style="color:rgba(255,255,255,.4);font-weight:600;">by @${escapeHTML(watch.by||'?')}</span></div>` : ''}
+    ${u.banned ? `<div class="staff-banner staff-banner--ban">BANNED · ${escapeHTML(u.banReason||'no reason on file')}</div>` : ''}
+    ${u.suspension?.until ? `<div class="staff-banner staff-banner--sus">SUSPENDED until ${escapeHTML(u.suspension.until)}</div>` : ''}
+    ${_sectHTML('Identity', _kvHTML([
+      ['Username', u.username],
+      ['Display', u.displayName || '—'],
+      ['Pronouns', u.pronouns || '—'],
+      ['Country', u.countryCode || '—'],
+      ['Created', u.createdAt ? new Date(u.createdAt).toLocaleString() + ` (${ageDays}d)` : '—'],
+      ['Last seen', u.lastSeen ? new Date(u.lastSeen).toLocaleString() : '—'],
+      ['Onyx', u.onyx ?? 0],
+    ]))}
+    ${_sectHTML('Activity', _kvHTML([
+      ['Friends', Array.isArray(u.friends) ? u.friends.length : 0],
+      ['Bastions', Array.isArray(u.bastions) ? u.bastions.length : 0],
+      ['Reports received', reports.length],
+    ]))}
+    <div class="staff-actions">
+      <button ${capAttrs(STAFF_CAPS.WATCHLIST_ADD)} onclick="_dossierAddToWatchlist('${escapeHTML(username)}')">${watch ? 'Update watch' : 'Watch'}</button>
+      <button ${capAttrs(STAFF_CAPS.USER_WARN)} onclick="_dossierWarn('${escapeHTML(username)}')">Warn</button>
+      <button ${capAttrs(STAFF_CAPS.USER_SUSPEND)} onclick="_dossierSuspend('${escapeHTML(username)}')">Suspend</button>
+      <button ${capAttrs(STAFF_CAPS.USER_BAN)} onclick="_dossierBan('${escapeHTML(username)}')" class="staff-actions__danger">Ban</button>
+      <button ${capAttrs(STAFF_CAPS.VIEW_LIVE_THREADS)} onclick="openLiveThreadViewer('user','${escapeHTML(username)}')" class="staff-actions__surveil">Live view</button>
+    </div>`;
+});
+function _dossierAddToWatchlist(username) {
+  const lvl = prompt('Level (observe / elevated / critical / lockdown):', 'observe');
+  if (!lvl) return;
+  const reason = prompt('Reason (required, audited):');
+  if (!reason) return;
+  try { watchlistAdd(username, lvl.trim(), reason.trim(), 0); _renderInspector(); }
+  catch (e) { toast(e.message || 'Failed to add to watchlist.', 'error'); }
+}
+function _dossierWarn(username) {
+  if (!hasCap(STAFF_CAPS.USER_WARN)) return;
+  const reason = prompt('Warning reason:');
+  if (!reason) return;
+  FortizedSocial.adminWarnUser?.(username, { reason, issuedBy: CU.username, issuedAt: new Date().toISOString() }).catch(()=>{});
+  logAudit('warn', username, reason, { cap: STAFF_CAPS.USER_WARN, targetEntity: 'user', targetId: username, reason });
+  staffActionLog({ label: `Warned @${username}`, detail: reason });
+}
+function _dossierSuspend(username) {
+  if (!hasCap(STAFF_CAPS.USER_SUSPEND)) return;
+  const hours = Number(prompt('Suspend for how many hours?', '24'));
+  if (!hours || hours <= 0) return;
+  const reason = prompt('Reason:'); if (!reason) return;
+  const until = new Date(Date.now() + hours * 3600000).toISOString();
+  FortizedSocial.adminSuspendUser?.(username, { until, reason, by: CU.username }).catch(()=>{});
+  logAudit('suspend', username, `${hours}h: ${reason}`, { cap: STAFF_CAPS.USER_SUSPEND, targetEntity: 'user', targetId: username, reason });
+  staffActionLog({ label: `Suspended @${username}`, detail: `${hours}h · ${reason}` });
+}
+function _dossierBan(username) {
+  if (!hasCap(STAFF_CAPS.USER_BAN)) return;
+  const reason = prompt(`Type the username "${username}" to confirm ban + reason:`);
+  if (reason !== username) { toast('Confirmation mismatch — ban aborted.', 'info'); return; }
+  const reasonReal = prompt('Ban reason:'); if (!reasonReal) return;
+  const b = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+  const obj = { username, reason: reasonReal, bannedBy: CU.username, bannedAt: new Date().toISOString() };
+  b.push(obj); localStorage.setItem('ftz_bans', JSON.stringify(b));
+  try { FortizedSocial.adminBanUser?.(username, obj); } catch(_) {}
+  logAudit('ban', username, reasonReal, { cap: STAFF_CAPS.USER_BAN, targetEntity: 'user', targetId: username, reason: reasonReal });
+  staffActionLog({ label: `Banned @${username}`, detail: reasonReal });
+}
+
+// BASTION INSPECTOR
+registerInspectorRenderer('bastion', async (body, bastionId) => {
+  body.innerHTML = `<div class="staff-loading">Loading bastion <b>${escapeHTML(bastionId)}</b>…</div>`;
+  let b = null;
+  try { b = await FortizedSocial.getBastionById?.(bastionId); } catch (_) {}
+  if (!b) { body.innerHTML = `<div class="staff-inspector__error">Bastion ${escapeHTML(bastionId)} not found.</div>`; return; }
+  const memCount = b.memberCount ?? (Array.isArray(b.members) ? b.members.length : 0);
+  body.innerHTML = `
+    <div class="staff-dossier__head">
+      <div class="staff-dossier__av" style="border-radius:12px;">${b.icon ? `<img src="${escapeHTML(b.icon)}">` : (b.emblem || '🏰')}</div>
+      <div class="staff-dossier__id">
+        <div class="staff-dossier__name">${escapeHTML(b.name || 'Bastion')} ${b.verified ? '✓' : ''}</div>
+        <div class="staff-dossier__handle">${escapeHTML(b.id || bastionId)} · owner @${escapeHTML(b.owner || '?')}</div>
+      </div>
+    </div>
+    ${_sectHTML('Overview', _kvHTML([
+      ['Members', memCount],
+      ['Channels', Array.isArray(b.channels) ? b.channels.length : 0],
+      ['Roles', Array.isArray(b.roles) ? b.roles.length : 0],
+      ['Public', b.public ? 'yes' : 'no'],
+      ['Created', b.createdAt ? new Date(b.createdAt).toLocaleString() : '—'],
+      ['Tagline', b.tagline || '—'],
+    ]))}
+    <div class="staff-actions">
+      <button ${capAttrs(STAFF_CAPS.BASTION_VERIFY)}>Verify</button>
+      <button ${capAttrs(STAFF_CAPS.BASTION_FEATURE)}>Feature</button>
+      <button ${capAttrs(STAFF_CAPS.BASTION_FREEZE_INVITES)}>Freeze invites</button>
+      <button ${capAttrs(STAFF_CAPS.BASTION_TAKEDOWN)} class="staff-actions__danger">Takedown</button>
+      <button onclick="inspectorPush('user','${escapeHTML(b.owner||'')}')">Owner dossier</button>
+    </div>`;
+});
+
+// REPORT INSPECTOR
+registerInspectorRenderer('report', (body, reportId) => {
+  const reports = (() => { try { return JSON.parse(localStorage.getItem('ftz_reports')||'[]'); } catch { return []; } })();
+  const r = reports.find(x => x && x.id === reportId);
+  if (!r) { body.innerHTML = `<div class="staff-inspector__error">Report ${escapeHTML(reportId)} not found.</div>`; return; }
+  const target = r.username || r.msgFrom || null;
+  body.innerHTML = `
+    <div class="staff-dossier__head">
+      <div class="staff-dossier__av" style="background:rgba(248,113,113,.12);color:#f87171;">⚠</div>
+      <div class="staff-dossier__id">
+        <div class="staff-dossier__name">${escapeHTML(r.reason || 'Report')}</div>
+        <div class="staff-dossier__handle">${escapeHTML(r.id)} · ${escapeHTML(r.type || 'unknown')}</div>
+      </div>
+    </div>
+    ${_sectHTML('Details', _kvHTML([
+      ['Reporter', r.reporter ? `@${r.reporter}` : '—'],
+      ['Target', target ? `@${target}` : '—'],
+      ['Context', r.context || '—'],
+      ['When', r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'],
+      ['Status', r.status || 'pending'],
+    ]))}
+    <div class="staff-actions">
+      ${target ? `<button onclick="inspectorPush('user','${escapeHTML(target)}')">Open dossier</button>` : ''}
+      <button ${capAttrs(STAFF_CAPS.REPORTS_ACTION)} onclick="_reportAction('${escapeHTML(reportId)}','dismiss')">Dismiss</button>
+      <button ${capAttrs(STAFF_CAPS.REPORTS_ACTION)} onclick="_reportAction('${escapeHTML(reportId)}','resolved')">Resolve</button>
+    </div>`;
+});
+function _reportAction(id, status) {
+  if (!hasCap(STAFF_CAPS.REPORTS_ACTION)) return;
+  const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+  const i = reports.findIndex(r => r && r.id === id); if (i < 0) return;
+  const prev = reports[i].status;
+  reports[i].status = status; localStorage.setItem('ftz_reports', JSON.stringify(reports));
+  logAudit('report.' + status, id, '', { cap: STAFF_CAPS.REPORTS_ACTION, targetEntity: 'report', targetId: id });
+  staffActionLog({
+    label: `Report ${status}`, detail: id,
+    undo: () => { reports[i].status = prev; localStorage.setItem('ftz_reports', JSON.stringify(reports)); }
+  });
+  _renderInspector();
+}
+
+// INCIDENT INSPECTOR
+registerInspectorRenderer('incident', (body, id) => {
+  const inc = incidentsList().find(x => x.id === id);
+  if (!inc) { body.innerHTML = `<div class="staff-inspector__error">Incident ${escapeHTML(id)} not found.</div>`; return; }
+  body.innerHTML = `
+    <div class="staff-dossier__head">
+      <div class="staff-dossier__av" style="background:rgba(245,158,11,.12);color:#f59e0b;border-radius:10px;">!</div>
+      <div class="staff-dossier__id">
+        <div class="staff-dossier__name">${escapeHTML(inc.title)}</div>
+        <div class="staff-dossier__handle">${escapeHTML(inc.id)} · ${escapeHTML(inc.severity)} · ${escapeHTML(inc.status)}</div>
+      </div>
+    </div>
+    ${_sectHTML('Summary', `<div style="font-size:12.5px;line-height:1.55;">${escapeHTML(inc.summary || '—')}</div>`)}
+    ${_sectHTML('Linked', `
+      ${inc.userIds.length ? `<div>Users: ${inc.userIds.map(u => `<a onclick="inspectorPush('user','${escapeHTML(u)}')" style="cursor:pointer;color:var(--accent);">@${escapeHTML(u)}</a>`).join(', ')}</div>` : ''}
+      ${inc.bastionIds.length ? `<div style="margin-top:4px;">Bastions: ${inc.bastionIds.map(b => `<a onclick="inspectorPush('bastion','${escapeHTML(b)}')" style="cursor:pointer;color:var(--accent);">${escapeHTML(b)}</a>`).join(', ')}</div>` : ''}
+      ${inc.reportIds.length ? `<div style="margin-top:4px;">Reports: ${inc.reportIds.map(r => `<a onclick="inspectorPush('report','${escapeHTML(r)}')" style="cursor:pointer;color:var(--accent);">${escapeHTML(r)}</a>`).join(', ')}</div>` : ''}
+      ${(!inc.userIds.length && !inc.bastionIds.length && !inc.reportIds.length) ? '<div style="color:rgba(255,255,255,.4);">No links yet.</div>' : ''}
+    `)}
+    ${_sectHTML('Timeline', `<div class="staff-timeline">${(inc.timeline||[]).map(t => `<div class="staff-timeline__row"><span>${new Date(t.at).toLocaleString()}</span> <b>${escapeHTML(t.kind)}</b>${t.by ? ` by @${escapeHTML(t.by)}` : ''}</div>`).join('')}</div>`)}
+    <div class="staff-actions">
+      <button ${capAttrs(STAFF_CAPS.INCIDENTS_MANAGE)} onclick="incidentUpdate('${id}',{status:'resolved'});_renderInspector();">Resolve</button>
+      <button ${capAttrs(STAFF_CAPS.INCIDENTS_MANAGE)} onclick="incidentUpdate('${id}',{status:'open'});_renderInspector();">Reopen</button>
+    </div>`;
+});
+
+// LIVE THREAD VIEWER — placeholder until we wire it to actual
+// message streams. Logs the open + reason via the gate above.
+registerInspectorRenderer('liveThread', (body, key, opts) => {
+  body.innerHTML = `
+    <div class="staff-banner staff-banner--watch">Surveillance · audit-logged · reason: ${escapeHTML(opts?.reason || '—')}</div>
+    ${_sectHTML('Thread', _kvHTML([
+      ['Target', key],
+      ['Opened', opts?.openedAt || '—'],
+      ['Operator', CU?.username || '—'],
+      ['Session', _STAFF_SESSION_ID],
+    ]))}
+    <div style="padding:20px;text-align:center;color:rgba(255,255,255,.4);font-size:12px;">
+      Live message stream renders here once the read-only mirror endpoint lands.
+    </div>`;
+});
+
+// ════════════════════════════════════════════════════════════════════
+// Phase 7 — Economy investigation (lite)
+// ────────────────────────────────────────────────────────────────────
+// Scoped to what we can compute from existing user rows without a
+// transactions table: top Onyx holders, spike detection by delta
+// from previous read, suspicious transfer placeholders. A full
+// transaction graph viewer waits for a tx table.
+// ════════════════════════════════════════════════════════════════════
+async function staffEconomyOverview() {
+  const users = await FortizedSocial.getAllUsers?.() || {};
+  const list = Object.values(users);
+  const total = list.length;
+  const totalOnyx = list.reduce((s, u) => s + (Number(u.onyx) || 0), 0);
+  const top = list.slice().sort((a, b) => (Number(b.onyx) || 0) - (Number(a.onyx) || 0)).slice(0, 10);
+  const inflation = (() => { try { const prev = Number(localStorage.getItem('ftz_econ_prev_total') || '0'); localStorage.setItem('ftz_econ_prev_total', String(totalOnyx)); return totalOnyx - prev; } catch { return 0; } })();
+  return { total, totalOnyx, top, inflation };
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Phase 6 — Analytics + world map
+// ────────────────────────────────────────────────────────────────────
+// D3 + TopoJSON loaded on-demand from CDN so we don't pay the bytes
+// until a staff opens the map. Choropleth tinted by user-count per
+// country (using each user's countryCode from _ensureUserCountry).
+// ════════════════════════════════════════════════════════════════════
+function _staffLoadScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector(`script[data-staff-src="${src}"]`)) return res();
+    const s = document.createElement('script'); s.src = src; s.dataset.staffSrc = src;
+    s.onload = () => res(); s.onerror = () => rej(new Error('script ' + src));
+    document.head.appendChild(s);
+  });
+}
+async function renderStaffWorldMap(mountEl) {
+  if (!mountEl) return;
+  mountEl.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4);font-size:12px;">Loading world map…</div>';
+  try {
+    await _staffLoadScript('https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js');
+    await _staffLoadScript('https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js');
+    const world = await (await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')).json();
+    const countries = window.topojson.feature(world, world.objects.countries).features;
+    // Per-country user count
+    const users = await FortizedSocial.getAllUsers?.() || {};
+    const counts = {};
+    Object.values(users).forEach(u => { if (u.countryCode) counts[u.countryCode] = (counts[u.countryCode] || 0) + 1; });
+    const maxN = Math.max(1, ...Object.values(counts));
+    mountEl.innerHTML = '';
+    const w = mountEl.clientWidth || 600, h = Math.round(w * 0.55);
+    const svg = window.d3.select(mountEl).append('svg').attr('viewBox', `0 0 ${w} ${h}`).attr('width', '100%').attr('height', '100%');
+    const proj = window.d3.geoMercator().fitSize([w, h - 20], { type: 'Sphere' });
+    const path = window.d3.geoPath(proj);
+    const tip = document.createElement('div'); tip.className = 'staff-map__tip'; mountEl.appendChild(tip);
+    // Numeric ISO codes from world-atlas → ISO-2 mapping for a useful
+    // subset (matches what _TZ_TO_COUNTRY actually produces). Anything
+    // not listed falls back to grey.
+    const NUM_TO_A2 = {'250':'FR','826':'GB','276':'DE','724':'ES','380':'IT','528':'NL','056':'BE','620':'PT','372':'IE','752':'SE','246':'FI','578':'NO','208':'DK','616':'PL','203':'CZ','300':'GR','040':'AT','756':'CH','643':'RU','792':'TR','804':'UA','642':'RO','840':'US','124':'CA','484':'MX','076':'BR','032':'AR','170':'CO','604':'PE','152':'CL','392':'JP','410':'KR','156':'CN','344':'HK','158':'TW','702':'SG','764':'TH','360':'ID','608':'PH','458':'MY','356':'IN','586':'PK','050':'BD','784':'AE','682':'SA','376':'IL','818':'EG','566':'NG','710':'ZA','404':'KE','504':'MA','036':'AU','554':'NZ'};
+    svg.append('g').selectAll('path').data(countries).join('path')
+      .attr('d', path)
+      .attr('fill', d => { const a2 = NUM_TO_A2[String(d.id).padStart(3,'0')]; const n = counts[a2] || 0; if (!n) return '#1a1f2c'; const t = Math.log(n + 1) / Math.log(maxN + 1); return `rgba(255,249,62,${0.15 + t * 0.65})`; })
+      .attr('stroke', '#0a0d14').attr('stroke-width', 0.5)
+      .on('mousemove', (e, d) => { const a2 = NUM_TO_A2[String(d.id).padStart(3,'0')]; tip.textContent = `${d.properties?.name || a2 || '?'} · ${counts[a2] || 0} users`; tip.style.display = 'block'; tip.style.left = (e.offsetX + 14) + 'px'; tip.style.top = (e.offsetY + 14) + 'px'; })
+      .on('mouseleave', () => { tip.style.display = 'none'; });
+  } catch (e) {
+    console.warn('[StaffMap] render failed:', e);
+    mountEl.innerHTML = `<div style="padding:40px;text-align:center;color:#fca5a5;font-size:12px;">Map failed to load (${escapeHTML(e?.message||'unknown')}). Network may be blocking the CDN.</div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Phase 3 — Live-first homepage (Live Ops)
+// ────────────────────────────────────────────────────────────────────
+// Replaces the legacy Dashboard tab when opened via openStaffOps()
+// or Cmd+K → "Live Ops". Compact, dense, tactical: 8 live counters,
+// the events stream, watchlist + incidents side panels, top-right
+// world map embed.
+// ════════════════════════════════════════════════════════════════════
+let _staffOpsTimer = null;
+async function openStaffOps() {
+  if (!hasCap(STAFF_CAPS.CONSOLE_OPEN)) return;
+  document.getElementById('staff-ops-root')?.remove();
+  const root = document.createElement('div'); root.id = 'staff-ops-root';
+  document.body.appendChild(root);
+  root.innerHTML = `
+    <div class="staff-ops">
+      <div class="staff-ops__head">
+        <div class="staff-ops__title">LIVE OPS <span class="staff-ops__pulse"></span></div>
+        <div class="staff-ops__sub">Operator @${escapeHTML(CU?.username||'?')} · session ${_STAFF_SESSION_ID.slice(-6)}</div>
+        <div style="flex:1;"></div>
+        <button class="staff-ops__btn" onclick="openStaffPalette()">⌘K</button>
+        <button class="staff-ops__btn staff-ops__btn--ghost" onclick="document.getElementById('staff-ops-root').remove();clearInterval(window._staffOpsTimer);">Close</button>
+      </div>
+      <div class="staff-ops__grid">
+        <div class="staff-ops__counters" id="staff-ops-counters"></div>
+        <div class="staff-ops__map" id="staff-ops-map"></div>
+        <div class="staff-ops__stream"><div class="staff-ops__sect-title">EVENTS · LIVE</div><div id="staff-ops-stream-body"></div></div>
+        <div class="staff-ops__side">
+          <div class="staff-ops__sect-title">WATCHLIST</div><div id="staff-ops-watch"></div>
+          <div class="staff-ops__sect-title" style="margin-top:14px;">INCIDENTS</div><div id="staff-ops-inc"></div>
+        </div>
+      </div>
+    </div>`;
+  const refresh = async () => {
+    try { await _staffOpsRefresh(); } catch (e) { console.warn('[StaffOps] refresh failed:', e?.message); }
+  };
+  refresh();
+  renderStaffWorldMap(document.getElementById('staff-ops-map'));
+  if (_staffOpsTimer) clearInterval(_staffOpsTimer);
+  _staffOpsTimer = setInterval(refresh, 5000);
+  window._staffOpsTimer = _staffOpsTimer;
+}
+async function _staffOpsRefresh() {
+  const users = await FortizedSocial.getAllUsers?.() || {};
+  const list = Object.values(users);
+  const onlineCount = list.filter(u => u.status && u.status !== 'offline').length;
+  const reports = (() => { try { return JSON.parse(localStorage.getItem('ftz_reports')||'[]'); } catch { return []; } })();
+  const pendingReports = reports.filter(r => r && r.status !== 'resolved' && r.status !== 'dismissed').length;
+  const automod = (() => { try { return JSON.parse(localStorage.getItem('ftz_automod_log')||'[]'); } catch { return []; } })();
+  const automodLastHour = automod.filter(e => new Date(e.timestamp).getTime() > Date.now() - 3600000).length;
+  const audit = (() => { try { return JSON.parse(localStorage.getItem('ftz_audit_log')||'[]'); } catch { return []; } })();
+  const incidents = incidentsList();
+  const openInc = incidents.filter(i => i.status !== 'resolved').length;
+  const watches = watchlistList();
+  const counters = [
+    { l:'Online now',     v: onlineCount,        c:'#3ecf6e' },
+    { l:'Users total',    v: list.length,        c:'#60a5fa' },
+    { l:'Pending reports',v: pendingReports,     c: pendingReports ? '#f87171':'#3ecf6e' },
+    { l:'Automod (1h)',   v: automodLastHour,    c: automodLastHour ? '#f59e0b':'#3ecf6e' },
+    { l:'Open incidents', v: openInc,            c: openInc ? '#f87171':'#3ecf6e' },
+    { l:'Watching',       v: watches.length,     c: watches.length ? '#a78bfa':'rgba(255,255,255,.3)' },
+    { l:'Audit (24h)',    v: audit.filter(e => new Date(e.at).getTime() > Date.now()-86400000).length, c:'#60a5fa' },
+    { l:'Countries',      v: new Set(list.map(u => u.countryCode).filter(Boolean)).size, c:'#fff93e' },
+  ];
+  const countersEl = document.getElementById('staff-ops-counters');
+  if (countersEl) countersEl.innerHTML = counters.map(s => `<div class="staff-ops__counter" style="--c:${s.c}"><div class="staff-ops__counter-v">${s.v}</div><div class="staff-ops__counter-l">${s.l}</div></div>`).join('');
+  const streamEl = document.getElementById('staff-ops-stream-body');
+  if (streamEl) {
+    const events = audit.slice(0, 40);
+    streamEl.innerHTML = events.map(e => {
+      const sev = (e.action||'').includes('ban') ? 'high' : (e.action||'').includes('warn') || (e.action||'').includes('suspend') ? 'med' : (e.action||'').includes('incident') ? 'high' : 'low';
+      return `<div class="staff-ops__event staff-ops__event--${sev}">
+        <span class="staff-ops__event-time">${new Date(e.at).toLocaleTimeString()}</span>
+        <span class="staff-ops__event-action">${escapeHTML(e.action||'?')}</span>
+        <span class="staff-ops__event-target" ${e.targetEntity && e.targetId ? `onclick="openInspector('${escapeHTML(e.targetEntity)}','${escapeHTML(e.targetId)}')" style="cursor:pointer;"` : ''}>${escapeHTML(e.target||e.targetId||'')}</span>
+        <span class="staff-ops__event-by">@${escapeHTML(e.by||'?')}</span>
+      </div>`;
+    }).join('') || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.3);font-size:11px;">No recent events.</div>';
+  }
+  const watchEl = document.getElementById('staff-ops-watch');
+  if (watchEl) {
+    watchEl.innerHTML = watches.slice(0, 8).map(w => `<div class="staff-ops__watch-row" onclick="openInspector('user','${escapeHTML(w.username)}')">
+      <span class="staff-ops__watch-lvl staff-ops__watch-lvl--${escapeHTML(w.level)}">${escapeHTML(w.level)}</span>
+      <span style="flex:1;">@${escapeHTML(w.username)}</span>
+    </div>`).join('') || '<div style="font-size:11px;color:rgba(255,255,255,.3);padding:6px 4px;">No active watches.</div>';
+  }
+  const incEl = document.getElementById('staff-ops-inc');
+  if (incEl) {
+    incEl.innerHTML = incidents.filter(i => i.status !== 'resolved').slice(0, 8).map(i => `<div class="staff-ops__watch-row" onclick="openInspector('incident','${escapeHTML(i.id)}')">
+      <span class="staff-ops__watch-lvl staff-ops__watch-lvl--${escapeHTML(i.severity)}">${escapeHTML(i.severity)}</span>
+      <span style="flex:1;">${escapeHTML(i.title)}</span>
+    </div>`).join('') || '<div style="font-size:11px;color:rgba(255,255,255,.3);padding:6px 4px;">No open incidents.</div>';
+  }
+}
+
+// Palette providers — register users, bastions, reports, incidents,
+// + jump-to-Ops shortcut so Cmd+K is the universal door into Phase
+// 3–9 surfaces.
+registerPaletteProvider((q) => {
+  const out = [];
+  out.push({ kind:'tab', label:'Live Ops', hint:'Open the live ops console', score: _staffPaletteScore(q, 'live ops console homepage'), run: openStaffOps });
+  // Incidents
+  for (const inc of incidentsList()) out.push({ kind:'report', label: inc.title, hint: inc.severity + ' · ' + inc.status, score: _staffPaletteScore(q, inc.title + ' ' + inc.id + ' incident'), run: () => openInspector('incident', inc.id) });
+  // Watchlist members
+  for (const w of watchlistList()) out.push({ kind:'user', label: '@' + w.username, hint: 'watch · ' + w.level, score: _staffPaletteScore(q, w.username + ' watchlist ' + w.level), run: () => openInspector('user', w.username) });
+  return out;
+});
+
+// Bootstrap a default palette entry so staff can find Live Ops from
+// the original admin panel header too (no UI change required —
+// the entry just exists in Cmd+K).
+

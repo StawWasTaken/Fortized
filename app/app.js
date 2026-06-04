@@ -1872,17 +1872,11 @@ const STAFF_CAP_LABELS = Object.freeze({
   [STAFF_CAPS.SYSTEM_FEATURE_FLAGS]:   'Edit feature flags',
 });
 
-// Role bundles. Each role inherits the bundle below it (helper ⊂ mod
-// ⊂ admin ⊂ superadmin) — the cascade is done at runtime by union,
-// so changing one tier doesn't require touching the others.
+// Role bundles. Each role inherits the bundle below it (mod ⊂ admin
+// ⊂ superadmin) — the cascade is done at runtime by union, so
+// changing one tier doesn't require touching the others.
 const _CAPS = STAFF_CAPS;
 const STAFF_ROLE_CAPS = Object.freeze({
-  helper: [
-    _CAPS.CONSOLE_OPEN,
-    _CAPS.REPORTS_VIEW,
-    _CAPS.SUPPORT_VIEW,
-    _CAPS.ANALYTICS_VIEW,
-  ],
   moderator: [
     _CAPS.CONSOLE_OPEN,
     _CAPS.USER_WARN,
@@ -21664,7 +21658,11 @@ function _renderAdminNav(active) {
   // Broadcasts / System so each domain stands on its own. The Broadcasts
   // tab is the single home for everything pushed out to users (banner ads,
   // system messages, scheduled actions) so the duplication is gone.
+  // "Live Ops" is the new full-screen tactical console (Phase 3 of
+  // the rewrite). It opens via openStaffOps() instead of loading
+  // into adm-content — the tab is intercepted in _loadAdminPage.
   const operations = [
+    {id:'live_ops',   svg:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>', label:'Live Ops'},
     {id:'dashboard',  svg:_admSvg.dashboard,  label:'Overview'},
     {id:'moderation', svg:_admSvg.moderation, label:'Moderation'},
     {id:'members',    svg:_admSvg.members,    label:'Members'},
@@ -21691,6 +21689,10 @@ async function loadAdminTab(tab) { _loadAdminPage(tab); }
 
 async function _loadAdminPage(tab, _isAutoRefresh) {
   if (!_isAutoRefresh && _adminAutoRefresh) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; }
+  // Live Ops opens the new tactical console as a full-screen overlay,
+  // not a panel inside #view-admin. The nav still shows it as the
+  // top entry so it's the first thing staff see.
+  if (tab === 'live_ops') { try { openStaffOps(); } catch (e) { console.warn('[StaffOps] open failed:', e); } return; }
   _renderAdminNav(tab); adminTab = tab;
   // Legacy tabs (prefixed with _) render into sub-content if available; top-level tabs use main content
   const _isLegacySub = tab.startsWith('_');
@@ -21758,6 +21760,8 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div style="font-size:11.5px;color:rgba(255,255,255,.3);">Operator: <span style="color:var(--accent);">${escapeHTML(CU.displayName||CU.username)}</span> · ${new Date().toLocaleString()} · Session Active</div>
         </div>
         <div style="display:flex;gap:var(--space-sm);">
+          <button class="hq-quick-btn" style="background:linear-gradient(135deg,rgba(62,207,110,.18),rgba(255,249,62,.12));border-color:rgba(62,207,110,.35);color:#fff;font-weight:800;" onclick="openStaffOps()" title="Open the new Live Ops console (Cmd+K)"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px #3ecf6e;margin-right:6px;animation:adm-badge-pulse 2s infinite;"></span>Live Ops</button>
+          <button class="hq-quick-btn" onclick="openStaffPalette()" title="Command palette (Cmd+K)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> ⌘K</button>
           <button class="hq-quick-btn" onclick="_syncAdminData().then(()=>{toast('Data synced','success');_loadAdminPage('dashboard');})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync</button>
           <button class="hq-quick-btn" onclick="_loadAdminPage('all_users')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Users DB</button>
         </div>

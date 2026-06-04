@@ -48591,3 +48591,317 @@ function _stawOnKey(e) {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// STAFF CONSOLE — Phase 2 primitives
+// ────────────────────────────────────────────────────────────────────
+// Three scaffolding components the Phase 4+ entity inspectors plug
+// into. Built alongside the existing #view-admin so nothing breaks;
+// later phases gradually migrate pages into the new shell.
+//
+//   • Inspector dock      → right-docked panel with a Back-stack so
+//                           clicking a user inside a report opens the
+//                           dossier on top, Back returns to the
+//                           report. Closes on Esc / outside-click /
+//                           X button.
+//   • Command palette     → Cmd+K (or Ctrl+K). Fuzzy search across
+//                           users / bastions / reports / caps / tabs.
+//                           Adapter-based so later phases drop in
+//                           new providers without rewriting the UI.
+//   • Action log surface  → bottom-right stack of recent staff
+//                           actions, each with an optional 60s undo.
+//                           Replaces the "did it work?" toast guess.
+// ════════════════════════════════════════════════════════════════════
+
+// ── Inspector dock ──────────────────────────────────────────────────
+// Stack so chained navigation feels natural (report → user → bastion
+// → back → back). The renderer is registered per-entity-kind so the
+// dock itself doesn't know what a "user" or "report" looks like —
+// later phases register their own renderers.
+const _staffInspectorStack = [];
+const _staffInspectorRenderers = {};
+
+function registerInspectorRenderer(kind, fn) {
+  _staffInspectorRenderers[kind] = fn;
+}
+
+function openInspector(kind, id, opts = {}) {
+  if (!hasCap(STAFF_CAPS.CONSOLE_OPEN)) return;
+  _staffInspectorStack.length = 0;
+  _staffInspectorStack.push({ kind, id, opts });
+  _renderInspector();
+}
+
+function inspectorPush(kind, id, opts = {}) {
+  _staffInspectorStack.push({ kind, id, opts });
+  _renderInspector();
+}
+
+function inspectorBack() {
+  if (_staffInspectorStack.length <= 1) { closeInspector(); return; }
+  _staffInspectorStack.pop();
+  _renderInspector();
+}
+
+function closeInspector() {
+  _staffInspectorStack.length = 0;
+  document.getElementById('staff-inspector-root')?.remove();
+  document.body.classList.remove('staff-inspector-open');
+}
+
+function _renderInspector() {
+  const top = _staffInspectorStack[_staffInspectorStack.length - 1];
+  if (!top) { closeInspector(); return; }
+  let root = document.getElementById('staff-inspector-root');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'staff-inspector-root';
+    root.innerHTML = `
+      <div class="staff-inspector__panel" role="dialog" aria-label="Inspector">
+        <div class="staff-inspector__head">
+          <button class="staff-inspector__back" aria-label="Back" onclick="inspectorBack()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="staff-inspector__title">Inspector</div>
+          <button class="staff-inspector__close" aria-label="Close" onclick="closeInspector()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="staff-inspector__body" id="staff-inspector-body"></div>
+        <div class="staff-inspector__crumb" id="staff-inspector-crumb"></div>
+      </div>`;
+    document.body.appendChild(root);
+    document.body.classList.add('staff-inspector-open');
+  }
+  // Render via the registered renderer, or a placeholder until later
+  // phases land the real inspectors. Stub renderers shouldn't throw
+  // — a missing renderer for "user" doesn't justify a broken panel.
+  const body = document.getElementById('staff-inspector-body');
+  const renderer = _staffInspectorRenderers[top.kind];
+  if (renderer) {
+    try { renderer(body, top.id, top.opts, { inspectorPush, inspectorBack, closeInspector }); }
+    catch (e) {
+      console.error('[Inspector] renderer failed:', e);
+      body.innerHTML = `<div class="staff-inspector__error">Renderer for "${escapeHTML(top.kind)}" threw — check console.</div>`;
+    }
+  } else {
+    body.innerHTML = `<div class="staff-inspector__stub">
+      <div class="staff-inspector__stub-kind">${escapeHTML(top.kind)}</div>
+      <div class="staff-inspector__stub-id">${escapeHTML(String(top.id))}</div>
+      <div class="staff-inspector__stub-hint">No renderer registered for "${escapeHTML(top.kind)}" yet — landing in a later phase.</div>
+    </div>`;
+  }
+  // Update crumb trail so the back-stack is visible
+  const crumb = document.getElementById('staff-inspector-crumb');
+  if (crumb) {
+    if (_staffInspectorStack.length > 1) {
+      crumb.style.display = '';
+      crumb.innerHTML = _staffInspectorStack.map((s, i) => {
+        const isLast = i === _staffInspectorStack.length - 1;
+        return `<span class="staff-inspector__crumb-step${isLast ? ' is-current' : ''}">${escapeHTML(s.kind)} · ${escapeHTML(String(s.id).slice(0, 24))}</span>`;
+      }).join('<span class="staff-inspector__crumb-sep">›</span>');
+    } else {
+      crumb.style.display = 'none';
+      crumb.innerHTML = '';
+    }
+  }
+  // Backdrop close
+  root.onclick = (e) => { if (e.target === root) closeInspector(); };
+}
+
+// Global Esc closes the inspector (only when it's open + no other
+// dialog/composer is). Captures so nested editable surfaces don't
+// swallow it.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!_staffInspectorStack.length) return;
+  if (document.querySelector('.staff-palette')) return; // palette handles its own
+  closeInspector();
+}, true);
+
+// ── Command palette (Cmd+K) ─────────────────────────────────────────
+// Provider model: anything pluggable supplies an array of items via
+// a registered provider fn. Default providers cover the existing
+// console tabs and capability names; user / bastion / report
+// providers register from their phases once the data sources exist.
+const _staffPaletteProviders = [];
+function registerPaletteProvider(fn) {
+  if (typeof fn === 'function') _staffPaletteProviders.push(fn);
+}
+
+// Default provider: tabs + capability tooltip docs. Always available.
+registerPaletteProvider((q) => {
+  const out = [];
+  const TABS = [
+    { id: 'dashboard',   label: 'Overview' },
+    { id: 'moderation',  label: 'Moderation' },
+    { id: 'members',     label: 'Members' },
+    { id: 'bastions',    label: 'Bastions' },
+    { id: 'economy',     label: 'Economy' },
+    { id: 'broadcasts',  label: 'Broadcasts' },
+    { id: 'feedback',    label: 'Feedback' },
+    { id: 'system',      label: 'System' },
+  ];
+  for (const t of TABS) {
+    out.push({
+      kind: 'tab',
+      label: t.label,
+      hint: 'Console tab',
+      score: _staffPaletteScore(q, t.label + ' ' + t.id),
+      run: () => { if (typeof _loadAdminPage === 'function') _loadAdminPage(t.id); },
+    });
+  }
+  // Capability listing for grep-from-keyboard
+  for (const cap of Object.values(STAFF_CAPS)) {
+    out.push({
+      kind: 'cap',
+      label: STAFF_CAP_LABELS[cap] || cap,
+      hint: cap + (hasCap(cap) ? ' · held' : ' · not held'),
+      score: _staffPaletteScore(q, cap + ' ' + (STAFF_CAP_LABELS[cap] || '')),
+      run: () => toast(hasCap(cap) ? 'You hold this capability.' : 'You don\'t hold this capability.', hasCap(cap) ? 'success' : 'info'),
+    });
+  }
+  return out;
+});
+
+// Naive substring + token-prefix fuzzy score. Good enough for a
+// keyboard launcher — we're not building a search engine here.
+function _staffPaletteScore(q, hay) {
+  if (!q) return 1;
+  const qs = q.toLowerCase().trim();
+  const hs = (hay || '').toLowerCase();
+  if (!qs) return 1;
+  if (hs.includes(qs)) return 100 + (hs.startsWith(qs) ? 50 : 0);
+  // Token-prefix
+  const toks = qs.split(/\s+/);
+  let s = 0;
+  for (const tk of toks) if (tk && hs.includes(tk)) s += 10;
+  return s;
+}
+
+function openStaffPalette() {
+  if (!hasCap(STAFF_CAPS.CONSOLE_OPEN)) return;
+  document.getElementById('staff-palette-root')?.remove();
+  const root = document.createElement('div');
+  root.id = 'staff-palette-root';
+  root.innerHTML = `
+    <div class="staff-palette" role="dialog" aria-label="Command palette">
+      <div class="staff-palette__head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="staff-palette__input" id="staff-palette-input" placeholder="Jump to user, bastion, report, tab, cap…" autocomplete="off">
+        <kbd class="staff-palette__kbd">ESC</kbd>
+      </div>
+      <div class="staff-palette__list" id="staff-palette-list"></div>
+      <div class="staff-palette__foot">
+        <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+        <span><kbd>↵</kbd> open</span>
+        <span><kbd>esc</kbd> close</span>
+      </div>
+    </div>`;
+  root.onclick = (e) => { if (e.target === root) root.remove(); };
+  document.body.appendChild(root);
+  const input = document.getElementById('staff-palette-input');
+  let activeIdx = 0;
+  let items = [];
+  const refresh = () => {
+    const q = input.value;
+    items = [];
+    for (const fn of _staffPaletteProviders) {
+      try { items.push(...(fn(q) || [])); } catch (e) { console.warn('[Palette] provider threw:', e?.message); }
+    }
+    items = items.filter(it => (it.score || 0) > 0).sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 30);
+    activeIdx = 0;
+    _renderPaletteList(items, activeIdx);
+  };
+  input.addEventListener('input', refresh);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { root.remove(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(items.length - 1, activeIdx + 1); _renderPaletteList(items, activeIdx); return; }
+    if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(0, activeIdx - 1); _renderPaletteList(items, activeIdx); return; }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const pick = items[activeIdx];
+      if (!pick) return;
+      try { pick.run?.(); } catch (err) { console.error('[Palette] run threw:', err); }
+      root.remove();
+    }
+  });
+  setTimeout(() => input.focus(), 10);
+  refresh();
+}
+
+function _renderPaletteList(items, activeIdx) {
+  const list = document.getElementById('staff-palette-list');
+  if (!list) return;
+  if (!items.length) {
+    list.innerHTML = '<div class="staff-palette__empty">No matches.</div>';
+    return;
+  }
+  list.innerHTML = items.map((it, i) => `
+    <div class="staff-palette__item${i === activeIdx ? ' is-active' : ''}" data-idx="${i}">
+      <span class="staff-palette__item-kind staff-palette__item-kind--${escapeHTML(it.kind)}">${escapeHTML(it.kind)}</span>
+      <span class="staff-palette__item-label">${escapeHTML(it.label)}</span>
+      <span class="staff-palette__item-hint">${escapeHTML(it.hint || '')}</span>
+    </div>`).join('');
+  list.querySelectorAll('.staff-palette__item').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = Number(el.dataset.idx);
+      const pick = items[idx];
+      if (!pick) return;
+      try { pick.run?.(); } catch (e) { console.error('[Palette] run threw:', e); }
+      document.getElementById('staff-palette-root')?.remove();
+    });
+  });
+}
+
+// Global hotkey. Cmd+K / Ctrl+K only when staff + not inside an
+// editable surface.
+document.addEventListener('keydown', (e) => {
+  if (!(e.metaKey || e.ctrlKey) || (e.key !== 'k' && e.key !== 'K')) return;
+  if (!hasCap(STAFF_CAPS.CONSOLE_OPEN)) return;
+  e.preventDefault();
+  openStaffPalette();
+});
+
+// ── Action log surface ──────────────────────────────────────────────
+// Replaces the "did the action land?" guesswork. Each staff write
+// posts a pill bottom-right with what just happened; if an `undo`
+// fn is passed, an Undo button appears for 60s. Stacks vertically,
+// auto-dismisses after 8s for non-undo actions.
+function staffActionLog({ label, detail, undo }) {
+  let host = document.getElementById('staff-action-log');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'staff-action-log';
+    document.body.appendChild(host);
+  }
+  const pill = document.createElement('div');
+  pill.className = 'staff-action-log__pill';
+  const undoBtnHTML = typeof undo === 'function'
+    ? `<button class="staff-action-log__undo">Undo</button>`
+    : '';
+  pill.innerHTML = `
+    <div class="staff-action-log__body">
+      <div class="staff-action-log__label">${escapeHTML(label || '')}</div>
+      ${detail ? `<div class="staff-action-log__detail">${escapeHTML(detail)}</div>` : ''}
+    </div>
+    ${undoBtnHTML}
+    <button class="staff-action-log__close" aria-label="Dismiss">✕</button>`;
+  host.appendChild(pill);
+  let dismissed = false;
+  const dismiss = () => { if (dismissed) return; dismissed = true; pill.classList.add('is-leaving'); setTimeout(() => pill.remove(), 200); };
+  pill.querySelector('.staff-action-log__close')?.addEventListener('click', dismiss);
+  if (typeof undo === 'function') {
+    let undone = false;
+    pill.querySelector('.staff-action-log__undo')?.addEventListener('click', async () => {
+      if (undone) return;
+      undone = true;
+      try { await undo(); pill.querySelector('.staff-action-log__label').textContent = 'Undone — ' + (label || ''); }
+      catch (e) { console.warn('[ActionLog] undo failed:', e?.message); toast('Undo failed.', 'error'); }
+      finally { setTimeout(dismiss, 1500); }
+    });
+    setTimeout(dismiss, 60000);
+  } else {
+    setTimeout(dismiss, 8000);
+  }
+}
+

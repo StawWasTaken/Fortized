@@ -10100,6 +10100,207 @@ select:focus-visible {
   border-top-color:rgba(8,10,15,.96);
   z-index:11200; pointer-events:none;
 }
+
+/* ── Staff console Phase 2: Inspector dock ────────────────────────
+   Right-docked panel. Entity inspectors (user dossier, bastion
+   inspector, report inspector, incident inspector) all render
+   inside .staff-inspector__body via registered renderers. */
+#staff-inspector-root{
+  position:fixed; inset:0; z-index:11000;
+  background:rgba(0,0,0,.4); backdrop-filter:blur(2px);
+  display:flex; justify-content:flex-end;
+  animation:fadeIn .14s ease;
+}
+body.staff-inspector-open{ overflow:hidden; }
+.staff-inspector__panel{
+  width:min(540px, 96vw); height:100%;
+  background:#0b0e15;
+  border-left:1px solid rgba(255,255,255,.08);
+  box-shadow:-32px 0 80px rgba(0,0,0,.6);
+  display:flex; flex-direction:column;
+  animation:staffInspectorIn .22s cubic-bezier(.22,1,.36,1);
+  font-family:var(--font-ui);
+  color:#dde3ed;
+}
+@keyframes staffInspectorIn { from { transform:translateX(20px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+.staff-inspector__head{
+  display:flex; align-items:center; gap:8px;
+  padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.05);
+  flex-shrink:0;
+}
+.staff-inspector__title{
+  flex:1; font-family:var(--font-display); font-size:13px; font-weight:800;
+  letter-spacing:.04em; text-transform:uppercase;
+  color:rgba(255,255,255,.85);
+}
+.staff-inspector__back, .staff-inspector__close{
+  width:30px; height:30px; border-radius:8px;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06);
+  color:rgba(255,255,255,.6);
+  display:inline-flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:background .14s, color .14s;
+}
+.staff-inspector__back svg, .staff-inspector__close svg{ width:14px; height:14px; }
+.staff-inspector__back:hover, .staff-inspector__close:hover{ background:rgba(255,255,255,.08); color:#fff; }
+.staff-inspector__body{
+  flex:1; overflow-y:auto; padding:14px 16px;
+  font-size:13px; line-height:1.5;
+  scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.1) transparent;
+}
+.staff-inspector__body::-webkit-scrollbar{ width:6px; }
+.staff-inspector__body::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.08); border-radius:3px; }
+.staff-inspector__crumb{
+  display:none;
+  padding:8px 14px; border-top:1px solid rgba(255,255,255,.04);
+  font-size:10.5px; color:rgba(255,255,255,.4); font-family:var(--font-ui);
+  letter-spacing:.02em;
+  display:flex; gap:6px; align-items:center; flex-wrap:wrap;
+}
+.staff-inspector__crumb-step{ font-variant-numeric:tabular-nums; }
+.staff-inspector__crumb-step.is-current{ color:var(--accent); font-weight:700; }
+.staff-inspector__crumb-sep{ opacity:.4; }
+.staff-inspector__stub{
+  padding:36px 24px; text-align:center;
+  border:1px dashed rgba(255,255,255,.08); border-radius:12px;
+}
+.staff-inspector__stub-kind{
+  font-family:var(--font-display); font-size:11px; font-weight:800;
+  letter-spacing:.18em; text-transform:uppercase;
+  color:var(--accent); margin-bottom:6px;
+}
+.staff-inspector__stub-id{
+  font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size:14px; color:#fff; margin-bottom:14px; word-break:break-all;
+}
+.staff-inspector__stub-hint{ font-size:12px; color:rgba(255,255,255,.4); }
+.staff-inspector__error{
+  padding:14px; background:rgba(248,113,113,.08);
+  border:1px solid rgba(248,113,113,.22); border-radius:10px;
+  color:#fca5a5; font-size:12px;
+}
+
+/* ── Staff console Phase 2: Command palette (Cmd+K) ─────────────── */
+#staff-palette-root{
+  position:fixed; inset:0; z-index:11100;
+  background:rgba(0,0,0,.45); backdrop-filter:blur(6px);
+  display:flex; align-items:flex-start; justify-content:center;
+  padding-top:14vh;
+  animation:fadeIn .12s ease;
+}
+.staff-palette{
+  width:min(640px, 92vw);
+  background:#0d1018;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  box-shadow:0 32px 80px rgba(0,0,0,.7);
+  font-family:var(--font-ui); color:#dde3ed;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+  animation:staffPaletteIn .18s cubic-bezier(.22,1,.36,1);
+}
+@keyframes staffPaletteIn { from { transform:translateY(-6px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.staff-palette__head{
+  display:flex; align-items:center; gap:10px;
+  padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.05);
+}
+.staff-palette__head svg{ width:14px; height:14px; color:rgba(255,255,255,.4); flex-shrink:0; }
+.staff-palette__input{
+  flex:1; background:transparent; border:none; outline:none;
+  font-family:var(--font-ui); font-size:14px; color:#fff;
+  caret-color:var(--accent);
+}
+.staff-palette__input::placeholder{ color:rgba(255,255,255,.3); }
+.staff-palette__kbd{
+  font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size:9.5px; font-weight:700;
+  padding:3px 6px; border-radius:5px;
+  background:rgba(255,255,255,.06); color:rgba(255,255,255,.5);
+  border:1px solid rgba(255,255,255,.06);
+}
+.staff-palette__list{
+  max-height:48vh; overflow-y:auto;
+  scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.1) transparent;
+}
+.staff-palette__list::-webkit-scrollbar{ width:6px; }
+.staff-palette__list::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.08); border-radius:3px; }
+.staff-palette__item{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 16px; cursor:pointer;
+  border-left:2px solid transparent;
+  transition:background .12s, border-color .12s;
+}
+.staff-palette__item:hover{ background:rgba(255,255,255,.03); }
+.staff-palette__item.is-active{ background:rgba(255,249,62,.06); border-left-color:var(--accent); }
+.staff-palette__item-kind{
+  font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size:9.5px; font-weight:700;
+  padding:2px 7px; border-radius:5px;
+  background:rgba(255,255,255,.05); color:rgba(255,255,255,.55);
+  letter-spacing:.04em; text-transform:uppercase;
+  min-width:48px; text-align:center; flex-shrink:0;
+}
+.staff-palette__item-kind--tab{ background:rgba(96,165,250,.1); color:#93c5fd; }
+.staff-palette__item-kind--cap{ background:rgba(167,139,250,.1); color:#c4b5fd; }
+.staff-palette__item-kind--user{ background:rgba(62,207,110,.1); color:#86efac; }
+.staff-palette__item-kind--bastion{ background:rgba(255,249,62,.08); color:var(--accent); }
+.staff-palette__item-kind--report{ background:rgba(248,113,113,.1); color:#fca5a5; }
+.staff-palette__item-label{ flex:1; font-size:13px; font-weight:600; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.staff-palette__item-hint{ font-size:11px; color:rgba(255,255,255,.35); font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; flex-shrink:0; }
+.staff-palette__empty{ padding:30px 20px; text-align:center; color:rgba(255,255,255,.35); font-size:12.5px; }
+.staff-palette__foot{
+  display:flex; gap:14px; justify-content:flex-end;
+  padding:10px 16px; border-top:1px solid rgba(255,255,255,.05);
+  font-size:10.5px; color:rgba(255,255,255,.35);
+}
+.staff-palette__foot kbd{
+  font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size:9px; font-weight:700;
+  padding:2px 5px; border-radius:4px;
+  background:rgba(255,255,255,.06); color:rgba(255,255,255,.6);
+  border:1px solid rgba(255,255,255,.06);
+  margin-right:4px;
+}
+
+/* ── Staff console Phase 2: Action log surface ───────────────────── */
+#staff-action-log{
+  position:fixed; bottom:18px; right:18px;
+  display:flex; flex-direction:column; gap:8px;
+  z-index:10800;
+  pointer-events:none;
+}
+.staff-action-log__pill{
+  pointer-events:auto;
+  display:flex; align-items:center; gap:10px;
+  padding:10px 14px;
+  background:#0d1018;
+  border:1px solid rgba(255,255,255,.08);
+  border-left:3px solid var(--accent);
+  border-radius:10px;
+  box-shadow:0 12px 32px rgba(0,0,0,.55);
+  font-family:var(--font-ui); color:#dde3ed;
+  min-width:260px; max-width:380px;
+  animation:staffPillIn .2s cubic-bezier(.22,1,.36,1);
+  transition:opacity .18s, transform .18s;
+}
+.staff-action-log__pill.is-leaving{ opacity:0; transform:translateX(8px); }
+@keyframes staffPillIn { from { transform:translateX(10px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+.staff-action-log__body{ flex:1; min-width:0; }
+.staff-action-log__label{ font-size:12.5px; font-weight:700; color:#fff; line-height:1.3; }
+.staff-action-log__detail{ font-size:11px; color:rgba(255,255,255,.45); margin-top:2px; font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; }
+.staff-action-log__undo{
+  background:rgba(255,249,62,.08); color:var(--accent);
+  border:1px solid rgba(255,249,62,.22); border-radius:7px;
+  padding:4px 11px; font-size:11px; font-weight:700;
+  cursor:pointer; font-family:var(--font-ui);
+  transition:background .12s, color .12s;
+}
+.staff-action-log__undo:hover{ background:var(--accent); color:var(--rail); }
+.staff-action-log__close{
+  background:transparent; border:none; color:rgba(255,255,255,.3);
+  cursor:pointer; font-size:13px; padding:2px 4px;
+  transition:color .12s;
+}
+.staff-action-log__close:hover{ color:#fff; }
 #up-widgets-container{ flex:1; min-height:0; overflow-y:auto; padding-right:4px; }
 #up-widgets-container::-webkit-scrollbar{ width:0; }
 /* Empty-state copy when the viewed user has no enabled widgets and

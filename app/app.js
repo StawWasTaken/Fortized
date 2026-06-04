@@ -30598,6 +30598,30 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     </div>`;
   }
 
+  // Empty-state: viewed user has no enabled widgets AND no games to
+  // show. Drop in one of the Fortized-themed minimalist messages so
+  // the canvas reads intentional instead of broken. Own-profile
+  // viewer still sees the "+ Add Widget" affordance above.
+  const enabledForDisplay = widgets.filter(w => w.enabled && w.id !== 'game_collection');
+  const hasAnyGames = games.length > 0;
+  const hasActivityCard = !!(u.gameActivity?.name && !u.gameActivity._spotify);
+  if (!enabledForDisplay.length && !hasAnyGames && !hasActivityCard) {
+    const name = escapeHTML(u.displayName || u.username || 'They');
+    const lines = isOwnProfile ? [
+      'Your profile card is beautifully empty. Add a widget to give it some life.',
+      'Going full minimalist mode? Cool — or tap "+ Add Widget" to fill it in.',
+    ] : [
+      `${name} is going full minimalist mode. Ask them how they keep it so clean.`,
+      `Less is more, apparently. ${name} is taking that philosophy very seriously.`,
+      `${name}'s profile card is beautifully empty. Ask them about their secret.`,
+      `${name} seems a bit shy and hasn't shared anything yet. Send them a friendly hi.`,
+    ];
+    const pick = lines[Math.floor(Math.random() * lines.length)];
+    html = `<div class="fpp-empty-widgets">
+      <div class="fpp-empty-widgets__icon">🌙</div>
+      <div class="fpp-empty-widgets__text">${pick}</div>
+    </div>`;
+  }
   containerEl.innerHTML = html;
   // Tag rendered widget cards with their underlying widget id so the
   // DnD reorder can persist back to CU.profileWidgets. The first two
@@ -47975,6 +47999,11 @@ setInterval(() => {
 document.addEventListener('dragstart', (e) => {
   const t = e.target;
   if (!t || !t.tagName) return;
+  // Allow drags that originate inside a real draggable container
+  // (profile-card widget cards, inner game cells). Without this the
+  // global img/svg blocker swallows their dragstart and reorder DnD
+  // silently breaks.
+  if (t.closest && t.closest('.fpp-widget-dnd')) return;
   const tag = t.tagName.toLowerCase();
   if (tag === 'img' || tag === 'svg' || tag === 'video' || tag === 'picture' || tag === 'canvas') {
     e.preventDefault();

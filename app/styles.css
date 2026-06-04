@@ -9979,8 +9979,11 @@ select:focus-visible {
 /* Banner inside the left frame keeps the native ratio it was uploaded
    at — never crop. object-fit:contain prevents the previous
    cover-crop that the user called out. */
+/* Banner uses the same cover-fill behavior as every other .fpp
+   surface (mini popover, DM sidebar, own popover) so it reads as
+   one consistent component family. */
 .fpp-card-modal__left .fpp__banner{ aspect-ratio:240/96; width:100%; height:auto; flex-shrink:0; }
-.fpp-card-modal__left .fpp__banner img{ width:100%; height:100%; object-fit:contain; object-position:center; background:rgba(0,0,0,.4); }
+.fpp-card-modal__left .fpp__banner img{ width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
 .fpp-card-modal__left .fpp__av{ width:84px; height:84px; border-width:4px; }
 .fpp-card-modal__left .fpp__av-row{ margin-top:-46px; }
 .fpp-card-modal__right{
@@ -10029,18 +10032,30 @@ select:focus-visible {
   display:flex; align-items:center; justify-content:space-between;
   margin-bottom:10px; flex-shrink:0;
 }
-/* Inside the unified canvas, widgets lose their individual border —
-   they become flat stacked panels separated by a soft divider. */
+/* Inside the unified canvas, each widget keeps its own framed card
+   so you can see what's draggable. The outer canvas is one frame,
+   the widgets are smaller frames inside — matches the sketch. */
 .fpp-card-modal__content .pw-widget{
-  border:none !important; background:transparent !important;
-  border-radius:0 !important; box-shadow:none !important;
-  padding:10px 4px !important; margin:0 !important;
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;
+  padding:12px 14px;
+  margin:0 0 10px;
 }
-.fpp-card-modal__content .pw-widget + .pw-widget{
-  border-top:1px solid rgba(255,255,255,.05) !important;
-}
+.fpp-card-modal__content .pw-widget:last-child{ margin-bottom:0; }
 #up-widgets-container{ flex:1; min-height:0; overflow-y:auto; padding-right:4px; }
 #up-widgets-container::-webkit-scrollbar{ width:0; }
+/* Empty-state copy when the viewed user has no enabled widgets and
+   no games. One playful line per viewer-session, picked at render
+   time from a small Fortized-themed pool. */
+.fpp-empty-widgets{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:32px 22px; gap:10px;
+  border:1px dashed rgba(255,255,255,.08); border-radius:14px;
+  background:rgba(255,255,255,.015);
+}
+.fpp-empty-widgets__icon{ font-size:30px; opacity:.6; }
+.fpp-empty-widgets__text{ font-size:13px; color:var(--muted-light); line-height:1.55; max-width:280px; }
 .fpp-card-modal__section-title{
   font-size:11px; font-weight:600;
   letter-spacing:.04em; text-transform:uppercase;

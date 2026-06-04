@@ -9282,8 +9282,63 @@ async function sendFriendRequest(){
   } catch(e){ console.error(e); if(err) err.textContent='Connection error'; }
   finally { if(btn){ btn.disabled = false; btn.classList.remove('btn-loading'); } }
 }
+// Recently-created accounts with no shared context are a common
+// spam / impersonation vector — when both signals trip (account
+// under 7 days old AND no mutual friends / mutual small bastions)
+// we surface a Discord-style confirm before adding them. Bypassed
+// when the friend request comes from someone you already share
+// context with.
+async function _shouldWarnNewFriendRequest(username){
+  try {
+    const u = await FortizedSocial.getUserByName(username);
+    if (!u) return false;
+    const createdAt = u.createdAt ? new Date(u.createdAt).getTime() : 0;
+    const isNew = createdAt && (Date.now() - createdAt) < 7*24*60*60*1000;
+    if (!isNew) return false;
+    const myFriends = new Set(CU?.friends || []);
+    const theirFriends = new Set(u.friends || []);
+    let mutualFriends = 0;
+    theirFriends.forEach(f => { if (myFriends.has(f)) mutualFriends++; });
+    if (mutualFriends > 0) return false;
+    const myBastions = new Set((CU?.bastions || []).map(b => b.id || b));
+    const theirBastions = new Set((u.bastions || []).map(b => b.id || b));
+    let mutualBastions = 0;
+    theirBastions.forEach(b => { if (myBastions.has(b)) mutualBastions++; });
+    if (mutualBastions > 0) return false;
+    return true;
+  } catch (_) { return false; }
+}
+
+function _confirmAcceptFriendRequest(username){
+  return new Promise(resolve => {
+    document.querySelector('.ftz-confirm-overlay[data-id=accept-friend]')?.remove();
+    const overlay = document.createElement('div');
+    overlay.className = 'ftz-confirm-overlay';
+    overlay.setAttribute('data-id', 'accept-friend');
+    overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:440px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
+        <div class="ftz-confirm-title" style="margin-bottom:0;">Accept friend request?</div>
+        <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:18px;line-height:1;padding:4px;">&times;</button>
+      </div>
+      <div class="ftz-confirm-text">This may be someone you don't know. You don't share any mutual friends or small mutual bastions with them.</div>
+      <div class="ftz-confirm-actions">
+        <button class="ftz-btn ftz-btn-ghost" data-act="cancel">Cancel</button>
+        <button class="ftz-btn ftz-btn-primary" data-act="ok">Accept</button>
+      </div>
+    </div>`;
+    overlay.onclick = e => { if (e.target === overlay) { overlay.remove(); resolve(false); } };
+    overlay.querySelector('[data-act=cancel]').onclick = () => { overlay.remove(); resolve(false); };
+    overlay.querySelector('[data-act=ok]').onclick = () => { overlay.remove(); resolve(true); };
+    document.body.appendChild(overlay);
+  });
+}
+
 async function acceptFriend(username){
   try{
+    if (await _shouldWarnNewFriendRequest(username)) {
+      const ok = await _confirmAcceptFriendRequest(username);
+      if (!ok) return;
+    }
     await FortizedSocial.acceptFriendRequest(CU.username, username);
     await refreshCU();
     toast('Now friends with '+username+'!','success');

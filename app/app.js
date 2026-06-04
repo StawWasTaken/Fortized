@@ -27006,7 +27006,7 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
         </div>
         <div class="chat-input-row">
           <button class="cit-attach" onclick="openFileUpload('${inputId}')" title="Attach File">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
           <div id="${inputId}" class="chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="${placeholder}" spellcheck="true"
             onkeydown="${keydown}"
@@ -27015,16 +27015,20 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">
             <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF" data-tooltip="GIFs">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><text x="12" y="15" text-anchor="middle" fill="currentColor" stroke="none" font-size="8" font-weight="800" font-family="sans-serif">GIF</text></svg>
+              <!-- svgrepo 310879 GIF -->
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3.5"/><path d="M9.5 10.5h-2a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h1.5v-1"/><line x1="12" y1="10" x2="12" y2="14"/><path d="M17.5 10.5h-2.5v3.5M15 12.5h1.8"/></svg>
             </button>
-            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="14 3 14 9 21 9"/><circle cx="9" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1" fill="currentColor" stroke="none"/><path d="M9 17c1 1 2 1.5 3 1.5s2-.5 3-1.5"/></svg>
+            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" title="Sticker" data-tooltip="Stickers">
+              <!-- svgrepo 311245 Sticker -->
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a4 4 0 0 1 4-4h7l7 7v7a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7z"/><path d="M14 3v3a4 4 0 0 0 4 4h3"/><path d="M8.5 14s1 2 3.5 2 3.5-2 3.5-2"/></svg>
             </button>
             <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" title="Emoji" data-tooltip="Emoji">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm-3.75-9c.69 0 1.25-.56 1.25-1.25S8.94 10.5 8.25 10.5 7 11.06 7 11.75 7.56 13 8.25 13zm7.5 0c.69 0 1.25-.56 1.25-1.25s-.56-1.25-1.25-1.25S14.5 11.06 14.5 11.75 15.06 13 15.75 13zM12 18a5 5 0 0 1-4.546-2.916.75.75 0 0 1 1.364-.628 3.5 3.5 0 0 0 6.364 0 .75.75 0 0 1 1.364.628A5 5 0 0 1 12 18z"/></svg>
+              <!-- svgrepo 310822 Emoji Laugh -->
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14.5c.7 1.3 2.1 2.2 4 2.2s3.3-.9 4-2.2"/><path d="M7 9.2c.4-.4 1-.7 1.7-.7s1.3.3 1.7.7"/><path d="M13.6 9.2c.4-.4 1-.7 1.7-.7s1.3.3 1.7.7"/></svg>
             </button>
-            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3"/><line x1="13" y1="15" x2="17" y2="15"/></svg>
+            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}" title="Bot commands" data-tooltip="Bot commands">
+              <!-- svgrepo 310556 Bot -->
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="3"/><line x1="12" y1="3" x2="12" y2="7"/><circle cx="12" cy="3" r="1" fill="currentColor"/><circle cx="9" cy="13" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/><path d="M9 17h6"/><line x1="2" y1="11" x2="4" y2="11"/><line x1="20" y1="11" x2="22" y2="11"/></svg>
             </button>
           </div>
         </div>

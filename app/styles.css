@@ -10064,6 +10064,42 @@ select:focus-visible {
 .fpp-widget-remove svg{ width:12px; height:12px; }
 .fpp-card-modal__content .pw-widget:hover .fpp-widget-remove{ opacity:1; }
 .fpp-widget-remove:hover{ background:rgba(248,113,113,.22); color:#fff; border-color:rgba(248,113,113,.5); }
+
+/* ── Staff capability gate visuals ────────────────────────────────
+   Buttons / rows that the operator can see but can't action because
+   they don't hold the required capability. Renders fully visible
+   but desaturated, with a "Requires: …" tooltip via [data-cap-tip].
+   Cursor:not-allowed so the affordance is clearly off. The data-
+   attribute drives the tooltip so we don't repeat the cap label
+   inline at every call site. */
+.cap-gated{
+  opacity:.4 !important;
+  cursor:not-allowed !important;
+  filter:grayscale(.5);
+  pointer-events:auto;
+  position:relative;
+}
+.cap-gated *{ pointer-events:none !important; }
+.cap-gated:hover::after{
+  content:attr(data-cap-tip);
+  position:absolute; bottom:calc(100% + 6px); right:0;
+  white-space:nowrap;
+  background:rgba(8,10,15,.96);
+  color:#fff;
+  font-family:var(--font-ui);
+  font-size:11px; font-weight:600; letter-spacing:.02em;
+  padding:6px 10px; border-radius:7px;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 8px 24px rgba(0,0,0,.55);
+  z-index:11200; pointer-events:none;
+}
+.cap-gated:hover::before{
+  content:""; position:absolute; bottom:100%; right:14px;
+  width:0; height:0;
+  border:5px solid transparent;
+  border-top-color:rgba(8,10,15,.96);
+  z-index:11200; pointer-events:none;
+}
 #up-widgets-container{ flex:1; min-height:0; overflow-y:auto; padding-right:4px; }
 #up-widgets-container::-webkit-scrollbar{ width:0; }
 /* Empty-state copy when the viewed user has no enabled widgets and

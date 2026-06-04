@@ -1741,8 +1741,298 @@ function getStaffRole(username) {
 }
 function hasStaffAccess() { return isModerator(); } // any staff role
 
-async function logAudit(action, target, note='') {
-  const entry = {action,target,note,by:CU?.username,at:new Date().toISOString()};
+// ════════════════════════════════════════════════════════════════════
+// STAFF CAPABILITY SYSTEM — Phase 1 of the console rewrite
+// ────────────────────────────────────────────────────────────────────
+// Capabilities are the unit of authorization for every staff action.
+// Roles (superadmin / admin / moderator / helper) become bundles of
+// capabilities; one-off grants live on the user row as
+// `staffCapsExtra` and are unioned in at runtime. This lets us:
+//   • add new staff tiers (event staff, regional mod, T&S) without
+//     touching every callsite
+//   • give a single user a single extra cap temporarily
+//   • render "greyed-with-tooltip" disabled buttons so non-staff /
+//     lower-tier staff see what exists without being able to fire it
+//     (the pro's authority-by-visibility recommendation)
+//   • gate UI + actions through ONE check (hasCap) instead of three
+//     separate isSuper/isAdmin/isMod ladders
+// Every cap id is lowercase dotted (`area.verb.scope`) — easy to
+// grep, namespace-grouped, machine-greppable for audit.
+// ════════════════════════════════════════════════════════════════════
+const STAFF_CAPS = Object.freeze({
+  // Console access
+  CONSOLE_OPEN:           'console.open',
+
+  // Moderation — user-facing
+  USER_WARN:              'user.warn',
+  USER_SUSPEND:           'user.suspend',
+  USER_BAN:               'user.ban',
+  USER_UNBAN:             'user.unban',
+  USER_FORCE_LOGOUT:      'user.force_logout',
+  USER_PROMOTE:           'user.promote',          // grant/revoke staff roles (superadmin only)
+  USER_GRANT_CAP:         'user.grant_cap',        // one-off cap grants (superadmin only)
+
+  // Moderation — content
+  CONTENT_DELETE_MSG:     'content.delete_msg',
+  CONTENT_REVIEW_NSFW:    'content.review_nsfw',
+  CONTENT_TAKEDOWN_AD:    'content.takedown_ad',
+
+  // Reports + incidents
+  REPORTS_VIEW:           'reports.view',
+  REPORTS_ACTION:         'reports.action',
+  INCIDENTS_VIEW:         'incidents.view',
+  INCIDENTS_MANAGE:       'incidents.manage',
+
+  // Watchlist + surveillance
+  WATCHLIST_VIEW:         'watchlist.view',
+  WATCHLIST_ADD:          'watchlist.add',
+  WATCHLIST_ESCALATE:     'watchlist.escalate',
+  VIEW_LIVE_THREADS:      'view.live_threads',     // superadmin, every open audited w/ reason
+
+  // Bastions
+  BASTION_VIEW_ALL:       'bastion.view_all',
+  BASTION_VERIFY:         'bastion.verify',
+  BASTION_FEATURE:        'bastion.feature',
+  BASTION_TAKEDOWN:       'bastion.takedown',
+  BASTION_TRANSFER:       'bastion.transfer',
+  BASTION_FREEZE_INVITES: 'bastion.freeze_invites',
+
+  // Economy
+  ECONOMY_VIEW:           'economy.view',
+  ECONOMY_GRANT:          'economy.grant',
+  ECONOMY_CLAWBACK:       'economy.clawback',
+  ECONOMY_OVERRIDE_PRICE: 'economy.override_price',
+  ECONOMY_RADIANCE_TRIAL: 'economy.radiance_trial',
+  ECONOMY_INVESTIGATE:    'economy.investigate',
+
+  // Broadcasts
+  BROADCAST_GLOBAL:       'broadcast.global',
+  BROADCAST_BASTION:      'broadcast.bastion',
+  BROADCAST_SEGMENT:      'broadcast.segment',
+
+  // Support
+  SUPPORT_VIEW:           'support.view',
+  SUPPORT_REPLY:          'support.reply',
+  SUPPORT_CLOSE:          'support.close',
+
+  // Analytics
+  ANALYTICS_VIEW:         'analytics.view',
+  ANALYTICS_DRILL:        'analytics.drill',
+
+  // System
+  SYSTEM_AUDIT_VIEW:      'system.audit_view',
+  SYSTEM_MAINTENANCE:     'system.maintenance',
+  SYSTEM_FEATURE_FLAGS:   'system.feature_flags',
+});
+
+// Human-readable labels for the disabled-button tooltip. Falls back
+// to the raw cap id if a label is missing so a new cap is still
+// usable before its label lands.
+const STAFF_CAP_LABELS = Object.freeze({
+  [STAFF_CAPS.USER_WARN]:              'Warn users',
+  [STAFF_CAPS.USER_SUSPEND]:           'Suspend users',
+  [STAFF_CAPS.USER_BAN]:               'Ban users',
+  [STAFF_CAPS.USER_UNBAN]:             'Unban users',
+  [STAFF_CAPS.USER_FORCE_LOGOUT]:      'Force-logout users',
+  [STAFF_CAPS.USER_PROMOTE]:           'Promote / demote staff',
+  [STAFF_CAPS.USER_GRANT_CAP]:         'Grant one-off capabilities',
+  [STAFF_CAPS.CONTENT_DELETE_MSG]:     'Delete messages',
+  [STAFF_CAPS.CONTENT_REVIEW_NSFW]:    'Review NSFW queue',
+  [STAFF_CAPS.CONTENT_TAKEDOWN_AD]:    'Take down ads',
+  [STAFF_CAPS.REPORTS_VIEW]:           'View reports',
+  [STAFF_CAPS.REPORTS_ACTION]:         'Action reports',
+  [STAFF_CAPS.INCIDENTS_VIEW]:         'View incidents',
+  [STAFF_CAPS.INCIDENTS_MANAGE]:       'Manage incidents',
+  [STAFF_CAPS.WATCHLIST_VIEW]:         'View watchlist',
+  [STAFF_CAPS.WATCHLIST_ADD]:          'Add to watchlist',
+  [STAFF_CAPS.WATCHLIST_ESCALATE]:     'Escalate watchlist entries',
+  [STAFF_CAPS.VIEW_LIVE_THREADS]:      'View live conversations',
+  [STAFF_CAPS.BASTION_VIEW_ALL]:       'View any bastion',
+  [STAFF_CAPS.BASTION_VERIFY]:         'Verify bastions',
+  [STAFF_CAPS.BASTION_FEATURE]:        'Feature bastions',
+  [STAFF_CAPS.BASTION_TAKEDOWN]:       'Take down bastions',
+  [STAFF_CAPS.BASTION_TRANSFER]:       'Transfer bastion ownership',
+  [STAFF_CAPS.BASTION_FREEZE_INVITES]: 'Freeze bastion invites',
+  [STAFF_CAPS.ECONOMY_VIEW]:           'View economy data',
+  [STAFF_CAPS.ECONOMY_GRANT]:          'Grant Onyx / rewards',
+  [STAFF_CAPS.ECONOMY_CLAWBACK]:       'Reclaim Onyx',
+  [STAFF_CAPS.ECONOMY_OVERRIDE_PRICE]: 'Override Fortshop prices',
+  [STAFF_CAPS.ECONOMY_RADIANCE_TRIAL]: 'Grant Radiance trials',
+  [STAFF_CAPS.ECONOMY_INVESTIGATE]:    'Investigate transactions',
+  [STAFF_CAPS.BROADCAST_GLOBAL]:       'Broadcast platform-wide',
+  [STAFF_CAPS.BROADCAST_BASTION]:      'Broadcast to a bastion',
+  [STAFF_CAPS.BROADCAST_SEGMENT]:      'Broadcast to a segment',
+  [STAFF_CAPS.SUPPORT_VIEW]:           'View support tickets',
+  [STAFF_CAPS.SUPPORT_REPLY]:          'Reply to support tickets',
+  [STAFF_CAPS.SUPPORT_CLOSE]:          'Close support tickets',
+  [STAFF_CAPS.ANALYTICS_VIEW]:         'View analytics',
+  [STAFF_CAPS.ANALYTICS_DRILL]:        'Drill into analytics',
+  [STAFF_CAPS.SYSTEM_AUDIT_VIEW]:      'View the audit log',
+  [STAFF_CAPS.SYSTEM_MAINTENANCE]:     'Toggle maintenance mode',
+  [STAFF_CAPS.SYSTEM_FEATURE_FLAGS]:   'Edit feature flags',
+});
+
+// Role bundles. Each role inherits the bundle below it (helper ⊂ mod
+// ⊂ admin ⊂ superadmin) — the cascade is done at runtime by union,
+// so changing one tier doesn't require touching the others.
+const _CAPS = STAFF_CAPS;
+const STAFF_ROLE_CAPS = Object.freeze({
+  helper: [
+    _CAPS.CONSOLE_OPEN,
+    _CAPS.REPORTS_VIEW,
+    _CAPS.SUPPORT_VIEW,
+    _CAPS.ANALYTICS_VIEW,
+  ],
+  moderator: [
+    _CAPS.CONSOLE_OPEN,
+    _CAPS.USER_WARN,
+    _CAPS.USER_SUSPEND,
+    _CAPS.CONTENT_DELETE_MSG,
+    _CAPS.CONTENT_REVIEW_NSFW,
+    _CAPS.REPORTS_VIEW, _CAPS.REPORTS_ACTION,
+    _CAPS.INCIDENTS_VIEW,
+    _CAPS.WATCHLIST_VIEW, _CAPS.WATCHLIST_ADD,
+    _CAPS.BASTION_VIEW_ALL,
+    _CAPS.BROADCAST_BASTION,
+    _CAPS.SUPPORT_VIEW, _CAPS.SUPPORT_REPLY,
+    _CAPS.ANALYTICS_VIEW,
+  ],
+  admin: [
+    _CAPS.CONSOLE_OPEN,
+    _CAPS.USER_WARN, _CAPS.USER_SUSPEND, _CAPS.USER_BAN, _CAPS.USER_UNBAN, _CAPS.USER_FORCE_LOGOUT,
+    _CAPS.CONTENT_DELETE_MSG, _CAPS.CONTENT_REVIEW_NSFW, _CAPS.CONTENT_TAKEDOWN_AD,
+    _CAPS.REPORTS_VIEW, _CAPS.REPORTS_ACTION,
+    _CAPS.INCIDENTS_VIEW, _CAPS.INCIDENTS_MANAGE,
+    _CAPS.WATCHLIST_VIEW, _CAPS.WATCHLIST_ADD, _CAPS.WATCHLIST_ESCALATE,
+    _CAPS.BASTION_VIEW_ALL, _CAPS.BASTION_VERIFY, _CAPS.BASTION_FEATURE,
+    _CAPS.BASTION_TAKEDOWN, _CAPS.BASTION_FREEZE_INVITES,
+    _CAPS.ECONOMY_VIEW, _CAPS.ECONOMY_GRANT, _CAPS.ECONOMY_RADIANCE_TRIAL, _CAPS.ECONOMY_INVESTIGATE,
+    _CAPS.BROADCAST_GLOBAL, _CAPS.BROADCAST_BASTION, _CAPS.BROADCAST_SEGMENT,
+    _CAPS.SUPPORT_VIEW, _CAPS.SUPPORT_REPLY, _CAPS.SUPPORT_CLOSE,
+    _CAPS.ANALYTICS_VIEW, _CAPS.ANALYTICS_DRILL,
+    _CAPS.SYSTEM_AUDIT_VIEW,
+  ],
+  // Superadmin gets the full ALL set computed at first call below.
+  superadmin: 'ALL',
+});
+
+// Lazily computed full cap set for superadmin. Captured here so a
+// later STAFF_CAPS extension is automatic — superadmin always has
+// everything without us having to remember to update the list.
+let _STAFF_ALL_CAPS = null;
+function _getAllStaffCaps() {
+  if (!_STAFF_ALL_CAPS) _STAFF_ALL_CAPS = new Set(Object.values(STAFF_CAPS));
+  return _STAFF_ALL_CAPS;
+}
+
+// Returns a Set of caps for any user — role bundle ∪ extras column.
+// `staffCapsExtra` is a string[] on the user row, written by the
+// USER_GRANT_CAP flow when a superadmin gives someone a one-off
+// capability. Extras can also REVOKE by prefixing with "-" so a mod
+// can have one specific cap stripped without changing their role.
+function getUserStaffCaps(user) {
+  const role = getStaffRole(user?.username || user);
+  if (!role) {
+    // Non-staff still get any extra caps explicitly granted to them
+    // (e.g. an "event staff" volunteer with just broadcast.bastion).
+    const extras = Array.isArray(user?.staffCapsExtra) ? user.staffCapsExtra : [];
+    const set = new Set(extras.filter(c => typeof c === 'string' && !c.startsWith('-')));
+    return set;
+  }
+  const bundle = STAFF_ROLE_CAPS[role];
+  const set = new Set(bundle === 'ALL' ? _getAllStaffCaps() : (bundle || []));
+  const extras = Array.isArray(user?.staffCapsExtra) ? user.staffCapsExtra : [];
+  for (const c of extras) {
+    if (typeof c !== 'string') continue;
+    if (c.startsWith('-')) set.delete(c.slice(1));
+    else set.add(c);
+  }
+  return set;
+}
+
+// The everyday cap check. Pass nothing for "current user", or a user
+// object / username for a specific target (e.g. when displaying
+// "this user can warn" in a dossier).
+function hasCap(cap, user) {
+  if (!cap) return false;
+  const u = user || CU;
+  if (!u) return false;
+  // String → resolve via getStaffRole; object → use its caps directly.
+  if (typeof u === 'string') {
+    return getUserStaffCaps({ username: u }).has(cap);
+  }
+  return getUserStaffCaps(u).has(cap);
+}
+
+// Returns a `{disabled, tooltip}` pair you can spread into a button.
+// Use when you want the control to render in the disabled / greyed
+// state for staff who lack the cap (instead of hiding it). This is
+// the pro's "authority by visibility" recommendation — lower-tier
+// staff understand what's above them.
+function capGate(cap) {
+  const ok = hasCap(cap);
+  if (ok) return { disabled: false, tooltip: '' };
+  const label = STAFF_CAP_LABELS[cap] || cap;
+  return { disabled: true, tooltip: `Requires capability: ${label}` };
+}
+
+// String helpers for the gated-attribute pattern. Drop into any
+// inline HTML template the existing console uses, e.g.
+//   <button ${capAttrs('user.ban')} onclick="banUser('${u}')">Ban</button>
+// When the operator has the cap → empty string (nothing changes).
+// When they don't → class="cap-gated" data-cap-tip="Requires: …"
+// disabled. .cap-gated CSS blocks inner pointer-events so onclick
+// never fires, even though the attribute is still in the DOM.
+function capAttrs(cap) {
+  const g = capGate(cap);
+  if (!g.disabled) return '';
+  const tip = (g.tooltip || '').replace(/"/g, '&quot;');
+  return `class="cap-gated" data-cap-tip="${tip}" disabled aria-disabled="true"`;
+}
+// Defensive runtime check: callsites that already fire mutations
+// should still call this before doing the write, so a missing cap
+// can't slip through a UI bug. Throws a typed error the caller can
+// surface as a toast.
+function requireCap(cap) {
+  if (hasCap(cap)) return;
+  const label = STAFF_CAP_LABELS[cap] || cap;
+  const e = new Error(`Missing capability: ${label}`);
+  e.code = 'NO_CAP';
+  e.cap = cap;
+  throw e;
+}
+
+// Per-tab session id — stamped on every audit row so we can group an
+// operator's actions into a "session" later (e.g. "user X opened 17
+// dossiers in 4 minutes"). Stable across tab lifetime, not stored.
+const _STAFF_SESSION_ID = 'ss_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+
+// Audit log writer — the source of truth for "who did what". Phase 1
+// upgrade: still accepts the legacy 3-arg form (action, target, note)
+// so all existing callers keep working, but ALSO accepts an opts
+// object as the 4th arg with structured fields the new console reads:
+//   {cap, targetEntity, targetId, reason, sessionId}
+// Stamped automatically with the per-tab session id so an operator's
+// actions can be grouped later. Required-reason gates (live thread
+// viewer etc.) MUST pass `reason` — the field is optional here
+// because most actions don't need it, but the caller enforces it
+// for the sensitive ones.
+async function logAudit(action, target, note='', opts) {
+  const entry = {
+    action,
+    target,
+    note,
+    by: CU?.username,
+    at: new Date().toISOString(),
+    sessionId: _STAFF_SESSION_ID,
+  };
+  if (opts && typeof opts === 'object') {
+    if (opts.cap)          entry.cap = opts.cap;
+    if (opts.targetEntity) entry.targetEntity = opts.targetEntity;
+    if (opts.targetId)     entry.targetId = opts.targetId;
+    if (opts.reason)       entry.reason = opts.reason;
+    if (opts.sessionId)    entry.sessionId = opts.sessionId;
+  }
   let log = [];
   try { log = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]'); } catch(e) { console.warn('[Audit] Parse failed:', e); }
   log.unshift(entry);

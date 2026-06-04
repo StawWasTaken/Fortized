@@ -165,6 +165,13 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
   data JSONB NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+-- Phase 1 of the staff console rewrite adds structured fields inside
+-- audit_log.data (no migration needed — JSONB): cap, targetEntity,
+-- targetId, reason, sessionId. Operators that hold one-off
+-- capability grants get them via users.staff_caps_extra:
+--   alter table users add column if not exists staff_caps_extra jsonb;
+-- Format: string array. Prefix with "-" to REVOKE a cap from a role
+-- bundle (e.g. ["-economy.grant"] strips that cap from an admin).
 
 CREATE TABLE IF NOT EXISTS admin_nsfw_queue (
   id TEXT PRIMARY KEY,

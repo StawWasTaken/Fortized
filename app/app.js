@@ -30638,6 +30638,28 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         const card = allCards[offset + i];
         if (card) card.dataset.widgetId = id;
       });
+      // Inline remove buttons — appear on hover, click toggles the
+      // widget off (same call Settings uses) and re-renders the
+      // canvas. The always-on Now Playing + Games I Like cards have
+      // no data-widget-id, so they intentionally don't get a remove
+      // button.
+      containerEl.querySelectorAll(':scope > .pw-widget[data-widget-id]').forEach(card => {
+        if (card.querySelector(':scope > .fpp-widget-remove')) return;
+        const btn = document.createElement('button');
+        btn.className = 'fpp-widget-remove';
+        btn.title = 'Remove widget';
+        btn.setAttribute('aria-label', 'Remove widget');
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const wid = card.dataset.widgetId;
+          if (!wid) return;
+          try { await toggleProfileWidget(wid, null); } catch (_) {}
+          try { renderProfileWidgetsOnCard(CU, containerEl); } catch (_) {}
+        });
+        card.appendChild(btn);
+      });
     } catch (_) {}
     _wireWidgetDnD(containerEl);
     // Inner DnD: game cells inside Games I Like (.pw-gc-masonry) and

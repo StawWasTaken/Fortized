@@ -9996,8 +9996,7 @@ select:focus-visible {
 }
 .fpp-card-modal__tabs{
   display:flex; gap:4px;
-  padding:14px 18px 12px;
-  border-bottom:1px solid var(--border);
+  padding:0 4px 10px;
   flex-shrink:0;
 }
 .fpp-card-modal__tab{
@@ -10051,6 +10050,20 @@ select:focus-visible {
   margin:0 0 10px;
 }
 .fpp-card-modal__content .pw-widget:last-child{ margin-bottom:0; }
+/* Inline remove button on own widgets — lets the user delete a
+   widget from the profile card without going through Settings. */
+.fpp-card-modal__content .pw-widget{ position:relative; }
+.fpp-widget-remove{
+  position:absolute; top:8px; right:8px; z-index:3;
+  width:24px; height:24px; border-radius:7px;
+  background:rgba(0,0,0,.45); color:rgba(255,255,255,.55);
+  border:1px solid rgba(255,255,255,.08);
+  display:inline-flex; align-items:center; justify-content:center;
+  cursor:pointer; opacity:0; transition:opacity .14s, background .14s, color .14s;
+}
+.fpp-widget-remove svg{ width:12px; height:12px; }
+.fpp-card-modal__content .pw-widget:hover .fpp-widget-remove{ opacity:1; }
+.fpp-widget-remove:hover{ background:rgba(248,113,113,.22); color:#fff; border-color:rgba(248,113,113,.5); }
 #up-widgets-container{ flex:1; min-height:0; overflow-y:auto; padding-right:4px; }
 #up-widgets-container::-webkit-scrollbar{ width:0; }
 /* Empty-state copy when the viewed user has no enabled widgets and

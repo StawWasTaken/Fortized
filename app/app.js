@@ -1019,6 +1019,15 @@ function saveLocal() {
     localStorage.setItem('ftz_current', CU.username);
     localStorage.setItem('fortized_current_user', CU.username);
   } catch {}
+  // Mirror bio to a dedicated key (same pattern as ftz_pfp_<name> /
+  // ftz_banner_<name>) so a stale DB read can't resurrect the
+  // previous "About me" after a deploy. refreshCU reads this back
+  // and overrides fresh.bio when they differ.
+  try {
+    if (CU.bio !== undefined) {
+      localStorage.setItem('ftz_bio_' + CU.username, JSON.stringify({ val: CU.bio || '', ts: Date.now() }));
+    }
+  } catch {}
   // Persist recent-edit timestamps too — without this they live only
   // in window memory, so a refresh between a save and Supabase's
   // replica catching up leaves the boot guard with no signal that
@@ -1187,6 +1196,38 @@ async function refreshCU() {
         }
       }
 
+      // ── Dedicated pfp / banner keys win over the DB row ────────────
+      // ftz_pfp_<name> + ftz_banner_<name> hold the last value the user
+      // actually committed locally. If the Supabase row write failed
+      // silently (row size / RLS) or got reverted by a stale replica,
+      // the DB will keep returning the old pfp/banner — and without
+      // this guard refreshCU would happily overwrite the just-uploaded
+      // local copy with that stale value. That's the "every time we
+      // deploy, my avatar/banner snap back to the old ones" bug.
+      try {
+        const pfpEntry = _readPersistedPfpLocal(CU.username);
+        if (pfpEntry && pfpEntry.val && pfpEntry.val !== fresh.pfp) {
+          fresh.pfp = pfpEntry.val;
+          if (pfpEntry.crop !== undefined) fresh.pfpCrop = pfpEntry.crop;
+        }
+      } catch {}
+      try {
+        const bannerEntry = _readPersistedBannerLocal(CU.username);
+        if (bannerEntry && bannerEntry.val && bannerEntry.val !== fresh.banner) {
+          fresh.banner = bannerEntry.val;
+        }
+      } catch {}
+      // Same idea for "About me" — written to ftz_bio_<name> by
+      // saveLocal whenever CU.bio changes locally.
+      try {
+        const raw = localStorage.getItem('ftz_bio_' + CU.username);
+        if (raw) {
+          const bioEntry = JSON.parse(raw);
+          if (bioEntry && typeof bioEntry.val === 'string' && bioEntry.val !== (fresh.bio || '')) {
+            fresh.bio = bioEntry.val;
+          }
+        }
+      } catch {}
       // Preserve radiance data if DB returned null but local had active values
       if(!fresh.radianceUntil && prevRad && new Date(prevRad)>new Date()) fresh.radianceUntil=prevRad;
       if(!fresh.radiancePlus && prevPlus && new Date(prevPlus)>new Date()) fresh.radiancePlus=prevPlus;
@@ -11463,10 +11504,14 @@ function initFortizedUXResilience() {
         CU.friendRequestsSent = data.sent || [];
         CU.friendRequestsReceived = data.received || [];
         saveLocal();
-        // Refresh friend request UI
+        // Refresh friend request UI. There's no dedicated
+        // refreshFriendRequests / updateNotificationBar — renderFriendsList()
+        // is what actually re-renders the requests panel, and the rail
+        // badge / notif list pick up the new CU.friendRequestsReceived
+        // on their own through buildNotifList()'s recompute.
         try {
-          refreshFriendRequests();
-          updateNotificationBar();
+          if (typeof renderFriendsList === 'function') renderFriendsList();
+          if (typeof buildNotifList === 'function') buildNotifList();
         } catch (e) {
           console.warn('[onFriendRequestsUpdate] UI refresh failed:', e?.message);
         }
@@ -36173,9 +36218,11 @@ function renderAtelierTopNav() {
     `<span style="display:inline-block;width:18px;height:18px;flex-shrink:0;background-color:currentColor;-webkit-mask:url('${url}') center/contain no-repeat;mask:url('${url}') center/contain no-repeat;"></span>`;
   const tabs = [
     { id: 'radiance', name: 'Radiance Dwelling', html: _maskIcon('/radiance-logo.png') },
-    { id: 'quests',   name: 'Quests',            html: _maskIcon('https://www.svgrepo.com/show/17305/laurel.svg') },
+    // Inline Lucide-style laurel + palette so we don't depend on
+    // svgrepo.com (it CORS-blocks at 429 under any load).
+    { id: 'quests',   name: 'Quests',            html: '<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;color:currentColor;flex-shrink:0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22c-1.5-5 0-11 5-15"/><path d="M17 22c1.5-5 0-11-5-15"/><path d="M7 22h10"/><path d="M5 7c2 0 3 1 3 3"/><path d="M19 7c-2 0-3 1-3 3"/><path d="M5 13c2 0 3 1 3 3"/><path d="M19 13c-2 0-3 1-3 3"/></svg></span>' },
     { id: 'shop',     name: 'Fortshop',          html: '<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;color:currentColor;flex-shrink:0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span>' },
-    { id: 'creator',  name: 'Creator',           html: _maskIcon('https://www.svgrepo.com/show/326997/color-palette-sharp.svg') }
+    { id: 'creator',  name: 'Creator',           html: '<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;color:currentColor;flex-shrink:0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2a10 10 0 1 0 0 20 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h2a4 4 0 0 0 4-4 10 10 0 0 0-10-10z"/></svg></span>' }
   ];
 
   navContainer.innerHTML = tabs.map(t => {

@@ -75,9 +75,16 @@ CREATE TABLE IF NOT EXISTS dms (
   edited BOOLEAN DEFAULT false,
   new_text TEXT,
   reactions JSONB,
+  forwarded BOOLEAN DEFAULT false,
+  forwarded_by TEXT,
+  flags JSONB,
   PRIMARY KEY (dm_key, id)
 );
 CREATE INDEX IF NOT EXISTS idx_dms_key ON dms(dm_key);
+-- Automod flags (rephrased / threat) attached to a message. Stored as
+-- a JSONB array so it survives a refresh and is replicated to the
+-- recipient. Migration for existing databases:
+--   alter table dms add column if not exists flags jsonb;
 
 -- ── Global Bastions ────────────────────────────────
 CREATE TABLE IF NOT EXISTS global_bastions (

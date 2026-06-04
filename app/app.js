@@ -5601,13 +5601,23 @@ async function sendDM() {
     toast(automod.warning, 'warning');
   }
   
-  // Add rephrased flag to message if needed
+  // Add rephrased + threat flags to message if needed. Both ride
+  // along on the message row so they survive a refresh and the
+  // recipient sees the (rephrased) tag / threat-warning card.
   const msgFlags = [];
   if (automod.isRephrased) msgFlags.push('rephrased');
+  if (automod.threat?.isThreat) msgFlags.push('threat');
   
   if (!text && !window._pendingAttachment) return;
-  // Safety pre-check
-  if (text) { const sw = contentSafetyCheck(text); if (sw) showContentWarning(sw) }
+  // Safety pre-check. WHOA_EASY is the spam-rate-limit code — that's
+  // a hard block (Discord-style): pop the card on the sender's side
+  // and bail before the message ever leaves the input. Other safety
+  // warnings keep their old "warn and pass" behavior.
+  if (text) {
+    const sw = contentSafetyCheck(text);
+    if (sw === 'WHOA_EASY') { _showRateLimitPopup(); return; }
+    if (sw) showContentWarning(sw);
+  }
   // Remove any old friend-gate bar if present
   document.getElementById('dm-not-friends-bar')?.remove();
   if (!text) return;
@@ -5635,7 +5645,7 @@ async function sendDM() {
     // stuck in "sending..." forever with no feedback. Now it visibly
     // fails with a Retry button after 15s.
     const savedMsg = await _withSendTimeout(
-      FortizedSocial.sendDMMessage(CU.username, curDM, text),
+      FortizedSocial.sendDMMessage(CU.username, curDM, text, msgFlags.length ? { flags: msgFlags } : undefined),
       15000
     );
     if (savedMsg?.id && msgsEl) {
@@ -6135,6 +6145,13 @@ async function sendGCMessage() {
     }
   }
   
+  // Spam rate-limit — hard block on the sender's side BEFORE we
+  // pay the cost of sending. Same Discord-style modal as DMs.
+  {
+    const sw = contentSafetyCheck(text);
+    if (sw === 'WHOA_EASY') { _showRateLimitPopup(); return; }
+    if (sw) showContentWarning(sw);
+  }
   // Run automod check
   const automod = runAutomod(text, recentMsgs);
   if (automod.isRephrased) {
@@ -6143,10 +6160,11 @@ async function sendGCMessage() {
   } else if (automod.warning) {
     toast(automod.warning, 'warning');
   }
-  
+
   const msgFlags = [];
   if (automod.isRephrased) msgFlags.push('rephrased');
-  
+  if (automod.threat?.isThreat) msgFlags.push('threat');
+
   clearChatInput(inp);
   _stopGCTypingBroadcast();
   const rep = replyingTo;
@@ -10212,6 +10230,50 @@ function _showSuspendScreen(data) {
   </div>`;
 }
 
+// Recipient-side automod threat card. Fires when an inbound message
+// carries the 'threat' flag (set by runAutomod on the sender). Uses
+// the same visual family as the admin warning overlay so the user
+// reads it as a real safety signal — but it's about the SENDER, not
+// the viewer, so the wording + actions differ (Acknowledge / Report).
+function _showThreatRecipientCard(senderUsername, text) {
+  if (!senderUsername) return;
+  // Don't repeatedly re-pop the card if the same sender pings again
+  // in the same session.
+  if (window._threatCardSeen && window._threatCardSeen[senderUsername]) return;
+  window._threatCardSeen = window._threatCardSeen || {};
+  window._threatCardSeen[senderUsername] = true;
+  document.getElementById('ftz-threat-recipient-card')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'ftz-threat-recipient-card';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,10,15,.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .25s ease;';
+  overlay.innerHTML = `<div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;width:100%;max-width:520px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);">
+    <div style="width:60px;height:60px;border-radius:16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L1 21h22L12 2z" stroke="#f87171" stroke-width="2" fill="none" stroke-linejoin="round"/>
+        <rect x="11" y="9" width="2" height="5" rx="1" fill="#f87171"/>
+        <circle cx="12" cy="17" r="1.2" fill="#f87171"/>
+      </svg>
+    </div>
+    <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.3px;">Possible threat detected</div>
+    <div style="font-size:14px;color:#8b95a8;margin-bottom:24px;line-height:1.7;">A message from <strong style="color:#fff;">@${escapeHTML(senderUsername)}</strong> was flagged by Fortized's safety system as potentially threatening. The message has been delivered — review it carefully before responding.</div>
+    <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:18px 22px;text-align:left;margin-bottom:24px;">
+      <div style="color:#5a6478;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Flagged message</div>
+      <div style="color:#c8d0dc;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word;">${escapeHTML(String(text||'').slice(0,400))}</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button onclick="document.getElementById('ftz-threat-recipient-card').remove();reportUser('${escapeHTML(senderUsername)}')" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#fca5a5;border-radius:10px;padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Report user</button>
+      <button onclick="document.getElementById('ftz-threat-recipient-card').remove()" class="warning-ack-btn">Acknowledge</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+function _checkIncomingThreatFlag(msg) {
+  if (!msg || !Array.isArray(msg.flags)) return;
+  if (msg.flags.includes('threat') && msg.from && msg.from !== CU?.username) {
+    _showThreatRecipientCard(msg.from, msg.text || '');
+  }
+}
+
 function _showWarningOverlay(reason, issuedBy, contentData) {
   if (document.getElementById('ftz-warning-overlay')) return;
   const safeReason = (reason && typeof reason === 'string') ? reason : 'Violation of Terms of Use';
@@ -10955,6 +11017,7 @@ function initFortizedUXResilience() {
                 appendMessage(msgsEl, msg, 'dm', lastAuthor);
                 scrollBottom('dm-msgs');
                 if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', msg.from)) { playNotifSound('message'); _showBrowserNotif(msg.from, (msg.text||'').slice(0,100), 'dm-'+msg.from); }
+                if (msg.from !== CU.username) _checkIncomingThreatFlag(msg);
               }
             }
           }
@@ -41338,6 +41401,31 @@ function initCrossDeviceSync() {
                   _applyAppearanceVisual(dbTheme);
                 }
               } catch (e) { _dbg('[Sync] appearance apply failed', e); }
+              // ── Instant warning / ban / suspend ─────────────────
+              // Staff actions on the admin panel write to users.banned,
+              // users.suspension, users.active_warning. Before this
+              // hook the user only saw the screen on their NEXT page
+              // load. Now the Supabase realtime channel surfaces the
+              // overlay immediately on the device that's signed in.
+              try {
+                if (newData.banned && !CU.banned) {
+                  CU.banned = true;
+                  CU.banReason = newData.ban_reason || newData.banReason || CU.banReason || 'You have been banned.';
+                  _showBanScreen?.({ reason: CU.banReason });
+                }
+                const susp = newData.suspension || (newData.raw && newData.raw.suspension);
+                if (susp && susp.until && new Date(susp.until) > new Date()) {
+                  if (!CU.suspension || JSON.stringify(CU.suspension) !== JSON.stringify(susp)) {
+                    CU.suspension = susp;
+                    _showSuspendScreen?.(susp);
+                  }
+                }
+                const warn = newData.active_warning || (newData.raw && newData.raw.active_warning);
+                if (warn && warn.reason && (!CU.activeWarning || JSON.stringify(CU.activeWarning) !== JSON.stringify(warn))) {
+                  CU.activeWarning = warn;
+                  _showWarningOverlay?.(warn.reason, warn.issuedBy, warn.contentData || null);
+                }
+              } catch (e) { _dbg('[Sync] staff-action overlay failed', e); }
               saveLocal();
             } catch (e) {
               console.error('[Supabase Sync Error]', e);

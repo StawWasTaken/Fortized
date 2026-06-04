@@ -822,7 +822,7 @@ const FortizedSocial = (() => {
   }
 
   function _dmFromRow(r) {
-    return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined };
+    return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined, flags: Array.isArray(r.flags) ? r.flags : (r.flags && typeof r.flags === 'string' ? (() => { try { return JSON.parse(r.flags); } catch { return undefined; } })() : undefined) };
   }
 
   function _dmFromPollingRow(r, msgData) {
@@ -858,6 +858,10 @@ const FortizedSocial = (() => {
 
     const row = { dm_key: key, id: msg.id, from: msg.from, text: msg.text, time: msg.time, timestamp: msg.timestamp };
     if (opts?.forwarded) { row.forwarded = true; row.forwarded_by = opts.forwardedBy || fromUsername; msg.forwarded = true; msg.forwardedBy = row.forwarded_by; }
+    // Automod flags (rephrased / threat / etc.) — stored alongside the
+    // message so they survive refresh and reach other devices. Requires
+    // a `flags JSONB` column on dms (see supabase-schema.sql migration).
+    if (Array.isArray(opts?.flags) && opts.flags.length) { row.flags = opts.flags; msg.flags = opts.flags; }
 
     try {
       const { data, error } = await sb.from('dms').insert(row);

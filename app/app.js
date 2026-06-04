@@ -19220,7 +19220,10 @@ function _openAvatarGifPicker() {
     {id:'love',label:'Love',emoji:'❤️',color:'#ff4d6d'},
     {id:'happy birthday',label:'Birthday',emoji:'🎂',color:'#f472b6'},
     {id:'laughing',label:'Laughing',emoji:'🤣',color:'#ffe066'},
-    {id:'sad',label:'Sad',emoji:'😢',color:'#60a5fa'},
+    // "Fortized" replaces the old Sad slot. The id drives the Klipy
+    // search query, so we use a fortress/castle-themed query for
+    // on-brand results, while the label keeps the brand name.
+    {id:'fortress castle knight',label:'Fortized',emoji:'🏰',color:'#fff93e'},
     {id:'excited',label:'Excited',emoji:'🎉',color:'#c084fc'},
     {id:'angry',label:'Angry',emoji:'😡',color:'#f87171'},
     {id:'dance',label:'Dance',emoji:'💃',color:'#f472b6'},
@@ -31730,7 +31733,10 @@ function openGiphyPicker(inputId) {
     {id:'love',label:'Love',emoji:'❤️',color:'#ff4d6d'},
     {id:'gaming',label:'Gaming',emoji:'🎮',color:'#3ecf6e'},
     {id:'laughing',label:'Laughing',emoji:'🤣',color:'#ffe066'},
-    {id:'sad',label:'Sad',emoji:'😢',color:'#60a5fa'},
+    // "Fortized" replaces the old Sad slot. The id drives the Klipy
+    // search query, so we use a fortress/castle-themed query for
+    // on-brand results, while the label keeps the brand name.
+    {id:'fortress castle knight',label:'Fortized',emoji:'🏰',color:'#fff93e'},
     {id:'excited',label:'Excited',emoji:'🎉',color:'#c084fc'},
     {id:'angry',label:'Angry',emoji:'😡',color:'#f87171'},
     {id:'dance',label:'Dance',emoji:'💃',color:'#f472b6'},
@@ -31845,12 +31851,10 @@ async function _loadCollectionPreviews() {
     const cid = CU?.username || 'anon';
     const res = await fetch(KLIPY_BASE + '/gifs/trending?per_page=6&content_filter=medium&customer_id=' + encodeURIComponent(cid));
     const data = await res.json();
-    const items = data.data?.data || data.data || [];
-    // Assign first gif to trending, then distribute to categories
+    const items = _klipyExtractItems(data);
     const trendCard = document.querySelector('[data-cat-preview="trending"]');
     if (trendCard && items[0]) trendCard.src = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
   } catch (e) { _dbg('[Klipy] trending fetch failed', e); }
-  // Load a preview for each category (batch a few at a time)
   const cats = [...previewCards].filter(c => c.dataset.catPreview !== 'trending');
   for (let i = 0; i < cats.length; i += 4) {
     const batch = cats.slice(i, i + 4);
@@ -31860,7 +31864,7 @@ async function _loadCollectionPreviews() {
         const cid = CU?.username || 'anon';
         const res = await fetch(KLIPY_BASE + '/gifs/search?q=' + encodeURIComponent(cat) + '&per_page=1&content_filter=medium&customer_id=' + encodeURIComponent(cid));
         const data = await res.json();
-        const items = data.data?.data || data.data || [];
+        const items = _klipyExtractItems(data);
         if (items[0]) card.src = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
       } catch (e) { _dbg('[Klipy] category preview failed', e); }
     }));
@@ -31900,6 +31904,27 @@ function handleGiphySearch(q, inputId) {
   }, 300);
 }
 
+// Klipy responses have shifted shape across versions — sometimes
+// {data:{data:[…]}}, sometimes {data:[…]}, occasionally
+// {result:{data:[…]}} or {gifs:[…]}. Walk every plausible path and
+// return the first array we find, so a one-off shape change doesn't
+// make the whole picker look empty.
+function _klipyExtractItems(data) {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  const candidates = [
+    data.data?.data,
+    data.data,
+    data.result?.data,
+    data.results,
+    data.gifs,
+    data.data?.gifs,
+    data.data?.results,
+  ];
+  for (const c of candidates) if (Array.isArray(c)) return c;
+  return [];
+}
+
 async function loadGiphyTrending(inputId) {
   const grid = document.getElementById('giphy-grid');
   if (!grid) return;
@@ -31908,9 +31933,15 @@ async function loadGiphyTrending(inputId) {
   try {
     const cid = CU?.username || 'anon';
     const res = await fetch(KLIPY_BASE + '/gifs/trending?per_page=30&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    renderGiphyResults((data.data?.data || data.data || []), inputId);
-  } catch { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Failed to load</div>'; }
+    const items = _klipyExtractItems(data);
+    if (!items.length) console.warn('[Klipy] trending returned no items, raw=', data);
+    renderGiphyResults(items, inputId);
+  } catch (e) {
+    console.warn('[Klipy] trending fetch failed:', e?.message);
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:12px;">Couldn\'t reach Klipy — try again in a moment.</div>';
+  }
 }
 
 async function searchGifs(q, inputId) {
@@ -31921,9 +31952,15 @@ async function searchGifs(q, inputId) {
   try {
     const cid = CU?.username || 'anon';
     const res = await fetch(KLIPY_BASE + '/gifs/search?q=' + encodeURIComponent(q) + '&per_page=30&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    renderGiphyResults((data.data?.data || data.data || []), inputId);
-  } catch { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Search failed</div>'; }
+    const items = _klipyExtractItems(data);
+    if (!items.length) console.warn('[Klipy] search "' + q + '" returned no items, raw=', data);
+    renderGiphyResults(items, inputId);
+  } catch (e) {
+    console.warn('[Klipy] search fetch failed:', e?.message);
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:12px;">Couldn\'t reach Klipy — try again in a moment.</div>';
+  }
 }
 
 async function _resolveKlipySlug(placeholderId, slug) {
@@ -31957,11 +31994,23 @@ async function _resolveKlipySlug(placeholderId, slug) {
 }
 
 function _klipyGifUrl(item, size) {
-  // Extract best available GIF URL from Klipy response item
-  // Prefer webp/mp4 over gif — gif format has 256-color limit causing grainy/banded visuals
-  const f = item.file || {};
+  // Extract best available GIF URL. Klipy response shapes:
+  //   item.file.<size>.<format>.url   (current)
+  //   item.<size>.<format>             (legacy direct)
+  //   item.images.<size>.url           (Giphy-style)
+  //   item.url / item.gif_url          (flat)
+  if (!item) return '';
+  const f = item.file || item.files || {};
   const sz = f[size] || f.hd || f.md || f.sm || f.xs || {};
-  return sz.webp?.url || sz.mp4?.url || sz.gif?.url || sz.jpg?.url || '';
+  const candidates = [
+    sz.webp?.url, sz.mp4?.url, sz.gif?.url, sz.jpg?.url,
+    typeof sz === 'string' ? sz : null,
+    item[size]?.url,
+    item.images?.[size]?.url,
+    item.images?.original?.url,
+    item.url, item.gif_url, item.preview_url,
+  ];
+  return candidates.find(u => typeof u === 'string' && u.length) || '';
 }
 
 function renderGiphyResults(gifs, inputId) {

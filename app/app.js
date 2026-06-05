@@ -28758,13 +28758,18 @@ function parseMD(s) {
       const oc = Math.max(1,Math.floor(mc*0.3));
       const iconHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">` : `<div class="bie-fallback">${(b.name||'B')[0]}</div>`;
       const bannerHTML = b.banner ? `<img src="${escapeHTML(b.banner)}" draggable="false">` : '';
-      return `<div class="bastion-invite-embed" onclick="joinByInvite('${escapeHTML(code)}')">
+      return `<a href="${escapeHTML(url)}" class="ftz-embed-url-line" onclick="event.preventDefault();openExternalLink(event,'${escapeHTML(url)}')">${escapeHTML(url)}</a><div class="bastion-invite-embed" onclick="joinByInvite('${escapeHTML(code)}')">
         <div class="bie-banner">${bannerHTML}</div>
         <div class="bie-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> BASTION INVITE</div>
         <div class="bie-body">
-          <div class="bie-header"><div class="bie-icon">${iconHTML}</div><div class="bie-name">${escapeHTML(b.name||'Bastion')}</div></div>
+          <div class="bie-header">
+            <div class="bie-icon">${iconHTML}</div>
+            <div class="bie-text">
+              <div class="bie-name">${escapeHTML(b.name||'Bastion')}</div>
+              <div class="bie-stats"><div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div></div>
+            </div>
+          </div>
           ${b.desc?`<div class="bie-desc">${escapeHTML(b.desc)}</div>`:''}
-          <div class="bie-stats"><div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div></div>
           <button class="bie-join joined">Joined</button>
         </div>
       </div>`;
@@ -28833,19 +28838,21 @@ function parseMD(s) {
       const descEl = el.querySelector('.bie-desc'); if (descEl && (b.desc||b.description)) { descEl.textContent = b.desc||b.description; descEl.style.display = ''; }
       const statsEl = el.querySelector('.bie-stats'); if (statsEl) { const mc = b.memberCount || Object.keys(b.memberRoles||{}).length || 1; const oc = Math.max(1,Math.floor(mc*0.3)); statsEl.innerHTML = `<div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div>`; }
     }, 200);
-    return `<div class="bastion-invite-embed" id="${embedId}" onclick="joinByInvite('${escapeHTML(code)}')">
+    return `<a href="${escapeHTML(url)}" class="ftz-embed-url-line" onclick="event.preventDefault();openExternalLink(event,'${escapeHTML(url)}')">${escapeHTML(url)}</a><div class="bastion-invite-embed" id="${embedId}" onclick="joinByInvite('${escapeHTML(code)}')">
       <div class="bie-banner"></div>
       <div class="bie-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> BASTION INVITE</div>
       <div class="bie-body">
         <div class="bie-header">
           <div class="bie-icon"><div class="bie-fallback">B</div></div>
-          <div class="bie-name">Loading...</div>
+          <div class="bie-text">
+            <div class="bie-name">Loading...</div>
+            <div class="bie-stats">
+              <div class="bie-stat"><span class="bie-dot online"></span>...</div>
+              <div class="bie-stat"><span class="bie-dot total"></span>...</div>
+            </div>
+          </div>
         </div>
         <div class="bie-desc" style="display:none;"></div>
-        <div class="bie-stats">
-          <div class="bie-stat"><span class="bie-dot online"></span>...</div>
-          <div class="bie-stat"><span class="bie-dot total"></span>...</div>
-        </div>
         <button class="bie-join ${alreadyMember?'joined':'primary'}">${alreadyMember?'Joined':'Join Bastion'}</button>
       </div>
     </div>`;

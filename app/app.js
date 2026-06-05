@@ -1711,7 +1711,8 @@ function attachFile(inputId) { openFileUpload(inputId || 'ch-input'); }
 function _openAttachMenu(evt, inputId, context) {
   evt?.stopPropagation();
   evt?.preventDefault();
-  document.getElementById('attach-menu')?.remove();
+  const existing = document.getElementById('attach-menu');
+  if (existing) { existing.remove(); return; } // toggle: second click closes
   const btn = evt?.currentTarget || evt?.target?.closest?.('.cit-attach');
   if (!btn) { openFileUpload(inputId); return; }
   const rect = btn.getBoundingClientRect();
@@ -1736,8 +1737,14 @@ function _openAttachMenu(evt, inputId, context) {
       <div class="attach-menu__body"><div class="attach-menu__title">Form</div><div class="attach-menu__sub">Multiple questions with various question types.</div></div>
     </button>`;
   document.body.appendChild(menu);
-  // Outside-click close
-  const off = (e) => { if (!menu.contains(e.target) && e.target !== btn) { menu.remove(); document.removeEventListener('mousedown', off, true); } };
+  // Outside-click close. Ignore mousedown on the button itself so the
+  // toggle-on-click path at the top of this function is what handles
+  // re-clicks (open → click + again → close).
+  const off = (e) => {
+    if (menu.contains(e.target) || btn.contains(e.target)) return;
+    menu.remove();
+    document.removeEventListener('mousedown', off, true);
+  };
   setTimeout(() => document.addEventListener('mousedown', off, true), 0);
 }
 // Placeholder for poll / form composer — the full embed builder
@@ -2606,8 +2613,21 @@ function updateSidebar(v) {
 // ════════════════════════════════════════════
 // USERBAR & ONYX
 // ════════════════════════════════════════════
+// Detach the userbar out of .sidebar-ctx and reparent to body so its
+// position:fixed isn't trapped by .sidebar-ctx's backdrop-filter
+// containing block — that's why the bar visually clipped to the
+// channel column instead of spanning both sidebars. Run once.
+function _hoistUserbarToBody() {
+  if (window._ubHoisted) return;
+  const ub = document.getElementById('userbar');
+  if (!ub) return;
+  if (ub.parentElement !== document.body) document.body.appendChild(ub);
+  window._ubHoisted = true;
+}
+
 function updateUserbar() {
   if (!CU) return;
+  _hoistUserbarToBody();
   const ua = document.getElementById('ua');
   const uaName = document.getElementById('ua-name');
   const uaStatusText = document.getElementById('ua-status-text');
@@ -27052,7 +27072,7 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
         </div>
         <div class="chat-input-row">
-          <button class="cit-attach" onclick="_openAttachMenu(event,'${inputId}','${context}')" data-tooltip="Add">
+          <button class="cit-attach" onclick="_openAttachMenu(event,'${inputId}','${context}')" data-tip="Add">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
           <div id="${inputId}" class="chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="${placeholder}" spellcheck="true"
@@ -27061,10 +27081,10 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
             onpaste="handlePaste(event,'${inputId}')"></div>
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">
-            <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" data-tooltip="GIFs"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310879/gif.svg" alt="" loading="lazy" draggable="false"></button>
-            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" data-tooltip="Stickers"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/311245/sticker.svg" alt="" loading="lazy" draggable="false"></button>
-            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" data-tooltip="Emoji"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false"></button>
-            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}" data-tooltip="Bot commands"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310556/bot.svg" alt="" loading="lazy" draggable="false"></button>
+            <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" data-tip="GIFs"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310879/gif.svg" alt="" loading="lazy" draggable="false"></button>
+            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" data-tip="Stickers"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/311245/sticker.svg" alt="" loading="lazy" draggable="false"></button>
+            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" data-tip="Emoji"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false"></button>
+            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}" data-tip="Bot commands"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310556/bot.svg" alt="" loading="lazy" draggable="false"></button>
           </div>
         </div>
       </div>
@@ -48469,14 +48489,41 @@ function _stawToggleInspector() {
   }
 }
 
+// Inspector pause = SCREEN FREEZE. While paused, every mousedown
+// /click /touchstart /mouseleave that lands outside the inspector
+// toolbar is intercepted at capture phase and stopped, so any open
+// popover / dropdown / tooltip stays on screen instead of vanishing
+// on the user's next move. This is the "select things that may
+// disappear" workflow — inspect a tooltip without it auto-closing.
 function _stawToggleInspectorPause() {
   if (!_stawInspectorOn) return;
   _stawInspectorPaused = !_stawInspectorPaused;
   document.documentElement.style.cursor = _stawInspectorPaused ? '' : 'crosshair';
+  document.body.classList.toggle('staw-frozen', _stawInspectorPaused);
   if (_stawInspectorPaused) _stawHoverBox?.remove();
   _stawHoverBox = null;
+  if (_stawInspectorPaused) {
+    if (!window._stawFreezeListeners) {
+      const blocker = (e) => {
+        const t = e.target;
+        if (t?.closest?.('#staw-inspect-toolbar')) return; // toolbar stays interactive
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+        // Don't preventDefault on mouseover/out so the existing
+        // browser highlight feedback still works.
+        if (e.type === 'mousedown' || e.type === 'click' || e.type === 'touchstart' || e.type === 'pointerdown') e.preventDefault();
+      };
+      const events = ['mousedown','click','touchstart','pointerdown','mouseleave','mouseout','focusout'];
+      events.forEach(ev => document.addEventListener(ev, blocker, true));
+      window._stawFreezeListeners = { blocker, events };
+    }
+  } else if (window._stawFreezeListeners) {
+    const { blocker, events } = window._stawFreezeListeners;
+    events.forEach(ev => document.removeEventListener(ev, blocker, true));
+    window._stawFreezeListeners = null;
+  }
   _stawUpdateToolbar();
-  toast?.(_stawInspectorPaused ? 'Inspector paused (interact with the page)' : 'Inspector resumed', 'info');
+  toast?.(_stawInspectorPaused ? 'Screen frozen — outside-click events blocked. Pick disappearing elements.' : 'Inspector resumed', 'info');
 }
 
 function _stawShowToolbar() {

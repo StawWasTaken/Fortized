@@ -1095,55 +1095,56 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* ── "+" attach menu (Media / Poll / Form) ──────────────────────── */
 .attach-menu{
   position:fixed; z-index:9000;
-  min-width:268px; max-width:320px;
+  min-width:228px; max-width:260px;
   background:#23272f;
   border:1px solid rgba(255,255,255,.06);
-  border-radius:10px;
-  padding:6px;
-  box-shadow:0 18px 40px rgba(0,0,0,.55);
+  border-radius:9px;
+  padding:4px;
+  box-shadow:0 14px 32px rgba(0,0,0,.55);
   animation:attachMenuIn .14s cubic-bezier(.22,1,.36,1);
 }
 @keyframes attachMenuIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
 .attach-menu__row{
-  display:flex; gap:10px; align-items:flex-start;
-  width:100%; padding:9px 10px;
-  background:transparent; border:none; border-radius:8px;
+  display:flex; gap:9px; align-items:flex-start;
+  width:100%; padding:7px 9px;
+  background:transparent; border:none; border-radius:7px;
   cursor:pointer; text-align:left;
   color:#dde3ed; font-family:var(--font-ui);
   transition:background .12s;
 }
 .attach-menu__row:hover{ background:rgba(255,255,255,.05); }
 .attach-menu__ico{
-  width:20px; height:20px; flex-shrink:0;
+  width:18px; height:18px; flex-shrink:0;
   color:rgba(255,255,255,.85);
   display:inline-flex; align-items:center; justify-content:center;
 }
-.attach-menu__ico svg{ width:18px; height:18px; display:block; }
+.attach-menu__ico svg{ width:16px; height:16px; display:block; }
 .attach-menu__body{ min-width:0; }
-.attach-menu__title{ font-size:13.5px; font-weight:700; color:#fff; line-height:1.2; }
-.attach-menu__sub{ font-size:11.5px; color:rgba(255,255,255,.5); margin-top:2px; line-height:1.35; }
+.attach-menu__title{ font-size:12.5px; font-weight:700; color:#fff; line-height:1.2; }
+.attach-menu__sub{ font-size:11px; color:rgba(255,255,255,.5); margin-top:1px; line-height:1.35; }
 
-/* Single-source tooltip for chat-bar action buttons. The buttons
-   used to carry both title="" (native) AND data-tooltip="" (custom)
-   which produced two tooltips on hover. Title was removed at the
-   JS layer; this rule renders the data-tooltip as the only tooltip. */
-.chat-input-row button[data-tooltip]{ position:relative; }
-.chat-input-row button[data-tooltip]:hover::after{
-  content:attr(data-tooltip);
-  position:absolute; bottom:calc(100% + 6px); left:50%;
-  transform:translateX(-50%);
-  background:rgba(8,10,15,.96); color:#fff;
-  font-family:var(--font-ui); font-size:11px; font-weight:600; letter-spacing:.02em;
-  padding:5px 9px; border-radius:6px;
-  border:1px solid rgba(255,255,255,.06);
-  box-shadow:0 8px 20px rgba(0,0,0,.55);
-  white-space:nowrap; z-index:8500; pointer-events:none;
+/* Chatbar buttons share the same global tooltip system as the rest
+   of the app — they carry data-tip="" which _initGlobalTooltips
+   picks up and renders body-level (so the tooltip isn't clipped
+   by .sidebar-ctx / .members-list overflow). No per-button CSS
+   needed here. */
+
+/* Inspector freeze — subtle ring + label so the operator knows the
+   screen is frozen. Pointer-events stay on the toolbar; everything
+   else has its mousedown/click swallowed by the capture listener. */
+body.staw-frozen{ position:relative; }
+body.staw-frozen::after{
+  content:"FROZEN"; position:fixed; top:14px; right:14px; z-index:99997;
+  background:rgba(251,191,36,.18); color:#fbbf24;
+  border:1px solid rgba(251,191,36,.45);
+  font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size:10px; font-weight:800; letter-spacing:.16em;
+  padding:4px 10px; border-radius:6px;
+  pointer-events:none;
 }
-.chat-input-row button[data-tooltip]:hover::before{
-  content:""; position:absolute; bottom:100%; left:50%;
-  width:0; height:0;
-  border:4px solid transparent; border-top-color:rgba(8,10,15,.96);
-  transform:translateX(-50%); z-index:8500; pointer-events:none;
+body.staw-frozen::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:99996;
+  box-shadow:inset 0 0 0 2px rgba(251,191,36,.4);
 }
 .chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-ui);font-size:14.5px;resize:none;max-height:160px;min-height:28px;line-height:1.55;padding:6px 4px;position:relative;z-index:2;}
 .ci-preview-wrap textarea{width:100%;}

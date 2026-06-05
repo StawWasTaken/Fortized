@@ -427,7 +427,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .ua-btns button:active{transform:scale(.94);}
 .ua-btns button.active{color:#f87171;background:rgba(248,113,113,.10);}
 .ua-btns button.active:hover{background:rgba(248,113,113,.16);}
-.ua-dev-popover{position:fixed;z-index:9999;background:#1c1e22;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px;min-width:240px;box-shadow:0 12px 36px rgba(0,0,0,.5);font-family:'Syne',sans-serif;color:#fff;display:flex;gap:6px;}
+.ua-dev-popover{position:fixed;z-index:9999;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),#15171e;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:6px;min-width:240px;box-shadow:0 12px 36px rgba(0,0,0,.5);font-family:'Syne',sans-serif;color:#fff;display:flex;gap:6px;}
 .ua-dev-popover__col{display:flex;flex-direction:column;gap:2px;min-width:220px;}
 .ua-dev-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:background .12s;}
 .ua-dev-row:hover{background:rgba(255,255,255,.05);}
@@ -437,14 +437,15 @@ body.is-desktop-app .topbar{padding-right:0;}
 .ua-dev-row__icon{color:rgba(255,255,255,.55);}
 .ua-dev-slider{padding:8px 10px;}
 .ua-dev-slider__label{font-size:11px;font-weight:700;color:#fff;margin-bottom:6px;}
-.ua-dev-slider input[type=range]{width:100%;accent-color:#3b82f6;}
+.ua-dev-slider input[type=range]{width:100%;accent-color:#fff93e;}
+.ua-dev-check input[type=checkbox]{accent-color:#fff93e;}
 .ua-dev-divider{height:1px;background:rgba(255,255,255,.06);margin:2px 6px;}
 .ua-dev-check{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:700;}
 .ua-dev-check:hover{background:rgba(255,255,255,.05);}
 .ua-dev-radio{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;}
 .ua-dev-radio:hover{background:rgba(255,255,255,.05);}
 .ua-dev-radio__dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.35);flex-shrink:0;}
-.ua-dev-radio.selected .ua-dev-radio__dot{border-color:#3b82f6;background:radial-gradient(#3b82f6 38%,transparent 42%);}
+.ua-dev-radio.selected .ua-dev-radio__dot{border-color:#fff93e;background:radial-gradient(#fff93e 38%,transparent 42%);}
 /* ── Rail Userbar (full userbar in fortized sidebar, matches secondary sidebar) ── */
 .rail-userbar{display:flex;flex-direction:column;flex-shrink:0;padding:0 6px 8px;gap:0;box-sizing:border-box;z-index:15;width:100%;}
 .rail-ub-activity-row{display:none;align-items:center;gap:6px;padding:5px 8px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.08);border-radius:9px 9px 0 0;margin:0 2px;}
@@ -10419,6 +10420,19 @@ select:focus-visible {
   margin-bottom:0;
   flex:1; min-height:0; display:flex; flex-direction:column;
 }
+/* Uniformize each tab panel (Board / Activity / Wishlist / Mutuals)
+   so they share the same flat background + scroll behaviour. The inner
+   .up-right-section blocks within Activity drop their own background
+   so the content area shows through cleanly. */
+.fpp-card-modal__content > [data-fpp-panel]{
+  flex:1; min-height:0; overflow:auto;
+}
+.fpp-card-modal__content [data-fpp-panel="activity"] .up-right-section,
+.fpp-card-modal__content [data-fpp-panel="mutuals"] .up-right-section{
+  background:transparent; border:none; padding:0; margin-bottom:14px;
+}
+.fpp-tab-ico, .fpp-sec-ico{display:inline-flex;align-items:center;justify-content:center;width:1em;height:1em;margin-right:6px;vertical-align:-2px;}
+.fpp-tab-ico svg, .fpp-sec-ico svg{margin:0!important;}
 .fpp-card-modal__section-head{
   display:flex; align-items:center; justify-content:space-between;
   margin-bottom:10px; flex-shrink:0;

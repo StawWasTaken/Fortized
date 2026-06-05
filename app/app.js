@@ -49,6 +49,8 @@ const _svgIcons = {
 const _FPP_MOON_SVG     = '<svg viewBox="0 0 512 512" fill="currentColor" style="width:1em;height:1em;"><path d="M256 0C114.6 0 0 114.6 0 256S114.6 512 256 512c68.8 0 131.3-27.2 177.3-71.4 7.3-7 9.4-17.9 5.3-27.1s-13.7-14.9-23.8-14.1c-4.9 .4-9.8 .6-14.8 .6-101.6 0-184-82.4-184-184 0-72.1 41.5-134.6 102.1-164.8 9.1-4.5 14.3-14.3 13.1-24.4S322.6 8.5 312.7 6.3C294.4 2.2 275.4 0 256 0z"/></svg>';
 const _FPP_MUTUAL_SVG   = '<svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;vertical-align:-2px;margin-right:6px;"><path d="M64 128a112 112 0 1 1 224 0 112 112 0 1 1 -224 0zM0 464c0-97.2 78.8-176 176-176s176 78.8 176 176l0 6c0 23.2-18.8 42-42 42L42 512c-23.2 0-42-18.8-42-42l0-6zM432 64a96 96 0 1 1 0 192 96 96 0 1 1 0-192zm0 240c79.5 0 144 64.5 144 144l0 22.4c0 23-18.6 41.6-41.6 41.6l-144.8 0c6.6-12.5 10.4-26.8 10.4-42l0-6c0-51.5-17.4-98.9-46.5-136.7 22.6-14.7 49.6-23.3 78.5-23.3z"/></svg>';
 const _FPP_ACTIVITY_SVG = '<svg viewBox="0 0 48 48" fill="currentColor" style="width:1em;height:1em;"><path d="M45.2906 23.0038c-1.9884 -8.9896 -4.9808 -13.78764 -9.4198 -15.09825 -0.9331 -0.2737 -1.9011 -0.41044 -2.8734 -0.40593 -1.2853 0 -2.4047 0.31312 -3.5888 0.64499 -1.4268 0.40031 -3.0477 0.85499 -5.4111 0.85499 -2.3634 0 -3.9853 -0.45374 -5.415 -0.85405 -1.1849 -0.33281 -2.3034 -0.64593 -3.5849 -0.64593 -1.0056 -0.00349 -2.0067 0.13281 -2.9747 0.40499C7.60736 9.2096 4.61677 14.0058 2.5993 22.9981 0.42995 32.6749 1.49775 38.7845 5.59364 40.202c0.56144 0.1979 1.15217 0.3 1.74747 0.3018 2.80589 0 5.05589 -2.3371 6.59339 -4.2505 1.7371 -2.1656 3.7706 -3.2644 10.063 -3.2644 5.6202 0 7.9461 0.7622 9.9552 3.2644 1.2627 1.5731 2.4562 2.6737 3.6468 3.3665 1.5834 0.9206 3.1659 1.125 4.7024 0.5972 2.4206 -0.826 3.8081 -3.0094 4.125 -6.4912 0.2409 -2.67 -0.1303 -6.1771 -1.1363 -10.722Zm-25.7931 -0.5044h-2.9999v3c0 0.3978 -0.1581 0.7793 -0.4394 1.0606s-0.6628 0.4393 -1.0606 0.4393c-0.3979 0 -0.7793 -0.158 -1.0607 -0.4393 -0.2813 -0.2813 -0.4393 -0.6628 -0.4393 -1.0606v-3h-2.9999c-0.3979 0 -0.77938 -0.1581 -1.06072 -0.4393 -0.28129 -0.2813 -0.43933 -0.6628 -0.43933 -1.0607 0 -0.3978 0.15804 -0.7793 0.43933 -1.0607 0.28134 -0.2812 0.66282 -0.4393 1.06072 -0.4393h2.9999v-2.9999c0 -0.3978 0.158 -0.7794 0.4393 -1.0607 0.2814 -0.2812 0.6628 -0.4393 1.0607 -0.4393 0.3978 0 0.7793 0.1581 1.0606 0.4393 0.2813 0.2813 0.4394 0.6629 0.4394 1.0607v2.9999h2.9999c0.3978 0 0.7794 0.1581 1.0606 0.4393 0.2814 0.2814 0.4394 0.6629 0.4394 1.0607 0 0.3979 -0.158 0.7794 -0.4394 1.0607 -0.2812 0.2812 -0.6628 0.4393 -1.0606 0.4393Zm7.8749 0.375c-0.3708 0 -0.7334 -0.11 -1.0417 -0.3159 -0.3083 -0.2061 -0.5486 -0.499 -0.6906 -0.8415 -0.1419 -0.3427 -0.179 -0.7196 -0.1066 -1.0834 0.0723 -0.3636 0.2509 -0.6978 0.5131 -0.96s0.5963 -0.4408 0.96 -0.5132c0.3638 -0.0722 0.7407 -0.0351 1.0833 0.1068 0.3426 0.1419 0.6355 0.3822 0.8415 0.6906 0.206 0.3083 0.316 0.6708 0.316 1.0416 0 0.4973 -0.1975 0.9743 -0.5492 1.3258 -0.3516 0.3517 -0.8285 0.5492 -1.3258 0.5492Zm4.125 4.1249c-0.3711 0 -0.7338 -0.11 -1.0422 -0.3163 -0.3085 -0.2062 -0.5487 -0.4993 -0.6906 -0.8422 -0.1417 -0.3428 -0.1786 -0.7201 -0.1058 -1.0839 0.0727 -0.3639 0.2517 -0.698 0.5144 -0.96s0.5972 -0.4403 0.9613 -0.5121c0.364 -0.0718 0.7411 -0.0339 1.0836 0.1087 0.3426 0.1426 0.6351 0.3837 0.8405 0.6926 0.2055 0.309 0.3147 0.6719 0.3137 1.043 -0.0012 0.4964 -0.1993 0.9721 -0.5508 1.3227 -0.3515 0.3507 -0.8277 0.5475 -1.3241 0.5475Zm0 -8.2498c-0.3709 0 -0.7334 -0.11 -1.0418 -0.316 -0.3083 -0.206 -0.5486 -0.4989 -0.6905 -0.8415 -0.142 -0.3426 -0.1791 -0.7196 -0.1067 -1.0833 0.0724 -0.3637 0.251 -0.6978 0.5132 -0.96s0.5962 -0.4408 0.96 -0.5132c0.3637 -0.0723 0.7407 -0.0352 1.0832 0.1068 0.3427 0.1418 0.6356 0.3822 0.8415 0.6905 0.2061 0.3084 0.316 0.6709 0.316 1.0417 0 0.4973 -0.1975 0.9742 -0.5491 1.3258 -0.3517 0.3516 -0.8286 0.5492 -1.3258 0.5492Zm4.1249 4.1249c-0.3709 0 -0.7334 -0.11 -1.0417 -0.3159 -0.3084 -0.2061 -0.5486 -0.499 -0.6906 -0.8415 -0.1419 -0.3427 -0.179 -0.7196 -0.1067 -1.0834 0.0724 -0.3636 0.251 -0.6978 0.5132 -0.96s0.5963 -0.4408 0.96 -0.5132c0.3638 -0.0722 0.7407 -0.0351 1.0833 0.1068 0.3426 0.1419 0.6355 0.3822 0.8415 0.6906 0.206 0.3083 0.316 0.6708 0.316 1.0416 0 0.4973 -0.1975 0.9743 -0.5492 1.3258 -0.3516 0.3517 -0.8285 0.5492 -1.3258 0.5492Z"/></svg>';
+const _FPP_BOARD_SVG    = '<svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;vertical-align:-2px;margin-right:6px;"><path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l448 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm96 96c17.7 0 32 14.3 32 32l0 192c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-192c0-17.7 14.3-32 32-32l32 0zm160 0c17.7 0 32 14.3 32 32l0 192c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-192c0-17.7 14.3-32 32-32l32 0zm160 0c17.7 0 32 14.3 32 32l0 192c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-192c0-17.7 14.3-32 32-32l32 0z"/></svg>';
+const _FPP_WISHLIST_SVG = '<svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;vertical-align:-2px;margin-right:6px;"><path d="M288 0c6.6 0 12.9 2.7 17.4 7.5l144 152 .5 .5 78.1 0c17.7 0 32 14.3 32 32 0 14.5-9.6 26.7-22.8 30.7L491.1 429.9c-6.5 29.3-32.5 50.1-62.5 50.1l-281.3 0c-30 0-56-20.8-62.5-50.1l-46-207.2c-13.2-3.9-22.8-16.2-22.8-30.7 0-17.7 14.3-32 32-32l78.1 0 .5-.5 144-152C275.1 2.7 281.4 0 288 0zm0 58.9L192.2 160 383.8 160 288 58.9zM208 264c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112zm80-24c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm128 24c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112z"/></svg>';
 function ftzIcon(name, size, color) {
   const svg = _svgIcons[name];
   if (!svg) return '';
@@ -908,9 +910,10 @@ const FORTIZED_EXTERNAL_EMOJIS = {
   seagull_shut: 'https://cdn3.emoji.gg/emojis/861449-shutseagullmeme.png',
   lmfao:        'https://cdn3.emoji.gg/emojis/lmfaolit.png',
 };
+const FORTIZED_EXTRA_EMOJI_NAMES = [];
 Object.entries(FORTIZED_EXTERNAL_EMOJIS).forEach(([name, url]) => {
   FORTIZED_EMOJI_MAP[name] = url;
-  FORTIZED_TEXTMOJIS.push(name);
+  FORTIZED_EXTRA_EMOJI_NAMES.push(name);
   FORTIZED_EMOJIS.push(name);
 });
 
@@ -18676,6 +18679,12 @@ function renderEmojiGrid() {
       FORTIZED_CHARACTERS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('') +
       FORTIZED_TEXTMOJIS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join(''),
   });
+  // 3b) Extra custom emojis (regular, not part of Fortized Guide)
+  if (FORTIZED_EXTRA_EMOJI_NAMES.length) sections.push({
+    id: 'extra', title: 'Custom', extra: '', cols: 8,
+    rowCount: Math.ceil(FORTIZED_EXTRA_EMOJI_NAMES.length/8), tight: true,
+    build: () => FORTIZED_EXTRA_EMOJI_NAMES.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join(''),
+  });
 
   // 4) Bastion custom emojis — skip bastions with zero *valid* emojis so that
   // deleted/removed emojis don't leave ghost sections behind.
@@ -21278,7 +21287,7 @@ async function _viewUserProfile(username) {
   if (activitiesToDisplay.length) {
     _activityContent.push(`
       <div class="up-right-section">
-        <div class="up-right-section-title">Active Now</div>
+        <div class="up-right-section-title"><span class="fpp-sec-ico">${_FPP_ACTIVITY_SVG}</span>Active Now</div>
         <div class="activities-list">
           ${activitiesToDisplay.map(activity => {
             const statusColor = FtzStatus.color(u.status || 'online');
@@ -21306,7 +21315,6 @@ async function _viewUserProfile(username) {
     `);
   }
 
-  if (_mutualFriends.length) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">${_FPP_MUTUAL_SVG} Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${_mutualFriends.slice(0,12).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>12?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-12}</div>`:''}</div></div>`);
   if (!_activityContent.length) _activityContent.push(`<div class="ftz-empty"><div class="ftz-empty-icon">${_FPP_ACTIVITY_SVG}</div><div class="ftz-empty-text">No recent activity</div></div>`);
 
   // ════════════════════════════════════════════════════════════════
@@ -21342,7 +21350,7 @@ async function _viewUserProfile(username) {
 
   // Tabs visibility
   const wl = Array.isArray(u.wishlist) ? u.wishlist : [];
-  const wlPriv = !!u.wishlistPrivate;
+  const wlPriv = u.wishlistPrivate !== false; // default: private
   const showWishlistTab = isOwn || (!wlPriv && wl.length > 0);
   const showMutualsTab = !isOwn;
 
@@ -21381,17 +21389,17 @@ async function _viewUserProfile(username) {
       <!-- RIGHT PANEL: tabs + content -->
       <div class="fpp-card-modal__right">
         <div class="fpp-card-modal__tabs">
-          <div class="fpp-card-modal__tab is-active" data-fpp-tab="board" onclick="_fppSwitchTab(this,'board')">Board</div>
-          <div class="fpp-card-modal__tab" data-fpp-tab="activity" onclick="_fppSwitchTab(this,'activity')">Activity</div>
-          ${showWishlistTab ? `<div class="fpp-card-modal__tab" data-fpp-tab="wishlist" onclick="_fppSwitchTab(this,'wishlist')">Wishlist${wl.length ? ` · ${wl.length}` : ''}</div>` : ''}
-          ${showMutualsTab ? `<div class="fpp-card-modal__tab" data-fpp-tab="mutuals" onclick="_fppSwitchTab(this,'mutuals')">Mutual Friends${_mutualFriends.length ? ` · ${_mutualFriends.length}` : ''}</div>` : ''}
+          <div class="fpp-card-modal__tab is-active" data-fpp-tab="board" onclick="_fppSwitchTab(this,'board')"><span class="fpp-tab-ico">${_FPP_BOARD_SVG}</span>Board</div>
+          <div class="fpp-card-modal__tab" data-fpp-tab="activity" onclick="_fppSwitchTab(this,'activity')"><span class="fpp-tab-ico">${_FPP_ACTIVITY_SVG}</span>Activity</div>
+          ${showWishlistTab ? `<div class="fpp-card-modal__tab" data-fpp-tab="wishlist" onclick="_fppSwitchTab(this,'wishlist')"><span class="fpp-tab-ico">${_FPP_WISHLIST_SVG}</span>Wishlist${wl.length ? ` · ${wl.length}` : ''}</div>` : ''}
+          ${showMutualsTab ? `<div class="fpp-card-modal__tab" data-fpp-tab="mutuals" onclick="_fppSwitchTab(this,'mutuals')"><span class="fpp-tab-ico">${_FPP_MUTUAL_SVG}</span>Mutual Friends${_mutualFriends.length ? ` · ${_mutualFriends.length}` : ''}</div>` : ''}
         </div>
         <div class="fpp-card-modal__content">
           <!-- BOARD: widgets + games -->
           <div data-fpp-panel="board">
             <div class="fpp-card-modal__section">
               <div class="fpp-card-modal__section-head">
-                <span class="fpp-card-modal__section-title">Your Widgets</span>
+                <span class="fpp-card-modal__section-title"><span class="fpp-sec-ico">${_FPP_BOARD_SVG}</span>${isOwn ? 'Your Widgets' : 'Widgets'}</span>
                 ${isOwn ? `<button class="fpp-card-modal__add-btn" onclick="_openAddWidgetPanel()">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   Add Widget
@@ -21408,7 +21416,7 @@ async function _viewUserProfile(username) {
           ${showWishlistTab ? `<div data-fpp-panel="wishlist" style="display:none;">
             <div class="fpp-card-modal__section">
               <div class="fpp-card-modal__section-head">
-                <span class="fpp-card-modal__section-title">Wishlist${wl.length ? ` · ${wl.length}` : ''}</span>
+                <span class="fpp-card-modal__section-title"><span class="fpp-sec-ico">${_FPP_WISHLIST_SVG}</span>Wishlist${wl.length ? ` · ${wl.length}` : ''}</span>
                 ${isOwn ? `<label style="display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--muted-light);cursor:pointer;">
                   <input type="checkbox" ${wlPriv?'checked':''} onchange="setWishlistPrivacy(this.checked)" style="accent-color:var(--accent);"> Private
                 </label>` : `<span style="font-size:10.5px;color:var(--muted);font-weight:600;">Public</span>`}

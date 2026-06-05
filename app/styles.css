@@ -3415,34 +3415,28 @@ body.is-desktop-app .notif-panel{top:0;}
   --embed-radius:       6px;
   --embed-radius-sm:    3px;
   --embed-accent-bar:   4px;
-  background:var(--embed-card-bg);
-  border:1px solid var(--embed-card-border);
+  background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),#15171e;
+  border:1px solid rgba(255,255,255,.06);
   border-radius:var(--embed-radius);
   width:420px; max-width:100%;
   margin:8px 0;
   position:relative;
   overflow:hidden;
   display:flex; flex-direction:column;
-  box-shadow:0 10px 28px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.35), inset 0 0 0 1px rgba(254,249,61,.04);
+  box-shadow:none;
   animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;
-  transition:transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s;
+  transition:transform .2s cubic-bezier(.22,1,.36,1);
   font-family:'Syne',sans-serif;
   font-weight:500;
 }
-.ftz-embed:hover{transform:translateY(-1px);box-shadow:0 14px 40px rgba(0,0,0,.6), inset 0 0 0 1px rgba(254,249,61,.06);}
+.ftz-embed:hover{transform:translateY(-1px);box-shadow:none;}
 /* Yellow left accent bar */
 .ftz-embed::before{
   content:""; position:absolute; inset-block:0; left:0;
   width:var(--embed-accent-bar); background:var(--embed-accent);
   z-index:3;
 }
-/* Subtle accent glow bleed off the left bar */
-.ftz-embed::after{
-  content:""; position:absolute; inset-block:0; left:0;
-  width:60px;
-  background:linear-gradient(90deg, rgba(254,249,61,.06) 0%, transparent 100%);
-  pointer-events:none; z-index:1;
-}
+.ftz-embed::after{ content:none; }
 /* Variant — full Fortized card (poll / form / FortNews etc).
    Adds the portrait min-height the brief mandates. Inline link
    previews skip this so they stay compact in chat. */
@@ -7378,7 +7372,7 @@ textarea:focus::placeholder {
 .ftz-ap-progress:hover { background: rgba(255,255,255,.12); }
 
 .ftz-embed-gif { transition: transform 0.15s ease, box-shadow 0.15s ease; }
-.ftz-embed-gif:hover { transform: scale(1.01); box-shadow: var(--shadow-md); }
+.ftz-embed-gif:hover { transform: scale(1.01); }
 
 .ftz-embed[onclick]:hover, .ftz-embed a:hover { opacity: 0.92; }
 

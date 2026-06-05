@@ -901,6 +901,18 @@ const FORTIZED_EMOJI_MAP = {};
 FORTIZED_EMOJIS_DATA.forEach(([name, ext]) => {
   FORTIZED_EMOJI_MAP[name] = FTZ_EMOJI_BASE + name + '.' + ext;
 });
+// Externally-hosted picks (emoji.gg CDN). Pushed into the textmoji set so
+// they show up in pickers / autocomplete alongside the local files.
+const FORTIZED_EXTERNAL_EMOJIS = {
+  pouting:      'https://cdn3.emoji.gg/emojis/103815-pouting.png',
+  seagull_shut: 'https://cdn3.emoji.gg/emojis/861449-shutseagullmeme.png',
+  lmfao:        'https://cdn3.emoji.gg/emojis/lmfaolit.png',
+};
+Object.entries(FORTIZED_EXTERNAL_EMOJIS).forEach(([name, url]) => {
+  FORTIZED_EMOJI_MAP[name] = url;
+  FORTIZED_TEXTMOJIS.push(name);
+  FORTIZED_EMOJIS.push(name);
+});
 
 // Custom money emoji overrides — live in a SEPARATE repo folder so the
 // "fortized emojis" folder stays reserved for Fortized Guide content.
@@ -10288,22 +10300,126 @@ function toggleVoiceDeafen(){
     if(ch) _renderVoicePanel(ch, voiceChannel);
   }
 }
-const _UB_MIC_ON   = '<svg width="14" height="14" viewBox="0 0 384 512" fill="currentColor"><path d="M192 0C139 0 96 43 96 96l0 128c0 53 43 96 96 96s96-43 96-96l0-128c0-53-43-96-96-96zM48 184c0-13.3-10.7-24-24-24S0 170.7 0 184l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c94.7-11.8 168-92.6 168-190.5l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 79.5-64.5 144-144 144S48 303.5 48 224l0-40z"/></svg>';
-const _UB_MIC_OFF  = '<svg width="14" height="14" viewBox="0 0 576 512" fill="#f87171"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L424.7 358.8C458.9 324.2 480 276.6 480 224l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 39.3-15.7 74.9-41.3 100.9L356.8 291C373.6 273.7 384 250 384 224l0-128c0-53-43-96-96-96s-96 43-96 96l0 30.2-151-151zm298.3 434l-41.4-41.4c-3.3 .2-6.5 .3-9.8 .3-79.5 0-144-64.5-144-144l0-10.2-43.6-43.6c-2.8 3.9-4.4 8.7-4.4 13.8l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c9.3-1.2 18.4-3 27.3-5.4z"/></svg>';
-const _UB_DEAF_ON  = '<svg width="14" height="14" viewBox="0 0 576 512" fill="currentColor"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L424.7 358.8C458.9 324.2 480 276.6 480 224l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 39.3-15.7 74.9-41.3 100.9L356.8 291C373.6 273.7 384 250 384 224l0-128c0-53-43-96-96-96s-96 43-96 96l0 30.2-151-151zm298.3 434l-41.4-41.4c-3.3 .2-6.5 .3-9.8 .3-79.5 0-144-64.5-144-144l0-10.2-43.6-43.6c-2.8 3.9-4.4 8.7-4.4 13.8l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c9.3-1.2 18.4-3 27.3-5.4z"/></svg>';
-const _UB_DEAF_OFF = '<svg width="14" height="14" viewBox="0 0 576 512" fill="#f87171"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L424.7 358.8C458.9 324.2 480 276.6 480 224l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 39.3-15.7 74.9-41.3 100.9L356.8 291C373.6 273.7 384 250 384 224l0-128c0-53-43-96-96-96s-96 43-96 96l0 30.2-151-151zm298.3 434l-41.4-41.4c-3.3 .2-6.5 .3-9.8 .3-79.5 0-144-64.5-144-144l0-10.2-43.6-43.6c-2.8 3.9-4.4 8.7-4.4 13.8l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c9.3-1.2 18.4-3 27.3-5.4z"/></svg>';
+const _UB_MIC_ON    = '<svg width="14" height="14" viewBox="0 0 384 512" fill="currentColor"><path d="M192 0C139 0 96 43 96 96l0 128c0 53 43 96 96 96s96-43 96-96l0-128c0-53-43-96-96-96zM48 184c0-13.3-10.7-24-24-24S0 170.7 0 184l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c94.7-11.8 168-92.6 168-190.5l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 79.5-64.5 144-144 144S48 303.5 48 224l0-40z"/></svg>';
+const _UB_MIC_OFF   = '<svg width="14" height="14" viewBox="0 0 576 512" fill="#f87171"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L424.7 358.8C458.9 324.2 480 276.6 480 224l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 39.3-15.7 74.9-41.3 100.9L356.8 291C373.6 273.7 384 250 384 224l0-128c0-53-43-96-96-96s-96 43-96 96l0 30.2-151-151zm298.3 434l-41.4-41.4c-3.3 .2-6.5 .3-9.8 .3-79.5 0-144-64.5-144-144l0-10.2-43.6-43.6c-2.8 3.9-4.4 8.7-4.4 13.8l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c9.3-1.2 18.4-3 27.3-5.4z"/></svg>';
+const _UB_HEAD_ON   = '<svg width="14" height="14" viewBox="0 0 640 640" fill="currentColor"><path d="M320 96C214 96 128 182 128 288l0 32 32 0c35.3 0 64 28.7 64 64l0 64c0 35.3-28.7 64-64 64l-32 0c-35.3 0-64-28.7-64-64l0-160C64 146.6 178.6 32 320 32S576 146.6 576 288l0 160c0 35.3-28.7 64-64 64l-32 0c-35.3 0-64-28.7-64-64l0-64c0-35.3 28.7-64 64-64l32 0 0-32c0-106-86-192-192-192z"/></svg>';
+const _UB_HEAD_OFF  = '<svg width="14" height="14" viewBox="0 0 640 640" fill="#f87171"><path d="M16 41C6.6 31.6 6.6 16.4 16 7s24.6-9.4 33.9 0l574 574c9.4 9.4 9.4 24.6 0 34s-24.6 9.4-33.9 0l-66.7-66.7C513.7 525.7 480 491.5 480 449l0-65c0-35.3 28.7-64 64-64l32 0 0-32c0-83.4-53.2-154.4-127.4-180.7L380 65.4C357.5 53.6 339.2 32 320 32 178.6 32 64 146.6 64 288l0 160c0 18.8 8.1 35.7 21 47.4l-69-69V41zM160 320l-32 0 0 128 32 0c35.3 0 64-28.7 64-64l0-64c0-35.3-28.7-64-64-64z"/></svg>';
+function _ubInitButtons() {
+  const m = document.getElementById('mic-btn');
+  if (m) { m.innerHTML = isMuted ? _UB_MIC_OFF : _UB_MIC_ON; m.classList.toggle('active', !!isMuted); }
+  const d = document.getElementById('deafen-btn');
+  if (d) { d.innerHTML = isDeafened ? _UB_HEAD_OFF : _UB_HEAD_ON; d.classList.toggle('active', !!isDeafened); }
+}
+document.addEventListener('DOMContentLoaded', _ubInitButtons);
+setTimeout(_ubInitButtons, 0);
 function toggleMic(){
   isMuted=!isMuted;
-  const b=document.getElementById('mic-btn');
-  if(b) b.innerHTML = isMuted ? _UB_MIC_OFF : _UB_MIC_ON;
+  _ubInitButtons();
   toast(isMuted?'Muted':'Unmuted','info');
 }
 function toggleDeafen(){
   isDeafened=!isDeafened;
-  if(isDeafened) { isMuted=true; const mb=document.getElementById('mic-btn'); if(mb) mb.innerHTML = _UB_MIC_OFF; }
-  const b=document.getElementById('deafen-btn');
-  if(b) b.innerHTML = isDeafened ? _UB_DEAF_OFF : _UB_DEAF_ON;
+  _ubInitButtons();
   toast(isDeafened?'Deafened':'Undeafened','info');
+}
+
+// ── Userbar device popovers (input / output) ────────────────────────
+let _uaInputVolume = +(localStorage.getItem('ftz_ua_input_vol') || 80);
+let _uaOutputVolume = +(localStorage.getItem('ftz_ua_output_vol') || 80);
+let _uaPushToTalk = localStorage.getItem('ftz_ua_ptt') === '1';
+let _uaInputDevice = localStorage.getItem('ftz_ua_input_dev') || 'default';
+let _uaOutputDevice = localStorage.getItem('ftz_ua_output_dev') || 'default';
+async function _uaEnumerateDevices(kind) {
+  try {
+    if (!navigator.mediaDevices?.enumerateDevices) return [];
+    if (kind === 'audioinput') {
+      try { const s = await navigator.mediaDevices.getUserMedia({audio:true}); s.getTracks().forEach(t=>t.stop()); } catch(_){}
+    }
+    const all = await navigator.mediaDevices.enumerateDevices();
+    return all.filter(d => d.kind === kind);
+  } catch(_) { return []; }
+}
+function _uaClosePopovers() {
+  document.querySelectorAll('.ua-dev-popover').forEach(p => p.remove());
+}
+async function _openInputDevicePopover(e) {
+  e?.stopPropagation();
+  _uaClosePopovers();
+  const anchor = e.currentTarget;
+  const devs = await _uaEnumerateDevices('audioinput');
+  const main = document.createElement('div');
+  main.className = 'ua-dev-popover';
+  main.innerHTML = `<div class="ua-dev-popover__col">
+    <div class="ua-dev-row" data-act="pick-input"><div class="ua-dev-row__label">Input Device<span class="ua-dev-row__sub">${escapeHTML(_uaInputDeviceLabel(devs))}</span></div><div class="ua-dev-row__chev">›</div></div>
+    <div class="ua-dev-divider"></div>
+    <div class="ua-dev-slider"><div class="ua-dev-slider__label">Input Volume</div><input type="range" min="0" max="100" value="${_uaInputVolume}" oninput="_uaInputVolume=+this.value;localStorage.setItem('ftz_ua_input_vol',this.value);"></div>
+    <div class="ua-dev-divider"></div>
+    <div class="ua-dev-check" onclick="_uaPushToTalk=!_uaPushToTalk;localStorage.setItem('ftz_ua_ptt',_uaPushToTalk?'1':'0');this.querySelector('input').checked=_uaPushToTalk;"><span>Push-to-talk</span><input type="checkbox" ${_uaPushToTalk?'checked':''} onclick="event.stopPropagation();_uaPushToTalk=this.checked;localStorage.setItem('ftz_ua_ptt',_uaPushToTalk?'1':'0');"></div>
+    <div class="ua-dev-row" onclick="_uaClosePopovers();showView('profile');"><div class="ua-dev-row__label">Voice Settings</div><div class="ua-dev-row__icon">⚙</div></div>
+  </div>`;
+  document.body.appendChild(main);
+  _uaPositionPopover(main, anchor);
+  main.querySelector('[data-act="pick-input"]').onclick = (ev) => { ev.stopPropagation(); _uaOpenDeviceList(main, devs, 'input'); };
+  setTimeout(() => document.addEventListener('mousedown', _uaOutsideClose, true), 0);
+}
+async function _openOutputDevicePopover(e) {
+  e?.stopPropagation();
+  _uaClosePopovers();
+  const anchor = e.currentTarget;
+  const devs = await _uaEnumerateDevices('audiooutput');
+  const main = document.createElement('div');
+  main.className = 'ua-dev-popover';
+  main.innerHTML = `<div class="ua-dev-popover__col">
+    <div class="ua-dev-row" data-act="pick-output"><div class="ua-dev-row__label">Output Device<span class="ua-dev-row__sub">${escapeHTML(_uaOutputDeviceLabel(devs))}</span></div><div class="ua-dev-row__chev">›</div></div>
+    <div class="ua-dev-divider"></div>
+    <div class="ua-dev-slider"><div class="ua-dev-slider__label">Output Volume</div><input type="range" min="0" max="100" value="${_uaOutputVolume}" oninput="_uaOutputVolume=+this.value;localStorage.setItem('ftz_ua_output_vol',this.value);"></div>
+    <div class="ua-dev-divider"></div>
+    <div class="ua-dev-row" onclick="_uaClosePopovers();showView('profile');"><div class="ua-dev-row__label">Voice Settings</div><div class="ua-dev-row__icon">⚙</div></div>
+  </div>`;
+  document.body.appendChild(main);
+  _uaPositionPopover(main, anchor);
+  main.querySelector('[data-act="pick-output"]').onclick = (ev) => { ev.stopPropagation(); _uaOpenDeviceList(main, devs, 'output'); };
+  setTimeout(() => document.addEventListener('mousedown', _uaOutsideClose, true), 0);
+}
+function _uaInputDeviceLabel(devs) {
+  if (_uaInputDevice === 'default') return 'Windows Default' + (devs[0] ? ' (' + (devs[0].label||'Microphone') + ')' : '');
+  const m = devs.find(d => d.deviceId === _uaInputDevice);
+  return m ? (m.label || 'Microphone') : 'Windows Default';
+}
+function _uaOutputDeviceLabel(devs) {
+  if (_uaOutputDevice === 'default') return 'Windows Default' + (devs[0] ? ' (' + (devs[0].label||'Speakers') + ')' : '');
+  const m = devs.find(d => d.deviceId === _uaOutputDevice);
+  return m ? (m.label || 'Speakers') : 'Windows Default';
+}
+function _uaOpenDeviceList(parent, devs, kind) {
+  parent.querySelectorAll('.ua-dev-popover__col').forEach((c,i) => { if (i>0) c.remove(); });
+  const col = document.createElement('div');
+  col.className = 'ua-dev-popover__col';
+  const cur = kind === 'input' ? _uaInputDevice : _uaOutputDevice;
+  const rows = [{deviceId:'default',label:'Windows Default',sub:devs[0]?(devs[0].label||''):''}, ...devs.map(d => ({deviceId:d.deviceId,label:d.label||(kind==='input'?'Microphone':'Speakers'),sub:''}))];
+  col.innerHTML = rows.map(r => `<div class="ua-dev-radio ${r.deviceId===cur?'selected':''}" data-id="${escapeHTML(r.deviceId)}"><div class="ua-dev-row__label">${escapeHTML(r.label)}${r.sub?`<span class="ua-dev-row__sub">${escapeHTML(r.sub)}</span>`:''}</div><div class="ua-dev-radio__dot"></div></div>`).join('');
+  parent.appendChild(col);
+  col.querySelectorAll('.ua-dev-radio').forEach(row => {
+    row.onclick = (ev) => {
+      ev.stopPropagation();
+      const id = row.dataset.id;
+      if (kind === 'input') { _uaInputDevice = id; localStorage.setItem('ftz_ua_input_dev', id); }
+      else { _uaOutputDevice = id; localStorage.setItem('ftz_ua_output_dev', id); }
+      col.querySelectorAll('.ua-dev-radio').forEach(r => r.classList.toggle('selected', r.dataset.id === id));
+    };
+  });
+}
+function _uaPositionPopover(el, anchor) {
+  const rect = anchor.getBoundingClientRect();
+  const w = el.offsetWidth || 260;
+  el.style.left = Math.max(8, rect.left + rect.width/2 - w/2) + 'px';
+  el.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+}
+function _uaOutsideClose(ev) {
+  if (!ev.target.closest('.ua-dev-popover') && !ev.target.closest('.ua-btn-chev')) {
+    _uaClosePopovers();
+    document.removeEventListener('mousedown', _uaOutsideClose, true);
+  }
 }
 
 // ════════════════════════════════════════════
@@ -21239,7 +21355,7 @@ async function _viewUserProfile(username) {
                 }).join('')}
               </div>
             </div>` : `<div style="padding:30px;text-align:center;color:var(--muted);">
-              <div style="font-size:32px;margin-bottom:8px;opacity:.5;">👥</div>
+              <div style="font-size:32px;margin-bottom:8px;opacity:.5;">${_FPP_MUTUAL_SVG}</div>
               <div style="font-size:13px;">No mutual friends</div>
             </div>`}
           </div>` : ''}

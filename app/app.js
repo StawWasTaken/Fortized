@@ -1379,6 +1379,127 @@ function _trustDomain(domain) {
     if (!user.includes(domain)) { user.push(domain); localStorage.setItem('ftz_trusted_domains', JSON.stringify(user)); }
   } catch (e) { _dbg('[URL] trust domain save failed', e); }
 }
+// ════════════════════════════════════════════════════════════════════
+// UNIFIED LINK EMBED — Fortized brand template
+// ────────────────────────────────────────────────────────────────────
+// Every generic URL (anything not caught by the YouTube / Twitter /
+// Spotify / TikTok / Instagram / Reddit-image / GIF special-cases
+// above) renders through this. The placeholder mounts with the
+// favicon + URL path. _hydrateLinkEmbed then async-fetches OG
+// metadata (title / description / og:image) via microlink.io's
+// free anonymous tier and patches the DOM. Cached in localStorage
+// (ftz_link_meta_<url>, 24h TTL) so a re-render doesn't re-fetch.
+// ════════════════════════════════════════════════════════════════════
+const _LINK_META_TTL_MS = 24 * 3600 * 1000;
+function _linkMetaCacheGet(url) {
+  try {
+    const raw = localStorage.getItem('ftz_link_meta_' + url);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || (Date.now() - (obj.ts || 0)) > _LINK_META_TTL_MS) return null;
+    return obj.data;
+  } catch { return null; }
+}
+function _linkMetaCacheSet(url, data) {
+  try { localStorage.setItem('ftz_link_meta_' + url, JSON.stringify({ ts: Date.now(), data })); } catch (_) {}
+}
+async function _fetchLinkMeta(url) {
+  const cached = _linkMetaCacheGet(url);
+  if (cached) return cached;
+  try {
+    // microlink.io free anonymous tier — returns og:title / og:description
+    // / og:image / favicon / publisher. No key needed for low traffic.
+    const res = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url));
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    if (j.status !== 'success' || !j.data) throw new Error('microlink: ' + (j.message || 'bad response'));
+    const d = j.data;
+    const meta = {
+      title: d.title || '',
+      description: d.description || '',
+      image: d.image?.url || d.logo?.url || '',
+      siteName: d.publisher || d.author || '',
+      favicon: d.logo?.url || '',
+    };
+    _linkMetaCacheSet(url, meta);
+    return meta;
+  } catch (e) { console.warn('[Embed] meta fetch failed:', e?.message); return null; }
+}
+function _renderUnifiedLinkEmbed(url) {
+  const safe = escapeHTML(url);
+  let domain = '', siteName = '', accent = '#fef93d';
+  try { const u = new URL(url); domain = u.hostname.replace('www.',''); siteName = domain.split('.')[0].replace(/^./, c => c.toUpperCase()); } catch (_) {}
+  if (domain.includes('github.com'))    { siteName = 'GitHub';   accent = '#f0f6fc'; }
+  else if (domain.includes('twitch.tv')) { siteName = 'Twitch';   accent = '#9146ff'; }
+  else if (domain.includes('reddit.com')){ siteName = 'Reddit';   accent = '#ff4500'; }
+  else if (domain.includes('steam'))     { siteName = 'Steam';    accent = '#66c0f4'; }
+  else if (domain.includes('itch.io'))   { siteName = 'itch.io';  accent = '#fa5c5c'; }
+  else if (domain.includes('fortized.com')){ siteName = 'Fortized'; accent = '#fef93d'; }
+  const id = 'lke-' + Math.random().toString(36).slice(2, 10);
+  const faviconUrl = 'https://www.google.com/s2/favicons?sz=64&domain=' + encodeURIComponent(domain);
+  // Placeholder = unified template structure. _hydrateLinkEmbed
+  // overwrites title / description / image once metadata arrives.
+  // The title links to the page; the asset image renders below the
+  // body when available, exactly per the brand brief.
+  const path = url.replace(/^https?:\/\/(www\.)?/,'').slice(0, 80);
+  setTimeout(() => _hydrateLinkEmbed(id, url), 0);
+  return `<div class="ftz-embed" id="${id}" data-link-embed style="--embed-color:${accent};">
+    <div class="ftz-embed-inner">
+      <div class="ftz-embed-stripe"></div>
+      <div class="ftz-embed-content">
+        <div class="ftz-embed-body">
+          <div class="ftz-embed-head" data-slot="provider">
+            <img src="${faviconUrl}" alt="" onerror="this.style.display='none'">
+            <span data-slot="provider-name">${escapeHTML(siteName || domain)}</span>
+          </div>
+          <div class="ftz-embed-title-row" data-slot="header">
+            <div class="ftz-embed-text-stack">
+              <div class="ftz-embed-title" data-slot="title">
+                <a href="${safe}" onclick="openExternalLink(event,'${safe}')">${escapeHTML(path)}</a>
+              </div>
+              <div class="ftz-embed-desc" data-slot="description" style="display:none;"></div>
+            </div>
+          </div>
+          <img class="ftz-embed-img" data-slot="asset-image" style="display:none;" alt="">
+        </div>
+        <div class="ftz-embed-foot" data-slot="footer">
+          <img src="${faviconUrl}" class="embed__footer-icon" alt="" onerror="this.style.display='none'">
+          <span>${escapeHTML(domain)}</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+async function _hydrateLinkEmbed(id, url) {
+  const meta = await _fetchLinkMeta(url);
+  const root = document.getElementById(id);
+  if (!root || !meta) return;
+  const safeUrl = escapeHTML(url);
+  if (meta.title) {
+    const titleEl = root.querySelector('[data-slot="title"]');
+    if (titleEl) titleEl.innerHTML = `<a href="${safeUrl}" onclick="openExternalLink(event,'${safeUrl}')">${escapeHTML(meta.title)}</a>`;
+  }
+  if (meta.description) {
+    const descEl = root.querySelector('[data-slot="description"]');
+    if (descEl) {
+      descEl.textContent = String(meta.description).slice(0, 240);
+      descEl.style.display = '';
+    }
+  }
+  if (meta.image) {
+    const imgEl = root.querySelector('[data-slot="asset-image"]');
+    if (imgEl) {
+      imgEl.src = meta.image;
+      imgEl.onerror = () => { imgEl.style.display = 'none'; };
+      imgEl.style.display = '';
+    }
+  }
+  if (meta.siteName) {
+    const provEl = root.querySelector('[data-slot="provider-name"]');
+    if (provEl) provEl.textContent = meta.siteName;
+  }
+}
+
 function openExternalLink(e, url) {
   if (e) e.preventDefault();
   if (!url) return;
@@ -28275,21 +28396,10 @@ function parseMD(s) {
     const vid2 = 'vid-' + Math.random().toString(36).slice(2);
     return `<div class="ftz-embed" style="--embed-color:#fef83d;max-width:480px;" tabindex="0"><div class="ftz-embed-inner" style="flex-direction:column;"><div class="ftz-vp" id="${vid2}-wrap"><video id="${vid2}" src="${safe}" preload="metadata" oncontextmenu="return false" onclick="ftzVideoToggle('${vid2}')" ondblclick="ftzVideoFullscreen('${vid2}')" ontimeupdate="ftzVideoTick('${vid2}')" onloadedmetadata="ftzVideoMeta('${vid2}')" onended="ftzVideoEnd('${vid2}')" onprogress="ftzVideoBuffer('${vid2}')" onerror="ftzVideoError('${vid2}')" onwaiting="ftzVideoWaiting('${vid2}')" onplaying="ftzVideoPlaying('${vid2}')"></video><div class="ftz-vp-overlay" id="${vid2}-overlay" onclick="ftzVideoToggle('${vid2}')"><div class="ftz-vp-overlay-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div><div id="${vid2}-spinner" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:3;pointer-events:none;"><div style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;"></div></div><div class="ftz-vp-error" id="${vid2}-error" style="display:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span>Failed to load video</span></div></div><div class="ftz-vp-controls"><div class="ftz-vp-progress" onclick="ftzVideoSeek('${vid2}',event)" onmousemove="ftzVideoSeekPreview('${vid2}',event)"><div class="ftz-vp-prog-buffer" id="${vid2}-buf"></div><div class="ftz-vp-prog-fill" id="${vid2}-prog"></div><div class="ftz-vp-prog-thumb" id="${vid2}-thumb"></div></div><div class="ftz-vp-row"><button class="ftz-vp-btn" id="${vid2}-btn" onclick="ftzVideoToggle('${vid2}')" title="Play/Pause"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><div class="ftz-vp-vol-wrap"><button class="ftz-vp-btn" onclick="ftzVideoMute('${vid2}')" id="${vid2}-vol-icon" title="Mute"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></button><div class="ftz-vp-vol-slider"><div class="ftz-vp-vol-track" onclick="ftzVideoVol('${vid2}',event)"><div class="ftz-vp-vol-fill" id="${vid2}-vol-fill" style="width:100%;"></div></div></div></div><span class="ftz-vp-time"><span id="${vid2}-cur">0:00</span> / <span id="${vid2}-dur">--:--</span></span><div style="flex:1;"></div><span class="ftz-vp-speed" id="${vid2}-speed" onclick="ftzVideoCycleSpeed('${vid2}')" title="Playback speed">1x</span><button class="ftz-vp-btn" onclick="ftzVideoPiP('${vid2}')" title="Picture-in-Picture"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="11" y="9" width="10" height="7" rx="1" fill="currentColor" stroke="none" opacity=".5"/></svg></button><button class="ftz-vp-btn" onclick="ftzVideoFullscreen('${vid2}')" title="Fullscreen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button></div></div></div></div>`;
   });
-  // 6. All other URLs — unified rich link embed card
-  s = s.replace(/(?<![='"(])(https?:\/\/[^\s<>"'()]+)/gi, url => {
-    const safe = escapeHTML(url);
-    let domain = '', siteName = '', embedColor = 'rgba(255,255,255,.2)';
-    try { const u = new URL(url); domain = u.hostname.replace('www.',''); siteName = domain.split('.')[0]; siteName = siteName.charAt(0).toUpperCase() + siteName.slice(1); } catch (e) { _dbg('[Embed] URL parse failed', e); }
-    if (domain.includes('github.com')) { siteName = 'GitHub'; embedColor = '#f0f6fc'; }
-    else if (domain.includes('twitch.tv')) { siteName = 'Twitch'; embedColor = '#9146ff'; }
-    else if (domain.includes('reddit.com')) { siteName = 'Reddit'; embedColor = '#ff4500'; }
-    else if (domain.includes('steam') || domain.includes('steampowered')) { siteName = 'Steam'; embedColor = '#1b2838'; }
-    else if (domain.includes('itch.io')) { siteName = 'itch.io'; embedColor = '#fa5c5c'; }
-    else if (domain.includes('fortized.com')) { siteName = 'Fortized'; embedColor = '#fef83d'; }
-    const pathLabel = url.replace(/^https?:\/\/(www\.)?/,'').slice(0,55) + (url.length>60?'...':'');
-    const faviconUrl = 'https://www.google.com/s2/favicons?sz=32&domain=' + encodeURIComponent(domain);
-    return `<div class="ftz-embed" style="--embed-color:${embedColor};" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><img src="${faviconUrl}" width="14" height="14" style="border-radius:3px;" onerror="this.style.display='none'"> ${siteName||domain}</div><div class="ftz-embed-body"><div class="ftz-embed-title">${escapeHTML(pathLabel)}</div><div class="ftz-embed-url">${escapeHTML(domain)}</div></div></div></div></div>`;
-  });
+  // 6. All other URLs — unified Fortized embed (title + desc + image
+  // come from the page's OG metadata, fetched async by
+  // _hydrateLinkEmbed once the DOM mounts).
+  s = s.replace(/(?<![='"(])(https?:\/\/[^\s<>"'()]+)/gi, url => _renderUnifiedLinkEmbed(url));
   // Twemoji: replace Unicode emoji with Twemoji images for consistent rendering
   // Added onclick for emoji tooltip (Discord-style click-to-describe)
   s = s.replace(/((?:\p{Emoji_Presentation}|\p{Extended_Pictographic})(?:\uFE0F)?(?:\u200D(?:\p{Emoji_Presentation}|\p{Extended_Pictographic})(?:\uFE0F)?)*)/gu, (emoji) => {

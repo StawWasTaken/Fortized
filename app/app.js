@@ -1470,6 +1470,57 @@ function _renderUnifiedLinkEmbed(url) {
     </div>
   </div>`;
 }
+// Build a unified Fortized embed card from a single options object.
+// All cross-platform embeds (YouTube / Spotify / X / Instagram /
+// TikTok / Reddit / etc.) route through this so they share the
+// same shape: provider row → title+thumb → description → optional
+// media iframe / asset image → footer.
+function _uniformEmbed(opts) {
+  const accent      = opts.accent || '#fef93d';
+  const providerSvg = opts.providerSvg || '';
+  const providerIco = opts.providerIcon ? `<img src="${escapeHTML(opts.providerIcon)}" alt="" onerror="this.style.display='none'">` : providerSvg;
+  const providerNm  = opts.providerName || '';
+  const titleStr    = opts.title || '';
+  const titleHref   = opts.titleHref || '';
+  const titleHTML   = titleHref ? `<a href="${escapeHTML(titleHref)}" onclick="openExternalLink(event,'${escapeHTML(titleHref)}')">${escapeHTML(titleStr)}</a>` : escapeHTML(titleStr);
+  const description = opts.description || '';
+  const thumbnail   = opts.thumbnail || '';
+  const image       = opts.image || '';
+  const media       = opts.media || '';
+  const footerIco   = opts.footerIcon || opts.providerIcon || '';
+  const footerText  = opts.footerText || '';
+  const onClick     = opts.onClick || '';
+  return `<div class="ftz-embed" style="--embed-color:${accent};" ${onClick?`onclick="${onClick}"`:''}>
+    <div class="ftz-embed-inner">
+      <div class="ftz-embed-stripe"></div>
+      <div class="ftz-embed-content">
+        <div class="ftz-embed-body">
+          ${providerNm || providerIco ? `<div class="ftz-embed-head" data-slot="provider">${providerIco}<span data-slot="provider-name">${escapeHTML(providerNm)}</span></div>` : ''}
+          ${titleStr || description || thumbnail ? `<div class="ftz-embed-title-row" data-slot="header">
+            <div class="ftz-embed-text-stack">
+              ${titleStr ? `<div class="ftz-embed-title" data-slot="title">${titleHTML}</div>` : ''}
+              ${description ? `<div class="ftz-embed-desc" data-slot="description">${escapeHTML(String(description).slice(0,240))}</div>` : ''}
+            </div>
+            ${thumbnail ? `<img class="ftz-embed-thumb" src="${escapeHTML(thumbnail)}" alt="" data-slot="thumbnail" onerror="this.style.display='none'">` : ''}
+          </div>` : ''}
+          ${media ? `<div class="ftz-embed-media">${media}</div>` : ''}
+          ${image ? `<img class="ftz-embed-img" data-slot="asset-image" src="${escapeHTML(image)}" alt="" onerror="this.style.display='none'">` : ''}
+        </div>
+        ${footerText ? `<div class="ftz-embed-foot" data-slot="footer">${footerIco?`<img src="${escapeHTML(footerIco)}" class="embed__footer-icon" alt="" onerror="this.style.display='none'">`:''}<span>${escapeHTML(footerText)}</span></div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+// Single-letter "logo glyph" provider SVGs used by the special-case
+// renderers so they don't need a remote favicon.
+const _EMBED_LOGOS = {
+  youtube:   '<svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;color:#ff0000;"><path d="M23 7s-.3-2-1.2-2.8c-1.1-1.2-2.4-1.2-3-1.3C16.2 2.8 12 2.8 12 2.8s-4.2 0-6.8.1c-.6.1-1.9.1-3 1.3C1.3 5 1 7 1 7S.7 9.1.7 11.3v2c0 2.2.3 4.3.3 4.3s.3 2 1.2 2.8c1.1 1.2 2.6 1.1 3.2 1.2C7.2 21.9 12 22 12 22s4.2 0 6.8-.2c.6-.1 1.9-.1 3-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.1.3-4.3v-2C23.3 9.1 23 7 23 7z"/></svg>',
+  tiktok:    '<svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;color:#ff0050;"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.09a8.16 8.16 0 004.77 1.52V7.17a4.85 4.85 0 01-1-.48z"/></svg>',
+  spotify:   '<svg viewBox="0 0 24 24" fill="#1DB954" style="width:18px;height:18px;"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>',
+  x:         '<svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;color:#fff;"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+  instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#E1306C;"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
+};
+
 async function _hydrateLinkEmbed(id, url) {
   const meta = await _fetchLinkMeta(url);
   const root = document.getElementById(id);
@@ -1850,11 +1901,11 @@ function _openAttachMenu(evt, inputId, context) {
       <div class="attach-menu__body"><div class="attach-menu__title">Media or file</div></div>
     </button>
     <button class="attach-menu__row" onclick="document.getElementById('attach-menu').remove();_openComposeBuilder('poll','${escapeHTML(inputId)}','${escapeHTML(context)}')">
-      <span class="attach-menu__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="4" y2="6.01"/><line x1="8" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="4" y2="12.01"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="4" y2="18.01"/><line x1="8" y1="18" x2="20" y2="18"/></svg></span>
+      <span class="attach-menu__ico"><svg viewBox="0 0 640 640" fill="currentColor" aria-hidden="true"><path d="M544 160C544 124.7 515.3 96 480 96L160 96C124.7 96 96 124.7 96 160L96 480C96 515.3 124.7 544 160 544L480 544C515.3 544 544 515.3 544 480L544 160zM352 216C352 229.3 341.3 240 328 240L216 240C202.7 240 192 229.3 192 216C192 202.7 202.7 192 216 192L328 192C341.3 192 352 202.7 352 216zM424 296C437.3 296 448 306.7 448 320C448 333.3 437.3 344 424 344L216 344C202.7 344 192 333.3 192 320C192 306.7 202.7 296 216 296L424 296zM288 424C288 437.3 277.3 448 264 448L216 448C202.7 448 192 437.3 192 424C192 410.7 202.7 400 216 400L264 400C277.3 400 288 410.7 288 424z"/></svg></span>
       <div class="attach-menu__body"><div class="attach-menu__title">Poll</div><div class="attach-menu__sub">A single or multiple-choice question.</div></div>
     </button>
     <button class="attach-menu__row" onclick="document.getElementById('attach-menu').remove();_openComposeBuilder('form','${escapeHTML(inputId)}','${escapeHTML(context)}')">
-      <span class="attach-menu__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg></span>
+      <span class="attach-menu__ico"><svg viewBox="0 0 640 640" fill="currentColor" aria-hidden="true"><path d="M128 128C128 92.7 156.7 64 192 64L341.5 64C358.5 64 374.8 70.7 386.8 82.7L493.3 189.3C505.3 201.3 512 217.6 512 234.6L512 512C512 547.3 483.3 576 448 576L192 576C156.7 576 128 547.3 128 512L128 128zM336 122.5L336 216C336 229.3 346.7 240 360 240L453.5 240L336 122.5zM248 320C234.7 320 224 330.7 224 344C224 357.3 234.7 368 248 368L392 368C405.3 368 416 357.3 416 344C416 330.7 405.3 320 392 320L248 320zM248 416C234.7 416 224 426.7 224 440C224 453.3 234.7 464 248 464L392 464C405.3 464 416 453.3 416 440C416 426.7 405.3 416 392 416L248 416z"/></svg></span>
       <div class="attach-menu__body"><div class="attach-menu__title">Form</div><div class="attach-menu__sub">Multiple questions with various question types.</div></div>
     </button>`;
   document.body.appendChild(menu);
@@ -28212,42 +28263,57 @@ function parseMD(s) {
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
-  // 2. YouTube embed — all unified
-  // YouTube Shorts — portrait 9:16 (same structure, just different aspect ratio)
-  s = s.replace(/https?:\/\/(?:www\.|m\.)?youtube\.com\/shorts\/([\w-]{11})[^\s]*/gi, (url, vid) => {
-    return `<div class="ftz-embed" style="--embed-color:#ff0000;display:inline-block;vertical-align:top;"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7s-.3-2-1.2-2.8c-1.1-1.2-2.4-1.2-3-1.3C16.2 2.8 12 2.8 12 2.8s-4.2 0-6.8.1c-.6.1-1.9.1-3 1.3C1.3 5 1 7 1 7S.7 9.1.7 11.3v2c0 2.2.3 4.3.3 4.3s.3 2 1.2 2.8c1.1 1.2 2.6 1.1 3.2 1.2C7.2 21.9 12 22 12 22s4.2 0 6.8-.2c.6-.1 1.9-.1 3-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.1.3-4.3v-2C23.3 9.1 23 7 23 7z"/></svg> YouTube Short</div><div class="ftz-embed-media"><div style="width:200px;height:355px;"><iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;inset:0;width:100%;height:100%;" allowfullscreen loading="lazy"></iframe></div></div></div></div></div>`;
-  });
-  // YouTube regular — 16:9
+  // 2. YouTube embeds — all routed through _uniformEmbed
+  s = s.replace(/https?:\/\/(?:www\.|m\.)?youtube\.com\/shorts\/([\w-]{11})[^\s]*/gi, (url, vid) => _uniformEmbed({
+    accent: '#ff0000', providerSvg: _EMBED_LOGOS.youtube, providerName: 'YouTube Short',
+    media: `<div style="position:relative;padding-bottom:177.78%;height:0;max-width:240px;margin:0 auto;"><iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;inset:0;width:100%;height:100%;" allowfullscreen loading="lazy"></iframe></div>`,
+    footerText: 'youtube.com',
+  }));
   s = s.replace(/https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/watch\?v=([\w-]{11})|youtu\.be\/([\w-]{11}))[^\s]*/gi, (url, watch, lite) => {
     const vid = watch || lite;
-    return `<div class="ftz-embed" style="--embed-color:#ff0000;"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7s-.3-2-1.2-2.8c-1.1-1.2-2.4-1.2-3-1.3C16.2 2.8 12 2.8 12 2.8s-4.2 0-6.8.1c-.6.1-1.9.1-3 1.3C1.3 5 1 7 1 7S.7 9.1.7 11.3v2c0 2.2.3 4.3.3 4.3s.3 2 1.2 2.8c1.1 1.2 2.6 1.1 3.2 1.2C7.2 21.9 12 22 12 22s4.2 0 6.8-.2c.6-.1 1.9-.1 3-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.1.3-4.3v-2C23.3 9.1 23 7 23 7z"/></svg> YouTube</div><div class="ftz-embed-media"><div style="position:relative;padding-bottom:56.25%;height:0;"><iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;inset:0;width:100%;height:100%;" allowfullscreen loading="lazy"></iframe></div></div></div></div></div>`;
+    return _uniformEmbed({
+      accent: '#ff0000', providerSvg: _EMBED_LOGOS.youtube, providerName: 'YouTube',
+      media: `<div style="position:relative;padding-bottom:56.25%;height:0;"><iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;inset:0;width:100%;height:100%;" allowfullscreen loading="lazy"></iframe></div>`,
+      footerText: 'youtube.com',
+    });
   });
-  // YouTube channel — unified channel/profile card
-  s = s.replace(/https?:\/\/(?:www\.)?youtube\.com\/@([\w.-]+)[^\s]*/gi, (url, handle) => {
-    const safe = escapeHTML(url);
-    return `<div class="ftz-embed" style="--embed-color:#ff0000;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7s-.3-2-1.2-2.8c-1.1-1.2-2.4-1.2-3-1.3C16.2 2.8 12 2.8 12 2.8s-4.2 0-6.8.1c-.6.1-1.9.1-3 1.3C1.3 5 1 7 1 7S.7 9.1.7 11.3v2c0 2.2.3 4.3.3 4.3s.3 2 1.2 2.8c1.1 1.2 2.6 1.1 3.2 1.2C7.2 21.9 12 22 12 22s4.2 0 6.8-.2c.6-.1 1.9-.1 3-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.1.3-4.3v-2C23.3 9.1 23 7 23 7z"/></svg> YouTube Channel</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,#ff0000,#cc0000);">${handle[0].toUpperCase()}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">@${escapeHTML(handle)}</div><div class="ftz-embed-desc">YouTube Channel</div></div><div class="ftz-embed-btn" style="flex-shrink:0;margin:0;padding:6px 14px;font-size:11px;">Visit</div></div></div></div></div>`;
-  });
-  // 3. TikTok — detect video vs channel
-  // TikTok channel (@user)
-  s = s.replace(/https?:\/\/(?:www\.)?tiktok\.com\/@([\w.]+)(?:\s|$)/gi, (url, user) => {
-    const safe = escapeHTML(url.trim());
-    return `<div class="ftz-embed" style="--embed-color:#ff0050;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.09a8.16 8.16 0 004.77 1.52V7.17a4.85 4.85 0 01-1-.48z"/></svg> TikTok</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,#ff0050,#00f2ea);">${user[0].toUpperCase()}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">@${escapeHTML(user)}</div><div class="ftz-embed-desc">TikTok Creator</div></div><div class="ftz-embed-btn" style="flex-shrink:0;margin:0;padding:6px 14px;font-size:11px;">Visit</div></div></div></div></div> `;
-  });
-  // TikTok video (any other tiktok link)
-  s = s.replace(/https?:\/\/(?:www\.)?tiktok\.com\/[^\s]+/gi, url => {
-    const safe = escapeHTML(url);
-    return `<div class="ftz-embed" style="--embed-color:#ff0050;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.09a8.16 8.16 0 004.77 1.52V7.17a4.85 4.85 0 01-1-.48z"/></svg> TikTok Video</div><div class="ftz-embed-body"><div class="ftz-embed-title">${safe.replace('https://','').slice(0,50)}</div><div class="ftz-embed-desc">Open in TikTok to watch this video</div></div></div></div></div>`;
-  });
-  // 4. Spotify embed — artist profiles use channel card, rest use player
-  // Spotify artist profile
-  s = s.replace(/https?:\/\/open\.spotify\.com\/artist\/([\w]+)[^\s]*/gi, (url, id) => {
-    const safe = escapeHTML(url);
-    return `<div class="ftz-embed" style="--embed-color:#1DB954;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Spotify</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,#1DB954,#14833b);"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">Spotify Artist</div><div class="ftz-embed-desc">Listen on Spotify</div></div><div class="ftz-embed-btn" style="flex-shrink:0;margin:0;padding:6px 14px;font-size:11px;">Open</div></div></div></div></div>`;
-  });
-  // Spotify track/album/playlist — with embedded player
+  s = s.replace(/https?:\/\/(?:www\.)?youtube\.com\/@([\w.-]+)[^\s]*/gi, (url, handle) => _uniformEmbed({
+    accent: '#ff0000', providerSvg: _EMBED_LOGOS.youtube, providerName: 'YouTube Channel',
+    title: '@' + handle, titleHref: url,
+    description: 'YouTube Channel',
+    footerText: 'youtube.com',
+    onClick: `openExternalLink(event,'${escapeHTML(url)}')`,
+  }));
+  // 3. TikTok — channel + video
+  s = s.replace(/https?:\/\/(?:www\.)?tiktok\.com\/@([\w.]+)(?:\s|$)/gi, (url, user) => _uniformEmbed({
+    accent: '#ff0050', providerSvg: _EMBED_LOGOS.tiktok, providerName: 'TikTok',
+    title: '@' + user, titleHref: url.trim(),
+    description: 'TikTok Creator',
+    footerText: 'tiktok.com',
+    onClick: `openExternalLink(event,'${escapeHTML(url.trim())}')`,
+  }));
+  s = s.replace(/https?:\/\/(?:www\.)?tiktok\.com\/[^\s]+/gi, url => _uniformEmbed({
+    accent: '#ff0050', providerSvg: _EMBED_LOGOS.tiktok, providerName: 'TikTok Video',
+    title: url.replace(/^https?:\/\//,'').slice(0,50), titleHref: url,
+    description: 'Open in TikTok to watch this video',
+    footerText: 'tiktok.com',
+    onClick: `openExternalLink(event,'${escapeHTML(url)}')`,
+  }));
+  // 4. Spotify — artist profile + track/album/playlist player
+  s = s.replace(/https?:\/\/open\.spotify\.com\/artist\/([\w]+)[^\s]*/gi, (url, id) => _uniformEmbed({
+    accent: '#1DB954', providerSvg: _EMBED_LOGOS.spotify, providerName: 'Spotify Artist',
+    title: 'Spotify Artist', titleHref: url,
+    description: 'Listen on Spotify',
+    footerText: 'open.spotify.com',
+    onClick: `openExternalLink(event,'${escapeHTML(url)}')`,
+  }));
   s = s.replace(/https?:\/\/open\.spotify\.com\/(track|album|playlist)\/([\w]+)[^\s]*/gi, (url, type, id) => {
-    const typeLabel = type === 'track' ? 'Track' : type === 'album' ? 'Album' : 'Playlist';
-    return `<div class="ftz-embed" style="--embed-color:#1DB954;"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Spotify ${typeLabel}</div><div class="ftz-embed-media"><iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="${type==='track'?80:152}" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe></div></div></div></div>`;
+    const label = type === 'track' ? 'Track' : type === 'album' ? 'Album' : 'Playlist';
+    return _uniformEmbed({
+      accent: '#1DB954', providerSvg: _EMBED_LOGOS.spotify, providerName: 'Spotify ' + label,
+      media: `<iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="${type==='track'?80:152}" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`,
+      footerText: 'open.spotify.com',
+    });
   });
   // 5. Fortized invite/bastion link — unified embed card
   s = s.replace(/https?:\/\/[^\s]*[?&]invite=([\w-]+)[^\s]*/gi, (url, code) => {
@@ -28356,22 +28422,30 @@ function parseMD(s) {
     </div>`;
   });
 
-  // 5b. X / Twitter post links — unique tweet card (unified embed)
-  s = s.replace(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/([\w]+)\/status\/([\d]+)[^\s]*/gi, (url, user, id) => {
-    const safe = escapeHTML(url);
-    return `<div class="ftz-embed" style="--embed-color:#1d9bf0;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><span style="font-family:var(--font-display);font-weight:900;font-size:14px;">&#120143;</span> Post</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,#1d9bf0,#0a6bbf);">${user[0].toUpperCase()}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">@${escapeHTML(user)}</div><div class="ftz-embed-desc">View post on &#120143;</div></div></div><div class="ftz-embed-foot"><span style="display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Likes</span><span style="display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Reposts</span><span style="display:flex;align-items:center;gap:4px;">${ftzIcon('chat','11')}Replies</span></div></div></div></div>`;
-  });
-
-  // 5c. X / Twitter profile links — unified channel/profile card
-  s = s.replace(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/([\w]+)(?:\s|$)/gi, (url, user) => {
-    const safe = escapeHTML(url.trim());
-    return `<div class="ftz-embed" style="--embed-color:#1d9bf0;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><span style="font-family:var(--font-display);font-weight:900;font-size:14px;">&#120143;</span> Profile</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,#1d9bf0,#0a6bbf);">${user[0].toUpperCase()}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">@${escapeHTML(user)}</div><div class="ftz-embed-desc">&#120143; Profile</div></div><div class="ftz-embed-btn" style="flex-shrink:0;margin:0;padding:6px 14px;font-size:11px;">Follow</div></div></div></div></div> `;
-  });
-  // 5d. Instagram channel links
-  s = s.replace(/https?:\/\/(?:www\.)?instagram\.com\/([\w.]+)(?:\s|$)/gi, (url, user) => {
-    const safe = escapeHTML(url.trim());
-    return `<div class="ftz-embed" style="--embed-color:#E1306C;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> Instagram</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,#833AB4,#E1306C,#F77737);">${user[0].toUpperCase()}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">@${escapeHTML(user)}</div><div class="ftz-embed-desc">Instagram Profile</div></div><div class="ftz-embed-btn" style="flex-shrink:0;margin:0;padding:6px 14px;font-size:11px;">Visit</div></div></div></div></div> `;
-  });
+  // 5b. X / Twitter post
+  s = s.replace(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/([\w]+)\/status\/([\d]+)[^\s]*/gi, (url, user, id) => _uniformEmbed({
+    accent: '#1d9bf0', providerSvg: _EMBED_LOGOS.x, providerName: 'X (formerly Twitter)',
+    title: '@' + user, titleHref: url,
+    description: 'View post on X',
+    footerText: 'x.com',
+    onClick: `openExternalLink(event,'${escapeHTML(url)}')`,
+  }));
+  // 5c. X / Twitter profile
+  s = s.replace(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/([\w]+)(?:\s|$)/gi, (url, user) => _uniformEmbed({
+    accent: '#1d9bf0', providerSvg: _EMBED_LOGOS.x, providerName: 'X Profile',
+    title: '@' + user, titleHref: url.trim(),
+    description: 'View profile on X',
+    footerText: 'x.com',
+    onClick: `openExternalLink(event,'${escapeHTML(url.trim())}')`,
+  }));
+  // 5d. Instagram profile
+  s = s.replace(/https?:\/\/(?:www\.)?instagram\.com\/([\w.]+)(?:\s|$)/gi, (url, user) => _uniformEmbed({
+    accent: '#E1306C', providerSvg: _EMBED_LOGOS.instagram, providerName: 'Instagram',
+    title: '@' + user, titleHref: url.trim(),
+    description: 'Instagram Profile',
+    footerText: 'instagram.com',
+    onClick: `openExternalLink(event,'${escapeHTML(url.trim())}')`,
+  }));
   // 5e. Fortized gift links — radiance gift
   s = s.replace(/https?:\/\/[^\s]*[?&]gift_radiance=([\w]+)[^\s]*/gi, (url, giftCode) => {
     return _renderGiftEmbed('radiance', giftCode);

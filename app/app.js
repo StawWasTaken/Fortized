@@ -1521,6 +1521,51 @@ const _EMBED_LOGOS = {
   instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#E1306C;"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
 };
 
+const _DOM_COLOR_CACHE = {};
+function _extractDominantColor(src) {
+  if (!src) return Promise.resolve(null);
+  if (_DOM_COLOR_CACHE[src] !== undefined) return Promise.resolve(_DOM_COLOR_CACHE[src]);
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.referrerPolicy = 'no-referrer';
+    img.onload = () => {
+      try {
+        const w = 32, h = 32;
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        const buckets = {};
+        let bestKey = null, bestScore = -1;
+        for (let i = 0; i < data.length; i += 4) {
+          const a = data[i+3]; if (a < 200) continue;
+          const r = data[i], g = data[i+1], b = data[i+2];
+          const max = Math.max(r,g,b), min = Math.min(r,g,b);
+          const sat = max === 0 ? 0 : (max - min) / max;
+          const lum = (max + min) / 2;
+          if (sat < 0.18) continue;
+          if (lum < 30 || lum > 235) continue;
+          const key = (r>>4) + ',' + (g>>4) + ',' + (b>>4);
+          const slot = buckets[key] || (buckets[key] = { r:0, g:0, b:0, n:0, sat:0 });
+          slot.r += r; slot.g += g; slot.b += b; slot.n++; slot.sat += sat;
+          const score = slot.n * (1 + slot.sat / slot.n);
+          if (score > bestScore) { bestScore = score; bestKey = key; }
+        }
+        if (!bestKey) { _DOM_COLOR_CACHE[src] = null; return resolve(null); }
+        const s = buckets[bestKey];
+        const r = Math.round(s.r / s.n), g = Math.round(s.g / s.n), b = Math.round(s.b / s.n);
+        const hex = '#' + [r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+        _DOM_COLOR_CACHE[src] = hex;
+        resolve(hex);
+      } catch(e) { _DOM_COLOR_CACHE[src] = null; resolve(null); }
+    };
+    img.onerror = () => { _DOM_COLOR_CACHE[src] = null; resolve(null); };
+    img.src = src;
+  });
+}
+
 async function _hydrateLinkEmbed(id, url) {
   const meta = await _fetchLinkMeta(url);
   const root = document.getElementById(id);
@@ -1548,6 +1593,12 @@ async function _hydrateLinkEmbed(id, url) {
   if (meta.siteName) {
     const provEl = root.querySelector('[data-slot="provider-name"]');
     if (provEl) provEl.textContent = meta.siteName;
+  }
+  const colorSrc = meta.image || meta.icon || meta.favicon || meta.logo;
+  if (colorSrc) {
+    _extractDominantColor(colorSrc).then(hex => {
+      if (hex && root.isConnected) root.style.setProperty('--embed-color', hex);
+    });
   }
 }
 
@@ -28758,7 +28809,7 @@ function parseMD(s) {
       const oc = Math.max(1,Math.floor(mc*0.3));
       const iconHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">` : `<div class="bie-fallback">${(b.name||'B')[0]}</div>`;
       const bannerHTML = b.banner ? `<img src="${escapeHTML(b.banner)}" draggable="false">` : '';
-      return `<a href="${escapeHTML(url)}" class="ftz-embed-url-line" onclick="event.preventDefault();openExternalLink(event,'${escapeHTML(url)}')">${escapeHTML(url)}</a><div class="bastion-invite-embed" onclick="joinByInvite('${escapeHTML(code)}')">
+      return `<div class="bastion-invite-embed" onclick="joinByInvite('${escapeHTML(code)}')">
         <div class="bie-banner">${bannerHTML}</div>
         <div class="bie-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> BASTION INVITE</div>
         <div class="bie-body">
@@ -28769,7 +28820,6 @@ function parseMD(s) {
               <div class="bie-stats"><div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div></div>
             </div>
           </div>
-          ${b.desc?`<div class="bie-desc">${escapeHTML(b.desc)}</div>`:''}
           <button class="bie-join joined">Joined</button>
         </div>
       </div>`;
@@ -28831,14 +28881,22 @@ function parseMD(s) {
       } catch(e) { console.error('[Embed] Unexpected error:', e); }
       // Update embed or show error
       const nameEl = el.querySelector('.bie-name');
-      if (!b) { console.warn('[Embed] All strategies failed for code:', code); if (nameEl) nameEl.textContent = 'Invite expired'; return; }
+      if (!b) {
+        console.warn('[Embed] All strategies failed for code:', code);
+        el.classList.add('invalid');
+        if (nameEl) nameEl.textContent = 'Invalid Invite';
+        const descEl2 = el.querySelector('.bie-desc'); if (descEl2) { descEl2.textContent = 'This invite may be expired or revoked.'; descEl2.style.display = ''; }
+        const statsEl2 = el.querySelector('.bie-stats'); if (statsEl2) statsEl2.remove();
+        const joinEl = el.querySelector('.bie-join'); if (joinEl) { joinEl.className = 'bie-join invalid'; joinEl.textContent = 'Invalid'; joinEl.disabled = true; }
+        return;
+      }
       if (nameEl) nameEl.textContent = b.name || 'Bastion';
       const iconEl = el.querySelector('.bie-icon'); if (iconEl) iconEl.innerHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.parentElement.innerHTML='<div class=bie-fallback>${(b.name||'B')[0]}</div>'">` : `<div class="bie-fallback">${(b.name||'B')[0]}</div>`;
       const bannerEl = el.querySelector('.bie-banner'); if (bannerEl && b.banner) bannerEl.innerHTML = `<img src="${escapeHTML(b.banner)}" draggable="false">`;
       const descEl = el.querySelector('.bie-desc'); if (descEl && (b.desc||b.description)) { descEl.textContent = b.desc||b.description; descEl.style.display = ''; }
       const statsEl = el.querySelector('.bie-stats'); if (statsEl) { const mc = b.memberCount || Object.keys(b.memberRoles||{}).length || 1; const oc = Math.max(1,Math.floor(mc*0.3)); statsEl.innerHTML = `<div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div>`; }
     }, 200);
-    return `<a href="${escapeHTML(url)}" class="ftz-embed-url-line" onclick="event.preventDefault();openExternalLink(event,'${escapeHTML(url)}')">${escapeHTML(url)}</a><div class="bastion-invite-embed" id="${embedId}" onclick="joinByInvite('${escapeHTML(code)}')">
+    return `<div class="bastion-invite-embed" id="${embedId}" onclick="joinByInvite('${escapeHTML(code)}')">
       <div class="bie-banner"></div>
       <div class="bie-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> BASTION INVITE</div>
       <div class="bie-body">

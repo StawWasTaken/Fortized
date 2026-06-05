@@ -3673,14 +3673,12 @@ body.is-desktop-app .notif-panel{top:0;}
    typography). Replaces the legacy treatment below — the
    "-LEGACY" classes still exist for any stale render path until
    they're swept later. */
-.ftz-embed-url-line{display:block;font-size:13px;color:#8fb6ff;text-decoration:none;margin:4px 0 2px;word-break:break-all;}
-.ftz-embed-url-line:hover{text-decoration:underline;}
 .bastion-invite-embed{
-  --embed-color:#3ecf6e;
+  --embed-color:#fff93e;
   background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),#15171e;
   border:1px solid rgba(255,255,255,.06);
   border-radius:6px;
-  width:420px; max-width:100%;
+  width:340px; max-width:100%;
   margin:8px 0;
   overflow:hidden;
   position:relative;
@@ -3692,27 +3690,30 @@ body.is-desktop-app .notif-panel{top:0;}
 .bastion-invite-embed:hover{transform:translateY(-1px);box-shadow:none;}
 .bastion-invite-embed::before{content:"";position:absolute;inset-block:0;left:0;width:4px;background:var(--embed-color);z-index:3;}
 .bastion-invite-embed::after{content:none;}
-.bastion-invite-embed .bie-banner{position:relative;height:80px;overflow:hidden;background:linear-gradient(135deg,rgba(62,207,110,.10),rgba(62,207,110,.04));}
+.bastion-invite-embed .bie-banner{position:relative;height:56px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(255,249,62,.02));}
 .bastion-invite-embed .bie-banner img{width:100%;height:100%;object-fit:cover;display:block;}
-.bastion-invite-embed .bie-label{position:absolute;top:10px;left:18px;z-index:4;font-family:'Syne',sans-serif;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:5px;text-shadow:0 1px 2px rgba(0,0,0,.6);}
-.bastion-invite-embed .bie-label svg{color:rgba(255,255,255,.85);}
-.bastion-invite-embed .bie-body{position:relative;padding:14px 16px 14px 20px;display:flex;flex-direction:column;gap:10px;z-index:2;}
-.bastion-invite-embed .bie-header{display:flex;align-items:center;gap:12px;}
-.bastion-invite-embed .bie-icon{width:48px;height:48px;border-radius:14px;background:#0c0d10;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
-.bastion-invite-embed .bie-icon img{width:100%;height:100%;object-fit:cover;border-radius:12px;}
-.bastion-invite-embed .bie-icon .bie-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(62,207,110,.10);font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--embed-color);}
-.bastion-invite-embed .bie-text{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1;}
-.bastion-invite-embed .bie-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;letter-spacing:.02em;line-height:1.2;}
-.bastion-invite-embed .bie-desc{font-size:13.5px;color:#cfd1d4;line-height:1.5;}
-.bastion-invite-embed .bie-stats{display:flex;align-items:center;gap:14px;}
-.bastion-invite-embed .bie-stat{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:#9ba1ad;}
-.bastion-invite-embed .bie-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.bastion-invite-embed .bie-dot.online{background:#3ecf6e;box-shadow:0 0 6px rgba(62,207,110,.5);}
+.bastion-invite-embed .bie-label{position:absolute;top:8px;left:16px;z-index:4;font-family:'Syne',sans-serif;font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:5px;text-shadow:0 1px 2px rgba(0,0,0,.6);}
+.bastion-invite-embed .bie-label svg{color:rgba(255,255,255,.75);width:10px;height:10px;}
+.bastion-invite-embed .bie-body{position:relative;padding:10px 12px 10px 16px;display:flex;flex-direction:column;gap:8px;z-index:2;}
+.bastion-invite-embed .bie-header{display:flex;align-items:center;gap:10px;}
+.bastion-invite-embed .bie-icon{width:40px;height:40px;border-radius:10px;background:#0c0d10;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
+.bastion-invite-embed .bie-icon img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
+.bastion-invite-embed .bie-icon .bie-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,249,62,.10);font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--embed-color);}
+.bastion-invite-embed .bie-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
+.bastion-invite-embed .bie-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;letter-spacing:.02em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bastion-invite-embed .bie-desc{font-size:12px;color:#cfd1d4;line-height:1.4;}
+.bastion-invite-embed .bie-stats{display:flex;align-items:center;gap:10px;}
+.bastion-invite-embed .bie-stat{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:#9ba1ad;}
+.bastion-invite-embed .bie-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.bastion-invite-embed .bie-dot.online{background:#3ecf6e;box-shadow:0 0 5px rgba(62,207,110,.5);}
 .bastion-invite-embed .bie-dot.total{background:#80848e;}
-.bastion-invite-embed .bie-join{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:4px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.03em;border:none;cursor:pointer;transition:filter .15s;width:100%;}
+.bastion-invite-embed .bie-join{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:4px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;letter-spacing:.03em;border:none;cursor:pointer;transition:filter .15s;width:100%;}
 .bastion-invite-embed .bie-join.primary{background:#3ecf6e;color:#0c1a12;}
 .bastion-invite-embed .bie-join.primary:hover{filter:brightness(1.08);}
 .bastion-invite-embed .bie-join.joined{background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);cursor:default;border:1px solid rgba(255,255,255,.08);}
+.bastion-invite-embed .bie-join.invalid{background:#eb4545;color:#fff;cursor:not-allowed;}
+.bastion-invite-embed.invalid{--embed-color:#eb4545;}
+.bastion-invite-embed.invalid .bie-banner{background:linear-gradient(135deg,rgba(235,69,69,.10),rgba(235,69,69,.02));}
 
 .bastion-invite-embed-LEGACY{max-width:420px;margin:8px 0;border-radius:16px;overflow:hidden;background:linear-gradient(145deg,rgba(15,18,30,.95),rgba(10,12,22,.98));border:1.5px solid rgba(255,249,62,.08);animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;}
 .bastion-invite-embed-LEGACY:hover{border-color:rgba(255,249,62,.18);transform:translateY(-1px);box-shadow:0 8px 32px rgba(0,0,0,.4);}

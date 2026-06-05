@@ -1919,11 +1919,435 @@ function _openAttachMenu(evt, inputId, context) {
   };
   setTimeout(() => document.addEventListener('mousedown', off, true), 0);
 }
-// Placeholder for poll / form composer — the full embed builder
-// is item 7 of the redesign brief and lands later. For now we
-// toast so the menu is functional end-to-end.
-function _openComposeBuilder(kind /*, inputId, context */) {
-  toast(`${kind === 'poll' ? 'Poll' : 'Form'} builder is coming soon — the embed redesign lands next.`, 'info');
+// ════════════════════════════════════════════════════════════════════
+// POLL + FORM COMPOSER + RENDERERS
+// ────────────────────────────────────────────────────────────────────
+// Opens a modal builder (Poll or Form), serialises the result into a
+// [FTZPOLL:<base64-json>] / [FTZFORM:<base64-json>] token, and
+// inserts it into the active composer. The parseMD pipeline below
+// converts the token at render time into a unified .ftz-embed card
+// using the brand template (Syne, yellow rail, 420px, footer bar).
+// Votes / submissions are kept in localStorage keyed by the embed's
+// own id so a refresh persists state.
+// ════════════════════════════════════════════════════════════════════
+function _openComposeBuilder(kind, inputId, context) {
+  if (kind === 'poll') return _openPollBuilder(inputId, context);
+  if (kind === 'form') return _openFormBuilder(inputId, context);
+  toast('Unknown composer kind: ' + kind, 'error');
+}
+
+function _openPollBuilder(inputId /*, context */) {
+  document.getElementById('ftz-poll-builder')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'ftz-poll-builder';
+  ov.className = 'modal-overlay open ftz-compose-overlay';
+  ov.innerHTML = `
+    <div class="ftz-compose">
+      <div class="ftz-compose__head">
+        <div class="ftz-compose__title">Create a poll</div>
+        <button class="ftz-compose__close" onclick="document.getElementById('ftz-poll-builder').remove()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="ftz-compose__body">
+        <label class="ftz-compose__label">Answer type</label>
+        <select id="poll-type" class="ftz-compose__input">
+          <option value="single">Single choice</option>
+          <option value="multi">Multiple choice</option>
+        </select>
+
+        <label class="ftz-compose__label" style="margin-top:14px;">Question</label>
+        <input id="poll-question" class="ftz-compose__input" maxlength="300" placeholder="What question do you want to ask?">
+
+        <div id="poll-options" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
+        <button class="ftz-compose__add" onclick="_pollAddOption()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add option
+        </button>
+
+        <label class="ftz-compose__label" style="margin-top:18px;">Duration</label>
+        <select id="poll-duration" class="ftz-compose__input">
+          <option value="3600000">1 hour</option>
+          <option value="86400000" selected>24 hours</option>
+          <option value="259200000">3 days</option>
+          <option value="604800000">7 days</option>
+          <option value="0">No expiry</option>
+        </select>
+
+        <label class="ftz-compose__toggle" style="margin-top:18px;">
+          <input type="checkbox" id="poll-open">
+          <span>Allow votes from anyone (open submissions)</span>
+        </label>
+      </div>
+      <div class="ftz-compose__foot">
+        <button class="ftz-compose__btn ftz-compose__btn--ghost" onclick="document.getElementById('ftz-poll-builder').remove()">Cancel</button>
+        <button class="ftz-compose__btn ftz-compose__btn--primary" onclick="_pollSubmit('${escapeHTML(inputId)}')">Create</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  _pollAddOption();
+  _pollAddOption();
+  setTimeout(() => document.getElementById('poll-question')?.focus(), 30);
+}
+
+function _pollAddOption() {
+  const list = document.getElementById('poll-options');
+  if (!list) return;
+  const i = list.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'ftz-compose__opt';
+  row.innerHTML = `
+    <span class="ftz-compose__opt-num">${i}</span>
+    <input class="ftz-compose__input ftz-compose__opt-input" maxlength="120" placeholder="Type your answer">
+    <button class="ftz-compose__opt-del" onclick="this.parentElement.remove();_pollRenumber()" aria-label="Remove option">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+    </button>`;
+  list.appendChild(row);
+}
+function _pollRenumber() {
+  document.querySelectorAll('#poll-options .ftz-compose__opt-num').forEach((el, i) => { el.textContent = i + 1; });
+}
+
+function _pollSubmit(inputId) {
+  const q = (document.getElementById('poll-question')?.value || '').trim();
+  if (!q) { toast('Add a question first.', 'info'); return; }
+  const type = document.getElementById('poll-type')?.value || 'single';
+  const opens = !!document.getElementById('poll-open')?.checked;
+  const dur = Number(document.getElementById('poll-duration')?.value || 0);
+  const options = [...document.querySelectorAll('#poll-options .ftz-compose__opt-input')]
+    .map(el => (el.value || '').trim())
+    .filter(Boolean);
+  if (options.length < 2) { toast('Add at least two options.', 'info'); return; }
+  const poll = {
+    id: 'pl_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    q, type, options, open: opens,
+    expiresAt: dur > 0 ? new Date(Date.now() + dur).toISOString() : null,
+    by: CU?.username || '',
+    at: new Date().toISOString(),
+  };
+  document.getElementById('ftz-poll-builder')?.remove();
+  _insertEmbedTokenIntoComposer(inputId, '[FTZPOLL:' + _b64(JSON.stringify(poll)) + ']');
+}
+
+// ── FORM ────────────────────────────────────────────────────────────
+function _openFormBuilder(inputId /*, context */) {
+  document.getElementById('ftz-form-builder')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'ftz-form-builder';
+  ov.className = 'modal-overlay open ftz-compose-overlay';
+  ov.innerHTML = `
+    <div class="ftz-compose">
+      <div class="ftz-compose__head">
+        <div class="ftz-compose__title">Create a form</div>
+        <button class="ftz-compose__close" onclick="document.getElementById('ftz-form-builder').remove()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="ftz-compose__body">
+        <label class="ftz-compose__label">Title</label>
+        <input id="form-title" class="ftz-compose__input" maxlength="120" placeholder="What's this form about?">
+        <label class="ftz-compose__label" style="margin-top:12px;">Description (optional)</label>
+        <input id="form-desc" class="ftz-compose__input" maxlength="240" placeholder="A short intro for respondents…">
+        <div id="form-questions" style="margin-top:14px;display:flex;flex-direction:column;gap:10px;"></div>
+        <button class="ftz-compose__add" onclick="_formAddQuestion()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add question
+        </button>
+      </div>
+      <div class="ftz-compose__foot">
+        <button class="ftz-compose__btn ftz-compose__btn--ghost" onclick="document.getElementById('ftz-form-builder').remove()">Cancel</button>
+        <button class="ftz-compose__btn ftz-compose__btn--primary" onclick="_formSubmit('${escapeHTML(inputId)}')">Create</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  _formAddQuestion();
+  setTimeout(() => document.getElementById('form-title')?.focus(), 30);
+}
+
+function _formAddQuestion() {
+  const list = document.getElementById('form-questions');
+  if (!list) return;
+  const i = list.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'ftz-compose__qblock';
+  row.innerHTML = `
+    <div class="ftz-compose__qhead">
+      <span class="ftz-compose__opt-num">${i}</span>
+      <select class="ftz-compose__input ftz-compose__qtype">
+        <option value="short">Short answer</option>
+        <option value="long">Long answer</option>
+        <option value="single">Single choice</option>
+        <option value="multi">Multiple choice</option>
+      </select>
+      <button class="ftz-compose__opt-del" onclick="this.closest('.ftz-compose__qblock').remove();_formRenumber()" aria-label="Remove question">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      </button>
+    </div>
+    <input class="ftz-compose__input ftz-compose__qtext" maxlength="240" placeholder="Question text">
+    <div class="ftz-compose__qchoices" style="display:none;flex-direction:column;gap:6px;margin-top:6px;"></div>
+    <button class="ftz-compose__qchoice-add" style="display:none;" onclick="_formAddChoice(this.parentElement)">+ Add choice</button>`;
+  const sel = row.querySelector('.ftz-compose__qtype');
+  sel.addEventListener('change', () => {
+    const isChoice = sel.value === 'single' || sel.value === 'multi';
+    const ch = row.querySelector('.ftz-compose__qchoices');
+    const add = row.querySelector('.ftz-compose__qchoice-add');
+    ch.style.display = isChoice ? 'flex' : 'none';
+    add.style.display = isChoice ? 'inline-flex' : 'none';
+    if (isChoice && !ch.children.length) { _formAddChoice(row); _formAddChoice(row); }
+  });
+  list.appendChild(row);
+}
+function _formAddChoice(qblock) {
+  const ch = qblock.querySelector('.ftz-compose__qchoices');
+  if (!ch) return;
+  const row = document.createElement('div');
+  row.className = 'ftz-compose__opt';
+  row.innerHTML = `
+    <input class="ftz-compose__input ftz-compose__opt-input" maxlength="120" placeholder="Choice">
+    <button class="ftz-compose__opt-del" onclick="this.parentElement.remove()" aria-label="Remove">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>`;
+  ch.appendChild(row);
+}
+function _formRenumber() {
+  document.querySelectorAll('#form-questions .ftz-compose__qblock .ftz-compose__opt-num').forEach((el, i) => { el.textContent = i + 1; });
+}
+function _formSubmit(inputId) {
+  const title = (document.getElementById('form-title')?.value || '').trim();
+  if (!title) { toast('Give the form a title.', 'info'); return; }
+  const desc = (document.getElementById('form-desc')?.value || '').trim();
+  const questions = [];
+  document.querySelectorAll('#form-questions .ftz-compose__qblock').forEach(b => {
+    const text = (b.querySelector('.ftz-compose__qtext')?.value || '').trim();
+    if (!text) return;
+    const type = b.querySelector('.ftz-compose__qtype')?.value || 'short';
+    const q = { text, type };
+    if (type === 'single' || type === 'multi') {
+      q.choices = [...b.querySelectorAll('.ftz-compose__opt-input')]
+        .map(el => (el.value || '').trim()).filter(Boolean);
+      if (q.choices.length < 2) return; // skip choice questions w/ too few
+    }
+    questions.push(q);
+  });
+  if (!questions.length) { toast('Add at least one question.', 'info'); return; }
+  const form = {
+    id: 'fm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    title, desc, questions,
+    by: CU?.username || '', at: new Date().toISOString(),
+  };
+  document.getElementById('ftz-form-builder')?.remove();
+  _insertEmbedTokenIntoComposer(inputId, '[FTZFORM:' + _b64(JSON.stringify(form)) + ']');
+}
+
+// ── helpers shared by both builders ─────────────────────────────────
+// Insert an embed token into a rich contenteditable composer at the
+// current caret (falls back to append). The token is plain text so
+// parseMD picks it up on send and on every subsequent render.
+function _insertEmbedTokenIntoComposer(inputId, token) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  if (el.isContentEditable) {
+    el.focus();
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount && el.contains(sel.anchorNode)) {
+      const r = sel.getRangeAt(0);
+      r.deleteContents();
+      r.insertNode(document.createTextNode((el.textContent ? ' ' : '') + token + ' '));
+      r.collapse(false);
+    } else {
+      el.textContent = (el.textContent || '') + (el.textContent ? ' ' : '') + token + ' ';
+      // Move caret to end
+      const r = document.createRange(); r.selectNodeContents(el); r.collapse(false);
+      sel?.removeAllRanges(); sel?.addRange(r);
+    }
+    // Fire input so the composer's existing oninput plumbing notices.
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  } else if (el.value !== undefined) {
+    el.value = (el.value || '') + (el.value ? ' ' : '') + token + ' ';
+    el.focus();
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+}
+
+function _b64(s) { try { return btoa(unescape(encodeURIComponent(s))); } catch { return ''; } }
+function _b64d(s) { try { return decodeURIComponent(escape(atob(s))); } catch { return ''; } }
+
+// ── Vote + submission persistence (local-first) ────────────────────
+function _pollVotesGet(pollId) {
+  try { return JSON.parse(localStorage.getItem('ftz_poll_' + pollId) || '{}'); } catch { return {}; }
+}
+function _pollVoteCast(pollId, optionIdx, multi) {
+  const me = CU?.username || 'anon';
+  const votes = _pollVotesGet(pollId);
+  votes[me] = votes[me] || [];
+  if (multi) {
+    if (votes[me].includes(optionIdx)) votes[me] = votes[me].filter(i => i !== optionIdx);
+    else votes[me].push(optionIdx);
+  } else {
+    votes[me] = [optionIdx];
+  }
+  try { localStorage.setItem('ftz_poll_' + pollId, JSON.stringify(votes)); } catch (_) {}
+  document.querySelectorAll(`[data-ftz-poll="${pollId}"]`).forEach(el => _renderPollInto(el));
+}
+function _formSubmissionSave(formId, answers) {
+  try {
+    const all = JSON.parse(localStorage.getItem('ftz_form_subs_' + formId) || '[]');
+    all.push({ by: CU?.username || 'anon', at: new Date().toISOString(), answers });
+    localStorage.setItem('ftz_form_subs_' + formId, JSON.stringify(all.slice(-500)));
+  } catch (_) {}
+  toast('Submitted — thanks!', 'success');
+}
+function _formSubsCount(formId) {
+  try { return JSON.parse(localStorage.getItem('ftz_form_subs_' + formId) || '[]').length; } catch { return 0; }
+}
+
+// ── Renderers (called from parseMD via [FTZPOLL:..]/[FTZFORM:..]) ──
+function _renderPollFromToken(b64) {
+  try {
+    const poll = JSON.parse(_b64d(b64));
+    const id = poll.id;
+    return `<div class="ftz-embed" data-ftz-poll="${escapeHTML(id)}" data-ftz-poll-data="${escapeHTML(b64)}" style="--embed-color:#fef93d;"></div>`;
+  } catch { return ''; }
+}
+function _renderFormFromToken(b64) {
+  try {
+    const form = JSON.parse(_b64d(b64));
+    return `<div class="ftz-embed" data-ftz-form="${escapeHTML(form.id)}" data-ftz-form-data="${escapeHTML(b64)}" style="--embed-color:#fef93d;"></div>`;
+  } catch { return ''; }
+}
+function _renderPollInto(host) {
+  if (!host) return;
+  const b64 = host.dataset.ftzPollData;
+  let poll; try { poll = JSON.parse(_b64d(b64)); } catch { return; }
+  const votes = _pollVotesGet(poll.id);
+  const me = CU?.username || 'anon';
+  const myVotes = votes[me] || [];
+  const counts = poll.options.map((_, i) => 0);
+  const voters = new Set();
+  for (const [user, arr] of Object.entries(votes)) {
+    if (!Array.isArray(arr) || !arr.length) continue;
+    voters.add(user);
+    arr.forEach(i => { if (i >= 0 && i < counts.length) counts[i]++; });
+  }
+  const totalVoters = voters.size;
+  const expired = !!(poll.expiresAt && new Date(poll.expiresAt) <= new Date());
+  const tag = poll.type === 'multi' ? 'Multiple choice' : 'Single choice';
+  const expiresLabel = poll.expiresAt
+    ? (expired ? 'Ended' : 'Ends ' + new Date(poll.expiresAt).toLocaleString())
+    : 'No expiry';
+  host.innerHTML = `
+    <div class="ftz-embed-inner">
+      <div class="ftz-embed-stripe"></div>
+      <div class="ftz-embed-content">
+        <div class="ftz-embed-body">
+          <div class="ftz-embed-head"><span class="ftz-poll-tag">POLL · ${escapeHTML(tag)}</span></div>
+          <div class="ftz-embed-title-row">
+            <div class="ftz-embed-text-stack">
+              <div class="ftz-embed-title">${escapeHTML(poll.q)}</div>
+              <div class="ftz-poll-meta">${totalVoters} ${totalVoters===1?'voter':'voters'} · ${escapeHTML(expiresLabel)}</div>
+            </div>
+          </div>
+          <div class="ftz-poll-options">${poll.options.map((opt, i) => {
+            const c = counts[i];
+            const pct = totalVoters ? Math.round((c / totalVoters) * 100) : 0;
+            const mine = myVotes.includes(i);
+            const dis = expired ? 'disabled' : '';
+            return `<button class="ftz-poll-opt${mine?' is-mine':''}" ${dis} onclick="_pollVoteCast('${escapeHTML(poll.id)}',${i},${poll.type==='multi'})">
+              <span class="ftz-poll-opt__fill" style="width:${pct}%;"></span>
+              <span class="ftz-poll-opt__label">${escapeHTML(opt)}</span>
+              <span class="ftz-poll-opt__count">${c} · ${pct}%</span>
+            </button>`;
+          }).join('')}</div>
+        </div>
+        <div class="ftz-embed-foot"><span>Poll by @${escapeHTML(poll.by||'?')}</span></div>
+      </div>
+    </div>`;
+}
+function _renderFormInto(host) {
+  if (!host) return;
+  const b64 = host.dataset.ftzFormData;
+  let form; try { form = JSON.parse(_b64d(b64)); } catch { return; }
+  const subs = _formSubsCount(form.id);
+  host.innerHTML = `
+    <div class="ftz-embed-inner">
+      <div class="ftz-embed-stripe"></div>
+      <div class="ftz-embed-content">
+        <div class="ftz-embed-body">
+          <div class="ftz-embed-head"><span class="ftz-poll-tag">FORM</span></div>
+          <div class="ftz-embed-title-row">
+            <div class="ftz-embed-text-stack">
+              <div class="ftz-embed-title">${escapeHTML(form.title)}</div>
+              ${form.desc ? `<div class="ftz-embed-desc">${escapeHTML(form.desc)}</div>` : ''}
+              <div class="ftz-poll-meta">${form.questions.length} question${form.questions.length===1?'':'s'} · ${subs} submission${subs===1?'':'s'}</div>
+            </div>
+          </div>
+          <button class="ftz-embed-btn primary" onclick="_openFormFiller('${escapeHTML(form.id)}','${escapeHTML(b64)}')">Open form</button>
+        </div>
+        <div class="ftz-embed-foot"><span>Form by @${escapeHTML(form.by||'?')}</span></div>
+      </div>
+    </div>`;
+}
+
+// MutationObserver-based hydration: whenever a [data-ftz-poll] /
+// [data-ftz-form] node lands in the DOM, fill it. Re-render on
+// vote because _pollVoteCast already calls _renderPollInto.
+function _hydrateEmbedTokens(root) {
+  (root || document).querySelectorAll('[data-ftz-poll]:empty').forEach(_renderPollInto);
+  (root || document).querySelectorAll('[data-ftz-form]:empty').forEach(_renderFormInto);
+}
+document.addEventListener('DOMContentLoaded', () => _hydrateEmbedTokens());
+new MutationObserver(muts => {
+  for (const m of muts) m.addedNodes.forEach(n => {
+    if (n.nodeType !== 1) return;
+    if (n.matches?.('[data-ftz-poll]') || n.matches?.('[data-ftz-form]')) _hydrateEmbedTokens(n.parentElement);
+    else _hydrateEmbedTokens(n);
+  });
+}).observe(document.body, { childList: true, subtree: true });
+
+// ── Form fill-in modal ─────────────────────────────────────────────
+function _openFormFiller(formId, b64) {
+  document.getElementById('ftz-form-filler')?.remove();
+  let form; try { form = JSON.parse(_b64d(b64)); } catch { return; }
+  const ov = document.createElement('div');
+  ov.id = 'ftz-form-filler';
+  ov.className = 'modal-overlay open ftz-compose-overlay';
+  const body = form.questions.map((q, i) => {
+    const id = 'ff_' + formId + '_' + i;
+    let field = '';
+    if (q.type === 'short') field = `<input class="ftz-compose__input" data-q="${i}" maxlength="240">`;
+    else if (q.type === 'long') field = `<textarea class="ftz-compose__input" data-q="${i}" rows="3" maxlength="2000"></textarea>`;
+    else if (q.type === 'single') field = `<div class="ftz-form-choices">${(q.choices||[]).map((c, j) => `<label class="ftz-form-choice"><input type="radio" name="${id}" data-q="${i}" data-v="${j}"><span>${escapeHTML(c)}</span></label>`).join('')}</div>`;
+    else if (q.type === 'multi') field = `<div class="ftz-form-choices">${(q.choices||[]).map((c, j) => `<label class="ftz-form-choice"><input type="checkbox" data-q="${i}" data-v="${j}"><span>${escapeHTML(c)}</span></label>`).join('')}</div>`;
+    return `<div class="ftz-compose__qblock"><div class="ftz-compose__qhead"><span class="ftz-compose__opt-num">${i+1}</span><span style="flex:1;color:#fff;font-weight:600;">${escapeHTML(q.text)}</span></div>${field}</div>`;
+  }).join('');
+  ov.innerHTML = `
+    <div class="ftz-compose">
+      <div class="ftz-compose__head">
+        <div class="ftz-compose__title">${escapeHTML(form.title)}</div>
+        <button class="ftz-compose__close" onclick="document.getElementById('ftz-form-filler').remove()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="ftz-compose__body">${form.desc ? `<div class="ftz-compose__intro">${escapeHTML(form.desc)}</div>` : ''}${body}</div>
+      <div class="ftz-compose__foot">
+        <button class="ftz-compose__btn ftz-compose__btn--ghost" onclick="document.getElementById('ftz-form-filler').remove()">Cancel</button>
+        <button class="ftz-compose__btn ftz-compose__btn--primary" onclick="_formFillerSubmit('${escapeHTML(formId)}')">Submit</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+function _formFillerSubmit(formId) {
+  const ov = document.getElementById('ftz-form-filler'); if (!ov) return;
+  const answers = {};
+  ov.querySelectorAll('input[data-q],textarea[data-q]').forEach(el => {
+    const i = el.dataset.q;
+    if (el.type === 'radio') { if (el.checked) answers[i] = Number(el.dataset.v); }
+    else if (el.type === 'checkbox') { answers[i] = answers[i] || []; if (el.checked) answers[i].push(Number(el.dataset.v)); }
+    else { answers[i] = el.value; }
+  });
+  _formSubmissionSave(formId, answers);
+  ov.remove();
+  document.querySelectorAll(`[data-ftz-form="${formId}"]`).forEach(_renderFormInto);
 }
 
 // ── Role System ──
@@ -28140,6 +28564,11 @@ function parseMD(s) {
       + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">'
       + '</div>';
   });
+  // 0a2. Poll + Form tokens — replaced into unified embed shells.
+  // The real DOM (vote bars, fill-in modal) hydrates from the
+  // shell via MutationObserver in _hydrateEmbedTokens().
+  s = s.replace(/\[FTZPOLL:([A-Za-z0-9+/=]+)\]/g, (_, b64) => _renderPollFromToken(b64));
+  s = s.replace(/\[FTZFORM:([A-Za-z0-9+/=]+)\]/g, (_, b64) => _renderFormFromToken(b64));
   // 0b. Video attachments — full-featured video player
   s = s.replace(/\[FTZVID:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
     const vid2='vid-'+Math.random().toString(36).slice(2);

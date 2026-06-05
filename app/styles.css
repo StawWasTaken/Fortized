@@ -3071,7 +3071,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .emoji-info-popover .eip-preview img{width:48px;height:48px;object-fit:contain;}
 .emoji-info-popover .eip-name{font-family:monospace;font-size:12px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:8px;}
 .emoji-info-popover .eip-type{font-size:11px;color:rgba(255,255,255,.3);text-align:center;padding:4px 10px;background:rgba(255,255,255,.04);border-radius:6px;}
-.modal-overlay{display:none;position:fixed;inset:0;background:linear-gradient(135deg,rgba(0,0,0,.85),rgba(0,0,0,.88));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:1000;align-items:center;justify-content:center;animation:overlayFadeIn .2s ease-out;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:none;-webkit-backdrop-filter:none;z-index:1000;align-items:center;justify-content:center;animation:overlayFadeIn .2s ease-out;}
 .modal-overlay.open,.modal-overlay.show{display:flex;}
 @keyframes overlayFadeIn{from{opacity:0;backdrop-filter:blur(0);}to{opacity:1;backdrop-filter:blur(12px);}}
 @keyframes mIn{from{opacity:0;transform:scale(.93) translateY(14px);}to{opacity:1;transform:none;}}
@@ -6844,9 +6844,9 @@ select:focus-visible,
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(0,0,0,.4);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   z-index: var(--z-modal);
   display: none;
   align-items: center;
@@ -10819,16 +10819,17 @@ body.staff-inspector-open{ overflow:hidden; }
   font-size:12px; font-weight:600;
 }
 .fpp-card-modal__connection-arrow{ color:var(--muted-light); font-size:12px; }
-.fpp-card-modal__note{
-  padding:14px 18px 18px;
-  cursor:pointer;
+.fpp-card-modal__note{ padding:14px 18px 18px; }
+.fpp-card-modal__note-input{
+  width:100%; resize:none; min-height:36px; max-height:140px;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06);
+  border-radius:8px; padding:8px 10px;
+  color:#fff; font-size:12px; font-family:inherit; line-height:1.5;
+  outline:none; transition:border-color .15s, background .15s;
+  overflow:auto;
 }
-.fpp-card-modal__note:hover .fpp-card-modal__note-body{ color:var(--text); }
-.fpp-card-modal__note-body{
-  font-size:12px; color:var(--muted);
-  font-style:italic; line-height:1.5;
-  transition:color .15s;
-}
+.fpp-card-modal__note-input::placeholder{ color:var(--muted); font-style:italic; }
+.fpp-card-modal__note-input:focus{ border-color:rgba(255,249,62,.35); background:rgba(255,255,255,.06); }
 
 /* Animations */
 @keyframes fppPopIn{

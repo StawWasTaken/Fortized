@@ -911,6 +911,13 @@ const FORTIZED_EXTERNAL_EMOJIS = {
   lmfao:        'https://cdn3.emoji.gg/emojis/lmfaolit.png',
 };
 const FORTIZED_EXTRA_EMOJI_NAMES = [];
+// Map each external custom emoji into a stock unicode-category tab so it
+// shows up alongside similar emojis (rather than in its own ghetto section).
+const FORTIZED_EXTRA_EMOJI_TAB = {
+  pouting:      'smileys',
+  lmfao:        'smileys',
+  seagull_shut: 'nature',
+};
 Object.entries(FORTIZED_EXTERNAL_EMOJIS).forEach(([name, url]) => {
   FORTIZED_EMOJI_MAP[name] = url;
   FORTIZED_EXTRA_EMOJI_NAMES.push(name);
@@ -18679,12 +18686,6 @@ function renderEmojiGrid() {
       FORTIZED_CHARACTERS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('') +
       FORTIZED_TEXTMOJIS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join(''),
   });
-  // 3b) Extra custom emojis (regular, not part of Fortized Guide)
-  if (FORTIZED_EXTRA_EMOJI_NAMES.length) sections.push({
-    id: 'extra', title: 'Custom', extra: '', cols: 8,
-    rowCount: Math.ceil(FORTIZED_EXTRA_EMOJI_NAMES.length/8), tight: true,
-    build: () => FORTIZED_EXTRA_EMOJI_NAMES.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join(''),
-  });
 
   // 4) Bastion custom emojis — skip bastions with zero *valid* emojis so that
   // deleted/removed emojis don't leave ghost sections behind.
@@ -18713,14 +18714,23 @@ function renderEmojiGrid() {
     });
   });
 
-  // 5) Unicode category sections
+  // 5) Unicode category sections — with custom Fortized emojis injected
+  //    into matching tabs (e.g. :pouting: in smileys) so they appear
+  //    alongside thematically similar unicode emojis.
+  const injectByTab = {};
+  FORTIZED_EXTRA_EMOJI_NAMES.forEach(name => {
+    const tabId = FORTIZED_EXTRA_EMOJI_TAB[name];
+    if (!tabId) return;
+    (injectByTab[tabId] = injectByTab[tabId] || []).push(name);
+  });
   EMOJI_PICKER_TABS.forEach(tab => {
     if (!tab.emojis) return;
+    const custom = injectByTab[tab.id] || [];
     sections.push({
       id: tab.id,
       title: tab.label || (tab.id.charAt(0).toUpperCase() + tab.id.slice(1)),
-      extra: '', cols: 8, rowCount: Math.ceil(tab.emojis.length/8), tight: false,
-      build: () => tab.emojis.map(e => renderEmojiCell(e)).join(''),
+      extra: '', cols: 8, rowCount: Math.ceil((tab.emojis.length + custom.length)/8), tight: false,
+      build: () => custom.map(n => ftzCell(n, FORTIZED_EMOJI_MAP[n])).join('') + tab.emojis.map(e => renderEmojiCell(e)).join(''),
     });
   });
 
@@ -21341,11 +21351,9 @@ async function _viewUserProfile(username) {
          <div style="display:flex;flex-wrap:wrap;gap:5px;">${renderUserRoleTags(username) || '<span style="font-size:12px;color:var(--muted);">No roles</span>'}</div>
        </div>` : '';
 
-  const _noteHTML = !isOwn ? `<div class="fpp-card-modal__note" onclick="_openUserNote('${escapeHTML(username)}')">
-    <div class="fpp-card-modal__left-section-title" style="display:flex;align-items:center;gap:6px;">Note
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.5;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-    </div>
-    <div class="fpp-card-modal__note-body">${_userNote ? escapeHTML(_userNote.slice(0, 200)) : 'Click to add a note…'}</div>
+  const _noteHTML = !isOwn ? `<div class="fpp-card-modal__note">
+    <div class="fpp-card-modal__left-section-title" style="display:flex;align-items:center;gap:6px;">Note <span style="font-weight:500;color:rgba(255,255,255,.4);letter-spacing:0;text-transform:none;font-size:10px;">(only visible to you)</span></div>
+    <textarea class="fpp-card-modal__note-input" placeholder="Click to add a note…" maxlength="500" oninput="_saveInlineUserNote('${escapeHTML(username)}', this.value)">${escapeHTML(_userNote || '')}</textarea>
   </div>` : '';
 
   // Tabs visibility
@@ -22056,7 +22064,20 @@ function showCustomConfirm(message,callback){
 // ════════════════════════════════════════════
 function openModal(id){
   if (id === 'modal-new-dm') { setTimeout(() => switchNewDMTab('dm'), 10); }
-  const el=document.getElementById(id);if(el){el._returnFocus=document.activeElement;el.classList.add('open');_trapFocusInOverlay(el);}}
+  const el=document.getElementById(id);if(!el)return;
+  // Single-modal policy — close any other currently-open .modal-overlay
+  // (except the one we're opening and any tagged with data-modal-stack="1"
+  // for cases like the displayname picker layering over Settings).
+  document.querySelectorAll('.modal-overlay.open').forEach(other => {
+    if (other === el) return;
+    if (other.dataset.modalStack === '1' || el.dataset.modalStack === '1') return;
+    other.classList.remove('open');
+    _releaseFocusTrap(other);
+    if (other.id === 'modal-settings') clearSettingsDirty();
+    try{other._returnFocus?.focus?.();}catch(_){};
+    other._returnFocus=null;
+  });
+  el._returnFocus=document.activeElement;el.classList.add('open');_trapFocusInOverlay(el);}
 function closeModal(id){const el=document.getElementById(id);if(el){el.classList.remove('open');_releaseFocusTrap(el);if(id==='modal-settings')clearSettingsDirty();try{el._returnFocus?.focus?.();}catch(_){};el._returnFocus=null;}}
 document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay')){e.target.classList.remove('open');_releaseFocusTrap(e.target);if(e.target.id==='modal-settings')clearSettingsDirty();try{e.target._returnFocus?.focus?.();}catch(_){};e.target._returnFocus=null;}});
 document.addEventListener('keydown', e => {
@@ -47110,6 +47131,18 @@ function _openUserNote(username) {
 function _getUserNote(username) {
   const notes = JSON.parse(localStorage.getItem('ftz_user_notes_' + CU.username) || '{}');
   return notes[username] || '';
+}
+let _inlineNoteSaveT = null;
+function _saveInlineUserNote(username, value) {
+  clearTimeout(_inlineNoteSaveT);
+  _inlineNoteSaveT = setTimeout(() => {
+    try {
+      const notes = JSON.parse(localStorage.getItem('ftz_user_notes_' + CU.username) || '{}');
+      if (value && value.trim()) notes[username] = value.trim();
+      else delete notes[username];
+      localStorage.setItem('ftz_user_notes_' + CU.username, JSON.stringify(notes));
+    } catch(_){}
+  }, 300);
 }
 
 // ════════════════════════════════════════════

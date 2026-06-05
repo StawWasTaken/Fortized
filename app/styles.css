@@ -379,8 +379,12 @@ body.is-desktop-app .topbar{padding-right:0;}
 .ub-activity-action{display:none;}
 /* User row container — rounded to match chatbar */
 /* Userbar pill — matches .chat-input-outer exactly so the two bars
-   read as one component family. 60px tall like the composer. */
-.ub-user-container{display:flex;align-items:center;background:rgba(255,255,255,.04);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);border-radius:10px;height:60px;overflow:hidden;}
+   read as one component family. 60px tall like the composer. Solid
+   dark base under the alpha-tint so the page underneath doesn't
+   bleed through (was rgba .04 over transparency → visibly see-through
+   once the userbar got hoisted to body and stopped inheriting the
+   sidebar's solid background). */
+.ub-user-container{display:flex;align-items:center;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),#15171e;backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);border-radius:10px;height:60px;overflow:hidden;}
 
 /* ── Userbar spans BOTH sidebars (sidebar + sidebar-ctx) ────────────
    The userbar is taken out of sidebar-ctx's column flow with
@@ -3388,38 +3392,217 @@ body.is-desktop-app .notif-panel{top:0;}
 @keyframes heartFloat { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-60px) scale(.4);opacity:0} }
 .heart-float { position:fixed;font-size:24px;pointer-events:none;animation:heartFloat 1.2s ease-out forwards;z-index:var(--z-max); }
 
-/* ── UNIFIED EMBED SYSTEM ─────────────────────────── */
-/* Base embed card — all embeds share this */
-.ftz-embed{border-radius:14px;overflow:hidden;max-width:440px;margin:8px 0;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;position:relative;transition:all .2s cubic-bezier(.22,1,.36,1);}
-.ftz-embed:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,0,0,.3);}
-/* Embed inner wrapper — contains left accent stripe + content */
-.ftz-embed-inner{display:flex;background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;min-height:0;}
-.ftz-embed:hover .ftz-embed-inner{border-color:rgba(255,255,255,.12);}
-/* Left accent stripe */
-.ftz-embed-stripe{width:4px;flex-shrink:0;background:var(--embed-color,rgba(255,255,255,.15));}
-/* Embed content area */
-.ftz-embed-content{flex:1;min-width:0;display:flex;flex-direction:column;}
-/* Embed header — icon + site name */
-.ftz-embed-head{display:flex;align-items:center;gap:6px;padding:10px 14px 0;font-size:11px;font-weight:700;color:var(--embed-color,var(--muted));}
-.ftz-embed-head svg,.ftz-embed-head img{width:14px;height:14px;flex-shrink:0;}
-.ftz-embed-head img{border-radius:3px;object-fit:contain;}
-/* Embed body — title, desc, etc */
-.ftz-embed-body{padding:6px 14px 12px;display:flex;flex-direction:column;gap:4px;}
-.ftz-embed-title{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ftz-embed-desc{font-size:12px;color:rgba(255,255,255,.45);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.ftz-embed-url{font-size:9.5px;color:rgba(255,255,255,.2);font-family:monospace;letter-spacing:.02em;}
-/* Embed image (optional — for link previews, etc) */
-.ftz-embed-img{width:100%;max-height:200px;object-fit:cover;display:block;}
-/* Embed media area — for iframes/videos */
-.ftz-embed-media{position:relative;overflow:hidden;}
-.ftz-embed-media iframe,.ftz-embed-media video{width:100%;display:block;border:none;}
-/* Embed footer — small meta text */
-.ftz-embed-foot{padding:6px 14px 10px;display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.25);border-top:1px solid rgba(255,255,255,.04);}
-/* Embed action button */
-.ftz-embed-btn{margin:0 14px 12px;padding:8px 16px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.7);font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;text-align:center;}
-.ftz-embed-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
-.ftz-embed-btn.primary{background:var(--embed-color,var(--accent));color:#13161d;border:none;}
-.ftz-embed-btn.primary:hover{filter:brightness(1.1);}
+/* ══════════════════════════════════════════════════════════════════
+   FORTIZED EMBED SYSTEM — applies to every embed card
+   (link previews, video/audio players, file cards, future
+   poll/form/fortnews builders). Design tokens + structure follow
+   the Fortized brand template (yellow left accent, dark card,
+   Rajdhani title, Noto Sans body, fields grid, footer bar).
+   The CSS rebrands the existing .ftz-embed* class names so every
+   existing renderer picks up the look without rewriting JS.
+   ══════════════════════════════════════════════════════════════ */
+.ftz-embed{
+  --embed-accent:       var(--embed-color, #fef93d);
+  --embed-accent-dim:   rgba(254,249,61,.12);
+  --embed-card-bg:      #1c1e22;
+  --embed-card-border:  #111214;
+  --embed-code-bg:      #111214;
+  --embed-footer-bg:    #111214;
+  --embed-footer-border:#0a0b0c;
+  --embed-text-title:   #ffffff;
+  --embed-text-body:    #cfd1d4;
+  --embed-text-muted:   #5c6370;
+  --embed-radius:       6px;
+  --embed-radius-sm:    3px;
+  --embed-accent-bar:   4px;
+  background:var(--embed-card-bg);
+  border:1px solid var(--embed-card-border);
+  border-radius:var(--embed-radius);
+  width:420px; max-width:100%;
+  margin:8px 0;
+  position:relative;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  box-shadow:0 6px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(254,249,61,.04);
+  animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;
+  transition:transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s;
+  font-family:'Noto Sans','Segoe UI',Helvetica,Arial,sans-serif;
+}
+.ftz-embed:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(0,0,0,.55), inset 0 0 0 1px rgba(254,249,61,.06);}
+/* Yellow left accent bar */
+.ftz-embed::before{
+  content:""; position:absolute; inset-block:0; left:0;
+  width:var(--embed-accent-bar); background:var(--embed-accent);
+  z-index:3;
+}
+/* Subtle accent glow bleed off the left bar */
+.ftz-embed::after{
+  content:""; position:absolute; inset-block:0; left:0;
+  width:60px;
+  background:linear-gradient(90deg, rgba(254,249,61,.06) 0%, transparent 100%);
+  pointer-events:none; z-index:1;
+}
+/* Variant — full Fortized card (poll / form / FortNews etc).
+   Adds the portrait min-height the brief mandates. Inline link
+   previews skip this so they stay compact in chat. */
+.ftz-embed--full{ min-height:540px; }
+
+/* Backwards-compat: existing renderers wrap content in
+   .ftz-embed-inner → .ftz-embed-stripe → .ftz-embed-content.
+   Inner is now a pass-through layer; the stripe is hidden because
+   ::before above already paints it. */
+.ftz-embed-inner{display:flex; background:transparent; border:none; border-radius:0; min-height:0; flex:1; position:relative; z-index:2;}
+.ftz-embed:hover .ftz-embed-inner{border-color:transparent;}
+.ftz-embed-stripe{display:none;}
+.ftz-embed-content{flex:1; min-width:0; display:flex; flex-direction:column; padding:0;}
+
+/* Body padding clears the 4px accent bar */
+.ftz-embed-body, .embed__body{
+  padding:14px 16px 14px 20px;
+  display:flex; flex-direction:column; gap:10px;
+  flex:1; position:relative; z-index:2;
+}
+
+/* Header — provider row */
+.ftz-embed-head, .embed__provider{
+  display:flex; align-items:center; gap:7px;
+  font-family:'Rajdhani','Syne',sans-serif;
+  font-size:13px; font-weight:600; letter-spacing:.04em;
+  color:var(--embed-text-body);
+  padding:0;
+}
+.ftz-embed-head svg, .ftz-embed-head img, .embed__provider-icon{
+  width:18px; height:18px; flex-shrink:0;
+  border-radius:50%; object-fit:cover;
+}
+
+/* Title + thumbnail row */
+.ftz-embed-title-row, .embed__header{
+  display:flex; justify-content:space-between; align-items:flex-start;
+  gap:14px;
+}
+.ftz-embed-text-stack, .embed__text-stack{
+  flex:1; display:flex; flex-direction:column; gap:5px; min-width:0;
+}
+.ftz-embed-title, .embed__title{
+  font-family:'Rajdhani','Syne',sans-serif;
+  font-size:17px; font-weight:700;
+  color:var(--embed-text-title);
+  letter-spacing:.02em; line-height:1.2;
+  white-space:normal; overflow:visible; text-overflow:clip;
+}
+.ftz-embed-title a, .embed__title a{
+  color:var(--embed-accent); text-decoration:none;
+}
+.ftz-embed-title a:hover, .embed__title a:hover{ text-decoration:underline; }
+
+/* Description */
+.ftz-embed-desc, .embed__description{
+  font-size:13.5px; line-height:1.5; color:var(--embed-text-body);
+  display:block; -webkit-line-clamp:unset; overflow:visible; white-space:normal;
+}
+.ftz-embed-desc strong, .embed__description strong{ color:var(--embed-text-title); font-weight:700; }
+.ftz-embed-desc em,     .embed__description em    { font-style:italic; }
+.ftz-embed-desc u,      .embed__description u     { text-decoration:underline; }
+
+/* Mention pill (used inside descriptions) */
+.embed-mention, .embed__description .mention{
+  background:var(--embed-accent-dim);
+  color:var(--embed-accent);
+  border-radius:var(--embed-radius-sm);
+  padding:0 4px; font-size:13px; font-weight:600;
+}
+
+/* URL line (kept for backwards compat) */
+.ftz-embed-url{font-size:10.5px; color:var(--embed-text-muted); font-family:'Consolas','Fira Code',monospace; letter-spacing:.02em;}
+
+/* Thumbnail */
+.ftz-embed-thumb, .embed__thumbnail{
+  width:72px; height:72px; border-radius:var(--embed-radius-sm);
+  object-fit:cover; flex-shrink:0; border:1px solid rgba(255,255,255,.06);
+}
+
+/* Section label */
+.ftz-embed-section-label, .embed__section-label{
+  font-family:'Rajdhani','Syne',sans-serif;
+  font-size:12px; font-weight:600;
+  letter-spacing:.08em; text-transform:uppercase;
+  color:var(--embed-text-muted); margin-bottom:-4px;
+}
+
+/* Code block */
+.ftz-embed-code, .embed__code{
+  background:var(--embed-code-bg);
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:var(--embed-radius-sm);
+  padding:10px 12px;
+  font-family:'Consolas','Fira Code',monospace;
+  font-size:12.5px; color:var(--embed-text-body);
+  white-space:pre-wrap; word-break:break-word; line-height:1.5;
+}
+
+/* Divider */
+.ftz-embed-divider, .embed__divider{ height:1px; background:rgba(255,255,255,.06); }
+
+/* Fields grid */
+.ftz-embed-fields, .embed__fields{
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+}
+.ftz-embed-field--full, .embed__field--full{ grid-column:1 / -1; }
+.ftz-embed-field-name, .embed__field-name{
+  font-size:12.5px; font-weight:700; color:var(--embed-text-title);
+  margin-bottom:2px; line-height:1.3;
+}
+.ftz-embed-field-value, .embed__field-value{
+  font-size:12.5px; color:var(--embed-text-body); line-height:1.45;
+}
+.strikethrough .ftz-embed-field-name, .strikethrough .ftz-embed-field-value,
+.strikethrough .embed__field-name,   .strikethrough .embed__field-value{
+  text-decoration:line-through; opacity:.55;
+}
+
+/* Asset image — banner strip */
+.ftz-embed-img, .embed__image{
+  width:100%; max-height:120px; object-fit:cover;
+  border-radius:var(--embed-radius-sm); display:block;
+  border:1px solid rgba(255,255,255,.05);
+}
+
+/* Media area — iframes/videos take more vertical room */
+.ftz-embed-media{position:relative; overflow:hidden; border-radius:var(--embed-radius-sm);}
+.ftz-embed-media iframe, .ftz-embed-media video{width:100%; display:block; border:none;}
+
+/* Footer bar */
+.ftz-embed-foot, .embed__footer{
+  background:var(--embed-footer-bg);
+  border-top:1px solid var(--embed-footer-border);
+  padding:9px 16px 9px 20px;
+  display:flex; align-items:center; gap:7px;
+  position:relative; z-index:2;
+  font-size:11.5px; color:var(--embed-text-muted); font-weight:500;
+}
+.embed__footer-icon, .ftz-embed-foot img{
+  width:15px; height:15px; border-radius:var(--embed-radius-sm);
+  object-fit:contain; flex-shrink:0;
+}
+.embed__footer-sep{ color:var(--embed-text-muted); opacity:.4; margin:0 3px; }
+
+/* Action button(s) inside the body */
+.ftz-embed-btn{
+  margin:6px 0 0;
+  padding:9px 16px; border-radius:var(--embed-radius-sm);
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  color:var(--embed-text-body);
+  font-family:'Rajdhani','Syne',sans-serif;
+  font-size:12.5px; font-weight:700; letter-spacing:.03em;
+  cursor:pointer; transition:background .15s, color .15s, border-color .15s;
+  text-align:center;
+}
+.ftz-embed-btn:hover{ background:rgba(255,255,255,.08); color:#fff; border-color:rgba(255,255,255,.14); }
+.ftz-embed-btn.primary{
+  background:var(--embed-accent); color:#13161d; border:none;
+}
+.ftz-embed-btn.primary:hover{ filter:brightness(1.08); }
 /* ── Custom Video Player ── */
 .ftz-vp{position:relative;background:#000;width:100%;overflow:hidden;border-radius:12px 12px 0 0;}
 .ftz-vp video{width:100%;max-height:360px;display:block;cursor:pointer;}

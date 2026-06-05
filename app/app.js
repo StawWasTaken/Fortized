@@ -2375,7 +2375,10 @@ function _renderFormInto(host) {
               <div class="ftz-poll-meta">${form.questions.length} question${form.questions.length===1?'':'s'} · ${subs} submission${subs===1?'':'s'}</div>
             </div>
           </div>
-          <button class="ftz-embed-btn primary" onclick="_openFormFiller('${escapeHTML(form.id)}','${escapeHTML(b64)}')">Open form</button>
+          <div style="display:flex;gap:6px;">
+            <button class="ftz-embed-btn primary" style="flex:1;" onclick="_openFormFiller('${escapeHTML(form.id)}','${escapeHTML(b64)}')">Open form</button>
+            ${form.by && CU?.username === form.by ? `<button class="ftz-embed-btn" title="View submissions (${subs})" aria-label="View submissions" style="width:36px;padding:0;display:flex;align-items:center;justify-content:center;" onclick="_openFormSubmissions('${escapeHTML(form.id)}','${escapeHTML(b64)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>` : ''}
+          </div>
         </div>
         <div class="ftz-embed-foot"><span>Form by @${escapeHTML(form.by||'?')}</span></div>
       </div>
@@ -2429,6 +2432,68 @@ function _openFormFiller(formId, b64) {
       </div>
     </div>`;
   document.body.appendChild(ov);
+}
+function _openFormSubmissions(formId, b64) {
+  document.getElementById('ftz-form-subs')?.remove();
+  let form; try { form = JSON.parse(_b64d(b64)); } catch { return; }
+  let subs = [];
+  try { subs = JSON.parse(localStorage.getItem('ftz_form_subs_' + formId) || '[]'); } catch (_) {}
+  const fmtAnswer = (q, a) => {
+    if (a == null || a === '') return '<span style="color:rgba(255,255,255,.3);">—</span>';
+    if (q.type === 'single') return escapeHTML(String(q.choices?.[a] ?? a));
+    if (q.type === 'multi') return (Array.isArray(a) ? a : []).map(i => escapeHTML(String(q.choices?.[i] ?? i))).join(', ') || '<span style="color:rgba(255,255,255,.3);">—</span>';
+    return escapeHTML(String(a));
+  };
+  const body = subs.length
+    ? subs.slice().reverse().map((sub, idx) => `
+        <div class="ftz-compose__qblock">
+          <div class="ftz-compose__qhead">
+            <span class="ftz-compose__opt-num">${subs.length - idx}</span>
+            <span style="flex:1;color:#fff;font-weight:700;">@${escapeHTML(sub.by || 'anon')}</span>
+            <span style="font-size:11px;color:rgba(255,255,255,.4);">${new Date(sub.at).toLocaleString()}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;padding:4px 0 2px;">
+            ${form.questions.map((q, i) => `
+              <div>
+                <div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:2px;">${escapeHTML(q.text)}</div>
+                <div style="font-size:13px;color:#fff;">${fmtAnswer(q, sub.answers?.[i])}</div>
+              </div>`).join('')}
+          </div>
+        </div>`).join('')
+    : `<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4);">No submissions yet.</div>`;
+  const ov = document.createElement('div');
+  ov.id = 'ftz-form-subs';
+  ov.className = 'modal-overlay open ftz-compose-overlay';
+  ov.innerHTML = `
+    <div class="ftz-compose">
+      <div class="ftz-compose__head">
+        <div class="ftz-compose__title">${escapeHTML(form.title)} — Submissions (${subs.length})</div>
+        <button class="ftz-compose__close" onclick="document.getElementById('ftz-form-subs').remove()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="ftz-compose__body">${body}</div>
+      <div class="ftz-compose__foot">
+        <button class="ftz-compose__btn ftz-compose__btn--ghost" onclick="_exportFormSubs('${escapeHTML(formId)}')">Export CSV</button>
+        <button class="ftz-compose__btn ftz-compose__btn--primary" onclick="document.getElementById('ftz-form-subs').remove()">Close</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+function _exportFormSubs(formId) {
+  let subs = []; try { subs = JSON.parse(localStorage.getItem('ftz_form_subs_' + formId) || '[]'); } catch (_) {}
+  if (!subs.length) { toast('No submissions to export.', 'info'); return; }
+  const allKeys = Array.from(new Set(subs.flatMap(s => Object.keys(s.answers || {})))).sort((a,b)=>+a-+b);
+  const header = ['user','at',...allKeys.map(k => 'q'+(+k+1))];
+  const rows = subs.map(s => [s.by||'', s.at||'', ...allKeys.map(k => {
+    const a = s.answers?.[k]; if (a == null) return '';
+    return Array.isArray(a) ? a.join('|') : String(a);
+  })]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'form_' + formId + '_submissions.csv';
+  a.click();
 }
 function _formFillerSubmit(formId) {
   const ov = document.getElementById('ftz-form-filler'); if (!ov) return;

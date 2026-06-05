@@ -1703,6 +1703,50 @@ function _formatElapsed(startIso) {
 }
 function attachFile(inputId) { openFileUpload(inputId || 'ch-input'); }
 
+// Guilded-style "+" menu — opens a small list above the composer
+// with Media/File, Poll, Form options. The previous behaviour was a
+// direct upload-file dialog; that's now option 1 inside the menu.
+// Poll + Form route to placeholders for the upcoming embed-builder
+// flows (item 7 of the redesign brief — those land in a later pass).
+function _openAttachMenu(evt, inputId, context) {
+  evt?.stopPropagation();
+  evt?.preventDefault();
+  document.getElementById('attach-menu')?.remove();
+  const btn = evt?.currentTarget || evt?.target?.closest?.('.cit-attach');
+  if (!btn) { openFileUpload(inputId); return; }
+  const rect = btn.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.id = 'attach-menu';
+  menu.className = 'attach-menu';
+  // Anchored above the "+" button — bottom edge sits just over the
+  // composer so it reads as belonging to the bar.
+  menu.style.left = rect.left + 'px';
+  menu.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+  menu.innerHTML = `
+    <button class="attach-menu__row" onclick="document.getElementById('attach-menu').remove();openFileUpload('${escapeHTML(inputId)}')">
+      <span class="attach-menu__ico"><svg viewBox="0 0 640 640" fill="currentColor" aria-hidden="true"><path d="M576 448C576 483.3 547.3 512 512 512L128 512C92.7 512 64 483.3 64 448L64 160C64 124.7 92.7 96 128 96L266.7 96C280.5 96 294 100.5 305.1 108.8L343.5 137.6C349 141.8 355.8 144 362.7 144L512 144C547.3 144 576 172.7 576 208L576 448zM320 224C306.7 224 296 234.7 296 248L296 296L248 296C234.7 296 224 306.7 224 320C224 333.3 234.7 344 248 344L296 344L296 392C296 405.3 306.7 416 320 416C333.3 416 344 405.3 344 392L344 344L392 344C405.3 344 416 333.3 416 320C416 306.7 405.3 296 392 296L344 296L344 248C344 234.7 333.3 224 320 224z"/></svg></span>
+      <div class="attach-menu__body"><div class="attach-menu__title">Media or file</div></div>
+    </button>
+    <button class="attach-menu__row" onclick="document.getElementById('attach-menu').remove();_openComposeBuilder('poll','${escapeHTML(inputId)}','${escapeHTML(context)}')">
+      <span class="attach-menu__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="4" y2="6.01"/><line x1="8" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="4" y2="12.01"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="4" y2="18.01"/><line x1="8" y1="18" x2="20" y2="18"/></svg></span>
+      <div class="attach-menu__body"><div class="attach-menu__title">Poll</div><div class="attach-menu__sub">A single or multiple-choice question.</div></div>
+    </button>
+    <button class="attach-menu__row" onclick="document.getElementById('attach-menu').remove();_openComposeBuilder('form','${escapeHTML(inputId)}','${escapeHTML(context)}')">
+      <span class="attach-menu__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg></span>
+      <div class="attach-menu__body"><div class="attach-menu__title">Form</div><div class="attach-menu__sub">Multiple questions with various question types.</div></div>
+    </button>`;
+  document.body.appendChild(menu);
+  // Outside-click close
+  const off = (e) => { if (!menu.contains(e.target) && e.target !== btn) { menu.remove(); document.removeEventListener('mousedown', off, true); } };
+  setTimeout(() => document.addEventListener('mousedown', off, true), 0);
+}
+// Placeholder for poll / form composer — the full embed builder
+// is item 7 of the redesign brief and lands later. For now we
+// toast so the menu is functional end-to-end.
+function _openComposeBuilder(kind /*, inputId, context */) {
+  toast(`${kind === 'poll' ? 'Poll' : 'Form'} builder is coming soon — the embed redesign lands next.`, 'info');
+}
+
 // ── Role System ──
 // Role membership is stored lowercase (addStaff normalises on insert, SUPER_ADMINS
 // is declared lowercase). Compare case-insensitively so that a user whose
@@ -17468,10 +17512,13 @@ function toggleEmojiPicker(targetId) {
 }
 
 function _pickerTopTabs(active) {
+  // svgrepo icon URLs matched to each tab. .svgrepo-icon CSS handles
+  // size + colour inversion so the black source SVGs read as light
+  // on our dark theme.
   return `<div class="picker-top-tabs">
-    <button class="picker-top-tab${active==='gif'?' active':''}" onclick="_switchPickerTab('gif')">GIFs</button>
-    <button class="picker-top-tab${active==='sticker'?' active':''}" onclick="_switchPickerTab('sticker')">Stickers</button>
-    <button class="picker-top-tab${active==='emoji'?' active':''}" onclick="_switchPickerTab('emoji')">Emoji</button>
+    <button class="picker-top-tab${active==='gif'?' active':''}" onclick="_switchPickerTab('gif')"><img class="svgrepo-icon" src="https://www.svgrepo.com/show/310879/gif.svg" alt="" loading="lazy" draggable="false">GIFs</button>
+    <button class="picker-top-tab${active==='sticker'?' active':''}" onclick="_switchPickerTab('sticker')"><img class="svgrepo-icon" src="https://www.svgrepo.com/show/311245/sticker.svg" alt="" loading="lazy" draggable="false">Stickers</button>
+    <button class="picker-top-tab${active==='emoji'?' active':''}" onclick="_switchPickerTab('emoji')"><img class="svgrepo-icon" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false">Emoji</button>
   </div>`;
 }
 function _switchPickerTab(tab) {
@@ -27005,8 +27052,8 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
         </div>
         <div class="chat-input-row">
-          <button class="cit-attach" onclick="openFileUpload('${inputId}')" title="Attach File">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <button class="cit-attach" onclick="_openAttachMenu(event,'${inputId}','${context}')" data-tooltip="Add">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
           <div id="${inputId}" class="chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="${placeholder}" spellcheck="true"
             onkeydown="${keydown}"
@@ -27014,22 +27061,10 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
             onpaste="handlePaste(event,'${inputId}')"></div>
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">
-            <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF" data-tooltip="GIFs">
-              <!-- svgrepo 310879 GIF -->
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3.5"/><path d="M9.5 10.5h-2a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h1.5v-1"/><line x1="12" y1="10" x2="12" y2="14"/><path d="M17.5 10.5h-2.5v3.5M15 12.5h1.8"/></svg>
-            </button>
-            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" title="Sticker" data-tooltip="Stickers">
-              <!-- svgrepo 311245 Sticker -->
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a4 4 0 0 1 4-4h7l7 7v7a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7z"/><path d="M14 3v3a4 4 0 0 0 4 4h3"/><path d="M8.5 14s1 2 3.5 2 3.5-2 3.5-2"/></svg>
-            </button>
-            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" title="Emoji" data-tooltip="Emoji">
-              <!-- svgrepo 310822 Emoji Laugh -->
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14.5c.7 1.3 2.1 2.2 4 2.2s3.3-.9 4-2.2"/><path d="M7 9.2c.4-.4 1-.7 1.7-.7s1.3.3 1.7.7"/><path d="M13.6 9.2c.4-.4 1-.7 1.7-.7s1.3.3 1.7.7"/></svg>
-            </button>
-            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}" title="Bot commands" data-tooltip="Bot commands">
-              <!-- svgrepo 310556 Bot -->
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="3"/><line x1="12" y1="3" x2="12" y2="7"/><circle cx="12" cy="3" r="1" fill="currentColor"/><circle cx="9" cy="13" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/><path d="M9 17h6"/><line x1="2" y1="11" x2="4" y2="11"/><line x1="20" y1="11" x2="22" y2="11"/></svg>
-            </button>
+            <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" data-tooltip="GIFs"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310879/gif.svg" alt="" loading="lazy" draggable="false"></button>
+            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" data-tooltip="Stickers"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/311245/sticker.svg" alt="" loading="lazy" draggable="false"></button>
+            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" data-tooltip="Emoji"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false"></button>
+            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}" data-tooltip="Bot commands"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310556/bot.svg" alt="" loading="lazy" draggable="false"></button>
           </div>
         </div>
       </div>

@@ -1997,6 +1997,7 @@ function _openAttachMenu(evt, inputId, context) {
 // own id so a refresh persists state.
 // ════════════════════════════════════════════════════════════════════
 function _openComposeBuilder(kind, inputId, context) {
+  window._ftzComposeCtx = context || 'ch';
   if (kind === 'poll') return _openPollBuilder(inputId, context);
   if (kind === 'form') return _openFormBuilder(inputId, context);
   toast('Unknown composer kind: ' + kind, 'error');
@@ -2092,7 +2093,7 @@ function _pollSubmit(inputId) {
     at: new Date().toISOString(),
   };
   document.getElementById('ftz-poll-builder')?.remove();
-  _insertEmbedTokenIntoComposer(inputId, '[FTZPOLL:' + _b64(JSON.stringify(poll)) + ']');
+  _sendEmbedTokenNow(inputId, window._ftzComposeCtx || 'ch', '[FTZPOLL:' + _b64(JSON.stringify(poll)) + ']');
 }
 
 // ── FORM ────────────────────────────────────────────────────────────
@@ -2202,13 +2203,40 @@ function _formSubmit(inputId) {
     by: CU?.username || '', at: new Date().toISOString(),
   };
   document.getElementById('ftz-form-builder')?.remove();
-  _insertEmbedTokenIntoComposer(inputId, '[FTZFORM:' + _b64(JSON.stringify(form)) + ']');
+  _sendEmbedTokenNow(inputId, window._ftzComposeCtx || 'ch', '[FTZFORM:' + _b64(JSON.stringify(form)) + ']');
 }
 
 // ── helpers shared by both builders ─────────────────────────────────
 // Insert an embed token into a rich contenteditable composer at the
 // current caret (falls back to append). The token is plain text so
 // parseMD picks it up on send and on every subsequent render.
+// Auto-send a poll/form/embed token as if it were a file attachment:
+// no text appears in the composer, no manual send press needed. The
+// token is briefly swapped into the input, the existing send pipeline
+// is fired, and the user's prior draft (if any) is restored.
+async function _sendEmbedTokenNow(inputId, context, token) {
+  const inp = document.getElementById(inputId);
+  if (!inp) { _insertEmbedTokenIntoComposer(inputId, token); return; }
+  const wasCE = inp.isContentEditable;
+  const savedHTML = wasCE ? inp.innerHTML : null;
+  const savedVal  = !wasCE ? (inp.value || '') : null;
+  const prevVis = inp.style.visibility;
+  inp.style.visibility = 'hidden';
+  if (wasCE) { inp.innerHTML = ''; inp.textContent = token; }
+  else { inp.value = token; }
+  try {
+    if (context === 'dm') await sendDM();
+    else if (context === 'gc') await sendGCMessage();
+    else await handleChatSend('ch', (typeof curChannel !== 'undefined' ? curChannel : 0));
+  } catch (e) { console.warn('[embed-token send]', e); }
+  setTimeout(() => {
+    if (wasCE) inp.innerHTML = savedHTML || '';
+    else inp.value = savedVal || '';
+    inp.style.visibility = prevVis || '';
+    try { inp.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){}
+  }, 0);
+}
+
 function _insertEmbedTokenIntoComposer(inputId, token) {
   const el = document.getElementById(inputId);
   if (!el) return;

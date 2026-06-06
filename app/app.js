@@ -8500,11 +8500,18 @@ function _normalizeMsg(m) {
   } else if (m.inserted_at && _safeDate(m.inserted_at)) {
     m.timestamp = new Date(m.inserted_at).toISOString();
   } else {
-    // Try to recover from the id (our ids are `<base36 Date.now()>...`).
-    const head = String(m.id).split(/[^a-z0-9]/i)[0];
-    const ms = head && head.length >= 7 && head.length <= 10 ? parseInt(head, 36) : NaN;
-    if (Number.isFinite(ms) && ms > 946684800000 && ms < Date.now() + 86400000) {
-      m.timestamp = new Date(ms).toISOString();
+    // Try to recover from the id (our ids are `<base36 Date.now()><random>`).
+    // The leading 8 chars are the ms timestamp at send time for the
+    // current epoch; try a few lengths around that.
+    const idStr = String(m.id || '');
+    for (const len of [8, 9, 7, 10]) {
+      const head = idStr.slice(0, len);
+      if (head.length !== len) continue;
+      const ms = parseInt(head, 36);
+      if (Number.isFinite(ms) && ms > 946684800000 && ms < Date.now() + 86400000) {
+        m.timestamp = new Date(ms).toISOString();
+        break;
+      }
     }
     // Otherwise leave undefined. We DELIBERATELY no longer stamp "now"
     // here — that bug made historical rows w/ null timestamps masquerade
@@ -9245,10 +9252,10 @@ function appendMessage(container, msg, context, prevAuthor) {
     // second before hydration. Falls back to null (default avatar) only if
     // we've never seen this author before.
     const _msgPfp = (msg.from === CU?.username) ? (CU?.pfp || null) : (typeof _pfpCache !== 'undefined' ? (_pfpCache[msg.from] || null) : null);
-    row.innerHTML=`${stripeHTML}
+    row.innerHTML=`${stripeHTML}${replyHTML}
       <div class="msg-av-wrap"><div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(_msgPfp,msg.from,42)}</div></div>
       <div class="msg-content-col ${outlineWrap}">
-        ${fwdHTML}${replyHTML}
+        ${fwdHTML}
         <div class="msg-header">
           <span class="msg-author" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;${roleColor?'color:'+roleColor+';':''}" data-author="${safeFrom}">${safeFrom}</span>
           ${getMsgRoleTag(msg.from, context)}
@@ -9291,10 +9298,10 @@ function appendMessage(container, msg, context, prevAuthor) {
   } else {
     const textId='mt-c-'+id.replace(/[^a-z0-9]/gi,'-');
     const stripeHTML2=roleColor?`<div class="msg-role-stripe" style="background:${roleColor};"></div>`:'';
-    row.innerHTML=`${stripeHTML2}
+    row.innerHTML=`${stripeHTML2}${replyHTML}
       <div class="msg-av-wrap"><span class="msg-time-small" data-tip="${escapeHTML(fullTime)}">${time}</span></div>
       <div class="msg-content-col">
-        ${fwdHTML}${replyHTML}
+        ${fwdHTML}
         <div class="msg-text" id="${textId}">${parseMD(escapeHTML(msg.text||''))}${rephrasedTag}${editTag}</div>
         ${reactHTML?`<div class="msg-reactions">${reactHTML}</div>`:''}
         <div class="msg-thread-slot" id="thread-slot-${safeId}"></div>

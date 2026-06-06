@@ -871,7 +871,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    while you're scrolling, which is the main source of the not-smooth
    feeling. Hover stays visually obvious because the colour change is
    instant on cursor-enter. */
-.msg-row{display:flex;padding:2px 20px 2px 20px;position:relative;min-width:0;}
+.msg-row{display:flex;flex-wrap:wrap;padding:2px 20px 2px 20px;position:relative;min-width:0;}
 .msg-row:hover{background:rgba(255,255,255,.018);}
 /* JS adds .is-scrolling to the container during active scroll; killing
    pointer-events on rows means the browser doesn't have to recompute
@@ -961,12 +961,15 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    big avatar's centre X; the L bends right toward the small reply
    avatar. The vertical extends past the reply-ref's bottom edge so it
    visually meets the top of the big avatar in the message body. */
-/* Reply-ref lives INSIDE .msg-content-col (right of the big avatar). The
-   ::before reaches LEFT into the avatar gutter so the vertical part of
-   the connector lines up with the big avatar's centre, then bends right
-   under the small reply avatar. */
-.msg-reply-ref{display:flex;align-items:center;gap:7px;padding:0 12px 2px 4px;margin:6px 0 0 0;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;line-height:1.35;position:relative;min-width:0;transition:color .12s;}
-.msg-reply-ref::before{content:"";position:absolute;left:-31px;top:50%;bottom:-10px;width:31px;border-left:2px solid rgba(255,255,255,.22);border-top:2px solid rgba(255,255,255,.22);border-top-left-radius:9px;pointer-events:none;}
+/* Reply-ref is a flex child of .msg-row (sibling of the avatar+content).
+   width:100% forces a wrap so it occupies its own line ABOVE the avatar
+   + name + body. The ::before draws a ┌-shaped connector: the vertical
+   part sits at the big avatar's centre X column, the horizontal extends
+   right under the small reply avatar. The vertical extends past the
+   reply-ref's bottom edge so it visually meets the top of the big
+   avatar in the row below. */
+.msg-reply-ref{flex-basis:100%;width:100%;display:flex;align-items:center;gap:7px;padding:0 0 2px 62px;margin:2px 0 0 0;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;line-height:1.35;position:relative;min-width:0;transition:color .12s;}
+.msg-reply-ref::before{content:"";position:absolute;left:31px;top:50%;bottom:-12px;width:31px;border-left:2px solid rgba(255,255,255,.22);border-top:2px solid rgba(255,255,255,.22);border-top-left-radius:9px;pointer-events:none;}
 .msg-reply-ref:hover{color:rgba(255,255,255,.95);}
 .msg-reply-ref:hover::before{border-color:rgba(255,255,255,.42);}
 .msg-reply-ref .mrr-av{width:18px;height:18px;border-radius:50%;flex-shrink:0;overflow:hidden;background:var(--panel);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}

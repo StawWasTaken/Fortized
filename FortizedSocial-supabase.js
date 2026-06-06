@@ -836,16 +836,23 @@ const FortizedSocial = (() => {
     return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at, _tsFromId(r.id)), edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined, replyTo: _parseJSONIsh(r.reply_to), flags: Array.isArray(r.flags) ? r.flags : (r.flags && typeof r.flags === 'string' ? (() => { try { return JSON.parse(r.flags); } catch { return undefined; } })() : undefined) };
   }
   // Best-effort timestamp recovery from the message id. Our ids look like
-  // `<base36 Date.now()>.<random>`, so the leading 8–9 chars decode to a
-  // real millisecond timestamp. Used as a last-resort sort key for rows
-  // whose `timestamp`/`created_at` columns are missing.
+  // `<base36 Date.now()><base36 Math.random()>` concatenated — Date.now()
+  // is 8 chars for the current epoch, plus ~10 random chars after. The old
+  // split-on-non-alphanumeric approach kept the whole 18-char id and the
+  // length cap rejected it, so we silently never recovered any timestamp.
+  // Now we try the first 8, 9, 7 chars and accept the first that decodes
+  // to a plausibly-recent ms.
   function _tsFromId(id) {
     if (!id || typeof id !== 'string') return null;
-    const head = id.split(/[^a-z0-9]/i)[0];
-    if (!head || head.length < 7 || head.length > 10) return null;
-    const ms = parseInt(head, 36);
-    if (!Number.isFinite(ms) || ms < 946684800000 || ms > Date.now() + 86400000) return null;
-    return new Date(ms).toISOString();
+    for (const len of [8, 9, 7, 10]) {
+      const head = id.slice(0, len);
+      if (head.length !== len) continue;
+      const ms = parseInt(head, 36);
+      if (Number.isFinite(ms) && ms > 946684800000 && ms < Date.now() + 86400000) {
+        return new Date(ms).toISOString();
+      }
+    }
+    return null;
   }
   function _parseJSONIsh(v) {
     if (v == null) return undefined;

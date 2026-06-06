@@ -6450,7 +6450,7 @@ async function loadDMMessages(username) {
       if (el) {
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
-        appendMessage(el,msg,'dm',null); _notifyNewMsg('dm-msgs');
+        _appendLiveMessage(el,msg,'dm'); _notifyNewMsg('dm-msgs');
         if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', username)) playNotifSound('message');
       }
     });
@@ -7226,7 +7226,7 @@ async function loadGCMessages(gcId) {
       const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
       if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
       const echoKey = 'gc|'+msg.from+'|'+(msg.text||'');
-      appendMessage(el, msg, 'gc', null);
+      _appendLiveMessage(el, msg, 'gc');
       _notifyNewMsg('gc-msgs');
       if (msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('gc', gcId)) playNotifSound('message');
     });
@@ -8099,7 +8099,7 @@ async function loadChannelMessages(idx) {
       if (el){
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
-        appendMessage(el,msg,'ch',null);
+        _appendLiveMessage(el,msg,'ch');
         _notifyNewMsg('ch-msgs-'+idx);
         if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('bastion',b.globalId||b.name)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
       }
@@ -8528,10 +8528,14 @@ function _promoteSystemMentions(html) {
 function _renderMsgBatch(container, msgs, context, state) {
   if (!state) {
     state = { lastDate: null, lastAuthor: null, lastTimestamp: null };
-    const lastRow = container.querySelector('.msg-row:last-child');
-    if (lastRow) {
-      state.lastAuthor = lastRow.dataset.from || null;
-      state.lastTimestamp = lastRow.dataset.timestamp || null;
+    // Walk back to find the last non-system .msg-row — `:last-child`
+    // misses when other elements (load-more-bar, etc.) trail the list.
+    for (let n = container.lastElementChild; n; n = n.previousElementSibling) {
+      if (n.classList?.contains('msg-row') && !n.classList.contains('msg-system')) {
+        state.lastAuthor = n.dataset.from || null;
+        state.lastTimestamp = n.dataset.timestamp || null;
+        break;
+      }
     }
     const dateDivs = container.querySelectorAll('.date-div');
     const lastDateDiv = dateDivs[dateDivs.length - 1];
@@ -8682,7 +8686,7 @@ async function _resyncActiveChat() {
     const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
     if (!mid) continue;
     if (container.querySelector(`[data-msgid="${CSS.escape(String(mid))}"]`)) continue;
-    try { appendMessage(container, msg, ctx, null); appended++; } catch(_) {}
+    try { _appendLiveMessage(container, msg, ctx); appended++; } catch(_) {}
   }
   if (appended > 0) {
     _dbg('[Resync] appended', appended, 'missed messages to', containerId);
@@ -8981,6 +8985,33 @@ function _renderForwardedCard(msg) {
   </div>`;
 }
 
+// Live-append a single new message: handles the date-divider transition
+// (when the message belongs to a new calendar day vs the last in-DOM row)
+// and then delegates to appendMessage. Used by the DM / GC / channel
+// real-time listeners so dividers stay correct without duplicating the
+// trickle-render path's logic.
+function _appendLiveMessage(container, msg, context) {
+  if (!container || !msg) return;
+  _normalizeMsg(msg);
+  // Find the most recent .msg-row (any kind) to compare date labels with.
+  let lastRow = null;
+  for (let n = container.lastElementChild; n; n = n.previousElementSibling) {
+    if (n.classList?.contains('msg-row')) { lastRow = n; break; }
+    if (n.classList?.contains('date-div')) break; // already a divider at the bottom — don't add another
+  }
+  if (lastRow) {
+    const thisLabel = _fmtMsgDateDivider(msg.timestamp);
+    const lastLabel = _fmtMsgDateDivider(lastRow.dataset.timestamp);
+    if (thisLabel && lastLabel && thisLabel !== lastLabel) {
+      const div = document.createElement('div');
+      div.className = 'date-div';
+      div.innerHTML = '<span>' + escapeHTML(thisLabel) + '</span>';
+      container.appendChild(div);
+    }
+  }
+  appendMessage(container, msg, context, null);
+}
+
 function appendMessage(container, msg, context, prevAuthor) {
   // If prevAuthor not provided, infer from last message in container
   if (prevAuthor === null && container) prevAuthor = _getLastAuthor(container);
@@ -9005,6 +9036,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     row.dataset.msgid=id;
     row.dataset.text=msg.text||'';
     row.dataset.from='__system__';
+    row.dataset.timestamp=msg.timestamp||''; // needed for date-divider compare
     const canDeleteSystem = (context==='ch'||context==='channel') && hasPerm('manage_messages');
     const ev = _inferSystemEvent(msg);
     row.dataset.systemEvent = ev.key;
@@ -9023,43 +9055,22 @@ function appendMessage(container, msg, context, prevAuthor) {
     container.appendChild(row);
     return;
   }
-  // Walk back through the container to find both:
-  //   • lastAnyRow      — the most recent .msg-row of any kind (used for
-  //                       date-divider comparison, since a system message
-  //                       sets the "date" of the chat too).
-  //   • lastNonSystem   — the most recent non-system .msg-row (used for
-  //                       author grouping; matches _getLastAuthor()).
+  // Walk back through the container to find the most recent
+  // non-system .msg-row for author grouping (matches _getLastAuthor).
   // A trailing .date-div between us and the previous row also breaks
-  // grouping (forces isFirst=true) so messages after a divider always
-  // render with full header.
-  let lastAnyRow = null, lastNonSystem = null, dividerBetween = false;
+  // grouping (forces isFirst=true).
+  let lastNonSystem = null, dividerBetween = false;
   if (container) {
     for (let n = container.lastElementChild; n; n = n.previousElementSibling) {
-      if (!lastAnyRow && n.classList?.contains('date-div')) { dividerBetween = true; continue; }
-      if (n.classList?.contains('msg-row')) {
-        if (!lastAnyRow) lastAnyRow = n;
-        if (!n.classList.contains('msg-system')) { lastNonSystem = n; break; }
+      if (n.classList?.contains('date-div')) { if (!lastNonSystem) dividerBetween = true; continue; }
+      if (n.classList?.contains('msg-row') && !n.classList.contains('msg-system')) {
+        lastNonSystem = n; break;
       }
     }
   }
-  // Date-divider auto-insert on live append (the trickle path handles
-  // dividers itself, but a single message arriving via Socket.io / poll
-  // would skip the check otherwise).
-  const thisDateLabel = _fmtMsgDateDivider(msg.timestamp);
-  const lastDateLabel = lastAnyRow ? _fmtMsgDateDivider(lastAnyRow.dataset.timestamp) : null;
-  let dividerInserted = false;
-  if (container && lastAnyRow && thisDateLabel && lastDateLabel && thisDateLabel !== lastDateLabel) {
-    const div = document.createElement('div');
-    div.className = 'date-div';
-    div.innerHTML = '<span>' + escapeHTML(thisDateLabel) + '</span>';
-    container.appendChild(div);
-    dividerInserted = true;
-  }
-  // Grouping: same author, within 20 minutes, no divider between =
-  // continuation. Use lastNonSystem so a system message between two
-  // messages from the same person doesn't break their group.
+  // Grouping: same author, within 20 minutes, no divider between = continuation.
   const groupingPrev = lastNonSystem?.dataset?.from || prevAuthor;
-  let isFirst = msg.from !== groupingPrev || dividerInserted || dividerBetween;
+  let isFirst = msg.from !== groupingPrev || dividerBetween;
   if (!isFirst && container) {
     const lastTs = lastNonSystem?.dataset?.timestamp;
     const a = _safeDate(msg.timestamp), b = _safeDate(lastTs);
@@ -9113,7 +9124,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     // we've never seen this author before.
     const _msgPfp = (msg.from === CU?.username) ? (CU?.pfp || null) : (typeof _pfpCache !== 'undefined' ? (_pfpCache[msg.from] || null) : null);
     row.innerHTML=`${stripeHTML}
-      <div class="msg-av-wrap"><div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(_msgPfp,msg.from,38)}</div></div>
+      <div class="msg-av-wrap"><div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(_msgPfp,msg.from,42)}</div></div>
       <div class="msg-content-col ${outlineWrap}">
         ${fwdHTML}${replyHTML}
         <div class="msg-header">
@@ -9135,7 +9146,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     FortizedSocial.getUserByName(msg.from).then(u=>{
       if (!u) return;
       _verifiedCache[msg.from] = !!u.verified;
-      if(u.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,u.displayName||msg.from,40);}
+      if(u.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,u.displayName||msg.from,42);}
       // Add decoration overlay on chat avatar
       if(u.activeDecoration){const el=document.getElementById(avId);if(el){el.style.position='relative';el.style.overflow='visible';const existing=el.querySelector('.profile-decoration-overlay-sm');if(!existing){el.insertAdjacentHTML('beforeend',buildDecorationOverlay(u.activeDecoration,'profile-decoration-overlay-sm'));}}}
       // Update author display name
@@ -9611,9 +9622,9 @@ async function _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _c
             const col = next.querySelector('.msg-content-col');
             const existingContent = col ? col.innerHTML : '';
             const avWrap = next.querySelector('.msg-av-wrap');
-            if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
+            if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,42)}</div>`;
             if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
-            FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}if(u?.activeDecoration){const el=document.getElementById(avId);if(el){el.style.position='relative';el.style.overflow='visible';el.insertAdjacentHTML('beforeend',buildDecorationOverlay(u.activeDecoration,'profile-decoration-overlay-sm'));}}}).catch(()=>{});
+            FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,42);}if(u?.activeDecoration){const el=document.getElementById(avId);if(el){el.style.position='relative';el.style.overflow='visible';el.insertAdjacentHTML('beforeend',buildDecorationOverlay(u.activeDecoration,'profile-decoration-overlay-sm'));}}}).catch(()=>{});
           }
         }
         row.style.transition = 'opacity .2s ease, transform .2s ease, max-height .25s ease';
@@ -10895,7 +10906,7 @@ function renderDiscoverGrid(bastions){
     const hasIcon = !!b.icon;
     const bannerSrc = b.banner || b.icon || '';
     const bannerHTML = bannerSrc
-      ? `<img src="${escapeHTML(bannerSrc)}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onload="_extractCardColor(this,'${_cardId}')">`
+      ? `<img src="${escapeHTML(bannerSrc)}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer" onload="try{_extractCardColor(this,'${_cardId}')}catch{}" onerror="this.style.display='none'">`
       : `<div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(80,80,120,.3),rgba(30,30,50,.8));"></div>`;
     return `<div class="bc" id="${_cardId}" onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">
       ${boostLevel>0?`<div style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:3px 8px;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);border-radius:6px;color:#fff;z-index:3;">${['🟦','🟪','👑'][boostLevel-1]} T${boostLevel}</div>`:''}
@@ -11464,7 +11475,11 @@ async function promptJoinPublicBastion(bastionId){
       const wName = CU.displayName||CU.username;
       const wTemplate = localB.welcomeMessage || '**{user}** joined the bastion. Welcome!';
       const membersList = await FortizedSocial.getBastionMembers(gid).catch(()=>[]) || [];
-      const wMsg = wTemplate.replace(/\{user\}/g, '**'+wName+'**').replace(/\{bastion\}/g, '**'+b.name+'**').replace(/\{count\}/g, String(membersList.length||1));
+      // Template already wraps {user}/{bastion} in ** if it wants bold —
+      // wrapping the replacement value in ** too produced ****Onyx**** and
+      // broke the system-message mention promotion (the <strong> regex
+      // couldn't match a nested-bold blob).
+      const wMsg = wTemplate.replace(/\{user\}/g, wName).replace(/\{bastion\}/g, b.name||'').replace(/\{count\}/g, String(membersList.length||1));
       const wChName = localB.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
       try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch(e) { console.warn('[Bastion] Welcome msg failed:', e?.message); }
     }
@@ -27146,7 +27161,7 @@ async function joinBastionById(bastionId, hasInvite) {
   if (localB.welcomeEnabled !== false) {
     const wName = CU.displayName||CU.username;
     const wTemplate = localB.welcomeMessage || '**{user}** joined the bastion. Welcome!';
-    const wMsg = wTemplate.replace(/\{user\}/g, '**'+wName+'**').replace(/\{bastion\}/g, '**'+(b.name||'Bastion')+'**').replace(/\{count\}/g, '');
+    const wMsg = wTemplate.replace(/\{user\}/g, wName).replace(/\{bastion\}/g, b.name||'Bastion').replace(/\{count\}/g, '');
     const wChName = localB.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
     try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch(e) { _dbg('[Bastion] Welcome msg failed:', e?.message); }
   }

@@ -869,8 +869,8 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* PFP column — no vertical separator (matches the settings-preview
    message-row composition where avatar + content sit on a single
    continuous surface). */
-.msg-av-wrap{width:58px;min-width:58px;display:flex;justify-content:center;padding-top:2px;flex-shrink:0;margin-right:4px;}
-.msg-av-inner{width:38px;height:38px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:transform .15s;}
+.msg-av-wrap{width:62px;min-width:62px;display:flex;justify-content:center;padding-top:2px;flex-shrink:0;margin-right:4px;}
+.msg-av-inner{width:42px;height:42px;border-radius:50%;background:var(--panel);font-size:15px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:transform .15s;}
 .msg-av-inner:hover{transform:scale(1.05);}
 .msg-av-inner img{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
 .msg-time-small{font-size:9.5px;color:rgba(255,255,255,.2);white-space:nowrap;padding-top:5px;min-width:44px;visibility:hidden;text-align:right;}
@@ -939,8 +939,8 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Reply / quote — soft left border, lighter bg, clickable */
 /* Reply / quote — Guilded-style compact preview: thin connector line on the
    left, inline avatar+name+text in one row, brightens on hover. */
-.msg-reply-ref{display:flex;align-items:center;gap:7px;padding:3px 12px 3px 56px;margin:0 0 2px 0;font-size:12.5px;color:rgba(255,255,255,.55);cursor:pointer;line-height:1.35;position:relative;transition:color .12s;}
-.msg-reply-ref::before{content:"";position:absolute;left:30px;top:50%;width:18px;height:12px;border-left:2px solid rgba(255,255,255,.18);border-top:2px solid rgba(255,255,255,.18);border-top-left-radius:8px;}
+.msg-reply-ref{display:flex;align-items:center;gap:7px;padding:3px 12px 3px 62px;margin:0 0 2px 0;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;line-height:1.35;position:relative;transition:color .12s;}
+.msg-reply-ref::before{content:"";position:absolute;left:34px;top:50%;width:20px;height:12px;border-left:2px solid rgba(255,255,255,.18);border-top:2px solid rgba(255,255,255,.18);border-top-left-radius:8px;}
 .msg-reply-ref:hover{color:rgba(255,255,255,.85);}
 .msg-reply-ref:hover::before{border-color:rgba(255,255,255,.32);}
 .msg-reply-ref strong{color:rgba(255,255,255,.85);font-weight:600;}

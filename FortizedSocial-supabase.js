@@ -799,17 +799,25 @@ const FortizedSocial = (() => {
       }
 
       // Reverse to chronological order after fetching latest N
-      const result = (data || []).reverse().map(r => {
+      const result = (data || []).map(r => {
         // Handle both old schema (columns: id, from, text, time, timestamp, etc.)
         // and new schema (columns: id, username, type, from, time, read, data)
         if (r.text !== undefined) {
-          // Old schema - has direct text column
           return _dmFromRow(r);
         } else {
-          // New schema - text might be in data column (JSONB)
           const msgData = typeof r.data === 'string' ? JSON.parse(r.data) : (r.data || {});
           return _dmFromPollingRow(r, msgData);
         }
+      });
+      // Stable chronological sort: timestamp ascending, id as tiebreaker.
+      // The DB's `order timestamp DESC + reverse` was unstable when two
+      // messages shared a timestamp, which is exactly what you get when
+      // the polling fallback stamps "now" on rows without a real ts.
+      result.sort((a, b) => {
+        const ta = a.timestamp ? +new Date(a.timestamp) : 0;
+        const tb = b.timestamp ? +new Date(b.timestamp) : 0;
+        if (ta !== tb) return ta - tb;
+        return String(a.id||'').localeCompare(String(b.id||''));
       });
 
       console.debug('[getDMMessages]', { between: key, count: result.length, sample: result.slice(-3).map(m => ({ id: m.id, from: m.from, text: m.text?.slice(0,40) })) });
@@ -991,12 +999,17 @@ const FortizedSocial = (() => {
       .eq('channel_id', channelId)
       .order('timestamp', { ascending: false })
       .range(_offset, _offset + _limit - 1);
-    const result = (data || []).reverse().map(r => ({
+    const result = (data || []).map(r => ({
       id: r.id, from: r.from, text: r.text, time: r.time,
       timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at) || new Date().toISOString(),
       edited: r.edited || false,
       reactions: r.reactions || undefined,
     }));
+    result.sort((a, b) => {
+      const ta = +new Date(a.timestamp), tb = +new Date(b.timestamp);
+      if (ta !== tb) return ta - tb;
+      return String(a.id||'').localeCompare(String(b.id||''));
+    });
     if (!_offset) _cacheSet('bm:' + bastionId + ':' + channelId, result, _CACHE_TTL.bastionMsgs);
     return result;
   }
@@ -1649,7 +1662,7 @@ const FortizedSocial = (() => {
             // — otherwise we 400 every 12s forever for each bastion.
             if (/column .* does not exist/i.test(bastionErr.message || '')) {
               _voiceSchemaBroken = true;
-              console.warn('[VoiceRoomPolling] voice_channels column missing — disabling polling for this session');
+              console.debug('[VoiceRoomPolling] voice_channels column missing — disabling polling for this session');
               stopVoiceRoomPolling();
               return;
             }

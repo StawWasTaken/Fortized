@@ -6429,6 +6429,7 @@ async function loadDMMessages(username) {
   // Stop any existing DM polling for this conversation
   const dmKey = [CU.username, username].sort().join('__');
   FortizedSocial.stopDMPolling(dmKey);
+  _paintInitialChatSkeleton(msgsEl);
   try {
     // Discord-style initial fetch: only the last 20 visible messages — the
     // ~one-screen Discord paints first. Older messages are lazy-loaded on
@@ -7208,6 +7209,7 @@ async function loadGCMessages(gcId) {
   // Join Socket.io room for GC real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('gc', String(gcId).toLowerCase());
   window._activeSubs.gcRoom = gcId;
+  _paintInitialChatSkeleton(msgsEl);
   try {
     const snap = await firebase.database().ref('groupChats/'+gcId+'/messages').orderByKey().get();
     const msgs = snap.exists() ? Object.values(snap.val()) : [];
@@ -8079,6 +8081,7 @@ async function loadChannelMessages(idx) {
   if (_chListener){try{_chListener();}catch(e){_dbg('[CH] Listener cleanup:',e?.message);}_chListener=null;}
   // Join Socket.io room for bastion channel real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('bastion', String(b.globalId||b.name).toLowerCase(), String(ch.name).toLowerCase());
+  _paintInitialChatSkeleton(msgsEl);
   try {
     // Discord-style initial fetch: only the last 20 visible messages.
     const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,20);
@@ -8524,7 +8527,7 @@ function renderMessages(container, msgs, context) {
     container._trickleCtrl.aborted = true;
     try { container._trickleCleanup?.(); } catch {}
   }
-  container.querySelectorAll('.msg-row,.date-div,.load-more-bar').forEach(el => el.remove());
+  container.querySelectorAll('.msg-row,.date-div,.load-more-bar,.msg-skel-stack').forEach(el => el.remove());
   // Reset the per-container dedup Set whenever we redo the message list —
   // otherwise switching DMs and back would silently swallow re-fetched
   // messages because their IDs were still "seen".
@@ -8667,6 +8670,18 @@ function _renderSkelMessages(n) {
     rows.push(`<div class="msg-skel"><span class="msg-skel-av"></span><div class="msg-skel-lines"><span class="msg-skel-name"></span>${bars}${img}</div></div>`);
   }
   return `<div class="msg-skel-stack" aria-hidden="true">${rows.join('')}</div>`;
+}
+
+// Paint the Discord-style loading placeholder into a chat container before
+// the first fetch resolves. renderMessages() strips it when real rows land
+// (the .msg-skel-stack selector was added to its cleanup query).
+function _paintInitialChatSkeleton(msgsEl) {
+  if (!msgsEl) return;
+  // Don't paint twice if the user re-opens the same chat mid-fetch, and
+  // don't paint over real messages still in the DOM (e.g. cached render).
+  if (msgsEl.querySelector('.msg-skel-stack')) return;
+  if (msgsEl.querySelector('.msg-row')) return;
+  msgsEl.insertAdjacentHTML('afterbegin', _renderSkelMessages(6));
 }
 
 // Replaces the load-more-bar's content with a single retry button —

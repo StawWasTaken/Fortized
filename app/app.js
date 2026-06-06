@@ -18820,8 +18820,10 @@ function _showEmojiTooltip(emoji, el) {
   const bastionIdx = el.dataset?.bastionIdx != null ? parseInt(el.dataset.bastionIdx) : null;
   const emojiKey = el.dataset?.emoji || emoji;
 
-  // Fortized Guide emoji
-  const isFtz = emojiType === 'ftz' || FORTIZED_EMOJI_MAP[emojiKey];
+  // Fortized Guide emoji (excluding the externally-hosted "extras" which
+  // are regular custom emojis, not part of the curated Guide set).
+  const isExtra = FORTIZED_EXTRA_EMOJI_NAMES.includes(emojiKey);
+  const isFtz = !isExtra && (emojiType === 'ftz' || FORTIZED_EMOJI_MAP[emojiKey]);
   // Bastion custom emoji — check all bastions
   let bastionCustom = null;
   let bastionName = '';
@@ -18848,6 +18850,13 @@ function _showEmojiTooltip(emoji, el) {
     originLabel = 'Fortized Guide Emoji';
     originColor = 'rgba(255,249,62,.85)';
     detailLine = 'Official Fortized Guide — available everywhere';
+  } else if (isExtra) {
+    const ftzUrl = FORTIZED_EMOJI_MAP[emojiKey];
+    previewHTML = `<img src="${ftzUrl}" style="width:32px;height:32px;object-fit:contain;">`;
+    nameStr = ':' + emojiKey + ':';
+    originLabel = 'Custom Emoji';
+    originColor = 'rgba(255,255,255,.55)';
+    detailLine = 'Custom emoji — available everywhere';
   } else if (bastionCustom) {
     // Bastion custom emoji
     previewHTML = `<img src="${escapeHTML(bastionCustom.data)}" style="width:32px;height:32px;object-fit:contain;">`;
@@ -19185,16 +19194,18 @@ function _showEmojiInfoPopover(emoji, type, e) {
   } else {
     nameStr = ':' + emoji + ':';
   }
-  const isFtz = FORTIZED_EMOJI_MAP[emoji];
+  const isExtra = FORTIZED_EXTRA_EMOJI_NAMES.includes(emoji);
+  const isFtz = !isExtra && FORTIZED_EMOJI_MAP[emoji];
   const bName = curBastion !== null ? (CU?.bastions?.[curBastion]?.name || 'Bastion') : '';
   const bCustom = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]).find(ce => ce.name === emoji) : null;
   let typeLabel = 'Default Emoji';
   let usageLabel = 'Can be used anywhere on Fortized.';
   if (isFtz) { typeLabel = 'Official Fortized Guide Emoji'; usageLabel = 'Official Fortized Guide Emoji — available everywhere.'; }
+  else if (isExtra) { typeLabel = 'Custom Emoji'; usageLabel = 'Custom emoji — available everywhere.'; }
   if (bCustom) { typeLabel = 'Bastion Emoji'; usageLabel = 'Available in: ' + escapeHTML(bName); }
   const previewHTML = type === 'unicode'
     ? `<img src="${emojiToTwemojiUrl(emoji)}" style="width:48px;height:48px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:42px\\'>${emoji}</span>'">`
-    : (isFtz ? `<img src="${escapeHTML(isFtz)}" style="width:48px;height:48px;object-fit:contain;">` : (bCustom ? `<img src="${escapeHTML(bCustom.data)}" style="width:48px;height:48px;object-fit:contain;">` : emoji));
+    : ((isFtz || isExtra) ? `<img src="${escapeHTML(FORTIZED_EMOJI_MAP[emoji])}" style="width:48px;height:48px;object-fit:contain;">` : (bCustom ? `<img src="${escapeHTML(bCustom.data)}" style="width:48px;height:48px;object-fit:contain;">` : emoji));
   pop.innerHTML = `<div class="eip-preview">${previewHTML}</div><div class="eip-name">${escapeHTML(nameStr)}</div><div class="eip-type">${typeLabel}</div><div style="font-size:10px;color:rgba(255,255,255,.25);text-align:center;margin-top:6px;">${usageLabel}</div>`;
   document.body.appendChild(pop);
   // Position near click
@@ -26116,9 +26127,9 @@ async function _showInviteFriendsPanel() {
 
   const ov = document.createElement('div');
   ov.className = 'input-dialog-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;';
 
-  ov.innerHTML = `<div style="background:var(--panel,#13161d);border:1.5px solid rgba(255,249,62,.1);border-radius:18px;width:100%;max-width:460px;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 80px rgba(255,249,62,.03);animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
+  ov.innerHTML = `<div class="ftz-card-modal" style="background:var(--panel,#13161d);border:1px solid rgba(255,255,255,.06);border-radius:14px;width:100%;max-width:460px;display:flex;flex-direction:column;box-shadow:none;animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
     <!-- Header -->
     <div style="padding:20px 20px 14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
@@ -26403,9 +26414,9 @@ async function showBastionInviteUI(bastionIdx) {
 
   const ov = document.createElement('div');
   ov.className = 'input-dialog-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;';
 
-  ov.innerHTML = `<div style="background:var(--panel,#13161d);border:1.5px solid rgba(255,249,62,.1);border-radius:18px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 80px rgba(255,249,62,.03);animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
+  ov.innerHTML = `<div class="ftz-card-modal" style="background:var(--panel,#13161d);border:1px solid rgba(255,255,255,.06);border-radius:14px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:none;animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
     <div style="padding:20px 20px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <h3 style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite friends to ${escapeHTML(b.name)}</h3>
@@ -49416,35 +49427,49 @@ function _stawToggleInspector() {
     _stawHoverBox?.remove(); _stawHoverBox = null;
     _stawToolbar?.remove(); _stawToolbar = null;
     _stawInspectorPaused = false;
+    if (_stawInspectorFrozen) {
+      _stawInspectorFrozen = false;
+      document.body.classList.remove('staw-frozen');
+      if (window._stawFreezeListeners) {
+        const { blocker, events } = window._stawFreezeListeners;
+        events.forEach(ev => document.removeEventListener(ev, blocker, true));
+        window._stawFreezeListeners = null;
+      }
+    }
     toast?.('Inspector OFF', 'info');
   }
 }
 
-// Inspector pause = SCREEN FREEZE. While paused, every mousedown
-// /click /touchstart /mouseleave that lands outside the inspector
-// toolbar is intercepted at capture phase and stopped, so any open
-// popover / dropdown / tooltip stays on screen instead of vanishing
-// on the user's next move. This is the "select things that may
-// disappear" workflow — inspect a tooltip without it auto-closing.
+// Pause = JUST pause the inspector's picker. The rest of the page
+// behaves normally (tooltips, hovers, notifications, etc all keep
+// working). Use FREEZE below if you want to halt the entire UI so a
+// disappearing element can be selected.
 function _stawToggleInspectorPause() {
   if (!_stawInspectorOn) return;
   _stawInspectorPaused = !_stawInspectorPaused;
   document.documentElement.style.cursor = _stawInspectorPaused ? '' : 'crosshair';
-  document.body.classList.toggle('staw-frozen', _stawInspectorPaused);
-  if (_stawInspectorPaused) _stawHoverBox?.remove();
-  _stawHoverBox = null;
-  if (_stawInspectorPaused) {
+  if (_stawInspectorPaused) { _stawHoverBox?.remove(); _stawHoverBox = null; }
+  _stawUpdateToolbar();
+  toast?.(_stawInspectorPaused ? 'Inspector paused' : 'Inspector resumed', 'info');
+}
+// Freeze = HALT the page. Blocks all user events at capture phase
+// AND pauses CSS animations/transitions so toasts/tooltips/dropdowns
+// don't auto-dismiss. Inspector toolbar itself stays interactive.
+let _stawInspectorFrozen = false;
+function _stawToggleInspectorFreeze() {
+  if (!_stawInspectorOn) return;
+  _stawInspectorFrozen = !_stawInspectorFrozen;
+  document.body.classList.toggle('staw-frozen', _stawInspectorFrozen);
+  if (_stawInspectorFrozen) {
     if (!window._stawFreezeListeners) {
       const blocker = (e) => {
         const t = e.target;
-        if (t?.closest?.('#staw-inspect-toolbar')) return; // toolbar stays interactive
+        if (t?.closest?.('#staw-inspect-toolbar, #staw-inspect-panel')) return;
         e.stopImmediatePropagation();
         e.stopPropagation();
-        // Don't preventDefault on mouseover/out so the existing
-        // browser highlight feedback still works.
-        if (e.type === 'mousedown' || e.type === 'click' || e.type === 'touchstart' || e.type === 'pointerdown') e.preventDefault();
+        if (['mousedown','click','touchstart','pointerdown','keydown','keypress','keyup','wheel','scroll','submit','input','change'].includes(e.type)) e.preventDefault();
       };
-      const events = ['mousedown','click','touchstart','pointerdown','mouseleave','mouseout','focusout'];
+      const events = ['mousedown','mouseup','click','dblclick','touchstart','touchend','pointerdown','pointerup','mouseleave','mouseout','mouseover','mouseenter','focusin','focusout','keydown','keypress','keyup','wheel','scroll','submit','input','change'];
       events.forEach(ev => document.addEventListener(ev, blocker, true));
       window._stawFreezeListeners = { blocker, events };
     }
@@ -49454,7 +49479,7 @@ function _stawToggleInspectorPause() {
     window._stawFreezeListeners = null;
   }
   _stawUpdateToolbar();
-  toast?.(_stawInspectorPaused ? 'Screen frozen — outside-click events blocked. Pick disappearing elements.' : 'Inspector resumed', 'info');
+  toast?.(_stawInspectorFrozen ? 'Screen FROZEN — page-wide events blocked, animations paused.' : 'Screen unfrozen', 'info');
 }
 
 function _stawShowToolbar() {
@@ -49468,9 +49493,11 @@ function _stawShowToolbar() {
       <span id="staw-tb-label" style="font-weight:600;letter-spacing:.02em;">Inspecting</span>
     </span>
     <button id="staw-tb-pause" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#dde3ed;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Pause</button>
+    <button id="staw-tb-freeze" style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.35);color:#93c5fd;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Freeze</button>
     <button id="staw-tb-exit" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);color:#f87171;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>`;
   document.body.appendChild(tb);
   tb.querySelector('#staw-tb-pause').onclick = (e) => { e.stopPropagation(); _stawToggleInspectorPause(); };
+  tb.querySelector('#staw-tb-freeze').onclick = (e) => { e.stopPropagation(); _stawToggleInspectorFreeze(); };
   tb.querySelector('#staw-tb-exit').onclick = (e) => { e.stopPropagation(); _stawToggleInspector(); };
   _stawToolbar = tb;
 }
@@ -49480,15 +49507,19 @@ function _stawUpdateToolbar() {
   const dot = _stawToolbar.querySelector('#staw-tb-dot');
   const label = _stawToolbar.querySelector('#staw-tb-label');
   const pauseBtn = _stawToolbar.querySelector('#staw-tb-pause');
-  if (_stawInspectorPaused) {
+  const freezeBtn = _stawToolbar.querySelector('#staw-tb-freeze');
+  if (_stawInspectorFrozen) {
+    if (dot) { dot.style.background = '#60a5fa'; dot.style.boxShadow = '0 0 6px #60a5fa'; }
+    if (label) label.textContent = 'Frozen';
+  } else if (_stawInspectorPaused) {
     if (dot) { dot.style.background = '#fbbf24'; dot.style.boxShadow = '0 0 6px #fbbf24'; }
     if (label) label.textContent = 'Paused';
-    if (pauseBtn) pauseBtn.textContent = 'Resume';
   } else {
     if (dot) { dot.style.background = '#3ecf6e'; dot.style.boxShadow = '0 0 6px #3ecf6e'; }
     if (label) label.textContent = 'Inspecting';
-    if (pauseBtn) pauseBtn.textContent = 'Pause';
   }
+  if (pauseBtn) pauseBtn.textContent = _stawInspectorPaused ? 'Resume' : 'Pause';
+  if (freezeBtn) freezeBtn.textContent = _stawInspectorFrozen ? 'Unfreeze' : 'Freeze';
 }
 
 function _stawIsOwnUI(el) {

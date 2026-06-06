@@ -805,12 +805,11 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* ── Chat 2.0 — Premium Communication ─────────── */
 .chat-wrap{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;position:relative;}
 .chat-msgs{flex:1;overflow-y:auto;padding:20px 0 8px;display:flex;flex-direction:column;will-change:scroll-position;-webkit-overflow-scrolling:touch;transform:translateZ(0);overflow-anchor:auto;overscroll-behavior:contain;scrollbar-gutter:stable;}
-/* While the initial skeleton is up, hide the freshly painted messages
-   until inline media reports load — prevents the "text appears, embeds
-   pop in a few seconds later" jank. The skeleton stays in place; rows
-   reserve their height via content-visibility but don't paint. */
-.chat-msgs.chat-msgs-initial-loading .msg-row,
-.chat-msgs.chat-msgs-initial-loading .date-div{visibility:hidden;}
+/* Per-row hold while the skeleton is up. ONLY the initial-paint rows
+   carry this class — rows added later (real-time sends/edits, optimistic
+   echoes, lazy-loaded older history) render visible immediately, so we
+   don't accidentally hide real-time updates behind a skeleton. */
+.msg-row.msg-pre-reveal,.date-div.msg-pre-reveal{visibility:hidden;}
 
 /* ════════════════════════════════════════════════════════════════
    OLDER-MESSAGES SKELETON LOADER
@@ -953,15 +952,24 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Own messages */
 .msg-row.own .msg-text{color:rgba(255,255,255,.85);}
 /* Reply / quote — soft left border, lighter bg, clickable */
-/* Reply / quote — Discord/Guilded style: thin L-shaped connector from the
-   replied-to message into the new one, with a small avatar + bold author
-   + truncated preview text. The connector starts above the row at the
-   avatar centre and bends right into the preview. */
-.msg-reply-ref{display:flex;align-items:center;gap:7px;padding:3px 12px 3px 62px;margin:0 0 2px 0;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;line-height:1.35;position:relative;min-width:0;transition:color .12s;}
-.msg-reply-ref::before{content:"";position:absolute;left:34px;top:50%;width:24px;height:14px;border-left:2px solid rgba(255,255,255,.22);border-top:2px solid rgba(255,255,255,.22);border-top-left-radius:8px;}
-.msg-reply-ref:hover{color:rgba(255,255,255,.9);}
-.msg-reply-ref:hover::before{border-color:rgba(255,255,255,.4);}
-.msg-reply-ref .mrr-av{width:16px;height:16px;border-radius:50%;flex-shrink:0;overflow:hidden;background:var(--panel);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
+/* Reply / quote — Discord/Guilded style. Layout:
+   ┌── [small av] name : preview text
+   │
+   [BIG AV] name • role · time
+            text...
+   The connector lives on the reply-ref. Its vertical part sits at the
+   big avatar's centre X; the L bends right toward the small reply
+   avatar. The vertical extends past the reply-ref's bottom edge so it
+   visually meets the top of the big avatar in the message body. */
+/* Reply-ref lives INSIDE .msg-content-col (right of the big avatar). The
+   ::before reaches LEFT into the avatar gutter so the vertical part of
+   the connector lines up with the big avatar's centre, then bends right
+   under the small reply avatar. */
+.msg-reply-ref{display:flex;align-items:center;gap:7px;padding:0 12px 2px 4px;margin:6px 0 0 0;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;line-height:1.35;position:relative;min-width:0;transition:color .12s;}
+.msg-reply-ref::before{content:"";position:absolute;left:-31px;top:50%;bottom:-10px;width:31px;border-left:2px solid rgba(255,255,255,.22);border-top:2px solid rgba(255,255,255,.22);border-top-left-radius:9px;pointer-events:none;}
+.msg-reply-ref:hover{color:rgba(255,255,255,.95);}
+.msg-reply-ref:hover::before{border-color:rgba(255,255,255,.42);}
+.msg-reply-ref .mrr-av{width:18px;height:18px;border-radius:50%;flex-shrink:0;overflow:hidden;background:var(--panel);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
 .msg-reply-ref .mrr-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
 .msg-reply-ref strong{color:#fff;font-weight:600;flex-shrink:0;}
 .msg-reply-ref .mrr-preview{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);min-width:0;}

@@ -57,25 +57,27 @@ const _FPP_WISHLIST_SVG = '<svg viewBox="0 0 576 512" fill="currentColor" style=
 //   <type>   → "<type>?FTZ<initial><n>"        (e.g. group → "group?FTZG3")
 //
 // <n> is the global creation index for that type, taken atomically from
-// Firebase RTDB so two concurrent creators can't collide. Owner usernames
-// no longer leak into the ID (the old scheme broke when ownership moved).
+// Supabase via the `ftz_next_id` RPC so two concurrent creators can't
+// collide. Owner usernames no longer leak into the ID (the old scheme
+// broke when ownership moved).
 //
 // Users are NOT issued FTZ-style IDs — their canonical ID is the username.
+//
+// The RPC must exist server-side (see migration SQL in the chat reply
+// that introduced this helper). If it's missing we fall back to a
+// timestamp-derived index — still unique, just not gap-free.
 async function _nextFortizedId(type) {
   const initial = String(type || 'item').charAt(0).toUpperCase();
   const prefix = String(type || 'item').toLowerCase();
   try {
-    if (typeof firebase !== 'undefined' && firebase.database) {
-      const ref = firebase.database().ref('counters/' + prefix);
-      const r = await ref.transaction(curr => (curr || 0) + 1);
-      if (r && r.committed && typeof r.snapshot?.val() === 'number') {
-        return `${prefix}?FTZ${initial}${r.snapshot.val()}`;
-      }
+    if (FortizedSocial?._sb) {
+      const { data, error } = await FortizedSocial._sb.rpc('ftz_next_id', { p_type: prefix });
+      if (!error && typeof data === 'number') return `${prefix}?FTZ${initial}${data}`;
+      if (error) console.warn('[ID] ftz_next_id RPC error:', error.message);
     }
-  } catch (e) { console.warn('[ID] counter txn failed, falling back', e?.message); }
-  // Offline / Firebase unavailable: stamp a timestamp-derived index so
-  // the ID still sorts roughly by creation order. Adopted by the next
-  // online write that touches the bastion.
+  } catch (e) { console.warn('[ID] counter RPC failed, falling back', e?.message); }
+  // Offline / RPC unavailable: stamp a base36 timestamp so the ID still
+  // sorts roughly by creation order and is globally unique.
   return `${prefix}?FTZ${initial}${Date.now().toString(36)}`;
 }
 
@@ -8516,10 +8518,19 @@ function _fmtMsgDateDivider(ts) {
 }
 function _fmtMsgTime(ts, fallback) {
   const d = _safeDate(ts);
-  if (d) return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  // If raw fallback ("HH:MM" string) was already provided by the message row,
-  // surface it; otherwise show empty so the row stays clean.
-  return (fallback && fallback !== 'Invalid Date') ? fallback : '';
+  if (!d) return (fallback && fallback !== 'Invalid Date') ? fallback : '';
+  const hm = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dayDiff = Math.round((today - msgDay) / 86400000);
+  if (dayDiff <= 0) return hm;
+  if (dayDiff === 1) return 'Yesterday at ' + hm;
+  // Older: dd/mm/yyyy hh:mm
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy} ${hm}`;
 }
 function _fmtMsgFullTime(ts) {
   const d = _safeDate(ts);
@@ -8650,6 +8661,11 @@ function renderMessages(container, msgs, context) {
   // skeleton stays visible in its place. We drop both the class and the
   // skeleton once images settle (or after a 1.5s safety cap).
   if (hadSkeleton) container.classList.add('chat-msgs-initial-loading');
+  // Snapshot the rows the next paint creates so we can hold ONLY them
+  // hidden — new rows from real-time listeners must stay visible.
+  const tagInitialRender = hadSkeleton ? (root) => {
+    root.querySelectorAll('.msg-row:not(.msg-pre-reveal), .date-div:not(.msg-pre-reveal)').forEach(el => el.classList.add('msg-pre-reveal'));
+  } : null;
 
   // Show the lazy-load bar whenever we hit the initial fetch limit (20) —
   // that tells us the server has more older messages waiting. Scroll-up
@@ -8667,6 +8683,7 @@ function renderMessages(container, msgs, context) {
   // Small lists: render synchronously — the rAF overhead outweighs the gain.
   if (msgs.length <= 40) {
     _renderMsgBatch(container, msgs, context);
+    if (tagInitialRender) tagInitialRender(container);
     if (hadSkeleton) _revealAfterMediaSettle(container);
     return;
   }
@@ -8674,6 +8691,7 @@ function renderMessages(container, msgs, context) {
   const FIRST = 25;
   const CHUNK = 15;
   const state = _renderMsgBatch(container, msgs.slice(0, FIRST), context);
+  if (tagInitialRender) tagInitialRender(container);
 
   const rest = msgs.slice(FIRST);
   const ctrl = { aborted: false, idx: 0 };
@@ -8707,6 +8725,7 @@ function renderMessages(container, msgs, context) {
     const chunk = rest.slice(ctrl.idx, ctrl.idx + CHUNK);
     if (!chunk.length) { cleanup(); if (hadSkeleton) _revealAfterMediaSettle(container); return; }
     _renderMsgBatch(container, chunk, context, state);
+    if (tagInitialRender) tagInitialRender(container);
     ctrl.idx += CHUNK;
     if (wasAtBottom) container.scrollTop = container.scrollHeight;
     if (ctrl.idx < rest.length) requestAnimationFrame(step);
@@ -8723,6 +8742,7 @@ function _revealAfterMediaSettle(container) {
   if (!container) return;
   const reveal = () => {
     container.classList.remove('chat-msgs-initial-loading');
+    container.querySelectorAll('.msg-pre-reveal').forEach(el => el.classList.remove('msg-pre-reveal'));
     container.querySelector('.msg-skel-stack')?.remove();
   };
   const mediaEls = Array.from(container.querySelectorAll('.msg-row img, .msg-row iframe, .msg-row video'));
@@ -30677,11 +30697,22 @@ function isUserBlocked(username) {
 }
 
 // ── Conversation mute (silences notifications, keeps messages visible) ──
+// Mute lists are persisted on the user object so they follow the account
+// across devices. localStorage is read as a one-time fallback for users
+// upgrading from the device-bound implementation; we copy it onto CU the
+// first time we see it, then the saveUser() call below pushes it to the
+// backend and future reads come from CU directly.
 function _getMutedConvos() {
-  try { return JSON.parse(localStorage.getItem('ftz_muted_convos') || '[]'); } catch { return []; }
+  if (CU && Array.isArray(CU.mutedConvos)) return CU.mutedConvos;
+  let arr = [];
+  try { arr = JSON.parse(localStorage.getItem('ftz_muted_convos') || '[]'); } catch {}
+  if (CU) CU.mutedConvos = arr;
+  return arr;
 }
 function _saveMutedConvos(arr) {
-  localStorage.setItem('ftz_muted_convos', JSON.stringify([...new Set(arr)]));
+  const uniq = [...new Set(arr)];
+  if (CU) { CU.mutedConvos = uniq; try { saveUser?.(); } catch {} }
+  localStorage.setItem('ftz_muted_convos', JSON.stringify(uniq));
 }
 function isConvoMuted(kind, id) {
   if (!id) return false;
@@ -30706,10 +30737,16 @@ function toggleMuteConvo(kind, id) {
 
 // ── Local per-user mute (silences notifications + messages from a user) ──
 function _getMutedUsers() {
-  try { return JSON.parse(localStorage.getItem('ftz_muted_users') || '[]'); } catch { return []; }
+  if (CU && Array.isArray(CU.mutedUsers)) return CU.mutedUsers;
+  let arr = [];
+  try { arr = JSON.parse(localStorage.getItem('ftz_muted_users') || '[]'); } catch {}
+  if (CU) CU.mutedUsers = arr;
+  return arr;
 }
 function _saveMutedUsers(arr) {
-  localStorage.setItem('ftz_muted_users', JSON.stringify([...new Set(arr)]));
+  const uniq = [...new Set(arr)];
+  if (CU) { CU.mutedUsers = uniq; try { saveUser?.(); } catch {} }
+  localStorage.setItem('ftz_muted_users', JSON.stringify(uniq));
 }
 function isUserMutedLocal(username) {
   return !!username && _getMutedUsers().includes(username.toLowerCase());

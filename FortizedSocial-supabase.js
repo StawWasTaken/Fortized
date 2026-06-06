@@ -2445,6 +2445,7 @@ const FortizedSocial = (() => {
     initSocket, getSocket, isSocketReady, socketEmit,
     joinRoom, leaveRoom, queryPresence, disconnectSocket,
     playNotificationSound,
+    _sb: sb,
   };
 
 })();

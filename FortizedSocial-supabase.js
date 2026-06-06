@@ -822,24 +822,36 @@ const FortizedSocial = (() => {
   }
 
   function _dmFromRow(r) {
-    return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined, flags: Array.isArray(r.flags) ? r.flags : (r.flags && typeof r.flags === 'string' ? (() => { try { return JSON.parse(r.flags); } catch { return undefined; } })() : undefined) };
+    return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at) || new Date().toISOString(), edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined, flags: Array.isArray(r.flags) ? r.flags : (r.flags && typeof r.flags === 'string' ? (() => { try { return JSON.parse(r.flags); } catch { return undefined; } })() : undefined) };
   }
 
   function _dmFromPollingRow(r, msgData) {
     // Extract message from polling response where data might be in a JSON column
     // Handle both schemas: old (direct text column) and new (data column as JSONB)
+    // Pick the first candidate that ISN'T an HH:MM display string — those are
+    // not real timestamps and were silently surfacing as "3 weeks ago".
+    const ts = _pickTimestamp(msgData.timestamp, r.timestamp, r.created_at, r.inserted_at);
     return {
       id: msgData.id || r.id,
       from: msgData.from || r.from,
-      text: msgData.text || r.text || '',  // msgData.text for new schema, r.text for old schema
+      text: msgData.text || r.text || '',
       time: msgData.time || r.time,
-      timestamp: msgData.timestamp || r.timestamp || r.time,
+      timestamp: ts || new Date().toISOString(),
       edited: msgData.edited || false,
       newText: msgData.newText || msgData.new_text || undefined,
       reactions: msgData.reactions || undefined,
       forwarded: msgData.forwarded || false,
       forwardedBy: msgData.forwardedBy || msgData.forwarded_by || undefined
     };
+  }
+  function _pickTimestamp(...candidates) {
+    for (const c of candidates) {
+      if (c == null || c === '') continue;
+      if (typeof c === 'string' && /^\d{1,2}:\d{2}$/.test(c.trim())) continue; // HH:MM display
+      const d = new Date(c);
+      if (!Number.isNaN(d.getTime()) && d.getTime() > 946684800000) return d.toISOString();
+    }
+    return null;
   }
 
   async function sendDMMessage(fromUsername, toUsername, text, opts) {
@@ -981,7 +993,8 @@ const FortizedSocial = (() => {
       .range(_offset, _offset + _limit - 1);
     const result = (data || []).reverse().map(r => ({
       id: r.id, from: r.from, text: r.text, time: r.time,
-      timestamp: r.timestamp, edited: r.edited || false,
+      timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at) || new Date().toISOString(),
+      edited: r.edited || false,
       reactions: r.reactions || undefined,
     }));
     if (!_offset) _cacheSet('bm:' + bastionId + ':' + channelId, result, _CACHE_TTL.bastionMsgs);

@@ -1828,7 +1828,12 @@ function _initChatScroll(msgsEl){
   // re-initialised (e.g. switching between DMs keeps #dm-msgs mounted).
   if(msgsEl.dataset.chatScrollInit==='1'){
     if(_chatObservers[id]){try{_chatObservers[id].disconnect();}catch{}}
-    const obs=new MutationObserver(()=>{if(_chatAutoScroll[id]?.atBottom) msgsEl.scrollTop=msgsEl.scrollHeight;});
+    const obs=new MutationObserver(()=>{
+      // Skip the auto-pin while the trickle renderer is mid-flight —
+      // it manages scroll itself, and double-pinning was the jitter.
+      if (msgsEl._trickleCtrl && !msgsEl._trickleCtrl.aborted) return;
+      if(_chatAutoScroll[id]?.atBottom) msgsEl.scrollTop=msgsEl.scrollHeight;
+    });
     obs.observe(msgsEl,{childList:true,subtree:true});
     _chatObservers[id]=obs;
     return;
@@ -1861,6 +1866,7 @@ function _initChatScroll(msgsEl){
   // Observe DOM changes — when new messages are appended, auto-scroll if at bottom
   if(_chatObservers[id]){try{_chatObservers[id].disconnect();}catch{}}
   const obs=new MutationObserver(()=>{
+    if (msgsEl._trickleCtrl && !msgsEl._trickleCtrl.aborted) return;
     if(_chatAutoScroll[id]?.atBottom){
       msgsEl.scrollTop=msgsEl.scrollHeight;
     }
@@ -1921,8 +1927,8 @@ function _removeNewMsgBar(msgsElId){
 }
 function formatTimeAgo(iso) {
   if (!iso) return '';
-  const d = new Date(iso), now = new Date();
-  const diff = (now - d) / 1000;
+  const d = _safeDate(iso); if (!d) return '';
+  const diff = (Date.now() - d.getTime()) / 1000;
   if (diff < 60) return 'just now';
   if (diff < 3600) return Math.floor(diff/60) + 'm ago';
   if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
@@ -8415,9 +8421,37 @@ function _executeBotScript(script, ctx) {
 // and fall back to a sane string so users never see "Invalid Date" again.
 function _safeDate(ts) {
   if (ts == null || ts === '' || ts === 'Invalid Date') return null;
+  // Reject pure HH:MM strings — those are *display* values, not timestamps.
+  // Parsing "14:32" as a Date silently gave us junk like "3 weeks ago".
+  if (typeof ts === 'string' && /^\d{1,2}:\d{2}$/.test(ts.trim())) return null;
   const d = new Date(ts);
   if (Number.isNaN(d.getTime())) return null;
+  // Reject epoch-zero / pre-2000 timestamps — those are almost always a
+  // mis-parsed numeric field, never a real chat message.
+  if (d.getTime() < 946684800000) return null; // 2000-01-01
   return d;
+}
+// Guarantee every message handled downstream has:
+//   • a stable string id
+//   • a canonical ISO `timestamp`
+//   • the original .time HH:MM kept for display fallback
+// Mutates and returns the message.
+function _normalizeMsg(m) {
+  if (!m || typeof m !== 'object') return m;
+  if (!m.id) m.id = String((m.from || '?') + '-' + (m.timestamp || m.time || Date.now()));
+  const d = _safeDate(m.timestamp);
+  if (d) {
+    m.timestamp = d.toISOString();
+  } else if (m.created_at && _safeDate(m.created_at)) {
+    m.timestamp = new Date(m.created_at).toISOString();
+  } else if (m.inserted_at && _safeDate(m.inserted_at)) {
+    m.timestamp = new Date(m.inserted_at).toISOString();
+  } else {
+    // No usable timestamp anywhere. Stamp it "now" so it shows as just-now
+    // instead of the bogus 3-weeks-ago that an unparseable field produced.
+    m.timestamp = new Date().toISOString();
+  }
+  return m;
 }
 function _fmtMsgDateDivider(ts) {
   const d = _safeDate(ts);
@@ -8491,6 +8525,13 @@ function renderMessages(container, msgs, context) {
     try { container._trickleCleanup?.(); } catch {}
   }
   container.querySelectorAll('.msg-row,.date-div,.load-more-bar').forEach(el => el.remove());
+  // Reset the per-container dedup Set whenever we redo the message list —
+  // otherwise switching DMs and back would silently swallow re-fetched
+  // messages because their IDs were still "seen".
+  if (container._seenIds) container._seenIds.clear();
+  // Normalize timestamps up-front so the trickle loop and group-author
+  // gap detection always see a real ISO string, not "14:32" from the DB.
+  msgs.forEach(_normalizeMsg);
   if (!msgs.length) return;
 
   // Show the lazy-load bar whenever we hit the initial fetch limit (20) —
@@ -8875,10 +8916,18 @@ function appendMessage(container, msg, context, prevAuthor) {
   // If prevAuthor not provided, infer from last message in container
   if (prevAuthor === null && container) prevAuthor = _getLastAuthor(container);
   if (!msg || !container) return;
+  _normalizeMsg(msg);
   const _msgBlocked = msg.from && msg.from !== '__system__' && typeof isUserBlocked === 'function' && isUserBlocked(msg.from);
   const _msgIgnored = msg.from && msg.from !== '__system__' && typeof isUserIgnored === 'function' && isUserIgnored(msg.from);
   const id=msg.id||(msg.from+msg.timestamp);
-  if (document.querySelector(`[data-msgid="${CSS.escape(id)}"]`)) return;
+  // Dedup: keep an in-memory Set per container instead of relying on a
+  // DOM query. Poll + Socket.io often fire in the same frame; the DOM
+  // node from the first one isn't queryable until the next layout, so
+  // the old `document.querySelector` check let duplicates through.
+  if (!container._seenIds) container._seenIds = new Set();
+  if (container._seenIds.has(id)) return;
+  if (document.querySelector(`[data-msgid="${CSS.escape(id)}"]`)) { container._seenIds.add(id); return; }
+  container._seenIds.add(id);
   // System messages (join, bot deploy, etc.)
   if (msg.from === '__system__') {
     const time=_fmtMsgTime(msg.timestamp, msg.time);

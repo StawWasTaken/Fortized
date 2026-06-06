@@ -1,125 +1,98 @@
-# Fortized — Pending Work
+# Fortized — Master TODO
 
-Carried forward from the "redesign profile previews + fix bugs" sessions.
-Items here were explicitly deferred — they are not blocked, just not done yet.
+Merged from the three IRL lists ("What's Wrong?", "Redesigning things",
+"Implementing new features") + the in-session carryover from the
+profile/embed/staff-console redesign passes. Sorted by **priority**
+within each tier, with rough **effort** estimates (S = afternoon,
+M = a day or two, L = a week-ish, XL = multi-week).
 
-## Profile previews redesign — FULL REWRITE DONE
+Priority key:
+- **P0** — blocking, breaks user experience or shipping
+- **P1** — high impact, needed before public usage scales
+- **P2** — meaningful polish / coherence work
+- **P3** — nice-to-have, can wait
 
-Component library: `.fpp-*` ("Fortized Profile Preview"). Single
-source of truth at the bottom of `app/styles.css`. No `!important`
-hacks, no inline-styled per-variant overrides — all five surfaces
-are composed from the same primitives.
+---
 
-| Rank | Variant                       | Class            | Width   | Rendering site                                |
-|------|-------------------------------|------------------|---------|-----------------------------------------------|
-| 1    | Profile Card (full modal)     | `.fpp-card-modal`| 900px   | `_viewUserProfile()` ~`app/app.js:18758`      |
-| 2    | Userbar own-profile popover   | `.fpp.fpp--own`  | 340px   | `_renderOwnProfilePopover()`                  |
-| 2    | Chat/memberlist mini popover  | `.fpp.fpp--mini` | 340px   | `showMiniProfilePreview()`                    |
-| 2    | DM sidebar panel              | `.fpp.fpp--dm`   | full    | `showDMUserPanel()` ~`:29467`                 |
-| 3    | Settings preview stack        | 3 stacked cards  | 380px   | `buildProfileView('myprofile')` ~`:17209`     |
+## P0 — Ship-blockers
 
-### What landed
+These are the items that make the app feel broken or incomplete to a
+new user. Should be hit first.
 
-- **Shared primitives**: `.fpp__banner`, `.fpp__av-row`, `.fpp__av`,
-  `.fpp__cs-bubble` (Discord-style chat bubble overlapping the
-  avatar), `.fpp__identity`, `.fpp-card` (boxed sub-card for Bio /
-  Member Since / Games), `.fpp-row` (interactive chevron row),
-  `.fpp__games-strip`, `.fpp__actions` (`[Message wide] [+ square]
-  [⋯ square]`), `.fpp-menu` (dropdown for ⋯), `.fpp__msg-input`
-  (pinned-bottom composer).
-- **Theme-aware surface**: every variant uses `var(--panel)` under a
-  translucent black film + corner accent wash, so the user's chosen
-  Appearance bleeds through automatically.
-- **Single glowing top rule** via `::before` on every surface, matching
-  the gamescards.
-- **Discord-style action row**: `[Message]` (flex 1) + `[+ / ✓ / ⏳]`
-  square friend-state button + `[⋯]` square that opens a dropdown
-  menu containing Invite to Bastion ▶ (with nested sub-menu of the
-  user's bastions), Ignore, Block, Report.
-- **Userbar own-profile popover**: status row + chevron that opens
-  a nested submenu (NOT 4 inline radios). Switch-accounts row with
-  the same pattern, showing all saved accounts + Add account + Log
-  out. Inline bio, game-collection strip, Edit Profile primary CTA.
-- **Settings preview replaced** with the Discord triple-preview:
-  (1) profile preview — banner + pfp + cs bubble + identity +
-  "Example Button" only, no bio/badges/games. (2) Message preview —
-  chat bubble using the user's display style. (3) Nameplate preview
-  — 32px row.
-- **DM sidebar panel** uses Bio / Member Since / Games / Mutual
-  Friends as boxed cards + a pinned-bottom Message input.
-- **Profile Card modal** is 900px 2-panel: left = banner + pfp + cs
-  bubble + identity + inline bio + member since + roles +
-  connections + note + actions; right = Board (widgets + Games I
-  Like 4-col grid) / Activity / Wishlist / Mutual Friends tabs.
+| # | Item | Effort | Notes |
+|---|------|--------|-------|
+| 1 | **Chat: how it loads / how it works** | XL | The single biggest "will anyone actually use this" item — message load races, scroll jumps, infinite-scroll edges, draft loss, attachment retry, reply/edit/delete sync. Touches DM + GC + bastion channels. |
+| 2 | **Bugs in Friends list (from DMs)** | M | Whatever's currently misbehaving in the Friends tab inside the DM view. Triage first, then fix. |
+| 3 | **DM sidebar: fix + redesign** | M | Sidebar entries, ordering, unread surface, redesign for the new userbar/chatbar coherence. |
+| 4 | **Forum-post real-time sync** | M | Need an entry point — likely a Supabase Realtime channel subscription on `forum_posts`. |
+| 5 | **Game reviews — RLS in Supabase** | S | Apply the pending RLS policies to `game_reviews` so reads/writes don't bypass auth. |
 
-### Helpers added
-- `_fppFormatDate`, `_fppBannerHTML`, `_fppAvatarHTML`,
-  `_fppCSBubbleHTML`, `_fppIdentityHTML`, `_fppBioCardHTML`,
-  `_fppMemberSinceCardHTML`, `_fppGamesCardHTML`, `_fppActionRowHTML`
-- `_fppClose`, `_fppShowMoreMenu`, `_fppShowInviteSub`,
-  `_fppShowStatusSubmenu`, `_fppShowAccountsSubmenu`,
-  `_fppPositionPopover`, `_fppSwitchTab`
+## P1 — Foundations & coherence (do before "redesign sweeps")
 
-### What was deleted
-- All `.mpp-*`, `.up-left-*`, `.up-right-*`, `.up-card`, `.dm-up-*`,
-  `.own-profile-panel`, `.settings-profile-preview` rendering HTML.
-  Their CSS stays in `styles.css` for now (dead code; safe to garbage-
-  collect in a future pass).
-- The legacy 4-radio own-profile panel + `_closeOwnProfileOutside` +
-  `_ownProfileOpen` state tracking.
+| # | Item | Effort | Notes |
+|---|------|--------|-------|
+| 6 | **Settings card — full redesign** | L | Currently messy, half-finished, doesn't match gamescard/profilecard treatment. Re-skin + finish unfinished panes. |
+| 7 | **Navigation bar redesign** (Home / DMs / Discover / Forum / Atelier) | L | Too noisy, feels overloaded. Reshape information density — fewer top-level slots, clearer hierarchy. |
+| 8 | **Activity system rework** (online / idle / dnd / invisible / offline) | M | Carried from earlier sessions. Distinguish presence vs custom status, fix auto-away race vs manual changes (`_resetIdle()` at `app/app.js:497`). |
+| 9 | **Game activity + detector + 3.2.0 desktop-app link** | L | Wire the new desktop app's activity feed to the web profile / userbar. |
+| 10 | **Supabase migrations to run** | S | Pending DDL:<br>• `alter table dms add column if not exists flags jsonb;`<br>• `alter table users add column if not exists staff_caps_extra jsonb;`<br>• `alter table users add column if not exists country_code text;`<br>• `alter table users add column if not exists region_code text;`<br>• `incidents`, `watchlist`, `v_country_user_count` (full DDL in Phase 1–9 commit). |
+| 11 | **Backfill `country_code`** for existing users on next login | S | Inject in the login flow once column lands. |
+| 12 | **Plug live-thread viewer** into the real read-only message mirror | M | Currently the staff watchlist live-thread is a placeholder. |
+| 13 | **Server-side polls/forms persistence** | M | Today votes + submissions live in `localStorage` — invisible across devices. Move to Supabase tables. |
 
-## Status-system — partial fix landed, monitor for repros
+## P1.5 — Big systems still pending (heavy lift but high payoff)
 
-Done: `_broadcast()` now guards against `FortizedSocial` being undefined
-and against `socketEmit` throwing synchronously — the previous code
-would let one bad emit abort the whole `set()` call, leaving the user's
-new status unsaved. Local dot is also force-refreshed without waiting
-on the server.
+| # | Item | Effort | Notes |
+|---|------|--------|-------|
+| 14 | **Staff Console — heavy redesign + reorder** | XL | Phase 1–9 shell exists; the legacy `#view-admin` pages still need to be migrated into the new shell incrementally. Also a "full revamp" pass deferred earlier. |
+| 15 | **Bastion deep-review** (how it works, bugs, new features) | L | Audit the whole flow, file a sub-list of fixes, then execute. |
+| 16 | **Bastion creation flow review** | M | Sub-audit of `#15` focused on the creation wizard. |
+| 17 | **Easier bastion management / creation / editing / customizing + role icons next to display names** | L | Replace role tags with role icons (Discord-style, but free — Guilded used to do this). |
+| 18 | **Group chats deep-review** | M | Same audit pattern as bastions. |
+| 19 | **Memberlist redesign** (bastions + group chats) | M | Includes fixing how it actually works. |
+| 20 | **Calls + Party Rooms** — fix + new features | L | Big surface; will need a separate breakdown. |
+| 21 | **Inbox + system redesign** | M | The whole inbox surface. |
+| 22 | **Notifications redesign** | M | Not everything done — finish the surface, polish the toast/feed/badge flow. |
+| 23 | **Discover — Activities feature** | M | New feature; spec lives in your head — write it down before starting. |
 
-Still open if symptoms persist:
-- distinguish "status" (presence) from "custom status" — possible rename
-- auto-away restore at `_resetIdle()` (`app/app.js:497`) may fight with
-  manual changes during the same animation frame
-- Firebase `onDisconnect` setup at `:572` — wrapped in try/catch but
-  may need a retry on auth-change
+## P2 — Visual / polish sweeps
 
-## Loading "stuck on loading Fortized" — DONE for now
+| # | Item | Effort | Notes |
+|---|------|--------|-------|
+| 24 | **App Homepage redesign** (fresh look + seasonal hooks) | L | Currently looks ugly per your note. |
+| 25 | **Badges redesign** | S | Photoshop work — on you, not me. |
+| 26 | **Page-by-page review of the whole app** | L | Full sweep, bug pass + UI polish. |
+| 27 | **Userbar further polish** (beyond the recent pill rework) | S | |
+| 28 | **Textchatbar further polish** | S | |
+| 29 | **App-page general visual sweep** | M | |
+| 30 | **"May updates"** | ? | Awaiting spec from you. |
+| 31 | **Second topbar consistency** across pages | S | "Need to put a bit everywhere" — tell me which pages need it. |
+| 32 | **Migrate `#view-admin` pages** into the new staff shell | M | (Subtask of #14 but tractable on its own.) |
+| 33 | **Avatar transparency / typing-area / skeleton scroll selectors via Inspect UI** | S | Carried from earlier — quick targeted polish using the new inspector. |
 
-Done across the three passes:
-- Data-loss guard on init now runs for all users (was super-admin only).
-- Safety timer raised 10s → 20s so the loader doesn't fade
-  mid-init.
-- Inner retry chain collapsed into a single bounded loop
-  (`FETCH_ATTEMPTS=2`, `FETCH_TIMEOUT_MS=6000`, `FETCH_BACKOFF_MS=1200`).
-  Worst case ~14s, well within the 20s safety window. Cache
-  fallback runs once after all attempts fail instead of being
-  duplicated in two `catch` blocks.
+## P3 — Nice-to-have / micro-polish
 
-Still open only if symptoms persist:
-- `FortizedSocial`-undefined branch sets a label but never returns,
-  then falls through into the online path that re-checks it. Works
-  today but fragile.
-- Need a console log dump from a real stuck session to know which
-  phase (if any) still hangs.
+| # | Item | Effort | Notes |
+|---|------|--------|-------|
+| 34 | **Bastion-invite embed** — collapse onto `_uniformEmbed` call | S | Currently has its own DOM. |
+| 35 | **File-card embed** (`[FTZFILE:…]`) — migrate to `_uniformEmbed` | S | Wrapper picks up the look; clean migration would tighten it. |
+| 36 | **Embed builders** — surface elsewhere (e.g. bastion announcements panel) | S | If you want polls/forms accessible from more places. |
+| 37 | **Status-system follow-ups** if symptoms persist (rename "status" vs "custom status", `onDisconnect` retry on auth-change) | S | Sitting from earlier session. |
+| 38 | **Loading-screen branch cleanup** | S | The `FortizedSocial`-undefined branch sets a label but never returns; works today but fragile. |
 
-## Tooltips — DONE
+---
 
-All three tooltip variants (`ftz-tooltip`, `rail-tooltip`,
-`rail-nav-tooltip`, `ftz-reaction-tip`) now share:
-- `#05060a` background, 1px subtle border, 4px radius, tight shadow
-- CSS arrow via `::after` pointing at the source element
-- `data-place="top|bottom|left|right"` + `--arrow-x` for re-aligning
-  after viewport clamping.
+## Reference — recent session summary
 
-## Hearken card — DONE (v3)
+For quick recall of what was just landed (not pending):
 
-Rebuilt on the `.pw-widget` treatment, now theme-aware. Per-version
-notes:
-- v2: dropped the shimmer animation, centered halo, and oversized
-  display title; cut width to 360px and matched buttons to
-  `.pw-gc-add-btn`.
-- v3: bumped to 460px, 20px radius, surface uses
-  `var(--panel)` under a translucent black film and the corner
-  accent wash so the user's chosen appearance bleeds through
-  (same trick the gamescards use). Title is "Hearken, Hearken!",
-  "Daily Quest" label dropped to weight 600.
+- Profile system rebuild (Profile Card modal, popovers, DM panel, Settings preview triple-card)
+- Embeds — Fortized brand template across every link/video/audio/poll/form/bastion-invite, dominant-color extraction, no shadows, no left glow, userbar-surface matching
+- Polls + Forms (auto-send like attachments, owner-only submissions viewer + CSV export)
+- Userbar — real headset glyphs, input/output device popovers (Fortized yellow theme), brighter icons
+- Staff Console Phase 1–9 (capabilities, inspector dock, Cmd+K, Live Ops, watchlist, incidents, world map)
+- Inspector Pause vs Freeze split — Pause idles the picker; Freeze halts every event + CSS animation
+- Modal backdrop unified at 60% black flat; per-card shadows removed
+- New emojis `:pouting:` / `:lmfao:` / `:seagull_shut:` injected into Smileys + Nature picker tabs (not Fortized Guide)
+- Note feature on profile cards is now inline (Discord-style, `(only visible to you)`)
+- Bastion invite embed — Discord-/Guilded-like compact layout, yellow accent + green Join + red Invalid

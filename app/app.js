@@ -6809,8 +6809,11 @@ async function sendDM() {
     // connection, regional outage), the optimistic row was previously
     // stuck in "sending..." forever with no feedback. Now it visibly
     // fails with a Retry button after 15s.
+    const sendOpts = {};
+    if (msgFlags.length) sendOpts.flags = msgFlags;
+    if (rep) sendOpts.replyTo = rep;
     const savedMsg = await _withSendTimeout(
-      FortizedSocial.sendDMMessage(CU.username, curDM, text, msgFlags.length ? { flags: msgFlags } : undefined),
+      FortizedSocial.sendDMMessage(CU.username, curDM, text, Object.keys(sendOpts).length ? sendOpts : undefined),
       15000
     );
     if (savedMsg?.id && msgsEl) {
@@ -8383,7 +8386,7 @@ async function sendChannelMsg(idx) {
   try {
     // 15s timeout: prevents hung sends from leaving the row stuck.
     const savedMsg = await _withSendTimeout(
-      FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text),
+      FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text, rep ? { replyTo: rep } : undefined),
       15000
     );
     // Update the local message ID to match Supabase ID (for edit/delete)
@@ -8495,9 +8498,15 @@ function _normalizeMsg(m) {
   } else if (m.inserted_at && _safeDate(m.inserted_at)) {
     m.timestamp = new Date(m.inserted_at).toISOString();
   } else {
-    // No usable timestamp anywhere. Stamp it "now" so it shows as just-now
-    // instead of the bogus 3-weeks-ago that an unparseable field produced.
-    m.timestamp = new Date().toISOString();
+    // Try to recover from the id (our ids are `<base36 Date.now()>...`).
+    const head = String(m.id).split(/[^a-z0-9]/i)[0];
+    const ms = head && head.length >= 7 && head.length <= 10 ? parseInt(head, 36) : NaN;
+    if (Number.isFinite(ms) && ms > 946684800000 && ms < Date.now() + 86400000) {
+      m.timestamp = new Date(ms).toISOString();
+    }
+    // Otherwise leave undefined. We DELIBERATELY no longer stamp "now"
+    // here — that bug made historical rows w/ null timestamps masquerade
+    // as the freshest message in the chat.
   }
   return m;
 }

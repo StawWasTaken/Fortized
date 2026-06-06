@@ -813,6 +813,9 @@ const FortizedSocial = (() => {
       // The DB's `order timestamp DESC + reverse` was unstable when two
       // messages shared a timestamp, which is exactly what you get when
       // the polling fallback stamps "now" on rows without a real ts.
+      // Stable chronological sort. Missing timestamps sort to the START
+      // (oldest) — never the end — so a row with a corrupted ts column
+      // can't masquerade as the most recent message.
       result.sort((a, b) => {
         const ta = a.timestamp ? +new Date(a.timestamp) : 0;
         const tb = b.timestamp ? +new Date(b.timestamp) : 0;
@@ -830,7 +833,25 @@ const FortizedSocial = (() => {
   }
 
   function _dmFromRow(r) {
-    return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at) || new Date().toISOString(), edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined, flags: Array.isArray(r.flags) ? r.flags : (r.flags && typeof r.flags === 'string' ? (() => { try { return JSON.parse(r.flags); } catch { return undefined; } })() : undefined) };
+    return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at, _tsFromId(r.id)), edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined, replyTo: _parseJSONIsh(r.reply_to), flags: Array.isArray(r.flags) ? r.flags : (r.flags && typeof r.flags === 'string' ? (() => { try { return JSON.parse(r.flags); } catch { return undefined; } })() : undefined) };
+  }
+  // Best-effort timestamp recovery from the message id. Our ids look like
+  // `<base36 Date.now()>.<random>`, so the leading 8–9 chars decode to a
+  // real millisecond timestamp. Used as a last-resort sort key for rows
+  // whose `timestamp`/`created_at` columns are missing.
+  function _tsFromId(id) {
+    if (!id || typeof id !== 'string') return null;
+    const head = id.split(/[^a-z0-9]/i)[0];
+    if (!head || head.length < 7 || head.length > 10) return null;
+    const ms = parseInt(head, 36);
+    if (!Number.isFinite(ms) || ms < 946684800000 || ms > Date.now() + 86400000) return null;
+    return new Date(ms).toISOString();
+  }
+  function _parseJSONIsh(v) {
+    if (v == null) return undefined;
+    if (typeof v === 'object') return v;
+    if (typeof v === 'string') { try { return JSON.parse(v); } catch { return undefined; } }
+    return undefined;
   }
 
   function _dmFromPollingRow(r, msgData) {
@@ -838,18 +859,19 @@ const FortizedSocial = (() => {
     // Handle both schemas: old (direct text column) and new (data column as JSONB)
     // Pick the first candidate that ISN'T an HH:MM display string — those are
     // not real timestamps and were silently surfacing as "3 weeks ago".
-    const ts = _pickTimestamp(msgData.timestamp, r.timestamp, r.created_at, r.inserted_at);
+    const ts = _pickTimestamp(msgData.timestamp, r.timestamp, r.created_at, r.inserted_at, _tsFromId(msgData.id || r.id));
     return {
       id: msgData.id || r.id,
       from: msgData.from || r.from,
       text: msgData.text || r.text || '',
       time: msgData.time || r.time,
-      timestamp: ts || new Date().toISOString(),
+      timestamp: ts,
       edited: msgData.edited || false,
       newText: msgData.newText || msgData.new_text || undefined,
       reactions: msgData.reactions || undefined,
       forwarded: msgData.forwarded || false,
-      forwardedBy: msgData.forwardedBy || msgData.forwarded_by || undefined
+      forwardedBy: msgData.forwardedBy || msgData.forwarded_by || undefined,
+      replyTo: _parseJSONIsh(msgData.replyTo || msgData.reply_to || r.reply_to)
     };
   }
   function _pickTimestamp(...candidates) {
@@ -878,10 +900,13 @@ const FortizedSocial = (() => {
 
     const row = { dm_key: key, id: msg.id, from: msg.from, text: msg.text, time: msg.time, timestamp: msg.timestamp };
     if (opts?.forwarded) { row.forwarded = true; row.forwarded_by = opts.forwardedBy || fromUsername; msg.forwarded = true; msg.forwardedBy = row.forwarded_by; }
-    // Automod flags (rephrased / threat / etc.) — stored alongside the
-    // message so they survive refresh and reach other devices. Requires
-    // a `flags JSONB` column on dms (see supabase-schema.sql migration).
     if (Array.isArray(opts?.flags) && opts.flags.length) { row.flags = opts.flags; msg.flags = opts.flags; }
+    // Persist reply target so the preview survives reload (requires a
+    // `reply_to JSONB` column on dms — see migration SQL).
+    if (opts?.replyTo && typeof opts.replyTo === 'object') {
+      row.reply_to = { id: opts.replyTo.id || null, from: opts.replyTo.from || null, text: (opts.replyTo.text || '').slice(0, 200) };
+      msg.replyTo = row.reply_to;
+    }
 
     try {
       const { data, error } = await sb.from('dms').insert(row);
@@ -994,19 +1019,21 @@ const FortizedSocial = (() => {
       if (cached !== undefined) return cached;
     }
     const { data } = await sb.from('bastion_msgs')
-      .select('id,from,text,time,timestamp,edited,reactions')
+      .select('id,from,text,time,timestamp,edited,reactions,reply_to')
       .eq('bastion_id', bastionId)
       .eq('channel_id', channelId)
       .order('timestamp', { ascending: false })
       .range(_offset, _offset + _limit - 1);
     const result = (data || []).map(r => ({
       id: r.id, from: r.from, text: r.text, time: r.time,
-      timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at) || new Date().toISOString(),
+      timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at, _tsFromId(r.id)),
       edited: r.edited || false,
       reactions: r.reactions || undefined,
+      replyTo: _parseJSONIsh(r.reply_to),
     }));
     result.sort((a, b) => {
-      const ta = +new Date(a.timestamp), tb = +new Date(b.timestamp);
+      const ta = a.timestamp ? +new Date(a.timestamp) : 0;
+      const tb = b.timestamp ? +new Date(b.timestamp) : 0;
       if (ta !== tb) return ta - tb;
       return String(a.id||'').localeCompare(String(b.id||''));
     });
@@ -1014,7 +1041,7 @@ const FortizedSocial = (() => {
     return result;
   }
 
-  async function sendBastionChannelMessage(bastionId, channelId, fromUsername, text) {
+  async function sendBastionChannelMessage(bastionId, channelId, fromUsername, text, opts) {
     const now = new Date();
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
     const msg = {
@@ -1024,11 +1051,16 @@ const FortizedSocial = (() => {
       time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       timestamp: now.toISOString()
     };
-    await sb.from('bastion_msgs').insert({
+    const row = {
       bastion_id: bastionId, channel_id: channelId,
       id: msg.id, from: msg.from, text: msg.text,
       time: msg.time, timestamp: msg.timestamp,
-    });
+    };
+    if (opts?.replyTo && typeof opts.replyTo === 'object') {
+      row.reply_to = { id: opts.replyTo.id || null, from: opts.replyTo.from || null, text: (opts.replyTo.text || '').slice(0, 200) };
+      msg.replyTo = row.reply_to;
+    }
+    await sb.from('bastion_msgs').insert(row);
     return msg;
   }
 

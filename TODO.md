@@ -44,41 +44,42 @@ new user. Should be hit first.
 
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
-| 14 | **Staff Console — heavy redesign + reorder** | XL | Phase 1–9 shell exists; the legacy `#view-admin` pages still need to be migrated into the new shell incrementally. Also a "full revamp" pass deferred earlier. |
-| 15 | **Bastion deep-review** (how it works, bugs, new features) | L | Audit the whole flow, file a sub-list of fixes, then execute. |
-| 16 | **Bastion creation flow review** | M | Sub-audit of `#15` focused on the creation wizard. |
-| 17 | **Easier bastion management / creation / editing / customizing + role icons next to display names** | L | Replace role tags with role icons (Discord-style, but free — Guilded used to do this). |
-| 18 | **Group chats deep-review** | M | Same audit pattern as bastions. |
-| 19 | **Memberlist redesign** (bastions + group chats) | M | Includes fixing how it actually works. |
-| 20 | **Calls + Party Rooms** — fix + new features | L | Big surface; will need a separate breakdown. |
-| 21 | **Inbox + system redesign** | M | The whole inbox surface. |
-| 22 | **Notifications redesign** | M | Not everything done — finish the surface, polish the toast/feed/badge flow. |
-| 23 | **Discover — Activities feature** | M | New feature; spec lives in your head — write it down before starting. |
+| 14 | **Mobile redesign — make the whole app usable on a phone** | XL | Touches every surface: sidebar / userbar / chatbar / profile cards / settings / modals / staff console. Probably needs a dedicated mobile shell (collapsible sidebars, bottom nav, sheet-style modals) rather than reflowing the desktop layout. Should land BEFORE the rest of the redesign sweeps so they only have to be designed once. |
+| 15 | **Staff Console — heavy redesign + reorder** | XL | Phase 1–9 shell exists; the legacy `#view-admin` pages still need to be migrated into the new shell incrementally. Also a "full revamp" pass deferred earlier. |
+| 16 | **Bastion deep-review** (how it works, bugs, new features) | L | Audit the whole flow, file a sub-list of fixes, then execute. |
+| 17 | **Bastion creation flow review** | M | Sub-audit of `#16` focused on the creation wizard. |
+| 18 | **Easier bastion management / creation / editing / customizing + role icons next to display names** | L | Replace role tags with role icons (Discord-style, but free — Guilded used to do this). |
+| 19 | **Group chats deep-review** | M | Same audit pattern as bastions. |
+| 20 | **Memberlist redesign** (bastions + group chats) | M | Includes fixing how it actually works. |
+| 21 | **Calls + Party Rooms** — fix + new features | L | Big surface; will need a separate breakdown. |
+| 22 | **Inbox + system redesign** | M | The whole inbox surface. |
+| 23 | **Notifications redesign** | M | Not everything done — finish the surface, polish the toast/feed/badge flow. |
+| 24 | **Discover — Activities feature** | M | New feature; spec lives in your head — write it down before starting. |
 
 ## P2 — Visual / polish sweeps
 
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
-| 24 | **App Homepage redesign** (fresh look + seasonal hooks) | L | Currently looks ugly per your note. |
-| 25 | **Badges redesign** | S | Photoshop work — on you, not me. |
-| 26 | **Page-by-page review of the whole app** | L | Full sweep, bug pass + UI polish. |
-| 27 | **Userbar further polish** (beyond the recent pill rework) | S | |
-| 28 | **Textchatbar further polish** | S | |
-| 29 | **App-page general visual sweep** | M | |
-| 30 | **"May updates"** | ? | Awaiting spec from you. |
-| 31 | **Second topbar consistency** across pages | S | "Need to put a bit everywhere" — tell me which pages need it. |
-| 32 | **Migrate `#view-admin` pages** into the new staff shell | M | (Subtask of #14 but tractable on its own.) |
-| 33 | **Avatar transparency / typing-area / skeleton scroll selectors via Inspect UI** | S | Carried from earlier — quick targeted polish using the new inspector. |
+| 25 | **App Homepage redesign** (fresh look + seasonal hooks) | L | Currently looks ugly per your note. |
+| 26 | **Badges redesign** | S | Photoshop work — on you, not me. |
+| 27 | **Page-by-page review of the whole app** | L | Full sweep, bug pass + UI polish. |
+| 28 | **Userbar further polish** (beyond the recent pill rework) | S | |
+| 29 | **Textchatbar further polish** | S | |
+| 30 | **App-page general visual sweep** | M | |
+| 31 | **"May updates"** | ? | Awaiting spec from you. |
+| 32 | **Second topbar consistency** across pages | S | "Need to put a bit everywhere" — tell me which pages need it. |
+| 33 | **Migrate `#view-admin` pages** into the new staff shell | M | (Subtask of #15 but tractable on its own.) |
+| 34 | **Avatar transparency / typing-area / skeleton scroll selectors via Inspect UI** | S | Carried from earlier — quick targeted polish using the new inspector. |
 
 ## P3 — Nice-to-have / micro-polish
 
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
-| 34 | **Bastion-invite embed** — collapse onto `_uniformEmbed` call | S | Currently has its own DOM. |
-| 35 | **File-card embed** (`[FTZFILE:…]`) — migrate to `_uniformEmbed` | S | Wrapper picks up the look; clean migration would tighten it. |
-| 36 | **Embed builders** — surface elsewhere (e.g. bastion announcements panel) | S | If you want polls/forms accessible from more places. |
-| 37 | **Status-system follow-ups** if symptoms persist (rename "status" vs "custom status", `onDisconnect` retry on auth-change) | S | Sitting from earlier session. |
-| 38 | **Loading-screen branch cleanup** | S | The `FortizedSocial`-undefined branch sets a label but never returns; works today but fragile. |
+| 35 | **Bastion-invite embed** — collapse onto `_uniformEmbed` call | S | Currently has its own DOM. |
+| 36 | **File-card embed** (`[FTZFILE:…]`) — migrate to `_uniformEmbed` | S | Wrapper picks up the look; clean migration would tighten it. |
+| 37 | **Embed builders** — surface elsewhere (e.g. bastion announcements panel) | S | If you want polls/forms accessible from more places. |
+| 38 | **Status-system follow-ups** if symptoms persist (rename "status" vs "custom status", `onDisconnect` retry on auth-change) | S | Sitting from earlier session. |
+| 39 | **Loading-screen branch cleanup** | S | The `FortizedSocial`-undefined branch sets a label but never returns; works today but fragile. |
 
 ---
 

@@ -861,8 +861,18 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .date-div::before,.date-div::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.06);}
 .date-div span{background:transparent;border:none;border-radius:0;padding:2px 4px;white-space:nowrap;font-size:11px;color:rgba(255,255,255,.55);}
 /* Message rows — more breathing room */
-.msg-row{display:flex;padding:2px 20px 2px 20px;position:relative;min-width:0;transition:background .12s;}
+/* No transition on the bg — Discord/Guilded don't transition row hover
+   either; the cost is one repaint per row that the :hover state crosses
+   while you're scrolling, which is the main source of the not-smooth
+   feeling. Hover stays visually obvious because the colour change is
+   instant on cursor-enter. */
+.msg-row{display:flex;padding:2px 20px 2px 20px;position:relative;min-width:0;}
 .msg-row:hover{background:rgba(255,255,255,.018);}
+/* JS adds .is-scrolling to the container during active scroll; killing
+   pointer-events on rows means the browser doesn't have to recompute
+   :hover state per scroll-step (huge win on long chats). */
+.chat-msgs.is-scrolling .msg-row{pointer-events:none;}
+.chat-msgs.is-scrolling .msg-row:hover{background:transparent;}
 .msg-row iframe{loading:lazy;}
 .msg-row.msg-first{padding-top:14px;margin-top:4px;}
 .msg-row.msg-editing{background:rgba(255,249,62,.03);transition:background .2s;}
@@ -1012,6 +1022,13 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .msg-forward-tag{font-size:10px;color:rgba(255,255,255,.25);margin-bottom:3px;}
 .reply-bar{display:none;align-items:center;gap:10px;padding:8px 16px;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.04);font-size:12.5px;}
 .reply-bar.show{display:flex;}
+/* Discord-style flat accent reply bar above the input. Solid yellow
+   tint, top-rounded only (the input is attached below, no gap). */
+.chat-reply-bar{display:none;align-items:center;gap:10px;padding:8px 16px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-bottom:none;border-radius:12px 12px 0 0;font-size:13px;color:rgba(0,0,0,.78);margin:0 -1px;}
+.chat-reply-bar .crb-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
+.chat-reply-bar .crb-text strong{color:#000;font-weight:700;}
+.chat-reply-bar .crb-close{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.18);border:none;color:rgba(0,0,0,.7);cursor:pointer;padding:0;transition:background .12s,color .12s;}
+.chat-reply-bar .crb-close:hover{background:rgba(0,0,0,.32);color:#000;}
 .reply-bar-text{flex:1;color:var(--muted-light);}
 .reply-bar-text strong{color:var(--accent);}
 .reply-bar button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}

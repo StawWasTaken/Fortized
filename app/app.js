@@ -1828,19 +1828,29 @@ function _initChatScroll(msgsEl){
   // re-initialised (e.g. switching between DMs keeps #dm-msgs mounted).
   if(msgsEl.dataset.chatScrollInit==='1'){
     if(_chatObservers[id]){try{_chatObservers[id].disconnect();}catch{}}
-    const obs=new MutationObserver(()=>{
-      // Skip the auto-pin while the trickle renderer is mid-flight —
-      // it manages scroll itself, and double-pinning was the jitter.
+    const obs=new MutationObserver((mutations)=>{
       if (msgsEl._trickleCtrl && !msgsEl._trickleCtrl.aborted) return;
-      if(_chatAutoScroll[id]?.atBottom) msgsEl.scrollTop=msgsEl.scrollHeight;
+      if(!_chatAutoScroll[id]?.atBottom) return;
+      for (const m of mutations) {
+        if (m.type === 'childList' && m.target === msgsEl && m.addedNodes.length) {
+          msgsEl.scrollTop = msgsEl.scrollHeight; return;
+        }
+      }
     });
-    obs.observe(msgsEl,{childList:true,subtree:true});
+    obs.observe(msgsEl,{childList:true});
     _chatObservers[id]=obs;
     return;
   }
   msgsEl.dataset.chatScrollInit='1';
   msgsEl.addEventListener('scroll',()=>{
-    // Debounce scroll calculations to avoid jank
+    // Pause hover effects while actively scrolling — Discord-style. Each
+    // row's :hover repaint as the cursor crosses it during a wheel/touch
+    // scroll is what produces the "not smooth" feeling. The .is-scrolling
+    // CSS rule neutralises it, then we drop the class shortly after the
+    // last scroll event so hover snaps back instantly on idle.
+    if (!msgsEl.classList.contains('is-scrolling')) msgsEl.classList.add('is-scrolling');
+    clearTimeout(msgsEl._scrollIdleT);
+    msgsEl._scrollIdleT = setTimeout(() => msgsEl.classList.remove('is-scrolling'), 120);
     if(_chatScrollDebounce[id]) return;
     _chatScrollDebounce[id]=true;
     requestAnimationFrame(()=>{
@@ -1865,13 +1875,20 @@ function _initChatScroll(msgsEl){
   },{passive:true});
   // Observe DOM changes — when new messages are appended, auto-scroll if at bottom
   if(_chatObservers[id]){try{_chatObservers[id].disconnect();}catch{}}
-  const obs=new MutationObserver(()=>{
+  const obs=new MutationObserver((mutations)=>{
     if (msgsEl._trickleCtrl && !msgsEl._trickleCtrl.aborted) return;
-    if(_chatAutoScroll[id]?.atBottom){
-      msgsEl.scrollTop=msgsEl.scrollHeight;
+    if(!_chatAutoScroll[id]?.atBottom) return;
+    // Only re-pin when a direct-child element was ADDED — reaction picker
+    // mounts, edit-buffer text nodes, hover-action menus etc. fire mutations
+    // on subtree:true and used to schedule a scroll re-pin every frame.
+    for (const m of mutations) {
+      if (m.type === 'childList' && m.target === msgsEl && m.addedNodes.length) {
+        msgsEl.scrollTop = msgsEl.scrollHeight;
+        return;
+      }
     }
   });
-  obs.observe(msgsEl,{childList:true,subtree:true});
+  obs.observe(msgsEl,{childList:true}); // direct children only
   _chatObservers[id]=obs;
   // Handle images/embeds loading after render — keep scroll at bottom
   msgsEl.addEventListener('load',function(e){
@@ -12129,10 +12146,13 @@ function initFortizedUXResilience() {
   }
   if (_needsSave && navigator.onLine) { try { await FortizedSocial.saveUserObject(CU); } catch(e) { console.warn('[Init] User save failed:', e?.message); } }
 
-  // Hide loading screen immediately once user data is ready
-  const loader=document.getElementById('app-loading');
-  if(loader)loader.style.display='none';
-  if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
+  // Hide loading screen — try/finally guarantees the splash drops even if a
+  // hot path above this (route resolution, view mount) throws synchronously.
+  try {
+    const loader=document.getElementById('app-loading');
+    if(loader)loader.style.display='none';
+    if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
+  } catch{}
   window._appInitDone = true;
 
   // Route to the correct view based on URL (or home as fallback)
@@ -28151,12 +28171,9 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
         ondragleave="if(!this.contains(event.relatedTarget))this.querySelector('.drop-overlay').classList.remove('active')"
         ondrop="this.querySelector('.drop-overlay').classList.remove('active');handleDropOnInput(event,'${inputId}')">
         <div class="drop-overlay"><span class="doi">📎</span><span class="dot" style="font-size:12px;font-weight:700;color:var(--accent);">Drop to upload</span></div>
-        <div class="chat-input-row" id="${inputId}-reply-bar" style="display:none;padding:5px 12px 0;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
-            <span>Replying to <strong id="${inputId}-reply-name" style="color:var(--accent);"></strong></span>
-          </div>
-          <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
+        <div class="chat-reply-bar" id="${inputId}-reply-bar">
+          <span class="crb-text">Replying to <strong id="${inputId}-reply-name"></strong></span>
+          <button class="crb-close" onclick="cancelReply('${context}')" aria-label="Cancel reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         <div class="chat-input-row">
           <button class="cit-attach" onclick="_openAttachMenu(event,'${inputId}','${context}')" data-tip="Add">

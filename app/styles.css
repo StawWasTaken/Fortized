@@ -805,6 +805,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* ── Chat 2.0 — Premium Communication ─────────── */
 .chat-wrap{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;position:relative;}
 .chat-msgs{flex:1;overflow-y:auto;padding:20px 0 8px;display:flex;flex-direction:column;will-change:scroll-position;-webkit-overflow-scrolling:touch;transform:translateZ(0);overflow-anchor:auto;overscroll-behavior:contain;scrollbar-gutter:stable;}
+/* While the initial skeleton is up, hide the freshly painted messages
+   until inline media reports load — prevents the "text appears, embeds
+   pop in a few seconds later" jank. The skeleton stays in place; rows
+   reserve their height via content-visibility but don't paint. */
+.chat-msgs.chat-msgs-initial-loading .msg-row,
+.chat-msgs.chat-msgs-initial-loading .date-div{visibility:hidden;}
 
 /* ════════════════════════════════════════════════════════════════
    OLDER-MESSAGES SKELETON LOADER
@@ -827,18 +833,18 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    as the anchor (which would cause the visible content to jump when the
    skeleton re-renders between fetches). The chat is left-aligned by
    convention; the skeleton mirrors that — no centering. */
-.msg-skel-stack{display:flex;flex-direction:column;align-items:stretch;gap:14px;padding:14px 20px 16px;overflow-anchor:none;}
-.msg-skel{display:flex;gap:12px;align-items:flex-start;overflow-anchor:none;}
+.msg-skel-stack{display:flex;flex-direction:column;align-items:stretch;align-self:stretch;width:100%;max-width:none;margin:0;gap:14px;padding:14px 20px 16px;overflow-anchor:none;}
+.msg-skel{display:flex;gap:12px;align-items:flex-start;align-self:stretch;width:100%;overflow-anchor:none;}
 .msg-skel-av,.msg-skel-line,.msg-skel-name{
   background:linear-gradient(90deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.04) 100%);
   background-size:200% 100%;
   animation:skel-shimmer 1.4s linear infinite;
   border-radius:6px;
 }
-.msg-skel-av{width:38px;height:38px;border-radius:50%;flex-shrink:0;}
-.msg-skel-lines{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;padding-top:4px;}
-.msg-skel-name{height:11px;width:24%;border-radius:5px;margin-bottom:3px;background:linear-gradient(90deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.12) 50%, rgba(255,255,255,.06) 100%);background-size:200% 100%;animation:skel-shimmer 1.4s linear infinite;}
-.msg-skel-line{height:9px;border-radius:5px;}
+.msg-skel-av{width:42px;height:42px;border-radius:50%;flex-shrink:0;}
+.msg-skel-lines{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding-top:4px;}
+.msg-skel-name{height:12px;width:18%;border-radius:5px;margin-bottom:3px;background:linear-gradient(90deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.12) 50%, rgba(255,255,255,.06) 100%);background-size:200% 100%;animation:skel-shimmer 1.4s linear infinite;}
+.msg-skel-line{height:10px;border-radius:5px;align-self:flex-start;}
 .msg-skel-image{display:block;width:180px;height:120px;border-radius:10px;margin-top:8px;
   background:linear-gradient(90deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.04) 100%);
   background-size:200% 100%;
@@ -947,13 +953,24 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Own messages */
 .msg-row.own .msg-text{color:rgba(255,255,255,.85);}
 /* Reply / quote — soft left border, lighter bg, clickable */
-/* Reply / quote — Guilded-style compact preview: thin connector line on the
-   left, inline avatar+name+text in one row, brightens on hover. */
-.msg-reply-ref{display:flex;align-items:center;gap:7px;padding:3px 12px 3px 62px;margin:0 0 2px 0;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;line-height:1.35;position:relative;transition:color .12s;}
-.msg-reply-ref::before{content:"";position:absolute;left:34px;top:50%;width:20px;height:12px;border-left:2px solid rgba(255,255,255,.18);border-top:2px solid rgba(255,255,255,.18);border-top-left-radius:8px;}
-.msg-reply-ref:hover{color:rgba(255,255,255,.85);}
-.msg-reply-ref:hover::before{border-color:rgba(255,255,255,.32);}
-.msg-reply-ref strong{color:rgba(255,255,255,.85);font-weight:600;}
+/* Reply / quote — Discord/Guilded style: thin L-shaped connector from the
+   replied-to message into the new one, with a small avatar + bold author
+   + truncated preview text. The connector starts above the row at the
+   avatar centre and bends right into the preview. */
+.msg-reply-ref{display:flex;align-items:center;gap:7px;padding:3px 12px 3px 62px;margin:0 0 2px 0;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;line-height:1.35;position:relative;min-width:0;transition:color .12s;}
+.msg-reply-ref::before{content:"";position:absolute;left:34px;top:50%;width:24px;height:14px;border-left:2px solid rgba(255,255,255,.22);border-top:2px solid rgba(255,255,255,.22);border-top-left-radius:8px;}
+.msg-reply-ref:hover{color:rgba(255,255,255,.9);}
+.msg-reply-ref:hover::before{border-color:rgba(255,255,255,.4);}
+.msg-reply-ref .mrr-av{width:16px;height:16px;border-radius:50%;flex-shrink:0;overflow:hidden;background:var(--panel);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
+.msg-reply-ref .mrr-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+.msg-reply-ref strong{color:#fff;font-weight:600;flex-shrink:0;}
+.msg-reply-ref .mrr-preview{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);min-width:0;}
+
+/* Source-message highlight when the user is actively replying to it.
+   Subtle yellow stripe + warm tint so it's obviously the target without
+   shouting. Cleared on send or on cancelReply(). */
+.msg-row.is-reply-target{background:rgba(255,249,62,.06);box-shadow:inset 3px 0 0 var(--accent);}
+.msg-row.is-reply-target:hover{background:rgba(255,249,62,.09);}
 
 /* Forwarded-message card (Discord-style) */
 .msg-fwd-card{
@@ -1022,13 +1039,14 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .msg-forward-tag{font-size:10px;color:rgba(255,255,255,.25);margin-bottom:3px;}
 .reply-bar{display:none;align-items:center;gap:10px;padding:8px 16px;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.04);font-size:12.5px;}
 .reply-bar.show{display:flex;}
-/* Discord-style flat accent reply bar above the input. Solid yellow
-   tint, top-rounded only (the input is attached below, no gap). */
-.chat-reply-bar{display:none;align-items:center;gap:10px;padding:8px 16px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-bottom:none;border-radius:12px 12px 0 0;font-size:13px;color:rgba(0,0,0,.78);margin:0 -1px;}
+/* Reply bar: matches the chat input surface, slightly darker. Sits
+   visually attached to the input below (top-rounded only, no bottom
+   border). Mirrors Discord's neutral grey reply strip. */
+.chat-reply-bar{display:none;align-items:center;gap:10px;padding:7px 14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-bottom:none;border-radius:10px 10px 0 0;font-size:12.5px;color:rgba(255,255,255,.6);margin:0 -1px;}
 .chat-reply-bar .crb-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
-.chat-reply-bar .crb-text strong{color:#000;font-weight:700;}
-.chat-reply-bar .crb-close{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.18);border:none;color:rgba(0,0,0,.7);cursor:pointer;padding:0;transition:background .12s,color .12s;}
-.chat-reply-bar .crb-close:hover{background:rgba(0,0,0,.32);color:#000;}
+.chat-reply-bar .crb-text strong{color:#fff;font-weight:600;}
+.chat-reply-bar .crb-close{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;transition:background .12s,color .12s;flex-shrink:0;}
+.chat-reply-bar .crb-close:hover{background:rgba(255,255,255,.14);color:#fff;}
 .reply-bar-text{flex:1;color:var(--muted-light);}
 .reply-bar-text strong{color:var(--accent);}
 .reply-bar button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}

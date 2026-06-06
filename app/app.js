@@ -51,6 +51,34 @@ const _FPP_MUTUAL_SVG   = '<svg viewBox="0 0 576 512" fill="currentColor" style=
 const _FPP_ACTIVITY_SVG = '<svg viewBox="0 0 48 48" fill="currentColor" style="width:1em;height:1em;"><path d="M45.2906 23.0038c-1.9884 -8.9896 -4.9808 -13.78764 -9.4198 -15.09825 -0.9331 -0.2737 -1.9011 -0.41044 -2.8734 -0.40593 -1.2853 0 -2.4047 0.31312 -3.5888 0.64499 -1.4268 0.40031 -3.0477 0.85499 -5.4111 0.85499 -2.3634 0 -3.9853 -0.45374 -5.415 -0.85405 -1.1849 -0.33281 -2.3034 -0.64593 -3.5849 -0.64593 -1.0056 -0.00349 -2.0067 0.13281 -2.9747 0.40499C7.60736 9.2096 4.61677 14.0058 2.5993 22.9981 0.42995 32.6749 1.49775 38.7845 5.59364 40.202c0.56144 0.1979 1.15217 0.3 1.74747 0.3018 2.80589 0 5.05589 -2.3371 6.59339 -4.2505 1.7371 -2.1656 3.7706 -3.2644 10.063 -3.2644 5.6202 0 7.9461 0.7622 9.9552 3.2644 1.2627 1.5731 2.4562 2.6737 3.6468 3.3665 1.5834 0.9206 3.1659 1.125 4.7024 0.5972 2.4206 -0.826 3.8081 -3.0094 4.125 -6.4912 0.2409 -2.67 -0.1303 -6.1771 -1.1363 -10.722Zm-25.7931 -0.5044h-2.9999v3c0 0.3978 -0.1581 0.7793 -0.4394 1.0606s-0.6628 0.4393 -1.0606 0.4393c-0.3979 0 -0.7793 -0.158 -1.0607 -0.4393 -0.2813 -0.2813 -0.4393 -0.6628 -0.4393 -1.0606v-3h-2.9999c-0.3979 0 -0.77938 -0.1581 -1.06072 -0.4393 -0.28129 -0.2813 -0.43933 -0.6628 -0.43933 -1.0607 0 -0.3978 0.15804 -0.7793 0.43933 -1.0607 0.28134 -0.2812 0.66282 -0.4393 1.06072 -0.4393h2.9999v-2.9999c0 -0.3978 0.158 -0.7794 0.4393 -1.0607 0.2814 -0.2812 0.6628 -0.4393 1.0607 -0.4393 0.3978 0 0.7793 0.1581 1.0606 0.4393 0.2813 0.2813 0.4394 0.6629 0.4394 1.0607v2.9999h2.9999c0.3978 0 0.7794 0.1581 1.0606 0.4393 0.2814 0.2814 0.4394 0.6629 0.4394 1.0607 0 0.3979 -0.158 0.7794 -0.4394 1.0607 -0.2812 0.2812 -0.6628 0.4393 -1.0606 0.4393Zm7.8749 0.375c-0.3708 0 -0.7334 -0.11 -1.0417 -0.3159 -0.3083 -0.2061 -0.5486 -0.499 -0.6906 -0.8415 -0.1419 -0.3427 -0.179 -0.7196 -0.1066 -1.0834 0.0723 -0.3636 0.2509 -0.6978 0.5131 -0.96s0.5963 -0.4408 0.96 -0.5132c0.3638 -0.0722 0.7407 -0.0351 1.0833 0.1068 0.3426 0.1419 0.6355 0.3822 0.8415 0.6906 0.206 0.3083 0.316 0.6708 0.316 1.0416 0 0.4973 -0.1975 0.9743 -0.5492 1.3258 -0.3516 0.3517 -0.8285 0.5492 -1.3258 0.5492Zm4.125 4.1249c-0.3711 0 -0.7338 -0.11 -1.0422 -0.3163 -0.3085 -0.2062 -0.5487 -0.4993 -0.6906 -0.8422 -0.1417 -0.3428 -0.1786 -0.7201 -0.1058 -1.0839 0.0727 -0.3639 0.2517 -0.698 0.5144 -0.96s0.5972 -0.4403 0.9613 -0.5121c0.364 -0.0718 0.7411 -0.0339 1.0836 0.1087 0.3426 0.1426 0.6351 0.3837 0.8405 0.6926 0.2055 0.309 0.3147 0.6719 0.3137 1.043 -0.0012 0.4964 -0.1993 0.9721 -0.5508 1.3227 -0.3515 0.3507 -0.8277 0.5475 -1.3241 0.5475Zm0 -8.2498c-0.3709 0 -0.7334 -0.11 -1.0418 -0.316 -0.3083 -0.206 -0.5486 -0.4989 -0.6905 -0.8415 -0.142 -0.3426 -0.1791 -0.7196 -0.1067 -1.0833 0.0724 -0.3637 0.251 -0.6978 0.5132 -0.96s0.5962 -0.4408 0.96 -0.5132c0.3637 -0.0723 0.7407 -0.0352 1.0832 0.1068 0.3427 0.1418 0.6356 0.3822 0.8415 0.6905 0.2061 0.3084 0.316 0.6709 0.316 1.0417 0 0.4973 -0.1975 0.9742 -0.5491 1.3258 -0.3517 0.3516 -0.8286 0.5492 -1.3258 0.5492Zm4.1249 4.1249c-0.3709 0 -0.7334 -0.11 -1.0417 -0.3159 -0.3084 -0.2061 -0.5486 -0.499 -0.6906 -0.8415 -0.1419 -0.3427 -0.179 -0.7196 -0.1067 -1.0834 0.0724 -0.3636 0.251 -0.6978 0.5132 -0.96s0.5963 -0.4408 0.96 -0.5132c0.3638 -0.0722 0.7407 -0.0351 1.0833 0.1068 0.3426 0.1419 0.6355 0.3822 0.8415 0.6906 0.206 0.3083 0.316 0.6708 0.316 1.0416 0 0.4973 -0.1975 0.9743 -0.5492 1.3258 -0.3516 0.3517 -0.8285 0.5492 -1.3258 0.5492Z"/></svg>';
 const _FPP_BOARD_SVG    = '<svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;vertical-align:-2px;margin-right:6px;"><path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l448 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm96 96c17.7 0 32 14.3 32 32l0 192c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-192c0-17.7 14.3-32 32-32l32 0zm160 0c17.7 0 32 14.3 32 32l0 192c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-192c0-17.7 14.3-32 32-32l32 0zm160 0c17.7 0 32 14.3 32 32l0 192c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-192c0-17.7 14.3-32 32-32l32 0z"/></svg>';
 const _FPP_WISHLIST_SVG = '<svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;vertical-align:-2px;margin-right:6px;"><path d="M288 0c6.6 0 12.9 2.7 17.4 7.5l144 152 .5 .5 78.1 0c17.7 0 32 14.3 32 32 0 14.5-9.6 26.7-22.8 30.7L491.1 429.9c-6.5 29.3-32.5 50.1-62.5 50.1l-281.3 0c-30 0-56-20.8-62.5-50.1l-46-207.2c-13.2-3.9-22.8-16.2-22.8-30.7 0-17.7 14.3-32 32-32l78.1 0 .5-.5 144-152C275.1 2.7 281.4 0 288 0zm0 58.9L192.2 160 383.8 160 288 58.9zM208 264c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112zm80-24c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm128 24c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112z"/></svg>';
+// Generate a Fortized-schema identifier for user-generated content.
+//
+//   bastion  → "bastion?FTZB<n>"
+//   <type>   → "<type>?FTZ<initial><n>"        (e.g. group → "group?FTZG3")
+//
+// <n> is the global creation index for that type, taken atomically from
+// Firebase RTDB so two concurrent creators can't collide. Owner usernames
+// no longer leak into the ID (the old scheme broke when ownership moved).
+//
+// Users are NOT issued FTZ-style IDs — their canonical ID is the username.
+async function _nextFortizedId(type) {
+  const initial = String(type || 'item').charAt(0).toUpperCase();
+  const prefix = String(type || 'item').toLowerCase();
+  try {
+    if (typeof firebase !== 'undefined' && firebase.database) {
+      const ref = firebase.database().ref('counters/' + prefix);
+      const r = await ref.transaction(curr => (curr || 0) + 1);
+      if (r && r.committed && typeof r.snapshot?.val() === 'number') {
+        return `${prefix}?FTZ${initial}${r.snapshot.val()}`;
+      }
+    }
+  } catch (e) { console.warn('[ID] counter txn failed, falling back', e?.message); }
+  // Offline / Firebase unavailable: stamp a timestamp-derived index so
+  // the ID still sorts roughly by creation order. Adopted by the next
+  // online write that touches the bastion.
+  return `${prefix}?FTZ${initial}${Date.now().toString(36)}`;
+}
+
 function ftzIcon(name, size, color) {
   const svg = _svgIcons[name];
   if (!svg) return '';
@@ -1118,7 +1146,7 @@ async function _syncBastionToGlobal(bastionIdx) {
     if (!b) return;
     // Ensure bastion always has a unique globalId
     if (!b.globalId) {
-      b.globalId = (b.owner || CU.username) + '_' + Date.now();
+      b.globalId = await _nextFortizedId('bastion');
       await saveUser();
       await FortizedSocial.addBastionMember(b.globalId, CU.username);
     }
@@ -8598,15 +8626,21 @@ function renderMessages(container, msgs, context) {
     container._trickleCtrl.aborted = true;
     try { container._trickleCleanup?.(); } catch {}
   }
-  container.querySelectorAll('.msg-row,.date-div,.load-more-bar,.msg-skel-stack').forEach(el => el.remove());
-  // Reset the per-container dedup Set whenever we redo the message list —
-  // otherwise switching DMs and back would silently swallow re-fetched
-  // messages because their IDs were still "seen".
+  // Keep the .msg-skel-stack for now if it's present — we'll drop it once
+  // the new messages have settled their inline media. Wipe only the old
+  // message content.
+  const hadSkeleton = !!container.querySelector('.msg-skel-stack');
+  container.querySelectorAll('.msg-row,.date-div,.load-more-bar').forEach(el => el.remove());
   if (container._seenIds) container._seenIds.clear();
-  // Normalize timestamps up-front so the trickle loop and group-author
-  // gap detection always see a real ISO string, not "14:32" from the DB.
   msgs.forEach(_normalizeMsg);
-  if (!msgs.length) return;
+  if (!msgs.length) {
+    container.querySelector('.msg-skel-stack')?.remove();
+    return;
+  }
+  // Initial-load mode: hide messages while embeds are loading. The
+  // skeleton stays visible in its place. We drop both the class and the
+  // skeleton once images settle (or after a 1.5s safety cap).
+  if (hadSkeleton) container.classList.add('chat-msgs-initial-loading');
 
   // Show the lazy-load bar whenever we hit the initial fetch limit (20) —
   // that tells us the server has more older messages waiting. Scroll-up
@@ -8624,6 +8658,7 @@ function renderMessages(container, msgs, context) {
   // Small lists: render synchronously — the rAF overhead outweighs the gain.
   if (msgs.length <= 40) {
     _renderMsgBatch(container, msgs, context);
+    if (hadSkeleton) _revealAfterMediaSettle(container);
     return;
   }
 
@@ -8661,14 +8696,41 @@ function renderMessages(container, msgs, context) {
     if (ctrl.aborted) return;
     const wasAtBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 80;
     const chunk = rest.slice(ctrl.idx, ctrl.idx + CHUNK);
-    if (!chunk.length) { cleanup(); return; }
+    if (!chunk.length) { cleanup(); if (hadSkeleton) _revealAfterMediaSettle(container); return; }
     _renderMsgBatch(container, chunk, context, state);
     ctrl.idx += CHUNK;
     if (wasAtBottom) container.scrollTop = container.scrollHeight;
     if (ctrl.idx < rest.length) requestAnimationFrame(step);
-    else cleanup();
+    else { cleanup(); if (hadSkeleton) _revealAfterMediaSettle(container); }
   };
   requestAnimationFrame(step);
+}
+
+// Wait for inline media (<img>/<iframe>/<video>) inside the freshly
+// rendered messages to settle, then drop the initial-loading mask and
+// remove the skeleton. Capped at 1.5s — past that the user is better off
+// seeing text with broken embed slots than staring at the placeholder.
+function _revealAfterMediaSettle(container) {
+  if (!container) return;
+  const reveal = () => {
+    container.classList.remove('chat-msgs-initial-loading');
+    container.querySelector('.msg-skel-stack')?.remove();
+  };
+  const mediaEls = Array.from(container.querySelectorAll('.msg-row img, .msg-row iframe, .msg-row video'));
+  const pending = mediaEls.filter(el => {
+    if (el.tagName === 'IMG') return !el.complete;
+    if (el.tagName === 'VIDEO') return el.readyState < 2;
+    return true; // iframes are best-effort
+  });
+  if (!pending.length) { requestAnimationFrame(reveal); return; }
+  let done = 0;
+  const onOne = () => { if (++done >= pending.length) { clearTimeout(t); reveal(); } };
+  pending.forEach(el => {
+    el.addEventListener('load',  onOne, { once: true });
+    el.addEventListener('error', onOne, { once: true });
+    if (el.tagName === 'VIDEO') el.addEventListener('loadeddata', onOne, { once: true });
+  });
+  const t = setTimeout(reveal, 1500);
 }
 
 // On Socket.IO reconnect (network blip, laptop sleep, tab wake), refetch the
@@ -9115,7 +9177,21 @@ function appendMessage(container, msg, context, prevAuthor) {
   const roleColor=getMsgRoleColor(msg.from,context);
   if(roleColor)row.style.position='relative';
 
-  const replyHTML=msg.replyTo?`<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;opacity:.5;"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg> <strong>${escapeHTML(msg.replyTo.from||'')}</strong><span style="opacity:.6;">: ${escapeHTML((msg.replyTo.text||'').slice(0,60))}</span></div>`:'';
+  let replyHTML = '';
+  if (msg.replyTo) {
+    const rFrom = msg.replyTo.from || '';
+    const rSafe = escapeHTML(rFrom);
+    const rText = escapeHTML((msg.replyTo.text||'').slice(0,80));
+    const rAvId = 'rav-' + (msg.id||'').replace(/[^a-z0-9]/gi,'-');
+    replyHTML = `<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><span class="mrr-av" id="${rAvId}">${buildAvatarHTML(null, rFrom, 16)}</span><strong>${rSafe}</strong><span class="mrr-preview">${rText || '<em style="opacity:.4">click to view</em>'}</span></div>`;
+    // Hydrate the replied-to user's real PFP asynchronously so cached
+    // listings render fast and avatars fill in.
+    if (rFrom) {
+      Promise.resolve().then(() => FortizedSocial.getUserByName(rFrom)).then(u => {
+        if (u?.pfp) { const el = document.getElementById(rAvId); if (el) el.innerHTML = buildAvatarHTML(u.pfp, rFrom, 16); }
+      }).catch(()=>{});
+    }
+  }
   const fwdHTML = msg.forwarded ? _renderForwardedCard(msg) : '';
   const editTag=msg.edited?`<span class="msg-edited" title="Edited${msg.editedAt ? ' at '+new Date(msg.editedAt).toLocaleString() : ''}">(edited)</span>`:'';
   const rephrasedTag=msg.flags?.includes('rephrased')?`<span class="msg-rephrased" title="Fortized rephrases messages that violate our core safety rules.">(rephrased)</span>`:'';
@@ -9376,13 +9452,15 @@ function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) 
 function replyToMsg(msgId, fromName, context) {
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
   replyingTo = {id:msgId, from:fromName, text:row?.dataset.text||''};
+  // Highlight the message we're replying to — drop any prior highlight
+  // first so only ever one row carries the cue.
+  document.querySelectorAll('.msg-row.is-reply-target').forEach(r => r.classList.remove('is-reply-target'));
+  if (row) row.classList.add('is-reply-target');
   const inputId = context==='dm' ? 'dm-input' : context==='gc' ? 'gc-input' : 'ch-input';
-  // New style reply bar
   const newBar = document.getElementById(inputId+'-reply-bar');
   const newName = document.getElementById(inputId+'-reply-name');
   if (newBar) { newBar.style.display='flex'; }
   if (newName) newName.textContent = fromName;
-  // Old fallback
   const bar = document.getElementById(context+'-reply-bar');
   const nameEl = document.getElementById(context+'-reply-name');
   if (bar && !newBar) bar.classList.add('show');
@@ -9392,7 +9470,7 @@ function replyToMsg(msgId, fromName, context) {
 }
 function cancelReply(context) {
   replyingTo = null;
-  // New input bar style
+  document.querySelectorAll('.msg-row.is-reply-target').forEach(r => r.classList.remove('is-reply-target'));
   const inputId = context==='dm' ? 'dm-input' : context==='gc' ? 'gc-input' : 'ch-input';
   const newBar = document.getElementById(inputId+'-reply-bar');
   if (newBar) newBar.style.display = 'none';
@@ -12140,7 +12218,7 @@ function initFortizedUXResilience() {
   let _needsSave = false;
   for (const b of CU.bastions) {
     if (!b.globalId) {
-      b.globalId = (b.owner || CU.username) + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,5);
+      b.globalId = await _nextFortizedId('bastion');
       _needsSave = true;
     }
   }
@@ -13976,7 +14054,7 @@ async function createBastion() {
 
   // Register globally
   try {
-    const globalId = CU.username+'_'+Date.now();
+    const globalId = await _nextFortizedId('bastion');
     const globalB = {...bastion, owner: CU.username, id: globalId};
     await FortizedSocial.saveGlobalBastion(globalId, globalB);
     CU.bastions[CU.bastions.length-1].globalId = globalId;
@@ -17083,7 +17161,7 @@ async function setBastionVis(isPublic) {
   if (sec) sec.style.display = isPublic ? '' : 'none';
   // Ensure bastion has a globalId before syncing
   if (!b.globalId) {
-    b.globalId = CU.username + '_' + Date.now();
+    b.globalId = await _nextFortizedId('bastion');
     await FortizedSocial.addBastionMember(b.globalId, CU.username);
   }
   await saveUser();

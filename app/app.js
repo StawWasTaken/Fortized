@@ -8471,6 +8471,43 @@ function _fmtMsgFullTime(ts) {
   const d = _safeDate(ts);
   return d ? d.toLocaleString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
 }
+
+// Map system-message text patterns to {icon, color}. Order matters — first
+// hit wins. `icon` references _svgIcons; `color` is the accent colour.
+// Authors of new system events can also pass `msg.systemEvent` directly
+// (e.g. systemEvent:'join') to skip the heuristic.
+const _SYSTEM_EVENT_PATTERNS = [
+  { key: 'join',       icon: 'addUser',      color: '#3ecf6e', test: /\b(joined|welcome to|has entered|just joined|has joined)\b/i },
+  { key: 'leave',      icon: 'users',        color: '#ff7a7a', test: /\b(left|has left|kicked|removed from)\b/i },
+  { key: 'ban',        icon: 'warning',      color: '#f87171', test: /\b(banned|banished)\b/i },
+  { key: 'bot',        icon: 'gift',         color: '#a78bfa', test: /\b(integrated|deployed|bot added|installed bot)\b/i },
+  { key: 'channel',    icon: 'plus',         color: '#7bb6ff', test: /\b(channel created|created the channel|new channel)\b/i },
+  { key: 'rename',     icon: 'pencil',       color: '#fbbf24', test: /\b(renamed|name changed)\b/i },
+  { key: 'role',       icon: 'shield',       color: '#fbbf24', test: /\b(role|promoted|demoted)\b/i },
+  { key: 'pin',        icon: 'bookmark',     color: '#fbbf24', test: /\b(pinned)\b/i },
+  { key: 'announce',   icon: 'megaphone',    color: '#fff93e', test: /\b(announcement|announces)\b/i },
+  { key: 'boost',      icon: 'boost',        color: '#ff77e4', test: /\b(boosted|boost)\b/i },
+];
+function _inferSystemEvent(msg) {
+  if (msg?.systemEvent && typeof msg.systemEvent === 'string') {
+    const hit = _SYSTEM_EVENT_PATTERNS.find(p => p.key === msg.systemEvent);
+    if (hit) return hit;
+  }
+  const text = msg?.text || '';
+  for (const p of _SYSTEM_EVENT_PATTERNS) { if (p.test.test(text)) return p; }
+  return { key: 'info', icon: 'chat', color: 'rgba(255,255,255,.5)' };
+}
+// Wrap `**username**` style bold tokens in system message text with a
+// clickable mention span that opens the mini-profile popover. This runs
+// AFTER parseMD has produced <strong> tags, so we promote <strong>name</strong>
+// into an inline mention chip.
+function _promoteSystemMentions(html) {
+  if (!html) return html;
+  return html.replace(/<strong>([\w._-]{2,32})<\/strong>/g, (m, name) => {
+    const safe = escapeHTML(name);
+    return `<span class="msg-mention sys-mention" onclick="event.stopPropagation();showMiniProfilePreview('${safe}',this)" data-mention="${safe}">@${safe}</span>`;
+  });
+}
 // Render a batch of messages into the container, continuing from optional
 // carry-state so we can split a single msgs array across multiple rAF ticks
 // without breaking date-div placement or author-grouping ("isFirst" / "isCont"
@@ -8681,7 +8718,11 @@ function _paintInitialChatSkeleton(msgsEl) {
   // don't paint over real messages still in the DOM (e.g. cached render).
   if (msgsEl.querySelector('.msg-skel-stack')) return;
   if (msgsEl.querySelector('.msg-row')) return;
-  msgsEl.insertAdjacentHTML('afterbegin', _renderSkelMessages(6));
+  // Append at the end — the messages container's first children are the
+  // channel banner / new-msgs bar / chat-welcome card, which must stay
+  // visible above the skeleton (otherwise the skeleton overlaps the
+  // banner and #channel header).
+  msgsEl.insertAdjacentHTML('beforeend', _renderSkelMessages(6));
 }
 
 // Replaces the load-more-bar's content with a single retry button —
@@ -8952,19 +8993,50 @@ function appendMessage(container, msg, context, prevAuthor) {
     row.dataset.text=msg.text||'';
     row.dataset.from='__system__';
     const canDeleteSystem = (context==='ch'||context==='channel') && hasPerm('manage_messages');
+    const ev = _inferSystemEvent(msg);
+    row.dataset.systemEvent = ev.key;
+    // Prefer an SVG glyph by event; fall back to msg.systemIcon (string)
+    // for legacy callers that explicitly passed an emoji.
+    const iconHTML = ftzIcon(ev.icon, 14)
+      ? `<span class="msg-system-icon" style="color:${ev.color};">${ftzIcon(ev.icon, 14, ev.color)}</span>`
+      : `<span class="msg-system-icon">${msg.systemIcon||'→'}</span>`;
+    const bodyHTML = _promoteSystemMentions(parseMD(escapeHTML(msg.text||'')));
     row.innerHTML=`<div class="msg-system-content">
-      <span class="msg-system-icon">${msg.systemIcon||'→'}</span>
-      <span class="msg-system-text">${parseMD(escapeHTML(msg.text||''))}</span>
+      ${iconHTML}
+      <span class="msg-system-text">${bodyHTML}</span>
       <span class="msg-system-time">${time}</span>
       ${canDeleteSystem?`<button onclick="deleteMsg('${escapeHTML(id)}','${context}')" title="Delete" class="msg-sys-delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg></button>`:''}
     </div>`;
     container.appendChild(row);
     return;
   }
-  // Group messages: same author within 5 minutes = continuation
-  let isFirst = msg.from !== prevAuthor;
+  // Insert a date divider on live append when the date changes vs the
+  // most recent message. Previously dividers were only inserted by the
+  // trickle render path, so messages crossing midnight or arriving the
+  // next day stayed grouped under the previous author.
+  let lastRow = null;
+  if (container) {
+    for (let n = container.lastElementChild; n; n = n.previousElementSibling) {
+      if (n.classList?.contains('msg-row')) { lastRow = n; break; }
+      if (n.classList?.contains('date-div')) break; // most recent thing is a divider
+    }
+  }
+  const thisDateLabel = _fmtMsgDateDivider(msg.timestamp);
+  const lastDateLabel = lastRow ? _fmtMsgDateDivider(lastRow.dataset.timestamp) : null;
+  let dividerInserted = false;
+  if (container && lastRow && thisDateLabel && lastDateLabel && thisDateLabel !== lastDateLabel) {
+    const div = document.createElement('div');
+    div.className = 'date-div';
+    div.innerHTML = '<span>' + escapeHTML(thisDateLabel) + '</span>';
+    container.appendChild(div);
+    dividerInserted = true;
+  }
+  // Group messages: same author within 20 minutes AND no divider between =
+  // continuation. A divider always breaks grouping so the next message is
+  // rendered with avatar + name + full timestamp (issue: messages after a
+  // time divider looked like silent continuations).
+  let isFirst = msg.from !== prevAuthor || dividerInserted;
   if (!isFirst && container) {
-    const lastRow = container.querySelector('.msg-row:last-child');
     const lastTs = lastRow?.dataset.timestamp;
     const a = _safeDate(msg.timestamp), b = _safeDate(lastTs);
     if (a && b) {
@@ -21938,13 +22010,26 @@ function handleContextMenu(e) {
     const msgId = msgRow.dataset.msgid;
     const inBastion = curBastion !== null;
     const isBastionAdminCtx = inBastion && hasPerm('manage_messages');
-    const sysItems = [
+    // If the system message mentions a user (we wrapped them as .sys-mention),
+    // surface a quick "Mention <user>" shortcut so admins can DM/ping them.
+    const mention = msgRow.querySelector('.sys-mention')?.dataset?.mention || null;
+    const primary = [
       { icon: _ctxSvg('copy'), label: 'Copy Text', action: () => navigator.clipboard.writeText(text), copyFeedback: true },
     ];
-    if (isBastionAdminCtx) {
-      sysItems.push({ icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
+    if (mention) {
+      primary.push({ icon: _ctxSvg('profile'), label: 'View @' + mention, action: () => showMiniProfilePreview(mention, msgRow) });
+      primary.push({ icon: _ctxSvg('mention'), label: 'Mention in Chat', action: () => { const ta = document.querySelector('.chat-input-row textarea'); if (ta) { ta.value += '@' + mention + ' '; ta.focus(); } } });
     }
-    showCtxMenu(e.clientX, e.clientY, [{ items: sysItems }]);
+    const secondary = [
+      { icon: _ctxSvg('copy'), label: 'Copy Message ID', action: () => navigator.clipboard.writeText(msgId||''), copyFeedback: true },
+    ];
+    const groups = [{ items: primary }, { items: secondary }];
+    if (isBastionAdminCtx) {
+      groups.push({ items: [
+        { icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) },
+      ]});
+    }
+    showCtxMenu(e.clientX, e.clientY, groups);
     return;
   }
 

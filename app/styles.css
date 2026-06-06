@@ -205,7 +205,10 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 .msg-row.msg-system{padding:4px 20px;margin:2px 0;background:transparent;}
 .msg-row.msg-system:hover{background:rgba(255,255,255,.01);}
 .msg-row.msg-system .msg-system-content{display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.35);font-weight:500;}
-.msg-row.msg-system .msg-system-icon{font-size:14px;flex-shrink:0;opacity:.6;}
+.msg-row.msg-system .msg-system-icon{font-size:14px;flex-shrink:0;opacity:.85;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;}
+.msg-row.msg-system .msg-system-icon svg{display:block;}
+.sys-mention{display:inline-block;padding:0 5px;border-radius:4px;background:rgba(255,249,62,.12);color:#fff93e;font-weight:600;cursor:pointer;transition:background .12s;}
+.sys-mention:hover{background:rgba(255,249,62,.22);}
 .msg-row.msg-system .msg-system-text{flex:1;}
 .msg-row.msg-system .msg-system-text strong{color:rgba(255,255,255,.55);font-weight:600;}
 .msg-row.msg-system .msg-system-time{font-size:10px;color:rgba(255,255,255,.15);flex-shrink:0;}

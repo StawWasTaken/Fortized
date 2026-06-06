@@ -204,7 +204,7 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 /* ── System messages (join/leave/bot) ──── */
 .msg-row.msg-system{padding:4px 20px;margin:2px 0;background:transparent;}
 .msg-row.msg-system:hover{background:rgba(255,255,255,.01);}
-.msg-row.msg-system .msg-system-content{display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.35);font-weight:500;}
+.msg-row.msg-system .msg-system-content{display:flex;align-items:center;gap:9px;font-size:13.5px;color:rgba(255,255,255,.5);font-weight:500;}
 .msg-row.msg-system .msg-system-icon{font-size:14px;flex-shrink:0;opacity:.85;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;}
 .msg-row.msg-system .msg-system-icon svg{display:block;}
 .sys-mention{display:inline-block;padding:0 5px;border-radius:4px;background:rgba(255,249,62,.12);color:#fff93e;font-weight:600;cursor:pointer;transition:background .12s;}
@@ -218,6 +218,11 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 .mention:hover{filter:brightness(1.2);}
 .mention-user{background:var(--state-info-dim);color:var(--blue);border:none;}
 .mention-user:hover{background:rgba(96,165,250,.22);}
+.mention-self{font-weight:700;}
+/* Guilded-style row highlight when YOU are mentioned in the row. The
+   :has() check finds .mention-self anywhere inside .msg-text. */
+.msg-row:has(.msg-text .mention-self){background:rgba(255,249,62,.04);box-shadow:inset 2px 0 0 var(--accent);}
+.msg-row:has(.msg-text .mention-self):hover{background:rgba(255,249,62,.06);}
 .mention-everyone{background:var(--accent-dim);color:var(--accent);border:none;}
 .mention-everyone:hover{background:var(--accent-mid);}
 .mention-here{background:var(--state-success-dim);color:var(--green);border:none;}
@@ -799,7 +804,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .dyk-tag{font-family:var(--font-display);font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;}
 /* ── Chat 2.0 — Premium Communication ─────────── */
 .chat-wrap{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;position:relative;}
-.chat-msgs{flex:1;overflow-y:auto;padding:20px 0 8px;display:flex;flex-direction:column;will-change:scroll-position;-webkit-overflow-scrolling:touch;transform:translateZ(0);overflow-anchor:auto;}
+.chat-msgs{flex:1;overflow-y:auto;padding:20px 0 8px;display:flex;flex-direction:column;will-change:scroll-position;-webkit-overflow-scrolling:touch;transform:translateZ(0);overflow-anchor:auto;overscroll-behavior:contain;scrollbar-gutter:stable;}
 
 /* ════════════════════════════════════════════════════════════════
    OLDER-MESSAGES SKELETON LOADER
@@ -852,9 +857,9 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .chat-welcome h3{font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:4px;}
 .chat-welcome p{font-size:13px;color:var(--muted);line-height:1.5;}
 /* Day separators — elegant centered pill */
-.date-div{display:flex;align-items:center;gap:14px;padding:14px 24px;font-size:10px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.06em;text-transform:uppercase;}
-.date-div::before,.date-div::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.04);}
-.date-div span{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-pill);padding:4px 14px;white-space:nowrap;font-size:10px;}
+.date-div{display:flex;align-items:center;gap:14px;padding:18px 24px 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.04em;}
+.date-div::before,.date-div::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.06);}
+.date-div span{background:transparent;border:none;border-radius:0;padding:2px 4px;white-space:nowrap;font-size:11px;color:rgba(255,255,255,.55);}
 /* Message rows — more breathing room */
 .msg-row{display:flex;padding:2px 20px 2px 20px;position:relative;min-width:0;transition:background .12s;}
 .msg-row:hover{background:rgba(255,255,255,.018);}
@@ -873,19 +878,20 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Content column */
 .msg-content-col{flex:1;min-width:0;padding-left:4px;}
 .msg-header{display:flex;align-items:center;gap:4px;margin-bottom:3px;flex-wrap:wrap;}
-.msg-author{font-size:14px;font-weight:600;color:#fff;cursor:pointer;line-height:1.3;}
+.msg-author{font-size:15px;font-weight:700;color:#fff;cursor:pointer;line-height:1.3;}
 .msg-author:hover{text-decoration:underline;}
-.msg-timestamp{font-size:10px;color:rgba(255,255,255,.3);margin-left:4px;font-weight:500;}
-.msg-text{font-size:14.5px;color:rgba(221,227,237,.88);line-height:1.65;word-break:break-word;letter-spacing:.01em;}
+.msg-timestamp{font-size:11px;color:rgba(255,255,255,.4);margin-left:6px;font-weight:500;}
+.msg-text{font-size:15.5px;color:rgba(228,232,240,.94);line-height:1.55;word-break:break-word;letter-spacing:.005em;}
 .msg-text code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:5px;font-size:12px;font-family:monospace;}
 .msg-edited{font-size:9.5px;color:rgba(255,255,255,.25);margin-left:4px;cursor:default;transition:color .15s;font-weight:500;letter-spacing:.01em;}
 .msg-edited:hover{color:rgba(255,255,255,.45);text-decoration:underline;text-decoration-style:dotted;}
 .msg-rephrased{font-size:9.5px;color:rgba(255,255,255,.25);margin-left:4px;cursor:default;transition:color .15s;font-weight:500;letter-spacing:.01em;}
 .msg-rephrased:hover{color:rgba(255,255,255,.45);text-decoration:underline;text-decoration-style:dotted;}
 /* Reactions */
-.msg-reactions{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
-.r-pill{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-pill);padding:3px 10px;font-size:12px;cursor:pointer;transition:all .15s;position:relative;}
-.r-pill:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.1);}
+.msg-reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+/* Guilded-style: rounder pill, slightly darker bg, brighter emoji+count */
+.r-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:3px 9px 3px 7px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;transition:all .12s;position:relative;line-height:1;}
+.r-pill:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.16);}
 .r-pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .r-pill:active{transform:scale(.95);}
 .r-pill.mine{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
@@ -931,8 +937,13 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Own messages */
 .msg-row.own .msg-text{color:rgba(255,255,255,.85);}
 /* Reply / quote — soft left border, lighter bg, clickable */
-.msg-reply-ref{display:flex;align-items:center;gap:8px;padding:5px 10px;background:rgba(255,255,255,.025);border-left:2px solid rgba(255,249,62,.25);border-radius:0 6px 6px 0;margin-bottom:6px;font-size:11.5px;color:rgba(255,255,255,.4);cursor:pointer;transition:background .12s;}
-.msg-reply-ref:hover{background:rgba(255,255,255,.05);}
+/* Reply / quote — Guilded-style compact preview: thin connector line on the
+   left, inline avatar+name+text in one row, brightens on hover. */
+.msg-reply-ref{display:flex;align-items:center;gap:7px;padding:3px 12px 3px 56px;margin:0 0 2px 0;font-size:12.5px;color:rgba(255,255,255,.55);cursor:pointer;line-height:1.35;position:relative;transition:color .12s;}
+.msg-reply-ref::before{content:"";position:absolute;left:30px;top:50%;width:18px;height:12px;border-left:2px solid rgba(255,255,255,.18);border-top:2px solid rgba(255,255,255,.18);border-top-left-radius:8px;}
+.msg-reply-ref:hover{color:rgba(255,255,255,.85);}
+.msg-reply-ref:hover::before{border-color:rgba(255,255,255,.32);}
+.msg-reply-ref strong{color:rgba(255,255,255,.85);font-weight:600;}
 
 /* Forwarded-message card (Discord-style) */
 .msg-fwd-card{

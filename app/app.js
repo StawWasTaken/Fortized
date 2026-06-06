@@ -8501,12 +8501,25 @@ function _inferSystemEvent(msg) {
 // clickable mention span that opens the mini-profile popover. This runs
 // AFTER parseMD has produced <strong> tags, so we promote <strong>name</strong>
 // into an inline mention chip.
+// Wrap mention-like tokens in system message text with a clickable mention
+// chip that opens the mini-profile popover. Runs AFTER parseMD has produced
+// <strong> tags. Handles three forms:
+//   • <strong>name</strong>  (rendered from **name** markdown)
+//   • @name                  (literal in the source text)
+//   • bare display name      (rare; only when systemAuthor is set on msg)
 function _promoteSystemMentions(html) {
   if (!html) return html;
-  return html.replace(/<strong>([\w._-]{2,32})<\/strong>/g, (m, name) => {
+  let out = html.replace(/<strong>([\w._-]{2,32})<\/strong>/g, (m, name) => {
     const safe = escapeHTML(name);
     return `<span class="msg-mention sys-mention" onclick="event.stopPropagation();showMiniProfilePreview('${safe}',this)" data-mention="${safe}">@${safe}</span>`;
   });
+  // Bare @username (not already inside a mention span). Walk via regex that
+  // refuses to match across tag boundaries (`[^<]` keeps us in text nodes).
+  out = out.replace(/(^|[^A-Za-z0-9_>])@([A-Za-z0-9_.\-]{2,32})\b/g, (m, pre, name) => {
+    const safe = escapeHTML(name);
+    return `${pre}<span class="msg-mention sys-mention" onclick="event.stopPropagation();showMiniProfilePreview('${safe}',this)" data-mention="${safe}">@${safe}</span>`;
+  });
+  return out;
 }
 // Render a batch of messages into the container, continuing from optional
 // carry-state so we can split a single msgs array across multiple rAF ticks
@@ -8583,7 +8596,7 @@ function renderMessages(container, msgs, context) {
     loadMore.className = 'load-more-bar';
     loadMore.dataset.context = context;
     loadMore.dataset.offset = '20';
-    loadMore.innerHTML = _renderSkelMessages(3);
+    loadMore.innerHTML = _renderSkelMessages(6);
     container.appendChild(loadMore);
   }
 
@@ -8740,7 +8753,7 @@ async function _loadOlderMessages(barOrBtn) {
   const offset = parseInt(bar.dataset.offset) || 50;
   // Make sure the skeleton is showing while we fetch (retry path replaces
   // it with a button, then back to skeleton here).
-  if (!bar.querySelector('.msg-skel-stack')) bar.innerHTML = _renderSkelMessages(3);
+  if (!bar.querySelector('.msg-skel-stack')) bar.innerHTML = _renderSkelMessages(6);
   try {
     let older = [];
     if (context === 'ch' && curBastion !== null && curChannel !== null) {
@@ -8772,7 +8785,7 @@ async function _loadOlderMessages(barOrBtn) {
       // If we got fewer than the page size, history is exhausted — remove
       // the bar so the IntersectionObserver stops firing.
       if (older.length < 50) { _detachOlderObserver(container); bar.remove(); }
-      else bar.innerHTML = _renderSkelMessages(3); // ready for the next round
+      else bar.innerHTML = _renderSkelMessages(6); // ready for the next round
     } else {
       _detachOlderObserver(bar.parentElement);
       bar.remove();
@@ -9010,34 +9023,45 @@ function appendMessage(container, msg, context, prevAuthor) {
     container.appendChild(row);
     return;
   }
-  // Insert a date divider on live append when the date changes vs the
-  // most recent message. Previously dividers were only inserted by the
-  // trickle render path, so messages crossing midnight or arriving the
-  // next day stayed grouped under the previous author.
-  let lastRow = null;
+  // Walk back through the container to find both:
+  //   • lastAnyRow      — the most recent .msg-row of any kind (used for
+  //                       date-divider comparison, since a system message
+  //                       sets the "date" of the chat too).
+  //   • lastNonSystem   — the most recent non-system .msg-row (used for
+  //                       author grouping; matches _getLastAuthor()).
+  // A trailing .date-div between us and the previous row also breaks
+  // grouping (forces isFirst=true) so messages after a divider always
+  // render with full header.
+  let lastAnyRow = null, lastNonSystem = null, dividerBetween = false;
   if (container) {
     for (let n = container.lastElementChild; n; n = n.previousElementSibling) {
-      if (n.classList?.contains('msg-row')) { lastRow = n; break; }
-      if (n.classList?.contains('date-div')) break; // most recent thing is a divider
+      if (!lastAnyRow && n.classList?.contains('date-div')) { dividerBetween = true; continue; }
+      if (n.classList?.contains('msg-row')) {
+        if (!lastAnyRow) lastAnyRow = n;
+        if (!n.classList.contains('msg-system')) { lastNonSystem = n; break; }
+      }
     }
   }
+  // Date-divider auto-insert on live append (the trickle path handles
+  // dividers itself, but a single message arriving via Socket.io / poll
+  // would skip the check otherwise).
   const thisDateLabel = _fmtMsgDateDivider(msg.timestamp);
-  const lastDateLabel = lastRow ? _fmtMsgDateDivider(lastRow.dataset.timestamp) : null;
+  const lastDateLabel = lastAnyRow ? _fmtMsgDateDivider(lastAnyRow.dataset.timestamp) : null;
   let dividerInserted = false;
-  if (container && lastRow && thisDateLabel && lastDateLabel && thisDateLabel !== lastDateLabel) {
+  if (container && lastAnyRow && thisDateLabel && lastDateLabel && thisDateLabel !== lastDateLabel) {
     const div = document.createElement('div');
     div.className = 'date-div';
     div.innerHTML = '<span>' + escapeHTML(thisDateLabel) + '</span>';
     container.appendChild(div);
     dividerInserted = true;
   }
-  // Group messages: same author within 20 minutes AND no divider between =
-  // continuation. A divider always breaks grouping so the next message is
-  // rendered with avatar + name + full timestamp (issue: messages after a
-  // time divider looked like silent continuations).
-  let isFirst = msg.from !== prevAuthor || dividerInserted;
+  // Grouping: same author, within 20 minutes, no divider between =
+  // continuation. Use lastNonSystem so a system message between two
+  // messages from the same person doesn't break their group.
+  const groupingPrev = lastNonSystem?.dataset?.from || prevAuthor;
+  let isFirst = msg.from !== groupingPrev || dividerInserted || dividerBetween;
   if (!isFirst && container) {
-    const lastTs = lastRow?.dataset.timestamp;
+    const lastTs = lastNonSystem?.dataset?.timestamp;
     const a = _safeDate(msg.timestamp), b = _safeDate(lastTs);
     if (a && b) {
       const gap = Math.abs(a.getTime() - b.getTime());
@@ -29445,7 +29469,16 @@ function parseMD(s) {
         }
       }
     }
-    h = '<span class="mention mention-user" onmouseenter="_showUserMentionPreview(event,this,\''+escapeHTML(name)+'\')" onmouseleave="_hidePreview()" onclick="_scrollToUserMsg(\''+escapeHTML(name)+'\')">@'+escapeHTML(name)+'</span>';
+    // Self-mention: paint with the highest role colour the current user
+    // holds in this bastion. Plain user mention stays blue.
+    const isSelf = CU?.username && name.toLowerCase() === String(CU.username).toLowerCase();
+    let selfStyle = '';
+    if (isSelf) {
+      const selfColor = getMsgRoleColor(CU.username, 'ch') || 'var(--accent)';
+      selfStyle = ' style="background:'+selfColor+'22;color:'+selfColor+';"';
+    }
+    const cls = isSelf ? 'mention mention-user mention-self' : 'mention mention-user';
+    h = '<span class="'+cls+'"'+selfStyle+' onmouseenter="_showUserMentionPreview(event,this,\''+escapeHTML(name)+'\')" onmouseleave="_hidePreview()" onclick="_scrollToUserMsg(\''+escapeHTML(name)+'\')">@'+escapeHTML(name)+'</span>';
     _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
   });
   // #room mentions — only match standalone #word, not inside placeholders

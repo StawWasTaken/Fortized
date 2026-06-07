@@ -1103,9 +1103,11 @@ const FortizedSocial = (() => {
         .eq('id', msgId);
 
       if (err2) throw new Error(`Update reactions failed: ${err2.message}`);
-      console.debug('[addReaction] Reaction added:', { msgId, emoji, username });
+      console.debug('[addReaction] Reaction toggled:', { msgId, emoji, username, users: arr });
+      return { users: arr };
     } catch(e) {
       console.error('[addReaction] Failed:', e.message);
+      return null;
     }
   }
 

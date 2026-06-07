@@ -1009,9 +1009,11 @@ function _readPersistedBannerLocal(username) {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || !('val' in parsed)) return null;
-    // 24h freshness window. Anything older is stale enough that the DB
-    // should be the authoritative source again.
-    if ((Date.now() - (parsed.ts || 0)) > 86400000) {
+    // 5-minute freshness window — covers our own save's network
+    // round-trip + Supabase replica lag, but NOT cross-device updates.
+    // Was 24h; that meant a banner edited on device A would be reverted
+    // by device B's stale localStorage on load.
+    if ((Date.now() - (parsed.ts || 0)) > 5 * 60 * 1000) {
       try { localStorage.removeItem('ftz_banner_' + username); } catch {}
       return null;
     }
@@ -1038,7 +1040,8 @@ function _readPersistedPfpLocal(username) {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || !('val' in parsed)) return null;
-    if ((Date.now() - (parsed.ts || 0)) > 86400000) {
+    // 5-minute window — see _readPersistedBannerLocal comment.
+    if ((Date.now() - (parsed.ts || 0)) > 5 * 60 * 1000) {
       try { localStorage.removeItem('ftz_pfp_' + username); } catch {}
       return null;
     }
@@ -8748,9 +8751,15 @@ function renderMessages(container, msgs, context) {
 function _revealAfterMediaSettle(container) {
   if (!container) return;
   const reveal = () => {
+    // Atomic swap: skeleton out, messages in, scroll snap to bottom if
+    // the user was hanging there. Reordering matters — remove the class
+    // FIRST so messages take layout, then drop the skeleton, then pin.
     container.classList.remove('chat-msgs-initial-loading');
     container.querySelectorAll('.msg-pre-reveal').forEach(el => el.classList.remove('msg-pre-reveal'));
     container.querySelector('.msg-skel-stack')?.remove();
+    // After reveal, snap to bottom unless the user has actively scrolled
+    // away from it (small tolerance for the skeleton itself).
+    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
   };
   const mediaEls = Array.from(container.querySelectorAll('.msg-row img, .msg-row iframe, .msg-row video'));
   const pending = mediaEls.filter(el => {
@@ -8890,11 +8899,19 @@ async function _loadOlderMessages(barOrBtn) {
       const anchorOffsetTop = anchor ? anchor.offsetTop : 0;
       const scrollTopBefore = container.scrollTop;
       // Insert older messages immediately AFTER the load-more bar so the
-      // skeleton stays at the very top.
+      // skeleton stays at the very top. Capture lastChild BEFORE the
+      // append: if appendMessage's dedup check rejected the message
+      // (already in _seenIds), lastChild would otherwise point to an
+      // unrelated existing row and we'd accidentally MOVE that row above
+      // the anchor — exactly the "messages disappear when scrolling up"
+      // bug. Bail unless lastChild actually changed.
       older.forEach(msg => {
+        const beforeLast = container.lastChild;
         appendMessage(container, msg, context, null);
         const appended = container.lastChild;
-        if (appended && anchor && appended !== anchor) container.insertBefore(appended, anchor);
+        if (appended && appended !== beforeLast && appended !== anchor) {
+          container.insertBefore(appended, anchor);
+        }
       });
       if (anchor) {
         const newAnchorOffsetTop = anchor.offsetTop;
@@ -12624,27 +12641,13 @@ function initFortizedUXResilience() {
           const parts = inner.split('__');
           const matches = parts.includes(myName) && parts.includes(themLow);
           if (matches) {
-            const bar = document.getElementById('dm-typing-bar');
-            const txt = document.getElementById('dm-typing-text');
-            if (bar && txt) {
-              if (others.length > 0) {
-                txt.innerHTML = _formatTypingText(others);
-                bar.style.opacity = '1';
-              } else { bar.style.opacity = '0'; }
-            }
+            _showTypingBar('dm-typing-bar', 'dm-typing-text', others);
           }
         }
         // GC typing
         if (roomLow.startsWith('gc:') && curGC) {
           if (roomLow === 'gc:'+String(curGC).toLowerCase()) {
-            const bar = document.getElementById('gc-typing-bar');
-            const txt = document.getElementById('gc-typing-text');
-            if (bar && txt) {
-              if (others.length > 0) {
-                txt.innerHTML = _formatTypingText(others);
-                bar.style.opacity = '1';
-              } else { bar.style.opacity = '0'; }
-            }
+            _showTypingBar('gc-typing-bar', 'gc-typing-text', others);
           }
         }
         // Bastion channel typing \u2014 lenient match: any bastion: room that
@@ -12656,14 +12659,7 @@ function initFortizedUXResilience() {
             const expected1 = ('bastion:'+(b.globalId||b.name)+':'+ch.name).toLowerCase();
             const expected2 = ('bastion:'+(b.name||b.globalId)+':'+ch.name).toLowerCase();
             if (roomLow === expected1 || roomLow === expected2) {
-              const bar = document.getElementById('ch-typing-bar');
-              const txt = document.getElementById('ch-typing-text');
-              if (bar && txt) {
-                if (others.length > 0) {
-                  txt.innerHTML = _formatTypingText(others);
-                  bar.style.opacity = '1';
-                } else { bar.style.opacity = '0'; }
-              }
+              _showTypingBar('ch-typing-bar', 'ch-typing-text', others);
             }
           }
         }
@@ -38051,6 +38047,28 @@ async function checkFriendTarget(val) {
 // TYPING INDICATOR (Socket.io powered, Firebase fallback)
 // ════════════════════════════════════════════
 let _typingTimeout = null;
+// Centralised typing bar updater. Sets text + opacity, AND schedules an
+// auto-clear after 6s of silence. Without this the bar stays stuck on
+// forever if the typer's `typing:stop` packet got dropped (closed tab,
+// network blip, etc.) \u2014 server.js has no timeout of its own.
+const _typingClearTimers = {};
+function _showTypingBar(barId, txtId, others) {
+  const bar = document.getElementById(barId);
+  const txt = document.getElementById(txtId);
+  if (!bar || !txt) return;
+  if (_typingClearTimers[barId]) { clearTimeout(_typingClearTimers[barId]); delete _typingClearTimers[barId]; }
+  if (others && others.length > 0) {
+    txt.innerHTML = _formatTypingText(others);
+    bar.style.opacity = '1';
+    _typingClearTimers[barId] = setTimeout(() => {
+      const _b = document.getElementById(barId);
+      if (_b) _b.style.opacity = '0';
+      delete _typingClearTimers[barId];
+    }, 6000);
+  } else {
+    bar.style.opacity = '0';
+  }
+}
 function _formatTypingText(users) {
   if (!users || !users.length) return '';
   const bold = n => '<strong>' + escapeHTML(n) + '</strong>';

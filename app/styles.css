@@ -808,8 +808,11 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Per-row hold while the skeleton is up. ONLY the initial-paint rows
    carry this class — rows added later (real-time sends/edits, optimistic
    echoes, lazy-loaded older history) render visible immediately, so we
-   don't accidentally hide real-time updates behind a skeleton. */
-.msg-row.msg-pre-reveal,.date-div.msg-pre-reveal{visibility:hidden;}
+   don't accidentally hide real-time updates behind a skeleton.
+   `display:none` (not visibility:hidden) so the rows don't reserve a
+   blank layout strip BELOW the skeleton during the media-settle wait —
+   that strip was being read as "blank page between skeleton and load". */
+.msg-row.msg-pre-reveal,.date-div.msg-pre-reveal{display:none;}
 
 /* ════════════════════════════════════════════════════════════════
    OLDER-MESSAGES SKELETON LOADER

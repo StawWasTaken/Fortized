@@ -9468,13 +9468,13 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
   if (_shiftHeld) {
     // Shift mode: Pin, Thread, Reply, Add Reaction, Edit, Forward, Delete
     return ''
-      + (canPin ? `<button onclick="pinMessage('${safeId}',document.querySelector('[data-msgid=\\'${safeId}\\']')?.dataset.text||'')" title="Pin Message"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1V2H8v4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24z"/></svg></button>` : '')
-      + (inBastion ? `<button onclick="openThread('${safeId}','${safeText}','${safeFrom}')" title="Create Thread"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>` : '')
-      + `<button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg></button>`
-      + `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>`
-      + (isOwn ? `<button onclick="editMsg('${safeId}')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : '')
-      + `<button onclick="forwardFromMsgEl(this,'${safeText}')" title="Forward"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>`
-      + ((isOwn||isBastionAdmin) ? `<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(248,113,113,.6);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>` : '');
+      + (canPin ? `<button onclick="pinMessage('${safeId}',document.querySelector('[data-msgid=\\'${safeId}\\']')?.dataset.text||'')" title="Pin Message">${_faMsg('pin')}</button>` : '')
+      + (inBastion ? `<button onclick="openThread('${safeId}','${safeText}','${safeFrom}')" title="Create Thread">${_faMsg('thread')}</button>` : '')
+      + `<button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply">${_faMsg('reply')}</button>`
+      + `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction">${_ADD_REACTION_ICON_HTML}</button>`
+      + (isOwn ? `<button onclick="editMsg('${safeId}')" title="Edit">${_faMsg('edit')}</button>` : '')
+      + `<button onclick="forwardFromMsgEl(this,'${safeText}')" title="Forward">${_faMsg('forward')}</button>`
+      + ((isOwn||isBastionAdmin) ? `<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(248,113,113,.6);">${_faMsg('trash')}</button>` : '');
   }
 
   // Default mode: Quick reactions (3), Add Reaction, Reply/Edit, Forward, More
@@ -9485,15 +9485,15 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
     html += `<button class="msg-act-qr" onclick="event.stopPropagation();toggleReaction('${safeId}','${em}','${context}')" data-tip="React with ${em}"><img src="${emojiToTwemojiUrl(em)}" alt="${em}" style="width:16px;height:16px;object-fit:contain;" onerror="this.outerHTML='${em}'"></button>`;
   });
   // Add Reaction
-  html += `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>`;
+  html += `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction">${_ADD_REACTION_ICON_HTML}</button>`;
   // Reply or Edit (if own message, show Edit; otherwise Reply)
   if (isOwn) {
-    html += `<button onclick="editMsg('${safeId}')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`;
+    html += `<button onclick="editMsg('${safeId}')" title="Edit">${_faMsg('edit')}</button>`;
   } else {
-    html += `<button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg></button>`;
+    html += `<button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply">${_faMsg('reply')}</button>`;
   }
   // Forward
-  html += `<button onclick="forwardFromMsgEl(this,'${safeText}')" title="Forward"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>`;
+  html += `<button onclick="forwardFromMsgEl(this,'${safeText}')" title="Forward">${_faMsg('forward')}</button>`;
   // More (dropdown)
   html += `<button onclick="_showMsgMoreMenu(event,'${safeId}','${safeFrom}','${safeText}','${context}',${isOwn},${isBastionAdmin})" title="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>`;
   return html;
@@ -9504,14 +9504,14 @@ function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) 
   const inBastion = (context==='ch'||context==='channel');
   const canPin = inBastion ? (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username) : (curDM || curGC);
   const items = [];
-  if (!isOwn) items.push({ icon: _ctxSvg('reply'), label: 'Reply', action: () => replyToMsg(msgId, from, context) });
-  if (isOwn) items.push({ icon: _ctxSvg('edit'), label: 'Edit', action: () => editMsg(msgId) });
-  items.push({ icon: _ctxSvg('copy'), label: 'Copy Text', action: () => navigator.clipboard.writeText(_splitFileTokens(document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`)?.dataset.text||'').stripped), copyFeedback: true });
-  if (canPin) items.push({ icon: _ctxSvg('pin'), label: 'Pin Message', action: () => pinMessage(msgId, text) });
-  if (inBastion) items.push({ icon: _ctxSvg('thread'), label: 'Create Thread', action: () => openThread(msgId, text, from) });
-  items.push({ icon: _ctxSvg('globe'), label: 'Translate', action: () => { const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`); if (row) _translateMessage(row, row.dataset.text||''); } });
-  items.push({ icon: _ctxSvg('report'), label: 'Report', action: () => reportMessage(msgId, text, from) });
-  if (isOwn || isBastionAdmin) items.push({ icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
+  if (!isOwn) items.push({ icon: _faMsg('reply', 15), label: 'Reply', action: () => replyToMsg(msgId, from, context) });
+  if (isOwn) items.push({ icon: _faMsg('edit', 15), label: 'Edit', action: () => editMsg(msgId) });
+  items.push({ icon: _faMsg('copy', 15), label: 'Copy Text', action: () => navigator.clipboard.writeText(_splitFileTokens(document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`)?.dataset.text||'').stripped), copyFeedback: true });
+  if (canPin) items.push({ icon: _faMsg('pin', 15), label: 'Pin Message', action: () => pinMessage(msgId, text) });
+  if (inBastion) items.push({ icon: _faMsg('thread', 15), label: 'Create Thread', action: () => openThread(msgId, text, from) });
+  items.push({ icon: _faMsg('translate', 15), label: 'Translate', action: () => { const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`); if (row) _translateMessage(row, row.dataset.text||''); } });
+  items.push({ icon: _faMsg('report', 15), label: 'Report', action: () => reportMessage(msgId, text, from) });
+  if (isOwn || isBastionAdmin) items.push({ icon: _faMsg('trash', 15), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
   showCtxMenu(e.clientX, e.clientY, [{ items }]);
 }
 
@@ -21932,6 +21932,26 @@ const _ctxIcons = {
 function _ctxSvg(name) {
   return _ctxIcons[name] || '';
 }
+
+// ── FontAwesome solid-fill icons used for message-action toolbar + More menu.
+// Sized via the _faMsg(name, size) helper which injects width/height attrs.
+const _faMsgIcons = {
+  edit:     '<svg viewBox="0 0 512 512" fill="currentColor"><path d="M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L368 46.1 465.9 144 490.3 119.6c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.7 15.7-7.4 21.9-13.5L432 177.9 334.1 80 172.4 241.7zM96 64C43 64 0 107 0 160L0 416c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-96c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 96c0 17.7-14.3 32-32 32L96 448c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 64z"/></svg>',
+  forward:  '<svg viewBox="0 0 512 512" fill="currentColor"><path d="M307.8 18.4c-12 5-19.8 16.6-19.8 29.6l0 80-112 0c-97.2 0-176 78.8-176 176 0 113.3 81.5 163.9 100.2 174.1 2.5 1.4 5.3 1.9 8.1 1.9 10.9 0 19.7-8.9 19.7-19.7 0-7.5-4.3-14.4-9.8-19.5-9.4-8.8-22.2-26.4-22.2-56.7 0-53 43-96 96-96l96 0 0 80c0 12.9 7.8 24.6 19.8 29.6s25.7 2.2 34.9-6.9l160-160c12.5-12.5 12.5-32.8 0-45.3l-160-160c-9.2-9.2-22.9-11.9-34.9-6.9z"/></svg>',
+  reply:    '<svg viewBox="0 0 512 512" fill="currentColor"><path d="M204.2 18.4c12 5 19.8 16.6 19.8 29.6l0 80 112 0c97.2 0 176 78.8 176 176 0 113.3-81.5 163.9-100.2 174.1-2.5 1.4-5.3 1.9-8.1 1.9-10.9 0-19.7-8.9-19.7-19.7 0-7.5 4.3-14.4 9.8-19.5 9.4-8.8 22.2-26.4 22.2-56.7 0-53-43-96-96-96l-96 0 0 80c0 12.9-7.8 24.6-19.8 29.6s-25.7 2.2-34.9-6.9l-160-160c-12.5-12.5-12.5-32.8 0-45.3l160-160c9.2-9.2 22.9-11.9 34.9-6.9z"/></svg>',
+  pin:      '<svg viewBox="0 0 384 512" fill="currentColor"><path d="M32 32C32 14.3 46.3 0 64 0L320 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-29.5 0 10.3 134.1c37.1 21.2 65.8 56.4 78.2 99.7l3.8 13.4c2.8 9.7 .8 20-5.2 28.1S362 352 352 352L32 352c-10 0-19.5-4.7-25.5-12.7s-8-18.4-5.2-28.1L5 297.8c12.4-43.3 41-78.5 78.2-99.7L93.5 64 64 64C46.3 64 32 49.7 32 32zM160 400l64 0 0 112c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-112z"/></svg>',
+  thread:   '<svg viewBox="0 0 576 512" fill="currentColor"><path d="M384 144c0 97.2-86 176-192 176-26.7 0-52.1-5-75.2-14L35.2 349.2c-9.3 4.9-20.7 3.2-28.2-4.2s-9.2-18.9-4.2-28.2l35.6-67.2C14.3 220.2 0 183.6 0 144 0 46.8 86-32 192-32S384 46.8 384 144zm0 368c-94.1 0-172.4-62.1-188.8-144 120-1.5 224.3-86.9 235.8-202.7 83.3 19.2 145 88.3 145 170.7 0 39.6-14.3 76.2-38.4 105.6l35.6 67.2c4.9 9.3 3.2 20.7-4.2 28.2s-18.9 9.2-28.2 4.2L459.2 498c-23.1 9-48.5 14-75.2 14z"/></svg>',
+  trash:    '<svg viewBox="0 0 448 512" fill="currentColor"><path d="M136.7 5.9C141.1-7.2 153.3-16 167.1-16l113.9 0c13.8 0 26 8.8 30.4 21.9L320 32 416 32c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 8.7-26.1zM32 144l384 0 0 304c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-304zm88 64c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24z"/></svg>',
+  copy:     '<svg viewBox="0 0 448 512" fill="currentColor"><path d="M192 0c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64l192 0c35.3 0 64-28.7 64-64l0-200.6c0-17.4-7.1-34.1-19.7-46.2L370.6 17.8C358.7 6.4 342.8 0 326.3 0L192 0zM64 128c-35.3 0-64 28.7-64 64L0 448c0 35.3 28.7 64 64 64l192 0c35.3 0 64-28.7 64-64l0-16-64 0 0 16-192 0 0-256 16 0 0-64-16 0z"/></svg>',
+  translate:'<svg viewBox="0 0 576 512" fill="currentColor"><path d="M160 0c17.7 0 32 14.3 32 32l0 32 128 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-9.6 0-8.4 23.1c-16.4 45.2-41.1 86.5-72.2 122 14.2 8.8 29 16.6 44.4 23.5l50.4 22.4 62.2-140c5.1-11.6 16.6-19 29.2-19s24.1 7.4 29.2 19l128 288c7.2 16.2-.1 35.1-16.2 42.2s-35.1-.1-42.2-16.2l-20-45-157.5 0-20 45c-7.2 16.2-26.1 23.4-42.2 16.2s-23.4-26.1-16.2-42.2l39.8-89.5-50.4-22.4c-23-10.2-45-22.4-65.8-36.4-21.3 17.2-44.6 32.2-69.5 44.7L78.3 380.6c-15.8 7.9-35 1.5-42.9-14.3s-1.5-35 14.3-42.9l34.5-17.3c16.3-8.2 31.8-17.7 46.4-28.3-13.8-12.7-26.8-26.4-38.9-40.9L81.6 224.7c-11.3-13.6-9.5-33.8 4.1-45.1s33.8-9.5 45.1 4.1l10.2 12.2c11.5 13.9 24.1 26.8 37.4 38.7 27.5-30.4 49.2-66.1 63.5-105.4l.5-1.2-210.3 0C14.3 128 0 113.7 0 96S14.3 64 32 64l96 0 0-32c0-17.7 14.3-32 32-32zM416 270.8L365.7 384 466.3 384 416 270.8z"/></svg>',
+  report:   '<svg viewBox="0 0 448 512" fill="currentColor"><path d="M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32L0 480c0 17.7 14.3 32 32 32s32-14.3 32-32l0-121.6 62.7-18.8c41.9-12.6 87.1-8.7 126.2 10.9 42.7 21.4 92.5 24 137.2 7.2l37.1-13.9c12.5-4.7 20.8-16.6 20.8-30l0-247.7c0-23-24.2-38-44.8-27.7l-11.8 5.9c-44.9 22.5-97.8 22.5-142.8 0-36.4-18.2-78.3-21.8-117.2-10.1L64 54.4 64 32z"/></svg>',
+};
+function _faMsg(name, size = 14) {
+  const raw = _faMsgIcons[name] || '';
+  return raw.replace('<svg ', `<svg width="${size}" height="${size}" `);
+}
+// Add-Reaction icon mirrors the chatbar emoji-picker opener (svgrepo emoji-laugh).
+const _ADD_REACTION_ICON_HTML = '<img class="svgrepo-icon" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false" style="width:16px;height:16px;">';
 
 // ── Translate message using browser built-in or fallback ──
 async function _translateMessage(msgRow, text) {

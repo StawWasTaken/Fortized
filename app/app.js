@@ -6807,35 +6807,33 @@ async function sendDM() {
   _removeNewMsgBar('dm-msgs');
   const isOutline = _outlineMode;
   _outlineMode = false;
-  const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline,flags:msgFlags.length ? msgFlags : undefined};
-  // Optimistic render — show message immediately for sender
+  // Pre-generate the canonical id we use everywhere — optimistic UI,
+  // Socket.IO emit, AND Supabase row. That way receivers see the same id
+  // on every channel and there's no second render when polling later
+  // picks up the persisted row.
+  const canonicalId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  const msg={id:canonicalId,from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline,flags:msgFlags.length ? msgFlags : undefined};
   const msgsEl = document.getElementById('dm-msgs');
   if (msgsEl) {
     const lastRows = msgsEl.querySelectorAll('.msg-row');
     const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
     appendMessage(msgsEl, msg, 'dm', lastAuthor);
     scrollBottom('dm-msgs');
-    // Register the optimistic row so the server echo reconciles by content instead of spawning a duplicate
     const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
     _registerPendingSend('dm:'+[CU.username, curDM].sort().join('__'), CU.username, text, _optimRow);
   }
+  // Fire the Socket.IO notification BEFORE awaiting Supabase. The
+  // Supabase insert is for persistence; receivers shouldn't wait on it
+  // to see the message. Was the root cause of 5–10s delivery delays.
+  FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: msg });
   try {
-    // Hard 15s timeout: if Supabase hangs (rare but it happens — slow
-    // connection, regional outage), the optimistic row was previously
-    // stuck in "sending..." forever with no feedback. Now it visibly
-    // fails with a Retry button after 15s.
-    const sendOpts = {};
+    const sendOpts = { id: canonicalId };
     if (msgFlags.length) sendOpts.flags = msgFlags;
     if (rep) sendOpts.replyTo = rep;
-    const savedMsg = await _withSendTimeout(
-      FortizedSocial.sendDMMessage(CU.username, curDM, text, Object.keys(sendOpts).length ? sendOpts : undefined),
+    await _withSendTimeout(
+      FortizedSocial.sendDMMessage(CU.username, curDM, text, sendOpts),
       15000
     );
-    if (savedMsg?.id && msgsEl) {
-      const localRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
-      if (localRow) localRow.dataset.msgid = savedMsg.id;
-    }
-    FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: savedMsg || msg });
     _trackSendMsgQuest();
   } catch (e) {
     console.error('[sendDM Error]', e.message);
@@ -8384,8 +8382,9 @@ async function sendChannelMsg(idx) {
   _removeNewMsgBar('ch-msgs-'+idx);
   const isOutline = _outlineMode;
   _outlineMode = false;
-  const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
-  // Optimistic render — show message immediately for sender
+  // Canonical id shared by optimistic UI + Socket.IO emit + Supabase row.
+  const canonicalId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  const msg={id:canonicalId,from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
   const msgsEl = document.getElementById('ch-msgs-'+idx);
   if (msgsEl) {
     const lastRows = msgsEl.querySelectorAll('.msg-row');
@@ -8395,21 +8394,18 @@ async function sendChannelMsg(idx) {
     const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
     _registerPendingSend('bastion:'+(b.globalId||b.name)+':'+ch.name, CU.username, text, _optimRow);
   }
-  // Award message reputation
   awardMessageRep(b.globalId||b.name, CU.username);
   _trackSendMsgQuest();
+  // Fire Socket.IO before awaiting Supabase — receivers get the message
+  // in real time instead of waiting on our persistence round-trip.
+  FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: msg });
   try {
-    // 15s timeout: prevents hung sends from leaving the row stuck.
-    const savedMsg = await _withSendTimeout(
-      FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text, rep ? { replyTo: rep } : undefined),
+    const sendOpts = { id: canonicalId };
+    if (rep) sendOpts.replyTo = rep;
+    await _withSendTimeout(
+      FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text, sendOpts),
       15000
     );
-    // Update the local message ID to match Supabase ID (for edit/delete)
-    if (savedMsg?.id && msgsEl) {
-      const localRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
-      if (localRow) localRow.dataset.msgid = savedMsg.id;
-    }
-    FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: savedMsg || msg });
   } catch (e) {
     console.error('[sendChannelMsg Error]', e?.message);
     _markMessageFailed(msgsEl, msg.id, { kind: 'ch', bastion: b.globalId||b.name, channel: ch.name, text, replyTo: rep });

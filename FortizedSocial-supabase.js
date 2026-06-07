@@ -895,10 +895,15 @@ const FortizedSocial = (() => {
     fromUsername = norm(fromUsername);
     toUsername   = norm(toUsername);
     const key = _dmKey(fromUsername, toUsername);
-    _cacheInvalidatePrefix('dm:' + key); // Clear DM cache for this conversation
+    _cacheInvalidatePrefix('dm:' + key);
     const now = new Date();
+    // Use the caller's pre-generated id if provided. Lets the caller
+    // emit Socket.IO with the same id BEFORE awaiting this insert, so
+    // receivers see the message instantly instead of waiting for the
+    // Supabase round-trip (root cause of the 10s delivery delay).
+    const msgId = (opts && opts.id) || (Date.now().toString(36) + Math.random().toString(36).slice(2));
     const msg = {
-      id:        Date.now().toString(36) + Math.random().toString(36).slice(2),
+      id:        msgId,
       from:      fromUsername,
       text,
       time:      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -1050,7 +1055,7 @@ const FortizedSocial = (() => {
 
   async function sendBastionChannelMessage(bastionId, channelId, fromUsername, text, opts) {
     const now = new Date();
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    const id = (opts && opts.id) || (Date.now().toString(36) + Math.random().toString(36).slice(2));
     const msg = {
       id,
       from: norm(fromUsername),

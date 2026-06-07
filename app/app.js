@@ -9252,12 +9252,14 @@ function appendMessage(container, msg, context, prevAuthor) {
     const rSafe = escapeHTML(rFrom);
     const rText = escapeHTML((msg.replyTo.text||'').slice(0,80));
     const rAvId = 'rav-' + (msg.id||'').replace(/[^a-z0-9]/gi,'-');
-    replyHTML = `<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><span class="mrr-av" id="${rAvId}">${buildAvatarHTML(null, rFrom, 16)}</span><strong>${rSafe}</strong><span class="mrr-preview">${rText || '<em style="opacity:.4">click to view</em>'}</span></div>`;
-    // Hydrate the replied-to user's real PFP asynchronously so cached
-    // listings render fast and avatars fill in.
-    if (rFrom) {
+    // Cache-first paint so the avatar shows immediately instead of
+    // flashing the default placeholder for the hydration round-trip.
+    const cachedReplyPfp = (rFrom === CU?.username) ? (CU?.pfp || null) : (_pfpCache[rFrom] || null);
+    replyHTML = `<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><span class="mrr-av" id="${rAvId}">${buildAvatarHTML(cachedReplyPfp, rFrom, 18)}</span><strong>${rSafe}</strong><span class="mrr-preview">${rText || '<em style="opacity:.4">click to view</em>'}</span></div>`;
+    // Hydrate only if we didn't already have a cached pfp.
+    if (rFrom && !cachedReplyPfp) {
       Promise.resolve().then(() => FortizedSocial.getUserByName(rFrom)).then(u => {
-        if (u?.pfp) { const el = document.getElementById(rAvId); if (el) el.innerHTML = buildAvatarHTML(u.pfp, rFrom, 16); }
+        if (u?.pfp) { _pfpCache[rFrom] = u.pfp; const el = document.getElementById(rAvId); if (el) el.innerHTML = buildAvatarHTML(u.pfp, rFrom, 18); }
       }).catch(()=>{});
     }
   }

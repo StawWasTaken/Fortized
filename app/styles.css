@@ -971,7 +971,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    reply-ref's bottom edge so it visually meets the top of the big
    avatar in the row below. */
 .msg-reply-ref{flex-basis:100%;width:100%;display:flex;align-items:center;gap:7px;padding:0 0 2px 62px;margin:2px 0 0 0;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;line-height:1.35;position:relative;min-width:0;transition:color .12s;}
-.msg-reply-ref::before{content:"";position:absolute;left:31px;top:50%;bottom:-12px;width:31px;border-left:2px solid rgba(255,255,255,.22);border-top:2px solid rgba(255,255,255,.22);border-top-left-radius:9px;pointer-events:none;}
+.msg-reply-ref::before{content:"";position:absolute;left:31px;top:32%;bottom:-14px;width:31px;border-left:2px solid rgba(255,255,255,.22);border-top:2px solid rgba(255,255,255,.22);border-top-left-radius:9px;pointer-events:none;}
 .msg-reply-ref:hover{color:rgba(255,255,255,.95);}
 .msg-reply-ref:hover::before{border-color:rgba(255,255,255,.42);}
 .msg-reply-ref .mrr-av{width:18px;height:18px;border-radius:50%;flex-shrink:0;overflow:hidden;background:var(--panel);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}

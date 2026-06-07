@@ -9762,6 +9762,10 @@ async function _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _c
         return;
       }
 
+      // Auto-unpin: if the deleted message was pinned, drop it from
+      // the local pin list so the panel doesn't keep a dead reference.
+      _unpinIfPresent(msgId, ctx, _curDM, _curGC, _curBastion, _curChannel);
+
       // Broadcast deletion to other users via Socket.io
       {
         let _dType = ctx, _dId1, _dId2;
@@ -35872,6 +35876,40 @@ function pinMessage(msgId, text) {
   savePinnedMessages(null, pins);
   toast('Message pinned!','success');
   if (document.getElementById('pins-panel')) showPinnedMessages();
+  // System message in bastion channels — DMs/GCs have no system message path
+  if (!curDM && !(typeof curGC !== 'undefined' && curGC) && curBastion !== null) {
+    const b = CU?.bastions?.[curBastion];
+    const ch = b?.channels?.[curChannel];
+    const bid = b?.globalId || b?.name;
+    const chName = ch?.name;
+    if (bid && chName) {
+      const preview = (text||'').slice(0,60).replace(/\n/g,' ');
+      const sysText = `📌 **${CU.username}** pinned a message${preview ? ': "'+preview+(text.length>60?'…':'')+'"' : '.'}`;
+      try { FortizedSocial.sendBastionChannelMessage(bid, chName, '__system__', sysText); } catch(e) { _dbg('[Pin] System msg failed:', e?.message); }
+    }
+  }
+}
+
+// Remove a pin entry from the current conversation's pin list if present.
+// Called from _executeDeleteMsg so deleting a pinned message auto-unpins it
+// for the deleter.
+function _unpinIfPresent(msgId, ctx, _curDM, _curGC, _curBastion, _curChannel) {
+  let key = null;
+  if (ctx === 'dm' && _curDM) key = 'ftz_pins_dm_' + _curDM;
+  else if (ctx === 'gc' && _curGC) key = 'ftz_pins_gc_' + _curGC;
+  else if (ctx === 'ch' || ctx === 'channel' || ctx === 'bastion') {
+    const b = CU?.bastions?.[_curBastion];
+    key = 'ftz_pins_ch_' + (b?.globalId || _curBastion) + '_' + _curChannel;
+  }
+  if (!key) return;
+  try {
+    const arr = JSON.parse(localStorage.getItem(key) || '[]');
+    const next = arr.filter(p => p.id !== msgId);
+    if (next.length !== arr.length) {
+      localStorage.setItem(key, JSON.stringify(next));
+      if (document.getElementById('pins-panel')) showPinnedMessages();
+    }
+  } catch {}
 }
 function showPinnedMessages() {
   const pins = getPinnedMessages();
@@ -35894,8 +35932,12 @@ function showPinnedMessages() {
       <button onclick="_closeEl('pins-panel');_closeEl('pins-panel-overlay')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
     </div>
     <div id="pins-list-content" style="flex:1;overflow-y:auto;padding:10px 14px;">${pins.length
-      ? pins.map((p,i) => `<div class="asr-item" style="margin-bottom:4px;">
-          <div class="asr-av">${buildAvatarHTML(null, p.from || '', 32)}</div>
+      ? pins.map((p,i) => {
+          // Paint from _pfpCache instantly so the avatar isn't a default
+          // placeholder for the half-second hydration round-trip.
+          const cachedPfp = (p.from === CU?.username) ? (CU?.pfp || null) : (_pfpCache[p.from] || null);
+          return `<div class="asr-item ftz-pin-item" data-pin-id="${escapeHTML(p.id)}" data-pin-idx="${i}" style="margin-bottom:4px;cursor:pointer;">
+          <div class="asr-av" data-pin-av="${escapeHTML(p.from||'')}">${buildAvatarHTML(cachedPfp, p.from || '', 32)}</div>
           <div class="asr-body" style="flex:1;min-width:0;">
             <div class="asr-meta">
               <span class="asr-from">${escapeHTML(p.from || '')}</span>
@@ -35903,26 +35945,36 @@ function showPinnedMessages() {
             </div>
             <div class="asr-text">${escapeHTML(p.text)}</div>
           </div>
-          <button data-unpin-idx="${i}" data-unpin-id="${CSS.escape(p.id)}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.3);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;" title="Unpin" onmouseover="this.style.color='var(--red)';this.style.background='rgba(248,113,113,.1)'" onmouseout="this.style.color='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.04)'">✕</button>
-        </div>`).join('')
+          <button data-unpin-idx="${i}" data-unpin-id="${escapeHTML(p.id)}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.3);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;" title="Unpin" onmouseover="this.style.color='var(--red)';this.style.background='rgba(248,113,113,.1)'" onmouseout="this.style.color='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.04)'">✕</button>
+        </div>`;
+        }).join('')
       : '<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,.2);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg><div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:4px;">No pinned messages</div><div style="font-size:12px;opacity:.6;">Right-click a message to pin it.</div></div>'
     }</div>`;
   document.body.appendChild(panel);
-  // Wire unpin buttons via delegation
+  // Wire unpin buttons + click-to-scroll via delegation
   panel.querySelector('#pins-list-content')?.addEventListener('click', e => {
-    const btn = e.target.closest('[data-unpin-idx]');
-    if (btn) { unpinMessage(btn.dataset.unpinId, parseInt(btn.dataset.unpinIdx)); }
+    const unpinBtn = e.target.closest('[data-unpin-idx]');
+    if (unpinBtn) {
+      e.stopPropagation();
+      unpinMessage(unpinBtn.dataset.unpinId, parseInt(unpinBtn.dataset.unpinIdx));
+      return;
+    }
+    const item = e.target.closest('.ftz-pin-item');
+    if (item) {
+      const pinId = item.dataset.pinId;
+      _closeEl('pins-panel'); _closeEl('pins-panel-overlay');
+      // Defer so the panel close animation doesn't fight the scroll.
+      setTimeout(() => scrollToMsg(pinId), 60);
+    }
   });
-  // Deferred PFP loading for pinned messages
+  // Deferred PFP hydration for pinned authors not yet in cache.
   pins.forEach(p => {
     if (!p.from) return;
     FortizedSocial.getUserByName(p.from).then(u => {
       if (!u?.pfp) return;
-      panel.querySelectorAll(`.asr-av`).forEach(av => {
-        const parent = av.closest('.asr-item');
-        if (parent?.querySelector('.asr-from')?.textContent === p.from) {
-          av.innerHTML = buildAvatarHTML(u.pfp, p.from, 32);
-        }
+      _pfpCache[p.from] = u.pfp;
+      panel.querySelectorAll(`[data-pin-av="${CSS.escape(p.from)}"]`).forEach(av => {
+        av.innerHTML = buildAvatarHTML(u.pfp, p.from, 32);
       });
     }).catch(()=>{});
   });

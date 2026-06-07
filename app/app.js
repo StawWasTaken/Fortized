@@ -9473,7 +9473,7 @@ function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) 
   const items = [];
   if (!isOwn) items.push({ icon: _ctxSvg('reply'), label: 'Reply', action: () => replyToMsg(msgId, from, context) });
   if (isOwn) items.push({ icon: _ctxSvg('edit'), label: 'Edit', action: () => editMsg(msgId) });
-  items.push({ icon: _ctxSvg('copy'), label: 'Copy Text', action: () => navigator.clipboard.writeText(document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`)?.dataset.text||''), copyFeedback: true });
+  items.push({ icon: _ctxSvg('copy'), label: 'Copy Text', action: () => navigator.clipboard.writeText(_splitFileTokens(document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`)?.dataset.text||'').stripped), copyFeedback: true });
   if (canPin) items.push({ icon: _ctxSvg('pin'), label: 'Pin Message', action: () => pinMessage(msgId, text) });
   if (inBastion) items.push({ icon: _ctxSvg('thread'), label: 'Create Thread', action: () => openThread(msgId, text, from) });
   items.push({ icon: _ctxSvg('globe'), label: 'Translate', action: () => { const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`); if (row) _translateMessage(row, row.dataset.text||''); } });
@@ -22143,7 +22143,7 @@ function handleContextMenu(e) {
         { icon: _ctxSvg('reply'), label: 'Reply', hint: 'R', action: () => replyToMsg(msgId, msgRow.querySelector('.msg-author')?.textContent || '', context) },
         { icon: _ctxSvg('emoji'), label: 'React', action: () => addReactionUI(msgId, context) },
         { icon: _ctxSvg('forward'), label: 'Forward', action: () => forwardMsg(text, _forwardOriginFromRow(msgRow)) },
-        { icon: _ctxSvg('copy'), label: 'Copy Text', hint: 'C', action: () => navigator.clipboard.writeText(text), copyFeedback: true },
+        { icon: _ctxSvg('copy'), label: 'Copy Text', hint: 'C', action: () => navigator.clipboard.writeText(_splitFileTokens(text).stripped), copyFeedback: true },
       ]
     };
 
@@ -22187,7 +22187,7 @@ function handleContextMenu(e) {
     // surface a quick "Mention <user>" shortcut so admins can DM/ping them.
     const mention = msgRow.querySelector('.sys-mention')?.dataset?.mention || null;
     const primary = [
-      { icon: _ctxSvg('copy'), label: 'Copy Text', action: () => navigator.clipboard.writeText(text), copyFeedback: true },
+      { icon: _ctxSvg('copy'), label: 'Copy Text', action: () => navigator.clipboard.writeText(_splitFileTokens(text).stripped), copyFeedback: true },
     ];
     if (mention) {
       primary.push({ icon: _ctxSvg('profile'), label: 'View @' + mention, action: () => showMiniProfilePreview(mention, msgRow) });
@@ -29182,7 +29182,7 @@ function parseMD(s) {
         + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>'
         + '</div>';
     }
-    return '<div style="margin:5px 0;display:inline-block;border-radius:10px;padding:0;overflow:hidden;">'
+    return '<div style="margin:6px 0 2px 0;display:block;border-radius:10px;padding:0;overflow:hidden;max-width:360px;">'
       + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">'
       + '</div>';
   });

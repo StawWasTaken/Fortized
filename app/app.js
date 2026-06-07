@@ -21993,17 +21993,30 @@ async function _translateMessage(msgRow, text) {
     const data = await res.json();
     if (data?.responseData?.translatedText) {
       const translated = data.responseData.translatedText;
+      const detectedLang = data?.responseData?.detectedLanguage || data?.matches?.[0]?.source || '';
+      // Skip the card if the API just echoed the original (already in target lang)
+      if (translated.trim().toLowerCase() === cleanText.trim().toLowerCase()) {
+        toast('Already in ' + targetLang.toUpperCase(), 'info');
+        return;
+      }
       // Show translation inline below message
-      let existingTr = msgRow.querySelector('.msg-translation');
-      if (existingTr) existingTr.remove();
+      msgRow.querySelector('.msg-translation')?.remove();
       const trDiv = document.createElement('div');
       trDiv.className = 'msg-translation';
-      trDiv.style.cssText = 'margin-top:6px;padding:8px 12px;background:rgba(254,248,61,.04);border:1px solid rgba(254,248,61,.1);border-radius:10px;font-size:12.5px;color:rgba(255,255,255,.65);line-height:1.55;';
-      trDiv.innerHTML = '<span style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(254,248,61,.4);display:block;margin-bottom:4px;">🌐 Translation</span>' + escapeHTML(translated);
+      const fromTag = detectedLang ? String(detectedLang).split('-')[0].toUpperCase() : '';
+      const arrow = fromTag ? `${fromTag} <span style="opacity:.4;">→</span> ${targetLang.toUpperCase()}` : targetLang.toUpperCase();
+      trDiv.innerHTML = `
+        <div class="msg-translation-head">
+          <span class="msg-translation-icon">${_faMsg('translate', 11)}</span>
+          <span class="msg-translation-label">Translation</span>
+          <span class="msg-translation-langs">${arrow}</span>
+          <button class="msg-translation-close" title="Dismiss" aria-label="Dismiss translation">×</button>
+        </div>
+        <div class="msg-translation-body">${escapeHTML(translated)}</div>`;
+      trDiv.querySelector('.msg-translation-close')?.addEventListener('click', e => { e.stopPropagation(); trDiv.remove(); });
       const textEl = msgRow.querySelector('.msg-text') || msgRow.querySelector('.msg-body');
       if (textEl) textEl.appendChild(trDiv);
       else msgRow.appendChild(trDiv);
-      toast('Translated!', 'success');
     } else { toast('Translation unavailable', 'error'); }
   } catch { toast('Translation failed — check your connection', 'error'); }
 }

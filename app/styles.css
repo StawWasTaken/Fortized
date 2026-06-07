@@ -970,6 +970,16 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    right under the small reply avatar. The vertical extends past the
    reply-ref's bottom edge so it visually meets the top of the big
    avatar in the row below. */
+/* Translate card — inline translation panel under a message */
+.msg-translation{margin-top:8px;padding:8px 12px 10px;background:linear-gradient(180deg,rgba(254,248,61,.05),rgba(254,248,61,.02));border:1px solid rgba(254,248,61,.14);border-radius:10px;font-size:13px;color:rgba(255,255,255,.78);line-height:1.55;animation:msg-translation-in .18s cubic-bezier(.22,1,.36,1);}
+@keyframes msg-translation-in{from{opacity:0;transform:translateY(-3px);}to{opacity:1;transform:translateY(0);}}
+.msg-translation-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.msg-translation-icon{color:rgba(254,248,61,.7);display:inline-flex;align-items:center;}
+.msg-translation-label{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:rgba(254,248,61,.55);}
+.msg-translation-langs{font-size:9.5px;font-weight:700;color:rgba(255,255,255,.42);letter-spacing:.05em;margin-left:2px;}
+.msg-translation-close{margin-left:auto;background:transparent;border:none;color:rgba(255,255,255,.3);font-size:16px;line-height:1;cursor:pointer;padding:0 4px;border-radius:4px;transition:color .12s,background .12s;}
+.msg-translation-close:hover{color:#fff;background:rgba(255,255,255,.06);}
+.msg-translation-body{font-size:13px;color:rgba(255,255,255,.82);line-height:1.5;word-break:break-word;}
 .msg-reply-ref{flex-basis:100%;width:100%;display:flex;align-items:center;gap:7px;padding:0 0 2px 62px;margin:2px 0 0 0;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;line-height:1.35;position:relative;min-width:0;transition:color .12s;}
 .msg-reply-ref::before{content:"";position:absolute;left:31px;top:32%;bottom:-14px;width:31px;border-left:2px solid rgba(255,255,255,.22);border-top:2px solid rgba(255,255,255,.22);border-top-left-radius:9px;pointer-events:none;}
 .msg-reply-ref:hover{color:rgba(255,255,255,.95);}

@@ -9951,24 +9951,45 @@ async function forwardTo(type, target) {
     if (type === 'dm') {
       const extra = { forwarded: true, forwardedBy: CU.username };
       if (forwardedFrom) extra.forwardedFrom = forwardedFrom;
-      await FortizedSocial.sendDMMessage(CU.username, target, text, extra);
+      const saved = await FortizedSocial.sendDMMessage(CU.username, target, text, extra);
+      const msgForSocket = saved || { from: CU.username, text, timestamp: new Date().toISOString(), forwarded: true, forwardedBy: CU.username, forwardedFrom };
+      FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: target, message: msgForSocket });
       toast('Forwarded to ' + target, 'success');
     } else if (type === 'gc') {
       const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
       if (forwardedFrom) msgObj.forwardedFrom = forwardedFrom;
+      // Firebase compat shim routes this to sb.from('group_chat_messages')
+      // and stores the full msgObj in the `data` JSONB column, so
+      // forwardedFrom survives.
       await firebase.database().ref('groupChats/' + target + '/messages').push(msgObj);
+      FortizedSocial.socketEmit('message:send', { type: 'gc', id1: target, message: msgObj });
       toast('Forwarded to group chat', 'success');
     } else if (type === 'bastion') {
       const [bi, chId] = target.split(':');
       const b = CU.bastions?.[parseInt(bi)];
-      if (b) {
-        const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
-        if (forwardedFrom) msgObj.forwardedFrom = forwardedFrom;
-        await firebase.database().ref('bastionMsgs/' + (b.globalId || b.name) + '/' + chId).push(msgObj);
-        toast('Forwarded to #' + ((b.channels||[]).find(c=>c.id===chId)?.name || chId), 'success');
+      const ch = b?.channels?.find(c => c.id === chId);
+      if (b && ch) {
+        // Bug fix: previously this wrote to firebase.database() under
+        // channel_id=ch.id, but every real bastion send (and read) uses
+        // channel_id=ch.name. Forwards landed in a phantom row no
+        // reader watched. Route through the canonical send fn.
+        const bid = b.globalId || b.name;
+        const sendOpts = {};
+        // Reuse the same pre-generated id pattern as live sends so the
+        // socket-emit + DB insert share the id.
+        sendOpts.id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+        const saved = await FortizedSocial.sendBastionChannelMessage(bid, ch.name, CU.username, text, sendOpts);
+        const msgForSocket = saved || { id: sendOpts.id, from: CU.username, text, timestamp: new Date().toISOString() };
+        msgForSocket.forwarded = true;
+        msgForSocket.forwardedBy = CU.username;
+        if (forwardedFrom) msgForSocket.forwardedFrom = forwardedFrom;
+        FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: bid, id2: ch.name, message: msgForSocket });
+        toast('Forwarded to #' + ch.name, 'success');
+      } else {
+        toast('Forward target not found', 'error');
       }
     }
-  } catch { toast('Forward failed', 'error'); }
+  } catch (e) { console.error('[forwardTo] failed:', e?.message||e); toast('Forward failed', 'error'); }
   finally { _forwardOrigin = null; }
 }
 async function forwardToDM(username) {

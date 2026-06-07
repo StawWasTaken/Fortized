@@ -46261,7 +46261,7 @@ function openThread(msgId, text, from) {
   const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
   const bid = b?.globalId||b?.name; const chName = ch?.name||'general';
   if (!bid) return;
-  _activeThread = { msgId, text, from, bid, chName };
+  _activeThread = { msgId, text, from, bid, chName, replyCount: 0 };
   document.getElementById('thread-panel')?.remove();
   document.getElementById('thread-panel-overlay')?.remove();
   // Overlay
@@ -46273,40 +46273,73 @@ function openThread(msgId, text, from) {
   const panel = document.createElement('div');
   panel.className = 'thread-panel-v2';
   panel.id = 'thread-panel';
+  // Cache-first avatar for the thread origin.
+  const originPfp = (from === CU?.username) ? (CU?.pfp || null) : (_pfpCache[from] || null);
+  const originAvId = 'thread-origin-av';
+  // Channel context line so people opening a thread from a deep link
+  // immediately see where it lives.
+  const chLabel = ch?.name ? `#${escapeHTML(ch.name)}` : '';
+  const bLabel = b?.name ? escapeHTML(b.name) : '';
   panel.innerHTML = `
-    <div class="thread-panel-header" style="padding:18px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span style="font-family:var(--font-display);font-size:17px;font-weight:800;flex:1;color:#fff;">Thread</span>
-      <button onclick="_closeThread()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
-    </div>
-    <div class="thread-origin" style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.015);">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-        ${buildAvatarHTML(null, from, 24)}
-        <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7);">${escapeHTML(from)}</span>
+    <div class="thread-panel-header" style="padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <span style="color:var(--accent);display:inline-flex;align-items:center;">${_faMsg('thread', 16)}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:#fff;line-height:1.1;">Thread</div>
+        <div style="font-size:10.5px;color:rgba(255,255,255,.35);letter-spacing:.04em;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${bLabel}${bLabel&&chLabel?' • ':''}${chLabel}</div>
       </div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.5;padding-left:32px;">${escapeHTML(text.slice(0,200))}</div>
+      <button onclick="_closeThread()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" title="Close thread (Esc)">✕</button>
     </div>
-    <div class="thread-replies" id="thread-replies" style="flex:1;overflow-y:auto;padding:8px 14px;"></div>
+    <div class="thread-origin" style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.015);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span id="${originAvId}" style="width:24px;height:24px;border-radius:50%;overflow:hidden;flex-shrink:0;display:inline-block;">${buildAvatarHTML(originPfp, from, 24)}</span>
+        <span style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.8);">${escapeHTML(from)}</span>
+        <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-left:auto;">Origin</span>
+      </div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.55;padding-left:32px;word-break:break-word;">${escapeHTML(text.slice(0,400))}${text.length>400?'…':''}</div>
+    </div>
+    <div class="thread-replies" id="thread-replies" style="flex:1;overflow-y:auto;padding:10px 14px;"></div>
     <div class="typing-indicator" id="thread-typing-bar" style="opacity:0;padding:4px 14px 2px;">
       <div class="typing-dots"><span></span><span></span><span></span></div>
       <span id="thread-typing-text"></span>
     </div>
-    <div class="thread-compose" style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.05);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
-      <textarea id="thread-input" placeholder="Reply to thread…" rows="1" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;padding:8px 12px;font-family:inherit;font-size:12.5px;resize:none;min-height:36px;max-height:100px;outline:none;transition:border-color .15s;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}" oninput="_broadcastThreadTyping()"></textarea>
-      <button onclick="_sendThreadReply()" style="padding:8px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .12s;" onmouseover="this.style.background='var(--accent)';this.style.color='#0f1119'" onmouseout="this.style.background='var(--accent-dim)';this.style.color='var(--accent)'">Reply</button>
+    <div class="thread-compose" style="padding:12px 14px;border-top:1px solid rgba(255,255,255,.05);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
+      <textarea id="thread-input" placeholder="Reply to thread…" rows="1" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;padding:9px 12px;font-family:inherit;font-size:13px;resize:none;min-height:38px;max-height:120px;outline:none;transition:border-color .15s;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}" oninput="_broadcastThreadTyping()"></textarea>
+      <button onclick="_sendThreadReply()" style="padding:9px 16px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:10px;color:var(--accent);font-size:12.5px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .12s;" onmouseover="this.style.background='var(--accent)';this.style.color='#0f1119'" onmouseout="this.style.background='var(--accent-dim)';this.style.color='var(--accent)'">Reply</button>
     </div>`;
   document.body.appendChild(panel);
+  // Hydrate origin avatar if we didn't have it cached.
+  if (from && !originPfp) {
+    FortizedSocial.getUserByName(from).then(u => {
+      if (!u?.pfp) return;
+      _pfpCache[from] = u.pfp;
+      const el = document.getElementById(originAvId);
+      if (el) el.innerHTML = buildAvatarHTML(u.pfp, from, 24);
+    }).catch(()=>{});
+  }
   _listenThreadReplies(bid, chName, msgId);
   _listenThreadTyping(bid, chName, msgId);
+  // Esc-to-close
+  if (!_threadEscBound) {
+    _threadEscBound = true;
+    document.addEventListener('keydown', _threadEscHandler);
+  }
+}
+let _threadEscBound = false;
+function _threadEscHandler(e) {
+  if (e.key === 'Escape' && document.getElementById('thread-panel')) {
+    e.preventDefault();
+    _closeThread();
+  }
 }
 function _closeThread() {
   _stopThreadTypingBroadcast();
   if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch(e) { _dbg('[Thread] typing listener cleanup failed', e); } _threadTypingListenerOff = null; }
   if (_threadListener) { _threadListener(); _threadListener = null; }
   _activeThread = null;
+  if (_threadEscBound) { document.removeEventListener('keydown', _threadEscHandler); _threadEscBound = false; }
   _closeEl('thread-panel-overlay');
   const p = document.getElementById('thread-panel');
-  if (p) { p.style.opacity='0'; p.style.transform='translate(-50%,-50%) scale(.95)'; p.style.transition='all .15s ease'; setTimeout(()=>p.remove(),150); }
+  if (p) { p.style.transition='transform .15s ease, opacity .15s ease'; p.style.transform='translateX(20px)'; p.style.opacity='0'; setTimeout(()=>p.remove(),160); }
 }
 function _listenThreadReplies(bid, chName, msgId) {
   if (_threadListener) _threadListener();
@@ -46321,16 +46354,54 @@ function _listenThreadReplies(bid, chName, msgId) {
 function _renderThreadReplies(replies) {
   const container = document.getElementById('thread-replies');
   if (!container) return;
-  if (!replies.length) { container.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--muted);font-size:12px;">No replies yet. Start the conversation!</div>'; return; }
-  container.innerHTML = replies.map(r => `
-    <div class="thread-reply">
-      <div class="tr-av">${buildAvatarHTML(null,r.from||'',28)}</div>
+  if (_activeThread) _activeThread.replyCount = replies.length;
+  if (!replies.length) {
+    container.innerHTML = `<div style="text-align:center;padding:40px 16px;color:rgba(255,255,255,.3);">
+      <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">No replies yet</div>
+      <div style="font-size:12px;opacity:.75;">Be the first to start this thread.</div>
+    </div>`;
+    return;
+  }
+  const ctx = 'ch';
+  container.innerHTML = replies.map(r => {
+    const isSystem = (r.from === '__system__') || r._system === true;
+    if (isSystem) {
+      return `<div class="thread-reply is-system">
+        <div class="tr-av" style="width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);">${_faMsg('thread', 14)}</div>
+        <div class="tr-body">
+          <div class="tr-text">${parseMD(escapeHTML(r.text||''))}</div>
+        </div>
+      </div>`;
+    }
+    const cachedReplyPfp = (r.from === CU?.username) ? (CU?.pfp || null) : (_pfpCache[r.from] || null);
+    const avId = 'tra-' + (r._key || r.id || Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/gi,'-');
+    const roleColor = getMsgRoleColor(r.from, ctx);
+    const stripe = roleColor ? `<div class="tr-role-stripe" style="background:${roleColor};"></div>` : '';
+    const time = r.timestamp ? new Date(r.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="thread-reply" data-from="${escapeHTML(r.from||'')}">${stripe}
+      <div class="tr-av" id="${avId}">${buildAvatarHTML(cachedReplyPfp, r.from||'', 28)}</div>
       <div class="tr-body">
-        <div class="tr-meta"><span class="tr-name">${escapeHTML(r.from||'')}</span><span class="tr-time">${r.timestamp?new Date(r.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''}</span></div>
+        <div class="tr-meta">
+          <span class="tr-name" style="${roleColor?'color:'+roleColor+';':''}">${escapeHTML(r.from||'')}</span>
+          <span class="tr-time">${time}</span>
+        </div>
         <div class="tr-text">${parseMD(escapeHTML(r.text||''))}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   container.scrollTop = container.scrollHeight;
+  // Backfill non-cached avatars
+  replies.forEach(r => {
+    if (!r.from || r.from === '__system__') return;
+    if (_pfpCache[r.from] || r.from === CU?.username) return;
+    FortizedSocial.getUserByName(r.from).then(u => {
+      if (!u?.pfp) return;
+      _pfpCache[r.from] = u.pfp;
+      container.querySelectorAll(`[data-from="${CSS.escape(r.from)}"] .tr-av`).forEach(av => {
+        av.innerHTML = buildAvatarHTML(u.pfp, r.from, 28);
+      });
+    }).catch(()=>{});
+  });
 }
 async function _sendThreadReply() {
   if (!_activeThread) return;
@@ -46339,17 +46410,30 @@ async function _sendThreadReply() {
   if (!text) return;
   input.value = '';
   _stopThreadTypingBroadcast();
-  const { bid, chName, msgId } = _activeThread;
+  const { bid, chName, msgId, replyCount } = _activeThread;
+  // If this is the first reply, post a system message in the parent
+  // channel so the channel sees the thread was created. (Discord does
+  // the same: 'X started a thread from Y'.)
+  const isFirstReply = (replyCount || 0) === 0;
+  if (isFirstReply) {
+    const fromName = _activeThread.from || '';
+    const previewSrc = (_activeThread.text || '').slice(0, 60).replace(/\n/g,' ');
+    const previewTag = previewSrc ? `: "${previewSrc}${(_activeThread.text||'').length>60?'…':''}"` : '';
+    const sysText = `🧵 **${CU.username}** started a thread on ${fromName?`**${fromName}**'s message`:'a message'}${previewTag}`;
+    try { FortizedSocial.sendBastionChannelMessage(bid, chName, '__system__', sysText); } catch(e) { _dbg('[Thread] System msg failed:', e?.message); }
+  }
   const reply = { from: CU.username, text, timestamp: new Date().toISOString() };
   try {
     await firebase.database().ref(`threads/${bid}/${chName}/${msgId}`).push(reply);
     // Update thread count on the parent message
     const countRef = firebase.database().ref(`threadCounts/${bid}/${chName}/${msgId}`);
     countRef.transaction(v => (v||0)+1);
+    // Track last reply time for the badge's "last active" stamp
+    firebase.database().ref(`threadCounts/${bid}/${chName}/${msgId}_lastTs`).set(Date.now());
     // Update thread badge on the parent message
     const safeParent = msgId.replace(/[^a-z0-9_\-]/gi, '-');
     _loadThreadBadge(bid, chName, msgId, safeParent, _activeThread.text||'', _activeThread.from||'');
-  } catch(e) { console.error('[Forum] Reply failed:', e); toast('Failed to reply. Please try again.','error'); }
+  } catch(e) { console.error('[Thread] Reply failed:', e); toast('Failed to reply. Please try again.','error'); }
 }
 
 // ── Thread typing indicator ───────────────────────
@@ -46403,14 +46487,20 @@ function _listenThreadTyping(bid, chName, msgId) {
 
 // ── Thread count badge loader ─────────────────────
 function _loadThreadBadge(bid, chName, msgId, safeId, text, from) {
-  firebase.database().ref(`threadCounts/${bid}/${chName}/${msgId}`).get().then(snap => {
-    const count = snap.val() || 0;
-    const slot = document.getElementById('thread-slot-' + safeId);
-    if (!slot) return;
+  const slot = document.getElementById('thread-slot-' + safeId);
+  if (!slot) return;
+  Promise.all([
+    firebase.database().ref(`threadCounts/${bid}/${chName}/${msgId}`).get(),
+    firebase.database().ref(`threadCounts/${bid}/${chName}/${msgId}_lastTs`).get(),
+  ]).then(([countSnap, tsSnap]) => {
+    const count = countSnap.val() || 0;
+    const lastTs = tsSnap.val();
     if (count > 0) {
+      const lastTag = lastTs ? `<span class="mtb-sep">·</span><span class="mtb-last">last ${formatTimeAgo(new Date(lastTs).toISOString())}</span>` : '';
       slot.innerHTML = `<div class="msg-thread-badge" onclick="openThread('${escapeHTML(msgId)}','${escapeHTML((text||'').slice(0,100).replace(/'/g,' '))}','${escapeHTML(from)}')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        ${count} ${count===1?'reply':'replies'}
+        ${_faMsg('thread', 12)}
+        <span class="mtb-count">${count} ${count===1?'reply':'replies'}</span>
+        ${lastTag}
       </div>`;
     } else {
       slot.innerHTML = '';

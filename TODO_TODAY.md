@@ -61,3 +61,19 @@ the current chat session that we agreed to tackle today.
 - Mutes persist on the account, not the device.
 - `chat-msgs-initial-loading` was hiding live messages → per-row tagging
   fix so real-time updates stay visible.
+- Messages disappearing on scroll-up → `_loadOlderMessages` shuffle bug
+  fixed (captured `lastChild` after dedup-rejected append).
+- Skeleton → blank gap eliminated (`display:none` + atomic reveal).
+- Profile reverting across devices → trust window 24h → 5min.
+- Typing indicator stuck on → 6s client-side auto-clear.
+- DM typing match → lenient substring (so future room-key changes don't
+  silently break it).
+- Image-lightbox zoom → `overflow:visible` on the wrap so `scale()`
+  actually grows the image instead of cropping it.
+- Userbar + embeds → use translucent surfaces so custom appearances
+  show through (was solid `#15171e` / `#1c1e22` before).
+- Reveal safety: try/catch + once-guard so a thrown reveal can't leave
+  messages stuck under `.msg-pre-reveal`.
+- "Failed to save data" toast: silenced for transient backend failures
+  (data is in localStorage; next save retries). Only surfaces when
+  actually offline.

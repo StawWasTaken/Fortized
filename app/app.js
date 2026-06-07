@@ -1132,7 +1132,17 @@ async function saveUser(immediate) {
       } catch(e) {
         console.warn('saveUser failed, retrying:', e);
         try { await new Promise(r => setTimeout(r, 1000)); await FortizedSocial.saveUserObject(CU); }
-        catch(e2) { console.error('saveUser retry failed:', e2); toast('Failed to save data. Check your connection.', 'error'); }
+        catch(e2) {
+          console.error('saveUser retry failed:', e2);
+          // Data is already in localStorage from saveLocal() above, so the
+          // user hasn't lost anything — it just hasn't synced yet. Only
+          // surface a toast for a genuinely offline state; for backend
+          // upsert failures (5xx, schema issue, row size, etc.) stay
+          // quiet and let the next saveUser() retry. Was falsely warning
+          // everyone about their connection on every transient backend
+          // hiccup.
+          if (!navigator.onLine) toast('Offline — changes saved locally and will sync on reconnect.', 'info');
+        }
       } finally { _saveUserPromise = null; _isSaving = false; }
     })();
     return _saveUserPromise;
@@ -8750,16 +8760,26 @@ function renderMessages(container, msgs, context) {
 // seeing text with broken embed slots than staring at the placeholder.
 function _revealAfterMediaSettle(container) {
   if (!container) return;
+  let revealed = false;
   const reveal = () => {
-    // Atomic swap: skeleton out, messages in, scroll snap to bottom if
-    // the user was hanging there. Reordering matters — remove the class
-    // FIRST so messages take layout, then drop the skeleton, then pin.
-    container.classList.remove('chat-msgs-initial-loading');
-    container.querySelectorAll('.msg-pre-reveal').forEach(el => el.classList.remove('msg-pre-reveal'));
-    container.querySelector('.msg-skel-stack')?.remove();
-    // After reveal, snap to bottom unless the user has actively scrolled
-    // away from it (small tolerance for the skeleton itself).
-    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+    if (revealed) return;
+    revealed = true;
+    try {
+      // Atomic swap: skeleton out, messages in, scroll snap to bottom if
+      // the user was hanging there. Reordering matters — remove the class
+      // FIRST so messages take layout, then drop the skeleton, then pin.
+      container.classList.remove('chat-msgs-initial-loading');
+      container.querySelectorAll('.msg-pre-reveal').forEach(el => el.classList.remove('msg-pre-reveal'));
+      container.querySelector('.msg-skel-stack')?.remove();
+      requestAnimationFrame(() => { try { container.scrollTop = container.scrollHeight; } catch{} });
+    } catch (e) {
+      console.warn('[Chat] reveal threw, dropping skeleton+class anyway:', e?.message);
+      // Belt-and-braces: if SOMETHING above threw, force-clear so messages
+      // can't be left stuck hidden behind .msg-pre-reveal forever.
+      try { container.classList.remove('chat-msgs-initial-loading'); } catch{}
+      try { container.querySelectorAll('.msg-pre-reveal').forEach(el => el.classList.remove('msg-pre-reveal')); } catch{}
+      try { container.querySelector('.msg-skel-stack')?.remove(); } catch{}
+    }
   };
   const mediaEls = Array.from(container.querySelectorAll('.msg-row img, .msg-row iframe, .msg-row video'));
   const pending = mediaEls.filter(el => {
@@ -12633,14 +12653,14 @@ function initFortizedUXResilience() {
         // overlay reads from. Done before bar updates so the dots and the
         // bar appear in the same paint cycle.
         try { _setRoomTypingUsers(roomLow, othersLower); _renderTypingBubbles(); } catch(_) {}
-        // DM typing \u2014 match by checking the room has both myName and curDM
-        // as participants (lenient: any "dm:" room that contains both).
+        // DM typing \u2014 lenient substring match. The strict split-on-"__"
+        // version broke silently any time the server's room-key format
+        // drifted (e.g. extra colon, percent-encoding). includes() catches
+        // both cases.
         if (roomLow.startsWith('dm:') && curDM) {
           const themLow = String(curDM).toLowerCase();
           const inner = roomLow.slice(3); // strip "dm:"
-          const parts = inner.split('__');
-          const matches = parts.includes(myName) && parts.includes(themLow);
-          if (matches) {
+          if (inner.includes(myName) && inner.includes(themLow)) {
             _showTypingBar('dm-typing-bar', 'dm-typing-text', others);
           }
         }

@@ -387,12 +387,11 @@ body.is-desktop-app .topbar{padding-right:0;}
 .ub-activity-action{display:none;}
 /* User row container — rounded to match chatbar */
 /* Userbar pill — matches .chat-input-outer exactly so the two bars
-   read as one component family. 60px tall like the composer. Solid
-   dark base under the alpha-tint so the page underneath doesn't
-   bleed through (was rgba .04 over transparency → visibly see-through
-   once the userbar got hoisted to body and stopped inheriting the
-   sidebar's solid background). */
-.ub-user-container{display:flex;align-items:center;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),#15171e;backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);border-radius:10px;height:60px;overflow:hidden;}
+   read as one component family AND the user's custom appearance shows
+   through both. Previously had a solid #15171e base to prevent
+   bleed-through; that broke custom appearances because the userbar
+   stopped being transparent. Returned to the alpha-only tint. */
+.ub-user-container{display:flex;align-items:center;background:rgba(255,255,255,.04);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);border-radius:10px;height:60px;overflow:hidden;}
 
 /* ── Userbar spans BOTH sidebars (sidebar + sidebar-ctx) ────────────
    The userbar is taken out of sidebar-ctx's column flow with
@@ -1385,7 +1384,11 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .mlb-meta{display:flex;flex-direction:column;min-width:0;}
 .mlb-name{font-size:13px;font-weight:700;color:#fff;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .mlb-time{font-size:11px;color:rgba(255,255,255,.5);line-height:1.2;margin-top:2px;}
-.mlb-image-wrap{display:flex;align-items:center;justify-content:center;max-width:90vw;max-height:70vh;overflow:hidden;border-radius:10px;}
+/* overflow:visible so transform:scale() actually GROWS the image instead
+   of just cropping inside a fixed-size box. The lightbox backdrop
+   contains the overflow visually (position:fixed; inset:0). Pan logic
+   handles navigation when the scaled image exceeds the viewport. */
+.mlb-image-wrap{display:flex;align-items:center;justify-content:center;max-width:90vw;max-height:70vh;overflow:visible;border-radius:10px;}
 .media-lightbox img.mlb-image{max-width:90vw;max-height:70vh;object-fit:contain;box-shadow:0 12px 60px rgba(0,0,0,.6);transition:transform .16s ease;user-select:none;-webkit-user-select:none;cursor:zoom-in;will-change:transform;}
 .mlb-toolbar{display:flex;align-items:center;gap:4px;padding:5px 8px;background:rgba(20,20,22,.65);border:1px solid rgba(255,255,255,.06);border-radius:12px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);position:relative;}
 .mlb-btn{background:transparent;border:none;color:rgba(255,255,255,.72);width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s,color .12s;padding:0;}
@@ -3499,11 +3502,14 @@ body.is-desktop-app .notif-panel{top:0;}
 .ftz-embed{
   --embed-accent:       var(--embed-color, #fef93d);
   --embed-accent-dim:   rgba(254,249,61,.12);
-  --embed-card-bg:      #1c1e22;
-  --embed-card-border:  #111214;
-  --embed-code-bg:      #111214;
-  --embed-footer-bg:    #111214;
-  --embed-footer-border:#0a0b0c;
+  /* Translucent so embeds follow the user's chosen appearance the same
+     way the chatbar + userbar do. Solid hex values used to lock embeds
+     to a dark colour even when the rest of the chat went translucent. */
+  --embed-card-bg:      rgba(255,255,255,.04);
+  --embed-card-border:  rgba(255,255,255,.08);
+  --embed-code-bg:      rgba(0,0,0,.22);
+  --embed-footer-bg:    rgba(0,0,0,.18);
+  --embed-footer-border:rgba(255,255,255,.04);
   --embed-text-title:   #ffffff;
   --embed-text-body:    #cfd1d4;
   --embed-text-muted:   #5c6370;

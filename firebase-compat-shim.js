@@ -1129,19 +1129,12 @@
     if (parts[0] === 'bastionMsgs' && parts.length >= 3) {
       const msg = val || {};
       msg.id = msg.id || key;
-      const row = {
+      await sb.from('bastion_msgs').insert({
         bastion_id: parts[1], channel_id: parts[2], id: msg.id,
         from: msg.from || null, text: msg.text || '',
         time: msg.time || null, timestamp: msg.timestamp || null,
         edited: false, reactions: null,
-      };
-      if (msg.forwarded) { row.forwarded = true; row.forwarded_by = msg.forwardedBy || msg.from || null; }
-      if (msg.forwardedFrom && typeof msg.forwardedFrom === 'object') row.forwarded_from = msg.forwardedFrom;
-      let res = await sb.from('bastion_msgs').insert(row);
-      if (res?.error && /column|does not exist/i.test(res.error.message || '')) {
-        delete row.forwarded; delete row.forwarded_by; delete row.forwarded_from;
-        await sb.from('bastion_msgs').insert(row);
-      }
+      });
       return { key: msg.id };
     }
 
@@ -1156,12 +1149,7 @@
         edited: false,
       };
       if (msg.forwarded) { row.forwarded = true; row.forwarded_by = msg.forwardedBy || msg.from || null; }
-      if (msg.forwardedFrom && typeof msg.forwardedFrom === 'object') row.forwarded_from = msg.forwardedFrom;
-      let res = await sb.from('dms').insert(row);
-      if (res?.error && /column|does not exist/i.test(res.error.message || '')) {
-        delete row.forwarded_from;
-        await sb.from('dms').insert(row);
-      }
+      await sb.from('dms').insert(row);
       return { key: msg.id };
     }
 

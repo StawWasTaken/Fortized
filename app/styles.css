@@ -923,7 +923,11 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 @keyframes sr-bounce{0%{opacity:1;transform:translate(0,0) scale(1);}50%{transform:translate(15px,-50px) scale(1.2);}100%{opacity:0;transform:translate(30px,-90px) scale(.4);}}
 @keyframes sr-zigzag{0%{opacity:1;transform:translate(0,0) scale(1);}33%{transform:translate(-20px,-30px) scale(1.1);}66%{transform:translate(20px,-60px) scale(.8);}100%{opacity:0;transform:translate(-10px,-90px) scale(.3);}}
 /* Hover quick actions — fade in, not pop */
-.msg-acts{display:flex;gap:1px;position:absolute;right:16px;top:-12px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:8px;padding:2px;z-index:10;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:translateY(3px);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);}
+.msg-acts{display:flex;gap:1px;position:absolute;right:16px;top:-14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:2px;z-index:30;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:translateY(3px);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 4px 12px rgba(0,0,0,.25);}
+/* Raise the hovered row above its neighbours so the absolute .msg-acts
+   isn't visually clipped by the next row's background. */
+.msg-row{position:relative;z-index:1;}
+.msg-row:hover{z-index:25;}
 .msg-row:hover .msg-acts{opacity:1;pointer-events:auto;transform:translateY(0);}
 .msg-acts button{background:none;border:none;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
 .msg-acts button:hover{background:rgba(255,255,255,.08);color:#fff;}

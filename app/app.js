@@ -8566,6 +8566,7 @@ const _SYSTEM_EVENT_PATTERNS = [
   { key: 'rename',     icon: 'pencil',       color: '#fbbf24', test: /\b(renamed|name changed)\b/i },
   { key: 'role',       icon: 'shield',       color: '#fbbf24', test: /\b(role|promoted|demoted)\b/i },
   { key: 'pin',        icon: 'bookmark',     color: '#fbbf24', test: /\b(pinned)\b/i },
+  { key: 'thread',     icon: 'thread',       color: '#60a5fa', test: /\b(started a thread|created a thread|opened a thread)\b/i },
   { key: 'announce',   icon: 'megaphone',    color: '#fff93e', test: /\b(announcement|announces)\b/i },
   { key: 'boost',      icon: 'boost',        color: '#ff77e4', test: /\b(boosted|boost)\b/i },
 ];
@@ -21354,7 +21355,7 @@ async function toggleNotifPanel() {
   panel.innerHTML = `
     <div class="modal-bar" style="flex-shrink:0;border-radius:18px 18px 0 0;"></div>
     <div class="npv-header">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span style="color:var(--accent);display:inline-flex;">${_faMsg('bell', 18)}</span>
       <h3>Inbox</h3>
       <button onclick="markAllRead()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;">Mark all read</button>
       <button onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
@@ -21972,6 +21973,7 @@ const _faMsgIcons = {
   copy:     '<svg viewBox="0 0 448 512" fill="currentColor"><path d="M192 0c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64l192 0c35.3 0 64-28.7 64-64l0-200.6c0-17.4-7.1-34.1-19.7-46.2L370.6 17.8C358.7 6.4 342.8 0 326.3 0L192 0zM64 128c-35.3 0-64 28.7-64 64L0 448c0 35.3 28.7 64 64 64l192 0c35.3 0 64-28.7 64-64l0-16-64 0 0 16-192 0 0-256 16 0 0-64-16 0z"/></svg>',
   translate:'<svg viewBox="0 0 576 512" fill="currentColor"><path d="M160 0c17.7 0 32 14.3 32 32l0 32 128 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-9.6 0-8.4 23.1c-16.4 45.2-41.1 86.5-72.2 122 14.2 8.8 29 16.6 44.4 23.5l50.4 22.4 62.2-140c5.1-11.6 16.6-19 29.2-19s24.1 7.4 29.2 19l128 288c7.2 16.2-.1 35.1-16.2 42.2s-35.1-.1-42.2-16.2l-20-45-157.5 0-20 45c-7.2 16.2-26.1 23.4-42.2 16.2s-23.4-26.1-16.2-42.2l39.8-89.5-50.4-22.4c-23-10.2-45-22.4-65.8-36.4-21.3 17.2-44.6 32.2-69.5 44.7L78.3 380.6c-15.8 7.9-35 1.5-42.9-14.3s-1.5-35 14.3-42.9l34.5-17.3c16.3-8.2 31.8-17.7 46.4-28.3-13.8-12.7-26.8-26.4-38.9-40.9L81.6 224.7c-11.3-13.6-9.5-33.8 4.1-45.1s33.8-9.5 45.1 4.1l10.2 12.2c11.5 13.9 24.1 26.8 37.4 38.7 27.5-30.4 49.2-66.1 63.5-105.4l.5-1.2-210.3 0C14.3 128 0 113.7 0 96S14.3 64 32 64l96 0 0-32c0-17.7 14.3-32 32-32zM416 270.8L365.7 384 466.3 384 416 270.8z"/></svg>',
   report:   '<svg viewBox="0 0 448 512" fill="currentColor"><path d="M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32L0 480c0 17.7 14.3 32 32 32s32-14.3 32-32l0-121.6 62.7-18.8c41.9-12.6 87.1-8.7 126.2 10.9 42.7 21.4 92.5 24 137.2 7.2l37.1-13.9c12.5-4.7 20.8-16.6 20.8-30l0-247.7c0-23-24.2-38-44.8-27.7l-11.8 5.9c-44.9 22.5-97.8 22.5-142.8 0-36.4-18.2-78.3-21.8-117.2-10.1L64 54.4 64 32z"/></svg>',
+  bell:     '<svg viewBox="0 0 448 512" fill="currentColor"><path d="M224 0c-17.7 0-32 14.3-32 32l0 3.2C119 50 64 114.6 64 192l0 21.7c0 48.1-16.4 94.8-46.4 132.4L7.8 358.3C2.7 364.6 0 372.4 0 380.5 0 400.1 15.9 416 35.5 416l376.9 0c19.6 0 35.5-15.9 35.5-35.5 0-8.1-2.7-15.9-7.8-22.2l-9.8-12.2C400.4 308.5 384 261.8 384 213.7l0-21.7c0-77.4-55-142-128-156.8l0-3.2c0-17.7-14.3-32-32-32zM162 464c7.1 27.6 32.2 48 62 48s54.9-20.4 62-48l-124 0z"/></svg>',
 };
 function _faMsg(name, size = 14) {
   const raw = _faMsgIcons[name] || '';
@@ -22212,20 +22214,19 @@ function handleContextMenu(e) {
     const primaryGroup = {
       label: 'Primary',
       items: [
-        { icon: _ctxSvg('reply'), label: 'Reply', hint: 'R', action: () => replyToMsg(msgId, msgRow.querySelector('.msg-author')?.textContent || '', context) },
-        { icon: _ctxSvg('emoji'), label: 'React', action: () => addReactionUI(msgId, context) },
-        { icon: _ctxSvg('forward'), label: 'Forward', action: () => forwardMsg(text, _forwardOriginFromRow(msgRow)) },
-        { icon: _ctxSvg('copy'), label: 'Copy Text', hint: 'C', action: () => navigator.clipboard.writeText(_splitFileTokens(text).stripped), copyFeedback: true },
+        { icon: _faMsg('reply', 15), label: 'Reply', hint: 'R', action: () => replyToMsg(msgId, msgRow.querySelector('.msg-author')?.textContent || '', context) },
+        { icon: _ADD_REACTION_ICON_HTML, label: 'React', action: () => addReactionUI(msgId, context) },
+        { icon: _faMsg('forward', 15), label: 'Forward', action: () => forwardMsg(text, _forwardOriginFromRow(msgRow)) },
+        { icon: _faMsg('copy', 15), label: 'Copy Text', hint: 'C', action: () => navigator.clipboard.writeText(_splitFileTokens(text).stripped), copyFeedback: true },
       ]
     };
 
     const interactionGroup = {
       label: 'Interaction',
       items: [
-        { icon: isPinned ? _ctxSvg('unpin') : _ctxSvg('pin'), label: isPinned ? 'Unpin Message' : 'Pin Message', action: () => pinMessage(msgId, text) },
-        ...(inBastion ? [{ icon: _ctxSvg('thread'), label: 'Create Thread', action: () => openThread(msgId, text, msgRow?.dataset?.from || '') }] : []),
-        { icon: _ctxSvg('globe'), label: 'Translate', action: () => { _translateMessage(msgRow, text); } },
-        { icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', label: 'Add Note on User', action: () => _openUserNote(msgRow?.dataset?.from || '') },
+        { icon: _faMsg('pin', 15), label: isPinned ? 'Unpin Message' : 'Pin Message', action: () => pinMessage(msgId, text) },
+        ...(inBastion ? [{ icon: _faMsg('thread', 15), label: 'Create Thread', action: () => openThread(msgId, text, msgRow?.dataset?.from || '') }] : []),
+        { icon: _faMsg('translate', 15), label: 'Translate', action: () => { _translateMessage(msgRow, text); } },
       ]
     };
 
@@ -22235,12 +22236,12 @@ function handleContextMenu(e) {
     };
 
     if (isOwn) {
-      moderationGroup.items.push({ icon: _ctxSvg('edit'), label: 'Edit', action: () => editMsg(msgId, context) });
+      moderationGroup.items.push({ icon: _faMsg('edit', 15), label: 'Edit', action: () => editMsg(msgId, context) });
     }
-    moderationGroup.items.push({ icon: _ctxSvg('report'), label: 'Report Message', action: () => reportMessage(msgId, text, msgRow.dataset.from) });
+    moderationGroup.items.push({ icon: _faMsg('report', 15), label: 'Report Message', action: () => reportMessage(msgId, text, msgRow.dataset.from) });
     const isBastionAdminCtx = inBastion && hasPerm('manage_messages');
     if (isOwn || isBastionAdminCtx) {
-      moderationGroup.items.push({ icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
+      moderationGroup.items.push({ icon: _faMsg('trash', 15), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
     }
 
     const groups = [primaryGroup, interactionGroup, moderationGroup];
@@ -35899,7 +35900,7 @@ function pinMessage(msgId, text) {
     const chName = ch?.name;
     if (bid && chName) {
       const preview = (text||'').slice(0,60).replace(/\n/g,' ');
-      const sysText = `📌 **${CU.username}** pinned a message${preview ? ': "'+preview+(text.length>60?'…':'')+'"' : '.'}`;
+      const sysText = `**${CU.username}** pinned a message${preview ? ': "'+preview+(text.length>60?'…':'')+'"' : '.'}`;
       try { FortizedSocial.sendBastionChannelMessage(bid, chName, '__system__', sysText); } catch(e) { _dbg('[Pin] System msg failed:', e?.message); }
     }
   }
@@ -35941,7 +35942,7 @@ function showPinnedMessages() {
   panel.className = 'pins-panel-v2';
   panel.innerHTML = `
     <div style="padding:20px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg>
+      <span style="color:var(--accent);display:inline-flex;">${_faMsg('pin', 16)}</span>
       <div style="font-family:var(--font-display);font-size:17px;font-weight:800;flex:1;color:#fff;">Pinned Messages</div>
       <span style="font-size:10px;color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);padding:2px 10px;border-radius:var(--radius-pill);font-weight:600;">${pins.length}</span>
       <button onclick="_closeEl('pins-panel');_closeEl('pins-panel-overlay')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
@@ -35963,7 +35964,7 @@ function showPinnedMessages() {
           <button data-unpin-idx="${i}" data-unpin-id="${escapeHTML(p.id)}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.3);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;" title="Unpin" onmouseover="this.style.color='var(--red)';this.style.background='rgba(248,113,113,.1)'" onmouseout="this.style.color='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.04)'">✕</button>
         </div>`;
         }).join('')
-      : '<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,.2);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg><div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:4px;">No pinned messages</div><div style="font-size:12px;opacity:.6;">Right-click a message to pin it.</div></div>'
+      : `<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,.2);"><div style="opacity:.3;margin-bottom:12px;display:flex;justify-content:center;">${_faMsg('pin', 32)}</div><div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:4px;">No pinned messages</div><div style="font-size:12px;opacity:.6;">Right-click a message to pin it.</div></div>`
     }</div>`;
   document.body.appendChild(panel);
   // Wire unpin buttons + click-to-scroll via delegation
@@ -46419,7 +46420,7 @@ async function _sendThreadReply() {
     const fromName = _activeThread.from || '';
     const previewSrc = (_activeThread.text || '').slice(0, 60).replace(/\n/g,' ');
     const previewTag = previewSrc ? `: "${previewSrc}${(_activeThread.text||'').length>60?'…':''}"` : '';
-    const sysText = `🧵 **${CU.username}** started a thread on ${fromName?`**${fromName}**'s message`:'a message'}${previewTag}`;
+    const sysText = `**${CU.username}** started a thread on ${fromName?`**${fromName}**'s message`:'a message'}${previewTag}`;
     try { FortizedSocial.sendBastionChannelMessage(bid, chName, '__system__', sysText); } catch(e) { _dbg('[Thread] System msg failed:', e?.message); }
   }
   const reply = { from: CU.username, text, timestamp: new Date().toISOString() };

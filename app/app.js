@@ -44,6 +44,16 @@ const _svgIcons = {
   addUser:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>`,
   construction:`<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></svg>`,
   boost:       `<svg width="1em" height="1em" viewBox="0 0 15 15" fill="currentColor" stroke="none"><path d="M12.5547,1c-2.1441,0-5.0211,1.471-6.9531,4H4C2.8427,5,2.1794,5.8638,1.7227,6.7773L1.1113,8h1.4434H4l1.5,1.5L7,11v1.4453v1.4434l1.2227-0.6113C9.1362,12.8206,10,12.1573,10,11V9.3984c2.529-1.932,4-4.809,4-6.9531V1H12.5547z M10,4c0.5523,0,1,0.4477,1,1l0,0c0,0.5523-0.4477,1-1,1l0,0C9.4477,6,9,5.5523,9,5v0C9,4.4477,9.4477,4,10,4L10,4z M3.5,10L3,10.5C2.2778,11.2222,2,13,2,13s1.698-0.198,2.5-1L5,11.5L3.5,10z"/></svg>`,
+  // ── System-message-event icons (FA filled, fill=currentColor so
+  // ftzIcon() can tint them per-event). Kept separate from the outline
+  // icons above so existing UI references aren't visually disturbed.
+  sys_join:    `<svg width="1em" height="1em" viewBox="0 0 512 512" fill="currentColor"><path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l370.7 0-105.4 105.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></svg>`,
+  sys_leave:   `<svg width="1em" height="1em" viewBox="0 0 512 512" fill="currentColor"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 288 480 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-370.7 0 105.4-105.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg>`,
+  sys_ban:     `<svg width="1em" height="1em" viewBox="0 0 576 512" fill="currentColor"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L311.5 245.7c55-10.9 96.5-59.5 96.5-117.7 0-66.3-53.7-120-120-120-58.2 0-106.8 41.5-117.7 96.5L41-24.9zM235.6 305.4C147.9 316.6 80 391.5 80 482.3 80 498.7 93.3 512 109.7 512l332.5 0-206.6-206.6z"/></svg>`,
+  sys_channel: `<svg width="1em" height="1em" viewBox="0 0 512 512" fill="currentColor"><path d="M214.7 .7c17.3 3.7 28.3 20.7 24.6 38l-19.1 89.3 126.5 0 22-102.7C372.4 8 389.4-3 406.7 .7s28.3 20.7 24.6 38L412.2 128 480 128c17.7 0 32 14.3 32 32s-14.3 32-32 32l-81.6 0-27.4 128 67.8 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-81.6 0-22 102.7c-3.7 17.3-20.7 28.3-38 24.6s-28.3-20.7-24.6-38l19.1-89.3-126.5 0-22 102.7c-3.7 17.3-20.7 28.3-38 24.6s-28.3-20.7-24.6-38L99.8 384 32 384c-17.7 0-32-14.3-32-32s14.3-32 32-32l81.6 0 27.4-128-67.8 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l81.6 0 22-102.7C180.4 8 197.4-3 214.7 .7zM206.4 192l-27.4 128 126.5 0 27.4-128-126.5 0z"/></svg>`,
+  sys_rename:  `<svg width="1em" height="1em" viewBox="0 0 512 512" fill="currentColor"><path d="M36.4 353.2c4.1-14.6 11.8-27.9 22.6-38.7l181.2-181.2 33.9-33.9c16.6 16.6 51.3 51.3 104 104l33.9 33.9-33.9 33.9-181.2 181.2c-10.7 10.7-24.1 18.5-38.7 22.6L30.4 510.6c-8.3 2.3-17.3 0-23.4-6.2S-1.4 489.3 .9 481L36.4 353.2zm55.6-3.7c-4.4 4.7-7.6 10.4-9.3 16.6l-24.1 86.9 86.9-24.1c6.4-1.8 12.2-5.1 17-9.7L91.9 349.5zm354-146.1c-16.6-16.6-51.3-51.3-104-104L308 65.5C334.5 39 349.4 24.1 352.9 20.6 366.4 7 384.8-.6 404-.6S441.6 7 455.1 20.6l35.7 35.7C504.4 69.9 512 88.3 512 107.4s-7.6 37.6-21.2 51.1c-3.5 3.5-18.4 18.4-44.9 44.9z"/></svg>`,
+  sys_role:    `<svg width="1em" height="1em" viewBox="0 0 576 512" fill="currentColor"><path d="M309.5-18.9c-4.1-8-12.4-13.1-21.4-13.1s-17.3 5.1-21.4 13.1L193.1 125.3 33.2 150.7c-8.9 1.4-16.3 7.7-19.1 16.3s-.5 18 5.8 24.4l114.4 114.5-25.2 159.9c-1.4 8.9 2.3 17.9 9.6 23.2s16.9 6.1 25 2L288.1 417.6 432.4 491c8 4.1 17.7 3.3 25-2s11-14.2 9.6-23.2L441.7 305.9 556.1 191.4c6.4-6.4 8.6-15.8 5.8-24.4s-10.1-14.9-19.1-16.3L383 125.3 309.5-18.9z"/></svg>`,
+  sys_announce:`<svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M6 9c-1.71 0-3.09 1.43-3 3.16C3.08 13.78 4.54 15 6.17 15H8l1.54.62c-.01.13-.04.25-.04.38 0 1.93 1.57 3.5 3.5 3.5 1.13 0 2.13-.55 2.77-1.39l.85.34a1 1 0 0 0 1.37-.93V6.48c0-.71-.71-1.19-1.37-.93L7.99 9h-2Zm7 9.5a2.5 2.5 0 0 1-2.5-2.5l4.3 1.72c-.46.48-1.09.78-1.8.78m7-6.5c0 1.01-.39 1.92-1 2.62V9.38c.61.7 1 1.61 1 2.62"/></svg>`,
 };
 
 const _FPP_MOON_SVG     = '<svg viewBox="0 0 512 512" fill="currentColor" style="width:1em;height:1em;"><path d="M256 0C114.6 0 0 114.6 0 256S114.6 512 256 512c68.8 0 131.3-27.2 177.3-71.4 7.3-7 9.4-17.9 5.3-27.1s-13.7-14.9-23.8-14.1c-4.9 .4-9.8 .6-14.8 .6-101.6 0-184-82.4-184-184 0-72.1 41.5-134.6 102.1-164.8 9.1-4.5 14.3-14.3 13.1-24.4S322.6 8.5 312.7 6.3C294.4 2.2 275.4 0 256 0z"/></svg>';
@@ -5402,7 +5412,7 @@ const _JOYSTER_DAILY_LIMIT = 5;
 // Joyster AI — talks to our /api/joyster proxy so the Gemini key stays server-side
 const JOYSTER_SYSTEM_PROMPT = `You are Joyster the Jester, the official mischievous mascot of Fortized - a gaming/social platform. You're a witty, cocky jester from King Staw's royal court who lives for chaos, pranks, and making people laugh. Personality: playful, arrogant, cheeky, spontaneous, constantly laughing (BAHAHA! Ahahaha! Hehehehe~), terrible puns, teases lovingly, unpredictable, bold, irreverent.
 
-You know Fortized features: Bastions (guilds with roles/channels), Onyx (currency), Radiance/VIP (premium), Atelier (cosmetics shop), voice/party rooms, profiles, custom status.
+You know Fortized features: Bastions (guilds with roles/channels), Onyx (currency), Radiance/VIP (premium), Atelier (cosmetics shop), voice/party channels, profiles, custom status.
 
 CRITICAL response rules:
 - 1-2 sentences MAX, punchy and snappy — NO essays
@@ -5623,7 +5633,7 @@ const JOYSTER_QUIPS = [
   "Emojis EVERYWHERE! Spam them! DO IT!",
   "I judge you... lovingly. Very lovingly. Hehehehe~",
   "CUSTOMIZED PROFILE?! NAH. Let me witness your shame!",
-  "Party Rooms + voice = my MASTERPIECE of chaos!",
+  "Party Channels + voice = my MASTERPIECE of chaos!",
   "Your theme colors scream 'I HAVE TASTE'! ...or do they?",
   "BAHAHA! Did you know? You're STUCK here now!",
   "Radiance?! Now that's a BIG BRAIN move!",
@@ -7732,7 +7742,7 @@ function renderBastionSidebar(scroll) {
 
   html+=`<div class="sidebar-divider" style="margin:4px 8px;"></div>`;
 
-  // ── Room categories (collapsible) ──
+  // ── Channel categories (collapsible) ──
   const textChs=chs.filter(c=>c.type==='text'||!c.type);
   const voiceChs=chs.filter(c=>c.type==='voice');
   const forumChs=chs.filter(c=>c.type==='forum');
@@ -7877,7 +7887,7 @@ function toggleBastionNameDropdown(e) {
       <div class="bnd-action" onclick="closeBastionNameDD();openOverviewRoom()"><span class="bnd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> Overview</div>
       <div class="bnd-action" onclick="closeBastionNameDD();showBastionInviteUI()"><span class="bnd-icon">🔗</span> Invite Friends</div>
       <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('boost')"><span class="bnd-icon">${_boostSvg('14')}</span> Boost</div>
-      ${(isOwner||hasPerm('manage_channels'))?`<div class="bnd-action" onclick="closeBastionNameDD();showCreateRoomModal(curBastion)"><span class="bnd-icon">➕</span> Create Room</div>`:''}
+      ${(isOwner||hasPerm('manage_channels'))?`<div class="bnd-action" onclick="closeBastionNameDD();showCreateRoomModal(curBastion)"><span class="bnd-icon">➕</span> Create Channel</div>`:''}
       ${isOwner?`<div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('templates')"><span class="bnd-icon">📋</span> Save as Template</div>`:''}
       ${isOwner?`<div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings()"><span class="bnd-icon">⚙️</span> Settings</div>`:''}
       <div class="bnd-action danger" onclick="closeBastionNameDD();openModal('modal-leave-bastion')"><span class="bnd-icon">🚪</span> Leave Bastion</div>
@@ -8076,7 +8086,7 @@ function loadChatChannel(idx) {
     return;
   }
   const nsfwBadge=ch.nsfw?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);background:rgba(248,113,113,.15);color:var(--red);margin-left:6px;">NSFW</span>`:'';
-  // Room name is displayed in the room-topbar above the chat, not in the main Fortized topbar
+  // Channel name is displayed in the room-topbar above the chat, not in the main Fortized topbar
   const sep=document.getElementById('tb-sep');
   const desc=document.getElementById('tb-desc');
   if (sep) sep.style.display='none';
@@ -8211,7 +8221,7 @@ async function _loadAnnouncementRoom(wrap, b, ch, idx) {
       </div>
     </div>` : `<div class="ann-readonly-bar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span>Only admins can post announcements in this room.</span>
+      <span>Only admins can post announcements in this channel.</span>
     </div>`}
   </div>`;
 
@@ -8557,17 +8567,22 @@ function _fmtMsgFullTime(ts) {
 // hit wins. `icon` references _svgIcons; `color` is the accent colour.
 // Authors of new system events can also pass `msg.systemEvent` directly
 // (e.g. systemEvent:'join') to skip the heuristic.
+// Colours pulled from the Fortized brand schema:
+//   yellized #fff93e · green #3ecf6e · pink #ff77e4 · red #eb4545
+//   orange  #fe9c3b · white  #ffffff · black #13161f
+// Bot is the only exception — explicitly blue (matches the chatbar
+// bot-command button affordance).
 const _SYSTEM_EVENT_PATTERNS = [
-  { key: 'join',       icon: 'addUser',      color: '#3ecf6e', test: /\b(joined|welcome to|has entered|just joined|has joined)\b/i },
-  { key: 'leave',      icon: 'users',        color: '#ff7a7a', test: /\b(left|has left|kicked|removed from)\b/i },
-  { key: 'ban',        icon: 'warning',      color: '#f87171', test: /\b(banned|banished)\b/i },
-  { key: 'bot',        icon: 'gift',         color: '#a78bfa', test: /\b(integrated|deployed|bot added|installed bot)\b/i },
-  { key: 'channel',    icon: 'plus',         color: '#7bb6ff', test: /\b(channel created|created the channel|new channel)\b/i },
-  { key: 'rename',     icon: 'pencil',       color: '#fbbf24', test: /\b(renamed|name changed)\b/i },
-  { key: 'role',       icon: 'shield',       color: '#fbbf24', test: /\b(role|promoted|demoted)\b/i },
-  { key: 'pin',        icon: 'bookmark',     color: '#fbbf24', test: /\b(pinned)\b/i },
-  { key: 'thread',     icon: 'thread',       color: '#60a5fa', test: /\b(started a thread|created a thread|opened a thread)\b/i },
-  { key: 'announce',   icon: 'megaphone',    color: '#fff93e', test: /\b(announcement|announces)\b/i },
+  { key: 'join',       icon: 'sys_join',     color: '#3ecf6e', test: /\b(joined|welcome to|has entered|just joined|has joined)\b/i },
+  { key: 'leave',      icon: 'sys_leave',    color: '#eb4545', test: /\b(left|has left|kicked|removed from)\b/i },
+  { key: 'ban',        icon: 'sys_ban',      color: '#eb4545', test: /\b(banned|banished)\b/i },
+  { key: 'bot',        iconHTML: '<img src="https://www.svgrepo.com/show/310556/bot.svg" style="width:14px;height:14px;display:inline-block;vertical-align:middle;filter:invert(57%) sepia(91%) saturate(2167%) hue-rotate(193deg) brightness(101%) contrast(94%);">', color: '#60a5fa', test: /\b(integrated|deployed|bot added|installed bot)\b/i },
+  { key: 'channel',    icon: 'sys_channel',  color: '#3ecf6e', test: /\b(channel created|created the channel|new channel)\b/i },
+  { key: 'rename',     icon: 'sys_rename',   color: '#fe9c3b', test: /\b(renamed|name changed)\b/i },
+  { key: 'role',       icon: 'sys_role',     color: '#fff93e', test: /\b(role|promoted|demoted)\b/i },
+  { key: 'pin',        icon: 'bookmark',     color: '#fff93e', test: /\b(pinned)\b/i },
+  { key: 'thread',     icon: 'thread',       color: '#fff93e', test: /\b(started a thread|created a thread|opened a thread)\b/i },
+  { key: 'announce',   icon: 'sys_announce', color: '#fff93e', test: /\b(announcement|announces)\b/i },
   { key: 'boost',      icon: 'boost',        color: '#ff77e4', test: /\b(boosted|boost)\b/i },
 ];
 function _inferSystemEvent(msg) {
@@ -9189,11 +9204,14 @@ function appendMessage(container, msg, context, prevAuthor) {
     const canDeleteSystem = (context==='ch'||context==='channel') && hasPerm('manage_messages');
     const ev = _inferSystemEvent(msg);
     row.dataset.systemEvent = ev.key;
-    // Prefer an SVG glyph by event; fall back to msg.systemIcon (string)
-    // for legacy callers that explicitly passed an emoji.
-    const iconHTML = ftzIcon(ev.icon, 14)
-      ? `<span class="msg-system-icon" style="color:${ev.color};">${ftzIcon(ev.icon, 14, ev.color)}</span>`
-      : `<span class="msg-system-icon">${msg.systemIcon||'→'}</span>`;
+    // Prefer an explicit iconHTML blob on the event (e.g. bot uses the
+    // svgrepo bot.svg img), then an SVG-glyph-by-key from _svgIcons,
+    // and finally a legacy msg.systemIcon emoji string.
+    const iconHTML = ev.iconHTML
+      ? `<span class="msg-system-icon" style="color:${ev.color};">${ev.iconHTML}</span>`
+      : (ftzIcon(ev.icon, 14)
+        ? `<span class="msg-system-icon" style="color:${ev.color};">${ftzIcon(ev.icon, 14, ev.color)}</span>`
+        : `<span class="msg-system-icon">${msg.systemIcon||'→'}</span>`);
     const bodyHTML = _promoteSystemMentions(parseMD(escapeHTML(msg.text||'')));
     row.innerHTML=`<div class="msg-system-content">
       ${iconHTML}
@@ -10656,7 +10674,7 @@ function joinVoice(idx) {
   const vcb=document.getElementById('voice-connected-bar');
   if (vcb){vcb.classList.add('show');document.getElementById('vcb-channel-name').textContent='🎉 '+ch.name;document.getElementById('vcb-participants').innerHTML=voiceParticipants.map(p=>`<div class="vcb-part">${buildAvatarHTML(p.pfp,p.name,18)} ${escapeHTML(p.name)}</div>`).join('');}
   _renderVoicePanel(ch, idx);
-  toast('Joined party room #'+ch.name,'success');
+  toast('Joined party channel #'+ch.name,'success');
 }
 function _renderVoicePanel(ch, idx) {
   const wrap=document.getElementById('bastion-chat-wrap');
@@ -10670,7 +10688,7 @@ function _renderVoicePanel(ch, idx) {
         <div class="voice-panel-title" style="font-family:var(--font-display);font-size:24px;font-weight:800;">🎉 ${escapeHTML(ch.name)}</div>
       </div>
       <div class="voice-panel-sub" style="font-size:13.5px;color:var(--muted);margin-bottom:32px;display:flex;align-items:center;gap:8px;">
-        <span style="font-weight:600;">Party Room</span>
+        <span style="font-weight:600;">Party Channel</span>
         <span style="width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.2);"></span>
         <span id="vc-participant-count" style="font-weight:700;color:rgba(62,207,110,.8);">${voiceParticipants.length}</span> <span>in the party</span>
       </div>
@@ -10747,7 +10765,7 @@ function disconnectVoice(){
   document.getElementById('vc-ch-extra')?.remove();
   const wrap=document.getElementById('bastion-chat-wrap');
   if(wrap)wrap.innerHTML=`<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('castle','48')}</div><h3>Select a channel</h3></div>`;
-  toast('Left party room','info');
+  toast('Left party channel','info');
   showFeedbackToast('a voice chat', 'voice_call');
 }
 function toggleVoiceMute(){
@@ -14180,11 +14198,11 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
   overlay.innerHTML = `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.08);border-radius:20px;max-width:460px;width:92%;box-shadow:0 24px 80px rgba(0,0,0,.7);animation:embedIn .18s cubic-bezier(.22,1,.36,1) both;">
     <div style="padding:26px 28px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-        <div style="font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;">Create Room</div>
+        <div style="font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;">Create Channel</div>
         <button id="crm-close" class="ftz-close-btn">&times;</button>
       </div>
       <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:20px;">in ${escapeHTML(b.name)}</div>
-      <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:10px;">Room Type</div>
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:10px;">Channel Type</div>
       <div id="crm-types" style="display:flex;flex-direction:column;gap:6px;margin-bottom:22px;">
         ${types.map(t => `<label data-type="${t.id}" class="crm-type-opt${t.id===selType?' selected':''}" onclick="_crmSelectType(this,'${t.id}')" style="display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:12px;cursor:pointer;border:1.5px solid ${t.id===selType?'rgba(255,249,62,.35)':'rgba(255,255,255,.06)'};background:${t.id===selType?'rgba(255,249,62,.05)':'rgba(255,255,255,.015)'};transition:all .15s;">
           <div style="width:40px;height:40px;border-radius:12px;background:${t.id===selType?'rgba(255,249,62,.1)':'rgba(255,255,255,.04)'};display:flex;align-items:center;justify-content:center;color:${t.id===selType?'#fff93e':'rgba(255,255,255,.35)'};flex-shrink:0;transition:all .15s;">${t.icon}</div>
@@ -14199,18 +14217,18 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
       </div>
     </div>
     <div style="padding:0 28px 24px;">
-      <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;">Room Name</div>
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;">Channel Name</div>
       <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:0 14px;transition:border-color .15s;" id="crm-input-wrap">
         <span id="crm-prefix" style="color:rgba(255,255,255,.2);font-size:15px;font-weight:600;">#</span>
-        <input id="crm-name" type="text" placeholder="new-room" maxlength="50" style="flex:1;background:transparent;border:none;color:#fff;font-family:var(--font-ui);font-size:14px;padding:12px 0;outline:none;" autocomplete="off" spellcheck="false">
+        <input id="crm-name" type="text" placeholder="new-channel" maxlength="50" style="flex:1;background:transparent;border:none;color:#fff;font-family:var(--font-ui);font-size:14px;padding:12px 0;outline:none;" autocomplete="off" spellcheck="false">
       </div>
-      <!-- Room Preview -->
+      <!-- Channel Preview -->
       <div style="margin-top:18px;">
         <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;">Preview</div>
         <div id="crm-preview" style="background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
           <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.02);">
             <span id="crm-pv-icon" style="color:rgba(255,255,255,.35);display:flex;align-items:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-            <span id="crm-pv-name" style="font-size:14px;font-weight:700;color:#fff;">new-room</span>
+            <span id="crm-pv-name" style="font-size:14px;font-weight:700;color:#fff;">new-channel</span>
             <span id="crm-pv-type" style="font-size:10px;padding:2px 8px;border-radius:var(--radius-pill);background:rgba(255,249,62,.08);color:rgba(255,249,62,.7);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Text</span>
           </div>
           <div style="padding:16px 14px;">
@@ -14219,7 +14237,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
                 <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;"><img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;"></div>
                 <div>
                   <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);">Fortized</div>
-                  <div id="crm-pv-welcome" style="font-size:12px;color:rgba(255,255,255,.3);line-height:1.4;">Welcome to <strong style="color:rgba(255,255,255,.5);">#new-room</strong>! This is the start of the channel.</div>
+                  <div id="crm-pv-welcome" style="font-size:12px;color:rgba(255,255,255,.3);line-height:1.4;">Welcome to <strong style="color:rgba(255,255,255,.5);">#new-channel</strong>! This is the start of the channel.</div>
                 </div>
               </div>
             </div>
@@ -14228,7 +14246,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
         <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;">Cancel</button>
-        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:var(--rail);font-family:var(--font-display);font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Create Room</button>
+        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:var(--rail);font-family:var(--font-display);font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Create Channel</button>
       </div>
     </div>
   </div>`;
@@ -14237,7 +14255,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
   const nameInput = overlay.querySelector('#crm-name');
   nameInput.focus();
   const _crmUpdatePreview = () => {
-    const n = nameInput.value || 'new-room';
+    const n = nameInput.value || 'new-channel';
     const t = overlay._selectedType || 'text';
     const pvName = overlay.querySelector('#crm-pv-name');
     const pvWelcome = overlay.querySelector('#crm-pv-welcome');
@@ -14268,7 +14286,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
   nameInput.addEventListener('keydown', e => { if (e.key==='Enter') overlay.querySelector('#crm-create').click(); });
   overlay.querySelector('#crm-create').onclick = async () => {
     const name = nameInput.value.trim();
-    if (!name) { toast('Room name is required','error'); nameInput.focus(); return; }
+    if (!name) { toast('Channel name is required','error'); nameInput.focus(); return; }
     const type = overlay._selectedType;
     const ch = { name, type, desc:'' };
     if (type === 'announcement') ch.restricted = true;
@@ -14363,7 +14381,7 @@ async function joinBastionByCode() {
 // BASTION HUB (member-facing)
 // ════════════════════════════════════════════
 function openBastionHub() {
-  // Legacy — redirect to new Overview Room
+  // Legacy — redirect to new Overview Channel
   openOverviewRoom();
 }
 function renderBastionHub() {
@@ -14758,7 +14776,7 @@ function openOverviewEditor() {
           <input type="checkbox" id="ov-ed-stats" ${ov.showStats!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Community Stats
         </label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" id="ov-ed-rooms" ${ov.showRooms!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Rooms Quick-Access
+          <input type="checkbox" id="ov-ed-rooms" ${ov.showRooms!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Channels Quick-Access
         </label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
           <input type="checkbox" id="ov-ed-announcements" ${ov.showAnnouncements!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Latest Announcements
@@ -15092,8 +15110,8 @@ function renderBSettingsMain(tab) {
       return `<div style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
           <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);flex:1;">${escapeHTML(cat.name)}</span>
-          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','text')">+ Text Room</button>
-          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','voice')">+ Party Room</button>
+          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','text')">+ Text Channel</button>
+          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','voice')">+ Party Channel</button>
           <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="renameCategory('${cat.id}')">✏️</button>
           <button class="btn-d" style="font-size:11px;padding:3px 8px;" onclick="deleteCategory('${cat.id}')">✕</button>
         </div>
@@ -15120,15 +15138,15 @@ function renderBSettingsMain(tab) {
         <button class="btn-d" style="padding:4px 9px;font-size:11px;" onclick="deleteChannel(${realIdx})">✕</button>
       </div>`;}).join('');
     main.innerHTML = `
-      <div class="bs-section-title">Rooms</div>
+      <div class="bs-section-title">Channels</div>
       <div class="bs-section-desc">Create and manage your bastion's channels and categories.</div>
       <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
         <button class="btn-g" onclick="addCategoryPrompt()" style="font-size:13px;">+ Category</button>
-        <button class="btn-a" onclick="addChannel(curBastion,'text')" style="font-size:13px;">+ Text Room</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'voice')" style="font-size:13px;">+ Party Room</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'announcement')" style="font-size:13px;">+ Announcement Room</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'poll')" style="font-size:13px;">+ Poll Room</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'forum')" style="font-size:13px;">+ Wall Room</button>
+        <button class="btn-a" onclick="addChannel(curBastion,'text')" style="font-size:13px;">+ Text Channel</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'voice')" style="font-size:13px;">+ Party Channel</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'announcement')" style="font-size:13px;">+ Announcement Channel</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'poll')" style="font-size:13px;">+ Poll Channel</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'forum')" style="font-size:13px;">+ Wall Channel</button>
       </div>
       ${catHTML}
       ${uncatHTML||(!cats.length?'<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No channels yet. Create some above!</div>':'')}`;
@@ -15581,7 +15599,7 @@ function renderBSettingsMain(tab) {
         <div style="font-family:var(--font-display);font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;">🏥 Health Check</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${[
-            {ok:channelCount>0,text:'Has at least one channel',fix:'Add a channel in Rooms Management'},
+            {ok:channelCount>0,text:'Has at least one channel',fix:'Add a channel in Channels Management'},
             {ok:roleCount>0,text:'Has roles configured',fix:'Create roles in the Roles tab'},
             {ok:(b.rules||[]).length>0,text:'Has server rules set',fix:'Add rules in the Server Rules tab'},
             {ok:!!b.banner,text:'Has a banner image',fix:'Upload a banner in Overview'},
@@ -22403,7 +22421,7 @@ function handleContextMenu(e) {
       const bastionItems = [];
       const canManageCh = isOwner || hasPerm('manage_channels');
       if (canManageCh) {
-        bastionItems.push({ icon: _ctxSvg('create'), label: 'Create Room', action: () => showCreateRoomModal(curBastion) });
+        bastionItems.push({ icon: _ctxSvg('create'), label: 'Create Channel', action: () => showCreateRoomModal(curBastion) });
       }
       if (isOwner) {
         bastionItems.push({ icon: _ctxSvg('settings'), label: 'Bastion Settings', action: () => openBastionSettings() });
@@ -27128,7 +27146,7 @@ function _editChannelInline(chIdx) {
   const ch = b.channels?.[chIdx]; if (!ch) return;
   const chType = ch.type || 'text';
   const typeNames = {text:'Text',voice:'Party',forum:'Wall',announcement:'Announcement',poll:'Poll'};
-  showCustomInput('Edit '+typeNames[chType]+' Room', 'Room name:', (newName) => {
+  showCustomInput('Edit '+typeNames[chType]+' Channel', 'Channel name:', (newName) => {
     if (!newName || !newName.trim()) return;
     ch.name = newName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '');
     saveUser();
@@ -27136,7 +27154,7 @@ function _editChannelInline(chIdx) {
     const scroll = document.getElementById('sidebar-scroll');
     if (scroll) renderBastionSidebar(scroll);
     if (curChannel === chIdx) loadChatChannel(chIdx);
-    toast('Room renamed to '+(chType==='text'?'#':'')+ch.name, 'success');
+    toast('Channel renamed to '+(chType==='text'?'#':'')+ch.name, 'success');
   }, ch.name);
 }
 function showCategoryCtxMenu(e, catId, label, type) {
@@ -27460,7 +27478,7 @@ async function addCategoryPrompt() {
 
 async function addChannelToCategory(catId, type) {
   const typeLabel = type==='voice'?'party':type;
-  showCustomInput('Add Room', `Name for new ${typeLabel} room:`, async (name) => {
+  showCustomInput('Add Channel', `Name for new ${typeLabel} room:`, async (name) => {
     if (!name?.trim()) return;
     const b = CU.bastions[curBastion];
     if (!b) return;
@@ -29878,7 +29896,7 @@ function _showRoomPreview(e, el, roomName) {
     if (!b) return;
     const ch = (b.channels||[]).find(c => c.name === roomName);
     if (!ch) return;
-    const typeLabel = {text:'Text Room',voice:'Party Room',forum:'Wall Room',announcement:'Announcement Room',poll:'Poll Room'}[ch.type]||'Room';
+    const typeLabel = {text:'Text Channel',voice:'Party Channel',forum:'Wall Channel',announcement:'Announcement Channel',poll:'Poll Channel'}[ch.type]||'Channel';
     const typeIcon = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')}[ch.type]||'#';
     const panel = document.createElement('div');
     panel.className = 'mention-preview';
@@ -42739,10 +42757,10 @@ function _handleSmartSuggestion(ta) {
   else if (triggerChar === '#') {
     if (curBastion !== null) {
       const b = CU?.bastions?.[curBastion];
-      // Rooms
+      // Channels
       (b?.channels||[]).forEach(ch => {
         if (ch.name.toLowerCase().startsWith(query) || ch.name.toLowerCase().includes(query)) {
-          const typeLabel = {text:'Text Room',voice:'Party Room',forum:'Wall Room',announcement:'Announcement Room',poll:'Poll Room'}[ch.type]||'Room';
+          const typeLabel = {text:'Text Channel',voice:'Party Channel',forum:'Wall Channel',announcement:'Announcement Channel',poll:'Poll Channel'}[ch.type]||'Channel';
           _sugResults.push({type:'room',label:ch.name,desc:typeLabel,icon:ch.type==='voice'?'🎉':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#',insert:'#'+ch.name});
         }
       });
@@ -42824,7 +42842,7 @@ function _renderSuggestPanel(ta) {
   const rect = ta.getBoundingClientRect();
   panel.style.cssText += `;position:fixed;bottom:${window.innerHeight-rect.top+6}px;left:${rect.left}px;display:flex;flex-direction:column;gap:2px;`;
 
-  const typeLabels = {'@':'Mentions','#':'Rooms & Categories','/':'Formatting','!':'Bot Commands'};
+  const typeLabels = {'@':'Mentions','#':'Channels & Categories','/':'Formatting','!':'Bot Commands'};
   const queryText = ta.value.slice(_sugStartPos+1, ta.selectionStart);
   panel.innerHTML = `<div class="sp-header">${typeLabels[_sugType]||'Suggestions'} ${queryText?'— <span style="color:rgba(255,249,62,.7);">'+escapeHTML(queryText)+'</span>':''}</div>`;
   _sugResults.forEach((r, i) => {

@@ -54,6 +54,8 @@ const _svgIcons = {
   sys_rename:  `<svg width="1em" height="1em" viewBox="0 0 512 512" fill="currentColor"><path d="M36.4 353.2c4.1-14.6 11.8-27.9 22.6-38.7l181.2-181.2 33.9-33.9c16.6 16.6 51.3 51.3 104 104l33.9 33.9-33.9 33.9-181.2 181.2c-10.7 10.7-24.1 18.5-38.7 22.6L30.4 510.6c-8.3 2.3-17.3 0-23.4-6.2S-1.4 489.3 .9 481L36.4 353.2zm55.6-3.7c-4.4 4.7-7.6 10.4-9.3 16.6l-24.1 86.9 86.9-24.1c6.4-1.8 12.2-5.1 17-9.7L91.9 349.5zm354-146.1c-16.6-16.6-51.3-51.3-104-104L308 65.5C334.5 39 349.4 24.1 352.9 20.6 366.4 7 384.8-.6 404-.6S441.6 7 455.1 20.6l35.7 35.7C504.4 69.9 512 88.3 512 107.4s-7.6 37.6-21.2 51.1c-3.5 3.5-18.4 18.4-44.9 44.9z"/></svg>`,
   sys_role:    `<svg width="1em" height="1em" viewBox="0 0 576 512" fill="currentColor"><path d="M309.5-18.9c-4.1-8-12.4-13.1-21.4-13.1s-17.3 5.1-21.4 13.1L193.1 125.3 33.2 150.7c-8.9 1.4-16.3 7.7-19.1 16.3s-.5 18 5.8 24.4l114.4 114.5-25.2 159.9c-1.4 8.9 2.3 17.9 9.6 23.2s16.9 6.1 25 2L288.1 417.6 432.4 491c8 4.1 17.7 3.3 25-2s11-14.2 9.6-23.2L441.7 305.9 556.1 191.4c6.4-6.4 8.6-15.8 5.8-24.4s-10.1-14.9-19.1-16.3L383 125.3 309.5-18.9z"/></svg>`,
   sys_announce:`<svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M6 9c-1.71 0-3.09 1.43-3 3.16C3.08 13.78 4.54 15 6.17 15H8l1.54.62c-.01.13-.04.25-.04.38 0 1.93 1.57 3.5 3.5 3.5 1.13 0 2.13-.55 2.77-1.39l.85.34a1 1 0 0 0 1.37-.93V6.48c0-.71-.71-1.19-1.37-.93L7.99 9h-2Zm7 9.5a2.5 2.5 0 0 1-2.5-2.5l4.3 1.72c-.46.48-1.09.78-1.8.78m7-6.5c0 1.01-.39 1.92-1 2.62V9.38c.61.7 1 1.61 1 2.62"/></svg>`,
+  sys_pin:     `<svg width="1em" height="1em" viewBox="0 0 384 512" fill="currentColor"><path d="M32 32C32 14.3 46.3 0 64 0L320 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-29.5 0 10.3 134.1c37.1 21.2 65.8 56.4 78.2 99.7l3.8 13.4c2.8 9.7 .8 20-5.2 28.1S362 352 352 352L32 352c-10 0-19.5-4.7-25.5-12.7s-8-18.4-5.2-28.1L5 297.8c12.4-43.3 41-78.5 78.2-99.7L93.5 64 64 64C46.3 64 32 49.7 32 32zM160 400l64 0 0 112c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-112z"/></svg>`,
+  sys_thread:  `<svg width="1em" height="1em" viewBox="0 0 576 512" fill="currentColor"><path d="M384 144c0 97.2-86 176-192 176-26.7 0-52.1-5-75.2-14L35.2 349.2c-9.3 4.9-20.7 3.2-28.2-4.2s-9.2-18.9-4.2-28.2l35.6-67.2C14.3 220.2 0 183.6 0 144 0 46.8 86 0 192 0S384 46.8 384 144zm0 368c-94.1 0-172.4-62.1-188.8-144 120-1.5 224.3-86.9 235.8-202.7 83.3 19.2 145 88.3 145 170.7 0 39.6-14.3 76.2-38.4 105.6l35.6 67.2c4.9 9.3 3.2 20.7-4.2 28.2s-18.9 9.2-28.2 4.2L459.2 498c-23.1 9-48.5 14-75.2 14z"/></svg>`,
 };
 
 const _FPP_MOON_SVG     = '<svg viewBox="0 0 512 512" fill="currentColor" style="width:1em;height:1em;"><path d="M256 0C114.6 0 0 114.6 0 256S114.6 512 256 512c68.8 0 131.3-27.2 177.3-71.4 7.3-7 9.4-17.9 5.3-27.1s-13.7-14.9-23.8-14.1c-4.9 .4-9.8 .6-14.8 .6-101.6 0-184-82.4-184-184 0-72.1 41.5-134.6 102.1-164.8 9.1-4.5 14.3-14.3 13.1-24.4S322.6 8.5 312.7 6.3C294.4 2.2 275.4 0 256 0z"/></svg>';
@@ -8540,7 +8542,11 @@ function _normalizeMsg(m) {
 }
 function _fmtMsgDateDivider(ts) {
   const d = _safeDate(ts);
-  return d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Today';
+  // No usable timestamp → no divider. The old `else 'Today'` fallback
+  // silently inserted phantom "Today" dividers above null-ts rows and
+  // every time the local day flipped while the app was open.
+  if (!d) return null;
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 function _fmtMsgTime(ts, fallback) {
   const d = _safeDate(ts);
@@ -8580,8 +8586,8 @@ const _SYSTEM_EVENT_PATTERNS = [
   { key: 'channel',    icon: 'sys_channel',  color: '#3ecf6e', test: /\b(channel created|created the channel|new channel)\b/i },
   { key: 'rename',     icon: 'sys_rename',   color: '#fe9c3b', test: /\b(renamed|name changed)\b/i },
   { key: 'role',       icon: 'sys_role',     color: '#fff93e', test: /\b(role|promoted|demoted)\b/i },
-  { key: 'pin',        icon: 'bookmark',     color: '#fff93e', test: /\b(pinned)\b/i },
-  { key: 'thread',     icon: 'thread',       color: '#fff93e', test: /\b(started a thread|created a thread|opened a thread)\b/i },
+  { key: 'pin',        icon: 'sys_pin',      color: '#fff93e', test: /\b(pinned)\b/i },
+  { key: 'thread',     icon: 'sys_thread',   color: '#fff93e', test: /\b(started a thread|created a thread|opened a thread)\b/i },
   { key: 'announce',   icon: 'sys_announce', color: '#fff93e', test: /\b(announcement|announces)\b/i },
   { key: 'boost',      icon: 'boost',        color: '#ff77e4', test: /\b(boosted|boost)\b/i },
 ];
@@ -8640,7 +8646,7 @@ function _renderMsgBatch(container, msgs, context, state) {
   }
   for (const msg of msgs) {
     const d = _fmtMsgDateDivider(msg.timestamp);
-    if (d !== state.lastDate) {
+    if (d && d !== state.lastDate) {
       const div = document.createElement('div');
       div.className = 'date-div';
       div.innerHTML = '<span>' + escapeHTML(d) + '</span>';
@@ -9171,6 +9177,18 @@ function _appendLiveMessage(container, msg, context) {
       div.className = 'date-div';
       div.innerHTML = '<span>' + escapeHTML(thisLabel) + '</span>';
       container.appendChild(div);
+    } else if (thisLabel && !lastLabel) {
+      // Last in-DOM row had no parseable timestamp — fall back to the
+      // active divider in the container. Avoids "Today" appearing
+      // mid-conversation when a single null-ts row poisoned the compare.
+      const dateDivs = container.querySelectorAll('.date-div');
+      const lastDateText = dateDivs[dateDivs.length - 1]?.textContent?.trim();
+      if (lastDateText && lastDateText !== thisLabel) {
+        const div = document.createElement('div');
+        div.className = 'date-div';
+        div.innerHTML = '<span>' + escapeHTML(thisLabel) + '</span>';
+        container.appendChild(div);
+      }
     }
   }
   appendMessage(container, msg, context, null);
@@ -9691,9 +9709,12 @@ function deleteMsg(msgId, context) {
   if (row) {
     const rawAuthor = row.dataset.from || 'Unknown';
     // System messages are stored as '__system__' under the hood, but
-    // surfaced to humans as the @fortized account.
-    const author = (rawAuthor === '__system__') ? 'fortized' : rawAuthor;
-    const pfp = (rawAuthor === CU.username) ? CU.pfp : (rawAuthor === '__system__' ? null : (_pfpCache[rawAuthor] || null));
+    // surfaced to humans as the @fortized account with the Fortized
+    // brand icon as the avatar.
+    const isSystem = rawAuthor === '__system__';
+    const author = isSystem ? 'fortized' : rawAuthor;
+    const pfp = isSystem ? '/Fortized icon.png'
+      : (rawAuthor === CU.username ? CU.pfp : (_pfpCache[rawAuthor] || null));
     const textEl = row.querySelector('.msg-text');
     // Get the text content for display
     const msgText = textEl ? textEl.textContent.trim() : '';

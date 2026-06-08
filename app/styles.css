@@ -923,7 +923,9 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 @keyframes sr-bounce{0%{opacity:1;transform:translate(0,0) scale(1);}50%{transform:translate(15px,-50px) scale(1.2);}100%{opacity:0;transform:translate(30px,-90px) scale(.4);}}
 @keyframes sr-zigzag{0%{opacity:1;transform:translate(0,0) scale(1);}33%{transform:translate(-20px,-30px) scale(1.1);}66%{transform:translate(20px,-60px) scale(.8);}100%{opacity:0;transform:translate(-10px,-90px) scale(.3);}}
 /* Hover quick actions — fade in, not pop */
-.msg-acts{display:flex;gap:1px;position:absolute;right:16px;top:-14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:2px;z-index:30;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:translateY(3px);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 4px 12px rgba(0,0,0,.25);}
+/* Solid surface so it reads as a single flat colour regardless of
+   what's underneath. Matches the userbar/chatbar effective tone. */
+.msg-acts{display:flex;gap:1px;position:absolute;right:16px;top:-14px;background:#1e2128;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:2px;z-index:30;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:translateY(3px);box-shadow:0 4px 12px rgba(0,0,0,.35);}
 /* Raise the hovered row above its neighbours so the absolute .msg-acts
    isn't visually clipped by the next row. content-visibility:auto on
    .msg-row creates a containing block that clips absolute children —
@@ -3237,7 +3239,9 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .toast.success{border-left:3px solid var(--green);color:#a3e8b8;}
 .toast.error{border-left:3px solid var(--red);color:#fca5a5;}
 .toast.info{border-left:3px solid var(--accent);color:var(--accent);}
-.ctx-menu{position:fixed;z-index:var(--z-max);background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:var(--radius-md);padding:6px 0;min-width:220px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:ctxIn .14s var(--ease-out);display:none;overflow:hidden;}
+/* Solid surface — same flat tone as the userbar so it never reveals
+   shifting shades from whatever it's floating over. No backdrop-filter. */
+.ctx-menu{position:fixed;z-index:var(--z-max);background:#1e2128;border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-md);padding:6px 0;min-width:220px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);animation:ctxIn .14s var(--ease-out);display:none;overflow:hidden;}
 .ctx-menu.ctx-visible{display:block;}
 /* ── System Announcement Banner ─────────────────── */
 .sys-announce-bar{display:flex;align-items:center;justify-content:center;position:relative;width:100%;min-height:40px;height:40px;background:#3ecf6e;background-image:repeating-linear-gradient(-45deg,transparent,transparent 10px,rgba(255,255,255,0.15) 10px,rgba(255,255,255,0.15) 20px);border-bottom:1px solid rgba(62,207,110,.3);box-sizing:border-box;}
@@ -5922,14 +5926,19 @@ button[disabled],
 .reaction-picker-v2 .rpv-preview{padding:8px 14px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:40px;}
 .reaction-picker-v2 .rpv-preview-emoji{font-size:28px;}
 .reaction-picker-v2 .rpv-preview-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.5);}
-/* Reworked reaction pills */
-.r-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:4px 10px 4px 7px;font-size:13px;cursor:pointer;transition:all .15s;user-select:none;}
-.r-pill:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.15);}
-.r-pill .r-emoji{font-size:16px;line-height:1;}
-.r-pill .r-count{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);min-width:8px;text-align:center;font-variant-numeric:tabular-nums;}
-.r-pill.mine{background:var(--accent-dim);border-color:var(--accent-mid);}
+/* Reworked reaction pills — Discord-parity: rounder, solid grey when
+   not mine, accent yellow when you reacted. Quick smiley-add follows. */
+.r-pill{display:inline-flex;align-items:center;gap:6px;background:#2a2d35;border:1px solid transparent;border-radius:14px;padding:3px 9px 3px 7px;font-size:13px;cursor:pointer;transition:background .12s,border-color .12s,transform .06s;user-select:none;line-height:1;}
+.r-pill:hover{background:#33363f;border-color:rgba(255,255,255,.1);}
+.r-pill:active{transform:scale(.94);}
+.r-pill .r-emoji{font-size:16px;line-height:1;display:inline-flex;align-items:center;}
+.r-pill .r-count{font-size:12px;font-weight:700;color:rgba(255,255,255,.8);min-width:8px;text-align:center;font-variant-numeric:tabular-nums;}
+.r-pill.mine{background:rgba(255,249,62,.14);border-color:rgba(255,249,62,.45);}
+.r-pill.mine:hover{background:rgba(255,249,62,.22);border-color:rgba(255,249,62,.6);}
 .r-pill.mine .r-count{color:var(--accent);}
-.r-pill.r-add-btn{background:transparent;border:1px dashed rgba(255,255,255,.1);border-radius:8px;padding:4px 8px;color:rgba(255,255,255,.3);cursor:pointer;transition:all .12s;font-size:14px;}
+.r-pill.r-add-btn{background:#2a2d35;border:1px solid transparent;border-radius:14px;padding:3px 8px;color:rgba(255,255,255,.55);cursor:pointer;transition:background .12s,color .12s,border-color .12s;}
+.r-pill.r-add-btn:hover{background:#33363f;border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.95);}
+.r-pill.r-add-btn svg,.r-pill.r-add-btn img{width:15px;height:15px;display:block;}
 .r-pill.r-add-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.6);transform:none;box-shadow:none;}
 
 /* ── Keyboard Shortcuts Settings ── */

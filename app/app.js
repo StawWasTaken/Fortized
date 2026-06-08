@@ -3365,13 +3365,13 @@ function setTopbarDMActions() {
   if (!acts) return;
   acts.innerHTML = `
     <button class="tb-act-btn" title="Voice Call" onclick="if(curDM)startVoiceCall(curDM);else toast('No active DM','error')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
-    <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>`;
+    <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()">${_faMsg('pin', 16)}</button>`;
 }
 function setTopbarChannelActions() {
   const acts = document.getElementById('tb-actions');
   if (!acts) return;
   acts.innerHTML = `
-    <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>`;
+    <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()">${_faMsg('pin', 16)}</button>`;
 }
 
 function updateSidebar(v) {
@@ -9671,8 +9671,11 @@ function deleteMsg(msgId, context) {
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
   let previewHTML = '';
   if (row) {
-    const author = row.dataset.from || 'Unknown';
-    const pfp = (author === CU.username) ? CU.pfp : (_pfpCache[author] || null);
+    const rawAuthor = row.dataset.from || 'Unknown';
+    // System messages are stored as '__system__' under the hood, but
+    // surfaced to humans as the @fortized account.
+    const author = (rawAuthor === '__system__') ? 'fortized' : rawAuthor;
+    const pfp = (rawAuthor === CU.username) ? CU.pfp : (rawAuthor === '__system__' ? null : (_pfpCache[rawAuthor] || null));
     const textEl = row.querySelector('.msg-text');
     // Get the text content for display
     const msgText = textEl ? textEl.textContent.trim() : '';
@@ -46265,15 +46268,17 @@ function openThread(msgId, text, from) {
   _activeThread = { msgId, text, from, bid, chName, replyCount: 0 };
   document.getElementById('thread-panel')?.remove();
   document.getElementById('thread-panel-overlay')?.remove();
-  // Overlay
+  // Overlay (flex-centers the card; click outside the card closes)
   const overlay = document.createElement('div');
   overlay.id = 'thread-panel-overlay';
   overlay.className = 'thread-panel-v2-overlay';
-  overlay.onclick = () => _closeThread();
-  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) _closeThread(); });
   const panel = document.createElement('div');
   panel.className = 'thread-panel-v2';
   panel.id = 'thread-panel';
+  // Stop bubbling so a click inside the card doesn't fire the overlay's
+  // outside-click handler.
+  panel.addEventListener('click', e => e.stopPropagation());
   // Cache-first avatar for the thread origin.
   const originPfp = (from === CU?.username) ? (CU?.pfp || null) : (_pfpCache[from] || null);
   const originAvId = 'thread-origin-av';
@@ -46307,7 +46312,8 @@ function openThread(msgId, text, from) {
       <textarea id="thread-input" placeholder="Reply to thread…" rows="1" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;padding:9px 12px;font-family:inherit;font-size:13px;resize:none;min-height:38px;max-height:120px;outline:none;transition:border-color .15s;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}" oninput="_broadcastThreadTyping()"></textarea>
       <button onclick="_sendThreadReply()" style="padding:9px 16px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:10px;color:var(--accent);font-size:12.5px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .12s;" onmouseover="this.style.background='var(--accent)';this.style.color='#0f1119'" onmouseout="this.style.background='var(--accent-dim)';this.style.color='var(--accent)'">Reply</button>
     </div>`;
-  document.body.appendChild(panel);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
   // Hydrate origin avatar if we didn't have it cached.
   if (from && !originPfp) {
     FortizedSocial.getUserByName(from).then(u => {
@@ -46335,22 +46341,35 @@ function _threadEscHandler(e) {
 function _closeThread() {
   _stopThreadTypingBroadcast();
   if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch(e) { _dbg('[Thread] typing listener cleanup failed', e); } _threadTypingListenerOff = null; }
-  if (_threadListener) { _threadListener(); _threadListener = null; }
+  if (_threadListener) { try { _threadListener(); } catch {} _threadListener = null; }
   _activeThread = null;
   if (_threadEscBound) { document.removeEventListener('keydown', _threadEscHandler); _threadEscBound = false; }
-  _closeEl('thread-panel-overlay');
-  const p = document.getElementById('thread-panel');
-  if (p) { p.style.transition='transform .15s ease, opacity .15s ease'; p.style.transform='translateX(20px)'; p.style.opacity='0'; setTimeout(()=>p.remove(),160); }
+  const ov = document.getElementById('thread-panel-overlay');
+  if (ov) {
+    ov.style.transition = 'opacity .12s ease';
+    ov.style.opacity = '0';
+    setTimeout(() => ov.remove(), 130);
+  }
 }
+let _threadRenderRaf = null;
 function _listenThreadReplies(bid, chName, msgId) {
-  if (_threadListener) _threadListener();
-  const ref = firebase.database().ref(`threads/${bid}/${chName}/${msgId}`).orderByChild('timestamp');
-  const cb = ref.on('value', snap => {
-    const replies = [];
-    if (snap.exists()) snap.forEach(c => { const v = c.val(); v._key = c.key; replies.push(v); });
-    _renderThreadReplies(replies);
-  });
-  _threadListener = () => ref.off('value', cb);
+  if (_threadListener) { try { _threadListener(); } catch {} _threadListener = null; }
+  try {
+    const ref = firebase.database().ref(`threads/${bid}/${chName}/${msgId}`).orderByChild('timestamp');
+    const cb = ref.on('value', snap => {
+      // Coalesce listener fires into one render per animation frame. The
+      // firebase-compat-shim can poll aggressively for ref.on('value');
+      // unthrottled it pounded container.innerHTML and froze the tab.
+      const replies = [];
+      try { if (snap.exists()) snap.forEach(c => { const v = c.val(); if (v) { v._key = c.key; replies.push(v); } }); } catch (e) { _dbg('[Thread] snap iter failed', e?.message); }
+      if (_threadRenderRaf) cancelAnimationFrame(_threadRenderRaf);
+      _threadRenderRaf = requestAnimationFrame(() => { _threadRenderRaf = null; try { _renderThreadReplies(replies); } catch (e) { console.warn('[Thread] render failed:', e?.message); } });
+    });
+    _threadListener = () => { try { ref.off('value', cb); } catch {} };
+  } catch (e) {
+    console.warn('[Thread] listener setup failed:', e?.message);
+    _renderThreadReplies([]);
+  }
 }
 function _renderThreadReplies(replies) {
   const container = document.getElementById('thread-replies');

@@ -5928,7 +5928,7 @@ button[disabled],
 .reaction-picker-v2 .rpv-preview-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.5);}
 /* Reworked reaction pills — Discord-parity: rounder, solid grey when
    not mine, accent yellow when you reacted. Quick smiley-add follows. */
-.r-pill{display:inline-flex;align-items:center;gap:6px;background:#2a2d35;border:1px solid transparent;border-radius:14px;padding:3px 9px 3px 7px;font-size:13px;cursor:pointer;transition:background .12s,border-color .12s,transform .06s;user-select:none;line-height:1;}
+.r-pill{display:inline-flex;align-items:center;gap:6px;background:#2a2d35;border:1px solid transparent;border-radius:8px;padding:3px 9px 3px 7px;font-size:13px;cursor:pointer;transition:background .12s,border-color .12s,transform .06s;user-select:none;line-height:1;}
 .r-pill:hover{background:#33363f;border-color:rgba(255,255,255,.1);}
 .r-pill:active{transform:scale(.94);}
 .r-pill .r-emoji{font-size:16px;line-height:1;display:inline-flex;align-items:center;}
@@ -5936,9 +5936,9 @@ button[disabled],
 .r-pill.mine{background:rgba(255,249,62,.14);border-color:rgba(255,249,62,.45);}
 .r-pill.mine:hover{background:rgba(255,249,62,.22);border-color:rgba(255,249,62,.6);}
 .r-pill.mine .r-count{color:var(--accent);}
-.r-pill.r-add-btn{background:#2a2d35;border:1px solid transparent;border-radius:14px;padding:3px 8px;color:rgba(255,255,255,.55);cursor:pointer;transition:background .12s,color .12s,border-color .12s;}
+.r-pill.r-add-btn{background:#2a2d35;border:1px solid transparent;border-radius:8px;padding:3px 8px;color:rgba(255,255,255,.55);cursor:pointer;transition:background .12s,color .12s,border-color .12s;}
 .r-pill.r-add-btn:hover{background:#33363f;border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.95);}
-.r-pill.r-add-btn svg,.r-pill.r-add-btn img{width:15px;height:15px;display:block;}
+.r-pill.r-add-btn svg,.r-pill.r-add-btn img{width:16px;height:16px;display:block;}
 .r-pill.r-add-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.6);transform:none;box-shadow:none;}
 
 /* ── Keyboard Shortcuts Settings ── */

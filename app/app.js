@@ -9309,7 +9309,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     const isMine = arr.includes(CU?.username);
     const hasSuperReaction = _hasActiveRadiance();
     return `<span class="r-pill${isMine?' mine':''}" onclick="toggleReaction('${escapeHTML(id)}','${emoji}','${context}')" onmousedown="${hasSuperReaction?`_reactionIntensityStart(this,'${escapeHTML(id)}','${emoji}','${context}')`:''}" onmouseup="_reactionIntensityEnd()" onmouseleave="_reactionIntensityEnd()" data-r-emoji="${escapeHTML(emoji)}" data-r-users="${escapeHTML(arr.join(','))}"><span class="r-emoji"><img src="${emojiToTwemojiUrl(emoji)}" alt="${emoji}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='${emoji}'"></span><span class="r-count">${arr.length}</span>${hasSuperReaction?`<span class="r-super-btn" onclick="event.stopPropagation();triggerSuperReaction(this.closest('.r-pill'),'${escapeHTML(emoji)}')" title="Super Reaction" data-tip="✨ Super!"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>`:''}</span>`;
-  }).join('')+`<span class="r-pill r-add-btn" onclick="addReactionUI(event,'${escapeHTML(id)}','${context}')" data-tip="Add Reaction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></span>`:'';
+  }).join('')+`<span class="r-pill r-add-btn" onclick="addReactionUI(event,'${escapeHTML(id)}','${context}')" data-tip="Add Reaction">${_ADD_REACTION_ICON_HTML}</span>`:'';
 
   const safeId=escapeHTML(id);
   const safeText=escapeHTML((msg.text||'').slice(0,100).replace(/'/g,' '));
@@ -9387,22 +9387,15 @@ function appendMessage(container, msg, context, prevAuthor) {
     }
   }
   container.appendChild(row);
-  // Initialize super reaction hover replays for all reactions in this message
-  if (_hasActiveRadiance()) {
-    const reactionPills = row.querySelectorAll('.r-pill[data-r-emoji]:not(.r-add-btn)');
-    reactionPills.forEach((pill, idx) => {
-      const emoji = pill.dataset.rEmoji;
-      if (!emoji) return;
-      // Auto-play super reaction animation when message is rendered
-      setTimeout(() => {
-        triggerSuperReaction(pill, emoji);
-      }, 100 + (idx * 150));
-      // Add mouseover to replay super reaction animation
-      pill.addEventListener('mouseover', function() {
-        triggerSuperReaction(pill, emoji);
-      });
-    });
-  }
+  // Super reactions are NOT auto-replayed any more. The previous build
+  // fired triggerSuperReaction() for every reaction on every render AND
+  // on every hover — each call spawned 5 floating-emoji particles into
+  // document.body. With Radiance active this flooded the chat surface
+  // and contributed heavily to the picker-flicker / lag reports. Super
+  // reactions now fire only when the user explicitly:
+  //   1) holds Radiance,
+  //   2) clicks the per-pill ✨ button, OR
+  //   3) reacts while "Super" mode is toggled on in the emoji picker.
   // Blur messages from blocked or ignored users
   if (_msgBlocked || _msgIgnored) {
     row.classList.add('msg-blurred');
@@ -20863,10 +20856,11 @@ function _openAvatarGifPicker() {
     {id:'love',label:'Love',emoji:'❤️',color:'#ff4d6d'},
     {id:'happy birthday',label:'Birthday',emoji:'🎂',color:'#f472b6'},
     {id:'laughing',label:'Laughing',emoji:'🤣',color:'#ffe066'},
-    // "Fortized" replaces the old Sad slot. The id drives the Klipy
-    // search query, so we use a fortress/castle-themed query for
-    // on-brand results, while the label keeps the brand name.
-    {id:'fortress castle knight',label:'Fortized',emoji:'🏰',color:'#fff93e'},
+    // "Fortized" — search by the brand tag. Klipy uploads tagged
+    // "fortized" / "Fortized" / "Fortized bastion" (incl. uploads
+    // from @staw) surface here. Was an unrelated "castle knight"
+    // query that returned generic medieval results.
+    {id:'fortized',label:'Fortized',emoji:'🏰',color:'#fff93e'},
     {id:'excited',label:'Excited',emoji:'🎉',color:'#c084fc'},
     {id:'angry',label:'Angry',emoji:'😡',color:'#f87171'},
     {id:'dance',label:'Dance',emoji:'💃',color:'#f472b6'},
@@ -33534,10 +33528,11 @@ function openGiphyPicker(inputId) {
     {id:'love',label:'Love',emoji:'❤️',color:'#ff4d6d'},
     {id:'gaming',label:'Gaming',emoji:'🎮',color:'#3ecf6e'},
     {id:'laughing',label:'Laughing',emoji:'🤣',color:'#ffe066'},
-    // "Fortized" replaces the old Sad slot. The id drives the Klipy
-    // search query, so we use a fortress/castle-themed query for
-    // on-brand results, while the label keeps the brand name.
-    {id:'fortress castle knight',label:'Fortized',emoji:'🏰',color:'#fff93e'},
+    // "Fortized" — search by the brand tag. Klipy uploads tagged
+    // "fortized" / "Fortized" / "Fortized bastion" (incl. uploads
+    // from @staw) surface here. Was an unrelated "castle knight"
+    // query that returned generic medieval results.
+    {id:'fortized',label:'Fortized',emoji:'🏰',color:'#fff93e'},
     {id:'excited',label:'Excited',emoji:'🎉',color:'#c084fc'},
     {id:'angry',label:'Angry',emoji:'😡',color:'#f87171'},
     {id:'dance',label:'Dance',emoji:'💃',color:'#f472b6'},

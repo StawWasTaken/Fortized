@@ -833,7 +833,7 @@ const FortizedSocial = (() => {
   }
 
   function _dmFromRow(r) {
-    return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at, _tsFromId(r.id)), edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined, replyTo: _parseJSONIsh(r.reply_to), flags: Array.isArray(r.flags) ? r.flags : (r.flags && typeof r.flags === 'string' ? (() => { try { return JSON.parse(r.flags); } catch { return undefined; } })() : undefined) };
+    return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at, _tsFromId(r.id)), edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined, forwardedFrom: _parseJSONIsh(r.forwarded_from) || undefined, replyTo: _parseJSONIsh(r.reply_to), flags: Array.isArray(r.flags) ? r.flags : (r.flags && typeof r.flags === 'string' ? (() => { try { return JSON.parse(r.flags); } catch { return undefined; } })() : undefined) };
   }
   // Best-effort timestamp recovery from the message id. Our ids look like
   // `<base36 Date.now()><base36 Math.random()>` concatenated — Date.now()
@@ -876,8 +876,9 @@ const FortizedSocial = (() => {
       edited: msgData.edited || false,
       newText: msgData.newText || msgData.new_text || undefined,
       reactions: msgData.reactions || undefined,
-      forwarded: msgData.forwarded || false,
-      forwardedBy: msgData.forwardedBy || msgData.forwarded_by || undefined,
+      forwarded: msgData.forwarded || r.forwarded || false,
+      forwardedBy: msgData.forwardedBy || msgData.forwarded_by || r.forwarded_by || undefined,
+      forwardedFrom: _parseJSONIsh(msgData.forwardedFrom || msgData.forwarded_from || r.forwarded_from) || undefined,
       replyTo: _parseJSONIsh(msgData.replyTo || msgData.reply_to || r.reply_to)
     };
   }
@@ -912,6 +913,10 @@ const FortizedSocial = (() => {
 
     const row = { dm_key: key, id: msg.id, from: msg.from, text: msg.text, time: msg.time, timestamp: msg.timestamp };
     if (opts?.forwarded) { row.forwarded = true; row.forwarded_by = opts.forwardedBy || fromUsername; msg.forwarded = true; msg.forwardedBy = row.forwarded_by; }
+    if (opts?.forwardedFrom && typeof opts.forwardedFrom === 'object') {
+      row.forwarded_from = opts.forwardedFrom;
+      msg.forwardedFrom = opts.forwardedFrom;
+    }
     if (Array.isArray(opts?.flags) && opts.flags.length) { row.flags = opts.flags; msg.flags = opts.flags; }
     // Persist reply target so the preview survives reload (requires a
     // `reply_to JSONB` column on dms — see migration SQL).
@@ -1030,18 +1035,32 @@ const FortizedSocial = (() => {
       const cached = _cacheGet(cacheKey);
       if (cached !== undefined) return cached;
     }
-    const { data } = await sb.from('bastion_msgs')
-      .select('id,from,text,time,timestamp,edited,reactions,reply_to')
+    // Select forwarded_* if present. Wrap in a fallback so pre-migration
+    // schemas (without these columns) still return data.
+    let { data, error } = await sb.from('bastion_msgs')
+      .select('id,from,text,time,timestamp,edited,reactions,reply_to,forwarded,forwarded_by,forwarded_from')
       .eq('bastion_id', bastionId)
       .eq('channel_id', channelId)
       .order('timestamp', { ascending: false })
       .range(_offset, _offset + _limit - 1);
+    if (error && /column|does not exist/i.test(error.message || '')) {
+      const fallback = await sb.from('bastion_msgs')
+        .select('id,from,text,time,timestamp,edited,reactions,reply_to')
+        .eq('bastion_id', bastionId)
+        .eq('channel_id', channelId)
+        .order('timestamp', { ascending: false })
+        .range(_offset, _offset + _limit - 1);
+      data = fallback.data;
+    }
     const result = (data || []).map(r => ({
       id: r.id, from: r.from, text: r.text, time: r.time,
       timestamp: _pickTimestamp(r.timestamp, r.created_at, r.inserted_at, _tsFromId(r.id)),
       edited: r.edited || false,
       reactions: r.reactions || undefined,
       replyTo: _parseJSONIsh(r.reply_to),
+      forwarded: r.forwarded || false,
+      forwardedBy: r.forwarded_by || undefined,
+      forwardedFrom: _parseJSONIsh(r.forwarded_from) || undefined,
     }));
     result.sort((a, b) => {
       const ta = a.timestamp ? +new Date(a.timestamp) : 0;
@@ -1072,7 +1091,21 @@ const FortizedSocial = (() => {
       row.reply_to = { id: opts.replyTo.id || null, from: opts.replyTo.from || null, text: (opts.replyTo.text || '').slice(0, 200) };
       msg.replyTo = row.reply_to;
     }
-    await sb.from('bastion_msgs').insert(row);
+    if (opts?.forwarded) {
+      row.forwarded = true; row.forwarded_by = opts.forwardedBy || msg.from;
+      msg.forwarded = true; msg.forwardedBy = row.forwarded_by;
+    }
+    if (opts?.forwardedFrom && typeof opts.forwardedFrom === 'object') {
+      row.forwarded_from = opts.forwardedFrom;
+      msg.forwardedFrom = opts.forwardedFrom;
+    }
+    // Tolerate the columns being absent (pre-migration) — retry without
+    // the optional fields so the message still lands.
+    let res = await sb.from('bastion_msgs').insert(row);
+    if (res?.error && /column|does not exist/i.test(res.error.message || '')) {
+      const minimal = { bastion_id: row.bastion_id, channel_id: row.channel_id, id: row.id, from: row.from, text: row.text, time: row.time, timestamp: row.timestamp, reply_to: row.reply_to };
+      await sb.from('bastion_msgs').insert(minimal);
+    }
     return msg;
   }
 

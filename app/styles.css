@@ -923,13 +923,14 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 @keyframes sr-bounce{0%{opacity:1;transform:translate(0,0) scale(1);}50%{transform:translate(15px,-50px) scale(1.2);}100%{opacity:0;transform:translate(30px,-90px) scale(.4);}}
 @keyframes sr-zigzag{0%{opacity:1;transform:translate(0,0) scale(1);}33%{transform:translate(-20px,-30px) scale(1.1);}66%{transform:translate(20px,-60px) scale(.8);}100%{opacity:0;transform:translate(-10px,-90px) scale(.3);}}
 /* Hover quick actions — fade in, not pop */
-/* Themeable solid surface — uses --msg-acts-bg which defaults to the
-   panel colour but can be overridden per user appearance (Radiance
-   customisation). Sits INSIDE the row's contain box so it isn't
-   clipped by content-visibility — was top:-14px which escaped the
-   contain block on media rows and forced a content-visibility hover
-   workaround that caused scroll jank. */
-.msg-acts{display:flex;gap:1px;position:absolute;right:12px;top:4px;background:var(--msg-acts-bg,var(--panel));border:1px solid var(--msg-acts-border,rgba(255,255,255,.06));border-radius:10px;padding:2px;z-index:5;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:translateY(3px);box-shadow:0 4px 12px rgba(0,0,0,.35);}
+/* Composite background — same recipe the chatbar/userbar use:
+   rgba(255,255,255,.04) overlay on top of an OPAQUE base colour
+   (var(--channel) by default). That means the toolbar reads as the
+   exact same tone as the chatbar regardless of what's underneath
+   (no content bleeds through), and any Radiance custom appearance
+   re-themes it automatically by redefining --channel. Position is
+   kept inside the row's contain box so scroll stays smooth. */
+.msg-acts{display:flex;gap:1px;position:absolute;right:12px;top:4px;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:2px;z-index:5;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:translateY(3px);box-shadow:0 4px 12px rgba(0,0,0,.35);}
 /* Hovered row reveals the toolbar inside its own box (no content-vis
    override — that was rapidly flipping contain on/off as the cursor
    moved between rows during scroll and was the regression source). */
@@ -3238,10 +3239,11 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .toast.success{border-left:3px solid var(--green);color:#a3e8b8;}
 .toast.error{border-left:3px solid var(--red);color:#fca5a5;}
 .toast.info{border-left:3px solid var(--accent);color:var(--accent);}
-/* Solid surface — themeable via --ctx-menu-bg (defaults to --panel so
-   custom user appearances re-skin it automatically). No blur, no rgba
-   tint — reads as one flat colour regardless of what's behind. */
-.ctx-menu{position:fixed;z-index:var(--z-max);background:var(--ctx-menu-bg,var(--panel));border:1px solid var(--ctx-menu-border,rgba(255,255,255,.06));border-radius:var(--radius-md);padding:6px 0;min-width:220px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);animation:ctxIn .14s var(--ease-out);display:none;overflow:hidden;}
+/* Same composite recipe as .msg-acts — rgba(255,255,255,.04) overlay
+   on top of opaque var(--channel). Reads as the chatbar/userbar tone,
+   no content bleeds through, Radiance custom appearances re-skin it
+   automatically by overriding --channel. */
+.ctx-menu{position:fixed;z-index:var(--z-max);background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-md);padding:6px 0;min-width:220px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);animation:ctxIn .14s var(--ease-out);display:none;overflow:hidden;}
 .ctx-menu.ctx-visible{display:block;}
 /* ── System Announcement Banner ─────────────────── */
 .sys-announce-bar{display:flex;align-items:center;justify-content:center;position:relative;width:100%;min-height:40px;height:40px;background:#3ecf6e;background-image:repeating-linear-gradient(-45deg,transparent,transparent 10px,rgba(255,255,255,0.15) 10px,rgba(255,255,255,0.15) 20px);border-bottom:1px solid rgba(62,207,110,.3);box-sizing:border-box;}

@@ -10813,15 +10813,53 @@ function _ubInitButtons() {
 }
 document.addEventListener('DOMContentLoaded', _ubInitButtons);
 setTimeout(_ubInitButtons, 0);
+// Persist mute/deafen on the account so refreshing or signing in on
+// another device restores the same state. Save to CU and Supabase;
+// also write a localStorage fallback so the next page load can
+// restore instantly before the network round-trip.
+function _persistVoiceState() {
+  try {
+    if (CU) {
+      CU.voiceMuted = !!isMuted;
+      CU.voiceDeafened = !!isDeafened;
+      try { localStorage.setItem('ftz_voice_state', JSON.stringify({ m: !!isMuted, d: !!isDeafened })); } catch {}
+      if (typeof FortizedSocial?.saveUserObject === 'function') {
+        FortizedSocial.saveUserObject(CU).catch(e => _dbg('[voice] save failed', e?.message));
+      }
+    }
+  } catch (e) { _dbg('[voice] persist failed', e?.message); }
+}
+function _restoreVoiceState() {
+  // Prefer the account record (cross-device); fall back to localStorage
+  // (instant restore before the user object resolves).
+  let m, d;
+  if (CU && (CU.voiceMuted !== undefined || CU.voiceDeafened !== undefined)) {
+    m = !!CU.voiceMuted; d = !!CU.voiceDeafened;
+  } else {
+    try {
+      const cached = JSON.parse(localStorage.getItem('ftz_voice_state') || 'null');
+      if (cached) { m = !!cached.m; d = !!cached.d; }
+    } catch {}
+  }
+  if (m !== undefined) isMuted = m;
+  if (d !== undefined) isDeafened = d;
+  _ubInitButtons();
+}
+document.addEventListener('DOMContentLoaded', () => setTimeout(_restoreVoiceState, 50));
+// Re-run after CU is hydrated from the database (refreshCU completes).
+setTimeout(_restoreVoiceState, 1500);
+setTimeout(_restoreVoiceState, 4000);
 function toggleMic(){
   isMuted=!isMuted;
   _ubInitButtons();
   toast(isMuted?'Muted':'Unmuted','info');
+  _persistVoiceState();
 }
 function toggleDeafen(){
   isDeafened=!isDeafened;
   _ubInitButtons();
   toast(isDeafened?'Deafened':'Undeafened','info');
+  _persistVoiceState();
 }
 
 // ── Userbar device popovers (input / output) ────────────────────────

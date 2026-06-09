@@ -391,7 +391,7 @@ body.is-desktop-app .topbar{padding-right:0;}
    through both. Previously had a solid #15171e base to prevent
    bleed-through; that broke custom appearances because the userbar
    stopped being transparent. Returned to the alpha-only tint. */
-.ub-user-container{display:flex;align-items:center;background:rgba(255,255,255,.04);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);border-radius:10px;height:60px;overflow:hidden;}
+.ub-user-container{display:flex;align-items:center;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);border-radius:10px;height:60px;overflow:hidden;}
 
 /* ── Userbar spans BOTH sidebars (sidebar + sidebar-ctx) ────────────
    The userbar is taken out of sidebar-ctx's column flow with
@@ -923,18 +923,21 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 @keyframes sr-bounce{0%{opacity:1;transform:translate(0,0) scale(1);}50%{transform:translate(15px,-50px) scale(1.2);}100%{opacity:0;transform:translate(30px,-90px) scale(.4);}}
 @keyframes sr-zigzag{0%{opacity:1;transform:translate(0,0) scale(1);}33%{transform:translate(-20px,-30px) scale(1.1);}66%{transform:translate(20px,-60px) scale(.8);}100%{opacity:0;transform:translate(-10px,-90px) scale(.3);}}
 /* Hover quick actions — fade in, not pop */
-/* Composite background — same recipe the chatbar/userbar use:
-   rgba(255,255,255,.04) overlay on top of an OPAQUE base colour
-   (var(--channel) by default). That means the toolbar reads as the
-   exact same tone as the chatbar regardless of what's underneath
-   (no content bleeds through), and any Radiance custom appearance
-   re-themes it automatically by redefining --channel. Position is
-   kept inside the row's contain box so scroll stays smooth. */
-.msg-acts{display:flex;gap:1px;position:absolute;right:12px;top:4px;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:2px;z-index:5;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:translateY(3px);box-shadow:0 4px 12px rgba(0,0,0,.35);}
-/* Hovered row reveals the toolbar inside its own box (no content-vis
-   override — that was rapidly flipping contain on/off as the cursor
-   moved between rows during scroll and was the regression source). */
-.msg-row{position:relative;}
+/* Composite background — same recipe as chatbar/userbar/embeds:
+   rgba(.04) overlay on opaque var(--channel). Position overlaps the
+   row above (Discord-style) via top:-14px. The content-visibility:auto
+   on .msg-row clips absolute children, so we lift the hovered row out
+   of containment — but only when NOT scrolling (the .is-scrolling
+   guard prevents the cv flip from firing as the cursor crosses rows
+   during a wheel/touch scroll, which was the prior smoothness issue). */
+.msg-acts{display:flex;gap:1px;position:absolute;right:16px;top:-14px;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:2px;z-index:30;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:translateY(3px);box-shadow:0 4px 12px rgba(0,0,0,.35);}
+/* When hovered AND not actively scrolling, lift the row out of
+   content-visibility:auto so the absolute toolbar can paint outside
+   the row's contain block (Discord-style overlap with the row above).
+   The .chat-msgs.is-scrolling guard means the cv flip can only happen
+   on idle — never mid-scroll — so it doesn't disturb scroll smoothness. */
+.msg-row{position:relative;z-index:1;}
+.chat-msgs:not(.is-scrolling) .msg-row:hover{z-index:25;content-visibility:visible;}
 .msg-row:hover .msg-acts{opacity:1;pointer-events:auto;transform:translateY(0);}
 .msg-acts button{background:none;border:none;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
 .msg-acts button:hover{background:rgba(255,255,255,.08);color:#fff;}
@@ -1135,7 +1138,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    The "+" button is borderless icon + 1px hairline divider (no
    square background). */
 .chat-input-outer{
-  background:rgba(255,255,255,.04);
+  background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);
   backdrop-filter:none; -webkit-backdrop-filter:none;
   border:1px solid rgba(255,255,255,.06);
   border-radius:10px;
@@ -1370,7 +1373,7 @@ body.staw-frozen::before{
    past-bar up so they stack instead of overlapping. Chip + text
    sizes mirror .undo-toast exactly so both pills feel like the
    same component family. */
-.chat-past-bar{--toast-bottom:calc(100px + env(safe-area-inset-bottom, 0px));position:fixed;bottom:var(--toast-bottom);left:50%;transform:translateX(-50%);z-index:9500;display:none;align-items:center;gap:10px;padding:10px 14px 10px 10px;width:max-content;max-width:calc(100% - 24px);background:var(--panel2);border:1px solid var(--border);border-radius:14px;box-shadow:var(--elev-2);font-size:13px;font-weight:600;color:rgba(255,255,255,.85);pointer-events:none;animation:undoSlideUp .22s cubic-bezier(.22,1,.36,1);}
+.chat-past-bar{--toast-bottom:calc(100px + env(safe-area-inset-bottom, 0px));position:fixed;bottom:var(--toast-bottom);left:50%;transform:translateX(-50%);z-index:9500;display:none;align-items:center;gap:10px;padding:10px 14px 10px 10px;width:max-content;max-width:calc(100% - 24px);background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:14px;box-shadow:var(--elev-2);font-size:13px;font-weight:600;color:rgba(255,255,255,.85);pointer-events:none;animation:undoSlideUp .22s cubic-bezier(.22,1,.36,1);}
 .chat-past-bar.show{display:flex;pointer-events:auto;}
 .chat-past-bar .cpb-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(96,165,250,.12);color:#60a5fa;flex-shrink:0;box-sizing:border-box;}
 .chat-past-bar .cpb-icon svg{width:16px;height:16px;display:block;}
@@ -3527,10 +3530,11 @@ body.is-desktop-app .notif-panel{top:0;}
 .ftz-embed{
   --embed-accent:       var(--embed-color, #fef93d);
   --embed-accent-dim:   rgba(254,249,61,.12);
-  /* Translucent so embeds follow the user's chosen appearance the same
-     way the chatbar + userbar do. Solid hex values used to lock embeds
-     to a dark colour even when the rest of the chat went translucent. */
-  --embed-card-bg:      rgba(255,255,255,.04);
+  /* Same composite recipe as the chatbar/userbar: rgba overlay on top
+     of an opaque --channel base. Embeds read as the chatbar tone, no
+     content bleeds through, Radiance custom appearances re-skin them
+     automatically by overriding --channel. */
+  --embed-card-bg:      linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);
   --embed-card-border:  rgba(255,255,255,.08);
   --embed-code-bg:      rgba(0,0,0,.22);
   --embed-footer-bg:    rgba(0,0,0,.18);
@@ -5160,7 +5164,7 @@ button[disabled],
    land on the textbox. The :has() rule below pushes the past-bar
    up another 60 px when undo-toast is up at the same time so they
    stack instead of overlapping. */
-.undo-toast{--toast-bottom:calc(100px + env(safe-area-inset-bottom, 0px));position:fixed;bottom:var(--toast-bottom);left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:10px 14px 10px 10px;display:flex;align-items:center;gap:10px;z-index:9500;box-shadow:var(--elev-2);animation:undoSlideUp .22s cubic-bezier(.22,1,.36,1);overflow:hidden;min-width:280px;}
+.undo-toast{--toast-bottom:calc(100px + env(safe-area-inset-bottom, 0px));position:fixed;bottom:var(--toast-bottom);left:50%;transform:translateX(-50%);background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 14px 10px 10px;display:flex;align-items:center;gap:10px;z-index:9500;box-shadow:var(--elev-2);animation:undoSlideUp .22s cubic-bezier(.22,1,.36,1);overflow:hidden;min-width:280px;}
 @keyframes undoSlideUp{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 .undo-toast .ut-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(248,113,113,.12);color:var(--red);flex-shrink:0;box-sizing:border-box;}
 .undo-toast .ut-icon svg{width:16px;height:16px;display:block;}
@@ -7778,6 +7782,13 @@ button[style*="background: var(--accent)"]:active {
   gap: 8px;
 }
 .ftz-empty-icon { font-size: 36px; opacity: 0.4; margin-bottom: 4px; }
+/* User-profile modal: every section header/empty-state svg shares the
+   same muted tone so neighbouring panels don't render at different
+   colours (the prior .ftz-empty-icon opacity 0.4 alone vs section
+   icons at full colour made them visibly mismatched). */
+.fpp-card-modal__content .ftz-empty-icon { opacity: 1; color: rgba(255,255,255,.4); }
+.fpp-card-modal__content .ftz-empty-icon svg,
+.fpp-card-modal__content .fpp-sec-ico svg { color: rgba(255,255,255,.4); }
 .ftz-empty-title { font-size: var(--font-lg); font-weight: 700; color: rgba(255,255,255,.6); }
 .ftz-empty-text { font-size: var(--font-md); color: var(--muted); max-width: 300px; line-height: 1.5; }
 

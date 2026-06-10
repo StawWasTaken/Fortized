@@ -8357,12 +8357,10 @@ function autoModCheck(text, bastion) {
   if (am.blockLinks && /https?:\/\//.test(text)) {
     toast('Links are disabled in this bastion','error'); return true;
   }
-  if (am.antiSpam) {
-    const letters = text.replace(/[^a-zA-Z]/g,'');
-    if (letters.length > 5 && (text.replace(/[^A-Z]/g,'').length / letters.length) > 0.7) {
-      toast('Excessive caps not allowed here','error'); return true;
-    }
-  }
+  // Caps-spam check removed — was firing on totally normal messages
+  // (any 6+-letter ALL-CAPS word triggered it) and added no real
+  // value. Anti-spam toggle is left in admin UI for back-compat but
+  // no longer enforced client-side.
   const mentionCount = (text.match(/@\w+/g)||[]).length;
   if (am.mentionLimit && mentionCount > am.mentionLimit) {
     toast('Too many mentions','error'); return true;
@@ -8539,6 +8537,20 @@ function _normalizeMsg(m) {
     // as the freshest message in the chat.
   }
   return m;
+}
+// Build the visible "(edited HH:MM · DD/MM)" tag for a message that's
+// been edited. Falls back to bare "(edited)" if no timestamp recorded.
+// Full date in the title for hover.
+function _fmtEditedTag(editedAt) {
+  const d = editedAt ? _safeDate(editedAt) : null;
+  if (!d) return '<span class="msg-edited" title="Edited">(edited)</span>';
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const time = d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+  const date = d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit'});
+  const label = sameDay ? `edited at ${time}` : `edited ${date} ${time}`;
+  const full = d.toLocaleString('en-GB');
+  return `<span class="msg-edited" title="Edited at ${full}">(${label})</span>`;
 }
 function _fmtMsgDateDivider(ts) {
   const d = _safeDate(ts);
@@ -9301,7 +9313,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     }
   }
   const fwdHTML = msg.forwarded ? _renderForwardedCard(msg) : '';
-  const editTag=msg.edited?`<span class="msg-edited" title="Edited${msg.editedAt ? ' at '+new Date(msg.editedAt).toLocaleString() : ''}">(edited)</span>`:'';
+  const editTag=msg.edited?_fmtEditedTag(msg.editedAt):'';
   const rephrasedTag=msg.flags?.includes('rephrased')?`<span class="msg-rephrased" title="Fortized rephrases messages that violate our core safety rules.">(rephrased)</span>`:'';
   const reactHTML=msg.reactions?Object.entries(msg.reactions).map(([emoji,users])=>{
     const arr=Array.isArray(users)?users:Object.values(users);
@@ -9634,7 +9646,7 @@ function cancelEdit(msgId) {
   if (!row) return;
   const original = row.dataset.editOriginal || row.dataset.text || '';
   const textEl = row.querySelector('.msg-text');
-  const edited = row.dataset.edited === '1' ? '<span class="msg-edited">(edited)</span>' : '';
+  const edited = row.dataset.edited === '1' ? _fmtEditedTag(row.dataset.editedAt) : '';
   if (textEl) textEl.innerHTML = parseMD(escapeHTML(original)) + edited;
   delete row.dataset.editOriginal;
   delete row.dataset.editTokens;
@@ -9664,7 +9676,9 @@ async function saveEdit(msgId) {
     delete row.dataset.editTokens;
   }
   const textEl=row?.querySelector('.msg-text');
-  if (textEl) textEl.innerHTML=parseMD(escapeHTML(newText))+'<span class="msg-edited">(edited)</span>';
+  const _editTs = new Date().toISOString();
+  if (row) { row.dataset.edited = '1'; row.dataset.editedAt = _editTs; }
+  if (textEl) textEl.innerHTML=parseMD(escapeHTML(newText))+_fmtEditedTag(_editTs);
   // Persist edit to Supabase
   try {
     if (curDM) {
@@ -10232,6 +10246,10 @@ function updateReactionUI(msgId, emoji, users, context) {
   }
 }
 function triggerSuperReaction(pill, emoji) {
+  // Super-reaction animation is a Radiance perk only — non-Radiance
+  // users never see the floating-emoji burst even if the call is
+  // somehow triggered (e.g. via a cached stale handler).
+  if (!_hasActiveRadiance()) return;
   pill.classList.add('super-react');
   // Spawn floating emojis
   const rect = pill.getBoundingClientRect();
@@ -12791,7 +12809,9 @@ function initFortizedUXResilience() {
         if (textEl && data.newText) {
           row.dataset.text = data.newText;
           row.dataset.edited = '1';
-          textEl.innerHTML = parseMD(escapeHTML(data.newText)) + '<span class="msg-edited">(edited)</span>';
+          const _eAt = data.editedAt || new Date().toISOString();
+          row.dataset.editedAt = _eAt;
+          textEl.innerHTML = parseMD(escapeHTML(data.newText)) + _fmtEditedTag(_eAt);
         }
       },
       onMessageDeleted: function(data) {
@@ -38133,7 +38153,7 @@ function _liveUpdateMessage(snap, context) {
   const textEl = row.querySelector('.msg-text');
   if (textEl && msg.text !== undefined) {
     let html = parseMD(escapeHTML(msg.text));
-    if (msg.edited) html += '<span class="msg-edited">(edited)</span>';
+    if (msg.edited) html += _fmtEditedTag(msg.editedAt);
     if (msg.forwarded) html = '<div style="display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.04);border-left:2px solid rgba(255,255,255,.2);border-radius:4px;margin-bottom:5px;font-size:12px;color:var(--muted);"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polyline points=\"15,17 20,12 15,7\"/><path d=\"M4 18v-2a4 4 0 014-4h12\"/></svg><span style=\"font-weight:600;\">Forwarded</span></div>' + html;
     textEl.innerHTML = html;
     row.dataset.text = msg.text;
@@ -42200,10 +42220,9 @@ function contentSafetyCheck(text) {
   if (/\[FTZ(?:IMG|VID|AUD|FILE|GIF|STICKER):/.test(text)) return null;
   // Check for repeated patterns (spam)
   if (/(.)\1{9,}/.test(text)) return 'Repetitive characters detected (possible spam).';
-  // Check for excessive caps
-  const caps = (text.match(/[A-Z]/g)||[]).length;
-  if (text.length > 20 && caps/text.length > 0.7) return 'Excessive capitalization detected.';
-  
+  // Caps check removed — normal emphasis (acronyms, project names,
+  // intentional shouting in casual chat) was getting blocked.
+
   // Rate limiting check - 5+ messages in 3 seconds
   const now = Date.now();
   _msgTimestamps.push(now);

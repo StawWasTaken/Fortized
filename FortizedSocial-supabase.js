@@ -1366,8 +1366,14 @@ const FortizedSocial = (() => {
       _socket.on('friend:accepted', function(data) {
         if (_socketCallbacks.onFriendAccepted) _socketCallbacks.onFriendAccepted(data);
       });
-      _socket.on('reaction:update', function(data) {
-        if (_socketCallbacks.onReaction) _socketCallbacks.onReaction(data);
+      // Server may forward as 'reaction:update', 'reaction:updated', or
+      // re-emit the client's original 'reaction:toggle' verbatim. Listen
+      // for all three so real-time sync works regardless of which the
+      // server-side handler picks. Belt and suspenders.
+      ['reaction:update', 'reaction:updated', 'reaction:toggle'].forEach(ev => {
+        _socket.on(ev, function(data) {
+          if (_socketCallbacks.onReaction) _socketCallbacks.onReaction(data);
+        });
       });
       _socket.on('message:edited', function(data) {
         if (_socketCallbacks.onMessageEdited) _socketCallbacks.onMessageEdited(data);

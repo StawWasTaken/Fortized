@@ -3,500 +3,126 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign Up - Fortized</title>
-<meta name="description" content="Create your Fortized account and start building your fortress. Get 25 free Onyx when you sign up.">
+<title>Sign up - Fortized</title>
+<meta name="description" content="Create your Fortized account and start building your Fortress.">
 <meta name="theme-color" content="#fff93e">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Fortized">
-<meta property="og:title" content="Sign Up – Fortized">
-<meta property="og:description" content="Create your Fortized account and start building your fortress. Get 25 free Onyx when you sign up.">
+<meta property="og:title" content="Sign up - Fortized">
+<meta property="og:description" content="Create your Fortized account and start building your Fortress.">
 <meta property="og:image" content="https://fortized.com/Fortized banner.png?v=2">
 <meta property="og:url" content="https://fortized.com/signup">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Sign Up – Fortized">
-<meta name="twitter:description" content="Create your Fortized account and start building your fortress. Get 25 free Onyx when you sign up.">
-<meta name="twitter:image" content="https://fortized.com/Fortized banner.png?v=2">
+<link rel="canonical" href="https://fortized.com/signup">
 <link rel="icon" type="image/png" href="/Fortized icon.png">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/fortized-2026.css">
 <style>
-::selection{background:rgba(255,249,62,.2);}
-:root {
-  --accent: #fff93e;
-  --accent-dim: rgba(255,249,62,.08);
-  --accent-mid: rgba(255,249,62,.18);
-  --accent-glow: rgba(255,249,62,.35);
-  --bg: #080a0f;
-  --panel: #11141e;
-  --panel-2: #0d101a;
-  --border: #1a2030;
-  --border-strong: #232a3d;
-  --muted: #4a5568;
-  --muted-light: #8b95a8;
-  --text: #c8d0dc;
-  --green: #4ade80;
-  --font-display: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-}
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-img { -webkit-user-drag: none; user-select: none; }
-html, body { height: 100%; }
-body {
-  background: var(--bg);
-  color: #fff;
-  font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-a { text-decoration: none; color: inherit; }
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: #1e2535; border-radius: 10px; }
+@keyframes shake { 10%,90%{transform:translate3d(-1px,0,0);} 20%,80%{transform:translate3d(2px,0,0);} 30%,50%,70%{transform:translate3d(-4px,0,0);} 40%,60%{transform:translate3d(4px,0,0);} }
+.auth-card.shake { animation: shake .5s cubic-bezier(.36,.07,.19,.97) both; }
+.btn-primary.loading { opacity: .7; pointer-events: none; }
+.btn-primary.loading::after { content: " …"; }
 
-body::before {
-  content: "";
-  position: fixed; inset: 0; z-index: 500;
-  pointer-events: none;
-  opacity: .018;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 256px 256px;
-}
-.bg-art { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.bg-art::before {
-  content: ""; position: absolute; inset: 0;
-  background: url("/Fortized banner.png?v=2") center/cover no-repeat;
-  opacity: .07;
-  filter: saturate(.7);
-}
-.bg-art::after {
-  content: ""; position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(255,249,62,.06), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 82% 70%, rgba(96,165,250,.04), transparent 60%),
-    linear-gradient(180deg, rgba(8,10,15,.55) 0%, var(--bg) 100%);
-}
-
-/* ── Unified site nav ── */
-.nav-root{position:fixed;top:0;left:0;right:0;z-index:300;height:56px;display:flex;align-items:center;padding:0 36px;background:rgba(8,10,15,.0);transition:background .35s,border-color .35s,box-shadow .35s}
-.nav-root.scrolled{background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid var(--border);box-shadow:0 1px 40px rgba(0,0,0,.5)}
-.nav-logo{display:flex;align-items:center;flex-shrink:0;margin-right:28px}
-.nav-logo .nav-logo-mark{height:26px;width:auto;object-fit:contain}
-.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:3px;gap:1px}
-.nav-pill{font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--muted-light);padding:6px 13px;border-radius:8px;transition:color .15s,background .15s;white-space:nowrap}
-.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
-.nav-sep{width:1px;height:20px;background:rgba(255,255,255,.07);margin:0 12px;flex-shrink:0}
-.nav-spacer{flex:1}
-.nav-right{display:flex;align-items:center;gap:8px}
-.nav-btn-login{font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--muted-light);padding:7px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);transition:.15s}
-.nav-btn-login:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
-@media (max-width: 900px) { .nav-pill-group, .nav-sep { display: none; } }
-@media (max-width: 768px) { .nav-root { padding: 0 18px; } }
-
-/* ── Auth shell ── */
-.auth-shell {
-  position: relative; z-index: 2;
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  gap: 64px;
-  padding: 120px 72px 80px;
-  max-width: 1280px;
-  margin: 0 auto;
-}
-.auth-pane-brand { display: flex; flex-direction: column; gap: 24px; max-width: 520px; }
-.brand-eyebrow {
-  display: inline-flex; align-items: center; gap: 9px;
-  font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--accent);
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-mid);
-  border-radius: 100px; padding: 5px 14px;
-  width: fit-content;
-}
-.brand-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-.brand-h1 {
-  font-family: var(--font-display);
-  font-size: 56px; font-weight: 800; line-height: .98;
-  letter-spacing: -2px; color: #fff;
-}
-.brand-h1 em { font-style: normal; color: var(--accent); }
-.brand-sub {
-  font-size: 16px; line-height: 1.65;
-  color: var(--muted-light); max-width: 460px;
-}
-.bonus-card {
-  display: flex; align-items: center; gap: 16px;
-  padding: 18px 20px;
-  background: linear-gradient(135deg, rgba(255,249,62,.08), rgba(255,249,62,.02));
-  border: 1px solid var(--accent-mid);
-  border-radius: 16px;
-  margin-top: 4px;
-}
-.bonus-icon {
-  width: 44px; height: 44px;
-  background: var(--accent);
-  color: #080a0f;
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 0 28px var(--accent-glow);
-}
-.bonus-icon img {
-  width: 28px; height: 28px;
-  object-fit: contain;
-  /* Force the Onyx badge to render in pure black on the yellow tile */
-  filter: brightness(0);
-  pointer-events: none;
-  -webkit-user-drag: none;
-}
-.bonus-text { font-size: 13.5px; color: var(--text); line-height: 1.55; }
-.bonus-text strong { color: #fff; font-family: var(--font-display); font-weight: 700; }
-.bonus-text .accent { color: var(--accent); font-weight: 700; }
-
-.brand-perks { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-.brand-perk {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  font-size: 13px;
-  color: var(--text);
-}
-.brand-perk-ic {
-  width: 28px; height: 28px; flex-shrink: 0;
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-mid);
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--accent);
-}
-.brand-perk-ic svg { width: 14px; height: 14px; }
-
-/* ── Auth card ── */
-.auth-pane-form { display: flex; flex-direction: column; gap: 14px; max-width: 480px; justify-self: end; width: 100%; }
-.auth-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 38px 36px 34px;
-  position: relative;
-  isolation: isolate;
-  box-shadow: 0 32px 80px rgba(0,0,0,.45);
-}
-.auth-card::before {
-  content: ""; position: absolute; inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at 90% -10%, rgba(255,249,62,.07), transparent 55%);
-  pointer-events: none; z-index: 0;
-}
-.auth-card > * { position: relative; z-index: 1; }
-.auth-card.shake { animation: shake .42s cubic-bezier(.36,.07,.19,.97) both; }
-@keyframes shake {
-  10%,90% { transform: translateX(-1.5px); }
-  20%,80% { transform: translateX(3px); }
-  30%,50%,70% { transform: translateX(-6px); }
-  40%,60% { transform: translateX(6px); }
-}
-.card-eyebrow {
-  font-family: var(--font-body);
-  font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 10px;
-}
-.card-h2 {
-  font-family: var(--font-display);
-  font-size: 26px; font-weight: 800; letter-spacing: -.7px; line-height: 1.1;
-  color: #fff; margin-bottom: 6px;
-}
-.card-sub { font-size: 13.5px; color: var(--muted-light); margin-bottom: 24px; line-height: 1.5; }
-
-.field { margin-bottom: 14px; }
-.field-label {
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 12px; font-weight: 600; letter-spacing: .04em;
-  color: var(--muted-light);
-  margin-bottom: 8px;
-}
-.optional { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
-.input-wrap { position: relative; }
-.input-wrap input {
-  width: 100%;
-  background: var(--panel-2);
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
-  padding: 13px 44px;
-  font-family: var(--font-body);
-  font-size: 14px; color: #fff;
-  outline: none;
-  transition: border-color .18s, box-shadow .18s, background .18s;
-}
-.input-wrap input::placeholder { color: #3b4256; }
-.input-wrap input:hover { border-color: #2a3247; }
-.input-wrap input:focus { border-color: rgba(255,249,62,.35); box-shadow: 0 0 0 3px rgba(255,249,62,.08); background: #0e1119; }
-.input-icon {
-  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-  width: 16px; height: 16px;
-  color: #4a5468;
-  pointer-events: none;
-  transition: color .15s;
-}
-.input-wrap input:focus ~ .input-icon { color: var(--accent); }
-.toggle-pw {
-  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer;
-  width: 28px; height: 28px;
-  display: flex; align-items: center; justify-content: center;
-  color: #4a5468;
-  border-radius: 6px;
-}
-.toggle-pw:hover { color: #fff; background: rgba(255,255,255,.04); }
-.toggle-pw svg { width: 16px; height: 16px; }
-.field-hint { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
-.field-error { font-size: 12px; color: #f87171; margin-top: 6px; min-height: 14px; }
-
-/* PFP upload */
 .upload-area {
   position: relative;
-  border: 1.5px dashed var(--border-strong);
+  border: 1.5px dashed var(--border);
   border-radius: 14px;
-  background: var(--panel-2);
-  padding: 22px;
+  padding: 16px;
+  background: rgba(255,255,255,.02);
   cursor: pointer;
-  transition: border-color .2s, background .2s;
-  min-height: 110px;
+  transition: border-color .15s, background .15s;
+  display: flex; align-items: center; gap: 14px;
+}
+.upload-area.dragover { border-color: var(--accent); background: rgba(255,249,62,.06); }
+.upload-area:hover { border-color: rgba(255,249,62,.30); }
+.upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-cta { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted-light); flex: 1; }
+.upload-cta-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(255,249,62,.08); border: 1px solid rgba(255,249,62,.22);
   display: flex; align-items: center; justify-content: center;
 }
-.upload-area:hover, .upload-area.dragover { border-color: rgba(255,249,62,.35); background: rgba(255,249,62,.03); }
-.upload-area input[type="file"] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2;
-}
-.upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; pointer-events: none; }
-.upload-placeholder .upload-icon-svg {
-  width: 28px; height: 28px; color: var(--muted-light);
-}
-.upload-text { font-size: 13.5px; color: var(--text); }
-.upload-text strong { color: var(--accent); font-weight: 600; }
-.upload-sub { font-size: 11px; color: var(--muted); }
-.upload-preview { display: none; align-items: center; gap: 12px; width: 100%; }
+.upload-cta-icon svg { width: 16px; height: 16px; fill: var(--accent); }
+.upload-cta b { color: #fff; font-weight: 700; }
+.upload-cta small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.upload-preview { display: none; align-items: center; gap: 12px; flex: 1; }
 .upload-preview.active { display: flex; }
-.upload-preview.active + .upload-placeholder { display: none; }
-.preview-img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-strong); flex-shrink: 0; }
+.upload-area:has(.upload-preview.active) .upload-cta { display: none; }
+.preview-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,249,62,.3); }
 .preview-info { flex: 1; min-width: 0; }
-.preview-name { font-size: 13px; color: #fff; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.preview-size { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.preview-name { font-size: 13.5px; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.preview-size { font-size: 11.5px; color: var(--muted); }
 .preview-remove {
-  font-size: 11.5px; font-weight: 600;
-  color: #f87171; background: rgba(248,113,113,.06); border: 1px solid rgba(248,113,113,.2);
-  padding: 5px 11px; border-radius: 8px; cursor: pointer;
-  position: relative; z-index: 3;
-  transition: background .15s;
-}
-.preview-remove:hover { background: rgba(248,113,113,.12); }
-
-.form-divider { height: 1px; background: var(--border); margin: 18px 0 14px; }
-
-.agree-block {
-  display: flex; align-items: flex-start; gap: 10px;
-  cursor: pointer; user-select: none;
-  margin-bottom: 16px;
-}
-.agree-block input[type="checkbox"] { display: none; }
-.checkbox-custom {
-  width: 18px; height: 18px; flex-shrink: 0;
-  border: 1.5px solid var(--border-strong);
-  border-radius: 5px;
-  background: var(--panel-2);
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s, border-color .15s;
-  margin-top: 1px;
-}
-.checkbox-check { width: 11px; height: 11px; opacity: 0; transition: opacity .15s; }
-.agree-block input:checked ~ .checkbox-custom { background: var(--accent); border-color: var(--accent); }
-.agree-block input:checked ~ .checkbox-custom .checkbox-check { opacity: 1; }
-.agree-text { font-size: 12.5px; color: var(--muted-light); line-height: 1.55; }
-.agree-text a { color: var(--accent); text-decoration: underline; text-decoration-color: rgba(255,249,62,.35); text-underline-offset: 2px; }
-.agree-text a:hover { text-decoration-color: var(--accent); }
-
-.error-msg {
-  font-size: 12.5px; color: #f87171;
-  background: rgba(248,113,113,.06);
-  border: 1px solid rgba(248,113,113,.18);
-  border-radius: 10px;
-  padding: 0;
-  height: 0; overflow: hidden;
-  transition: padding .15s, height .15s, margin .15s;
-}
-.error-msg:not(:empty) { padding: 10px 14px; height: auto; margin-bottom: 14px; }
-
-.btn-primary {
-  width: 100%;
-  font-family: var(--font-display);
-  font-size: 14.5px; font-weight: 700;
-  color: #080a0f;
-  background: var(--accent);
-  padding: 14px 24px;
-  border: none;
-  border-radius: 12px;
+  font-size: 12px; font-weight: 600; color: var(--muted-light);
+  padding: 5px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: rgba(255,255,255,.03);
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  transition: transform .14s, box-shadow .2s, filter .15s;
-  margin-bottom: 14px;
-  position: relative;
-  overflow: hidden;
 }
-.btn-primary:hover { box-shadow: 0 0 32px var(--accent-glow); filter: brightness(1.06); transform: translateY(-1px); }
-.btn-primary:active { transform: translateY(0); }
-.btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
-.btn-primary .spinner {
-  display: none;
-  width: 16px; height: 16px;
-  border: 2px solid rgba(8,10,15,.25);
-  border-top-color: #080a0f;
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
-}
-.btn-primary.loading .spinner { display: block; }
-.btn-primary.loading .btn-label { opacity: .7; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.auth-footer {
-  text-align: center;
-  font-size: 13.5px; color: var(--muted-light);
-}
-.auth-footer a { color: var(--accent); font-weight: 600; }
-.auth-footer a:hover { color: #fff; }
-
-.auth-perks {
-  display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
-  margin-top: 4px;
-}
-.perk-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 11.5px; color: var(--muted-light);
-}
-.perk-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .auth-shell { grid-template-columns: 1fr; gap: 36px; padding: 110px 32px 60px; }
-  .auth-pane-form { justify-self: stretch; max-width: none; }
-  .brand-h1 { font-size: 44px; letter-spacing: -1.4px; }
-  .brand-perks { display: none; }
-}
-@media (max-width: 600px) {
-  .auth-card { padding: 26px 22px 24px; border-radius: 20px; }
-  .brand-h1 { font-size: 36px; }
-  .auth-shell { padding: 100px 22px 56px; }
-}
-img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
+.preview-remove:hover { color: #fca5a5; border-color: rgba(252,165,165,.4); }
+.field-error { display: block; font-size: 12px; color: #fca5a5; margin-top: 4px; min-height: 14px; }
 </style>
-<script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
-<div class="bg-art"></div>
+<div class="bg-blob b1"></div>
+<div class="bg-blob b2"></div>
 
 <nav class="nav-root" id="mainNav">
-  <a href="/" class="nav-logo">
-    <img src="/Fortized logo2026.png?v=2026" alt="Fortized" class="nav-logo-mark" onerror="this.style.display='none'">
-  </a>
+  <a href="/" class="nav-logo"><img src="/Fortized logo2026.png?v=2026" alt="Fortized"></a>
   <div class="nav-pill-group">
     <a href="/newsroom" class="nav-pill">Newsroom</a>
     <a href="/legal" class="nav-pill">Legal</a>
     <a href="/support" class="nav-pill">Support</a>
     <a href="/download" class="nav-pill">Download</a>
   </div>
-  <div class="nav-sep"></div>
   <div class="nav-spacer"></div>
   <div class="nav-right">
-    <a href="/login" class="nav-btn-login">Already a member?</a>
+    <a href="/login" class="nav-btn-ghost">Login</a>
+    <div class="nav-hamburger"><span></span><span></span><span></span></div>
   </div>
 </nav>
+<div class="mobile-menu">
+  <a href="/newsroom">Newsroom</a>
+  <a href="/legal">Legal</a>
+  <a href="/support">Support</a>
+  <a href="/download">Download</a>
+  <a href="/login">Login</a>
+  <a href="/signup">Join the Fortress</a>
+</div>
 
-<main class="auth-shell">
+<div class="auth-page">
+  <div class="auth-card" id="authCard">
+    <div class="auth-brand"><img class="mark" src="/Fortized icon.png" alt="Fortized"></div>
+    <h1>Join the Fortress.</h1>
+    <p class="sub">Build your Bastions, rally your squad.</p>
 
-  <!-- ── Brand pane ── -->
-  <section class="auth-pane-brand">
-    <div class="brand-eyebrow"><span class="brand-eyebrow-dot"></span>Join the Fortress</div>
-    <h1 class="brand-h1">Build your <em>fortress.</em></h1>
-    <p class="brand-sub">Spin up a community in minutes. Pick rooms, set ranks, write the rules. Free forever, yours forever.</p>
+    <div id="error" class="auth-error"></div>
 
-    <div class="bonus-card">
-      <div class="bonus-icon"><img src="/Onyx.png" alt="Onyx" draggable="false" oncontextmenu="return false"></div>
-      <div class="bonus-text"><strong>Welcome bonus:</strong> Get <span class="accent">25 Onyx</span> free when you sign up — spend them in the Atelier.</div>
-    </div>
-
-    <div class="brand-perks">
-      <div class="brand-perk">
-        <div class="brand-perk-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-        </div>
-        <div>Free, forever — no credit card needed</div>
+    <div class="auth-form">
+      <div class="auth-field">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@somewhere.com" autocomplete="email">
       </div>
-      <div class="brand-perk">
-        <div class="brand-perk-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-        </div>
-        <div>Web &amp; Desktop apps included</div>
-      </div>
-      <div class="brand-perk">
-        <div class="brand-perk-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-        </div>
-        <div>Defended by AutoMod, raid lockdown, audit logs</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Form pane ── -->
-  <section class="auth-pane-form">
-    <div class="auth-card" id="authCard">
-      <div class="card-eyebrow">Create account</div>
-      <h2 class="card-h2">Start your fortress.</h2>
-      <p class="card-sub">All you need is an email, a username, and a password.</p>
-
-      <div class="field">
-        <label class="field-label" for="email">Email address</label>
-        <div class="input-wrap">
-          <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
-          <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3.5" width="12" height="9" rx="2"/><path d="M2 5.5l6 4 6-4"/>
-          </svg>
-        </div>
-      </div>
-
-      <div class="field">
-        <label class="field-label" for="username">Username</label>
-        <div class="input-wrap">
-          <input type="text" id="username" placeholder="Choose a unique handle" autocomplete="username">
-          <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="8" cy="5" r="3.25"/><path d="M2.5 14.5c0-3 2.5-4.5 5.5-4.5s5.5 1.5 5.5 4.5"/>
-          </svg>
-        </div>
+      <div class="auth-field">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Choose a unique handle" autocomplete="username">
         <div id="userError" class="field-error"></div>
       </div>
-
-      <div class="field">
-        <label class="field-label" for="password">Password</label>
-        <div class="input-wrap">
-          <input type="password" id="password" placeholder="At least 6 characters" autocomplete="new-password">
-          <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5 7V5a3 3 0 016 0v2"/>
-          </svg>
-          <button type="button" class="toggle-pw" id="togglePw" tabindex="-1" aria-label="Toggle password visibility">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8z"/>
-              <circle cx="8" cy="8" r="2"/>
-            </svg>
-          </button>
-        </div>
-        <div class="field-hint">Must be at least 6 characters long.</div>
+      <div class="auth-field">
+        <label for="password">Password</label>
+        <input type="password" id="password" class="has-toggle" placeholder="At least 6 characters" autocomplete="new-password">
+        <button type="button" class="pw-toggle" id="togglePw" tabindex="-1" aria-label="Toggle password visibility">
+          <svg><use href="#i-eye"/></svg>
+        </button>
       </div>
-
-      <div class="field">
-        <label class="field-label" for="pfp">Profile picture <span class="optional">Optional</span></label>
+      <div class="auth-field">
+        <label>Profile picture <span style="color:var(--muted); font-weight:500; text-transform:none; letter-spacing:0;">(optional)</span></label>
         <div class="upload-area" id="uploadArea">
           <input type="file" id="pfp" accept="image/*">
+          <div class="upload-cta">
+            <span class="upload-cta-icon"><svg><use href="#i-people"/></svg></span>
+            <span><b>Drop an image, or click to pick</b><small>PNG / JPG · up to 5 MB</small></span>
+          </div>
           <div class="upload-preview" id="uploadPreview">
             <img class="preview-img" id="previewImg" src="" alt="">
             <div class="preview-info">
@@ -505,48 +131,23 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
             </div>
             <button type="button" class="preview-remove" id="previewRemove">Remove</button>
           </div>
-          <div class="upload-placeholder">
-            <svg class="upload-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            <div class="upload-text"><strong>Click to upload</strong> or drag &amp; drop</div>
-            <div class="upload-sub">PNG, JPG, GIF up to 5 MB</div>
-          </div>
         </div>
       </div>
 
-      <div class="form-divider"></div>
-
-      <label class="agree-block">
+      <label class="auth-checkbox" style="font-size:13px;">
         <input type="checkbox" id="terms">
-        <div class="checkbox-custom">
-          <svg class="checkbox-check" viewBox="0 0 12 12" fill="none">
-            <path d="M2 6l3 3 5-5" stroke="#080a0f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="agree-text">
-          By creating an account you agree to our <a href="/legal/terms-of-service" target="_blank" onclick="event.stopPropagation()">Terms of Service</a> and <a href="/legal/privacy-policy" target="_blank" onclick="event.stopPropagation()">Privacy Policy</a>.
-        </div>
+        <span class="box"><svg><use href="#i-check"/></svg></span>
+        I agree to the <a href="/legal/terms-of-service" style="color:var(--accent);">Terms</a> and <a href="/legal/privacy-policy" style="color:var(--accent);">Privacy Policy</a>
       </label>
 
-      <div id="error" class="error-msg"></div>
-
-      <button class="btn-primary" id="signupBtn">
-        <div class="spinner"></div>
-        <span class="btn-label">Create Account</span>
+      <button class="auth-submit btn-primary" id="signupBtn">
+        Create account <svg><use href="#i-arrow-right"/></svg>
       </button>
-
-      <div class="auth-footer">Already have an account? <a href="/login">Sign in</a></div>
     </div>
 
-    <div class="auth-perks">
-      <div class="perk-chip">Free forever</div>
-      <div class="perk-chip">No credit card</div>
-      <div class="perk-chip">No tracking</div>
-    </div>
-  </section>
-
-</main>
+    <div class="auth-foot">Already have an account? <a href="/login">Sign in</a></div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/FortizedSocial-supabase.js?v=20260430e"></script>
@@ -568,14 +169,12 @@ const previewSize   = document.getElementById('previewSize');
 const previewRemove = document.getElementById('previewRemove');
 const authCard      = document.getElementById('authCard');
 
-// File upload handling with preview
+function showError(msg) { errorDiv.textContent = msg; errorDiv.classList.add('show'); }
+function clearError() { errorDiv.textContent = ''; errorDiv.classList.remove('show'); }
+
 function handleFile(file) {
   if (!file) return;
-  if (file.size > 5 * 1024 * 1024) {
-    errorDiv.textContent = 'File too large — max 5 MB allowed.';
-    pfpInput.value = '';
-    return;
-  }
+  if (file.size > 5 * 1024 * 1024) { showError('File too large - max 5 MB allowed.'); pfpInput.value = ''; return; }
   const reader = new FileReader();
   reader.onload = (e) => {
     previewImg.src = e.target.result;
@@ -585,24 +184,15 @@ function handleFile(file) {
   };
   reader.readAsDataURL(file);
 }
-
 pfpInput.addEventListener('change', () => handleFile(pfpInput.files[0]));
-
-// Drag & drop
 uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
 uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
 uploadArea.addEventListener('drop', (e) => {
   e.preventDefault();
   uploadArea.classList.remove('dragover');
   const file = e.dataTransfer.files[0];
-  if (file) {
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    pfpInput.files = dt.files;
-    handleFile(file);
-  }
+  if (file) { const dt = new DataTransfer(); dt.items.add(file); pfpInput.files = dt.files; handleFile(file); }
 });
-
 previewRemove.addEventListener('click', (e) => {
   e.stopPropagation();
   pfpInput.value = '';
@@ -610,127 +200,55 @@ previewRemove.addEventListener('click', (e) => {
   previewImg.src = '';
 });
 
-// Password visibility toggle
 const togglePw = document.getElementById('togglePw');
 togglePw.addEventListener('click', () => {
   const isPassword = passwordInput.type === 'password';
   passwordInput.type = isPassword ? 'text' : 'password';
-  togglePw.innerHTML = isPassword
-    ? '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8z"/><line x1="2" y1="14" x2="14" y2="2"/></svg>'
-    : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>';
+  togglePw.querySelector('use').setAttribute('href', isPassword ? '#i-eye-slash' : '#i-eye');
 });
 
-// ── Fortized Username Rules & Enforcement (Final) ──
-// Character set: a-z A-Z 0-9 and the single underscore. 3–30 chars.
-// No leading/trailing/consecutive underscores. Plus content +
-// impersonation + spam + uniqueness checks, all hardened against
-// the bypasses people actually try (leetspeak, fullwidth lookalikes,
-// zero-width chars, padding garbage, vowel removal).
-const USERNAME_REJECT_MESSAGES = [
-  'Chosen username is unavailable or violates our rules.',
-  'This username is not allowed.'
-];
-function _usernameRejection() {
-  return USERNAME_REJECT_MESSAGES[Math.floor(Math.random() * USERNAME_REJECT_MESSAGES.length)];
-}
-
-// CEO / founder + variants — always blocked regardless of staff list.
+const USERNAME_REJECT_MESSAGES = ['Chosen username is unavailable or violates our rules.','This username is not allowed.'];
+function _usernameRejection() { return USERNAME_REJECT_MESSAGES[Math.floor(Math.random() * USERNAME_REJECT_MESSAGES.length)]; }
 const FOUNDER_BASES = ['staw','stawrer','stawrerr','lemonstaw','croistaw','swiftaw','swift'];
-// Permanently reserved generic names.
-const RESERVED_NAMES = [
-  'admin','administrator','moderator','mod','fortized','fortize','fortify',
-  'staff','support','system','owner','founder','ceo','dev','developer',
-  'superadmin','root','official','help','helpdesk','team','bot','null',
-  'undefined','anonymous','anon','guest','user','test','tester','demo',
-  'service','contact','noreply','no_reply','postmaster','webmaster',
-  'security','abuse','moderation','automod'
-];
-// Blacklisted figures / refs (matched against multiple normalised
-// forms so leetspeak + lookalike bypasses don't slip through).
-const BLACKLISTED_SUBSTRINGS = [
-  'donaldtrump','trumpdonald','melenchon','mélenchon','melanchon',
-  'communedeparis',
-  'epstein','jeffreyepstein',
-  'cp','csam','pedo','pedophile','pedophil','minorattract'
-];
-// Spam / low-effort patterns.
-const SPAM_PATTERNS = [
-  /^([a-z0-9])\1{4,}$/i,
-  /^qwerty(?:uiop)?$/i, /^asdfgh(?:jkl)?$/i, /^zxcvbn(?:m)?$/i,
-  /^[0-9]{8,}$/,
-  /^[a-z]+[0-9]{5,}$/i,
-  /^(.)\1(.)\2(.)\3/,        // ababab, aabbcc style spam
-  /^[bcdfghjklmnpqrstvwxyz]{5,}$/i  // consonant-only mash like "qwxzv"
-];
+const RESERVED_NAMES = ['admin','administrator','moderator','mod','fortized','fortize','fortify','staff','support','system','owner','founder','ceo','dev','developer','superadmin','root','official','help','helpdesk','team','bot','null','undefined','anonymous','anon','guest','user','test','tester','demo','service','contact','noreply','no_reply','postmaster','webmaster','security','abuse','moderation','automod'];
+const BLACKLISTED_SUBSTRINGS = ['donaldtrump','trumpdonald','melenchon','mélenchon','melanchon','communedeparis','epstein','jeffreyepstein','cp','csam','pedo','pedophile','pedophil','minorattract'];
+const SPAM_PATTERNS = [/^([a-z0-9])\1{4,}$/i,/^qwerty(?:uiop)?$/i,/^asdfgh(?:jkl)?$/i,/^zxcvbn(?:m)?$/i,/^[0-9]{8,}$/,/^[a-z]+[0-9]{5,}$/i,/^(.)\1(.)\2(.)\3/,/^[bcdfghjklmnpqrstvwxyz]{5,}$/i];
 
-// Leetspeak + lookalike normaliser. Folds every common bypass back
-// to plain a-z so a value like "5t4w_1" or "Ｓｔａｗ" or "St‎aw" all
-// resolve to "staw" before the staff/founder/blacklist checks run.
 function _usernameNormalise(s) {
   if (!s) return '';
-  // 1. Strip invisible / zero-width / RTL-override chars used to
-  //    hide letters inside a name.
   let v = s.replace(/[​-‏‪-‮⁠-⁤﻿]/g, '');
-  // 2. Fold fullwidth + Cyrillic / Greek lookalikes back to ASCII.
-  const LOOKALIKE = {
-    'а':'a','е':'e','о':'o','р':'p','с':'c','х':'x','у':'y','к':'k','м':'m','н':'h','т':'t','і':'i','ѕ':'s','ј':'j',
-    'А':'a','Е':'e','О':'o','Р':'p','С':'c','Х':'x','У':'y','К':'k','М':'m','Н':'h','Т':'t',
-    'α':'a','ε':'e','ο':'o','ρ':'p','τ':'t','υ':'y','ι':'i','ν':'v',
-    'Α':'a','Ε':'e','Ο':'o','Ρ':'p','Τ':'t','Υ':'y','Ι':'i','Ν':'n'
-  };
+  const LOOKALIKE = {'а':'a','е':'e','о':'o','р':'p','с':'c','х':'x','у':'y','к':'k','м':'m','н':'h','т':'t','і':'i','ѕ':'s','ј':'j','А':'a','Е':'e','О':'o','Р':'p','С':'c','Х':'x','У':'y','К':'k','М':'m','Н':'h','Т':'t','α':'a','ε':'e','ο':'o','ρ':'p','τ':'t','υ':'y','ι':'i','ν':'v','Α':'a','Ε':'e','Ο':'o','Ρ':'p','Τ':'t','Υ':'y','Ι':'i','Ν':'n'};
   v = v.replace(/[^\x00-\x7f]/g, ch => LOOKALIKE[ch] || ch);
-  // 3. Fullwidth digits/letters.
   v = v.replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
   v = v.toLowerCase();
-  // 4. Leetspeak fold.
   const LEET = { '4':'a','@':'a','3':'e','€':'e','1':'i','!':'i','|':'i','0':'o','5':'s','$':'s','7':'t','8':'b','9':'g','6':'g' };
-  v = v.replace(/[4@3€1!|05$78969]/g, ch => LEET[ch] || ch);
-  // 5. Drop everything except letters — final form for impersonation
-  //    matching ("St_a_w_99" → "staw"; "St4w" → "staw"; "Ｓtaw" → "staw").
+  v = v.replace(/[4@3€1!|05$7896]/g, ch => LEET[ch] || ch);
   return v.replace(/[^a-z]/g, '');
 }
-// Stricter: also strip vowels for a "consonant skeleton" so
-// "Mdrtr" / "Mdrt" still flag against "Moderator".
-function _consonantSkeleton(letters) {
-  return letters.replace(/[aeiou]/g, '');
-}
+function _consonantSkeleton(letters) { return letters.replace(/[aeiou]/g, ''); }
 
-// Returns { ok: bool, reason: string|null }. Reason is one of the two
-// canonical messages when ok is false.
 function validateUsername(raw) {
   const v = (raw || '').trim();
   if (!v) return { ok: false, reason: _usernameRejection() };
-  // Technical rules — exactly what the spec lists.
   if (v.length < 3 || v.length > 30) return { ok: false, reason: _usernameRejection() };
   if (!/^[A-Za-z0-9_]+$/.test(v)) return { ok: false, reason: _usernameRejection() };
   if (v.startsWith('_') || v.endsWith('_')) return { ok: false, reason: _usernameRejection() };
   if (/__/.test(v)) return { ok: false, reason: _usernameRejection() };
-  const norm = v.toLowerCase();
-  // Hardened normalised forms used for all content / impersonation
-  // checks — defeats leetspeak, lookalike chars, padding tricks.
   const letters = _usernameNormalise(v);
   const skeleton = _consonantSkeleton(letters);
-  // Spam.
   for (const re of SPAM_PATTERNS) { if (re.test(v)) return { ok: false, reason: _usernameRejection() }; }
-  // Reserved names + close variations (matches against both the
-  // letters-only form and its consonant skeleton).
   for (const r of RESERVED_NAMES) {
     const rSk = _consonantSkeleton(r);
     if (letters === r || skeleton === rSk) return { ok: false, reason: _usernameRejection() };
     if (letters.startsWith(r) && letters.length - r.length <= 3) return { ok: false, reason: _usernameRejection() };
     if (letters.endsWith(r)   && letters.length - r.length <= 2) return { ok: false, reason: _usernameRejection() };
   }
-  // Founder / CEO bases.
   for (const b of FOUNDER_BASES) {
     if (letters === b) return { ok: false, reason: _usernameRejection() };
     if (letters.startsWith(b) || letters.endsWith(b)) return { ok: false, reason: _usernameRejection() };
     if (letters.includes(b) && letters.length - b.length <= 4) return { ok: false, reason: _usernameRejection() };
   }
-  // Blacklisted content.
-  for (const bad of BLACKLISTED_SUBSTRINGS) {
-    if (letters.includes(bad)) return { ok: false, reason: _usernameRejection() };
-  }
-  // Dynamic staff check — current admins + mods at sign-up time.
+  for (const bad of BLACKLISTED_SUBSTRINGS) { if (letters.includes(bad)) return { ok: false, reason: _usernameRejection() }; }
   let staff = { admins: [], moderators: [] };
   try { staff = JSON.parse(localStorage.getItem('ftz_staff') || '{}'); } catch {}
   const staffNames = [...(staff.admins || []), ...(staff.moderators || [])]
@@ -746,24 +264,11 @@ function validateUsername(raw) {
   return { ok: true, reason: null };
 }
 
-// Uniqueness check — hits FortizedSocial.getUserByName. Returns true
-// if the name is FREE (not registered yet). Tolerant: a network
-// failure is treated as "unknown" rather than blocking signup, since
-// the server-side register() will catch a real collision anyway.
 async function isUsernameAvailable(name) {
-  try {
-    const existing = await FortizedSocial.getUserByName(name.toLowerCase());
-    return !existing;
-  } catch (e) {
-    console.warn('[signup] uniqueness check failed', e?.message);
-    return true;
-  }
+  try { const existing = await FortizedSocial.getUserByName(name.toLowerCase()); return !existing; }
+  catch (e) { console.warn('[signup] uniqueness check failed', e?.message); return true; }
 }
 
-// Live validation as the user types — debounced uniqueness check
-// kicks in after 350ms of no input so we don't hammer the DB on
-// every keystroke. Spec rejection wins over taken-already so users
-// don't get told "taken" for something that wasn't even allowable.
 let _userCheckTimer = null;
 usernameInput.addEventListener('input', () => {
   const val = usernameInput.value.trim();
@@ -773,15 +278,12 @@ usernameInput.addEventListener('input', () => {
   userErrorDiv.textContent = '';
   clearTimeout(_userCheckTimer);
   _userCheckTimer = setTimeout(async () => {
-    if (usernameInput.value.trim() !== val) return; // raced past
+    if (usernameInput.value.trim() !== val) return;
     const free = await isUsernameAvailable(val);
-    if (!free && usernameInput.value.trim() === val) {
-      userErrorDiv.textContent = _usernameRejection();
-    }
+    if (!free && usernameInput.value.trim() === val) { userErrorDiv.textContent = _usernameRejection(); }
   }, 350);
 });
 
-// Enter key submission
 signupBtn.addEventListener('click', doSignup);
 [emailInput, usernameInput, passwordInput].forEach(el =>
   el.addEventListener('keydown', e => { if (e.key === 'Enter') doSignup(); })
@@ -793,32 +295,23 @@ async function doSignup() {
   const password = passwordInput.value;
   const terms    = termsCheckbox.checked;
 
-  errorDiv.textContent = '';
+  clearError();
   userErrorDiv.textContent = '';
 
-  if (!email || !username || !password) { errorDiv.textContent = 'All fields are required.'; return; }
-  if (!terms) { errorDiv.textContent = 'You must agree to the Terms to continue.'; return; }
+  if (!email || !username || !password) { showError('All fields are required.'); return; }
+  if (!terms) { showError('You must agree to the Terms to continue.'); return; }
 
-  // Check if registrations are disabled globally
   try {
     const gsSnap = await firebase.database().ref('admin/global_settings/disableRegistration').get();
     if (gsSnap.exists() && gsSnap.val() === true) {
-      errorDiv.textContent = 'New registrations are currently disabled. Please try again later.';
+      showError('New registrations are currently disabled. Please try again later.');
       return;
     }
-  } catch(e) { /* continue if check fails — don't block on network error */ }
+  } catch(e) { /* continue */ }
 
-  // Client-side block before hitting the server — runs the full
-  // Fortized Username Rules validator AND a uniqueness check.
   const _vr = validateUsername(username);
-  if (!_vr.ok) {
-    userErrorDiv.textContent = _vr.reason;
-    return;
-  }
-  if (!(await isUsernameAvailable(username))) {
-    userErrorDiv.textContent = _usernameRejection();
-    return;
-  }
+  if (!_vr.ok) { userErrorDiv.textContent = _vr.reason; return; }
+  if (!(await isUsernameAvailable(username))) { userErrorDiv.textContent = _usernameRejection(); return; }
 
   setLoading(true);
 
@@ -849,29 +342,22 @@ async function doSignup() {
           const updatedUser = { ...result.user, pfp: e.target.result };
           await FortizedSocial.saveUserObject(updatedUser);
           cacheAndRedirect(updatedUser);
-        } catch (err) {
-          console.error('PFP save error:', err);
-          cacheAndRedirect(result.user);
-        }
+        } catch (err) { console.error('PFP save error:', err); cacheAndRedirect(result.user); }
       };
       reader.onerror = () => cacheAndRedirect(result.user);
       reader.readAsDataURL(file);
     } else {
-      // Assign a deterministic default profile picture
       const _hash = (result.user.username||'').split('').reduce((a,c) => a + c.charCodeAt(0), 0);
       const defaultPfpUrl = _hash % 2 === 0 ? '/default%20pfp.png' : '/default%20pfp2.png';
       try {
         const updatedUser = { ...result.user, pfp: defaultPfpUrl };
         await FortizedSocial.saveUserObject(updatedUser);
         cacheAndRedirect(updatedUser);
-      } catch {
-        cacheAndRedirect(result.user);
-      }
+      } catch { cacheAndRedirect(result.user); }
     }
-
   } catch (err) {
     console.error('Signup error:', err);
-    errorDiv.textContent = 'Connection error. Check your internet and try again.';
+    showError('Connection error. Check your internet and try again.');
     setLoading(false);
   }
 }
@@ -881,7 +367,6 @@ function setLoading(on) {
   signupBtn.classList.toggle('loading', on);
 }
 </script>
-<script>(()=>{const n=document.getElementById('mainNav');if(!n)return;window.addEventListener('scroll',()=>n.classList.toggle('scrolled',window.scrollY>40),{passive:true});if(window.scrollY>40)n.classList.add('scrolled');})();</script>
-<script>if (typeof twemoji !== 'undefined') { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); }</script>
+<script src="/css/fortized-2026.js"></script>
 </body>
 </html>

@@ -488,8 +488,8 @@
         <div class="hero-sticker s1">
           <img class="mini" src="/Fortized icon.png" alt="">
           <div>
-            <span class="lbl">live right now</span>
-            <h5><span data-bastion-count>--</span> Bastions</h5>
+            <span class="lbl">Bastions created on Fortized</span>
+            <h5><span data-bastion-count>--</span></h5>
           </div>
         </div>
         <div class="hero-sticker s2">
@@ -667,6 +667,9 @@
 <script src="/css/fortized-2026.js"></script>
 <script>
 // Live Bastion count from the Fortized Supabase
+// The actual Bastion rows live in `bastions` but on a fresh project RLS
+// blocks anon SELECT so we get an empty array back. Try both `bastions`
+// and `global_bastions` and use whichever returns a real count.
 (function () {
   const SB_URL = 'https://ufnjjddqnicbzyjfawrb.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbmpqZGRxbmljYnp5amZhd3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NTkzMjgsImV4cCI6MjA4ODIzNTMyOH0.5Sfc_wQO6T3mQT6lqsPTAntqyxhDZJqTrZ3GNkyQSEk';
@@ -687,24 +690,44 @@
     requestAnimationFrame(step);
   }
 
-  async function pullCount() {
+  async function countTable(name) {
     try {
-      const r = await fetch(SB_URL + '/rest/v1/bastions?select=id', {
-        headers: { ...SB_HEADERS, Range: '0-0', 'Range-Unit': 'items' }
+      // HEAD with Prefer: count=exact is the supabase-recommended way to
+      // get a count without paying for any row data. Works whether the
+      // table is empty or has 100k rows.
+      const r = await fetch(SB_URL + '/rest/v1/' + name + '?select=id', {
+        method: 'HEAD',
+        headers: { ...SB_HEADERS, 'Range-Unit': 'items', Range: '0-0' }
       });
+      if (!r.ok) {
+        console.warn('[bastion count] ' + name + ' HEAD ->', r.status, r.statusText);
+        return null;
+      }
       const cr = r.headers.get('content-range') || '';
       const m = cr.match(/\/(\d+|\*)$/);
-      const total = m && m[1] !== '*' ? parseInt(m[1], 10) : NaN;
-      if (Number.isFinite(total)) tween(el, total, 800);
-      else el.textContent = '—';
+      if (!m || m[1] === '*') return null;
+      return parseInt(m[1], 10);
     } catch (e) {
-      console.warn('[bastion count] failed:', e);
-      el.textContent = '—';
+      console.warn('[bastion count] ' + name + ' threw:', e);
+      return null;
     }
   }
 
+  async function pullCount() {
+    const [a, b] = await Promise.all([countTable('bastions'), countTable('global_bastions')]);
+    const candidates = [a, b].filter(n => Number.isFinite(n));
+    if (!candidates.length) {
+      console.warn('[bastion count] both tables returned null - check RLS policies on bastions/global_bastions');
+      el.textContent = '—';
+      return;
+    }
+    // Use whichever has the larger count (the canonical store)
+    const total = Math.max(...candidates);
+    tween(el, total, 800);
+  }
+
   pullCount();
-  setInterval(pullCount, 10000); // refresh every 10s
+  setInterval(pullCount, 10000);
 })();
 </script>
 </body>

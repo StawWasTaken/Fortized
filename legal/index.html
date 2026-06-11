@@ -118,6 +118,21 @@
   <a href="/signup">Join the Fortress</a>
 </div>
 
+<style>
+.page-top { position: relative; overflow: hidden; }
+.page-top::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(160deg, rgba(8,10,15,.96) 0%, rgba(8,10,15,.82) 50%, rgba(8,10,15,.96) 100%),
+    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png') center/cover;
+  z-index: -1;
+}
+.page-top::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 200px;
+  background: linear-gradient(180deg, transparent, var(--bg));
+  z-index: -1; pointer-events: none;
+}
+</style>
 <section class="page-top">
   <div class="container">
     <div class="eyebrow lilac">Legal</div>

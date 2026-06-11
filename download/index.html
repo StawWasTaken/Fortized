@@ -56,17 +56,15 @@
   z-index: -1;
 }
 .dl-app-icon {
-  width: 96px; height: 96px;
+  width: 110px; height: 110px;
   margin: 0 auto 18px;
-  border-radius: 26px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 0 0 var(--ink), 0 18px 36px rgba(255,249,62,.30);
   transform: rotate(-4deg);
   transition: transform .3s;
+  filter: drop-shadow(0 12px 24px rgba(255,249,62,.35));
 }
 .dl-app-card:hover .dl-app-icon { transform: rotate(0deg) scale(1.05); }
-.dl-app-icon img { width: 64px; height: 64px; object-fit: contain; filter: brightness(0); }
+.dl-app-icon img { width: 100%; height: 100%; object-fit: contain; }
 .dl-app-card h2 {
   font-family: var(--font-display); font-size: 26px; font-weight: 800;
   letter-spacing: -.6px; margin-bottom: 6px;
@@ -134,7 +132,6 @@
 <nav class="nav-root">
   <a href="/" class="nav-logo"><img src="/Fortized logo2026.png?v=2026" alt="Fortized"></a>
   <div class="nav-pill-group">
-    <a href="/" class="nav-pill">Home</a>
     <a href="/newsroom" class="nav-pill">Newsroom</a>
     <a href="/legal" class="nav-pill">Legal</a>
     <a href="/support" class="nav-pill">Support</a>

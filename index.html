@@ -281,6 +281,27 @@
 }
 .b:hover .icon-art { transform: rotate(-6deg) scale(1.05); }
 .b.span-3 .icon-art { width: 180px; height: 180px; }
+
+/* single icon floating at the top-right of single bento cards */
+.b .bento-art {
+  position: absolute;
+  top: -10px; right: -14px;
+  width: 130px; height: 130px;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 14px 26px rgba(0,0,0,.45)) drop-shadow(0 0 18px rgba(255,249,62,.12));
+  transition: transform .35s cubic-bezier(.22,1,.36,1), filter .25s;
+  z-index: 2;
+}
+.b:hover .bento-art { transform: rotate(-6deg) scale(1.06); filter: drop-shadow(0 18px 30px rgba(0,0,0,.55)) drop-shadow(0 0 28px rgba(255,249,62,.25)); }
+.b:not(.span-2):not(.span-3) {
+  padding-top: 130px;
+}
+.b:not(.span-2):not(.span-3) .chip { margin-bottom: 12px; }
+@media (max-width: 600px) {
+  .b .bento-art { width: 100px; height: 100px; }
+  .b:not(.span-2):not(.span-3) { padding-top: 110px; }
+}
 @media (max-width: 600px) {
   .b.span-2 .row, .b.span-3 .row { grid-template-columns: 1fr; }
   .b .icon-art { width: 100px; height: 100px; margin-left: auto; }
@@ -414,7 +435,6 @@
 <nav class="nav-root">
   <a href="/" class="nav-logo" aria-label="Fortized"><img src="/Fortized logo2026.png?v=2026" alt="Fortized"></a>
   <div class="nav-pill-group">
-    <a href="/" class="nav-pill active">Home</a>
     <a href="/newsroom" class="nav-pill">Newsroom</a>
     <a href="/legal" class="nav-pill">Legal</a>
     <a href="/support" class="nav-pill">Support</a>
@@ -466,10 +486,10 @@
         <div class="knight-glow"></div>
         <img class="knight-img" src="/Fortized Knight.png" alt="">
         <div class="hero-sticker s1">
-          <img class="mini" src="/Fortized logo.png" alt="">
+          <img class="mini" src="/Fortized icon.png" alt="">
           <div>
-            <span class="lbl">live now</span>
-            <h5>134 Bastions</h5>
+            <span class="lbl">live right now</span>
+            <h5><span data-bastion-count>--</span> Bastions</h5>
           </div>
         </div>
         <div class="hero-sticker s2">
@@ -530,6 +550,7 @@
       </article>
 
       <article class="b t2 reveal">
+        <img class="bento-art" src="/Icons/controller.png" alt="">
         <span class="chip blue"><span class="dot"></span> Action</span>
         <h3>Play.</h3>
         <p>Share screenshots, go live, show off favourite games on your profile, and jump into Activities from Discover.</p>
@@ -537,6 +558,7 @@
       </article>
 
       <article class="b t3 reveal">
+        <img class="bento-art" src="/Icons/headset.png" alt="">
         <span class="chip mint"><span class="dot"></span> Voice</span>
         <h3>Talk.</h3>
         <p>Hop into voice rooms or call any friend straight from their profile. No queue, no setup.</p>
@@ -544,6 +566,7 @@
       </article>
 
       <article class="b t4 reveal">
+        <img class="bento-art" src="/Icons/media.png" alt="">
         <span class="chip pink"><span class="dot"></span> Files</span>
         <h3>Share.</h3>
         <p>Upload clips, screenshots, save files, art - anything. Drop it in chat, share it on a forum.</p>
@@ -551,6 +574,7 @@
       </article>
 
       <article class="b t1 reveal">
+        <img class="bento-art" src="/Icons/Scheduling.png" alt="">
         <span class="chip lilac"><span class="dot"></span> Plan</span>
         <h3>Schedule.</h3>
         <p>Each Bastion has its own calendar. Pin events, raids, movie nights right inside your rooms.</p>
@@ -641,5 +665,47 @@
 </footer>
 
 <script src="/css/fortized-2026.js"></script>
+<script>
+// Live Bastion count from the Fortized Supabase
+(function () {
+  const SB_URL = 'https://ufnjjddqnicbzyjfawrb.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbmpqZGRxbmljYnp5amZhd3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NTkzMjgsImV4cCI6MjA4ODIzNTMyOH0.5Sfc_wQO6T3mQT6lqsPTAntqyxhDZJqTrZ3GNkyQSEk';
+  const SB_HEADERS = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, Prefer: 'count=exact' };
+  const el = document.querySelector('[data-bastion-count]');
+  if (!el) return;
+
+  function tween(el, to, dur) {
+    const from = parseInt((el.textContent || '0').replace(/\D/g,''),10) || 0;
+    if (from === to) { el.textContent = to.toLocaleString(); return; }
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - start) / dur);
+      const e = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(from + (to - from) * e).toLocaleString();
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  async function pullCount() {
+    try {
+      const r = await fetch(SB_URL + '/rest/v1/bastions?select=id', {
+        headers: { ...SB_HEADERS, Range: '0-0', 'Range-Unit': 'items' }
+      });
+      const cr = r.headers.get('content-range') || '';
+      const m = cr.match(/\/(\d+|\*)$/);
+      const total = m && m[1] !== '*' ? parseInt(m[1], 10) : NaN;
+      if (Number.isFinite(total)) tween(el, total, 800);
+      else el.textContent = '—';
+    } catch (e) {
+      console.warn('[bastion count] failed:', e);
+      el.textContent = '—';
+    }
+  }
+
+  pullCount();
+  setInterval(pullCount, 10000); // refresh every 10s
+})();
+</script>
 </body>
 </html>

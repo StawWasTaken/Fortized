@@ -53,6 +53,28 @@
 .doc .arrow { font-family: var(--font-display); font-weight: 700; color: var(--accent); font-size: 18px; transition: transform .2s; }
 .doc:hover .arrow { transform: translateX(4px); }
 
+.cat-block { margin-top: 50px; }
+.cat-head {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 800;
+  letter-spacing: -.8px;
+  margin-bottom: 20px;
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.cat-num {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  padding: 5px 10px; border-radius: 100px;
+  position: relative; top: -3px;
+}
+.cat-num.lilac { background: linear-gradient(135deg, var(--c-lilac), #a78bfa); color: #1f1140; }
+.cat-sub { color: var(--muted-light); font-weight: 500; font-size: 16px; letter-spacing: -.3px; }
+
 .intro-note {
   margin-top: 36px;
   background: linear-gradient(160deg, #2a290d 0%, #1c1a05 100%);
@@ -75,7 +97,6 @@
 <nav class="nav-root">
   <a href="/" class="nav-logo"><img src="/Fortized logo2026.png?v=2026" alt="Fortized"></a>
   <div class="nav-pill-group">
-    <a href="/" class="nav-pill">Home</a>
     <a href="/newsroom" class="nav-pill">Newsroom</a>
     <a href="/legal" class="nav-pill active">Legal</a>
     <a href="/support" class="nav-pill">Support</a>
@@ -108,47 +129,62 @@
       <p>We try to write our policies the way we'd actually explain them to a friend. The legal version is here when you need it, but skim the summary at the top of each page first.</p>
     </div>
 
-    <div class="docs">
-      <a class="doc t1 reveal" href="/legal/terms-of-service">
-        <div class="icon"><svg><use href="#i-doc"/></svg></div>
-        <div>
-          <h3>Terms of Service</h3>
-          <p>The deal between you and us.</p>
-        </div>
-        <span class="arrow">→</span>
-      </a>
-      <a class="doc t2 reveal" href="/legal/terms-of-use">
-        <div class="icon"><svg><use href="#i-doc"/></svg></div>
-        <div>
-          <h3>Terms of Use</h3>
-          <p>How to use the platform.</p>
-        </div>
-        <span class="arrow">→</span>
-      </a>
-      <a class="doc t3 reveal" href="/legal/privacy-policy">
-        <div class="icon"><svg><use href="#i-shield"/></svg></div>
-        <div>
-          <h3>Privacy Policy</h3>
-          <p>What data we collect, what we don't.</p>
-        </div>
-        <span class="arrow">→</span>
-      </a>
-      <a class="doc t4 reveal" href="/legal/creator-policy">
-        <div class="icon"><svg><use href="#i-fire"/></svg></div>
-        <div>
-          <h3>Creator Policy</h3>
-          <p>Rules for the creator marketplace.</p>
-        </div>
-        <span class="arrow">→</span>
-      </a>
-      <a class="doc t5 reveal" href="/legal/fortshop-policy">
-        <div class="icon"><svg><use href="#i-fire"/></svg></div>
-        <div>
-          <h3>Fortshop Policy</h3>
-          <p>How the shop and Radiance work.</p>
-        </div>
-        <span class="arrow">→</span>
-      </a>
+    <div class="cat-block reveal">
+      <h2 class="cat-head"><span class="cat-num">01</span> Terms <span class="cat-sub">- the agreements you sign on for</span></h2>
+      <div class="docs">
+        <a class="doc t1" href="/legal/terms-of-service">
+          <div class="icon"><svg><use href="#i-doc"/></svg></div>
+          <div>
+            <h3>Terms of Service</h3>
+            <p>The deal between you and us.</p>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+        <a class="doc t2" href="/legal/terms-of-use">
+          <div class="icon"><svg><use href="#i-doc"/></svg></div>
+          <div>
+            <h3>Terms of Use</h3>
+            <p>How to actually use the platform.</p>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="cat-block reveal" style="margin-top:40px;">
+      <h2 class="cat-head"><span class="cat-num lilac">02</span> Policies <span class="cat-sub">- the rules of the road</span></h2>
+      <div class="docs">
+        <a class="doc t3" href="/legal/privacy-policy">
+          <div class="icon" style="background:rgba(125,211,252,.10); border-color:rgba(125,211,252,.25);">
+            <svg style="fill:var(--c-blue);"><use href="#i-shield"/></svg>
+          </div>
+          <div>
+            <h3>Privacy Policy</h3>
+            <p>What data we collect, what we don't.</p>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+        <a class="doc t4" href="/legal/creator-policy">
+          <div class="icon" style="background:rgba(255,138,180,.10); border-color:rgba(255,138,180,.25);">
+            <svg style="fill:var(--c-pink);"><use href="#i-fire"/></svg>
+          </div>
+          <div>
+            <h3>Creator Policy</h3>
+            <p>Rules for the creator marketplace.</p>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+        <a class="doc t5" href="/legal/fortshop-policy">
+          <div class="icon" style="background:rgba(134,239,172,.10); border-color:rgba(134,239,172,.25);">
+            <svg style="fill:var(--c-mint);"><use href="#i-bolt"/></svg>
+          </div>
+          <div>
+            <h3>Fortshop Policy</h3>
+            <p>How the shop and Radiance work.</p>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </div>
     </div>
   </div>
 </section>

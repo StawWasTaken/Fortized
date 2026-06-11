@@ -327,8 +327,8 @@
 }
 .ramparts-inner {
   background:
-    linear-gradient(160deg, rgba(20,22,32,.92) 0%, rgba(20,22,32,.78) 50%, rgba(20,22,32,.94) 100%),
-    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png') center/cover;
+    linear-gradient(160deg, rgba(20,22,32,.94) 0%, rgba(20,22,32,.80) 50%, rgba(20,22,32,.94) 100%),
+    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner.png') center/cover;
   border: 1.5px solid var(--border);
   border-radius: 26px;
   padding: 40px;
@@ -389,6 +389,38 @@
 .rampart h4 { font-family: var(--font-display); font-size: 16px; font-weight: 800; letter-spacing: -.3px; margin-bottom: 4px; }
 .rampart p { font-size: 13px; color: var(--muted-light); line-height: 1.55; }
 @media (max-width: 720px) { .ramparts-inner { padding: 28px; transform: none; } }
+
+/* ─── poster showcase ─── */
+.poster-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+@media (max-width: 760px) { .poster-grid { grid-template-columns: 1fr; } }
+.poster {
+  position: relative;
+  display: block;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  box-shadow: 0 8px 0 0 var(--ink), 0 22px 50px rgba(0,0,0,.5);
+  transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .25s, border-color .25s;
+  aspect-ratio: 16 / 9;
+  background: var(--panel);
+}
+.poster.t1 { transform: rotate(-1.5deg); }
+.poster.t2 { transform: rotate(1.5deg); }
+.poster:hover { transform: rotate(0) translateY(-6px); box-shadow: 0 14px 0 0 var(--ink), 0 30px 60px rgba(0,0,0,.6); }
+.poster img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s cubic-bezier(.22,1,.36,1); }
+.poster:hover img { transform: scale(1.04); }
+.poster-tag {
+  position: absolute;
+  top: 14px; left: 14px;
+  z-index: 2;
+}
+.poster-tag .chip {
+  background: rgba(8,10,15,.78);
+  backdrop-filter: blur(12px);
+}
 
 /* ─── outro card ─── */
 .outro {
@@ -585,9 +617,7 @@
         <div class="meta"><span class="pulse"></span> Bastion calendar · Events</div>
       </article>
 
-      <article class="b span-3 t2 reveal" style="background:
-        linear-gradient(135deg, rgba(20,22,32,.94) 0%, rgba(20,22,32,.78) 50%, rgba(20,22,32,.94) 100%),
-        url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner4.png') center/cover;">
+      <article class="b span-3 t2 reveal">
         <div class="row">
           <div>
             <span class="chip yellow"><span class="dot"></span> Economy</span>
@@ -640,6 +670,26 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- showcase: the two non-background banner images displayed as real visuals -->
+<section class="section">
+  <div class="container">
+    <div class="section-eyebrow"><svg><use href="#i-hashtag"/></svg> the press kit</div>
+    <h2 class="head">Banners, posters, <span class="gradient-text">fresh off the wall</span>.</h2>
+    <p class="lede">Things we shipped, painted, printed, posted.</p>
+
+    <div class="poster-grid">
+      <a class="poster t1 reveal" href="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png" target="_blank" rel="noopener">
+        <img src="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png" alt="Fortized poster v2">
+        <div class="poster-tag"><span class="chip yellow"><span class="dot"></span> Poster · v2</span></div>
+      </a>
+      <a class="poster t2 reveal" href="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner4.png" target="_blank" rel="noopener">
+        <img src="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner4.png" alt="Fortized poster v4">
+        <div class="poster-tag"><span class="chip pink"><span class="dot"></span> Poster · v4</span></div>
+      </a>
     </div>
   </div>
 </section>

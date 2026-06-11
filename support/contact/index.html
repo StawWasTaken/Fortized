@@ -19,7 +19,7 @@
   content: ""; position: absolute; inset: 0;
   background:
     linear-gradient(160deg, rgba(8,10,15,.96) 0%, rgba(8,10,15,.78) 50%, rgba(8,10,15,.96) 100%),
-    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner4.png') center/cover;
+    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner.png') center/cover;
   z-index: -1;
 }
 
@@ -227,8 +227,8 @@
   display: flex; align-items: center; justify-content: center;
 }
 .channel .icon svg { width: 22px; height: 22px; fill: var(--accent); }
-.channel.fortized .icon { background: rgba(255,249,62,.10); border-color: rgba(255,249,62,.30); }
-.channel.fortized .icon svg { fill: var(--accent); }
+.channel.fortized .icon { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: var(--ink); box-shadow: 0 3px 0 0 var(--ink); }
+.channel.fortized .icon img { width: 30px; height: 30px; object-fit: contain; }
 .channel.reddit .icon { background: rgba(255,107,58,.10); border-color: rgba(255,107,58,.30); }
 .channel.reddit .icon svg { fill: #ff6b3a; }
 .channel.x .icon { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.18); }
@@ -439,7 +439,7 @@
 
       <div class="channels">
         <a class="channel t1 fortized" href="https://www.fortized.com/app?invite=fort-MO3FD2SX-1LZQ" target="_blank" rel="noopener">
-          <div class="icon"><svg><use href="#i-fortized"/></svg></div>
+          <div class="icon"><img src="/Fortized logo.png" alt=""></div>
           <div>
             <h3>Fortized Guide</h3>
             <p>The official Fortized Bastion - join the community.</p>

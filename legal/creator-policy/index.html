@@ -14,11 +14,25 @@
 <link rel="icon" type="image/png" href="/Fortized icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/fortized-2026.css">
+<style>
+.page-top { position: relative; overflow: hidden; }
+.page-top::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(160deg, rgba(8,10,15,.96) 0%, rgba(8,10,15,.82) 50%, rgba(8,10,15,.98) 100%),
+    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png') center/cover;
+  z-index: -1;
+}
+.page-top::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 220px;
+  background: linear-gradient(180deg, transparent, var(--bg));
+  z-index: -1; pointer-events: none;
+}
+</style>
 </head>
 <body>
 
 <div class="bg-blob b1"></div>
-<div class="bg-blob b2"></div>
 
 <nav class="nav-root">
   <a href="/" class="nav-logo"><img src="/Fortized logo2026.png?v=2026" alt="Fortized"></a>
@@ -59,27 +73,11 @@
     </div>
 
     <article class="legal-prose">
-<p class="hero-sub">The rules for everything you build, publish, or integrate as a Fortized creator: ads, bots, bastion templates, marketplace listings, API keys, OAuth and oEmbed integrations, takedowns, and revenue.</p>
-    
-      
-
-    </div>
-  </div>
-</div>
-
-<div class="legal-layout">
-  <aside class="toc" id="toc">
-    <div class="toc-title">Contents</div>
-  </aside>
-
-  <div class="legal-content">
-    <div class="legal-body">
-
-      <div class="callout callout-yellow">
+<div class="callout callout-yellow">
         <strong>Read this before you create.</strong> The Creator Hub gives you tools that reach other people in the realm; your ads sit in front of strangers, your bots run inside other communities, your templates seed entire bastions, and your API keys let third-party software act on your behalf. With those tools come responsibilities. This Policy describes them.
       </div>
 
-      <div class="sec-head" id="s-1">
+      <div class="sec-head" >
         <div class="sec-num">1</div>
         <h2>Becoming a Creator</h2>
       </div>
@@ -87,12 +85,12 @@
       <p>Anyone with an active Fortized account in good standing can use the Creator Hub. Suspended, banned, or restricted accounts cannot create, publish, or list anything. If your account is moderated mid-creation, all in-progress drafts are paused until the moderation is resolved.</p>
 
       <div class="sub-label"><span>1.2 What You Agree To</span></div>
-      <p>Before you can enter the Creator Hub for the first time, you must accept the <a href="/legal/terms-of-use" style="color:var(--acc);">Terms of Use</a>, the <a href="/legal/terms-of-service" style="color:var(--acc);">Terms of Service</a>, and this Creator Policy. Accepting once is enough; we won't ask you again unless we publish a material change.</p>
+      <p>Before you can enter the Creator Hub for the first time, you must accept the <a href="/legal/terms-of-use" style="color:var(--accent);">Terms of Use</a>, the <a href="/legal/terms-of-service" style="color:var(--accent);">Terms of Service</a>, and this Creator Policy. Accepting once is enough; we won't ask you again unless we publish a material change.</p>
 
       <div class="sub-label"><span>1.3 You Are Responsible</span></div>
       <p>Anything you create; an ad, a bot, a template, an API integration; is published in your name and tied to your account. You are responsible for the content, behavior, security, and consequences of your creations, including any harm they cause to other users.</p>
 
-      <div class="sec-head" id="s-2">
+      <div class="sec-head" >
         <div class="sec-num">2</div>
         <h2>Ads</h2>
       </div>
@@ -103,7 +101,7 @@
       <p>An ad costs <strong>15 Onyx</strong> for <strong>4 days</strong> of placement. You can renew (15 Onyx for another 4 days) or enable auto-renew. Editing an active ad costs <strong>5 Onyx</strong>. Cancelling an active ad costs <strong>5 Onyx</strong>; the ad immediately stops serving and disappears from your inventory <strong>2 hours</strong> after cancellation.</p>
 
       <div class="sub-label"><span>2.3 Content Rules</span></div>
-      <p>Ads must follow the <a href="/legal/terms-of-use" style="color:var(--acc);">Terms of Use</a>. They must not contain or promote:</p>
+      <p>Ads must follow the <a href="/legal/terms-of-use" style="color:var(--accent);">Terms of Use</a>. They must not contain or promote:</p>
       <ul>
         <li>Sexual or sexually suggestive content, nudity, or sexualised minors (any depiction)</li>
         <li>Hate speech, harassment, or content targeting a person or group based on identity</li>
@@ -118,9 +116,9 @@
       <p>By default, ads link to a bastion you own. In-app destinations (Home, Discover, Forum, Atelier sub-tabs) are also allowed. External URLs (any domain other than <code>fortized.com</code>) are reserved for Fortized staff and verified partners only. Submitting an external URL without authorisation will get the ad rejected and may cost you the listing fee.</p>
 
       <div class="sub-label"><span>2.5 Takedowns and Refunds</span></div>
-      <p>Swiftaw may take down any ad that violates this Policy or the Terms of Use, with or without notice. Onyx spent on a taken-down ad is forfeited. Onyx spent on an ad you cancelled yourself is also forfeited (the cancellation fee is the cost of stopping the placement early). Where a takedown was clearly our error, contact <a href="/support" style="color:var(--acc);">Support</a> for a manual review and possible refund.</p>
+      <p>Swiftaw may take down any ad that violates this Policy or the Terms of Use, with or without notice. Onyx spent on a taken-down ad is forfeited. Onyx spent on an ad you cancelled yourself is also forfeited (the cancellation fee is the cost of stopping the placement early). Where a takedown was clearly our error, contact <a href="/support" style="color:var(--accent);">Support</a> for a manual review and possible refund.</p>
 
-      <div class="sec-head" id="s-3">
+      <div class="sec-head" >
         <div class="sec-num">3</div>
         <h2>Bots</h2>
       </div>
@@ -146,7 +144,7 @@
       <div class="sub-label"><span>3.5 Disabling and Takedowns</span></div>
       <p>Swiftaw may disable any bot that violates this Policy. Bastion owners may remove a bot from their bastion at any time. If a bot is found to be malicious, all installations of that bot may be force-removed across the platform.</p>
 
-      <div class="sec-head" id="s-4">
+      <div class="sec-head" >
         <div class="sec-num">4</div>
         <h2>Bastion Templates</h2>
       </div>
@@ -162,7 +160,7 @@
       <div class="sub-label"><span>4.4 Resale and Pricing</span></div>
       <p>Templates can be free or priced in Onyx. The same listing rules as bots apply: clear name, description, accurate contents. Templates that re-package another creator's work without permission will be removed.</p>
 
-      <div class="sec-head" id="s-5">
+      <div class="sec-head" >
         <div class="sec-num">5</div>
         <h2>API Keys and Integrations</h2>
       </div>
@@ -199,7 +197,7 @@
         <strong>Heads up.</strong> The full OAuth, oEmbed, and "Join Bastion" flows are rolling out in stages. The rules in this section apply the moment the corresponding feature is exposed to your account.
       </div>
 
-      <div class="sec-head" id="s-6">
+      <div class="sec-head" >
         <div class="sec-num">6</div>
         <h2>Revenue and Onyx Earnings</h2>
       </div>
@@ -207,12 +205,12 @@
       <p>If you list a paid bot or paid template on the Creator Marketplace, you earn Onyx for every sale, less Swiftaw's platform share. The exact split is shown on the listing form before you publish. Free items earn no Onyx.</p>
 
       <div class="sub-label"><span>6.2 Onyx Is Not Cash</span></div>
-      <p>Onyx is a virtual currency tied to your Fortized account, governed by the <a href="/legal/fortshop-policy" style="color:var(--acc);">Fortshop Policy</a>. It cannot be redeemed for real money and cannot be transferred outside the platform.</p>
+      <p>Onyx is a virtual currency tied to your Fortized account, governed by the <a href="/legal/fortshop-policy" style="color:var(--accent);">Fortshop Policy</a>. It cannot be redeemed for real money and cannot be transferred outside the platform.</p>
 
       <div class="sub-label"><span>6.3 Refunds and Chargebacks</span></div>
       <p>If a buyer disputes a Marketplace purchase and we issue a refund, the corresponding Onyx is reversed from your earnings. Repeated disputes against your listings may lead to delisting.</p>
 
-      <div class="sec-head" id="s-7">
+      <div class="sec-head" >
         <div class="sec-num">7</div>
         <h2>Intellectual Property</h2>
       </div>
@@ -225,7 +223,7 @@
       <div class="sub-label"><span>7.3 You Don't Use What Isn't Yours</span></div>
       <p>Don't upload anything you don't have the right to use. Submitting copyrighted material, trademarks, or another person's likeness without permission may get the work removed and your account moderated.</p>
 
-      <div class="sec-head" id="s-8">
+      <div class="sec-head" >
         <div class="sec-num">8</div>
         <h2>Conduct, Enforcement, and Takedowns</h2>
       </div>
@@ -242,12 +240,12 @@
       </ul>
 
       <div class="sub-label"><span>8.3 Reporting Abuse</span></div>
-      <p>If you believe a creator is breaking this Policy, report the offending ad, bot, template, or integration to <a href="/support" style="color:var(--acc);">Fortized Support</a>. Include the creation's name, the creator's username, and a clear description of the issue.</p>
+      <p>If you believe a creator is breaking this Policy, report the offending ad, bot, template, or integration to <a href="/support" style="color:var(--accent);">Fortized Support</a>. Include the creation's name, the creator's username, and a clear description of the issue.</p>
 
       <div class="sub-label"><span>8.4 Appeals</span></div>
       <p>If we take action on something you created, we will tell you what was actioned and why, where we can. You can appeal through Support. Appeal decisions are made by a moderator who was not involved in the original decision wherever possible.</p>
 
-      <div class="sec-head" id="s-9">
+      <div class="sec-head" >
         <div class="sec-num">9</div>
         <h2>Termination and Changes</h2>
       </div>
@@ -259,10 +257,6 @@
 
       <div class="sub-label"><span>9.3 Changes to This Policy</span></div>
       <p>We may update this Policy. Material changes will be announced in-app or by email at least 30 days before they take effect, and you will be asked to re-accept before continuing to use the Creator Hub. Non-material clarifications take effect immediately and are listed at the top of the page.</p>
-
-    </div>
-  </div>
-</div>
     </article>
   </div>
 </section>

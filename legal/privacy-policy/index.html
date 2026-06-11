@@ -14,11 +14,25 @@
 <link rel="icon" type="image/png" href="/Fortized icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/fortized-2026.css">
+<style>
+.page-top { position: relative; overflow: hidden; }
+.page-top::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(160deg, rgba(8,10,15,.96) 0%, rgba(8,10,15,.82) 50%, rgba(8,10,15,.98) 100%),
+    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png') center/cover;
+  z-index: -1;
+}
+.page-top::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 220px;
+  background: linear-gradient(180deg, transparent, var(--bg));
+  z-index: -1; pointer-events: none;
+}
+</style>
 </head>
 <body>
 
 <div class="bg-blob b1"></div>
-<div class="bg-blob b2"></div>
 
 <nav class="nav-root">
   <a href="/" class="nav-logo"><img src="/Fortized logo2026.png?v=2026" alt="Fortized"></a>
@@ -59,30 +73,14 @@
     </div>
 
     <article class="legal-prose">
-<p class="hero-sub">What data we collect, why we collect it, how we keep it safe and how long we keep it.</p>
-    
-      
-
-    </div>
-  </div>
-</div>
-
-<div class="legal-layout">
-  <aside class="toc" id="toc">
-    <div class="toc-title">Contents</div>
-  </aside>
-
-  <div class="legal-content">
-    <div class="legal-body">
-
-      <div class="sec-head" id="s-1">
+<div class="sec-head" >
         <div class="sec-num">1</div>
         <h2>Data Controller and Contact</h2>
       </div>
       <p><strong>Swiftaw SAS</strong> is the data controller for all personal data processed on Fortized. We determine the purposes and means of data processing.</p>
-      <p>For data-protection inquiries, requests to access your data, or complaints, contact <a href="/support" style="color:var(--acc);">Fortized Support</a> and mark your message <strong>Data Protection Request</strong>. We respond within 30 days (or up to 90 days for complex requests, as permitted by GDPR).</p>
+      <p>For data-protection inquiries, requests to access your data, or complaints, contact <a href="/support" style="color:var(--accent);">Fortized Support</a> and mark your message <strong>Data Protection Request</strong>. We respond within 30 days (or up to 90 days for complex requests, as permitted by GDPR).</p>
 
-      <div class="sec-head" id="s-2">
+      <div class="sec-head" >
         <div class="sec-num">2</div>
         <h2>What Data We Collect</h2>
       </div>
@@ -120,9 +118,9 @@
         <li>Your Spotify display name and profile picture</li>
         <li>A Spotify refresh token (stored server-side, never shared with anyone)</li>
       </ul>
-      <p>We do not access your Spotify password. Spotify's <a href="https://www.spotify.com/legal/privacy-policy/" target="_blank" rel="noopener" style="color:var(--acc);">Privacy Policy</a> applies to Spotify data.</p>
+      <p>We do not access your Spotify password. Spotify's <a href="https://www.spotify.com/legal/privacy-policy/" target="_blank" rel="noopener" style="color:var(--accent);">Privacy Policy</a> applies to Spotify data.</p>
 
-      <div class="sec-head" id="s-3">
+      <div class="sec-head" >
         <div class="sec-num">3</div>
         <h2>Why We Collect Data</h2>
       </div>
@@ -141,7 +139,7 @@
         <strong>No data sale.</strong> We never sell, trade, or share your personal data with advertisers, data brokers, or third parties for profit. Period.
       </div>
 
-      <div class="sec-head" id="s-4">
+      <div class="sec-head" >
         <div class="sec-num">4</div>
         <h2>How We Store and Protect Data</h2>
       </div>
@@ -154,7 +152,7 @@
       <div class="sub-label"><span>4.3 Backups and Redundancy</span></div>
       <p>We maintain redundant backups to prevent data loss. Backups are encrypted and stored in secure facilities. In the event of a disaster, we can restore your account and data from backups.</p>
 
-      <div class="sec-head" id="s-5">
+      <div class="sec-head" >
         <div class="sec-num">5</div>
         <h2>Data Retention</h2>
       </div>
@@ -162,14 +160,14 @@
       <p><strong>Deleted accounts:</strong> When you delete your account, we remove your data from live systems within 30 days. Backups are purged within 90 days. Some data may be retained longer if required by law or to resolve ongoing legal disputes (e.g., if your content is subject to a lawsuit).</p>
       <p><strong>Law enforcement holds:</strong> If law enforcement requests preservation of your data, we may retain it for the duration of the hold, even after you delete your account.</p>
 
-      <div class="sec-head" id="s-6">
+      <div class="sec-head" >
         <div class="sec-num">6</div>
         <h2>International Data Transfers</h2>
       </div>
       <p>Swiftaw is based in France and processes and stores all user data exclusively within the European Union. Our infrastructure is located at Swiftaw's datacenter in Orleans, France and Supabase's datacenter in Paris, France. We do not transfer personal data outside the EU as part of our standard operations.</p>
       <p>If, in the future, any data transfer outside the EU becomes necessary to provide the Service, we will rely on Standard Contractual Clauses (SCCs) and other mechanisms approved by the European Commission to ensure your data is protected at a level equivalent to GDPR, and we will update this policy accordingly.</p>
 
-      <div class="sec-head" id="s-7">
+      <div class="sec-head" >
         <div class="sec-num">7</div>
         <h2>Your GDPR Rights</h2>
       </div>
@@ -183,13 +181,13 @@
         <li><strong>Object:</strong> Refuse processing of your data for certain purposes (e.g., opt out of analytics).</li>
         <li><strong>Withdraw consent:</strong> If we rely on your consent, you can withdraw it at any time (though this won't affect prior processing).</li>
       </ul>
-      <p>To exercise any of these rights, contact <a href="/support" style="color:var(--acc);">Fortized Support</a> and clearly state your request. We respond within 30 days (or up to 90 days for complex requests).</p>
+      <p>To exercise any of these rights, contact <a href="/support" style="color:var(--accent);">Fortized Support</a> and clearly state your request. We respond within 30 days (or up to 90 days for complex requests).</p>
 
       <div class="callout callout-green">
-        <strong>Right to lodge a complaint:</strong> If you believe we violate your data protection rights, you have the right to lodge a complaint with your national data protection authority (e.g., the <a href="https://www.cnil.fr/" target="_blank" rel="noopener" style="color:var(--acc);">CNIL in France</a>).
+        <strong>Right to lodge a complaint:</strong> If you believe we violate your data protection rights, you have the right to lodge a complaint with your national data protection authority (e.g., the <a href="https://www.cnil.fr/" target="_blank" rel="noopener" style="color:var(--accent);">CNIL in France</a>).
       </div>
 
-      <div class="sec-head" id="s-8">
+      <div class="sec-head" >
         <div class="sec-num">8</div>
         <h2>Cookies and Tracking</h2>
       </div>
@@ -201,7 +199,7 @@
       </ul>
       <p>You can disable cookies in your browser, but some Fortized features may not work correctly. We do not use third-party analytics tools that track you across other websites.</p>
 
-      <div class="sec-head" id="s-9">
+      <div class="sec-head" >
         <div class="sec-num">9</div>
         <h2>Data Breaches</h2>
       </div>
@@ -214,16 +212,11 @@
       </ul>
       <p>We maintain cyber insurance and incident response procedures to minimize risk.</p>
 
-      <div class="sec-head" id="s-10">
+      <div class="sec-head" >
         <div class="sec-num">10</div>
         <h2>Changes to This Policy</h2>
       </div>
       <p>Swiftaw may update this Privacy Policy. If we make a material change, we will notify you in-app or by email at least 30 days before the change takes effect. Continued use after the notice period means you accept the updated policy.</p>
-
-
-    </div>
-  </div>
-</div>
     </article>
   </div>
 </section>

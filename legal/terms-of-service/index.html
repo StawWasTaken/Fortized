@@ -14,11 +14,25 @@
 <link rel="icon" type="image/png" href="/Fortized icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/fortized-2026.css">
+<style>
+.page-top { position: relative; overflow: hidden; }
+.page-top::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(160deg, rgba(8,10,15,.96) 0%, rgba(8,10,15,.82) 50%, rgba(8,10,15,.98) 100%),
+    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png') center/cover;
+  z-index: -1;
+}
+.page-top::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 220px;
+  background: linear-gradient(180deg, transparent, var(--bg));
+  z-index: -1; pointer-events: none;
+}
+</style>
 </head>
 <body>
 
 <div class="bg-blob b1"></div>
-<div class="bg-blob b2"></div>
 
 <nav class="nav-root">
   <a href="/" class="nav-logo"><img src="/Fortized logo2026.png?v=2026" alt="Fortized"></a>
@@ -59,23 +73,7 @@
     </div>
 
     <article class="legal-prose">
-<p class="hero-sub">The legal framework governing Swiftaw's operation of Fortized. Covers warranties, liability limits, governing law, and dispute resolution. Read after the Terms of Use.</p>
-    
-      
-
-    </div>
-  </div>
-</div>
-
-<div class="legal-layout">
-  <aside class="toc" id="toc">
-    <div class="toc-title">Contents</div>
-  </aside>
-
-  <div class="legal-content">
-    <div class="legal-body">
-
-      <div class="sec-head" id="s-1">
+<div class="sec-head" >
         <div class="sec-num">1</div>
         <h2>Service Description and Operator</h2>
       </div>
@@ -83,9 +81,9 @@
       <p>Fortized is a social and gaming platform operated by <strong>Swiftaw SAS</strong>, a limited liability company incorporated and registered under the laws of France (SIRET: as on file with the French Register of Commerce). Swiftaw is the legal operator and data controller for Fortized. This Service includes the web application, desktop applications, mobile applications (if and when available), APIs, and all features and systems within.</p>
 
       <div class="sub-label"><span>1.2 Swiftaw's Details</span></div>
-      <p>For legal service of process, data protection requests, or complaints about the Service, contact Swiftaw through <a href="/support" style="color:var(--acc);">Fortized Support</a> and mark your message <strong>Legal Notice</strong>. We respond in French or English. Swiftaw is subject to the jurisdiction of the French courts and complies with French commercial law, GDPR, the Digital Services Act, and other applicable EU and international regulations.</p>
+      <p>For legal service of process, data protection requests, or complaints about the Service, contact Swiftaw through <a href="/support" style="color:var(--accent);">Fortized Support</a> and mark your message <strong>Legal Notice</strong>. We respond in French or English. Swiftaw is subject to the jurisdiction of the French courts and complies with French commercial law, GDPR, the Digital Services Act, and other applicable EU and international regulations.</p>
 
-      <div class="sec-head" id="s-2">
+      <div class="sec-head" >
         <div class="sec-num">2</div>
         <h2>Service Availability and Modifications</h2>
       </div>
@@ -98,7 +96,7 @@
       <div class="sub-label"><span>2.3 Third-Party Integrations</span></div>
       <p>Fortized may integrate with third-party services (Spotify, for example). We are not responsible for the availability, accuracy, or quality of those third-party services. If a third-party service fails, Fortized may not function correctly. Terms of those third parties apply when you use their services through Fortized.</p>
 
-      <div class="sec-head" id="s-3">
+      <div class="sec-head" >
         <div class="sec-num">3</div>
         <h2>Intellectual Property Rights</h2>
       </div>
@@ -111,7 +109,7 @@
       <div class="sub-label"><span>3.3 Your Content License to Swiftaw</span></div>
       <p>When you post content on Fortized, you grant Swiftaw a worldwide, royalty-free, perpetual license to display, distribute, and archive that content on the platform. This license survives deletion of individual messages but not deletion of your entire account. You revoke this license by deleting the content or your account.</p>
 
-      <div class="sec-head" id="s-4">
+      <div class="sec-head" >
         <div class="sec-num">4</div>
         <h2>Limitation of Liability</h2>
       </div>
@@ -141,7 +139,7 @@
       </ul>
       <p>If you are a consumer in the EU, nothing in these Terms waives your right to compensation for personal injury or damages that French law or EU law does not permit us to limit.</p>
 
-      <div class="sec-head" id="s-5">
+      <div class="sec-head" >
         <div class="sec-num">5</div>
         <h2>Indemnification</h2>
       </div>
@@ -158,7 +156,7 @@
         <strong>EU Consumer Note:</strong> This indemnification clause is limited by your statutory consumer rights. If you are a consumer, you cannot indemnify Swiftaw for our own negligence or breach of law.
       </div>
 
-      <div class="sec-head" id="s-6">
+      <div class="sec-head" >
         <div class="sec-num">6</div>
         <h2>Disclaimers</h2>
       </div>
@@ -175,7 +173,7 @@
       <div class="sub-label"><span>6.2 User Responsibility</span></div>
       <p>You are solely responsible for your use of Fortized. You assume all risks. If Fortized causes you loss, that is your responsibility to mitigate or resolve.</p>
 
-      <div class="sec-head" id="s-7">
+      <div class="sec-head" >
         <div class="sec-num">7</div>
         <h2>Governing Law and Dispute Resolution</h2>
       </div>
@@ -186,12 +184,12 @@
       <p>Any legal action or proceeding relating to Fortized must be brought exclusively in the competent courts of France. Both you and Swiftaw consent to the exclusive jurisdiction of these courts. Nothing in these Terms prevents either party from seeking injunctive relief in any jurisdiction.</p>
 
       <div class="sub-label"><span>7.3 EU Dispute Resolution (Consumer)</span></div>
-      <p>If you are a consumer in the EU, you may also file a complaint with the <a href="https://ec.europa.eu/consumers/odr/main/" target="_blank" rel="noopener" style="color:var(--acc);">European Online Dispute Resolution platform</a>. You may submit complaints about Fortized at <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener" style="color:var(--acc);">https://ec.europa.eu/consumers/odr</a>.</p>
+      <p>If you are a consumer in the EU, you may also file a complaint with the <a href="https://ec.europa.eu/consumers/odr/main/" target="_blank" rel="noopener" style="color:var(--accent);">European Online Dispute Resolution platform</a>. You may submit complaints about Fortized at <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener" style="color:var(--accent);">https://ec.europa.eu/consumers/odr</a>.</p>
 
       <div class="sub-label"><span>7.4 Good-Faith Resolution</span></div>
-      <p>Before initiating legal action, contact <a href="/support" style="color:var(--acc);">Fortized Support</a> and describe your complaint. We will respond within 15 business days. If we cannot resolve the dispute, either party may pursue legal remedies. This requirement does not prevent emergency injunctive relief.</p>
+      <p>Before initiating legal action, contact <a href="/support" style="color:var(--accent);">Fortized Support</a> and describe your complaint. We will respond within 15 business days. If we cannot resolve the dispute, either party may pursue legal remedies. This requirement does not prevent emergency injunctive relief.</p>
 
-      <div class="sec-head" id="s-8">
+      <div class="sec-head" >
         <div class="sec-num">8</div>
         <h2>Severability and Waiver</h2>
       </div>
@@ -201,16 +199,11 @@
       <div class="sub-label"><span>8.2 Waiver</span></div>
       <p>Swiftaw's failure to enforce any provision of these Terms does not constitute a waiver of that provision or any other provision. No waiver is valid unless in writing and signed by an authorized representative of Swiftaw.</p>
 
-      <div class="sec-head" id="s-9">
+      <div class="sec-head" >
         <div class="sec-num">9</div>
         <h2>Entire Agreement</h2>
       </div>
-      <p>These Terms, the <a href="/legal/terms-of-use" style="color:var(--acc);font-weight:700;">Terms of Use</a>, the <a href="/legal/privacy-policy" style="color:var(--acc);font-weight:700;">Privacy Policy</a>, and the <a href="/legal/fortshop-policy" style="color:var(--acc);font-weight:700;">Fortshop Policy</a> constitute the entire agreement between you and Swiftaw regarding Fortized. They supersede all prior negotiations, understandings, and agreements, whether written or oral.</p>
-
-
-    </div>
-  </div>
-</div>
+      <p>These Terms, the <a href="/legal/terms-of-use" style="color:var(--accent);font-weight:700;">Terms of Use</a>, the <a href="/legal/privacy-policy" style="color:var(--accent);font-weight:700;">Privacy Policy</a>, and the <a href="/legal/fortshop-policy" style="color:var(--accent);font-weight:700;">Fortshop Policy</a> constitute the entire agreement between you and Swiftaw regarding Fortized. They supersede all prior negotiations, understandings, and agreements, whether written or oral.</p>
     </article>
   </div>
 </section>

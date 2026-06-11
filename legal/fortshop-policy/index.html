@@ -14,11 +14,25 @@
 <link rel="icon" type="image/png" href="/Fortized icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/fortized-2026.css">
+<style>
+.page-top { position: relative; overflow: hidden; }
+.page-top::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(160deg, rgba(8,10,15,.96) 0%, rgba(8,10,15,.82) 50%, rgba(8,10,15,.98) 100%),
+    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png') center/cover;
+  z-index: -1;
+}
+.page-top::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 220px;
+  background: linear-gradient(180deg, transparent, var(--bg));
+  z-index: -1; pointer-events: none;
+}
+</style>
 </head>
 <body>
 
 <div class="bg-blob b1"></div>
-<div class="bg-blob b2"></div>
 
 <nav class="nav-root">
   <a href="/" class="nav-logo"><img src="/Fortized logo2026.png?v=2026" alt="Fortized"></a>
@@ -59,23 +73,7 @@
     </div>
 
     <article class="legal-prose">
-<p class="hero-sub">How the Fortshop works. What you're buying. How discounts stack. Refund rules. Seasonal items. Resellers market. Onyx earnings.</p>
-    
-      
-
-    </div>
-  </div>
-</div>
-
-<div class="legal-layout">
-  <aside class="toc" id="toc">
-    <div class="toc-title">Contents</div>
-  </aside>
-
-  <div class="legal-content">
-    <div class="legal-body">
-
-      <div class="sec-head" id="s-1">
+<div class="sec-head" >
         <div class="sec-num">1</div>
         <h2>Virtual Goods and Licensing</h2>
       </div>
@@ -108,7 +106,7 @@
       </ul>
       <p>If your license is revoked, you will not receive a refund, except as mandated by consumer protection law.</p>
 
-      <div class="sec-head" id="s-2">
+      <div class="sec-head" >
         <div class="sec-num">2</div>
         <h2>Onyx Currency</h2>
       </div>
@@ -139,7 +137,7 @@
       <div class="sub-label"><span>2.4 Onyx Balance</span></div>
       <p>Your Onyx balance is stored in your account and synced across devices. If you delete your account, your Onyx is forfeited (no refund).</p>
 
-      <div class="sec-head" id="s-3">
+      <div class="sec-head" >
         <div class="sec-num">3</div>
         <h2>Discount System</h2>
       </div>
@@ -220,7 +218,7 @@
         <strong>How stacking works:</strong> If an item costs 100 Onyx and all three discounts apply (Radiance 10% + Streak 5% + Item of the Day 35%), the final price is 100 - (10+5+35) = 50 Onyx. Discounts are additive, not multiplicative.
       </div>
 
-      <div class="sec-head" id="s-4">
+      <div class="sec-head" >
         <div class="sec-num">4</div>
         <h2>Purchases and Non-Refundability</h2>
       </div>
@@ -237,12 +235,12 @@
       <p>All Fortshop purchases are final and non-refundable once delivered. Because digital items are delivered immediately upon purchase, we cannot offer refunds except where mandated by consumer protection law (e.g., the EU 14-day cooling-off period for consumers who have not yet used the item).</p>
 
       <div class="sub-label"><span>4.3 EU Consumer Rights</span></div>
-      <p>If you are a consumer in the EU, you have the right to cancel a purchase within 14 days of purchase, provided you have not yet started using the item (e.g., applied the appearance to your account). To cancel, contact <a href="/support" style="color:var(--acc);">Fortized Support</a> and request a refund. We will process your refund within 14 days of receiving your cancellation request. This right does not apply if you have already used the item.</p>
+      <p>If you are a consumer in the EU, you have the right to cancel a purchase within 14 days of purchase, provided you have not yet started using the item (e.g., applied the appearance to your account). To cancel, contact <a href="/support" style="color:var(--accent);">Fortized Support</a> and request a refund. We will process your refund within 14 days of receiving your cancellation request. This right does not apply if you have already used the item.</p>
 
       <div class="sub-label"><span>4.4 Errors and Disputes</span></div>
-      <p>If there is a billing error (e.g., you were charged twice), contact <a href="/support" style="color:var(--acc);">Fortized Support</a> immediately with proof. We will investigate and correct the error within 15 business days.</p>
+      <p>If there is a billing error (e.g., you were charged twice), contact <a href="/support" style="color:var(--accent);">Fortized Support</a> immediately with proof. We will investigate and correct the error within 15 business days.</p>
 
-      <div class="sec-head" id="s-5">
+      <div class="sec-head" >
         <div class="sec-num">5</div>
         <h2>Seasonal Items</h2>
       </div>
@@ -255,7 +253,7 @@
       <div class="sub-label"><span>5.3 Seasonal Rarity</span></div>
       <p>Seasonal items have rarity status and follow the same resale rules as rare items (see Section 6).</p>
 
-      <div class="sec-head" id="s-6">
+      <div class="sec-head" >
         <div class="sec-num">6</div>
         <h2>Marketplace (Resale System)</h2>
       </div>
@@ -296,9 +294,9 @@
       </ul>
 
       <div class="sub-label"><span>6.7 Dispute Resolution</span></div>
-      <p>If you have a dispute over a marketplace transaction (e.g., you claim you didn't receive an item), contact <a href="/support" style="color:var(--acc);">Fortized Support</a>. We will investigate and resolve the dispute based on our transaction logs. Swiftaw's decision is final.</p>
+      <p>If you have a dispute over a marketplace transaction (e.g., you claim you didn't receive an item), contact <a href="/support" style="color:var(--accent);">Fortized Support</a>. We will investigate and resolve the dispute based on our transaction logs. Swiftaw's decision is final.</p>
 
-      <div class="sec-head" id="s-7">
+      <div class="sec-head" >
         <div class="sec-num">7</div>
         <h2>Radiance Subscription</h2>
       </div>
@@ -319,7 +317,7 @@
       <div class="sub-label"><span>7.3 Gifting Radiance</span></div>
       <p>You can gift 30 days of Radiance to a friend for 600 Onyx. The gift is sent as a redeemable link. Your friend has 30 days to accept. Once redeemed, their Radiance subscription begins and runs for 30 days.</p>
 
-      <div class="sec-head" id="s-8">
+      <div class="sec-head" >
         <div class="sec-num">8</div>
         <h2>Item Removal and Discontinuation</h2>
       </div>
@@ -331,16 +329,11 @@
       </ul>
       <p>If an item is removed, players who already own it retain their license (your cosmetic continues to work). Future purchases of that item are no longer possible. No refunds are issued for discontinuation.</p>
 
-      <div class="sec-head" id="s-9">
+      <div class="sec-head" >
         <div class="sec-num">9</div>
         <h2>Changes to This Policy</h2>
       </div>
       <p>Swiftaw may update this Policy. If we make a material change that affects purchases or discounts, we will notify you in-app or by email at least 30 days before the change takes effect. Continued use of the Fortshop means you accept the updated Policy.</p>
-
-
-    </div>
-  </div>
-</div>
     </article>
   </div>
 </section>

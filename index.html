@@ -390,36 +390,32 @@
 .rampart p { font-size: 13px; color: var(--muted-light); line-height: 1.55; }
 @media (max-width: 720px) { .ramparts-inner { padding: 28px; transform: none; } }
 
-/* ─── poster showcase ─── */
-.poster-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+/* ─── banner bands (decorative, between sections) ─── */
+.banner-band {
+  margin-top: 70px;
+  padding: 0 28px;
 }
-@media (max-width: 760px) { .poster-grid { grid-template-columns: 1fr; } }
-.poster {
+.banner-band .strip {
+  max-width: 1240px; margin: 0 auto;
   position: relative;
-  display: block;
-  border-radius: 22px;
+  border-radius: 24px;
   overflow: hidden;
   border: 2px solid var(--ink);
-  box-shadow: 0 8px 0 0 var(--ink), 0 22px 50px rgba(0,0,0,.5);
-  transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .25s, border-color .25s;
-  aspect-ratio: 16 / 9;
-  background: var(--panel);
+  box-shadow: 0 8px 0 0 var(--ink), 0 18px 50px rgba(0,0,0,.45);
+  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .25s;
 }
-.poster.t1 { transform: rotate(-1.5deg); }
-.poster.t2 { transform: rotate(1.5deg); }
-.poster:hover { transform: rotate(0) translateY(-6px); box-shadow: 0 14px 0 0 var(--ink), 0 30px 60px rgba(0,0,0,.6); }
-.poster img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s cubic-bezier(.22,1,.36,1); }
-.poster:hover img { transform: scale(1.04); }
-.poster-tag {
-  position: absolute;
-  top: 14px; left: 14px;
-  z-index: 2;
+.banner-band .strip img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover;
+  aspect-ratio: 4 / 1;
 }
-.poster-tag .chip {
-  background: rgba(8,10,15,.78);
-  backdrop-filter: blur(12px);
+.banner-band .strip:hover { transform: translateY(-4px); box-shadow: 0 12px 0 0 var(--ink), 0 26px 60px rgba(0,0,0,.55); }
+.banner-band.tilt-l .strip { transform: rotate(-.8deg); }
+.banner-band.tilt-r .strip { transform: rotate(.8deg); }
+.banner-band.tilt-l .strip:hover, .banner-band.tilt-r .strip:hover { transform: rotate(0) translateY(-4px); }
+@media (max-width: 760px) {
+  .banner-band .strip img { aspect-ratio: 3 / 1; }
+  .banner-band.tilt-l .strip, .banner-band.tilt-r .strip { transform: rotate(0); }
 }
 
 /* ─── outro card ─── */
@@ -632,6 +628,13 @@
   </div>
 </section>
 
+<!-- banner band: decorative section transition -->
+<div class="banner-band tilt-l reveal">
+  <div class="strip">
+    <img src="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png" alt="">
+  </div>
+</div>
+
 <!-- ramparts -->
 <section class="section">
   <div class="container">
@@ -674,25 +677,12 @@
   </div>
 </section>
 
-<!-- showcase: the two non-background banner images displayed as real visuals -->
-<section class="section">
-  <div class="container">
-    <div class="section-eyebrow"><svg><use href="#i-hashtag"/></svg> the press kit</div>
-    <h2 class="head">Banners, posters, <span class="gradient-text">fresh off the wall</span>.</h2>
-    <p class="lede">Things we shipped, painted, printed, posted.</p>
-
-    <div class="poster-grid">
-      <a class="poster t1 reveal" href="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png" target="_blank" rel="noopener">
-        <img src="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner2.png" alt="Fortized poster v2">
-        <div class="poster-tag"><span class="chip yellow"><span class="dot"></span> Poster · v2</span></div>
-      </a>
-      <a class="poster t2 reveal" href="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner4.png" target="_blank" rel="noopener">
-        <img src="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner4.png" alt="Fortized poster v4">
-        <div class="poster-tag"><span class="chip pink"><span class="dot"></span> Poster · v4</span></div>
-      </a>
-    </div>
+<!-- banner band -->
+<div class="banner-band tilt-r reveal">
+  <div class="strip">
+    <img src="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner4.png" alt="">
   </div>
-</section>
+</div>
 
 <!-- outro -->
 <section class="outro">

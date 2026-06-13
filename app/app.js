@@ -12052,6 +12052,11 @@ function initFortizedUXResilience() {
   // to actually complete; if it really hangs, utils.js already swaps
   // in a Retry button at 8s, which is the right escalation point.
   const _hideLoader = () => { if(_sl){_sl.style.opacity='0';setTimeout(()=>{_sl.style.display='none';},300);} };
+  // Cancel utils.js's "Retry" fallback timer — appInit owns the loader
+  // from this point on. Otherwise both timers race and the user sees
+  // "Retrying… (2/2)" from appInit AND "Taking too long…" + a Retry
+  // button from utils.js stacked on top of each other.
+  if (window._loadingSafetyTimer) { try { clearTimeout(window._loadingSafetyTimer); } catch {} }
   const _st=setTimeout(_hideLoader, 20000);
   window._loadingSafetyTimer = _st;
   // Surface unhandled init errors so the loader never silently sits

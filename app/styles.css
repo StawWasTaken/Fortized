@@ -11631,3 +11631,205 @@ select:focus,select:focus-visible,
   font-weight: 700 !important;
   letter-spacing: -.2px;
 }
+
+
+/* ════════════════════════════════════════════════════════════
+   SWIFTIGN LAYER · v2 — full overhaul pass
+   Covers: loader (yellow tint + fix), topbar, home hero,
+   channel list, member list, settings nav, notification panel,
+   bastion rail polish, modal headers, common buttons.
+   Additive. v2 · 13 jun 2026
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Loader: tint the GIF yellow + retry button match ─────── */
+.app-loading .app-loading-anim {
+  /* recolour the white/grey GIF pixels to Swiftaw/Fortized yellow.
+     sepia → saturate → hue-rotate is the classic single-tone tint
+     recipe; tuned to land on #fff93e while keeping the drop-shadow. */
+  filter:
+    drop-shadow(0 6px 24px rgba(255,249,62,.32))
+    sepia(1)
+    saturate(20)
+    hue-rotate(-6deg)
+    brightness(108%) !important;
+}
+.ftz-loading-retry:active {
+  transform: translateY(3px) !important;
+  box-shadow: 0 1px 0 0 #050608, 0 4px 10px rgba(0,0,0,.40) !important;
+}
+
+/* ── Topbar — turn the title into a sticker pill ─────────── */
+.topbar { border-bottom: 1px solid rgba(255,255,255,.04); }
+.topbar-title {
+  padding: 5px 12px;
+  background: rgba(255,249,62,.06);
+  border: 1px solid rgba(255,249,62,.22);
+  border-radius: 100px;
+  letter-spacing: -.3px !important;
+  transition: transform .2s var(--ease-out);
+}
+.topbar-title:hover { transform: rotate(-1deg); }
+
+/* ── Home hero — tilt the headline, sticker-up the CTAs ──── */
+.home-hero h1 {
+  letter-spacing: -2.2px !important;
+  transform-origin: left center;
+}
+.home-hero h1 em {
+  display: inline-block;
+  transform: rotate(-2deg);
+}
+.home-hero-actions .hero-btn {
+  border: 1.5px solid var(--swf-ink) !important;
+  box-shadow: 0 4px 0 0 var(--swf-ink), 0 10px 22px rgba(0,0,0,.45) !important;
+  transition: transform .12s var(--ease-out), box-shadow .12s var(--ease-out) !important;
+}
+.home-hero-actions .hero-btn:active {
+  transform: translateY(3px) !important;
+  box-shadow: 0 1px 0 0 var(--swf-ink), 0 4px 10px rgba(0,0,0,.40) !important;
+}
+
+/* ── Home quick strip — soft tinted chip rotation ───────── */
+.home-quick-strip .hqs-btn {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: -.2px;
+  border-radius: 14px !important;
+  border: 1.5px solid rgba(255,255,255,.10) !important;
+  background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.015)) !important;
+  box-shadow: 0 3px 0 0 rgba(0,0,0,.55);
+  transition: transform .18s var(--ease-out), border-color .15s !important;
+}
+.home-quick-strip .hqs-btn:nth-child(odd):not(:hover)  { transform: rotate(-1.2deg); }
+.home-quick-strip .hqs-btn:nth-child(even):not(:hover) { transform: rotate(.9deg); }
+.home-quick-strip .hqs-btn:hover {
+  transform: rotate(0) translateY(-2px) !important;
+  border-color: rgba(255,249,62,.32) !important;
+  color: #fff !important;
+}
+.home-quick-strip .hqs-label {
+  font-family: var(--font-display) !important;
+  letter-spacing: .18em !important;
+  color: var(--accent) !important;
+  opacity: .75;
+}
+
+/* ── Channel list (.ch-item-2027) — sticker hover micro ── */
+.ch-item-2027 {
+  border-radius: 10px !important;
+  transition: background .12s, color .12s, transform .14s var(--ease-out) !important;
+}
+.ch-item-2027:hover {
+  transform: translateX(2px);
+  background: rgba(255,249,62,.05) !important;
+}
+.ch-item-2027.active {
+  background: linear-gradient(135deg, rgba(255,249,62,.14), rgba(255,249,62,.05)) !important;
+  border: 1px solid rgba(255,249,62,.22);
+  box-shadow: 0 2px 0 0 var(--swf-ink), 0 6px 12px rgba(0,0,0,.30);
+}
+.ch-item-2027.active .ch-hash { color: var(--accent) !important; }
+.ch-item-2027.active::before { background: var(--accent) !important; box-shadow: 0 0 6px rgba(255,249,62,.55); }
+
+/* ── Member list rows — gentle hover lift ───────────────── */
+.ml-entry {
+  transition: background .12s, transform .14s var(--ease-out) !important;
+  border-radius: 8px !important;
+}
+.ml-entry:hover {
+  transform: translateX(2px);
+}
+.ml-entry--activity:nth-child(odd):not(:hover)  { transform: rotate(-.6deg); }
+.ml-entry--activity:nth-child(even):not(:hover) { transform: rotate(.5deg); }
+.ml-entry--activity:hover { transform: rotate(0) translateY(-2px) !important; }
+
+/* ── Settings nav — sticker selected state ──────────────── */
+.settings-nav-item {
+  border-radius: 12px !important;
+  transition: background .12s, color .12s, transform .14s var(--ease-out) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: -.2px;
+}
+.settings-nav-item:hover { transform: translateX(2px); }
+.settings-nav-item.active, .settings-nav-item[aria-current="true"] {
+  background: linear-gradient(135deg, rgba(255,249,62,.16), rgba(255,249,62,.06)) !important;
+  border: 1px solid rgba(255,249,62,.28);
+  box-shadow: 0 3px 0 0 var(--swf-ink), 0 8px 16px rgba(0,0,0,.35);
+  color: #fff !important;
+}
+
+/* ── Notification panel header — Swiftign chip vibe ────── */
+.np-header {
+  background: linear-gradient(180deg, rgba(255,249,62,.06), transparent) !important;
+  border-bottom: 1px solid rgba(255,249,62,.10) !important;
+}
+.np-header h3 {
+  font-size: 14px !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  color: var(--accent) !important;
+}
+
+/* ── Bastion rail — sticker hover ───────────────────────── */
+.rail-bastion {
+  border-radius: 18px !important;
+  transition: border-radius .18s var(--ease-out), background .18s, transform .14s var(--ease-out) !important;
+}
+.rail-bastion:hover { transform: rotate(-2deg); border-radius: 14px !important; }
+.rail-bastion.active { transform: rotate(0) !important; }
+
+/* ── Modal title bar — small Swiftign signature dot ─────── */
+.modal-card .modal-bar { position: relative; }
+.modal-card .modal-bar::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 14px rgba(255,249,62,.55);
+  transform: translate(-50%, -50%);
+}
+
+/* ── Generic ftz button family — sticker shadow ─────────── */
+.ftz-btn-primary,
+button.ftz-primary,
+.ftz-btn--primary,
+button[data-ftz-primary] {
+  border: 1.5px solid var(--swf-ink) !important;
+  box-shadow: 0 4px 0 0 var(--swf-ink), 0 12px 22px rgba(0,0,0,.40) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 800 !important;
+  letter-spacing: -.2px;
+  transition: transform .12s var(--ease-out), box-shadow .12s var(--ease-out) !important;
+}
+.ftz-btn-primary:active,
+button.ftz-primary:active,
+.ftz-btn--primary:active,
+button[data-ftz-primary]:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 var(--swf-ink), 0 4px 10px rgba(0,0,0,.40) !important;
+}
+
+/* ── Add a soft yellow glow to focused inputs in modals ─── */
+.modal-card input[type="text"]:focus,
+.modal-card input[type="search"]:focus,
+.modal-card textarea:focus {
+  box-shadow: 0 0 0 3px rgba(255,249,62,.18) !important;
+  border-color: rgba(255,249,62,.45) !important;
+}
+
+/* ── Toast: keep tilt on enter/exit consistent ─────────── */
+.toast { transform: translateY(20px) rotate(-1deg); }
+.toast.show { transform: translateY(0) rotate(-1deg) !important; }
+
+/* ── Mobile: drop tilts on small screens (Swiftign rule) ─ */
+@media (max-width: 720px) {
+  .topbar-title { transform: none !important; }
+  .home-hero h1 em { transform: none !important; }
+  .home-quick-strip .hqs-btn { transform: none !important; }
+  .ml-entry--activity { transform: none !important; }
+  .toast, .toast.show { transform: translateY(0) !important; }
+  .rail-bastion:hover { transform: none !important; }
+}

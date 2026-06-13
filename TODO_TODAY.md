@@ -48,6 +48,105 @@ the current chat session that we agreed to tackle today.
   - Validates against the `invites` table, joins on success, opens the
     bastion. Mirrors the friend-request flow but resolves to a bastion.
 
+## 4. Swiftign redesign for the Fortized app (parked, big job)
+
+we already shipped the swiftign design on swiftaw and on the fortized
+web/marketing pages. the app is the last piece. parking it here so we
+don't forget, but realistically this is hours of careful surface-by-
+surface work and the app needs to be less buggy first - so it's a "do
+this once the chaos calms" item, not a today item.
+
+scope (from the brief staw pasted):
+
+**house rules (every session when we touch this)**
+- push directly to main on stawwastaken/fortized, no feature branches.
+- british english everywhere (colour, behaviour, organise, customise,
+  recognise, centre, favourite, grey, analyse).
+- tone: lowercase, conversational, no em-dashes, use a normal dash.
+- no "still A / still B / still C -> punchline" copy beats.
+- reference: swiftaw.com/innovation-room (the swiftign article),
+  swiftaw.com, fortized.com marketing pages, pinterest gestalt feel
+  (rounded tiles, soft tinted panels).
+
+**currently shipped on /app**
+- loading race fix - utils.js no longer force-shows view-home mid-init.
+- loader gif tinted yellow via css filter.
+- loader retry button is now a yellow 3d swiftign sticker.
+- toast - sticker treatment with hard offset shadow + slight tilt.
+- offline banner - sticker treatment.
+- sidebar rail active state - hard offset shadow on active rail
+  buttons and bastions.
+- `.swf-*` utility classes - `.swf-chip.{yellow|pink|blue|mint|lilac|peach}`,
+  `.swf-btn-3d`, `.swf-sticker`, `.swf-tilt-l/r`. drop into any new surface.
+- `.btn-a` / `.btn-g` global - all primary/ghost buttons are 3d swiftign.
+- `.modal` global - all modals inherit the sticker frame.
+- create bastion modal - the reference, use it for the rest.
+
+**reverted (lessons learned)**
+v2 and v3 broad-brush layers targeted classes that don't exist
+(`.modal-card`, `.create-btn`, `.ftz-btn-primary`), forced yellow on
+profile buttons that must respect the user's theme colour, and forced
+syne/tilts on dense surfaces (notification items, member rows, channel
+list) where they didn't fit. lesson: surface-by-surface, audit real
+dom classes first, never broad-brush.
+
+**what's left (priority order)**
+1. profile panel (`.fpp__*`) - buttons/chips inside profile must adopt
+   the user's theme accent, not hard-code yellow. find the user-theme
+   css variable and read from it. audit `own-profile-panel.html`,
+   `dm-profile-panel.html`, `profile-card.html`, `.fpp__*` rules.
+2. home view (`#view-home`) - feel like the fortized marketing
+   homepage: yellow sticker hero, bento grid using `/Icons/*`, tilted
+   feature stickers, live "bastions created on fortized" counter,
+   yellow outro card.
+3. settings modal - per-subpage sticker pass (account, profile,
+   privacy, voice & video, notifications, theme, subscription,
+   sessions, connections). theme-aware buttons keep their theme
+   awareness.
+4. bastion overview / settings - yellow sticker card on the fortized
+   banner backdrop (marketing ramparts panel pattern).
+5. channel list - subtle sticker active state only. no tilts, no slide
+   animations.
+6. dm list / friends view - same; sticker active state only.
+7. other modals - add friend, join bastion, new dm / group chat,
+   forward message, role editor, assign role, leave bastion confirm,
+   boost, events, overview. the global `.modal` treatment already
+   applies; check each renders cleanly.
+8. message input bar + message rows - leave alone unless explicitly
+   asked. high-frequency, high-risk.
+9. mobile (<=720px) - soften tilts and 3d shadows (matches marketing).
+10. floating decorations - small bobbing fontawesome svgs into home +
+    settings (not chat).
+
+**architecture notes**
+- `/app/styles.css` is ~11,950 lines of densely-packed single-line css.
+  never edit in place, always append at the bottom or create
+  `app/styles.swiftign.css`.
+- use body-prefixed selectors (`body .foo`) to outrank packed rules.
+- audit real dom classes first with grep on `index.html` and `app.js`
+  render functions. v4 wins came from finding `.btn-a` / `.btn-g` /
+  `.modal` / `.tmpl-card` / `.vis-opt` / `.tic-*`; v2/v3 failures
+  came from guessing.
+- bump the cache-buster (`?v=2026swfn5`) on every css/js change.
+
+**"feels swiftign" acceptance criteria**
+- buttons feel 3d (hard offset shadow, press in on click).
+- modals feel like stickers (slight tilt, sticker frame, hard offset
+  shadow).
+- profile panel respects the user's chosen theme colour.
+- home view feels like a small fortized marketing site.
+- chat is untouched and still snappy.
+- mobile straightens the tilts.
+- nothing else in the app feels broken or visually inconsistent.
+
+## 5. Login + signup pages redesign
+
+staw plans to redo the fortized login and signup flows. scope to be
+defined - hold a slot here so it doesn't get lost. likely a swiftign
+pass (sticker frame, 3d buttons, yellow accent) plus whatever ux
+changes staw wants (oauth providers, magic link, etc.). will
+re-scope properly when we pick it up.
+
 ---
 
 ## Done today (out of these or adjacent)

@@ -11833,3 +11833,299 @@ button[data-ftz-primary]:active {
   .toast, .toast.show { transform: translateY(0) !important; }
   .rail-bastion:hover { transform: none !important; }
 }
+
+
+/* ════════════════════════════════════════════════════════════
+   SWIFTIGN LAYER · v3 — full app overhaul (~50% target)
+   Inspirations: Swiftaw Lab Swiftign article, swiftaw.com,
+   fortized.com, Pinterest Gestalt (rounded tiles, soft tinted
+   panels, generous radii).
+   Additive. v3 · 13 jun 2026
+   ════════════════════════════════════════════════════════════ */
+
+/* ── 1. Display type pass — Syne where titles read large ── */
+.topbar-title,
+.np-header h3,
+.modal-card h1, .modal-card h2, .modal-card h3,
+.fpp__name, .fpp__heading,
+.settings-page h1, .settings-page h2, .settings-section-title,
+.home-hero h1, .home-card-title, .home-section-title,
+.create-bastion-title, .ab-title, .jb-title,
+.user-card-name, .friend-card-name, .dm-row-name,
+.bastion-overview-title {
+  font-family: var(--font-display) !important;
+  letter-spacing: -.4px;
+}
+
+/* ── 2. Bigger radii across panels (Gestalt tile feel) ──── */
+.modal-card { border-radius: 24px !important; }
+.notif-panel,
+.emoji-picker-panel,
+.fmt-sel-panel,
+.ctx-menu { border-radius: 18px !important; }
+.tb-cap, .tb-onyx-pill { border-radius: 14px !important; }
+.tb-search { border-radius: 12px !important; }
+.tb-act-btn, .tb-actions button { border-radius: 12px !important; }
+
+/* ── 3. Soft tinted "zone" backgrounds — Pinterest panel feel ── */
+/* The home view gets a very subtle yellow wash; member list a peach
+   wash; notification panel a lilac wash. Kept at ~3% so it reads as
+   warmth, not colour. */
+#view-home, .view-home { background: linear-gradient(180deg, rgba(255,249,62,.018), transparent 320px) !important; }
+.member-list, .ml-root { background: linear-gradient(180deg, rgba(253,186,116,.012), transparent 240px) !important; }
+.notif-panel { background: linear-gradient(180deg, rgba(196,181,253,.04), var(--glass-heavy) 200px) !important; }
+
+/* ── 4. Topbar pills — sticker treatment ──────────────────── */
+.tb-cap, .tb-onyx-pill {
+  border: 1.5px solid rgba(255,255,255,.10) !important;
+  box-shadow: 0 3px 0 0 rgba(0,0,0,.55), 0 8px 16px rgba(0,0,0,.30) !important;
+  transition: transform .14s var(--ease-out), border-color .15s, box-shadow .14s !important;
+}
+.tb-cap:hover, .tb-onyx-pill:hover {
+  transform: translateY(-1px) rotate(-1deg);
+  box-shadow: 0 4px 0 0 rgba(0,0,0,.55), 0 12px 22px rgba(0,0,0,.40) !important;
+}
+.tb-cap:active, .tb-onyx-pill:active {
+  transform: translateY(2px) rotate(0) !important;
+  box-shadow: 0 1px 0 0 rgba(0,0,0,.55), 0 4px 10px rgba(0,0,0,.30) !important;
+}
+.tb-cap--onyx { border-color: rgba(255,249,62,.32) !important; }
+.tb-cap-val { letter-spacing: -.4px !important; }
+.tb-cap-lbl {
+  font-family: var(--font-display) !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+}
+
+/* ── 5. Topbar search — yellow focus ring ────────────────── */
+.tb-search { border: 1.5px solid rgba(255,255,255,.08) !important; transition: border-color .15s, box-shadow .15s; }
+.tb-search:focus-within {
+  border-color: rgba(255,249,62,.50) !important;
+  box-shadow: 0 0 0 3px rgba(255,249,62,.16) !important;
+  background: rgba(255,249,62,.04) !important;
+}
+
+/* ── 6. Context menu — sticker dropdown ──────────────────── */
+.ctx-menu {
+  border: 1.5px solid rgba(255,255,255,.10) !important;
+  box-shadow: 0 8px 0 0 rgba(0,0,0,.55), 0 24px 60px rgba(0,0,0,.55) !important;
+  font-family: var(--font-display) !important;
+  padding: 6px !important;
+}
+.ctx-menu > div, .ctx-menu button, .ctx-menu .ctx-item {
+  border-radius: 10px !important;
+  font-weight: 600;
+  letter-spacing: -.2px;
+  transition: background .12s, color .12s, transform .14s var(--ease-out) !important;
+}
+.ctx-menu > div:hover, .ctx-menu button:hover, .ctx-menu .ctx-item:hover {
+  transform: translateX(2px);
+  background: rgba(255,249,62,.08) !important;
+  color: var(--accent) !important;
+}
+
+/* ── 7. Emoji picker + format selector — bigger radius + sticker shadow ── */
+.emoji-picker-panel, .fmt-sel-panel {
+  border: 1.5px solid rgba(255,255,255,.10) !important;
+  box-shadow: 0 6px 0 0 rgba(0,0,0,.55), 0 20px 48px rgba(0,0,0,.55) !important;
+}
+.fmt-sel-btn { border-radius: 9px !important; transition: background .12s, transform .12s !important; }
+.fmt-sel-btn:hover { transform: translateY(-1px); }
+
+/* ── 8. Notification panel — list items ─────────────────── */
+.np-list .np-item, .np-list > div[data-notif] {
+  border-radius: 14px !important;
+  transition: background .12s, transform .14s var(--ease-out), border-color .12s !important;
+  border: 1px solid transparent !important;
+}
+.np-list .np-item:hover, .np-list > div[data-notif]:hover {
+  transform: translateX(3px);
+  background: rgba(255,249,62,.05) !important;
+  border-color: rgba(255,249,62,.18) !important;
+}
+.np-list .np-item.unread, .np-list > div[data-notif].unread {
+  background: rgba(255,249,62,.06) !important;
+  border-color: rgba(255,249,62,.22) !important;
+}
+
+/* ── 9. Mobile bottom tab bar — sticker active ──────────── */
+.mob-tab, .mobile-tab, [data-mob-tab] {
+  border-radius: 12px !important;
+  transition: transform .14s var(--ease-out), background .14s !important;
+}
+.mob-tab.active, .mobile-tab.active, [data-mob-tab].active {
+  background: linear-gradient(135deg, rgba(255,249,62,.16), rgba(255,249,62,.04)) !important;
+  box-shadow: 0 3px 0 0 var(--swf-ink), 0 8px 16px rgba(0,0,0,.35) !important;
+}
+
+/* ── 10. Inputs (general) — soft yellow focus glow ──────── */
+input[type="text"], input[type="search"], input[type="email"],
+input[type="password"], input[type="number"], textarea, select {
+  transition: border-color .15s, box-shadow .15s, background .15s !important;
+}
+input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus,
+input[type="password"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+  border-color: rgba(255,249,62,.45) !important;
+  box-shadow: 0 0 0 3px rgba(255,249,62,.16) !important;
+}
+
+/* ── 11. Profile panel (.fpp__*) — sticker frame ─────────── */
+.fpp__card, .fpp__root, .fpp__container {
+  border-radius: 22px !important;
+  border: 1.5px solid rgba(255,255,255,.08) !important;
+  box-shadow:
+    0 8px 0 0 rgba(0,0,0,.55),
+    0 24px 60px rgba(0,0,0,.55),
+    0 0 80px rgba(255,249,62,.04) !important;
+}
+.fpp__name, .fpp__heading {
+  letter-spacing: -.8px !important;
+  font-weight: 800 !important;
+}
+.fpp__badge, .fpp__role, .fpp__tag {
+  font-family: var(--font-display) !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  border-radius: 100px !important;
+}
+
+/* ── 12. Bastion overview / hero cards — sticker tile ───── */
+.bastion-overview, .overview-card, .home-card, .home-tile {
+  border-radius: 22px !important;
+  border: 1.5px solid rgba(255,255,255,.08) !important;
+  background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.015)) !important;
+  box-shadow: 0 6px 0 0 rgba(0,0,0,.55), 0 18px 40px rgba(0,0,0,.45) !important;
+  transition: transform .2s var(--ease-out), box-shadow .2s !important;
+}
+.home-card:hover, .home-tile:hover, .overview-card:hover {
+  transform: translateY(-3px) rotate(-.4deg);
+  box-shadow: 0 9px 0 0 rgba(0,0,0,.55), 0 24px 50px rgba(0,0,0,.50) !important;
+}
+
+/* ── 13. Friends + DM rows ──────────────────────────────── */
+.dm-row, .friend-row, .dm-item, .friend-card, .user-card {
+  border-radius: 14px !important;
+  transition: background .12s, transform .14s var(--ease-out), border-color .12s !important;
+  border: 1px solid transparent !important;
+}
+.dm-row:hover, .friend-row:hover, .dm-item:hover, .friend-card:hover, .user-card:hover {
+  transform: translateX(3px);
+  background: rgba(255,249,62,.05) !important;
+  border-color: rgba(255,249,62,.18) !important;
+}
+.dm-row.active, .friend-row.active, .dm-item.active, .friend-card.active, .user-card.active {
+  background: linear-gradient(135deg, rgba(255,249,62,.14), rgba(255,249,62,.04)) !important;
+  border-color: rgba(255,249,62,.28) !important;
+  box-shadow: 0 2px 0 0 var(--swf-ink), 0 6px 12px rgba(0,0,0,.30) !important;
+}
+
+/* ── 14. Section / header labels — Syne uppercase ───────── */
+.section-label, .ftz-section-label, .chan-section-label,
+[data-section-label], .group-label, .home-section-label,
+.np-section, .settings-section-label, .fpp__section-label {
+  font-family: var(--font-display) !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: .18em !important;
+  text-transform: uppercase !important;
+  color: var(--accent) !important;
+  opacity: .75;
+}
+
+/* ── 15. Badges (notification dots) — sticker ring ──────── */
+.nav-badge, .rail-notif-badge, .ftz-badge, [data-ftz-badge] {
+  border-radius: 100px !important;
+  border: 2px solid #050608 !important;
+  box-shadow: 0 0 0 1.5px rgba(255,255,255,.10), 0 2px 8px rgba(0,0,0,.5) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 800 !important;
+}
+
+/* ── 16. Tooltips ───────────────────────────────────────── */
+[data-tip]:hover::before, [data-tooltip]:hover::before,
+.tooltip, .tt-pop {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: -.2px;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: 0 4px 0 0 rgba(0,0,0,.55), 0 12px 22px rgba(0,0,0,.40) !important;
+}
+
+/* ── 17. Primary actions across views — 3D shadow ───────── */
+.create-btn, .save-btn, .send-btn, .cta-btn, .primary-btn,
+.modal-card .btn-primary, .modal-card button.primary,
+.cb-create-btn, .ab-add-btn, .jb-join-btn {
+  border: 1.5px solid var(--swf-ink) !important;
+  box-shadow: 0 4px 0 0 var(--swf-ink), 0 12px 22px rgba(0,0,0,.40) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 800 !important;
+  letter-spacing: -.2px;
+  border-radius: 12px !important;
+  transition: transform .12s var(--ease-out), box-shadow .12s var(--ease-out) !important;
+}
+.create-btn:active, .save-btn:active, .send-btn:active, .cta-btn:active,
+.primary-btn:active, .modal-card .btn-primary:active, .modal-card button.primary:active,
+.cb-create-btn:active, .ab-add-btn:active, .jb-join-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 var(--swf-ink), 0 4px 10px rgba(0,0,0,.40) !important;
+}
+
+/* ── 18. Scrollbars — slightly fatter, yellow-tinted ────── */
+*::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(255,249,62,.16) !important;
+  border-radius: 100px !important;
+  border: 1px solid rgba(255,249,62,.10) !important;
+}
+*::-webkit-scrollbar-thumb:hover { background: rgba(255,249,62,.32) !important; }
+
+/* ── 19. Unsaved-changes bar — sticker treatment ────────── */
+.unsaved-bar, #unsaved-bar, .save-bar {
+  border-radius: 16px !important;
+  border: 1.5px solid rgba(255,249,62,.32) !important;
+  background: linear-gradient(135deg, rgba(255,249,62,.10), rgba(255,249,62,.04)) !important;
+  box-shadow: 0 6px 0 0 var(--swf-ink), 0 18px 40px rgba(0,0,0,.50) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+}
+
+/* ── 20. Hero buttons in modals — sticker cluster ───────── */
+.modal-card .hero-btn, .modal-card .ftz-btn {
+  border-radius: 12px !important;
+  border: 1.5px solid var(--swf-ink) !important;
+  box-shadow: 0 4px 0 0 var(--swf-ink), 0 12px 22px rgba(0,0,0,.40) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 800 !important;
+  letter-spacing: -.2px;
+}
+
+/* ── 21. Selection — yellow ─────────────────────────────── */
+::selection { background: rgba(255,249,62,.32) !important; color: #fff !important; }
+
+/* ── 22. Sidebar rail divider — softer ──────────────────── */
+.rail-sep {
+  background: linear-gradient(90deg, transparent, rgba(255,249,62,.30), transparent) !important;
+  width: 36px !important;
+  height: 1.5px !important;
+}
+
+/* ── 23. Loader label tilt + chip stays mounted ─────────── */
+.app-loading .lbl { transform: rotate(-1.5deg) !important; }
+
+/* ── 24. Subtle bob animation utility for decorative bits ─ */
+@keyframes swfBob {
+  0%, 100% { transform: translateY(0) rotate(var(--swf-tilt, 0deg)); }
+  50%      { transform: translateY(-6px) rotate(calc(var(--swf-tilt, 0deg) + 1deg)); }
+}
+.swf-bob { animation: swfBob 4.5s ease-in-out infinite; }
+
+/* ── 25. Mobile — undo the playful tilts at the breakpoint ─ */
+@media (max-width: 720px) {
+  .tb-cap:hover, .tb-onyx-pill:hover,
+  .home-card:hover, .home-tile:hover, .overview-card:hover,
+  .ctx-menu > div:hover,
+  .dm-row:hover, .friend-row:hover, .dm-item:hover { transform: none !important; }
+}

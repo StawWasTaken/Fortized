@@ -24,11 +24,8 @@
     if(!el.querySelector('button.ftz-loading-retry')){
       var retry=document.createElement('button');
       retry.className='ftz-loading-retry';
-      retry.style.cssText='margin-top:14px;padding:9px 22px;border-radius:12px;border:1.5px solid #050608;background:linear-gradient(135deg,#fff93e,#fff700);color:#050608;font-family:Syne,sans-serif;font-size:13px;font-weight:800;letter-spacing:-.2px;cursor:pointer;box-shadow:0 4px 0 0 #050608,0 12px 22px rgba(0,0,0,.40);transition:transform .12s,box-shadow .12s;';
+      retry.style.cssText='margin-top:12px;padding:8px 20px;border-radius:10px;border:1px solid rgba(255,249,62,.2);background:rgba(255,249,62,.06);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;';
       retry.textContent='Retry';
-      retry.onmouseover=function(){this.style.transform='translateY(-1px)';};
-      retry.onmouseout=function(){this.style.transform='translateY(0)';};
-      retry.onmousedown=function(){this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 0 #050608,0 4px 10px rgba(0,0,0,.40)';};
       retry.onclick=function(){ window.location.reload(); };
       el.appendChild(retry);
     }

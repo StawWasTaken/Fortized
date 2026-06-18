@@ -33704,28 +33704,49 @@ function _gifBackToCollections(inputId) {
 // Load preview GIF thumbnails for collection cards
 async function _loadCollectionPreviews() {
   const previewCards = document.querySelectorAll('[data-cat-preview]');
+  console.info('[Klipy] _loadCollectionPreviews start, cards=', previewCards.length);
   if (!previewCards.length) return;
+  const _pickPreviewUrl = (item) => {
+    if (!item) return '';
+    return _klipyGifUrl(item, 'sm')
+        || _klipyGifUrl(item, 'xs')
+        || _klipyGifUrl(item, 'md')
+        || _klipyGifUrl(item, 'hd');
+  };
   // Load trending preview
   try {
     const cid = CU?.username || 'anon';
     const res = await fetch(KLIPY_BASE + '/gifs/trending?per_page=6&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     const items = _klipyExtractItems(data);
+    console.info('[Klipy] trending preview items=', items.length, items[0]);
     const trendCard = document.querySelector('[data-cat-preview="trending"]');
-    if (trendCard && items[0]) trendCard.src = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
-  } catch (e) { _dbg('[Klipy] trending fetch failed', e); }
+    if (trendCard && items[0]) {
+      const url = _pickPreviewUrl(items[0]);
+      console.info('[Klipy] trending preview url=', url);
+      if (url) trendCard.src = url;
+    }
+  } catch (e) { console.warn('[Klipy] trending preview fetch failed:', e); }
   const cats = [...previewCards].filter(c => c.dataset.catPreview !== 'trending');
   for (let i = 0; i < cats.length; i += 4) {
     const batch = cats.slice(i, i + 4);
     await Promise.allSettled(batch.map(async (card) => {
+      const cat = card.dataset.catPreview;
       try {
-        const cat = card.dataset.catPreview;
         const cid = CU?.username || 'anon';
         const res = await fetch(KLIPY_BASE + '/gifs/search?q=' + encodeURIComponent(cat) + '&per_page=1&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         const items = _klipyExtractItems(data);
-        if (items[0]) card.src = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
-      } catch (e) { _dbg('[Klipy] category preview failed', e); }
+        if (items[0]) {
+          const url = _pickPreviewUrl(items[0]);
+          if (url) card.src = url;
+          else console.warn('[Klipy] category "' + cat + '" — no usable URL on item', items[0]);
+        } else {
+          console.warn('[Klipy] category "' + cat + '" — no items, raw=', data);
+        }
+      } catch (e) { console.warn('[Klipy] category "' + cat + '" fetch failed:', e); }
     }));
   }
 }

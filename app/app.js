@@ -19931,44 +19931,76 @@ function _buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- Profile Theme — Main = banner colour/dominant,
-                 Accent = avatar dominant. The only pickable control
-                 is the Banner Color (free + Radiance without image). -->
+            <!-- Profile Theme — mode-driven: Auto from Avatar, Auto from
+                 Banner (Radiance + has banner), or Custom. Available to
+                 every user. Auto modes derive a 2-stop gradient from the
+                 source image; Custom exposes two colour pickers with an
+                 eyedropper. Auto-from-Banner only updates the gradient;
+                 the banner image itself is untouched. -->
             <div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Theme</div>
                 <span style="font-size:9px;font-weight:800;letter-spacing:.08em;background:#fff93e;color:#13161d;border-radius:5px;padding:2px 7px;">NEW</span>
               </div>
-              ${CU.banner && hasRadiance
-                ? ''
-                : `<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;">
-                    <div style="text-align:center;">
-                      <button type="button" id="ftz-theme-swatch-bannerColor" onclick="_openThemeSwatch(this,'bannerColor')" style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeBannerColor+'55'};overflow:hidden;position:relative;cursor:pointer;padding:0;background:${themeBannerColor};display:flex;align-items:center;justify-content:center;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      </button>
-                      <div style="font-size:10.5px;color:rgba(255,255,255,.5);margin-top:6px;">Banner Color</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;">Let Fortized sample your avatar or banner — or pick the gradient stops yourself.</div>
+              ${(() => {
+                const pt2 = CU.profileTheme || {};
+                const mode2 = pt2.mode || (pt2.color1 || pt2.main ? 'custom' : 'pfp');
+                const c1v = (pt2.color1 || pt2.main || '#a855f7').toLowerCase();
+                const c2v = (pt2.color2 || pt2.accent || _fppDeriveAccent(c1v)).toLowerCase();
+                const bannerEnabled = hasRadiance && !!CU.banner;
+                const eyeOk = (typeof window !== 'undefined') && ('EyeDropper' in window);
+                const pill = (id, label, sub, enabled) => `
+                  <button class="pt-mode-pill ${mode2===id?'is-active':''}" ${enabled?'':'disabled'} onclick="_selectProfileThemeMode('${id}')" style="flex:1;min-width:140px;text-align:left;padding:11px 13px;border-radius:11px;cursor:${enabled?'pointer':'not-allowed'};border:1.5px solid ${mode2===id?'var(--accent)':'rgba(255,255,255,.08)'};background:${mode2===id?'rgba(255,249,62,.05)':'rgba(255,255,255,.02)'};opacity:${enabled?'1':'.45'};display:flex;flex-direction:column;align-items:flex-start;gap:3px;transition:all .15s;">
+                    <div style="font-family:var(--font-display);font-size:12.5px;font-weight:800;color:#fff;">${label}</div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.35;">${sub}</div>
+                  </button>`;
+                const eyeBtn = (target) => eyeOk
+                  ? `<button onclick="_eyedropTo('${target}')" title="Eyedropper — sample any pixel on screen" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;width:34px;height:34px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.65);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg></button>`
+                  : `<button title="Eyedropper not supported in this browser" disabled style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.08);border-radius:8px;width:34px;height:34px;cursor:not-allowed;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.25);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg></button>`;
+                return `
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+                  ${pill('pfp','Auto from Avatar','Sampled from your profile picture.', true)}
+                  ${pill('banner','Auto from Banner', hasRadiance ? (CU.banner?'Sampled from your banner image.':'Set a banner first to use this.') : 'Banner uploads require Radiance.', bannerEnabled)}
+                  ${pill('custom','Custom','Pick the gradient stops yourself.', true)}
+                </div>
+                <div style="display:${mode2==='custom'?'flex':'none'};gap:14px;flex-wrap:wrap;align-items:flex-end;padding:12px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:11px;margin-bottom:10px;">
+                  <div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,.45);margin-bottom:5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;">Color 1</div>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                      <input type="color" id="pt-color1" value="${c1v}" style="width:46px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;background:transparent;" oninput="_inlineCustomThemeInput()">
+                      ${eyeBtn('pt-color1')}
                     </div>
-                  </div>`}
-              <!-- Read-only derived swatches so the user sees what they
-                   actually got from their banner + avatar combination. -->
-              <div style="display:flex;gap:18px;align-items:center;padding:10px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:10px;">
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <div style="width:22px;height:22px;border-radius:5px;background:${themeMain||_FPP_BRAND_YELLOW};border:1px solid rgba(255,255,255,.12);"></div>
-                  <div>
-                    <div style="font-size:11px;color:#fff;font-weight:600;line-height:1.1;">Main</div>
-                    <div style="font-size:10px;color:rgba(255,255,255,.4);">${(themeMain||_FPP_BRAND_YELLOW).toLowerCase()}</div>
                   </div>
-                </div>
-                <div style="width:1px;align-self:stretch;background:var(--border);"></div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <div style="width:22px;height:22px;border-radius:5px;background:${themeAccent||_fppDeriveAccent(themeMain||_FPP_BRAND_YELLOW)};border:1px solid rgba(255,255,255,.12);"></div>
                   <div>
-                    <div style="font-size:11px;color:#fff;font-weight:600;line-height:1.1;">Accent</div>
-                    <div style="font-size:10px;color:rgba(255,255,255,.4);">${(themeAccent||_fppDeriveAccent(themeMain||_FPP_BRAND_YELLOW)).toLowerCase()}</div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,.45);margin-bottom:5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;">Color 2</div>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                      <input type="color" id="pt-color2" value="${c2v}" style="width:46px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;background:transparent;" oninput="_inlineCustomThemeInput()">
+                      ${eyeBtn('pt-color2')}
+                    </div>
                   </div>
+                  <button onclick="saveProfileTheme()" class="settings-save-btn" style="margin-left:auto;">Save Custom</button>
                 </div>
-              </div>
-              ${(CU.profileTheme && (CU.profileTheme.bannerColor || CU.profileTheme.main || CU.profileTheme.accent)) ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" class="reset-theme-btn" style="margin-top:12px;">Reset Theme</button>' : ''}
+                <div style="display:${mode2!=='custom'?'flex':'none'};gap:10px;align-items:center;padding:11px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:11px;margin-bottom:10px;flex-wrap:wrap;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:22px;height:22px;border-radius:5px;background:${c1v};border:1px solid rgba(255,255,255,.12);"></div>
+                    <div>
+                      <div style="font-size:11px;color:#fff;font-weight:600;line-height:1.1;">Main</div>
+                      <div style="font-size:10px;color:rgba(255,255,255,.4);">${c1v}</div>
+                    </div>
+                  </div>
+                  <div style="width:1px;align-self:stretch;background:var(--border);"></div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:22px;height:22px;border-radius:5px;background:${c2v};border:1px solid rgba(255,255,255,.12);"></div>
+                    <div>
+                      <div style="font-size:11px;color:#fff;font-weight:600;line-height:1.1;">Accent</div>
+                      <div style="font-size:10px;color:rgba(255,255,255,.4);">${c2v}</div>
+                    </div>
+                  </div>
+                  <button onclick="_resampleProfileTheme()" class="settings-save-btn" style="margin-left:auto;">${pt2.mode?'Re-sample':'Sample now'}</button>
+                </div>`;
+              })()}
+              ${(CU.profileTheme && (CU.profileTheme.bannerColor || CU.profileTheme.main || CU.profileTheme.accent || CU.profileTheme.color1 || CU.profileTheme.color2)) ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" class="reset-theme-btn" style="margin-top:6px;">Reset Theme</button>' : ''}
             </div>
             ${sep}
 
@@ -46091,6 +46123,13 @@ function previewProfileTheme() {
   markSettingsDirty();
 }
 
+// Inline (myprofile-widget) variant — same behaviour but the preview
+// element isn't present, so just flag the unsaved-changes bar so the
+// user knows to hit Save Custom.
+function _inlineCustomThemeInput() {
+  markSettingsDirty();
+}
+
 async function saveProfileTheme() {
   const c1 = document.getElementById('pt-color1')?.value;
   const c2 = document.getElementById('pt-color2')?.value;
@@ -46121,11 +46160,21 @@ async function _selectProfileThemeMode(mode) {
   if (!CU.profileTheme) CU.profileTheme = {};
   CU.profileTheme.mode = mode;
   if (mode === 'pfp' || mode === 'banner') {
-    await _resampleProfileTheme({ silent: true });
+    await _resampleProfileTheme({ silent: true, noRepaint: true });
   } else {
     await saveUser();
   }
-  buildProfileView('profile_theme');
+  _repaintActiveProfileView();
+}
+
+// Re-render whichever profile view is currently shown — the dedicated
+// profile_theme settings tab or the inline widget on My Profile — so
+// the mode pills + swatches reflect the latest state without forcing
+// the caller to know which surface they're on.
+function _repaintActiveProfileView() {
+  const inSettingsTab = !!document.querySelector('.pt-mode-pill') && !!document.getElementById('pt-auto-block');
+  if (inSettingsTab) buildProfileView('profile_theme');
+  else buildProfileView('myprofile');
 }
 
 // Sample dominant colour from the chosen source image and turn it
@@ -46145,6 +46194,7 @@ async function _resampleProfileTheme(opts) {
   await saveUser();
   clearSettingsDirty();
   if (!opts.silent) toast('🎨 Profile theme sampled!', 'success');
+  if (!opts.noRepaint) _repaintActiveProfileView();
 }
 
 // Rotate hue +35° in HSL space so the second gradient stop is related

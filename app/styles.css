@@ -1011,6 +1011,35 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .pt-mode-pill:not([disabled]):hover{border-color:rgba(255,249,62,.35) !important;background:rgba(255,249,62,.03) !important;}
 .pt-mode-pill[disabled]{pointer-events:none;}
 
+/* Profile theme inline widget */
+.pt-resample-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.85);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;font-family:var(--font-display);cursor:pointer;transition:all .15s;}
+.pt-resample-btn:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.25);color:#fff93e;}
+.pt-custom-swatch{transition:transform .15s,box-shadow .15s,border-color .15s;}
+.pt-custom-swatch:hover{transform:translateY(-1px);border-color:rgba(255,249,62,.35) !important;box-shadow:0 4px 14px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.4) inset;}
+
+/* Starter Drops */
+.pt-starter-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin;}
+.pt-starter-row::-webkit-scrollbar{height:6px;}
+.pt-starter-row::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+.pt-starter-card{flex:0 0 152px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:0;cursor:pointer;display:flex;flex-direction:column;text-align:left;font-family:inherit;color:#fff;overflow:hidden;transition:transform .15s,border-color .15s,box-shadow .15s;position:relative;}
+.pt-starter-card:hover{transform:translateY(-2px);border-color:rgba(255,249,62,.3);box-shadow:0 6px 18px rgba(0,0,0,.28);}
+.pt-starter-img{display:block;width:100%;height:80px;background-size:cover;background-position:center;}
+.pt-starter-label{display:block;font-size:11.5px;font-weight:700;padding:7px 10px 9px;letter-spacing:.01em;}
+.pt-starter-dot{position:absolute;top:8px;right:8px;width:14px;height:14px;border-radius:50%;border:2px solid rgba(0,0,0,.55);box-shadow:0 0 0 1px rgba(255,255,255,.15);}
+
+/* Colour popover */
+.pt-colour-pop{font-family:var(--font-ui);}
+.pt-pop-card{background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;box-shadow:0 14px 40px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.4);min-width:268px;}
+.pt-pop-row{display:flex;align-items:center;gap:8px;}
+.pt-pop-swatch{width:38px;height:38px;border-radius:10px;border:1.5px solid rgba(255,255,255,.18);flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,.5) inset;}
+.pt-pop-row #pt-pop-hex{flex:1;min-width:0;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13px;padding:8px 10px;outline:none;text-transform:lowercase;letter-spacing:.04em;}
+.pt-pop-row #pt-pop-hex:focus{border-color:rgba(255,249,62,.35);}
+.pt-pop-icon-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;}
+.pt-pop-icon-btn:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.25);color:#fff93e;}
+.pt-pop-presets{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px;}
+.pt-pop-preset{width:100%;aspect-ratio:1/1;border-radius:8px;border:1.5px solid rgba(255,255,255,.08);cursor:pointer;padding:0;transition:transform .12s,border-color .12s;}
+.pt-pop-preset:hover{transform:scale(1.07);border-color:rgba(255,249,62,.4);}
+
 /* Source-message highlight when the user is actively replying to it.
    Subtle yellow stripe + warm tint so it's obviously the target without
    shouting. Cleared on send or on cancelReply(). */

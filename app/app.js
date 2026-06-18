@@ -19931,76 +19931,60 @@ function _buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- Profile Theme — mode-driven: Auto from Avatar, Auto from
-                 Banner (Radiance + has banner), or Custom. Available to
-                 every user. Auto modes derive a 2-stop gradient from the
-                 source image; Custom exposes two colour pickers with an
-                 eyedropper. Auto-from-Banner only updates the gradient;
-                 the banner image itself is untouched. -->
+            <!-- Profile Theme — two modes only: Automatic (samples your
+                 avatar, or banner if you have one) or Custom (pick a
+                 single colour with our styled picker). No Save button —
+                 changes flag the unsaved-changes bar; the user commits
+                 from there. Starter packs (Radiance-only) below set
+                 banner + Custom colour in one click. -->
             <div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Theme</div>
                 <span style="font-size:9px;font-weight:800;letter-spacing:.08em;background:#fff93e;color:#13161d;border-radius:5px;padding:2px 7px;">NEW</span>
               </div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;">Let Fortized sample your avatar or banner — or pick the gradient stops yourself.</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Let Fortized read a colour from your avatar (or banner), or roll your own.</div>
               ${(() => {
                 const pt2 = CU.profileTheme || {};
-                const mode2 = pt2.mode || (pt2.color1 || pt2.main ? 'custom' : 'pfp');
+                const mode2 = (pt2.mode === 'custom') ? 'custom' : (pt2.mode === 'auto' || pt2.mode === 'pfp' || pt2.mode === 'banner' ? 'auto' : (pt2.color1 || pt2.main ? 'custom' : 'auto'));
                 const c1v = (pt2.color1 || pt2.main || '#a855f7').toLowerCase();
-                const c2v = (pt2.color2 || pt2.accent || _fppDeriveAccent(c1v)).toLowerCase();
-                const bannerEnabled = hasRadiance && !!CU.banner;
-                const eyeOk = (typeof window !== 'undefined') && ('EyeDropper' in window);
-                const pill = (id, label, sub, enabled) => `
-                  <button class="pt-mode-pill ${mode2===id?'is-active':''}" ${enabled?'':'disabled'} onclick="_selectProfileThemeMode('${id}')" style="flex:1;min-width:140px;text-align:left;padding:11px 13px;border-radius:11px;cursor:${enabled?'pointer':'not-allowed'};border:1.5px solid ${mode2===id?'var(--accent)':'rgba(255,255,255,.08)'};background:${mode2===id?'rgba(255,249,62,.05)':'rgba(255,255,255,.02)'};opacity:${enabled?'1':'.45'};display:flex;flex-direction:column;align-items:flex-start;gap:3px;transition:all .15s;">
-                    <div style="font-family:var(--font-display);font-size:12.5px;font-weight:800;color:#fff;">${label}</div>
-                    <div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.35;">${sub}</div>
-                  </button>`;
-                const eyeBtn = (target) => eyeOk
-                  ? `<button onclick="_eyedropTo('${target}')" title="Eyedropper — sample any pixel on screen" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;width:34px;height:34px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.65);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg></button>`
-                  : `<button title="Eyedropper not supported in this browser" disabled style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.08);border-radius:8px;width:34px;height:34px;cursor:not-allowed;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.25);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg></button>`;
+                const pillBase = (id, label) => {
+                  const active = mode2 === id;
+                  return `<button class="pt-mode-pill ${active?'is-active':''}" onclick="_selectProfileThemeMode('${id}')" style="flex:1;padding:9px 14px;border-radius:10px;cursor:pointer;border:1.5px solid ${active?'var(--accent)':'rgba(255,255,255,.08)'};background:${active?'rgba(255,249,62,.05)':'rgba(255,255,255,.02)'};font-family:var(--font-display);font-size:12.5px;font-weight:800;color:#fff;transition:all .15s;">${label}</button>`;
+                };
                 return `
-                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-                  ${pill('pfp','Auto from Avatar','Sampled from your profile picture.', true)}
-                  ${pill('banner','Auto from Banner', hasRadiance ? (CU.banner?'Sampled from your banner image.':'Set a banner first to use this.') : 'Banner uploads require Radiance.', bannerEnabled)}
-                  ${pill('custom','Custom','Pick the gradient stops yourself.', true)}
+                <div style="display:flex;gap:8px;margin-bottom:12px;">
+                  ${pillBase('auto','Automatic')}
+                  ${pillBase('custom','Custom')}
                 </div>
-                <div style="display:${mode2==='custom'?'flex':'none'};gap:14px;flex-wrap:wrap;align-items:flex-end;padding:12px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:11px;margin-bottom:10px;">
-                  <div>
-                    <div style="font-size:10.5px;color:rgba(255,255,255,.45);margin-bottom:5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;">Color 1</div>
-                    <div style="display:flex;gap:6px;align-items:center;">
-                      <input type="color" id="pt-color1" value="${c1v}" style="width:46px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;background:transparent;" oninput="_inlineCustomThemeInput()">
-                      ${eyeBtn('pt-color1')}
-                    </div>
+                ${mode2==='auto' ? `
+                <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:10px;">
+                  <div style="width:24px;height:24px;border-radius:6px;background:${c1v};border:1px solid rgba(255,255,255,.18);box-shadow:0 0 0 1px rgba(0,0,0,.4) inset;flex-shrink:0;"></div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:11.5px;color:#fff;font-weight:700;">${hasRadiance && CU.banner ? 'Sampled from your banner' : 'Sampled from your avatar'}</div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,.45);">${c1v}</div>
                   </div>
-                  <div>
-                    <div style="font-size:10.5px;color:rgba(255,255,255,.45);margin-bottom:5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;">Color 2</div>
-                    <div style="display:flex;gap:6px;align-items:center;">
-                      <input type="color" id="pt-color2" value="${c2v}" style="width:46px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;background:transparent;" oninput="_inlineCustomThemeInput()">
-                      ${eyeBtn('pt-color2')}
-                    </div>
+                  <button onclick="_resampleProfileTheme()" class="pt-resample-btn">Re-sample</button>
+                </div>` : `
+                <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:10px;">
+                  <button id="pt-custom-swatch" onclick="_openColourPopover(this,'pt-colour-hidden')" class="pt-custom-swatch" style="width:34px;height:34px;border-radius:8px;border:1.5px solid rgba(255,255,255,.18);background:${c1v};cursor:pointer;flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,.4) inset;padding:0;"></button>
+                  <input id="pt-colour-hidden" type="hidden" value="${c1v}">
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:11.5px;color:#fff;font-weight:700;">Frame colour</div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,.45);" id="pt-colour-hex-label">${c1v}</div>
                   </div>
-                  <button onclick="saveProfileTheme()" class="settings-save-btn" style="margin-left:auto;">Save Custom</button>
-                </div>
-                <div style="display:${mode2!=='custom'?'flex':'none'};gap:10px;align-items:center;padding:11px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:11px;margin-bottom:10px;flex-wrap:wrap;">
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <div style="width:22px;height:22px;border-radius:5px;background:${c1v};border:1px solid rgba(255,255,255,.12);"></div>
-                    <div>
-                      <div style="font-size:11px;color:#fff;font-weight:600;line-height:1.1;">Main</div>
-                      <div style="font-size:10px;color:rgba(255,255,255,.4);">${c1v}</div>
-                    </div>
-                  </div>
-                  <div style="width:1px;align-self:stretch;background:var(--border);"></div>
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <div style="width:22px;height:22px;border-radius:5px;background:${c2v};border:1px solid rgba(255,255,255,.12);"></div>
-                    <div>
-                      <div style="font-size:11px;color:#fff;font-weight:600;line-height:1.1;">Accent</div>
-                      <div style="font-size:10px;color:rgba(255,255,255,.4);">${c2v}</div>
-                    </div>
-                  </div>
-                  <button onclick="_resampleProfileTheme()" class="settings-save-btn" style="margin-left:auto;">${pt2.mode?'Re-sample':'Sample now'}</button>
-                </div>`;
+                  <button onclick="document.getElementById('pt-custom-swatch').click()" class="pt-resample-btn">Pick…</button>
+                </div>`}`;
               })()}
-              ${(CU.profileTheme && (CU.profileTheme.bannerColor || CU.profileTheme.main || CU.profileTheme.accent || CU.profileTheme.color1 || CU.profileTheme.color2)) ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" class="reset-theme-btn" style="margin-top:6px;">Reset Theme</button>' : ''}
+              ${hasRadiance ? `
+              <div style="margin-top:18px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                  <div style="font-size:12px;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;">Starter Drops</div>
+                  <span style="font-size:9px;font-weight:800;letter-spacing:.06em;background:rgba(255,160,62,.1);color:#ff9d3e;border:1px solid rgba(255,160,62,.2);border-radius:5px;padding:2px 6px;">RADIANCE</span>
+                </div>
+                <div style="font-size:11.5px;color:rgba(255,255,255,.4);margin-bottom:10px;">One click sets your banner GIF and a matching custom colour. Free for Radiance.</div>
+                <div class="pt-starter-row">${_renderStarterPacks()}</div>
+              </div>` : ''}
+              ${(CU.profileTheme && (CU.profileTheme.bannerColor || CU.profileTheme.main || CU.profileTheme.color1)) ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" class="reset-theme-btn" style="margin-top:14px;">Reset Theme</button>' : ''}
             </div>
             ${sep}
 
@@ -21759,9 +21743,11 @@ async function _viewUserProfile(username) {
   const customStatus = u.customStatus;
   const games = u.gameCollection || [];
 
-  // Profile theme border
+  // Profile theme border — bumped from 3px to 6px so the frame reads
+  // at Discord-tier prominence and the chosen colour actually pops
+  // around the card.
   const themeBorder = profileTheme
-    ? `background:linear-gradient(135deg,${profileTheme.color1},${profileTheme.color2});padding:3px;border-radius:20px;`
+    ? `background:linear-gradient(135deg,${profileTheme.color1},${profileTheme.color2});padding:6px;border-radius:22px;`
     : '';
   // Show custom banner if user has Radiance + banner, otherwise a nice gradient
   const hasUserRadiance = _hasRadiance(u);
@@ -46155,15 +46141,25 @@ function applyPresetTheme(c1, c2) {
 // block visibility is driven off `CU.profileTheme.mode` so a single
 // `buildProfileView('profile_theme')` repaint is enough — no manual
 // DOM toggling. ──
+// Two-mode profile theme: 'auto' (sample banner if Radiance + has
+// banner, otherwise sample avatar) or 'custom' (a single picked
+// colour). Picking a mode flags the unsaved-changes bar so the
+// existing Save Changes path commits everything in one go — no
+// dedicated Save button.
 async function _selectProfileThemeMode(mode) {
   if (!CU) return;
   if (!CU.profileTheme) CU.profileTheme = {};
-  CU.profileTheme.mode = mode;
-  if (mode === 'pfp' || mode === 'banner') {
-    await _resampleProfileTheme({ silent: true, noRepaint: true });
+  if (mode === 'auto') {
+    CU.profileTheme.mode = 'auto';
+    await _resampleProfileTheme({ silent: true, noRepaint: true, noSave: true });
   } else {
-    await saveUser();
+    CU.profileTheme.mode = 'custom';
+    // Seed a colour1 if we have nothing yet, so the swatch isn't empty.
+    if (!CU.profileTheme.color1 && !CU.profileTheme.main) {
+      CU.profileTheme.color1 = '#a855f7';
+    }
   }
+  markSettingsDirty();
   _repaintActiveProfileView();
 }
 
@@ -46180,21 +46176,204 @@ function _repaintActiveProfileView() {
 // Sample dominant colour from the chosen source image and turn it
 // into a two-stop gradient. The second stop is a hue-rotated variant
 // of the first so the gradient still reads, even from a flat source.
+// Sample a single dominant colour for the auto theme. Source is the
+// banner if Radiance + banner uploaded, otherwise the avatar. The
+// colour is run through the UI-collision guard so it can never blend
+// with the rail/panel/accent surfaces. The matching second-stop is
+// the hue-rotated complement so existing gradient code still works.
 async function _resampleProfileTheme(opts) {
   opts = opts || {};
   if (!CU) return;
-  const mode = CU.profileTheme?.mode || 'pfp';
-  const src = mode === 'banner' ? CU.banner : CU.pfp;
-  if (!src) { if (!opts.silent) toast('No source image to sample yet', 'error'); return; }
+  const hasRadiance = _hasRadiance(CU);
+  const src = (hasRadiance && CU.banner) ? CU.banner : CU.pfp;
+  if (!src) { if (!opts.silent) toast('Add an avatar first', 'error'); return; }
   let base = null;
   try { base = await _fppSampleImageColor(src); } catch { base = null; }
   if (!base) { if (!opts.silent) toast('Couldn\'t read the image colour', 'error'); return; }
+  base = _sanitizeThemeHex(base);
   const pair = _ptHexComplement(base);
-  CU.profileTheme = { mode, color1: base, color2: pair };
-  await saveUser();
-  clearSettingsDirty();
-  if (!opts.silent) toast('🎨 Profile theme sampled!', 'success');
+  CU.profileTheme = { mode: 'auto', color1: base, color2: pair };
+  if (opts.noSave) {
+    markSettingsDirty();
+  } else {
+    await saveUser();
+    clearSettingsDirty();
+    if (!opts.silent) toast('🎨 Profile theme sampled!', 'success');
+  }
   if (!opts.noRepaint) _repaintActiveProfileView();
+}
+
+// UI-collision guard. Pushes the colour away from the rail/panel
+// greys and the brand accent so the profile frame is always visible
+// against the surfaces it sits on top of. Clamps saturation and
+// lightness to a comfortable band, then nudges hue if the result
+// lands within a small distance of the brand yellow (#fff93e).
+function _sanitizeThemeHex(hex) {
+  if (!hex || typeof hex !== 'string') return '#a855f7';
+  const h = hex.replace('#','').padStart(6,'0').slice(0,6);
+  let r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  if ([r,g,b].some(v => Number.isNaN(v))) return '#a855f7';
+  let [hh, ss, ll] = _rgbToHsl(r, g, b);
+  // Lift dull or near-grey picks so they read as a colour against
+  // the dark UI; keep saturated colours roughly as-is.
+  if (ss < 0.28) ss = 0.45;
+  // Avoid near-black (blends with the rail) and near-white (blends
+  // with light text / accents).
+  ll = Math.max(0.36, Math.min(0.72, ll));
+  // Nudge away from the brand yellow if too close.
+  const BRAND_H = 56; // ~#fff93e in HSL hue
+  if (Math.abs(((hh - BRAND_H + 540) % 360) - 180) > 165) {
+    // within 15° of brand hue — rotate by 40°
+    hh = (hh + 40) % 360;
+  }
+  const [r2,g2,b2] = _hslToRgb(hh, ss, ll);
+  const toHex = v => Math.round(v).toString(16).padStart(2,'0');
+  return '#' + toHex(r2) + toHex(g2) + toHex(b2);
+}
+
+function _rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+  const l = (mx + mn) / 2;
+  let h = 0, s = 0;
+  if (mx !== mn) {
+    const d = mx - mn;
+    s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+    switch (mx) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
+      case g: h = ((b - r) / d + 2); break;
+      case b: h = ((r - g) / d + 4); break;
+    }
+    h *= 60;
+  }
+  return [h, s, l];
+}
+
+function _hslToRgb(h, s, l) {
+  const c = (1 - Math.abs(2*l - 1)) * s;
+  const x = c * (1 - Math.abs((h/60) % 2 - 1));
+  const m = l - c/2;
+  let r=0,g=0,b=0;
+  if (h < 60)      { r=c; g=x; }
+  else if (h<120)  { r=x; g=c; }
+  else if (h<180)  { g=c; b=x; }
+  else if (h<240)  { g=x; b=c; }
+  else if (h<300)  { r=x; b=c; }
+  else             { r=c; b=x; }
+  return [(r+m)*255, (g+m)*255, (b+m)*255];
+}
+
+// ── Starter Drops (Radiance-only) ──
+// Free curated banner + matching custom colour combos. Click sets
+// banner + custom theme in one go. Names lean playful, never
+// corporate.
+const _FTZ_STARTER_PACKS = [
+  { id:'sakura-server',   name:'Sakura Server',     url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftSakuraTree.gif', colour:'#ff94cc' },
+  { id:'snowed-in',       name:'Snowed In',         url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftWinter1.gif',    colour:'#c4cdd5' },
+  { id:'frost-loop',      name:'Frost Loop',        url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftWinter2.gif',    colour:'#c4cdd5' },
+  { id:'bonaparte',       name:'Bonaparte Brainrot',url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerNapoEdit.gif',            colour:'#002451' },
+  { id:'hayfever',        name:'Hay Fever Hours',   url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerSummer.gif',              colour:'#559367' },
+  { id:'cherry-static',   name:'Cherry Static',     url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerWhite.gif',               colour:'#e3e3e3' },
+];
+
+function _renderStarterPacks() {
+  return _FTZ_STARTER_PACKS.map(p => `
+    <button type="button" class="pt-starter-card" onclick="_applyStarterPack('${p.id}')" title="${escapeHTML(p.name)}">
+      <span class="pt-starter-img" style="background-image:url('${p.url}');"></span>
+      <span class="pt-starter-label">${escapeHTML(p.name)}</span>
+      <span class="pt-starter-dot" style="background:${p.colour};"></span>
+    </button>`).join('');
+}
+
+async function _applyStarterPack(id) {
+  if (!_hasRadiance(CU)) { toast('Starter Drops are a Radiance perk', 'error'); return; }
+  const pack = _FTZ_STARTER_PACKS.find(p => p.id === id);
+  if (!pack) return;
+  const colour = _sanitizeThemeHex(pack.colour);
+  CU.banner = pack.url;
+  _persistBannerLocal(CU.username, pack.url);
+  CU.profileTheme = { mode: 'custom', color1: colour, color2: _ptHexComplement(colour) };
+  window._recentlyEditedFields = window._recentlyEditedFields || {};
+  window._recentlyEditedFields.banner = Date.now();
+  try { saveLocal(); } catch (_) {}
+  markSettingsDirty();
+  _repaintActiveProfileView();
+  toast(`🎨 ${pack.name} loaded — save to keep`, 'info');
+}
+
+// ── Aesthetic colour popover for the Custom mode swatch.
+// Anchored under the clicked swatch. Contains a styled colour
+// preview, a hex input, the EyeDropper button, and the native
+// <input type="color"> hidden behind the swatch so the OS picker
+// still does the heavy lifting. ──
+function _openColourPopover(anchorEl, hiddenInputId) {
+  document.querySelector('.pt-colour-pop')?.remove();
+  const hidden = document.getElementById(hiddenInputId);
+  const startHex = (hidden?.value || '#a855f7').toLowerCase();
+  const eyeOk = ('EyeDropper' in window);
+  const rect = anchorEl.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'pt-colour-pop';
+  pop.style.cssText = `position:fixed;left:${Math.round(rect.left)}px;top:${Math.round(rect.bottom+8)}px;z-index:9999;`;
+  pop.innerHTML = `
+    <div class="pt-pop-card">
+      <div class="pt-pop-row">
+        <div class="pt-pop-swatch" id="pt-pop-swatch" style="background:${startHex};"></div>
+        <input id="pt-pop-hex" type="text" maxlength="7" value="${startHex}" spellcheck="false" autocomplete="off">
+        <label class="pt-pop-icon-btn" title="Open colour picker">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="19" cy="13" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="10" cy="20" r="2.5"/><path d="M12 2a10 10 0 0 0 0 20c1.5 0 2-1 2-2v-1a2 2 0 0 1 2-2h2a4 4 0 0 0 4-4 10 10 0 0 0-10-11Z"/></svg>
+          <input id="pt-pop-native" type="color" value="${startHex}" style="opacity:0;width:0;height:0;position:absolute;pointer-events:none;">
+        </label>
+        ${eyeOk ? `<button class="pt-pop-icon-btn" id="pt-pop-eye" title="Eyedropper — sample any pixel on screen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
+        </button>` : ''}
+      </div>
+      <div class="pt-pop-presets">
+        ${['#ff94cc','#c4cdd5','#002451','#559367','#e3e3e3','#a855f7','#3b82f6','#22c55e','#f97316','#ef4444','#ec4899','#06b6d4'].map(c => `<button type="button" class="pt-pop-preset" data-c="${c}" style="background:${c};"></button>`).join('')}
+      </div>
+    </div>`;
+  document.body.appendChild(pop);
+  const hexInp = pop.querySelector('#pt-pop-hex');
+  const native = pop.querySelector('#pt-pop-native');
+  const swatch = pop.querySelector('#pt-pop-swatch');
+  const commit = (raw) => {
+    let v = (raw || '').trim().toLowerCase();
+    if (v && v[0] !== '#') v = '#' + v;
+    if (!/^#[0-9a-f]{6}$/.test(v)) return;
+    const safe = _sanitizeThemeHex(v);
+    swatch.style.background = safe;
+    hexInp.value = safe;
+    native.value = safe;
+    if (hidden) hidden.value = safe;
+    const visibleSwatch = document.getElementById('pt-custom-swatch');
+    if (visibleSwatch) visibleSwatch.style.background = safe;
+    const label = document.getElementById('pt-colour-hex-label');
+    if (label) label.textContent = safe;
+    if (!CU.profileTheme) CU.profileTheme = {};
+    CU.profileTheme.mode = 'custom';
+    CU.profileTheme.color1 = safe;
+    CU.profileTheme.color2 = _ptHexComplement(safe);
+    markSettingsDirty();
+  };
+  hexInp.addEventListener('input', () => commit(hexInp.value));
+  native.addEventListener('input', () => commit(native.value));
+  pop.querySelectorAll('.pt-pop-preset').forEach(b => b.addEventListener('click', () => commit(b.dataset.c)));
+  const eyeBtn = pop.querySelector('#pt-pop-eye');
+  if (eyeBtn) eyeBtn.addEventListener('click', async () => {
+    try {
+      const ed = new window.EyeDropper();
+      const res = await ed.open();
+      if (res?.sRGBHex) commit(res.sRGBHex);
+    } catch {}
+  });
+  setTimeout(() => {
+    document.addEventListener('mousedown', function close(ev) {
+      if (!pop.contains(ev.target) && ev.target !== anchorEl) {
+        pop.remove();
+        document.removeEventListener('mousedown', close, true);
+      }
+    }, true);
+  }, 0);
 }
 
 // Rotate hue +35° in HSL space so the second gradient stop is related

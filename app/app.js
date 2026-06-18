@@ -745,8 +745,12 @@ const PERMISSIONS = [
 ];
 const PERM_GROUPS = ['General','Text','Voice/Party','Automation','Moderation','Boost'];
 let activeEmojiCat = 0;
+// TODO(staw): manually recheck emoji categories — there are likely
+// stragglers in the wrong group (e.g. some Unicode 15+ additions land
+// in "Symbols" when they're really faces or objects). Walk each list
+// in order and re-bucket anything that looks miscategorised.
 const EMOJI_CATEGORIES = [
-  {icon:'😀', label:'Faces', emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','🥹','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾']},
+  {icon:'😀', label:'Faces', emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥴','🫩','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','🥹','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾']},
   {icon:'👋', label:'People & Gestures', emojis:['👋','🤚','🖐️','✋','🖖','🫱','🫲','🫳','🫴','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','🫵','👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','👀','👁️','👅','👄','🫦','🧠','🫀','🫁','🦷','🦴','👶','🧒','👦','👧','🧑','👱','👨','🧔','👩','🧓','👴','👵','🙍','🙎','🙅','🙆','💁','🙋','🧏','🙇','🤦','🤷','💆','💇','🚶','🧍','🧎','🏃','💃','🕺','🕴️','👯','🧖','🧗','🤸','🏌️','🏇','⛷️','🏂','🏋️','🤼','🤽','🤾','🤺','🏄','🚣','🏊','🚴','🚵','🤹']},
   {icon:'❤️', label:'Hearts & Symbols', emojis:['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','❤️‍🔥','❤️‍🩹','🩷','🩵','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','💌','💍','💐','🌹','💑','💏','♥️','♠️','♦️','♣️','🃏','🀄','🔴','🟠','🟡','🟢','🔵','🟣','🟤','⚫','⚪','🟥','🟧','🟨','🟩','🟦','🟪','🟫','⬛','⬜','◼️','◻️','▪️','▫️','🔶','🔷','🔸','🔹','🔺','🔻','💠','🔘','🏁','🚩','🏳️','🏴','🏳️‍🌈','🏳️‍⚧️','✝️','☪️','🕉️','☮️','☯️','✡️','🔯','☸️','⚛️','♾️','🆔','⚕️','✖️','➕','➖','➗','❓','❔','❕','❗','〰️','💲','⚜️','🔱','📛','🔰','⭕','✅','☑️','✔️','❌','❎','➰','➿','〽️','✳️','✴️','🔲','🔳','⏩','⏪','⏫','⏬','▶️','◀️','🔼','🔽','⏸️','⏯️','⏹️','⏺️','⏏️','🎦','🔅','🔆','📶','🛜','📳','📴']},
   {icon:'🌿', label:'Animals & Nature', emojis:['🐶','🐕','🦮','🐕‍🦺','🐩','🐺','🦊','🦝','🐱','🐈','🐈‍⬛','🦁','🐯','🐅','🐆','🐴','🫎','🫏','🐎','🦄','🦓','🦌','🦬','🐮','🐂','🐃','🐄','🐷','🐖','🐗','🐽','🐏','🐑','🐐','🐪','🐫','🦙','🦒','🐘','🦣','🦏','🦛','🐭','🐁','🐀','🐹','🐰','🐇','🐿️','🦫','🦔','🦇','🐻','🐻‍❄️','🐨','🐼','🦥','🦦','🦨','🦘','🦡','🐾','🦃','🐔','🐓','🐣','🐤','🐥','🐦','🐧','🕊️','🦅','🦆','🦢','🦉','🦤','🪶','🦩','🦚','🦜','🪽','🐦‍⬛','🪿','🐸','🐊','🐢','🦎','🐍','🐲','🐉','🦕','🦖','🐳','🐋','🐬','🦭','🐟','🐠','🐡','🦈','🐙','🐚','🪸','🐌','🦋','🐛','🐜','🐝','🪲','🐞','🦗','🪳','🕷️','🕸️','🦂','🦟','🪰','🪱','🦠','💐','🌸','💮','🪷','🏵️','🌹','🥀','🌺','🌻','🌼','🌷','🪻','🌱','🪴','🌲','🌳','🌴','🌵','🌾','🌿','☘️','🍀','🍁','🍂','🍃','🪹','🪺','🍄','🌰','🦀','🦞','🦐','🦑','🌍','🌎','🌏','🌕','🌖','🌗','🌘','🌑','🌒','🌓','🌔','🌙','🌚','🌛','🌜','☀️','🌝','🌞','⭐','🌟','🌠','🌌','☁️','⛅','⛈️','🌤️','🌥️','🌦️','🌧️','🌨️','🌩️','🌪️','🌫️','🌬️','🌈','☂️','☔','⚡','❄️','☃️','⛄','🔥','💧','🌊']},
@@ -775,6 +779,7 @@ const EMOJI_SHORTCODES = {
   'drooling_face':'🤤','sleeping':'😴','mask':'😷','face_with_thermometer':'🤒',
   'face_with_head_bandage':'🤕','nauseated_face':'🤢','sneezing_face':'🤧','hot_face':'🥵',
   'cold_face':'🥶','woozy_face':'🥴','dizzy_face':'😵','exploding_head':'🤯',
+  'face_with_bags_under_eyes':'🫩',
   'partying_face':'🥳','sunglasses':'😎','nerd_face':'🤓',
   'monocle_face':'🧐','confused':'😕','worried':'😟','slightly_frowning_face':'🙁',
   'frowning_face':'☹️','open_mouth':'😮','hushed':'😯','astonished':'😲','flushed':'😳',
@@ -19767,6 +19772,24 @@ function buildProfileView(tab) {
     // mounted so typing ":sob" suggests :sob: + the same picker
     // chip works in settings as in chat.
     if (tab === 'myprofile' && typeof setupEmojiAutocomplete === 'function') {
+      // Bio input is the same contenteditable widget as the chatbar — wire
+      // the rich-input shim so its `.value` getter returns the markdown
+      // source (used by save handlers + char count), then enable :emoji:
+      // autocomplete identical to chat.
+      try {
+        const bi = document.getElementById('bio-input');
+        if (bi) {
+          // Stash the source markdown the template stamped in, then
+          // let _initRichInput shim .value. Re-feeding the source via
+          // the shim converts :emoji: → <img> on mount (same UX as the
+          // chatbar when restoring a draft).
+          const src = (CU.bio || '');
+          _initRichInput(bi);
+          if (src) bi.value = src;
+          const cc = document.getElementById('bio-char-count');
+          if (cc) cc.textContent = String(300 - (bi.value || '').length);
+        }
+      } catch (_) {}
       try { setupEmojiAutocomplete('bio-input'); } catch (_) {}
     }
     return r;
@@ -19988,14 +20011,27 @@ function _buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- About Me -->
+            <!-- About Me — uses the same rich contenteditable as the
+                 chatbar so :emoji: autocomplete, emoji picker insert,
+                 paste-as-plain-text and the .value shim all work
+                 identically. Markdown vocabulary mirrors chat but
+                 the bio renderer strips block-level tokens (see
+                 parseBioMD). -->
             <div>
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">About Me</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">Markdown, links, <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">:emoji:</code> and <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">@username</code> mentions are all supported.</div>
-              <div style="position:relative;">
-                <textarea class="settings-input" id="bio-input" rows="4" maxlength="300" style="resize:none;padding-bottom:28px;" oninput="markSettingsDirty();updateProfilePreview();document.getElementById('bio-char-count').textContent=(300-this.value.length)">${escapeHTML(CU.bio||'')}</textarea>
-                <span id="bio-char-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:rgba(255,255,255,.25);">${300-(CU.bio||'').length}</span>
-                <button onclick="toggleEmojiPicker('bio-input')" class="emoji-insert-btn" style="position:absolute;bottom:8px;right:50px;" data-tip="Add emoji" type="button"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm-3.75-9c.69 0 1.25-.56 1.25-1.25S8.94 10.5 8.25 10.5 7 11.06 7 11.75 7.56 13 8.25 13zm7.5 0c.69 0 1.25-.56 1.25-1.25s-.56-1.25-1.25-1.25S14.5 11.06 14.5 11.75 15.06 13 15.75 13zM12 18a5 5 0 0 1-4.546-2.916.75.75 0 0 1 1.364-.628 3.5 3.5 0 0 0 6.364 0 .75.75 0 0 1 1.364.628A5 5 0 0 1 12 18z"/></svg></button>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">Same formatting as chat — <strong>**bold**</strong>, <em>*italic*</em>, <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">\`code\`</code>, links, <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">:emoji:</code> and <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">@username</code> mentions are all supported.</div>
+              <div class="chat-input-wrap bio-input-wrap" style="--ftz-bio-bg:rgba(255,255,255,.03);">
+                <div class="chat-input-outer">
+                  <div class="chat-input-row">
+                    <div id="bio-input" class="chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write something about yourself…" spellcheck="true" data-maxlen="300"
+                      oninput="_onBioInput(this)"
+                      onpaste="handlePaste(event,'bio-input')">${escapeHTML(CU.bio||'')}</div>
+                    <span id="bio-char-count" style="font-size:11px;color:rgba(255,255,255,.25);flex-shrink:0;">${300-(CU.bio||'').length}</span>
+                    <div class="chat-input-actions">
+                      <button class="cit-btn" onclick="toggleEmojiPicker('bio-input')" id="emoji-btn-bio" data-tip="Emoji" type="button"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false"></button>
+                    </div>
+                  </div>
+                </div>
               </div>
               <!-- Mention policy: who can @-tag me in their About Me.
                    Custom dropdown (.ftz-select) instead of a native
@@ -27504,6 +27540,23 @@ async function saveBio() {
   toast('Bio saved!','success');
 }
 
+// Bio input handler — mirrors onChatInput's role on the chatbar:
+// updates the char counter, marks settings dirty, and refreshes the
+// inline My Profile preview. Truncation at 300 chars is enforced
+// softly (we don't fight the caret; saveBio slices on submit).
+function _onBioInput(el) {
+  if (!el) return;
+  if (el.isContentEditable && !el._richInit) _initRichInput(el);
+  const len = (el.value || '').length;
+  const cc = document.getElementById('bio-char-count');
+  if (cc) {
+    cc.textContent = String(300 - len);
+    cc.style.color = len > 300 ? 'var(--red)' : (len > 280 ? '#f59e0b' : 'rgba(255,255,255,.25)');
+  }
+  try { markSettingsDirty(); } catch (_) {}
+  try { updateProfilePreview(); } catch (_) {}
+}
+
 // ════════════════════════════════════════════
 // CHANNEL CATEGORIES
 // ════════════════════════════════════════════
@@ -29029,51 +29082,109 @@ function _augmentShortcodes() {
 // authorUsername (optional) is the user whose About-Me this is — needed
 // for the mention-policy check (the mentioned user filters mentions
 // from the author, not the viewer).
+// Bio renderer. Uniformised with chat parseMD (same inline-formatting
+// vocabulary) but the block-level / chat-only features are stripped:
+//   ✗ @everyone / @here / @role / #room       (no bastion context)
+//   ✗ code blocks ``` … ```                   (oversized)
+//   ✗ quote blocks > … / >>> … <<<            (oversized)
+//   ✗ structured titles  /…/  //…//  ///…///  (oversized)
+//   ✗ dividers ---                            (layout-shifting)
+//   ✗ FTZ attachment / GIF / sticker tokens   (no embeds in bios)
+// Kept (mirrors chat exactly):
+//   ✓ links: [label](url) + bare URL auto-link
+//   ✓ @username mentions (real-user gated at click; mention-policy gated at render)
+//   ✓ :emoji: shortcodes (custom bastion emoji = Radiance-gated)
+//   ✓ bold ** / italic * / bold-italic *** / strike ~~ / inline code `
+//   ✓ spoiler ||x|| / highlight ==x== / small ~x~
+//   ✓ "quoted" → italic-muted span
 function parseBioMD(s, authorUsername) {
   if (!s) return '';
   let out = String(s);
   // Escape HTML first so user-supplied content can't inject markup.
   out = out.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+  // Protect inline-code spans so the inline-formatting regexes below
+  // don't mangle their contents (e.g. `**hi**` should stay literal).
+  const _slots = [];
+  out = out.replace(/`([^`\n]+)`/g, (_, t) => {
+    const h = '<code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:5px;font-family:\'Courier New\',monospace;font-size:12px;">'+t+'</code>';
+    _slots.push(h); return '\x00BIO'+(_slots.length-1)+'\x00';
+  });
+
   // [label](url) → anchor (do this before bare-URL pass so labels win)
   out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, label, url) => {
     const safe = url.replace(/"/g, '&quot;');
-    return `<a href="${safe}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${label}</a>`;
+    const h = `<a href="${safe}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${label}</a>`;
+    _slots.push(h); return '\x00BIO'+(_slots.length-1)+'\x00';
   });
   // Bare URLs → anchor with a shortened display label.
   out = out.replace(/(?<!["'>])(https?:\/\/[^\s<]+)/g, (m) => {
     const safe = m.replace(/"/g, '&quot;');
     const label = m.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40) + (m.length > 45 ? '…' : '');
-    return `<a href="${safe}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${label}</a>`;
+    const h = `<a href="${safe}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${label}</a>`;
+    _slots.push(h); return '\x00BIO'+(_slots.length-1)+'\x00';
   });
-  // @mentions — plain yellow link (no chip / no border) like a URL,
-  // clickable → opens the full Profile Card modal. The mention-policy
-  // gate (_bioMentionAllowed) decides whether to render: disallowed
-  // mentions get character-for-character hashtag masking (the @ +
-  // every char of the username turns into '#', preserving length so
-  // the layout stays stable).
+
+  // @mentions — yellow link, click opens the profile card. The
+  // mention-policy gate (_bioMentionAllowed) decides whether to
+  // render: disallowed mentions get character-for-character hashtag
+  // masking (the @ + every char of the username turns into '#',
+  // preserving length so the layout stays stable). @everyone, @here
+  // and role/channel mentions don't exist in bios — they fall through
+  // as literal text by virtue of not matching the username pattern.
   out = out.replace(/(^|[^A-Za-z0-9_])@([A-Za-z0-9_]{2,32})/g, (full, prefix, handle) => {
+    const low = handle.toLowerCase();
+    if (low === 'everyone' || low === 'here') return prefix + '@' + handle;
     if (!_bioMentionAllowed(authorUsername, handle)) {
-      // '@username' → '#' repeated (len + 1 for the @)
       return prefix + '#'.repeat(handle.length + 1);
     }
-    const safe = handle.toLowerCase().replace(/'/g, "\\'");
-    return prefix + `<a class="bio-mention" data-mention="${escapeHTML(handle.toLowerCase())}" href="#" onclick="event.preventDefault();event.stopPropagation();_openBioMention('${safe}')">@${escapeHTML(handle)}</a>`;
+    const safe = low.replace(/'/g, "\\'");
+    const h = `<a class="bio-mention" data-mention="${escapeHTML(low)}" href="#" onclick="event.preventDefault();event.stopPropagation();_openBioMention('${safe}')">@${escapeHTML(handle)}</a>`;
+    _slots.push(h); return prefix + '\x00BIO'+(_slots.length-1)+'\x00';
   });
+
   // :emoji_name: → inline emoji <img>. Custom bastion emojis are
   // Radiance-only when used in an About Me (matches the chat rule
   // where non-Radiance can only use bastion emojis inside that
   // bastion — About Me is a global surface so Radiance is required).
   out = out.replace(/:([a-zA-Z0-9_+-]{2,40}):/g, (m, name) => {
     const r = _bioEmojiHTML(name, authorUsername);
-    return r || m;
+    if (!r) return m;
+    _slots.push(r); return '\x00BIO'+(_slots.length-1)+'\x00';
   });
-  // **bold** and *italic*
-  out = out.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
-  out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
-  // `code`
-  out = out.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+  // Inline formatting — SAME order and patterns as parseMD layer 5.
+  out = out.replace(/\|\|(.+?)\|\|/g, (_, t) => {
+    const h = '<span class="msg-spoiler" tabindex="0" role="button" aria-label="Spoiler - click to reveal" onclick="this.classList.toggle(\'revealed\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">'+t+'</span>';
+    _slots.push(h); return '\x00BIO'+(_slots.length-1)+'\x00';
+  });
+  out = out.replace(/==(.+?)==/g, (_, t) => {
+    const h = '<span class="msg-highlight">'+t+'</span>';
+    _slots.push(h); return '\x00BIO'+(_slots.length-1)+'\x00';
+  });
+  // Small ~text~ — has to come BEFORE strike ~~ won't fire because
+  // the negative lookbehind/ahead require a single ~.
+  out = out.replace(/(?<!~)~(?!~)(.+?)(?<!~)~(?!~)/g, (_, t) => {
+    const h = '<span class="msg-small">'+t+'</span>';
+    _slots.push(h); return '\x00BIO'+(_slots.length-1)+'\x00';
+  });
+  out = out.replace(/~~(.+?)~~/g, '<s>$1</s>');
+  out = out.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  out = out.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  out = out.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // "quoted" → muted italic span (same as parseMD).
+  out = out.replace(/&quot;([^&]+?)&quot;/g, (_, t) => {
+    const h = '<span style="font-style:italic;color:rgba(255,255,255,.45);border-left:2px solid rgba(255,255,255,.1);padding-left:8px;">'+t+'</span>';
+    _slots.push(h); return '\x00BIO'+(_slots.length-1)+'\x00';
+  });
+
   // Line breaks
   out = out.replace(/\n/g, '<br>');
+
+  // Restore protected slots (multiple passes for nested placeholders)
+  for (let i = 0; i < 5; i++) {
+    out = out.replace(/\x00BIO(\d+)\x00/g, (_, idx) => _slots[parseInt(idx)] || '');
+  }
   return out;
 }
 

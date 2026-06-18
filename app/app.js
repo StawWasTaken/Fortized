@@ -20742,73 +20742,90 @@ function _buildProfileView(tab) {
 
   else if (tab === 'profile_theme') {
     const hasPlus = _hasRadiance(CU);
-    const pt = CU?.profileTheme || { color1: '#a855f7', color2: '#3b82f6' };
+    const pt = CU?.profileTheme || {};
+    // Schema: { mode:'pfp'|'banner'|'custom', color1, color2 }
+    // Legacy themes without `mode` are treated as 'custom'.
+    const mode = pt.mode || 'custom';
+    const c1 = pt.color1 || '#a855f7';
+    const c2 = pt.color2 || '#3b82f6';
+    const hasBanner = !!CU?.banner;
+    const eyeDropperSupported = (typeof window !== 'undefined') && ('EyeDropper' in window);
     const ptHero = `
       <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
         <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Profile Theme</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize your profile card gradient</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Pick a gradient automatically from your avatar or banner, or roll your own.</div>
       </div>`;
-    if (!hasPlus) {
-      main.innerHTML = `<div class="settings-panel">
-        ${ptHero}
-        <div style="background:rgba(255,255,255,.02);border:1.5px dashed rgba(254,248,61,.08);border-radius:18px;padding:40px;text-align:center;">
-          <div style="font-size:44px;margin-bottom:14px;">🔒</div>
-          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Radiance Required</div>
-          <div style="font-size:13.5px;color:rgba(255,255,255,.4);max-width:320px;margin:0 auto 22px;line-height:1.6;">Profile themes let you add a gradient stroke and custom colors around your profile card and avatar.</div>
-          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" style="background:#fef83d;color:var(--rail);border:none;border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:11px 24px;cursor:pointer;">Get Radiance</button>
-        </div>
-      </div>`;
-    } else {
-      const PRESET_THEMES = [
-        {name:'Purple Flow', c1:'#a855f7', c2:'#3b82f6'},
-        {name:'Sunset Glow', c1:'#f97316', c2:'#f0abfc'},
-        {name:'Ocean Breeze', c1:'#06b6d4', c2:'#0ea5e9'},
-        {name:'Forest Vibes', c1:'#10b981', c2:'#6366f1'},
-        {name:'Crimson Burst', c1:'#ef4444', c2:'#f97316'},
-        {name:'Midnight Dream', c1:'#1e293b', c2:'#64748b'},
-        {name:'Pink Paradise', c1:'#ec4899', c2:'#f0abfc'},
-        {name:'Green Pulse', c1:'#22c55e', c2:'#84cc16'},
-      ];
-      main.innerHTML = `<div class="settings-panel">
-        ${ptHero}
+    const PRESET_THEMES = [
+      {name:'Purple Flow', c1:'#a855f7', c2:'#3b82f6'},
+      {name:'Sunset Glow', c1:'#f97316', c2:'#f0abfc'},
+      {name:'Ocean Breeze', c1:'#06b6d4', c2:'#0ea5e9'},
+      {name:'Forest Vibes', c1:'#10b981', c2:'#6366f1'},
+      {name:'Crimson Burst', c1:'#ef4444', c2:'#f97316'},
+      {name:'Midnight Dream', c1:'#1e293b', c2:'#64748b'},
+      {name:'Pink Paradise', c1:'#ec4899', c2:'#f0abfc'},
+      {name:'Green Pulse', c1:'#22c55e', c2:'#84cc16'},
+    ];
+    const modePill = (id, label, sub, enabled) => `
+      <button class="pt-mode-pill ${mode===id?'is-active':''}" ${enabled?'':'disabled'} onclick="_selectProfileThemeMode('${id}')" style="flex:1;text-align:left;padding:14px 16px;border-radius:14px;cursor:${enabled?'pointer':'not-allowed'};border:1.5px solid ${mode===id?'var(--accent)':'rgba(255,255,255,.06)'};background:${mode===id?'rgba(255,249,62,.05)':'rgba(255,255,255,.02)'};opacity:${enabled?'1':'.45'};display:flex;flex-direction:column;align-items:flex-start;gap:4px;transition:all .15s;">
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;">${label}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.35;">${sub}</div>
+      </button>`;
+    const eyeBtn = (target) => eyeDropperSupported
+      ? `<button onclick="_eyedropTo('${target}')" title="Eyedropper" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;width:36px;height:36px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.65);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg></button>`
+      : `<button title="Eyedropper not supported in this browser" disabled style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.08);border-radius:8px;width:36px;height:36px;cursor:not-allowed;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.25);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg></button>`;
+    const customBlock = `
+      <div id="pt-custom-block" style="display:${mode==='custom'?'block':'none'};margin-top:18px;">
         <div class="settings-section-title">PRESET THEMES</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:28px;">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:24px;">
           ${PRESET_THEMES.map(t => `
-            <div onclick="applyPresetTheme('${t.c1}','${t.c2}')" class="preset-theme-swatch" style="border:2px solid ${pt.color1===t.c1&&pt.color2===t.c2?'var(--accent)':'rgba(255,255,255,.08)'};background:${pt.color1===t.c1&&pt.color2===t.c2?'rgba(255,249,62,.04)':'rgba(255,255,255,.01)'};" data-theme-c1="${t.c1}" data-theme-c2="${t.c2}">
+            <div onclick="applyPresetTheme('${t.c1}','${t.c2}')" class="preset-theme-swatch" style="border:2px solid ${c1===t.c1&&c2===t.c2?'var(--accent)':'rgba(255,255,255,.08)'};background:${c1===t.c1&&c2===t.c2?'rgba(255,249,62,.04)':'rgba(255,255,255,.01)'};">
               <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,${t.c1},${t.c2});flex-shrink:0;border:2px solid rgba(255,255,255,.1);"></div>
               <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:#fff;">${t.name}</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:1px;">${t.c1} → ${t.c2}</div></div>
             </div>
           `).join('')}
         </div>
-        <div class="settings-section-title">CUSTOM THEME</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:20px;">Or create your own gradient colors</div>
-        <!-- Color pickers -->
+        <div class="settings-section-title">CUSTOM COLOURS</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:16px;">Pick the two gradient stops yourself — or use the eyedropper to sample anything on screen.</div>
         <div class="settings-row">
           <div class="settings-row-label"><div class="srl-name">Color 1</div></div>
-          <div class="settings-row-content">
-            <input type="color" id="pt-color1" value="${pt.color1}" style="width:48px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;" oninput="previewProfileTheme()">
+          <div class="settings-row-content" style="display:flex;align-items:center;gap:8px;">
+            <input type="color" id="pt-color1" value="${c1}" style="width:48px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;" oninput="previewProfileTheme()">
+            ${eyeBtn('pt-color1')}
           </div>
         </div>
         <div class="settings-row">
           <div class="settings-row-label"><div class="srl-name">Color 2</div></div>
-          <div class="settings-row-content">
-            <input type="color" id="pt-color2" value="${pt.color2}" style="width:48px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;" oninput="previewProfileTheme()">
+          <div class="settings-row-content" style="display:flex;align-items:center;gap:8px;">
+            <input type="color" id="pt-color2" value="${c2}" style="width:48px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;" oninput="previewProfileTheme()">
+            ${eyeBtn('pt-color2')}
           </div>
-        </div>
-        <!-- Preview -->
-        <div style="margin-top:16px;">
-          <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:10px;">Preview</div>
-          <div id="pt-preview" style="display:inline-block;padding:3px;border-radius:50%;background:linear-gradient(135deg,${pt.color1},${pt.color2});">
-            <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:3px solid #18191c;">
-              ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;font-family:var(--font-display);font-weight:800;">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
-            </div>
-          </div>
-          <div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.35);">The profile card will have a gradient border using your chosen colors.</div>
         </div>
         <button class="settings-save-btn" onclick="saveProfileTheme()" style="margin-top:18px;">Save Theme</button>
-        <button class="settings-save-btn-ghost" onclick="CU.profileTheme=null;saveUser();buildProfileView('profile_theme')" style="margin-top:8px;margin-left:8px;">Reset to Default</button>
       </div>`;
-    }
+    const autoBlock = `
+      <div id="pt-auto-block" style="display:${mode!=='custom'?'block':'none'};margin-top:18px;">
+        <div class="settings-section-title">PREVIEW</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:14px;">We sample the dominant colour from your ${mode==='banner'?'banner':'avatar'} and build a gradient. Re-sample any time the source changes.</div>
+        <button class="settings-save-btn" onclick="_resampleProfileTheme()" style="margin-bottom:10px;">${pt.mode?'Re-sample &amp; Save':'Sample &amp; Save'}</button>
+        <div style="font-size:11.5px;color:rgba(255,255,255,.3);margin-top:4px;">The banner image itself stays untouched — only the card gradient updates.</div>
+      </div>`;
+    main.innerHTML = `<div class="settings-panel">
+      ${ptHero}
+      <div class="settings-section-title">THEME SOURCE</div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+        ${modePill('pfp','Auto from Avatar','We pick a gradient from your profile picture.', true)}
+        ${modePill('banner','Auto from Banner', hasPlus ? (hasBanner?'Sampled from your banner image.':'Set a banner first to use this.') : 'Banner uploads require Radiance.', hasPlus && hasBanner)}
+        ${modePill('custom','Custom','Pick the gradient stops yourself.', true)}
+      </div>
+      <div style="display:inline-block;padding:3px;border-radius:50%;background:linear-gradient(135deg,${c1},${c2});margin-top:24px;">
+        <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:3px solid #18191c;">
+          ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;font-family:var(--font-display);font-weight:800;">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
+        </div>
+      </div>
+      ${customBlock}
+      ${autoBlock}
+      <button class="settings-save-btn-ghost" onclick="CU.profileTheme=null;saveUser();buildProfileView('profile_theme')" style="margin-top:18px;">Reset to Default</button>
+    </div>`;
   }
 
   else if (tab === 'my_bots') {
@@ -21266,15 +21283,14 @@ async function updateBanner(e) {
   if (!file) return;
   if (file.size > 8*1024*1024) { toast('Max 8MB', 'error'); return; }
   const reader = new FileReader();
+  // Animated GIF banners: cropping rasterises to a single frame via canvas
+  // and kills the animation, so for image/gif we apply the data URL
+  // directly and skip the crop modal entirely.
+  const isAnimatedGif = file.type === 'image/gif';
   reader.onload = async ev => {
     const fileData = ev.target.result;
-    showCropModal(fileData, 16/5, async (cropped) => {
-      // QUEUE the banner change (mirrors the avatar flow): set CU.banner,
-      // persist via the dedicated ftz_banner_<name> key, save locally,
-      // mark the unsaved-changes bar. Supabase write + socket emit
-      // happen on Save Changes (saveAllSettings).
+    const applyBanner = async (finalBanner) => {
       _syncSettingsInputsToCU();
-      const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
       CU.banner = finalBanner;
       _persistBannerLocal(CU.username, finalBanner);
       // Auto-sample a card accent from the new banner so the rest of
@@ -21294,7 +21310,15 @@ async function updateBanner(e) {
       buildProfileView('myprofile');
       markSettingsDirty();
       toast('Banner set — click Save Changes to keep', 'info');
-    });
+    };
+    if (isAnimatedGif) {
+      await applyBanner(fileData);
+    } else {
+      showCropModal(fileData, 16/5, async (cropped) => {
+        const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
+        await applyBanner(finalBanner);
+      });
+    }
   };
   reader.readAsDataURL(file);
 }
@@ -46071,7 +46095,7 @@ async function saveProfileTheme() {
   const c1 = document.getElementById('pt-color1')?.value;
   const c2 = document.getElementById('pt-color2')?.value;
   if (!c1 || !c2) return;
-  CU.profileTheme = { color1: c1, color2: c2 };
+  CU.profileTheme = { mode: 'custom', color1: c1, color2: c2 };
   await saveUser();
   clearSettingsDirty();
   toast('🎨 Profile theme saved!', 'success');
@@ -46084,6 +46108,88 @@ function applyPresetTheme(c1, c2) {
   if (col2) col2.value = c2;
   previewProfileTheme();
   saveProfileTheme();
+}
+
+// ── Profile theme mode toggle (Auto from PFP / Auto from Banner /
+// Custom). Persists the chosen mode immediately and, for auto modes,
+// resamples the source image on the spot. The custom block + auto
+// block visibility is driven off `CU.profileTheme.mode` so a single
+// `buildProfileView('profile_theme')` repaint is enough — no manual
+// DOM toggling. ──
+async function _selectProfileThemeMode(mode) {
+  if (!CU) return;
+  if (!CU.profileTheme) CU.profileTheme = {};
+  CU.profileTheme.mode = mode;
+  if (mode === 'pfp' || mode === 'banner') {
+    await _resampleProfileTheme({ silent: true });
+  } else {
+    await saveUser();
+  }
+  buildProfileView('profile_theme');
+}
+
+// Sample dominant colour from the chosen source image and turn it
+// into a two-stop gradient. The second stop is a hue-rotated variant
+// of the first so the gradient still reads, even from a flat source.
+async function _resampleProfileTheme(opts) {
+  opts = opts || {};
+  if (!CU) return;
+  const mode = CU.profileTheme?.mode || 'pfp';
+  const src = mode === 'banner' ? CU.banner : CU.pfp;
+  if (!src) { if (!opts.silent) toast('No source image to sample yet', 'error'); return; }
+  let base = null;
+  try { base = await _fppSampleImageColor(src); } catch { base = null; }
+  if (!base) { if (!opts.silent) toast('Couldn\'t read the image colour', 'error'); return; }
+  const pair = _ptHexComplement(base);
+  CU.profileTheme = { mode, color1: base, color2: pair };
+  await saveUser();
+  clearSettingsDirty();
+  if (!opts.silent) toast('🎨 Profile theme sampled!', 'success');
+}
+
+// Rotate hue +35° in HSL space so the second gradient stop is related
+// to but distinct from the sampled base colour.
+function _ptHexComplement(hex) {
+  const h = (hex || '').replace('#','');
+  if (h.length !== 6) return hex;
+  const r = parseInt(h.slice(0,2),16)/255, g = parseInt(h.slice(2,4),16)/255, b = parseInt(h.slice(4,6),16)/255;
+  const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+  let hh = 0; const l = (mx+mn)/2; const d = mx-mn;
+  const s = d === 0 ? 0 : d/(1-Math.abs(2*l-1));
+  if (d !== 0) {
+    if (mx === r) hh = ((g-b)/d) % 6;
+    else if (mx === g) hh = (b-r)/d + 2;
+    else hh = (r-g)/d + 4;
+    hh *= 60; if (hh < 0) hh += 360;
+  }
+  const newH = (hh + 35) % 360;
+  // HSL -> RGB
+  const c = (1 - Math.abs(2*l - 1)) * s;
+  const x = c * (1 - Math.abs((newH/60) % 2 - 1));
+  const m = l - c/2;
+  let r2=0,g2=0,b2=0;
+  if (newH < 60)      { r2=c; g2=x; }
+  else if (newH<120)  { r2=x; g2=c; }
+  else if (newH<180)  { g2=c; b2=x; }
+  else if (newH<240)  { g2=x; b2=c; }
+  else if (newH<300)  { r2=x; b2=c; }
+  else                { r2=c; b2=x; }
+  const toHex = v => Math.round((v+m)*255).toString(16).padStart(2,'0');
+  return '#' + toHex(r2) + toHex(g2) + toHex(b2);
+}
+
+// EyeDropper API wrapper. Writes the picked colour into the target
+// <input type="color"> and fires the preview hook. Chromium-only;
+// guarded at render time by the `eyeDropperSupported` flag.
+async function _eyedropTo(targetId) {
+  if (!('EyeDropper' in window)) { toast('Your browser doesn\'t support the eyedropper', 'error'); return; }
+  try {
+    const ed = new window.EyeDropper();
+    const res = await ed.open();
+    const hex = (res && res.sRGBHex) || '';
+    const el = document.getElementById(targetId);
+    if (el && hex) { el.value = hex; previewProfileTheme(); }
+  } catch { /* user cancelled — silent */ }
 }
 
 

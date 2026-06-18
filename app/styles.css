@@ -1004,6 +1004,9 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .msg-reply-ref .mrr-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
 .msg-reply-ref strong{color:#fff;font-weight:600;flex-shrink:0;}
 .msg-reply-ref .mrr-preview{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);min-width:0;}
+.msg-reply-ref .mrr-attach-ico{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.55);margin-left:2px;}
+.msg-reply-ref:hover .mrr-attach-ico{color:rgba(255,255,255,.85);}
+.msg-reply-ref .mrr-attach-ico svg{display:block;}
 
 /* Source-message highlight when the user is actively replying to it.
    Subtle yellow stripe + warm tint so it's obviously the target without

@@ -20757,91 +20757,10 @@ function _buildProfileView(tab) {
   }
 
   else if (tab === 'profile_theme') {
-    const hasPlus = _hasRadiance(CU);
-    const pt = CU?.profileTheme || {};
-    // Schema: { mode:'pfp'|'banner'|'custom', color1, color2 }
-    // Legacy themes without `mode` are treated as 'custom'.
-    const mode = pt.mode || 'custom';
-    const c1 = pt.color1 || '#a855f7';
-    const c2 = pt.color2 || '#3b82f6';
-    const hasBanner = !!CU?.banner;
-    const eyeDropperSupported = (typeof window !== 'undefined') && ('EyeDropper' in window);
-    const ptHero = `
-      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Profile Theme</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Pick a gradient automatically from your avatar or banner, or roll your own.</div>
-      </div>`;
-    const PRESET_THEMES = [
-      {name:'Purple Flow', c1:'#a855f7', c2:'#3b82f6'},
-      {name:'Sunset Glow', c1:'#f97316', c2:'#f0abfc'},
-      {name:'Ocean Breeze', c1:'#06b6d4', c2:'#0ea5e9'},
-      {name:'Forest Vibes', c1:'#10b981', c2:'#6366f1'},
-      {name:'Crimson Burst', c1:'#ef4444', c2:'#f97316'},
-      {name:'Midnight Dream', c1:'#1e293b', c2:'#64748b'},
-      {name:'Pink Paradise', c1:'#ec4899', c2:'#f0abfc'},
-      {name:'Green Pulse', c1:'#22c55e', c2:'#84cc16'},
-    ];
-    const modePill = (id, label, sub, enabled) => `
-      <button class="pt-mode-pill ${mode===id?'is-active':''}" ${enabled?'':'disabled'} onclick="_selectProfileThemeMode('${id}')" style="flex:1;text-align:left;padding:14px 16px;border-radius:14px;cursor:${enabled?'pointer':'not-allowed'};border:1.5px solid ${mode===id?'var(--accent)':'rgba(255,255,255,.06)'};background:${mode===id?'rgba(255,249,62,.05)':'rgba(255,255,255,.02)'};opacity:${enabled?'1':'.45'};display:flex;flex-direction:column;align-items:flex-start;gap:4px;transition:all .15s;">
-        <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;">${label}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.35;">${sub}</div>
-      </button>`;
-    const eyeBtn = (target) => eyeDropperSupported
-      ? `<button onclick="_eyedropTo('${target}')" title="Eyedropper" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;width:36px;height:36px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.65);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg></button>`
-      : `<button title="Eyedropper not supported in this browser" disabled style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.08);border-radius:8px;width:36px;height:36px;cursor:not-allowed;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.25);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg></button>`;
-    const customBlock = `
-      <div id="pt-custom-block" style="display:${mode==='custom'?'block':'none'};margin-top:18px;">
-        <div class="settings-section-title">PRESET THEMES</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:24px;">
-          ${PRESET_THEMES.map(t => `
-            <div onclick="applyPresetTheme('${t.c1}','${t.c2}')" class="preset-theme-swatch" style="border:2px solid ${c1===t.c1&&c2===t.c2?'var(--accent)':'rgba(255,255,255,.08)'};background:${c1===t.c1&&c2===t.c2?'rgba(255,249,62,.04)':'rgba(255,255,255,.01)'};">
-              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,${t.c1},${t.c2});flex-shrink:0;border:2px solid rgba(255,255,255,.1);"></div>
-              <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:#fff;">${t.name}</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:1px;">${t.c1} → ${t.c2}</div></div>
-            </div>
-          `).join('')}
-        </div>
-        <div class="settings-section-title">CUSTOM COLOURS</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:16px;">Pick the two gradient stops yourself — or use the eyedropper to sample anything on screen.</div>
-        <div class="settings-row">
-          <div class="settings-row-label"><div class="srl-name">Color 1</div></div>
-          <div class="settings-row-content" style="display:flex;align-items:center;gap:8px;">
-            <input type="color" id="pt-color1" value="${c1}" style="width:48px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;" oninput="previewProfileTheme()">
-            ${eyeBtn('pt-color1')}
-          </div>
-        </div>
-        <div class="settings-row">
-          <div class="settings-row-label"><div class="srl-name">Color 2</div></div>
-          <div class="settings-row-content" style="display:flex;align-items:center;gap:8px;">
-            <input type="color" id="pt-color2" value="${c2}" style="width:48px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;" oninput="previewProfileTheme()">
-            ${eyeBtn('pt-color2')}
-          </div>
-        </div>
-        <button class="settings-save-btn" onclick="saveProfileTheme()" style="margin-top:18px;">Save Theme</button>
-      </div>`;
-    const autoBlock = `
-      <div id="pt-auto-block" style="display:${mode!=='custom'?'block':'none'};margin-top:18px;">
-        <div class="settings-section-title">PREVIEW</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:14px;">We sample the dominant colour from your ${mode==='banner'?'banner':'avatar'} and build a gradient. Re-sample any time the source changes.</div>
-        <button class="settings-save-btn" onclick="_resampleProfileTheme()" style="margin-bottom:10px;">${pt.mode?'Re-sample &amp; Save':'Sample &amp; Save'}</button>
-        <div style="font-size:11.5px;color:rgba(255,255,255,.3);margin-top:4px;">The banner image itself stays untouched — only the card gradient updates.</div>
-      </div>`;
-    main.innerHTML = `<div class="settings-panel">
-      ${ptHero}
-      <div class="settings-section-title">THEME SOURCE</div>
-      <div style="display:flex;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
-        ${modePill('pfp','Auto from Avatar','We pick a gradient from your profile picture.', true)}
-        ${modePill('banner','Auto from Banner', hasPlus ? (hasBanner?'Sampled from your banner image.':'Set a banner first to use this.') : 'Banner uploads require Radiance.', hasPlus && hasBanner)}
-        ${modePill('custom','Custom','Pick the gradient stops yourself.', true)}
-      </div>
-      <div style="display:inline-block;padding:3px;border-radius:50%;background:linear-gradient(135deg,${c1},${c2});margin-top:24px;">
-        <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:3px solid #18191c;">
-          ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;font-family:var(--font-display);font-weight:800;">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
-        </div>
-      </div>
-      ${customBlock}
-      ${autoBlock}
-      <button class="settings-save-btn-ghost" onclick="CU.profileTheme=null;saveUser();buildProfileView('profile_theme')" style="margin-top:18px;">Reset to Default</button>
-    </div>`;
+    // Tab removed — the Profile Theme widget lives inline on My Profile
+    // now (per brief: no duplicate pickers, no separate tab). Bounce
+    // callers there so any deep link or legacy route still works.
+    return buildProfileView('myprofile');
   }
 
   else if (tab === 'my_bots') {
@@ -29333,16 +29252,32 @@ function _ftzSelectPick(id, value, label, onChangeExpr) {
 // card opens cleanly without stacking. CRITICALLY does NOT touch the
 // settings preview (.fpp--settings) — that's the user's own card sitting
 // inside Settings and shouldn't disappear when they test mentions.
-function _openBioMention(username) {
+async function _openBioMention(username) {
   if (!username) return;
+  // Real-user check. Bio mentions look like links so users assume the
+  // click goes somewhere — without this, fake handles open a stub
+  // profile (viewUserProfile constructs one from {username}) and that
+  // looks broken. Hit the user cache first; on miss, ask Supabase via
+  // FortizedSocial.getUserByName so we know whether the account exists
+  // before opening anything.
+  const lower = String(username).toLowerCase();
+  let exists = false;
+  try {
+    const cached = (typeof cachedProfile === 'function') ? cachedProfile(lower) : null;
+    if (cached && cached.username) exists = true;
+  } catch (_) {}
+  if (!exists) {
+    try {
+      const u = await FortizedSocial.getUserByName(lower, { noCache: false });
+      if (u && u.username) exists = true;
+    } catch (_) {}
+  }
+  if (!exists) { toast('That account doesn\'t exist on Fortized', 'error'); return; }
   try {
     document.querySelectorAll('.fpp--mini, .fpp--own, .fpp--dm, .fpp-card-modal, #fpp-menu, #fpp-invite-sub, #fpp-status-submenu, #fpp-accounts-submenu').forEach(el => el.remove());
   } catch (_) {}
   try { closeModal?.('modal-user'); } catch (_) {}
-  // Defer one tick so the closeModal teardown doesn't race the new open.
-  setTimeout(() => {
-    try { viewUserProfile(username); } catch (_) {}
-  }, 30);
+  setTimeout(() => { try { viewUserProfile(username); } catch (_) {} }, 30);
 }
 
 function parseMD(s) {
@@ -29835,16 +29770,26 @@ function parseMD(s) {
         }
       }
     }
-    // Self-mention: paint with the highest role colour the current user
-    // holds in this bastion. Plain user mention stays blue.
+    // User mention rules:
+    //  - Only render as a coloured mention if the target is actually
+    //    present in the current context (bastion members / GC members
+    //    / DM partner). Otherwise leave as plain text — no link, no
+    //    chip — so typing @some_random_name in chat doesn't open a
+    //    bogus profile.
+    //  - Default colour: brand yellow.
+    //  - Inside a bastion, if the mentioned user holds any role, the
+    //    highest-hierarchy role colour wins (same order as
+    //    getMsgRoleColor).
+    if (!_isMentionableHere(name)) return match;
     const isSelf = CU?.username && name.toLowerCase() === String(CU.username).toLowerCase();
-    let selfStyle = '';
-    if (isSelf) {
-      const selfColor = getMsgRoleColor(CU.username, 'ch') || 'var(--accent)';
-      selfStyle = ' style="background:'+selfColor+'22;color:'+selfColor+';"';
+    let mentionColour = '#fff93e';
+    if (curBastion !== null) {
+      const roleColour = getMsgRoleColor(name, 'ch');
+      if (roleColour) mentionColour = roleColour;
     }
+    const styleAttr = ' style="background:'+mentionColour+'22;color:'+mentionColour+';"';
     const cls = isSelf ? 'mention mention-user mention-self' : 'mention mention-user';
-    h = '<span class="'+cls+'"'+selfStyle+' onmouseenter="_showUserMentionPreview(event,this,\''+escapeHTML(name)+'\')" onmouseleave="_hidePreview()" onclick="_scrollToUserMsg(\''+escapeHTML(name)+'\')">@'+escapeHTML(name)+'</span>';
+    h = '<span class="'+cls+'"'+styleAttr+' onmouseenter="_showUserMentionPreview(event,this,\''+escapeHTML(name)+'\')" onmouseleave="_hidePreview()" onclick="_scrollToUserMsg(\''+escapeHTML(name)+'\')">@'+escapeHTML(name)+'</span>';
     _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
   });
   // #room mentions — only match standalone #word, not inside placeholders
@@ -29904,6 +29849,37 @@ function _copyCodeBlock(id) {
     const btn = el.querySelector('.code-copy');
     if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500); }
   }).catch(() => {});
+}
+
+// Membership check for the chat @mention rule. Returns true if `name`
+// is reachable in the surface we're currently rendering — i.e. they
+// can actually see the mention go through:
+//   - Bastion channel: name is in b.members
+//   - GC: name is in gc.members
+//   - DM: name is the partner or yourself
+//   - Anywhere else / no context: permissive (forum/announcement/
+//     bio renderers have their own gates)
+function _isMentionableHere(name) {
+  if (!name) return false;
+  const n = String(name).toLowerCase();
+  const me = String(CU?.username || '').toLowerCase();
+  if (n === me) return true;
+  if (curBastion !== null) {
+    const b = CU?.bastions?.[curBastion];
+    if (!b) return true;
+    const members = (b.members || []).map(s => String(s).toLowerCase());
+    return members.includes(n);
+  }
+  if (curGC) {
+    const gc = (CU?.groupChats || []).find(g => g && String(g.id) === String(curGC));
+    if (!gc) return true;
+    const members = (gc.members || []).map(s => String(s).toLowerCase());
+    return members.includes(n);
+  }
+  if (curDM) {
+    return n === String(curDM).toLowerCase();
+  }
+  return true;
 }
 
 function _showMentionBadge(el, text) {
@@ -46163,14 +46139,10 @@ async function _selectProfileThemeMode(mode) {
   _repaintActiveProfileView();
 }
 
-// Re-render whichever profile view is currently shown — the dedicated
-// profile_theme settings tab or the inline widget on My Profile — so
-// the mode pills + swatches reflect the latest state without forcing
-// the caller to know which surface they're on.
+// The profile-theme widget lives inline on My Profile; the dedicated
+// tab was removed. Always repaint myprofile.
 function _repaintActiveProfileView() {
-  const inSettingsTab = !!document.querySelector('.pt-mode-pill') && !!document.getElementById('pt-auto-block');
-  if (inSettingsTab) buildProfileView('profile_theme');
-  else buildProfileView('myprofile');
+  buildProfileView('myprofile');
 }
 
 // Sample dominant colour from the chosen source image and turn it
@@ -46268,10 +46240,10 @@ function _hslToRgb(h, s, l) {
 // banner + custom theme in one go. Names lean playful, never
 // corporate.
 const _FTZ_STARTER_PACKS = [
-  { id:'sakura-server',   name:'Sakura Server',     url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftSakuraTree.gif', colour:'#ff94cc' },
+  { id:'sakura-garden',   name:'Sakura Garden',     url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftSakuraTree.gif', colour:'#ff94cc' },
   { id:'snowed-in',       name:'Snowed In',         url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftWinter1.gif',    colour:'#c4cdd5' },
   { id:'frost-loop',      name:'Frost Loop',        url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftWinter2.gif',    colour:'#c4cdd5' },
-  { id:'bonaparte',       name:'Bonaparte Brainrot',url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerNapoEdit.gif',            colour:'#002451' },
+  { id:'eagle-hour',      name:'Eagle Hour',        url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerNapoEdit.gif',            colour:'#002451' },
   { id:'hayfever',        name:'Hay Fever Hours',   url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerSummer.gif',              colour:'#559367' },
   { id:'cherry-static',   name:'Cherry Static',     url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerWhite.gif',               colour:'#e3e3e3' },
 ];

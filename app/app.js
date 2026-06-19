@@ -20235,7 +20235,7 @@ function _buildProfileView(tab) {
                   <div class="fpp-card fpp-card--about" id="preview-about-card" style="${(CU.bio||CU.joinedAt||CU.createdAt)?'':'display:none;'}">
                     <div id="preview-bio-section" style="${CU.bio?'':'display:none;'}">
                       <div class="fpp-card__title">About Me</div>
-                      <div class="fpp-card__body" id="preview-bio-body">${CU.bio ? (parseBioMD(CU.bio.slice(0,300))+(CU.bio.length>300?'…':'')) : ''}</div>
+                      <div class="fpp-card__body" id="preview-bio-body">${CU.bio ? (parseBioMD(CU.bio.slice(0,300), CU.username)+(CU.bio.length>300?'…':'')) : ''}</div>
                     </div>
                     ${(CU.joinedAt||CU.createdAt) ? `
                       ${CU.bio ? '<div class="fpp-card__sep"></div>' : ''}
@@ -20903,6 +20903,38 @@ function _buildProfileView(tab) {
             <span>80%</span><span>100%</span><span>120%</span>
           </div>`;
         })()}
+      </div>
+
+      <!-- Cursor — PC only. Hidden on touch / coarse-pointer devices
+           via .ftz-cursor-section-pc-only because a custom CSS cursor
+           on a phone or tablet does nothing visible and would just
+           burn data on the PNG fetch. Free for everyone, no Onyx,
+           no Radiance — per brief. -->
+      <div class="ftz-cursor-section-pc-only">
+        <div class="settings-section-title" style="margin-top:36px;">CURSOR</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:14px;">Pick which hand follows your pointer. PC only — phones and tablets ignore custom cursors.</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${(() => {
+            const currentCursor = localStorage.getItem('ftz_cursor') || 'knight';
+            const cursors = [
+              { id:'knight',     name:'Fortized Knight', desc:'The classic gauntlet of our Knight.',                                          preview:_FTZ_CURSORS.knight.normal },
+              { id:'fortizian',  name:'Fortizan',         desc:'A plain Fortizan hand — every Fortizan is pure white, after all.',           preview:_FTZ_CURSORS.fortizian.normal },
+            ];
+            return cursors.map(c => `
+              <div onclick="_applyFortizedCursor('${c.id}')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid ${currentCursor===c.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentCursor===c.id?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">
+                <div style="width:16px;height:16px;border-radius:50%;border:2px solid ${currentCursor===c.id?'var(--accent)':'rgba(255,255,255,.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  ${currentCursor===c.id?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);"></div>':''}
+                </div>
+                <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <img src="${c.preview}" alt="" style="width:24px;height:24px;object-fit:contain;" onerror="this.style.display='none'">
+                </div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:14px;font-weight:700;color:#fff;">${c.name}</div>
+                  <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">${c.desc}</div>
+                </div>
+              </div>`).join('');
+          })()}
+        </div>
       </div>
     </div>`;
   }
@@ -29523,8 +29555,16 @@ async function _openBioMention(username) {
     } catch (_) {}
   }
   if (!exists) { toast('That account doesn\'t exist on Fortized', 'error'); return; }
+  // Close stacking surfaces ONLY. We want the new profile card to
+  // REPLACE the old one (no card-on-top-of-card), so the mini /
+  // own popovers, any open profile-card modal, and the userbar
+  // sub-menus all go. The DM right-side panel (.fpp--dm) is a
+  // permanent layout column, not a card — leaving the DM open
+  // is the correct behaviour. Same for small modals like
+  // custom-status / avatar / banner / decoration pickers, which
+  // weren't in this list to begin with.
   try {
-    document.querySelectorAll('.fpp--mini, .fpp--own, .fpp--dm, .fpp-card-modal, #fpp-menu, #fpp-invite-sub, #fpp-status-submenu, #fpp-accounts-submenu').forEach(el => el.remove());
+    document.querySelectorAll('.fpp--mini, .fpp--own, .fpp-card-modal, #fpp-menu, #fpp-invite-sub, #fpp-status-submenu, #fpp-accounts-submenu').forEach(el => el.remove());
   } catch (_) {}
   try { closeModal?.('modal-user'); } catch (_) {}
   setTimeout(() => { try { viewUserProfile(username); } catch (_) {} }, 30);
@@ -46190,6 +46230,47 @@ function _appearanceKey() {
   const u = (typeof CU !== 'undefined' && CU?.username) || localStorage.getItem('ftz_current') || localStorage.getItem('fortized_current_user') || '';
   return u ? 'ftz_appearance_' + u : 'ftz_appearance';
 }
+
+// ─── Custom cursors (Knight + Fortizan, PC-only) ────────────────
+// Two cosmetic cursor sets, free for everyone. Each set has a
+// "normal" pointer and a "clickable" variant the browser swaps in
+// over interactive elements via the CSS rule on .ftz-cursor-<id>.
+// The choice persists per-device in localStorage (cosmetic, not
+// account-bound — feels weirder to roam across devices than the
+// app theme does). _applyFortizedCursor toggles the class on
+// <html> and writes the key; CSS does the rest. Touch / coarse-
+// pointer devices get the device default (the @media block in
+// styles.css gates the cursor rules so phones / tablets aren't
+// affected). PNG URLs live in _FTZ_CURSORS for the picker preview.
+const _FTZ_CURSORS = {
+  knight:    {
+    normal:    'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor1.png',
+    clickable: 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor2.png',
+  },
+  fortizian: {
+    normal:    'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor1.png',
+    clickable: 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2.png',
+  },
+};
+function _applyFortizedCursor(id) {
+  if (!_FTZ_CURSORS[id]) id = 'knight';
+  try { localStorage.setItem('ftz_cursor', id); } catch (_) {}
+  const html = document.documentElement;
+  Object.keys(_FTZ_CURSORS).forEach(k => html.classList.remove('ftz-cursor-' + k));
+  html.classList.add('ftz-cursor-' + id);
+  // Re-render the appearance tab if it's open so the radio button
+  // reflects the new pick without a full reload.
+  if (document.querySelector('.ftz-cursor-section-pc-only')) {
+    try { buildProfileView('appearance'); } catch (_) {}
+  }
+}
+// Apply on boot so the cursor is set before the user sees the app.
+(() => {
+  try {
+    const saved = localStorage.getItem('ftz_cursor') || 'knight';
+    if (_FTZ_CURSORS[saved]) document.documentElement.classList.add('ftz-cursor-' + saved);
+  } catch (_) {}
+})();
 function _darkenHex(hex, pct) {
   // Darken a hex color by a percentage (0-1). E.g. 0.188 = 18.8% darker
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
@@ -46736,9 +46817,9 @@ function _openColourPopover(anchorEl, hiddenInputId) {
       <div class="pt-pop-hex-row">
         <span class="pt-pop-hex-prefix">#</span>
         <input id="pt-pop-hex" class="pt-pop-hex-input" type="text" maxlength="6" value="${startHex.slice(1)}" spellcheck="false" autocomplete="off">
-        ${eyeOk ? `<button class="pt-pop-icon-btn" id="pt-pop-eye" title="Eyedropper — sample any pixel on screen" type="button" aria-label="Eyedropper">
+        <button class="pt-pop-icon-btn${eyeOk ? '' : ' pt-pop-icon-btn--soft-disabled'}" id="pt-pop-eye" title="${eyeOk ? 'Eyedropper — sample any pixel on screen' : 'Eyedropper unsupported in this browser — try Chrome or Edge'}" type="button" aria-label="Eyedropper">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
-        </button>` : ''}
+        </button>
       </div>
       <div class="pt-pop-presets">
         ${PRESETS.map(c => `<button type="button" class="pt-pop-preset" data-c="${c}" style="background:${c};" aria-label="Preset ${c}"></button>`).join('')}
@@ -46852,9 +46933,25 @@ function _openColourPopover(anchorEl, hiddenInputId) {
     refresh();
   }));
 
-  // Eyedropper.
+  // Eyedropper. If the browser doesn't ship the EyeDropper API
+  // (Firefox / Safari at the time of writing), we still show the
+  // button but toast a fallback message — the user asked us to
+  // make sure "there's a way" to open it from settings; silently
+  // hiding the button when unsupported was the wrong choice
+  // because it gave no signal at all.
   const eyeBtn = pop.querySelector('#pt-pop-eye');
   if (eyeBtn) eyeBtn.addEventListener('click', async () => {
+    if (typeof window.EyeDropper !== 'function') {
+      try { toast?.('Eyedropper not supported in this browser — try Chrome or Edge', 'error'); } catch (_) {}
+      return;
+    }
+    // Suspend the outside-close listener while the eyedropper
+    // overlay is up. ed.open() awaits a click on the system
+    // overlay, but that click also bubbles to our document-level
+    // mousedown handler and tore the picker down before the
+    // sample was applied — leaving the picker visually closed
+    // and the user thinking nothing happened.
+    pop.dataset.eyedropping = '1';
     try {
       const ed = new window.EyeDropper();
       const res = await ed.open();
@@ -46864,12 +46961,22 @@ function _openColourPopover(anchorEl, hiddenInputId) {
         state.h = h.h; state.s = h.s; state.v = h.v;
         refresh();
       }
-    } catch {}
+    } catch (_) {
+      // User cancelled or unsupported — silent.
+    } finally {
+      delete pop.dataset.eyedropping;
+    }
   });
 
   // Click-outside dismiss.
   setTimeout(() => {
     document.addEventListener('mousedown', function close(ev) {
+      // Eyedropper guard — see above. While the EyeDropper system
+      // overlay is up, the next click is on its surface, not the
+      // picker; without this skip we'd tear the picker down
+      // mid-sample and the colour update would land on an
+      // orphan DOM.
+      if (pop.dataset.eyedropping) return;
       if (!pop.contains(ev.target) && ev.target !== anchorEl) {
         pop.remove();
         document.removeEventListener('mousedown', close, true);

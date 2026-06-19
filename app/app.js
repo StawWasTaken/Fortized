@@ -20917,7 +20917,7 @@ function _buildProfileView(tab) {
           ${(() => {
             const currentCursor = localStorage.getItem('ftz_cursor') || 'knight';
             const cursors = [
-              { id:'knight',     name:'Fortized Knight', desc:"Eh. Just a gauntlet. Bit dented, smells faintly of metal polish. The Knight stopped caring what it looked like centuries ago.", preview:_FTZ_CURSORS.knight.normal },
+              { id:'knight',     name:'Fortized Knight', desc:"Your gauntlet. Royal issue, mildly scratched, technically priceless. You wear it well, even if half the realm forgets the Knights are the ones holding everything together.", preview:_FTZ_CURSORS.knight.normal },
               { id:'fortizian',  name:'Fortizan',         desc:"Some guy's hand. Pale, obviously, everyone here is. Doesn't even remember which side of town it's from anymore. Just kind of... vibing.", preview:_FTZ_CURSORS.fortizian.normal },
             ];
             return cursors.map(c => `

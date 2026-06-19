@@ -20917,7 +20917,7 @@ function _buildProfileView(tab) {
           ${(() => {
             const currentCursor = localStorage.getItem('ftz_cursor') || 'knight';
             const cursors = [
-              { id:'knight',     name:'Fortized Knight', desc:"Your gauntlet. Royal issue, mildly scratched, technically priceless. You wear it well, even if half the realm forgets the Knights are the ones holding everything together.", preview:_FTZ_CURSORS.knight.normal },
+              { id:'knight',     name:'Fortized Knight', desc:"Your Royal gauntlet. Forged on the third Tuesday of the harvest moon, by a smith whose name nobody bothered writing down. Weighs approximately the same as four loaves of bread, polished to exactly 62% reflectivity (the legal minimum is 60), and currently insured for a sum that would buy roughly seventeen modest horses, give or take a hoof. Definitely the most important hand in the realm. Probably.", preview:_FTZ_CURSORS.knight.normal },
               { id:'fortizian',  name:'Fortizan',         desc:"Some guy's hand. Pale, obviously, everyone here is. Doesn't even remember which side of town it's from anymore. Just kind of... vibing.", preview:_FTZ_CURSORS.fortizian.normal },
             ];
             return cursors.map(c => `

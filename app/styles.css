@@ -1028,15 +1028,103 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .pt-starter-dot{position:absolute;top:8px;right:8px;width:14px;height:14px;border-radius:50%;border:2px solid rgba(0,0,0,.55);box-shadow:0 0 0 1px rgba(255,255,255,.15);}
 
 /* Colour popover */
+/* Discord-style colour picker (see _openColourPopover). Dark
+   Fortized panel — never white — with the brand yellow only on
+   focus rings. Selection cursors on the square and the hue slider
+   are stroked white so they stay readable against any hue. */
 .pt-colour-pop{font-family:var(--font-ui);}
-.pt-pop-card{background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;box-shadow:0 14px 40px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.4);min-width:268px;}
-.pt-pop-row{display:flex;align-items:center;gap:8px;}
-.pt-pop-swatch{width:38px;height:38px;border-radius:10px;border:1.5px solid rgba(255,255,255,.18);flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,.5) inset;}
-.pt-pop-row #pt-pop-hex{flex:1;min-width:0;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13px;padding:8px 10px;outline:none;text-transform:lowercase;letter-spacing:.04em;}
-.pt-pop-row #pt-pop-hex:focus{border-color:rgba(255,249,62,.35);}
-.pt-pop-icon-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;}
-.pt-pop-icon-btn:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.25);color:#fff93e;}
-.pt-pop-presets{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px;}
+.pt-pop-card{background:linear-gradient(rgba(255,255,255,.03),rgba(255,255,255,.03)),var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.4);width:268px;}
+.pt-pop-card--discord{ display:flex; flex-direction:column; gap:10px; }
+/* HSV square. CSS-vars drive the gradient stack: saturation
+   horizontal (white → transparent over the live hue), value
+   vertical (transparent → black). --pt-hue is updated by the JS
+   each refresh tick so dragging the hue slider instantly
+   repaints the square. */
+.pt-pop-sq{
+  position:relative;
+  width:100%;
+  aspect-ratio: 268 / 156;
+  border-radius:10px;
+  overflow:hidden;
+  touch-action:none;
+  user-select:none;
+  background:var(--pt-hue, #ff0000);
+  cursor:crosshair;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.45);
+}
+.pt-pop-sq-sat{
+  position:absolute; inset:0;
+  background:linear-gradient(to right, rgba(255,255,255,1), rgba(255,255,255,0));
+  pointer-events:none;
+}
+.pt-pop-sq-val{
+  position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0));
+  pointer-events:none;
+}
+.pt-pop-sq-thumb{
+  position:absolute;
+  width:14px; height:14px;
+  border-radius:50%;
+  border:2px solid #fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.5);
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  background:transparent;
+}
+/* Hue slider — full rainbow with a vertical thumb pill. */
+.pt-pop-hue{
+  position:relative;
+  height:14px;
+  border-radius:7px;
+  background:linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+  touch-action:none;
+  user-select:none;
+  cursor:pointer;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.45);
+}
+.pt-pop-hue:focus-visible{ outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.45), 0 0 0 3px rgba(255,249,62,.35); }
+.pt-pop-hue-thumb{
+  position:absolute; top:50%;
+  width:8px; height:18px;
+  border-radius:5px;
+  background:#fff;
+  border:1.5px solid rgba(0,0,0,.4);
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.45);
+}
+.pt-pop-hex-row{
+  display:flex; align-items:center; gap:6px;
+  background:rgba(0,0,0,.28);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  padding:0 10px;
+  transition:border-color .15s;
+}
+.pt-pop-hex-row:focus-within{ border-color:rgba(255,249,62,.35); }
+.pt-pop-hex-prefix{
+  font-family:var(--font-ui);
+  font-size:13px; font-weight:600;
+  color:rgba(255,255,255,.45);
+  user-select:none;
+}
+.pt-pop-hex-input{
+  flex:1; min-width:0;
+  background:transparent;
+  border:0;
+  color:#fff;
+  font-family:var(--font-ui);
+  font-size:13px;
+  letter-spacing:.06em;
+  padding:9px 0;
+  outline:none;
+  text-transform:lowercase;
+}
+.pt-pop-hex-input::placeholder{ color:rgba(255,255,255,.18); }
+.pt-pop-icon-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;flex-shrink:0;}
+.pt-pop-icon-btn:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.25);color:var(--accent);}
+.pt-pop-presets{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
 .pt-pop-preset{width:100%;aspect-ratio:1/1;border-radius:8px;border:1.5px solid rgba(255,255,255,.08);cursor:pointer;padding:0;transition:transform .12s,border-color .12s;}
 .pt-pop-preset:hover{transform:scale(1.07);border-color:rgba(255,249,62,.4);}
 
@@ -9847,6 +9935,37 @@ select:focus-visible {
     var(--panel);
   display:flex; align-items:center; justify-content:center;
 }
+/* Self-status — tints the cutout ring and adds a subtle theme glow
+   so the user's own status visibly carries their profile theme on
+   every surface that shows their avatar. The inner status colour
+   (online green / idle yellow / DND red / offline grey) stays
+   semantic — only the surround changes. */
+.fpp__status-dot--self{
+  background:
+    linear-gradient(rgba(var(--fpp-main-rgb),.32), rgba(var(--fpp-main-rgb),.18)),
+    var(--panel);
+  box-shadow:0 0 0 1px rgba(var(--fpp-main-rgb),.55), 0 0 12px rgba(var(--fpp-main-rgb),.35);
+}
+/* Frame gradient — Radiance only (set by _fppApplyTheme when color2
+   is present). Repaints the avatar ring, the top stripe and the
+   banner bottom-edge highlight as a color1→color2 sweep so the two
+   stops read as a deliberate theme rather than two clashing colours
+   stuck together. */
+.fpp.fpp--has-frame-gradient::before,
+.fpp-card-modal__left.fpp--has-frame-gradient::before,
+.fpp-card-modal.fpp--has-frame-gradient .fpp-card-modal__left::before{
+  background:var(--fpp-frame, linear-gradient(90deg, var(--fpp-main), var(--fpp-main)));
+}
+.fpp.fpp--has-frame-gradient .fpp__banner,
+.fpp-card-modal.fpp--has-frame-gradient .fpp__banner{
+  border-bottom:1px solid transparent;
+  border-image:var(--fpp-frame) 1;
+  border-image-slice:1;
+}
+.fpp.fpp--has-frame-gradient .fpp__av,
+.fpp-card-modal.fpp--has-frame-gradient .fpp__av{
+  box-shadow:0 0 0 3px rgba(0,0,0,.6), 0 0 0 5px var(--fpp-main);
+}
 /* Custom-status bubble — speech-bubble style. Sits vertically
    centred on the banner/body boundary line, with two trailing dots
    ascending from the avatar so the text reads as "spoken" by the
@@ -10369,10 +10488,12 @@ select:focus-visible {
   height:100%;
   display:flex; flex-direction:column;
 }
-/* DM panel is narrower than the popovers (~280px column), so the
-   avatar scales down a touch to keep the same visual weight. */
-.fpp--dm .fpp__av{ width:72px; height:72px; border-width:4px; }
-.fpp--dm .fpp__av-row{ margin-top:-40px; }
+/* DM panel is narrower than the popovers (~341px column), so the
+   avatar gets a 1.5× bump per brief — same visual anchor weight as
+   Discord's DM right-side panel. Border thickness scales a notch
+   so the ring stays in proportion. */
+.fpp--dm .fpp__av{ width:108px; height:108px; border-width:5px; }
+.fpp--dm .fpp__av-row{ margin-top:-60px; }
 .fpp--dm > *:last-child{ margin-bottom:0; }
 .fpp--dm .fpp__msg-input{ margin-top:auto; }
 /* DM panel is a sidebar column, not a freestanding card — a Main-
@@ -10668,10 +10789,14 @@ select:focus-visible {
 /* Banner uses the same cover-fill behavior as every other .fpp
    surface (mini popover, DM sidebar, own popover) so it reads as
    one consistent component family. */
-.fpp-card-modal__left .fpp__banner{ aspect-ratio:240/96; width:100%; height:auto; flex-shrink:0; }
+/* Unified banner ratio across every surface (.fpp base + this
+   modal override) so a banner crops the same way no matter where
+   the user sees it. Was 240/96 (2.5:1) here vs 680/235 (~2.89:1)
+   everywhere else — same image, two different crops. */
+.fpp-card-modal__left .fpp__banner{ aspect-ratio:680/235; width:100%; height:auto; flex-shrink:0; }
 .fpp-card-modal__left .fpp__banner img{ width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
-.fpp-card-modal__left .fpp__av{ width:84px; height:84px; border-width:4px; }
-.fpp-card-modal__left .fpp__av-row{ margin-top:-46px; }
+.fpp-card-modal__left .fpp__av{ width:100px; height:100px; border-width:4px; }
+.fpp-card-modal__left .fpp__av-row{ margin-top:-56px; }
 .fpp-card-modal__right{
   display:flex; flex-direction:column; overflow:hidden; min-height:0;
 }

@@ -20083,11 +20083,30 @@ function _buildProfileView(tab) {
               ${(() => {
                 const pt2 = CU.profileTheme || {};
                 const mode2 = (pt2.mode === 'custom') ? 'custom' : (pt2.mode === 'auto' || pt2.mode === 'pfp' || pt2.mode === 'banner' ? 'auto' : (pt2.color1 || pt2.main ? 'custom' : 'auto'));
-                const c1v = (pt2.color1 || pt2.main || '#a855f7').toLowerCase();
+                const c1v = (pt2.color1 || pt2.main || pt2.bannerColor || '#fff93e').toLowerCase();
+                // Secondary colour is Radiance-only — free users
+                // see a single picker that "reinforces" everywhere.
+                const c2v = (hasRadiance && pt2.color2) ? String(pt2.color2).toLowerCase() : null;
                 const pillBase = (id, label) => {
                   const active = mode2 === id;
                   return `<button class="pt-mode-pill ${active?'is-active':''}" onclick="_selectProfileThemeMode('${id}')" style="flex:1;padding:9px 14px;border-radius:10px;cursor:pointer;border:1.5px solid ${active?'var(--accent)':'rgba(255,255,255,.08)'};background:${active?'rgba(255,249,62,.05)':'rgba(255,255,255,.02)'};font-family:var(--font-display);font-size:12.5px;font-weight:800;color:#fff;transition:all .15s;">${label}</button>`;
                 };
+                // Per brief: free users pick ONE colour ("Primary")
+                // that drives banner + theme accent everywhere.
+                // Radiance users get a SECOND colour ("Frame") that
+                // blends with the primary into a gradient on the
+                // profile frame (avatar ring, top stripe, banner
+                // fallback gradient) — Discord-style two-stop theme.
+                const swatchBlock = (label, sub, swatchId, hiddenId, value, allowEmpty) => `
+                  <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:10px;">
+                    <button id="${swatchId}" onclick="_openColourPopover(this,'${hiddenId}')" class="pt-custom-swatch" style="width:34px;height:34px;border-radius:8px;border:1.5px solid rgba(255,255,255,.18);background:${value || 'repeating-conic-gradient(rgba(255,255,255,.06) 0% 25%, transparent 0% 50%) 50% / 8px 8px'};cursor:pointer;flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,.4) inset;padding:0;"></button>
+                    <input id="${hiddenId}" type="hidden" value="${value || ''}">
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:11.5px;color:#fff;font-weight:700;">${label}</div>
+                      <div style="font-size:10.5px;color:rgba(255,255,255,.45);" id="${hiddenId}-label">${value || sub}</div>
+                    </div>
+                    ${value && allowEmpty ? `<button onclick="_clearProfileColour2()" class="pt-resample-btn" title="Remove second colour">Clear</button>` : `<button onclick="document.getElementById('${swatchId}').click()" class="pt-resample-btn">Pick…</button>`}
+                  </div>`;
                 return `
                 <div style="display:flex;gap:8px;margin-bottom:12px;">
                   ${pillBase('auto','Automatic')}
@@ -20102,14 +20121,10 @@ function _buildProfileView(tab) {
                   </div>
                   <button onclick="_resampleProfileTheme()" class="pt-resample-btn">Re-sample</button>
                 </div>` : `
-                <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:10px;">
-                  <button id="pt-custom-swatch" onclick="_openColourPopover(this,'pt-colour-hidden')" class="pt-custom-swatch" style="width:34px;height:34px;border-radius:8px;border:1.5px solid rgba(255,255,255,.18);background:${c1v};cursor:pointer;flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,.4) inset;padding:0;"></button>
-                  <input id="pt-colour-hidden" type="hidden" value="${c1v}">
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:11.5px;color:#fff;font-weight:700;">Frame colour</div>
-                    <div style="font-size:10.5px;color:rgba(255,255,255,.45);" id="pt-colour-hex-label">${c1v}</div>
-                  </div>
-                  <button onclick="document.getElementById('pt-custom-swatch').click()" class="pt-resample-btn">Pick…</button>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  ${swatchBlock(hasRadiance ? 'Primary colour' : 'Theme colour', hasRadiance ? 'Banner + button accent' : 'Used everywhere', 'pt-custom-swatch', 'pt-colour-hidden', c1v, false)}
+                  ${hasRadiance ? swatchBlock('Frame colour', 'Blends into a gradient on the profile frame', 'pt-custom-swatch-2', 'pt-colour-hidden-2', c2v, true) : ''}
+                  ${hasRadiance && !c2v ? '<div style="font-size:10.5px;color:rgba(255,255,255,.32);padding:0 4px;">Pick a frame colour for a Discord-style two-stop gradient on the avatar ring + banner.</div>' : ''}
                 </div>`}`;
               })()}
               ${hasRadiance ? `
@@ -21961,7 +21976,7 @@ async function _viewUserProfile(username) {
       <div class="fpp-card-modal__left">
         <div class="fpp__banner">${_fppBannerHTML(u, hasUserRadiance)}</div>
         <div class="fpp__av-row">
-          <div class="fpp__av-wrap">${_fppAvatarHTML(u, 92)}</div>
+          <div class="fpp__av-wrap">${_fppAvatarHTML(u, 100)}</div>
           ${_fppCSBubbleHTML(u, isOwn)}
         </div>
         ${_fppIdentityHTML(u)}
@@ -33732,7 +33747,7 @@ async function showDMUserPanel(username) {
   panel.innerHTML = `
     <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
     <div class="fpp__av-row">
-      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 72)}</div>
+      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 108)}</div>
       ${_fppCSBubbleHTML(u, isOwn)}
     </div>
     ${_fppIdentityHTML(u)}
@@ -43091,9 +43106,15 @@ function _handleSmartSuggestion(ta) {
   _sugStartPos = triggerPos;
 
   if (triggerChar === '@') {
-    // Context: DMs should not show @everyone, @here, or roles
+    // Context-scoped suggestions. DMs/GCs are 1:1/N-to-N so no
+    // mass mentions and no roles. Bios are a global surface
+    // (parseBioMD strips @everyone/@here/@role at render anyway)
+    // so we hide them from the autocomplete too — surfacing
+    // un-rendered suggestions would just confuse people.
     const isDM = ta.id === 'dm-input' || ta.id === 'gc-input';
-    if (!isDM) {
+    const isBio = ta.id === 'bio-input';
+    const allowMassAndRoles = !isDM && !isBio;
+    if (allowMassAndRoles) {
       // @everyone and @here
       if ('everyone'.startsWith(query)) _sugResults.push({type:'special',label:'everyone',desc:'Notify all members',icon:'📢',insert:'@everyone'});
       if ('here'.startsWith(query)) _sugResults.push({type:'special',label:'here',desc:'Notify online members',icon:'📍',insert:'@here'});
@@ -43117,6 +43138,9 @@ function _handleSmartSuggestion(ta) {
     _sugResults = _sugResults.slice(0, 10);
   }
   else if (triggerChar === '#') {
+    // Bios have no channel context — #room suggestions are useless
+    // there and would render as broken plaintext after save.
+    if (ta.id === 'bio-input') { _hideSuggestPanel(); return false; }
     if (curBastion !== null) {
       const b = CU?.bastions?.[curBastion];
       // Channels
@@ -43137,6 +43161,9 @@ function _handleSmartSuggestion(ta) {
     _sugResults = _sugResults.slice(0, 10);
   }
   else if (triggerChar === '/') {
+    // Bios strip structured-title tokens at render — surfacing them
+    // in autocomplete would teach a syntax that does nothing.
+    if (ta.id === 'bio-input') { _hideSuggestPanel(); return false; }
     // Format suggestions
     const formats = [
       {label:'Title1',desc:'Large heading: /Your Title/',icon:'📝',insert:'/'},
@@ -45211,24 +45238,34 @@ function _fppDefaultMain(u) {
 function _fppResolveTheme(u) {
   const t = (u && typeof u.profileTheme === 'object' && u.profileTheme) ? u.profileTheme : null;
   const hasRadiance = _hasRadiance(u);
-  // Banner is an image (Radiance only — they uploaded one) or a flat
-  // colour. Free users get a single picker that writes bannerColor;
-  // default is brand yellow ("yelized") if they've never touched it.
+  // Single source of truth for the picked colour. We accept legacy
+  // names (main / bannerColor) so users from before this rework
+  // still get themed; the inline widget writes color1 going forward.
+  const color1 = (t && (t.color1 || t.main || t.bannerColor)) || _FPP_BRAND_YELLOW;
+  // Second colour is RADIANCE-only — free users can't pick it, and
+  // even if it's present in their data we ignore it so the surface
+  // reads as a single reinforced colour. This is per brief: "Free
+  // users only get 1 colour ... Radiance users have that PLUS a
+  // second colour".
+  const color2 = (hasRadiance && t && t.color2) ? t.color2 : null;
+  // Main colour drives banner-fallback, button accent, frame stroke.
+  // Reinforcement rule (per brief): free users see the SAME colour
+  // everywhere — no derived shifted-hue accent that turns yellow
+  // into green-yellow. Radiance users get color1 + color2 for the
+  // frame gradient; the accent (buttons, etc.) still uses color1 so
+  // the "main brand colour" stays dominant.
+  const main = color1;
+  const accent = color2 || color1;
   const bannerImage = (u && u.banner && hasRadiance) ? u.banner : null;
-  const bannerColor = (t && t.bannerColor) || _FPP_BRAND_YELLOW;
-  // Main colour = the banner's dominant colour. For images that means
-  // the cached sampled hex (written at upload time). For a flat-colour
-  // banner the bannerColor IS the dominant colour, no sampling needed.
-  // Legacy color1/main keys still satisfy this for old data.
-  const cachedMain = (t && (t.main || t.color1)) || null;
-  const main = bannerImage ? (cachedMain || _FPP_BRAND_YELLOW) : bannerColor;
-  // Accent colour = avatar's dominant colour, sampled at upload time
-  // and stored in profileTheme.accent. If we have no sample (legacy
-  // user, no avatar) we derive a tasteful accent off the main instead.
-  const cachedAccent = (t && (t.accent || t.color2)) || null;
-  const accent = cachedAccent || _fppDeriveAccent(main);
-  const bannerStyle = bannerImage ? '' : `background:${bannerColor};`;
-  return { main, accent, bannerImage, bannerStyle, hasRadiance };
+  const bannerStyle = bannerImage ? '' : (
+    color2
+      // Radiance: subtle gradient on the fallback banner that
+      // matches the frame gradient — keeps the two colour stops
+      // legible without making the banner feel busy.
+      ? `background:linear-gradient(135deg, ${color1}, ${color2});`
+      : `background:${color1};`
+  );
+  return { main, accent, color1, color2, bannerImage, bannerStyle, hasRadiance };
 }
 
 // ── Custom colour-picker popover ─────────────────────────────
@@ -45406,6 +45443,18 @@ function _fppApplyTheme(el, u) {
     el.style.setProperty('--fpp-accent', th.accent);
     el.style.setProperty('--fpp-accent-rgb', `${accRgb.r},${accRgb.g},${accRgb.b}`);
   }
+  // Frame gradient — Radiance only. The CSS reads --fpp-frame to
+  // paint a color1 → color2 sweep along the inner border / banner
+  // bottom edge / avatar ring. Free users (no color2) get a flat
+  // single colour from the same vars, so the frame still themes
+  // but without the two-stop gradient.
+  if (th.color2) {
+    el.style.setProperty('--fpp-frame', `linear-gradient(135deg, ${th.color1}, ${th.color2})`);
+    el.classList.add('fpp--has-frame-gradient');
+  } else {
+    el.style.setProperty('--fpp-frame', th.color1);
+    el.classList.remove('fpp--has-frame-gradient');
+  }
   // Radiance stroke removed — the yellow halo around the card was
   // visually loud and clashed with whatever Main colour the user
   // picked. The card already reads as themed via the top stripe,
@@ -45431,9 +45480,15 @@ function _fppBannerHTML(u, hasRadiance) {
 
 function _fppAvatarHTML(u, size) {
   const dec = u.activeDecoration ? (getDecorationSrc(u.activeDecoration) || '') : '';
+  // is-self flag drives a CSS rule that paints the dot's outer
+  // chrome (avatar-cutout ring + glow) in the user's theme colour
+  // — per brief: "your own status colour to be influenced by your
+  // profile theme colours". We keep the inner status colour
+  // (green/yellow/red/grey) untouched so the semantic still reads.
+  const isSelf = CU?.username && String(u.username || '').toLowerCase() === String(CU.username).toLowerCase();
   return `<div class="fpp__av" data-action="open-profile">${buildAvatarHTML(u.pfp, u.displayName || u.username, size)}</div>
     ${dec ? `<img src="${escapeHTML(dec)}" class="fpp__decoration" onerror="this.style.display='none'">` : ''}
-    <span class="fpp__status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22">${FtzStatus.dotSvg(u.status || 'offline', 22)}</span>`;
+    <span class="fpp__status-dot profile-status-dot${isSelf ? ' fpp__status-dot--self' : ''}" data-for="${escapeHTML(u.username)}" data-dot-size="22">${FtzStatus.dotSvg(u.status || 'offline', 22)}</span>`;
 }
 
 // Playful placeholder prompts for the empty custom-status bubble. A
@@ -46472,8 +46527,11 @@ async function _resampleProfileTheme(opts) {
   try { base = await _fppSampleImageColor(src); } catch { base = null; }
   if (!base) { if (!opts.silent) toast('Couldn\'t read the image colour', 'error'); return; }
   base = _sanitizeThemeHex(base);
-  const pair = _ptHexComplement(base);
-  CU.profileTheme = { mode: 'auto', color1: base, color2: pair };
+  // Free + Radiance both sample ONE primary colour. Radiance users
+  // can still set a second colour manually via the second picker
+  // — auto-sample shouldn't pick it for them (the old behaviour of
+  // shifting hue +35° is what made yellow themes paint green).
+  CU.profileTheme = { mode: 'auto', color1: base };
   if (opts.noSave) {
     markSettingsDirty();
   } else {
@@ -46587,66 +46645,218 @@ async function _applyStarterPack(id) {
 // preview, a hex input, the EyeDropper button, and the native
 // <input type="color"> hidden behind the swatch so the OS picker
 // still does the heavy lifting. ──
+// Discord-style colour picker for the inline Profile-Theme widget.
+// Layout matches the reference screenshot the user attached:
+//   ┌──────────────────────────────────────┐
+//   │           HSV square (s × v)         │  ← drag to pick saturation/value
+//   ├──────────────────────────────────────┤
+//   │ hue slider (rainbow track)           │
+//   ├──────────────────────────────────────┤
+//   │ # ▒▒▒▒▒▒  [eyedropper]               │  ← hex field + native colour
+//   ├──────────────────────────────────────┤
+//   │ ▓ ▓ ▓ ▓ ▓                            │  ← 5 brand presets
+//   └──────────────────────────────────────┘
+// Chrome is dark Fortized panel — never white — with the brand
+// yellow only on the selection ring and focus states. The little
+// crosshair on the square and the slider thumb are stroked in the
+// CURRENT live colour outline so the picker visibly reflects what
+// the user is selecting at all times.
 function _openColourPopover(anchorEl, hiddenInputId) {
   document.querySelector('.pt-colour-pop')?.remove();
   const hidden = document.getElementById(hiddenInputId);
-  const startHex = (hidden?.value || '#a855f7').toLowerCase();
+  const startHex = (hidden?.value || '#fff93e').toLowerCase();
   const eyeOk = ('EyeDropper' in window);
+  // Brand presets — the 5 most common Fortized picks. Matches the
+  // count and footprint of the screenshot reference (1 dark + 4
+  // brand hues). User can still type any hex or use the native
+  // colour input via the eyedropper button.
+  const PRESETS = ['#13161d','#fff93e','#559367','#7a4f2b','#7c3aed'];
+
+  // HSV math.
+  const rgbToHex = (r,g,b) => '#' + [r,g,b].map(v => Math.round(v).toString(16).padStart(2,'0')).join('');
+  const hexToRgb = (hex) => {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return {r:0,g:0,b:0};
+    const n = parseInt(m[1],16); return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+  };
+  const rgbToHsv = (r,g,b) => {
+    r/=255; g/=255; b/=255;
+    const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn;
+    let h=0; const v=mx, s=mx===0?0:d/mx;
+    if (d){ switch(mx){case r: h=((g-b)/d)%6; break; case g: h=(b-r)/d+2; break; case b: h=(r-g)/d+4; break;} h*=60; if (h<0) h+=360; }
+    return {h,s,v};
+  };
+  const hsvToRgb = (h,s,v) => {
+    const c=v*s, x=c*(1-Math.abs(((h/60)%2)-1)), m=v-c;
+    let r=0,g=0,b=0;
+    if (h<60){r=c;g=x;} else if (h<120){r=x;g=c;} else if (h<180){g=c;b=x;}
+    else if (h<240){g=x;b=c;} else if (h<300){r=x;b=c;} else {r=c;b=x;}
+    return {r:(r+m)*255, g:(g+m)*255, b:(b+m)*255};
+  };
+
+  const startRgb = hexToRgb(startHex);
+  const startHsv = rgbToHsv(startRgb.r, startRgb.g, startRgb.b);
+  const state = { h:startHsv.h, s:startHsv.s, v:startHsv.v };
+
   const rect = anchorEl.getBoundingClientRect();
   const pop = document.createElement('div');
   pop.className = 'pt-colour-pop';
   pop.style.cssText = `position:fixed;left:${Math.round(rect.left)}px;top:${Math.round(rect.bottom+8)}px;z-index:9999;`;
   pop.innerHTML = `
-    <div class="pt-pop-card">
-      <div class="pt-pop-row">
-        <div class="pt-pop-swatch" id="pt-pop-swatch" style="background:${startHex};"></div>
-        <input id="pt-pop-hex" type="text" maxlength="7" value="${startHex}" spellcheck="false" autocomplete="off">
-        <label class="pt-pop-icon-btn" title="Open colour picker">
+    <div class="pt-pop-card pt-pop-card--discord">
+      <div class="pt-pop-sq" id="pt-pop-sq" role="application" aria-label="Saturation and brightness">
+        <div class="pt-pop-sq-sat"></div>
+        <div class="pt-pop-sq-val"></div>
+        <div class="pt-pop-sq-thumb" id="pt-pop-sq-thumb"></div>
+      </div>
+      <div class="pt-pop-hue" id="pt-pop-hue" role="slider" aria-label="Hue" aria-valuemin="0" aria-valuemax="360" tabindex="0">
+        <div class="pt-pop-hue-thumb" id="pt-pop-hue-thumb"></div>
+      </div>
+      <div class="pt-pop-hex-row">
+        <span class="pt-pop-hex-prefix">#</span>
+        <input id="pt-pop-hex" class="pt-pop-hex-input" type="text" maxlength="6" value="${startHex.slice(1)}" spellcheck="false" autocomplete="off">
+        <label class="pt-pop-icon-btn" title="Native colour picker" tabindex="-1">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="19" cy="13" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="10" cy="20" r="2.5"/><path d="M12 2a10 10 0 0 0 0 20c1.5 0 2-1 2-2v-1a2 2 0 0 1 2-2h2a4 4 0 0 0 4-4 10 10 0 0 0-10-11Z"/></svg>
           <input id="pt-pop-native" type="color" value="${startHex}" style="opacity:0;width:0;height:0;position:absolute;pointer-events:none;">
         </label>
-        ${eyeOk ? `<button class="pt-pop-icon-btn" id="pt-pop-eye" title="Eyedropper — sample any pixel on screen">
+        ${eyeOk ? `<button class="pt-pop-icon-btn" id="pt-pop-eye" title="Eyedropper — sample any pixel on screen" type="button">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
         </button>` : ''}
       </div>
       <div class="pt-pop-presets">
-        ${['#ff94cc','#c4cdd5','#002451','#559367','#e3e3e3','#a855f7','#3b82f6','#22c55e','#f97316','#ef4444','#ec4899','#06b6d4'].map(c => `<button type="button" class="pt-pop-preset" data-c="${c}" style="background:${c};"></button>`).join('')}
+        ${PRESETS.map(c => `<button type="button" class="pt-pop-preset" data-c="${c}" style="background:${c};" aria-label="Preset ${c}"></button>`).join('')}
       </div>
     </div>`;
   document.body.appendChild(pop);
+
+  const sq = pop.querySelector('#pt-pop-sq');
+  const sqThumb = pop.querySelector('#pt-pop-sq-thumb');
+  const hue = pop.querySelector('#pt-pop-hue');
+  const hueThumb = pop.querySelector('#pt-pop-hue-thumb');
   const hexInp = pop.querySelector('#pt-pop-hex');
   const native = pop.querySelector('#pt-pop-native');
-  const swatch = pop.querySelector('#pt-pop-swatch');
-  const commit = (raw) => {
-    let v = (raw || '').trim().toLowerCase();
-    if (v && v[0] !== '#') v = '#' + v;
-    if (!/^#[0-9a-f]{6}$/.test(v)) return;
-    const safe = _sanitizeThemeHex(v);
-    swatch.style.background = safe;
-    hexInp.value = safe;
-    native.value = safe;
-    if (hidden) hidden.value = safe;
-    const visibleSwatch = document.getElementById('pt-custom-swatch');
-    if (visibleSwatch) visibleSwatch.style.background = safe;
-    const label = document.getElementById('pt-colour-hex-label');
-    if (label) label.textContent = safe;
+
+  // Repaint the picker chrome + commit the current colour upward.
+  const refresh = (skipHexInput) => {
+    const hueRgb = hsvToRgb(state.h, 1, 1);
+    sq.style.setProperty('--pt-hue', rgbToHex(hueRgb.r, hueRgb.g, hueRgb.b));
+    const rgb = hsvToRgb(state.h, state.s, state.v);
+    const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+    sqThumb.style.left = (state.s * 100) + '%';
+    sqThumb.style.top  = ((1 - state.v) * 100) + '%';
+    sqThumb.style.background = hex;
+    hueThumb.style.left = (state.h / 360 * 100) + '%';
+    hue.setAttribute('aria-valuenow', Math.round(state.h));
+    if (!skipHexInput) hexInp.value = hex.slice(1);
+    native.value = hex;
+    if (hidden) hidden.value = hex;
+    // Generic visible-swatch + label sync — derive both IDs from
+    // the hidden input the picker was opened against so the second
+    // (Radiance) picker updates its own corresponding chrome instead
+    // of the first picker's.
+    const swatchId = hiddenInputId === 'pt-colour-hidden-2' ? 'pt-custom-swatch-2' : 'pt-custom-swatch';
+    const labelId  = (hiddenInputId || 'pt-colour-hidden') + '-label';
+    const visibleSwatch = document.getElementById(swatchId);
+    if (visibleSwatch) visibleSwatch.style.background = hex;
+    const label = document.getElementById(labelId) || document.getElementById('pt-colour-hex-label');
+    if (label) label.textContent = hex;
     if (!CU.profileTheme) CU.profileTheme = {};
     CU.profileTheme.mode = 'custom';
-    CU.profileTheme.color1 = safe;
-    CU.profileTheme.color2 = _ptHexComplement(safe);
+    // Route to color1 OR color2 based on which hidden input opened
+    // the picker — the inline widget uses 'pt-colour-hidden' for
+    // primary and 'pt-colour-hidden-2' for the Radiance secondary.
+    // We DO NOT auto-derive the other slot anymore (that was the
+    // "yellow card renders green" bug — _ptHexComplement shifted
+    // hue by 35° so yellow turned into yellow-green for the accent).
+    // Free users only ever see one picker, so color2 stays null
+    // and the resolver reinforces color1 everywhere.
+    const safeHex = _sanitizeThemeHex(hex);
+    if (hiddenInputId === 'pt-colour-hidden-2') {
+      CU.profileTheme.color2 = safeHex;
+    } else {
+      CU.profileTheme.color1 = safeHex;
+    }
     markSettingsDirty();
+    try { updateProfilePreview(); } catch (_) {}
   };
-  hexInp.addEventListener('input', () => commit(hexInp.value));
-  native.addEventListener('input', () => commit(native.value));
-  pop.querySelectorAll('.pt-pop-preset').forEach(b => b.addEventListener('click', () => commit(b.dataset.c)));
+  refresh();
+
+  // Square (saturation × value) drag handling.
+  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+  let sqDragging = false;
+  const sqMove = (e) => {
+    if (!sqDragging) return;
+    const r = sq.getBoundingClientRect();
+    state.s = clamp((e.clientX - r.left) / r.width, 0, 1);
+    state.v = clamp(1 - (e.clientY - r.top) / r.height, 0, 1);
+    refresh();
+    e.preventDefault();
+  };
+  sq.addEventListener('pointerdown', (e) => { sqDragging = true; sq.setPointerCapture?.(e.pointerId); sqMove(e); });
+  sq.addEventListener('pointermove', sqMove);
+  sq.addEventListener('pointerup',   () => { sqDragging = false; });
+  sq.addEventListener('pointercancel',() => { sqDragging = false; });
+
+  // Hue slider drag.
+  let hueDragging = false;
+  const hueMove = (e) => {
+    if (!hueDragging) return;
+    const r = hue.getBoundingClientRect();
+    state.h = clamp((e.clientX - r.left) / r.width, 0, 1) * 360;
+    refresh();
+    e.preventDefault();
+  };
+  hue.addEventListener('pointerdown', (e) => { hueDragging = true; hue.setPointerCapture?.(e.pointerId); hueMove(e); });
+  hue.addEventListener('pointermove', hueMove);
+  hue.addEventListener('pointerup',   () => { hueDragging = false; });
+  hue.addEventListener('pointercancel',() => { hueDragging = false; });
+  hue.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft')  { state.h = clamp(state.h - 3, 0, 360); refresh(); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { state.h = clamp(state.h + 3, 0, 360); refresh(); e.preventDefault(); }
+  });
+
+  // Hex input — manual entry. Validate on every keystroke so the
+  // picker chrome stays in sync as the user types.
+  hexInp.addEventListener('input', () => {
+    const raw = hexInp.value.trim().replace(/^#/, '').toLowerCase();
+    if (!/^[0-9a-f]{6}$/.test(raw)) return;
+    const rgb = hexToRgb('#' + raw);
+    const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
+    state.h = h.h; state.s = h.s; state.v = h.v;
+    refresh(true);
+  });
+
+  // Native picker (label tap opens it).
+  native.addEventListener('input', () => {
+    const rgb = hexToRgb(native.value);
+    const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
+    state.h = h.h; state.s = h.s; state.v = h.v;
+    refresh();
+  });
+
+  // Preset swatches.
+  pop.querySelectorAll('.pt-pop-preset').forEach(b => b.addEventListener('click', () => {
+    const rgb = hexToRgb(b.dataset.c);
+    const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
+    state.h = h.h; state.s = h.s; state.v = h.v;
+    refresh();
+  }));
+
+  // Eyedropper.
   const eyeBtn = pop.querySelector('#pt-pop-eye');
   if (eyeBtn) eyeBtn.addEventListener('click', async () => {
     try {
       const ed = new window.EyeDropper();
       const res = await ed.open();
-      if (res?.sRGBHex) commit(res.sRGBHex);
+      if (res?.sRGBHex) {
+        const rgb = hexToRgb(res.sRGBHex);
+        const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
+        state.h = h.h; state.s = h.s; state.v = h.v;
+        refresh();
+      }
     } catch {}
   });
+
+  // Click-outside dismiss.
   setTimeout(() => {
     document.addEventListener('mousedown', function close(ev) {
       if (!pop.contains(ev.target) && ev.target !== anchorEl) {
@@ -46655,6 +46865,17 @@ function _openColourPopover(anchorEl, hiddenInputId) {
       }
     }, true);
   }, 0);
+}
+
+// Clear the Radiance secondary colour. The widget always offers
+// this when color2 is set so users can revert to a single-stop
+// flat-colour frame without resetting the whole theme.
+function _clearProfileColour2() {
+  if (!CU.profileTheme) return;
+  delete CU.profileTheme.color2;
+  markSettingsDirty();
+  try { buildProfileView('myprofile'); } catch (_) {}
+  try { updateProfilePreview(); } catch (_) {}
 }
 
 // Rotate hue +35° in HSL space so the second gradient stop is related

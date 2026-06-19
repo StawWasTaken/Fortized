@@ -20917,8 +20917,8 @@ function _buildProfileView(tab) {
           ${(() => {
             const currentCursor = localStorage.getItem('ftz_cursor') || 'knight';
             const cursors = [
-              { id:'knight',     name:'Fortized Knight', desc:'The classic gauntlet of our Knight.',                                          preview:_FTZ_CURSORS.knight.normal },
-              { id:'fortizian',  name:'Fortizan',         desc:'A plain Fortizan hand — every Fortizan is pure white, after all.',           preview:_FTZ_CURSORS.fortizian.normal },
+              { id:'knight',     name:'Fortized Knight', desc:"Suit up. The Knight’s gauntlet is on point duty — armoured, ready, mildly judgemental.", preview:_FTZ_CURSORS.knight.normal },
+              { id:'fortizian',  name:'Fortizan',         desc:"A perfectly average Fortizan paw. Pure white, slightly suspicious, ready to click on absolutely anything.", preview:_FTZ_CURSORS.fortizian.normal },
             ];
             return cursors.map(c => `
               <div onclick="_applyFortizedCursor('${c.id}')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid ${currentCursor===c.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentCursor===c.id?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">
@@ -46933,36 +46933,31 @@ function _openColourPopover(anchorEl, hiddenInputId) {
     refresh();
   }));
 
-  // Eyedropper. If the browser doesn't ship the EyeDropper API
-  // (Firefox / Safari at the time of writing), we still show the
-  // button but toast a fallback message — the user asked us to
-  // make sure "there's a way" to open it from settings; silently
-  // hiding the button when unsupported was the wrong choice
-  // because it gave no signal at all.
+  // Eyedropper — works on every browser. Chromium gets the real
+  // pixel-perfect EyeDropper API; Firefox / Safari fall back to a
+  // DOM-element-sampler that reads the computed background-color
+  // of whatever element you click. Not pixel-perfect (won't catch
+  // a single pixel inside an image) but covers the vast majority
+  // of UI sampling needs — banner tiles, sidebar swatches, etc. —
+  // without depending on a 30KB html2canvas-style dependency.
   const eyeBtn = pop.querySelector('#pt-pop-eye');
   if (eyeBtn) eyeBtn.addEventListener('click', async () => {
-    if (typeof window.EyeDropper !== 'function') {
-      try { toast?.('Eyedropper not supported in this browser — try Chrome or Edge', 'error'); } catch (_) {}
-      return;
-    }
-    // Suspend the outside-close listener while the eyedropper
-    // overlay is up. ed.open() awaits a click on the system
-    // overlay, but that click also bubbles to our document-level
-    // mousedown handler and tore the picker down before the
-    // sample was applied — leaving the picker visually closed
-    // and the user thinking nothing happened.
+    // Suspend the outside-close listener for the whole eyedropper
+    // session — the system overlay's click (Chromium) or the
+    // polyfill overlay's click (others) would bubble up to the
+    // document mousedown handler and tear the picker down before
+    // we got a chance to apply the sampled colour.
     pop.dataset.eyedropping = '1';
     try {
-      const ed = new window.EyeDropper();
-      const res = await ed.open();
-      if (res?.sRGBHex) {
-        const rgb = hexToRgb(res.sRGBHex);
+      const sampled = await _ftzEyedropperOpen();
+      if (sampled) {
+        const rgb = hexToRgb(sampled);
         const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
         state.h = h.h; state.s = h.s; state.v = h.v;
         refresh();
       }
     } catch (_) {
-      // User cancelled or unsupported — silent.
+      // User cancelled — silent.
     } finally {
       delete pop.dataset.eyedropping;
     }
@@ -46983,6 +46978,90 @@ function _openColourPopover(anchorEl, hiddenInputId) {
       }
     }, true);
   }, 0);
+}
+
+// ─── Universal eyedropper ──────────────────────────────────────
+// Returns the picked hex (#RRGGBB) or null if the user cancelled.
+// Resolves via the native EyeDropper API on Chromium / Edge
+// (pixel-perfect), and via a DOM-overlay fallback on Firefox /
+// Safari — the user clicks any element on the page and we read
+// its computed background-color. The fallback isn't pixel-true
+// but works on every browser without pulling in a heavy
+// canvas-snapshot dependency.
+async function _ftzEyedropperOpen() {
+  if (typeof window.EyeDropper === 'function') {
+    try {
+      const ed = new window.EyeDropper();
+      const res = await ed.open();
+      return res?.sRGBHex || null;
+    } catch (_) { return null; }
+  }
+  return _ftzEyedropperFallback();
+}
+// DOM-element sampler. Drops a translucent click-catcher over
+// the viewport; on click we use elementFromPoint to find the
+// topmost element BELOW our overlay (briefly hide via
+// pointer-events:none) and read getComputedStyle().backgroundColor.
+// Walks up the tree until we find a non-transparent ancestor so
+// clicking on, say, a transparent text node still returns a
+// meaningful colour from the panel beneath.
+function _ftzEyedropperFallback() {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'ftz-eye-overlay';
+    overlay.innerHTML = `
+      <div class="ftz-eye-hint">
+        <span class="ftz-eye-hint-ico" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
+        </span>
+        Click anywhere to sample a colour · Esc to cancel
+      </div>`;
+    document.body.appendChild(overlay);
+    const cleanup = () => {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey, true);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cleanup(); resolve(null); }
+    };
+    document.addEventListener('keydown', onKey, true);
+    overlay.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Hide the overlay for a frame so elementFromPoint sees what's
+      // underneath instead of returning our own overlay.
+      overlay.style.pointerEvents = 'none';
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      overlay.style.pointerEvents = '';
+      let hex = null;
+      // Walk up the tree until we hit a non-transparent background.
+      let el = target;
+      while (el && el !== document.documentElement) {
+        const bg = getComputedStyle(el).backgroundColor;
+        const parsed = _ftzParseRgbString(bg);
+        if (parsed && parsed.a > 0) {
+          hex = '#' + [parsed.r, parsed.g, parsed.b].map(v => v.toString(16).padStart(2,'0')).join('');
+          break;
+        }
+        el = el.parentElement;
+      }
+      cleanup();
+      resolve(hex);
+    }, { once: true });
+  });
+}
+function _ftzParseRgbString(s) {
+  if (!s || typeof s !== 'string') return null;
+  const m = s.match(/^rgba?\(([^)]+)\)$/i);
+  if (!m) return null;
+  const parts = m[1].split(',').map(x => x.trim());
+  if (parts.length < 3) return null;
+  const r = parseInt(parts[0], 10);
+  const g = parseInt(parts[1], 10);
+  const b = parseInt(parts[2], 10);
+  const a = parts.length >= 4 ? parseFloat(parts[3]) : 1;
+  if ([r,g,b].some(v => Number.isNaN(v))) return null;
+  return { r, g, b, a: Number.isNaN(a) ? 1 : a };
 }
 
 // Clear the Radiance secondary colour. The widget always offers

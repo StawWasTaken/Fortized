@@ -1128,6 +1128,35 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .pt-pop-preset{width:100%;aspect-ratio:1/1;border-radius:8px;border:1.5px solid rgba(255,255,255,.08);cursor:pointer;padding:0;transition:transform .12s,border-color .12s;}
 .pt-pop-preset:hover{transform:scale(1.07);border-color:rgba(255,249,62,.4);}
 
+/* Universal eyedropper overlay — the polyfill path for browsers
+   without the native EyeDropper API. Sits over the whole viewport,
+   passes the click through to elementFromPoint via a brief
+   pointer-events:none hide, and surfaces a hint chip so the user
+   knows what to do. The hint stays at the top so it doesn't sit
+   under the user's cursor when they're trying to aim. */
+.ftz-eye-overlay{
+  position:fixed; inset:0; z-index:99999;
+  background:rgba(0,0,0,.18);
+  cursor:crosshair !important;
+  animation:ftzEyeFadeIn .14s ease-out;
+}
+.ftz-eye-hint{
+  position:absolute; left:50%; top:24px;
+  transform:translateX(-50%);
+  display:inline-flex; align-items:center; gap:8px;
+  padding:9px 16px;
+  background:var(--panel,#1b1e25);
+  border:1px solid rgba(255,249,62,.35);
+  border-radius:999px;
+  box-shadow:0 8px 28px rgba(0,0,0,.5);
+  font-family:var(--font-ui);
+  font-size:12.5px; font-weight:600;
+  color:rgba(255,255,255,.85);
+  pointer-events:none;
+}
+.ftz-eye-hint-ico{ display:inline-flex; color:var(--accent,#fff93e); }
+@keyframes ftzEyeFadeIn{ from { opacity:0; } to { opacity:1; } }
+
 /* Source-message highlight when the user is actively replying to it.
    Subtle yellow stripe + warm tint so it's obviously the target without
    shouting. Cleared on send or on cancelReply(). */
@@ -3067,66 +3096,71 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   font-variant-numeric:tabular-nums;
 }
 
-/* ─── Custom Fortized cursors (PC-only) ─────────────────────────
-   Two cosmetic sets the user can pick from Settings → Appearance.
-   Gated on @media (hover: hover) and (pointer: fine) so phones /
-   tablets fall back to the platform default — a CSS cursor on a
-   touch device does nothing visible and there's no point burning
-   the PNG fetch. Settings UI mirrors the same gate by hiding the
-   section via .ftz-cursor-section-pc-only on touch devices.
-
-   We list every interactive selector explicitly for the clickable
-   variant because the `pointer` semantic isn't inherited from the
-   browser default once we override `cursor` on the root — anything
-   that historically read as `cursor:pointer` needs to be re-tagged
-   to swap to the clickable cursor. */
+/* ─── Custom Fortized cursors (PC-only, app-pages-only) ─────────
+   Scope: every cursor rule is gated on TWO conditions:
+     (a) @media (hover:hover) and (pointer:fine) — touch devices
+         (phones / tablets) keep the platform default cursor.
+     (b) The cursor class is on <html>, applied only when the
+         Fortized SPA boots — index.html → app.js IIFE. Anything
+         outside the SPA never sees the class so the rule is
+         literally inert there.
+   ! important matters: 330+ inline `cursor:pointer` styles exist
+   on divs across the codebase. Without !important, every one of
+   them would win over our class rule and the custom cursor would
+   silently not apply on the elements the user actually clicks.
+   Catch-all selectors:
+     * — paints the base (normal / arrow) cursor across the page.
+     [style*="cursor:pointer"] / [style*="cursor: pointer"] / a /
+     button / [role=button] / [tabindex] — paint the clickable
+     variant for anything that historically read as pointer.
+   Text inputs override back to cursor:text so the I-beam stays
+   over editable surfaces, where overriding it is disruptive. */
 @media (hover: hover) and (pointer: fine){
+  /* Knight set */
   html.ftz-cursor-knight,
-  html.ftz-cursor-knight body{
-    cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor1.png') 4 2, default;
+  html.ftz-cursor-knight body,
+  html.ftz-cursor-knight *{
+    cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor1.png') 4 2, default !important;
   }
   html.ftz-cursor-knight :is(
     a, button, [role="button"], [role="link"], [role="menuitem"], [role="tab"],
     [role="checkbox"], [role="radio"], [role="switch"], [role="option"],
     [tabindex]:not([tabindex="-1"]),
-    summary, label, select, input[type="checkbox"], input[type="radio"],
+    summary, label, select,
+    input[type="checkbox"], input[type="radio"],
     input[type="submit"], input[type="button"], input[type="reset"], input[type="file"],
-    .clickable, .cit-btn, .cit-attach, .cit-gif, .cit-sticker, .cit-botcmd,
-    .settings-save-btn, .settings-save-btn-ghost, .reset-theme-btn,
-    .pt-mode-pill, .pt-custom-swatch, .pt-pop-icon-btn, .pt-pop-preset,
-    .unsaved-bar-reset, .unsaved-bar-save,
-    .ch-row, .ml-entry, .an-row, .friend-item, .emoji-cell, .gc-item,
-    .ftz-tab, .ftz-pill, .ftz-chip, .nav-tab, .side-tab,
-    .gdm-close, .modal-close, .bio-mention, .msg-mention, .mention,
-    .pw-gc-add-btn, .pt-resample-btn, .pt-pop-eye, .pt-starter-card
-  ){ cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor2.png') 4 2, pointer; }
+    [style*="cursor:pointer"], [style*="cursor: pointer"]
+  ){ cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor2.png') 4 2, pointer !important; }
 
+  /* Fortizan set */
   html.ftz-cursor-fortizian,
-  html.ftz-cursor-fortizian body{
-    cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor1.png') 4 2, default;
+  html.ftz-cursor-fortizian body,
+  html.ftz-cursor-fortizian *{
+    cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor1.png') 4 2, default !important;
   }
   html.ftz-cursor-fortizian :is(
     a, button, [role="button"], [role="link"], [role="menuitem"], [role="tab"],
     [role="checkbox"], [role="radio"], [role="switch"], [role="option"],
     [tabindex]:not([tabindex="-1"]),
-    summary, label, select, input[type="checkbox"], input[type="radio"],
+    summary, label, select,
+    input[type="checkbox"], input[type="radio"],
     input[type="submit"], input[type="button"], input[type="reset"], input[type="file"],
-    .clickable, .cit-btn, .cit-attach, .cit-gif, .cit-sticker, .cit-botcmd,
-    .settings-save-btn, .settings-save-btn-ghost, .reset-theme-btn,
-    .pt-mode-pill, .pt-custom-swatch, .pt-pop-icon-btn, .pt-pop-preset,
-    .unsaved-bar-reset, .unsaved-bar-save,
-    .ch-row, .ml-entry, .an-row, .friend-item, .emoji-cell, .gc-item,
-    .ftz-tab, .ftz-pill, .ftz-chip, .nav-tab, .side-tab,
-    .gdm-close, .modal-close, .bio-mention, .msg-mention, .mention,
-    .pw-gc-add-btn, .pt-resample-btn, .pt-pop-eye, .pt-starter-card
-  ){ cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2.png') 4 2, pointer; }
+    [style*="cursor:pointer"], [style*="cursor: pointer"]
+  ){ cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2.png') 4 2, pointer !important; }
 
-  /* Keep the I-beam over text inputs / textareas / contenteditable
-     surfaces — overriding the platform text cursor on those is more
-     disruptive than helpful. */
+  /* Text fields keep the I-beam — overriding it is disruptive. */
   html.ftz-cursor-knight :is(input:not([type]), input[type="text"], input[type="email"], input[type="password"], input[type="search"], input[type="number"], input[type="url"], input[type="tel"], textarea, [contenteditable="true"], [contenteditable=""]),
   html.ftz-cursor-fortizian :is(input:not([type]), input[type="text"], input[type="email"], input[type="password"], input[type="search"], input[type="number"], input[type="url"], input[type="tel"], textarea, [contenteditable="true"], [contenteditable=""]){
-    cursor:text;
+    cursor:text !important;
+  }
+
+  /* Eyedropper polyfill overlay still wants the crosshair —
+     beat the catch-all !important above. */
+  html.ftz-cursor-knight .ftz-eye-overlay,
+  html.ftz-cursor-fortizian .ftz-eye-overlay,
+  html.ftz-cursor-knight .ftz-eye-overlay *,
+  html.ftz-cursor-fortizian .ftz-eye-overlay *{
+    cursor:crosshair !important;
   }
 }
 /* Hide the cursor section on touch devices so the picker doesn't
@@ -9983,16 +10017,17 @@ select:focus-visible {
    reads as embedded in the card rather than stuck on top. */
 .fpp__av{
   width:96px; height:96px; border-radius:50%;
-  /* Avatar border IS the theme ring now. Free users see a flat
-     var(--fpp-main) ring; Radiance users with a second colour
-     get a color1→color2 gradient via --fpp-frame (the gradient
-     class promotes border-image so the sweep paints across the
-     full circle). No outer box-shadow band — the ring lives ON
-     the image edge, mirroring the Discord SVG-mask reference. */
-  border:3px solid var(--fpp-main);
+  /* No theme ring — was a coloured border that the user found
+     distracting on every variant. Avatar now sits flush with no
+     decorative stroke; status dot still draws the user's eye to
+     the corner without a frame fighting it. Per-surface variants
+     still set border-width if they need spacing for the status
+     cutout, but border-color is transparent so nothing reads as
+     a ring. */
+  border:3px solid transparent;
   background:
     linear-gradient(var(--panel), var(--panel)) padding-box,
-    var(--fpp-main) border-box;
+    var(--panel) border-box;
   overflow:hidden; flex-shrink:0;
   cursor:pointer;
   transition:transform .18s cubic-bezier(.22,1,.36,1);
@@ -10057,19 +10092,10 @@ select:focus-visible {
    Frame value — no gap, no outer shadow halo. Falls back to
    var(--fpp-main) for free users (single colour); gradient mode
    uses border-image for the color1→color2 sweep. */
-.fpp.fpp--has-frame-gradient .fpp__av,
-.fpp-card-modal.fpp--has-frame-gradient .fpp__av{
-  /* Radiance only — second colour is present, so paint the border
-     as a color1→color2 gradient. Border itself is transparent and
-     the background fills the border-box with the gradient (the
-     padding-box layer above paints the inner disc opaque so the
-     avatar image isn't tinted). No outer box-shadow. */
-  border-color:transparent;
-  background:
-    linear-gradient(var(--panel), var(--panel)) padding-box,
-    var(--fpp-frame, var(--fpp-main)) border-box;
-  box-shadow:none;
-}
+/* Frame gradient class is now a no-op on the avatar — ring removed
+   per user feedback. Kept the class on the panel so other surfaces
+   (top stripe, banner edge) can still pick up the gradient if we
+   decide to bring them back, but the avatar stays unringed. */
 /* Custom-status bubble — speech-bubble style. Sits vertically
    centred on the banner/body boundary line, with two trailing dots
    ascending from the avatar so the text reads as "spoken" by the

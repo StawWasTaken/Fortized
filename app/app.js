@@ -20917,8 +20917,8 @@ function _buildProfileView(tab) {
           ${(() => {
             const currentCursor = localStorage.getItem('ftz_cursor') || 'knight';
             const cursors = [
-              { id:'knight',     name:'Fortized Knight', desc:'"i polish this gauntlet every morning, you know. and yet you still drag it through your downloads folder."',                 preview:_FTZ_CURSORS.knight.normal },
-              { id:'fortizian',  name:'Fortizan',         desc:'"everyone in fortized is pure white anyways, what did you expect... pink? we live in a city without a sun. enjoy the hand."', preview:_FTZ_CURSORS.fortizian.normal },
+              { id:'knight',     name:'Fortized Knight', desc:'The armoured gauntlet of the Fortized Knight. Forged in the lower quarters, scuffed by a thousand sieges, and still somehow the cleanest hand in the city.',                                    preview:_FTZ_CURSORS.knight.normal },
+              { id:'fortizian',  name:'Fortizan',         desc:'The bare hand of an ordinary Fortizan citizen. Pale as the walls of Fortized itself, calloused from honest work, and unbothered by the absence of a sun overhead.', preview:_FTZ_CURSORS.fortizian.normal },
             ];
             return cursors.map(c => `
               <div onclick="_applyFortizedCursor('${c.id}')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid ${currentCursor===c.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentCursor===c.id?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">

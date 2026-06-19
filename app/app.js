@@ -745,6 +745,77 @@ const PERMISSIONS = [
 ];
 const PERM_GROUPS = ['General','Text','Voice/Party','Automation','Moderation','Boost'];
 let activeEmojiCat = 0;
+
+// ─── Country flags (must be declared BEFORE EMOJI_CATEGORIES) ──
+// EMOJI_CATEGORIES below spreads _FTZ_COUNTRY_ISO at module load
+// time, so the table and its helpers have to exist already. Putting
+// them here keeps the data-then-categories-then-helpers ordering
+// honest. The shortcode injection into EMOJI_SHORTCODES + reverse
+// lookup happens further down — those need the SHORTCODES object
+// itself, which is declared after EMOJI_CATEGORIES.
+const _FTZ_COUNTRY_ISO = [
+  ['af','Afghanistan'],['ax','Åland Islands'],['al','Albania'],['dz','Algeria'],['as','American Samoa'],
+  ['ad','Andorra'],['ao','Angola'],['ai','Anguilla'],['aq','Antarctica'],['ag','Antigua & Barbuda'],
+  ['ar','Argentina'],['am','Armenia'],['aw','Aruba'],['au','Australia'],['at','Austria'],
+  ['az','Azerbaijan'],['bs','Bahamas'],['bh','Bahrain'],['bd','Bangladesh'],['bb','Barbados'],
+  ['by','Belarus'],['be','Belgium'],['bz','Belize'],['bj','Benin'],['bm','Bermuda'],
+  ['bt','Bhutan'],['bo','Bolivia'],['ba','Bosnia & Herzegovina'],['bw','Botswana'],['bv','Bouvet Island'],
+  ['br','Brazil'],['io','British Indian Ocean Territory'],['vg','British Virgin Islands'],['bn','Brunei'],['bg','Bulgaria'],
+  ['bf','Burkina Faso'],['bi','Burundi'],['kh','Cambodia'],['cm','Cameroon'],['ca','Canada'],
+  ['cv','Cape Verde'],['bq','Caribbean Netherlands'],['ky','Cayman Islands'],['cf','Central African Republic'],['td','Chad'],
+  ['cl','Chile'],['cn','China'],['cx','Christmas Island'],['cc','Cocos (Keeling) Islands'],['co','Colombia'],
+  ['km','Comoros'],['cg','Congo - Brazzaville'],['cd','Congo - Kinshasa'],['ck','Cook Islands'],['cr','Costa Rica'],
+  ['ci','Côte d’Ivoire'],['hr','Croatia'],['cu','Cuba'],['cw','Curaçao'],['cy','Cyprus'],
+  ['cz','Czechia'],['dk','Denmark'],['dj','Djibouti'],['dm','Dominica'],['do','Dominican Republic'],
+  ['ec','Ecuador'],['eg','Egypt'],['sv','El Salvador'],['gq','Equatorial Guinea'],['er','Eritrea'],
+  ['ee','Estonia'],['sz','Eswatini'],['et','Ethiopia'],['fk','Falkland Islands'],['fo','Faroe Islands'],
+  ['fj','Fiji'],['fi','Finland'],['fr','France'],['gf','French Guiana'],['pf','French Polynesia'],
+  ['tf','French Southern Territories'],['ga','Gabon'],['gm','Gambia'],['ge','Georgia'],['de','Germany'],
+  ['gh','Ghana'],['gi','Gibraltar'],['gr','Greece'],['gl','Greenland'],['gd','Grenada'],
+  ['gp','Guadeloupe'],['gu','Guam'],['gt','Guatemala'],['gg','Guernsey'],['gn','Guinea'],
+  ['gw','Guinea-Bissau'],['gy','Guyana'],['ht','Haiti'],['hm','Heard & McDonald Islands'],['hn','Honduras'],
+  ['hk','Hong Kong SAR China'],['hu','Hungary'],['is','Iceland'],['in','India'],['id','Indonesia'],
+  ['ir','Iran'],['iq','Iraq'],['ie','Ireland'],['im','Isle of Man'],['il','Israel'],
+  ['it','Italy'],['jm','Jamaica'],['jp','Japan'],['je','Jersey'],['jo','Jordan'],
+  ['kz','Kazakhstan'],['ke','Kenya'],['ki','Kiribati'],['xk','Kosovo'],['kw','Kuwait'],
+  ['kg','Kyrgyzstan'],['la','Laos'],['lv','Latvia'],['lb','Lebanon'],['ls','Lesotho'],
+  ['lr','Liberia'],['ly','Libya'],['li','Liechtenstein'],['lt','Lithuania'],['lu','Luxembourg'],
+  ['mo','Macao SAR China'],['mg','Madagascar'],['mw','Malawi'],['my','Malaysia'],['mv','Maldives'],
+  ['ml','Mali'],['mt','Malta'],['mh','Marshall Islands'],['mq','Martinique'],['mr','Mauritania'],
+  ['mu','Mauritius'],['yt','Mayotte'],['mx','Mexico'],['fm','Micronesia'],['md','Moldova'],
+  ['mc','Monaco'],['mn','Mongolia'],['me','Montenegro'],['ms','Montserrat'],['ma','Morocco'],
+  ['mz','Mozambique'],['mm','Myanmar (Burma)'],['na','Namibia'],['nr','Nauru'],['np','Nepal'],
+  ['nl','Netherlands'],['nc','New Caledonia'],['nz','New Zealand'],['ni','Nicaragua'],['ne','Niger'],
+  ['ng','Nigeria'],['nu','Niue'],['nf','Norfolk Island'],['kp','North Korea'],['mk','North Macedonia'],
+  ['mp','Northern Mariana Islands'],['no','Norway'],['om','Oman'],['pk','Pakistan'],['pw','Palau'],
+  ['ps','Palestinian Territories'],['pa','Panama'],['pg','Papua New Guinea'],['py','Paraguay'],['pe','Peru'],
+  ['ph','Philippines'],['pn','Pitcairn Islands'],['pl','Poland'],['pt','Portugal'],['pr','Puerto Rico'],
+  ['qa','Qatar'],['re','Réunion'],['ro','Romania'],['ru','Russia'],['rw','Rwanda'],
+  ['ws','Samoa'],['sm','San Marino'],['st','São Tomé & Príncipe'],['sa','Saudi Arabia'],['sn','Senegal'],
+  ['rs','Serbia'],['sc','Seychelles'],['sl','Sierra Leone'],['sg','Singapore'],['sx','Sint Maarten'],
+  ['sk','Slovakia'],['si','Slovenia'],['sb','Solomon Islands'],['so','Somalia'],['za','South Africa'],
+  ['gs','South Georgia & South Sandwich Islands'],['kr','South Korea'],['ss','South Sudan'],['es','Spain'],['lk','Sri Lanka'],
+  ['bl','St. Barthélemy'],['sh','St. Helena'],['kn','St. Kitts & Nevis'],['lc','St. Lucia'],['mf','St. Martin'],
+  ['pm','St. Pierre & Miquelon'],['vc','St. Vincent & Grenadines'],['sd','Sudan'],['sr','Suriname'],['sj','Svalbard & Jan Mayen'],
+  ['se','Sweden'],['ch','Switzerland'],['sy','Syria'],['tw','Taiwan'],['tj','Tajikistan'],
+  ['tz','Tanzania'],['th','Thailand'],['tl','Timor-Leste'],['tg','Togo'],['tk','Tokelau'],
+  ['to','Tonga'],['tt','Trinidad & Tobago'],['tn','Tunisia'],['tr','Türkiye'],['tm','Turkmenistan'],
+  ['tc','Turks & Caicos Islands'],['tv','Tuvalu'],['ug','Uganda'],['ua','Ukraine'],['ae','United Arab Emirates'],
+  ['gb','United Kingdom'],['us','United States'],['uy','Uruguay'],['vi','U.S. Virgin Islands'],['uz','Uzbekistan'],
+  ['vu','Vanuatu'],['va','Vatican City'],['ve','Venezuela'],['vn','Vietnam'],['wf','Wallis & Futuna'],
+  ['eh','Western Sahara'],['ye','Yemen'],['zm','Zambia'],['zw','Zimbabwe'],
+];
+// Regional-indicator math: 'A'.codePoint(0x41) → 🇦 (0x1F1E6).
+// Offset is 0x1F1E6 - 0x41 = 0x1F1A5.
+const _FTZ_FLAG_OFFSET = 0x1F1E6 - 0x41;
+function _isoToFlag(iso) {
+  const u = iso.toUpperCase();
+  return String.fromCodePoint(u.charCodeAt(0) + _FTZ_FLAG_OFFSET, u.charCodeAt(1) + _FTZ_FLAG_OFFSET);
+}
+// Flag char → friendly country name (used by the hover/click tooltip)
+const _FTZ_FLAG_NAMES = Object.create(null);
+_FTZ_COUNTRY_ISO.forEach(([iso, name]) => { _FTZ_FLAG_NAMES[_isoToFlag(iso)] = name; });
+
 // TODO(staw): manually recheck emoji categories — there are likely
 // stragglers in the wrong group (e.g. some Unicode 15+ additions land
 // in "Symbols" when they're really faces or objects). Walk each list
@@ -887,77 +958,12 @@ const EMOJI_SHORTCODES = {
   'banjo':'🪕','drum':'🥁','long_drum':'🪘',
 };
 
-// ─── Country flags ─────────────────────────────────────────────
-// Every ISO 3166-1 alpha-2 region, mapped to its regional-indicator
-// flag glyph and exposed as :flag_<iso>: in EMOJI_SHORTCODES (per
-// brief). Built programmatically so it's a single source of truth
-// for the picker + parser + autocomplete + reverse-name lookup.
-// Each entry is [iso2, English country name].
-const _FTZ_COUNTRY_ISO = [
-  ['af','Afghanistan'],['ax','Åland Islands'],['al','Albania'],['dz','Algeria'],['as','American Samoa'],
-  ['ad','Andorra'],['ao','Angola'],['ai','Anguilla'],['aq','Antarctica'],['ag','Antigua & Barbuda'],
-  ['ar','Argentina'],['am','Armenia'],['aw','Aruba'],['au','Australia'],['at','Austria'],
-  ['az','Azerbaijan'],['bs','Bahamas'],['bh','Bahrain'],['bd','Bangladesh'],['bb','Barbados'],
-  ['by','Belarus'],['be','Belgium'],['bz','Belize'],['bj','Benin'],['bm','Bermuda'],
-  ['bt','Bhutan'],['bo','Bolivia'],['ba','Bosnia & Herzegovina'],['bw','Botswana'],['bv','Bouvet Island'],
-  ['br','Brazil'],['io','British Indian Ocean Territory'],['vg','British Virgin Islands'],['bn','Brunei'],['bg','Bulgaria'],
-  ['bf','Burkina Faso'],['bi','Burundi'],['kh','Cambodia'],['cm','Cameroon'],['ca','Canada'],
-  ['cv','Cape Verde'],['bq','Caribbean Netherlands'],['ky','Cayman Islands'],['cf','Central African Republic'],['td','Chad'],
-  ['cl','Chile'],['cn','China'],['cx','Christmas Island'],['cc','Cocos (Keeling) Islands'],['co','Colombia'],
-  ['km','Comoros'],['cg','Congo - Brazzaville'],['cd','Congo - Kinshasa'],['ck','Cook Islands'],['cr','Costa Rica'],
-  ['ci','Côte d’Ivoire'],['hr','Croatia'],['cu','Cuba'],['cw','Curaçao'],['cy','Cyprus'],
-  ['cz','Czechia'],['dk','Denmark'],['dj','Djibouti'],['dm','Dominica'],['do','Dominican Republic'],
-  ['ec','Ecuador'],['eg','Egypt'],['sv','El Salvador'],['gq','Equatorial Guinea'],['er','Eritrea'],
-  ['ee','Estonia'],['sz','Eswatini'],['et','Ethiopia'],['fk','Falkland Islands'],['fo','Faroe Islands'],
-  ['fj','Fiji'],['fi','Finland'],['fr','France'],['gf','French Guiana'],['pf','French Polynesia'],
-  ['tf','French Southern Territories'],['ga','Gabon'],['gm','Gambia'],['ge','Georgia'],['de','Germany'],
-  ['gh','Ghana'],['gi','Gibraltar'],['gr','Greece'],['gl','Greenland'],['gd','Grenada'],
-  ['gp','Guadeloupe'],['gu','Guam'],['gt','Guatemala'],['gg','Guernsey'],['gn','Guinea'],
-  ['gw','Guinea-Bissau'],['gy','Guyana'],['ht','Haiti'],['hm','Heard & McDonald Islands'],['hn','Honduras'],
-  ['hk','Hong Kong SAR China'],['hu','Hungary'],['is','Iceland'],['in','India'],['id','Indonesia'],
-  ['ir','Iran'],['iq','Iraq'],['ie','Ireland'],['im','Isle of Man'],['il','Israel'],
-  ['it','Italy'],['jm','Jamaica'],['jp','Japan'],['je','Jersey'],['jo','Jordan'],
-  ['kz','Kazakhstan'],['ke','Kenya'],['ki','Kiribati'],['xk','Kosovo'],['kw','Kuwait'],
-  ['kg','Kyrgyzstan'],['la','Laos'],['lv','Latvia'],['lb','Lebanon'],['ls','Lesotho'],
-  ['lr','Liberia'],['ly','Libya'],['li','Liechtenstein'],['lt','Lithuania'],['lu','Luxembourg'],
-  ['mo','Macao SAR China'],['mg','Madagascar'],['mw','Malawi'],['my','Malaysia'],['mv','Maldives'],
-  ['ml','Mali'],['mt','Malta'],['mh','Marshall Islands'],['mq','Martinique'],['mr','Mauritania'],
-  ['mu','Mauritius'],['yt','Mayotte'],['mx','Mexico'],['fm','Micronesia'],['md','Moldova'],
-  ['mc','Monaco'],['mn','Mongolia'],['me','Montenegro'],['ms','Montserrat'],['ma','Morocco'],
-  ['mz','Mozambique'],['mm','Myanmar (Burma)'],['na','Namibia'],['nr','Nauru'],['np','Nepal'],
-  ['nl','Netherlands'],['nc','New Caledonia'],['nz','New Zealand'],['ni','Nicaragua'],['ne','Niger'],
-  ['ng','Nigeria'],['nu','Niue'],['nf','Norfolk Island'],['kp','North Korea'],['mk','North Macedonia'],
-  ['mp','Northern Mariana Islands'],['no','Norway'],['om','Oman'],['pk','Pakistan'],['pw','Palau'],
-  ['ps','Palestinian Territories'],['pa','Panama'],['pg','Papua New Guinea'],['py','Paraguay'],['pe','Peru'],
-  ['ph','Philippines'],['pn','Pitcairn Islands'],['pl','Poland'],['pt','Portugal'],['pr','Puerto Rico'],
-  ['qa','Qatar'],['re','Réunion'],['ro','Romania'],['ru','Russia'],['rw','Rwanda'],
-  ['ws','Samoa'],['sm','San Marino'],['st','São Tomé & Príncipe'],['sa','Saudi Arabia'],['sn','Senegal'],
-  ['rs','Serbia'],['sc','Seychelles'],['sl','Sierra Leone'],['sg','Singapore'],['sx','Sint Maarten'],
-  ['sk','Slovakia'],['si','Slovenia'],['sb','Solomon Islands'],['so','Somalia'],['za','South Africa'],
-  ['gs','South Georgia & South Sandwich Islands'],['kr','South Korea'],['ss','South Sudan'],['es','Spain'],['lk','Sri Lanka'],
-  ['bl','St. Barthélemy'],['sh','St. Helena'],['kn','St. Kitts & Nevis'],['lc','St. Lucia'],['mf','St. Martin'],
-  ['pm','St. Pierre & Miquelon'],['vc','St. Vincent & Grenadines'],['sd','Sudan'],['sr','Suriname'],['sj','Svalbard & Jan Mayen'],
-  ['se','Sweden'],['ch','Switzerland'],['sy','Syria'],['tw','Taiwan'],['tj','Tajikistan'],
-  ['tz','Tanzania'],['th','Thailand'],['tl','Timor-Leste'],['tg','Togo'],['tk','Tokelau'],
-  ['to','Tonga'],['tt','Trinidad & Tobago'],['tn','Tunisia'],['tr','Türkiye'],['tm','Turkmenistan'],
-  ['tc','Turks & Caicos Islands'],['tv','Tuvalu'],['ug','Uganda'],['ua','Ukraine'],['ae','United Arab Emirates'],
-  ['gb','United Kingdom'],['us','United States'],['uy','Uruguay'],['vi','U.S. Virgin Islands'],['uz','Uzbekistan'],
-  ['vu','Vanuatu'],['va','Vatican City'],['ve','Venezuela'],['vn','Vietnam'],['wf','Wallis & Futuna'],
-  ['eh','Western Sahara'],['ye','Yemen'],['zm','Zambia'],['zw','Zimbabwe'],
-];
-// Regional-indicator math: 'A'.codePoint(0x41) → 🇦 (0x1F1E6).
-// Offset is 0x1F1E6 - 0x41 = 0x1F1A5.
-const _FTZ_FLAG_OFFSET = 0x1F1E6 - 0x41;
-function _isoToFlag(iso) {
-  const u = iso.toUpperCase();
-  return String.fromCodePoint(u.charCodeAt(0) + _FTZ_FLAG_OFFSET, u.charCodeAt(1) + _FTZ_FLAG_OFFSET);
-}
-// Flag char → friendly country name (used by the hover/click tooltip)
-const _FTZ_FLAG_NAMES = Object.create(null);
-_FTZ_COUNTRY_ISO.forEach(([iso, name]) => {
-  const ch = _isoToFlag(iso);
-  EMOJI_SHORTCODES['flag_' + iso] = ch;
-  _FTZ_FLAG_NAMES[ch] = name;
+// ─── Country flag shortcodes ───────────────────────────────────
+// The _FTZ_COUNTRY_ISO table + helpers were declared further up
+// (EMOJI_CATEGORIES needs them at module-eval time). Here we just
+// inject each country into EMOJI_SHORTCODES as :flag_<iso>:.
+_FTZ_COUNTRY_ISO.forEach(([iso]) => {
+  EMOJI_SHORTCODES['flag_' + iso] = _isoToFlag(iso);
 });
 
 // ─── Reverse lookup: emoji char → shortcode ────────────────────

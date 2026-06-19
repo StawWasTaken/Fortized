@@ -21976,7 +21976,7 @@ async function _viewUserProfile(username) {
       <div class="fpp-card-modal__left">
         <div class="fpp__banner">${_fppBannerHTML(u, hasUserRadiance)}</div>
         <div class="fpp__av-row">
-          <div class="fpp__av-wrap">${_fppAvatarHTML(u, 100)}</div>
+          <div class="fpp__av-wrap">${_fppAvatarHTML(u, 92)}</div>
           ${_fppCSBubbleHTML(u, isOwn)}
         </div>
         ${_fppIdentityHTML(u)}
@@ -29388,11 +29388,14 @@ function _bioEmojiHTML(name, authorUsername) {
       return `<img class="rci-emoji bio-emoji emoji msg-emoji" data-emoji="${escapeHTML(lower)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(src)}" alt=":${escapeHTML(lower)}:" draggable="false" title="${friendly}">`;
     }
   } catch (_) {}
-  // 3) Custom bastion emoji — Radiance gate on the AUTHOR.
-  //    Look up author's Radiance via cached profile (self renders trust
-  //    CU; cross-user renders trust whatever the userCache has). If we
-  //    can't determine, default to permissive (render) so we don't drop
-  //    a legitimate emoji on a flaky cache.
+  // 3) Custom bastion emoji — STRICT Radiance gate on the author.
+  //    Per brief: "make sure bastion emojis are ONLY usable by
+  //    Radiance users". Previously we defaulted to permissive when
+  //    we couldn't resolve the author's entitlement from cache —
+  //    that meant a missed cache lookup let a free user render a
+  //    bastion emoji on their bio. Now: render ONLY when we can
+  //    PROVE Radiance. Self renders use CU directly so the user
+  //    always sees the correct behaviour for their own bio.
   const author = (authorUsername || '').toLowerCase();
   const isSelf = author && CU?.username && author === CU.username.toLowerCase();
   let authorObj = null;
@@ -29400,13 +29403,11 @@ function _bioEmojiHTML(name, authorUsername) {
   else if (typeof cachedProfile === 'function') {
     try { authorObj = cachedProfile(author) || null; } catch (_) {}
   }
+  if (!authorObj || !_hasRadiance(authorObj)) return '';
   // Walk every bastion to find the emoji.
   for (let bi = 0; bi < (CU?.bastions || []).length; bi++) {
     const ce = (CU.bastions[bi]?.customEmojis || []).find(e => e.name === lower);
     if (!ce) continue;
-    // Radiance gate. If we have author info AND they're not Radiance,
-    // refuse to render (caller falls back to the literal :name:).
-    if (authorObj && !_hasRadiance(authorObj)) return '';
     const friendly = _shortcodeToTitle(lower).replace(/"/g, '&quot;');
     return `<img class="rci-emoji bio-emoji emoji msg-emoji" data-emoji="${escapeHTML(lower)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(ce.data)}" alt=":${escapeHTML(lower)}:" draggable="false" title="${friendly}">`;
   }
@@ -33747,7 +33748,7 @@ async function showDMUserPanel(username) {
   panel.innerHTML = `
     <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
     <div class="fpp__av-row">
-      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 108)}</div>
+      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 94)}</div>
       ${_fppCSBubbleHTML(u, isOwn)}
     </div>
     ${_fppIdentityHTML(u)}
@@ -42958,8 +42959,29 @@ function handleEmojiAutocomplete(ta) {
   FORTIZED_EMOJIS.forEach(name => {
     if (name.startsWith(query) || name.includes(query)) _acResults.push({type:'ftz', name, url:FORTIZED_EMOJI_MAP[name]});
   });
-  // Bastion custom emojis
-  if (curBastion !== null) {
+  // Bastion custom emojis. In chat, only the CURRENT bastion's
+  // emojis are reachable. In the bio editor the user might be
+  // outside any bastion view, so we widen the search to every
+  // bastion they're in — but gate strictly on Radiance because
+  // custom bastion emojis on a global surface (bio) are a paid
+  // feature. Without that gate, free users could autocomplete +
+  // insert tokens that wouldn't actually render at read-time
+  // (parseBioMD's same Radiance check would strip them).
+  const isBio = ta.id === 'bio-input';
+  if (isBio) {
+    if (_hasRadiance(CU)) {
+      const seenNames = new Set();
+      (CU?.bastions || []).forEach(b => {
+        (b?.customEmojis || []).forEach(ce => {
+          if (seenNames.has(ce.name)) return;
+          if (ce.name.startsWith(query) || ce.name.includes(query)) {
+            _acResults.push({type:'custom', name:ce.name, url:ce.data});
+            seenNames.add(ce.name);
+          }
+        });
+      });
+    }
+  } else if (curBastion !== null) {
     (CU?.bastions?.[curBastion]?.customEmojis||[]).forEach(ce => {
       if (ce.name.startsWith(query) || ce.name.includes(query)) _acResults.push({type:'custom', name:ce.name, url:ce.data});
     });
@@ -46714,11 +46736,7 @@ function _openColourPopover(anchorEl, hiddenInputId) {
       <div class="pt-pop-hex-row">
         <span class="pt-pop-hex-prefix">#</span>
         <input id="pt-pop-hex" class="pt-pop-hex-input" type="text" maxlength="6" value="${startHex.slice(1)}" spellcheck="false" autocomplete="off">
-        <label class="pt-pop-icon-btn" title="Native colour picker" tabindex="-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="19" cy="13" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="10" cy="20" r="2.5"/><path d="M12 2a10 10 0 0 0 0 20c1.5 0 2-1 2-2v-1a2 2 0 0 1 2-2h2a4 4 0 0 0 4-4 10 10 0 0 0-10-11Z"/></svg>
-          <input id="pt-pop-native" type="color" value="${startHex}" style="opacity:0;width:0;height:0;position:absolute;pointer-events:none;">
-        </label>
-        ${eyeOk ? `<button class="pt-pop-icon-btn" id="pt-pop-eye" title="Eyedropper — sample any pixel on screen" type="button">
+        ${eyeOk ? `<button class="pt-pop-icon-btn" id="pt-pop-eye" title="Eyedropper — sample any pixel on screen" type="button" aria-label="Eyedropper">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
         </button>` : ''}
       </div>
@@ -46733,7 +46751,6 @@ function _openColourPopover(anchorEl, hiddenInputId) {
   const hue = pop.querySelector('#pt-pop-hue');
   const hueThumb = pop.querySelector('#pt-pop-hue-thumb');
   const hexInp = pop.querySelector('#pt-pop-hex');
-  const native = pop.querySelector('#pt-pop-native');
 
   // Repaint the picker chrome + commit the current colour upward.
   const refresh = (skipHexInput) => {
@@ -46747,7 +46764,6 @@ function _openColourPopover(anchorEl, hiddenInputId) {
     hueThumb.style.left = (state.h / 360 * 100) + '%';
     hue.setAttribute('aria-valuenow', Math.round(state.h));
     if (!skipHexInput) hexInp.value = hex.slice(1);
-    native.value = hex;
     if (hidden) hidden.value = hex;
     // Generic visible-swatch + label sync — derive both IDs from
     // the hidden input the picker was opened against so the second
@@ -46825,13 +46841,8 @@ function _openColourPopover(anchorEl, hiddenInputId) {
     refresh(true);
   });
 
-  // Native picker (label tap opens it).
-  native.addEventListener('input', () => {
-    const rgb = hexToRgb(native.value);
-    const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
-    state.h = h.h; state.s = h.s; state.v = h.v;
-    refresh();
-  });
+  // Native colour picker removed (per brief — only the eyedropper
+  // remains as the alternative input alongside HSV + hex).
 
   // Preset swatches.
   pop.querySelectorAll('.pt-pop-preset').forEach(b => b.addEventListener('click', () => {

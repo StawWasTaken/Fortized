@@ -3029,9 +3029,21 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   color:rgba(255,255,255,.18);
   pointer-events:none;
 }
+/* Emoji glyphs inside the bio rich-input mirror the chatbar's
+   .rci-emoji exactly (size, baseline, user-select:text) so they
+   feel like a single character of text — highlightable with the
+   caret, copy-pastes as ":name:", deletes with one backspace,
+   etc. Without the user-select rule the browser treats them as
+   atomic images and selection skips/jumps around them. */
 .bio-textbox__input .msg-emoji,
 .bio-textbox__input .rci-emoji{
-  width:18px;height:18px;vertical-align:-4px;display:inline-block;
+  width:1.4em;height:1.4em;
+  object-fit:contain;
+  vertical-align:-.27em;
+  display:inline-block;
+  user-select:text;
+  -webkit-user-select:text;
+  margin:0 1px;
 }
 .bio-textbox__emoji{
   position:absolute;
@@ -9939,12 +9951,14 @@ select:focus-visible {
    so the user's own status visibly carries their profile theme on
    every surface that shows their avatar. The inner status colour
    (online green / idle yellow / DND red / offline grey) stays
-   semantic — only the surround changes. */
+   semantic — only the surround changes. Stroke + glow trimmed
+   after first-pass review: was 1px hairline + 12px glow which
+   bled into the banner; now a flatter wash with no outer halo. */
 .fpp__status-dot--self{
   background:
-    linear-gradient(rgba(var(--fpp-main-rgb),.32), rgba(var(--fpp-main-rgb),.18)),
+    linear-gradient(rgba(var(--fpp-main-rgb),.22), rgba(var(--fpp-main-rgb),.12)),
     var(--panel);
-  box-shadow:0 0 0 1px rgba(var(--fpp-main-rgb),.55), 0 0 12px rgba(var(--fpp-main-rgb),.35);
+  box-shadow:inset 0 0 0 1px rgba(var(--fpp-main-rgb),.35);
 }
 /* Frame gradient — Radiance only (set by _fppApplyTheme when color2
    is present). Repaints the avatar ring, the top stripe and the
@@ -9962,9 +9976,15 @@ select:focus-visible {
   border-image:var(--fpp-frame) 1;
   border-image-slice:1;
 }
+/* Frame ring — thinner than the first pass; was 3+5px (8px total)
+   which read as a chunky yellow halo around the avatar. Now 2+1px
+   (3px total): a single dark hairline against the avatar's own
+   border + a slim Main-coloured outer band. The border-width on
+   each .fpp variant still does the heavy lifting; the gradient
+   class just tints the outer edge. */
 .fpp.fpp--has-frame-gradient .fpp__av,
 .fpp-card-modal.fpp--has-frame-gradient .fpp__av{
-  box-shadow:0 0 0 3px rgba(0,0,0,.6), 0 0 0 5px var(--fpp-main);
+  box-shadow:0 0 0 1px rgba(0,0,0,.55), 0 0 0 2px var(--fpp-main);
 }
 /* Custom-status bubble — speech-bubble style. Sits vertically
    centred on the banner/body boundary line, with two trailing dots
@@ -10488,12 +10508,12 @@ select:focus-visible {
   height:100%;
   display:flex; flex-direction:column;
 }
-/* DM panel is narrower than the popovers (~341px column), so the
-   avatar gets a 1.5× bump per brief — same visual anchor weight as
-   Discord's DM right-side panel. Border thickness scales a notch
-   so the ring stays in proportion. */
-.fpp--dm .fpp__av{ width:108px; height:108px; border-width:5px; }
-.fpp--dm .fpp__av-row{ margin-top:-60px; }
+/* DM panel avatar — tuned down from the first pass after user
+   review. Was 108px (×1.5), the screenshot read as "too big" —
+   now 94px (×1.3) so it still anchors the column without
+   crowding the banner edge. */
+.fpp--dm .fpp__av{ width:94px; height:94px; border-width:3px; }
+.fpp--dm .fpp__av-row{ margin-top:-52px; }
 .fpp--dm > *:last-child{ margin-bottom:0; }
 .fpp--dm .fpp__msg-input{ margin-top:auto; }
 /* DM panel is a sidebar column, not a freestanding card — a Main-
@@ -10795,8 +10815,8 @@ select:focus-visible {
    everywhere else — same image, two different crops. */
 .fpp-card-modal__left .fpp__banner{ aspect-ratio:680/235; width:100%; height:auto; flex-shrink:0; }
 .fpp-card-modal__left .fpp__banner img{ width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
-.fpp-card-modal__left .fpp__av{ width:100px; height:100px; border-width:4px; }
-.fpp-card-modal__left .fpp__av-row{ margin-top:-56px; }
+.fpp-card-modal__left .fpp__av{ width:92px; height:92px; border-width:3px; }
+.fpp-card-modal__left .fpp__av-row{ margin-top:-52px; }
 .fpp-card-modal__right{
   display:flex; flex-direction:column; overflow:hidden; min-height:0;
 }

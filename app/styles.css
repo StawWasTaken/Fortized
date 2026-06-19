@@ -1128,17 +1128,26 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .pt-pop-preset{width:100%;aspect-ratio:1/1;border-radius:8px;border:1.5px solid rgba(255,255,255,.08);cursor:pointer;padding:0;transition:transform .12s,border-color .12s;}
 .pt-pop-preset:hover{transform:scale(1.07);border-color:rgba(255,249,62,.4);}
 
-/* Universal eyedropper overlay — the polyfill path for browsers
-   without the native EyeDropper API. Sits over the whole viewport,
-   passes the click through to elementFromPoint via a brief
-   pointer-events:none hide, and surfaces a hint chip so the user
-   knows what to do. The hint stays at the top so it doesn't sit
-   under the user's cursor when they're trying to aim. */
+/* Universal eyedropper overlay. Two modes:
+     · base — overlay only, sits over the live page
+     · --capture — overlay shows the captured frame from
+       getDisplayMedia and a roving loupe with live hex readout
+   Both modes use cursor:crosshair and listen for Esc. */
 .ftz-eye-overlay{
   position:fixed; inset:0; z-index:99999;
   background:rgba(0,0,0,.18);
   cursor:crosshair !important;
   animation:ftzEyeFadeIn .14s ease-out;
+}
+.ftz-eye-overlay--capture{
+  background:rgba(0,0,0,.92);
+}
+.ftz-eye-frame{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:contain;
+  user-select:none;
+  pointer-events:none;
 }
 .ftz-eye-hint{
   position:absolute; left:50%; top:24px;
@@ -1153,8 +1162,35 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
   font-size:12.5px; font-weight:600;
   color:rgba(255,255,255,.85);
   pointer-events:none;
+  z-index:2;
 }
 .ftz-eye-hint-ico{ display:inline-flex; color:var(--accent,#fff93e); }
+.ftz-eye-loupe{
+  position:fixed; left:0; top:0;
+  display:inline-flex; align-items:center; gap:7px;
+  padding:6px 10px 6px 6px;
+  background:rgba(20,22,28,.94);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:999px;
+  box-shadow:0 8px 24px rgba(0,0,0,.45);
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .08s;
+  z-index:3;
+}
+.ftz-eye-loupe-swatch{
+  width:18px; height:18px;
+  border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.6);
+  flex-shrink:0;
+}
+.ftz-eye-loupe-hex{
+  font-family:var(--font-ui);
+  font-size:11.5px; font-weight:700;
+  letter-spacing:.04em;
+  color:#fff;
+  font-variant-numeric:tabular-nums;
+}
 @keyframes ftzEyeFadeIn{ from { opacity:0; } to { opacity:1; } }
 
 /* Source-message highlight when the user is actively replying to it.
@@ -10040,32 +10076,26 @@ select:focus-visible {
   pointer-events:none; z-index:2;
 }
 .fpp__status-dot{
-  /* ~2/3 inside the avatar, 1/3 outside. A circular avatar curves
-     away from its bounding-box corner, so a positive 2px offset
-     brings the dot's centre to ~36 px from the avatar's centre —
-     just inside the 40 px radius — for the deeper inset Discord
-     uses (most of the dot reads as overlapping the pfp). */
+  /* Sits in the avatar's bottom-right corner. No panel-coloured
+     wrapper ring — the SVG (FtzStatus.dotSvg) already paints its
+     own dark circle background, so layering a wider panel circle
+     around it just created the visible "ring" the user kept
+     flagging. We make the wrapper exactly the SVG size and
+     transparent: the dot reads as a clean status disc with no
+     surrounding chrome. */
   position:absolute; bottom:2px; right:2px;
-  width:26px; height:26px; z-index:3;
+  width:22px; height:22px; z-index:3;
   border-radius:50%;
-  background:
-    linear-gradient(rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)),
-    linear-gradient(rgba(0,0,0,.20), rgba(0,0,0,.20)),
-    var(--panel);
+  background:transparent;
   display:flex; align-items:center; justify-content:center;
 }
-/* Self-status — tints the cutout ring and adds a subtle theme glow
-   so the user's own status visibly carries their profile theme on
-   every surface that shows their avatar. The inner status colour
-   (online green / idle yellow / DND red / offline grey) stays
-   semantic — only the surround changes. Stroke + glow trimmed
-   after first-pass review: was 1px hairline + 12px glow which
-   bled into the banner; now a flatter wash with no outer halo. */
+/* Self-status — no chrome ring or wash. The dot just shows the
+   status colour against the panel. Earlier passes added a tinted
+   background + inset stroke as a "theme glow"; user feedback was
+   that any ring at all was distracting. Reverted to a flat dot. */
 .fpp__status-dot--self{
-  background:
-    linear-gradient(rgba(var(--fpp-main-rgb),.22), rgba(var(--fpp-main-rgb),.12)),
-    var(--panel);
-  box-shadow:inset 0 0 0 1px rgba(var(--fpp-main-rgb),.35);
+  background:transparent;
+  box-shadow:none;
 }
 /* Frame gradient — Radiance only (set by _fppApplyTheme when color2
    is present). Repaints the avatar ring, the top stripe and the

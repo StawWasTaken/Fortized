@@ -20917,8 +20917,8 @@ function _buildProfileView(tab) {
           ${(() => {
             const currentCursor = localStorage.getItem('ftz_cursor') || 'knight';
             const cursors = [
-              { id:'knight',     name:'Fortized Knight', desc:"Suit up. The Knight’s gauntlet is on point duty — armoured, ready, mildly judgemental.", preview:_FTZ_CURSORS.knight.normal },
-              { id:'fortizian',  name:'Fortizan',         desc:"A perfectly average Fortizan paw. Pure white, slightly suspicious, ready to click on absolutely anything.", preview:_FTZ_CURSORS.fortizian.normal },
+              { id:'knight',     name:'Fortized Knight', desc:'"i polish this gauntlet every morning, you know. and yet you still drag it through your downloads folder."',                 preview:_FTZ_CURSORS.knight.normal },
+              { id:'fortizian',  name:'Fortizan',         desc:'"everyone in fortized is pure white anyways, what did you expect... pink? we live in a city without a sun. enjoy the hand."', preview:_FTZ_CURSORS.fortizian.normal },
             ];
             return cursors.map(c => `
               <div onclick="_applyFortizedCursor('${c.id}')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid ${currentCursor===c.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentCursor===c.id?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">
@@ -46980,14 +46980,20 @@ function _openColourPopover(anchorEl, hiddenInputId) {
   }, 0);
 }
 
-// ─── Universal eyedropper ──────────────────────────────────────
+// ─── Universal pixel-accurate eyedropper ───────────────────────
 // Returns the picked hex (#RRGGBB) or null if the user cancelled.
-// Resolves via the native EyeDropper API on Chromium / Edge
-// (pixel-perfect), and via a DOM-overlay fallback on Firefox /
-// Safari — the user clicks any element on the page and we read
-// its computed background-color. The fallback isn't pixel-true
-// but works on every browser without pulling in a heavy
-// canvas-snapshot dependency.
+// Strategy:
+//   1. Chromium / Edge with the native EyeDropper API → use it.
+//      Best path, pixel-perfect, no permission prompt needed.
+//   2. Every other browser (Firefox, Safari, older Edge) →
+//      getDisplayMedia capture. The user picks the Fortized tab,
+//      we grab a single video frame, freeze it as an image inside
+//      an overlay (the user sees their own page as a still),
+//      and let them click any pixel. We sample THAT pixel from
+//      the captured canvas — true pixel accuracy, no DOM walking.
+// getDisplayMedia ships in Firefox, Safari 13+, Chrome, Edge,
+// Opera; it's the same API Discord uses internally for screen
+// share, so the permission prompt is familiar.
 async function _ftzEyedropperOpen() {
   if (typeof window.EyeDropper === 'function') {
     try {
@@ -46996,27 +47002,69 @@ async function _ftzEyedropperOpen() {
       return res?.sRGBHex || null;
     } catch (_) { return null; }
   }
-  return _ftzEyedropperFallback();
+  return _ftzEyedropperCaptureFallback();
 }
-// DOM-element sampler. Drops a translucent click-catcher over
-// the viewport; on click we use elementFromPoint to find the
-// topmost element BELOW our overlay (briefly hide via
-// pointer-events:none) and read getComputedStyle().backgroundColor.
-// Walks up the tree until we find a non-transparent ancestor so
-// clicking on, say, a transparent text node still returns a
-// meaningful colour from the panel beneath.
-function _ftzEyedropperFallback() {
+async function _ftzEyedropperCaptureFallback() {
+  if (!navigator?.mediaDevices?.getDisplayMedia) {
+    try { toast?.('Eyedropper unavailable in this browser', 'error'); } catch (_) {}
+    return null;
+  }
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getDisplayMedia({
+      // preferCurrentTab is a Chromium hint — Firefox / Safari
+      // ignore it gracefully, no error.
+      video: { cursor: 'never', displaySurface: 'browser' },
+      audio: false,
+      preferCurrentTab: true,
+      selfBrowserSurface: 'include',
+      surfaceSwitching: 'exclude',
+      systemAudio: 'exclude',
+    });
+  } catch (_) {
+    // User denied / cancelled the share dialog.
+    return null;
+  }
+  // Pull a single frame off the track into a canvas.
+  const video = document.createElement('video');
+  video.srcObject = stream;
+  video.muted = true;
+  video.playsInline = true;
+  try { await video.play(); } catch (_) {}
+  // Wait one rAF so the first frame is actually decoded.
+  await new Promise(r => requestAnimationFrame(() => r()));
+  const w = video.videoWidth || window.innerWidth;
+  const h = video.videoHeight || window.innerHeight;
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(video, 0, 0, w, h);
+  // Tear down the share now — we already have the frame.
+  stream.getTracks().forEach(t => t.stop());
+  // Show the captured frame as an overlay the user can click into.
+  // The frame is rendered scaled to viewport so a click maps
+  // pixel-to-pixel back to the canvas via the same scale factor.
   return new Promise((resolve) => {
     const overlay = document.createElement('div');
-    overlay.className = 'ftz-eye-overlay';
+    overlay.className = 'ftz-eye-overlay ftz-eye-overlay--capture';
+    const dataUrl = canvas.toDataURL('image/png');
     overlay.innerHTML = `
       <div class="ftz-eye-hint">
         <span class="ftz-eye-hint-ico" aria-hidden="true">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
         </span>
-        Click anywhere to sample a colour · Esc to cancel
+        Click any pixel to sample · Esc to cancel
+      </div>
+      <img class="ftz-eye-frame" src="${dataUrl}" alt="" draggable="false">
+      <div class="ftz-eye-loupe" id="ftz-eye-loupe" aria-hidden="true">
+        <span class="ftz-eye-loupe-swatch"></span>
+        <span class="ftz-eye-loupe-hex">#______</span>
       </div>`;
     document.body.appendChild(overlay);
+    const img = overlay.querySelector('.ftz-eye-frame');
+    const loupe = overlay.querySelector('#ftz-eye-loupe');
+    const swatch = loupe.querySelector('.ftz-eye-loupe-swatch');
+    const hexLbl = loupe.querySelector('.ftz-eye-loupe-hex');
     const cleanup = () => {
       overlay.remove();
       document.removeEventListener('keydown', onKey, true);
@@ -47025,43 +47073,42 @@ function _ftzEyedropperFallback() {
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cleanup(); resolve(null); }
     };
     document.addEventListener('keydown', onKey, true);
-    overlay.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      // Hide the overlay for a frame so elementFromPoint sees what's
-      // underneath instead of returning our own overlay.
-      overlay.style.pointerEvents = 'none';
-      const target = document.elementFromPoint(e.clientX, e.clientY);
-      overlay.style.pointerEvents = '';
-      let hex = null;
-      // Walk up the tree until we hit a non-transparent background.
-      let el = target;
-      while (el && el !== document.documentElement) {
-        const bg = getComputedStyle(el).backgroundColor;
-        const parsed = _ftzParseRgbString(bg);
-        if (parsed && parsed.a > 0) {
-          hex = '#' + [parsed.r, parsed.g, parsed.b].map(v => v.toString(16).padStart(2,'0')).join('');
-          break;
-        }
-        el = el.parentElement;
+    // Map a viewport click back to canvas-pixel coordinates by
+    // using the image's own bounding box (it's rendered with
+    // object-fit:contain so the frame is letterboxed if the
+    // viewport AR differs from the source).
+    const sample = (clientX, clientY) => {
+      const rect = img.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
+      const px = Math.floor((x / rect.width)  * canvas.width);
+      const py = Math.floor((y / rect.height) * canvas.height);
+      try {
+        const d = ctx.getImageData(px, py, 1, 1).data;
+        return '#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2,'0')).join('');
+      } catch (_) {
+        // Cross-origin canvas read would throw here — getDisplayMedia
+        // frames are taint-free though, so this is just a safety net.
+        return null;
       }
+    };
+    overlay.addEventListener('mousemove', (e) => {
+      const hex = sample(e.clientX, e.clientY);
+      if (!hex) { loupe.style.opacity = 0; return; }
+      loupe.style.opacity = 1;
+      loupe.style.left = (e.clientX + 16) + 'px';
+      loupe.style.top  = (e.clientY + 16) + 'px';
+      swatch.style.background = hex;
+      hexLbl.textContent = hex.toUpperCase();
+    });
+    overlay.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const hex = sample(e.clientX, e.clientY);
       cleanup();
       resolve(hex);
     }, { once: true });
   });
-}
-function _ftzParseRgbString(s) {
-  if (!s || typeof s !== 'string') return null;
-  const m = s.match(/^rgba?\(([^)]+)\)$/i);
-  if (!m) return null;
-  const parts = m[1].split(',').map(x => x.trim());
-  if (parts.length < 3) return null;
-  const r = parseInt(parts[0], 10);
-  const g = parseInt(parts[1], 10);
-  const b = parseInt(parts[2], 10);
-  const a = parts.length >= 4 ? parseFloat(parts[3]) : 1;
-  if ([r,g,b].some(v => Number.isNaN(v))) return null;
-  return { r, g, b, a: Number.isNaN(a) ? 1 : a };
 }
 
 // Clear the Radiance secondary colour. The widget always offers

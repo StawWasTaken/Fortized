@@ -40,10 +40,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix112';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix113';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix112';
+    s4.src = '/firebase-compat-shim.js?v=2026fix113';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -52,14 +52,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix112">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix113">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix112', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix113', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -514,7 +514,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
         <div class="active-now-header">Active Now</div>
         <div class="active-now-list" id="dm-active-now-list"></div>
       </div>
-      <div id="dm-user-panel" style="display:none;width:280px;min-width:280px;max-width:280px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
+      <div id="dm-user-panel" style="display:none;width:341px;min-width:341px;max-width:341px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
     </div>
 
     <!-- FRIENDS VIEW -->
@@ -1088,8 +1088,11 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
 <!-- UNSAVED CHANGES BAR -->
 <div class="unsaved-bar" id="unsaved-bar">
   <div class="unsaved-bar-msg"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> <strong>Careful!</strong> You have unsaved changes.</div>
-  <button class="unsaved-bar-reset" onclick="resetSettingsChanges()">Reset</button>
-  <button class="unsaved-bar-save" onclick="saveAllSettings()">Save Changes</button>
+  <button class="unsaved-bar-reset" type="button" onclick="resetSettingsChanges()">Reset</button>
+  <button class="unsaved-bar-save" type="button" onclick="saveAllSettings()" aria-label="Save Changes">
+    <span class="unsaved-bar-save-spinner" aria-hidden="true"></span>
+    <span class="unsaved-bar-save-label">Save Changes</span>
+  </button>
 </div>
 
 
@@ -1210,10 +1213,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix112"></script>
-<script src="/app/app.js?v=2026fix112"></script>
-<script src="/app/joy-system.js?v=2026fix112"></script>
-<script src="/app/chronicle-games.js?v=2026fix112"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix113"></script>
+<script src="/app/app.js?v=2026fix113"></script>
+<script src="/app/joy-system.js?v=2026fix113"></script>
+<script src="/app/chronicle-games.js?v=2026fix113"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

@@ -759,7 +759,14 @@ const EMOJI_CATEGORIES = [
   {icon:'⚽', label:'Sports', emojis:['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤼','🤸','🤺','🤾','🏌️','🏇','⛹️','🤽','🏊','🚣','🏄','🧘','🚴','🚵','🏎️','🏍️']},
   {icon:'🚗', label:'Travel & Places', emojis:['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🏍️','🛵','🦽','🦼','🛺','🚲','🛴','🛹','🛼','🚏','🛣️','🛤️','🛞','⛽','🛞','🚨','🚥','🚦','🛑','🚧','⚓','🛟','⛵','🛶','🚤','🛳️','⛴️','🛥️','🚢','✈️','🛩️','🛫','🛬','🪂','💺','🚁','🚟','🚠','🚡','🛰️','🚀','🛸','🌍','🌎','🌏','🗺️','🧭','🏔️','⛰️','🌋','🗻','🏕️','🏖️','🏜️','🏝️','🏞️','🏟️','🏛️','🏗️','🧱','🪨','🪵','🛖','🏘️','🏚️','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','🛕','🕍','⛩️','🕋','⛲','⛺','🌁','🌃','🏙️','🌄','🌅','🌆','🌇','🌉','🎠','🛝','🎡','🎢','💈','🎪','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞','🚋','🚃','🚎']},
   {icon:'🏷️', label:'Objects', emojis:['👓','🕶️','🥽','🥼','🦺','👔','👕','👖','🧣','🧤','🧥','🧦','👗','👘','🥻','🩱','🩲','🩳','👙','👚','🪭','👛','👜','👝','🛍️','🎒','🩴','👞','👟','🥾','🥿','👠','👡','🩰','👢','🪮','👑','👒','🎩','🎓','🧢','🪖','⛑️','📿','💄','💍','💎','📕','📗','📘','📙','📚','📖','🔖','🏷️','📰','🗞️','📁','📂','📅','📆','📇','🗃️','🗳️','🗄️','📋','📝','📄','📃','📑','🧾','📊','📈','📉','✉️','📧','📨','📩','📤','📥','📦','📫','📪','📬','📭','📮','🗳️','✏️','✒️','🖋️','🖊️','🖌️','🖍️','📐','📏','🗂️','📌','📍','✂️','🗃️','🗳️','🗄️','🔒','🔓','🔏','🔐','🔑','🗝️','🧸','🪆','🧩','♟️','🎭','🖼️','🧵','🪡','🧶','🪢']},
-  {icon:'🔣', label:'Flags', emojis:['🏁','🚩','🎌','🏴','🏳️','🏳️‍🌈','🏳️‍⚧️','🏴‍☠️','🇺🇸','🇬🇧','🇫🇷','🇩🇪','🇮🇹','🇪🇸','🇵🇹','🇧🇷','🇯🇵','🇰🇷','🇨🇳','🇮🇳','🇷🇺','🇨🇦','🇦🇺','🇲🇽','🇦🇷','🇨🇴','🇹🇷','🇸🇦','🇪🇬','🇳🇬','🇿🇦','🇰🇪','🇮🇩','🇹🇭','🇻🇳','🇵🇭','🇲🇾','🇸🇬','🇳🇿','🇮🇪','🇳🇱','🇧🇪','🇨🇭','🇦🇹','🇸🇪','🇳🇴','🇩🇰','🇫🇮','🇵🇱','🇨🇿','🇬🇷','🇺🇦','🇷🇴','🇭🇺','🇭🇷','🇷🇸','🇧🇬','🇸🇰','🇱🇹','🇱🇻','🇪🇪','🇮🇱','🇦🇪','🇶🇦','🇰🇼','🇯🇴','🇱🇧','🇮🇶','🇮🇷','🇵🇰','🇧🇩','🇱🇰','🇲🇲','🇰🇭','🇱🇦','🇹🇼','🇭🇰','🇲🇴','🇰🇵','🇲🇳','🇳🇵','🇧🇹','🇦🇫','🇺🇿','🇰🇿','🇬🇪','🇦🇲','🇦🇿','🇨🇱','🇵🇪','🇪🇨','🇻🇪','🇧🇴','🇵🇾','🇺🇾','🇬🇾','🇸🇷','🇨🇺','🇯🇲','🇭🇹','🇩🇴','🇵🇷','🇹🇹','🇧🇸','🇧🇧','🇬🇩','🇱🇨','🇩🇲','🇰🇳','🇦🇬','🇻🇨','🇲🇦','🇩🇿','🇹🇳','🇱🇾','🇸🇩','🇪🇹','🇹🇿','🇺🇬','🇷🇼','🇨🇩','🇨🇬','🇬🇭','🇨🇮','🇸🇳','🇨🇲','🇲🇬','🇲🇿','🇦🇴','🇿🇼','🇧🇼','🇳🇦','🇿🇲','🇲🇼','🇫🇯','🇵🇬','🇸🇧','🇻🇺','🇼🇸','🇹🇴','🇰🇮','🇲🇭','🇵🇼','🇫🇲','🇳🇷','🇹🇻','🇮🇸','🇱🇺','🇲🇹','🇨🇾','🇲🇩','🇲🇪','🇦🇱','🇲🇰','🇧🇦','🇽🇰','🇸🇮']},
+  // Flags category. Symbolic / regional banners stay hard-coded at
+  // the top of the list; every ISO 3166-1 country flag is appended
+  // alphabetically by ISO code via _FTZ_COUNTRY_ISO so this list is
+  // always in sync with the :flag_<iso>: shortcodes.
+  {icon:'🔣', label:'Flags', emojis:[
+    '🏁','🚩','🎌','🏴','🏳️','🏳️‍🌈','🏳️‍⚧️','🏴‍☠️',
+    ..._FTZ_COUNTRY_ISO.map(([iso]) => _isoToFlag(iso))
+  ]},
 ];
 
 // ════════════════════════════════════════════════════════════
@@ -879,6 +886,107 @@ const EMOJI_SHORTCODES = {
   'accordion':'🪗','guitar':'🎸','musical_keyboard':'🎹','trumpet':'🎺','violin':'🎻',
   'banjo':'🪕','drum':'🥁','long_drum':'🪘',
 };
+
+// ─── Country flags ─────────────────────────────────────────────
+// Every ISO 3166-1 alpha-2 region, mapped to its regional-indicator
+// flag glyph and exposed as :flag_<iso>: in EMOJI_SHORTCODES (per
+// brief). Built programmatically so it's a single source of truth
+// for the picker + parser + autocomplete + reverse-name lookup.
+// Each entry is [iso2, English country name].
+const _FTZ_COUNTRY_ISO = [
+  ['af','Afghanistan'],['ax','Åland Islands'],['al','Albania'],['dz','Algeria'],['as','American Samoa'],
+  ['ad','Andorra'],['ao','Angola'],['ai','Anguilla'],['aq','Antarctica'],['ag','Antigua & Barbuda'],
+  ['ar','Argentina'],['am','Armenia'],['aw','Aruba'],['au','Australia'],['at','Austria'],
+  ['az','Azerbaijan'],['bs','Bahamas'],['bh','Bahrain'],['bd','Bangladesh'],['bb','Barbados'],
+  ['by','Belarus'],['be','Belgium'],['bz','Belize'],['bj','Benin'],['bm','Bermuda'],
+  ['bt','Bhutan'],['bo','Bolivia'],['ba','Bosnia & Herzegovina'],['bw','Botswana'],['bv','Bouvet Island'],
+  ['br','Brazil'],['io','British Indian Ocean Territory'],['vg','British Virgin Islands'],['bn','Brunei'],['bg','Bulgaria'],
+  ['bf','Burkina Faso'],['bi','Burundi'],['kh','Cambodia'],['cm','Cameroon'],['ca','Canada'],
+  ['cv','Cape Verde'],['bq','Caribbean Netherlands'],['ky','Cayman Islands'],['cf','Central African Republic'],['td','Chad'],
+  ['cl','Chile'],['cn','China'],['cx','Christmas Island'],['cc','Cocos (Keeling) Islands'],['co','Colombia'],
+  ['km','Comoros'],['cg','Congo - Brazzaville'],['cd','Congo - Kinshasa'],['ck','Cook Islands'],['cr','Costa Rica'],
+  ['ci','Côte d’Ivoire'],['hr','Croatia'],['cu','Cuba'],['cw','Curaçao'],['cy','Cyprus'],
+  ['cz','Czechia'],['dk','Denmark'],['dj','Djibouti'],['dm','Dominica'],['do','Dominican Republic'],
+  ['ec','Ecuador'],['eg','Egypt'],['sv','El Salvador'],['gq','Equatorial Guinea'],['er','Eritrea'],
+  ['ee','Estonia'],['sz','Eswatini'],['et','Ethiopia'],['fk','Falkland Islands'],['fo','Faroe Islands'],
+  ['fj','Fiji'],['fi','Finland'],['fr','France'],['gf','French Guiana'],['pf','French Polynesia'],
+  ['tf','French Southern Territories'],['ga','Gabon'],['gm','Gambia'],['ge','Georgia'],['de','Germany'],
+  ['gh','Ghana'],['gi','Gibraltar'],['gr','Greece'],['gl','Greenland'],['gd','Grenada'],
+  ['gp','Guadeloupe'],['gu','Guam'],['gt','Guatemala'],['gg','Guernsey'],['gn','Guinea'],
+  ['gw','Guinea-Bissau'],['gy','Guyana'],['ht','Haiti'],['hm','Heard & McDonald Islands'],['hn','Honduras'],
+  ['hk','Hong Kong SAR China'],['hu','Hungary'],['is','Iceland'],['in','India'],['id','Indonesia'],
+  ['ir','Iran'],['iq','Iraq'],['ie','Ireland'],['im','Isle of Man'],['il','Israel'],
+  ['it','Italy'],['jm','Jamaica'],['jp','Japan'],['je','Jersey'],['jo','Jordan'],
+  ['kz','Kazakhstan'],['ke','Kenya'],['ki','Kiribati'],['xk','Kosovo'],['kw','Kuwait'],
+  ['kg','Kyrgyzstan'],['la','Laos'],['lv','Latvia'],['lb','Lebanon'],['ls','Lesotho'],
+  ['lr','Liberia'],['ly','Libya'],['li','Liechtenstein'],['lt','Lithuania'],['lu','Luxembourg'],
+  ['mo','Macao SAR China'],['mg','Madagascar'],['mw','Malawi'],['my','Malaysia'],['mv','Maldives'],
+  ['ml','Mali'],['mt','Malta'],['mh','Marshall Islands'],['mq','Martinique'],['mr','Mauritania'],
+  ['mu','Mauritius'],['yt','Mayotte'],['mx','Mexico'],['fm','Micronesia'],['md','Moldova'],
+  ['mc','Monaco'],['mn','Mongolia'],['me','Montenegro'],['ms','Montserrat'],['ma','Morocco'],
+  ['mz','Mozambique'],['mm','Myanmar (Burma)'],['na','Namibia'],['nr','Nauru'],['np','Nepal'],
+  ['nl','Netherlands'],['nc','New Caledonia'],['nz','New Zealand'],['ni','Nicaragua'],['ne','Niger'],
+  ['ng','Nigeria'],['nu','Niue'],['nf','Norfolk Island'],['kp','North Korea'],['mk','North Macedonia'],
+  ['mp','Northern Mariana Islands'],['no','Norway'],['om','Oman'],['pk','Pakistan'],['pw','Palau'],
+  ['ps','Palestinian Territories'],['pa','Panama'],['pg','Papua New Guinea'],['py','Paraguay'],['pe','Peru'],
+  ['ph','Philippines'],['pn','Pitcairn Islands'],['pl','Poland'],['pt','Portugal'],['pr','Puerto Rico'],
+  ['qa','Qatar'],['re','Réunion'],['ro','Romania'],['ru','Russia'],['rw','Rwanda'],
+  ['ws','Samoa'],['sm','San Marino'],['st','São Tomé & Príncipe'],['sa','Saudi Arabia'],['sn','Senegal'],
+  ['rs','Serbia'],['sc','Seychelles'],['sl','Sierra Leone'],['sg','Singapore'],['sx','Sint Maarten'],
+  ['sk','Slovakia'],['si','Slovenia'],['sb','Solomon Islands'],['so','Somalia'],['za','South Africa'],
+  ['gs','South Georgia & South Sandwich Islands'],['kr','South Korea'],['ss','South Sudan'],['es','Spain'],['lk','Sri Lanka'],
+  ['bl','St. Barthélemy'],['sh','St. Helena'],['kn','St. Kitts & Nevis'],['lc','St. Lucia'],['mf','St. Martin'],
+  ['pm','St. Pierre & Miquelon'],['vc','St. Vincent & Grenadines'],['sd','Sudan'],['sr','Suriname'],['sj','Svalbard & Jan Mayen'],
+  ['se','Sweden'],['ch','Switzerland'],['sy','Syria'],['tw','Taiwan'],['tj','Tajikistan'],
+  ['tz','Tanzania'],['th','Thailand'],['tl','Timor-Leste'],['tg','Togo'],['tk','Tokelau'],
+  ['to','Tonga'],['tt','Trinidad & Tobago'],['tn','Tunisia'],['tr','Türkiye'],['tm','Turkmenistan'],
+  ['tc','Turks & Caicos Islands'],['tv','Tuvalu'],['ug','Uganda'],['ua','Ukraine'],['ae','United Arab Emirates'],
+  ['gb','United Kingdom'],['us','United States'],['uy','Uruguay'],['vi','U.S. Virgin Islands'],['uz','Uzbekistan'],
+  ['vu','Vanuatu'],['va','Vatican City'],['ve','Venezuela'],['vn','Vietnam'],['wf','Wallis & Futuna'],
+  ['eh','Western Sahara'],['ye','Yemen'],['zm','Zambia'],['zw','Zimbabwe'],
+];
+// Regional-indicator math: 'A'.codePoint(0x41) → 🇦 (0x1F1E6).
+// Offset is 0x1F1E6 - 0x41 = 0x1F1A5.
+const _FTZ_FLAG_OFFSET = 0x1F1E6 - 0x41;
+function _isoToFlag(iso) {
+  const u = iso.toUpperCase();
+  return String.fromCodePoint(u.charCodeAt(0) + _FTZ_FLAG_OFFSET, u.charCodeAt(1) + _FTZ_FLAG_OFFSET);
+}
+// Flag char → friendly country name (used by the hover/click tooltip)
+const _FTZ_FLAG_NAMES = Object.create(null);
+_FTZ_COUNTRY_ISO.forEach(([iso, name]) => {
+  const ch = _isoToFlag(iso);
+  EMOJI_SHORTCODES['flag_' + iso] = ch;
+  _FTZ_FLAG_NAMES[ch] = name;
+});
+
+// ─── Reverse lookup: emoji char → shortcode ────────────────────
+// Used by _emojiFriendlyName(uni) to power the hover/click tooltip
+// on every <img class="msg-emoji"> in chat + bios. Built once on
+// startup so the lookup is O(1) at render time.
+const _FTZ_EMOJI_TO_SHORTCODE = Object.create(null);
+Object.keys(EMOJI_SHORTCODES).forEach(name => {
+  const u = EMOJI_SHORTCODES[name];
+  // First shortcode wins so canonical names beat aliases (we declare
+  // canonical first by convention).
+  if (!_FTZ_EMOJI_TO_SHORTCODE[u]) _FTZ_EMOJI_TO_SHORTCODE[u] = name;
+});
+
+// Friendly name for the tooltip on hover / click. Prefers the curated
+// country name for flags, then the shortcode (snake → Title Case),
+// then falls back to the emoji glyph itself (so unknown emojis at
+// least show something useful).
+function _emojiFriendlyName(uni) {
+  if (!uni) return '';
+  if (_FTZ_FLAG_NAMES[uni]) return 'Flag: ' + _FTZ_FLAG_NAMES[uni];
+  const sc = _FTZ_EMOJI_TO_SHORTCODE[uni];
+  if (sc) return _shortcodeToTitle(sc);
+  return uni;
+}
+function _shortcodeToTitle(name) {
+  if (!name) return '';
+  return String(name).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
 // Emoticon to emoji map
 const EMOTICON_MAP = {
@@ -7139,7 +7247,7 @@ async function showGCMemberPanel(meta) {
   document.getElementById('gc-member-panel')?.remove();
   const panel = document.createElement('div');
   panel.id = 'gc-member-panel';
-  panel.style.cssText = 'width:260px;min-width:260px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;';
+  panel.style.cssText = 'width:341px;min-width:341px;max-width:341px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;';
   const isOwner = meta.owner === CU.username;
   const memberCount = (meta.members||[]).length;
 
@@ -20011,27 +20119,24 @@ function _buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- About Me — uses the same rich contenteditable as the
-                 chatbar so :emoji: autocomplete, emoji picker insert,
-                 paste-as-plain-text and the .value shim all work
-                 identically. Markdown vocabulary mirrors chat but
-                 the bio renderer strips block-level tokens (see
-                 parseBioMD). -->
+            <!-- About Me — same rich-input under the hood as the chatbar
+                 (markdown, :emoji: autocomplete, emoji picker insert,
+                 paste-as-plain, .value shim) but visually a settings
+                 textbox: matches the .settings-input look used by
+                 Pronouns / Display Name, rectangular, tall, and the
+                 emoji button floats inside the corner instead of a
+                 chatbar-style action row. The bio-textbox wrapper
+                 carries the styled chrome via CSS (border, bg, hover,
+                 focus ring) so we don't need any inline styling. -->
             <div>
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">About Me</div>
               <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">Same formatting as chat — <strong>**bold**</strong>, <em>*italic*</em>, <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">\`code\`</code>, links, <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">:emoji:</code> and <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">@username</code> mentions are all supported.</div>
-              <div class="chat-input-wrap bio-input-wrap" style="--ftz-bio-bg:rgba(255,255,255,.03);">
-                <div class="chat-input-outer">
-                  <div class="chat-input-row">
-                    <div id="bio-input" class="chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write something about yourself…" spellcheck="true" data-maxlen="300"
-                      oninput="_onBioInput(this)"
-                      onpaste="handlePaste(event,'bio-input')">${escapeHTML(CU.bio||'')}</div>
-                    <span id="bio-char-count" style="font-size:11px;color:rgba(255,255,255,.25);flex-shrink:0;">${300-(CU.bio||'').length}</span>
-                    <div class="chat-input-actions">
-                      <button class="cit-btn" onclick="toggleEmojiPicker('bio-input')" id="emoji-btn-bio" data-tip="Emoji" type="button"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false"></button>
-                    </div>
-                  </div>
-                </div>
+              <div class="bio-textbox">
+                <div id="bio-input" class="bio-textbox__input chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write something about yourself…" spellcheck="true" data-maxlen="300"
+                  oninput="_onBioInput(this)"
+                  onpaste="handlePaste(event,'bio-input')">${escapeHTML(CU.bio||'')}</div>
+                <button class="bio-textbox__emoji" onclick="toggleEmojiPicker('bio-input')" id="emoji-btn-bio" data-tip="Emoji" type="button" aria-label="Insert emoji"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false"></button>
+                <span id="bio-char-count" class="bio-textbox__count">${300-(CU.bio||'').length}</span>
               </div>
               <!-- Mention policy: who can @-tag me in their About Me.
                    Custom dropdown (.ftz-select) instead of a native
@@ -29234,13 +29339,18 @@ function _bioMentionAllowed(authorUsername, mentionedHandle) {
 function _bioEmojiHTML(name, authorUsername) {
   if (!name) return '';
   const lower = String(name).toLowerCase();
-  // 1) Unicode shortcode (always free)
+  // 1) Unicode shortcode (always free). Friendly title — flag names
+  // get their curated country name, everything else gets the
+  // shortcode title-cased ("face_with_bags_under_eyes" → "Face With
+  // Bags Under Eyes") so hovering an emoji explains what it is in
+  // English rather than echoing `:emoji:` back.
   try {
-    if (typeof _resolveEmojiUnicode === 'function') {
-      const uni = _resolveEmojiUnicode(lower);
-      if (uni) {
-        const url = (typeof emojiToTwemojiUrl === 'function') ? emojiToTwemojiUrl(uni) : '';
-        if (url) return `<img class="rci-emoji bio-emoji emoji" data-emoji="${escapeHTML(lower)}" data-emoji-uni="${escapeHTML(uni)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(url)}" alt="${escapeHTML(uni)}" draggable="false" title=":${escapeHTML(lower)}:">`;
+    const uni = (typeof EMOJI_SHORTCODES === 'object') ? EMOJI_SHORTCODES[lower] : null;
+    if (uni) {
+      const url = (typeof emojiToTwemojiUrl === 'function') ? emojiToTwemojiUrl(uni) : '';
+      if (url) {
+        const friendly = _emojiFriendlyName(uni).replace(/"/g, '&quot;');
+        return `<img class="rci-emoji bio-emoji emoji msg-emoji" data-emoji="${escapeHTML(lower)}" data-emoji-uni="${escapeHTML(uni)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(url)}" alt="${escapeHTML(uni)}" draggable="false" title="${friendly}">`;
       }
     }
   } catch (_) {}
@@ -29248,7 +29358,8 @@ function _bioEmojiHTML(name, authorUsername) {
   try {
     if (typeof FORTIZED_EMOJI_MAP === 'object' && FORTIZED_EMOJI_MAP[lower]) {
       const src = FORTIZED_EMOJI_MAP[lower];
-      return `<img class="rci-emoji bio-emoji emoji" data-emoji="${escapeHTML(lower)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(src)}" alt=":${escapeHTML(lower)}:" draggable="false" title=":${escapeHTML(lower)}:">`;
+      const friendly = _shortcodeToTitle(lower).replace(/"/g, '&quot;');
+      return `<img class="rci-emoji bio-emoji emoji msg-emoji" data-emoji="${escapeHTML(lower)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(src)}" alt=":${escapeHTML(lower)}:" draggable="false" title="${friendly}">`;
     }
   } catch (_) {}
   // 3) Custom bastion emoji — Radiance gate on the AUTHOR.
@@ -29270,7 +29381,8 @@ function _bioEmojiHTML(name, authorUsername) {
     // Radiance gate. If we have author info AND they're not Radiance,
     // refuse to render (caller falls back to the literal :name:).
     if (authorObj && !_hasRadiance(authorObj)) return '';
-    return `<img class="rci-emoji bio-emoji emoji" data-emoji="${escapeHTML(lower)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(ce.data)}" alt=":${escapeHTML(lower)}:" draggable="false" title=":${escapeHTML(lower)}:">`;
+    const friendly = _shortcodeToTitle(lower).replace(/"/g, '&quot;');
+    return `<img class="rci-emoji bio-emoji emoji msg-emoji" data-emoji="${escapeHTML(lower)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(ce.data)}" alt=":${escapeHTML(lower)}:" draggable="false" title="${friendly}">`;
   }
   return '';
 }
@@ -29811,7 +29923,8 @@ function parseMD(s) {
     try {
       const url = emojiToTwemojiUrl(emoji);
       const safeEmoji = emoji.replace(/'/g, "\\'").replace(/\\/g, '\\\\');
-      return `<img src="${url}" alt="${emoji}" class="msg-emoji" data-emoji="${emoji}" style="width:1.25em;height:1.25em;object-fit:contain;vertical-align:-0.25em;display:inline-block;" onerror="this.style.display='none'">`;
+      const friendly = _emojiFriendlyName(emoji).replace(/"/g, '&quot;');
+      return `<img src="${url}" alt="${emoji}" class="msg-emoji" data-emoji="${emoji}" title="${friendly}" style="width:1.25em;height:1.25em;object-fit:contain;vertical-align:-0.25em;display:inline-block;" onerror="this.style.display='none'">`;
     } catch { return emoji; }
   });
   // ═══════════════════════════════════════════════════════
@@ -44666,6 +44779,33 @@ function resetSettingsChanges() {
 }
 
 async function saveAllSettings() {
+  // Re-entrancy guard. Without this, a slow saveUser() + a twitchy
+  // user clicking the bar five times queues five socket emits and
+  // five toast notifications. We mark the save button busy so the
+  // CSS shows a spinner + disables pointer events, and bail on the
+  // second call.
+  if (saveAllSettings._inFlight) return;
+  saveAllSettings._inFlight = true;
+  const _bar = document.getElementById('unsaved-bar');
+  const _saveBtn = _bar?.querySelector('.unsaved-bar-save');
+  const _resetBtn = _bar?.querySelector('.unsaved-bar-reset');
+  if (_bar) _bar.classList.add('is-saving');
+  if (_saveBtn) { _saveBtn.disabled = true; _saveBtn.setAttribute('aria-busy','true'); }
+  if (_resetBtn) _resetBtn.disabled = true;
+  const _release = () => {
+    saveAllSettings._inFlight = false;
+    if (_bar) _bar.classList.remove('is-saving');
+    if (_saveBtn) { _saveBtn.disabled = false; _saveBtn.removeAttribute('aria-busy'); }
+    if (_resetBtn) _resetBtn.disabled = false;
+  };
+  try {
+    return await _saveAllSettingsImpl();
+  } finally {
+    _release();
+  }
+}
+
+async function _saveAllSettingsImpl() {
   // If the settings inputs aren't on screen, go back to profile to save
   if (!document.getElementById('dn-input')) {
     showView('profile');

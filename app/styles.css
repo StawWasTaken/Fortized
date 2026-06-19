@@ -3133,30 +3133,31 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 }
 
 /* ─── Custom Fortized cursors (PC-only, app-pages-only) ─────────
-   Scope: every cursor rule is gated on TWO conditions:
-     (a) @media (hover:hover) and (pointer:fine) — touch devices
-         (phones / tablets) keep the platform default cursor.
-     (b) The cursor class is on <html>, applied only when the
-         Fortized SPA boots — index.html → app.js IIFE. Anything
-         outside the SPA never sees the class so the rule is
-         literally inert there.
-   ! important matters: 330+ inline `cursor:pointer` styles exist
-   on divs across the codebase. Without !important, every one of
-   them would win over our class rule and the custom cursor would
-   silently not apply on the elements the user actually clicks.
-   Catch-all selectors:
-     * — paints the base (normal / arrow) cursor across the page.
-     [style*="cursor:pointer"] / [style*="cursor: pointer"] / a /
-     button / [role=button] / [tabindex] — paint the clickable
-     variant for anything that historically read as pointer.
-   Text inputs override back to cursor:text so the I-beam stays
-   over editable surfaces, where overriding it is disruptive. */
+   ASSETS: each cursor ships at 32x32 (1x) and 64x64 (@2x).
+   The base `cursor: url(...) X Y, fallback` line declares the 1x
+   asset so older engines that choke on image-set() still get a
+   working cursor; the second `cursor:` line uses image-set so
+   modern browsers pick the @2x asset on Retina / 4K displays.
+   Hotspot coordinates (4 2) are tuned for 32x32 — if the @2x
+   file lands at 64x64 the engine scales the hotspot proportionally
+   so we don't double them manually.
+   PNGs MUST stay <=128x128 or every major engine silently falls
+   back to the platform default. Source assets used to be 512x512
+   which is why the cursor never swapped. */
 @media (hover: hover) and (pointer: fine){
-  /* Knight set */
+  /* --- KNIGHT SET --- */
   html.ftz-cursor-knight,
   html.ftz-cursor-knight body,
   html.ftz-cursor-knight *{
     cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor1.png') 4 2, default !important;
+    cursor:-webkit-image-set(
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor1.png') 1x,
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor1@2x.png') 2x
+    ) 4 2, default !important;
+    cursor:image-set(
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor1.png') 1x,
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor1@2x.png') 2x
+    ) 4 2, default !important;
   }
   html.ftz-cursor-knight :is(
     a, button, [role="button"], [role="link"], [role="menuitem"], [role="tab"],
@@ -3166,13 +3167,31 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
     input[type="checkbox"], input[type="radio"],
     input[type="submit"], input[type="button"], input[type="reset"], input[type="file"],
     [style*="cursor:pointer"], [style*="cursor: pointer"]
-  ){ cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor2.png') 4 2, pointer !important; }
+  ){
+    cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor2.png') 4 2, pointer !important;
+    cursor:-webkit-image-set(
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor2.png') 1x,
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor2@2x.png') 2x
+    ) 4 2, pointer !important;
+    cursor:image-set(
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor2.png') 1x,
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor2@2x.png') 2x
+    ) 4 2, pointer !important;
+  }
 
-  /* Fortizan set */
+  /* --- FORTIZAN SET --- */
   html.ftz-cursor-fortizian,
   html.ftz-cursor-fortizian body,
   html.ftz-cursor-fortizian *{
     cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor1.png') 4 2, default !important;
+    cursor:-webkit-image-set(
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor1.png') 1x,
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor1@2x.png') 2x
+    ) 4 2, default !important;
+    cursor:image-set(
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor1.png') 1x,
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor1@2x.png') 2x
+    ) 4 2, default !important;
   }
   html.ftz-cursor-fortizian :is(
     a, button, [role="button"], [role="link"], [role="menuitem"], [role="tab"],
@@ -3182,9 +3201,19 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
     input[type="checkbox"], input[type="radio"],
     input[type="submit"], input[type="button"], input[type="reset"], input[type="file"],
     [style*="cursor:pointer"], [style*="cursor: pointer"]
-  ){ cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2.png') 4 2, pointer !important; }
+  ){
+    cursor:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2.png') 4 2, pointer !important;
+    cursor:-webkit-image-set(
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2.png') 1x,
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2@2x.png') 2x
+    ) 4 2, pointer !important;
+    cursor:image-set(
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2.png') 1x,
+      url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2@2x.png') 2x
+    ) 4 2, pointer !important;
+  }
 
-  /* Text fields keep the I-beam — overriding it is disruptive. */
+  /* Text fields keep the I-beam */
   html.ftz-cursor-knight :is(input:not([type]), input[type="text"], input[type="email"], input[type="password"], input[type="search"], input[type="number"], input[type="url"], input[type="tel"], textarea, [contenteditable="true"], [contenteditable=""]),
   html.ftz-cursor-fortizian :is(input:not([type]), input[type="text"], input[type="email"], input[type="password"], input[type="search"], input[type="number"], input[type="url"], input[type="tel"], textarea, [contenteditable="true"], [contenteditable=""]){
     cursor:text !important;

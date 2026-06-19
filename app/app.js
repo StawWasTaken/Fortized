@@ -3349,7 +3349,7 @@ function showView(v, _skipPush) {
   if (v === 'profile') {
     closeModal('modal-bsettings'); // close other if open
     openModal('modal-settings');
-    _settingsOriginal = CU ? structuredClone({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme}) : null;
+    _settingsOriginal = CU ? structuredClone({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,pfpCrop:CU.pfpCrop,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme,activeDecoration:CU.activeDecoration,displayFont:CU.displayFont,displayEffect:CU.displayEffect,displayColor:CU.displayColor,mentionPolicy:CU.mentionPolicy}) : null;
     clearSettingsDirty();
     buildProfileNav(document.getElementById('profile-nav'));
     buildProfileView('myprofile');
@@ -21770,7 +21770,12 @@ async function _viewUserProfile(username) {
   // CURRENT data instead of a 5-minute-old cached snapshot.
   try { u = await FortizedSocial.getUserByName(username, { noCache: true }); } catch (e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
-  if (username === (CU.username||'').toLowerCase()) u = { ...u, ...CU };
+  if (username === (CU.username||'').toLowerCase()) {
+    // Public-view shim — own profile card paints from the SAVED
+    // snapshot while Settings is mid-edit, so unsaved bio/banner/
+    // theme/pronouns don't bleed through. See _publicViewOf doc.
+    u = _publicViewOf({ ...u, ...CU });
+  }
 
   let status = 'offline';
   // Use live Socket.IO presence first, fallback to DB
@@ -33692,6 +33697,10 @@ async function showDMUserPanel(username) {
   // pfp / banner / bio / pronouns — Discord-style live read.
   try { u = await FortizedSocial.getUserByName(username, { noCache: true }); } catch (e) { _dbg('[DM] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
+  // If we ever paint OUR OWN profile in the DM right-side panel, the
+  // saved snapshot wins over in-progress settings edits. See
+  // _publicViewOf doc.
+  u = _publicViewOf(u);
 
   // Update DM welcome area with actual pfp
   const _wAv = document.getElementById('dm-welcome-av');
@@ -44566,6 +44575,35 @@ async function _dismissDailyPopup(claim) {
 let _settingsOriginal = null; // snapshot of CU before editing
 let _settingsDirty = false;
 
+// ─── Public view of CU while settings are dirty ────────────────
+// While a user is mid-edit in Settings, the inline handlers mutate
+// CU directly (CU.pfp, CU.banner, CU.profileTheme, etc.) so the
+// embedded settings preview can reflect the typed-but-unsaved
+// state. Any other surface that paints CU — mini popover, own
+// popover, DM sidebar, profile-card modal — wraps its target user
+// through _publicViewOf() so it falls back to the saved snapshot
+// for those editable fields. The settings preview ITSELF reads CU
+// directly (unwrapped) so the live preview keeps working.
+//
+// Non-CU users pass through unchanged. If nothing's dirty, no
+// allocation happens — we just return the user.
+const _PUBLIC_REVERT_FIELDS = [
+  'displayName','bio','pfp','pfpCrop','banner','pronouns',
+  'profileTheme','activeDecoration','displayFont','displayEffect',
+  'displayColor','socials','mentionPolicy',
+];
+function _publicViewOf(u) {
+  if (!u || !CU || !_settingsDirty || !_settingsOriginal) return u;
+  const target = String(u.username || '').toLowerCase();
+  const me = String(CU.username || '').toLowerCase();
+  if (!target || target !== me) return u;
+  const view = Object.assign({}, u);
+  for (const k of _PUBLIC_REVERT_FIELDS) {
+    if (k in _settingsOriginal) view[k] = _settingsOriginal[k];
+  }
+  return view;
+}
+
 // Capture the user's typed-but-unsaved settings inputs into CU so a
 // view rebuild (buildProfileView, pfp/banner change handlers, etc.)
 // doesn't wipe their work. saveAllSettings does the same input read
@@ -44603,11 +44641,17 @@ function _refreshSettingsBaseline() {
     email: CU.email,
     password: CU.password,
     pfp: CU.pfp,
+    pfpCrop: CU.pfpCrop,
     banner: CU.banner,
     socials: CU.socials,
     notifSettings: CU.notifSettings,
     pronouns: CU.pronouns,
-    profileTheme: CU.profileTheme
+    profileTheme: CU.profileTheme,
+    activeDecoration: CU.activeDecoration,
+    displayFont: CU.displayFont,
+    displayEffect: CU.displayEffect,
+    displayColor: CU.displayColor,
+    mentionPolicy: CU.mentionPolicy,
   });
   _settingsDirty = false;
   document.getElementById('unsaved-bar')?.classList.remove('show');
@@ -44885,7 +44929,7 @@ async function _saveAllSettingsImpl() {
   try { _persistBannerLocal(CU.username, CU.banner || ''); } catch (_) {}
   try { _persistPfpLocal(CU.username, CU.pfp || '', CU.pfpCrop || null); } catch (_) {}
   // Update snapshot so future edits compare against saved state
-  _settingsOriginal = CU ? structuredClone({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme}) : null;
+  _settingsOriginal = CU ? structuredClone({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,pfpCrop:CU.pfpCrop,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme,activeDecoration:CU.activeDecoration,displayFont:CU.displayFont,displayEffect:CU.displayEffect,displayColor:CU.displayColor,mentionPolicy:CU.mentionPolicy}) : null;
   clearSettingsDirty();
   toast('Settings saved!', 'success');
   buildProfileView('myprofile');
@@ -45740,7 +45784,11 @@ async function showMiniProfilePreview(username, anchorEl) {
   if (!u) u = { username, displayName: username };
   let status = 'offline';
   if (username === CU?.username) {
-    u = { ...u, ...CU };
+    // _publicViewOf reverts editable identity fields to the saved
+    // snapshot when settings is dirty, so the mini popover doesn't
+    // leak unsaved bio/banner/theme edits back at the user while
+    // they're still typing in Settings.
+    u = _publicViewOf({ ...u, ...CU });
     status = CU.status || 'online';
   } else {
     try {
@@ -45839,9 +45887,13 @@ function _fppPositionPopover(panel, anchorEl) {
 function _renderOwnProfilePopover(anchorEl) {
   _fppClose();
   if (!CU?.username) return;
-  const u = CU;
-  const hasRadiance = _hasRadiance(u);
-  const status = u.status || 'online';
+  // Reflect the saved profile (not the in-progress settings edits)
+  // — see _publicViewOf doc above. _hasRadiance still reads CU's
+  // entitlements (snapshot doesn't capture those) so banner-upload
+  // gating stays correct.
+  const u = _publicViewOf(CU);
+  const hasRadiance = _hasRadiance(CU);
+  const status = CU.status || 'online';
   const statusLabel = FtzStatus.publicLabel(status);
 
   const panel = document.createElement('div');

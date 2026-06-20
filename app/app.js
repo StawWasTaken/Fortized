@@ -11094,7 +11094,7 @@ async function _openInputDevicePopover(e) {
     <div class="ua-dev-slider"><div class="ua-dev-slider__label">Input Volume</div><input type="range" min="0" max="100" value="${_uaInputVolume}" oninput="_uaInputVolume=+this.value;localStorage.setItem('ftz_ua_input_vol',this.value);"></div>
     <div class="ua-dev-divider"></div>
     <div class="ua-dev-check" onclick="_uaPushToTalk=!_uaPushToTalk;localStorage.setItem('ftz_ua_ptt',_uaPushToTalk?'1':'0');this.querySelector('input').checked=_uaPushToTalk;"><span>Push-to-talk</span><input type="checkbox" ${_uaPushToTalk?'checked':''} onclick="event.stopPropagation();_uaPushToTalk=this.checked;localStorage.setItem('ftz_ua_ptt',_uaPushToTalk?'1':'0');"></div>
-    <div class="ua-dev-row" onclick="_uaClosePopovers();showView('profile');"><div class="ua-dev-row__label">Voice Settings</div><div class="ua-dev-row__icon">⚙</div></div>
+    <div class="ua-dev-row" onclick="_openVoiceSettings('input')"><div class="ua-dev-row__label">Voice Settings</div><div class="ua-dev-row__icon"><svg width="14" height="14" viewBox="0 0 512 512" fill="currentColor"><path d="M195.1 9.5C198.1-5.3 211.2-16 226.4-16l59.8 0c15.2 0 28.3 10.7 31.3 25.5L332 79.5c14.1 6 27.3 13.7 39.3 22.8l67.8-22.5c14.4-4.8 30.2 1.2 37.8 14.4l29.9 51.8c7.6 13.2 4.9 29.8-6.5 39.9L447 233.3c.9 7.4 1.3 15 1.3 22.7s-.5 15.3-1.3 22.7l53.4 47.5c11.4 10.1 14 26.8 6.5 39.9l-29.9 51.8c-7.6 13.1-23.4 19.2-37.8 14.4l-67.8-22.5c-12.1 9.1-25.3 16.7-39.3 22.8l-14.4 69.9c-3.1 14.9-16.2 25.5-31.3 25.5l-59.8 0c-15.2 0-28.3-10.7-31.3-25.5l-14.4-69.9c-14.1-6-27.2-13.7-39.3-22.8L73.5 432.3c-14.4 4.8-30.2-1.2-37.8-14.4L5.8 366.1c-7.6-13.2-4.9-29.8 6.5-39.9l53.4-47.5c-.9-7.4-1.3-15-1.3-22.7s.5-15.3 1.3-22.7L12.3 185.8c-11.4-10.1-14-26.8-6.5-39.9L35.7 94.1c7.6-13.2 23.4-19.2 37.8-14.4l67.8 22.5c12.1-9.1 25.3-16.7 39.3-22.8L195.1 9.5zM256.3 336a80 80 0 1 0 -.6-160 80 80 0 1 0 .6 160z"/></svg></div></div>
   </div>`;
   document.body.appendChild(main);
   _uaPositionPopover(main, anchor);
@@ -11113,12 +11113,23 @@ async function _openOutputDevicePopover(e) {
     <div class="ua-dev-divider"></div>
     <div class="ua-dev-slider"><div class="ua-dev-slider__label">Output Volume</div><input type="range" min="0" max="100" value="${_uaOutputVolume}" oninput="_uaOutputVolume=+this.value;localStorage.setItem('ftz_ua_output_vol',this.value);"></div>
     <div class="ua-dev-divider"></div>
-    <div class="ua-dev-row" onclick="_uaClosePopovers();showView('profile');"><div class="ua-dev-row__label">Voice Settings</div><div class="ua-dev-row__icon">⚙</div></div>
+    <div class="ua-dev-row" onclick="_openVoiceSettings('output')"><div class="ua-dev-row__label">Voice Settings</div><div class="ua-dev-row__icon"><svg width="14" height="14" viewBox="0 0 512 512" fill="currentColor"><path d="M195.1 9.5C198.1-5.3 211.2-16 226.4-16l59.8 0c15.2 0 28.3 10.7 31.3 25.5L332 79.5c14.1 6 27.3 13.7 39.3 22.8l67.8-22.5c14.4-4.8 30.2 1.2 37.8 14.4l29.9 51.8c7.6 13.2 4.9 29.8-6.5 39.9L447 233.3c.9 7.4 1.3 15 1.3 22.7s-.5 15.3-1.3 22.7l53.4 47.5c11.4 10.1 14 26.8 6.5 39.9l-29.9 51.8c-7.6 13.1-23.4 19.2-37.8 14.4l-67.8-22.5c-12.1 9.1-25.3 16.7-39.3 22.8l-14.4 69.9c-3.1 14.9-16.2 25.5-31.3 25.5l-59.8 0c-15.2 0-28.3-10.7-31.3-25.5l-14.4-69.9c-14.1-6-27.2-13.7-39.3-22.8L73.5 432.3c-14.4 4.8-30.2-1.2-37.8-14.4L5.8 366.1c-7.6-13.2-4.9-29.8 6.5-39.9l53.4-47.5c-.9-7.4-1.3-15-1.3-22.7s.5-15.3 1.3-22.7L12.3 185.8c-11.4-10.1-14-26.8-6.5-39.9L35.7 94.1c7.6-13.2 23.4-19.2 37.8-14.4l67.8 22.5c12.1-9.1 25.3-16.7 39.3-22.8L195.1 9.5zM256.3 336a80 80 0 1 0 -.6-160 80 80 0 1 0 .6 160z"/></svg></div></div>
   </div>`;
   document.body.appendChild(main);
   _uaPositionPopover(main, anchor);
   main.querySelector('[data-act="pick-output"]').onclick = (ev) => { ev.stopPropagation(); _uaOpenDeviceList(main, devs, 'output'); };
   setTimeout(() => document.addEventListener('mousedown', _uaOutsideClose, true), 0);
+}
+// Opens the settings modal directly on the Voice & Video page, then
+// scrolls the panel to whichever section the userbar quick-toggle was
+// for (input chevron → input, output chevron → output).
+function _openVoiceSettings(spy) {
+  try { _uaClosePopovers(); } catch(_) {}
+  try { showView('profile'); } catch(_) {}
+  setTimeout(() => {
+    try { buildProfileView('voice_settings'); } catch(_) {}
+    if (spy) setTimeout(() => { try { _scrollMainToSpy(spy); } catch(_) {} }, 80);
+  }, 60);
 }
 function _uaInputDeviceLabel(devs) {
   if (_uaInputDevice === 'default') return 'Windows Default' + (devs[0] ? ' (' + (devs[0].label||'Microphone') + ')' : '');
@@ -20654,46 +20665,41 @@ function _buildProfileView(tab) {
   }
 
   else if (tab === 'notifications' || tab === 'notifs_settings' || tab === 'notif_messages' || tab === 'notif_social' || tab === 'notif_system') {
+    // Same .voice-section card shape as My Account / Voice & Video so
+    // the chrome reads as one family. Each row stacks label + sub-copy
+    // on the left and parks the toggle hard right.
+    const notifRow = (k, name, desc) => `
+      <div class="voice-row">
+        <div class="voice-row__stack">
+          <div class="voice-row__name">${name}</div>
+          ${desc ? `<div class="voice-row__desc">${desc}</div>` : ''}
+        </div>
+        <div class="voice-row__value voice-row__value--end">
+          <div class="toggle ${notifSettings[k]?'on':''}" onclick="toggleNotifSetting('${k}',this);markSettingsDirty()"></div>
+        </div>
+      </div>`;
     main.innerHTML = `
       <div class="settings-panel">
         ${_settingsHeader('notifications')}
 
-        <div class="settings-section-title" data-spy="messages">MESSAGES</div>
-        ${[
-          ['messages','Direct Messages','Notify for new DMs'],
-          ['bastionActivity','Bastion Messages','Messages in your Bastions'],
-          ['mentions','Mentions','When someone @mentions you'],
-        ].map(([k,label,desc]) => `
-          <div class="settings-row">
-            <div class="settings-row-label"><div class="srl-name">${label}</div><div class="srl-desc">${desc}</div></div>
-            <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
-              <div class="toggle ${notifSettings[k]?'on':''}" onclick="toggleNotifSetting('${k}',this);markSettingsDirty()"></div>
-            </div>
-          </div>`).join('')}
+        <div class="voice-section" data-spy="messages">
+          <div class="voice-section__title">Messages</div>
+          ${notifRow('messages',        'Direct Messages',   'Notify for new DMs')}
+          ${notifRow('bastionActivity', 'Bastion Messages',  'Messages in your Bastions')}
+          ${notifRow('mentions',        'Mentions',          'When someone @mentions you')}
+        </div>
 
-        <div class="settings-section-title" style="margin-top:28px;" data-spy="social">SOCIAL</div>
-        ${[
-          ['friendRequests','Friend Requests','When someone sends you a friend request'],
-        ].map(([k,label,desc]) => `
-          <div class="settings-row">
-            <div class="settings-row-label"><div class="srl-name">${label}</div><div class="srl-desc">${desc}</div></div>
-            <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
-              <div class="toggle ${notifSettings[k]?'on':''}" onclick="toggleNotifSetting('${k}',this);markSettingsDirty()"></div>
-            </div>
-          </div>`).join('')}
+        <div class="voice-section" data-spy="social">
+          <div class="voice-section__title">Social</div>
+          ${notifRow('friendRequests', 'Friend Requests', 'When someone sends you a friend request')}
+        </div>
 
-        <div class="settings-section-title" style="margin-top:28px;" data-spy="system">SYSTEM</div>
-        ${[
-          ['sounds','Notification Sounds','Play sound effects for notifications'],
-        ].map(([k,label,desc]) => `
-          <div class="settings-row">
-            <div class="settings-row-label"><div class="srl-name">${label}</div><div class="srl-desc">${desc}</div></div>
-            <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
-              <div class="toggle ${notifSettings[k]?'on':''}" onclick="toggleNotifSetting('${k}',this);markSettingsDirty()"></div>
-            </div>
-          </div>`).join('')}
+        <div class="voice-section" data-spy="system">
+          <div class="voice-section__title">System</div>
+          ${notifRow('sounds', 'Notification Sounds', 'Play sound effects for notifications')}
+        </div>
 
-        <button class="settings-save-btn" onclick="saveNotifSettings();clearSettingsDirty()" style="margin-top:24px;">Save Changes</button>
+        <button class="settings-save-btn" onclick="saveNotifSettings();clearSettingsDirty()" style="margin-top:8px;">Save Changes</button>
       </div>`;
   }
 
@@ -20867,12 +20873,17 @@ function _buildProfileView(tab) {
     // page boundary otherwise.
     if (typeof _stopMicTest === 'function') _stopMicTest();
     if (typeof _stopCamTest === 'function') _stopCamTest();
-    const _inVol  = localStorage.getItem('ftz_voice_in_volume')  || '100';
-    const _outVol = localStorage.getItem('ftz_voice_out_volume') || '100';
-    const _ns     = localStorage.getItem('ftz_noise_suppress') !== 'false';
-    const _ec     = localStorage.getItem('ftz_echo_cancel')    !== 'false';
-    const _agc    = localStorage.getItem('ftz_auto_gain')      !== 'false';
-    const _mirror = localStorage.getItem('ftz_video_mirror')   !== 'false';
+    const _inVol   = localStorage.getItem('ftz_voice_in_volume')  || '100';
+    const _outVol  = localStorage.getItem('ftz_voice_out_volume') || '100';
+    const _ns      = localStorage.getItem('ftz_noise_suppress') !== 'false';
+    const _ec      = localStorage.getItem('ftz_echo_cancel')    !== 'false';
+    const _agc     = localStorage.getItem('ftz_auto_gain')      !== 'false';
+    const _mirror  = localStorage.getItem('ftz_video_mirror')   !== 'false';
+    const _mode    = localStorage.getItem('ftz_voice_mode') || 'va';
+    const _pttKey  = localStorage.getItem('ftz_voice_ptt_key') || '';
+    const _inDev   = localStorage.getItem('ftz_voice_input_device')  || _uaInputDevice || 'default';
+    const _outDev  = localStorage.getItem('ftz_voice_output_device') || _uaOutputDevice || 'default';
+    const _camDev  = localStorage.getItem('ftz_voice_cam_device')    || 'default';
     main.innerHTML = `<div class="settings-panel">
       ${_settingsHeader('voice_settings')}
 
@@ -20881,7 +20892,7 @@ function _buildProfileView(tab) {
         <div class="voice-section__title">Input</div>
         <div class="voice-row">
           <div class="voice-row__label">Input device</div>
-          <div class="voice-row__value"><select id="voice-input-device" class="voice-select"><option value="default">Default</option></select></div>
+          <div class="voice-row__value" id="voice-input-device-wrap">${_ftzSelectHTML('voice-input-device', _inDev, [{value:'default',label:'System Default'}], "localStorage.setItem('ftz_voice_input_device','__VALUE__')")}</div>
         </div>
         <div class="voice-row">
           <div class="voice-row__label">Mic test</div>
@@ -20895,6 +20906,19 @@ function _buildProfileView(tab) {
           <div class="voice-row__value voice-row__value--col">
             <input type="range" min="0" max="100" value="${_inVol}" id="voice-input-volume" class="voice-slider" oninput="localStorage.setItem('ftz_voice_in_volume',this.value);document.getElementById('voice-input-volume-val').textContent=this.value+'%'">
             <span class="voice-slider__val" id="voice-input-volume-val">${_inVol}%</span>
+          </div>
+        </div>
+        <div class="voice-row">
+          <div class="voice-row__label">Voice mode</div>
+          <div class="voice-row__value voice-row__value--col">
+            ${_ftzSelectHTML('voice-mode', _mode, [
+              {value:'va',  label:'Voice Activity'},
+              {value:'ptt', label:'Push to Talk'},
+            ], "_setVoiceMode('__VALUE__')")}
+            <div id="voice-ptt-row" style="display:${_mode==='ptt'?'flex':'none'};align-items:center;gap:10px;margin-top:8px;">
+              <span style="font-size:12px;color:rgba(255,255,255,.55);">Key:</span>
+              <button class="voice-test-btn voice-ptt-key" id="voice-ptt-key-btn" onclick="_recordPttKey(this)">${escapeHTML(_formatPttKey(_pttKey))}</button>
+            </div>
           </div>
         </div>
         <div class="voice-row">
@@ -20912,7 +20936,7 @@ function _buildProfileView(tab) {
         <div class="voice-section__title">Output</div>
         <div class="voice-row">
           <div class="voice-row__label">Output device</div>
-          <div class="voice-row__value"><select id="voice-output-device" class="voice-select"><option value="default">Default</option></select></div>
+          <div class="voice-row__value" id="voice-output-device-wrap">${_ftzSelectHTML('voice-output-device', _outDev, [{value:'default',label:'System Default'}], "localStorage.setItem('ftz_voice_output_device','__VALUE__')")}</div>
         </div>
         <div class="voice-row">
           <div class="voice-row__label">Output volume</div>
@@ -20932,7 +20956,7 @@ function _buildProfileView(tab) {
         <div class="voice-section__title">Video</div>
         <div class="voice-row">
           <div class="voice-row__label">Camera</div>
-          <div class="voice-row__value"><select id="voice-cam-device" class="voice-select"><option value="default">Default</option></select></div>
+          <div class="voice-row__value" id="voice-cam-device-wrap">${_ftzSelectHTML('voice-cam-device', _camDev, [{value:'default',label:'System Default'}], "localStorage.setItem('ftz_voice_cam_device','__VALUE__')")}</div>
         </div>
         <div class="voice-row">
           <div class="voice-row__label">Preview</div>
@@ -20955,17 +20979,12 @@ function _buildProfileView(tab) {
     // permission at least once — pre-permission entries show as kind.
     if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
       navigator.mediaDevices.enumerateDevices().then(devices => {
-        const inSel  = document.getElementById('voice-input-device');
-        const outSel = document.getElementById('voice-output-device');
-        const camSel = document.getElementById('voice-cam-device');
-        devices.forEach(d => {
-          const o = document.createElement('option');
-          o.value = d.deviceId;
-          o.textContent = d.label || d.kind;
-          if (d.kind === 'audioinput'  && inSel)  inSel.appendChild(o);
-          if (d.kind === 'audiooutput' && outSel) outSel.appendChild(o);
-          if (d.kind === 'videoinput'  && camSel) camSel.appendChild(o);
-        });
+        const ins  = devices.filter(d => d.kind === 'audioinput');
+        const outs = devices.filter(d => d.kind === 'audiooutput');
+        const cams = devices.filter(d => d.kind === 'videoinput');
+        _rebuildVoiceDeviceSelect('voice-input-device-wrap',  'voice-input-device',  ins,  _inDev,  'ftz_voice_input_device',  'Microphone');
+        _rebuildVoiceDeviceSelect('voice-output-device-wrap', 'voice-output-device', outs, _outDev, 'ftz_voice_output_device', 'Speakers');
+        _rebuildVoiceDeviceSelect('voice-cam-device-wrap',    'voice-cam-device',    cams, _camDev, 'ftz_voice_cam_device',    'Camera');
       }).catch(()=>{});
     }
   }
@@ -21550,6 +21569,83 @@ function _toggleVideoMirror(el) {
   const v = document.getElementById('voice-cam-preview');
   if (v) v.style.transform = next ? 'scaleX(-1)' : '';
 }
+
+// Replace a device-select wrapper with a freshly populated custom
+// Fortized dropdown now that enumerateDevices() has returned real
+// labelled entries. Falls back to "Microphone/Speakers/Camera" if the
+// browser hides the label until permission is granted.
+function _rebuildVoiceDeviceSelect(wrapId, hiddenId, devs, currentVal, lsKey, fallback) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  const opts = [{ value:'default', label:'System Default' }]
+    .concat(devs.map(d => ({ value:d.deviceId, label:d.label || fallback })));
+  wrap.innerHTML = _ftzSelectHTML(hiddenId, currentVal, opts, "localStorage.setItem('" + lsKey + "','__VALUE__')");
+}
+
+// Push-to-talk. The page lets the user pick Voice Activity vs PTT
+// and bind a key. When PTT mode is active, holding the bound key
+// unmutes the mic; releasing it mutes again.
+function _formatPttKey(code) {
+  if (!code) return 'Click to bind…';
+  // Trim the "Key" / "Digit" / "Arrow" prefixes browsers tack on so
+  // labels read like "A", "5", "Space" instead of "KeyA", "Digit5".
+  return code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Arrow/, '');
+}
+function _setVoiceMode(mode) {
+  localStorage.setItem('ftz_voice_mode', mode);
+  // Mirror into the userbar's PTT flag so the popover checkbox + page
+  // mode pick agree on a single source of truth.
+  try { _uaPushToTalk = (mode === 'ptt'); localStorage.setItem('ftz_ua_ptt', _uaPushToTalk ? '1' : '0'); } catch(_) {}
+  const row = document.getElementById('voice-ptt-row');
+  if (row) row.style.display = (mode === 'ptt') ? 'flex' : 'none';
+  _wirePushToTalk();
+}
+function _recordPttKey(btn) {
+  btn.textContent = 'Press any key…';
+  btn.classList.add('recording');
+  const handler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const code = e.code || e.key;
+    if (!code || code === 'Escape') {
+      btn.textContent = _formatPttKey(localStorage.getItem('ftz_voice_ptt_key') || '');
+      btn.classList.remove('recording');
+      window.removeEventListener('keydown', handler, true);
+      return;
+    }
+    localStorage.setItem('ftz_voice_ptt_key', code);
+    btn.textContent = _formatPttKey(code);
+    btn.classList.remove('recording');
+    window.removeEventListener('keydown', handler, true);
+    _wirePushToTalk();
+  };
+  window.addEventListener('keydown', handler, true);
+}
+// Global PTT key listener — holds-to-talk while in PTT mode. Rewires
+// on key/mode change so only one handler is ever attached.
+let _pttKeyHandler = null;
+function _wirePushToTalk() {
+  if (_pttKeyHandler) {
+    window.removeEventListener('keydown', _pttKeyHandler, true);
+    window.removeEventListener('keyup',   _pttKeyHandler, true);
+    _pttKeyHandler = null;
+  }
+  if (localStorage.getItem('ftz_voice_mode') !== 'ptt') return;
+  const target = localStorage.getItem('ftz_voice_ptt_key') || '';
+  if (!target) return;
+  _pttKeyHandler = (e) => {
+    const code = e.code || e.key;
+    if (code !== target) return;
+    // Skip when typing into inputs so the bound key isn't hijacked.
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    if (e.type === 'keydown' && typeof isMuted !== 'undefined' && isMuted) { try { toggleMic(); } catch(_) {} }
+    if (e.type === 'keyup'   && typeof isMuted !== 'undefined' && !isMuted) { try { toggleMic(); } catch(_) {} }
+  };
+  window.addEventListener('keydown', _pttKeyHandler, true);
+  window.addEventListener('keyup',   _pttKeyHandler, true);
+}
+document.addEventListener('DOMContentLoaded', () => setTimeout(_wirePushToTalk, 200));
 
 // Email mask helper — used by both the initial render and the
 // Reveal toggle so the masked + real strings stay in sync.

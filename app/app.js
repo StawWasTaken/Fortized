@@ -21009,139 +21009,95 @@ function _buildProfileView(tab) {
 
     // Build a rich, accurate app preview for a given theme
     function buildChatPreview(t, label) {
-      // Realistic theme preview — bigger surfaces, app-size fonts, the
-      // actual Fortized chrome elements (titlebar, server rail, channel
-      // list with categories, chat with reactions, member list).
-      const uName = CU?.displayName || CU?.username || 'You';
-      const uInitial = uName[0].toUpperCase();
+      // Simplified Fortized bastion preview — same anatomy as the real
+      // app (server rail, channel list, chat, member panel) but with
+      // shape placeholders instead of fake text so the preview reads
+      // as a palette demo rather than a fictional conversation.
       const isLight = !!t.light;
-      const textMain   = isLight ? 'rgba(0,0,0,.78)' : 'rgba(255,255,255,.78)';
       const textStrong = isLight ? '#1a1a1a' : '#fff';
-      const textDim    = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
-      const textDim2   = isLight ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)';
-      const textMuted  = isLight ? 'rgba(0,0,0,.45)' : 'rgba(255,255,255,.42)';
-      const pfp40 = CU?.pfp
-        ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-        : `<div style="width:100%;height:100%;border-radius:50%;background:${t.panel};display:flex;align-items:center;justify-content:center;font-size:14px;font-family:var(--font-display);font-weight:800;color:${t.accent};">${uInitial}</div>`;
-      const pfp24 = CU?.pfp
-        ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-        : `<div style="width:100%;height:100%;border-radius:50%;background:${t.panel};display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--font-display);font-weight:800;color:${t.accent};">${uInitial}</div>`;
+      const textDim    = isLight ? 'rgba(0,0,0,.10)' : 'rgba(255,255,255,.08)';
+      const textDim2   = isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.05)';
+      const textMuted  = isLight ? 'rgba(0,0,0,.45)' : 'rgba(255,255,255,.4)';
+      const msgBar     = isLight ? 'rgba(0,0,0,.10)' : 'rgba(255,255,255,.10)';
+      const msgBarLight= isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.06)';
+      // Bars stand in for message author names + body lines so the
+      // preview can't accidentally suggest a real conversation.
+      const msgRow = (col, w1, w2, w3) => `
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="width:26px;height:26px;border-radius:50%;background:${col};flex-shrink:0;"></div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:center;gap:6px;"><div style="height:7px;width:${w1}px;background:${col};border-radius:4px;"></div><div style="height:5px;width:24px;background:${msgBarLight};border-radius:3px;"></div></div>
+            <div style="height:5px;width:${w2}px;background:${msgBar};border-radius:3px;"></div>
+            ${w3 ? `<div style="height:5px;width:${w3}px;background:${msgBar};border-radius:3px;"></div>` : ''}
+          </div>
+        </div>`;
+      const memberRow = (col) => `
+        <div style="display:flex;align-items:center;gap:6px;padding:3px 6px;">
+          <div style="width:16px;height:16px;border-radius:50%;background:${col};flex-shrink:0;"></div>
+          <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;max-width:50px;"></div>
+        </div>`;
       return `
       <div style="flex:1;min-width:0;">
-        <div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);margin-bottom:10px;">${label}</div>
-        <div style="border-radius:14px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};box-shadow:0 12px 36px rgba(0,0,0,.4);">
-          <!-- Titlebar -->
-          <div style="height:34px;background:${t.sidebar};display:flex;align-items:center;padding:0 14px;gap:8px;border-bottom:1px solid ${t.border};">
-            <div style="display:flex;gap:6px;align-items:center;">
-              <div style="width:10px;height:10px;border-radius:50%;background:${t.accent};box-shadow:0 0 6px ${t.accent}77;"></div>
-              <span style="font-size:11px;font-weight:800;color:${textStrong};font-family:var(--font-display);letter-spacing:-.01em;">Fortized</span>
+        ${label ? `<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);margin-bottom:8px;">${label}</div>` : ''}
+        <div style="border-radius:12px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};box-shadow:0 10px 28px rgba(0,0,0,.35);">
+          <div style="display:flex;height:230px;">
+            <!-- Server rail -->
+            <div style="width:42px;background:${isLight ? 'rgba(0,0,0,.05)' : 'rgba(0,0,0,.25)'};display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:6px;">
+              <div style="width:28px;height:28px;border-radius:10px;background:${t.accent};opacity:.85;"></div>
+              <div style="width:18px;height:2px;background:${textDim};border-radius:1px;margin:2px 0;"></div>
+              <div style="width:28px;height:28px;border-radius:50%;background:${textDim};"></div>
+              <div style="width:28px;height:28px;border-radius:50%;background:${textDim2};"></div>
             </div>
-            <div style="flex:1;"></div>
-            <div style="display:flex;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:3px;background:${textDim};"></div>
-              <div style="width:10px;height:10px;border-radius:3px;background:${textDim};"></div>
-              <div style="width:10px;height:10px;border-radius:3px;background:${textDim};"></div>
-            </div>
-          </div>
-          <div style="display:flex;height:340px;">
-            <!-- Server list -->
-            <div style="width:60px;background:${isLight ? 'rgba(0,0,0,.04)' : 'rgba(0,0,0,.22)'};display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:8px;">
-              <div style="width:40px;height:40px;border-radius:14px;background:${t.accent};opacity:.18;"></div>
-              <div style="width:26px;height:2px;background:${textDim};border-radius:2px;margin:2px 0;"></div>
-              <div style="width:40px;height:40px;border-radius:50%;background:${textDim};"></div>
-              <div style="width:40px;height:40px;border-radius:50%;background:${textDim2};"></div>
-              <div style="width:40px;height:40px;border-radius:50%;background:${textDim2};"></div>
-            </div>
-            <!-- Channel sidebar -->
-            <div style="width:180px;background:${t.sidebar};border-right:1px solid ${t.border};padding:12px 10px;display:flex;flex-direction:column;gap:3px;overflow:hidden;">
-              <div style="font-size:12px;font-weight:800;color:${textStrong};font-family:var(--font-display);padding:6px 8px;margin-bottom:4px;">Bastion Name</div>
-              <div style="font-size:9.5px;font-weight:800;color:${textMuted};text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;margin-top:6px;">Text Channels</div>
-              <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;background:${isLight ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.07)'};"><span style="font-size:11px;color:${textMuted};">#</span><span style="font-size:12px;font-weight:600;color:${textStrong};">general</span></div>
-              <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;"><span style="font-size:11px;color:${textMuted};">#</span><span style="font-size:12px;color:${textMuted};">off-topic</span></div>
-              <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;"><span style="font-size:11px;color:${textMuted};">#</span><span style="font-size:12px;color:${textMuted};">media</span></div>
-              <div style="font-size:9.5px;font-weight:800;color:${textMuted};text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;margin-top:8px;">Voice</div>
-              <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;"><span style="font-size:11px;color:${textMuted};">🔊</span><span style="font-size:12px;color:${textMuted};">Lounge</span></div>
+            <!-- Channel list -->
+            <div style="width:124px;background:${t.sidebar};border-right:1px solid ${t.border};padding:10px 8px;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
+              <div style="height:7px;width:80px;background:${textStrong};border-radius:3px;opacity:.85;margin-bottom:4px;"></div>
+              <div style="height:5px;width:46px;background:${textMuted};border-radius:3px;margin-top:4px;"></div>
+              <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;border-radius:4px;background:${isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.08)'};">
+                <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
+                <div style="height:5px;flex:1;background:${textStrong};border-radius:3px;opacity:.7;"></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;">
+                <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
+                <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;"></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;">
+                <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
+                <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;"></div>
+              </div>
               <div style="flex:1;"></div>
-              <!-- User bar -->
-              <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:${isLight ? 'rgba(0,0,0,.05)' : 'rgba(0,0,0,.28)'};">
-                <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;">${pfp24}</div>
-                <div style="min-width:0;flex:1;"><div style="font-size:11px;font-weight:700;color:${textStrong};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(uName)}</div><div style="font-size:9px;color:${textMuted};">Online</div></div>
+              <!-- Userbar -->
+              <div style="display:flex;align-items:center;gap:6px;padding:6px;border-radius:6px;background:${isLight ? 'rgba(0,0,0,.06)' : 'rgba(0,0,0,.3)'};">
+                <div style="width:22px;height:22px;border-radius:50%;background:${t.accent};opacity:.8;flex-shrink:0;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><div style="height:5px;width:40px;background:${textStrong};border-radius:3px;opacity:.8;"></div><div style="height:4px;width:24px;background:${textMuted};border-radius:3px;"></div></div>
               </div>
             </div>
             <!-- Chat area -->
             <div style="flex:1;display:flex;flex-direction:column;background:${t.channel};overflow:hidden;">
               <!-- Channel header -->
-              <div style="height:38px;border-bottom:1px solid ${t.border};display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;">
-                <span style="font-size:14px;color:${textMuted};font-weight:600;">#</span>
-                <span style="font-size:13px;font-weight:800;color:${textStrong};">general</span>
-                <div style="width:1px;height:16px;background:${t.border};margin:0 6px;"></div>
-                <span style="font-size:11px;color:${textMuted};">Welcome to the bastion!</span>
+              <div style="height:30px;border-bottom:1px solid ${t.border};display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;">
+                <span style="font-size:13px;color:${textMuted};font-weight:600;">#</span>
+                <div style="height:6px;width:46px;background:${textStrong};border-radius:3px;opacity:.85;"></div>
               </div>
-              <!-- Messages -->
-              <div style="flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:14px;overflow:hidden;">
-                <div style="display:flex;gap:11px;align-items:flex-start;">
-                  <div style="width:38px;height:38px;border-radius:50%;background:${t.accent}22;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:${t.accent};font-family:var(--font-display);">F</div>
-                  <div style="min-width:0;flex:1;">
-                    <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;">
-                      <span style="font-size:13px;font-weight:700;color:${t.accent};">Fortized</span>
-                      <span style="font-size:10px;color:${textMuted};">Today at 14:32</span>
-                    </div>
-                    <div style="font-size:13px;color:${textMain};line-height:1.5;">Welcome to the bastion! Hope everyone's having a great day.</div>
-                  </div>
-                </div>
-                <div style="display:flex;gap:11px;align-items:flex-start;">
-                  <div style="width:38px;height:38px;border-radius:50%;flex-shrink:0;overflow:hidden;">${pfp40}</div>
-                  <div style="min-width:0;flex:1;">
-                    <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;">
-                      <span style="font-size:13px;font-weight:700;color:${textStrong};">${escapeHTML(uName)}</span>
-                      <span style="font-size:10px;color:${textMuted};">Today at 14:33</span>
-                    </div>
-                    <div style="font-size:13px;color:${textMain};line-height:1.5;">This looks amazing — love the new theme.</div>
-                    <div style="display:flex;gap:5px;margin-top:6px;">
-                      <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:11px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.18);font-size:11px;font-weight:700;color:${t.accent};">🔥 2</div>
-                      <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:11px;background:${isLight ? 'rgba(0,0,0,.04)' : 'rgba(255,255,255,.05)'};border:1px solid ${textDim};font-size:11px;font-weight:600;color:${textMain};">👀 1</div>
-                    </div>
-                  </div>
-                </div>
-                <div style="display:flex;gap:11px;align-items:flex-start;">
-                  <div style="width:38px;height:38px;border-radius:50%;background:rgba(140,100,220,.18);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#a78bfa;font-family:var(--font-display);">K</div>
-                  <div style="min-width:0;flex:1;">
-                    <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;">
-                      <span style="font-size:13px;font-weight:700;color:#a78bfa;">Knight</span>
-                      <span style="font-size:10px;color:${textMuted};">Today at 14:34</span>
-                    </div>
-                    <div style="font-size:13px;color:${textMain};line-height:1.5;">Hey, welcome aboard 🎉</div>
-                  </div>
-                </div>
+              <!-- Messages (shape placeholders) -->
+              <div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
+                ${msgRow(t.accent, 38, 110, 80)}
+                ${msgRow(msgBar, 30, 90, 0)}
+                ${msgRow('rgba(140,100,220,.6)', 26, 70, 0)}
               </div>
               <!-- Chat input -->
-              <div style="padding:0 14px 14px;flex-shrink:0;">
-                <div style="height:38px;background:${t.panel};border-radius:10px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 14px;gap:10px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${textMuted}" stroke-width="2" style="opacity:.6;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                  <div style="font-size:12px;color:${textMuted};">Message #general</div>
-                  <div style="flex:1;"></div>
-                  <div style="display:flex;gap:6px;">
-                    <div style="width:14px;height:14px;border-radius:3px;background:${textDim};"></div>
-                    <div style="width:14px;height:14px;border-radius:3px;background:${textDim};"></div>
-                  </div>
+              <div style="padding:0 12px 12px;flex-shrink:0;">
+                <div style="height:30px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 12px;gap:8px;">
+                  <div style="width:12px;height:12px;border-radius:50%;border:1.5px solid ${textMuted};opacity:.5;flex-shrink:0;"></div>
+                  <div style="height:5px;flex:1;background:${msgBarLight};border-radius:3px;"></div>
                 </div>
               </div>
             </div>
             <!-- Members panel -->
-            <div style="width:130px;background:${t.sidebar};border-left:1px solid ${t.border};padding:12px 8px;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
-              <div style="font-size:9.5px;font-weight:800;color:${textMuted};text-transform:uppercase;letter-spacing:.06em;padding:3px 6px;">Online — 3</div>
-              <div style="display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:5px;">
-                <div style="width:22px;height:22px;border-radius:50%;background:${t.accent}22;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:${t.accent};">F</div>
-                <span style="font-size:11.5px;color:${t.accent};font-weight:700;">Fortized</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:5px;">
-                <div style="width:22px;height:22px;border-radius:50%;overflow:hidden;flex-shrink:0;">${pfp24}</div>
-                <span style="font-size:11.5px;color:${textStrong};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(uName)}</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:5px;">
-                <div style="width:22px;height:22px;border-radius:50%;background:rgba(140,100,220,.2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#a78bfa;">K</div>
-                <span style="font-size:11.5px;color:#a78bfa;font-weight:700;">Knight</span>
-              </div>
+            <div style="width:80px;background:${t.sidebar};border-left:1px solid ${t.border};padding:10px 4px;display:flex;flex-direction:column;gap:2px;overflow:hidden;">
+              <div style="height:5px;width:40px;background:${textMuted};border-radius:3px;margin:2px 6px 4px;"></div>
+              ${memberRow(t.accent)}
+              ${memberRow(msgBar)}
+              ${memberRow('rgba(140,100,220,.6)')}
             </div>
           </div>
         </div>
@@ -21305,7 +21261,7 @@ function _buildProfileView(tab) {
               </div>
               ${isSel?'<div class="apr-cursor-sq__check"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0f1119" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>':''}
               <div class="apr-cursor-sq__hover-actions">
-                <button class="apr-cursor-sq__hover-btn" data-tip="Edit" onclick="event.stopPropagation();_openCustomCursorModal('${c.id}')">${_faIcon('user-gear', 12)}</button>
+                <button class="apr-cursor-sq__hover-btn" data-tip="Edit" onclick="event.stopPropagation();_openCustomCursorModal('${c.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 512 512" fill="currentColor"><path d="M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L368 46.1 465.9 144 490.3 119.6c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.7 15.7-7.4 21.9-13.5L432 177.9 334.1 80 172.4 241.7zM96 64C43 64 0 107 0 160L0 416c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-96c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 96c0 17.7-14.3 32-32 32L96 448c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 64z"/></svg></button>
                 <button class="apr-cursor-sq__hover-btn apr-cursor-sq__hover-btn--danger" data-tip="Delete" onclick="event.stopPropagation();_confirmDeleteCustomCursor('${c.id}')">×</button>
               </div>
             </div>`;
@@ -47110,17 +47066,25 @@ function _applyFortizedCursor(id, opts) {
 }
 
 // ─── Custom cursors (Radiance) ──────────────────────────────
-// Read a user-picked image file, downscale to 32x32 (center-cropped
-// to square first so wide / tall images don't squash), return a
-// PNG data-URL ready to persist. Browsers cap data-URL cursors at
-// 128px on most platforms, so 32 is safe and compact.
+// Read a user-picked image, return a data-URL ready to persist.
+//   • PNG / JPG / WebP / SVG → center-cropped + downscaled to a
+//     32×32 PNG so the cursor stays compact and square.
+//   • GIF → returned untouched (canvas only sees the first frame,
+//     so we keep the original bytes to preserve the animation).
+// Browsers cap cursor URLs around 128px on most platforms, so 32
+// is the right default for static; GIFs are usually small enough
+// that the browser handles them either way.
 async function _resizeImageTo32(file) {
-  const dataUrl = await new Promise((resolve, reject) => {
+  const readAsDataUrl = () => new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(r.result);
     r.onerror = reject;
     r.readAsDataURL(file);
   });
+  if (file.type === 'image/gif') {
+    return await readAsDataUrl();
+  }
+  const dataUrl = await readAsDataUrl();
   const img = new Image();
   await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = dataUrl; });
   const c = document.createElement('canvas');

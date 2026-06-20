@@ -19818,55 +19818,86 @@ function insertCustomEmoji(name, data) {
 // ════════════════════════════════════════════
 // PROFILE & SETTINGS
 // ════════════════════════════════════════════
-function buildProfileNav(scroll) {
-  const _svgIcons = {
-    myprofile: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-    profile_widgets: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
-    profile_theme: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>',
-    account_info: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
-    account_security: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
-    game_collection: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>',
-    activity_detection: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
-    notif_messages: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>',
-    notif_social: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
-    notif_system: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',
-    my_bots: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>',
-    my_data: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-    appearance: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
-    density: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
-    scaling: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>',
-    quick_support: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-    policies: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
-    safety: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-    logout: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+function buildProfileNav(scroll, opts) {
+  // Resolve active tab: explicit opt > previously remembered > default myprofile.
+  const activeTab = (opts && opts.activeTab) || scroll?.dataset?.activeTab || 'myprofile';
+  // Preserve typed search across re-renders so the user doesn't lose their filter.
+  const prevSearch = scroll?.querySelector('.profile-nav-search input')?.value || '';
+
+  // FontAwesome-style line icons, 24x24 viewBox, stroke-based for a consistent
+  // tone with the rest of the Fortized chrome. The custom Safety icon is the
+  // Fortized Security PNG (per design ask), not an SVG.
+  const ICN = {
+    'id-card':         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M5 17c.4-1.7 2-2.7 4-2.7s3.6 1 4 2.7"/><line x1="15" y1="10" x2="19" y2="10"/><line x1="15" y1="14" x2="19" y2="14"/></svg>',
+    'user-gear':       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-1a5 5 0 0 1 5-5h2.5"/><circle cx="17" cy="17" r="3"/><line x1="17" y1="12" x2="17" y2="13.5"/><line x1="17" y1="20.5" x2="17" y2="22"/><line x1="11.5" y1="17" x2="13" y2="17"/><line x1="21" y1="17" x2="22.5" y2="17"/></svg>',
+    'key':             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><line x1="10.8" y1="12.2" x2="20" y2="3"/><line x1="17" y1="6" x2="20" y2="9"/><line x1="14" y1="9" x2="16" y2="11"/></svg>',
+    'bell':            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',
+    'microphone':      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>',
+    'palette':         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.5-1.1-.3-.3-.4-.7-.4-1.1a1.6 1.6 0 0 1 1.6-1.6h2c3 0 5.5-2.5 5.5-5.5C22 6 17.5 2 12 2z"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="6.5" cy="12.5" r="1.3" fill="currentColor"/><circle cx="13" cy="6" r="1.3" fill="currentColor"/><circle cx="17.5" cy="10" r="1.3" fill="currentColor"/></svg>',
+    'keyboard':        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8.01"/><line x1="10" y1="8" x2="10" y2="8.01"/><line x1="14" y1="8" x2="14" y2="8.01"/><line x1="18" y1="8" x2="18" y2="8.01"/><line x1="6" y1="12" x2="6" y2="12.01"/><line x1="18" y1="12" x2="18" y2="12.01"/><line x1="8" y1="16" x2="16" y2="16"/></svg>',
+    'language':        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 014 10 15 15 0 01-4 10 15 15 0 01-4-10 15 15 0 014-10z"/></svg>',
+    'gamepad':         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>',
+    'user-plus':       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>',
+    'circle-question': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    'file-lines':      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+    'logout':          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
   };
-  const sections = [
-    {type:'section', label:'USER SETTINGS'},
-    {type:'item', id:'myprofile', icon:_svgIcons.myprofile, label:'My Profile'},
-    {type:'item', id:'account', icon:_svgIcons.account_info, label:'My Account'},
-    {type:'sep'},
-    {type:'section', label:'APP SETTINGS'},
-    {type:'item', id:'appearance', icon:_svgIcons.appearance, label:'Appearance'},
-    {type:'item', id:'notifications', icon:_svgIcons.notif_messages, label:'Notifications'},
-    {type:'item', id:'language', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>', label:'Language'},
-    {type:'item', id:'game_collection', icon:_svgIcons.game_collection, label:'Apps & Games'},
-    {type:'item', id:'keybinds', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8.01"/><line x1="10" y1="8" x2="10" y2="8.01"/><line x1="14" y1="8" x2="14" y2="8.01"/><line x1="18" y1="8" x2="18" y2="8.01"/><line x1="6" y1="12" x2="6" y2="12.01"/><line x1="18" y1="12" x2="18" y2="12.01"/><line x1="8" y1="16" x2="16" y2="16"/></svg>', label:'Keyboard Shortcuts'},
-    {type:'sep'},
-    {type:'section', label:'PRIVACY & SAFETY'},
-    {type:'item', id:'safety', icon:_svgIcons.safety, label:'Safety'},
-    {type:'item', id:'friend_privacy', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6m3-3h-6"/></svg>', label:'Friend Requests'},
-    {type:'item', id:'authorized_apps', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="1"/></svg>', label:'Authorized Apps'},
-    {type:'sep'},
-    {type:'section', label:'VOICE & VIDEO'},
-    {type:'item', id:'voice_settings', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>', label:'Voice & Video'},
-    {type:'sep'},
-    {type:'section', label:'SUPPORT'},
-    {type:'item', id:'quick_support', icon:_svgIcons.quick_support, label:'Quick Support'},
-    {type:'item', id:'policies', icon:_svgIcons.policies, label:'Policies'},
-    {type:'sep'},
+  // Custom Fortized Security mark for the Safety entry (per design).
+  const SAFETY_ICON = '<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FortizedSecurity%20logo.png" width="15" height="15" alt="" style="display:block;object-fit:contain;" loading="lazy" draggable="false">';
+
+  // Discord-style grouped nav. Each item can carry `subs[]` — scroll-spy
+  // anchors that show under the parent only while its tab is active. In
+  // Phase 1 only My Profile has spy hooks planted in its template; other
+  // parents' subs will be wired page-by-page in Phase 3.
+  const NAV = [
+    { label:'ACCOUNT', items: [
+      { id:'myprofile',       icon:ICN['id-card'],         label:'My Profile', subs:[
+        { spy:'identity',    label:'Identity' },
+        { spy:'theme',       label:'Theme' },
+        { spy:'aboutme',     label:'About Me' },
+        { spy:'connections', label:'Connections' },
+      ]},
+      { id:'account',         icon:ICN['user-gear'],       label:'My Account' },
+      { id:'authorized_apps', icon:ICN['key'],             label:'Authorized Apps' },
+      { id:'notifications',   icon:ICN['bell'],            label:'Notifications' },
+    ]},
+    { label:'EXPERIENCE', items: [
+      { id:'voice_settings',  icon:ICN['microphone'],      label:'Voice & Video' },
+      { id:'appearance',      icon:ICN['palette'],         label:'Appearance' },
+      { id:'keybinds',        icon:ICN['keyboard'],        label:'Keybinds' },
+      { id:'language',        icon:ICN['language'],        label:'Language' },
+    ]},
+    { label:'ACTIVITY', items: [
+      { id:'game_collection', icon:ICN['gamepad'],         label:'Apps & Games' },
+    ]},
+    { label:'SAFETY', items: [
+      { id:'safety',          icon:SAFETY_ICON,            label:'Safety' },
+      { id:'friend_privacy',  icon:ICN['user-plus'],       label:'Friend Requests' },
+    ]},
+    { label:'SUPPORT', items: [
+      { id:'quick_support',   icon:ICN['circle-question'], label:'Quick Support' },
+      { id:'policies',        icon:ICN['file-lines'],      label:'Policies' },
+    ]},
   ];
-  // User card at top (Discord-style)
+
   const _navPfp = CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<span style="font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</span>`;
+
+  const renderItem = (item) => {
+    const isActive = item.id === activeTab;
+    const hasSubs = Array.isArray(item.subs) && item.subs.length > 0;
+    let html = `<div class="profile-nav-item${isActive?' active':''}" id="pnav-${item.id}" data-tab="${item.id}" onclick="buildProfileView('${item.id}')">
+      <span class="pni-icon">${item.icon}</span>
+      <span>${item.label}</span>
+    </div>`;
+    if (hasSubs) {
+      html += `<div class="profile-nav-subs${isActive?' is-expanded':''}" data-parent="${item.id}">
+        ${item.subs.map(s => `<div class="profile-nav-sub" data-spy-target="${s.spy}" onclick="_navJumpToSpy('${item.id}','${s.spy}')">${s.label}</div>`).join('')}
+      </div>`;
+    }
+    return html;
+  };
+
+  scroll.dataset.activeTab = activeTab;
   scroll.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:0 4px 4px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);">
       <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_navPfp}</div>
@@ -19876,27 +19907,98 @@ function buildProfileNav(scroll) {
       </div>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
     </div>
-    <div style="padding:4px 6px 8px;">
+    <div class="profile-nav-search" style="padding:4px 6px 8px;">
       <div style="position:relative;">
         <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);display:flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-        <input type="text" placeholder="Search" style="width:100%;padding:7px 10px 7px 30px;border-radius:6px;border:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;" oninput="(function(v,items){items.forEach(function(el){var t=el.textContent.toLowerCase();el.style.display=t.includes(v)?'':'none';});el.closest('.profile-nav')?.querySelectorAll('.profile-nav-section,.profile-nav-sep').forEach(function(s){s.style.display=v?'none':'';});}.call(null,this.value.toLowerCase(),this.closest('.profile-nav')?.querySelectorAll('.profile-nav-item')||[]))">
+        <input type="text" placeholder="Search" value="${escapeHTML(prevSearch)}" style="width:100%;padding:7px 10px 7px 30px;border-radius:6px;border:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;" oninput="_filterSettingsNav(this)">
       </div>
     </div>
-    ${sections.map(s => {
-      if (s.type === 'section') return `<div class="profile-nav-section">${s.label}</div>`;
-      if (s.type === 'sep') return '<div class="profile-nav-sep"></div>';
-      return `<div class="profile-nav-item" id="pnav-${s.id}" onclick="buildProfileView('${s.id}')">
-        <span class="pni-icon">${s.icon}</span>
-        <span>${s.label}</span>
-      </div>`;
-    }).join('')}
+    ${NAV.map(group => `
+      <div class="profile-nav-section">${group.label}</div>
+      ${group.items.map(renderItem).join('')}
+      <div class="profile-nav-sep"></div>
+    `).join('')}
     <div style="flex:1;"></div>
-    <div class="profile-nav-sep"></div>
     <div class="profile-nav-item" onclick="doLogout()" style="color:rgba(248,113,113,.6);">
-      <span class="pni-icon">${_svgIcons.logout}</span>
+      <span class="pni-icon">${ICN['logout']}</span>
       <span>Log Out</span>
     </div>`;
-  buildProfileView('myprofile');
+
+  // Don't re-trigger buildProfileView when this is a refresh (tab switch).
+  if (!opts || !opts.skipView) buildProfileView(activeTab);
+}
+
+// Type-to-filter behaviour for the settings nav. Hides items that don't
+// match, and folds the section headers / sub-trees while the filter is on.
+function _filterSettingsNav(input) {
+  const v = (input.value || '').toLowerCase();
+  const nav = input.closest('.profile-nav');
+  if (!nav) return;
+  nav.querySelectorAll('.profile-nav-item[data-tab]').forEach(el => {
+    el.style.display = (!v || el.textContent.toLowerCase().includes(v)) ? '' : 'none';
+  });
+  nav.querySelectorAll('.profile-nav-section,.profile-nav-sep').forEach(s => { s.style.display = v ? 'none' : ''; });
+  nav.querySelectorAll('.profile-nav-subs').forEach(s => { s.style.display = v ? 'none' : ''; });
+}
+
+// Click handler for a nav sub-item. Switches tabs if needed, then scrolls
+// the main pane to the corresponding [data-spy] anchor. Pages that don't
+// yet have spy anchors planted just no-op the scroll part.
+function _navJumpToSpy(tabId, spyId) {
+  const nav = document.getElementById('profile-nav');
+  const currentTab = nav?.dataset.activeTab;
+  if (currentTab !== tabId) {
+    buildProfileView(tabId);
+    setTimeout(() => _scrollMainToSpy(spyId), 60);
+  } else {
+    _scrollMainToSpy(spyId);
+  }
+}
+function _scrollMainToSpy(spyId) {
+  const main = document.getElementById('profile-main');
+  const target = main && main.querySelector('[data-spy="' + spyId + '"]');
+  if (target) target.scrollIntoView({ block:'start', behavior:'smooth' });
+}
+
+// Sync the nav chrome to whichever tab just rendered: highlights the active
+// parent and expands only that parent's sub-tree. Called from buildProfileView.
+function _updateSettingsNavActive(tab) {
+  const nav = document.getElementById('profile-nav');
+  if (!nav) return;
+  nav.dataset.activeTab = tab;
+  nav.querySelectorAll('.profile-nav-item').forEach(el => el.classList.remove('active'));
+  const navItem = document.getElementById('pnav-' + tab);
+  if (navItem) navItem.classList.add('active');
+  nav.querySelectorAll('.profile-nav-subs').forEach(s => s.classList.remove('is-expanded'));
+  const subs = nav.querySelector('.profile-nav-subs[data-parent="' + tab + '"]');
+  if (subs) subs.classList.add('is-expanded');
+}
+
+// Scroll-spy: watch [data-spy] anchors in the main pane and highlight the
+// matching .profile-nav-sub as the user scrolls. Re-arms on every tab
+// switch; gracefully no-ops on pages without anchors.
+function _setupSettingsScrollSpy() {
+  const main = document.getElementById('profile-main');
+  const nav  = document.getElementById('profile-nav');
+  if (!main || !nav) return;
+  if (nav._spyObserver) { try { nav._spyObserver.disconnect(); } catch(_){} nav._spyObserver = null; }
+  const spies = main.querySelectorAll('[data-spy]');
+  if (!spies.length) return;
+  // Highlight band: top ~35% of the panel. The anchor crossing into the
+  // band wins; we pick the top-most intersecting one to handle overlaps.
+  const obs = new IntersectionObserver(entries => {
+    let topMost = null;
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        if (!topMost || e.boundingClientRect.top < topMost.boundingClientRect.top) topMost = e;
+      }
+    });
+    if (!topMost) return;
+    const spyId = topMost.target.getAttribute('data-spy');
+    nav.querySelectorAll('.profile-nav-sub').forEach(s => s.classList.toggle('is-active', s.getAttribute('data-spy-target') === spyId));
+  }, { root: main, rootMargin: '0px 0px -65% 0px', threshold: 0 });
+  spies.forEach(s => obs.observe(s));
+  nav._spyObserver = obs;
 }
 
 function buildProfileView(tab) {
@@ -19926,6 +20028,9 @@ function buildProfileView(tab) {
       } catch (_) {}
       try { setupEmojiAutocomplete('bio-input'); } catch (_) {}
     }
+    // Re-arm scroll-spy against any [data-spy] anchors the freshly-rendered
+    // page just stamped in. Deferred a tick so layout is settled.
+    setTimeout(_setupSettingsScrollSpy, 30);
     return r;
   } catch (e) {
     console.error('[buildProfileView] Tab "' + tab + '" failed to render:', e);
@@ -19952,10 +20057,8 @@ function _buildProfileView(tab) {
   if (tab !== 'myprofile') {
     document.getElementById('unsaved-bar')?.classList.remove('show');
   }
-  // Update active nav
-  document.querySelectorAll('.profile-nav-item').forEach(el => el.classList.remove('active'));
-  const navItem = document.getElementById('pnav-' + tab);
-  if (navItem) navItem.classList.add('active');
+  // Update active nav + expand the active parent's sub-tree (Discord-style).
+  try { _updateSettingsNavActive(tab); } catch(_){}
   const hasRadiance = _hasRadiance(CU);
 
   if (tab === 'myprofile') {
@@ -20024,7 +20127,7 @@ function _buildProfileView(tab) {
           <div>
 
             <!-- Display Name -->
-            <div>
+            <div data-spy="identity">
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Display Name</div>
               <input class="settings-input" id="dn-input" value="${escapeHTML(CU.displayName||CU.username)}" maxlength="32" placeholder="Your display name" oninput="markSettingsDirty();updateProfilePreview()">
             </div>
@@ -20094,7 +20197,7 @@ function _buildProfileView(tab) {
                  changes flag the unsaved-changes bar; the user commits
                  from there. Starter packs (Radiance-only) below set
                  banner + Custom colour in one click. -->
-            <div>
+            <div data-spy="theme">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Theme</div>
                 <span style="font-size:9px;font-weight:800;letter-spacing:.08em;background:#fff93e;color:#13161d;border-radius:5px;padding:2px 7px;">NEW</span>
@@ -20169,7 +20272,7 @@ function _buildProfileView(tab) {
                  chatbar-style action row. The bio-textbox wrapper
                  carries the styled chrome via CSS (border, bg, hover,
                  focus ring) so we don't need any inline styling. -->
-            <div>
+            <div data-spy="aboutme">
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">About Me</div>
               <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">Same formatting as chat — <strong>**bold**</strong>, <em>*italic*</em>, <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">\`code\`</code>, links, <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">:emoji:</code> and <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">@username</code> mentions are all supported.</div>
               <div class="bio-textbox">
@@ -20200,7 +20303,7 @@ function _buildProfileView(tab) {
             ${sep}
 
             <!-- Connections -->
-            <div>
+            <div data-spy="connections">
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Connections</div>
               <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:4px 14px;">
                 ${_CONN_PLATFORMS.map(p => '<div class="connected-row"><div class="connected-icon" style="background:'+p.color+'18;color:'+p.color+';">'+_connIcon(p.key)+'</div><div class="connected-label">'+p.label+'</div><input class="settings-input" id="social-'+p.key+'" value="'+escapeHTML((CU.socials||{})[p.key]||'')+'" placeholder="'+p.placeholder+'" style="flex:1;font-size:12.5px;padding:7px 12px;" oninput="markSettingsDirty();validateSocialLink(\''+p.key+'\',\''+( p.pattern||p.key+'.com')+'\',this)"></div>').join('')}

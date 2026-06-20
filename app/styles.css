@@ -2966,8 +2966,11 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .hq-quick-btn:hover{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
 @media(max-width:768px){.admin-nav{width:56px;min-width:56px;}.adm-tab span:last-child,.adm-sec-label{display:none;}.adm-tab{justify-content:center;padding:10px;}}
 /* ── Settings modal (large modal for settings/bsettings) ──── */
-.settings-modal{width:min(calc(90vh * 16 / 9),calc(100vw - 40px)) !important;height:min(90vh,calc((100vw - 40px) * 9 / 16)) !important;max-width:none !important;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;}
+.settings-modal{width:min(1180px,calc(100vw - 40px)) !important;height:min(820px,calc(100vh - 40px)) !important;max-width:none !important;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;box-shadow:0 0 0 1.5px var(--glass-border) !important;position:relative;}
 @media(max-width:768px){.settings-modal{width:calc(100vw - 12px);height:calc(100vh - 12px);border-radius:14px;}}
+.settings-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:10px;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.14);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;transition:all .15s;padding:0;}
+.settings-close:hover{background:rgba(255,255,255,.12);}
+.settings-close svg{display:block;}
 /* ── Overview modal (Guilded-style) ──── */
 .overview-modal{max-width:calc(100vw - 40px);width:calc(100vh * 1.5);height:calc(100vh / 1.5);max-height:calc(100vh - 40px);display:flex;flex-direction:column;overflow:hidden;border-radius:18px;}
 .overview-modal .modal-body{overflow-y:auto;flex:1;padding:0;}
@@ -3042,8 +3045,13 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .profile-nav-item.active .pni-icon{opacity:1;}
 .profile-nav-item:hover .pni-icon{opacity:.75;}
 .profile-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 14px;}
+.profile-nav-subs{margin:2px 0 4px 32px;border-left:1px solid rgba(255,255,255,.06);padding-left:0;}
+.profile-nav-sub{display:flex;align-items:center;padding:6px 12px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,.4);transition:color .12s, background .12s;border-radius:0 6px 6px 0;font-weight:500;position:relative;margin-left:-1px;border-left:2px solid transparent;}
+.profile-nav-sub:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.03);}
+.profile-nav-sub.is-active{color:#fff;border-left-color:var(--accent);background:rgba(255,255,255,.04);}
+.profile-nav-item .pni-icon svg{width:16px;height:16px;}
 /* Main settings area */
-.profile-main{flex:1;overflow-y:auto;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);scroll-behavior:smooth;}
+.profile-main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);scroll-behavior:smooth;}
 .settings-panel{max-width:100%;padding:0 20px 60px;margin:0;}
 .settings-section-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.04);}
 .settings-row{display:flex;align-items:flex-start;gap:16px;padding:14px;border:1px solid transparent;border-radius:12px;margin-bottom:2px;transition:all .12s;}

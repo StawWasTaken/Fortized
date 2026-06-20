@@ -40,10 +40,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix128';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix129';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix128';
+    s4.src = '/firebase-compat-shim.js?v=2026fix129';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -52,14 +52,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix128">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix129">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix128', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix129', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -709,10 +709,13 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
 <!-- SETTINGS MODAL (opens over current page like Create Bastion) -->
 <div class="modal-overlay" role="dialog" id="modal-settings">
   <div class="modal settings-modal">
+    <button class="settings-close" aria-label="Close settings" onclick="closeModal('modal-settings')" data-tip="Close">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
     <div class="modal-bar"></div>
     <div class="modal-body" style="padding:0;display:flex;height:100%;overflow:hidden;">
       <div class="profile-nav" id="profile-nav" style="flex-shrink:0;"></div>
-      <div class="profile-main" id="profile-main" style="flex:1;overflow-y:auto;"></div>
+      <div class="profile-main" id="profile-main" style="flex:1;overflow-y:auto;overflow-x:hidden;"></div>
     </div>
   </div>
 </div>
@@ -1213,10 +1216,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix128"></script>
-<script src="/app/app.js?v=2026fix128"></script>
-<script src="/app/joy-system.js?v=2026fix128"></script>
-<script src="/app/chronicle-games.js?v=2026fix128"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix129"></script>
+<script src="/app/app.js?v=2026fix129"></script>
+<script src="/app/joy-system.js?v=2026fix129"></script>
+<script src="/app/chronicle-games.js?v=2026fix129"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

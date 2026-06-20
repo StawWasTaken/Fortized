@@ -127,6 +127,59 @@ function _radiancePlusImg(size){return _radianceImg(size);}
 function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
 
 // ══════════════════════════════════════════════════════════
+// ACCOUNT STANDING  (warnings + suspensions → 5-level meter)
+// ══════════════════════════════════════════════════════════
+// Each warning carries its own expiry (set when the moderator issues
+// it, based on how many active warnings the user already had). The
+// user's *current* standing is the worst active record:
+//   0 active warnings, 0 suspensions  → 0 All good
+//   1 active warning                  → 1 Limited
+//   2 active warnings                 → 2 Very limited
+//   3+ active warnings                → 3 At risk
+//   any active suspension             → 4 Suspended
+// Records past their expiry are ignored so a clean stretch promotes
+// the user back up the meter automatically without manual cleanup.
+const _STANDING_META = [
+  { id:0, label:'All good',     color:'#3ecf6e', tint:'rgba(62,207,110,.08)',  border:'rgba(62,207,110,.22)', msg:"Thanks for keeping it clean. If you break the rules, it'll show up here." },
+  { id:1, label:'Limited',      color:'#f59e0b', tint:'rgba(245,158,11,.08)',  border:'rgba(245,158,11,.28)', msg:"You've received a warning. Stay clear of further violations to recover." },
+  { id:2, label:'Very limited', color:'#f97316', tint:'rgba(249,115,22,.10)',  border:'rgba(249,115,22,.32)', msg:"Multiple warnings on record. Continued violations risk suspension." },
+  { id:3, label:'At risk',      color:'#ef4444', tint:'rgba(239,68,68,.12)',   border:'rgba(239,68,68,.38)',  msg:"Your account is at risk. Any further infraction may suspend you." },
+  { id:4, label:'Suspended',    color:'#b91c1c', tint:'rgba(239,68,68,.14)',   border:'rgba(127,29,29,.55)',  msg:"Your account is suspended. Access is limited until the suspension ends." },
+];
+function _activeWarnings(u) {
+  const now = Date.now();
+  return (u && u.disciplinary && Array.isArray(u.disciplinary.warnings) ? u.disciplinary.warnings : [])
+    .filter(w => !w.expiresAt || w.expiresAt > now);
+}
+function _activeSuspensions(u) {
+  const now = Date.now();
+  return (u && u.disciplinary && Array.isArray(u.disciplinary.suspensions) ? u.disciplinary.suspensions : [])
+    .filter(s => !s.until || s.until > now);
+}
+function _standingLevel(u) {
+  if (_activeSuspensions(u).length > 0) return 4;
+  const n = _activeWarnings(u).length;
+  if (n === 0) return 0;
+  if (n === 1) return 1;
+  if (n === 2) return 2;
+  return 3;
+}
+function _standingMeta(u) { return _STANDING_META[_standingLevel(u)]; }
+// Lookup the expiry window (ms) a new warning should carry — depends
+// on how many active warnings the user already has, so each strike
+// stays on record longer than the last.
+function _warningDuration(existingCount) {
+  const d = 86400000;
+  if (existingCount <= 0) return 7  * d;   // first warning → 1 week
+  if (existingCount === 1) return 14 * d;  // second → 2 weeks
+  if (existingCount === 2) return 21 * d;  // third → 3 weeks
+  if (existingCount === 3) return 30 * d;  // fourth → 1 month
+  return 90 * d;                            // 5+ → 3 months
+}
+// Suspensions always sit on the record for a year.
+const _SUSPENSION_DURATION_MS = 365 * 86400000;
+
+// ══════════════════════════════════════════════════════════
 // COMPANION BRIDGE  (localhost process scanner)
 // ══════════════════════════════════════════════════════════
 // The Fortized Companion is a tiny local helper (Python script) that
@@ -20168,7 +20221,7 @@ function _buildProfileView(tab) {
     const sep = `<div style="height:1px;background:rgba(255,255,255,.05);margin:22px 0;"></div>`;
 
     main.innerHTML = `
-      <div style="padding:0 48px 60px;max-width:100%;">
+      <div class="settings-panel">
 
         ${_settingsHeader('myprofile')}
 
@@ -20483,38 +20536,109 @@ function _buildProfileView(tab) {
   }
 
   else if (tab === 'account' || tab === 'account_security') {
+    const _meta = _standingMeta(CU);
+    const _activeW = _activeWarnings(CU);
+    const _activeS = _activeSuspensions(CU);
+    const _passkeys = (CU.security && Array.isArray(CU.security.passkeys)) ? CU.security.passkeys : [];
+    const _memberSince = CU.createdAt ? new Date(CU.createdAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'Unknown';
+    const _maskEmail = (e) => { if (!e) return '—'; const [u,d] = e.split('@'); return '*'.repeat(Math.max(4, (u||'').length)) + '@' + (d||'…'); };
+
     main.innerHTML = `
       <div class="settings-panel">
         ${_settingsHeader('account')}
 
-        <div class="settings-section-title">ACCOUNT DETAILS</div>
-        <div class="settings-row">
-          <div class="settings-row-label"><div class="srl-name">Username</div><div class="srl-desc">Cannot be changed</div></div>
-          <div class="settings-row-content"><input class="settings-input" value="${escapeHTML(CU.username)}" disabled></div>
-        </div>
-        <div class="settings-row">
-          <div class="settings-row-label"><div class="srl-name">Email</div></div>
-          <div class="settings-row-content" style="display:flex;gap:8px;">
-            <input class="settings-input" id="email-input" value="${escapeHTML(CU.email||'')}" placeholder="your@email.com" style="flex:1;">
-            <button class="settings-save-btn" onclick="saveEmail()">Save</button>
+        <!-- Account Info -->
+        <div class="acct-section" data-spy="account-info">
+          <div class="acct-section__title">Account Info</div>
+          <div class="acct-row">
+            <div class="acct-row__label">Username</div>
+            <div class="acct-row__value"><span class="acct-row__static">${escapeHTML(CU.username)}</span></div>
+            <div class="acct-row__action"><span class="acct-row__locked" data-tip="Usernames are permanent">Locked</span></div>
           </div>
-        </div>
-        <div class="settings-row">
-          <div class="settings-row-label"><div class="srl-name">Member Since</div></div>
-          <div class="settings-row-content"><div style="font-size:13px;color:rgba(255,255,255,.5);">${CU.createdAt ? new Date(CU.createdAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'Unknown'}</div></div>
+          <div class="acct-row">
+            <div class="acct-row__label">Email</div>
+            <div class="acct-row__value">
+              <span class="acct-row__static" id="acct-email-mask">${escapeHTML(_maskEmail(CU.email||''))}</span>
+              <button class="acct-row__reveal" id="acct-email-reveal" type="button"
+                onclick="(function(b){const m=document.getElementById('acct-email-mask');if(!m)return;const showing=m.dataset.shown==='1';m.textContent=showing?'${escapeHTML(_maskEmail(CU.email||''))}':${JSON.stringify(escapeHTML(CU.email||'—'))};m.dataset.shown=showing?'0':'1';b.textContent=showing?'Reveal':'Hide';})(this)">Reveal</button>
+            </div>
+            <div class="acct-row__action"><button class="acct-row__edit" type="button" onclick="_openEmailEditor()">Edit</button></div>
+          </div>
+          <div class="acct-row">
+            <div class="acct-row__label">Member Since</div>
+            <div class="acct-row__value"><span class="acct-row__static">${_memberSince}</span></div>
+            <div class="acct-row__action"></div>
+          </div>
         </div>
 
-        <div class="settings-section-title" style="margin-top:32px;">PASSWORD & SECURITY</div>
-        <div class="settings-row">
-          <div class="settings-row-label"><div class="srl-name">Change Password</div><div class="srl-desc">Update your account password</div></div>
-          <div class="settings-row-content" style="display:flex;flex-direction:column;gap:8px;">
-            <input class="settings-input" id="pw-old" type="password" placeholder="Current password">
-            <input class="settings-input" id="pw-new" type="password" placeholder="New password (min 6 chars)">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <button class="settings-save-btn" onclick="changePassword()">Update Password</button>
-              <span id="pw-msg" style="font-size:12px;"></span>
+        <!-- Password & Security -->
+        <div class="acct-section" data-spy="password">
+          <div class="acct-section__title">Password &amp; Security</div>
+          <div class="acct-row">
+            <div class="acct-row__label">Password</div>
+            <div class="acct-row__value"><span class="acct-row__static">••••••••</span></div>
+            <div class="acct-row__action"><button class="acct-row__edit" type="button" onclick="_openPasswordEditor()">Edit</button></div>
+          </div>
+          <div class="acct-row">
+            <div class="acct-row__label">Multi-Factor Authentication</div>
+            <div class="acct-row__value">
+              ${_passkeys.length === 0
+                ? '<span class="acct-row__static" style="color:rgba(255,255,255,.4);">No security key registered</span>'
+                : `<span class="acct-row__static">${_passkeys.length} ${_passkeys.length===1?'key':'keys'} registered</span>`}
+            </div>
+            <div class="acct-row__action">
+              ${_passkeys.length === 0
+                ? '<button class="acct-row__edit" type="button" onclick="_setupSecurityKey()">Set up</button>'
+                : '<button class="acct-row__edit" type="button" onclick="_openSecurityKeysList()">Manage</button>'}
             </div>
           </div>
+          <div class="acct-row">
+            <div class="acct-row__label">Logged-in Devices</div>
+            <div class="acct-row__value"><span class="acct-row__static">This browser session</span></div>
+            <div class="acct-row__action"><span class="acct-row__locked" data-tip="Session tracking coming soon">1 device</span></div>
+          </div>
+        </div>
+
+        <!-- Account Standing -->
+        <div class="acct-section acct-standing" data-spy="standing" style="background:${_meta.tint};border-color:${_meta.border};">
+          <div class="acct-section__title">Account Standing</div>
+          <div class="acct-standing__row">
+            <div class="acct-standing__avatar" style="background:${_meta.tint};border-color:${_meta.border};">
+              ${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 56, CU.pfpCrop)}
+            </div>
+            <div class="acct-standing__body">
+              <div class="acct-standing__headline">Your account is <span style="color:${_meta.color};">${_meta.label.toLowerCase()}</span></div>
+              <div class="acct-standing__msg">${_meta.msg} <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:${_meta.color};">Terms of Service</a> and <a href="/community-guidelines" target="_blank" rel="noopener noreferrer" style="color:${_meta.color};">Community Guidelines</a>.</div>
+            </div>
+          </div>
+          <!-- 5-segment meter; the segments up to and including the current
+               level are filled with that level's colour. -->
+          <div class="acct-standing__meter">
+            ${[0,1,2,3,4].map(i => {
+              const active = i <= _meta.id;
+              const m = _STANDING_META[i];
+              return `<div class="acct-standing__seg-wrap">
+                <div class="acct-standing__seg" style="background:${active ? m.color : 'rgba(255,255,255,.08)'};"></div>
+                <div class="acct-standing__seg-label" style="color:${active ? m.color : 'rgba(255,255,255,.32)'};">${m.label}</div>
+              </div>`;
+            }).join('')}
+          </div>
+          ${_activeS.length > 0 ? `
+          <div class="acct-standing__detail">
+            <div class="acct-standing__detail-label">Active suspension</div>
+            ${_activeS.map(s => {
+              const until = s.until ? new Date(s.until).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'indefinite';
+              return `<div class="acct-standing__detail-row">${escapeHTML(s.reason||'No reason recorded')} <span style="color:rgba(255,255,255,.4);">· lifts ${until}</span></div>`;
+            }).join('')}
+          </div>` : ''}
+          ${_activeW.length > 0 ? `
+          <div class="acct-standing__detail">
+            <div class="acct-standing__detail-label">Active warnings (${_activeW.length})</div>
+            ${_activeW.map(w => {
+              const exp = w.expiresAt ? new Date(w.expiresAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'no expiry';
+              return `<div class="acct-standing__detail-row">${escapeHTML(w.reason||'No reason recorded')} <span style="color:rgba(255,255,255,.4);">· clears ${exp}</span></div>`;
+            }).join('')}
+          </div>` : ''}
         </div>
 
         <div class="danger-section-title" style="margin-top:36px;">DANGER ZONE</div>
@@ -21134,6 +21258,132 @@ function _buildProfileView(tab) {
 async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}const btn=document.querySelector('[onclick*="saveDisplayName"]');if(btn){btn.classList.add('btn-loading');btn.disabled=true;}CU.displayName=dn;await saveUser();if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');try{const s=FortizedSocial.getSocket();if(s)s.emit('profile:update',{displayName:dn,field:'displayName'});}catch(e){}toast('Display name updated!','success');showFeedbackToast('editing your profile','profile_edit');}
 async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();const btn=document.querySelector('[onclick*="saveEmail"]');if(btn){btn.classList.add('btn-loading');btn.disabled=true;}CU.email=e;await saveUser();if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}toast('Email updated!','success');}
 async function changePassword(){const old=document.getElementById('pw-old')?.value,nw=document.getElementById('pw-new')?.value,msg=document.getElementById('pw-msg');if(!old||!nw){if(msg){msg.style.color='var(--red)';msg.textContent='Fill both fields.';}return;}if(old!==CU.password){if(msg){msg.style.color='var(--red)';msg.textContent='Current password incorrect.';}return;}if(nw.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Too short.';}return;}CU.password=nw;await saveUser();if(msg){msg.style.color='var(--green)';msg.textContent='Password updated!';}document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';}
+
+// ── Security keys (WebAuthn / passkeys) ─────────────────────
+// Client-side scaffold: triggers the platform's WebAuthn dialog so
+// the user can register a device (Touch ID, Windows Hello, USB key,
+// passkey via phone). We store the credential id locally for now;
+// server-side verification of a signed challenge is the follow-up
+// step when the auth backend is ready to receive it.
+async function _setupSecurityKey() {
+  if (!window.PublicKeyCredential || !navigator.credentials?.create) {
+    toast('Security keys are not supported in this browser', 'error');
+    return;
+  }
+  try {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const userId = new TextEncoder().encode(CU.username || 'fortized-user');
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { name: 'Fortized', id: location.hostname || 'fortized.com' },
+        user: {
+          id: userId,
+          name: CU.username || 'fortized-user',
+          displayName: CU.displayName || CU.username || 'Fortized user',
+        },
+        pubKeyCredParams: [
+          { type:'public-key', alg:-7   }, // ES256
+          { type:'public-key', alg:-257 }, // RS256
+        ],
+        authenticatorSelection: { userVerification:'preferred' },
+        timeout: 60000,
+        attestation: 'none',
+      }
+    });
+    if (!cred) return;
+    CU.security = CU.security || {};
+    CU.security.passkeys = CU.security.passkeys || [];
+    CU.security.passkeys.push({
+      id: cred.id,
+      registeredAt: Date.now(),
+      label: 'Security key',
+    });
+    try { await saveUser(); } catch(_) { try { saveLocal(); } catch(__){} }
+    toast('Security key registered','success');
+    buildProfileView('account');
+  } catch (e) {
+    if (e && e.name === 'NotAllowedError') toast('Security key setup cancelled', 'info');
+    else toast('Security key setup failed: ' + (e && e.message || e), 'error');
+  }
+}
+async function _removeSecurityKey(id) {
+  if (!CU.security || !Array.isArray(CU.security.passkeys)) return;
+  CU.security.passkeys = CU.security.passkeys.filter(p => p.id !== id);
+  try { await saveUser(); } catch(_) { try { saveLocal(); } catch(__){} }
+  buildProfileView('account');
+}
+
+// ── Lightweight editor popovers for My Account rows ─────────
+// Discord-style "Edit" buttons open a small centred card. The
+// inputs reuse the existing save handlers so the rest of the
+// account flow keeps working unchanged.
+function _openEmailEditor() {
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:420px;">
+    <div class="ftz-confirm-title">Change Email</div>
+    <input class="settings-input" id="email-input" value="${escapeHTML(CU.email||'')}" placeholder="your@email.com" style="margin:14px 0 4px;">
+    <div class="ftz-confirm-actions">
+      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Cancel</button>
+      <button class="ftz-btn" id="cc-ok" style="background:var(--accent);color:var(--rail);">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('cc-ok').onclick = async () => { await saveEmail(); overlay.remove(); buildProfileView('account'); };
+  document.getElementById('cc-cancel').onclick = () => overlay.remove();
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  setTimeout(() => document.getElementById('email-input')?.focus(), 30);
+}
+function _openPasswordEditor() {
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:420px;">
+    <div class="ftz-confirm-title">Change Password</div>
+    <input class="settings-input" id="pw-old" type="password" placeholder="Current password" style="margin:14px 0 6px;">
+    <input class="settings-input" id="pw-new" type="password" placeholder="New password (min 6 chars)" style="margin-bottom:4px;">
+    <div id="pw-msg" style="font-size:12px;min-height:14px;margin-top:6px;"></div>
+    <div class="ftz-confirm-actions">
+      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Cancel</button>
+      <button class="ftz-btn" id="cc-ok" style="background:var(--accent);color:var(--rail);">Update</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('cc-ok').onclick = async () => {
+    await changePassword();
+    const msg = document.getElementById('pw-msg');
+    if (msg && msg.textContent.includes('updated')) setTimeout(() => overlay.remove(), 600);
+  };
+  document.getElementById('cc-cancel').onclick = () => overlay.remove();
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  setTimeout(() => document.getElementById('pw-old')?.focus(), 30);
+}
+function _openSecurityKeysList() {
+  const keys = (CU.security && Array.isArray(CU.security.passkeys)) ? CU.security.passkeys : [];
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:460px;">
+    <div class="ftz-confirm-title">Security Keys</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin:14px 0;">
+      ${keys.length === 0 ? '<div style="font-size:12.5px;color:rgba(255,255,255,.4);">No keys registered yet.</div>' : keys.map(k => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;color:#fff;font-weight:600;">${escapeHTML(k.label||'Security key')}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);">Registered ${new Date(k.registeredAt||Date.now()).toLocaleDateString()}</div>
+          </div>
+          <button class="ftz-btn ftz-btn-ghost" onclick="_removeSecurityKey('${escapeHTML(k.id)}');this.closest('.ftz-confirm-overlay').remove();" style="color:var(--red);">Remove</button>
+        </div>`).join('')}
+    </div>
+    <div class="ftz-confirm-actions">
+      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Close</button>
+      <button class="ftz-btn" id="cc-ok" style="background:var(--accent);color:var(--rail);">Add Another</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('cc-ok').onclick = () => { overlay.remove(); _setupSecurityKey(); };
+  document.getElementById('cc-cancel').onclick = () => overlay.remove();
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+}
 function _showAvatarPickerMenu(event) {
   event.stopPropagation();
   showCtxMenu(event.clientX, event.clientY, [{items:[
@@ -26085,10 +26335,14 @@ async function adminSearchUser() {
   const ageDisplay = canSeePreciseAge ? (u.dateOfBirth || 'Not set') : (ageTier || 'Unknown');
   const ageLabel = canSeePreciseAge ? 'Date of Birth' : 'Age Tier';
 
+  // Account standing — used to highlight at-risk subjects in the staff
+  // console so a moderator clocks severity before reading any text.
+  const _tgtStanding = _standingMeta(u);
   result.innerHTML = `
     <div style="max-width:860px;">
       <!-- Subject Header -->
-      <div class="hq-panel" style="margin-bottom:14px;">
+      <div class="hq-panel" style="margin-bottom:14px;position:relative;${_tgtStanding.id>0?`box-shadow:inset 0 0 0 1px ${_tgtStanding.border};background:linear-gradient(90deg,${_tgtStanding.tint},transparent 35%);`:''}">
+        ${_tgtStanding.id>0?`<div class="adm-standing-stripe" style="background:${_tgtStanding.color};opacity:${0.35 + _tgtStanding.id*0.16};"></div>`:''}
         <div style="display:flex;align-items:center;gap:18px;padding:22px 24px;position:relative;">
           <div style="position:relative;flex-shrink:0;">
             <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:3px solid ${riskColor}33;box-shadow:0 0 20px ${riskColor}15;">${buildAvatarHTML(u.pfp,u.displayName||u.username,72)}</div>
@@ -26098,6 +26352,7 @@ async function adminSearchUser() {
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
               <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;">${escapeHTML(u.displayName||u.username)}</div>
               ${isBanned?'<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;padding:3px 10px;border-radius:var(--radius-pill);animation:adm-badge-pulse 2s infinite;">BANNED</span>':''}
+              ${_tgtStanding.id>0?`<span class="adm-standing-badge" style="background:${_tgtStanding.tint};color:${_tgtStanding.color};border:1px solid ${_tgtStanding.border};">${escapeHTML(_tgtStanding.label.toUpperCase())}</span>`:''}
               ${targetStaffBadge}
             </div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:6px;">@${escapeHTML(username)} · <span style="color:${statusColors[userStatus]||'#6b7280'};font-weight:600;">${userStatus.toUpperCase()}</span>${accountAge!==null?' · Account age: '+accountAge+'d':''}</div>

@@ -3120,7 +3120,12 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .pt-starter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
 /* Main settings area */
 .profile-main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);scroll-behavior:smooth;}
-.settings-panel{max-width:100%;padding:0 20px 60px;margin:0;}
+/* Uniform settings padding: 48px L/R + 120px bottom so the last
+   section can always scroll above the panel's bottom edge even on
+   short viewports. Every settings page renders inside a
+   .settings-panel (including My Profile now) so the title/icon
+   row always lines up at the same x-coordinate across pages. */
+.settings-panel{max-width:100%;padding:0 48px 120px;margin:0;}
 .settings-section-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.04);}
 .settings-row{display:flex;align-items:flex-start;gap:16px;padding:14px;border:1px solid transparent;border-radius:12px;margin-bottom:2px;transition:all .12s;}
 .settings-row:hover{background:rgba(255,255,255,.02);}
@@ -6677,7 +6682,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .profile-nav:not(.mobile-nav-open){overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
   .profile-nav:not(.mobile-nav-open)::-webkit-scrollbar{display:none;}
   .profile-nav:not(.mobile-nav-open) .profile-nav-item.active::before{display:none;}
-  .settings-panel{padding:0 16px 80px;}
+  .settings-panel{padding:0 18px 120px;}
   .settings-row{flex-direction:column;gap:8px;padding:14px;}
   .settings-row-label{width:100%;}
   /* ══════ DISCOVER ══════ */
@@ -12046,4 +12051,47 @@ select:focus,select:focus-visible,
 .ftz-vp-fname, .ftz-ap-name{ font-family:'Syne',sans-serif !important; font-weight:600; }
 .ftz-vp-prog-fill, .ftz-vp-prog-thumb, .ftz-ap-prog-fill{ background:var(--embed-color, #fef93d) !important; }
 .ftz-vp-vol-fill, .ftz-ap-vol-fill{ background:var(--embed-color, #fef93d) !important; }
+
+/* ── My Account page (Discord-style sectioned rows) ───────────
+   Each section is a card with a heading and a vertical stack of
+   rows; every row is label/value/action. The Account Standing
+   card lives in this same shape but is tinted by the user's
+   level so it reads as a status panel rather than a list row. */
+.acct-section{padding:18px 22px;margin-bottom:18px;border:1px solid rgba(255,255,255,.05);border-radius:14px;background:rgba(255,255,255,.02);}
+.acct-section__title{font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;margin-bottom:14px;letter-spacing:-.01em;}
+.acct-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid rgba(255,255,255,.04);}
+.acct-row:first-of-type{border-top:none;padding-top:4px;}
+.acct-row__label{flex:0 0 200px;font-size:13px;font-weight:600;color:rgba(255,255,255,.55);}
+.acct-row__value{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font-size:13.5px;color:rgba(255,255,255,.85);}
+.acct-row__static{font-variant-numeric:tabular-nums;}
+.acct-row__reveal{background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;padding:0;font-family:inherit;}
+.acct-row__reveal:hover{text-decoration:underline;}
+.acct-row__action{flex-shrink:0;}
+.acct-row__edit{padding:6px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s;}
+.acct-row__edit:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18);}
+.acct-row__locked{font-size:11.5px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:7px;padding:4px 10px;font-weight:600;cursor:help;}
+
+/* Standing card extends .acct-section with a tinted background. */
+.acct-standing{transition:background .2s, border-color .2s;}
+.acct-standing__row{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
+.acct-standing__avatar{width:56px;height:56px;border-radius:50%;flex-shrink:0;overflow:hidden;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);position:relative;}
+.acct-standing__avatar > div,
+.acct-standing__avatar > img,
+.acct-standing__avatar > span{width:100%!important;height:100%!important;object-fit:cover;border-radius:50%;display:block;}
+.acct-standing__body{flex:1;min-width:0;}
+.acct-standing__headline{font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:5px;}
+.acct-standing__msg{font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.55;}
+.acct-standing__meter{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
+.acct-standing__seg-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.acct-standing__seg{width:100%;height:6px;border-radius:3px;transition:background .25s;}
+.acct-standing__seg-label{font-size:10.5px;font-weight:700;text-align:center;letter-spacing:.02em;transition:color .25s;}
+.acct-standing__detail{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);}
+.acct-standing__detail-label{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px;}
+.acct-standing__detail-row{font-size:12.5px;color:rgba(255,255,255,.7);padding:4px 0;}
+
+/* Admin user-search card highlight when the target has an active
+   standing record. The left border ramps up with severity so a
+   moderator can spot trouble at a glance without reading rows. */
+.adm-standing-stripe{position:absolute;top:0;left:0;bottom:0;width:4px;border-radius:14px 0 0 14px;pointer-events:none;}
+.adm-standing-badge{font-size:9px;font-weight:800;letter-spacing:.06em;padding:3px 10px;border-radius:var(--radius-pill);text-transform:uppercase;}
 

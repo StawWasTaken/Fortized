@@ -3089,7 +3089,8 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
    stays parked but gets a fast micro-tremble (on the <img>) plus a
    slow back-and-forth drift (on the wrapper) so he reads as flying
    alongside us at matched speed, with the clouds doing the scenery. */
-.atelier-promo{position:relative;border-radius:14px;overflow:hidden;margin-bottom:28px;cursor:pointer;background:url('https://wallpaperaccess.com/full/8278296.gif') center/cover no-repeat, linear-gradient(180deg,#ffc4e4 0%,#ff8fcf 45%,#f874df 100%);min-height:124px;display:flex;align-items:center;padding:18px 28px 18px 168px;gap:20px;transition:transform .15s, box-shadow .15s;}
+.atelier-promo{position:relative;border-radius:14px;overflow:hidden;margin-bottom:28px;cursor:pointer;background:url('https://wallpaperaccess.com/full/8278296.gif') 50% center/cover no-repeat, linear-gradient(180deg,#ffc4e4 0%,#ff8fcf 45%,#f874df 100%);min-height:124px;display:flex;align-items:center;padding:18px 28px 18px 168px;gap:20px;transition:transform .15s, box-shadow .15s;animation:ftz-promo-bg-pan 11s linear infinite;}
+@keyframes ftz-promo-bg-pan{from{background-position:60% center, 0 0;}to{background-position:40% center, 0 0;}}
 .atelier-promo:hover{transform:translateY(-1px);box-shadow:0 14px 30px -10px rgba(248,116,223,.5);}
 .atelier-promo__text{flex:1;min-width:0;position:relative;z-index:3;}
 .atelier-promo__title{font-family:var(--font-display);font-size:18px;font-weight:800;color:#3a1b3a;letter-spacing:-.01em;margin-bottom:4px;text-shadow:0 1px 0 rgba(255,255,255,.3);}

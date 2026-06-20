@@ -3234,6 +3234,40 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   .ftz-cursor-section-pc-only{ display:none !important; }
 }
 
+/* Cursor picker card — when a cursor has a descExtra (the second
+   half of its lore), the card stays compact until hover. On
+   hover the hidden span slides in via a max-height + opacity
+   transition; the surrounding card grows naturally because the
+   description is a flex child, so nothing animates explicitly
+   on the card itself except a subtle scale + accent-tinted lift
+   so the hover feels deliberate.
+   Non-expandable cards (Fortizan) get the same hover lift so the
+   two cards still read as paired UI. */
+.ftz-cursor-card{
+  transition:transform .22s cubic-bezier(.22,1,.36,1),
+             border-color .18s, background-color .18s,
+             box-shadow .22s;
+}
+.ftz-cursor-card:hover{
+  border-color:rgba(254,248,61,.18) !important;
+  background:rgba(254,248,61,.03) !important;
+  transform:translateY(-1px);
+  box-shadow:0 6px 20px rgba(0,0,0,.28);
+}
+.ftz-cursor-card .ftz-cursor-extra{
+  display:inline-block;
+  max-width:100%;
+  max-height:0;
+  opacity:0;
+  overflow:hidden;
+  vertical-align:bottom;
+  transition:max-height .35s cubic-bezier(.22,1,.36,1), opacity .22s ease;
+}
+.ftz-cursor-card--expandable:hover .ftz-cursor-extra{
+  max-height:320px;
+  opacity:1;
+}
+
 /* Save button */
 .settings-save-btn{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#13161d;border:none;border-radius:8px;padding:8px 18px;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;}
 .settings-save-btn:hover{filter:brightness(1.06);transform:translateY(-1px);}

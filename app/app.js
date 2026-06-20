@@ -20937,12 +20937,28 @@ function _buildProfileView(tab) {
           ${(() => {
             const currentCursor = localStorage.getItem('ftz_cursor') || 'knight';
             const cursors = [
-              { id:'knight',     name:'Fortized Knight', desc:"Your Royal gauntlet. Forged on the third Tuesday of the harvest moon, by a smith whose name nobody bothered writing down. Weighs approximately the same as four loaves of bread, polished to exactly 62% reflectivity (the legal minimum is 60), and currently insured for a sum that would buy roughly seventeen modest horses, give or take a hoof. Definitely the most important hand in the realm. Probably.", preview:_FTZ_CURSORS.knight.normal },
-              { id:'fortizian',  name:'Fortizan',         desc:"Some guy's hand. Pale, obviously, everyone here is. Doesn't even remember which side of town it's from anymore. Just kind of... vibing.", preview:_FTZ_CURSORS.fortizian.normal },
+              {
+                id:'knight',
+                name:'Fortized Knight',
+                // Short half is visible by default; descExtra slides
+                // in on hover via the .ftz-cursor-card:hover CSS rule
+                // (max-height + opacity transition). Splitting the
+                // text at "down." keeps the absurd over-precision
+                // section as the punchline.
+                desc:"Your Royal gauntlet. Forged on the third Tuesday of the harvest moon, by a smith whose name nobody bothered writing down.",
+                descExtra:" Weighs approximately the same as four loaves of bread, polished to exactly 62% reflectivity (the legal minimum is 60), and currently insured for a sum that would buy roughly seventeen modest horses, give or take a hoof. Definitely the most important hand in the realm. Probably.",
+                preview:_FTZ_CURSORS.knight.normal,
+              },
+              {
+                id:'fortizian',
+                name:'Fortizan',
+                desc:"Some guy's hand. Pale, obviously, everyone here is. Doesn't even remember which side of town it's from anymore. Just kind of... vibing.",
+                preview:_FTZ_CURSORS.fortizian.normal,
+              },
             ];
             return cursors.map(c => `
-              <div onclick="_applyFortizedCursor('${c.id}')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid ${currentCursor===c.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentCursor===c.id?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">
-                <div style="width:16px;height:16px;border-radius:50%;border:2px solid ${currentCursor===c.id?'var(--accent)':'rgba(255,255,255,.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div onclick="_applyFortizedCursor('${c.id}')" class="ftz-cursor-card${c.descExtra ? ' ftz-cursor-card--expandable' : ''}" style="display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;border:1.5px solid ${currentCursor===c.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentCursor===c.id?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">
+                <div style="width:16px;height:16px;border-radius:50%;border:2px solid ${currentCursor===c.id?'var(--accent)':'rgba(255,255,255,.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">
                   ${currentCursor===c.id?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);"></div>':''}
                 </div>
                 <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -20950,7 +20966,9 @@ function _buildProfileView(tab) {
                 </div>
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:14px;font-weight:700;color:#fff;">${c.name}</div>
-                  <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">${c.desc}</div>
+                  <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;line-height:1.5;">
+                    <span>${c.desc}</span>${c.descExtra ? `<span class="ftz-cursor-extra">${c.descExtra}</span>` : ''}
+                  </div>
                 </div>
               </div>`).join('');
           })()}

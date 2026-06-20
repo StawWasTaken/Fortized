@@ -12150,3 +12150,47 @@ select:focus,select:focus-visible,
 .voice-cam-preview-wrap video{width:100%;height:100%;object-fit:cover;display:block;}
 .voice-cam-preview-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:rgba(255,255,255,.35);pointer-events:none;}
 
+/* ── Appearance page ─────────────────────────────────────────
+   Section subtitles (Default themes / Your collection / etc),
+   the responsive theme card grid, and the radio-style selector
+   row reused by Density / Spoiler mode / Cursor. */
+.apr-subtitle{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.5);margin:0 0 10px;}
+.apr-hint{font-size:11.5px;color:rgba(255,255,255,.4);line-height:1.5;}
+.apr-theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+.apr-radio-row{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1.5px solid rgba(255,255,255,.04);border-radius:12px;background:rgba(255,255,255,.015);cursor:pointer;transition:all .15s;margin-bottom:8px;}
+.apr-radio-row:last-child{margin-bottom:0;}
+.apr-radio-row:hover{border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.025);}
+.apr-radio-row.is-selected{border-color:rgba(254,248,61,.22);background:rgba(254,248,61,.04);}
+.apr-radio-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.2);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:2px;transition:border-color .15s;}
+.apr-radio-dot.is-on{border-color:var(--accent);}
+.apr-radio-dot.is-on::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.apr-radio-name{font-size:13.5px;font-weight:700;color:#fff;}
+.apr-radio-desc{font-size:12px;color:rgba(255,255,255,.4);line-height:1.5;margin-top:2px;}
+.apr-cursor-preview{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── Density rules — drive .msg-row spacing + chat list rows.
+   The values are intentionally close to the default to avoid
+   breaking dense pages like Bastion lists; the difference shows
+   most clearly in chat. */
+[data-density="compact"] .msg-row{padding-top:0;padding-bottom:0;}
+[data-density="compact"] .msg-row + .msg-row{margin-top:0;}
+[data-density="cozy"] .msg-row{padding-top:8px;padding-bottom:8px;}
+[data-density="cozy"] .msg-row + .msg-row{margin-top:4px;}
+
+/* ── Spoiler "Always" mode — strips the blur + background mask so
+   spoilers render as plain text. Click handler still fires but the
+   class is harmless on already-revealed text. */
+[data-spoiler-mode="always"] .msg-spoiler{color:rgba(255,255,255,.85);background:transparent;filter:none;-webkit-filter:none;user-select:auto;cursor:default;padding:0;}
+
+/* ── Reduced motion — flattens animations + transitions globally.
+   Uses !important because most animation declarations come from
+   element rules and we need a single shortcut to override them all. */
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after{
+  animation-duration:.001ms !important;
+  animation-iteration-count:1 !important;
+  transition-duration:.001ms !important;
+  scroll-behavior:auto !important;
+}
+

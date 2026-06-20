@@ -21206,151 +21206,160 @@ function _buildProfileView(tab) {
       </div>`;
     }
 
+    const _curDensity = localStorage.getItem('ftz_density') || 'default';
+    const _curScale   = parseFloat(localStorage.getItem('ftz_scale') || '1');
+    const _curSpoiler = localStorage.getItem('ftz_spoiler_mode') || 'click';
+    const _curReducedMotion = localStorage.getItem('ftz_reduced_motion') === '1';
+    const _curCursor  = localStorage.getItem('ftz_cursor') || 'knight';
+    const cursors = [
+      {
+        id:'knight',
+        name:'Fortized Knight',
+        desc:"Your Royal gauntlet. Forged on the third Tuesday of the harvest moon, by a smith whose name nobody bothered writing down.",
+        descExtra:" Weighs approximately the same as four loaves of bread, polished to exactly 62% reflectivity (the legal minimum is 60), and currently insured for a sum that would buy roughly seventeen modest horses, give or take a hoof. Definitely the most important hand in the realm. Probably.",
+        preview:_FTZ_CURSORS.knight.normal,
+      },
+      {
+        id:'fortizian',
+        name:'Fortizan',
+        desc:"Some guy's hand. Pale, obviously, everyone here is. Doesn't even remember which side of town it's from anymore. Just kind of... vibing.",
+        preview:_FTZ_CURSORS.fortizian.normal,
+      },
+    ];
+    const densityOpts = [
+      { v:'default', name:'Default', desc:'Standard spacing between messages and rows.' },
+      { v:'compact', name:'Compact', desc:'Tighter messages, more on screen at once.' },
+      { v:'cozy',    name:'Cozy',    desc:'Roomier messages and rows for easier reading.' },
+    ];
+    const spoilerOpts = [
+      { v:'click',  name:'On click', desc:'Spoilers stay blurred until you tap them. The classic Fortized behaviour.' },
+      { v:'always', name:'Always',   desc:'Reveal every spoiler automatically. Use at your own risk.' },
+    ];
+
     main.innerHTML = `<div class="settings-panel">
       ${_settingsHeader('appearance')}
 
-      <!-- Live Preview: Current vs Selected -->
-      <div class="settings-section-title">PREVIEW</div>
-      <div id="appearance-preview-area" style="display:flex;gap:16px;margin-bottom:32px;">
-        ${buildChatPreview(selTheme, 'CURRENT APPEARANCE')}
-        <div id="appearance-preview-selected" style="flex:1;min-width:0;display:none;">
-        </div>
-      </div>
-      <div id="appearance-apply-bar" style="display:none;margin-bottom:28px;padding:14px 18px;background:rgba(254,248,61,.04);border:1.5px solid rgba(254,248,61,.12);border-radius:14px;display:none;align-items:center;gap:12px;">
-        <div style="flex:1;">
-          <div style="font-size:13px;font-weight:700;color:#fff;">Apply <span id="appearance-apply-name"></span>?</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">Click apply to switch to this appearance</div>
-        </div>
-        <button onclick="applySelectedAppearance()" class="settings-save-btn" style="margin:0;padding:8px 20px;font-size:12px;">Apply</button>
-        <button onclick="cancelAppearancePreview()" class="settings-save-btn-ghost" style="margin:0;padding:6px 14px;font-size:11px;">Cancel</button>
-      </div>
+      <!-- THEMES (was "Appearances") -->
+      <div class="voice-section" data-spy="theme">
+        <div class="voice-section__title">Themes</div>
 
-      <!-- Default Appearances -->
-      <div class="settings-section-title">DEFAULT APPEARANCES</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:-12px;margin-bottom:16px;">Free appearances included with every account</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:32px;">
-        ${defaultThemes.map(t => buildAppearanceCard(t)).join('')}
-      </div>
-
-      <!-- User-Owned Appearances -->
-      <div class="settings-section-title">YOUR COLLECTION</div>
-      ${hasOwnedThemes ? `
-        <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:-12px;margin-bottom:16px;">Appearances you've unlocked from the Atelier</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:32px;">
-          ${ownedThemes.map(t => buildAppearanceCard(t)).join('')}
+        <!-- Live preview area -->
+        <div id="appearance-preview-area" style="display:flex;gap:16px;margin-bottom:18px;">
+          ${buildChatPreview(selTheme, 'CURRENT THEME')}
+          <div id="appearance-preview-selected" style="flex:1;min-width:0;display:none;"></div>
         </div>
-      ` : `
-        <div style="background:rgba(255,255,255,.015);border:1.5px dashed rgba(254,248,61,.1);border-radius:18px;padding:36px 24px;text-align:center;margin-bottom:32px;">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;opacity:.4;"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.65-.75 1.65-1.69 0-.44-.18-.83-.44-1.12-.29-.29-.44-.66-.44-1.12a1.64 1.64 0 0 1 1.67-1.67h1.99c3.05 0 5.56-2.5 5.56-5.55C21.97 6.01 17.46 2 12 2z"/></svg>
-          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:rgba(255,255,255,.6);margin-bottom:6px;">No owned appearances yet</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.3);max-width:300px;margin:0 auto 18px;line-height:1.55;">Visit the Atelier Shop to browse and purchase exclusive appearances with Onyx.</div>
-          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:var(--rail);border:none;border-radius:14px;font-family:var(--font-display);font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);">Browse the Atelier Shop</button>
-        </div>
-      `}
-
-      <!-- Available in Shop -->
-      ${lockedThemes.length > 0 ? `
-        <div class="settings-section-title">AVAILABLE IN SHOP</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:-12px;margin-bottom:16px;">Purchase these appearances in the Atelier</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:20px;">
-          ${lockedThemes.map(t => buildAppearanceCard(t)).join('')}
-        </div>
-      ` : ''}
-
-      <!-- Interface Density -->
-      <div class="settings-section-title" style="margin-top:36px;">INTERFACE DENSITY</div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:32px;">
-        ${(()=>{
-          const currentDensity = localStorage.getItem('ftz_density') || 'default';
-          return ['default','compact','cozy'].map(d => `
-          <div onclick="_applyFortizedDensity('${d}')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid ${currentDensity===d?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentDensity===d?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">
-            <div style="width:16px;height:16px;border-radius:50%;border:2px solid ${currentDensity===d?'var(--accent)':'rgba(255,255,255,.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              ${currentDensity===d?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);"></div>':''}
-            </div>
-            <div>
-              <div style="font-size:14px;font-weight:700;color:#fff;">${d.charAt(0).toUpperCase()+d.slice(1)}</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">${d==='default'?'Standard spacing between elements':d==='compact'?'Reduced spacing for more content':d==='cozy'?'More breathing room between elements':''}</div>
-            </div>
-          </div>`).join('');
-        })()}
-      </div>
-
-      <!-- Interface Scaling -->
-      <div class="settings-section-title">INTERFACE SCALING</div>
-      <div style="padding:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;">
-        ${(()=>{
-          const currentScale = parseFloat(localStorage.getItem('ftz_scale') || '1');
-          return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <span style="font-size:13px;color:rgba(255,255,255,.5);">Font Size</span>
-            <span id="scale-value" style="font-size:13px;font-weight:700;color:var(--accent);">${Math.round(currentScale*100)}%</span>
+        <div id="appearance-apply-bar" style="display:none;margin-bottom:18px;padding:14px 18px;background:rgba(254,248,61,.04);border:1.5px solid rgba(254,248,61,.12);border-radius:14px;align-items:center;gap:12px;">
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#fff;">Apply <span id="appearance-apply-name"></span>?</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">Click apply to switch to this theme</div>
           </div>
-          <input type="range" min="80" max="120" step="5" value="${Math.round(currentScale*100)}" style="width:100%;accent-color:var(--accent);" oninput="_applyFortizedScale(this.value/100)">
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.25);margin-top:8px;">
-            <span>80%</span><span>100%</span><span>120%</span>
-          </div>`;
-        })()}
+          <button onclick="applySelectedAppearance()" class="settings-save-btn" style="margin:0;padding:8px 20px;font-size:12px;">Apply</button>
+          <button onclick="cancelAppearancePreview()" class="settings-save-btn-ghost" style="margin:0;padding:6px 14px;font-size:11px;">Cancel</button>
+        </div>
+
+        <div class="apr-subtitle">Default themes</div>
+        <div class="apr-theme-grid">${defaultThemes.map(t => buildAppearanceCard(t)).join('')}</div>
+
+        <div class="apr-subtitle" style="margin-top:18px;">Your collection</div>
+        ${hasOwnedThemes ? `
+          <div class="apr-theme-grid">${ownedThemes.map(t => buildAppearanceCard(t)).join('')}</div>
+        ` : `
+          <div class="settings-temp-empty" style="padding:24px 18px;margin-top:6px;">
+            <div class="settings-temp-empty__icon" style="width:48px;height:48px;margin-bottom:10px;">${_faIcon('palette', 26)}</div>
+            <div class="settings-temp-empty__title" style="font-size:15px;">No themes collected yet</div>
+            <div class="settings-temp-empty__msg">Browse the Fortshop to unlock seasonal and Radiance-only themes with Onyx.</div>
+          </div>
+        `}
+
+        ${lockedThemes.length > 0 ? `
+          <div class="apr-subtitle" style="margin-top:18px;">Available in the Fortshop</div>
+          <div class="apr-theme-grid">${lockedThemes.map(t => buildAppearanceCard(t)).join('')}</div>
+        ` : ''}
       </div>
 
-      <!-- Cursor — PC only. Hidden on touch / coarse-pointer devices
-           via .ftz-cursor-section-pc-only because a custom CSS cursor
-           on a phone or tablet does nothing visible and would just
-           burn data on the PNG fetch. Free for everyone, no Onyx,
-           no Radiance — per brief. -->
-      <div class="ftz-cursor-section-pc-only">
-        <div class="settings-section-title" style="margin-top:36px;">CURSOR</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:14px;">Pick which hand follows your pointer. PC only — phones and tablets ignore custom cursors.</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          ${(() => {
-            const currentCursor = localStorage.getItem('ftz_cursor') || 'knight';
-            const cursors = [
-              {
-                id:'knight',
-                name:'Fortized Knight',
-                // Short half is visible by default; descExtra slides
-                // in on hover via the .ftz-cursor-card:hover CSS rule
-                // (max-height + opacity transition). Splitting the
-                // text at "down." keeps the absurd over-precision
-                // section as the punchline.
-                desc:"Your Royal gauntlet. Forged on the third Tuesday of the harvest moon, by a smith whose name nobody bothered writing down.",
-                descExtra:" Weighs approximately the same as four loaves of bread, polished to exactly 62% reflectivity (the legal minimum is 60), and currently insured for a sum that would buy roughly seventeen modest horses, give or take a hoof. Definitely the most important hand in the realm. Probably.",
-                preview:_FTZ_CURSORS.knight.normal,
-              },
-              {
-                id:'fortizian',
-                name:'Fortizan',
-                desc:"Some guy's hand. Pale, obviously, everyone here is. Doesn't even remember which side of town it's from anymore. Just kind of... vibing.",
-                preview:_FTZ_CURSORS.fortizian.normal,
-              },
-            ];
-            return cursors.map(c => `
-              <div onclick="_applyFortizedCursor('${c.id}')" class="ftz-cursor-card${c.descExtra ? ' ftz-cursor-card--expandable' : ''}" style="display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;border:1.5px solid ${currentCursor===c.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentCursor===c.id?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">
-                <div style="width:16px;height:16px;border-radius:50%;border:2px solid ${currentCursor===c.id?'var(--accent)':'rgba(255,255,255,.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">
-                  ${currentCursor===c.id?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);"></div>':''}
+      <!-- LAYOUT — density + scaling -->
+      <div class="voice-section" data-spy="density">
+        <div class="voice-section__title">Layout</div>
+        <div class="voice-row">
+          <div class="voice-row__label">Density</div>
+          <div class="voice-row__value voice-row__value--col">
+            ${densityOpts.map(o => `
+              <div class="apr-radio-row${_curDensity===o.v?' is-selected':''}" onclick="_applyFortizedDensity('${o.v}',{_noRepaint:true});this.parentNode.querySelectorAll('.apr-radio-row').forEach(r=>r.classList.remove('is-selected'));this.classList.add('is-selected');this.parentNode.querySelectorAll('.apr-radio-dot').forEach(d=>d.classList.remove('is-on'));this.querySelector('.apr-radio-dot').classList.add('is-on');">
+                <div class="apr-radio-dot${_curDensity===o.v?' is-on':''}"></div>
+                <div>
+                  <div class="apr-radio-name">${o.name}</div>
+                  <div class="apr-radio-desc">${o.desc}</div>
                 </div>
-                <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <img src="${c.preview}" alt="" style="width:24px;height:24px;object-fit:contain;" onerror="this.style.display='none'">
-                </div>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:14px;font-weight:700;color:#fff;">${c.name}</div>
-                  <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;line-height:1.5;">
-                    <span>${c.desc}</span>${c.descExtra ? `<span class="ftz-cursor-extra">${c.descExtra}</span>` : ''}
-                  </div>
-                </div>
-              </div>`).join('');
-          })()}
+              </div>`).join('')}
+          </div>
+        </div>
+        <div class="voice-row" data-spy="scaling">
+          <div class="voice-row__label">Interface scale</div>
+          <div class="voice-row__value voice-row__value--col">
+            <input type="range" min="80" max="120" step="5" value="${Math.round(_curScale*100)}" class="voice-slider" oninput="_applyFortizedScale(this.value/100)">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.35);">
+              <span>80%</span>
+              <span id="scale-value" style="color:var(--accent);font-weight:700;">${Math.round(_curScale*100)}%</span>
+              <span>120%</span>
+            </div>
+            <div class="apr-hint">Scales every panel, font, and gap so the proportions hold. 100% is default.</div>
+          </div>
         </div>
       </div>
 
-      <!-- Text & Emoji — moved out of Notifications (it isn't a
-           notification setting; it shapes how typed text renders). -->
-      <div data-spy="text">
-        <div class="settings-section-title" style="margin-top:36px;">TEXT &amp; EMOJI</div>
-        <div class="settings-row">
-          <div class="settings-row-label">
-            <div class="srl-name">Emoticon Conversion</div>
-            <div class="srl-desc">Converts :) to emoji, &lt;3 to heart, etc.</div>
+      <!-- CURSOR — PC only -->
+      <div class="voice-section ftz-cursor-section-pc-only" data-spy="cursor">
+        <div class="voice-section__title">Cursor</div>
+        <div class="apr-hint" style="margin-bottom:12px;">Pick which hand follows your pointer. PC only — phones and tablets ignore custom cursors.</div>
+        ${cursors.map(c => `
+          <div onclick="_applyFortizedCursor('${c.id}')" class="apr-radio-row apr-cursor-card${c.descExtra ? ' ftz-cursor-card--expandable' : ''}${_curCursor===c.id?' is-selected':''}">
+            <div class="apr-radio-dot${_curCursor===c.id?' is-on':''}" style="margin-top:6px;"></div>
+            <div class="apr-cursor-preview">
+              <img src="${c.preview}" alt="" style="width:24px;height:24px;object-fit:contain;" onerror="this.style.display='none'">
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div class="apr-radio-name">${c.name}</div>
+              <div class="apr-radio-desc"><span>${c.desc}</span>${c.descExtra ? `<span class="ftz-cursor-extra">${c.descExtra}</span>` : ''}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <!-- READING — spoiler mode + reduced motion (bonus) -->
+      <div class="voice-section" data-spy="reading">
+        <div class="voice-section__title">Reading</div>
+        <div class="voice-row">
+          <div class="voice-row__label">Show spoiler content</div>
+          <div class="voice-row__value voice-row__value--col">
+            ${spoilerOpts.map(o => `
+              <div class="apr-radio-row${_curSpoiler===o.v?' is-selected':''}" onclick="_applySpoilerMode('${o.v}');this.parentNode.querySelectorAll('.apr-radio-row').forEach(r=>r.classList.remove('is-selected'));this.classList.add('is-selected');this.parentNode.querySelectorAll('.apr-radio-dot').forEach(d=>d.classList.remove('is-on'));this.querySelector('.apr-radio-dot').classList.add('is-on');">
+                <div class="apr-radio-dot${_curSpoiler===o.v?' is-on':''}"></div>
+                <div>
+                  <div class="apr-radio-name">${o.name}</div>
+                  <div class="apr-radio-desc">${o.desc}</div>
+                </div>
+              </div>`).join('')}
           </div>
-          <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
+        </div>
+        <div class="voice-row">
+          <div class="voice-row__stack">
+            <div class="voice-row__name">Reduced motion</div>
+            <div class="voice-row__desc">Trims animations across Fortized — page transitions, popovers, the Fortshop banner, the nav sub-tree. Easier on motion-sensitive eyes and a little gentler on older hardware.</div>
+          </div>
+          <div class="voice-row__value voice-row__value--end">
+            <div class="toggle ${_curReducedMotion?'on':''}" onclick="(()=>{const on=localStorage.getItem('ftz_reduced_motion')!=='1';_applyReducedMotion(on);this.classList.toggle('on',on);})()"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEXT & EMOJI -->
+      <div class="voice-section" data-spy="text">
+        <div class="voice-section__title">Text &amp; Emoji</div>
+        <div class="voice-row">
+          <div class="voice-row__stack">
+            <div class="voice-row__name">Emoticon conversion</div>
+            <div class="voice-row__desc">Converts :) to 🙂, &lt;3 to ❤️, and so on as you type.</div>
+          </div>
+          <div class="voice-row__value voice-row__value--end">
             <div class="toggle ${!_globalSettings?.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this)"></div>
           </div>
         </div>
@@ -47083,8 +47092,18 @@ function _applyFortizedScale(s, opts) {
   s = parseFloat(s) || 1;
   s = Math.max(0.8, Math.min(1.2, s));
   try { localStorage.setItem('ftz_scale', String(s)); } catch (_) {}
-  document.documentElement.style.fontSize = s + 'rem';
-  // Live readout in the slider chip.
+  // `zoom` is the only knob that actually rescales a UI built mostly
+  // in px (most of Fortized's chrome is px, not rem). Supported in
+  // Chromium / WebKit; Firefox falls back to a transform that scales
+  // the document from the top-left so layout proportions still hold.
+  try {
+    document.documentElement.style.zoom = (s === 1) ? '' : String(s);
+    const supportsZoom = (typeof CSS !== 'undefined' && CSS.supports && CSS.supports('zoom', '1'));
+    if (!supportsZoom) {
+      document.documentElement.style.transform = (s === 1) ? '' : 'scale(' + s + ')';
+      document.documentElement.style.transformOrigin = 'top left';
+    }
+  } catch (_) {}
   const el = document.getElementById('scale-value');
   if (el) el.textContent = Math.round(s * 100) + '%';
   if (!opts._skipPersist && typeof CU !== 'undefined' && CU && CU.username && CU.scale !== s) {
@@ -47092,6 +47111,31 @@ function _applyFortizedScale(s, opts) {
     try { saveUser(); } catch (_) {}
   }
 }
+// Spoiler reveal mode: 'click' (default — blur until tapped) or
+// 'always' (show every spoiler immediately). CSS rule in styles.css
+// keys off [data-spoiler-mode="always"] on the document root.
+function _applySpoilerMode(mode) {
+  if (mode !== 'click' && mode !== 'always') mode = 'click';
+  try { localStorage.setItem('ftz_spoiler_mode', mode); } catch (_) {}
+  document.documentElement.dataset.spoilerMode = mode;
+}
+// Reduced motion — flattens animations and transitions across the app
+// for users who prefer less movement. Keys off [data-reduced-motion]
+// on the document root.
+function _applyReducedMotion(on) {
+  on = !!on;
+  try { localStorage.setItem('ftz_reduced_motion', on ? '1' : '0'); } catch (_) {}
+  document.documentElement.dataset.reducedMotion = on ? 'true' : 'false';
+}
+// Apply all persisted appearance prefs on boot so density/scale/
+// spoiler/reduced-motion all kick in before the page paints — no
+// flash of unstyled chrome between login and the first repaint.
+(() => {
+  try { _applyFortizedDensity(localStorage.getItem('ftz_density') || 'default', { _noRepaint:true, _skipPersist:true }); } catch (_) {}
+  try { _applyFortizedScale(parseFloat(localStorage.getItem('ftz_scale') || '1'), { _skipPersist:true }); } catch (_) {}
+  try { _applySpoilerMode(localStorage.getItem('ftz_spoiler_mode') || 'click'); } catch (_) {}
+  try { _applyReducedMotion(localStorage.getItem('ftz_reduced_motion') === '1'); } catch (_) {}
+})();
 // Apply on boot so the cursor is set before the user sees the app.
 (() => {
   try {

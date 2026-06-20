@@ -47092,10 +47092,17 @@ async function _processCursorImage(srcDataUrl, isGif, size) {
   const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  const minSide = Math.min(img.width, img.height);
-  const sx = (img.width  - minSide) / 2;
-  const sy = (img.height - minSide) / 2;
-  ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, s, s);
+  // Fit the whole image inside the square canvas (no crop). Wide or
+  // tall sources get transparent letterbox padding so nothing gets
+  // chopped off, and the aspect ratio is preserved.
+  const w = img.naturalWidth  || img.width  || s;
+  const h = img.naturalHeight || img.height || s;
+  const scale = s / Math.max(w, h);
+  const dw = w * scale;
+  const dh = h * scale;
+  const dx = (s - dw) / 2;
+  const dy = (s - dh) / 2;
+  ctx.drawImage(img, dx, dy, dw, dh);
   return c.toDataURL('image/png');
 }
 // ── Single Fortized modal for adding / editing custom cursors ──
@@ -47210,11 +47217,23 @@ function _openCustomCursorModal(editingId) {
   });
   const sizeSlider = overlay.querySelector('#cursor-modal-size');
   const sizeReadout = overlay.querySelector('#cursor-modal-size-val');
-  sizeSlider.addEventListener('input', async () => {
+  // Debounce the canvas reprocess so a rapid drag doesn't fire ten
+  // overlapping async jobs (which would race and could leave a stale
+  // size on the preview). The readout updates instantly though, so
+  // the user sees the value tracking the slider.
+  let _resizeDebounce = null;
+  sizeSlider.addEventListener('input', () => {
     _cursorModalState.size = parseInt(sizeSlider.value, 10) || 32;
     sizeReadout.textContent = _cursorModalState.size + 'px';
-    await _reprocess();
-    renderBody();
+    // Live preview img sizing so the slot updates without waiting on
+    // the canvas reprocess to finish. The actual saved data URL is
+    // re-derived in the debounced job below.
+    overlay.querySelectorAll('.ftz-cursor-slot__preview img').forEach(im => {
+      im.style.width  = _cursorModalState.size + 'px';
+      im.style.height = _cursorModalState.size + 'px';
+    });
+    if (_resizeDebounce) clearTimeout(_resizeDebounce);
+    _resizeDebounce = setTimeout(async () => { await _reprocess(); renderBody(); }, 90);
   });
   overlay.querySelector('#cursor-modal-cancel').onclick = () => overlay.remove();
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };

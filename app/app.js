@@ -47087,22 +47087,23 @@ async function _processCursorImage(srcDataUrl, isGif, size) {
   const s = Math.max(16, Math.min(64, parseInt(size, 10) || 32));
   const img = new Image();
   await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = srcDataUrl; });
-  const c = document.createElement('canvas');
-  c.width = s; c.height = s;
-  const ctx = c.getContext('2d');
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  // Fit the whole image inside the square canvas (no crop). Wide or
-  // tall sources get transparent letterbox padding so nothing gets
-  // chopped off, and the aspect ratio is preserved.
+  // Scale so the LARGER dimension is `s` px, keep aspect ratio, NO
+  // letterbox. The canvas matches the scaled image's real dimensions
+  // so the cursor's hotspot lands on the visible pixels (built-in
+  // cursors use a fixed "4 2" hotspot and the user-uploaded ones
+  // need to behave the same way — padded canvases were putting the
+  // hotspot in transparent space above the image).
   const w = img.naturalWidth  || img.width  || s;
   const h = img.naturalHeight || img.height || s;
   const scale = s / Math.max(w, h);
-  const dw = w * scale;
-  const dh = h * scale;
-  const dx = (s - dw) / 2;
-  const dy = (s - dh) / 2;
-  ctx.drawImage(img, dx, dy, dw, dh);
+  const cw = Math.max(1, Math.round(w * scale));
+  const ch = Math.max(1, Math.round(h * scale));
+  const c = document.createElement('canvas');
+  c.width = cw; c.height = ch;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, cw, ch);
   return c.toDataURL('image/png');
 }
 // ── Single Fortized modal for adding / editing custom cursors ──

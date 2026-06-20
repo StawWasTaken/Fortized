@@ -1368,7 +1368,11 @@ async function refreshCU() {
         'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
         'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
         'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
-        'createdAt','customStatus','verified','appearance','wishlist','wishlistPrivate'
+        'createdAt','customStatus','verified','appearance','wishlist','wishlistPrivate',
+        // Cross-device cosmetics — same protection pattern as
+        // appearance so a background refresh doesn't clobber a
+        // pick that hasn't reached the DB yet.
+        'cursor','density','scale'
       ];
       const _recentEdits = window._recentlyEditedFields || {};
       const _now = Date.now();
@@ -12427,7 +12431,9 @@ function initFortizedUXResilience() {
               'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
               'createdAt','customStatus','verified','appearance','badges',
               'completedQuests','questsRewarded','questsDailyLog','dailyStreak','streakDate',
-              'lastDailyReward','lastDaily'
+              'lastDailyReward','lastDaily',
+              // Cross-device cosmetics — see protectFields explainer above.
+              'cursor','density','scale'
             ];
             for (const k of protectFields) {
               const nv = CU[k], lv = local[k];
@@ -12508,6 +12514,20 @@ function initFortizedUXResilience() {
       _applyAppearanceVisual(CU.appearance);
     }
   } catch (e) { _dbg && _dbg('[Appearance] init apply failed', e); }
+
+  // Cursor + density + interface scale follow the same model — the
+  // value lives on CU so it follows the user across every device
+  // they sign into. _skipPersist on the apply path stops us echoing
+  // the write back to the DB during this reconciliation pass.
+  try {
+    if (CU.cursor && typeof _applyFortizedCursor === 'function') _applyFortizedCursor(CU.cursor, { _skipPersist: true });
+  } catch (e) { _dbg && _dbg('[Cursor] init apply failed', e); }
+  try {
+    if (CU.density && typeof _applyFortizedDensity === 'function') _applyFortizedDensity(CU.density, { _skipPersist: true, _noRepaint: true });
+  } catch (e) { _dbg && _dbg('[Density] init apply failed', e); }
+  try {
+    if (typeof CU.scale === 'number' && typeof _applyFortizedScale === 'function') _applyFortizedScale(CU.scale, { _skipPersist: true });
+  } catch (e) { _dbg && _dbg('[Scale] init apply failed', e); }
 
   // ── Enforce bans & suspensions (skip when offline to avoid hanging) ──
   if (navigator.onLine) {
@@ -20877,7 +20897,7 @@ function _buildProfileView(tab) {
         ${(()=>{
           const currentDensity = localStorage.getItem('ftz_density') || 'default';
           return ['default','compact','cozy'].map(d => `
-          <div onclick="localStorage.setItem('ftz_density','${d}');document.documentElement.dataset.density='${d}';buildProfileView('appearance')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid ${currentDensity===d?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentDensity===d?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">
+          <div onclick="_applyFortizedDensity('${d}')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid ${currentDensity===d?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentDensity===d?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">
             <div style="width:16px;height:16px;border-radius:50%;border:2px solid ${currentDensity===d?'var(--accent)':'rgba(255,255,255,.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               ${currentDensity===d?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);"></div>':''}
             </div>
@@ -20898,7 +20918,7 @@ function _buildProfileView(tab) {
             <span style="font-size:13px;color:rgba(255,255,255,.5);">Font Size</span>
             <span id="scale-value" style="font-size:13px;font-weight:700;color:var(--accent);">${Math.round(currentScale*100)}%</span>
           </div>
-          <input type="range" min="80" max="120" step="5" value="${Math.round(currentScale*100)}" style="width:100%;accent-color:var(--accent);" oninput="const s=this.value/100;document.getElementById('scale-value').textContent=this.value+'%';document.documentElement.style.fontSize=s+'rem';localStorage.setItem('ftz_scale',s)">
+          <input type="range" min="80" max="120" step="5" value="${Math.round(currentScale*100)}" style="width:100%;accent-color:var(--accent);" oninput="_applyFortizedScale(this.value/100)">
           <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.25);margin-top:8px;">
             <span>80%</span><span>100%</span><span>120%</span>
           </div>`;
@@ -46252,16 +46272,59 @@ const _FTZ_CURSORS = {
     clickable: 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2.png',
   },
 };
-function _applyFortizedCursor(id) {
+function _applyFortizedCursor(id, opts) {
   if (!_FTZ_CURSORS[id]) id = 'knight';
+  opts = opts || {};
   try { localStorage.setItem('ftz_cursor', id); } catch (_) {}
   const html = document.documentElement;
   Object.keys(_FTZ_CURSORS).forEach(k => html.classList.remove('ftz-cursor-' + k));
   html.classList.add('ftz-cursor-' + id);
+  // Persist to the account so the same cursor follows the user
+  // to every device they sign into. localStorage above is just
+  // the first-paint cache; CU.cursor is the source of truth and
+  // is reconciled on login. opts._skipPersist short-circuits the
+  // write when we're applying a value that already came from the
+  // DB / a sibling-tab event (avoids an echo loop).
+  if (!opts._skipPersist && typeof CU !== 'undefined' && CU && CU.username && CU.cursor !== id) {
+    CU.cursor = id;
+    try { saveUser(); } catch (_) {}
+  }
   // Re-render the appearance tab if it's open so the radio button
   // reflects the new pick without a full reload.
   if (document.querySelector('.ftz-cursor-section-pc-only')) {
     try { buildProfileView('appearance'); } catch (_) {}
+  }
+}
+
+// ─── Account-level density + interface scale ────────────────────
+// Same pattern as cursor + appearance: localStorage is the fast
+// boot-time cache, CU.density / CU.scale is the cross-device
+// source of truth, login reconciles. Inline onclick / oninput
+// handlers route through these so we don't duplicate the
+// persistence dance in the template strings.
+function _applyFortizedDensity(d, opts) {
+  if (!['default','compact','cozy'].includes(d)) d = 'default';
+  opts = opts || {};
+  try { localStorage.setItem('ftz_density', d); } catch (_) {}
+  document.documentElement.dataset.density = d;
+  if (!opts._skipPersist && typeof CU !== 'undefined' && CU && CU.username && CU.density !== d) {
+    CU.density = d;
+    try { saveUser(); } catch (_) {}
+  }
+  if (!opts._noRepaint) { try { buildProfileView('appearance'); } catch (_) {} }
+}
+function _applyFortizedScale(s, opts) {
+  opts = opts || {};
+  s = parseFloat(s) || 1;
+  s = Math.max(0.8, Math.min(1.2, s));
+  try { localStorage.setItem('ftz_scale', String(s)); } catch (_) {}
+  document.documentElement.style.fontSize = s + 'rem';
+  // Live readout in the slider chip.
+  const el = document.getElementById('scale-value');
+  if (el) el.textContent = Math.round(s * 100) + '%';
+  if (!opts._skipPersist && typeof CU !== 'undefined' && CU && CU.username && CU.scale !== s) {
+    CU.scale = s;
+    try { saveUser(); } catch (_) {}
   }
 }
 // Apply on boot so the cursor is set before the user sees the app.

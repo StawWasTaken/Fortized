@@ -19923,22 +19923,47 @@ function buildProfileNav(scroll, opts) {
         { spy:'theme',    label:'Theme' },
         { spy:'aboutme',  label:'About Me' },
       ]},
-      { id:'account',         icon:ICN['user-gear'],       label:'My Account' },
+      { id:'account',         icon:ICN['user-gear'],       label:'My Account', subs:[
+        { spy:'account-info', label:'Account Info' },
+        { spy:'password',     label:'Password & Security' },
+      ]},
       { id:'connections',     icon:ICN['link'],            label:'Connections' },
       { id:'authorized_apps', icon:ICN['key'],             label:'Authorized Apps' },
-      { id:'notifications',   icon:ICN['bell'],            label:'Notifications' },
+      { id:'notifications',   icon:ICN['bell'],            label:'Notifications', subs:[
+        { spy:'messages', label:'Messages' },
+        { spy:'social',   label:'Social' },
+        { spy:'system',   label:'System' },
+      ]},
     ]},
     { label:'EXPERIENCE', items: [
-      { id:'voice_settings',  icon:ICN['microphone'],      label:'Voice & Video' },
-      { id:'appearance',      icon:ICN['palette'],         label:'Appearance' },
+      { id:'voice_settings',  icon:ICN['microphone'],      label:'Voice & Video', subs:[
+        { spy:'input',  label:'Input' },
+        { spy:'output', label:'Output' },
+        { spy:'video',  label:'Video' },
+      ]},
+      { id:'appearance',      icon:ICN['palette'],         label:'Appearance', subs:[
+        { spy:'theme',   label:'Theme' },
+        { spy:'density', label:'Density' },
+        { spy:'scaling', label:'Scaling' },
+        { spy:'cursor',  label:'Cursor' },
+      ]},
       { id:'keybinds',        icon:ICN['keyboard'],        label:'Keybinds' },
-      { id:'language',        icon:ICN['language'],        label:'Language' },
+      { id:'language',        icon:ICN['language'],        label:'Language', subs:[
+        { spy:'lang',  label:'Language' },
+        { spy:'time',  label:'Time Format' },
+      ]},
     ]},
     { label:'ACTIVITY', items: [
-      { id:'game_collection', icon:ICN['gamepad'],         label:'Apps & Games' },
+      { id:'game_collection', icon:ICN['gamepad'],         label:'Apps & Games', subs:[
+        { spy:'current',    label:'Current Game' },
+        { spy:'collection', label:'Your Collection' },
+      ]},
     ]},
     { label:'SAFETY', items: [
-      { id:'safety',          icon:SAFETY_ICON,            label:'Safety' },
+      { id:'safety',          icon:SAFETY_ICON,            label:'Safety', subs:[
+        { spy:'blocked', label:'Blocked Users' },
+        { spy:'ignored', label:'Ignored Users' },
+      ]},
       { id:'friend_privacy',  icon:ICN['user-plus'],       label:'Friend Requests' },
     ]},
     { label:'SUPPORT', items: [
@@ -20147,21 +20172,17 @@ function _buildProfileView(tab) {
 
         ${_settingsHeader('myprofile')}
 
-        <!-- Atelier promo (Discord-style sky-blue banner) -->
-        <div class="atelier-promo" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')">
+        <!-- Fortshop promo (yellow→pink sunset, flying knight) -->
+        <div class="atelier-promo" onclick="(typeof _openFortshop==='function')?_openFortshop():showView('atelier')">
           <div class="atelier-promo__clouds"></div>
-          <div class="atelier-promo__deco">
-            <div class="atelier-promo__deco-inner">
-              <img src="${FORTIZED_EMOJI_MAP['knight_nyancat']||''}" style="width:34px;height:34px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:26px\\'>✨</span>'">
-            </div>
-          </div>
           <div class="atelier-promo__text">
             <div class="atelier-promo__title">Give your profile a fresh look</div>
-            <div class="atelier-promo__sub">Decorations, profile themes, appearance styles, and Radiance effects in the Atelier.</div>
+            <div class="atelier-promo__sub">Decorations, profile themes, and Radiance effects — all in the Fortshop.</div>
+            <button class="atelier-promo__cta" type="button">Visit the Fortshop
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg>
+            </button>
           </div>
-          <button class="atelier-promo__cta" type="button">Go to Shop
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg>
-          </button>
+          <img class="atelier-promo__knight" src="${FORTIZED_EMOJI_MAP['knight_nyancat']||''}" alt="" onerror="this.style.display='none'">
         </div>
 
         <!-- Two-column grid -->
@@ -20209,10 +20230,7 @@ function _buildProfileView(tab) {
 
             <!-- Avatar Decoration -->
             <div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                <div style="font-size:14px;font-weight:700;color:#fff;">Avatar Decoration</div>
-                ${_radianceMark()}
-              </div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Avatar Decoration</div>
               <button onclick="_openDecorationPicker()" class="settings-save-btn">Change Decoration</button>
             </div>
             ${sep}
@@ -20221,7 +20239,7 @@ function _buildProfileView(tab) {
             <div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Banner</div>
-                ${hasRadiance ? '' : _radianceMark()}
+                ${_radianceMark()}
               </div>
               <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)">
               <div style="display:flex;gap:8px;">
@@ -20397,11 +20415,23 @@ function _buildProfileView(tab) {
                 </div>
               </div>
 
-              <!-- (2) MESSAGE PREVIEW
-                   Exact mirror of the real .msg-row in chat — same 38 px
-                   avatar, same 14 px / weight 600 author with optional
-                   display-font + effect, same "· {time}" timestamp, same
-                   14.5 px / .88 white body text at line-height 1.65. -->
+              <!-- (2) MESSAGE PREVIEW — picks one of two scripted lines at
+                   random so the surface reads as a real chat snapshot
+                   (timestamp = the viewer's actual local clock; reactions
+                   mirror the real .r-pill component, some from "you"
+                   some from other people). Pure preview, no handlers. -->
+              ${(() => {
+                const _previewMsgs = [
+                  { text:"did anyone else hear that weird noise at 3am",          reactions:[{e:'👀',n:3,mine:false},{e:'😱',n:2,mine:true}] },
+                  { text:"who ate the last french fries without telling anyone?", reactions:[{e:'🥀',n:4,mine:true},{e:'🍟',n:1,mine:false}] },
+                ];
+                const _pm = _previewMsgs[Math.floor(Math.random() * _previewMsgs.length)];
+                const _localNow = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+                const _reactionsHTML = _pm.reactions.map(r => {
+                  const url = (typeof emojiToTwemojiUrl === 'function') ? emojiToTwemojiUrl(r.e) : '';
+                  return `<span class="r-pill${r.mine?' mine':''}"><img src="${url}" alt="${r.e}" style="width:16px;height:16px;object-fit:contain;" onerror="this.outerHTML='${r.e}'">${r.n}</span>`;
+                }).join('');
+                return `
               <div>
                 <div class="fpp-settings-stack__label">Message preview</div>
                 <div class="fpp-msg-preview">
@@ -20410,13 +20440,15 @@ function _buildProfileView(tab) {
                     <div class="fpp-msg-preview__body">
                       <div class="fpp-msg-preview__name-row">
                         <span class="fpp-msg-preview__name" id="preview-msg-name" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
-                        <span class="fpp-msg-preview__time">·  Today at 12:34</span>
+                        <span class="fpp-msg-preview__time">·  Today at ${_localNow}</span>
                       </div>
-                      <div class="fpp-msg-preview__text">Hey! This is what your messages look like.</div>
+                      <div class="fpp-msg-preview__text">${escapeHTML(_pm.text)}</div>
+                      <div class="msg-reactions" style="margin-top:8px;">${_reactionsHTML}</div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>`;
+              })()}
 
               <!-- (3) NAMEPLATE PREVIEW
                    Exact mirror of the real .ml-entry in the memberlist —
@@ -20591,7 +20623,7 @@ function _buildProfileView(tab) {
   else if (tab === 'safety') {
     main.innerHTML = `<div class="settings-panel">
       ${_settingsHeader('safety')}
-      <div class="settings-section-title">BLOCKED USERS</div>
+      <div class="settings-section-title" data-spy="blocked">BLOCKED USERS</div>
       <div id="safety-blocked-list" style="margin-bottom:24px;">
         ${(()=>{
           const blocked = CU?.blockedUsers || [];
@@ -20599,7 +20631,7 @@ function _buildProfileView(tab) {
           return blocked.map(u => '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;margin-bottom:4px;"><span style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">@'+escapeHTML(u)+'</span><button onclick="toggleBlockUser(\''+escapeHTML(u)+'\');setTimeout(()=>buildProfileView(\'safety\'),300)" style="padding:5px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:11px;font-weight:600;cursor:pointer;">Unblock</button></div>').join('');
         })()}
       </div>
-      <div class="settings-section-title">IGNORED USERS</div>
+      <div class="settings-section-title" data-spy="ignored">IGNORED USERS</div>
       <div id="safety-ignored-list">
         ${(()=>{
           const ignored = CU?.ignoredUsers ? Object.keys(CU.ignoredUsers) : [];

@@ -3077,23 +3077,23 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .settings-badge-new{display:inline-flex;align-items:center;font-size:9px;font-weight:800;letter-spacing:.08em;background:#fff93e;color:#13161d;border-radius:5px;padding:2px 7px;cursor:help;line-height:1;}
 .settings-radiance-mark{display:inline-block;width:14px;height:14px;background-color:#fff;-webkit-mask:url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png') center/contain no-repeat;mask:url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png') center/contain no-repeat;vertical-align:-2px;cursor:help;}
 
-/* Discord-style atelier promo — sky-blue gradient banner with cloud
-   decorations and a white CTA pill. Replaces the old dark "card" look. */
-.atelier-promo{position:relative;border-radius:14px;overflow:hidden;margin-bottom:28px;cursor:pointer;background:linear-gradient(110deg,#4865d6 0%,#5b6fd9 35%,#6b5bd1 70%,#7a55c4 100%);min-height:104px;display:flex;align-items:center;padding:18px 24px;gap:20px;transition:transform .15s, box-shadow .15s;}
-.atelier-promo:hover{transform:translateY(-1px);box-shadow:0 12px 28px -10px rgba(72,101,214,.45);}
-.atelier-promo__clouds{position:absolute;inset:0;pointer-events:none;opacity:.55;}
+/* Fortshop promo — yellow→pink "sunset sky" banner with the knight
+   nyancat flying out the right side. Replaces the old dark card. */
+.atelier-promo{position:relative;border-radius:14px;overflow:hidden;margin-bottom:28px;cursor:pointer;background:linear-gradient(110deg,#fff93e 0%,#ffd166 40%,#f88ad4 75%,#f874df 100%);min-height:116px;display:flex;align-items:center;padding:18px 28px;gap:20px;transition:transform .15s, box-shadow .15s;}
+.atelier-promo:hover{transform:translateY(-1px);box-shadow:0 14px 30px -10px rgba(248,116,223,.5);}
+.atelier-promo__clouds{position:absolute;inset:0;pointer-events:none;opacity:.6;}
 .atelier-promo__clouds::before,.atelier-promo__clouds::after{content:'';position:absolute;background:rgba(255,255,255,.85);border-radius:999px;filter:blur(.5px);}
-.atelier-promo__clouds::before{width:80px;height:20px;top:12px;right:120px;box-shadow:-22px -8px 0 -2px rgba(255,255,255,.85),-44px 4px 0 -4px rgba(255,255,255,.85);}
-.atelier-promo__clouds::after{width:90px;height:22px;bottom:8px;right:200px;box-shadow:30px 10px 0 -3px rgba(255,255,255,.85),60px -4px 0 -5px rgba(255,255,255,.85);}
-.atelier-promo__deco{flex-shrink:0;position:relative;width:84px;height:84px;display:flex;align-items:center;justify-content:center;}
-.atelier-promo__deco::before{content:'';position:absolute;inset:8px;border-radius:14px;background:rgba(255,255,255,.18);transform:rotate(-8deg);}
-.atelier-promo__deco::after{content:'';position:absolute;inset:6px;border-radius:14px;background:rgba(255,255,255,.32);transform:rotate(4deg);}
-.atelier-promo__deco-inner{position:relative;width:48px;height:48px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:2;}
+.atelier-promo__clouds::before{width:70px;height:18px;top:14px;left:30%;box-shadow:-20px -6px 0 -2px rgba(255,255,255,.85),-40px 4px 0 -4px rgba(255,255,255,.85);}
+.atelier-promo__clouds::after{width:80px;height:20px;bottom:14px;left:42%;box-shadow:28px 8px 0 -3px rgba(255,255,255,.85),55px -4px 0 -5px rgba(255,255,255,.85);}
 .atelier-promo__text{flex:1;min-width:0;position:relative;z-index:2;}
-.atelier-promo__title{font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;letter-spacing:-.01em;margin-bottom:3px;}
-.atelier-promo__sub{font-size:12.5px;color:rgba(255,255,255,.82);line-height:1.45;}
-.atelier-promo__cta{flex-shrink:0;position:relative;z-index:2;padding:9px 18px;background:#fff;color:#3a4dc4;border:none;border-radius:999px;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .12s, background .12s;}
-.atelier-promo__cta:hover{background:#f7f8ff;transform:scale(1.02);}
+.atelier-promo__title{font-family:var(--font-display);font-size:18px;font-weight:800;color:#3a1b3a;letter-spacing:-.01em;margin-bottom:4px;text-shadow:0 1px 0 rgba(255,255,255,.25);}
+.atelier-promo__sub{font-size:12.5px;color:rgba(58,27,58,.75);line-height:1.45;margin-bottom:12px;}
+.atelier-promo__cta{padding:9px 20px;background:#fff;color:#a020a0;border:none;border-radius:999px;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .12s, background .12s;box-shadow:0 3px 10px rgba(160,32,160,.18);}
+.atelier-promo__cta:hover{background:#fff5fc;transform:scale(1.03);}
+/* Flying knight: bigger, no container, sits at the right end and lets
+   its bottom-right corner clip off the bubble like it's taking off. */
+.atelier-promo__knight{position:absolute;right:-22px;bottom:-18px;width:148px;height:148px;object-fit:contain;pointer-events:none;z-index:3;transform:rotate(-8deg);filter:drop-shadow(0 6px 14px rgba(58,27,58,.28));transition:transform .25s ease;}
+.atelier-promo:hover .atelier-promo__knight{transform:rotate(-12deg) translate(-4px,-4px);}
 
 /* Compact starter-drops grid (Radiance Profile Theme presets). */
 .pt-starter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
@@ -10864,18 +10864,10 @@ select:focus-visible {
 .fpp-msg-preview{
   position:relative;
   padding:12px 14px 14px;
-  background:
-    radial-gradient(620px 110px at 16% 0%, rgba(255,249,62,.05), transparent 70%),
-    linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
-    var(--panel);
+  background:var(--panel);
   border:1px solid var(--border);
   border-radius:14px;
   overflow:hidden;
-}
-.fpp-msg-preview::before{
-  content:""; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
-  pointer-events:none;
 }
 .fpp-msg-preview__row{
   display:flex; gap:14px; align-items:flex-start;
@@ -10926,18 +10918,10 @@ select:focus-visible {
 .fpp-nameplate-preview{
   position:relative;
   padding:6px 8px;
-  background:
-    radial-gradient(620px 110px at 16% 0%, rgba(255,249,62,.05), transparent 70%),
-    linear-gradient(0deg, rgba(0,0,0,.20), rgba(0,0,0,.20)),
-    var(--panel);
+  background:var(--panel);
   border:1px solid var(--border);
   border-radius:14px;
   overflow:hidden;
-}
-.fpp-nameplate-preview::before{
-  content:""; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,249,62,.25) 12%, var(--accent) 50%, rgba(255,249,62,.25) 88%, transparent 100%);
-  pointer-events:none;
 }
 .fpp-nameplate-preview__row{
   display:flex; align-items:center; gap:10px;

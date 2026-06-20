@@ -3234,17 +3234,24 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   .ftz-cursor-section-pc-only{ display:none !important; }
 }
 
-/* Cursor picker card — when a cursor has a descExtra (the second
-   half of its lore), the card stays compact until hover. On
-   hover the hidden span slides in via a max-height + opacity
-   transition; the surrounding card grows naturally because the
-   description is a flex child, so nothing animates explicitly
-   on the card itself except a subtle scale + accent-tinted lift
-   so the hover feels deliberate.
-   Non-expandable cards (Fortizan) get the same hover lift so the
-   two cards still read as paired UI. */
+/* Cursor picker card.
+   Both rows have the same fixed default height so Knight and
+   Fortizan read as paired UI no matter how long their default
+   text is. When a card has a descExtra (the second half of its
+   lore), the .ftz-cursor-card--expandable modifier lifts the
+   height cap on hover and reveals the rest via a max-height +
+   opacity transition on .ftz-cursor-extra. The surrounding
+   card grows naturally because the inner description is a flex
+   child of a fixed-height container.
+   Non-expandable cards (Fortizan) keep the hover lift so both
+   still react to the cursor in step. */
 .ftz-cursor-card{
-  transition:transform .22s cubic-bezier(.22,1,.36,1),
+  min-height:92px;
+  max-height:92px;
+  overflow:hidden;
+  transition:max-height .38s cubic-bezier(.22,1,.36,1),
+             min-height .38s cubic-bezier(.22,1,.36,1),
+             transform .22s cubic-bezier(.22,1,.36,1),
              border-color .18s, background-color .18s,
              box-shadow .22s;
 }
@@ -3254,6 +3261,9 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   transform:translateY(-1px);
   box-shadow:0 6px 20px rgba(0,0,0,.28);
 }
+.ftz-cursor-card--expandable:hover{
+  max-height:360px;
+}
 .ftz-cursor-card .ftz-cursor-extra{
   display:inline-block;
   max-width:100%;
@@ -3261,7 +3271,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   opacity:0;
   overflow:hidden;
   vertical-align:bottom;
-  transition:max-height .35s cubic-bezier(.22,1,.36,1), opacity .22s ease;
+  transition:max-height .38s cubic-bezier(.22,1,.36,1), opacity .25s ease;
 }
 .ftz-cursor-card--expandable:hover .ftz-cursor-extra{
   max-height:320px;

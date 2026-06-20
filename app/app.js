@@ -47066,36 +47066,36 @@ function _applyFortizedCursor(id, opts) {
 }
 
 // ─── Custom cursors (Radiance) ──────────────────────────────
-// Read a user-picked image, return a data-URL ready to persist.
-//   • PNG / JPG / WebP / SVG → center-cropped + downscaled to a
-//     32×32 PNG so the cursor stays compact and square.
+// Read a user-picked image, return a data-URL ready to persist at
+// the requested pixel size (default 32). Behaviour by file type:
+//   • PNG / JPG / WebP / SVG → centre-cropped + downscaled to a
+//     size×size PNG so the cursor stays compact and square.
 //   • GIF → returned untouched (canvas only sees the first frame,
 //     so we keep the original bytes to preserve the animation).
-// Browsers cap cursor URLs around 128px on most platforms, so 32
-// is the right default for static; GIFs are usually small enough
-// that the browser handles them either way.
-async function _resizeImageTo32(file) {
-  const readAsDataUrl = () => new Promise((resolve, reject) => {
+// Browsers cap cursor URLs around 128 px on most platforms, so the
+// modal slider is bounded 16-64 to stay reliably in-range.
+async function _readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(r.result);
     r.onerror = reject;
     r.readAsDataURL(file);
   });
-  if (file.type === 'image/gif') {
-    return await readAsDataUrl();
-  }
-  const dataUrl = await readAsDataUrl();
+}
+async function _processCursorImage(srcDataUrl, isGif, size) {
+  if (isGif) return srcDataUrl; // keep animation
+  const s = Math.max(16, Math.min(64, parseInt(size, 10) || 32));
   const img = new Image();
-  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = dataUrl; });
+  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = srcDataUrl; });
   const c = document.createElement('canvas');
-  c.width = 32; c.height = 32;
+  c.width = s; c.height = s;
   const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   const minSide = Math.min(img.width, img.height);
   const sx = (img.width  - minSide) / 2;
   const sy = (img.height - minSide) / 2;
-  ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, 32, 32);
+  ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, s, s);
   return c.toDataURL('image/png');
 }
 // ── Single Fortized modal for adding / editing custom cursors ──
@@ -47110,10 +47110,19 @@ let _cursorModalState = null;
 function _openCustomCursorModal(editingId) {
   if (!_hasRadiance(CU)) { toast('Custom cursors are a Radiance perk', 'error'); return; }
   const editing = editingId ? (CU.customCursors || []).find(x => x.id === editingId) : null;
+  // State tracks the *source* image (so size changes can re-process
+  // from the raw bytes) and the *processed* image (what'll be saved).
+  // GIF flags short-circuit canvas processing to preserve animation.
+  const _isGifUrl = (u) => typeof u === 'string' && u.startsWith('data:image/gif');
   _cursorModalState = {
     id: editing ? editing.id : null,
     name: editing ? (editing.name || '') : '',
     mode: editing && editing.pointer && editing.pointer !== editing.normal ? 'dual' : 'single',
+    size: editing && editing.size ? editing.size : 32,
+    normalSrc:  editing ? editing.normal  : '',
+    pointerSrc: editing ? (editing.pointer || editing.normal) : '',
+    normalIsGif:  editing ? _isGifUrl(editing.normal)  : false,
+    pointerIsGif: editing ? _isGifUrl(editing.pointer || editing.normal) : false,
     normal:  editing ? editing.normal  : '',
     pointer: editing ? (editing.pointer || editing.normal) : '',
   };
@@ -47127,6 +47136,14 @@ function _openCustomCursorModal(editingId) {
         <button type="button" class="ftz-cursor-modal__tab" data-mode="dual">Normal + pointer</button>
       </div>
       <div class="ftz-cursor-modal__body" id="cursor-modal-body"></div>
+      <div class="ftz-cursor-modal__size">
+        <div class="ftz-cursor-modal__size-head">
+          <label class="ftz-cursor-modal__size-label">Size</label>
+          <span class="ftz-cursor-modal__size-val" id="cursor-modal-size-val">${_cursorModalState.size}px</span>
+        </div>
+        <input type="range" min="16" max="64" step="4" value="${_cursorModalState.size}" id="cursor-modal-size" class="voice-slider">
+        <div class="ftz-cursor-modal__size-hint">PNG / JPG / WebP / SVG are resampled to this size. GIFs keep their original frame size to preserve animation.</div>
+      </div>
       <input class="settings-input ftz-cursor-modal__name" id="cursor-modal-name" placeholder="Name (optional)" maxlength="30" value="${escapeHTML(_cursorModalState.name)}">
       <div class="ftz-confirm-actions" style="margin-top:14px;">
         <button class="ftz-btn ftz-btn-ghost" id="cursor-modal-cancel">Cancel</button>
@@ -47146,7 +47163,7 @@ function _openCustomCursorModal(editingId) {
       return `
       <div class="ftz-cursor-slot" data-slot="${key}">
         <div class="ftz-cursor-slot__preview">
-          ${url ? `<img src="${url}" alt="">` : '<span class="ftz-cursor-slot__empty">No image</span>'}
+          ${url ? `<img src="${url}" alt="" style="width:${_cursorModalState.size}px;height:${_cursorModalState.size}px;">` : '<span class="ftz-cursor-slot__empty">No image</span>'}
         </div>
         <div class="ftz-cursor-slot__label">${label}</div>
         <button type="button" class="ftz-cursor-slot__pick">${url ? 'Replace' : 'Choose image'}</button>
@@ -47163,16 +47180,41 @@ function _openCustomCursorModal(editingId) {
         const file = await _pickImageFile();
         if (!file) return;
         try {
-          const dataUrl = await _resizeImageTo32(file);
-          _cursorModalState[which] = dataUrl;
-          if (_cursorModalState.mode === 'single') _cursorModalState.pointer = dataUrl;
+          const isGif = file.type === 'image/gif';
+          const src = await _readFileAsDataUrl(file);
+          _cursorModalState[which + 'Src']   = src;
+          _cursorModalState[which + 'IsGif'] = isGif;
+          if (_cursorModalState.mode === 'single') {
+            _cursorModalState.pointerSrc   = src;
+            _cursorModalState.pointerIsGif = isGif;
+          }
+          await _reprocess();
           renderBody();
         } catch (e) { toast('Could not import that image', 'error'); }
       });
     });
   };
+  // Re-derive the saveable normal/pointer images from the source bytes
+  // at the current size. Called when the user picks a file or moves
+  // the size slider.
+  const _reprocess = async () => {
+    if (_cursorModalState.normalSrc) {
+      _cursorModalState.normal = await _processCursorImage(_cursorModalState.normalSrc, _cursorModalState.normalIsGif, _cursorModalState.size);
+    }
+    if (_cursorModalState.pointerSrc) {
+      _cursorModalState.pointer = await _processCursorImage(_cursorModalState.pointerSrc, _cursorModalState.pointerIsGif, _cursorModalState.size);
+    }
+  };
   overlay.querySelectorAll('.ftz-cursor-modal__tab').forEach(b => {
     b.addEventListener('click', () => { _cursorModalState.mode = b.dataset.mode; renderTabs(); renderBody(); });
+  });
+  const sizeSlider = overlay.querySelector('#cursor-modal-size');
+  const sizeReadout = overlay.querySelector('#cursor-modal-size-val');
+  sizeSlider.addEventListener('input', async () => {
+    _cursorModalState.size = parseInt(sizeSlider.value, 10) || 32;
+    sizeReadout.textContent = _cursorModalState.size + 'px';
+    await _reprocess();
+    renderBody();
   });
   overlay.querySelector('#cursor-modal-cancel').onclick = () => overlay.remove();
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
@@ -47184,17 +47226,15 @@ function _openCustomCursorModal(editingId) {
     CU.customCursors = CU.customCursors || [];
     if (s.id) {
       const c = CU.customCursors.find(x => x.id === s.id);
-      if (c) { c.name = s.name || c.name; c.normal = s.normal; c.pointer = pointer; }
+      if (c) { c.name = s.name || c.name; c.normal = s.normal; c.pointer = pointer; c.size = s.size; }
     } else {
       const newId = 'c' + Date.now().toString(36);
       const idx = CU.customCursors.length + 1;
-      CU.customCursors.push({ id: newId, name: s.name || ('Custom #' + idx), normal: s.normal, pointer });
+      CU.customCursors.push({ id: newId, name: s.name || ('Custom #' + idx), normal: s.normal, pointer, size: s.size });
     }
     try { await saveUser(); } catch(_) {}
     overlay.remove();
     toast(s.id ? 'Cursor updated' : 'Custom cursor added', 'success');
-    // If we just edited the active cursor, reapply so the new image
-    // takes effect immediately.
     if (s.id && (CU.cursor || '') === 'custom_' + s.id) { try { _applyFortizedCursor(CU.cursor); } catch(_) {} }
     buildProfileView('appearance');
   };

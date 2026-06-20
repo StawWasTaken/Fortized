@@ -12168,6 +12168,36 @@ select:focus,select:focus-visible,
 .apr-radio-desc{font-size:12px;color:rgba(255,255,255,.4);line-height:1.5;margin-top:2px;}
 .apr-cursor-preview{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
+/* Custom theme card — two colour pickers + live gradient swatch.
+   Sits at the bottom of the Themes section as the "Build your own"
+   Radiance perk. */
+.apr-custom-theme{display:grid;grid-template-columns:140px 1fr;gap:14px;padding:10px;border:1.5px solid rgba(255,255,255,.05);border-radius:14px;background:rgba(255,255,255,.015);align-items:stretch;}
+.apr-custom-theme.is-active{border-color:rgba(254,248,61,.35);background:rgba(254,248,61,.04);}
+.apr-custom-theme.is-locked{opacity:.65;}
+.apr-custom-theme__swatch{position:relative;border-radius:10px;min-height:100px;overflow:hidden;}
+.apr-custom-theme__active{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.5);border:1px solid rgba(254,248,61,.45);border-radius:6px;padding:2px 8px;font-size:9px;font-weight:800;color:#fef83d;letter-spacing:.04em;}
+.apr-custom-theme__lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);font-size:11px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.04em;}
+.apr-custom-theme__controls{display:flex;flex-direction:column;gap:8px;padding:4px;}
+.apr-custom-theme__row{display:flex;align-items:center;gap:10px;}
+.apr-custom-theme__label{flex:1;font-size:12px;font-weight:600;color:rgba(255,255,255,.6);}
+.apr-custom-theme__row input[type="color"]{width:44px;height:30px;padding:0;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:transparent;cursor:pointer;}
+.apr-custom-theme__row input[type="color"]:disabled{cursor:not-allowed;opacity:.5;}
+.apr-custom-theme__apply{margin-top:6px;padding:9px 16px;background:var(--accent);color:#13161d;border:none;border-radius:8px;font-family:var(--font-display);font-size:12.5px;font-weight:800;cursor:pointer;transition:transform .12s, opacity .12s;}
+.apr-custom-theme__apply:hover{transform:scale(1.02);}
+.apr-custom-theme__apply:disabled{opacity:.4;cursor:not-allowed;background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);}
+
+/* Custom cursor list — extends .apr-radio-row with rename/delete
+   actions on the right and a dashed upload button at the bottom. */
+.apr-custom-cursor-actions{display:flex;gap:6px;flex-shrink:0;}
+.apr-cursor-action{padding:5px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:7px;color:rgba(255,255,255,.7);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s;}
+.apr-cursor-action:hover{background:rgba(255,255,255,.1);color:#fff;}
+.apr-cursor-action--danger{color:rgba(248,113,113,.85);border-color:rgba(248,113,113,.18);}
+.apr-cursor-action--danger:hover{background:rgba(248,113,113,.1);color:var(--red);}
+.apr-cursor-upload{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;margin-top:8px;background:transparent;border:1.5px dashed rgba(255,255,255,.12);border-radius:12px;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;}
+.apr-cursor-upload:hover:not(:disabled){border-color:rgba(254,248,61,.35);color:#fff;background:rgba(254,248,61,.04);}
+.apr-cursor-upload:disabled{opacity:.45;cursor:not-allowed;}
+.apr-cursor-upload__icon{font-size:18px;font-weight:300;line-height:1;}
+
 /* ── Density rules — drive .msg-row spacing + chat list rows.
    The values are intentionally close to the default to avoid
    breaking dense pages like Bastion lists; the difference shows

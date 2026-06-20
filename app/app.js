@@ -21138,66 +21138,37 @@ function _buildProfileView(tab) {
       </div>`;
     }
 
-    // Build an appearance card with accurate mini app preview
+    // Build an appearance card. The preview is now just a clean colour
+    // gradient (bg → sidebar → accent) — no busy mini chat — so users
+    // read the palette at a glance instead of squinting at fake rows.
     function buildAppearanceCard(t) {
       const isActive = currentTheme===t.id;
       const isLocked = t.locked;
-      const isLight = !!t.light;
       const borderCol = isActive ? 'rgba(254,248,61,.35)' : 'rgba(255,255,255,.06)';
       const bgCol = isActive ? 'rgba(254,248,61,.04)' : 'rgba(255,255,255,.015)';
       const txtCol = isActive ? '#fef83d' : '#fff';
-      const mockDim = isLight ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.06)';
-      const mockDim2 = isLight ? 'rgba(0,0,0,.04)' : 'rgba(255,255,255,.03)';
-      const textMuted = isLight ? 'rgba(0,0,0,.25)' : 'rgba(255,255,255,.2)';
-      const textStrong = isLight ? 'rgba(0,0,0,.6)' : 'rgba(255,255,255,.6)';
       const clickAction = isLocked ? "buyAppearance('" + t.id + "'," + t.cost + ")" : "selectAppearancePreview('" + t.id + "')";
       const opac = isLocked ? 'opacity:.55;' : '';
+      // Three-stop gradient using the theme's own palette so each card
+      // reads as a distinct strip of "what the app will look like".
+      const grad = t.bodyGrad
+        ? t.bodyGrad
+        : `linear-gradient(135deg, ${t.sidebar} 0%, ${t.bg} 55%, ${t.panel} 100%)`;
       return `
       <div onclick="${clickAction}" class="appearance-card" style="border:1.5px solid ${borderCol};border-radius:16px;background:${bgCol};${opac}">
-        <!-- Accurate mini app preview -->
-        <div style="height:130px;${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};display:flex;overflow:hidden;position:relative;border-radius:14px 14px 0 0;">
-          <!-- Server icons -->
-          <div style="width:20px;background:${isLight ? 'rgba(0,0,0,.03)' : 'rgba(0,0,0,.15)'};display:flex;flex-direction:column;align-items:center;padding:5px 0;gap:3px;">
-            <div style="width:14px;height:14px;border-radius:5px;background:${t.accent};opacity:.15;"></div>
-            <div style="width:8px;height:1px;background:${mockDim};"></div>
-            <div style="width:14px;height:14px;border-radius:50%;background:${mockDim};"></div>
-            <div style="width:14px;height:14px;border-radius:50%;background:${mockDim2};"></div>
-          </div>
-          <!-- Channel sidebar -->
-          <div style="width:58px;background:${t.sidebar};border-right:1px solid ${t.border};padding:6px 4px;display:flex;flex-direction:column;gap:1px;overflow:hidden;">
-            <div style="font-size:5px;font-weight:800;color:${textMuted};text-transform:uppercase;padding:2px 3px;margin-bottom:2px;">Bastion</div>
-            <div style="display:flex;align-items:center;gap:2px;padding:2px 3px;border-radius:3px;background:${isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.06)'};"><span style="font-size:5px;color:${textMuted};">#</span><span style="font-size:5.5px;font-weight:600;color:${textStrong};">general</span></div>
-            <div style="display:flex;align-items:center;gap:2px;padding:2px 3px;"><span style="font-size:5px;color:${textMuted};">#</span><span style="font-size:5.5px;color:${textMuted};">off-topic</span></div>
-            <div style="display:flex;align-items:center;gap:2px;padding:2px 3px;"><span style="font-size:5px;color:${textMuted};">#</span><span style="font-size:5.5px;color:${textMuted};">media</span></div>
-          </div>
-          <!-- Chat area -->
-          <div style="flex:1;display:flex;flex-direction:column;background:${t.channel};overflow:hidden;">
-            <div style="height:16px;border-bottom:1px solid ${t.border};display:flex;align-items:center;padding:0 6px;"><span style="font-size:5.5px;font-weight:700;color:${textStrong};"># general</span></div>
-            <div style="flex:1;padding:5px 6px;display:flex;flex-direction:column;gap:4px;">
-              <div style="display:flex;gap:4px;align-items:flex-start;">
-                <div style="width:12px;height:12px;border-radius:50%;background:${t.accent}22;flex-shrink:0;"></div>
-                <div><div style="height:2px;background:${t.accent};border-radius:2px;width:22px;margin-bottom:2px;opacity:.6;"></div><div style="height:2px;background:${mockDim};border-radius:2px;width:40px;"></div></div>
-              </div>
-              <div style="display:flex;gap:4px;align-items:flex-start;">
-                <div style="width:12px;height:12px;border-radius:50%;background:${mockDim};flex-shrink:0;"></div>
-                <div><div style="height:2px;background:${textMuted};border-radius:2px;width:18px;margin-bottom:2px;"></div><div style="height:2px;background:${mockDim};border-radius:2px;width:35px;"></div></div>
-              </div>
-              <div style="display:flex;gap:4px;align-items:flex-start;">
-                <div style="width:12px;height:12px;border-radius:50%;background:rgba(140,100,220,.12);flex-shrink:0;"></div>
-                <div><div style="height:2px;background:rgba(167,139,250,.4);border-radius:2px;width:15px;margin-bottom:2px;"></div><div style="height:2px;background:${mockDim};border-radius:2px;width:30px;"></div></div>
-              </div>
-            </div>
-            <div style="padding:0 5px 4px;"><div style="height:12px;background:${t.panel};border-radius:4px;border:1px solid ${t.border};"></div></div>
-          </div>
-          ${isActive ? '<div style="position:absolute;top:6px;right:6px;background:rgba(254,248,61,.15);border:1px solid rgba(254,248,61,.25);border-radius:6px;padding:2px 7px;font-size:8px;font-weight:700;color:#fef83d;backdrop-filter:blur(8px);">Active</div>' : ''}
+        <!-- Palette swatch -->
+        <div style="height:90px;background:${grad};position:relative;border-radius:14px 14px 0 0;overflow:hidden;">
+          <!-- Accent dot bottom-right so the user sees the highlight colour too -->
+          <div style="position:absolute;bottom:10px;right:10px;width:18px;height:18px;border-radius:50%;background:${t.accent};box-shadow:0 0 0 2px rgba(0,0,0,.25), 0 4px 12px ${t.accent}40;"></div>
+          ${isActive ? '<div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.45);border:1px solid rgba(254,248,61,.4);border-radius:6px;padding:2px 8px;font-size:9px;font-weight:800;color:#fef83d;backdrop-filter:blur(8px);letter-spacing:.04em;">ACTIVE</div>' : ''}
           ${isLocked ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(1px);"><div style="font-size:18px;">🔒</div></div>' : ''}
         </div>
         <!-- Card footer -->
         <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">
           ${isActive ? '<div style="width:14px;height:14px;border-radius:50%;background:#fef83d;flex-shrink:0;box-shadow:0 0 8px rgba(254,248,61,.4);display:flex;align-items:center;justify-content:center;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0f1119" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' : '<div style="width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.15);flex-shrink:0;"></div>'}
           <div style="flex:1;min-width:0;">
-            <div style="font-size:12px;font-weight:700;color:${txtCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.name}</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.desc}</div>
+            <div style="font-size:13px;font-weight:700;color:${txtCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.name}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.desc}</div>
           </div>
           ${t.free ? '<div style="font-size:8px;font-weight:700;color:rgba(62,207,110,.7);background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.12);border-radius:6px;padding:2px 7px;white-space:nowrap;">FREE</div>' : ''}
           ${(!t.free && !isLocked) ? '<div style="font-size:8px;font-weight:700;color:rgba(62,207,110,.7);background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.12);border-radius:6px;padding:2px 7px;white-space:nowrap;">OWNED</div>' : ''}
@@ -21271,6 +21242,36 @@ function _buildProfileView(tab) {
           </div>
         `}
 
+        <!-- Custom theme — Radiance-only, two-colour gradient. -->
+        <div class="apr-subtitle" style="margin-top:18px;display:flex;align-items:center;gap:8px;">
+          <span>Build your own</span>
+          ${_newBadge()}
+          ${_radianceMark()}
+        </div>
+        ${(() => {
+          const isRad = _hasRadiance(CU);
+          const cust = (CU && CU.customAppearance) || { color1:'#a855f7', color2:'#3b82f6' };
+          const isActiveCustom = currentTheme === 'custom';
+          return `
+          <div class="apr-custom-theme${isActiveCustom?' is-active':''}${!isRad?' is-locked':''}">
+            <div class="apr-custom-theme__swatch" id="apr-custom-swatch" style="background:linear-gradient(135deg, ${cust.color1} 0%, ${cust.color2} 100%);">
+              ${isActiveCustom ? '<div class="apr-custom-theme__active">ACTIVE</div>' : ''}
+              ${!isRad ? '<div class="apr-custom-theme__lock">🔒 Radiance only</div>' : ''}
+            </div>
+            <div class="apr-custom-theme__controls">
+              <div class="apr-custom-theme__row">
+                <label class="apr-custom-theme__label">Colour 1</label>
+                <input type="color" id="apr-c1" value="${cust.color1}" oninput="document.getElementById('apr-custom-swatch').style.background='linear-gradient(135deg, '+this.value+' 0%, '+document.getElementById('apr-c2').value+' 100%)'" ${isRad?'':'disabled'}>
+              </div>
+              <div class="apr-custom-theme__row">
+                <label class="apr-custom-theme__label">Colour 2</label>
+                <input type="color" id="apr-c2" value="${cust.color2}" oninput="document.getElementById('apr-custom-swatch').style.background='linear-gradient(135deg, '+document.getElementById('apr-c1').value+' 0%, '+this.value+' 100%)'" ${isRad?'':'disabled'}>
+              </div>
+              <button class="apr-custom-theme__apply" onclick="_saveCustomAppearance(document.getElementById('apr-c1').value, document.getElementById('apr-c2').value)" ${isRad?'':'disabled'}>Apply custom theme</button>
+            </div>
+          </div>`;
+        })()}
+
         ${lockedThemes.length > 0 ? `
           <div class="apr-subtitle" style="margin-top:18px;">Available in the Fortshop</div>
           <div class="apr-theme-grid">${lockedThemes.map(t => buildAppearanceCard(t)).join('')}</div>
@@ -21309,7 +21310,9 @@ function _buildProfileView(tab) {
 
       <!-- CURSOR — PC only -->
       <div class="voice-section ftz-cursor-section-pc-only" data-spy="cursor">
-        <div class="voice-section__title">Cursor</div>
+        <div class="voice-section__title" style="display:flex;align-items:center;gap:8px;">
+          <span>Cursor</span>
+        </div>
         <div class="apr-hint" style="margin-bottom:12px;">Pick which hand follows your pointer. PC only — phones and tablets ignore custom cursors.</div>
         ${cursors.map(c => `
           <div onclick="_applyFortizedCursor('${c.id}')" class="apr-radio-row apr-cursor-card${c.descExtra ? ' ftz-cursor-card--expandable' : ''}${_curCursor===c.id?' is-selected':''}">
@@ -21322,6 +21325,42 @@ function _buildProfileView(tab) {
               <div class="apr-radio-desc"><span>${c.desc}</span>${c.descExtra ? `<span class="ftz-cursor-extra">${c.descExtra}</span>` : ''}</div>
             </div>
           </div>`).join('')}
+
+        <!-- Custom cursors — Radiance, upload → resize → collection -->
+        <div class="apr-subtitle" style="margin-top:18px;display:flex;align-items:center;gap:8px;">
+          <span>Your custom cursors</span>
+          ${_newBadge()}
+          ${_radianceMark()}
+        </div>
+        <div class="apr-hint" style="margin-bottom:10px;">Upload a PNG — Fortized resizes it to 32×32 and adds it here. Pick one to use it everywhere.</div>
+        ${(() => {
+          const isRad = _hasRadiance(CU);
+          const list = (CU && CU.customCursors) || [];
+          const rows = list.map(c => {
+            const id = 'custom_' + c.id;
+            const isSel = _curCursor === id;
+            return `
+            <div class="apr-radio-row apr-cursor-card${isSel?' is-selected':''}">
+              <div class="apr-radio-dot${isSel?' is-on':''}" style="margin-top:6px;" onclick="_applyFortizedCursor('${id}')"></div>
+              <div class="apr-cursor-preview" onclick="_applyFortizedCursor('${id}')" style="cursor:pointer;">
+                <img src="${c.normal}" alt="" style="width:24px;height:24px;object-fit:contain;">
+              </div>
+              <div style="flex:1;min-width:0;" onclick="_applyFortizedCursor('${id}')">
+                <div class="apr-radio-name">${escapeHTML(c.name||'Custom cursor')}</div>
+                <div class="apr-radio-desc">Custom upload · 32×32</div>
+              </div>
+              <div class="apr-custom-cursor-actions">
+                <button class="apr-cursor-action" onclick="event.stopPropagation();_renameCustomCursor('${c.id}')">Rename</button>
+                <button class="apr-cursor-action apr-cursor-action--danger" onclick="event.stopPropagation();_deleteCustomCursor('${c.id}')">Delete</button>
+              </div>
+            </div>`;
+          }).join('');
+          return rows + `
+            <button class="apr-cursor-upload" onclick="_addCustomCursor()" ${isRad?'':'disabled'}>
+              <span class="apr-cursor-upload__icon">+</span>
+              <span>${isRad ? 'Upload a cursor image' : 'Upload — Radiance only'}</span>
+            </button>`;
+        })()}
       </div>
 
       <!-- READING — spoiler mode + reduced motion (bonus) -->
@@ -47046,12 +47085,57 @@ const _FTZ_CURSORS = {
     clickable: 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZFortizianCursor2.png',
   },
 };
+// Inject (or remove) a <style> tag that sets the cursor for the whole
+// document to the user's uploaded image. We need a runtime style block
+// because the dataUrls are per-user — they can't live in styles.css.
+function _applyCustomCursorStyle(cursor) {
+  let style = document.getElementById('ftz-custom-cursor-style');
+  if (!cursor) { if (style) style.remove(); return; }
+  if (!style) {
+    style = document.createElement('style');
+    style.id = 'ftz-custom-cursor-style';
+    document.head.appendChild(style);
+  }
+  const normal  = cursor.normal  || cursor.pointer;
+  const pointer = cursor.pointer || cursor.normal;
+  style.textContent = `
+    html, html body, html *{ cursor: url('${normal}') 4 2, default !important; }
+    html :is(a, button, [role="button"], [role="link"], [role="menuitem"], [role="tab"],
+      [role="checkbox"], [role="radio"], [role="switch"], [role="option"],
+      [tabindex]:not([tabindex="-1"]),
+      summary, label, select,
+      input[type="checkbox"], input[type="radio"],
+      input[type="submit"], input[type="button"], input[type="reset"], input[type="file"],
+      [style*="cursor:pointer"], [style*="cursor: pointer"]
+    ){ cursor: url('${pointer}') 4 2, pointer !important; }
+  `;
+}
+
 function _applyFortizedCursor(id, opts) {
-  if (!_FTZ_CURSORS[id]) id = 'knight';
   opts = opts || {};
-  try { localStorage.setItem('ftz_cursor', id); } catch (_) {}
   const html = document.documentElement;
   Object.keys(_FTZ_CURSORS).forEach(k => html.classList.remove('ftz-cursor-' + k));
+  // Custom cursor — look it up on CU.customCursors and inject style.
+  if (typeof id === 'string' && id.startsWith('custom_')) {
+    const customId = id.slice(7);
+    const c = ((typeof CU !== 'undefined' && CU && CU.customCursors) || []).find(x => x.id === customId);
+    if (!c) { id = 'knight'; } // fallback if the cursor was deleted
+    else {
+      try { localStorage.setItem('ftz_cursor', id); } catch (_) {}
+      _applyCustomCursorStyle(c);
+      if (!opts._skipPersist && CU && CU.username && CU.cursor !== id) {
+        CU.cursor = id;
+        try { saveUser(); } catch (_) {}
+      }
+      if (document.querySelector('.ftz-cursor-section-pc-only')) {
+        try { buildProfileView('appearance'); } catch (_) {}
+      }
+      return;
+    }
+  }
+  if (!_FTZ_CURSORS[id]) id = 'knight';
+  _applyCustomCursorStyle(null); // clear any custom style
+  try { localStorage.setItem('ftz_cursor', id); } catch (_) {}
   html.classList.add('ftz-cursor-' + id);
   // Persist to the account so the same cursor follows the user
   // to every device they sign into. localStorage above is just
@@ -47068,6 +47152,92 @@ function _applyFortizedCursor(id, opts) {
   if (document.querySelector('.ftz-cursor-section-pc-only')) {
     try { buildProfileView('appearance'); } catch (_) {}
   }
+}
+
+// ─── Custom cursors (Radiance) ──────────────────────────────
+// Read a user-picked image file, downscale to 32x32 (center-cropped
+// to square first so wide / tall images don't squash), return a
+// PNG data-URL ready to persist. Browsers cap data-URL cursors at
+// 128px on most platforms, so 32 is safe and compact.
+async function _resizeImageTo32(file) {
+  const dataUrl = await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+  const img = new Image();
+  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = dataUrl; });
+  const c = document.createElement('canvas');
+  c.width = 32; c.height = 32;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  const minSide = Math.min(img.width, img.height);
+  const sx = (img.width  - minSide) / 2;
+  const sy = (img.height - minSide) / 2;
+  ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, 32, 32);
+  return c.toDataURL('image/png');
+}
+async function _addCustomCursor() {
+  if (!_hasRadiance(CU)) { toast('Custom cursors are a Radiance perk', 'error'); return; }
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+  const file = await new Promise(resolve => {
+    input.onchange = () => resolve(input.files && input.files[0]);
+    input.click();
+  });
+  document.body.removeChild(input);
+  if (!file) return;
+  try {
+    const dataUrl = await _resizeImageTo32(file);
+    CU.customCursors = CU.customCursors || [];
+    const id = 'c' + Date.now().toString(36);
+    const idx = CU.customCursors.length + 1;
+    CU.customCursors.push({ id, name: 'Custom #' + idx, normal: dataUrl, pointer: dataUrl });
+    try { await saveUser(); } catch(_) {}
+    toast('Custom cursor added', 'success');
+    buildProfileView('appearance');
+  } catch (e) {
+    console.error('[CustomCursor] add failed', e);
+    toast('Could not import that image', 'error');
+  }
+}
+async function _renameCustomCursor(id) {
+  const c = (CU.customCursors || []).find(x => x.id === id);
+  if (!c) return;
+  const next = prompt('Rename cursor', c.name);
+  if (!next || next.trim() === c.name) return;
+  c.name = next.trim().slice(0, 30);
+  try { await saveUser(); } catch(_) {}
+  buildProfileView('appearance');
+}
+async function _deleteCustomCursor(id) {
+  if (!confirm('Delete this custom cursor?')) return;
+  CU.customCursors = (CU.customCursors || []).filter(x => x.id !== id);
+  // If the currently-applied cursor was this one, fall back to Knight.
+  if ((CU.cursor || '').endsWith(id) && (CU.cursor || '').startsWith('custom_')) {
+    try { _applyFortizedCursor('knight'); } catch(_) {}
+  }
+  try { await saveUser(); } catch(_) {}
+  buildProfileView('appearance');
+}
+
+// ─── Custom appearance (Radiance) ─────────────────────────────
+// Stores the two-colour gradient on the user record and triggers
+// applyAppearance('custom') which now reads CU.customAppearance to
+// resolve the body gradient + accent. Free users see the card but
+// the Apply button is gated behind _hasRadiance().
+async function _saveCustomAppearance(c1, c2) {
+  if (!_hasRadiance(CU)) { toast('Custom themes are a Radiance perk', 'error'); return; }
+  CU.customAppearance = { color1: c1, color2: c2 };
+  try { await saveUser(); } catch(_) {}
+  try { applyAppearance('custom'); } catch(_) {}
+  toast('Custom theme applied', 'success');
+  buildProfileView('appearance');
 }
 
 // ─── Account-level density + interface scale ────────────────────
@@ -47137,12 +47307,20 @@ function _applyReducedMotion(on) {
   try { _applyReducedMotion(localStorage.getItem('ftz_reduced_motion') === '1'); } catch (_) {}
 })();
 // Apply on boot so the cursor is set before the user sees the app.
+// Custom cursors need CU to be hydrated first (the dataUrls live on
+// the user object), so they re-apply once via the deferred call below.
 (() => {
   try {
     const saved = localStorage.getItem('ftz_cursor') || 'knight';
     if (_FTZ_CURSORS[saved]) document.documentElement.classList.add('ftz-cursor-' + saved);
   } catch (_) {}
 })();
+setTimeout(() => {
+  try {
+    const saved = localStorage.getItem('ftz_cursor') || '';
+    if (saved.startsWith('custom_')) _applyFortizedCursor(saved, { _skipPersist:true });
+  } catch (_) {}
+}, 600);
 function _darkenHex(hex, pct) {
   // Darken a hex color by a percentage (0-1). E.g. 0.188 = 18.8% darker
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
@@ -47230,6 +47408,26 @@ function applyAppearance(themeId, _opts) {
     document.documentElement.style.setProperty('--border',     '#1a3524');
     document.documentElement.style.setProperty('--muted',      '#3a5848');
     document.documentElement.style.setProperty('--muted-light','#6aa782');
+  } else if (themeId === 'custom' && CU && CU.customAppearance) {
+    // Radiance custom: two user-picked colours blend into a diagonal
+    // gradient that lives behind every panel. Surface colours stay
+    // the dark Fortized Classic palette so text contrast holds; only
+    // the canvas behind the glass shows the user's gradient.
+    const c1 = CU.customAppearance.color1 || '#a855f7';
+    const c2 = CU.customAppearance.color2 || '#3b82f6';
+    canvasColor = `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`;
+    sidebarColor = '#181a1f';
+    glassHeavy = 'rgba(19,22,29,.92)'; glassMid = 'rgba(19,22,29,.78)'; glassLight = 'rgba(19,22,29,.62)';
+    document.documentElement.style.setProperty('--bg',         '#13161d');
+    document.documentElement.style.setProperty('--rail',       '#0f1119');
+    document.documentElement.style.setProperty('--sidebar',    sidebarColor);
+    document.documentElement.style.setProperty('--channel',    '#15171e');
+    document.documentElement.style.setProperty('--panel',      '#1b1e25');
+    document.documentElement.style.setProperty('--panel2',     '#1f232b');
+    document.documentElement.style.setProperty('--panel3',     '#23272f');
+    document.documentElement.style.setProperty('--border',     '#252b3a');
+    document.documentElement.style.setProperty('--muted',      '#4e5a6f');
+    document.documentElement.style.setProperty('--muted-light','#7d8a9e');
   } else {
     // Fortized Classic (default)
     canvasColor = '#13161d';

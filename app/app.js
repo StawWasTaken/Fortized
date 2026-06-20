@@ -20715,12 +20715,17 @@ function _buildProfileView(tab) {
   }
 
   else if (tab === 'connections') {
-    // Connections is now its own settings page (lifted out of My Profile).
-    // Keep the same per-platform list, just hosted under a clean header.
-    main.innerHTML = `<div class="settings-panel" style="padding:0 48px 60px;">
+    // Placeholder while the connections feature is being designed.
+    // The platform list + validation lives in code but isn't wired
+    // to a settings surface yet — keep this card warm so users know
+    // it's coming rather than empty without comment.
+    main.innerHTML = `<div class="settings-panel">
       ${_settingsHeader('connections')}
-      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:4px 14px;">
-        ${_CONN_PLATFORMS.map(p => '<div class="connected-row"><div class="connected-icon" style="background:'+p.color+'18;color:'+p.color+';">'+_connIcon(p.key)+'</div><div class="connected-label">'+p.label+'</div><input class="settings-input" id="social-'+p.key+'" value="'+escapeHTML((CU.socials||{})[p.key]||'')+'" placeholder="'+p.placeholder+'" style="flex:1;font-size:12.5px;padding:7px 12px;" oninput="markSettingsDirty();validateSocialLink(\''+p.key+'\',\''+( p.pattern||p.key+'.com')+'\',this)"></div>').join('')}
+      <div class="settings-temp-empty">
+        <div class="settings-temp-empty__icon">${_faIcon('link', 36)}</div>
+        <div class="settings-temp-empty__pill">Coming soon</div>
+        <div class="settings-temp-empty__title">Connections will live here</div>
+        <div class="settings-temp-empty__msg">This page is temporary while we build it out. Soon you'll be able to link your YouTube, X / Twitter, TikTok, Roblox and more so they show on your profile. Nothing to manage yet.</div>
       </div>
     </div>`;
   }
@@ -20849,8 +20854,16 @@ function _buildProfileView(tab) {
       </div></div>`;
   }
   else if (tab === 'authorized_apps') {
-    main.innerHTML = `<div class="settings-panel">${_settingsHeader('authorized_apps')}
-      <div class="ftz-empty" style="padding:40px;"><div class="ftz-empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg></div><div class="ftz-empty-title">No Authorized Apps</div><div class="ftz-empty-text">When you authorize third-party apps, they'll appear here.<br>OAuth integration coming soon.</div></div></div>`;
+    // Placeholder while OAuth app management is being built.
+    main.innerHTML = `<div class="settings-panel">
+      ${_settingsHeader('authorized_apps')}
+      <div class="settings-temp-empty">
+        <div class="settings-temp-empty__icon">${_faIcon('key', 36)}</div>
+        <div class="settings-temp-empty__pill">Coming soon</div>
+        <div class="settings-temp-empty__title">Authorized apps will live here</div>
+        <div class="settings-temp-empty__msg">This page is temporary while we build it out. Once third-party apps can sign in with Fortized, you'll review them, see what they can access, and revoke them from here. Nothing to manage yet.</div>
+      </div>
+    </div>`;
   }
   else if (tab === 'voice_settings') {
     main.innerHTML = `<div class="settings-panel">${_settingsHeader('voice_settings')}

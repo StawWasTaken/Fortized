@@ -20686,17 +20686,6 @@ function _buildProfileView(tab) {
             </div>
           </div>`).join('')}
 
-        <div class="settings-section-title" style="margin-top:28px;">TEXT & EMOJI</div>
-        <div class="settings-row">
-          <div class="settings-row-label">
-            <div class="srl-name">Emoticon Conversion</div>
-            <div class="srl-desc">Converts :) to emoji, &lt;3 to heart, etc.</div>
-          </div>
-          <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
-            <div class="toggle ${!_globalSettings?.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this)"></div>
-          </div>
-        </div>
-
         <button class="settings-save-btn" onclick="saveNotifSettings();clearSettingsDirty()" style="margin-top:24px;">Save Changes</button>
       </div>`;
   }
@@ -21232,6 +21221,21 @@ function _buildProfileView(tab) {
                 </div>
               </div>`).join('');
           })()}
+        </div>
+      </div>
+
+      <!-- Text & Emoji — moved out of Notifications (it isn't a
+           notification setting; it shapes how typed text renders). -->
+      <div data-spy="text">
+        <div class="settings-section-title" style="margin-top:36px;">TEXT &amp; EMOJI</div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <div class="srl-name">Emoticon Conversion</div>
+            <div class="srl-desc">Converts :) to emoji, &lt;3 to heart, etc.</div>
+          </div>
+          <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
+            <div class="toggle ${!_globalSettings?.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this)"></div>
+          </div>
         </div>
       </div>
     </div>`;

@@ -20172,11 +20172,13 @@ function _buildProfileView(tab) {
 
         ${_settingsHeader('myprofile')}
 
-        <!-- Fortshop promo — animated pink sky, knight parked on the left,
-             drifting clouds behind him sell the "flying" feel. -->
+        <!-- Fortshop promo — pink-sky GIF background does the scenery; the
+             knight stays parked but trembles + drifts so he reads as
+             flying alongside us at matched speed. -->
         <div class="atelier-promo" onclick="(typeof _openFortshop==='function')?_openFortshop():showView('atelier')">
-          <div class="atelier-promo__sky"></div>
-          <img class="atelier-promo__knight" src="${FORTIZED_EMOJI_MAP['knight_nyancat']||''}" alt="" onerror="this.style.display='none'">
+          <span class="atelier-promo__knight-wrap">
+            <img class="atelier-promo__knight" src="${FORTIZED_EMOJI_MAP['knight_nyancat']||''}" alt="" onerror="this.style.display='none'">
+          </span>
           <div class="atelier-promo__text">
             <div class="atelier-promo__title">Give your profile a fresh look</div>
             <div class="atelier-promo__sub">Decorations, profile themes, and Radiance effects — all in the Fortshop.</div>

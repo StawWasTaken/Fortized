@@ -3085,44 +3085,35 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .settings-badge-new{display:inline-flex;align-items:center;font-size:9px;font-weight:800;letter-spacing:.08em;background:#fff93e;color:#13161d;border-radius:5px;padding:2px 7px;cursor:help;line-height:1;}
 .settings-radiance-mark{display:inline-block;width:14px;height:14px;background-color:#fff;-webkit-mask:url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png') center/contain no-repeat;mask:url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png') center/contain no-repeat;vertical-align:-2px;cursor:help;}
 
-/* Fortshop promo — animated pink sky with clouds drifting left→right.
-   The knight sprite stays parked on the left, and because the clouds
-   stream past behind him, he reads as flying through the sky without
-   actually moving. Pure CSS; no external GIF dependency. */
-.atelier-promo{position:relative;border-radius:14px;overflow:hidden;margin-bottom:28px;cursor:pointer;background:linear-gradient(180deg,#ffc4e4 0%,#ff8fcf 45%,#f874df 100%);min-height:124px;display:flex;align-items:center;padding:18px 28px 18px 168px;gap:20px;transition:transform .15s, box-shadow .15s;}
+/* Fortshop promo — pink-sky GIF as the moving background. The knight
+   stays parked but gets a fast micro-tremble (on the <img>) plus a
+   slow back-and-forth drift (on the wrapper) so he reads as flying
+   alongside us at matched speed, with the clouds doing the scenery. */
+.atelier-promo{position:relative;border-radius:14px;overflow:hidden;margin-bottom:28px;cursor:pointer;background:url('https://wallpaperaccess.com/full/8278296.gif') center/cover no-repeat, linear-gradient(180deg,#ffc4e4 0%,#ff8fcf 45%,#f874df 100%);min-height:124px;display:flex;align-items:center;padding:18px 28px 18px 168px;gap:20px;transition:transform .15s, box-shadow .15s;}
 .atelier-promo:hover{transform:translateY(-1px);box-shadow:0 14px 30px -10px rgba(248,116,223,.5);}
-/* Two parallax cloud layers translate independently for depth. */
-.atelier-promo__sky{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1;}
-.atelier-promo__sky::before,
-.atelier-promo__sky::after{
-  content:'';position:absolute;top:0;bottom:0;left:0;width:200%;
-  background-image:
-    radial-gradient(ellipse 110px 26px at 8% 28%,  rgba(255,255,255,.7), transparent 65%),
-    radial-gradient(ellipse 80px  20px at 22% 72%, rgba(255,255,255,.55), transparent 65%),
-    radial-gradient(ellipse 130px 30px at 38% 20%, rgba(255,255,255,.65), transparent 65%),
-    radial-gradient(ellipse 90px  22px at 56% 62%, rgba(255,255,255,.55), transparent 65%),
-    radial-gradient(ellipse 110px 26px at 74% 32%, rgba(255,255,255,.65), transparent 65%),
-    radial-gradient(ellipse 70px  18px at 90% 78%, rgba(255,255,255,.5), transparent 65%);
-  animation:ftz-sky-drift 22s linear infinite;
-}
-.atelier-promo__sky::after{
-  opacity:.45;
-  animation-duration:36s;
-  transform:translateY(10px);
-  filter:blur(1px);
-}
-@keyframes ftz-sky-drift{
-  from{transform:translateX(-50%);}
-  to{transform:translateX(0%);}
-}
 .atelier-promo__text{flex:1;min-width:0;position:relative;z-index:3;}
 .atelier-promo__title{font-family:var(--font-display);font-size:18px;font-weight:800;color:#3a1b3a;letter-spacing:-.01em;margin-bottom:4px;text-shadow:0 1px 0 rgba(255,255,255,.3);}
 .atelier-promo__sub{font-size:12.5px;color:rgba(58,27,58,.75);line-height:1.45;margin-bottom:12px;}
 .atelier-promo__cta{padding:9px 20px;background:#fff;color:#a020a0;border:none;border-radius:999px;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .12s, background .12s;box-shadow:0 3px 10px rgba(160,32,160,.18);}
 .atelier-promo__cta:hover{background:#fff5fc;transform:scale(1.03);}
-/* Knight sits on the left, straight up — the drifting clouds behind
-   him sell the "flying" feel without any motion on the sprite. */
-.atelier-promo__knight{position:absolute;left:-10px;bottom:-14px;width:160px;height:160px;object-fit:contain;pointer-events:none;z-index:4;filter:drop-shadow(0 6px 14px rgba(58,27,58,.28));}
+/* Two-layer motion: outer wrapper drifts back+forward slowly (we and
+   the knight are flying at matched speed but he wobbles in the wind),
+   inner <img> trembles fast like a small engine vibration. The two
+   transforms compose because they're on different elements. */
+.atelier-promo__knight-wrap{position:absolute;left:-10px;bottom:-14px;width:160px;height:160px;pointer-events:none;z-index:4;animation:ftz-knight-drift 7s ease-in-out infinite;will-change:transform;}
+.atelier-promo__knight{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(58,27,58,.28));animation:ftz-knight-tremble .18s linear infinite;will-change:transform;display:block;}
+@keyframes ftz-knight-drift{
+  0%,100%{transform:translateX(0);}
+  35%{transform:translateX(-10px);}
+  65%{transform:translateX(3px);}
+}
+@keyframes ftz-knight-tremble{
+  0%{transform:translate(0,0);}
+  25%{transform:translate(.6px,-.4px);}
+  50%{transform:translate(-.5px,.5px);}
+  75%{transform:translate(.5px,.4px);}
+  100%{transform:translate(0,0);}
+}
 
 /* Compact starter-drops grid (Radiance Profile Theme presets). */
 .pt-starter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}

@@ -129,6 +129,51 @@ function showError(msg) {
   authCard.classList.add('shake');
 }
 
+// Decode the base64url credential id (the form WebAuthn stores) back
+// into the ArrayBuffer that navigator.credentials.get() expects in
+// allowCredentials[i].id.
+function _b64uToBuf(s) {
+  s = String(s||'').replace(/-/g,'+').replace(/_/g,'/');
+  while (s.length % 4) s += '=';
+  try {
+    const bin = atob(s);
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    return buf.buffer;
+  } catch { return new ArrayBuffer(0); }
+}
+
+// Second factor — if the user has registered passkeys/security keys,
+// require one to complete sign-in. Server-side challenge verification
+// is the follow-up step when the auth backend is ready; for now we
+// trust a non-null cred response from the platform dialog.
+async function _verifySecurityKeyFactor(passkeys) {
+  if (!window.PublicKeyCredential || !navigator.credentials || !navigator.credentials.get) {
+    showError('This browser does not support security keys. Use a passkey-capable browser.');
+    return false;
+  }
+  try {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const allowCredentials = (passkeys||[]).map(k => ({
+      type: 'public-key',
+      id: _b64uToBuf(k.id),
+    }));
+    const cred = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials,
+        userVerification: 'preferred',
+        timeout: 60000,
+        rpId: location.hostname || 'fortized.com',
+      }
+    });
+    return !!cred;
+  } catch (e) {
+    console.error('Security key verification failed', e);
+    return false;
+  }
+}
+
 async function doLogin() {
   const id   = identifierInput.value.trim();
   const pass = passwordInput.value.trim();
@@ -145,6 +190,22 @@ async function doLogin() {
       return;
     }
     const user = result.user;
+
+    // MFA gate — if the user has registered security keys, require one
+    // before completing sign-in. We swap the button label so the user
+    // knows the platform dialog is coming.
+    const passkeys = (user && user.security && Array.isArray(user.security.passkeys)) ? user.security.passkeys : [];
+    if (passkeys.length > 0) {
+      loginBtn.innerHTML = 'Waiting for security key…';
+      const ok = await _verifySecurityKeyFactor(passkeys);
+      if (!ok) {
+        showError('Security key verification failed or was cancelled.');
+        loginBtn.innerHTML = 'Sign in <svg><use href="#i-arrow-right"/></svg>';
+        setLoading(false);
+        return;
+      }
+    }
+
     if (user?.username) {
       localStorage.setItem('ftz_current', user.username);
       localStorage.setItem('fortized_current_user', user.username);

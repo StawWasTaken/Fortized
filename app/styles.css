@@ -3119,13 +3119,14 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 /* Compact starter-drops grid (Radiance Profile Theme presets). */
 .pt-starter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
 /* Main settings area */
-.profile-main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);scroll-behavior:smooth;}
-/* Uniform settings padding: 48px L/R + 120px bottom so the last
-   section can always scroll above the panel's bottom edge even on
-   short viewports. Every settings page renders inside a
+.profile-main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);scroll-behavior:smooth;overscroll-behavior:contain;}
+/* Uniform settings padding: 48px L/R + 200px bottom. The bottom
+   pad has to clear the floating .unsaved-bar (60px tall, bottom:24px)
+   PLUS leave a comfortable margin so the last section can scroll
+   well above the bar. Every settings page renders inside a
    .settings-panel (including My Profile now) so the title/icon
    row always lines up at the same x-coordinate across pages. */
-.settings-panel{max-width:100%;padding:0 48px 120px;margin:0;}
+.settings-panel{max-width:100%;padding:0 48px 200px;margin:0;}
 .settings-section-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.04);}
 .settings-row{display:flex;align-items:flex-start;gap:16px;padding:14px;border:1px solid transparent;border-radius:12px;margin-bottom:2px;transition:all .12s;}
 .settings-row:hover{background:rgba(255,255,255,.02);}
@@ -6682,7 +6683,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .profile-nav:not(.mobile-nav-open){overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
   .profile-nav:not(.mobile-nav-open)::-webkit-scrollbar{display:none;}
   .profile-nav:not(.mobile-nav-open) .profile-nav-item.active::before{display:none;}
-  .settings-panel{padding:0 18px 120px;}
+  .settings-panel{padding:0 18px 180px;}
   .settings-row{flex-direction:column;gap:8px;padding:14px;}
   .settings-row-label{width:100%;}
   /* ══════ DISCOVER ══════ */

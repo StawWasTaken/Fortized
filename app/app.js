@@ -20541,7 +20541,8 @@ function _buildProfileView(tab) {
     const _activeS = _activeSuspensions(CU);
     const _passkeys = (CU.security && Array.isArray(CU.security.passkeys)) ? CU.security.passkeys : [];
     const _memberSince = CU.createdAt ? new Date(CU.createdAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'Unknown';
-    const _maskEmail = (e) => { if (!e) return '—'; const [u,d] = e.split('@'); return '*'.repeat(Math.max(4, (u||'').length)) + '@' + (d||'…'); };
+    const _realEmail   = CU.email || '—';
+    const _maskedEmail = _maskEmailForDisplay(CU.email || '');
 
     main.innerHTML = `
       <div class="settings-panel">
@@ -20558,9 +20559,8 @@ function _buildProfileView(tab) {
           <div class="acct-row">
             <div class="acct-row__label">Email</div>
             <div class="acct-row__value">
-              <span class="acct-row__static" id="acct-email-mask">${escapeHTML(_maskEmail(CU.email||''))}</span>
-              <button class="acct-row__reveal" id="acct-email-reveal" type="button"
-                onclick="(function(b){const m=document.getElementById('acct-email-mask');if(!m)return;const showing=m.dataset.shown==='1';m.textContent=showing?'${escapeHTML(_maskEmail(CU.email||''))}':${JSON.stringify(escapeHTML(CU.email||'—'))};m.dataset.shown=showing?'0':'1';b.textContent=showing?'Reveal':'Hide';})(this)">Reveal</button>
+              <span class="acct-row__static" id="acct-email-mask" data-real="${escapeHTML(_realEmail)}" data-masked="${escapeHTML(_maskedEmail)}">${escapeHTML(_maskedEmail)}</span>
+              <button class="acct-row__reveal" id="acct-email-reveal" type="button" onclick="_toggleEmailReveal(this)">Reveal</button>
             </div>
             <div class="acct-row__action"><button class="acct-row__edit" type="button" onclick="_openEmailEditor()">Edit</button></div>
           </div>
@@ -20608,7 +20608,7 @@ function _buildProfileView(tab) {
             </div>
             <div class="acct-standing__body">
               <div class="acct-standing__headline">Your account is <span style="color:${_meta.color};">${_meta.label.toLowerCase()}</span></div>
-              <div class="acct-standing__msg">${_meta.msg} <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:${_meta.color};">Terms of Service</a> and <a href="/community-guidelines" target="_blank" rel="noopener noreferrer" style="color:${_meta.color};">Community Guidelines</a>.</div>
+              <div class="acct-standing__msg">${_meta.msg} <a href="https://www.fortized.com/legal/terms-of-use/" target="_blank" rel="noopener noreferrer" style="color:${_meta.color};">Terms of Service</a> and <a href="https://www.fortized.com/legal/terms-of-use/" target="_blank" rel="noopener noreferrer" style="color:${_meta.color};">Terms of Use</a>.</div>
             </div>
           </div>
           <!-- 5-segment meter; the segments up to and including the current
@@ -21314,6 +21314,25 @@ async function _removeSecurityKey(id) {
   buildProfileView('account');
 }
 
+// Email mask helper — used by both the initial render and the
+// Reveal toggle so the masked + real strings stay in sync.
+function _maskEmailForDisplay(e) {
+  if (!e) return '—';
+  const idx = e.indexOf('@');
+  if (idx < 0) return '*'.repeat(Math.max(4, e.length));
+  return '*'.repeat(Math.max(4, idx)) + e.slice(idx);
+}
+function _toggleEmailReveal(btn) {
+  const m = document.getElementById('acct-email-mask');
+  if (!m) return;
+  const showing = m.dataset.shown === '1';
+  const real    = m.dataset.real   || '—';
+  const masked  = m.dataset.masked || '—';
+  m.textContent = showing ? masked : real;
+  m.dataset.shown  = showing ? '0' : '1';
+  btn.textContent  = showing ? 'Reveal' : 'Hide';
+}
+
 // ── Lightweight editor popovers for My Account rows ─────────
 // Discord-style "Edit" buttons open a small centred card. The
 // inputs reuse the existing save handlers so the rest of the
@@ -21321,19 +21340,33 @@ async function _removeSecurityKey(id) {
 function _openEmailEditor() {
   const overlay = document.createElement('div');
   overlay.className = 'ftz-confirm-overlay';
-  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:420px;">
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:440px;">
     <div class="ftz-confirm-title">Change Email</div>
-    <input class="settings-input" id="email-input" value="${escapeHTML(CU.email||'')}" placeholder="your@email.com" style="margin:14px 0 4px;">
+    <div style="font-size:12.5px;color:rgba(255,255,255,.5);margin:6px 0 14px;">Confirm your password to update the email on this account.</div>
+    <input class="settings-input" id="em-pw"  type="password" placeholder="Current password" style="margin-bottom:6px;">
+    <input class="settings-input" id="em-new" type="email"    placeholder="new@email.com" value="${escapeHTML(CU.email||'')}" style="margin-bottom:4px;">
+    <div id="em-msg" style="font-size:12px;min-height:14px;margin-top:6px;color:var(--red);"></div>
     <div class="ftz-confirm-actions">
       <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Cancel</button>
-      <button class="ftz-btn" id="cc-ok" style="background:var(--accent);color:var(--rail);">Save</button>
+      <button class="ftz-btn" id="cc-ok" style="background:var(--accent);color:var(--rail);">Update</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
-  document.getElementById('cc-ok').onclick = async () => { await saveEmail(); overlay.remove(); buildProfileView('account'); };
+  const msg = document.getElementById('em-msg');
+  document.getElementById('cc-ok').onclick = async () => {
+    const pw  = document.getElementById('em-pw').value;
+    const eml = document.getElementById('em-new').value.trim();
+    if (pw !== CU.password) { msg.textContent = 'Current password incorrect.'; return; }
+    if (!eml || !/.+@.+\..+/.test(eml)) { msg.textContent = 'Enter a valid email.'; return; }
+    CU.email = eml;
+    try { await saveUser(); } catch(_) { try { saveLocal(); } catch(__){} }
+    toast('Email updated', 'success');
+    overlay.remove();
+    buildProfileView('account');
+  };
   document.getElementById('cc-cancel').onclick = () => overlay.remove();
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  setTimeout(() => document.getElementById('email-input')?.focus(), 30);
+  setTimeout(() => document.getElementById('em-pw')?.focus(), 30);
 }
 function _openPasswordEditor() {
   const overlay = document.createElement('div');

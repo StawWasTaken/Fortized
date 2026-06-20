@@ -21009,128 +21009,138 @@ function _buildProfileView(tab) {
 
     // Build a rich, accurate app preview for a given theme
     function buildChatPreview(t, label) {
+      // Realistic theme preview — bigger surfaces, app-size fonts, the
+      // actual Fortized chrome elements (titlebar, server rail, channel
+      // list with categories, chat with reactions, member list).
       const uName = CU?.displayName || CU?.username || 'You';
       const uInitial = uName[0].toUpperCase();
       const isLight = !!t.light;
-      const textMain = isLight ? 'rgba(0,0,0,.7)' : 'rgba(255,255,255,.55)';
+      const textMain   = isLight ? 'rgba(0,0,0,.78)' : 'rgba(255,255,255,.78)';
       const textStrong = isLight ? '#1a1a1a' : '#fff';
-      const textDim = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
-      const textDim2 = isLight ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)';
-      const textMuted = isLight ? 'rgba(0,0,0,.35)' : 'rgba(255,255,255,.3)';
-      const pfpHtml = CU?.pfp
-        ? '<img src="'+CU.pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
-        : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--font-display);font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
+      const textDim    = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
+      const textDim2   = isLight ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)';
+      const textMuted  = isLight ? 'rgba(0,0,0,.45)' : 'rgba(255,255,255,.42)';
+      const pfp40 = CU?.pfp
+        ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+        : `<div style="width:100%;height:100%;border-radius:50%;background:${t.panel};display:flex;align-items:center;justify-content:center;font-size:14px;font-family:var(--font-display);font-weight:800;color:${t.accent};">${uInitial}</div>`;
+      const pfp24 = CU?.pfp
+        ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+        : `<div style="width:100%;height:100%;border-radius:50%;background:${t.panel};display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--font-display);font-weight:800;color:${t.accent};">${uInitial}</div>`;
       return `
       <div style="flex:1;min-width:0;">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:10px;">${label}</div>
-        <div style="border-radius:14px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};box-shadow:0 8px 32px rgba(0,0,0,.25);">
+        <div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);margin-bottom:10px;">${label}</div>
+        <div style="border-radius:14px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};box-shadow:0 12px 36px rgba(0,0,0,.4);">
           <!-- Titlebar -->
-          <div style="height:28px;background:${t.sidebar};display:flex;align-items:center;padding:0 10px;gap:6px;border-bottom:1px solid ${t.border};">
-            <div style="display:flex;gap:4px;align-items:center;">
-              <div style="width:8px;height:8px;border-radius:50%;background:${t.accent};opacity:.5;"></div>
-              <span style="font-size:9px;font-weight:800;color:${textMuted};font-family:var(--font-display);letter-spacing:-.02em;">Fortized</span>
+          <div style="height:34px;background:${t.sidebar};display:flex;align-items:center;padding:0 14px;gap:8px;border-bottom:1px solid ${t.border};">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <div style="width:10px;height:10px;border-radius:50%;background:${t.accent};box-shadow:0 0 6px ${t.accent}77;"></div>
+              <span style="font-size:11px;font-weight:800;color:${textStrong};font-family:var(--font-display);letter-spacing:-.01em;">Fortized</span>
             </div>
             <div style="flex:1;"></div>
-            <div style="display:flex;gap:5px;">
-              <div style="width:8px;height:8px;border-radius:2px;background:${textDim};"></div>
-              <div style="width:8px;height:8px;border-radius:2px;background:${textDim};"></div>
-              <div style="width:8px;height:8px;border-radius:2px;background:${textDim};"></div>
+            <div style="display:flex;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:3px;background:${textDim};"></div>
+              <div style="width:10px;height:10px;border-radius:3px;background:${textDim};"></div>
+              <div style="width:10px;height:10px;border-radius:3px;background:${textDim};"></div>
             </div>
           </div>
-          <div style="display:flex;height:220px;">
+          <div style="display:flex;height:340px;">
             <!-- Server list -->
-            <div style="width:48px;background:${isLight ? 'rgba(0,0,0,.03)' : 'rgba(0,0,0,.15)'};display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:5px;">
-              <div style="width:32px;height:32px;border-radius:12px;background:${t.accent};opacity:.15;"></div>
-              <div style="width:20px;height:1px;background:${textDim};margin:2px 0;"></div>
-              <div style="width:32px;height:32px;border-radius:50%;background:${textDim};"></div>
-              <div style="width:32px;height:32px;border-radius:50%;background:${textDim2};"></div>
-              <div style="width:32px;height:32px;border-radius:50%;background:${textDim2};"></div>
+            <div style="width:60px;background:${isLight ? 'rgba(0,0,0,.04)' : 'rgba(0,0,0,.22)'};display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:8px;">
+              <div style="width:40px;height:40px;border-radius:14px;background:${t.accent};opacity:.18;"></div>
+              <div style="width:26px;height:2px;background:${textDim};border-radius:2px;margin:2px 0;"></div>
+              <div style="width:40px;height:40px;border-radius:50%;background:${textDim};"></div>
+              <div style="width:40px;height:40px;border-radius:50%;background:${textDim2};"></div>
+              <div style="width:40px;height:40px;border-radius:50%;background:${textDim2};"></div>
             </div>
             <!-- Channel sidebar -->
-            <div style="width:140px;background:${t.sidebar};border-right:1px solid ${t.border};padding:10px 8px;display:flex;flex-direction:column;gap:2px;overflow:hidden;">
-              <div style="font-size:9px;font-weight:800;color:${textMuted};text-transform:uppercase;letter-spacing:.05em;padding:4px 6px;margin-bottom:2px;">Bastion Name</div>
-              <div style="font-size:8px;font-weight:700;color:${isLight ? 'rgba(0,0,0,.2)' : 'rgba(255,255,255,.15)'};text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;margin-top:6px;">Text Channels</div>
-              <div style="display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:4px;background:${isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.06)'};"><span style="font-size:8px;color:${textMuted};">#</span><span style="font-size:9px;font-weight:600;color:${textStrong};">general</span></div>
-              <div style="display:flex;align-items:center;gap:4px;padding:4px 6px;"><span style="font-size:8px;color:${textMuted};">#</span><span style="font-size:9px;color:${textMuted};">off-topic</span></div>
-              <div style="display:flex;align-items:center;gap:4px;padding:4px 6px;"><span style="font-size:8px;color:${textMuted};">#</span><span style="font-size:9px;color:${textMuted};">media</span></div>
-              <div style="font-size:8px;font-weight:700;color:${isLight ? 'rgba(0,0,0,.2)' : 'rgba(255,255,255,.15)'};text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;margin-top:6px;">Voice</div>
-              <div style="display:flex;align-items:center;gap:4px;padding:4px 6px;"><span style="font-size:8px;color:${textMuted};">🔊</span><span style="font-size:9px;color:${textMuted};">Lounge</span></div>
+            <div style="width:180px;background:${t.sidebar};border-right:1px solid ${t.border};padding:12px 10px;display:flex;flex-direction:column;gap:3px;overflow:hidden;">
+              <div style="font-size:12px;font-weight:800;color:${textStrong};font-family:var(--font-display);padding:6px 8px;margin-bottom:4px;">Bastion Name</div>
+              <div style="font-size:9.5px;font-weight:800;color:${textMuted};text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;margin-top:6px;">Text Channels</div>
+              <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;background:${isLight ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.07)'};"><span style="font-size:11px;color:${textMuted};">#</span><span style="font-size:12px;font-weight:600;color:${textStrong};">general</span></div>
+              <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;"><span style="font-size:11px;color:${textMuted};">#</span><span style="font-size:12px;color:${textMuted};">off-topic</span></div>
+              <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;"><span style="font-size:11px;color:${textMuted};">#</span><span style="font-size:12px;color:${textMuted};">media</span></div>
+              <div style="font-size:9.5px;font-weight:800;color:${textMuted};text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;margin-top:8px;">Voice</div>
+              <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;"><span style="font-size:11px;color:${textMuted};">🔊</span><span style="font-size:12px;color:${textMuted};">Lounge</span></div>
               <div style="flex:1;"></div>
               <!-- User bar -->
-              <div style="display:flex;align-items:center;gap:6px;padding:6px;border-radius:6px;background:${isLight ? 'rgba(0,0,0,.04)' : 'rgba(0,0,0,.2)'};">
-                <div style="width:22px;height:22px;border-radius:50%;overflow:hidden;flex-shrink:0;">${pfpHtml}</div>
-                <div style="min-width:0;flex:1;"><div style="font-size:8px;font-weight:700;color:${textStrong};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${uName}</div><div style="font-size:7px;color:${textMuted};">Online</div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:${isLight ? 'rgba(0,0,0,.05)' : 'rgba(0,0,0,.28)'};">
+                <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;">${pfp24}</div>
+                <div style="min-width:0;flex:1;"><div style="font-size:11px;font-weight:700;color:${textStrong};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(uName)}</div><div style="font-size:9px;color:${textMuted};">Online</div></div>
               </div>
             </div>
             <!-- Chat area -->
             <div style="flex:1;display:flex;flex-direction:column;background:${t.channel};overflow:hidden;">
               <!-- Channel header -->
-              <div style="height:28px;border-bottom:1px solid ${t.border};display:flex;align-items:center;padding:0 10px;gap:6px;">
-                <span style="font-size:9px;color:${textMuted};">#</span>
-                <span style="font-size:9px;font-weight:700;color:${textStrong};">general</span>
-                <div style="width:1px;height:14px;background:${t.border};margin:0 4px;"></div>
-                <span style="font-size:8px;color:${textMuted};">Welcome to the bastion!</span>
+              <div style="height:38px;border-bottom:1px solid ${t.border};display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;">
+                <span style="font-size:14px;color:${textMuted};font-weight:600;">#</span>
+                <span style="font-size:13px;font-weight:800;color:${textStrong};">general</span>
+                <div style="width:1px;height:16px;background:${t.border};margin:0 6px;"></div>
+                <span style="font-size:11px;color:${textMuted};">Welcome to the bastion!</span>
               </div>
               <!-- Messages -->
-              <div style="flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
-                <div style="display:flex;gap:7px;align-items:flex-start;">
-                  <div style="width:24px;height:24px;border-radius:50%;background:${t.accent}22;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:${t.accent};">F</div>
-                  <div style="min-width:0;">
-                    <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:1px;">
-                      <span style="font-size:9px;font-weight:700;color:${t.accent};">Fortized</span>
-                      <span style="font-size:7px;color:${t.muted};">Today 14:32</span>
+              <div style="flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:14px;overflow:hidden;">
+                <div style="display:flex;gap:11px;align-items:flex-start;">
+                  <div style="width:38px;height:38px;border-radius:50%;background:${t.accent}22;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:${t.accent};font-family:var(--font-display);">F</div>
+                  <div style="min-width:0;flex:1;">
+                    <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;">
+                      <span style="font-size:13px;font-weight:700;color:${t.accent};">Fortized</span>
+                      <span style="font-size:10px;color:${textMuted};">Today at 14:32</span>
                     </div>
-                    <div style="font-size:9px;color:${textMain};line-height:1.45;">Welcome to the bastion! Hope everyone's having a great day.</div>
+                    <div style="font-size:13px;color:${textMain};line-height:1.5;">Welcome to the bastion! Hope everyone's having a great day.</div>
                   </div>
                 </div>
-                <div style="display:flex;gap:7px;align-items:flex-start;">
-                  <div style="width:24px;height:24px;border-radius:50%;flex-shrink:0;overflow:hidden;">${pfpHtml}</div>
-                  <div style="min-width:0;">
-                    <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:1px;">
-                      <span style="font-size:9px;font-weight:700;color:${textStrong};">${uName}</span>
-                      <span style="font-size:7px;color:${t.muted};">Today 14:33</span>
+                <div style="display:flex;gap:11px;align-items:flex-start;">
+                  <div style="width:38px;height:38px;border-radius:50%;flex-shrink:0;overflow:hidden;">${pfp40}</div>
+                  <div style="min-width:0;flex:1;">
+                    <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;">
+                      <span style="font-size:13px;font-weight:700;color:${textStrong};">${escapeHTML(uName)}</span>
+                      <span style="font-size:10px;color:${textMuted};">Today at 14:33</span>
                     </div>
-                    <div style="font-size:9px;color:${textMain};line-height:1.45;">This looks amazing! Love the new theme.</div>
+                    <div style="font-size:13px;color:${textMain};line-height:1.5;">This looks amazing — love the new theme.</div>
+                    <div style="display:flex;gap:5px;margin-top:6px;">
+                      <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:11px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.18);font-size:11px;font-weight:700;color:${t.accent};">🔥 2</div>
+                      <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:11px;background:${isLight ? 'rgba(0,0,0,.04)' : 'rgba(255,255,255,.05)'};border:1px solid ${textDim};font-size:11px;font-weight:600;color:${textMain};">👀 1</div>
+                    </div>
                   </div>
                 </div>
-                <div style="display:flex;gap:7px;align-items:flex-start;">
-                  <div style="width:24px;height:24px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:var(--purple);">K</div>
-                  <div style="min-width:0;">
-                    <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:1px;">
-                      <span style="font-size:9px;font-weight:700;color:var(--purple);">Knight</span>
-                      <span style="font-size:7px;color:${t.muted};">Today 14:34</span>
+                <div style="display:flex;gap:11px;align-items:flex-start;">
+                  <div style="width:38px;height:38px;border-radius:50%;background:rgba(140,100,220,.18);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#a78bfa;font-family:var(--font-display);">K</div>
+                  <div style="min-width:0;flex:1;">
+                    <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;">
+                      <span style="font-size:13px;font-weight:700;color:#a78bfa;">Knight</span>
+                      <span style="font-size:10px;color:${textMuted};">Today at 14:34</span>
                     </div>
-                    <div style="font-size:9px;color:${textMain};line-height:1.45;">Hey, welcome aboard! 🎉</div>
+                    <div style="font-size:13px;color:${textMain};line-height:1.5;">Hey, welcome aboard 🎉</div>
                   </div>
                 </div>
               </div>
               <!-- Chat input -->
-              <div style="padding:0 10px 8px;">
-                <div style="height:26px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 10px;gap:6px;">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${t.muted}" stroke-width="2" style="opacity:.4;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                  <div style="font-size:8px;color:${t.muted};opacity:.5;">Message #general</div>
+              <div style="padding:0 14px 14px;flex-shrink:0;">
+                <div style="height:38px;background:${t.panel};border-radius:10px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 14px;gap:10px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${textMuted}" stroke-width="2" style="opacity:.6;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  <div style="font-size:12px;color:${textMuted};">Message #general</div>
                   <div style="flex:1;"></div>
-                  <div style="display:flex;gap:4px;">
-                    <div style="width:10px;height:10px;border-radius:3px;background:${textDim};"></div>
-                    <div style="width:10px;height:10px;border-radius:3px;background:${textDim};"></div>
+                  <div style="display:flex;gap:6px;">
+                    <div style="width:14px;height:14px;border-radius:3px;background:${textDim};"></div>
+                    <div style="width:14px;height:14px;border-radius:3px;background:${textDim};"></div>
                   </div>
                 </div>
               </div>
             </div>
             <!-- Members panel -->
-            <div style="width:100px;background:${t.sidebar};border-left:1px solid ${t.border};padding:8px 6px;display:flex;flex-direction:column;gap:2px;overflow:hidden;">
-              <div style="font-size:7px;font-weight:700;color:${textMuted};text-transform:uppercase;letter-spacing:.05em;padding:2px 4px;">Online — 3</div>
-              <div style="display:flex;align-items:center;gap:4px;padding:3px 4px;border-radius:4px;">
-                <div style="width:16px;height:16px;border-radius:50%;background:${t.accent}22;flex-shrink:0;"></div>
-                <span style="font-size:8px;color:${t.accent};font-weight:600;">Fortized</span>
+            <div style="width:130px;background:${t.sidebar};border-left:1px solid ${t.border};padding:12px 8px;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
+              <div style="font-size:9.5px;font-weight:800;color:${textMuted};text-transform:uppercase;letter-spacing:.06em;padding:3px 6px;">Online — 3</div>
+              <div style="display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:5px;">
+                <div style="width:22px;height:22px;border-radius:50%;background:${t.accent}22;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:${t.accent};">F</div>
+                <span style="font-size:11.5px;color:${t.accent};font-weight:700;">Fortized</span>
               </div>
-              <div style="display:flex;align-items:center;gap:4px;padding:3px 4px;border-radius:4px;">
-                <div style="width:16px;height:16px;border-radius:50%;overflow:hidden;flex-shrink:0;">${pfpHtml}</div>
-                <span style="font-size:8px;color:${textStrong};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${uName}</span>
+              <div style="display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:5px;">
+                <div style="width:22px;height:22px;border-radius:50%;overflow:hidden;flex-shrink:0;">${pfp24}</div>
+                <span style="font-size:11.5px;color:${textStrong};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(uName)}</span>
               </div>
-              <div style="display:flex;align-items:center;gap:4px;padding:3px 4px;border-radius:4px;">
-                <div style="width:16px;height:16px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;"></div>
-                <span style="font-size:8px;color:var(--purple);font-weight:600;">Knight</span>
+              <div style="display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:5px;">
+                <div style="width:22px;height:22px;border-radius:50%;background:rgba(140,100,220,.2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#a78bfa;">K</div>
+                <span style="font-size:11.5px;color:#a78bfa;font-weight:700;">Knight</span>
               </div>
             </div>
           </div>
@@ -21138,43 +21148,26 @@ function _buildProfileView(tab) {
       </div>`;
     }
 
-    // Build an appearance card. The preview is now just a clean colour
-    // gradient (bg → sidebar → accent) — no busy mini chat — so users
-    // read the palette at a glance instead of squinting at fake rows.
+    // Compact square theme card — palette swatch + name, no description.
+    // The full theme name + price live in a tooltip via data-tip so the
+    // grid stays tight without dropping context.
     function buildAppearanceCard(t) {
-      const isActive = currentTheme===t.id;
+      const isActive = currentTheme === t.id;
       const isLocked = t.locked;
-      const borderCol = isActive ? 'rgba(254,248,61,.35)' : 'rgba(255,255,255,.06)';
-      const bgCol = isActive ? 'rgba(254,248,61,.04)' : 'rgba(255,255,255,.015)';
-      const txtCol = isActive ? '#fef83d' : '#fff';
       const clickAction = isLocked ? "buyAppearance('" + t.id + "'," + t.cost + ")" : "selectAppearancePreview('" + t.id + "')";
-      const opac = isLocked ? 'opacity:.55;' : '';
-      // Three-stop gradient using the theme's own palette so each card
-      // reads as a distinct strip of "what the app will look like".
       const grad = t.bodyGrad
         ? t.bodyGrad
         : `linear-gradient(135deg, ${t.sidebar} 0%, ${t.bg} 55%, ${t.panel} 100%)`;
+      const tip = isLocked ? (t.name + ' · ' + t.cost + ' Onyx') : t.name;
       return `
-      <div onclick="${clickAction}" class="appearance-card" style="border:1.5px solid ${borderCol};border-radius:16px;background:${bgCol};${opac}">
-        <!-- Palette swatch -->
-        <div style="height:90px;background:${grad};position:relative;border-radius:14px 14px 0 0;overflow:hidden;">
-          <!-- Accent dot bottom-right so the user sees the highlight colour too -->
-          <div style="position:absolute;bottom:10px;right:10px;width:18px;height:18px;border-radius:50%;background:${t.accent};box-shadow:0 0 0 2px rgba(0,0,0,.25), 0 4px 12px ${t.accent}40;"></div>
-          ${isActive ? '<div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.45);border:1px solid rgba(254,248,61,.4);border-radius:6px;padding:2px 8px;font-size:9px;font-weight:800;color:#fef83d;backdrop-filter:blur(8px);letter-spacing:.04em;">ACTIVE</div>' : ''}
-          ${isLocked ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(1px);"><div style="font-size:18px;">🔒</div></div>' : ''}
+      <button onclick="${clickAction}" class="apr-theme-sq${isActive?' is-active':''}${isLocked?' is-locked':''}" data-tip="${escapeHTML(tip)}" type="button">
+        <div class="apr-theme-sq__swatch" style="background:${grad};">
+          <div class="apr-theme-sq__accent" style="background:${t.accent};box-shadow:0 0 0 2px rgba(0,0,0,.25), 0 4px 10px ${t.accent}55;"></div>
+          ${isActive ? '<div class="apr-theme-sq__check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f1119" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' : ''}
+          ${isLocked ? '<div class="apr-theme-sq__lock">🔒</div>' : ''}
         </div>
-        <!-- Card footer -->
-        <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">
-          ${isActive ? '<div style="width:14px;height:14px;border-radius:50%;background:#fef83d;flex-shrink:0;box-shadow:0 0 8px rgba(254,248,61,.4);display:flex;align-items:center;justify-content:center;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0f1119" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' : '<div style="width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.15);flex-shrink:0;"></div>'}
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:700;color:${txtCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.name}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.desc}</div>
-          </div>
-          ${t.free ? '<div style="font-size:8px;font-weight:700;color:rgba(62,207,110,.7);background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.12);border-radius:6px;padding:2px 7px;white-space:nowrap;">FREE</div>' : ''}
-          ${(!t.free && !isLocked) ? '<div style="font-size:8px;font-weight:700;color:rgba(62,207,110,.7);background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.12);border-radius:6px;padding:2px 7px;white-space:nowrap;">OWNED</div>' : ''}
-          ${isLocked ? '<div style="font-size:8px;font-weight:700;color:rgba(254,248,61,.6);background:rgba(254,248,61,.06);border:1px solid rgba(254,248,61,.1);border-radius:6px;padding:2px 7px;display:flex;align-items:center;gap:3px;white-space:nowrap;"><img src="/Onyx.png" style="width:9px;height:9px;object-fit:contain;">'+t.cost+'</div>' : ''}
-        </div>
-      </div>`;
+        <div class="apr-theme-sq__name">${escapeHTML(t.name)}</div>
+      </button>`;
     }
 
     const _curDensity = localStorage.getItem('ftz_density') || 'default';
@@ -21242,36 +21235,6 @@ function _buildProfileView(tab) {
           </div>
         `}
 
-        <!-- Custom theme — Radiance-only, two-colour gradient. -->
-        <div class="apr-subtitle" style="margin-top:18px;display:flex;align-items:center;gap:8px;">
-          <span>Build your own</span>
-          ${_newBadge()}
-          ${_radianceMark()}
-        </div>
-        ${(() => {
-          const isRad = _hasRadiance(CU);
-          const cust = (CU && CU.customAppearance) || { color1:'#a855f7', color2:'#3b82f6' };
-          const isActiveCustom = currentTheme === 'custom';
-          return `
-          <div class="apr-custom-theme${isActiveCustom?' is-active':''}${!isRad?' is-locked':''}">
-            <div class="apr-custom-theme__swatch" id="apr-custom-swatch" style="background:linear-gradient(135deg, ${cust.color1} 0%, ${cust.color2} 100%);">
-              ${isActiveCustom ? '<div class="apr-custom-theme__active">ACTIVE</div>' : ''}
-              ${!isRad ? '<div class="apr-custom-theme__lock">🔒 Radiance only</div>' : ''}
-            </div>
-            <div class="apr-custom-theme__controls">
-              <div class="apr-custom-theme__row">
-                <label class="apr-custom-theme__label">Colour 1</label>
-                <input type="color" id="apr-c1" value="${cust.color1}" oninput="document.getElementById('apr-custom-swatch').style.background='linear-gradient(135deg, '+this.value+' 0%, '+document.getElementById('apr-c2').value+' 100%)'" ${isRad?'':'disabled'}>
-              </div>
-              <div class="apr-custom-theme__row">
-                <label class="apr-custom-theme__label">Colour 2</label>
-                <input type="color" id="apr-c2" value="${cust.color2}" oninput="document.getElementById('apr-custom-swatch').style.background='linear-gradient(135deg, '+document.getElementById('apr-c1').value+' 0%, '+this.value+' 100%)'" ${isRad?'':'disabled'}>
-              </div>
-              <button class="apr-custom-theme__apply" onclick="_saveCustomAppearance(document.getElementById('apr-c1').value, document.getElementById('apr-c2').value)" ${isRad?'':'disabled'}>Apply custom theme</button>
-            </div>
-          </div>`;
-        })()}
-
         ${lockedThemes.length > 0 ? `
           <div class="apr-subtitle" style="margin-top:18px;">Available in the Fortshop</div>
           <div class="apr-theme-grid">${lockedThemes.map(t => buildAppearanceCard(t)).join('')}</div>
@@ -21310,56 +21273,48 @@ function _buildProfileView(tab) {
 
       <!-- CURSOR — PC only -->
       <div class="voice-section ftz-cursor-section-pc-only" data-spy="cursor">
-        <div class="voice-section__title" style="display:flex;align-items:center;gap:8px;">
-          <span>Cursor</span>
+        <div class="voice-section__title">Cursor</div>
+        <div class="apr-cursor-grid">
+          ${cursors.map(c => `
+            <button type="button" onclick="_applyFortizedCursor('${c.id}')" class="apr-cursor-sq${_curCursor===c.id?' is-active':''}" data-tip="${escapeHTML(c.name)}">
+              <div class="apr-cursor-sq__preview">
+                <img src="${c.preview}" alt="" onerror="this.style.display='none'">
+              </div>
+              ${_curCursor===c.id?'<div class="apr-cursor-sq__check"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0f1119" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>':''}
+            </button>`).join('')}
         </div>
-        <div class="apr-hint" style="margin-bottom:12px;">Pick which hand follows your pointer. PC only — phones and tablets ignore custom cursors.</div>
-        ${cursors.map(c => `
-          <div onclick="_applyFortizedCursor('${c.id}')" class="apr-radio-row apr-cursor-card${c.descExtra ? ' ftz-cursor-card--expandable' : ''}${_curCursor===c.id?' is-selected':''}">
-            <div class="apr-radio-dot${_curCursor===c.id?' is-on':''}" style="margin-top:6px;"></div>
-            <div class="apr-cursor-preview">
-              <img src="${c.preview}" alt="" style="width:24px;height:24px;object-fit:contain;" onerror="this.style.display='none'">
-            </div>
-            <div style="flex:1;min-width:0;">
-              <div class="apr-radio-name">${c.name}</div>
-              <div class="apr-radio-desc"><span>${c.desc}</span>${c.descExtra ? `<span class="ftz-cursor-extra">${c.descExtra}</span>` : ''}</div>
-            </div>
-          </div>`).join('')}
 
-        <!-- Custom cursors — Radiance, upload → resize → collection -->
-        <div class="apr-subtitle" style="margin-top:18px;display:flex;align-items:center;gap:8px;">
+        <!-- Divider + custom cursors (Radiance + NEW) -->
+        <div class="apr-divider"></div>
+        <div class="apr-subtitle" style="display:flex;align-items:center;gap:8px;">
           <span>Your custom cursors</span>
           ${_newBadge()}
           ${_radianceMark()}
         </div>
-        <div class="apr-hint" style="margin-bottom:10px;">Upload a PNG — Fortized resizes it to 32×32 and adds it here. Pick one to use it everywhere.</div>
         ${(() => {
           const isRad = _hasRadiance(CU);
           const list = (CU && CU.customCursors) || [];
-          const rows = list.map(c => {
+          const tiles = list.map(c => {
             const id = 'custom_' + c.id;
             const isSel = _curCursor === id;
+            const tip = (c.name || 'Custom cursor');
             return `
-            <div class="apr-radio-row apr-cursor-card${isSel?' is-selected':''}">
-              <div class="apr-radio-dot${isSel?' is-on':''}" style="margin-top:6px;" onclick="_applyFortizedCursor('${id}')"></div>
-              <div class="apr-cursor-preview" onclick="_applyFortizedCursor('${id}')" style="cursor:pointer;">
-                <img src="${c.normal}" alt="" style="width:24px;height:24px;object-fit:contain;">
+            <div class="apr-cursor-sq apr-cursor-sq--custom${isSel?' is-active':''}" data-tip="${escapeHTML(tip)}">
+              <div class="apr-cursor-sq__preview" onclick="_applyFortizedCursor('${id}')">
+                <img src="${c.normal}" alt="">
               </div>
-              <div style="flex:1;min-width:0;" onclick="_applyFortizedCursor('${id}')">
-                <div class="apr-radio-name">${escapeHTML(c.name||'Custom cursor')}</div>
-                <div class="apr-radio-desc">Custom upload · 32×32</div>
-              </div>
-              <div class="apr-custom-cursor-actions">
-                <button class="apr-cursor-action" onclick="event.stopPropagation();_renameCustomCursor('${c.id}')">Rename</button>
-                <button class="apr-cursor-action apr-cursor-action--danger" onclick="event.stopPropagation();_deleteCustomCursor('${c.id}')">Delete</button>
+              ${isSel?'<div class="apr-cursor-sq__check"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0f1119" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>':''}
+              <div class="apr-cursor-sq__hover-actions">
+                <button class="apr-cursor-sq__hover-btn" data-tip="Edit" onclick="event.stopPropagation();_openCustomCursorModal('${c.id}')">${_faIcon('user-gear', 12)}</button>
+                <button class="apr-cursor-sq__hover-btn apr-cursor-sq__hover-btn--danger" data-tip="Delete" onclick="event.stopPropagation();_confirmDeleteCustomCursor('${c.id}')">×</button>
               </div>
             </div>`;
           }).join('');
-          return rows + `
-            <button class="apr-cursor-upload" onclick="_addCustomCursor()" ${isRad?'':'disabled'}>
-              <span class="apr-cursor-upload__icon">+</span>
-              <span>${isRad ? 'Upload a cursor image' : 'Upload — Radiance only'}</span>
-            </button>`;
+          return `<div class="apr-cursor-grid">${tiles}
+            <button type="button" class="apr-cursor-sq apr-cursor-sq--upload" data-tip="${isRad?'Upload cursor':'Radiance only'}" onclick="_openCustomCursorModal()" ${isRad?'':'disabled'}>
+              <span class="apr-cursor-sq__plus">+</span>
+            </button>
+          </div>`;
         })()}
       </div>
 
@@ -47179,66 +47134,134 @@ async function _resizeImageTo32(file) {
   ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, 32, 32);
   return c.toDataURL('image/png');
 }
-async function _addCustomCursor() {
+// ── Single Fortized modal for adding / editing custom cursors ──
+// One UI handles both flows. Tabs at the top pick between "Single
+// image" (one PNG drives both pointer states) and "Normal + pointer"
+// (one image for the default cursor, another for hover/click). The
+// modal pre-fills if `id` is passed (edit mode), otherwise creates
+// a new cursor on save. Browser file pickers are unavoidable for
+// reading a file off disk, but all dialogs, toasts, and prompts
+// around the flow use Fortized chrome — no native confirm/prompt.
+let _cursorModalState = null;
+function _openCustomCursorModal(editingId) {
   if (!_hasRadiance(CU)) { toast('Custom cursors are a Radiance perk', 'error'); return; }
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.style.display = 'none';
-  document.body.appendChild(input);
-  const file = await new Promise(resolve => {
-    input.onchange = () => resolve(input.files && input.files[0]);
+  const editing = editingId ? (CU.customCursors || []).find(x => x.id === editingId) : null;
+  _cursorModalState = {
+    id: editing ? editing.id : null,
+    name: editing ? (editing.name || '') : '',
+    mode: editing && editing.pointer && editing.pointer !== editing.normal ? 'dual' : 'single',
+    normal:  editing ? editing.normal  : '',
+    pointer: editing ? (editing.pointer || editing.normal) : '',
+  };
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay ftz-cursor-modal-overlay';
+  overlay.innerHTML = `
+    <div class="ftz-cursor-modal">
+      <div class="ftz-cursor-modal__title">${editing ? 'Edit cursor' : 'Add custom cursor'}</div>
+      <div class="ftz-cursor-modal__tabs">
+        <button type="button" class="ftz-cursor-modal__tab" data-mode="single">Single image</button>
+        <button type="button" class="ftz-cursor-modal__tab" data-mode="dual">Normal + pointer</button>
+      </div>
+      <div class="ftz-cursor-modal__body" id="cursor-modal-body"></div>
+      <input class="settings-input ftz-cursor-modal__name" id="cursor-modal-name" placeholder="Name (optional)" maxlength="30" value="${escapeHTML(_cursorModalState.name)}">
+      <div class="ftz-confirm-actions" style="margin-top:14px;">
+        <button class="ftz-btn ftz-btn-ghost" id="cursor-modal-cancel">Cancel</button>
+        <button class="ftz-btn ftz-btn-primary" id="cursor-modal-save" style="background:var(--accent);color:#13161d;">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const renderTabs = () => {
+    overlay.querySelectorAll('.ftz-cursor-modal__tab').forEach(b => {
+      b.classList.toggle('is-active', b.dataset.mode === _cursorModalState.mode);
+    });
+  };
+  const renderBody = () => {
+    const body = overlay.querySelector('#cursor-modal-body');
+    const slot = (key, label) => {
+      const url = _cursorModalState[key];
+      return `
+      <div class="ftz-cursor-slot" data-slot="${key}">
+        <div class="ftz-cursor-slot__preview">
+          ${url ? `<img src="${url}" alt="">` : '<span class="ftz-cursor-slot__empty">No image</span>'}
+        </div>
+        <div class="ftz-cursor-slot__label">${label}</div>
+        <button type="button" class="ftz-cursor-slot__pick">${url ? 'Replace' : 'Choose image'}</button>
+      </div>`;
+    };
+    if (_cursorModalState.mode === 'single') {
+      body.innerHTML = `<div class="ftz-cursor-slots">${slot('normal', 'Cursor')}</div>`;
+    } else {
+      body.innerHTML = `<div class="ftz-cursor-slots ftz-cursor-slots--dual">${slot('normal', 'Normal')}${slot('pointer', 'Pointer')}</div>`;
+    }
+    body.querySelectorAll('.ftz-cursor-slot__pick').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const which = btn.closest('.ftz-cursor-slot').dataset.slot;
+        const file = await _pickImageFile();
+        if (!file) return;
+        try {
+          const dataUrl = await _resizeImageTo32(file);
+          _cursorModalState[which] = dataUrl;
+          if (_cursorModalState.mode === 'single') _cursorModalState.pointer = dataUrl;
+          renderBody();
+        } catch (e) { toast('Could not import that image', 'error'); }
+      });
+    });
+  };
+  overlay.querySelectorAll('.ftz-cursor-modal__tab').forEach(b => {
+    b.addEventListener('click', () => { _cursorModalState.mode = b.dataset.mode; renderTabs(); renderBody(); });
+  });
+  overlay.querySelector('#cursor-modal-cancel').onclick = () => overlay.remove();
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.querySelector('#cursor-modal-save').onclick = async () => {
+    const s = _cursorModalState;
+    s.name = (overlay.querySelector('#cursor-modal-name').value || '').trim();
+    if (!s.normal) { toast('Pick an image first', 'error'); return; }
+    const pointer = s.mode === 'dual' ? (s.pointer || s.normal) : s.normal;
+    CU.customCursors = CU.customCursors || [];
+    if (s.id) {
+      const c = CU.customCursors.find(x => x.id === s.id);
+      if (c) { c.name = s.name || c.name; c.normal = s.normal; c.pointer = pointer; }
+    } else {
+      const newId = 'c' + Date.now().toString(36);
+      const idx = CU.customCursors.length + 1;
+      CU.customCursors.push({ id: newId, name: s.name || ('Custom #' + idx), normal: s.normal, pointer });
+    }
+    try { await saveUser(); } catch(_) {}
+    overlay.remove();
+    toast(s.id ? 'Cursor updated' : 'Custom cursor added', 'success');
+    // If we just edited the active cursor, reapply so the new image
+    // takes effect immediately.
+    if (s.id && (CU.cursor || '') === 'custom_' + s.id) { try { _applyFortizedCursor(CU.cursor); } catch(_) {} }
+    buildProfileView('appearance');
+  };
+  renderTabs(); renderBody();
+}
+function _pickImageFile() {
+  return new Promise(resolve => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none';
+    document.body.appendChild(input);
+    input.onchange = () => { const f = input.files && input.files[0]; document.body.removeChild(input); resolve(f); };
     input.click();
   });
-  document.body.removeChild(input);
-  if (!file) return;
-  try {
-    const dataUrl = await _resizeImageTo32(file);
-    CU.customCursors = CU.customCursors || [];
-    const id = 'c' + Date.now().toString(36);
-    const idx = CU.customCursors.length + 1;
-    CU.customCursors.push({ id, name: 'Custom #' + idx, normal: dataUrl, pointer: dataUrl });
-    try { await saveUser(); } catch(_) {}
-    toast('Custom cursor added', 'success');
-    buildProfileView('appearance');
-  } catch (e) {
-    console.error('[CustomCursor] add failed', e);
-    toast('Could not import that image', 'error');
-  }
 }
-async function _renameCustomCursor(id) {
+function _confirmDeleteCustomCursor(id) {
   const c = (CU.customCursors || []).find(x => x.id === id);
   if (!c) return;
-  const next = prompt('Rename cursor', c.name);
-  if (!next || next.trim() === c.name) return;
-  c.name = next.trim().slice(0, 30);
-  try { await saveUser(); } catch(_) {}
-  buildProfileView('appearance');
-}
-async function _deleteCustomCursor(id) {
-  if (!confirm('Delete this custom cursor?')) return;
-  CU.customCursors = (CU.customCursors || []).filter(x => x.id !== id);
-  // If the currently-applied cursor was this one, fall back to Knight.
-  if ((CU.cursor || '').endsWith(id) && (CU.cursor || '').startsWith('custom_')) {
-    try { _applyFortizedCursor('knight'); } catch(_) {}
-  }
-  try { await saveUser(); } catch(_) {}
-  buildProfileView('appearance');
+  showCustomConfirm('Delete "' + (c.name || 'this cursor') + '"?', async () => {
+    CU.customCursors = (CU.customCursors || []).filter(x => x.id !== id);
+    if ((CU.cursor || '') === 'custom_' + id) {
+      try { _applyFortizedCursor('knight'); } catch(_) {}
+    }
+    try { await saveUser(); } catch(_) {}
+    buildProfileView('appearance');
+  });
 }
 
-// ─── Custom appearance (Radiance) ─────────────────────────────
-// Stores the two-colour gradient on the user record and triggers
-// applyAppearance('custom') which now reads CU.customAppearance to
-// resolve the body gradient + accent. Free users see the card but
-// the Apply button is gated behind _hasRadiance().
-async function _saveCustomAppearance(c1, c2) {
-  if (!_hasRadiance(CU)) { toast('Custom themes are a Radiance perk', 'error'); return; }
-  CU.customAppearance = { color1: c1, color2: c2 };
-  try { await saveUser(); } catch(_) {}
-  try { applyAppearance('custom'); } catch(_) {}
-  toast('Custom theme applied', 'success');
-  buildProfileView('appearance');
-}
+// ─── Custom appearance (removed) ─────────────────────────────
+// The Radiance two-colour gradient theme was dropped per design;
+// the helper used to live here. Themes are picked from the
+// curated list only.
 
 // ─── Account-level density + interface scale ────────────────────
 // Same pattern as cursor + appearance: localStorage is the fast
@@ -47408,26 +47431,6 @@ function applyAppearance(themeId, _opts) {
     document.documentElement.style.setProperty('--border',     '#1a3524');
     document.documentElement.style.setProperty('--muted',      '#3a5848');
     document.documentElement.style.setProperty('--muted-light','#6aa782');
-  } else if (themeId === 'custom' && CU && CU.customAppearance) {
-    // Radiance custom: two user-picked colours blend into a diagonal
-    // gradient that lives behind every panel. Surface colours stay
-    // the dark Fortized Classic palette so text contrast holds; only
-    // the canvas behind the glass shows the user's gradient.
-    const c1 = CU.customAppearance.color1 || '#a855f7';
-    const c2 = CU.customAppearance.color2 || '#3b82f6';
-    canvasColor = `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`;
-    sidebarColor = '#181a1f';
-    glassHeavy = 'rgba(19,22,29,.92)'; glassMid = 'rgba(19,22,29,.78)'; glassLight = 'rgba(19,22,29,.62)';
-    document.documentElement.style.setProperty('--bg',         '#13161d');
-    document.documentElement.style.setProperty('--rail',       '#0f1119');
-    document.documentElement.style.setProperty('--sidebar',    sidebarColor);
-    document.documentElement.style.setProperty('--channel',    '#15171e');
-    document.documentElement.style.setProperty('--panel',      '#1b1e25');
-    document.documentElement.style.setProperty('--panel2',     '#1f232b');
-    document.documentElement.style.setProperty('--panel3',     '#23272f');
-    document.documentElement.style.setProperty('--border',     '#252b3a');
-    document.documentElement.style.setProperty('--muted',      '#4e5a6f');
-    document.documentElement.style.setProperty('--muted-light','#7d8a9e');
   } else {
     // Fortized Classic (default)
     canvasColor = '#13161d';

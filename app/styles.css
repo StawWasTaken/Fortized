@@ -12227,6 +12227,16 @@ select:focus,select:focus-visible,
 .ftz-cursor-modal__size-val{font-size:12.5px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;}
 .ftz-cursor-modal__size-hint{font-size:11px;color:rgba(255,255,255,.4);line-height:1.45;margin-top:8px;}
 
+/* ── Keybinds page ───────────────────────────────────────────
+   Chip-style key glyphs (Ctrl + K, Alt + ←, etc) that look like
+   real keycaps. Used both in the per-row chip row on the
+   settings page and inline inside the tip footer. */
+.kbd-chip-row{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end;}
+.kbd-chip{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 8px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.1);border-bottom-color:rgba(255,255,255,.18);border-radius:6px;font-family:var(--font-mono,monospace);font-size:11.5px;font-weight:700;color:rgba(255,255,255,.85);box-shadow:inset 0 -1px 0 rgba(255,255,255,.05);}
+.kbd-chip-plus{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);padding:0 2px;}
+.kbd-tip{margin-top:20px;padding:14px 18px;background:rgba(254,248,61,.03);border:1px solid rgba(254,248,61,.08);border-radius:12px;font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;}
+.kbd-tip strong{color:#fff;font-weight:700;}
+
 /* ── Density rules — drive .msg-row spacing + chat list rows.
    The values are intentionally close to the default to avoid
    breaking dense pages like Bastion lists; the difference shows

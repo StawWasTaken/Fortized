@@ -20011,7 +20011,10 @@ function buildProfileNav(scroll, opts) {
         { spy:'scaling', label:'Scaling' },
         { spy:'cursor',  label:'Cursor' },
       ]},
-      { id:'keybinds',        icon:ICN['keyboard'],        label:'Keybinds' },
+      { id:'keybinds',        icon:ICN['keyboard'],        label:'Keybinds', subs:[
+        { spy:'navigation', label:'Navigation' },
+        { spy:'general',    label:'General' },
+      ]},
       { id:'language',        icon:ICN['language'],        label:'Language', subs:[
         { spy:'lang',  label:'Language' },
         { spy:'time',  label:'Time Format' },
@@ -49276,33 +49279,42 @@ function _renderKeybindsSettings(main) {
   const binds = _getKeybinds();
   const sections = {};
   binds.forEach(b => { if (!sections[b.section]) sections[b.section] = []; sections[b.section].push(b); });
-  let html = `<div style="padding:24px;">
-    ${_settingsHeader('keybinds')}`;
-  Object.entries(sections).forEach(([name, items]) => {
-    html += `<div style="margin-bottom:24px;">
-      <div class="settings-section-title">${escapeHTML(name)}</div>
-      <div class="kbd-settings-grid">`;
-    items.forEach(b => {
-      html += `<div class="kbd-setting-row">
-        <div class="ksr-action">
-          <div class="ksr-action-name">${escapeHTML(b.label)}</div>
-          <div class="ksr-action-desc">${escapeHTML(b.desc)}</div>
-        </div>
-        <div class="ksr-keys">${b.keys.map(k=>`<span class="ksr-key">${escapeHTML(k)}</span>`).join('')}</div>
-        <button class="ksr-edit-btn" onclick="_captureKeybind('${b.id}')">Edit</button>
-      </div>`;
-    });
-    html += '</div></div>';
-  });
-  html += `<div style="display:flex;gap:8px;margin-top:20px;">
-    <button class="settings-save-btn-ghost" onclick="_resetKeybinds()">Reset to Defaults</button>
-  </div>
-  <div style="margin-top:20px;padding:14px;background:rgba(254,248,61,.03);border:1px solid rgba(254,248,61,.08);border-radius:12px;">
-    <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.6;">
-      <strong style="color:rgba(255,255,255,.5);">Tip:</strong> Press <strong>Ctrl+/</strong> anywhere to view all shortcuts quickly. Your custom bindings are saved locally in your browser.
+  // Keys → friendly chip glyphs. Browser key strings come in mixed:
+  // "ArrowLeft", "Control", " " (space), single letters. Map the
+  // common ones so the chips read like a real shortcut sheet.
+  const chip = (k) => {
+    const m = { 'ArrowLeft':'←','ArrowRight':'→','ArrowUp':'↑','ArrowDown':'↓',
+                'Control':'Ctrl','Meta':'⌘',' ':'Space','Enter':'↵','Escape':'Esc' };
+    return `<span class="kbd-chip">${escapeHTML(m[k] || k)}</span>`;
+  };
+  const sectionHTML = (name, items) => {
+    const spy = name.toLowerCase().replace(/[^a-z]/g,'');
+    return `<div class="voice-section" data-spy="${spy}">
+      <div class="voice-section__title">${escapeHTML(name)}</div>
+      ${items.map(b => `
+        <div class="voice-row">
+          <div class="voice-row__stack">
+            <div class="voice-row__name">${escapeHTML(b.label)}</div>
+            <div class="voice-row__desc">${escapeHTML(b.desc)}</div>
+          </div>
+          <div class="voice-row__value voice-row__value--end" style="gap:8px;">
+            <div class="kbd-chip-row">${b.keys.map(chip).join('<span class="kbd-chip-plus">+</span>')}</div>
+            <button class="acct-row__edit" type="button" onclick="_captureKeybind('${b.id}')">Edit</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  };
+
+  main.innerHTML = `<div class="settings-panel">
+    ${_settingsHeader('keybinds')}
+    ${Object.entries(sections).map(([name, items]) => sectionHTML(name, items)).join('')}
+    <div style="display:flex;justify-content:flex-start;gap:8px;margin-top:6px;">
+      <button class="acct-row__edit" type="button" onclick="_resetKeybinds()" style="padding:8px 18px;">Reset to defaults</button>
     </div>
-  </div></div>`;
-  main.innerHTML = html;
+    <div class="kbd-tip">
+      <strong>Tip —</strong> press <span class="kbd-chip">Ctrl</span><span class="kbd-chip-plus">+</span><span class="kbd-chip">/</span> anywhere to see every shortcut. Your custom bindings are saved locally in this browser.
+    </div>
+  </div>`;
 }
 
 function _captureKeybind(bindId) {

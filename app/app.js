@@ -20910,15 +20910,18 @@ function _buildProfileView(tab) {
         </div>
         <div class="voice-row">
           <div class="voice-row__label">Voice mode</div>
-          <div class="voice-row__value voice-row__value--col">
+          <div class="voice-row__value">
             ${_ftzSelectHTML('voice-mode', _mode, [
               {value:'va',  label:'Voice Activity'},
               {value:'ptt', label:'Push to Talk'},
             ], "_setVoiceMode('__VALUE__')")}
-            <div id="voice-ptt-row" style="display:${_mode==='ptt'?'flex':'none'};align-items:center;gap:10px;margin-top:8px;">
-              <span style="font-size:12px;color:rgba(255,255,255,.55);">Key:</span>
-              <button class="voice-test-btn voice-ptt-key" id="voice-ptt-key-btn" onclick="_recordPttKey(this)">${escapeHTML(_formatPttKey(_pttKey))}</button>
-            </div>
+          </div>
+        </div>
+        <div class="voice-row">
+          <div class="voice-row__label">Push to talk key</div>
+          <div class="voice-row__value voice-row__value--col">
+            <button class="voice-test-btn voice-ptt-key" id="voice-ptt-key-btn" onclick="_recordPttKey(this)">${escapeHTML(_formatPttKey(_pttKey))}</button>
+            <div class="voice-ptt-hint">${_mode==='ptt'?'Hold this key to unmute while in PTT mode.':'Bind a key now — it activates when you switch Voice mode to Push to Talk.'}</div>
           </div>
         </div>
         <div class="voice-row">
@@ -21596,8 +21599,13 @@ function _setVoiceMode(mode) {
   // Mirror into the userbar's PTT flag so the popover checkbox + page
   // mode pick agree on a single source of truth.
   try { _uaPushToTalk = (mode === 'ptt'); localStorage.setItem('ftz_ua_ptt', _uaPushToTalk ? '1' : '0'); } catch(_) {}
-  const row = document.getElementById('voice-ptt-row');
-  if (row) row.style.display = (mode === 'ptt') ? 'flex' : 'none';
+  // Refresh the hint copy so the user sees which mode the bound key is
+  // active in. The bind button itself stays visible in both modes so
+  // users can configure their key without first flipping to PTT.
+  const hint = document.querySelector('.voice-ptt-hint');
+  if (hint) hint.textContent = (mode === 'ptt')
+    ? 'Hold this key to unmute while in PTT mode.'
+    : 'Bind a key now — it activates when you switch Voice mode to Push to Talk.';
   _wirePushToTalk();
 }
 function _recordPttKey(btn) {

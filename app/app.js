@@ -20172,9 +20172,11 @@ function _buildProfileView(tab) {
 
         ${_settingsHeader('myprofile')}
 
-        <!-- Fortshop promo (yellow→pink sunset, flying knight) -->
+        <!-- Fortshop promo — animated pink sky, knight parked on the left,
+             drifting clouds behind him sell the "flying" feel. -->
         <div class="atelier-promo" onclick="(typeof _openFortshop==='function')?_openFortshop():showView('atelier')">
-          <div class="atelier-promo__clouds"></div>
+          <div class="atelier-promo__sky"></div>
+          <img class="atelier-promo__knight" src="${FORTIZED_EMOJI_MAP['knight_nyancat']||''}" alt="" onerror="this.style.display='none'">
           <div class="atelier-promo__text">
             <div class="atelier-promo__title">Give your profile a fresh look</div>
             <div class="atelier-promo__sub">Decorations, profile themes, and Radiance effects — all in the Fortshop.</div>
@@ -20182,7 +20184,6 @@ function _buildProfileView(tab) {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg>
             </button>
           </div>
-          <img class="atelier-promo__knight" src="${FORTIZED_EMOJI_MAP['knight_nyancat']||''}" alt="" onerror="this.style.display='none'">
         </div>
 
         <!-- Two-column grid -->

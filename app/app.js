@@ -19818,34 +19818,99 @@ function insertCustomEmoji(name, data) {
 // ════════════════════════════════════════════
 // PROFILE & SETTINGS
 // ════════════════════════════════════════════
+
+// Official FontAwesome Free 7 Solid icons used in both the settings nav
+// and the per-page headers. Sized 15px by default; pass a size to the
+// helper for a larger render (page headers use 24).
+const _FA_ICON_PATHS = {
+  'id-card':         { vb:'0 0 576 512', d:'M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l448 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm80 256l64 0c44.2 0 80 35.8 80 80 0 8.8-7.2 16-16 16L80 384c-8.8 0-16-7.2-16-16 0-44.2 35.8-80 80-80zm-24-96a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm240-48l112 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-112 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm0 96l112 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-112 0c-13.3 0-24-10.7-24-24s10.7-24 24-24z' },
+  'user-gear':       { vb:'0 0 640 512', d:'M256.5 8a120 120 0 1 1 0 240 120 120 0 1 1 0-240zM226.7 304l59.4 0 1.5 0c-12.9 26.8-7.8 58.2 11.5 79.5-20.2 22.3-24.8 55.8-9.4 83.4l22.5 40.4c.9 1.6 1.9 3.2 2.9 4.7l-237 0c-16.4 0-29.7-13.3-29.7-29.7 0-98.5 79.8-178.3 178.3-178.3zm205.9-56.4c0-13.3 10.7-24 24-24l48 0c13.3 0 24 10.7 24 24l0 6.1c0 18.9 24.1 32.8 40.5 23.4l5-2.9c11.6-6.7 26.5-2.6 33 9.1l22.4 40.2c6.2 11.2 2.6 25.2-8.2 32l-4.7 2.9c-16.2 10.1-16.2 39.9 0 50.1l4.6 2.9c10.8 6.8 14.5 20.8 8.3 32L607 483.8c-6.5 11.7-21.4 15.9-33 9.1l-4.9-2.9c-16.4-9.5-40.5 4.5-40.5 23.4l0 6.1c0 13.3-10.7 24-24 24l-48 0c-13.3 0-24-10.7-24-24l0-5.9c0-19-24.2-33-40.7-23.5l-4.8 2.8c-11.6 6.7-26.4 2.6-33-9.1l-22.6-40.4c-6.2-11.2-2.6-25.3 8.3-32.1l4.4-2.7c16.3-10.1 16.3-40.1 0-50.2l-4.5-2.8c-10.9-6.8-14.5-20.9-8.3-32.1l22.5-40.3c6.5-11.7 21.4-15.8 32.9-9.1l4.8 2.8c16.5 9.5 40.7-4.5 40.7-23.5l0-5.9zm99.9 136.2a52 52 0 1 0 -104 0 52 52 0 1 0 104 0z' },
+  'key':             { vb:'0 0 512 512', d:'M336 352c97.2 0 176-78.8 176-176S433.2 0 336 0 160 78.8 160 176c0 18.7 2.9 36.8 8.3 53.7L7 391c-4.5 4.5-7 10.6-7 17l0 80c0 13.3 10.7 24 24 24l80 0c13.3 0 24-10.7 24-24l0-40 40 0c13.3 0 24-10.7 24-24l0-40 40 0c6.4 0 12.5-2.5 17-7l33.3-33.3c16.9 5.4 35 8.3 53.7 8.3zM376 96a40 40 0 1 1 0 80 40 40 0 1 1 0-80z' },
+  'bell':            { vb:'0 0 448 512', d:'M224 0c-17.7 0-32 14.3-32 32l0 3.2C119 50 64 114.6 64 192l0 21.7c0 48.1-16.4 94.8-46.4 132.4L7.8 358.3C2.7 364.6 0 372.4 0 380.5 0 400.1 15.9 416 35.5 416l376.9 0c19.6 0 35.5-15.9 35.5-35.5 0-8.1-2.7-15.9-7.8-22.2l-9.8-12.2C400.4 308.5 384 261.8 384 213.7l0-21.7c0-77.4-55-142-128-156.8l0-3.2c0-17.7-14.3-32-32-32zM162 464c7.1 27.6 32.2 48 62 48s54.9-20.4 62-48l-124 0z' },
+  'microphone':      { vb:'0 0 384 512', d:'M192 0C139 0 96 43 96 96l0 128c0 53 43 96 96 96s96-43 96-96l0-128c0-53-43-96-96-96zM48 184c0-13.3-10.7-24-24-24S0 170.7 0 184l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c94.7-11.8 168-92.6 168-190.5l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 79.5-64.5 144-144 144S48 303.5 48 224l0-40z' },
+  'palette':         { vb:'0 0 512 512', d:'M512 256c0 .9 0 1.8 0 2.7-.4 36.5-33.6 61.3-70.1 61.3L344 320c-26.5 0-48 21.5-48 48 0 3.4 .4 6.7 1 9.9 2.1 10.2 6.5 20 10.8 29.9 6.1 13.8 12.1 27.5 12.1 42 0 31.8-21.6 60.7-53.4 62-3.5 .1-7 .2-10.6 .2-141.4 0-256-114.6-256-256S114.6 0 256 0 512 114.6 512 256zM128 288a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm0-96a32 32 0 1 0 0-64 32 32 0 1 0 0 64zM288 96a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm96 96a32 32 0 1 0 0-64 32 32 0 1 0 0 64z' },
+  'keyboard':        { vb:'0 0 576 512', d:'M64 64C28.7 64 0 92.7 0 128L0 384c0 35.3 28.7 64 64 64l448 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L64 64zm16 64l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16zM64 240c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32zM176 128l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16zM160 240c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32zm16 80l224 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-224 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16zm80-176c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32zm16 80l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16zm80-80c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32zm16 80l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16zm80-80c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32zm16 80l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16z' },
+  'language':        { vb:'0 0 576 512', d:'M160 0c17.7 0 32 14.3 32 32l0 32 128 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-9.6 0-8.4 23.1c-16.4 45.2-41.1 86.5-72.2 122 14.2 8.8 29 16.6 44.4 23.5l50.4 22.4 62.2-140c5.1-11.6 16.6-19 29.2-19s24.1 7.4 29.2 19l128 288c7.2 16.2-.1 35.1-16.2 42.2s-35.1-.1-42.2-16.2l-20-45-157.5 0-20 45c-7.2 16.2-26.1 23.4-42.2 16.2s-23.4-26.1-16.2-42.2l39.8-89.5-50.4-22.4c-23-10.2-45-22.4-65.8-36.4-21.3 17.2-44.6 32.2-69.5 44.7L78.3 380.6c-15.8 7.9-35 1.5-42.9-14.3s-1.5-35 14.3-42.9l34.5-17.3c16.3-8.2 31.8-17.7 46.4-28.3-13.8-12.7-26.8-26.4-38.9-40.9L81.6 224.7c-11.3-13.6-9.5-33.8 4.1-45.1s33.8-9.5 45.1 4.1l10.2 12.2c11.5 13.9 24.1 26.8 37.4 38.7 27.5-30.4 49.2-66.1 63.5-105.4l.5-1.2-210.3 0C14.3 128 0 113.7 0 96S14.3 64 32 64l96 0 0-32c0-17.7 14.3-32 32-32zM416 270.8L365.7 384 466.3 384 416 270.8z' },
+  'gamepad':         { vb:'0 0 640 512', d:'M448 64c106 0 192 86 192 192S554 448 448 448l-256 0C86 448 0 362 0 256S86 64 192 64l256 0zM192 176c-13.3 0-24 10.7-24 24l0 32-32 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l32 0 0 32c0 13.3 10.7 24 24 24s24-10.7 24-24l0-32 32 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-32 0 0-32c0-13.3-10.7-24-24-24zm240 96a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm64-96a32 32 0 1 0 0 64 32 32 0 1 0 0-64z' },
+  'user-plus':       { vb:'0 0 640 512', d:'M285.7 304c98.5 0 178.3 79.8 178.3 178.3 0 16.4-13.3 29.7-29.7 29.7L77.7 512C61.3 512 48 498.7 48 482.3 48 383.8 127.8 304 226.3 304l59.4 0zM528 80c13.3 0 24 10.7 24 24l0 48 48 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-48 0 0 48c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-48-48 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0 0-48c0-13.3 10.7-24 24-24zM256 248a120 120 0 1 1 0-240 120 120 0 1 1 0 240z' },
+  'circle-info':     { vb:'0 0 512 512', d:'M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM224 160a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm-8 64l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24z' },
+  'logout':          { vb:'0 0 512 512', d:'M505 273c9.4-9.4 9.4-24.6 0-33.9L361 95c-6.9-6.9-17.2-8.9-26.2-5.2S320 102.3 320 112l0 80-112 0c-26.5 0-48 21.5-48 48l0 32c0 26.5 21.5 48 48 48l112 0 0 80c0 9.7 5.8 18.5 14.8 22.2s19.3 1.7 26.2-5.2L505 273zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z' },
+  'link':            { vb:'0 0 576 512', d:'M419.5 96c-16.6 0-32.7 4.5-46.8 12.7-15.8-16-34.2-29.4-54.5-39.5 28.2-24 64.1-37.2 101.3-37.2 86.4 0 156.5 70 156.5 156.5 0 41.5-16.5 81.3-45.8 110.6l-71.1 71.1c-29.3 29.3-69.1 45.8-110.6 45.8-86.4 0-156.5-70-156.5-156.5 0-1.5 0-3 .1-4.5 .5-17.7 15.2-31.6 32.9-31.1s31.6 15.2 31.1 32.9c0 .9 0 1.8 0 2.6 0 51.1 41.4 92.5 92.5 92.5 24.5 0 48-9.7 65.4-27.1l71.1-71.1c17.3-17.3 27.1-40.9 27.1-65.4 0-51.1-41.4-92.5-92.5-92.5zM275.2 173.3c-1.9-.8-3.8-1.9-5.5-3.1-12.6-6.5-27-10.2-42.1-10.2-24.5 0-48 9.7-65.4 27.1L91.1 258.2c-17.3 17.3-27.1 40.9-27.1 65.4 0 51.1 41.4 92.5 92.5 92.5 16.5 0 32.6-4.4 46.7-12.6 15.8 16 34.2 29.4 54.6 39.5-28.2 23.9-64 37.2-101.3 37.2-86.4 0-156.5-70-156.5-156.5 0-41.5 16.5-81.3 45.8-110.6l71.1-71.1c29.3-29.3 69.1-45.8 110.6-45.8 86.6 0 156.5 70.6 156.5 156.9 0 1.3 0 2.6 0 3.9-.4 17.7-15.1 31.6-32.8 31.2s-31.6-15.1-31.2-32.8c0-.8 0-1.5 0-2.3 0-33.7-18-63.3-44.8-79.6z' },
+};
+function _faIcon(name, size) {
+  const ic = _FA_ICON_PATHS[name];
+  if (!ic) return '';
+  const s = size || 15;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="${ic.vb}" fill="currentColor" style="display:block;"><path d="${ic.d}"/></svg>`;
+}
+// Safety mark: PNG silhouette recoloured via CSS mask so it tints with
+// the row colour like an SVG.
+const _SAFETY_PNG_URL = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FortizedSecurity%20logo.png';
+function _safetyIcon(size) {
+  const s = size || 15;
+  return `<span style="display:block;width:${s}px;height:${s}px;background-color:currentColor;-webkit-mask:url('${_SAFETY_PNG_URL}') center/contain no-repeat;mask:url('${_SAFETY_PNG_URL}') center/contain no-repeat;"></span>`;
+}
+
+// Per-tab page header metadata. Used by _settingsHeader to render the
+// uniform "icon + title" strip at the top of every settings page.
+const _SETTINGS_TAB_META = {
+  myprofile:       { icon:() => _faIcon('id-card', 24),     title:'My Profile' },
+  account:         { icon:() => _faIcon('user-gear', 24),   title:'My Account' },
+  connections:     { icon:() => _faIcon('link', 24),        title:'Connections' },
+  authorized_apps: { icon:() => _faIcon('key', 24),         title:'Authorized Apps' },
+  notifications:   { icon:() => _faIcon('bell', 24),        title:'Notifications' },
+  voice_settings:  { icon:() => _faIcon('microphone', 24),  title:'Voice & Video' },
+  appearance:      { icon:() => _faIcon('palette', 24),     title:'Appearance' },
+  keybinds:        { icon:() => _faIcon('keyboard', 24),    title:'Keybinds' },
+  language:        { icon:() => _faIcon('language', 24),    title:'Language' },
+  game_collection: { icon:() => _faIcon('gamepad', 24),     title:'Apps & Games' },
+  safety:          { icon:() => _safetyIcon(24),            title:'Safety' },
+  friend_privacy:  { icon:() => _faIcon('user-plus', 24),   title:'Friend Requests' },
+  support:         { icon:() => _faIcon('circle-info', 24), title:'Support & Policies' },
+  my_data:         { icon:() => _faIcon('key', 24),         title:'My Data' },
+};
+function _settingsHeader(tab) {
+  const meta = _SETTINGS_TAB_META[tab];
+  if (!meta) return '';
+  return `<div class="settings-page-header">
+    <span class="settings-page-header__icon">${meta.icon()}</span>
+    <div class="settings-page-header__title">${meta.title}</div>
+  </div>`;
+}
+
+// Inline badges for section headings. The NEW tag and the Radiance mark
+// both carry the existing data-tip tooltip system.
+function _newBadge() {
+  return `<span class="settings-badge-new" data-tip="New to Fortized">NEW</span>`;
+}
+function _radianceMark() {
+  return `<span class="settings-radiance-mark" data-tip="Radiance Exclusive" aria-label="Radiance Exclusive"></span>`;
+}
+
 function buildProfileNav(scroll, opts) {
   // Resolve active tab: explicit opt > previously remembered > default myprofile.
   const activeTab = (opts && opts.activeTab) || scroll?.dataset?.activeTab || 'myprofile';
   // Preserve typed search across re-renders so the user doesn't lose their filter.
   const prevSearch = scroll?.querySelector('.profile-nav-search input')?.value || '';
 
-  // Official FontAwesome Free 7 solid paths, sized 15px to fit the nav.
-  // Solid fills inherit currentColor from the .profile-nav-item text colour
-  // so they dim/light up with the rest of the row state.
-  const _ic = (vb, d) => `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="${vb}" fill="currentColor" style="display:block;"><path d="${d}"/></svg>`;
+  // All FA icons + the Safety mark are now defined at module scope so the
+  // per-page headers can reuse them. Pull them through the _faIcon helper.
   const ICN = {
-    'id-card':         _ic('0 0 576 512', 'M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l448 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm80 256l64 0c44.2 0 80 35.8 80 80 0 8.8-7.2 16-16 16L80 384c-8.8 0-16-7.2-16-16 0-44.2 35.8-80 80-80zm-24-96a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm240-48l112 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-112 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm0 96l112 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-112 0c-13.3 0-24-10.7-24-24s10.7-24 24-24z'),
-    'user-gear':       _ic('0 0 640 512', 'M256.5 8a120 120 0 1 1 0 240 120 120 0 1 1 0-240zM226.7 304l59.4 0 1.5 0c-12.9 26.8-7.8 58.2 11.5 79.5-20.2 22.3-24.8 55.8-9.4 83.4l22.5 40.4c.9 1.6 1.9 3.2 2.9 4.7l-237 0c-16.4 0-29.7-13.3-29.7-29.7 0-98.5 79.8-178.3 178.3-178.3zm205.9-56.4c0-13.3 10.7-24 24-24l48 0c13.3 0 24 10.7 24 24l0 6.1c0 18.9 24.1 32.8 40.5 23.4l5-2.9c11.6-6.7 26.5-2.6 33 9.1l22.4 40.2c6.2 11.2 2.6 25.2-8.2 32l-4.7 2.9c-16.2 10.1-16.2 39.9 0 50.1l4.6 2.9c10.8 6.8 14.5 20.8 8.3 32L607 483.8c-6.5 11.7-21.4 15.9-33 9.1l-4.9-2.9c-16.4-9.5-40.5 4.5-40.5 23.4l0 6.1c0 13.3-10.7 24-24 24l-48 0c-13.3 0-24-10.7-24-24l0-5.9c0-19-24.2-33-40.7-23.5l-4.8 2.8c-11.6 6.7-26.4 2.6-33-9.1l-22.6-40.4c-6.2-11.2-2.6-25.3 8.3-32.1l4.4-2.7c16.3-10.1 16.3-40.1 0-50.2l-4.5-2.8c-10.9-6.8-14.5-20.9-8.3-32.1l22.5-40.3c6.5-11.7 21.4-15.8 32.9-9.1l4.8 2.8c16.5 9.5 40.7-4.5 40.7-23.5l0-5.9zm99.9 136.2a52 52 0 1 0 -104 0 52 52 0 1 0 104 0z'),
-    'key':             _ic('0 0 512 512', 'M336 352c97.2 0 176-78.8 176-176S433.2 0 336 0 160 78.8 160 176c0 18.7 2.9 36.8 8.3 53.7L7 391c-4.5 4.5-7 10.6-7 17l0 80c0 13.3 10.7 24 24 24l80 0c13.3 0 24-10.7 24-24l0-40 40 0c13.3 0 24-10.7 24-24l0-40 40 0c6.4 0 12.5-2.5 17-7l33.3-33.3c16.9 5.4 35 8.3 53.7 8.3zM376 96a40 40 0 1 1 0 80 40 40 0 1 1 0-80z'),
-    'bell':            _ic('0 0 448 512', 'M224 0c-17.7 0-32 14.3-32 32l0 3.2C119 50 64 114.6 64 192l0 21.7c0 48.1-16.4 94.8-46.4 132.4L7.8 358.3C2.7 364.6 0 372.4 0 380.5 0 400.1 15.9 416 35.5 416l376.9 0c19.6 0 35.5-15.9 35.5-35.5 0-8.1-2.7-15.9-7.8-22.2l-9.8-12.2C400.4 308.5 384 261.8 384 213.7l0-21.7c0-77.4-55-142-128-156.8l0-3.2c0-17.7-14.3-32-32-32zM162 464c7.1 27.6 32.2 48 62 48s54.9-20.4 62-48l-124 0z'),
-    'microphone':      _ic('0 0 384 512', 'M192 0C139 0 96 43 96 96l0 128c0 53 43 96 96 96s96-43 96-96l0-128c0-53-43-96-96-96zM48 184c0-13.3-10.7-24-24-24S0 170.7 0 184l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c94.7-11.8 168-92.6 168-190.5l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 79.5-64.5 144-144 144S48 303.5 48 224l0-40z'),
-    'palette':         _ic('0 0 512 512', 'M512 256c0 .9 0 1.8 0 2.7-.4 36.5-33.6 61.3-70.1 61.3L344 320c-26.5 0-48 21.5-48 48 0 3.4 .4 6.7 1 9.9 2.1 10.2 6.5 20 10.8 29.9 6.1 13.8 12.1 27.5 12.1 42 0 31.8-21.6 60.7-53.4 62-3.5 .1-7 .2-10.6 .2-141.4 0-256-114.6-256-256S114.6 0 256 0 512 114.6 512 256zM128 288a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm0-96a32 32 0 1 0 0-64 32 32 0 1 0 0 64zM288 96a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm96 96a32 32 0 1 0 0-64 32 32 0 1 0 0 64z'),
-    'keyboard':        _ic('0 0 576 512', 'M64 64C28.7 64 0 92.7 0 128L0 384c0 35.3 28.7 64 64 64l448 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L64 64zm16 64l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16zM64 240c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32zM176 128l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16zM160 240c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32zm16 80l224 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-224 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16zm80-176c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32zm16 80l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16zm80-80c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32zm16 80l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16zm80-80c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32zm16 80l32 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16z'),
-    'language':        _ic('0 0 576 512', 'M160 0c17.7 0 32 14.3 32 32l0 32 128 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-9.6 0-8.4 23.1c-16.4 45.2-41.1 86.5-72.2 122 14.2 8.8 29 16.6 44.4 23.5l50.4 22.4 62.2-140c5.1-11.6 16.6-19 29.2-19s24.1 7.4 29.2 19l128 288c7.2 16.2-.1 35.1-16.2 42.2s-35.1-.1-42.2-16.2l-20-45-157.5 0-20 45c-7.2 16.2-26.1 23.4-42.2 16.2s-23.4-26.1-16.2-42.2l39.8-89.5-50.4-22.4c-23-10.2-45-22.4-65.8-36.4-21.3 17.2-44.6 32.2-69.5 44.7L78.3 380.6c-15.8 7.9-35 1.5-42.9-14.3s-1.5-35 14.3-42.9l34.5-17.3c16.3-8.2 31.8-17.7 46.4-28.3-13.8-12.7-26.8-26.4-38.9-40.9L81.6 224.7c-11.3-13.6-9.5-33.8 4.1-45.1s33.8-9.5 45.1 4.1l10.2 12.2c11.5 13.9 24.1 26.8 37.4 38.7 27.5-30.4 49.2-66.1 63.5-105.4l.5-1.2-210.3 0C14.3 128 0 113.7 0 96S14.3 64 32 64l96 0 0-32c0-17.7 14.3-32 32-32zM416 270.8L365.7 384 466.3 384 416 270.8z'),
-    'gamepad':         _ic('0 0 640 512', 'M448 64c106 0 192 86 192 192S554 448 448 448l-256 0C86 448 0 362 0 256S86 64 192 64l256 0zM192 176c-13.3 0-24 10.7-24 24l0 32-32 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l32 0 0 32c0 13.3 10.7 24 24 24s24-10.7 24-24l0-32 32 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-32 0 0-32c0-13.3-10.7-24-24-24zm240 96a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm64-96a32 32 0 1 0 0 64 32 32 0 1 0 0-64z'),
-    'user-plus':       _ic('0 0 640 512', 'M285.7 304c98.5 0 178.3 79.8 178.3 178.3 0 16.4-13.3 29.7-29.7 29.7L77.7 512C61.3 512 48 498.7 48 482.3 48 383.8 127.8 304 226.3 304l59.4 0zM528 80c13.3 0 24 10.7 24 24l0 48 48 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-48 0 0 48c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-48-48 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0 0-48c0-13.3 10.7-24 24-24zM256 248a120 120 0 1 1 0-240 120 120 0 1 1 0 240z'),
-    'circle-info':     _ic('0 0 512 512', 'M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM224 160a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm-8 64l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24z'),
-    'logout':          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+    'id-card':     _faIcon('id-card'),
+    'user-gear':   _faIcon('user-gear'),
+    'key':         _faIcon('key'),
+    'bell':        _faIcon('bell'),
+    'microphone':  _faIcon('microphone'),
+    'palette':     _faIcon('palette'),
+    'keyboard':    _faIcon('keyboard'),
+    'language':    _faIcon('language'),
+    'gamepad':     _faIcon('gamepad'),
+    'user-plus':   _faIcon('user-plus'),
+    'circle-info': _faIcon('circle-info'),
+    'logout':      _faIcon('logout'),
+    'link':        _faIcon('link'),
   };
-  // Safety uses the Fortized Security PNG, recoloured via CSS mask so it
-  // inherits currentColor like the SVG icons (hovers / active state work).
-  const _SAFETY_PNG = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FortizedSecurity%20logo.png';
-  const SAFETY_ICON = `<span class="safety-icon" style="display:block;width:15px;height:15px;background-color:currentColor;-webkit-mask:url('${_SAFETY_PNG}') center/contain no-repeat;mask:url('${_SAFETY_PNG}') center/contain no-repeat;"></span>`;
+  const SAFETY_ICON = _safetyIcon();
 
   // Discord-style grouped nav. Each item can carry `subs[]` — scroll-spy
   // anchors that show under the parent only while its tab is active. In
@@ -19854,12 +19919,12 @@ function buildProfileNav(scroll, opts) {
   const NAV = [
     { label:'ACCOUNT', items: [
       { id:'myprofile',       icon:ICN['id-card'],         label:'My Profile', subs:[
-        { spy:'identity',    label:'Identity' },
-        { spy:'theme',       label:'Theme' },
-        { spy:'aboutme',     label:'About Me' },
-        { spy:'connections', label:'Connections' },
+        { spy:'identity', label:'Identity' },
+        { spy:'theme',    label:'Theme' },
+        { spy:'aboutme',  label:'About Me' },
       ]},
       { id:'account',         icon:ICN['user-gear'],       label:'My Account' },
+      { id:'connections',     icon:ICN['link'],            label:'Connections' },
       { id:'authorized_apps', icon:ICN['key'],             label:'Authorized Apps' },
       { id:'notifications',   icon:ICN['bell'],            label:'Notifications' },
     ]},
@@ -20080,45 +20145,23 @@ function _buildProfileView(tab) {
     main.innerHTML = `
       <div style="padding:0 48px 60px;max-width:100%;">
 
-        <!-- Tab bar -->
-        <div style="display:flex;gap:0;padding-top:28px;margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,.07);">
-          <div style="padding:10px 20px 10px 0;font-size:14px;font-weight:700;color:#fff;border-bottom:2px solid var(--accent);margin-bottom:-1px;cursor:default;">Main Profile</div>
-        </div>
+        ${_settingsHeader('myprofile')}
 
-        <!-- Promo Banner — Atelier -->
-        <div style="position:relative;border-radius:18px;overflow:hidden;margin-bottom:28px;border:1px solid rgba(254,248,61,.12);cursor:pointer;" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')">
-          <div style="position:absolute;inset:0;background:url('https://cdn.theatlantic.com/thumbor/EmW-E0FwUa0MhOoGk0BXYyBiBm0=/0x0:1718x1718/1718x1718/media/files/est/space-calculator/background6.jpg') center/cover no-repeat;filter:blur(1px) saturate(1.3);"></div>
-          <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(6,8,16,.88) 0%,rgba(12,18,38,.7) 40%,rgba(20,14,50,.6) 70%,rgba(8,16,32,.75) 100%);"></div>
-          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 10% 50%,rgba(254,248,61,.12) 0%,transparent 50%),radial-gradient(ellipse at 90% 30%,rgba(167,139,250,.1) 0%,transparent 45%),radial-gradient(ellipse at 50% 100%,rgba(62,207,110,.06) 0%,transparent 40%);pointer-events:none;"></div>
-          <!-- Animated accent line at top -->
-          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(254,248,61,.5),rgba(167,139,250,.4),rgba(62,207,110,.3),transparent);"></div>
-          <div style="position:relative;padding:22px 28px;display:flex;align-items:center;gap:22px;">
-            <!-- Icon cluster -->
-            <div style="flex-shrink:0;position:relative;">
-              <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,rgba(254,248,61,.12),rgba(167,139,250,.08));border:1px solid rgba(254,248,61,.15);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
-                <img src="${FORTIZED_EMOJI_MAP['knight_nyancat']||''}" style="width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 2px 10px rgba(254,248,61,.4));" onerror="this.outerHTML='<span style=font-size:28px>✨</span>'">
-              </div>
-              <div style="position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#a78bfa,#6366f1);display:flex;align-items:center;justify-content:center;border:2px solid var(--panel);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <!-- Atelier promo (Discord-style sky-blue banner) -->
+        <div class="atelier-promo" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')">
+          <div class="atelier-promo__clouds"></div>
+          <div class="atelier-promo__deco">
+            <div class="atelier-promo__deco-inner">
+              <img src="${FORTIZED_EMOJI_MAP['knight_nyancat']||''}" style="width:34px;height:34px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:26px\\'>✨</span>'">
             </div>
-            <!-- Text -->
-            <div style="flex:1;min-width:0;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-                <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;">The Atelier</div>
-                <span style="font-size:8.5px;font-weight:700;color:var(--accent);background:rgba(254,248,61,.1);border:1px solid rgba(254,248,61,.15);border-radius:5px;padding:2px 7px;text-transform:uppercase;letter-spacing:.04em;">New</span>
-              </div>
-              <div style="font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.5;">Discover avatar decorations, profile themes, appearance styles, and Radiance effects to make your profile truly yours.</div>
-              <div style="display:flex;gap:6px;margin-top:10px;">
-                <span style="font-size:10px;color:rgba(255,255,255,.3);background:rgba(255,255,255,.04);padding:3px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.05);">🎨 Themes</span>
-                <span style="font-size:10px;color:rgba(255,255,255,.3);background:rgba(255,255,255,.04);padding:3px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.05);">✨ Decorations</span>
-                <span style="font-size:10px;color:rgba(255,255,255,.3);background:rgba(255,255,255,.04);padding:3px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.05);">🏆 Badges</span>
-              </div>
-            </div>
-            <!-- CTA -->
-            <button style="flex-shrink:0;padding:11px 24px;background:linear-gradient(135deg,var(--accent),#ffe566);color:var(--rail);border:none;border-radius:11px;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-              Explore
-            </button>
           </div>
+          <div class="atelier-promo__text">
+            <div class="atelier-promo__title">Give your profile a fresh look</div>
+            <div class="atelier-promo__sub">Decorations, profile themes, appearance styles, and Radiance effects in the Atelier.</div>
+          </div>
+          <button class="atelier-promo__cta" type="button">Go to Shop
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg>
+          </button>
         </div>
 
         <!-- Two-column grid -->
@@ -20134,12 +20177,9 @@ function _buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- Display Name Style & Effects (Free for all) -->
+            <!-- Display Name Style & Effects -->
             <div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                <div style="font-size:14px;font-weight:700;color:#fff;">Display Name Style</div>
-              </div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Customise your display name font, effect, and colour. Free for everyone!</div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Display Name Style</div>
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
                 <div style="padding:8px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;flex:1;">
                   <span id="dn-style-preview" style="font-size:16px;${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
@@ -20151,8 +20191,7 @@ function _buildProfileView(tab) {
 
             <!-- Pronouns -->
             <div>
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Pronouns</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">Shown on your public profile.</div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Pronouns</div>
               <input class="settings-input" id="pronouns-input" value="${escapeHTML(CU.pronouns||'')}" maxlength="40" placeholder="e.g. he/him, she/her, they/them" oninput="markSettingsDirty()">
             </div>
             ${sep}
@@ -20172,7 +20211,7 @@ function _buildProfileView(tab) {
             <div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">Avatar Decoration</div>
-                <span style="font-size:9px;font-weight:700;background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.15);border-radius:5px;padding:2px 7px;">ATELIER</span>
+                ${_radianceMark()}
               </div>
               <button onclick="_openDecorationPicker()" class="settings-save-btn">Change Decoration</button>
             </div>
@@ -20182,7 +20221,7 @@ function _buildProfileView(tab) {
             <div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Banner</div>
-                ${hasRadiance ? '' : '<span style="font-size:9px;font-weight:700;background:rgba(255,160,62,.1);color:#ff9d3e;border:1px solid rgba(255,160,62,.2);border-radius:5px;padding:2px 7px;">RADIANCE</span>'}
+                ${hasRadiance ? '' : _radianceMark()}
               </div>
               <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)">
               <div style="display:flex;gap:8px;">
@@ -20201,7 +20240,7 @@ function _buildProfileView(tab) {
             <div data-spy="theme">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Theme</div>
-                <span style="font-size:9px;font-weight:800;letter-spacing:.08em;background:#fff93e;color:#13161d;border-radius:5px;padding:2px 7px;">NEW</span>
+                ${_newBadge()}
               </div>
               <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Let Fortized read a colour from your avatar (or banner), or roll your own.</div>
               ${(() => {
@@ -20253,12 +20292,11 @@ function _buildProfileView(tab) {
               })()}
               ${hasRadiance ? `
               <div style="margin-top:18px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
                   <div style="font-size:12px;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;">Starter Drops</div>
-                  <span style="font-size:9px;font-weight:800;letter-spacing:.06em;background:rgba(255,160,62,.1);color:#ff9d3e;border:1px solid rgba(255,160,62,.2);border-radius:5px;padding:2px 6px;">RADIANCE</span>
+                  ${_radianceMark()}
                 </div>
-                <div style="font-size:11.5px;color:rgba(255,255,255,.4);margin-bottom:10px;">One click sets your banner GIF and a matching custom colour. Free for Radiance.</div>
-                <div class="pt-starter-row">${_renderStarterPacks()}</div>
+                ${_renderStarterPacks()}
               </div>` : ''}
               ${(CU.profileTheme && (CU.profileTheme.bannerColor || CU.profileTheme.main || CU.profileTheme.color1)) ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" class="reset-theme-btn" style="margin-top:14px;">Reset Theme</button>' : ''}
             </div>
@@ -20274,8 +20312,7 @@ function _buildProfileView(tab) {
                  carries the styled chrome via CSS (border, bg, hover,
                  focus ring) so we don't need any inline styling. -->
             <div data-spy="aboutme">
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">About Me</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">Same formatting as chat — <strong>**bold**</strong>, <em>*italic*</em>, <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">\`code\`</code>, links, <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">:emoji:</code> and <code style="background:rgba(255,255,255,.04);padding:1px 5px;border-radius:4px;color:rgba(255,249,62,.85);font-size:11px;">@username</code> mentions are all supported.</div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">About Me</div>
               <div class="bio-textbox">
                 <div id="bio-input" class="bio-textbox__input chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write something about yourself…" spellcheck="true" data-maxlen="300"
                   oninput="_onBioInput(this)"
@@ -20289,25 +20326,13 @@ function _buildProfileView(tab) {
                    settings UI. The hidden input holds the persisted
                    value; markSettingsDirty fires on every pick so the
                    unsaved-changes bar appears. -->
-              <div style="margin-top:14px;display:flex;align-items:center;gap:14px;padding:12px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;">
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:12.5px;font-weight:600;color:#fff;margin-bottom:2px;">Who can mention me in their About Me</div>
-                  <div style="font-size:11px;color:rgba(255,255,255,.4);">Blocked users can never mention you. Disallowed mentions are masked with hashtags (e.g. <code style="background:rgba(255,255,255,.04);padding:1px 4px;border-radius:3px;font-size:10.5px;">######</code>).</div>
-                </div>
+              <div style="margin-top:14px;display:flex;align-items:center;gap:14px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;">
+                <div style="flex:1;min-width:0;font-size:12.5px;font-weight:600;color:#fff;">Who can mention me in their About Me</div>
                 ${_ftzSelectHTML('mention-policy', CU.mentionPolicy || 'everyone', [
                   { value:'everyone', label:'Everyone' },
                   { value:'friends',  label:'Friends only' },
                   { value:'none',     label:'Nobody' },
                 ], 'CU.mentionPolicy=__VALUE__;markSettingsDirty()')}
-              </div>
-            </div>
-            ${sep}
-
-            <!-- Connections -->
-            <div data-spy="connections">
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Connections</div>
-              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:4px 14px;">
-                ${_CONN_PLATFORMS.map(p => '<div class="connected-row"><div class="connected-icon" style="background:'+p.color+'18;color:'+p.color+';">'+_connIcon(p.key)+'</div><div class="connected-label">'+p.label+'</div><input class="settings-input" id="social-'+p.key+'" value="'+escapeHTML((CU.socials||{})[p.key]||'')+'" placeholder="'+p.placeholder+'" style="flex:1;font-size:12.5px;padding:7px 12px;" oninput="markSettingsDirty();validateSocialLink(\''+p.key+'\',\''+( p.pattern||p.key+'.com')+'\',this)"></div>').join('')}
               </div>
             </div>
 
@@ -20425,10 +20450,7 @@ function _buildProfileView(tab) {
   else if (tab === 'account' || tab === 'account_security') {
     main.innerHTML = `
       <div class="settings-panel">
-        <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">My Account</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Manage your account details and security</div>
-        </div>
+        ${_settingsHeader('account')}
 
         <div class="settings-section-title">ACCOUNT DETAILS</div>
         <div class="settings-row">
@@ -20468,10 +20490,7 @@ function _buildProfileView(tab) {
   else if (tab === 'notifications' || tab === 'notifs_settings' || tab === 'notif_messages' || tab === 'notif_social' || tab === 'notif_system') {
     main.innerHTML = `
       <div class="settings-panel">
-        <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Notifications</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Control how and when you receive notifications</div>
-        </div>
+        ${_settingsHeader('notifications')}
 
         <div class="settings-section-title">MESSAGES</div>
         ${[
@@ -20536,14 +20555,22 @@ function _buildProfileView(tab) {
     renderActivityDetectionTab(main);
   }
 
+  else if (tab === 'connections') {
+    // Connections is now its own settings page (lifted out of My Profile).
+    // Keep the same per-platform list, just hosted under a clean header.
+    main.innerHTML = `<div class="settings-panel" style="padding:0 48px 60px;">
+      ${_settingsHeader('connections')}
+      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:4px 14px;">
+        ${_CONN_PLATFORMS.map(p => '<div class="connected-row"><div class="connected-icon" style="background:'+p.color+'18;color:'+p.color+';">'+_connIcon(p.key)+'</div><div class="connected-label">'+p.label+'</div><input class="settings-input" id="social-'+p.key+'" value="'+escapeHTML((CU.socials||{})[p.key]||'')+'" placeholder="'+p.placeholder+'" style="flex:1;font-size:12.5px;padding:7px 12px;" oninput="markSettingsDirty();validateSocialLink(\''+p.key+'\',\''+( p.pattern||p.key+'.com')+'\',this)"></div>').join('')}
+      </div>
+    </div>`;
+  }
+
   else if (tab === 'support' || tab === 'help_center' || tab === 'quick_support' || tab === 'policies') {
     // Merged Support + Policies. Settings shouldn't host long-form help or
     // legal content — just route the user to the canonical pages.
     main.innerHTML = `<div class="settings-panel">
-      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Support &amp; Policies</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Get help or read our legal documents</div>
-      </div>
+      ${_settingsHeader('support')}
       <div style="display:flex;flex-direction:column;gap:8px;">
         ${[
           {label:'Get Support',      url:'/support',  desc:'Account issues, bastions, Radiance, and more', color:'96,165,250'},
@@ -20563,10 +20590,7 @@ function _buildProfileView(tab) {
 
   else if (tab === 'safety') {
     main.innerHTML = `<div class="settings-panel">
-      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Safety</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Manage blocked and ignored users</div>
-      </div>
+      ${_settingsHeader('safety')}
       <div class="settings-section-title">BLOCKED USERS</div>
       <div id="safety-blocked-list" style="margin-bottom:24px;">
         ${(()=>{
@@ -20588,10 +20612,7 @@ function _buildProfileView(tab) {
 
   else if (tab === 'my_data') {
     main.innerHTML = `<div class="settings-panel">
-      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">My Data</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Download or manage your personal data</div>
-      </div>
+      ${_settingsHeader('my_data')}
       <div class="settings-section-title">YOUR DATA</div>
       <div style="padding:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px;">Request Your Data</div>
@@ -20633,7 +20654,7 @@ function _buildProfileView(tab) {
       {code:'zh',label:'中文',flag:'🇨🇳'},
     ];
     main.innerHTML = `<div class="settings-panel">
-      <div class="settings-title">Language & Time</div>
+      ${_settingsHeader('language')}
       <!-- Select Language -->
       <div style="margin-bottom:24px;max-width:500px;">
         <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.75);margin-bottom:4px;">Select a Language</div>
@@ -20656,8 +20677,8 @@ function _buildProfileView(tab) {
     </div>`;
   }
   else if (tab === 'friend_privacy') {
-    main.innerHTML = `<div class="settings-panel"><div class="settings-title">Friend Requests</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:20px;">Control who can send you friend requests.</div>
+    main.innerHTML = `<div class="settings-panel">
+      ${_settingsHeader('friend_privacy')}
       <div style="display:flex;flex-direction:column;gap:12px;max-width:500px;">
         ${[{key:'allowEveryone',label:'Everyone',desc:'Anyone on Fortized can send you a friend request.'},{key:'allowBastionMembers',label:'Bastion Members',desc:'Members of your bastions can send you requests.'},{key:'allowFriendsOfFriends',label:'Friends of Friends',desc:'People with mutual friends can send you requests.'}].map(opt => {
           const privacy = JSON.parse(localStorage.getItem('ftz_friend_privacy')||'{}');
@@ -20669,11 +20690,11 @@ function _buildProfileView(tab) {
       </div></div>`;
   }
   else if (tab === 'authorized_apps') {
-    main.innerHTML = `<div class="settings-panel"><div class="settings-title">Authorized Apps</div>
+    main.innerHTML = `<div class="settings-panel">${_settingsHeader('authorized_apps')}
       <div class="ftz-empty" style="padding:40px;"><div class="ftz-empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg></div><div class="ftz-empty-title">No Authorized Apps</div><div class="ftz-empty-text">When you authorize third-party apps, they'll appear here.<br>OAuth integration coming soon.</div></div></div>`;
   }
   else if (tab === 'voice_settings') {
-    main.innerHTML = `<div class="settings-panel"><div class="settings-title">Voice & Video</div>
+    main.innerHTML = `<div class="settings-panel">${_settingsHeader('voice_settings')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:600px;">
         <div><div class="settings-section-title">Input Device</div><select id="voice-input-device" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-size:13px;font-family:inherit;"><option value="default">Default</option></select></div>
         <div><div class="settings-section-title">Output Device</div><select id="voice-output-device" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-size:13px;font-family:inherit;"><option value="default">Default</option></select></div>
@@ -20908,11 +20929,7 @@ function _buildProfileView(tab) {
     }
 
     main.innerHTML = `<div class="settings-panel">
-      <!-- Page Hero -->
-      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;">Appearance</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:5px;">Your client, your look — choose how Fortized feels</div>
-      </div>
+      ${_settingsHeader('appearance')}
 
       <!-- Live Preview: Current vs Selected -->
       <div class="settings-section-title">PREVIEW</div>
@@ -27766,7 +27783,7 @@ function _connIcon(key, size) {
 const _CONN_PLATFORMS = [
   {key:'youtube', label:'YouTube', pattern:'youtube.com', color:'#FF4444', placeholder:'https://youtube.com/@channel'},
   {key:'roblox',  label:'Roblox',  pattern:'roblox.com',  color:'#00B2FF', placeholder:'https://roblox.com/users/...'},
-  {key:'twitter', label:'X / Twitter', pattern:'x.com', color:'#1d9bf0', placeholder:'https://x.com/username'},
+  {key:'twitter', label:'X / Twitter', pattern:'x.com', color:'#ffffff', placeholder:'https://x.com/username'},
   {key:'tiktok',  label:'TikTok',  pattern:'tiktok.com',  color:'#ff0050', placeholder:'https://tiktok.com/@username'},
 ];
 
@@ -31818,6 +31835,7 @@ function renderGameCollectionTab(main) {
     + '</div>';
 
   main.innerHTML = '<div class="settings-panel rg-panel">'
+    + _settingsHeader('game_collection')
     + currentGameHtml
     + inlineAdd
     + gamesListHtml
@@ -46862,21 +46880,32 @@ function _hslToRgb(h, s, l) {
 // banner + custom theme in one go. Names lean playful, never
 // corporate.
 const _FTZ_STARTER_PACKS = [
-  { id:'sakura-garden',   name:'Sakura Garden',     url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftSakuraTree.gif', colour:'#ff94cc' },
-  { id:'snowed-in',       name:'Snowed In',         url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftWinter1.gif',    colour:'#c4cdd5' },
-  { id:'frost-loop',      name:'Frost Loop',        url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftWinter2.gif',    colour:'#c4cdd5' },
-  { id:'eagle-hour',      name:'Eagle Hour',        url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerNapoEdit.gif',            colour:'#002451' },
-  { id:'hayfever',        name:'Hay Fever Hours',   url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerSummer.gif',              colour:'#559367' },
-  { id:'cherry-static',   name:'Cherry Static',     url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerWhite.gif',               colour:'#e3e3e3' },
+  { id:'sakura-garden',   name:'Sakura Garden',     url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftSakuraTree.gif', colour:'#ff94cc', category:'Seasonal' },
+  { id:'snowed-in',       name:'Snowed In',         url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftWinter1.gif',    colour:'#c4cdd5', category:'Seasonal' },
+  { id:'frost-loop',      name:'Frost Loop',        url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerMinecraftWinter2.gif',    colour:'#c4cdd5', category:'Seasonal' },
+  { id:'hayfever',        name:'Hay Fever Hours',   url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerSummer.gif',              colour:'#559367', category:'Seasonal' },
+  { id:'eagle-hour',      name:'Eagle Hour',        url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerNapoEdit.gif',            colour:'#002451', category:'Specials' },
+  { id:'cherry-static',   name:'Cherry Static',     url:'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZBannerWhite.gif',               colour:'#e3e3e3', category:'Specials' },
 ];
 
 function _renderStarterPacks() {
-  return _FTZ_STARTER_PACKS.map(p => `
-    <button type="button" class="pt-starter-card" onclick="_applyStarterPack('${p.id}')" title="${escapeHTML(p.name)}">
+  // Group by category and render a compact mini-card grid per group so
+  // the whole block fits without dominating the page.
+  const groups = _FTZ_STARTER_PACKS.reduce((acc, p) => {
+    (acc[p.category] = acc[p.category] || []).push(p);
+    return acc;
+  }, {});
+  const cardHTML = p => `
+    <button type="button" class="pt-starter-card pt-starter-card--mini" onclick="_applyStarterPack('${p.id}')" title="${escapeHTML(p.name)}">
       <span class="pt-starter-img" style="background-image:url('${p.url}');"></span>
       <span class="pt-starter-label">${escapeHTML(p.name)}</span>
       <span class="pt-starter-dot" style="background:${p.colour};"></span>
-    </button>`).join('');
+    </button>`;
+  return Object.keys(groups).map(cat => `
+    <div class="pt-starter-category">
+      <div class="pt-starter-category__label">${cat}</div>
+      <div class="pt-starter-grid">${groups[cat].map(cardHTML).join('')}</div>
+    </div>`).join('');
 }
 
 async function _applyStarterPack(id) {
@@ -48321,10 +48350,7 @@ function _renderKeybindsSettings(main) {
   const sections = {};
   binds.forEach(b => { if (!sections[b.section]) sections[b.section] = []; sections[b.section].push(b); });
   let html = `<div style="padding:24px;">
-    <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-      <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Keyboard Shortcuts</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize keyboard shortcuts to match your workflow. Click "Edit" to rebind any shortcut.</div>
-    </div>`;
+    ${_settingsHeader('keybinds')}`;
   Object.entries(sections).forEach(([name, items]) => {
     html += `<div style="margin-bottom:24px;">
       <div class="settings-section-title">${escapeHTML(name)}</div>

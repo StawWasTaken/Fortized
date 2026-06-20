@@ -1026,6 +1026,14 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .pt-starter-img{display:block;width:100%;height:80px;background-size:cover;background-position:center;}
 .pt-starter-label{display:block;font-size:11.5px;font-weight:700;padding:7px 10px 9px;letter-spacing:.01em;}
 .pt-starter-dot{position:absolute;top:8px;right:8px;width:14px;height:14px;border-radius:50%;border:2px solid rgba(0,0,0,.55);box-shadow:0 0 0 1px rgba(255,255,255,.15);}
+/* Compact starter cards — used inside the categorised grid on My Profile. */
+.pt-starter-category{margin-bottom:10px;}
+.pt-starter-category:last-child{margin-bottom:0;}
+.pt-starter-category__label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin:0 2px 6px;}
+.pt-starter-card--mini{flex:0 0 auto;width:auto;}
+.pt-starter-card--mini .pt-starter-img{height:54px;}
+.pt-starter-card--mini .pt-starter-label{font-size:10.5px;padding:5px 8px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pt-starter-card--mini .pt-starter-dot{width:11px;height:11px;top:5px;right:5px;border-width:1.5px;}
 
 /* Colour popover */
 /* Discord-style colour picker (see _openColourPopover). Dark
@@ -3045,11 +3053,50 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .profile-nav-item.active .pni-icon{opacity:1;}
 .profile-nav-item:hover .pni-icon{opacity:.75;}
 .profile-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 14px;}
-.profile-nav-subs{margin:2px 0 4px 32px;border-left:1px solid rgba(255,255,255,.06);padding-left:0;}
+/* Discord-style sub-tree: hidden by default, animates open under the
+   active parent. The max-height ceiling fits ~6 sub-items; bump if a
+   page needs more. */
+.profile-nav-subs{margin:2px 0 4px 32px;border-left:1px solid rgba(255,255,255,.06);padding-left:0;max-height:0;overflow:hidden;opacity:0;transition:max-height .22s ease, opacity .18s ease, margin .22s ease;}
+.profile-nav-subs.is-expanded{max-height:280px;opacity:1;margin-top:2px;margin-bottom:6px;}
 .profile-nav-sub{display:flex;align-items:center;padding:6px 12px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,.4);transition:color .12s, background .12s;border-radius:0 6px 6px 0;font-weight:500;position:relative;margin-left:-1px;border-left:2px solid transparent;}
 .profile-nav-sub:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.03);}
 .profile-nav-sub.is-active{color:#fff;border-left-color:var(--accent);background:rgba(255,255,255,.04);}
 .profile-nav-item .pni-icon svg{width:16px;height:16px;}
+
+/* Uniform settings page header — every page renders this row so the
+   chrome reads consistently (FA icon + title, no per-page subtitle by
+   default). Description lines now live only on NEW features. */
+.settings-page-header{display:flex;align-items:center;gap:14px;margin:28px 0 28px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.05);}
+.settings-page-header__icon{display:flex;align-items:center;justify-content:center;width:28px;height:28px;color:rgba(255,255,255,.75);flex-shrink:0;}
+.settings-page-header__icon svg{width:24px;height:24px;}
+.settings-page-header__title{font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;}
+
+/* Inline section badges — NEW tag + Radiance mark (white-tinted PNG
+   via mask so it sits next to text like a glyph instead of a colour
+   image). Both carry data-tip tooltips. */
+.settings-badge-new{display:inline-flex;align-items:center;font-size:9px;font-weight:800;letter-spacing:.08em;background:#fff93e;color:#13161d;border-radius:5px;padding:2px 7px;cursor:help;line-height:1;}
+.settings-radiance-mark{display:inline-block;width:14px;height:14px;background-color:#fff;-webkit-mask:url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png') center/contain no-repeat;mask:url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png') center/contain no-repeat;vertical-align:-2px;cursor:help;}
+
+/* Discord-style atelier promo — sky-blue gradient banner with cloud
+   decorations and a white CTA pill. Replaces the old dark "card" look. */
+.atelier-promo{position:relative;border-radius:14px;overflow:hidden;margin-bottom:28px;cursor:pointer;background:linear-gradient(110deg,#4865d6 0%,#5b6fd9 35%,#6b5bd1 70%,#7a55c4 100%);min-height:104px;display:flex;align-items:center;padding:18px 24px;gap:20px;transition:transform .15s, box-shadow .15s;}
+.atelier-promo:hover{transform:translateY(-1px);box-shadow:0 12px 28px -10px rgba(72,101,214,.45);}
+.atelier-promo__clouds{position:absolute;inset:0;pointer-events:none;opacity:.55;}
+.atelier-promo__clouds::before,.atelier-promo__clouds::after{content:'';position:absolute;background:rgba(255,255,255,.85);border-radius:999px;filter:blur(.5px);}
+.atelier-promo__clouds::before{width:80px;height:20px;top:12px;right:120px;box-shadow:-22px -8px 0 -2px rgba(255,255,255,.85),-44px 4px 0 -4px rgba(255,255,255,.85);}
+.atelier-promo__clouds::after{width:90px;height:22px;bottom:8px;right:200px;box-shadow:30px 10px 0 -3px rgba(255,255,255,.85),60px -4px 0 -5px rgba(255,255,255,.85);}
+.atelier-promo__deco{flex-shrink:0;position:relative;width:84px;height:84px;display:flex;align-items:center;justify-content:center;}
+.atelier-promo__deco::before{content:'';position:absolute;inset:8px;border-radius:14px;background:rgba(255,255,255,.18);transform:rotate(-8deg);}
+.atelier-promo__deco::after{content:'';position:absolute;inset:6px;border-radius:14px;background:rgba(255,255,255,.32);transform:rotate(4deg);}
+.atelier-promo__deco-inner{position:relative;width:48px;height:48px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:2;}
+.atelier-promo__text{flex:1;min-width:0;position:relative;z-index:2;}
+.atelier-promo__title{font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;letter-spacing:-.01em;margin-bottom:3px;}
+.atelier-promo__sub{font-size:12.5px;color:rgba(255,255,255,.82);line-height:1.45;}
+.atelier-promo__cta{flex-shrink:0;position:relative;z-index:2;padding:9px 18px;background:#fff;color:#3a4dc4;border:none;border-radius:999px;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .12s, background .12s;}
+.atelier-promo__cta:hover{background:#f7f8ff;transform:scale(1.02);}
+
+/* Compact starter-drops grid (Radiance Profile Theme presets). */
+.pt-starter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
 /* Main settings area */
 .profile-main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);scroll-behavior:smooth;}
 .settings-panel{max-width:100%;padding:0 20px 60px;margin:0;}

@@ -20203,6 +20203,13 @@ function _buildProfileView(tab) {
   }
   // Update active nav + expand the active parent's sub-tree (Discord-style).
   try { _updateSettingsNavActive(tab); } catch(_){}
+  // Tear down any live mic/cam stream from Voice & Video the moment the
+  // user navigates away — otherwise the green recording indicator stays
+  // on in the OS tray long after they've left the page.
+  if (tab !== 'voice_settings') {
+    try { if (typeof _stopMicTest === 'function') _stopMicTest(); } catch(_) {}
+    try { if (typeof _stopCamTest === 'function') _stopCamTest(); } catch(_) {}
+  }
   const hasRadiance = _hasRadiance(CU);
 
   if (tab === 'myprofile') {
@@ -20651,7 +20658,7 @@ function _buildProfileView(tab) {
       <div class="settings-panel">
         ${_settingsHeader('notifications')}
 
-        <div class="settings-section-title">MESSAGES</div>
+        <div class="settings-section-title" data-spy="messages">MESSAGES</div>
         ${[
           ['messages','Direct Messages','Notify for new DMs'],
           ['bastionActivity','Bastion Messages','Messages in your Bastions'],
@@ -20664,7 +20671,7 @@ function _buildProfileView(tab) {
             </div>
           </div>`).join('')}
 
-        <div class="settings-section-title" style="margin-top:28px;">SOCIAL</div>
+        <div class="settings-section-title" style="margin-top:28px;" data-spy="social">SOCIAL</div>
         ${[
           ['friendRequests','Friend Requests','When someone sends you a friend request'],
         ].map(([k,label,desc]) => `
@@ -20675,7 +20682,7 @@ function _buildProfileView(tab) {
             </div>
           </div>`).join('')}
 
-        <div class="settings-section-title" style="margin-top:28px;">SYSTEM</div>
+        <div class="settings-section-title" style="margin-top:28px;" data-spy="system">SYSTEM</div>
         ${[
           ['sounds','Notification Sounds','Play sound effects for notifications'],
         ].map(([k,label,desc]) => `
@@ -20855,19 +20862,110 @@ function _buildProfileView(tab) {
     </div>`;
   }
   else if (tab === 'voice_settings') {
-    main.innerHTML = `<div class="settings-panel">${_settingsHeader('voice_settings')}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:600px;">
-        <div><div class="settings-section-title">Input Device</div><select id="voice-input-device" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-size:13px;font-family:inherit;"><option value="default">Default</option></select></div>
-        <div><div class="settings-section-title">Output Device</div><select id="voice-output-device" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-size:13px;font-family:inherit;"><option value="default">Default</option></select></div>
+    // Stop any streams that might still be live from a previous mount —
+    // a stale mic/cam stream from a previous render would leak past the
+    // page boundary otherwise.
+    if (typeof _stopMicTest === 'function') _stopMicTest();
+    if (typeof _stopCamTest === 'function') _stopCamTest();
+    const _inVol  = localStorage.getItem('ftz_voice_in_volume')  || '100';
+    const _outVol = localStorage.getItem('ftz_voice_out_volume') || '100';
+    const _ns     = localStorage.getItem('ftz_noise_suppress') !== 'false';
+    const _ec     = localStorage.getItem('ftz_echo_cancel')    !== 'false';
+    const _agc    = localStorage.getItem('ftz_auto_gain')      !== 'false';
+    const _mirror = localStorage.getItem('ftz_video_mirror')   !== 'false';
+    main.innerHTML = `<div class="settings-panel">
+      ${_settingsHeader('voice_settings')}
+
+      <!-- INPUT -->
+      <div class="voice-section" data-spy="input">
+        <div class="voice-section__title">Input</div>
+        <div class="voice-row">
+          <div class="voice-row__label">Input device</div>
+          <div class="voice-row__value"><select id="voice-input-device" class="voice-select"><option value="default">Default</option></select></div>
+        </div>
+        <div class="voice-row">
+          <div class="voice-row__label">Mic test</div>
+          <div class="voice-row__value voice-row__value--col">
+            <div class="voice-mic-meter"><div class="voice-mic-meter__fill" id="voice-mic-level"></div></div>
+            <button class="voice-test-btn" id="voice-mic-test-btn" onclick="_toggleMicTest()">Test Mic</button>
+          </div>
+        </div>
+        <div class="voice-row">
+          <div class="voice-row__label">Input sensitivity</div>
+          <div class="voice-row__value voice-row__value--col">
+            <input type="range" min="0" max="100" value="${_inVol}" id="voice-input-volume" class="voice-slider" oninput="localStorage.setItem('ftz_voice_in_volume',this.value);document.getElementById('voice-input-volume-val').textContent=this.value+'%'">
+            <span class="voice-slider__val" id="voice-input-volume-val">${_inVol}%</span>
+          </div>
+        </div>
+        <div class="voice-row">
+          <div class="voice-row__label">Audio processing</div>
+          <div class="voice-row__value voice-row__value--toggles">
+            <label class="voice-toggle-row"><span>Noise suppression</span><div class="toggle ${_ns?'on':''}" onclick="_toggleVoicePref('ftz_noise_suppress',this)"></div></label>
+            <label class="voice-toggle-row"><span>Echo cancellation</span><div class="toggle ${_ec?'on':''}" onclick="_toggleVoicePref('ftz_echo_cancel',this)"></div></label>
+            <label class="voice-toggle-row"><span>Automatic gain control</span><div class="toggle ${_agc?'on':''}" onclick="_toggleVoicePref('ftz_auto_gain',this)"></div></label>
+          </div>
+        </div>
       </div>
-      <div style="margin-top:20px;max-width:600px;"><div class="settings-section-title">Input Volume</div><input type="range" min="0" max="100" value="${localStorage.getItem('ftz_voice_volume')||'100'}" style="width:100%;accent-color:var(--accent);" oninput="localStorage.setItem('ftz_voice_volume',this.value);"></div>
-      <div style="margin-top:16px;"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" ${localStorage.getItem('ftz_noise_suppress')!=='false'?'checked':''} onchange="localStorage.setItem('ftz_noise_suppress',this.checked);toast('Saved','success');" style="accent-color:var(--accent);width:16px;height:16px;"><span style="font-size:13px;color:rgba(255,255,255,.6);">Noise Suppression</span></label></div>
+
+      <!-- OUTPUT -->
+      <div class="voice-section" data-spy="output">
+        <div class="voice-section__title">Output</div>
+        <div class="voice-row">
+          <div class="voice-row__label">Output device</div>
+          <div class="voice-row__value"><select id="voice-output-device" class="voice-select"><option value="default">Default</option></select></div>
+        </div>
+        <div class="voice-row">
+          <div class="voice-row__label">Output volume</div>
+          <div class="voice-row__value voice-row__value--col">
+            <input type="range" min="0" max="100" value="${_outVol}" id="voice-output-volume" class="voice-slider" oninput="localStorage.setItem('ftz_voice_out_volume',this.value);document.getElementById('voice-output-volume-val').textContent=this.value+'%'">
+            <span class="voice-slider__val" id="voice-output-volume-val">${_outVol}%</span>
+          </div>
+        </div>
+        <div class="voice-row">
+          <div class="voice-row__label">Test</div>
+          <div class="voice-row__value"><button class="voice-test-btn" onclick="_playTestSound()">Play test sound</button></div>
+        </div>
+      </div>
+
+      <!-- VIDEO -->
+      <div class="voice-section" data-spy="video">
+        <div class="voice-section__title">Video</div>
+        <div class="voice-row">
+          <div class="voice-row__label">Camera</div>
+          <div class="voice-row__value"><select id="voice-cam-device" class="voice-select"><option value="default">Default</option></select></div>
+        </div>
+        <div class="voice-row">
+          <div class="voice-row__label">Preview</div>
+          <div class="voice-row__value voice-row__value--col">
+            <div class="voice-cam-preview-wrap">
+              <video id="voice-cam-preview" autoplay playsinline muted style="${_mirror?'transform:scaleX(-1);':''}"></video>
+              <div class="voice-cam-preview-empty" id="voice-cam-empty">No camera active</div>
+            </div>
+            <button class="voice-test-btn" id="voice-cam-test-btn" onclick="_toggleCamTest()">Test Camera</button>
+          </div>
+        </div>
+        <div class="voice-row">
+          <div class="voice-row__label">Mirror video</div>
+          <div class="voice-row__value"><div class="toggle ${_mirror?'on':''}" onclick="_toggleVideoMirror(this)"></div></div>
+        </div>
+      </div>
     </div>`;
-    if (navigator.mediaDevices?.enumerateDevices) {
+    // Populate device dropdowns asynchronously. enumerateDevices() only
+    // returns labelled devices after the user has granted mic/cam
+    // permission at least once — pre-permission entries show as kind.
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
       navigator.mediaDevices.enumerateDevices().then(devices => {
-        const inputSel = document.getElementById('voice-input-device');
-        const outputSel = document.getElementById('voice-output-device');
-        devices.forEach(d => { const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || d.kind; if (d.kind==='audioinput'&&inputSel) inputSel.appendChild(o); if (d.kind==='audiooutput'&&outputSel) outputSel.appendChild(o); });
+        const inSel  = document.getElementById('voice-input-device');
+        const outSel = document.getElementById('voice-output-device');
+        const camSel = document.getElementById('voice-cam-device');
+        devices.forEach(d => {
+          const o = document.createElement('option');
+          o.value = d.deviceId;
+          o.textContent = d.label || d.kind;
+          if (d.kind === 'audioinput'  && inSel)  inSel.appendChild(o);
+          if (d.kind === 'audiooutput' && outSel) outSel.appendChild(o);
+          if (d.kind === 'videoinput'  && camSel) camSel.appendChild(o);
+        });
       }).catch(()=>{});
     }
   }
@@ -21329,6 +21427,128 @@ async function _removeSecurityKey(id) {
   CU.security.passkeys = CU.security.passkeys.filter(p => p.id !== id);
   try { await saveUser(); } catch(_) { try { saveLocal(); } catch(__){} }
   buildProfileView('account');
+}
+
+// ── Voice & Video page helpers ──────────────────────────────
+// Mic test: open getUserMedia, run a FFT analyser, paint the level
+// meter bar at ~60 Hz, tear it all down when the user clicks again
+// or leaves the page. Cam test: similar but pipes the video track
+// into the preview <video>. Audio context is created lazily so the
+// browser doesn't spin one up just because the page loaded.
+let _ftzMicStream   = null;
+let _ftzMicAudioCtx = null;
+let _ftzMicAnalyser = null;
+let _ftzMicRAF      = null;
+let _ftzCamStream   = null;
+
+function _stopMicTest() {
+  if (_ftzMicRAF) { try { cancelAnimationFrame(_ftzMicRAF); } catch(_) {} _ftzMicRAF = null; }
+  if (_ftzMicStream) { try { _ftzMicStream.getTracks().forEach(t => t.stop()); } catch(_) {} _ftzMicStream = null; }
+  if (_ftzMicAudioCtx) { try { _ftzMicAudioCtx.close(); } catch(_) {} _ftzMicAudioCtx = null; }
+  _ftzMicAnalyser = null;
+  const bar = document.getElementById('voice-mic-level');
+  if (bar) bar.style.width = '0%';
+  const btn = document.getElementById('voice-mic-test-btn');
+  if (btn) btn.textContent = 'Test Mic';
+}
+async function _startMicTest() {
+  _stopMicTest();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _ftzMicStream = stream;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    _ftzMicAudioCtx = ctx;
+    const src = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    src.connect(analyser);
+    _ftzMicAnalyser = analyser;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    const loop = () => {
+      if (!_ftzMicAnalyser) return;
+      analyser.getByteFrequencyData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) sum += data[i];
+      const avg = sum / data.length;
+      const pct = Math.min(100, (avg / 128) * 100);
+      const bar = document.getElementById('voice-mic-level');
+      if (bar) bar.style.width = pct + '%';
+      _ftzMicRAF = requestAnimationFrame(loop);
+    };
+    loop();
+    const btn = document.getElementById('voice-mic-test-btn');
+    if (btn) btn.textContent = 'Stop Test';
+  } catch (e) {
+    toast('Microphone permission denied', 'error');
+    _stopMicTest();
+  }
+}
+function _toggleMicTest() { _ftzMicStream ? _stopMicTest() : _startMicTest(); }
+
+function _stopCamTest() {
+  if (_ftzCamStream) { try { _ftzCamStream.getTracks().forEach(t => t.stop()); } catch(_) {} _ftzCamStream = null; }
+  const v = document.getElementById('voice-cam-preview');
+  if (v) v.srcObject = null;
+  const empty = document.getElementById('voice-cam-empty');
+  if (empty) empty.style.display = '';
+  const btn = document.getElementById('voice-cam-test-btn');
+  if (btn) btn.textContent = 'Test Camera';
+}
+async function _startCamTest() {
+  _stopCamTest();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    _ftzCamStream = stream;
+    const v = document.getElementById('voice-cam-preview');
+    if (v) { v.srcObject = stream; v.play().catch(()=>{}); }
+    const empty = document.getElementById('voice-cam-empty');
+    if (empty) empty.style.display = 'none';
+    const btn = document.getElementById('voice-cam-test-btn');
+    if (btn) btn.textContent = 'Stop Camera';
+  } catch (e) {
+    toast('Camera permission denied', 'error');
+    _stopCamTest();
+  }
+}
+function _toggleCamTest() { _ftzCamStream ? _stopCamTest() : _startCamTest(); }
+
+// Brief 440Hz beep so the user can confirm their output device is
+// actually pushing audio to the speakers / headphones they expect.
+function _playTestSound() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 440;
+    const t = ctx.currentTime;
+    const vol = Math.max(0, Math.min(1, (parseInt(localStorage.getItem('ftz_voice_out_volume')||'100',10)/100) * 0.25));
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(vol, t + 0.04);
+    gain.gain.linearRampToValueAtTime(0,   t + 0.45);
+    osc.start(t);
+    osc.stop(t + 0.5);
+    setTimeout(() => { try { ctx.close(); } catch(_) {} }, 600);
+  } catch (e) { toast('Audio test failed', 'error'); }
+}
+
+function _toggleVoicePref(key, el) {
+  const cur = localStorage.getItem(key) !== 'false';
+  const next = !cur;
+  localStorage.setItem(key, next ? 'true' : 'false');
+  if (el) el.classList.toggle('on', next);
+}
+function _toggleVideoMirror(el) {
+  const cur = localStorage.getItem('ftz_video_mirror') !== 'false';
+  const next = !cur;
+  localStorage.setItem('ftz_video_mirror', next ? 'true' : 'false');
+  if (el) el.classList.toggle('on', next);
+  const v = document.getElementById('voice-cam-preview');
+  if (v) v.style.transform = next ? 'scaleX(-1)' : '';
 }
 
 // Email mask helper — used by both the initial render and the

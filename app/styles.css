@@ -12100,9 +12100,36 @@ select:focus,select:focus-visible,
    functionality isn't wired up yet (Connections, Authorized Apps).
    Reads as a warm placeholder rather than a broken-feeling void. */
 .settings-temp-empty{margin-top:8px;padding:48px 28px;background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.08);border-radius:16px;text-align:center;max-width:520px;margin-left:auto;margin-right:auto;}
-.settings-temp-empty__icon{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:18px;background:rgba(255,249,62,.06);color:rgba(255,255,255,.5);margin-bottom:14px;}
+.settings-temp-empty__icon{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:18px;background:rgba(255,249,62,.06);color:rgba(255,255,255,.5);margin:0 auto 14px;}
 .settings-temp-empty__icon svg{width:32px;height:32px;}
 .settings-temp-empty__pill{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);border-radius:5px;padding:3px 9px;margin-bottom:12px;}
 .settings-temp-empty__title{font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-.01em;}
 .settings-temp-empty__msg{font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.55;max-width:420px;margin:0 auto;}
+
+/* ── Voice & Video page ──────────────────────────────────────
+   Same sectioned-card pattern as My Account: each section is a
+   bordered panel with a title and a label/value row stack. The
+   level meter is a thin bar that fills with the accent colour
+   while Test Mic is active. */
+.voice-section{padding:18px 22px;margin-bottom:18px;border:1px solid rgba(255,255,255,.05);border-radius:14px;background:rgba(255,255,255,.02);}
+.voice-section__title{font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;margin-bottom:14px;letter-spacing:-.01em;}
+.voice-row{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-top:1px solid rgba(255,255,255,.04);}
+.voice-row:first-of-type{border-top:none;padding-top:4px;}
+.voice-row__label{flex:0 0 200px;font-size:13px;font-weight:600;color:rgba(255,255,255,.55);padding-top:6px;}
+.voice-row__value{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font-size:13.5px;color:rgba(255,255,255,.85);}
+.voice-row__value--col{flex-direction:column;align-items:stretch;}
+.voice-row__value--toggles{flex-direction:column;align-items:stretch;gap:0;}
+.voice-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;color:rgba(255,255,255,.75);cursor:pointer;}
+.voice-toggle-row:last-child{border-bottom:none;}
+.voice-select{width:100%;padding:9px 12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-size:13px;font-family:inherit;outline:none;}
+.voice-select:focus{border-color:var(--accent);}
+.voice-slider{width:100%;accent-color:var(--accent);}
+.voice-slider__val{font-size:11.5px;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums;align-self:flex-end;}
+.voice-test-btn{padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s;align-self:flex-start;}
+.voice-test-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18);}
+.voice-mic-meter{position:relative;width:100%;height:10px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06);border-radius:6px;overflow:hidden;}
+.voice-mic-meter__fill{height:100%;width:0%;background:linear-gradient(90deg,#3ecf6e,#fef83d 70%,#f87171);transition:width .08s linear;border-radius:6px;}
+.voice-cam-preview-wrap{position:relative;width:100%;max-width:380px;aspect-ratio:16/9;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;}
+.voice-cam-preview-wrap video{width:100%;height:100%;object-fit:cover;display:block;}
+.voice-cam-preview-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:rgba(255,255,255,.35);pointer-events:none;}
 

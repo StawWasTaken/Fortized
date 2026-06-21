@@ -19929,8 +19929,7 @@ const _SETTINGS_TAB_META = {
   language:        { icon:() => _faIcon('language', 24),    title:'Language & Time' },
   game_collection: { icon:() => _faIcon('gamepad', 24),     title:'Apps & Games' },
   safety:          { icon:() => _safetyIcon(24),            title:'Safety' },
-  friend_privacy:  { icon:() => _faIcon('user-plus', 24),   title:'Friend Requests' },
-  support:         { icon:() => _faIcon('circle-info', 24), title:'Support & Policies' },
+  activity_privacy:{ icon:() => '<span style="display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;color:currentColor;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><path d="M12 3 L12 12"/></svg></span>', title:'Activity Privacy' },
   my_data:         { icon:() => _faIcon('key', 24),         title:'My Data' },
 };
 function _settingsHeader(tab) {
@@ -19976,6 +19975,10 @@ function buildProfileNav(scroll, opts) {
     'circle-info': _faIcon('circle-info'),
     'logout':      _faIcon('logout'),
     'link':        _faIcon('link'),
+    // Inline glyphs for the new ACTIVITY / SUPPORT entries — kept inline
+    // so we don't need to extend _FA_ICON_PATHS for two one-off icons.
+    'radar':       '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><path d="M12 3 L12 12"/></svg>',
+    'scale':       '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M12 3v18"/><path d="M5 21h14"/><path d="M5 9 L1 16 a4 4 0 0 0 8 0z"/><path d="M19 9 L15 16 a4 4 0 0 0 8 0z"/><path d="M5 9l7-3 7 3"/></svg>',
   };
   const SAFETY_ICON = _safetyIcon();
 
@@ -20032,22 +20035,39 @@ function buildProfileNav(scroll, opts) {
         { spy:'collection', label:'Added Games' },
         { spy:'overlay',    label:'In-Game Overlay' },
       ]},
+      { id:'activity_privacy', icon:ICN['radar'],          label:'Activity Privacy', subs:[
+        { spy:'sharing',  label:'Activity Sharing' },
+        { spy:'auto',     label:'Auto-share' },
+        { spy:'bastions', label:'My Bastions' },
+      ]},
     ]},
     { label:'SAFETY', items: [
       { id:'safety',          icon:SAFETY_ICON,            label:'Safety', subs:[
+        { spy:'friends', label:'Friend Requests' },
         { spy:'blocked', label:'Blocked Users' },
         { spy:'ignored', label:'Ignored Users' },
       ]},
-      { id:'friend_privacy',  icon:ICN['user-plus'],       label:'Friend Requests' },
     ]},
     { label:'SUPPORT', items: [
-      { id:'support',         icon:ICN['circle-info'],     label:'Support & Policies' },
+      { id:'support', icon:ICN['circle-info'], label:'Support', external:'https://www.fortized.com/support/' },
+      { id:'legal',   icon:ICN['scale'],       label:'Legal',   external:'https://www.fortized.com/legal/' },
     ]},
   ];
 
   const _navPfp = CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<span style="font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</span>`;
 
   const renderItem = (item) => {
+    // External-link entries (Support, Legal) open in a new tab instead of
+    // routing through buildProfileView. Mark them with a tiny "↗" so the
+    // user sees they're leaving the app.
+    if (item.external) {
+      const href = item.external.replace(/"/g, '&quot;');
+      return `<a class="profile-nav-item profile-nav-item--external" href="${href}" target="_blank" rel="noopener noreferrer">
+        <span class="pni-icon">${item.icon}</span>
+        <span>${_tn(item.label)}</span>
+        <svg class="pni-external" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><polyline points="9 7 17 7 17 15"/></svg>
+      </a>`;
+    }
     const isActive = item.id === activeTab;
     const hasSubs = Array.isArray(item.subs) && item.subs.length > 0;
     let html = `<div class="profile-nav-item${isActive?' active':''}" id="pnav-${item.id}" data-tab="${item.id}" onclick="buildProfileView('${item.id}')">
@@ -20742,48 +20762,30 @@ function _buildProfileView(tab) {
     </div>`;
   }
 
+  // Support & Policies and Friend Requests are no longer pages. If a legacy
+  // bookmark lands here, redirect to the right destination and bail.
   else if (tab === 'support' || tab === 'help_center' || tab === 'quick_support' || tab === 'policies') {
-    // Merged Support + Policies. Settings shouldn't host long-form help or
-    // legal content — just route the user to the canonical pages.
-    main.innerHTML = `<div class="settings-panel">
-      ${_settingsHeader('support')}
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        ${[
-          {label:'Get Support',      url:'/support',  desc:'Account issues, bastions, Radiance, and more', color:'96,165,250'},
-          {label:'Privacy Policy',   url:'/privacy',  desc:'How we handle your data and privacy',          color:'62,207,110'},
-          {label:'Terms of Service', url:'/terms',    desc:'Our terms and community guidelines',           color:'167,139,250'},
-        ].map(link => `
-          <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="legal-link-row" style="background:rgba(${link.color},.02);border:1.5px solid rgba(${link.color},.08);">
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;">${link.label}</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.4;">${link.desc}</div>
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
-          </a>`).join('')}
-      </div>
-    </div>`;
+    window.open('https://www.fortized.com/support/', '_blank', 'noopener');
+    buildProfileView('myprofile');
+    return;
+  }
+  else if (tab === 'legal') {
+    window.open('https://www.fortized.com/legal/', '_blank', 'noopener');
+    buildProfileView('myprofile');
+    return;
+  }
+  else if (tab === 'friend_privacy') {
+    // Merged into Safety; route there and let scroll-spy land on Friend Requests.
+    buildProfileView('safety');
+    setTimeout(() => { try { _navJumpToSpy('safety','friends'); } catch(_){} }, 60);
+    return;
   }
 
   else if (tab === 'safety') {
-    main.innerHTML = `<div class="settings-panel">
-      ${_settingsHeader('safety')}
-      <div class="settings-section-title" data-spy="blocked">BLOCKED USERS</div>
-      <div id="safety-blocked-list" style="margin-bottom:24px;">
-        ${(()=>{
-          const blocked = CU?.blockedUsers || [];
-          if (!blocked.length) return '<div style="padding:24px;text-align:center;color:rgba(255,255,255,.25);font-size:13px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;">No blocked users</div>';
-          return blocked.map(u => '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;margin-bottom:4px;"><span style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">@'+escapeHTML(u)+'</span><button onclick="toggleBlockUser(\''+escapeHTML(u)+'\');setTimeout(()=>buildProfileView(\'safety\'),300)" style="padding:5px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:11px;font-weight:600;cursor:pointer;">Unblock</button></div>').join('');
-        })()}
-      </div>
-      <div class="settings-section-title" data-spy="ignored">IGNORED USERS</div>
-      <div id="safety-ignored-list">
-        ${(()=>{
-          const ignored = CU?.ignoredUsers ? Object.keys(CU.ignoredUsers) : [];
-          if (!ignored.length) return '<div style="padding:24px;text-align:center;color:rgba(255,255,255,.25);font-size:13px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;">No ignored users</div>';
-          return ignored.map(u => '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;margin-bottom:4px;"><span style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">@'+escapeHTML(u)+'</span><button onclick="unignoreUser(\''+escapeHTML(u)+'\');setTimeout(()=>buildProfileView(\'safety\'),300)" style="padding:5px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:8px;color:#f59e0b;font-size:11px;font-weight:600;cursor:pointer;">Unignore</button></div>').join('');
-        })()}
-      </div>
-    </div>`;
+    _renderSafetyMerged(main);
+  }
+  else if (tab === 'activity_privacy') {
+    _renderActivityPrivacy(main);
   }
 
   else if (tab === 'my_data') {
@@ -20805,19 +20807,6 @@ function _buildProfileView(tab) {
 
   else if (tab === 'language') {
     _renderLanguageSettings(main);
-  }
-  else if (tab === 'friend_privacy') {
-    main.innerHTML = `<div class="settings-panel">
-      ${_settingsHeader('friend_privacy')}
-      <div style="display:flex;flex-direction:column;gap:12px;max-width:500px;">
-        ${[{key:'allowEveryone',label:'Everyone',desc:'Anyone on Fortized can send you a friend request.'},{key:'allowBastionMembers',label:'Bastion Members',desc:'Members of your bastions can send you requests.'},{key:'allowFriendsOfFriends',label:'Friends of Friends',desc:'People with mutual friends can send you requests.'}].map(opt => {
-          const privacy = JSON.parse(localStorage.getItem('ftz_friend_privacy')||'{}');
-          return `<label style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);cursor:pointer;">
-            <input type="checkbox" ${privacy[opt.key]!==false?'checked':''} onchange="const p=JSON.parse(localStorage.getItem('ftz_friend_privacy')||'{}');p['${opt.key}']=this.checked;localStorage.setItem('ftz_friend_privacy',JSON.stringify(p));toast('Saved','success');" style="accent-color:var(--accent);width:16px;height:16px;">
-            <div><div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.7);">${opt.label}</div><div style="font-size:11px;color:rgba(255,255,255,.3);">${opt.desc}</div></div>
-          </label>`;
-        }).join('')}
-      </div></div>`;
   }
   else if (tab === 'authorized_apps') {
     // Placeholder while OAuth app management is being built.
@@ -49509,7 +49498,7 @@ const _LANG_PACK = {
     'nav.search':'Search', 'nav.edit_profiles':'Edit Profiles',
     'tab.myprofile':'My Profile', 'tab.account':'My Account', 'tab.connections':'Connections', 'tab.authorized_apps':'Authorized Apps', 'tab.notifications':'Notifications',
     'tab.voice_settings':'Voice & Video', 'tab.appearance':'Appearance', 'tab.keybinds':'Keybinds', 'tab.language':'Language & Time',
-    'tab.game_collection':'Apps & Games', 'tab.safety':'Safety', 'tab.friend_privacy':'Friend Requests', 'tab.support':'Support & Policies',
+    'tab.game_collection':'Apps & Games', 'tab.activity_privacy':'Activity Privacy', 'tab.safety':'Safety', 'tab.support':'Support', 'tab.legal':'Legal',
     'sub.identity':'Identity', 'sub.theme':'Theme', 'sub.aboutme':'About Me',
     'sub.account_info':'Account Info', 'sub.password':'Password & Security',
     'sub.messages':'Messages', 'sub.social':'Social', 'sub.system':'System',
@@ -49549,7 +49538,7 @@ const _LANG_PACK = {
     'nav.search':'Rechercher', 'nav.edit_profiles':'Modifier les profils',
     'tab.myprofile':'Mon profil', 'tab.account':'Mon compte', 'tab.connections':'Connexions', 'tab.authorized_apps':'Apps autorisées', 'tab.notifications':'Notifications',
     'tab.voice_settings':'Voix et vidéo', 'tab.appearance':'Apparence', 'tab.keybinds':'Raccourcis', 'tab.language':'Langue et heure',
-    'tab.game_collection':'Apps et jeux', 'tab.safety':'Sécurité', 'tab.friend_privacy':'Demandes d’amis', 'tab.support':'Aide et règles',
+    'tab.game_collection':'Apps et jeux', 'tab.activity_privacy':'Confidentialité de l’activité', 'tab.safety':'Sécurité', 'tab.support':'Aide', 'tab.legal':'Mentions légales',
     'sub.identity':'Identité', 'sub.theme':'Thème', 'sub.aboutme':'À propos de moi',
     'sub.account_info':'Infos du compte', 'sub.password':'Mot de passe et sécurité',
     'sub.messages':'Messages', 'sub.social':'Social', 'sub.system':'Système',
@@ -49587,7 +49576,7 @@ const _LANG_PACK = {
     'nav.search':'Buscar', 'nav.edit_profiles':'Editar perfiles',
     'tab.myprofile':'Mi perfil', 'tab.account':'Mi cuenta', 'tab.connections':'Conexiones', 'tab.authorized_apps':'Apps autorizadas', 'tab.notifications':'Notificaciones',
     'tab.voice_settings':'Voz y vídeo', 'tab.appearance':'Apariencia', 'tab.keybinds':'Atajos de teclado', 'tab.language':'Idioma y hora',
-    'tab.game_collection':'Apps y juegos', 'tab.safety':'Seguridad', 'tab.friend_privacy':'Solicitudes de amistad', 'tab.support':'Ayuda y políticas',
+    'tab.game_collection':'Apps y juegos', 'tab.activity_privacy':'Privacidad de la actividad', 'tab.safety':'Seguridad', 'tab.support':'Ayuda', 'tab.legal':'Legal',
     'sub.identity':'Identidad', 'sub.theme':'Tema', 'sub.aboutme':'Sobre mí',
     'sub.account_info':'Información de cuenta', 'sub.password':'Contraseña y seguridad',
     'sub.messages':'Mensajes', 'sub.social':'Social', 'sub.system':'Sistema',
@@ -49625,7 +49614,7 @@ const _LANG_PACK = {
     'nav.search':'Suchen', 'nav.edit_profiles':'Profile bearbeiten',
     'tab.myprofile':'Mein Profil', 'tab.account':'Mein Konto', 'tab.connections':'Verbindungen', 'tab.authorized_apps':'Autorisierte Apps', 'tab.notifications':'Benachrichtigungen',
     'tab.voice_settings':'Sprache & Video', 'tab.appearance':'Erscheinungsbild', 'tab.keybinds':'Tastenkürzel', 'tab.language':'Sprache & Uhrzeit',
-    'tab.game_collection':'Apps & Spiele', 'tab.safety':'Sicherheit', 'tab.friend_privacy':'Freundschaftsanfragen', 'tab.support':'Hilfe & Richtlinien',
+    'tab.game_collection':'Apps & Spiele', 'tab.activity_privacy':'Aktivitätsprivatsphäre', 'tab.safety':'Sicherheit', 'tab.support':'Hilfe', 'tab.legal':'Rechtliches',
     'sub.identity':'Identität', 'sub.theme':'Design', 'sub.aboutme':'Über mich',
     'sub.account_info':'Konto-Infos', 'sub.password':'Passwort & Sicherheit',
     'sub.messages':'Nachrichten', 'sub.social':'Sozial', 'sub.system':'System',
@@ -49663,7 +49652,7 @@ const _LANG_PACK = {
     'nav.search':'Cerca', 'nav.edit_profiles':'Modifica profili',
     'tab.myprofile':'Il mio profilo', 'tab.account':'Il mio account', 'tab.connections':'Connessioni', 'tab.authorized_apps':'App autorizzate', 'tab.notifications':'Notifiche',
     'tab.voice_settings':'Voce e video', 'tab.appearance':'Aspetto', 'tab.keybinds':'Scorciatoie', 'tab.language':'Lingua e ora',
-    'tab.game_collection':'App e giochi', 'tab.safety':'Sicurezza', 'tab.friend_privacy':'Richieste di amicizia', 'tab.support':'Supporto e norme',
+    'tab.game_collection':'App e giochi', 'tab.activity_privacy':'Privacy dell’attività', 'tab.safety':'Sicurezza', 'tab.support':'Supporto', 'tab.legal':'Note legali',
     'sub.identity':'Identità', 'sub.theme':'Tema', 'sub.aboutme':'Su di me',
     'sub.account_info':'Info account', 'sub.password':'Password e sicurezza',
     'sub.messages':'Messaggi', 'sub.social':'Social', 'sub.system':'Sistema',
@@ -49701,7 +49690,7 @@ const _LANG_PACK = {
     'nav.search':'Buscar', 'nav.edit_profiles':'Editar perfis',
     'tab.myprofile':'Meu perfil', 'tab.account':'Minha conta', 'tab.connections':'Conexões', 'tab.authorized_apps':'Apps autorizados', 'tab.notifications':'Notificações',
     'tab.voice_settings':'Voz e vídeo', 'tab.appearance':'Aparência', 'tab.keybinds':'Atalhos', 'tab.language':'Idioma e hora',
-    'tab.game_collection':'Apps e jogos', 'tab.safety':'Segurança', 'tab.friend_privacy':'Pedidos de amizade', 'tab.support':'Suporte e políticas',
+    'tab.game_collection':'Apps e jogos', 'tab.activity_privacy':'Privacidade de atividade', 'tab.safety':'Segurança', 'tab.support':'Suporte', 'tab.legal':'Termos',
     'sub.identity':'Identidade', 'sub.theme':'Tema', 'sub.aboutme':'Sobre mim',
     'sub.account_info':'Informações da conta', 'sub.password':'Senha e segurança',
     'sub.messages':'Mensagens', 'sub.social':'Social', 'sub.system':'Sistema',
@@ -49739,7 +49728,7 @@ const _LANG_PACK = {
     'nav.search':'検索', 'nav.edit_profiles':'プロフィールを編集',
     'tab.myprofile':'プロフィール', 'tab.account':'アカウント', 'tab.connections':'連携', 'tab.authorized_apps':'承認済みアプリ', 'tab.notifications':'通知',
     'tab.voice_settings':'音声・ビデオ', 'tab.appearance':'外観', 'tab.keybinds':'キー設定', 'tab.language':'言語と時刻',
-    'tab.game_collection':'アプリ・ゲーム', 'tab.safety':'安全', 'tab.friend_privacy':'フレンドリクエスト', 'tab.support':'サポート・ポリシー',
+    'tab.game_collection':'アプリ・ゲーム', 'tab.activity_privacy':'アクティビティのプライバシー', 'tab.safety':'安全', 'tab.support':'サポート', 'tab.legal':'規約',
     'sub.identity':'アイデンティティ', 'sub.theme':'テーマ', 'sub.aboutme':'自己紹介',
     'sub.account_info':'アカウント情報', 'sub.password':'パスワードとセキュリティ',
     'sub.messages':'メッセージ', 'sub.social':'ソーシャル', 'sub.system':'システム',
@@ -49777,7 +49766,7 @@ const _LANG_PACK = {
     'nav.search':'بحث', 'nav.edit_profiles':'تعديل الملفات الشخصية',
     'tab.myprofile':'ملفي الشخصي', 'tab.account':'حسابي', 'tab.connections':'الاتصالات', 'tab.authorized_apps':'التطبيقات المعتمدة', 'tab.notifications':'الإشعارات',
     'tab.voice_settings':'الصوت والفيديو', 'tab.appearance':'المظهر', 'tab.keybinds':'الاختصارات', 'tab.language':'اللغة والوقت',
-    'tab.game_collection':'التطبيقات والألعاب', 'tab.safety':'الأمان', 'tab.friend_privacy':'طلبات الصداقة', 'tab.support':'الدعم والسياسات',
+    'tab.game_collection':'التطبيقات والألعاب', 'tab.activity_privacy':'خصوصية النشاط', 'tab.safety':'الأمان', 'tab.support':'الدعم', 'tab.legal':'قانوني',
     'sub.identity':'الهوية', 'sub.theme':'المظهر', 'sub.aboutme':'نبذة عني',
     'sub.account_info':'معلومات الحساب', 'sub.password':'كلمة المرور والأمان',
     'sub.messages':'الرسائل', 'sub.social':'الاجتماعية', 'sub.system':'النظام',
@@ -49820,7 +49809,7 @@ const _NAV_LABEL_TO_KEY = {
   'Search':'nav.search', 'Edit Profiles':'nav.edit_profiles',
   'My Profile':'tab.myprofile', 'My Account':'tab.account', 'Connections':'tab.connections', 'Authorized Apps':'tab.authorized_apps', 'Notifications':'tab.notifications',
   'Voice & Video':'tab.voice_settings', 'Appearance':'tab.appearance', 'Keybinds':'tab.keybinds', 'Language & Time':'tab.language',
-  'Apps & Games':'tab.game_collection', 'Safety':'tab.safety', 'Friend Requests':'tab.friend_privacy', 'Support & Policies':'tab.support',
+  'Apps & Games':'tab.game_collection', 'Safety':'tab.safety', 'Support':'tab.support', 'Legal':'tab.legal', 'Activity Privacy':'tab.activity_privacy',
   'Identity':'sub.identity', 'Theme':'sub.theme', 'About Me':'sub.aboutme',
   'Account Info':'sub.account_info', 'Password & Security':'sub.password',
   'Messages':'sub.messages', 'Social':'sub.social', 'System':'sub.system',
@@ -49989,6 +49978,201 @@ function _ftzLanguagePick(code) {
 function _ftzTimeFormatPick(val) {
   localStorage.setItem('ftz_time_format', val);
   buildProfileView('language');
+}
+
+// ════════════════════════════════════════════
+// SAFETY (merged: Friend Requests + Blocked + Ignored)
+// ════════════════════════════════════════════
+function _renderSafetyMerged(main) {
+  const blocked = CU?.blockedUsers || [];
+  const ignored = CU?.ignoredUsers ? Object.keys(CU.ignoredUsers) : [];
+  const privacy = (() => { try { return JSON.parse(localStorage.getItem('ftz_friend_privacy') || '{}'); } catch(_) { return {}; } })();
+  const friendOpts = [
+    { key:'allowEveryone',          label:'Everyone',           desc:'Anyone on Fortized can send you a friend request.' },
+    { key:'allowBastionMembers',    label:'Bastion Members',    desc:'Members of bastions you share can send you requests.' },
+    { key:'allowFriendsOfFriends',  label:'Friends of Friends', desc:'People with mutual friends can send you requests.' },
+  ];
+  const friendRows = friendOpts.map(opt => {
+    const on = privacy[opt.key] !== false;
+    return `<div class="voice-row">
+      <div class="voice-row__stack">
+        <div class="voice-row__name">${escapeHTML(opt.label)}</div>
+        <div class="voice-row__desc">${escapeHTML(opt.desc)}</div>
+      </div>
+      <div class="voice-row__value voice-row__value--end">
+        <div class="toggle${on?' on':''}" onclick="_safetyToggleFriendPrivacy('${opt.key}',this)"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const userListHtml = (users, kind) => {
+    if (!users.length) {
+      return `<div class="safety-empty">${kind === 'block' ? 'No blocked users' : 'No ignored users'}</div>`;
+    }
+    const tone = kind === 'block' ? 'danger' : 'warn';
+    const action = kind === 'block' ? 'Unblock' : 'Unignore';
+    const fn = kind === 'block' ? 'toggleBlockUser' : 'unignoreUser';
+    return `<div class="safety-list">${users.map(u => `
+      <div class="safety-row">
+        <span class="safety-row__handle">@${escapeHTML(u)}</span>
+        <button class="safety-row__btn safety-row__btn--${tone}" onclick="${fn}('${escapeHTML(u).replace(/'/g,"\\'")}');setTimeout(()=>buildProfileView('safety'),300)">${action}</button>
+      </div>`).join('')}</div>`;
+  };
+
+  main.innerHTML = `<div class="settings-panel">
+    ${_settingsHeader('safety')}
+
+    <div class="voice-section" data-spy="friends">
+      <div class="voice-section__title">Friend Requests</div>
+      <div class="voice-section__desc">Who can send you a friend request. Off for everyone? Only invite-only adds will work.</div>
+      ${friendRows}
+    </div>
+
+    <div class="voice-section" data-spy="blocked">
+      <div class="voice-section__title">Blocked Users</div>
+      <div class="voice-section__desc">Blocked users can’t message you, see your profile, or join the same voice rooms.</div>
+      ${userListHtml(blocked, 'block')}
+    </div>
+
+    <div class="voice-section" data-spy="ignored">
+      <div class="voice-section__title">Ignored Users</div>
+      <div class="voice-section__desc">Ignored users can still message you — you just won’t see them. Good for muting without escalating.</div>
+      ${userListHtml(ignored, 'ignore')}
+    </div>
+  </div>`;
+}
+
+function _safetyToggleFriendPrivacy(key, el) {
+  const on = el.classList.toggle('on');
+  let p; try { p = JSON.parse(localStorage.getItem('ftz_friend_privacy') || '{}'); } catch(_) { p = {}; }
+  p[key] = on;
+  localStorage.setItem('ftz_friend_privacy', JSON.stringify(p));
+}
+
+// ════════════════════════════════════════════
+// ACTIVITY PRIVACY (Discord-inspired)
+// ════════════════════════════════════════════
+function _renderActivityPrivacy(main) {
+  const shareActivity = localStorage.getItem('ftz_share_activity') !== 'false';
+  const shareOnline   = localStorage.getItem('ftz_share_online')   !== 'false';
+  const autoShare     = localStorage.getItem('ftz_auto_share_mode') || 'all'; // none | small | all
+  const overrides = (() => { try { return JSON.parse(localStorage.getItem('ftz_bastion_share') || '{}'); } catch(_) { return {}; } })();
+  const bastions = (CU?.bastions || []).filter(b => b && b.name);
+
+  const radioRow = (val, label, desc) => `
+    <button type="button" class="ap-radio${autoShare===val?' is-on':''}" onclick="_apSetAutoShare('${val}')">
+      <span class="ap-radio__dot"></span>
+      <span class="ap-radio__body">
+        <span class="ap-radio__label">${escapeHTML(label)}</span>
+        <span class="ap-radio__desc">${escapeHTML(desc)}</span>
+      </span>
+    </button>`;
+
+  const bastionRow = (b) => {
+    const id = b.globalId || b.id || b.name;
+    const override = overrides[id];
+    // Default state inherits from the auto-share mode.
+    const inheritedOn = autoShare === 'all' || (autoShare === 'small' && (b.memberCount || 0) < 200);
+    const on = override === undefined ? inheritedOn : !!override;
+    const member = (b.memberCount === 1 ? '1 Member' : `${(b.memberCount||0).toLocaleString()} Members`);
+    const avatar = b.iconUrl || b.icon
+      ? `<img class="ap-bastion__icon" src="${escapeHTML(b.iconUrl||b.icon)}" alt="" onerror="this.outerHTML='<div class=&quot;ap-bastion__icon ap-bastion__icon--fallback&quot;>${escapeHTML((b.name||'?')[0].toUpperCase())}</div>'">`
+      : `<div class="ap-bastion__icon ap-bastion__icon--fallback">${escapeHTML((b.name||'?')[0].toUpperCase())}</div>`;
+    return `<div class="ap-bastion-row" data-bastion-id="${escapeHTML(id)}" data-name="${escapeHTML((b.name||'').toLowerCase())}">
+      ${avatar}
+      <div class="ap-bastion__body">
+        <div class="ap-bastion__name">${escapeHTML(b.name)}</div>
+        <div class="ap-bastion__sub">${escapeHTML(member)}</div>
+      </div>
+      <div class="toggle${on?' on':''}" onclick="_apToggleBastion('${escapeHTML(id).replace(/'/g,"\\'")}',this)"></div>
+    </div>`;
+  };
+
+  main.innerHTML = `<div class="settings-panel">
+    ${_settingsHeader('activity_privacy')}
+
+    <div class="voice-section" data-spy="sharing">
+      <div class="voice-section__title">Activity Sharing</div>
+      <div class="voice-section__desc">Controls whether anyone — friends, bastion members, strangers — can see what you’re up to.</div>
+      <div class="voice-row">
+        <div class="voice-row__stack">
+          <div class="voice-row__name">Share my activity</div>
+          <div class="voice-row__desc">Share activity from games and connected apps, including when and how you engage.</div>
+        </div>
+        <div class="voice-row__value voice-row__value--end">
+          <div class="toggle${shareActivity?' on':''}" onclick="_apToggle('ftz_share_activity',this)"></div>
+        </div>
+      </div>
+      <div class="voice-row">
+        <div class="voice-row__stack">
+          <div class="voice-row__name">Share when I come online</div>
+          <div class="voice-row__desc">Friends receive a push notification when you come online.</div>
+        </div>
+        <div class="voice-row__value voice-row__value--end">
+          <div class="toggle${shareOnline?' on':''}" onclick="_apToggle('ftz_share_online',this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="voice-section" data-spy="auto">
+      <div class="voice-section__title">Auto-share When Joining a Bastion</div>
+      <div class="voice-section__desc">Default sharing rule for any new bastion you join. Per-bastion overrides win below.</div>
+      <div class="ap-radio-group">
+        ${radioRow('none',  'Do not share',                   'New bastions start with sharing off.')}
+        ${radioRow('small', 'Share in bastions under 200 members', 'Small communities only — your activity stays off in big bastions.')}
+        ${radioRow('all',   'Share in all bastions',           'Default on for every bastion you join.')}
+      </div>
+    </div>
+
+    <div class="voice-section" data-spy="bastions">
+      <div class="voice-section__title">My Bastions</div>
+      <div class="voice-section__desc">Override the default per bastion. The toggle reflects what’s actually applied right now.</div>
+      <div class="ap-bastions-controls">
+        <div class="ap-search">
+          <svg width="14" height="14" viewBox="0 0 512 512" fill="currentColor" style="opacity:.45;"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>
+          <input type="text" placeholder="Search my bastions…" oninput="_apFilterBastions(this.value)">
+        </div>
+        <button class="ap-link" onclick="_apToggleAll(true)">Toggle All On</button>
+      </div>
+      ${bastions.length
+        ? `<div class="ap-bastion-list">${bastions.map(bastionRow).join('')}</div>`
+        : `<div class="safety-empty">You’re not in any bastions yet.</div>`}
+    </div>
+  </div>`;
+}
+
+function _apToggle(key, el) {
+  const on = el.classList.toggle('on');
+  localStorage.setItem(key, on ? 'true' : 'false');
+}
+function _apSetAutoShare(mode) {
+  localStorage.setItem('ftz_auto_share_mode', mode);
+  // Re-render so the per-bastion toggles reflect the new inheritance.
+  const main = document.getElementById('profile-main');
+  if (main) _renderActivityPrivacy(main);
+}
+function _apToggleBastion(id, el) {
+  const on = el.classList.toggle('on');
+  let map; try { map = JSON.parse(localStorage.getItem('ftz_bastion_share') || '{}'); } catch(_) { map = {}; }
+  map[id] = on;
+  localStorage.setItem('ftz_bastion_share', JSON.stringify(map));
+}
+function _apToggleAll(value) {
+  let map; try { map = JSON.parse(localStorage.getItem('ftz_bastion_share') || '{}'); } catch(_) { map = {}; }
+  document.querySelectorAll('.ap-bastion-row').forEach(row => {
+    const id = row.getAttribute('data-bastion-id'); if (!id) return;
+    map[id] = !!value;
+    const t = row.querySelector('.toggle');
+    if (t) t.classList.toggle('on', !!value);
+  });
+  localStorage.setItem('ftz_bastion_share', JSON.stringify(map));
+}
+function _apFilterBastions(q) {
+  const needle = (q||'').trim().toLowerCase();
+  document.querySelectorAll('.ap-bastion-row').forEach(row => {
+    const name = row.getAttribute('data-name') || '';
+    row.hidden = needle && !name.includes(needle);
+  });
 }
 
 // ════════════════════════════════════════════

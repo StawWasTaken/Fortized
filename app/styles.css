@@ -3053,6 +3053,50 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .profile-nav-item.active .pni-icon{opacity:1;}
 .profile-nav-item:hover .pni-icon{opacity:.75;}
 .profile-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 14px;}
+/* External-link nav entries (Support, Legal) — open in a new tab and
+   show a tiny ↗ instead of routing through buildProfileView. */
+.profile-nav-item--external{text-decoration:none;}
+.profile-nav-item--external .pni-external{margin-left:auto;opacity:.35;color:currentColor;flex-shrink:0;transition:opacity .12s,transform .12s;}
+.profile-nav-item--external:hover .pni-external{opacity:.85;transform:translate(1px,-1px);}
+
+/* Safety (merged page) + Activity Privacy share these helpers. */
+.safety-empty{padding:22px 14px;text-align:center;font-size:12.5px;color:rgba(255,255,255,.35);border:1px dashed rgba(255,255,255,.08);border-radius:10px;}
+.safety-list{display:flex;flex-direction:column;gap:6px;}
+.safety-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:10px;}
+.safety-row__handle{font-size:13px;font-weight:600;color:rgba(255,255,255,.65);}
+.safety-row__btn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid;background:transparent;font-family:inherit;transition:all .12s;}
+.safety-row__btn--danger{color:#ff8a8a;border-color:rgba(255,90,90,.25);background:rgba(255,90,90,.05);}
+.safety-row__btn--danger:hover{background:rgba(255,90,90,.12);border-color:rgba(255,90,90,.4);}
+.safety-row__btn--warn{color:#f59e0b;border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.05);}
+.safety-row__btn--warn:hover{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.4);}
+
+/* Activity Privacy radios + bastion list. */
+.ap-radio-group{display:flex;flex-direction:column;gap:8px;}
+.ap-radio{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:11px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);cursor:pointer;font-family:inherit;text-align:left;color:inherit;transition:all .14s;}
+.ap-radio:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);}
+.ap-radio.is-on{background:rgba(254,248,61,.05);border-color:rgba(254,248,61,.35);}
+.ap-radio__dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.25);flex:0 0 auto;margin-top:2px;position:relative;transition:all .14s;}
+.ap-radio.is-on .ap-radio__dot{border-color:#fef83d;background:#fef83d;}
+.ap-radio.is-on .ap-radio__dot::after{content:'';position:absolute;inset:3px;border-radius:50%;background:#13161d;}
+.ap-radio__body{display:flex;flex-direction:column;flex:1;min-width:0;gap:2px;}
+.ap-radio__label{font-size:13px;font-weight:700;color:#fff;}
+.ap-radio__desc{font-size:11.5px;color:rgba(255,255,255,.42);line-height:1.45;}
+
+.ap-bastions-controls{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.ap-search{flex:1;display:flex;align-items:center;gap:10px;padding:9px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;transition:border-color .12s;}
+.ap-search:focus-within{border-color:rgba(254,248,61,.35);}
+.ap-search input{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:13px;font-family:inherit;}
+.ap-search input::placeholder{color:rgba(255,255,255,.32);}
+.ap-link{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap;}
+.ap-link:hover{text-decoration:underline;}
+
+.ap-bastion-list{display:flex;flex-direction:column;gap:6px;}
+.ap-bastion-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;}
+.ap-bastion__icon{width:32px;height:32px;border-radius:8px;object-fit:cover;background:var(--panel2);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:rgba(255,255,255,.7);}
+.ap-bastion__icon--fallback{background:linear-gradient(135deg,rgba(254,248,61,.08),rgba(255,255,255,.04));}
+.ap-bastion__body{flex:1;min-width:0;}
+.ap-bastion__name{font-size:13px;font-weight:700;color:#fff;}
+.ap-bastion__sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
 /* Per-parent sub-tree: hidden by default, swap to display:block when the
    parent is active and stagger each sub-item in from the left so the
    "tree opens" reads like a cascade instead of a jump. */

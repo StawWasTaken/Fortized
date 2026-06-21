@@ -49497,6 +49497,7 @@ const _LANG_PACK = {
     'modal.add_friend.desc':'You can add friends with their Fortized usernames.', 'modal.add_friend.placeholder':'Enter a username…', 'modal.add_friend.send':'Send Friend Request',
     'modal.new_dm.title':'New Message', 'modal.new_dm.sub':'Start a direct message or create a group chat', 'modal.new_dm.tab_dm':'Direct Message', 'modal.new_dm.tab_gc':'Group Chat', 'modal.new_dm.username_placeholder':'Username…', 'modal.new_dm.open_chat':'Open Chat', 'modal.new_dm.group_name_placeholder':'Group name…', 'modal.new_dm.select_friends':'Select Friends', 'modal.new_dm.create_group':'Create Group',
     'modal.create_bastion.title':'Create a Bastion', 'modal.create_bastion.sub':'Build your community — your way', 'modal.create_bastion.own_title':'Create My Own', 'modal.create_bastion.own_desc':'Start fresh from scratch', 'modal.create_bastion.tmpl_title':'Start From a Template', 'modal.create_bastion.tmpl_desc':'Pre-configured channels', 'modal.create_bastion.name':'Bastion name', 'modal.create_bastion.desc':'Short description (optional)', 'modal.create_bastion.public':'Public', 'modal.create_bastion.private':'Private', 'modal.create_bastion.create_btn':'Create Bastion',
+    'rail.home':'Home', 'rail.dms':'Direct Messages', 'rail.discover':'Discover', 'rail.forum':'Forum', 'rail.create_bastion':'Create Bastion',
   },
   fr: {
     'nav.account':'Compte', 'nav.experience':'Expérience', 'nav.activity':'Activité', 'nav.safety':'Sécurité', 'nav.support':'Aide',
@@ -49533,6 +49534,7 @@ const _LANG_PACK = {
     'modal.add_friend.desc':'Vous pouvez ajouter des amis avec leur nom d’utilisateur Fortized.', 'modal.add_friend.placeholder':'Saisissez un nom d’utilisateur…', 'modal.add_friend.send':'Envoyer la demande d’ami',
     'modal.new_dm.title':'Nouveau message', 'modal.new_dm.sub':'Lancez un message direct ou créez un chat de groupe', 'modal.new_dm.tab_dm':'Message direct', 'modal.new_dm.tab_gc':'Chat de groupe', 'modal.new_dm.username_placeholder':'Nom d’utilisateur…', 'modal.new_dm.open_chat':'Ouvrir le chat', 'modal.new_dm.group_name_placeholder':'Nom du groupe…', 'modal.new_dm.select_friends':'Sélectionner des amis', 'modal.new_dm.create_group':'Créer le groupe',
     'modal.create_bastion.title':'Créer un Bastion', 'modal.create_bastion.sub':'Construisez votre communauté — à votre manière', 'modal.create_bastion.own_title':'Créer le mien', 'modal.create_bastion.own_desc':'Partir de zéro', 'modal.create_bastion.tmpl_title':'Partir d’un modèle', 'modal.create_bastion.tmpl_desc':'Salons préconfigurés', 'modal.create_bastion.name':'Nom du Bastion', 'modal.create_bastion.desc':'Courte description (facultatif)', 'modal.create_bastion.public':'Public', 'modal.create_bastion.private':'Privé', 'modal.create_bastion.create_btn':'Créer le Bastion',
+    'rail.home':'Accueil', 'rail.dms':'Messages directs', 'rail.discover':'Découvrir', 'rail.forum':'Forum', 'rail.create_bastion':'Créer un Bastion',
     lang_title:'Langue et heure', lang_section:'Langue d’affichage', lang_desc:'Choisissez la langue d’affichage de l’interface. Les changements s’appliquent instantanément.', lang_picker:'Langue', time_section:'Format de l’heure', time_desc:'Comment l’heure est affichée dans l’application.', time_24:'24 heures (14:30)', time_12:'12 heures (2:30 PM)', preview_section:'Aperçu', preview_desc:'Exemple en direct avec vos réglages actuels.', preview_hello:'Bonjour !', preview_today:'Nous sommes le', preview_now:'Il est',
   },
   es: {
@@ -49570,6 +49572,7 @@ const _LANG_PACK = {
     'modal.add_friend.desc':'Puedes añadir amigos con sus nombres de usuario de Fortized.', 'modal.add_friend.placeholder':'Introduce un nombre de usuario…', 'modal.add_friend.send':'Enviar solicitud de amistad',
     'modal.new_dm.title':'Mensaje nuevo', 'modal.new_dm.sub':'Inicia un mensaje directo o crea un chat grupal', 'modal.new_dm.tab_dm':'Mensaje directo', 'modal.new_dm.tab_gc':'Chat grupal', 'modal.new_dm.username_placeholder':'Nombre de usuario…', 'modal.new_dm.open_chat':'Abrir chat', 'modal.new_dm.group_name_placeholder':'Nombre del grupo…', 'modal.new_dm.select_friends':'Seleccionar amigos', 'modal.new_dm.create_group':'Crear grupo',
     'modal.create_bastion.title':'Crear un Bastion', 'modal.create_bastion.sub':'Construye tu comunidad — a tu manera', 'modal.create_bastion.own_title':'Crear el mío', 'modal.create_bastion.own_desc':'Empezar desde cero', 'modal.create_bastion.tmpl_title':'Empezar desde una plantilla', 'modal.create_bastion.tmpl_desc':'Canales preconfigurados', 'modal.create_bastion.name':'Nombre del Bastion', 'modal.create_bastion.desc':'Descripción corta (opcional)', 'modal.create_bastion.public':'Público', 'modal.create_bastion.private':'Privado', 'modal.create_bastion.create_btn':'Crear Bastion',
+    'rail.home':'Inicio', 'rail.dms':'Mensajes directos', 'rail.discover':'Descubrir', 'rail.forum':'Forum', 'rail.create_bastion':'Crear un Bastion',
     lang_title:'Idioma y hora', lang_section:'Idioma de pantalla', lang_desc:'Elige el idioma con el que debe mostrarse la interfaz. Los cambios se aplican al instante.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Cómo se muestran las horas en la aplicación.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Vista previa', preview_desc:'Muestra en vivo con tus ajustes actuales.', preview_hello:'¡Hola!', preview_today:'Hoy es', preview_now:'Ahora son las',
   },
   de: {
@@ -49607,6 +49610,7 @@ const _LANG_PACK = {
     'modal.add_friend.desc':'Du kannst Freunde über ihre Fortized-Benutzernamen hinzufügen.', 'modal.add_friend.placeholder':'Benutzername eingeben…', 'modal.add_friend.send':'Freundschaftsanfrage senden',
     'modal.new_dm.title':'Neue Nachricht', 'modal.new_dm.sub':'Direktnachricht oder Gruppenchat starten', 'modal.new_dm.tab_dm':'Direktnachricht', 'modal.new_dm.tab_gc':'Gruppenchat', 'modal.new_dm.username_placeholder':'Benutzername…', 'modal.new_dm.open_chat':'Chat öffnen', 'modal.new_dm.group_name_placeholder':'Gruppenname…', 'modal.new_dm.select_friends':'Freunde auswählen', 'modal.new_dm.create_group':'Gruppe erstellen',
     'modal.create_bastion.title':'Bastion erstellen', 'modal.create_bastion.sub':'Bau deine Community — wie du willst', 'modal.create_bastion.own_title':'Selbst erstellen', 'modal.create_bastion.own_desc':'Von Grund auf neu', 'modal.create_bastion.tmpl_title':'Mit einer Vorlage starten', 'modal.create_bastion.tmpl_desc':'Vorkonfigurierte Kanäle', 'modal.create_bastion.name':'Bastion-Name', 'modal.create_bastion.desc':'Kurze Beschreibung (optional)', 'modal.create_bastion.public':'Öffentlich', 'modal.create_bastion.private':'Privat', 'modal.create_bastion.create_btn':'Bastion erstellen',
+    'rail.home':'Start', 'rail.dms':'Direktnachrichten', 'rail.discover':'Entdecken', 'rail.forum':'Forum', 'rail.create_bastion':'Bastion erstellen',
     lang_title:'Sprache & Uhrzeit', lang_section:'Anzeigesprache', lang_desc:'Wähle die Sprache, in der die Oberfläche angezeigt werden soll. Änderungen werden sofort übernommen.', lang_picker:'Sprache', time_section:'Uhrzeitformat', time_desc:'Wie Uhrzeiten in der App angezeigt werden.', time_24:'24-Stunden (14:30)', time_12:'12-Stunden (2:30 PM)', preview_section:'Vorschau', preview_desc:'Live-Beispiel mit deinen aktuellen Einstellungen.', preview_hello:'Hallo!', preview_today:'Heute ist', preview_now:'Jetzt ist es',
   },
   it: {
@@ -49644,6 +49648,7 @@ const _LANG_PACK = {
     'modal.add_friend.desc':'Puoi aggiungere amici tramite il loro nome utente Fortized.', 'modal.add_friend.placeholder':'Inserisci un nome utente…', 'modal.add_friend.send':'Invia richiesta di amicizia',
     'modal.new_dm.title':'Nuovo messaggio', 'modal.new_dm.sub':'Inizia un messaggio diretto o crea una chat di gruppo', 'modal.new_dm.tab_dm':'Messaggio diretto', 'modal.new_dm.tab_gc':'Chat di gruppo', 'modal.new_dm.username_placeholder':'Nome utente…', 'modal.new_dm.open_chat':'Apri chat', 'modal.new_dm.group_name_placeholder':'Nome del gruppo…', 'modal.new_dm.select_friends':'Seleziona amici', 'modal.new_dm.create_group':'Crea gruppo',
     'modal.create_bastion.title':'Crea un Bastion', 'modal.create_bastion.sub':'Costruisci la tua community — a modo tuo', 'modal.create_bastion.own_title':'Crea il mio', 'modal.create_bastion.own_desc':'Partire da zero', 'modal.create_bastion.tmpl_title':'Parti da un modello', 'modal.create_bastion.tmpl_desc':'Canali preconfigurati', 'modal.create_bastion.name':'Nome del Bastion', 'modal.create_bastion.desc':'Breve descrizione (facoltativo)', 'modal.create_bastion.public':'Pubblico', 'modal.create_bastion.private':'Privato', 'modal.create_bastion.create_btn':'Crea Bastion',
+    'rail.home':'Home', 'rail.dms':'Messaggi diretti', 'rail.discover':'Scopri', 'rail.forum':'Forum', 'rail.create_bastion':'Crea un Bastion',
     lang_title:'Lingua e ora', lang_section:'Lingua di visualizzazione', lang_desc:'Scegli la lingua in cui mostrare l’interfaccia. Le modifiche sono immediate.', lang_picker:'Lingua', time_section:'Formato dell’ora', time_desc:'Come vengono mostrate le ore nell’app.', time_24:'24 ore (14:30)', time_12:'12 ore (2:30 PM)', preview_section:'Anteprima', preview_desc:'Esempio dal vivo con le tue impostazioni.', preview_hello:'Ciao!', preview_today:'Oggi è', preview_now:'Adesso sono le',
   },
   pt: {
@@ -49681,6 +49686,7 @@ const _LANG_PACK = {
     'modal.add_friend.desc':'Você pode adicionar amigos pelos nomes de usuário Fortized.', 'modal.add_friend.placeholder':'Digite um nome de usuário…', 'modal.add_friend.send':'Enviar pedido de amizade',
     'modal.new_dm.title':'Nova mensagem', 'modal.new_dm.sub':'Inicie uma mensagem direta ou crie um chat em grupo', 'modal.new_dm.tab_dm':'Mensagem direta', 'modal.new_dm.tab_gc':'Chat em grupo', 'modal.new_dm.username_placeholder':'Nome de usuário…', 'modal.new_dm.open_chat':'Abrir chat', 'modal.new_dm.group_name_placeholder':'Nome do grupo…', 'modal.new_dm.select_friends':'Selecionar amigos', 'modal.new_dm.create_group':'Criar grupo',
     'modal.create_bastion.title':'Criar um Bastion', 'modal.create_bastion.sub':'Construa sua comunidade — do seu jeito', 'modal.create_bastion.own_title':'Criar do zero', 'modal.create_bastion.own_desc':'Começar do nada', 'modal.create_bastion.tmpl_title':'Começar de um modelo', 'modal.create_bastion.tmpl_desc':'Canais pré-configurados', 'modal.create_bastion.name':'Nome do Bastion', 'modal.create_bastion.desc':'Descrição curta (opcional)', 'modal.create_bastion.public':'Público', 'modal.create_bastion.private':'Privado', 'modal.create_bastion.create_btn':'Criar Bastion',
+    'rail.home':'Início', 'rail.dms':'Mensagens diretas', 'rail.discover':'Descobrir', 'rail.forum':'Forum', 'rail.create_bastion':'Criar um Bastion',
     lang_title:'Idioma e hora', lang_section:'Idioma de exibição', lang_desc:'Escolha o idioma em que a interface deve aparecer. As mudanças são aplicadas na hora.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Como as horas são exibidas no app.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Pré-visualização', preview_desc:'Exemplo ao vivo com suas configurações.', preview_hello:'Olá!', preview_today:'Hoje é', preview_now:'Agora são',
   },
   ja: {
@@ -49718,6 +49724,7 @@ const _LANG_PACK = {
     'modal.add_friend.desc':'Fortized のユーザー名でフレンドを追加できます。', 'modal.add_friend.placeholder':'ユーザー名を入力…', 'modal.add_friend.send':'フレンドリクエストを送信',
     'modal.new_dm.title':'新規メッセージ', 'modal.new_dm.sub':'ダイレクトメッセージかグループチャットを始めましょう', 'modal.new_dm.tab_dm':'ダイレクトメッセージ', 'modal.new_dm.tab_gc':'グループチャット', 'modal.new_dm.username_placeholder':'ユーザー名…', 'modal.new_dm.open_chat':'チャットを開く', 'modal.new_dm.group_name_placeholder':'グループ名…', 'modal.new_dm.select_friends':'フレンドを選択', 'modal.new_dm.create_group':'グループを作成',
     'modal.create_bastion.title':'Bastion を作成', 'modal.create_bastion.sub':'あなたらしいコミュニティを', 'modal.create_bastion.own_title':'自分で作る', 'modal.create_bastion.own_desc':'最初から作成', 'modal.create_bastion.tmpl_title':'テンプレートから始める', 'modal.create_bastion.tmpl_desc':'チャンネル設定済み', 'modal.create_bastion.name':'Bastion 名', 'modal.create_bastion.desc':'短い説明（任意）', 'modal.create_bastion.public':'公開', 'modal.create_bastion.private':'非公開', 'modal.create_bastion.create_btn':'Bastion を作成',
+    'rail.home':'ホーム', 'rail.dms':'ダイレクトメッセージ', 'rail.discover':'発見', 'rail.forum':'Forum', 'rail.create_bastion':'Bastion を作成',
     lang_title:'言語と時刻', lang_section:'表示言語', lang_desc:'UI を表示する言語を選んでください。変更はすぐに適用されます。', lang_picker:'言語', time_section:'時刻表示', time_desc:'アプリ全体での時刻表示です。', time_24:'24時間表記 (14:30)', time_12:'12時間表記 (2:30 PM)', preview_section:'プレビュー', preview_desc:'現在の設定でのサンプルです。', preview_hello:'こんにちは！', preview_today:'今日は', preview_now:'今は',
   },
   ar: {
@@ -49755,6 +49762,7 @@ const _LANG_PACK = {
     'modal.add_friend.desc':'يمكنك إضافة الأصدقاء عبر أسماء مستخدمي Fortized.', 'modal.add_friend.placeholder':'أدخل اسم مستخدم…', 'modal.add_friend.send':'إرسال طلب صداقة',
     'modal.new_dm.title':'رسالة جديدة', 'modal.new_dm.sub':'ابدأ رسالة مباشرة أو أنشئ دردشة جماعية', 'modal.new_dm.tab_dm':'رسالة مباشرة', 'modal.new_dm.tab_gc':'دردشة جماعية', 'modal.new_dm.username_placeholder':'اسم المستخدم…', 'modal.new_dm.open_chat':'فتح الدردشة', 'modal.new_dm.group_name_placeholder':'اسم المجموعة…', 'modal.new_dm.select_friends':'اختر الأصدقاء', 'modal.new_dm.create_group':'إنشاء المجموعة',
     'modal.create_bastion.title':'إنشاء Bastion', 'modal.create_bastion.sub':'ابنِ مجتمعك — بطريقتك', 'modal.create_bastion.own_title':'إنشاء خاص بي', 'modal.create_bastion.own_desc':'البدء من الصفر', 'modal.create_bastion.tmpl_title':'البدء من قالب', 'modal.create_bastion.tmpl_desc':'قنوات معدّة مسبقًا', 'modal.create_bastion.name':'اسم Bastion', 'modal.create_bastion.desc':'وصف قصير (اختياري)', 'modal.create_bastion.public':'عام', 'modal.create_bastion.private':'خاص', 'modal.create_bastion.create_btn':'إنشاء Bastion',
+    'rail.home':'الرئيسية', 'rail.dms':'الرسائل المباشرة', 'rail.discover':'استكشاف', 'rail.forum':'Forum', 'rail.create_bastion':'إنشاء Bastion',
     lang_title:'اللغة والوقت', lang_section:'لغة العرض', lang_desc:'اختر لغة عرض الواجهة. تدخل التغييرات حيّز التنفيذ فورًا.', lang_picker:'اللغة', time_section:'تنسيق الوقت', time_desc:'طريقة عرض الوقت في التطبيق.', time_24:'24 ساعة (14:30)', time_12:'12 ساعة (2:30 PM)', preview_section:'معاينة', preview_desc:'عيّنة حيّة بإعداداتك الحالية.', preview_hello:'مرحبًا!', preview_today:'اليوم هو', preview_now:'الآن الساعة',
   },
 };
@@ -49837,6 +49845,13 @@ function _ftzApplyI18n(root) {
     const k = el.getAttribute('data-i18n-title'); if (!k) return;
     el.setAttribute('title', _t(k));
     el.setAttribute('data-tip', _t(k));
+  });
+  // Rail nav tips ride on data-nav-tip and surface through the rail's own
+  // hover bubble — separate attribute so I can leave _t() literals on the
+  // ones that already lived there.
+  scope.querySelectorAll && scope.querySelectorAll('[data-i18n-nav-tip]').forEach(el => {
+    const k = el.getAttribute('data-i18n-nav-tip'); if (!k) return;
+    el.setAttribute('data-nav-tip', _t(k));
   });
 }
 document.addEventListener('DOMContentLoaded', () => { _applyLanguageGlobals(); _ftzApplyI18n(); });

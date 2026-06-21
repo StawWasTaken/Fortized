@@ -3054,207 +3054,124 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .profile-nav-item:hover .pni-icon{opacity:.75;}
 .profile-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 14px;}
 
-/* ── Settings sidebar identity strip ─────────────────────────
-   The card at the top of the settings sidebar. Click jumps to
-   My Profile; status dot mirrors the userbar; the pencil only
-   appears on hover so the calm state stays calm. The avatar's
-   glow ring uses --accent so it matches whatever profile theme
-   the user is on. */
-.settings-identity{
-  position:relative;
-  display:flex;align-items:center;gap:12px;
-  padding:11px 12px;
+/* ── Settings sidebar identity tile (Option C, standalone) ───
+   Self-contained: zero inheritance from older identity classes.
+   Two stacked rows. Top row = avatar + name/handle/status +
+   badges. Bottom row = three always-visible chips (Edit /
+   Switch / Status). Whole tile is a card; the chips have their
+   own backgrounds so they don't pretend to be one big button. */
+.ftz-id-tile{
+  display:block;
   margin:0 4px 6px;
   border-radius:12px;
-  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));
-  border:1px solid rgba(255,255,255,.05);
-  cursor:pointer;
-  transition:background .16s,border-color .16s,transform .16s;
-  outline:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.06);
+  overflow:hidden;
 }
-.settings-identity:hover{
-  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.02));
-  border-color:rgba(255,255,255,.1);
+.ftz-id-tile__row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 12px 10px;
 }
-.settings-identity:focus-visible{ box-shadow:0 0 0 2px rgba(254,248,61,.35); }
-.settings-identity:active{ transform:translateY(1px); }
-
-.settings-identity__avatar-wrap{
+.ftz-id-tile__avatar-wrap{
   position:relative;
-  width:42px;height:42px;flex-shrink:0;
+  width:48px;height:48px;
+  flex:0 0 48px;
 }
-.settings-identity__glow{
-  position:absolute;inset:-4px;border-radius:50%;
-  background:radial-gradient(circle,rgba(254,248,61,.32) 0%,rgba(254,248,61,0) 70%);
-  opacity:.55;
-  filter:blur(2px);
-  pointer-events:none;
-  transition:opacity .2s;
-}
-.settings-identity:hover .settings-identity__glow{ opacity:.9; }
-.settings-identity__avatar{
-  position:relative;
-  width:100%;height:100%;
-  border-radius:50%;overflow:hidden;
+.ftz-id-tile__avatar{
+  width:48px;height:48px;
+  border-radius:12px;
+  overflow:hidden;
   background:var(--panel2);
   display:flex;align-items:center;justify-content:center;
-  z-index:1;
+  box-shadow:0 0 0 1px rgba(255,255,255,.05), 0 0 16px rgba(254,248,61,.18);
 }
-.settings-identity__dot{
+.ftz-id-tile__avatar img{ width:100%;height:100%;object-fit:cover;display:block; }
+.ftz-id-tile__dot{
   position:absolute;
   right:-2px;bottom:-2px;
   width:16px;height:16px;
   border-radius:50%;
   background:#13161d;
   display:flex;align-items:center;justify-content:center;
-  z-index:2;
-  /* tiny inset so the dot reads as a sticker on the avatar */
   box-shadow:0 0 0 2px #13161d;
 }
-.settings-identity__dot svg{ width:12px;height:12px;display:block; }
+.ftz-id-tile__dot svg{ width:12px;height:12px;display:block; }
 
-.settings-identity__body{
+.ftz-id-tile__text{
   flex:1;min-width:0;
   display:flex;flex-direction:column;gap:2px;
 }
-.settings-identity__name{
+.ftz-id-tile__name{
   font-family:var(--font-display);
   font-size:14px;font-weight:800;
   color:#fff;
   letter-spacing:-.005em;
+  line-height:1.2;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.settings-identity__handle{
+.ftz-id-tile__handle{
   font-size:11px;font-weight:500;
-  color:rgba(255,255,255,.4);
+  color:rgba(255,255,255,.45);
+  line-height:1.3;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-
-.settings-identity__edit{
-  display:flex;align-items:center;justify-content:center;
-  width:28px;height:28px;
-  border-radius:7px;
-  color:rgba(255,255,255,.5);
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.06);
-  opacity:0;
-  transform:translateX(4px);
-  transition:opacity .16s,transform .16s,color .12s,background .12s;
-  flex-shrink:0;
-}
-.settings-identity:hover .settings-identity__edit{
-  opacity:1;transform:translateX(0);
-}
-.settings-identity:hover .settings-identity__edit:hover{
-  color:#fef83d;background:rgba(254,248,61,.08);
-}
-
-/* ── Tile identity card (Option C) ───────────────────────────
-   Big square 54×54 avatar on the left, name + handle stacked
-   next to it, plus a flat chip row underneath: Edit · Switch ·
-   Status. Always visible — no hover-to-reveal — so every
-   affordance is discoverable on first look (incl. touch). */
-.settings-identity--tile{
-  flex-direction:column;
-  align-items:stretch;
-  gap:0;
-  padding:0;
-  cursor:default;
-  overflow:hidden;
-}
-.settings-identity--tile .settings-identity__top{
-  display:flex;align-items:center;gap:14px;
-  padding:14px 14px 12px;
-}
-.settings-identity--tile:hover{
-  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
-  border-color:rgba(255,255,255,.1);
-}
-
-/* Square avatar variant. Same wrap + glow primitives, different
-   border-radius and slightly larger size. */
-.settings-identity__avatar-wrap--square{ width:54px;height:54px; }
-.settings-identity__avatar--square{ border-radius:14px; }
-.settings-identity__glow--square{
-  border-radius:18px;
-  background:radial-gradient(circle,rgba(254,248,61,.32) 0%,rgba(254,248,61,0) 70%);
-}
-.settings-identity__avatar-wrap--square .settings-identity__dot{
-  right:-3px;bottom:-3px;
-}
-
-.settings-identity--tile .settings-identity__name{
-  font-size:15px;
-  margin-bottom:1px;
-}
-.settings-identity--tile .settings-identity__handle{ font-size:11.5px; }
-
-.settings-identity__cs{
+.ftz-id-tile__cs{
   display:flex;align-items:center;gap:5px;
-  margin-top:4px;
-  padding-top:4px;
-  border-top:1px dashed rgba(255,255,255,.05);
+  margin-top:3px;
   font-size:11px;
   color:rgba(255,255,255,.65);
   line-height:1.3;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.settings-identity__cs-emoji{
-  width:13px;height:13px;flex-shrink:0;
-  vertical-align:middle;
-}
+.ftz-id-tile__cs-emoji{ width:12px;height:12px;flex-shrink:0;vertical-align:middle; }
 
-.settings-identity__badges{
-  display:flex;flex-direction:column;gap:4px;
-  align-items:flex-end;
+.ftz-id-tile__badges{
+  display:flex;flex-direction:column;gap:3px;align-items:flex-end;
   flex-shrink:0;
 }
-.settings-identity__badge{
+.ftz-id-tile__badge{
   display:inline-flex;align-items:center;gap:3px;
-  padding:2px 7px;
-  font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
-  border-radius:5px;
+  padding:2px 6px;
+  font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  border-radius:4px;
   white-space:nowrap;
 }
-.settings-identity__badge--radiance{
+.ftz-id-tile__badge--radiance{
   color:#fef83d;
-  background:linear-gradient(135deg,rgba(254,248,61,.15),rgba(254,248,61,.04));
+  background:linear-gradient(135deg,rgba(254,248,61,.16),rgba(254,248,61,.04));
   border:1px solid rgba(254,248,61,.3);
-  box-shadow:0 0 8px rgba(254,248,61,.08);
 }
 
-/* Flat chip row — three buttons, each labelled. The Status chip
-   shows the same status-dot SVG used on the avatar so the chip
-   doubles as a live indicator without taking extra room. */
-.settings-identity__chips{
+.ftz-id-tile__chips{
   display:flex;gap:5px;
   padding:0 8px 8px;
 }
-.settings-identity__chip{
+.ftz-id-tile__chip{
   flex:1;
   display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  padding:7px 8px;
+  padding:7px 4px;
   font-family:inherit;
   font-size:11px;font-weight:700;letter-spacing:.01em;
-  color:rgba(255,255,255,.65);
-  background:rgba(255,255,255,.035);
+  color:rgba(255,255,255,.7);
+  background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.05);
-  border-radius:8px;
+  border-radius:7px;
   cursor:pointer;
-  transition:all .12s;
+  transition:color .12s,background .12s,border-color .12s,transform .12s;
 }
-.settings-identity__chip:hover{
+.ftz-id-tile__chip:hover{
   color:#fff;
-  background:rgba(255,255,255,.07);
+  background:rgba(255,255,255,.08);
   border-color:rgba(255,255,255,.14);
 }
-.settings-identity__chip svg{ opacity:.55; transition:opacity .12s; }
-.settings-identity__chip:hover svg{ opacity:.9; }
-.settings-identity__chip-dot{
+.ftz-id-tile__chip:active{ transform:translateY(1px); }
+.ftz-id-tile__chip svg{ flex-shrink:0; opacity:.6; transition:opacity .12s; }
+.ftz-id-tile__chip:hover svg{ opacity:1; }
+.ftz-id-tile__chip-dot{
   display:inline-flex;align-items:center;justify-content:center;
   width:10px;height:10px;flex-shrink:0;
 }
-.settings-identity__chip-dot svg{ width:10px;height:10px;display:block;opacity:1; }
+.ftz-id-tile__chip-dot svg{ width:10px;height:10px;display:block; }
 
 /* External-link nav entries (Support, Legal) — open in a new tab and
    show a tiny ↗ instead of routing through buildProfileView. */

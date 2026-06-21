@@ -20117,32 +20117,31 @@ function buildProfileNav(scroll, opts) {
 
   scroll.dataset.activeTab = activeTab;
   scroll.innerHTML = `
-    <div class="settings-identity settings-identity--tile" data-status="${_navStatus}" role="group">
-      <div class="settings-identity__top">
-        <div class="settings-identity__avatar-wrap settings-identity__avatar-wrap--square">
-          <div class="settings-identity__glow settings-identity__glow--square"></div>
-          <div class="settings-identity__avatar settings-identity__avatar--square">${_navPfp}</div>
-          <span class="settings-identity__dot">${_navStatusDot}</span>
+    <div class="ftz-id-tile" data-status="${_navStatus}">
+      <div class="ftz-id-tile__row">
+        <div class="ftz-id-tile__avatar-wrap">
+          <div class="ftz-id-tile__avatar">${_navPfp}</div>
+          <span class="ftz-id-tile__dot">${_navStatusDot}</span>
         </div>
-        <div class="settings-identity__body">
-          <div class="settings-identity__name">${_navDisplay}</div>
-          <div class="settings-identity__handle">${escapeHTML(_navHandle)}</div>
-          ${_navCustomStatus}
+        <div class="ftz-id-tile__text">
+          <div class="ftz-id-tile__name">${_navDisplay}</div>
+          <div class="ftz-id-tile__handle">${escapeHTML(_navHandle)}</div>
+          ${_navCustomStatus.replace('settings-identity__cs','ftz-id-tile__cs').replace('settings-identity__cs-emoji','ftz-id-tile__cs-emoji')}
         </div>
-        ${_navBadges}
+        ${_navBadges.replace(/settings-identity__badges/g,'ftz-id-tile__badges').replace(/settings-identity__badge/g,'ftz-id-tile__badge')}
       </div>
-      <div class="settings-identity__chips">
-        <button class="settings-identity__chip" onclick="buildProfileView('myprofile')">
+      <div class="ftz-id-tile__chips">
+        <button class="ftz-id-tile__chip" onclick="buildProfileView('myprofile')">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Edit
+          <span>Edit</span>
         </button>
-        <button class="settings-identity__chip" onclick="_settingsSwitchProfile()">
+        <button class="ftz-id-tile__chip" onclick="_settingsSwitchProfile()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          Switch
+          <span>Switch</span>
         </button>
-        <button class="settings-identity__chip" onclick="openStatusPicker()">
-          <span class="settings-identity__chip-dot" data-status="${_navStatus}">${_navStatusDot}</span>
-          Status
+        <button class="ftz-id-tile__chip" onclick="openStatusPicker()">
+          <span class="ftz-id-tile__chip-dot">${_navStatusDot}</span>
+          <span>Status</span>
         </button>
       </div>
     </div>

@@ -20029,9 +20029,8 @@ function buildProfileNav(scroll, opts) {
     { label:'ACTIVITY', items: [
       { id:'game_collection', icon:ICN['gamepad'],         label:'Apps & Games', subs:[
         { spy:'current',    label:'Current Game' },
-        { spy:'collection', label:'Your Library' },
+        { spy:'collection', label:'Added Games' },
         { spy:'overlay',    label:'In-Game Overlay' },
-        { spy:'ignored',    label:'Ignored Apps' },
       ]},
     ]},
     { label:'SAFETY', items: [
@@ -32312,29 +32311,22 @@ const GAME_CATALOG = [
   {name:'X (Twitter)',icon:'\uD83C\uDF10',genre:'Social'},
 ];
 
-// Icons shared across rows — flag (Not a game), eye (toggle activity
-// detection for this game), monitor (toggle in-game overlay), ⋯ overflow.
-// Same visual idiom as Discord's row but each icon is per-game, so you
-// can keep detection on for Roblox and off for Adobe without juggling
-// the global setting.
-const _AG_ICON_FLAG    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a2 2 0 0 1 2-2h11l-2 5 2 5H6"/></svg>';
-const _AG_ICON_EYE     = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-const _AG_ICON_EYE_OFF = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-const _AG_ICON_MON     = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
-const _AG_ICON_MORE    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
-const _AG_ICON_RESTORE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 10 9 10"/></svg>';
-const _AG_ICON_VERIFIED = '<svg class="ag-verified" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-tip="Detected via IGDB"><path d="M9 12l2 2 4-4M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+// Icons — three per row + the IGDB-verified checkmark. Eye/monitor go red
+// when the toggle is off, like Discord. No popup menu, no corner X — those
+// were noise. Manual game search was removed entirely so users can't seed
+// fake titles into the catalog.
+const _AG_ICON_REPORT  = '<svg width="14" height="14" viewBox="0 0 448 512" fill="currentColor" aria-hidden="true"><path d="M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32L0 480c0 17.7 14.3 32 32 32s32-14.3 32-32l0-121.6 62.7-18.8c41.9-12.6 87.1-8.7 126.2 10.9 42.7 21.4 92.5 24 137.2 7.2l37.1-13.9c12.5-4.7 20.8-16.6 20.8-30l0-247.7c0-23-24.2-38-44.8-27.7l-11.8 5.9c-44.9 22.5-97.8 22.5-142.8 0-36.4-18.2-78.3-21.8-117.2-10.1L64 54.4 64 32z"/></svg>';
+const _AG_ICON_DETECT  = '<svg width="14" height="14" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>';
+const _AG_ICON_OVERLAY = '<svg width="14" height="14" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M448 32c35.3 0 64 28.7 64 64l0 112-64 0 0-112-384 0 0 320 144 0 0 64-144 0-6.5-.3c-30.1-3.1-54.1-27-57.1-57.1L0 416 0 96C0 62.9 25.2 35.6 57.5 32.3L64 32 448 32zm16 224c26.5 0 48 21.5 48 48l0 128c0 26.5-21.5 48-48 48l-160 0c-26.5 0-48-21.5-48-48l0-128c0-26.5 21.5-48 48-48l160 0z"/></svg>';
+const _AG_ICON_VERIFIED = '<svg class="ag-verified" width="14" height="14" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true" data-tip="Verified by IGDB"><path d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zM374 145.7c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8L379.3 179.2c7.8-10.7 5.4-25.7-5.3-33.5z"/></svg>';
 
 function renderGameCollectionTab(main) {
   if (!main) return;
-  const allGames = CU.gameCollection || [];
-  const games = allGames.filter(g => g && typeof g.name === 'string' && g.name && !g.ignored);
-  const ignored = allGames.filter(g => g && typeof g.name === 'string' && g.name && g.ignored);
+  const games = (CU.gameCollection || []).filter(g => g && typeof g.name === 'string' && g.name);
   const currentGame = _gameActivity;
   const activityEnabled = localStorage.getItem('ftz_activity_detection') !== 'false';
   const overlayDefault = localStorage.getItem('ftz_overlay_default') !== 'false';
   const isDesktop = !!window.fortizedDesktop?.isDesktopApp;
-  const idxOf = (g) => allGames.indexOf(g);
 
   // ── Current Game card ───────────────────────────────────────────
   let currentCardHtml;
@@ -32349,7 +32341,6 @@ function renderGameCollectionTab(main) {
         <div class="ag-current__name">${escapeHTML(currentGame.name)}${verified}</div>
         <div class="ag-current__sub"><span class="ag-pulse"></span>Now playing</div>
       </div>
-      <button class="ag-icon ag-icon--ghost" data-tip="Stop showing as status" onclick="setGameActivity(null);buildProfileView('game_collection')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>`;
   } else {
     currentCardHtml = `<div class="ag-current ag-current--empty">
@@ -32361,7 +32352,7 @@ function renderGameCollectionTab(main) {
     </div>`;
   }
 
-  // ── Inline picker (kept; styled to match) ───────────────────────
+  // ── Inline picker — only detected apps (manual search removed). ─
   const inlineAdd = `<div class="ag-addline">
     <span>Not seeing your game?</span>
     <button class="ag-link" onclick="_toggleInlineGamePicker()">Add it!</button>
@@ -32372,17 +32363,10 @@ function renderGameCollectionTab(main) {
       <button class="ag-chip" onclick="_refreshInlineDetectedApps()">Refresh</button>
     </div>
     <div id="inline-detected-apps" class="ag-detected-list"><div class="ag-detected-loading">Scanning…</div></div>
-    <div class="ag-inline-picker__sep">Or search manually</div>
-    <div class="ag-inline-picker__search">
-      <input class="settings-input" id="inline-game-search" placeholder="Search games…" oninput="_filterInlineGameSearch(this.value)">
-      <button class="btn-a" onclick="_addGameFromInlineSearch()">Add</button>
-    </div>
-    <div id="inline-game-search-results" class="ag-inline-results" style="display:none;"></div>
   </div>`;
 
-  // ── Row builder shared by Library and Ignored sections ──────────
-  const buildRow = (g, opts = {}) => {
-    const i = idxOf(g);
+  // ── Row builder ─────────────────────────────────────────────────
+  const buildRow = (g, i) => {
     const isPlaying = currentGame?.name === g.name;
     const cover = g.coverUrl || g.coverThumb || _getManualCover(g.name);
     const lastPlayed = _formatLastPlayed(g.lastPlayed);
@@ -32397,80 +32381,49 @@ function renderGameCollectionTab(main) {
       ? `<img class="ag-row__cover" src="${escapeHTML(cover)}" alt="" onerror="this.outerHTML='<div class=&quot;ag-row__cover ag-cover-fallback&quot;><span>${g.icon||'🎮'}</span></div>'">`
       : `<div class="ag-row__cover ag-cover-fallback"><span>${g.icon||'🎮'}</span></div>`;
 
-    if (opts.ignored) {
-      return `<div class="ag-row ag-row--ignored">
-        ${coverHTML}
-        <div class="ag-row__body">
-          <div class="ag-row__name">${escapeHTML(g.name)}</div>
-          <span class="ag-row__sub">Marked as not a game</span>
-        </div>
-        <div class="ag-row__actions">
-          <button class="ag-icon" data-tip="Restore" onclick="_unmarkGameIgnored(${i})">${_AG_ICON_RESTORE}</button>
-          <button class="ag-icon ag-icon--danger" data-tip="Remove permanently" onclick="removeGameFromCollection(${i})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        </div>
-      </div>`;
-    }
-
     const detectionOff = !!g.detectionDisabled;
     const overlayOff   = g.overlayEnabled === false;
-    return `<div class="ag-row${isPlaying?' ag-row--playing':''}" onclick="openGameDetailsModal('${safeName}')">
+    return `<div class="ag-row${isPlaying?' ag-row--playing':''}">
       ${coverHTML}
       <div class="ag-row__body">
-        <div class="ag-row__name">${escapeHTML(g.name)}${verified}${g.hidden?'<span class="ag-tag ag-tag--hidden" data-tip="Hidden from profile">Hidden</span>':''}</div>
+        <div class="ag-row__name">${escapeHTML(g.name)}${verified}</div>
         ${sub}
       </div>
-      <div class="ag-row__actions" onclick="event.stopPropagation()">
-        <button class="ag-icon" data-tip="Not a game" onclick="_markGameIgnored(${i})">${_AG_ICON_FLAG}</button>
-        <button class="ag-icon${detectionOff?' is-off':''}" data-tip="${detectionOff?'Detection disabled — click to enable':'Toggle activity detection'}" onclick="_toggleGameDetectionOne(${i})">${detectionOff?_AG_ICON_EYE_OFF:_AG_ICON_EYE}</button>
-        <button class="ag-icon${overlayOff?' is-off':''}" data-tip="${overlayOff?'Overlay disabled — click to enable':'Toggle in-game overlay'}" onclick="_toggleGameOverlayOne(${i})">${_AG_ICON_MON}</button>
-        <button class="ag-icon ag-icon--more" data-tip="More" onclick="_openGameRowMenu(event,${i})">${_AG_ICON_MORE}</button>
+      <div class="ag-row__actions">
+        <button class="ag-icon" data-tip="Report incorrectly detected game" onclick="_reportIncorrectGame(${i})">${_AG_ICON_REPORT}</button>
+        <button class="ag-icon${detectionOff?' is-off':''}" data-tip="Toggle detection" onclick="_toggleGameDetectionOne(${i})">${_AG_ICON_DETECT}</button>
+        <button class="ag-icon${overlayOff?' is-off':''}" data-tip="Toggle overlay" onclick="_toggleGameOverlayOne(${i})">${_AG_ICON_OVERLAY}</button>
       </div>
-      <button class="ag-row__close" data-tip="Remove from library" onclick="event.stopPropagation();_confirmRemoveGame(${i})" aria-label="Remove"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM8.7 7.3 12 10.6l3.3-3.3a1 1 0 1 1 1.4 1.4L13.4 12l3.3 3.3a1 1 0 0 1-1.4 1.4L12 13.4l-3.3 3.3a1 1 0 1 1-1.4-1.4L10.6 12 7.3 8.7a1 1 0 1 1 1.4-1.4z"/></svg></button>
     </div>`;
   };
 
   // ── Library section ─────────────────────────────────────────────
   const libraryRowsHtml = games.length
-    ? `<div class="ag-list">${games.map(g => buildRow(g)).join('')}</div>`
+    ? `<div class="ag-list">${games.map((g, i) => buildRow(g, i)).join('')}</div>`
     : `<div class="ag-empty">
         <div class="ag-empty__title">No games yet</div>
-        <div class="ag-empty__sub">Games you add show up on your public profile.</div>
+        <div class="ag-empty__sub">Games show up here once they’ve been detected.</div>
       </div>`;
-
-  // ── Ignored section (only visible when populated) ───────────────
-  const ignoredSectionHtml = ignored.length ? `
-    <div class="voice-section" data-spy="ignored">
-      <div class="voice-section__title">Ignored Apps</div>
-      <div class="voice-section__desc">Apps you marked as “not a game”. They won’t show up as your activity, but they stay here so you can change your mind.</div>
-      <div class="ag-list">${ignored.map(g => buildRow(g, {ignored:true})).join('')}</div>
-    </div>` : `
-    <div class="voice-section" data-spy="ignored">
-      <div class="voice-section__title">Ignored Apps</div>
-      <div class="voice-section__desc">Anything you mark as “not a game” will land here so you can recover it later. Empty for now.</div>
-    </div>`;
 
   main.innerHTML = `<div class="settings-panel">
     ${_settingsHeader('game_collection')}
 
     <div class="voice-section" data-spy="current">
       <div class="voice-section__title">Current Game</div>
-      <div class="voice-section__desc">What you’re playing right now — auto-detected by the desktop app or pinned manually.</div>
+      <div class="voice-section__desc">What you’re playing right now — auto-detected by the desktop app.</div>
       ${currentCardHtml}
       ${inlineAdd}
     </div>
 
     <div class="voice-section" data-spy="collection">
-      <div class="voice-section__title">Your Library</div>
+      <div class="voice-section__title">Added Games</div>
       <div class="voice-section__desc">Some information about games (such as genre or cover art) is provided by <a href="https://www.igdb.com" target="_blank" rel="noopener" class="ag-link">IGDB</a>.</div>
       ${libraryRowsHtml}
-      <div class="ag-bottom-actions">
-        <button class="ag-add-btn" onclick="openGameCollectionPicker()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add a game manually</button>
-      </div>
     </div>
 
     <div class="voice-section" data-spy="overlay">
       <div class="voice-section__title">In-Game Overlay</div>
-      <div class="voice-section__desc">The Fortized overlay lets you reply, see who’s talking, and manage voice without leaving the game. Per-game overrides live on each row in your Library.</div>
+      <div class="voice-section__desc">The Fortized overlay lets you reply, see who’s talking, and manage voice without leaving the game. Per-game overrides live on each row above.</div>
       <div class="voice-row">
         <div class="voice-row__stack">
           <div class="voice-row__name">Activity Detection ${isDesktop?'':'<span class="ag-tag ag-tag--desktop">Desktop only</span>'}</div>
@@ -32485,17 +32438,16 @@ function renderGameCollectionTab(main) {
       <div class="voice-row">
         <div class="voice-row__stack">
           <div class="voice-row__name">Enable overlay by default</div>
-          <div class="voice-row__desc">New games inherit this setting. Toggle per-game from the monitor icon in your Library.</div>
+          <div class="voice-row__desc">New games inherit this setting. Toggle per-game from the monitor icon above.</div>
         </div>
         <div class="voice-row__value voice-row__value--end">
           <div class="toggle${overlayDefault?' on':''}" onclick="_toggleOverlayDefault(this)"></div>
         </div>
       </div>
     </div>
-
-    ${ignoredSectionHtml}
   </div>`;
 }
+
 
 function _formatLastPlayed(dateStr) {
   if (!dateStr) return null;
@@ -32514,11 +32466,9 @@ function _formatLastPlayed(dateStr) {
 function _toggleInlineGamePicker() {
   const picker = document.getElementById('inline-game-picker');
   if (!picker) return;
-  const isHidden = picker.style.display === 'none';
-  picker.style.display = isHidden ? 'block' : 'none';
-  if (isHidden) {
-    _refreshInlineDetectedApps();
-  }
+  const wasHidden = picker.hasAttribute('hidden');
+  if (wasHidden) { picker.removeAttribute('hidden'); _refreshInlineDetectedApps(); }
+  else picker.setAttribute('hidden', '');
 }
 
 async function _refreshInlineDetectedApps() {
@@ -32553,27 +32503,34 @@ async function _refreshInlineDetectedApps() {
   }
 
   if (!enrichedApps.length && !window.fortizedDesktop?.isDesktopApp) {
-    container.innerHTML = '<div class="rg-detected-empty"><strong>Requires Fortized Desktop</strong><span>Install the desktop app to auto-detect running games.</span></div>';
+    container.innerHTML = `<div class="ag-detected-empty">
+      <div class="ag-detected-empty__title">Requires Fortized Desktop</div>
+      <div class="ag-detected-empty__sub">Install the desktop app to auto-detect running games.</div>
+    </div>`;
     return;
   }
   if (!enrichedApps.length) {
-    container.innerHTML = '<div class="rg-detected-empty"><strong>Nothing new detected</strong><span>Open a game and hit Refresh.</span></div>';
+    container.innerHTML = `<div class="ag-detected-empty">
+      <div class="ag-detected-empty__title">Nothing new detected</div>
+      <div class="ag-detected-empty__sub">Open a game and hit Refresh.</div>
+    </div>`;
     return;
   }
 
   container.innerHTML = enrichedApps.map(app => {
     const cover = app.coverUrl || app.coverThumb;
-    const safeName = escapeHTML(app.name).replace(/\x27/g, "\\\x27");
-    return '<div class="rg-detected-row" onclick="_addDetectedGame(\x27' + safeName + '\x27)">'
-      + (cover
-          ? '<img class="rg-detected-cover" src="' + escapeHTML(cover) + '" alt="" onerror="this.outerHTML=\x27<div class=&quot;rg-detected-cover rg-cover-fallback&quot;><span>' + (app.icon||'🎮') + '</span></div>\x27">'
-          : '<div class="rg-detected-cover rg-cover-fallback"><span>' + (app.icon||'🎮') + '</span></div>')
-      + '<div class="rg-detected-body">'
-      +   '<div class="rg-detected-name">' + escapeHTML(app.name) + '</div>'
-      +   (app.genre ? '<div class="rg-detected-genre">' + escapeHTML(app.genre) + '</div>' : '')
-      + '</div>'
-      + '<span class="rg-detected-add">+ Add</span>'
-      + '</div>';
+    const safeName = escapeHTML(app.name).replace(/'/g, "\\'");
+    const coverHTML = cover
+      ? `<img class="ag-detected__cover" src="${escapeHTML(cover)}" alt="" onerror="this.outerHTML='<div class=&quot;ag-detected__cover ag-cover-fallback&quot;><span>${app.icon||'🎮'}</span></div>'">`
+      : `<div class="ag-detected__cover ag-cover-fallback"><span>${app.icon||'🎮'}</span></div>`;
+    return `<div class="ag-detected__row">
+      ${coverHTML}
+      <div class="ag-detected__body">
+        <div class="ag-detected__name">${escapeHTML(app.name)}</div>
+        ${app.genre ? `<div class="ag-detected__genre">${escapeHTML(app.genre)}</div>` : ''}
+      </div>
+      <button class="ag-detected__add" onclick="_addDetectedGame('${safeName}')">Add</button>
+    </div>`;
   }).join('');
 }
 
@@ -32596,53 +32553,8 @@ async function _addDetectedGame(name) {
   setTimeout(() => _refreshInlineDetectedApps(), 200);
 }
 
-function _filterInlineGameSearch(query) {
-  const container = document.getElementById('inline-game-search-results');
-  if (!container) return;
-  if (!query || query.length < 2) { container.style.display = 'none'; return; }
-  container.style.display = 'block';
-  const owned = new Set((CU.gameCollection||[]).map(g => g.name.toLowerCase()));
-  const q = query.toLowerCase();
-  const matches = GAME_CATALOG.filter(g => !owned.has(g.name.toLowerCase()) && g.name.toLowerCase().includes(q)).slice(0, 8);
-  if (!matches.length) {
-    container.innerHTML = '<div class="rg-detected-empty"><span>No matches. Press <strong>Add</strong> to add "' + escapeHTML(query) + '" as custom.</span></div>';
-    return;
-  }
-  container.innerHTML = matches.map(g => {
-    const cover = _getManualCover(g.name);
-    const safeName = escapeHTML(g.name).replace(/\x27/g, "\\\x27");
-    return '<div class="rg-detected-row" onclick="_addDetectedGame(\x27' + safeName + '\x27);document.getElementById(\x27inline-game-search\x27).value=\x27\x27;document.getElementById(\x27inline-game-search-results\x27).style.display=\x27none\x27">'
-      + (cover
-          ? '<img class="rg-detected-cover" src="' + escapeHTML(cover) + '" alt="">'
-          : '<div class="rg-detected-cover rg-cover-fallback"><span>' + (g.icon||'🎮') + '</span></div>')
-      + '<div class="rg-detected-body">'
-      +   '<div class="rg-detected-name">' + escapeHTML(g.name) + '</div>'
-      +   '<div class="rg-detected-genre">' + escapeHTML(g.genre||'Game') + '</div>'
-      + '</div>'
-      + '<span class="rg-detected-add">+ Add</span>'
-      + '</div>';
-  }).join('');
-}
 
-function _addGameFromInlineSearch() {
-  const input = document.getElementById('inline-game-search');
-  if (!input || !input.value.trim()) { toast('Type a game name first', 'error'); return; }
-  const name = input.value.trim();
-  _addDetectedGame(name);
-  input.value = '';
-  document.getElementById('inline-game-search-results').style.display = 'none';
-  document.getElementById('inline-game-picker').style.display = 'none';
-}
-
-function _toggleGameVisibility(idx, el) {
-  const games = CU.gameCollection || [];
-  if (!games[idx]) return;
-  games[idx].hidden = !games[idx].hidden;
-  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
-  buildProfileView('game_collection');
-}
-
-// ── Per-game toggles for the new Apps & Games row design ─────────
+// ── Per-game toggles + report for the new Apps & Games row design ─
 function _toggleGameDetectionOne(idx) {
   const games = CU.gameCollection || [];
   const g = games[idx]; if (!g) return;
@@ -32660,63 +32572,31 @@ function _toggleGameOverlayOne(idx) {
   toast(`${g.name} — overlay ${g.overlayEnabled===false?'disabled':'enabled'}`, 'info');
   buildProfileView('game_collection');
 }
-function _markGameIgnored(idx) {
-  const games = CU.gameCollection || [];
-  const g = games[idx]; if (!g) return;
-  g.ignored = true;
-  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
-  toast(`Moved “${g.name}” to Ignored Apps`, 'info');
-  buildProfileView('game_collection');
-}
-function _unmarkGameIgnored(idx) {
-  const games = CU.gameCollection || [];
-  const g = games[idx]; if (!g) return;
-  g.ignored = false;
-  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
-  toast(`“${g.name}” restored to your library`, 'success');
-  buildProfileView('game_collection');
-}
 function _toggleOverlayDefault(el) {
   const on = el.classList.toggle('on');
   localStorage.setItem('ftz_overlay_default', on ? 'true' : 'false');
 }
-function _confirmRemoveGame(idx) {
+// Goes through the shared report pipeline so it lands in the same staff
+// console as message/user/bastion reports.
+const GAME_DETECTION_REPORT_REASONS = ['Not actually a game','Wrong title','Wrong cover / art','Belongs to a different game','Spam / fake entry','Other'];
+function _reportIncorrectGame(idx) {
   const games = CU.gameCollection || [];
   const g = games[idx]; if (!g) return;
-  showCustomConfirm(`Remove “${g.name}” from your library? You can always add it again later.`, () => removeGameFromCollection(idx));
-}
-
-// Tiny popover menu for the ⋯ button on each Library row. Built fresh
-// per click so we never leak listeners.
-function _openGameRowMenu(ev, idx) {
-  ev.stopPropagation();
-  document.querySelector('.ag-row-menu')?.remove();
-  const games = CU.gameCollection || [];
-  const g = games[idx]; if (!g) return;
-  const isPinned = _gameActivity?.name === g.name;
-  const menu = document.createElement('div');
-  menu.className = 'ag-row-menu';
-  menu.innerHTML = `
-    <button onclick="${isPinned ? `setGameActivity(null);buildProfileView('game_collection')` : `_pinGameAsCurrent(${idx})`};this.closest('.ag-row-menu').remove()">${isPinned ? 'Unpin as current activity' : 'Pin as current activity'}</button>
-    <button onclick="_toggleGameVisibility(${idx});this.closest('.ag-row-menu').remove()">${g.hidden ? 'Show on profile' : 'Hide from profile'}</button>
-    <div class="ag-row-menu__sep"></div>
-    <button class="ag-row-menu__danger" onclick="_confirmRemoveGame(${idx});this.closest('.ag-row-menu').remove()">Remove from library</button>`;
-  document.body.appendChild(menu);
-  const r = ev.currentTarget.getBoundingClientRect();
-  const w = 220;
-  menu.style.top  = `${Math.min(window.innerHeight - 220, r.bottom + 6)}px`;
-  menu.style.left = `${Math.max(8, r.right - w)}px`;
-  setTimeout(() => {
-    const off = (e) => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', off, true); } };
-    document.addEventListener('mousedown', off, true);
-  }, 0);
-}
-
-function _pinGameAsCurrent(idx) {
-  const games = CU.gameCollection || [];
-  const g = games[idx]; if (!g) return;
-  if (typeof setGameActivity === 'function') setGameActivity(g);
-  buildProfileView('game_collection');
+  if (typeof activeReportData !== 'undefined') {
+    activeReportData = { type: 'game-detection', gameName: g.name, gameIcon: g.icon || null, coverUrl: g.coverUrl || g.coverThumb || null, genre: g.genre || null, reportedAt: new Date().toISOString() };
+  }
+  showReport({
+    type: 'game-detection',
+    title: 'Report Incorrect Detection',
+    subtitle: 'Tell staff why this entry shouldn’t have been added.',
+    subjectLabel: 'Reported Entry',
+    subjectText: escapeHTML(g.name),
+    subjectMeta: g.genre ? escapeHTML(g.genre) : '',
+    subjectIcon: '<svg viewBox="0 0 448 512" fill="currentColor"><path d="M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32L0 480c0 17.7 14.3 32 32 32s32-14.3 32-32l0-121.6 62.7-18.8c41.9-12.6 87.1-8.7 126.2 10.9 42.7 21.4 92.5 24 137.2 7.2l37.1-13.9c12.5-4.7 20.8-16.6 20.8-30l0-247.7c0-23-24.2-38-44.8-27.7l-11.8 5.9c-44.9 22.5-97.8 22.5-142.8 0-36.4-18.2-78.3-21.8-117.2-10.1L64 54.4 64 32z"/></svg>',
+    reasons: GAME_DETECTION_REPORT_REASONS,
+    placeholder: 'Anything else staff should know? (optional)',
+    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+  });
 }
 
 let _gcTimer = null;

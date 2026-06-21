@@ -20054,7 +20054,22 @@ function buildProfileNav(scroll, opts) {
     ]},
   ];
 
-  const _navPfp = CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<span style="font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</span>`;
+  const _navPfp = CU?.pfp
+    ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+    : `<span style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent);">${escapeHTML((CU?.displayName||CU?.username||'?')[0].toUpperCase())}</span>`;
+  // Status dot mirrors the userbar's — same FtzStatus helper so they stay
+  // in lockstep visually. Falls back to a plain green dot if the helper
+  // isn't loaded yet (very early boot).
+  const _navStatus = (() => {
+    try { return FtzStatus.sanitize(CU?.status || 'online'); }
+    catch(_) { return 'online'; }
+  })();
+  const _navStatusDot = (() => {
+    try { return FtzStatus.dotSvg(_navStatus, 12); }
+    catch(_) { return ''; }
+  })();
+  const _navHandle = CU?.username ? '@' + CU.username : '';
+  const _navDisplay = escapeHTML(CU?.displayName || CU?.username || 'User');
 
   const renderItem = (item) => {
     // External-link entries (Support, Legal) open in a new tab instead of
@@ -20084,13 +20099,19 @@ function buildProfileNav(scroll, opts) {
 
   scroll.dataset.activeTab = activeTab;
   scroll.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:0 4px 4px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);">
-      <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_navPfp}</div>
-      <div style="min-width:0;flex:1;">
-        <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(CU?.displayName||CU?.username||'User')}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:500;">${escapeHTML(_t('nav.edit_profiles'))}</div>
+    <div class="settings-identity" data-status="${_navStatus}" onclick="buildProfileView('myprofile')" role="button" tabindex="0" data-tip="${escapeHTML(_t('nav.edit_profiles'))}">
+      <div class="settings-identity__avatar-wrap">
+        <div class="settings-identity__glow"></div>
+        <div class="settings-identity__avatar">${_navPfp}</div>
+        <span class="settings-identity__dot">${_navStatusDot}</span>
       </div>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <div class="settings-identity__body">
+        <div class="settings-identity__name">${_navDisplay}</div>
+        <div class="settings-identity__handle">${escapeHTML(_navHandle)}</div>
+      </div>
+      <span class="settings-identity__edit" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </span>
     </div>
     <div class="profile-nav-search" style="padding:4px 6px 8px;">
       <div style="position:relative;">

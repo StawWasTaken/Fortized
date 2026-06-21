@@ -3053,6 +3053,102 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .profile-nav-item.active .pni-icon{opacity:1;}
 .profile-nav-item:hover .pni-icon{opacity:.75;}
 .profile-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 14px;}
+
+/* ── Settings sidebar identity strip ─────────────────────────
+   The card at the top of the settings sidebar. Click jumps to
+   My Profile; status dot mirrors the userbar; the pencil only
+   appears on hover so the calm state stays calm. The avatar's
+   glow ring uses --accent so it matches whatever profile theme
+   the user is on. */
+.settings-identity{
+  position:relative;
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;
+  margin:0 4px 6px;
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));
+  border:1px solid rgba(255,255,255,.05);
+  cursor:pointer;
+  transition:background .16s,border-color .16s,transform .16s;
+  outline:none;
+}
+.settings-identity:hover{
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.02));
+  border-color:rgba(255,255,255,.1);
+}
+.settings-identity:focus-visible{ box-shadow:0 0 0 2px rgba(254,248,61,.35); }
+.settings-identity:active{ transform:translateY(1px); }
+
+.settings-identity__avatar-wrap{
+  position:relative;
+  width:42px;height:42px;flex-shrink:0;
+}
+.settings-identity__glow{
+  position:absolute;inset:-4px;border-radius:50%;
+  background:radial-gradient(circle,rgba(254,248,61,.32) 0%,rgba(254,248,61,0) 70%);
+  opacity:.55;
+  filter:blur(2px);
+  pointer-events:none;
+  transition:opacity .2s;
+}
+.settings-identity:hover .settings-identity__glow{ opacity:.9; }
+.settings-identity__avatar{
+  position:relative;
+  width:100%;height:100%;
+  border-radius:50%;overflow:hidden;
+  background:var(--panel2);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1;
+}
+.settings-identity__dot{
+  position:absolute;
+  right:-2px;bottom:-2px;
+  width:16px;height:16px;
+  border-radius:50%;
+  background:#13161d;
+  display:flex;align-items:center;justify-content:center;
+  z-index:2;
+  /* tiny inset so the dot reads as a sticker on the avatar */
+  box-shadow:0 0 0 2px #13161d;
+}
+.settings-identity__dot svg{ width:12px;height:12px;display:block; }
+
+.settings-identity__body{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;gap:2px;
+}
+.settings-identity__name{
+  font-family:var(--font-display);
+  font-size:14px;font-weight:800;
+  color:#fff;
+  letter-spacing:-.005em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.settings-identity__handle{
+  font-size:11px;font-weight:500;
+  color:rgba(255,255,255,.4);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+.settings-identity__edit{
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;
+  border-radius:7px;
+  color:rgba(255,255,255,.5);
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  opacity:0;
+  transform:translateX(4px);
+  transition:opacity .16s,transform .16s,color .12s,background .12s;
+  flex-shrink:0;
+}
+.settings-identity:hover .settings-identity__edit{
+  opacity:1;transform:translateX(0);
+}
+.settings-identity:hover .settings-identity__edit:hover{
+  color:#fef83d;background:rgba(254,248,61,.08);
+}
+
 /* External-link nav entries (Support, Legal) — open in a new tab and
    show a tiny ↗ instead of routing through buildProfileView. */
 .profile-nav-item--external{text-decoration:none;}

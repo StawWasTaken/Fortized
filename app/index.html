@@ -40,10 +40,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix158';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix159';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix158';
+    s4.src = '/firebase-compat-shim.js?v=2026fix159';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -52,14 +52,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix158">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix159">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix158', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix159', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -767,20 +767,20 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   <div class="modal" style="max-width:520px;width:100%;">
     <div class="modal-bar"></div>
     <div class="modal-body">
-      <div class="modal-title">Create a Bastion</div>
-      <div class="modal-sub">Build your community — your way</div>
+      <div class="modal-title" data-i18n="modal.create_bastion.title">Create a Bastion</div>
+      <div class="modal-sub" data-i18n="modal.create_bastion.sub">Build your community — your way</div>
       <!-- Step 1: choose path -->
       <div id="cb-step-1">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
           <div onclick="showBastionStep2('custom')" style="padding:18px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:.15s;" onmouseenter="this.style.borderColor='var(--accent-mid)'" onmouseleave="this.style.borderColor='var(--border)'">
             <div style="font-size:28px;margin-bottom:6px;">🏗️</div>
-            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;">Create My Own</div>
-            <div style="font-size:11.5px;color:var(--muted-light);margin-top:3px;">Start fresh from scratch</div>
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;" data-i18n="modal.create_bastion.own_title">Create My Own</div>
+            <div style="font-size:11.5px;color:var(--muted-light);margin-top:3px;" data-i18n="modal.create_bastion.own_desc">Start fresh from scratch</div>
           </div>
           <div onclick="showBastionStep2('template')" style="padding:18px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:.15s;" onmouseenter="this.style.borderColor='var(--accent-mid)'" onmouseleave="this.style.borderColor='var(--border)'">
             <div style="font-size:28px;margin-bottom:6px;">📋</div>
-            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;">Start From a Template</div>
-            <div style="font-size:11.5px;color:var(--muted-light);margin-top:3px;">Pre-configured channels</div>
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;" data-i18n="modal.create_bastion.tmpl_title">Start From a Template</div>
+            <div style="font-size:11.5px;color:var(--muted-light);margin-top:3px;" data-i18n="modal.create_bastion.tmpl_desc">Pre-configured channels</div>
           </div>
         </div>
         <!-- Template import section -->
@@ -814,7 +814,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn-g" onclick="closeModal('modal-create-bastion')">Cancel</button>
+          <button class="btn-g" onclick="closeModal('modal-create-bastion')" data-i18n="btn.cancel">Cancel</button>
         </div>
       </div>
       <!-- Step: Import Template (Discord or Fortized) -->
@@ -860,8 +860,8 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
           <div id="cb-icon-preview" style="width:60px;height:60px;border-radius:14px;background:var(--panel2);border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;overflow:hidden;transition:all .2s;" onclick="document.getElementById('cb-icon-upload').click()" onmouseenter="this.style.borderColor='rgba(255,249,62,.3)'" onmouseleave="this.style.borderColor='var(--border)'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
           <input id="cb-icon-upload" type="file" accept="image/*,image/gif" style="display:none;" onchange="previewCBIcon(event)">
           <div style="flex:1;">
-            <input class="modal-input" id="cb-name" placeholder="Bastion name" maxlength="40">
-            <input class="modal-input" id="cb-desc" placeholder="Short description (optional)" maxlength="120">
+            <input class="modal-input" id="cb-name" placeholder="Bastion name" data-i18n-placeholder="modal.create_bastion.name" maxlength="40">
+            <input class="modal-input" id="cb-desc" placeholder="Short description (optional)" data-i18n-placeholder="modal.create_bastion.desc" maxlength="120">
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
@@ -870,10 +870,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
         </div>
         <div class="vis-toggle" style="margin-bottom:12px;">
           <div class="vis-opt active" id="vis-public" onclick="setCBVis('public')">
-            <div style="font-size:20px;color:rgba(255,255,255,.6);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div style="font-size:12px;font-weight:700;">Public</div>
+            <div style="font-size:20px;color:rgba(255,255,255,.6);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div style="font-size:12px;font-weight:700;" data-i18n="modal.create_bastion.public">Public</div>
           </div>
           <div class="vis-opt" id="vis-private" onclick="setCBVis('private')">
-            <div style="font-size:20px;color:rgba(255,255,255,.6);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div style="font-size:12px;font-weight:700;">Private</div>
+            <div style="font-size:20px;color:rgba(255,255,255,.6);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div style="font-size:12px;font-weight:700;" data-i18n="modal.create_bastion.private">Private</div>
           </div>
         </div>
         <div style="margin-bottom:12px;">
@@ -882,8 +882,8 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
         </div>
         <div class="modal-error" id="cb-error"></div>
         <div class="modal-actions">
-          <button class="btn-g" onclick="showBastionStep1()">&#8592; Back</button>
-          <button class="btn-a" onclick="createBastion()">Create Bastion</button>
+          <button class="btn-g" onclick="showBastionStep1()" data-i18n="btn.back">&#8592; Back</button>
+          <button class="btn-a" onclick="createBastion()" data-i18n="modal.create_bastion.create_btn">Create Bastion</button>
         </div>
       </div>
     </div>
@@ -896,32 +896,32 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   <div class="modal" style="max-width:480px;width:100%;">
     <div class="modal-bar"></div>
     <div class="modal-body">
-      <div class="modal-title" style="display:flex;align-items:center;gap:8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> New Message</div>
-      <div class="modal-sub">Start a direct message or create a group chat</div>
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <span data-i18n="modal.new_dm.title">New Message</span></div>
+      <div class="modal-sub" data-i18n="modal.new_dm.sub">Start a direct message or create a group chat</div>
       <!-- Tabs -->
       <div style="display:flex;gap:6px;margin-bottom:16px;background:var(--panel2);border-radius:12px;padding:4px;">
-        <button id="ndm-tab-dm" onclick="switchNewDMTab('dm')" style="flex:1;padding:7px;border-radius:9px;background:var(--accent);color:#060810;font-weight:700;font-size:13px;border:none;cursor:pointer;">Direct Message</button>
-        <button id="ndm-tab-gc" onclick="switchNewDMTab('gc')" style="flex:1;padding:7px;border-radius:9px;background:transparent;color:var(--muted-light);font-weight:600;font-size:13px;border:none;cursor:pointer;">Group Chat</button>
+        <button id="ndm-tab-dm" onclick="switchNewDMTab('dm')" style="flex:1;padding:7px;border-radius:9px;background:var(--accent);color:#060810;font-weight:700;font-size:13px;border:none;cursor:pointer;" data-i18n="modal.new_dm.tab_dm">Direct Message</button>
+        <button id="ndm-tab-gc" onclick="switchNewDMTab('gc')" style="flex:1;padding:7px;border-radius:9px;background:transparent;color:var(--muted-light);font-weight:600;font-size:13px;border:none;cursor:pointer;" data-i18n="modal.new_dm.tab_gc">Group Chat</button>
       </div>
       <!-- DM pane -->
       <div id="ndm-pane-dm">
-        <input class="modal-input" id="dm-target" placeholder="Username…" onkeydown="if(event.key==='Enter')openDMChat(document.getElementById('dm-target').value.trim().toLowerCase())">
+        <input class="modal-input" id="dm-target" placeholder="Username…" data-i18n-placeholder="modal.new_dm.username_placeholder" onkeydown="if(event.key==='Enter')openDMChat(document.getElementById('dm-target').value.trim().toLowerCase())">
         <div class="modal-error" id="dm-error"></div>
         <div class="modal-actions">
-          <button class="btn-g" onclick="closeModal('modal-new-dm')">Cancel</button>
-          <button class="btn-a" onclick="openDMChat(document.getElementById('dm-target').value.trim().toLowerCase())">Open Chat</button>
+          <button class="btn-g" onclick="closeModal('modal-new-dm')" data-i18n="btn.cancel">Cancel</button>
+          <button class="btn-a" onclick="openDMChat(document.getElementById('dm-target').value.trim().toLowerCase())" data-i18n="modal.new_dm.open_chat">Open Chat</button>
         </div>
       </div>
       <!-- Group Chat pane -->
       <div id="ndm-pane-gc" style="display:none;">
-        <input class="modal-input" id="gc-name-input" placeholder="Group name…" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')createGroupChat()">
-        <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Select Friends</div>
+        <input class="modal-input" id="gc-name-input" placeholder="Group name…" data-i18n-placeholder="modal.new_dm.group_name_placeholder" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')createGroupChat()">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;" data-i18n="modal.new_dm.select_friends">Select Friends</div>
         <div id="gc-friend-picker" style="max-height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:12px;"></div>
         <div id="gc-selected-preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:24px;"></div>
         <div class="modal-error" id="gc-error"></div>
         <div class="modal-actions">
-          <button class="btn-g" onclick="closeModal('modal-new-dm')">Cancel</button>
-          <button class="btn-a" id="gc-create-btn" onclick="createGroupChat()">Create Group</button>
+          <button class="btn-g" onclick="closeModal('modal-new-dm')" data-i18n="btn.cancel">Cancel</button>
+          <button class="btn-a" id="gc-create-btn" onclick="createGroupChat()" data-i18n="modal.new_dm.create_group">Create Group</button>
         </div>
       </div>
     </div>
@@ -1216,10 +1216,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix158"></script>
-<script src="/app/app.js?v=2026fix158"></script>
-<script src="/app/joy-system.js?v=2026fix158"></script>
-<script src="/app/chronicle-games.js?v=2026fix158"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix159"></script>
+<script src="/app/app.js?v=2026fix159"></script>
+<script src="/app/joy-system.js?v=2026fix159"></script>
+<script src="/app/chronicle-games.js?v=2026fix159"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

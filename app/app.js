@@ -20013,6 +20013,8 @@ function buildProfileNav(scroll, opts) {
       ]},
       { id:'keybinds',        icon:ICN['keyboard'],        label:'Keybinds', subs:[
         { spy:'navigation', label:'Navigation' },
+        { spy:'messaging',  label:'Messaging' },
+        { spy:'voice',      label:'Voice' },
         { spy:'general',    label:'General' },
       ]},
       { id:'language',        icon:ICN['language'],        label:'Language', subs:[
@@ -49178,17 +49180,22 @@ function _formatSearchTime(ts) {
 // ════════════════════════════════════════════
 let _kbdShortcutsActive = false;
 const _defaultKeybinds = [
-  {id:'search',label:'Quick Search',desc:'Open the deep search panel',keys:['Ctrl','K'],section:'Navigation',action:()=>openAdvancedSearch()},
-  {id:'shortcuts',label:'Shortcut List',desc:'Show keyboard shortcuts overlay',keys:['Ctrl','/'],section:'Navigation',action:()=>_showKbdShortcuts()},
-  {id:'mute',label:'Toggle Mute',desc:'Mute/unmute notifications',keys:['Ctrl','Shift','M'],section:'Navigation',action:()=>toast('Notifications toggled','info')},
-  {id:'nav-back',label:'Go Back',desc:'Navigate to previous page',keys:['Alt','←'],section:'Navigation',action:()=>history.back()},
-  {id:'nav-forward',label:'Go Forward',desc:'Navigate to next page',keys:['Alt','→'],section:'Navigation',action:()=>history.forward()},
-  {id:'nav-refresh',label:'Refresh',desc:'Reload the page',keys:['Ctrl','R'],section:'Navigation',action:()=>location.reload()},
-  {id:'home',label:'Go Home',desc:'Navigate to the home view',keys:['Ctrl','H'],section:'Navigation',action:()=>showView('home')},
-  {id:'dms',label:'Open DMs',desc:'Navigate to direct messages',keys:['Ctrl','D'],section:'Navigation',action:()=>showView('dms')},
-  {id:'settings',label:'Open Settings',desc:'Navigate to settings',keys:['Ctrl',','],section:'Navigation',action:()=>showView('profile')},
-  {id:'notifications',label:'Toggle Notifications',desc:'Open/close notification panel',keys:['Ctrl','N'],section:'Navigation',action:()=>toggleNotifPanel()},
-  {id:'close',label:'Close Panels',desc:'Close open panels and overlays',keys:['Escape'],section:'General',action:()=>{
+  // Navigation — moving between top-level views and browser history.
+  {id:'home',label:'Go Home',desc:'Jump straight to the home view',keys:['Ctrl','H'],section:'Navigation',action:()=>showView('home')},
+  {id:'dms',label:'Open Direct Messages',desc:'Open the DMs view',keys:['Ctrl','D'],section:'Navigation',action:()=>showView('dms')},
+  {id:'settings',label:'Open Settings',desc:'Open this settings panel',keys:['Ctrl',','],section:'Navigation',action:()=>showView('profile')},
+  {id:'nav-back',label:'Go Back',desc:'Step back through page history',keys:['Alt','←'],section:'Navigation',action:()=>history.back()},
+  {id:'nav-forward',label:'Go Forward',desc:'Step forward through page history',keys:['Alt','→'],section:'Navigation',action:()=>history.forward()},
+  {id:'nav-refresh',label:'Soft Refresh',desc:'Reload the current view',keys:['Ctrl','R'],section:'Navigation',action:()=>location.reload()},
+  // Messaging — surfaces tied to messages, search, and notifications panel.
+  {id:'search',label:'Quick Search',desc:'Open the deep search panel',keys:['Ctrl','K'],section:'Messaging',action:()=>openAdvancedSearch()},
+  {id:'notifications',label:'Toggle Notifications Panel',desc:'Open or close the notifications drawer',keys:['Ctrl','N'],section:'Messaging',action:()=>toggleNotifPanel()},
+  // Voice — real voice state toggles so you don’t need to hunt for the userbar.
+  {id:'mic-mute',label:'Toggle Mute Microphone',desc:'Mute or unmute your mic without leaving the page',keys:['Ctrl','Shift','M'],section:'Voice',action:()=>toggleMic()},
+  {id:'deafen',label:'Toggle Deafen',desc:'Stop hearing voice audio and mute yourself',keys:['Ctrl','Shift','D'],section:'Voice',action:()=>toggleDeafen()},
+  // General — everything else: meta + dismiss.
+  {id:'shortcuts',label:'Shortcut List',desc:'Show the keyboard shortcuts cheat sheet',keys:['Ctrl','/'],section:'General',action:()=>_showKbdShortcuts()},
+  {id:'close',label:'Close Panels',desc:'Dismiss open panels, overlays, and modals',keys:['Escape'],section:'General',action:()=>{
     document.getElementById('thread-panel') && _closeThread();
     if(document.getElementById('adv-search-panel')){_closeEl('adv-search-panel');_closeEl('adv-search-overlay');}
     document.getElementById('pins-panel') && _closeEl('pins-panel');
@@ -49275,8 +49282,18 @@ function _showKbdShortcuts() {
   document.body.appendChild(el);
 }
 
+// Per-section blurbs so the user knows *why* each group exists rather
+// than getting Discord's one undifferentiated wall of binds.
+const _KBD_SECTION_META = {
+  Navigation: { spy:'navigation', desc:'Jump between top-level views and browser history.' },
+  Messaging:  { spy:'messaging',  desc:'Surfaces tied to search, mentions, and notifications.' },
+  Voice:      { spy:'voice',      desc:'Toggle your mic and audio without touching the userbar.' },
+  General:    { spy:'general',    desc:'Catch-all helpers — cheat sheet and dismissing overlays.' },
+};
+
 function _renderKeybindsSettings(main) {
   const binds = _getKeybinds();
+  const sectionOrder = ['Navigation','Messaging','Voice','General'];
   const sections = {};
   binds.forEach(b => { if (!sections[b.section]) sections[b.section] = []; sections[b.section].push(b); });
   // Keys → friendly chip glyphs. Browser key strings come in mixed:
@@ -49287,27 +49304,50 @@ function _renderKeybindsSettings(main) {
                 'Control':'Ctrl','Meta':'⌘',' ':'Space','Enter':'↵','Escape':'Esc' };
     return `<span class="kbd-chip">${escapeHTML(m[k] || k)}</span>`;
   };
+  // Conflict detection — fingerprint each binding by its normalised
+  // combo so duplicates can be flagged on both rows.
+  const fp = (keys) => keys.map(k => k.toLowerCase()).sort().join('+');
+  const counts = {};
+  binds.forEach(b => { const f = fp(b.keys); counts[f] = (counts[f]||0) + 1; });
+  const customIds = new Set((JSON.parse(localStorage.getItem('ftz_keybinds')||'[]')||[]).map(s=>s.id));
+
   const sectionHTML = (name, items) => {
-    const spy = name.toLowerCase().replace(/[^a-z]/g,'');
-    return `<div class="voice-section" data-spy="${spy}">
+    const meta = _KBD_SECTION_META[name] || { spy:name.toLowerCase().replace(/[^a-z]/g,''), desc:'' };
+    return `<div class="voice-section" data-spy="${meta.spy}">
       <div class="voice-section__title">${escapeHTML(name)}</div>
-      ${items.map(b => `
-        <div class="voice-row">
+      ${meta.desc ? `<div class="voice-section__desc">${escapeHTML(meta.desc)}</div>` : ''}
+      ${items.map(b => {
+        const conflict = counts[fp(b.keys)] > 1;
+        const custom = customIds.has(b.id);
+        const haystack = `${b.label} ${b.desc} ${b.keys.join(' ')}`.toLowerCase();
+        return `
+        <div class="voice-row kbd-row${conflict ? ' kbd-row--conflict' : ''}" data-kbd-search="${escapeHTML(haystack)}">
           <div class="voice-row__stack">
-            <div class="voice-row__name">${escapeHTML(b.label)}</div>
+            <div class="voice-row__name">${escapeHTML(b.label)}${custom ? '<span class="kbd-tag kbd-tag--custom">Custom</span>' : ''}${conflict ? '<span class="kbd-tag kbd-tag--conflict">Conflict</span>' : ''}</div>
             <div class="voice-row__desc">${escapeHTML(b.desc)}</div>
           </div>
           <div class="voice-row__value voice-row__value--end" style="gap:8px;">
             <div class="kbd-chip-row">${b.keys.map(chip).join('<span class="kbd-chip-plus">+</span>')}</div>
             <button class="acct-row__edit" type="button" onclick="_captureKeybind('${b.id}')">Edit</button>
           </div>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>`;
   };
 
+  const totalConflicts = Object.values(counts).filter(n => n > 1).length;
+
   main.innerHTML = `<div class="settings-panel">
     ${_settingsHeader('keybinds')}
-    ${Object.entries(sections).map(([name, items]) => sectionHTML(name, items)).join('')}
+    <div class="kbd-toolbar">
+      <div class="kbd-filter">
+        <svg width="14" height="14" viewBox="0 0 512 512" fill="currentColor" style="opacity:.45;flex:0 0 auto;"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>
+        <input type="text" placeholder="Search shortcuts (label, description, or key)…" oninput="_filterKeybinds(this.value)">
+      </div>
+      ${totalConflicts ? `<div class="kbd-conflict-banner">${totalConflicts} conflicting ${totalConflicts === 1 ? 'binding' : 'bindings'} — rebind one of each pair.</div>` : ''}
+    </div>
+    ${sectionOrder.filter(n => sections[n]).map(name => sectionHTML(name, sections[name])).join('')}
+    <div class="kbd-empty" id="kbd-empty" hidden>No shortcuts match your search.</div>
     <div style="display:flex;justify-content:flex-start;gap:8px;margin-top:6px;">
       <button class="acct-row__edit" type="button" onclick="_resetKeybinds()" style="padding:8px 18px;">Reset to defaults</button>
     </div>
@@ -49315,6 +49355,26 @@ function _renderKeybindsSettings(main) {
       <strong>Tip —</strong> press <span class="kbd-chip">Ctrl</span><span class="kbd-chip-plus">+</span><span class="kbd-chip">/</span> anywhere to see every shortcut. Your custom bindings are saved locally in this browser.
     </div>
   </div>`;
+}
+
+function _filterKeybinds(q) {
+  const needle = (q || '').trim().toLowerCase();
+  const rows = document.querySelectorAll('.kbd-row');
+  let shown = 0;
+  rows.forEach(r => {
+    const hay = r.getAttribute('data-kbd-search') || '';
+    const hit = !needle || hay.includes(needle);
+    r.hidden = !hit;
+    if (hit) shown++;
+  });
+  // Hide whole sections that have no visible rows.
+  document.querySelectorAll('.voice-section[data-spy]').forEach(sec => {
+    if (!sec.querySelector('.kbd-row')) return;
+    const anyVisible = !!sec.querySelector('.kbd-row:not([hidden])');
+    sec.hidden = !anyVisible;
+  });
+  const empty = document.getElementById('kbd-empty');
+  if (empty) empty.hidden = shown !== 0;
 }
 
 function _captureKeybind(bindId) {

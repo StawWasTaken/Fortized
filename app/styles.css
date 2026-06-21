@@ -12236,6 +12236,22 @@ select:focus,select:focus-visible,
 .kbd-chip-plus{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);padding:0 2px;}
 .kbd-tip{margin-top:20px;padding:14px 18px;background:rgba(254,248,61,.03);border:1px solid rgba(254,248,61,.08);border-radius:12px;font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;}
 .kbd-tip strong{color:#fff;font-weight:700;}
+/* Section blurbs + filter bar — the "we did organisation, Discord
+   didn't" layer that sits above the per-row chip stack. */
+.voice-section__desc{margin:-8px 0 14px;font-size:12.5px;color:rgba(255,255,255,.42);line-height:1.55;}
+.kbd-toolbar{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+.kbd-filter{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;transition:border-color .12s,background .12s;}
+.kbd-filter:focus-within{border-color:rgba(254,248,61,.35);background:rgba(254,248,61,.04);}
+.kbd-filter input{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:13px;font-family:inherit;}
+.kbd-filter input::placeholder{color:rgba(255,255,255,.32);}
+.kbd-conflict-banner{padding:10px 14px;background:rgba(255,90,90,.06);border:1px solid rgba(255,90,90,.22);border-radius:10px;font-size:12.5px;font-weight:600;color:#ff8a8a;}
+.kbd-row{position:relative;}
+.kbd-row--conflict{background:linear-gradient(180deg,rgba(255,90,90,.04),rgba(255,90,90,0));}
+.kbd-row--conflict .kbd-chip{border-color:rgba(255,90,90,.35);color:#ffd0d0;}
+.kbd-tag{display:inline-flex;align-items:center;margin-left:8px;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle;}
+.kbd-tag--custom{background:rgba(254,248,61,.1);color:#fef83d;border:1px solid rgba(254,248,61,.25);}
+.kbd-tag--conflict{background:rgba(255,90,90,.12);color:#ff9a9a;border:1px solid rgba(255,90,90,.3);}
+.kbd-empty{padding:28px;text-align:center;font-size:13px;color:rgba(255,255,255,.4);border:1px dashed rgba(255,255,255,.08);border-radius:12px;margin-bottom:18px;}
 
 /* ── Density rules — drive .msg-row spacing + chat list rows.
    The values are intentionally close to the default to avoid

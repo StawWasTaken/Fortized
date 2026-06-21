@@ -49254,32 +49254,13 @@ function _initKeyboardShortcuts() {
     }
   });
 }
+// Ctrl+/ opens the live settings page directly — no popup card. The
+// keybinds settings page already lists every shortcut and is the place
+// you'd want to land if you're trying to *change* one anyway.
 function _showKbdShortcuts() {
   document.querySelector('.kbd-overlay')?.remove();
-  const binds = _getKeybinds();
-  const sections = {};
-  binds.forEach(b => { if (!sections[b.section]) sections[b.section] = []; sections[b.section].push(b); });
-  const el = document.createElement('div');
-  el.className = 'kbd-overlay';
-  el.onclick = e => { if (e.target === el) el.remove(); };
-  let sectionsHtml = '';
-  Object.entries(sections).forEach(([name, items]) => {
-    sectionsHtml += `<div class="kbd-section"><h3>${escapeHTML(name)}</h3>`;
-    items.forEach(b => {
-      sectionsHtml += `<div class="kbd-row"><span class="kr-label">${escapeHTML(b.label)}</span><div class="kr-keys">${b.keys.map(k=>`<span class="kr-key">${escapeHTML(k)}</span>`).join('')}</div></div>`;
-    });
-    sectionsHtml += '</div>';
-  });
-  el.innerHTML = `<div class="kbd-card">
-    <h2>Keyboard Shortcuts</h2>
-    <div class="kbd-sub">Configurable in Settings > Keyboard Shortcuts</div>
-    ${sectionsHtml}
-    <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;">
-      <button class="btn-g" style="padding:8px 20px;font-size:12px;" onclick="this.closest('.kbd-overlay').remove()">Close</button>
-      <button style="padding:8px 20px;font-size:12px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:8px;color:var(--accent);font-weight:700;cursor:pointer;transition:all .12s;" onclick="this.closest('.kbd-overlay').remove();showView('profile');setTimeout(()=>buildProfileView('keybinds'),100)">Customize</button>
-    </div>
-  </div>`;
-  document.body.appendChild(el);
+  showView('profile');
+  setTimeout(() => buildProfileView('keybinds'), 60);
 }
 
 // Per-section blurbs so the user knows *why* each group exists rather
@@ -49310,6 +49291,8 @@ function _renderKeybindsSettings(main) {
   const counts = {};
   binds.forEach(b => { const f = fp(b.keys); counts[f] = (counts[f]||0) + 1; });
   const customIds = new Set((JSON.parse(localStorage.getItem('ftz_keybinds')||'[]')||[]).map(s=>s.id));
+  const defaultsById = {};
+  _defaultKeybinds.forEach(d => { defaultsById[d.id] = d.keys; });
 
   const sectionHTML = (name, items) => {
     const meta = _KBD_SECTION_META[name] || { spy:name.toLowerCase().replace(/[^a-z]/g,''), desc:'' };
@@ -49320,15 +49303,17 @@ function _renderKeybindsSettings(main) {
         const conflict = counts[fp(b.keys)] > 1;
         const custom = customIds.has(b.id);
         const haystack = `${b.label} ${b.desc} ${b.keys.join(' ')}`.toLowerCase();
+        const chips = b.keys.map(chip).join('<span class="kbd-chip-plus">+</span>');
         return `
-        <div class="voice-row kbd-row${conflict ? ' kbd-row--conflict' : ''}" data-kbd-search="${escapeHTML(haystack)}">
+        <div class="voice-row kbd-row${conflict ? ' kbd-row--conflict' : ''}" data-kbd-id="${b.id}" data-kbd-search="${escapeHTML(haystack)}">
           <div class="voice-row__stack">
             <div class="voice-row__name">${escapeHTML(b.label)}${custom ? '<span class="kbd-tag kbd-tag--custom">Custom</span>' : ''}${conflict ? '<span class="kbd-tag kbd-tag--conflict">Conflict</span>' : ''}</div>
             <div class="voice-row__desc">${escapeHTML(b.desc)}</div>
           </div>
           <div class="voice-row__value voice-row__value--end" style="gap:8px;">
-            <div class="kbd-chip-row">${b.keys.map(chip).join('<span class="kbd-chip-plus">+</span>')}</div>
-            <button class="acct-row__edit" type="button" onclick="_captureKeybind('${b.id}')">Edit</button>
+            <div class="kbd-chip-row" data-kbd-chips>${chips}</div>
+            ${custom ? `<button class="kbd-reset-one" type="button" title="Restore default" onclick="_resetKeybindOne('${b.id}')"><svg width="12" height="12" viewBox="0 0 512 512" fill="currentColor"><path d="M75 75L41 41C26 26 0 36 0 57l0 128c0 13 11 24 24 24l128 0c21 0 32-26 17-41L137 137C171 102 213 80 261 80c97 0 176 79 176 176s-79 176-176 176c-39 0-75-13-105-34-15-11-36-7-46 8s-7 36 8 46c40 28 90 44 143 44 132 0 240-108 240-240S393 16 261 16 41 124 41 256l0 4c0 0 0 0 0 0z"/></svg></button>` : ''}
+            <button class="acct-row__edit kbd-edit-btn" type="button" onclick="_captureKeybind('${b.id}')">Edit</button>
           </div>
         </div>`;
       }).join('')}
@@ -49377,31 +49362,49 @@ function _filterKeybinds(q) {
   if (empty) empty.hidden = shown !== 0;
 }
 
+// Inline rebind — recording happens right in the row instead of a popup
+// card. Esc cancels, a complete combo auto-commits after a brief pause.
+let _kbdCaptureCleanup = null;
 function _captureKeybind(bindId) {
-  document.querySelector('.kbd-capture-overlay')?.remove();
+  if (_kbdCaptureCleanup) _kbdCaptureCleanup();
+  const row = document.querySelector(`.kbd-row[data-kbd-id="${bindId}"]`);
   const bind = _getKeybinds().find(b => b.id === bindId);
-  if (!bind) return;
-  const overlay = document.createElement('div');
-  overlay.className = 'kbd-capture-overlay';
-  overlay.innerHTML = `<div class="kbd-capture-card">
-    <h3>Rebind: ${escapeHTML(bind.label)}</h3>
-    <div class="kcc-desc">${escapeHTML(bind.desc)}</div>
-    <div class="kcc-keys" id="kcc-keys-display">
-      <span style="font-size:12px;color:rgba(255,255,255,.25);">Press your desired key combination...</span>
-    </div>
-    <div class="kcc-hint">Press Escape to cancel</div>
-    <div class="kcc-actions">
-      <button onclick="document.querySelector('.kbd-capture-overlay')?.remove()" style="padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;">Cancel</button>
-    </div>
-  </div>`;
-  document.body.appendChild(overlay);
+  if (!row || !bind) return;
+  const chipBox = row.querySelector('[data-kbd-chips]');
+  const editBtn = row.querySelector('.kbd-edit-btn');
+  const resetBtn = row.querySelector('.kbd-reset-one');
+  if (!chipBox || !editBtn) return;
+  const originalChips = chipBox.innerHTML;
+  const originalBtn = editBtn.textContent;
+  row.classList.add('kbd-row--recording');
+  chipBox.innerHTML = `<span class="kbd-recording"><span class="kbd-recording__dot"></span>Press a combo… <span class="kbd-recording__hint">Esc to cancel</span></span>`;
+  editBtn.textContent = 'Cancel';
+  editBtn.setAttribute('onclick', `_cancelKbdCapture()`);
+  if (resetBtn) resetBtn.style.visibility = 'hidden';
+
   let captured = null;
+  let commitTimer = null;
+  function cleanup() {
+    document.removeEventListener('keydown', handleKey, true);
+    row.classList.remove('kbd-row--recording');
+    if (commitTimer) clearTimeout(commitTimer);
+    _kbdCaptureCleanup = null;
+  }
+  function cancel() {
+    cleanup();
+    chipBox.innerHTML = originalChips;
+    editBtn.textContent = originalBtn;
+    editBtn.setAttribute('onclick', `_captureKeybind('${bindId}')`);
+    if (resetBtn) resetBtn.style.visibility = '';
+  }
+  _kbdCaptureCleanup = cancel;
+  window._cancelKbdCapture = cancel;
+
   function handleKey(e) {
     e.preventDefault();
     e.stopPropagation();
     if (e.key === 'Escape' && !e.ctrlKey && !e.shiftKey && !e.altKey) {
-      document.removeEventListener('keydown', handleKey, true);
-      overlay.remove();
+      cancel();
       return;
     }
     const keys = [];
@@ -49412,14 +49415,14 @@ function _captureKeybind(bindId) {
     if (!['Control','Shift','Alt','Meta'].includes(mainKey)) {
       keys.push(mainKey.length === 1 ? mainKey.toUpperCase() : mainKey);
       captured = keys;
-      const display = document.getElementById('kcc-keys-display');
-      if (display) display.innerHTML = keys.map(k => `<span class="kcc-key">${escapeHTML(k)}</span>`).join(' + ');
-      // Auto-save after brief delay
-      setTimeout(() => {
-        document.removeEventListener('keydown', handleKey, true);
-        overlay.remove();
+      const m = { 'ArrowLeft':'←','ArrowRight':'→','ArrowUp':'↑','ArrowDown':'↓',
+                  'Control':'Ctrl','Meta':'⌘',' ':'Space','Enter':'↵','Escape':'Esc' };
+      chipBox.innerHTML = keys.map(k => `<span class="kbd-chip">${escapeHTML(m[k] || k)}</span>`).join('<span class="kbd-chip-plus">+</span>');
+      if (commitTimer) clearTimeout(commitTimer);
+      commitTimer = setTimeout(() => {
+        cleanup();
         _applyKeybind(bindId, captured);
-      }, 400);
+      }, 350);
     }
   }
   document.addEventListener('keydown', handleKey, true);
@@ -49433,6 +49436,17 @@ function _applyKeybind(bindId, keys) {
   _saveKeybinds(binds);
   buildProfileView('keybinds');
   toast(`Shortcut for "${bind.label}" updated to ${keys.join('+')}`, 'success');
+}
+
+function _resetKeybindOne(bindId) {
+  const def = _defaultKeybinds.find(b => b.id === bindId);
+  if (!def) return;
+  const saved = JSON.parse(localStorage.getItem('ftz_keybinds') || '[]') || [];
+  const next = saved.filter(s => s.id !== bindId);
+  if (next.length) localStorage.setItem('ftz_keybinds', JSON.stringify(next));
+  else localStorage.removeItem('ftz_keybinds');
+  buildProfileView('keybinds');
+  toast(`"${def.label}" restored to default (${def.keys.join('+')})`, 'success');
 }
 
 function _resetKeybinds() {

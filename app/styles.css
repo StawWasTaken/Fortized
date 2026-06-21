@@ -12252,6 +12252,15 @@ select:focus,select:focus-visible,
 .kbd-tag--custom{background:rgba(254,248,61,.1);color:#fef83d;border:1px solid rgba(254,248,61,.25);}
 .kbd-tag--conflict{background:rgba(255,90,90,.12);color:#ff9a9a;border:1px solid rgba(255,90,90,.3);}
 .kbd-empty{padding:28px;text-align:center;font-size:13px;color:rgba(255,255,255,.4);border:1px dashed rgba(255,255,255,.08);border-radius:12px;margin-bottom:18px;}
+/* Inline rebind — when Edit is clicked, the chip row becomes a pulsing
+   "recording" pill in place. No popup card. Esc cancels. */
+.kbd-row--recording{background:linear-gradient(180deg,rgba(254,248,61,.04),rgba(254,248,61,0));}
+.kbd-recording{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px dashed rgba(254,248,61,.45);border-radius:8px;font-size:11.5px;font-weight:700;color:#fef83d;background:rgba(254,248,61,.04);}
+.kbd-recording__dot{width:7px;height:7px;border-radius:50%;background:#fef83d;animation:kbd-rec-pulse 1s ease-in-out infinite;}
+.kbd-recording__hint{color:rgba(255,255,255,.4);font-weight:600;}
+@keyframes kbd-rec-pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.kbd-reset-one{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:rgba(255,255,255,.55);border-radius:7px;cursor:pointer;transition:all .12s;padding:0;}
+.kbd-reset-one:hover{color:#fef83d;border-color:rgba(254,248,61,.4);background:rgba(254,248,61,.06);}
 
 /* ── Density rules — drive .msg-row spacing + chat list rows.
    The values are intentionally close to the default to avoid

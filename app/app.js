@@ -20029,7 +20029,9 @@ function buildProfileNav(scroll, opts) {
     { label:'ACTIVITY', items: [
       { id:'game_collection', icon:ICN['gamepad'],         label:'Apps & Games', subs:[
         { spy:'current',    label:'Current Game' },
-        { spy:'collection', label:'Your Collection' },
+        { spy:'collection', label:'Your Library' },
+        { spy:'overlay',    label:'In-Game Overlay' },
+        { spy:'ignored',    label:'Ignored Apps' },
       ]},
     ]},
     { label:'SAFETY', items: [
@@ -32310,118 +32312,189 @@ const GAME_CATALOG = [
   {name:'X (Twitter)',icon:'\uD83C\uDF10',genre:'Social'},
 ];
 
+// Icons shared across rows — flag (Not a game), eye (toggle activity
+// detection for this game), monitor (toggle in-game overlay), ⋯ overflow.
+// Same visual idiom as Discord's row but each icon is per-game, so you
+// can keep detection on for Roblox and off for Adobe without juggling
+// the global setting.
+const _AG_ICON_FLAG    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a2 2 0 0 1 2-2h11l-2 5 2 5H6"/></svg>';
+const _AG_ICON_EYE     = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const _AG_ICON_EYE_OFF = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+const _AG_ICON_MON     = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+const _AG_ICON_MORE    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
+const _AG_ICON_RESTORE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 10 9 10"/></svg>';
+const _AG_ICON_VERIFIED = '<svg class="ag-verified" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-tip="Detected via IGDB"><path d="M9 12l2 2 4-4M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
 function renderGameCollectionTab(main) {
   if (!main) return;
-  const games = CU.gameCollection || [];
+  const allGames = CU.gameCollection || [];
+  const games = allGames.filter(g => g && typeof g.name === 'string' && g.name && !g.ignored);
+  const ignored = allGames.filter(g => g && typeof g.name === 'string' && g.name && g.ignored);
   const currentGame = _gameActivity;
   const activityEnabled = localStorage.getItem('ftz_activity_detection') !== 'false';
+  const overlayDefault = localStorage.getItem('ftz_overlay_default') !== 'false';
   const isDesktop = !!window.fortizedDesktop?.isDesktopApp;
-  const verifiedSvg = '<svg class="rg-verified" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 14.3l-4.8 2.6.9-5.4L4.2 7.7l5.4-.8L12 2z"/></svg>';
+  const idxOf = (g) => allGames.indexOf(g);
 
-  // ── Current Game ──
-  let currentGameHtml = '<div class="rg-section-head">Current Game</div>';
+  // ── Current Game card ───────────────────────────────────────────
+  let currentCardHtml;
   if (currentGame) {
     const cover = currentGame.coverUrl || currentGame.coverThumb || _getManualCover(currentGame.name);
-    const verified = currentGame._igdbEnriched ? verifiedSvg : '';
-    currentGameHtml += '<div class="rg-current rg-current--playing">'
-      + (cover
-          ? '<img class="rg-cover-sm" src="' + escapeHTML(cover) + '" alt="" onerror="this.outerHTML=\'<div class=&quot;rg-cover-sm rg-cover-fallback&quot;><span>' + (currentGame.icon||'🎮') + '</span></div>\'">'
-          : '<div class="rg-cover-sm rg-cover-fallback"><span>' + (currentGame.icon||'🎮') + '</span></div>')
-      + '<div class="rg-current-body">'
-      +   '<div class="rg-current-name">' + escapeHTML(currentGame.name) + verified + '</div>'
-      +   '<div class="rg-current-sub">Playing now</div>'
-      + '</div>'
-      + '<button class="rg-icon-btn rg-icon-btn--ghost" title="Stop" onclick="setGameActivity(null);renderGameCollectionTab(document.getElementById(\'profile-main\'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
-      + '</div>';
+    const verified = currentGame._igdbEnriched ? _AG_ICON_VERIFIED : '';
+    currentCardHtml = `<div class="ag-current ag-current--playing">
+      ${cover
+        ? `<img class="ag-current__cover" src="${escapeHTML(cover)}" alt="" onerror="this.outerHTML='<div class=&quot;ag-current__cover ag-cover-fallback&quot;><span>${currentGame.icon||'🎮'}</span></div>'">`
+        : `<div class="ag-current__cover ag-cover-fallback"><span>${currentGame.icon||'🎮'}</span></div>`}
+      <div class="ag-current__body">
+        <div class="ag-current__name">${escapeHTML(currentGame.name)}${verified}</div>
+        <div class="ag-current__sub"><span class="ag-pulse"></span>Now playing</div>
+      </div>
+      <button class="ag-icon ag-icon--ghost" data-tip="Stop showing as status" onclick="setGameActivity(null);buildProfileView('game_collection')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`;
   } else {
-    currentGameHtml += '<div class="rg-current rg-current--empty">'
-      + '<div class="rg-current-empty-title">No game detected</div>'
-      + '<div class="rg-current-empty-sub">What are you playing?!</div>'
-      + '</div>';
+    currentCardHtml = `<div class="ag-current ag-current--empty">
+      <div class="ag-current__cover ag-cover-fallback"><span>🎮</span></div>
+      <div class="ag-current__body">
+        <div class="ag-current__name">No game detected</div>
+        <div class="ag-current__sub">What are you playing?!</div>
+      </div>
+    </div>`;
   }
 
-  // ── Inline "Add it!" picker ──
-  const inlineAdd = '<div class="rg-addline">'
-    + '<span>Not seeing your game?</span>'
-    + '<button class="rg-link" onclick="_toggleInlineGamePicker()">Add it!</button>'
-    + '</div>'
-    + '<div id="inline-game-picker" class="rg-inline-picker" style="display:none;">'
-    + '<div class="rg-inline-head"><span class="rg-inline-title">Detected Apps</span>'
-    +   '<button class="rg-chip-btn" onclick="_refreshInlineDetectedApps()">Refresh</button></div>'
-    + '<div id="inline-detected-apps" class="rg-detected-list"><div class="rg-detected-loading">Scanning…</div></div>'
-    + '<div class="rg-inline-sep">Or search manually</div>'
-    + '<div class="rg-inline-search">'
-    +   '<input class="settings-input" id="inline-game-search" placeholder="Search games…" oninput="_filterInlineGameSearch(this.value)">'
-    +   '<button class="btn-a rg-inline-add-btn" onclick="_addGameFromInlineSearch()">Add</button>'
-    + '</div>'
-    + '<div id="inline-game-search-results" class="rg-inline-results" style="display:none;"></div>'
-    + '</div>';
+  // ── Inline picker (kept; styled to match) ───────────────────────
+  const inlineAdd = `<div class="ag-addline">
+    <span>Not seeing your game?</span>
+    <button class="ag-link" onclick="_toggleInlineGamePicker()">Add it!</button>
+  </div>
+  <div id="inline-game-picker" class="ag-inline-picker" hidden>
+    <div class="ag-inline-picker__head">
+      <span class="ag-inline-picker__title">Detected Apps</span>
+      <button class="ag-chip" onclick="_refreshInlineDetectedApps()">Refresh</button>
+    </div>
+    <div id="inline-detected-apps" class="ag-detected-list"><div class="ag-detected-loading">Scanning…</div></div>
+    <div class="ag-inline-picker__sep">Or search manually</div>
+    <div class="ag-inline-picker__search">
+      <input class="settings-input" id="inline-game-search" placeholder="Search games…" oninput="_filterInlineGameSearch(this.value)">
+      <button class="btn-a" onclick="_addGameFromInlineSearch()">Add</button>
+    </div>
+    <div id="inline-game-search-results" class="ag-inline-results" style="display:none;"></div>
+  </div>`;
 
-  // ── Added Games ──
-  let gamesListHtml = '<div class="rg-divider"></div><div class="rg-section-head">Added Games</div>'
-    + '<div class="rg-section-note">Some information about games (such as genre or cover art) is provided by <a href="https://www.igdb.com" target="_blank" rel="noopener">IGDB</a>.</div>';
-  if (games.length) {
-    gamesListHtml += '<div class="rg-list">';
-    games.forEach((g, i) => {
-      if (!g || typeof g.name !== 'string' || !g.name) return; // skip corrupted entries
-      const isPlaying = currentGame?.name === g.name;
-      const cover = g.coverUrl || g.coverThumb || _getManualCover(g.name);
-      const lastPlayed = _formatLastPlayed(g.lastPlayed);
-      const verified = (g.coverUrl || g.coverThumb) ? verifiedSvg : '';
-      const sub = isPlaying
-        ? '<span class="rg-row-sub rg-row-sub--playing">Playing now</span>'
-        : (lastPlayed
-            ? '<span class="rg-row-sub">Last played <strong>' + escapeHTML(lastPlayed) + '</strong></span>'
-            : (g.genre ? '<span class="rg-row-sub">' + escapeHTML(g.genre) + '</span>' : ''));
-      const safeName = escapeHTML(g.name).replace(/'/g, "\\'");
-      gamesListHtml += '<div class="rg-row' + (isPlaying?' rg-row--playing':'') + '" onclick="openGameDetailsModal(\'' + safeName + '\')" title="View details">'
-        + (cover
-            ? '<img class="rg-row-cover" src="' + escapeHTML(cover) + '" alt="" onerror="this.outerHTML=\'<div class=&quot;rg-row-cover rg-cover-fallback&quot;><span>' + (g.icon||'🎮') + '</span></div>\'">'
-            : '<div class="rg-row-cover rg-cover-fallback"><span>' + (g.icon||'🎮') + '</span></div>')
-        + '<div class="rg-row-body">'
-        +   '<div class="rg-row-name">' + escapeHTML(g.name) + verified + (g.hidden?'<span class="rg-row-hidden-tag" title="Hidden from profile">hidden</span>':'') + '</div>'
-        +   sub
-        + '</div>'
-        + '<div class="rg-row-actions">'
-        +   '<button class="rg-icon-btn" title="' + (g.hidden?'Show on profile':'Hide from profile') + '" onclick="event.stopPropagation();_toggleGameVisibility(' + i + ',this)">'
-        +     (g.hidden
-                ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
-                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>')
-        +   '</button>'
-        +   '<button class="rg-icon-btn rg-icon-btn--danger" title="Remove" onclick="event.stopPropagation();removeGameFromCollection(' + i + ')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
-        + '</div>'
-        + '</div>';
-    });
-    gamesListHtml += '</div>';
-  } else {
-    gamesListHtml += '<div class="rg-empty">'
-      + '<div class="rg-empty-title">No games added yet</div>'
-      + '<div class="rg-empty-sub">Games you add show up on your public profile.</div>'
-      + '</div>';
-  }
+  // ── Row builder shared by Library and Ignored sections ──────────
+  const buildRow = (g, opts = {}) => {
+    const i = idxOf(g);
+    const isPlaying = currentGame?.name === g.name;
+    const cover = g.coverUrl || g.coverThumb || _getManualCover(g.name);
+    const lastPlayed = _formatLastPlayed(g.lastPlayed);
+    const verified = (g.coverUrl || g.coverThumb) ? _AG_ICON_VERIFIED : '';
+    const sub = isPlaying
+      ? `<span class="ag-row__sub ag-row__sub--playing">Now playing</span>`
+      : (lastPlayed
+          ? `<span class="ag-row__sub">Last played <strong>${escapeHTML(lastPlayed)}</strong></span>`
+          : (g.genre ? `<span class="ag-row__sub">${escapeHTML(g.genre)}</span>` : ''));
+    const safeName = escapeHTML(g.name).replace(/'/g, "\\'");
+    const coverHTML = cover
+      ? `<img class="ag-row__cover" src="${escapeHTML(cover)}" alt="" onerror="this.outerHTML='<div class=&quot;ag-row__cover ag-cover-fallback&quot;><span>${g.icon||'🎮'}</span></div>'">`
+      : `<div class="ag-row__cover ag-cover-fallback"><span>${g.icon||'🎮'}</span></div>`;
 
-  // ── Activity Detection ──
-  const activityToggleHtml = '<div class="rg-divider"></div>'
-    + '<div class="rg-row rg-row--setting">'
-    +   '<div class="rg-row-body">'
-    +     '<div class="rg-row-name">Activity Detection</div>'
-    +     '<span class="rg-row-sub">' + (isDesktop ? 'Automatically detect games and show them as your status.' : 'Requires the <strong>Fortized Desktop</strong> app.') + '</span>'
-    +   '</div>'
-    +   '<div class="rg-row-actions">'
-    +     (isDesktop
-              ? '<div class="toggle' + (activityEnabled?' on':'') + '" onclick="toggleActivityDetection(this)"></div>'
-              : '<span class="rg-chip-muted">Desktop only</span>')
-    +   '</div>'
-    + '</div>';
+    if (opts.ignored) {
+      return `<div class="ag-row ag-row--ignored">
+        ${coverHTML}
+        <div class="ag-row__body">
+          <div class="ag-row__name">${escapeHTML(g.name)}</div>
+          <span class="ag-row__sub">Marked as not a game</span>
+        </div>
+        <div class="ag-row__actions">
+          <button class="ag-icon" data-tip="Restore" onclick="_unmarkGameIgnored(${i})">${_AG_ICON_RESTORE}</button>
+          <button class="ag-icon ag-icon--danger" data-tip="Remove permanently" onclick="removeGameFromCollection(${i})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      </div>`;
+    }
 
-  main.innerHTML = '<div class="settings-panel rg-panel">'
-    + _settingsHeader('game_collection')
-    + currentGameHtml
-    + inlineAdd
-    + gamesListHtml
-    + '<div class="rg-bottom-actions"><button class="btn-a" onclick="openGameCollectionPicker()">+ Add Game</button></div>'
-    + activityToggleHtml
-    + '</div>';
+    const detectionOff = !!g.detectionDisabled;
+    const overlayOff   = g.overlayEnabled === false;
+    return `<div class="ag-row${isPlaying?' ag-row--playing':''}" onclick="openGameDetailsModal('${safeName}')">
+      ${coverHTML}
+      <div class="ag-row__body">
+        <div class="ag-row__name">${escapeHTML(g.name)}${verified}${g.hidden?'<span class="ag-tag ag-tag--hidden" data-tip="Hidden from profile">Hidden</span>':''}</div>
+        ${sub}
+      </div>
+      <div class="ag-row__actions" onclick="event.stopPropagation()">
+        <button class="ag-icon" data-tip="Not a game" onclick="_markGameIgnored(${i})">${_AG_ICON_FLAG}</button>
+        <button class="ag-icon${detectionOff?' is-off':''}" data-tip="${detectionOff?'Detection disabled — click to enable':'Toggle activity detection'}" onclick="_toggleGameDetectionOne(${i})">${detectionOff?_AG_ICON_EYE_OFF:_AG_ICON_EYE}</button>
+        <button class="ag-icon${overlayOff?' is-off':''}" data-tip="${overlayOff?'Overlay disabled — click to enable':'Toggle in-game overlay'}" onclick="_toggleGameOverlayOne(${i})">${_AG_ICON_MON}</button>
+        <button class="ag-icon ag-icon--more" data-tip="More" onclick="_openGameRowMenu(event,${i})">${_AG_ICON_MORE}</button>
+      </div>
+      <button class="ag-row__close" data-tip="Remove from library" onclick="event.stopPropagation();_confirmRemoveGame(${i})" aria-label="Remove"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM8.7 7.3 12 10.6l3.3-3.3a1 1 0 1 1 1.4 1.4L13.4 12l3.3 3.3a1 1 0 0 1-1.4 1.4L12 13.4l-3.3 3.3a1 1 0 1 1-1.4-1.4L10.6 12 7.3 8.7a1 1 0 1 1 1.4-1.4z"/></svg></button>
+    </div>`;
+  };
+
+  // ── Library section ─────────────────────────────────────────────
+  const libraryRowsHtml = games.length
+    ? `<div class="ag-list">${games.map(g => buildRow(g)).join('')}</div>`
+    : `<div class="ag-empty">
+        <div class="ag-empty__title">No games yet</div>
+        <div class="ag-empty__sub">Games you add show up on your public profile.</div>
+      </div>`;
+
+  // ── Ignored section (only visible when populated) ───────────────
+  const ignoredSectionHtml = ignored.length ? `
+    <div class="voice-section" data-spy="ignored">
+      <div class="voice-section__title">Ignored Apps</div>
+      <div class="voice-section__desc">Apps you marked as “not a game”. They won’t show up as your activity, but they stay here so you can change your mind.</div>
+      <div class="ag-list">${ignored.map(g => buildRow(g, {ignored:true})).join('')}</div>
+    </div>` : `
+    <div class="voice-section" data-spy="ignored">
+      <div class="voice-section__title">Ignored Apps</div>
+      <div class="voice-section__desc">Anything you mark as “not a game” will land here so you can recover it later. Empty for now.</div>
+    </div>`;
+
+  main.innerHTML = `<div class="settings-panel">
+    ${_settingsHeader('game_collection')}
+
+    <div class="voice-section" data-spy="current">
+      <div class="voice-section__title">Current Game</div>
+      <div class="voice-section__desc">What you’re playing right now — auto-detected by the desktop app or pinned manually.</div>
+      ${currentCardHtml}
+      ${inlineAdd}
+    </div>
+
+    <div class="voice-section" data-spy="collection">
+      <div class="voice-section__title">Your Library</div>
+      <div class="voice-section__desc">Some information about games (such as genre or cover art) is provided by <a href="https://www.igdb.com" target="_blank" rel="noopener" class="ag-link">IGDB</a>.</div>
+      ${libraryRowsHtml}
+      <div class="ag-bottom-actions">
+        <button class="ag-add-btn" onclick="openGameCollectionPicker()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add a game manually</button>
+      </div>
+    </div>
+
+    <div class="voice-section" data-spy="overlay">
+      <div class="voice-section__title">In-Game Overlay</div>
+      <div class="voice-section__desc">The Fortized overlay lets you reply, see who’s talking, and manage voice without leaving the game. Per-game overrides live on each row in your Library.</div>
+      <div class="voice-row">
+        <div class="voice-row__stack">
+          <div class="voice-row__name">Activity Detection ${isDesktop?'':'<span class="ag-tag ag-tag--desktop">Desktop only</span>'}</div>
+          <div class="voice-row__desc">${isDesktop ? 'Automatically detect running games and show them as your status.' : 'Auto-detection runs inside the Fortized Desktop app. The browser app can’t see your running processes.'}</div>
+        </div>
+        <div class="voice-row__value voice-row__value--end">
+          ${isDesktop
+            ? `<div class="toggle${activityEnabled?' on':''}" onclick="toggleActivityDetection(this)"></div>`
+            : `<div class="toggle is-disabled" data-tip="Available in Fortized Desktop"></div>`}
+        </div>
+      </div>
+      <div class="voice-row">
+        <div class="voice-row__stack">
+          <div class="voice-row__name">Enable overlay by default</div>
+          <div class="voice-row__desc">New games inherit this setting. Toggle per-game from the monitor icon in your Library.</div>
+        </div>
+        <div class="voice-row__value voice-row__value--end">
+          <div class="toggle${overlayDefault?' on':''}" onclick="_toggleOverlayDefault(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    ${ignoredSectionHtml}
+  </div>`;
 }
 
 function _formatLastPlayed(dateStr) {
@@ -32566,6 +32639,83 @@ function _toggleGameVisibility(idx, el) {
   if (!games[idx]) return;
   games[idx].hidden = !games[idx].hidden;
   saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
+  buildProfileView('game_collection');
+}
+
+// ── Per-game toggles for the new Apps & Games row design ─────────
+function _toggleGameDetectionOne(idx) {
+  const games = CU.gameCollection || [];
+  const g = games[idx]; if (!g) return;
+  g.detectionDisabled = !g.detectionDisabled;
+  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
+  toast(`${g.name} — detection ${g.detectionDisabled?'disabled':'enabled'}`, 'info');
+  buildProfileView('game_collection');
+}
+function _toggleGameOverlayOne(idx) {
+  const games = CU.gameCollection || [];
+  const g = games[idx]; if (!g) return;
+  // Default is on; flip explicitly so subsequent renders show the right state.
+  g.overlayEnabled = g.overlayEnabled === false ? true : false;
+  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
+  toast(`${g.name} — overlay ${g.overlayEnabled===false?'disabled':'enabled'}`, 'info');
+  buildProfileView('game_collection');
+}
+function _markGameIgnored(idx) {
+  const games = CU.gameCollection || [];
+  const g = games[idx]; if (!g) return;
+  g.ignored = true;
+  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
+  toast(`Moved “${g.name}” to Ignored Apps`, 'info');
+  buildProfileView('game_collection');
+}
+function _unmarkGameIgnored(idx) {
+  const games = CU.gameCollection || [];
+  const g = games[idx]; if (!g) return;
+  g.ignored = false;
+  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
+  toast(`“${g.name}” restored to your library`, 'success');
+  buildProfileView('game_collection');
+}
+function _toggleOverlayDefault(el) {
+  const on = el.classList.toggle('on');
+  localStorage.setItem('ftz_overlay_default', on ? 'true' : 'false');
+}
+function _confirmRemoveGame(idx) {
+  const games = CU.gameCollection || [];
+  const g = games[idx]; if (!g) return;
+  showCustomConfirm(`Remove “${g.name}” from your library? You can always add it again later.`, () => removeGameFromCollection(idx));
+}
+
+// Tiny popover menu for the ⋯ button on each Library row. Built fresh
+// per click so we never leak listeners.
+function _openGameRowMenu(ev, idx) {
+  ev.stopPropagation();
+  document.querySelector('.ag-row-menu')?.remove();
+  const games = CU.gameCollection || [];
+  const g = games[idx]; if (!g) return;
+  const isPinned = _gameActivity?.name === g.name;
+  const menu = document.createElement('div');
+  menu.className = 'ag-row-menu';
+  menu.innerHTML = `
+    <button onclick="${isPinned ? `setGameActivity(null);buildProfileView('game_collection')` : `_pinGameAsCurrent(${idx})`};this.closest('.ag-row-menu').remove()">${isPinned ? 'Unpin as current activity' : 'Pin as current activity'}</button>
+    <button onclick="_toggleGameVisibility(${idx});this.closest('.ag-row-menu').remove()">${g.hidden ? 'Show on profile' : 'Hide from profile'}</button>
+    <div class="ag-row-menu__sep"></div>
+    <button class="ag-row-menu__danger" onclick="_confirmRemoveGame(${idx});this.closest('.ag-row-menu').remove()">Remove from library</button>`;
+  document.body.appendChild(menu);
+  const r = ev.currentTarget.getBoundingClientRect();
+  const w = 220;
+  menu.style.top  = `${Math.min(window.innerHeight - 220, r.bottom + 6)}px`;
+  menu.style.left = `${Math.max(8, r.right - w)}px`;
+  setTimeout(() => {
+    const off = (e) => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', off, true); } };
+    document.addEventListener('mousedown', off, true);
+  }, 0);
+}
+
+function _pinGameAsCurrent(idx) {
+  const games = CU.gameCollection || [];
+  const g = games[idx]; if (!g) return;
+  if (typeof setGameActivity === 'function') setGameActivity(g);
   buildProfileView('game_collection');
 }
 
@@ -49458,6 +49608,20 @@ const _FTZ_LANGUAGES = [
 //     user-provided text through this helper.
 //   • Capitalised proper nouns introduced by us belong in <span data-no-i18n>
 //     style wrappers if they ever appear next to translated copy.
+//
+// KNOWN BUGS — pick up next session:
+//   1. Big chunks of chrome still don't translate (deep settings sub-pages,
+//      Discover view, Forum chrome, Atelier/Fortshop modal internals, bastion
+//      topbar, member list rail, chat composer placeholder, sound/emoji/GIF
+//      pickers, per-message context menus, friend request action buttons in
+//      notif rows). Each is a tag-and-translate pass following the same
+//      pattern as the home/friends/notif batches.
+//   2. The userbar (and possibly other surfaces) is translating things it
+//      shouldn't — the user's username + their custom status text are
+//      flipping with the language switch. Those are user content and must
+//      stay untouched. Audit every data-i18n / _t() call against user data:
+//      anything reading from CU.username, CU.displayName, CU.customStatus,
+//      message bodies, etc. must NOT go through the translation helper.
 const _LANG_PACK = {
   en: {
     // Settings sidebar — section headers + nav items + sub-anchors.

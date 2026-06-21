@@ -3054,36 +3054,51 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .profile-nav-item:hover .pni-icon{opacity:.75;}
 .profile-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 14px;}
 
-/* ── Settings sidebar identity tile (Option C, standalone) ───
-   Self-contained: zero inheritance from older identity classes.
-   Two stacked rows. Top row = avatar + name/handle/status +
-   badges. Bottom row = three always-visible chips (Edit /
-   Switch / Status). Whole tile is a card; the chips have their
-   own backgrounds so they don't pretend to be one big button. */
+/* ── Settings sidebar identity tile (Option A, standalone) ───
+   The "calm + premium" card. Round avatar + accent glow ring,
+   status dot bottom-right, display-font name, muted @handle,
+   pencil chip on the right that only appears on hover. Whole
+   card is the click target. Zero inheritance from older
+   identity classes — every rule is self-contained. */
 .ftz-id-tile{
-  display:block;
+  position:relative;
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;
   margin:0 4px 6px;
   border-radius:12px;
   background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
   border:1px solid rgba(255,255,255,.06);
-  overflow:hidden;
+  cursor:pointer;
+  transition:background .16s,border-color .16s,transform .14s;
+  outline:none;
 }
-.ftz-id-tile__row{
-  display:flex;align-items:center;gap:12px;
-  padding:12px 12px 10px;
+.ftz-id-tile:hover{
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025));
+  border-color:rgba(255,255,255,.12);
 }
+.ftz-id-tile:focus-visible{ box-shadow:0 0 0 2px rgba(254,248,61,.35); }
+.ftz-id-tile:active{ transform:translateY(1px); }
+
 .ftz-id-tile__avatar-wrap{
   position:relative;
-  width:48px;height:48px;
-  flex:0 0 48px;
+  width:42px;height:42px;flex:0 0 42px;
 }
+.ftz-id-tile__glow{
+  position:absolute;inset:-4px;border-radius:50%;
+  background:radial-gradient(circle,rgba(254,248,61,.3) 0%,rgba(254,248,61,0) 70%);
+  opacity:.55;
+  filter:blur(2px);
+  pointer-events:none;
+  transition:opacity .2s;
+}
+.ftz-id-tile:hover .ftz-id-tile__glow{ opacity:.9; }
 .ftz-id-tile__avatar{
-  width:48px;height:48px;
-  border-radius:12px;
-  overflow:hidden;
+  position:relative;
+  width:42px;height:42px;
+  border-radius:50%;overflow:hidden;
   background:var(--panel2);
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 0 1px rgba(255,255,255,.05), 0 0 16px rgba(254,248,61,.18);
+  z-index:1;
 }
 .ftz-id-tile__avatar img{ width:100%;height:100%;object-fit:cover;display:block; }
 .ftz-id-tile__dot{
@@ -3093,6 +3108,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   border-radius:50%;
   background:#13161d;
   display:flex;align-items:center;justify-content:center;
+  z-index:2;
   box-shadow:0 0 0 2px #13161d;
 }
 .ftz-id-tile__dot svg{ width:12px;height:12px;display:block; }
@@ -3115,63 +3131,21 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   line-height:1.3;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.ftz-id-tile__cs{
-  display:flex;align-items:center;gap:5px;
-  margin-top:3px;
-  font-size:11px;
-  color:rgba(255,255,255,.65);
-  line-height:1.3;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.ftz-id-tile__cs-emoji{ width:12px;height:12px;flex-shrink:0;vertical-align:middle; }
 
-.ftz-id-tile__badges{
-  display:flex;flex-direction:column;gap:3px;align-items:flex-end;
+.ftz-id-tile__edit{
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;
+  border-radius:7px;
+  color:rgba(255,255,255,.5);
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  opacity:0;
+  transform:translateX(4px);
+  transition:opacity .16s,transform .16s,color .12s,background .12s;
   flex-shrink:0;
 }
-.ftz-id-tile__badge{
-  display:inline-flex;align-items:center;gap:3px;
-  padding:2px 6px;
-  font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
-  border-radius:4px;
-  white-space:nowrap;
-}
-.ftz-id-tile__badge--radiance{
-  color:#fef83d;
-  background:linear-gradient(135deg,rgba(254,248,61,.16),rgba(254,248,61,.04));
-  border:1px solid rgba(254,248,61,.3);
-}
-
-.ftz-id-tile__chips{
-  display:flex;gap:5px;
-  padding:0 8px 8px;
-}
-.ftz-id-tile__chip{
-  flex:1;
-  display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  padding:7px 4px;
-  font-family:inherit;
-  font-size:11px;font-weight:700;letter-spacing:.01em;
-  color:rgba(255,255,255,.7);
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.05);
-  border-radius:7px;
-  cursor:pointer;
-  transition:color .12s,background .12s,border-color .12s,transform .12s;
-}
-.ftz-id-tile__chip:hover{
-  color:#fff;
-  background:rgba(255,255,255,.08);
-  border-color:rgba(255,255,255,.14);
-}
-.ftz-id-tile__chip:active{ transform:translateY(1px); }
-.ftz-id-tile__chip svg{ flex-shrink:0; opacity:.6; transition:opacity .12s; }
-.ftz-id-tile__chip:hover svg{ opacity:1; }
-.ftz-id-tile__chip-dot{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:10px;height:10px;flex-shrink:0;
-}
-.ftz-id-tile__chip-dot svg{ width:10px;height:10px;display:block; }
+.ftz-id-tile:hover .ftz-id-tile__edit{ opacity:1;transform:translateX(0); }
+.ftz-id-tile:hover .ftz-id-tile__edit:hover{ color:#fef83d;background:rgba(254,248,61,.08); }
 
 /* External-link nav entries (Support, Legal) — open in a new tab and
    show a tiny ↗ instead of routing through buildProfileView. */

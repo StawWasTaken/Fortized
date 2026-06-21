@@ -20117,33 +20117,19 @@ function buildProfileNav(scroll, opts) {
 
   scroll.dataset.activeTab = activeTab;
   scroll.innerHTML = `
-    <div class="ftz-id-tile" data-status="${_navStatus}">
-      <div class="ftz-id-tile__row">
-        <div class="ftz-id-tile__avatar-wrap">
-          <div class="ftz-id-tile__avatar">${_navPfp}</div>
-          <span class="ftz-id-tile__dot">${_navStatusDot}</span>
-        </div>
-        <div class="ftz-id-tile__text">
-          <div class="ftz-id-tile__name">${_navDisplay}</div>
-          <div class="ftz-id-tile__handle">${escapeHTML(_navHandle)}</div>
-          ${_navCustomStatus.replace('settings-identity__cs','ftz-id-tile__cs').replace('settings-identity__cs-emoji','ftz-id-tile__cs-emoji')}
-        </div>
-        ${_navBadges.replace(/settings-identity__badges/g,'ftz-id-tile__badges').replace(/settings-identity__badge/g,'ftz-id-tile__badge')}
+    <div class="ftz-id-tile" data-status="${_navStatus}" onclick="buildProfileView('myprofile')" role="button" tabindex="0" data-tip="${escapeHTML(_t('nav.edit_profiles'))}">
+      <div class="ftz-id-tile__avatar-wrap">
+        <div class="ftz-id-tile__glow"></div>
+        <div class="ftz-id-tile__avatar">${_navPfp}</div>
+        <span class="ftz-id-tile__dot">${_navStatusDot}</span>
       </div>
-      <div class="ftz-id-tile__chips">
-        <button class="ftz-id-tile__chip" onclick="buildProfileView('myprofile')">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          <span>Edit</span>
-        </button>
-        <button class="ftz-id-tile__chip" onclick="_settingsSwitchProfile()">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          <span>Switch</span>
-        </button>
-        <button class="ftz-id-tile__chip" onclick="openStatusPicker()">
-          <span class="ftz-id-tile__chip-dot">${_navStatusDot}</span>
-          <span>Status</span>
-        </button>
+      <div class="ftz-id-tile__text">
+        <div class="ftz-id-tile__name">${_navDisplay}</div>
+        <div class="ftz-id-tile__handle">${escapeHTML(_navHandle)}</div>
       </div>
+      <span class="ftz-id-tile__edit" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </span>
     </div>
     <div class="profile-nav-search" style="padding:4px 6px 8px;">
       <div style="position:relative;">

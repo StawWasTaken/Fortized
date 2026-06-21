@@ -3149,6 +3149,122 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   color:#fef83d;background:rgba(254,248,61,.08);
 }
 
+/* ── Rich identity strip (Option B) ──────────────────────────
+   Same base card; adds a custom-status line, badge chip, and
+   a hover-only action row with Edit Profile + Switch pills.
+   __main is the click target (jumps to My Profile); __actions
+   sits underneath as a separate row that animates in on hover. */
+.settings-identity--rich{
+  flex-direction:column;
+  align-items:stretch;
+  gap:0;
+  padding:0;
+  cursor:default;
+  overflow:hidden;
+}
+.settings-identity--rich .settings-identity__main{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;
+  cursor:pointer;
+  border-radius:12px 12px 0 0;
+  transition:background .14s;
+}
+.settings-identity--rich .settings-identity__main:focus-visible{
+  box-shadow:inset 0 0 0 2px rgba(254,248,61,.35);
+  outline:none;
+}
+.settings-identity--rich:hover{
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+  border-color:rgba(255,255,255,.1);
+}
+.settings-identity--rich .settings-identity__avatar-wrap{
+  width:46px;height:46px;
+}
+.settings-identity--rich .settings-identity__name{ font-size:14px; }
+.settings-identity--rich .settings-identity__handle{ font-size:11.5px; }
+
+.settings-identity__cs{
+  display:flex;align-items:center;gap:5px;
+  margin-top:4px;
+  padding-top:4px;
+  border-top:1px dashed rgba(255,255,255,.05);
+  font-size:11px;
+  color:rgba(255,255,255,.65);
+  line-height:1.3;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.settings-identity__cs-emoji{
+  width:13px;height:13px;flex-shrink:0;
+  vertical-align:middle;
+}
+
+.settings-identity__badges{
+  display:flex;flex-direction:column;gap:4px;
+  align-items:flex-end;
+  flex-shrink:0;
+}
+.settings-identity__badge{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:2px 7px;
+  font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  border-radius:5px;
+  white-space:nowrap;
+}
+.settings-identity__badge--radiance{
+  color:#fef83d;
+  background:linear-gradient(135deg,rgba(254,248,61,.15),rgba(254,248,61,.04));
+  border:1px solid rgba(254,248,61,.3);
+  box-shadow:0 0 8px rgba(254,248,61,.08);
+}
+
+.settings-identity__actions{
+  display:flex;gap:6px;
+  padding:0 12px;
+  max-height:0;
+  opacity:0;
+  overflow:hidden;
+  transition:max-height .2s ease,opacity .14s,padding-bottom .2s ease,border-top-color .2s;
+  border-top:1px solid transparent;
+}
+.settings-identity--rich:hover .settings-identity__actions,
+.settings-identity--rich:focus-within .settings-identity__actions{
+  max-height:46px;
+  opacity:1;
+  padding:8px 12px 10px;
+  border-top-color:rgba(255,255,255,.04);
+}
+.settings-identity__pill{
+  flex:1;
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:6px 10px;
+  font-family:inherit;
+  font-size:11px;font-weight:700;letter-spacing:.01em;
+  border-radius:7px;
+  cursor:pointer;
+  border:1px solid;
+  transition:all .12s;
+}
+.settings-identity__pill{
+  color:#13161d;
+  background:var(--accent);
+  border-color:var(--accent);
+}
+.settings-identity__pill:hover{
+  filter:brightness(1.08);
+  transform:translateY(-1px);
+}
+.settings-identity__pill--ghost{
+  color:rgba(255,255,255,.7);
+  background:rgba(255,255,255,.04);
+  border-color:rgba(255,255,255,.08);
+}
+.settings-identity__pill--ghost:hover{
+  color:#fff;
+  background:rgba(255,255,255,.08);
+  border-color:rgba(255,255,255,.16);
+  filter:none;
+}
+
 /* External-link nav entries (Support, Legal) — open in a new tab and
    show a tiny ↗ instead of routing through buildProfileView. */
 .profile-nav-item--external{text-decoration:none;}

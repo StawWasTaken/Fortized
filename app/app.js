@@ -20056,7 +20056,7 @@ function buildProfileNav(scroll, opts) {
 
   const _navPfp = CU?.pfp
     ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-    : `<span style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent);">${escapeHTML((CU?.displayName||CU?.username||'?')[0].toUpperCase())}</span>`;
+    : `<span style="font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--accent);">${escapeHTML((CU?.displayName||CU?.username||'?')[0].toUpperCase())}</span>`;
   // Status dot mirrors the userbar's — same FtzStatus helper so they stay
   // in lockstep visually. Falls back to a plain green dot if the helper
   // isn't loaded yet (very early boot).
@@ -20070,6 +20070,24 @@ function buildProfileNav(scroll, opts) {
   })();
   const _navHandle = CU?.username ? '@' + CU.username : '';
   const _navDisplay = escapeHTML(CU?.displayName || CU?.username || 'User');
+  // Custom status — emoji + text, both optional. Emoji renders through
+  // twemoji so it matches the rest of the app's emoji styling.
+  const _navCustomStatus = (() => {
+    const cs = CU?.customStatus;
+    if (!cs || (!cs.text && !cs.emoji)) return '';
+    const emoji = cs.emoji ? `<img class="settings-identity__cs-emoji" src="${emojiToTwemojiUrl(cs.emoji)}" alt="" onerror="this.outerHTML='${escapeHTML(cs.emoji)}'">` : '';
+    const text = cs.text ? `<span>${escapeHTML(cs.text)}</span>` : '';
+    return `<div class="settings-identity__cs">${emoji}${text}</div>`;
+  })();
+  // Badges row — Radiance + plan level if applicable. Kept compact so it
+  // never pushes past the card edge on narrow sidebars.
+  const _navBadges = (() => {
+    const out = [];
+    if (typeof _hasRadiance === 'function' && _hasRadiance(CU)) {
+      out.push(`<span class="settings-identity__badge settings-identity__badge--radiance" data-tip="Radiance">✦ Radiance</span>`);
+    }
+    return out.length ? `<div class="settings-identity__badges">${out.join('')}</div>` : '';
+  })();
 
   const renderItem = (item) => {
     // External-link entries (Support, Legal) open in a new tab instead of
@@ -20099,19 +20117,30 @@ function buildProfileNav(scroll, opts) {
 
   scroll.dataset.activeTab = activeTab;
   scroll.innerHTML = `
-    <div class="settings-identity" data-status="${_navStatus}" onclick="buildProfileView('myprofile')" role="button" tabindex="0" data-tip="${escapeHTML(_t('nav.edit_profiles'))}">
-      <div class="settings-identity__avatar-wrap">
-        <div class="settings-identity__glow"></div>
-        <div class="settings-identity__avatar">${_navPfp}</div>
-        <span class="settings-identity__dot">${_navStatusDot}</span>
+    <div class="settings-identity settings-identity--rich" data-status="${_navStatus}" role="group" data-tip="${escapeHTML(_t('nav.edit_profiles'))}">
+      <div class="settings-identity__main" onclick="buildProfileView('myprofile')" role="button" tabindex="0">
+        <div class="settings-identity__avatar-wrap">
+          <div class="settings-identity__glow"></div>
+          <div class="settings-identity__avatar">${_navPfp}</div>
+          <span class="settings-identity__dot">${_navStatusDot}</span>
+        </div>
+        <div class="settings-identity__body">
+          <div class="settings-identity__name">${_navDisplay}</div>
+          <div class="settings-identity__handle">${escapeHTML(_navHandle)}</div>
+          ${_navCustomStatus}
+        </div>
+        ${_navBadges}
       </div>
-      <div class="settings-identity__body">
-        <div class="settings-identity__name">${_navDisplay}</div>
-        <div class="settings-identity__handle">${escapeHTML(_navHandle)}</div>
+      <div class="settings-identity__actions">
+        <button class="settings-identity__pill" onclick="buildProfileView('myprofile')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Profile
+        </button>
+        <button class="settings-identity__pill settings-identity__pill--ghost" onclick="_settingsSwitchProfile()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Switch
+        </button>
       </div>
-      <span class="settings-identity__edit" aria-hidden="true">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      </span>
     </div>
     <div class="profile-nav-search" style="padding:4px 6px 8px;">
       <div style="position:relative;">
@@ -49999,6 +50028,13 @@ function _ftzLanguagePick(code) {
 function _ftzTimeFormatPick(val) {
   localStorage.setItem('ftz_time_format', val);
   buildProfileView('language');
+}
+
+// Stub for the Switch pill in the identity strip. Multi-profile
+// (Personal / Work) isn't a real feature yet; this just toasts a
+// "coming soon" message instead of silently failing.
+function _settingsSwitchProfile() {
+  if (typeof toast === 'function') toast('Profile switching is coming soon', 'info');
 }
 
 // ════════════════════════════════════════════

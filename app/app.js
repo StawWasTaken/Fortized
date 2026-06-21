@@ -49442,6 +49442,19 @@ const _FTZ_LANGUAGES = [
 // settings nav headers so switching gives instant visible feedback. Other
 // languages fall back to English keys (we still flip dir/locale/date format
 // even when the pack isn't present, so non-text wiring still works).
+//
+// SCOPE RULES — do not break these when extending the pack:
+//   • Translate only generic UI chrome (labels, headings, buttons, tooltips).
+//   • NEVER translate brand or character names: "Fortized", "Swiftaw",
+//     "Joyster", "Leafen", "Wealthplace", "Radiance", "Bastion", "Fortshop",
+//     etc. They stay as-is in every language, like Discord keeps "Discord"
+//     and "Nitro" untranslated.
+//   • NEVER translate user content: usernames, display names, message
+//     bodies, posts, statuses, server names, anything the user typed. The
+//     pack is keyed by fixed UI keys only — no string template ever takes
+//     user-provided text through this helper.
+//   • Capitalised proper nouns introduced by us belong in <span data-no-i18n>
+//     style wrappers if they ever appear next to translated copy.
 const _LANG_PACK = {
   en: { lang_title:'Language & Time', lang_section:'Display Language', lang_desc:'Pick the language Fortized should display in. Changes apply instantly.', lang_picker:'Language', time_section:'Time Format', time_desc:'How clock times are shown across the app.', time_24:'24-hour (14:30)', time_12:'12-hour (2:30 PM)', preview_section:'Preview', preview_desc:'Live sample using your current language and time settings.', preview_hello:'Hello!', preview_today:'Today is', preview_now:'Right now it is' },
   fr: { lang_title:'Langue et heure', lang_section:'Langue d’affichage', lang_desc:'Choisissez la langue d’affichage de Fortized. Les changements s’appliquent instantanément.', lang_picker:'Langue', time_section:'Format de l’heure', time_desc:'Comment l’heure est affichée dans l’application.', time_24:'24 heures (14:30)', time_12:'12 heures (2:30 PM)', preview_section:'Aperçu', preview_desc:'Exemple en direct avec vos réglages actuels.', preview_hello:'Bonjour !', preview_today:'Nous sommes le', preview_now:'Il est' },

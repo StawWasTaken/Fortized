@@ -3147,6 +3147,22 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .ftz-id-tile:hover .ftz-id-tile__edit{ opacity:1;transform:translateX(0); }
 .ftz-id-tile:hover .ftz-id-tile__edit:hover{ color:#fef83d;background:rgba(254,248,61,.08); }
 
+/* ── Display-name effect idle animations ─────────────────────
+   Subtle. Both run forever once the class is on. The flow shift
+   is what makes Gradient feel alive without strobing; the halo
+   breath is a soft glow pulse that doesn't distract from text. */
+@keyframes ftz-fx-flow-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.ftz-fx-flow { animation: ftz-fx-flow-shift 7s ease-in-out infinite; }
+@keyframes ftz-fx-halo-breath {
+  0%,100% { filter: brightness(1) saturate(1); }
+  50%     { filter: brightness(1.15) saturate(1.15); }
+}
+.ftz-fx-halo { animation: ftz-fx-halo-breath 3.2s ease-in-out infinite; }
+
 /* External-link nav entries (Support, Legal) — open in a new tab and
    show a tiny ↗ instead of routing through buildProfileView. */
 .profile-nav-item--external{text-decoration:none;}

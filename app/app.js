@@ -31231,21 +31231,31 @@ function _updateProfileThemePreview() {
 // way Discord locks the look of nickname styles. _getDisplayFontStyle()
 // returns "font-family:…;font-weight:…;" so callers can drop one
 // string into an inline style attribute and get both at once.
+// 8 fonts per spec. Weights match what loads in the Google Fonts <link>
+// — keep this in sync with app/index.html if you swap families.
 const DISPLAY_NAME_FONTS = [
-  {id:'default',     name:'Default',       css:"'DM Sans',sans-serif",        weight:'500', sample:'Gg'},
-  {id:'syne',        name:'Syne',          css:"'Syne',sans-serif",           weight:'700', sample:'Gg'},
-  {id:'dynapuff',    name:'DynaPuff',      css:"'DynaPuff',cursive",          weight:'700', sample:'Gg'},
-  {id:'medieval',    name:'MedievalSharp', css:"'MedievalSharp',serif",       weight:'800', sample:'Gg'},
-  {id:'pixelify',    name:'Pixelify Sans', css:"'Pixelify Sans',monospace",   weight:'700', sample:'Gg'},
-  {id:'chicle',      name:'Chicle',        css:"'Chicle',cursive",            weight:'400', sample:'Gg'},
+  {id:'default',  name:'Default',        css:"'DM Sans',sans-serif",      weight:'500', sample:'Aa'},
+  {id:'syne',     name:'Syne',           css:"'Syne',sans-serif",         weight:'800', sample:'Aa'},
+  {id:'dynapuff', name:'DynaPuff',       css:"'DynaPuff',cursive",        weight:'700', sample:'Aa'},
+  {id:'chicle',   name:'Chicle',         css:"'Chicle',cursive",          weight:'400', sample:'Aa'},
+  {id:'croissant',name:'Croissant One',  css:"'Croissant One',cursive",   weight:'400', sample:'Aa'},
+  {id:'medieval', name:'MedievalSharp',  css:"'MedievalSharp',serif",     weight:'800', sample:'Aa'},
+  {id:'pixelify', name:'Pixelify Sans',  css:"'Pixelify Sans',monospace", weight:'700', sample:'Aa'},
+  {id:'caprasimo',name:'Caprasimo',      css:"'Caprasimo',serif",         weight:'400', sample:'Aa'},
 ];
 
+// Renamed from Discord's terms so we're our own thing:
+//   gradient → flow   (subtle horizontal shimmer animation)
+//   neon     → halo   (subtle pulsing glow animation)
+//   toon     → inked  (chosen colour body + darker stroke + soft white inner glow)
+//   pop      → lifted (default text colour + darker stroke + coloured 3D drop)
+// `animated:true` flags the ones with a subtle idle animation.
 const DISPLAY_NAME_EFFECTS = [
   {id:'solid',    name:'Solid'},
-  {id:'gradient', name:'Gradient'},
-  {id:'neon',     name:'Neon'},
-  {id:'toon',     name:'Toon'},
-  {id:'pop',      name:'Pop'},
+  {id:'gradient', name:'Gradient', animated:true},
+  {id:'neon',     name:'Halo',     animated:true},
+  {id:'toon',     name:'Inked'},
+  {id:'pop',      name:'Lifted'},
 ];
 
 const DISPLAY_NAME_COLORS = [
@@ -31269,13 +31279,45 @@ function _getDisplayFontStyle(fontId) {
   return `font-family:${_getDisplayFontCSS(fontId)};font-weight:${_getDisplayFontWeight(fontId)};`;
 }
 
-function _getDisplayEffectCSS(effect, color) {
+// Pull the user's two colours when the chosen effect needs both. Color2
+// only matters for gradient ("flow"); everything else reads color only.
+function _getDisplayEffectCSS(effect, color, color2) {
   color = color || '#fff';
-  if (effect === 'gradient') return `background:linear-gradient(90deg,${color},#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;`;
-  if (effect === 'neon') return `color:${color};text-shadow:0 0 7px ${color}88,0 0 14px ${color}44,0 0 28px ${color}22;`;
-  if (effect === 'toon') return `color:${color};text-shadow:-1px -1px 0 rgba(0,0,0,.5),1px -1px 0 rgba(0,0,0,.5),-1px 1px 0 rgba(0,0,0,.5),1px 1px 0 rgba(0,0,0,.5);`;
-  if (effect === 'pop') return `color:${color};text-shadow:2px 2px 0 rgba(0,0,0,.3),-1px -1px 0 rgba(255,255,255,.1);`;
+  color2 = color2 || color;
+  // Gradient: left-to-right between the two picked colours. The slow
+  // background-position pan is what gives the "Flow" idle animation.
+  if (effect === 'gradient') {
+    return `background:linear-gradient(90deg,${color} 0%,${color2} 100%);background-size:200% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:transparent;`;
+  }
+  // Halo: default text colour + coloured stroke + coloured glow.
+  // Uses -webkit-text-stroke for crisp edges; the glow is a layered
+  // text-shadow that gets gently pulsed by the .ftz-fx-halo class.
+  if (effect === 'neon') {
+    return `color:#fff;-webkit-text-stroke:1px ${color};text-shadow:0 0 6px ${color}cc,0 0 14px ${color}77,0 0 24px ${color}33;`;
+  }
+  // Inked: chosen colour text, darker stroke around the glyphs, and a
+  // soft white "shadow" inside via stacked white text-shadows on -1px
+  // offsets — gives the cartoon-ink highlight feel.
+  if (effect === 'toon') {
+    const darker = `color-mix(in srgb, ${color}, #000 35%)`;
+    return `color:${color};-webkit-text-stroke:1.2px ${darker};text-shadow:0 1px 0 rgba(255,255,255,.55),0 -1px 0 rgba(255,255,255,.25);paint-order:stroke fill;`;
+  }
+  // Lifted: white text with a darker stroke + chosen colour 3D drop
+  // built by stacking 4 px of progressively offset shadows. Gives the
+  // chunky relief look from your reference screenshot.
+  if (effect === 'pop') {
+    const darker = `color-mix(in srgb, ${color}, #000 50%)`;
+    return `color:#fff;-webkit-text-stroke:1px ${darker};text-shadow:1px 1px 0 ${color},2px 2px 0 ${color},3px 3px 0 ${color},4px 4px 6px rgba(0,0,0,.3);paint-order:stroke fill;`;
+  }
   return `color:${color};`;
+}
+// Returns a class name to append for any effect that carries an idle
+// animation. Use alongside the inline style helpers so render sites
+// can both style AND animate the displayname without duplicating logic.
+function _getDisplayEffectClass(effect) {
+  if (effect === 'gradient') return 'ftz-fx-flow';
+  if (effect === 'neon')     return 'ftz-fx-halo';
+  return '';
 }
 
 function _openDisplayNameStyleModal() {

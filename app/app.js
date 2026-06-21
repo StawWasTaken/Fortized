@@ -49475,8 +49475,21 @@ const _LANG_PACK = {
     'sub.lang':'Language', 'sub.time':'Time Format', 'sub.preview':'Preview',
     'sub.current_game':'Current Game', 'sub.your_collection':'Your Collection',
     'sub.blocked':'Blocked Users', 'sub.ignored':'Ignored Users',
-    // Language & Time page itself.
-    lang_title:'Language & Time', lang_section:'Display Language', lang_desc:'Pick the language the UI should display in. Changes apply instantly.', lang_picker:'Language', time_section:'Time Format', time_desc:'How clock times are shown across the app.', time_24:'24-hour (14:30)', time_12:'12-hour (2:30 PM)', preview_section:'Preview', preview_desc:'Live sample using your current language and time settings.', preview_hello:'Hello!', preview_today:'Today is', preview_now:'Right now it is',
+    // Home view + friends + bastion empty + active now + common chrome.
+    'home.hero.welcome':'Welcome back,', 'home.hero.your':'Your', 'home.hero.fortress':'Fortress', 'home.hero.awaits':'Awaits',
+    'home.hero.explore':'Explore', 'home.hero.message':'Message', 'home.hero.create':'Create',
+    'home.section.who_online':'Who’s Online Today?', 'home.section.view_all_friends':'View all friends',
+    'home.section.buying':'What are People Buying?', 'home.section.happening':'What’s Happening?', 'home.section.feedback':'Feedback',
+    'home.fb.place_title':'A place where…', 'home.fb.place_hint':'Finish the sentence', 'home.fb.place_prefix':'A place where', 'home.fb.place_placeholder':'…everyone feels at home.',
+    'home.fb.anon':'Stay anonymous', 'home.fb.regular_title':'Regular feedback', 'home.fb.regular_hint':'Tell us what’s on your mind', 'home.fb.textarea_placeholder':'Bugs, ideas, polish… anything goes.',
+    'home.fb.cat_suggestion':'Suggestion', 'home.fb.cat_bug':'Bug report', 'home.fb.cat_question':'Question', 'home.fb.cat_other':'Other', 'home.fb.send':'Send',
+    'home.active_now':'Active Now',
+    'friends.title':'Friends', 'friends.add':'Add Friend', 'friends.tab.all':'All', 'friends.tab.online':'Online', 'friends.tab.pending':'Pending', 'friends.tab.blocked':'Blocked',
+    'bastion.empty.title':'Select a channel', 'bastion.empty.body':'Pick a text channel from the sidebar to start chatting.',
+    'dms.empty.title':'Select a conversation', 'dms.empty.body':'Pick a direct message from the sidebar or start a new one.',
+    // Common chrome — buttons, toasts, confirms used everywhere.
+    'btn.save':'Save', 'btn.cancel':'Cancel', 'btn.delete':'Delete', 'btn.confirm':'Confirm', 'btn.close':'Close', 'btn.copy':'Copy', 'btn.send':'Send', 'btn.edit':'Edit', 'btn.add':'Add', 'btn.remove':'Remove', 'btn.back':'Back', 'btn.next':'Next', 'btn.reset':'Reset', 'btn.apply':'Apply',
+    'toast.saved':'Saved', 'toast.copied':'Copied', 'toast.deleted':'Deleted', 'toast.failed':'Something went wrong', 'toast.sent':'Sent',
   },
   fr: {
     'nav.account':'Compte', 'nav.experience':'Expérience', 'nav.activity':'Activité', 'nav.safety':'Sécurité', 'nav.support':'Aide',
@@ -49493,6 +49506,19 @@ const _LANG_PACK = {
     'sub.lang':'Langue', 'sub.time':'Format de l’heure', 'sub.preview':'Aperçu',
     'sub.current_game':'Jeu actuel', 'sub.your_collection':'Votre collection',
     'sub.blocked':'Utilisateurs bloqués', 'sub.ignored':'Utilisateurs ignorés',
+    'home.hero.welcome':'Bon retour,', 'home.hero.your':'Votre', 'home.hero.fortress':'Forteresse', 'home.hero.awaits':'vous attend',
+    'home.hero.explore':'Explorer', 'home.hero.message':'Message', 'home.hero.create':'Créer',
+    'home.section.who_online':'Qui est en ligne aujourd’hui ?', 'home.section.view_all_friends':'Voir tous les amis',
+    'home.section.buying':'Qu’est-ce que les gens achètent ?', 'home.section.happening':'Que se passe-t-il ?', 'home.section.feedback':'Commentaires',
+    'home.fb.place_title':'Un endroit où…', 'home.fb.place_hint':'Finissez la phrase', 'home.fb.place_prefix':'Un endroit où', 'home.fb.place_placeholder':'…tout le monde se sent chez soi.',
+    'home.fb.anon':'Rester anonyme', 'home.fb.regular_title':'Commentaire classique', 'home.fb.regular_hint':'Dites-nous ce que vous avez en tête', 'home.fb.textarea_placeholder':'Bugs, idées, finitions… tout y est.',
+    'home.fb.cat_suggestion':'Suggestion', 'home.fb.cat_bug':'Rapport de bug', 'home.fb.cat_question':'Question', 'home.fb.cat_other':'Autre', 'home.fb.send':'Envoyer',
+    'home.active_now':'Actifs maintenant',
+    'friends.title':'Amis', 'friends.add':'Ajouter un ami', 'friends.tab.all':'Tous', 'friends.tab.online':'En ligne', 'friends.tab.pending':'En attente', 'friends.tab.blocked':'Bloqués',
+    'bastion.empty.title':'Sélectionnez un salon', 'bastion.empty.body':'Choisissez un salon textuel dans la barre latérale pour commencer à discuter.',
+    'dms.empty.title':'Sélectionnez une conversation', 'dms.empty.body':'Choisissez un message direct dans la barre latérale ou commencez-en un nouveau.',
+    'btn.save':'Enregistrer', 'btn.cancel':'Annuler', 'btn.delete':'Supprimer', 'btn.confirm':'Confirmer', 'btn.close':'Fermer', 'btn.copy':'Copier', 'btn.send':'Envoyer', 'btn.edit':'Modifier', 'btn.add':'Ajouter', 'btn.remove':'Retirer', 'btn.back':'Retour', 'btn.next':'Suivant', 'btn.reset':'Réinitialiser', 'btn.apply':'Appliquer',
+    'toast.saved':'Enregistré', 'toast.copied':'Copié', 'toast.deleted':'Supprimé', 'toast.failed':'Une erreur est survenue', 'toast.sent':'Envoyé',
     lang_title:'Langue et heure', lang_section:'Langue d’affichage', lang_desc:'Choisissez la langue d’affichage de l’interface. Les changements s’appliquent instantanément.', lang_picker:'Langue', time_section:'Format de l’heure', time_desc:'Comment l’heure est affichée dans l’application.', time_24:'24 heures (14:30)', time_12:'12 heures (2:30 PM)', preview_section:'Aperçu', preview_desc:'Exemple en direct avec vos réglages actuels.', preview_hello:'Bonjour !', preview_today:'Nous sommes le', preview_now:'Il est',
   },
   es: {
@@ -49510,6 +49536,19 @@ const _LANG_PACK = {
     'sub.lang':'Idioma', 'sub.time':'Formato de hora', 'sub.preview':'Vista previa',
     'sub.current_game':'Juego actual', 'sub.your_collection':'Tu colección',
     'sub.blocked':'Usuarios bloqueados', 'sub.ignored':'Usuarios ignorados',
+    'home.hero.welcome':'Bienvenido de nuevo,', 'home.hero.your':'Tu', 'home.hero.fortress':'Fortaleza', 'home.hero.awaits':'te espera',
+    'home.hero.explore':'Explorar', 'home.hero.message':'Mensaje', 'home.hero.create':'Crear',
+    'home.section.who_online':'¿Quién está en línea hoy?', 'home.section.view_all_friends':'Ver todos los amigos',
+    'home.section.buying':'¿Qué está comprando la gente?', 'home.section.happening':'¿Qué está pasando?', 'home.section.feedback':'Comentarios',
+    'home.fb.place_title':'Un lugar donde…', 'home.fb.place_hint':'Termina la frase', 'home.fb.place_prefix':'Un lugar donde', 'home.fb.place_placeholder':'…todos se sienten en casa.',
+    'home.fb.anon':'Permanecer anónimo', 'home.fb.regular_title':'Comentario normal', 'home.fb.regular_hint':'Cuéntanos lo que piensas', 'home.fb.textarea_placeholder':'Bugs, ideas, mejoras… lo que sea.',
+    'home.fb.cat_suggestion':'Sugerencia', 'home.fb.cat_bug':'Reporte de error', 'home.fb.cat_question':'Pregunta', 'home.fb.cat_other':'Otro', 'home.fb.send':'Enviar',
+    'home.active_now':'Activos ahora',
+    'friends.title':'Amigos', 'friends.add':'Añadir amigo', 'friends.tab.all':'Todos', 'friends.tab.online':'En línea', 'friends.tab.pending':'Pendientes', 'friends.tab.blocked':'Bloqueados',
+    'bastion.empty.title':'Selecciona un canal', 'bastion.empty.body':'Elige un canal de texto en la barra lateral para empezar a chatear.',
+    'dms.empty.title':'Selecciona una conversación', 'dms.empty.body':'Elige un mensaje directo en la barra lateral o empieza uno nuevo.',
+    'btn.save':'Guardar', 'btn.cancel':'Cancelar', 'btn.delete':'Eliminar', 'btn.confirm':'Confirmar', 'btn.close':'Cerrar', 'btn.copy':'Copiar', 'btn.send':'Enviar', 'btn.edit':'Editar', 'btn.add':'Añadir', 'btn.remove':'Quitar', 'btn.back':'Atrás', 'btn.next':'Siguiente', 'btn.reset':'Restablecer', 'btn.apply':'Aplicar',
+    'toast.saved':'Guardado', 'toast.copied':'Copiado', 'toast.deleted':'Eliminado', 'toast.failed':'Algo salió mal', 'toast.sent':'Enviado',
     lang_title:'Idioma y hora', lang_section:'Idioma de pantalla', lang_desc:'Elige el idioma con el que debe mostrarse la interfaz. Los cambios se aplican al instante.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Cómo se muestran las horas en la aplicación.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Vista previa', preview_desc:'Muestra en vivo con tus ajustes actuales.', preview_hello:'¡Hola!', preview_today:'Hoy es', preview_now:'Ahora son las',
   },
   de: {
@@ -49527,6 +49566,19 @@ const _LANG_PACK = {
     'sub.lang':'Sprache', 'sub.time':'Uhrzeitformat', 'sub.preview':'Vorschau',
     'sub.current_game':'Aktuelles Spiel', 'sub.your_collection':'Deine Sammlung',
     'sub.blocked':'Blockierte Nutzer', 'sub.ignored':'Ignorierte Nutzer',
+    'home.hero.welcome':'Willkommen zurück,', 'home.hero.your':'Deine', 'home.hero.fortress':'Festung', 'home.hero.awaits':'erwartet dich',
+    'home.hero.explore':'Erkunden', 'home.hero.message':'Nachricht', 'home.hero.create':'Erstellen',
+    'home.section.who_online':'Wer ist heute online?', 'home.section.view_all_friends':'Alle Freunde ansehen',
+    'home.section.buying':'Was kaufen die Leute?', 'home.section.happening':'Was ist los?', 'home.section.feedback':'Feedback',
+    'home.fb.place_title':'Ein Ort, an dem…', 'home.fb.place_hint':'Vervollständige den Satz', 'home.fb.place_prefix':'Ein Ort, an dem', 'home.fb.place_placeholder':'…sich jeder zu Hause fühlt.',
+    'home.fb.anon':'Anonym bleiben', 'home.fb.regular_title':'Normales Feedback', 'home.fb.regular_hint':'Sag uns, was dir auf dem Herzen liegt', 'home.fb.textarea_placeholder':'Bugs, Ideen, Feinschliff… alles geht.',
+    'home.fb.cat_suggestion':'Vorschlag', 'home.fb.cat_bug':'Fehlermeldung', 'home.fb.cat_question':'Frage', 'home.fb.cat_other':'Sonstiges', 'home.fb.send':'Senden',
+    'home.active_now':'Jetzt aktiv',
+    'friends.title':'Freunde', 'friends.add':'Freund hinzufügen', 'friends.tab.all':'Alle', 'friends.tab.online':'Online', 'friends.tab.pending':'Ausstehend', 'friends.tab.blocked':'Blockiert',
+    'bastion.empty.title':'Wähle einen Kanal', 'bastion.empty.body':'Wähle einen Textkanal in der Seitenleiste, um zu chatten.',
+    'dms.empty.title':'Wähle eine Unterhaltung', 'dms.empty.body':'Wähle eine Direktnachricht in der Seitenleiste oder starte eine neue.',
+    'btn.save':'Speichern', 'btn.cancel':'Abbrechen', 'btn.delete':'Löschen', 'btn.confirm':'Bestätigen', 'btn.close':'Schließen', 'btn.copy':'Kopieren', 'btn.send':'Senden', 'btn.edit':'Bearbeiten', 'btn.add':'Hinzufügen', 'btn.remove':'Entfernen', 'btn.back':'Zurück', 'btn.next':'Weiter', 'btn.reset':'Zurücksetzen', 'btn.apply':'Übernehmen',
+    'toast.saved':'Gespeichert', 'toast.copied':'Kopiert', 'toast.deleted':'Gelöscht', 'toast.failed':'Etwas ist schiefgelaufen', 'toast.sent':'Gesendet',
     lang_title:'Sprache & Uhrzeit', lang_section:'Anzeigesprache', lang_desc:'Wähle die Sprache, in der die Oberfläche angezeigt werden soll. Änderungen werden sofort übernommen.', lang_picker:'Sprache', time_section:'Uhrzeitformat', time_desc:'Wie Uhrzeiten in der App angezeigt werden.', time_24:'24-Stunden (14:30)', time_12:'12-Stunden (2:30 PM)', preview_section:'Vorschau', preview_desc:'Live-Beispiel mit deinen aktuellen Einstellungen.', preview_hello:'Hallo!', preview_today:'Heute ist', preview_now:'Jetzt ist es',
   },
   it: {
@@ -49544,6 +49596,19 @@ const _LANG_PACK = {
     'sub.lang':'Lingua', 'sub.time':'Formato ora', 'sub.preview':'Anteprima',
     'sub.current_game':'Gioco attuale', 'sub.your_collection':'La tua collezione',
     'sub.blocked':'Utenti bloccati', 'sub.ignored':'Utenti ignorati',
+    'home.hero.welcome':'Bentornato,', 'home.hero.your':'La tua', 'home.hero.fortress':'Fortezza', 'home.hero.awaits':'ti aspetta',
+    'home.hero.explore':'Esplora', 'home.hero.message':'Messaggio', 'home.hero.create':'Crea',
+    'home.section.who_online':'Chi è online oggi?', 'home.section.view_all_friends':'Vedi tutti gli amici',
+    'home.section.buying':'Cosa stanno comprando?', 'home.section.happening':'Cosa sta succedendo?', 'home.section.feedback':'Feedback',
+    'home.fb.place_title':'Un posto dove…', 'home.fb.place_hint':'Completa la frase', 'home.fb.place_prefix':'Un posto dove', 'home.fb.place_placeholder':'…tutti si sentono a casa.',
+    'home.fb.anon':'Resta anonimo', 'home.fb.regular_title':'Feedback normale', 'home.fb.regular_hint':'Dicci cosa ti passa per la testa', 'home.fb.textarea_placeholder':'Bug, idee, rifiniture… qualunque cosa.',
+    'home.fb.cat_suggestion':'Suggerimento', 'home.fb.cat_bug':'Segnalazione bug', 'home.fb.cat_question':'Domanda', 'home.fb.cat_other':'Altro', 'home.fb.send':'Invia',
+    'home.active_now':'Attivi ora',
+    'friends.title':'Amici', 'friends.add':'Aggiungi amico', 'friends.tab.all':'Tutti', 'friends.tab.online':'Online', 'friends.tab.pending':'In sospeso', 'friends.tab.blocked':'Bloccati',
+    'bastion.empty.title':'Seleziona un canale', 'bastion.empty.body':'Scegli un canale testuale dalla barra laterale per iniziare a chattare.',
+    'dms.empty.title':'Seleziona una conversazione', 'dms.empty.body':'Scegli un messaggio diretto dalla barra laterale o iniziane uno nuovo.',
+    'btn.save':'Salva', 'btn.cancel':'Annulla', 'btn.delete':'Elimina', 'btn.confirm':'Conferma', 'btn.close':'Chiudi', 'btn.copy':'Copia', 'btn.send':'Invia', 'btn.edit':'Modifica', 'btn.add':'Aggiungi', 'btn.remove':'Rimuovi', 'btn.back':'Indietro', 'btn.next':'Avanti', 'btn.reset':'Reimposta', 'btn.apply':'Applica',
+    'toast.saved':'Salvato', 'toast.copied':'Copiato', 'toast.deleted':'Eliminato', 'toast.failed':'Qualcosa è andato storto', 'toast.sent':'Inviato',
     lang_title:'Lingua e ora', lang_section:'Lingua di visualizzazione', lang_desc:'Scegli la lingua in cui mostrare l’interfaccia. Le modifiche sono immediate.', lang_picker:'Lingua', time_section:'Formato dell’ora', time_desc:'Come vengono mostrate le ore nell’app.', time_24:'24 ore (14:30)', time_12:'12 ore (2:30 PM)', preview_section:'Anteprima', preview_desc:'Esempio dal vivo con le tue impostazioni.', preview_hello:'Ciao!', preview_today:'Oggi è', preview_now:'Adesso sono le',
   },
   pt: {
@@ -49561,6 +49626,19 @@ const _LANG_PACK = {
     'sub.lang':'Idioma', 'sub.time':'Formato de hora', 'sub.preview':'Pré-visualização',
     'sub.current_game':'Jogo atual', 'sub.your_collection':'Sua coleção',
     'sub.blocked':'Usuários bloqueados', 'sub.ignored':'Usuários ignorados',
+    'home.hero.welcome':'Bem-vindo de volta,', 'home.hero.your':'Sua', 'home.hero.fortress':'Fortaleza', 'home.hero.awaits':'te espera',
+    'home.hero.explore':'Explorar', 'home.hero.message':'Mensagem', 'home.hero.create':'Criar',
+    'home.section.who_online':'Quem está on-line hoje?', 'home.section.view_all_friends':'Ver todos os amigos',
+    'home.section.buying':'O que as pessoas estão comprando?', 'home.section.happening':'O que está acontecendo?', 'home.section.feedback':'Feedback',
+    'home.fb.place_title':'Um lugar onde…', 'home.fb.place_hint':'Termine a frase', 'home.fb.place_prefix':'Um lugar onde', 'home.fb.place_placeholder':'…todos se sintam em casa.',
+    'home.fb.anon':'Ficar anônimo', 'home.fb.regular_title':'Feedback comum', 'home.fb.regular_hint':'Conte o que está na sua cabeça', 'home.fb.textarea_placeholder':'Bugs, ideias, ajustes… qualquer coisa.',
+    'home.fb.cat_suggestion':'Sugestão', 'home.fb.cat_bug':'Relato de bug', 'home.fb.cat_question':'Pergunta', 'home.fb.cat_other':'Outro', 'home.fb.send':'Enviar',
+    'home.active_now':'Ativos agora',
+    'friends.title':'Amigos', 'friends.add':'Adicionar amigo', 'friends.tab.all':'Todos', 'friends.tab.online':'On-line', 'friends.tab.pending':'Pendentes', 'friends.tab.blocked':'Bloqueados',
+    'bastion.empty.title':'Selecione um canal', 'bastion.empty.body':'Escolha um canal de texto na barra lateral para começar a conversar.',
+    'dms.empty.title':'Selecione uma conversa', 'dms.empty.body':'Escolha uma mensagem direta na barra lateral ou inicie uma nova.',
+    'btn.save':'Salvar', 'btn.cancel':'Cancelar', 'btn.delete':'Excluir', 'btn.confirm':'Confirmar', 'btn.close':'Fechar', 'btn.copy':'Copiar', 'btn.send':'Enviar', 'btn.edit':'Editar', 'btn.add':'Adicionar', 'btn.remove':'Remover', 'btn.back':'Voltar', 'btn.next':'Próximo', 'btn.reset':'Redefinir', 'btn.apply':'Aplicar',
+    'toast.saved':'Salvo', 'toast.copied':'Copiado', 'toast.deleted':'Excluído', 'toast.failed':'Algo deu errado', 'toast.sent':'Enviado',
     lang_title:'Idioma e hora', lang_section:'Idioma de exibição', lang_desc:'Escolha o idioma em que a interface deve aparecer. As mudanças são aplicadas na hora.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Como as horas são exibidas no app.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Pré-visualização', preview_desc:'Exemplo ao vivo com suas configurações.', preview_hello:'Olá!', preview_today:'Hoje é', preview_now:'Agora são',
   },
   ja: {
@@ -49578,6 +49656,19 @@ const _LANG_PACK = {
     'sub.lang':'言語', 'sub.time':'時刻表示', 'sub.preview':'プレビュー',
     'sub.current_game':'現在のゲーム', 'sub.your_collection':'コレクション',
     'sub.blocked':'ブロック中のユーザー', 'sub.ignored':'無視中のユーザー',
+    'home.hero.welcome':'おかえりなさい、', 'home.hero.your':'あなたの', 'home.hero.fortress':'要塞', 'home.hero.awaits':'があなたを待っています',
+    'home.hero.explore':'探索', 'home.hero.message':'メッセージ', 'home.hero.create':'作成',
+    'home.section.who_online':'今日オンラインなのは？', 'home.section.view_all_friends':'フレンド全員を見る',
+    'home.section.buying':'みんなが買っているもの', 'home.section.happening':'いま何が起きている？', 'home.section.feedback':'フィードバック',
+    'home.fb.place_title':'こんな場所…', 'home.fb.place_hint':'文を完成させてください', 'home.fb.place_prefix':'こんな場所', 'home.fb.place_placeholder':'…誰もが居心地よくいられる。',
+    'home.fb.anon':'匿名のままにする', 'home.fb.regular_title':'通常のフィードバック', 'home.fb.regular_hint':'今思っていることを教えてください', 'home.fb.textarea_placeholder':'バグ、アイデア、改善案… なんでもどうぞ。',
+    'home.fb.cat_suggestion':'提案', 'home.fb.cat_bug':'バグ報告', 'home.fb.cat_question':'質問', 'home.fb.cat_other':'その他', 'home.fb.send':'送信',
+    'home.active_now':'アクティブ中',
+    'friends.title':'フレンド', 'friends.add':'フレンドを追加', 'friends.tab.all':'すべて', 'friends.tab.online':'オンライン', 'friends.tab.pending':'保留中', 'friends.tab.blocked':'ブロック中',
+    'bastion.empty.title':'チャンネルを選択', 'bastion.empty.body':'サイドバーからテキストチャンネルを選んでチャットを始めましょう。',
+    'dms.empty.title':'会話を選択', 'dms.empty.body':'サイドバーからダイレクトメッセージを選ぶか、新しく始めましょう。',
+    'btn.save':'保存', 'btn.cancel':'キャンセル', 'btn.delete':'削除', 'btn.confirm':'確定', 'btn.close':'閉じる', 'btn.copy':'コピー', 'btn.send':'送信', 'btn.edit':'編集', 'btn.add':'追加', 'btn.remove':'外す', 'btn.back':'戻る', 'btn.next':'次へ', 'btn.reset':'リセット', 'btn.apply':'適用',
+    'toast.saved':'保存しました', 'toast.copied':'コピーしました', 'toast.deleted':'削除しました', 'toast.failed':'問題が発生しました', 'toast.sent':'送信しました',
     lang_title:'言語と時刻', lang_section:'表示言語', lang_desc:'UI を表示する言語を選んでください。変更はすぐに適用されます。', lang_picker:'言語', time_section:'時刻表示', time_desc:'アプリ全体での時刻表示です。', time_24:'24時間表記 (14:30)', time_12:'12時間表記 (2:30 PM)', preview_section:'プレビュー', preview_desc:'現在の設定でのサンプルです。', preview_hello:'こんにちは！', preview_today:'今日は', preview_now:'今は',
   },
   ar: {
@@ -49595,6 +49686,19 @@ const _LANG_PACK = {
     'sub.lang':'اللغة', 'sub.time':'تنسيق الوقت', 'sub.preview':'معاينة',
     'sub.current_game':'اللعبة الحالية', 'sub.your_collection':'مجموعتك',
     'sub.blocked':'المستخدمون المحظورون', 'sub.ignored':'المستخدمون المتجاهلون',
+    'home.hero.welcome':'مرحبًا بعودتك،', 'home.hero.your':'حصنك', 'home.hero.fortress':'في انتظارك', 'home.hero.awaits':'',
+    'home.hero.explore':'استكشاف', 'home.hero.message':'رسالة', 'home.hero.create':'إنشاء',
+    'home.section.who_online':'من المتصل اليوم؟', 'home.section.view_all_friends':'عرض كل الأصدقاء',
+    'home.section.buying':'ماذا يشتري الناس؟', 'home.section.happening':'ماذا يحدث؟', 'home.section.feedback':'الملاحظات',
+    'home.fb.place_title':'مكان حيث…', 'home.fb.place_hint':'أكمِل الجملة', 'home.fb.place_prefix':'مكان حيث', 'home.fb.place_placeholder':'…يشعر فيه الجميع بالراحة.',
+    'home.fb.anon':'البقاء مجهولًا', 'home.fb.regular_title':'ملاحظة عادية', 'home.fb.regular_hint':'أخبرنا بما يدور في ذهنك', 'home.fb.textarea_placeholder':'الأخطاء، الأفكار، التحسينات… أي شيء.',
+    'home.fb.cat_suggestion':'اقتراح', 'home.fb.cat_bug':'بلاغ خطأ', 'home.fb.cat_question':'سؤال', 'home.fb.cat_other':'أخرى', 'home.fb.send':'إرسال',
+    'home.active_now':'النشطون الآن',
+    'friends.title':'الأصدقاء', 'friends.add':'إضافة صديق', 'friends.tab.all':'الكل', 'friends.tab.online':'متصل', 'friends.tab.pending':'قيد الانتظار', 'friends.tab.blocked':'محظورون',
+    'bastion.empty.title':'اختر قناة', 'bastion.empty.body':'اختر قناة نصية من الشريط الجانبي لتبدأ الدردشة.',
+    'dms.empty.title':'اختر محادثة', 'dms.empty.body':'اختر رسالة مباشرة من الشريط الجانبي أو ابدأ واحدة جديدة.',
+    'btn.save':'حفظ', 'btn.cancel':'إلغاء', 'btn.delete':'حذف', 'btn.confirm':'تأكيد', 'btn.close':'إغلاق', 'btn.copy':'نسخ', 'btn.send':'إرسال', 'btn.edit':'تعديل', 'btn.add':'إضافة', 'btn.remove':'إزالة', 'btn.back':'رجوع', 'btn.next':'التالي', 'btn.reset':'إعادة تعيين', 'btn.apply':'تطبيق',
+    'toast.saved':'تم الحفظ', 'toast.copied':'تم النسخ', 'toast.deleted':'تم الحذف', 'toast.failed':'حدث خطأ ما', 'toast.sent':'تم الإرسال',
     lang_title:'اللغة والوقت', lang_section:'لغة العرض', lang_desc:'اختر لغة عرض الواجهة. تدخل التغييرات حيّز التنفيذ فورًا.', lang_picker:'اللغة', time_section:'تنسيق الوقت', time_desc:'طريقة عرض الوقت في التطبيق.', time_24:'24 ساعة (14:30)', time_12:'12 ساعة (2:30 PM)', preview_section:'معاينة', preview_desc:'عيّنة حيّة بإعداداتك الحالية.', preview_hello:'مرحبًا!', preview_today:'اليوم هو', preview_now:'الآن الساعة',
   },
 };
@@ -49650,8 +49754,37 @@ function _applyLanguageGlobals() {
   document.documentElement.lang = meta.code;
   document.documentElement.dir = meta.rtl ? 'rtl' : 'ltr';
 }
-document.addEventListener('DOMContentLoaded', _applyLanguageGlobals);
-setTimeout(_applyLanguageGlobals, 0);
+// DOM sweeper — any element with data-i18n / data-i18n-placeholder /
+// data-i18n-label / data-i18n-title / data-i18n-html gets its text rewritten
+// using the current language pack. Keys that aren't in the pack fall back
+// to the English value, so untranslated languages still read sanely.
+// MUST be called after dynamic renders that insert tagged markup.
+function _ftzApplyI18n(root) {
+  const scope = root || document;
+  scope.querySelectorAll && scope.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n'); if (!k) return;
+    el.textContent = _t(k);
+  });
+  scope.querySelectorAll && scope.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const k = el.getAttribute('data-i18n-html'); if (!k) return;
+    el.innerHTML = _t(k);
+  });
+  scope.querySelectorAll && scope.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const k = el.getAttribute('data-i18n-placeholder'); if (!k) return;
+    el.setAttribute('placeholder', _t(k));
+  });
+  scope.querySelectorAll && scope.querySelectorAll('[data-i18n-label]').forEach(el => {
+    const k = el.getAttribute('data-i18n-label'); if (!k) return;
+    el.setAttribute('aria-label', _t(k));
+  });
+  scope.querySelectorAll && scope.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const k = el.getAttribute('data-i18n-title'); if (!k) return;
+    el.setAttribute('title', _t(k));
+    el.setAttribute('data-tip', _t(k));
+  });
+}
+document.addEventListener('DOMContentLoaded', () => { _applyLanguageGlobals(); _ftzApplyI18n(); });
+setTimeout(() => { _applyLanguageGlobals(); _ftzApplyI18n(); }, 0);
 
 function _renderLanguageSettings(main) {
   _applyLanguageGlobals();
@@ -49728,6 +49861,10 @@ function _renderLanguageSettings(main) {
 function _ftzLanguagePick(code) {
   localStorage.setItem('ftz_language', code);
   _applyLanguageGlobals();
+  // Re-translate every data-i18n element in the live DOM so the entire app
+  // chrome (home view, friends view, bastion empty state, modals, etc.)
+  // flips immediately without a page reload.
+  _ftzApplyI18n();
   buildProfileView('language');
   const meta = _ftzCurrentLangMeta();
   toast(`${meta.flag} ${meta.native}`, 'success');

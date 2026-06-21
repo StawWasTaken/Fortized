@@ -40,10 +40,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix155';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix156';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix155';
+    s4.src = '/firebase-compat-shim.js?v=2026fix156';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -52,14 +52,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix155">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix156">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix155', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix156', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -399,20 +399,20 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
             <div class="hero-sparkles" id="hero-sparkles"></div>
             <!-- Left content -->
             <div class="hero-left-content">
-              <div class="hero-greeting">Welcome back, <span id="hero-username" style="color:var(--accent);font-weight:700;margin:0 4px;"></span> <span class="wave-emoji" style="font-size:18px;">👋</span></div>
-              <h1>Your <em>Fortress</em><br>Awaits</h1>
+              <div class="hero-greeting"><span data-i18n="home.hero.welcome">Welcome back,</span> <span id="hero-username" style="color:var(--accent);font-weight:700;margin:0 4px;"></span> <span class="wave-emoji" style="font-size:18px;">👋</span></div>
+              <h1><span data-i18n="home.hero.your">Your</span> <em data-i18n="home.hero.fortress">Fortress</em><br><span data-i18n="home.hero.awaits">Awaits</span></h1>
               <div class="home-hero-actions">
                 <button class="hero-btn hero-btn-primary" onclick="showView('discover')" onmouseenter="_joysterReact('wink')" onmouseleave="_joysterReact('idle')">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
-                  Explore
+                  <span data-i18n="home.hero.explore">Explore</span>
                 </button>
                 <button class="hero-btn hero-btn-secondary" onclick="openModal('modal-new-dm')" onmouseenter="_joysterReact('point')" onmouseleave="_joysterReact('idle')">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                  Message
+                  <span data-i18n="home.hero.message">Message</span>
                 </button>
                 <button class="hero-btn hero-btn-create" onclick="openModal('modal-create-bastion')" onmouseenter="_joysterReact('excited')" onmouseleave="_joysterReact('idle')">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                  Create
+                  <span data-i18n="home.hero.create">Create</span>
                 </button>
               </div>
               <!-- Micro-status strip (live stats) -->
@@ -436,59 +436,59 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
             </div>
             <!-- 2) Who's Online Today — online friends, no cards, just clean chips -->
             <div class="realm-section">
-              <div class="realm-section-title">Who's Online Today? <a href="#" onclick="event.preventDefault();showView('dms');setTimeout(()=>{try{showDMFriendsHome();}catch(_){}},80);" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">View all friends ›</a></div>
+              <div class="realm-section-title"><span data-i18n="home.section.who_online">Who's Online Today?</span> <a href="#" onclick="event.preventDefault();showView('dms');setTimeout(()=>{try{showDMFriendsHome();}catch(_){}},80);" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;"><span data-i18n="home.section.view_all_friends">View all friends</span> ›</a></div>
               <div id="home-friends-today" class="home-friends-online"></div>
             </div>
             <!-- 3) What are people buying — rectangular CARD with 6 item cards inside -->
             <div class="realm-section">
-              <div class="realm-section-title">What are People Buying? <a href="#" onclick="event.preventDefault();_openFortshop()" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Fortshop ›</a></div>
+              <div class="realm-section-title"><span data-i18n="home.section.buying">What are People Buying?</span> <a href="#" onclick="event.preventDefault();_openFortshop()" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Fortshop ›</a></div>
               <div id="home-trending-items" class="home-buying-card"></div>
             </div>
             <!-- 4) What's happening — 4 top forum posts -->
             <div class="realm-section">
-              <div class="realm-section-title">What's Happening? <a href="#" onclick="event.preventDefault();showView('forum')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Forum ›</a></div>
+              <div class="realm-section-title"><span data-i18n="home.section.happening">What's Happening?</span> <a href="#" onclick="event.preventDefault();showView('forum')" style="margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;">Forum ›</a></div>
               <div id="home-trending-forum"></div>
             </div>
             <!-- 5) Feedback section — "A place where..." card + regular feedback card -->
             <div class="realm-section">
-              <div class="realm-section-title">Feedback</div>
+              <div class="realm-section-title" data-i18n="home.section.feedback">Feedback</div>
               <div class="home-feedback-row">
                 <div class="home-feedback-card home-fb-place">
                   <div class="home-fb-hdr">
-                    <span class="home-fb-title">A place where…</span>
-                    <span class="home-fb-hint">Finish the sentence</span>
+                    <span class="home-fb-title" data-i18n="home.fb.place_title">A place where…</span>
+                    <span class="home-fb-hint" data-i18n="home.fb.place_hint">Finish the sentence</span>
                   </div>
                   <div class="home-fb-user" id="home-fb-user"></div>
                   <div class="home-fb-compose">
-                    <span class="home-fb-prefix">A place where</span>
-                    <input id="home-fb-place-input" class="home-fb-input" maxlength="180" placeholder="…everyone feels at home." autocomplete="off">
+                    <span class="home-fb-prefix" data-i18n="home.fb.place_prefix">A place where</span>
+                    <input id="home-fb-place-input" class="home-fb-input" maxlength="180" data-i18n-placeholder="home.fb.place_placeholder" placeholder="…everyone feels at home." autocomplete="off">
                   </div>
                   <div class="home-fb-actions">
-                    <label class="home-fb-anon"><input id="home-fb-anon" type="checkbox"> Stay anonymous</label>
+                    <label class="home-fb-anon"><input id="home-fb-anon" type="checkbox"> <span data-i18n="home.fb.anon">Stay anonymous</span></label>
                     <button class="home-fb-send" onclick="submitPlaceFeedback()">
                       <span class="home-fb-shine"></span>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                      Send
+                      <span data-i18n="home.fb.send">Send</span>
                     </button>
                   </div>
                 </div>
                 <div class="home-feedback-card home-fb-regular">
                   <div class="home-fb-hdr">
-                    <span class="home-fb-title">Regular feedback</span>
-                    <span class="home-fb-hint">Tell us what's on your mind</span>
+                    <span class="home-fb-title" data-i18n="home.fb.regular_title">Regular feedback</span>
+                    <span class="home-fb-hint" data-i18n="home.fb.regular_hint">Tell us what's on your mind</span>
                   </div>
-                  <textarea id="home-fb-regular-text" class="home-fb-textarea" maxlength="500" placeholder="Bugs, ideas, polish… anything goes."></textarea>
+                  <textarea id="home-fb-regular-text" class="home-fb-textarea" maxlength="500" data-i18n-placeholder="home.fb.textarea_placeholder" placeholder="Bugs, ideas, polish… anything goes."></textarea>
                   <div class="home-fb-actions">
                     <select id="home-fb-regular-cat" class="home-fb-select">
-                      <option value="suggestion">Suggestion</option>
-                      <option value="bug">Bug report</option>
-                      <option value="question">Question</option>
-                      <option value="other">Other</option>
+                      <option value="suggestion" data-i18n="home.fb.cat_suggestion">Suggestion</option>
+                      <option value="bug" data-i18n="home.fb.cat_bug">Bug report</option>
+                      <option value="question" data-i18n="home.fb.cat_question">Question</option>
+                      <option value="other" data-i18n="home.fb.cat_other">Other</option>
                     </select>
                     <button class="home-fb-send" onclick="submitRegularFeedback()">
                       <span class="home-fb-shine"></span>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                      Send
+                      <span data-i18n="home.fb.send">Send</span>
                     </button>
                   </div>
                 </div>
@@ -499,7 +499,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
 
         <!-- Active Now right sidebar (no ad) -->
         <div class="active-now-sidebar" id="home-active-now">
-          <div class="active-now-header">Active Now</div>
+          <div class="active-now-header" data-i18n="home.active_now">Active Now</div>
           <div class="active-now-list" id="home-active-now-list"></div>
         </div>
       </div>
@@ -511,7 +511,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
       </div>
       <!-- Active Now sidebar for DMs -->
       <div class="active-now-sidebar" id="dm-active-now">
-        <div class="active-now-header">Active Now</div>
+        <div class="active-now-header" data-i18n="home.active_now">Active Now</div>
         <div class="active-now-list" id="dm-active-now-list"></div>
       </div>
       <div id="dm-user-panel" style="display:none;width:341px;min-width:341px;max-width:341px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
@@ -522,13 +522,13 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
       <div style="flex:1;overflow-y:auto;padding:28px;">
         <div style="max-width:700px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
-            <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;">Friends</h2>
-            <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:7px 14px;border-radius:8px;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Friend</button>
+            <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;" data-i18n="friends.title">Friends</h2>
+            <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:7px 14px;border-radius:8px;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span data-i18n="friends.add">Add Friend</span></button>
           </div>
           <div id="friends-tabs" style="display:flex;gap:5px;margin-bottom:20px;">
-            <button class="disc-tab active" onclick="filterFriends('all',this)">All</button>
-            <button class="disc-tab" onclick="filterFriends('online',this)">Online</button>
-            <button class="disc-tab" onclick="filterFriends('pending',this)">Pending</button>
+            <button class="disc-tab active" onclick="filterFriends('all',this)" data-i18n="friends.tab.all">All</button>
+            <button class="disc-tab" onclick="filterFriends('online',this)" data-i18n="friends.tab.online">Online</button>
+            <button class="disc-tab" onclick="filterFriends('pending',this)" data-i18n="friends.tab.pending">Pending</button>
           </div>
           <div id="friends-list"></div>
         </div>
@@ -545,8 +545,8 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
       <div class="chat-wrap" id="bastion-chat-wrap">
         <div class="empty-state">
           <div class="ei" style="font-size:48px;color:rgba(255,255,255,.15);"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l3-4 3 4v14"/><path d="M13 21V7l3-4 3 4v14"/><rect x="9" y="17" width="2" height="4"/><rect x="4" y="10" width="2" height="3"/><rect x="14" y="10" width="2" height="3"/></svg></div>
-          <h3>Select a channel</h3>
-          <p>Pick a text channel from the sidebar to start chatting.</p>
+          <h3 data-i18n="bastion.empty.title">Select a channel</h3>
+          <p data-i18n="bastion.empty.body">Pick a text channel from the sidebar to start chatting.</p>
         </div>
       </div>
       <div class="member-list" id="member-list"></div>
@@ -1216,10 +1216,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix155"></script>
-<script src="/app/app.js?v=2026fix155"></script>
-<script src="/app/joy-system.js?v=2026fix155"></script>
-<script src="/app/chronicle-games.js?v=2026fix155"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix156"></script>
+<script src="/app/app.js?v=2026fix156"></script>
+<script src="/app/joy-system.js?v=2026fix156"></script>
+<script src="/app/chronicle-games.js?v=2026fix156"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

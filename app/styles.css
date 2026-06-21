@@ -3149,12 +3149,12 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   color:#fef83d;background:rgba(254,248,61,.08);
 }
 
-/* ── Rich identity strip (Option B) ──────────────────────────
-   Same base card; adds a custom-status line, badge chip, and
-   a hover-only action row with Edit Profile + Switch pills.
-   __main is the click target (jumps to My Profile); __actions
-   sits underneath as a separate row that animates in on hover. */
-.settings-identity--rich{
+/* ── Tile identity card (Option C) ───────────────────────────
+   Big square 54×54 avatar on the left, name + handle stacked
+   next to it, plus a flat chip row underneath: Edit · Switch ·
+   Status. Always visible — no hover-to-reveal — so every
+   affordance is discoverable on first look (incl. touch). */
+.settings-identity--tile{
   flex-direction:column;
   align-items:stretch;
   gap:0;
@@ -3162,26 +3162,32 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   cursor:default;
   overflow:hidden;
 }
-.settings-identity--rich .settings-identity__main{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 12px;
-  cursor:pointer;
-  border-radius:12px 12px 0 0;
-  transition:background .14s;
+.settings-identity--tile .settings-identity__top{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 14px 12px;
 }
-.settings-identity--rich .settings-identity__main:focus-visible{
-  box-shadow:inset 0 0 0 2px rgba(254,248,61,.35);
-  outline:none;
-}
-.settings-identity--rich:hover{
+.settings-identity--tile:hover{
   background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
   border-color:rgba(255,255,255,.1);
 }
-.settings-identity--rich .settings-identity__avatar-wrap{
-  width:46px;height:46px;
+
+/* Square avatar variant. Same wrap + glow primitives, different
+   border-radius and slightly larger size. */
+.settings-identity__avatar-wrap--square{ width:54px;height:54px; }
+.settings-identity__avatar--square{ border-radius:14px; }
+.settings-identity__glow--square{
+  border-radius:18px;
+  background:radial-gradient(circle,rgba(254,248,61,.32) 0%,rgba(254,248,61,0) 70%);
 }
-.settings-identity--rich .settings-identity__name{ font-size:14px; }
-.settings-identity--rich .settings-identity__handle{ font-size:11.5px; }
+.settings-identity__avatar-wrap--square .settings-identity__dot{
+  right:-3px;bottom:-3px;
+}
+
+.settings-identity--tile .settings-identity__name{
+  font-size:15px;
+  margin-bottom:1px;
+}
+.settings-identity--tile .settings-identity__handle{ font-size:11.5px; }
 
 .settings-identity__cs{
   display:flex;align-items:center;gap:5px;
@@ -3217,53 +3223,38 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   box-shadow:0 0 8px rgba(254,248,61,.08);
 }
 
-.settings-identity__actions{
-  display:flex;gap:6px;
-  padding:0 12px;
-  max-height:0;
-  opacity:0;
-  overflow:hidden;
-  transition:max-height .2s ease,opacity .14s,padding-bottom .2s ease,border-top-color .2s;
-  border-top:1px solid transparent;
+/* Flat chip row — three buttons, each labelled. The Status chip
+   shows the same status-dot SVG used on the avatar so the chip
+   doubles as a live indicator without taking extra room. */
+.settings-identity__chips{
+  display:flex;gap:5px;
+  padding:0 8px 8px;
 }
-.settings-identity--rich:hover .settings-identity__actions,
-.settings-identity--rich:focus-within .settings-identity__actions{
-  max-height:46px;
-  opacity:1;
-  padding:8px 12px 10px;
-  border-top-color:rgba(255,255,255,.04);
-}
-.settings-identity__pill{
+.settings-identity__chip{
   flex:1;
   display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  padding:6px 10px;
+  padding:7px 8px;
   font-family:inherit;
   font-size:11px;font-weight:700;letter-spacing:.01em;
-  border-radius:7px;
+  color:rgba(255,255,255,.65);
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:8px;
   cursor:pointer;
-  border:1px solid;
   transition:all .12s;
 }
-.settings-identity__pill{
-  color:#13161d;
-  background:var(--accent);
-  border-color:var(--accent);
-}
-.settings-identity__pill:hover{
-  filter:brightness(1.08);
-  transform:translateY(-1px);
-}
-.settings-identity__pill--ghost{
-  color:rgba(255,255,255,.7);
-  background:rgba(255,255,255,.04);
-  border-color:rgba(255,255,255,.08);
-}
-.settings-identity__pill--ghost:hover{
+.settings-identity__chip:hover{
   color:#fff;
-  background:rgba(255,255,255,.08);
-  border-color:rgba(255,255,255,.16);
-  filter:none;
+  background:rgba(255,255,255,.07);
+  border-color:rgba(255,255,255,.14);
 }
+.settings-identity__chip svg{ opacity:.55; transition:opacity .12s; }
+.settings-identity__chip:hover svg{ opacity:.9; }
+.settings-identity__chip-dot{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:10px;height:10px;flex-shrink:0;
+}
+.settings-identity__chip-dot svg{ width:10px;height:10px;display:block;opacity:1; }
 
 /* External-link nav entries (Support, Legal) — open in a new tab and
    show a tiny ↗ instead of routing through buildProfileView. */

@@ -20117,11 +20117,11 @@ function buildProfileNav(scroll, opts) {
 
   scroll.dataset.activeTab = activeTab;
   scroll.innerHTML = `
-    <div class="settings-identity settings-identity--rich" data-status="${_navStatus}" role="group" data-tip="${escapeHTML(_t('nav.edit_profiles'))}">
-      <div class="settings-identity__main" onclick="buildProfileView('myprofile')" role="button" tabindex="0">
-        <div class="settings-identity__avatar-wrap">
-          <div class="settings-identity__glow"></div>
-          <div class="settings-identity__avatar">${_navPfp}</div>
+    <div class="settings-identity settings-identity--tile" data-status="${_navStatus}" role="group">
+      <div class="settings-identity__top">
+        <div class="settings-identity__avatar-wrap settings-identity__avatar-wrap--square">
+          <div class="settings-identity__glow settings-identity__glow--square"></div>
+          <div class="settings-identity__avatar settings-identity__avatar--square">${_navPfp}</div>
           <span class="settings-identity__dot">${_navStatusDot}</span>
         </div>
         <div class="settings-identity__body">
@@ -20131,14 +20131,18 @@ function buildProfileNav(scroll, opts) {
         </div>
         ${_navBadges}
       </div>
-      <div class="settings-identity__actions">
-        <button class="settings-identity__pill" onclick="buildProfileView('myprofile')">
+      <div class="settings-identity__chips">
+        <button class="settings-identity__chip" onclick="buildProfileView('myprofile')">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Edit Profile
+          Edit
         </button>
-        <button class="settings-identity__pill settings-identity__pill--ghost" onclick="_settingsSwitchProfile()">
+        <button class="settings-identity__chip" onclick="_settingsSwitchProfile()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
           Switch
+        </button>
+        <button class="settings-identity__chip" onclick="openStatusPicker()">
+          <span class="settings-identity__chip-dot" data-status="${_navStatus}">${_navStatusDot}</span>
+          Status
         </button>
       </div>
     </div>

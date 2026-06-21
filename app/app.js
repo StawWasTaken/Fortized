@@ -6516,25 +6516,25 @@ function showDMFriendsHome() {
         <img src="/Fortized banner.png?v=2" class="disc-hero-bg" alt="" onerror="this.style.display='none'">
         <div class="disc-hero-fade"></div>
         <div class="disc-hero-content">
-          <h1 style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin:0 0 3px;text-shadow:0 2px 12px rgba(0,0,0,.5);">Friends</h1>
-          <p style="font-size:11.5px;color:rgba(255,255,255,.4);margin:0;">Your conversations & friends</p>
+          <h1 style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin:0 0 3px;text-shadow:0 2px 12px rgba(0,0,0,.5);">${_t('friends.title')}</h1>
+          <p style="font-size:11.5px;color:rgba(255,255,255,.4);margin:0;">${_t('dms.friends_subtitle')}</p>
         </div>
       </div>
       <div style="padding:16px 28px 28px;max-width:900px;">
         <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:14px;">
-          <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
+          <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> ${_t('friends.add')}</button>
         </div>
         <!-- Search bar -->
         <div style="margin-bottom:20px;position:relative;">
           <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           </span>
-          <input type="text" id="dm-friends-search" placeholder="Search friends..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;">
+          <input type="text" id="dm-friends-search" placeholder="${_t('dms.search_friends')}" oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;">
         </div>
         <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
-          <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">Online</button>
-          <button class="disc-tab" onclick="dmFriendsFilter('all',this)">All</button>
-          <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">Pending</button>
+          <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">${_t('friends.tab.online')}</button>
+          <button class="disc-tab" onclick="dmFriendsFilter('all',this)">${_t('friends.tab.all')}</button>
+          <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">${_t('friends.tab.pending')}</button>
         </div>
         <div id="dm-friends-list"></div>
       </div>
@@ -22315,15 +22315,15 @@ async function toggleNotifPanel() {
     <div class="modal-bar" style="flex-shrink:0;border-radius:18px 18px 0 0;"></div>
     <div class="npv-header">
       <span style="color:var(--accent);display:inline-flex;">${_faMsg('bell', 18)}</span>
-      <h3>Inbox</h3>
-      <button onclick="markAllRead()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;">Mark all read</button>
+      <h3>${_t('notif.inbox')}</h3>
+      <button onclick="markAllRead()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;">${_t('notif.mark_all')}</button>
       <button onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
     </div>
     <div class="npv-tabs" id="npv-tabs">
-      <button class="npv-tab active" onclick="_setNotifTab('all',this)">All</button>
-      <button class="npv-tab" onclick="_setNotifTab('unread',this)">Unread</button>
-      <button class="npv-tab" onclick="_setNotifTab('mentions',this)">Mentions</button>
-      <button class="npv-tab" onclick="_setNotifTab('friends',this)">Friends</button>
+      <button class="npv-tab active" onclick="_setNotifTab('all',this)">${_t('notif.tab.all')}</button>
+      <button class="npv-tab" onclick="_setNotifTab('unread',this)">${_t('notif.tab.unread')}</button>
+      <button class="npv-tab" onclick="_setNotifTab('mentions',this)">${_t('notif.tab.mentions')}</button>
+      <button class="npv-tab" onclick="_setNotifTab('friends',this)">${_t('notif.tab.friends')}</button>
     </div>
     <div class="npv-list" id="np-list-v2"><div style="text-align:center;padding:30px;display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="skeleton skeleton-text" style="width:80%;height:14px;"></div><div class="skeleton skeleton-text" style="width:60%;height:14px;"></div><div class="skeleton skeleton-text" style="width:40%;height:14px;"></div></div></div>`;
   document.body.appendChild(panel);
@@ -22376,7 +22376,7 @@ async function buildNotifList() {
   if(!notifs.length){
     list.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;">'
       +'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>'
-      +'<div style="font-size:13px;color:var(--muted);text-align:center;">All caught up!<br><span style="font-size:11.5px;opacity:.6;">No new notifications</span></div></div>';
+      +'<div style="font-size:13px;color:var(--muted);text-align:center;">'+_t('notif.empty.title')+'<br><span style="font-size:11.5px;opacity:.6;">'+_t('notif.empty.body')+'</span></div></div>';
     return;
   }
   const svgs = {
@@ -49490,6 +49490,8 @@ const _LANG_PACK = {
     // Common chrome — buttons, toasts, confirms used everywhere.
     'btn.save':'Save', 'btn.cancel':'Cancel', 'btn.delete':'Delete', 'btn.confirm':'Confirm', 'btn.close':'Close', 'btn.copy':'Copy', 'btn.send':'Send', 'btn.edit':'Edit', 'btn.add':'Add', 'btn.remove':'Remove', 'btn.back':'Back', 'btn.next':'Next', 'btn.reset':'Reset', 'btn.apply':'Apply',
     'toast.saved':'Saved', 'toast.copied':'Copied', 'toast.deleted':'Deleted', 'toast.failed':'Something went wrong', 'toast.sent':'Sent',
+    'notif.inbox':'Inbox', 'notif.mark_all':'Mark all read', 'notif.tab.all':'All', 'notif.tab.unread':'Unread', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Friends', 'notif.empty.title':'All caught up!', 'notif.empty.body':'No new notifications',
+    'dms.friends_subtitle':'Your conversations & friends', 'dms.search_friends':'Search friends…',
   },
   fr: {
     'nav.account':'Compte', 'nav.experience':'Expérience', 'nav.activity':'Activité', 'nav.safety':'Sécurité', 'nav.support':'Aide',
@@ -49519,6 +49521,8 @@ const _LANG_PACK = {
     'dms.empty.title':'Sélectionnez une conversation', 'dms.empty.body':'Choisissez un message direct dans la barre latérale ou commencez-en un nouveau.',
     'btn.save':'Enregistrer', 'btn.cancel':'Annuler', 'btn.delete':'Supprimer', 'btn.confirm':'Confirmer', 'btn.close':'Fermer', 'btn.copy':'Copier', 'btn.send':'Envoyer', 'btn.edit':'Modifier', 'btn.add':'Ajouter', 'btn.remove':'Retirer', 'btn.back':'Retour', 'btn.next':'Suivant', 'btn.reset':'Réinitialiser', 'btn.apply':'Appliquer',
     'toast.saved':'Enregistré', 'toast.copied':'Copié', 'toast.deleted':'Supprimé', 'toast.failed':'Une erreur est survenue', 'toast.sent':'Envoyé',
+    'notif.inbox':'Boîte de réception', 'notif.mark_all':'Tout marquer comme lu', 'notif.tab.all':'Tout', 'notif.tab.unread':'Non lus', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Amis', 'notif.empty.title':'Tout est à jour !', 'notif.empty.body':'Aucune nouvelle notification',
+    'dms.friends_subtitle':'Vos conversations et amis', 'dms.search_friends':'Rechercher des amis…',
     lang_title:'Langue et heure', lang_section:'Langue d’affichage', lang_desc:'Choisissez la langue d’affichage de l’interface. Les changements s’appliquent instantanément.', lang_picker:'Langue', time_section:'Format de l’heure', time_desc:'Comment l’heure est affichée dans l’application.', time_24:'24 heures (14:30)', time_12:'12 heures (2:30 PM)', preview_section:'Aperçu', preview_desc:'Exemple en direct avec vos réglages actuels.', preview_hello:'Bonjour !', preview_today:'Nous sommes le', preview_now:'Il est',
   },
   es: {
@@ -49549,6 +49553,8 @@ const _LANG_PACK = {
     'dms.empty.title':'Selecciona una conversación', 'dms.empty.body':'Elige un mensaje directo en la barra lateral o empieza uno nuevo.',
     'btn.save':'Guardar', 'btn.cancel':'Cancelar', 'btn.delete':'Eliminar', 'btn.confirm':'Confirmar', 'btn.close':'Cerrar', 'btn.copy':'Copiar', 'btn.send':'Enviar', 'btn.edit':'Editar', 'btn.add':'Añadir', 'btn.remove':'Quitar', 'btn.back':'Atrás', 'btn.next':'Siguiente', 'btn.reset':'Restablecer', 'btn.apply':'Aplicar',
     'toast.saved':'Guardado', 'toast.copied':'Copiado', 'toast.deleted':'Eliminado', 'toast.failed':'Algo salió mal', 'toast.sent':'Enviado',
+    'notif.inbox':'Bandeja', 'notif.mark_all':'Marcar todo como leído', 'notif.tab.all':'Todo', 'notif.tab.unread':'No leídas', 'notif.tab.mentions':'Menciones', 'notif.tab.friends':'Amigos', 'notif.empty.title':'¡Todo al día!', 'notif.empty.body':'Sin notificaciones nuevas',
+    'dms.friends_subtitle':'Tus conversaciones y amigos', 'dms.search_friends':'Buscar amigos…',
     lang_title:'Idioma y hora', lang_section:'Idioma de pantalla', lang_desc:'Elige el idioma con el que debe mostrarse la interfaz. Los cambios se aplican al instante.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Cómo se muestran las horas en la aplicación.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Vista previa', preview_desc:'Muestra en vivo con tus ajustes actuales.', preview_hello:'¡Hola!', preview_today:'Hoy es', preview_now:'Ahora son las',
   },
   de: {
@@ -49579,6 +49585,8 @@ const _LANG_PACK = {
     'dms.empty.title':'Wähle eine Unterhaltung', 'dms.empty.body':'Wähle eine Direktnachricht in der Seitenleiste oder starte eine neue.',
     'btn.save':'Speichern', 'btn.cancel':'Abbrechen', 'btn.delete':'Löschen', 'btn.confirm':'Bestätigen', 'btn.close':'Schließen', 'btn.copy':'Kopieren', 'btn.send':'Senden', 'btn.edit':'Bearbeiten', 'btn.add':'Hinzufügen', 'btn.remove':'Entfernen', 'btn.back':'Zurück', 'btn.next':'Weiter', 'btn.reset':'Zurücksetzen', 'btn.apply':'Übernehmen',
     'toast.saved':'Gespeichert', 'toast.copied':'Kopiert', 'toast.deleted':'Gelöscht', 'toast.failed':'Etwas ist schiefgelaufen', 'toast.sent':'Gesendet',
+    'notif.inbox':'Posteingang', 'notif.mark_all':'Alle als gelesen markieren', 'notif.tab.all':'Alle', 'notif.tab.unread':'Ungelesen', 'notif.tab.mentions':'Erwähnungen', 'notif.tab.friends':'Freunde', 'notif.empty.title':'Alles erledigt!', 'notif.empty.body':'Keine neuen Benachrichtigungen',
+    'dms.friends_subtitle':'Deine Unterhaltungen und Freunde', 'dms.search_friends':'Freunde suchen…',
     lang_title:'Sprache & Uhrzeit', lang_section:'Anzeigesprache', lang_desc:'Wähle die Sprache, in der die Oberfläche angezeigt werden soll. Änderungen werden sofort übernommen.', lang_picker:'Sprache', time_section:'Uhrzeitformat', time_desc:'Wie Uhrzeiten in der App angezeigt werden.', time_24:'24-Stunden (14:30)', time_12:'12-Stunden (2:30 PM)', preview_section:'Vorschau', preview_desc:'Live-Beispiel mit deinen aktuellen Einstellungen.', preview_hello:'Hallo!', preview_today:'Heute ist', preview_now:'Jetzt ist es',
   },
   it: {
@@ -49609,6 +49617,8 @@ const _LANG_PACK = {
     'dms.empty.title':'Seleziona una conversazione', 'dms.empty.body':'Scegli un messaggio diretto dalla barra laterale o iniziane uno nuovo.',
     'btn.save':'Salva', 'btn.cancel':'Annulla', 'btn.delete':'Elimina', 'btn.confirm':'Conferma', 'btn.close':'Chiudi', 'btn.copy':'Copia', 'btn.send':'Invia', 'btn.edit':'Modifica', 'btn.add':'Aggiungi', 'btn.remove':'Rimuovi', 'btn.back':'Indietro', 'btn.next':'Avanti', 'btn.reset':'Reimposta', 'btn.apply':'Applica',
     'toast.saved':'Salvato', 'toast.copied':'Copiato', 'toast.deleted':'Eliminato', 'toast.failed':'Qualcosa è andato storto', 'toast.sent':'Inviato',
+    'notif.inbox':'Posta in arrivo', 'notif.mark_all':'Segna tutto come letto', 'notif.tab.all':'Tutto', 'notif.tab.unread':'Non lette', 'notif.tab.mentions':'Menzioni', 'notif.tab.friends':'Amici', 'notif.empty.title':'Tutto in ordine!', 'notif.empty.body':'Nessuna nuova notifica',
+    'dms.friends_subtitle':'Le tue conversazioni e amici', 'dms.search_friends':'Cerca amici…',
     lang_title:'Lingua e ora', lang_section:'Lingua di visualizzazione', lang_desc:'Scegli la lingua in cui mostrare l’interfaccia. Le modifiche sono immediate.', lang_picker:'Lingua', time_section:'Formato dell’ora', time_desc:'Come vengono mostrate le ore nell’app.', time_24:'24 ore (14:30)', time_12:'12 ore (2:30 PM)', preview_section:'Anteprima', preview_desc:'Esempio dal vivo con le tue impostazioni.', preview_hello:'Ciao!', preview_today:'Oggi è', preview_now:'Adesso sono le',
   },
   pt: {
@@ -49639,6 +49649,8 @@ const _LANG_PACK = {
     'dms.empty.title':'Selecione uma conversa', 'dms.empty.body':'Escolha uma mensagem direta na barra lateral ou inicie uma nova.',
     'btn.save':'Salvar', 'btn.cancel':'Cancelar', 'btn.delete':'Excluir', 'btn.confirm':'Confirmar', 'btn.close':'Fechar', 'btn.copy':'Copiar', 'btn.send':'Enviar', 'btn.edit':'Editar', 'btn.add':'Adicionar', 'btn.remove':'Remover', 'btn.back':'Voltar', 'btn.next':'Próximo', 'btn.reset':'Redefinir', 'btn.apply':'Aplicar',
     'toast.saved':'Salvo', 'toast.copied':'Copiado', 'toast.deleted':'Excluído', 'toast.failed':'Algo deu errado', 'toast.sent':'Enviado',
+    'notif.inbox':'Caixa de entrada', 'notif.mark_all':'Marcar tudo como lido', 'notif.tab.all':'Tudo', 'notif.tab.unread':'Não lidas', 'notif.tab.mentions':'Menções', 'notif.tab.friends':'Amigos', 'notif.empty.title':'Tudo em dia!', 'notif.empty.body':'Sem notificações novas',
+    'dms.friends_subtitle':'Suas conversas e amigos', 'dms.search_friends':'Buscar amigos…',
     lang_title:'Idioma e hora', lang_section:'Idioma de exibição', lang_desc:'Escolha o idioma em que a interface deve aparecer. As mudanças são aplicadas na hora.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Como as horas são exibidas no app.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Pré-visualização', preview_desc:'Exemplo ao vivo com suas configurações.', preview_hello:'Olá!', preview_today:'Hoje é', preview_now:'Agora são',
   },
   ja: {
@@ -49669,6 +49681,8 @@ const _LANG_PACK = {
     'dms.empty.title':'会話を選択', 'dms.empty.body':'サイドバーからダイレクトメッセージを選ぶか、新しく始めましょう。',
     'btn.save':'保存', 'btn.cancel':'キャンセル', 'btn.delete':'削除', 'btn.confirm':'確定', 'btn.close':'閉じる', 'btn.copy':'コピー', 'btn.send':'送信', 'btn.edit':'編集', 'btn.add':'追加', 'btn.remove':'外す', 'btn.back':'戻る', 'btn.next':'次へ', 'btn.reset':'リセット', 'btn.apply':'適用',
     'toast.saved':'保存しました', 'toast.copied':'コピーしました', 'toast.deleted':'削除しました', 'toast.failed':'問題が発生しました', 'toast.sent':'送信しました',
+    'notif.inbox':'受信箱', 'notif.mark_all':'すべて既読にする', 'notif.tab.all':'すべて', 'notif.tab.unread':'未読', 'notif.tab.mentions':'メンション', 'notif.tab.friends':'フレンド', 'notif.empty.title':'すべて確認済み！', 'notif.empty.body':'新しい通知はありません',
+    'dms.friends_subtitle':'会話とフレンド', 'dms.search_friends':'フレンドを検索…',
     lang_title:'言語と時刻', lang_section:'表示言語', lang_desc:'UI を表示する言語を選んでください。変更はすぐに適用されます。', lang_picker:'言語', time_section:'時刻表示', time_desc:'アプリ全体での時刻表示です。', time_24:'24時間表記 (14:30)', time_12:'12時間表記 (2:30 PM)', preview_section:'プレビュー', preview_desc:'現在の設定でのサンプルです。', preview_hello:'こんにちは！', preview_today:'今日は', preview_now:'今は',
   },
   ar: {
@@ -49699,6 +49713,8 @@ const _LANG_PACK = {
     'dms.empty.title':'اختر محادثة', 'dms.empty.body':'اختر رسالة مباشرة من الشريط الجانبي أو ابدأ واحدة جديدة.',
     'btn.save':'حفظ', 'btn.cancel':'إلغاء', 'btn.delete':'حذف', 'btn.confirm':'تأكيد', 'btn.close':'إغلاق', 'btn.copy':'نسخ', 'btn.send':'إرسال', 'btn.edit':'تعديل', 'btn.add':'إضافة', 'btn.remove':'إزالة', 'btn.back':'رجوع', 'btn.next':'التالي', 'btn.reset':'إعادة تعيين', 'btn.apply':'تطبيق',
     'toast.saved':'تم الحفظ', 'toast.copied':'تم النسخ', 'toast.deleted':'تم الحذف', 'toast.failed':'حدث خطأ ما', 'toast.sent':'تم الإرسال',
+    'notif.inbox':'صندوق الوارد', 'notif.mark_all':'تعليم الكل كمقروء', 'notif.tab.all':'الكل', 'notif.tab.unread':'غير مقروء', 'notif.tab.mentions':'الإشارات', 'notif.tab.friends':'الأصدقاء', 'notif.empty.title':'كل شيء على ما يرام!', 'notif.empty.body':'لا توجد إشعارات جديدة',
+    'dms.friends_subtitle':'محادثاتك وأصدقاؤك', 'dms.search_friends':'بحث عن الأصدقاء…',
     lang_title:'اللغة والوقت', lang_section:'لغة العرض', lang_desc:'اختر لغة عرض الواجهة. تدخل التغييرات حيّز التنفيذ فورًا.', lang_picker:'اللغة', time_section:'تنسيق الوقت', time_desc:'طريقة عرض الوقت في التطبيق.', time_24:'24 ساعة (14:30)', time_12:'12 ساعة (2:30 PM)', preview_section:'معاينة', preview_desc:'عيّنة حيّة بإعداداتك الحالية.', preview_hello:'مرحبًا!', preview_today:'اليوم هو', preview_now:'الآن الساعة',
   },
 };

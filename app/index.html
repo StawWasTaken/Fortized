@@ -40,10 +40,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix157';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix158';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix157';
+    s4.src = '/firebase-compat-shim.js?v=2026fix158';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -52,14 +52,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix157">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix158">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix157', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix158', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -348,7 +348,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
       <div class="ub-activity-row" id="ub-activity-row" style="display:none;">
         <div class="ub-activity-icon" id="ub-activity-icon"></div>
         <div class="ub-activity-info" id="ub-activity-info">
-          <span class="ub-activity-label">Playing</span>
+          <span class="ub-activity-label" data-i18n="ub.playing">Playing</span>
           <span class="ub-activity-name" id="ub-activity-name">—</span>
         </div>
       </div>
@@ -357,23 +357,23 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
         <div class="ub-user-row">
           <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel()">
             <div class="ua" id="ua">
-              <span id="ua-status-dot" class="ua-status-dot" data-dot-size="13" title="Online"></span>
+              <span id="ua-status-dot" class="ua-status-dot" data-dot-size="13" data-i18n-title="ub.status.online" title="Online"></span>
             </div>
             <div class="ua-info">
-              <div class="ua-name" id="ua-name">Loading…</div>
-              <div class="ua-status-text" id="ua-status-text">Online</div>
+              <div class="ua-name" id="ua-name" data-i18n="ub.loading">Loading…</div>
+              <div class="ua-status-text" id="ua-status-text" data-i18n="ub.status.online">Online</div>
             </div>
           </div>
           <div class="ua-btns">
             <div class="ua-btn-group">
-              <button onclick="toggleMic()" id="mic-btn" class="ua-btn-main" title="Mute/Unmute"></button>
-              <button onclick="_openInputDevicePopover(event)" class="ua-btn-chev" title="Input options"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l-6-6h12l-6 6z"/></svg></button>
+              <button onclick="toggleMic()" id="mic-btn" class="ua-btn-main" data-i18n-title="ub.tip.mute" title="Mute/Unmute"></button>
+              <button onclick="_openInputDevicePopover(event)" class="ua-btn-chev" data-i18n-title="ub.tip.input" title="Input options"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l-6-6h12l-6 6z"/></svg></button>
             </div>
             <div class="ua-btn-group">
-              <button onclick="toggleDeafen()" id="deafen-btn" class="ua-btn-main" title="Deafen/Undeafen"></button>
-              <button onclick="_openOutputDevicePopover(event)" class="ua-btn-chev" title="Output options"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l-6-6h12l-6 6z"/></svg></button>
+              <button onclick="toggleDeafen()" id="deafen-btn" class="ua-btn-main" data-i18n-title="ub.tip.deafen" title="Deafen/Undeafen"></button>
+              <button onclick="_openOutputDevicePopover(event)" class="ua-btn-chev" data-i18n-title="ub.tip.output" title="Output options"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l-6-6h12l-6 6z"/></svg></button>
             </div>
-            <button onclick="showView('profile')" class="ua-btn-settings" title="Settings">
+            <button onclick="showView('profile')" class="ua-btn-settings" data-i18n-title="ub.tip.settings" title="Settings">
               <svg width="14" height="14" viewBox="0 0 512 512" fill="currentColor"><path d="M195.1 9.5C198.1-5.3 211.2-16 226.4-16l59.8 0c15.2 0 28.3 10.7 31.3 25.5L332 79.5c14.1 6 27.3 13.7 39.3 22.8l67.8-22.5c14.4-4.8 30.2 1.2 37.8 14.4l29.9 51.8c7.6 13.2 4.9 29.8-6.5 39.9L447 233.3c.9 7.4 1.3 15 1.3 22.7s-.5 15.3-1.3 22.7l53.4 47.5c11.4 10.1 14 26.8 6.5 39.9l-29.9 51.8c-7.6 13.1-23.4 19.2-37.8 14.4l-67.8-22.5c-12.1 9.1-25.3 16.7-39.3 22.8l-14.4 69.9c-3.1 14.9-16.2 25.5-31.3 25.5l-59.8 0c-15.2 0-28.3-10.7-31.3-25.5l-14.4-69.9c-14.1-6-27.2-13.7-39.3-22.8L73.5 432.3c-14.4 4.8-30.2-1.2-37.8-14.4L5.8 366.1c-7.6-13.2-4.9-29.8 6.5-39.9l53.4-47.5c-.9-7.4-1.3-15-1.3-22.7s.5-15.3 1.3-22.7L12.3 185.8c-11.4-10.1-14-26.8-6.5-39.9L35.7 94.1c7.6-13.2 23.4-19.2 37.8-14.4l67.8 22.5c12.1-9.1 25.3-16.7 39.3-22.8L195.1 9.5zM256.3 336a80 80 0 1 0 -.6-160 80 80 0 1 0 .6 160z"/></svg>
             </button>
           </div>
@@ -935,13 +935,13 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
     <div class="modal-body" style="padding:0;">
       <!-- Add Friend Section -->
       <div style="padding:28px 28px 22px;position:relative;">
-        <div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#fff;margin-bottom:5px;">Add Friend</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;max-width:340px;">You can add friends with their Fortized usernames.</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#fff;margin-bottom:5px;" data-i18n="friends.add">Add Friend</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;max-width:340px;" data-i18n="modal.add_friend.desc">You can add friends with their Fortized usernames.</div>
         <div style="position:relative;">
           <img src="/JoysterPoint.png" style="position:absolute;right:15px;bottom:calc(100% - 21px);width:108px;height:108px;object-fit:contain;z-index:3;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3));" onerror="this.style.display='none'" alt="">
           <div style="display:flex;align-items:center;gap:0;padding:4px;border-radius:12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);">
-            <input id="friend-target" placeholder="Enter a username..." autocomplete="off" spellcheck="false" oninput="checkFriendTarget(this.value)" onkeydown="if(event.key==='Enter')sendFriendRequest()" style="flex:1;padding:10px 12px;background:transparent;border:none!important;box-shadow:none!important;color:#fff;font-size:13px;outline:none;margin:0;" onfocus="this.parentElement.style.borderColor='rgba(255,249,62,.3)'" onblur="this.parentElement.style.borderColor='rgba(255,255,255,.08)'">
-            <button class="btn-a" id="friend-send-btn" onclick="sendFriendRequest()" style="padding:10px 16px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Send Friend Request</button>
+            <input id="friend-target" placeholder="Enter a username..." data-i18n-placeholder="modal.add_friend.placeholder" autocomplete="off" spellcheck="false" oninput="checkFriendTarget(this.value)" onkeydown="if(event.key==='Enter')sendFriendRequest()" style="flex:1;padding:10px 12px;background:transparent;border:none!important;box-shadow:none!important;color:#fff;font-size:13px;outline:none;margin:0;" onfocus="this.parentElement.style.borderColor='rgba(255,249,62,.3)'" onblur="this.parentElement.style.borderColor='rgba(255,255,255,.08)'">
+            <button class="btn-a" id="friend-send-btn" onclick="sendFriendRequest()" style="padding:10px 16px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span data-i18n="modal.add_friend.send">Send Friend Request</span></button>
           </div>
         </div>
         <div id="friend-target-preview" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;"></div>
@@ -1216,10 +1216,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix157"></script>
-<script src="/app/app.js?v=2026fix157"></script>
-<script src="/app/joy-system.js?v=2026fix157"></script>
-<script src="/app/chronicle-games.js?v=2026fix157"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix158"></script>
+<script src="/app/app.js?v=2026fix158"></script>
+<script src="/app/joy-system.js?v=2026fix158"></script>
+<script src="/app/chronicle-games.js?v=2026fix158"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

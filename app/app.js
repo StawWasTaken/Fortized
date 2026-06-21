@@ -23416,11 +23416,11 @@ function showCustomConfirm(message,callback){
   const overlay=document.createElement('div');
   overlay.className='ftz-confirm-overlay';
   overlay.innerHTML=`<div class="ftz-confirm-card">
-    <div class="ftz-confirm-title">Confirm</div>
+    <div class="ftz-confirm-title">${_t('btn.confirm')}</div>
     <div class="ftz-confirm-text">${escapeHTML(message)}</div>
     <div class="ftz-confirm-actions">
-      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Cancel</button>
-      <button class="ftz-btn ftz-btn-danger" id="cc-ok">Confirm</button>
+      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">${_t('btn.cancel')}</button>
+      <button class="ftz-btn ftz-btn-danger" id="cc-ok">${_t('btn.confirm')}</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -49492,6 +49492,9 @@ const _LANG_PACK = {
     'toast.saved':'Saved', 'toast.copied':'Copied', 'toast.deleted':'Deleted', 'toast.failed':'Something went wrong', 'toast.sent':'Sent',
     'notif.inbox':'Inbox', 'notif.mark_all':'Mark all read', 'notif.tab.all':'All', 'notif.tab.unread':'Unread', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Friends', 'notif.empty.title':'All caught up!', 'notif.empty.body':'No new notifications',
     'dms.friends_subtitle':'Your conversations & friends', 'dms.search_friends':'Search friends…',
+    'ub.loading':'Loading…', 'ub.playing':'Playing', 'ub.status.online':'Online',
+    'ub.tip.mute':'Mute / Unmute', 'ub.tip.deafen':'Deafen / Undeafen', 'ub.tip.input':'Input options', 'ub.tip.output':'Output options', 'ub.tip.settings':'Settings',
+    'modal.add_friend.desc':'You can add friends with their Fortized usernames.', 'modal.add_friend.placeholder':'Enter a username…', 'modal.add_friend.send':'Send Friend Request',
   },
   fr: {
     'nav.account':'Compte', 'nav.experience':'Expérience', 'nav.activity':'Activité', 'nav.safety':'Sécurité', 'nav.support':'Aide',
@@ -49523,6 +49526,9 @@ const _LANG_PACK = {
     'toast.saved':'Enregistré', 'toast.copied':'Copié', 'toast.deleted':'Supprimé', 'toast.failed':'Une erreur est survenue', 'toast.sent':'Envoyé',
     'notif.inbox':'Boîte de réception', 'notif.mark_all':'Tout marquer comme lu', 'notif.tab.all':'Tout', 'notif.tab.unread':'Non lus', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Amis', 'notif.empty.title':'Tout est à jour !', 'notif.empty.body':'Aucune nouvelle notification',
     'dms.friends_subtitle':'Vos conversations et amis', 'dms.search_friends':'Rechercher des amis…',
+    'ub.loading':'Chargement…', 'ub.playing':'Joue à', 'ub.status.online':'En ligne',
+    'ub.tip.mute':'Couper / Activer le micro', 'ub.tip.deafen':'Couper / Activer le son', 'ub.tip.input':'Options d’entrée', 'ub.tip.output':'Options de sortie', 'ub.tip.settings':'Paramètres',
+    'modal.add_friend.desc':'Vous pouvez ajouter des amis avec leur nom d’utilisateur Fortized.', 'modal.add_friend.placeholder':'Saisissez un nom d’utilisateur…', 'modal.add_friend.send':'Envoyer la demande d’ami',
     lang_title:'Langue et heure', lang_section:'Langue d’affichage', lang_desc:'Choisissez la langue d’affichage de l’interface. Les changements s’appliquent instantanément.', lang_picker:'Langue', time_section:'Format de l’heure', time_desc:'Comment l’heure est affichée dans l’application.', time_24:'24 heures (14:30)', time_12:'12 heures (2:30 PM)', preview_section:'Aperçu', preview_desc:'Exemple en direct avec vos réglages actuels.', preview_hello:'Bonjour !', preview_today:'Nous sommes le', preview_now:'Il est',
   },
   es: {
@@ -49555,6 +49561,9 @@ const _LANG_PACK = {
     'toast.saved':'Guardado', 'toast.copied':'Copiado', 'toast.deleted':'Eliminado', 'toast.failed':'Algo salió mal', 'toast.sent':'Enviado',
     'notif.inbox':'Bandeja', 'notif.mark_all':'Marcar todo como leído', 'notif.tab.all':'Todo', 'notif.tab.unread':'No leídas', 'notif.tab.mentions':'Menciones', 'notif.tab.friends':'Amigos', 'notif.empty.title':'¡Todo al día!', 'notif.empty.body':'Sin notificaciones nuevas',
     'dms.friends_subtitle':'Tus conversaciones y amigos', 'dms.search_friends':'Buscar amigos…',
+    'ub.loading':'Cargando…', 'ub.playing':'Jugando a', 'ub.status.online':'En línea',
+    'ub.tip.mute':'Silenciar / Activar micro', 'ub.tip.deafen':'Silenciar / Activar audio', 'ub.tip.input':'Opciones de entrada', 'ub.tip.output':'Opciones de salida', 'ub.tip.settings':'Configuración',
+    'modal.add_friend.desc':'Puedes añadir amigos con sus nombres de usuario de Fortized.', 'modal.add_friend.placeholder':'Introduce un nombre de usuario…', 'modal.add_friend.send':'Enviar solicitud de amistad',
     lang_title:'Idioma y hora', lang_section:'Idioma de pantalla', lang_desc:'Elige el idioma con el que debe mostrarse la interfaz. Los cambios se aplican al instante.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Cómo se muestran las horas en la aplicación.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Vista previa', preview_desc:'Muestra en vivo con tus ajustes actuales.', preview_hello:'¡Hola!', preview_today:'Hoy es', preview_now:'Ahora son las',
   },
   de: {
@@ -49587,6 +49596,9 @@ const _LANG_PACK = {
     'toast.saved':'Gespeichert', 'toast.copied':'Kopiert', 'toast.deleted':'Gelöscht', 'toast.failed':'Etwas ist schiefgelaufen', 'toast.sent':'Gesendet',
     'notif.inbox':'Posteingang', 'notif.mark_all':'Alle als gelesen markieren', 'notif.tab.all':'Alle', 'notif.tab.unread':'Ungelesen', 'notif.tab.mentions':'Erwähnungen', 'notif.tab.friends':'Freunde', 'notif.empty.title':'Alles erledigt!', 'notif.empty.body':'Keine neuen Benachrichtigungen',
     'dms.friends_subtitle':'Deine Unterhaltungen und Freunde', 'dms.search_friends':'Freunde suchen…',
+    'ub.loading':'Laden…', 'ub.playing':'Spielt', 'ub.status.online':'Online',
+    'ub.tip.mute':'Stumm / Laut', 'ub.tip.deafen':'Taub / Hören', 'ub.tip.input':'Eingangsoptionen', 'ub.tip.output':'Ausgangsoptionen', 'ub.tip.settings':'Einstellungen',
+    'modal.add_friend.desc':'Du kannst Freunde über ihre Fortized-Benutzernamen hinzufügen.', 'modal.add_friend.placeholder':'Benutzername eingeben…', 'modal.add_friend.send':'Freundschaftsanfrage senden',
     lang_title:'Sprache & Uhrzeit', lang_section:'Anzeigesprache', lang_desc:'Wähle die Sprache, in der die Oberfläche angezeigt werden soll. Änderungen werden sofort übernommen.', lang_picker:'Sprache', time_section:'Uhrzeitformat', time_desc:'Wie Uhrzeiten in der App angezeigt werden.', time_24:'24-Stunden (14:30)', time_12:'12-Stunden (2:30 PM)', preview_section:'Vorschau', preview_desc:'Live-Beispiel mit deinen aktuellen Einstellungen.', preview_hello:'Hallo!', preview_today:'Heute ist', preview_now:'Jetzt ist es',
   },
   it: {
@@ -49619,6 +49631,9 @@ const _LANG_PACK = {
     'toast.saved':'Salvato', 'toast.copied':'Copiato', 'toast.deleted':'Eliminato', 'toast.failed':'Qualcosa è andato storto', 'toast.sent':'Inviato',
     'notif.inbox':'Posta in arrivo', 'notif.mark_all':'Segna tutto come letto', 'notif.tab.all':'Tutto', 'notif.tab.unread':'Non lette', 'notif.tab.mentions':'Menzioni', 'notif.tab.friends':'Amici', 'notif.empty.title':'Tutto in ordine!', 'notif.empty.body':'Nessuna nuova notifica',
     'dms.friends_subtitle':'Le tue conversazioni e amici', 'dms.search_friends':'Cerca amici…',
+    'ub.loading':'Caricamento…', 'ub.playing':'Sta giocando a', 'ub.status.online':'Online',
+    'ub.tip.mute':'Disattiva / Attiva microfono', 'ub.tip.deafen':'Disattiva / Attiva audio', 'ub.tip.input':'Opzioni di ingresso', 'ub.tip.output':'Opzioni di uscita', 'ub.tip.settings':'Impostazioni',
+    'modal.add_friend.desc':'Puoi aggiungere amici tramite il loro nome utente Fortized.', 'modal.add_friend.placeholder':'Inserisci un nome utente…', 'modal.add_friend.send':'Invia richiesta di amicizia',
     lang_title:'Lingua e ora', lang_section:'Lingua di visualizzazione', lang_desc:'Scegli la lingua in cui mostrare l’interfaccia. Le modifiche sono immediate.', lang_picker:'Lingua', time_section:'Formato dell’ora', time_desc:'Come vengono mostrate le ore nell’app.', time_24:'24 ore (14:30)', time_12:'12 ore (2:30 PM)', preview_section:'Anteprima', preview_desc:'Esempio dal vivo con le tue impostazioni.', preview_hello:'Ciao!', preview_today:'Oggi è', preview_now:'Adesso sono le',
   },
   pt: {
@@ -49651,6 +49666,9 @@ const _LANG_PACK = {
     'toast.saved':'Salvo', 'toast.copied':'Copiado', 'toast.deleted':'Excluído', 'toast.failed':'Algo deu errado', 'toast.sent':'Enviado',
     'notif.inbox':'Caixa de entrada', 'notif.mark_all':'Marcar tudo como lido', 'notif.tab.all':'Tudo', 'notif.tab.unread':'Não lidas', 'notif.tab.mentions':'Menções', 'notif.tab.friends':'Amigos', 'notif.empty.title':'Tudo em dia!', 'notif.empty.body':'Sem notificações novas',
     'dms.friends_subtitle':'Suas conversas e amigos', 'dms.search_friends':'Buscar amigos…',
+    'ub.loading':'Carregando…', 'ub.playing':'Jogando', 'ub.status.online':'On-line',
+    'ub.tip.mute':'Mudo / Reativar microfone', 'ub.tip.deafen':'Mudo / Reativar áudio', 'ub.tip.input':'Opções de entrada', 'ub.tip.output':'Opções de saída', 'ub.tip.settings':'Configurações',
+    'modal.add_friend.desc':'Você pode adicionar amigos pelos nomes de usuário Fortized.', 'modal.add_friend.placeholder':'Digite um nome de usuário…', 'modal.add_friend.send':'Enviar pedido de amizade',
     lang_title:'Idioma e hora', lang_section:'Idioma de exibição', lang_desc:'Escolha o idioma em que a interface deve aparecer. As mudanças são aplicadas na hora.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Como as horas são exibidas no app.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Pré-visualização', preview_desc:'Exemplo ao vivo com suas configurações.', preview_hello:'Olá!', preview_today:'Hoje é', preview_now:'Agora são',
   },
   ja: {
@@ -49683,6 +49701,9 @@ const _LANG_PACK = {
     'toast.saved':'保存しました', 'toast.copied':'コピーしました', 'toast.deleted':'削除しました', 'toast.failed':'問題が発生しました', 'toast.sent':'送信しました',
     'notif.inbox':'受信箱', 'notif.mark_all':'すべて既読にする', 'notif.tab.all':'すべて', 'notif.tab.unread':'未読', 'notif.tab.mentions':'メンション', 'notif.tab.friends':'フレンド', 'notif.empty.title':'すべて確認済み！', 'notif.empty.body':'新しい通知はありません',
     'dms.friends_subtitle':'会話とフレンド', 'dms.search_friends':'フレンドを検索…',
+    'ub.loading':'読み込み中…', 'ub.playing':'プレイ中', 'ub.status.online':'オンライン',
+    'ub.tip.mute':'ミュート / 解除', 'ub.tip.deafen':'スピーカーをミュート / 解除', 'ub.tip.input':'入力オプション', 'ub.tip.output':'出力オプション', 'ub.tip.settings':'設定',
+    'modal.add_friend.desc':'Fortized のユーザー名でフレンドを追加できます。', 'modal.add_friend.placeholder':'ユーザー名を入力…', 'modal.add_friend.send':'フレンドリクエストを送信',
     lang_title:'言語と時刻', lang_section:'表示言語', lang_desc:'UI を表示する言語を選んでください。変更はすぐに適用されます。', lang_picker:'言語', time_section:'時刻表示', time_desc:'アプリ全体での時刻表示です。', time_24:'24時間表記 (14:30)', time_12:'12時間表記 (2:30 PM)', preview_section:'プレビュー', preview_desc:'現在の設定でのサンプルです。', preview_hello:'こんにちは！', preview_today:'今日は', preview_now:'今は',
   },
   ar: {
@@ -49715,6 +49736,9 @@ const _LANG_PACK = {
     'toast.saved':'تم الحفظ', 'toast.copied':'تم النسخ', 'toast.deleted':'تم الحذف', 'toast.failed':'حدث خطأ ما', 'toast.sent':'تم الإرسال',
     'notif.inbox':'صندوق الوارد', 'notif.mark_all':'تعليم الكل كمقروء', 'notif.tab.all':'الكل', 'notif.tab.unread':'غير مقروء', 'notif.tab.mentions':'الإشارات', 'notif.tab.friends':'الأصدقاء', 'notif.empty.title':'كل شيء على ما يرام!', 'notif.empty.body':'لا توجد إشعارات جديدة',
     'dms.friends_subtitle':'محادثاتك وأصدقاؤك', 'dms.search_friends':'بحث عن الأصدقاء…',
+    'ub.loading':'جارٍ التحميل…', 'ub.playing':'يلعب', 'ub.status.online':'متصل',
+    'ub.tip.mute':'كتم / إلغاء كتم الميكروفون', 'ub.tip.deafen':'كتم / إلغاء كتم الصوت', 'ub.tip.input':'خيارات الإدخال', 'ub.tip.output':'خيارات الإخراج', 'ub.tip.settings':'الإعدادات',
+    'modal.add_friend.desc':'يمكنك إضافة الأصدقاء عبر أسماء مستخدمي Fortized.', 'modal.add_friend.placeholder':'أدخل اسم مستخدم…', 'modal.add_friend.send':'إرسال طلب صداقة',
     lang_title:'اللغة والوقت', lang_section:'لغة العرض', lang_desc:'اختر لغة عرض الواجهة. تدخل التغييرات حيّز التنفيذ فورًا.', lang_picker:'اللغة', time_section:'تنسيق الوقت', time_desc:'طريقة عرض الوقت في التطبيق.', time_24:'24 ساعة (14:30)', time_12:'12 ساعة (2:30 PM)', preview_section:'معاينة', preview_desc:'عيّنة حيّة بإعداداتك الحالية.', preview_hello:'مرحبًا!', preview_today:'اليوم هو', preview_now:'الآن الساعة',
   },
 };

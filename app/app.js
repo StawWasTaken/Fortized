@@ -19936,9 +19936,12 @@ const _SETTINGS_TAB_META = {
 function _settingsHeader(tab) {
   const meta = _SETTINGS_TAB_META[tab];
   if (!meta) return '';
+  // Title goes through the translation map; falls back to the English
+  // literal in meta.title when no key matches.
+  const title = (typeof _tn === 'function') ? _tn(meta.title) : meta.title;
   return `<div class="settings-page-header">
     <span class="settings-page-header__icon">${meta.icon()}</span>
-    <div class="settings-page-header__title">${meta.title}</div>
+    <div class="settings-page-header__title">${title}</div>
   </div>`;
 }
 
@@ -20048,11 +20051,11 @@ function buildProfileNav(scroll, opts) {
     const hasSubs = Array.isArray(item.subs) && item.subs.length > 0;
     let html = `<div class="profile-nav-item${isActive?' active':''}" id="pnav-${item.id}" data-tab="${item.id}" onclick="buildProfileView('${item.id}')">
       <span class="pni-icon">${item.icon}</span>
-      <span>${item.label}</span>
+      <span>${_tn(item.label)}</span>
     </div>`;
     if (hasSubs) {
       html += `<div class="profile-nav-subs${isActive?' is-expanded':''}" data-parent="${item.id}">
-        ${item.subs.map(s => `<div class="profile-nav-sub" data-spy-target="${s.spy}" onclick="_navJumpToSpy('${item.id}','${s.spy}')">${s.label}</div>`).join('')}
+        ${item.subs.map(s => `<div class="profile-nav-sub" data-spy-target="${s.spy}" onclick="_navJumpToSpy('${item.id}','${s.spy}')">${_tn(s.label)}</div>`).join('')}
       </div>`;
     }
     return html;
@@ -20064,18 +20067,18 @@ function buildProfileNav(scroll, opts) {
       <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_navPfp}</div>
       <div style="min-width:0;flex:1;">
         <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(CU?.displayName||CU?.username||'User')}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:500;">Edit Profiles</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:500;">${escapeHTML(_t('nav.edit_profiles'))}</div>
       </div>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
     </div>
     <div class="profile-nav-search" style="padding:4px 6px 8px;">
       <div style="position:relative;">
         <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);display:flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-        <input type="text" placeholder="Search" value="${escapeHTML(prevSearch)}" style="width:100%;padding:7px 10px 7px 30px;border-radius:6px;border:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;" oninput="_filterSettingsNav(this)">
+        <input type="text" placeholder="${escapeHTML(_t('nav.search'))}" value="${escapeHTML(prevSearch)}" style="width:100%;padding:7px 10px 7px 30px;border-radius:6px;border:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;" oninput="_filterSettingsNav(this)">
       </div>
     </div>
     ${NAV.map(group => `
-      <div class="profile-nav-section">${group.label}</div>
+      <div class="profile-nav-section">${_tn(group.label)}</div>
       ${group.items.map(renderItem).join('')}
       <div class="profile-nav-sep"></div>
     `).join('')}
@@ -49456,15 +49459,169 @@ const _FTZ_LANGUAGES = [
 //   • Capitalised proper nouns introduced by us belong in <span data-no-i18n>
 //     style wrappers if they ever appear next to translated copy.
 const _LANG_PACK = {
-  en: { lang_title:'Language & Time', lang_section:'Display Language', lang_desc:'Pick the language Fortized should display in. Changes apply instantly.', lang_picker:'Language', time_section:'Time Format', time_desc:'How clock times are shown across the app.', time_24:'24-hour (14:30)', time_12:'12-hour (2:30 PM)', preview_section:'Preview', preview_desc:'Live sample using your current language and time settings.', preview_hello:'Hello!', preview_today:'Today is', preview_now:'Right now it is' },
-  fr: { lang_title:'Langue et heure', lang_section:'Langue d’affichage', lang_desc:'Choisissez la langue d’affichage de Fortized. Les changements s’appliquent instantanément.', lang_picker:'Langue', time_section:'Format de l’heure', time_desc:'Comment l’heure est affichée dans l’application.', time_24:'24 heures (14:30)', time_12:'12 heures (2:30 PM)', preview_section:'Aperçu', preview_desc:'Exemple en direct avec vos réglages actuels.', preview_hello:'Bonjour !', preview_today:'Nous sommes le', preview_now:'Il est' },
-  es: { lang_title:'Idioma y hora', lang_section:'Idioma de pantalla', lang_desc:'Elige el idioma con el que Fortized debe mostrarse. Los cambios se aplican al instante.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Cómo se muestran las horas en la aplicación.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Vista previa', preview_desc:'Muestra en vivo con tus ajustes actuales.', preview_hello:'¡Hola!', preview_today:'Hoy es', preview_now:'Ahora son las' },
-  de: { lang_title:'Sprache & Uhrzeit', lang_section:'Anzeigesprache', lang_desc:'Wähle die Sprache, in der Fortized angezeigt werden soll. Änderungen werden sofort übernommen.', lang_picker:'Sprache', time_section:'Uhrzeitformat', time_desc:'Wie Uhrzeiten in der App angezeigt werden.', time_24:'24-Stunden (14:30)', time_12:'12-Stunden (2:30 PM)', preview_section:'Vorschau', preview_desc:'Live-Beispiel mit deinen aktuellen Einstellungen.', preview_hello:'Hallo!', preview_today:'Heute ist', preview_now:'Jetzt ist es' },
-  it: { lang_title:'Lingua e ora', lang_section:'Lingua di visualizzazione', lang_desc:'Scegli la lingua in cui mostrare Fortized. Le modifiche sono immediate.', lang_picker:'Lingua', time_section:'Formato dell’ora', time_desc:'Come vengono mostrate le ore nell’app.', time_24:'24 ore (14:30)', time_12:'12 ore (2:30 PM)', preview_section:'Anteprima', preview_desc:'Esempio dal vivo con le tue impostazioni.', preview_hello:'Ciao!', preview_today:'Oggi è', preview_now:'Adesso sono le' },
-  pt: { lang_title:'Idioma e hora', lang_section:'Idioma de exibição', lang_desc:'Escolha o idioma em que o Fortized deve aparecer. As mudanças são aplicadas na hora.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Como as horas são exibidas no app.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Pré-visualização', preview_desc:'Exemplo ao vivo com suas configurações.', preview_hello:'Olá!', preview_today:'Hoje é', preview_now:'Agora são' },
-  ja: { lang_title:'言語と時刻', lang_section:'表示言語', lang_desc:'Fortized を表示する言語を選んでください。変更はすぐに適用されます。', lang_picker:'言語', time_section:'時刻表示', time_desc:'アプリ全体での時刻表示です。', time_24:'24時間表記 (14:30)', time_12:'12時間表記 (2:30 PM)', preview_section:'プレビュー', preview_desc:'現在の設定でのサンプルです。', preview_hello:'こんにちは！', preview_today:'今日は', preview_now:'今は' },
-  ar: { lang_title:'اللغة والوقت', lang_section:'لغة العرض', lang_desc:'اختر اللغة التي تريد عرض Fortized بها. تدخل التغييرات حيّز التنفيذ فورًا.', lang_picker:'اللغة', time_section:'تنسيق الوقت', time_desc:'طريقة عرض الوقت في التطبيق.', time_24:'24 ساعة (14:30)', time_12:'12 ساعة (2:30 PM)', preview_section:'معاينة', preview_desc:'عيّنة حيّة بإعداداتك الحالية.', preview_hello:'مرحبًا!', preview_today:'اليوم هو', preview_now:'الآن الساعة' },
+  en: {
+    // Settings sidebar — section headers + nav items + sub-anchors.
+    'nav.account':'Account', 'nav.experience':'Experience', 'nav.activity':'Activity', 'nav.safety':'Safety', 'nav.support':'Support',
+    'nav.search':'Search', 'nav.edit_profiles':'Edit Profiles',
+    'tab.myprofile':'My Profile', 'tab.account':'My Account', 'tab.connections':'Connections', 'tab.authorized_apps':'Authorized Apps', 'tab.notifications':'Notifications',
+    'tab.voice_settings':'Voice & Video', 'tab.appearance':'Appearance', 'tab.keybinds':'Keybinds', 'tab.language':'Language & Time',
+    'tab.game_collection':'Apps & Games', 'tab.safety':'Safety', 'tab.friend_privacy':'Friend Requests', 'tab.support':'Support & Policies',
+    'sub.identity':'Identity', 'sub.theme':'Theme', 'sub.aboutme':'About Me',
+    'sub.account_info':'Account Info', 'sub.password':'Password & Security',
+    'sub.messages':'Messages', 'sub.social':'Social', 'sub.system':'System',
+    'sub.input':'Input', 'sub.output':'Output', 'sub.video':'Video',
+    'sub.density':'Density', 'sub.scaling':'Scaling', 'sub.cursor':'Cursor',
+    'sub.navigation':'Navigation', 'sub.messaging':'Messaging', 'sub.voice':'Voice', 'sub.general':'General',
+    'sub.lang':'Language', 'sub.time':'Time Format', 'sub.preview':'Preview',
+    'sub.current_game':'Current Game', 'sub.your_collection':'Your Collection',
+    'sub.blocked':'Blocked Users', 'sub.ignored':'Ignored Users',
+    // Language & Time page itself.
+    lang_title:'Language & Time', lang_section:'Display Language', lang_desc:'Pick the language the UI should display in. Changes apply instantly.', lang_picker:'Language', time_section:'Time Format', time_desc:'How clock times are shown across the app.', time_24:'24-hour (14:30)', time_12:'12-hour (2:30 PM)', preview_section:'Preview', preview_desc:'Live sample using your current language and time settings.', preview_hello:'Hello!', preview_today:'Today is', preview_now:'Right now it is',
+  },
+  fr: {
+    'nav.account':'Compte', 'nav.experience':'Expérience', 'nav.activity':'Activité', 'nav.safety':'Sécurité', 'nav.support':'Aide',
+    'nav.search':'Rechercher', 'nav.edit_profiles':'Modifier les profils',
+    'tab.myprofile':'Mon profil', 'tab.account':'Mon compte', 'tab.connections':'Connexions', 'tab.authorized_apps':'Apps autorisées', 'tab.notifications':'Notifications',
+    'tab.voice_settings':'Voix et vidéo', 'tab.appearance':'Apparence', 'tab.keybinds':'Raccourcis', 'tab.language':'Langue et heure',
+    'tab.game_collection':'Apps et jeux', 'tab.safety':'Sécurité', 'tab.friend_privacy':'Demandes d’amis', 'tab.support':'Aide et règles',
+    'sub.identity':'Identité', 'sub.theme':'Thème', 'sub.aboutme':'À propos de moi',
+    'sub.account_info':'Infos du compte', 'sub.password':'Mot de passe et sécurité',
+    'sub.messages':'Messages', 'sub.social':'Social', 'sub.system':'Système',
+    'sub.input':'Entrée', 'sub.output':'Sortie', 'sub.video':'Vidéo',
+    'sub.density':'Densité', 'sub.scaling':'Mise à l’échelle', 'sub.cursor':'Curseur',
+    'sub.navigation':'Navigation', 'sub.messaging':'Messagerie', 'sub.voice':'Voix', 'sub.general':'Général',
+    'sub.lang':'Langue', 'sub.time':'Format de l’heure', 'sub.preview':'Aperçu',
+    'sub.current_game':'Jeu actuel', 'sub.your_collection':'Votre collection',
+    'sub.blocked':'Utilisateurs bloqués', 'sub.ignored':'Utilisateurs ignorés',
+    lang_title:'Langue et heure', lang_section:'Langue d’affichage', lang_desc:'Choisissez la langue d’affichage de l’interface. Les changements s’appliquent instantanément.', lang_picker:'Langue', time_section:'Format de l’heure', time_desc:'Comment l’heure est affichée dans l’application.', time_24:'24 heures (14:30)', time_12:'12 heures (2:30 PM)', preview_section:'Aperçu', preview_desc:'Exemple en direct avec vos réglages actuels.', preview_hello:'Bonjour !', preview_today:'Nous sommes le', preview_now:'Il est',
+  },
+  es: {
+    'nav.account':'Cuenta', 'nav.experience':'Experiencia', 'nav.activity':'Actividad', 'nav.safety':'Seguridad', 'nav.support':'Ayuda',
+    'nav.search':'Buscar', 'nav.edit_profiles':'Editar perfiles',
+    'tab.myprofile':'Mi perfil', 'tab.account':'Mi cuenta', 'tab.connections':'Conexiones', 'tab.authorized_apps':'Apps autorizadas', 'tab.notifications':'Notificaciones',
+    'tab.voice_settings':'Voz y vídeo', 'tab.appearance':'Apariencia', 'tab.keybinds':'Atajos de teclado', 'tab.language':'Idioma y hora',
+    'tab.game_collection':'Apps y juegos', 'tab.safety':'Seguridad', 'tab.friend_privacy':'Solicitudes de amistad', 'tab.support':'Ayuda y políticas',
+    'sub.identity':'Identidad', 'sub.theme':'Tema', 'sub.aboutme':'Sobre mí',
+    'sub.account_info':'Información de cuenta', 'sub.password':'Contraseña y seguridad',
+    'sub.messages':'Mensajes', 'sub.social':'Social', 'sub.system':'Sistema',
+    'sub.input':'Entrada', 'sub.output':'Salida', 'sub.video':'Vídeo',
+    'sub.density':'Densidad', 'sub.scaling':'Escala', 'sub.cursor':'Cursor',
+    'sub.navigation':'Navegación', 'sub.messaging':'Mensajería', 'sub.voice':'Voz', 'sub.general':'General',
+    'sub.lang':'Idioma', 'sub.time':'Formato de hora', 'sub.preview':'Vista previa',
+    'sub.current_game':'Juego actual', 'sub.your_collection':'Tu colección',
+    'sub.blocked':'Usuarios bloqueados', 'sub.ignored':'Usuarios ignorados',
+    lang_title:'Idioma y hora', lang_section:'Idioma de pantalla', lang_desc:'Elige el idioma con el que debe mostrarse la interfaz. Los cambios se aplican al instante.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Cómo se muestran las horas en la aplicación.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Vista previa', preview_desc:'Muestra en vivo con tus ajustes actuales.', preview_hello:'¡Hola!', preview_today:'Hoy es', preview_now:'Ahora son las',
+  },
+  de: {
+    'nav.account':'Konto', 'nav.experience':'Erlebnis', 'nav.activity':'Aktivität', 'nav.safety':'Sicherheit', 'nav.support':'Hilfe',
+    'nav.search':'Suchen', 'nav.edit_profiles':'Profile bearbeiten',
+    'tab.myprofile':'Mein Profil', 'tab.account':'Mein Konto', 'tab.connections':'Verbindungen', 'tab.authorized_apps':'Autorisierte Apps', 'tab.notifications':'Benachrichtigungen',
+    'tab.voice_settings':'Sprache & Video', 'tab.appearance':'Erscheinungsbild', 'tab.keybinds':'Tastenkürzel', 'tab.language':'Sprache & Uhrzeit',
+    'tab.game_collection':'Apps & Spiele', 'tab.safety':'Sicherheit', 'tab.friend_privacy':'Freundschaftsanfragen', 'tab.support':'Hilfe & Richtlinien',
+    'sub.identity':'Identität', 'sub.theme':'Design', 'sub.aboutme':'Über mich',
+    'sub.account_info':'Konto-Infos', 'sub.password':'Passwort & Sicherheit',
+    'sub.messages':'Nachrichten', 'sub.social':'Sozial', 'sub.system':'System',
+    'sub.input':'Eingang', 'sub.output':'Ausgang', 'sub.video':'Video',
+    'sub.density':'Dichte', 'sub.scaling':'Skalierung', 'sub.cursor':'Cursor',
+    'sub.navigation':'Navigation', 'sub.messaging':'Nachrichten', 'sub.voice':'Sprache', 'sub.general':'Allgemein',
+    'sub.lang':'Sprache', 'sub.time':'Uhrzeitformat', 'sub.preview':'Vorschau',
+    'sub.current_game':'Aktuelles Spiel', 'sub.your_collection':'Deine Sammlung',
+    'sub.blocked':'Blockierte Nutzer', 'sub.ignored':'Ignorierte Nutzer',
+    lang_title:'Sprache & Uhrzeit', lang_section:'Anzeigesprache', lang_desc:'Wähle die Sprache, in der die Oberfläche angezeigt werden soll. Änderungen werden sofort übernommen.', lang_picker:'Sprache', time_section:'Uhrzeitformat', time_desc:'Wie Uhrzeiten in der App angezeigt werden.', time_24:'24-Stunden (14:30)', time_12:'12-Stunden (2:30 PM)', preview_section:'Vorschau', preview_desc:'Live-Beispiel mit deinen aktuellen Einstellungen.', preview_hello:'Hallo!', preview_today:'Heute ist', preview_now:'Jetzt ist es',
+  },
+  it: {
+    'nav.account':'Account', 'nav.experience':'Esperienza', 'nav.activity':'Attività', 'nav.safety':'Sicurezza', 'nav.support':'Supporto',
+    'nav.search':'Cerca', 'nav.edit_profiles':'Modifica profili',
+    'tab.myprofile':'Il mio profilo', 'tab.account':'Il mio account', 'tab.connections':'Connessioni', 'tab.authorized_apps':'App autorizzate', 'tab.notifications':'Notifiche',
+    'tab.voice_settings':'Voce e video', 'tab.appearance':'Aspetto', 'tab.keybinds':'Scorciatoie', 'tab.language':'Lingua e ora',
+    'tab.game_collection':'App e giochi', 'tab.safety':'Sicurezza', 'tab.friend_privacy':'Richieste di amicizia', 'tab.support':'Supporto e norme',
+    'sub.identity':'Identità', 'sub.theme':'Tema', 'sub.aboutme':'Su di me',
+    'sub.account_info':'Info account', 'sub.password':'Password e sicurezza',
+    'sub.messages':'Messaggi', 'sub.social':'Social', 'sub.system':'Sistema',
+    'sub.input':'Ingresso', 'sub.output':'Uscita', 'sub.video':'Video',
+    'sub.density':'Densità', 'sub.scaling':'Scala', 'sub.cursor':'Cursore',
+    'sub.navigation':'Navigazione', 'sub.messaging':'Messaggistica', 'sub.voice':'Voce', 'sub.general':'Generale',
+    'sub.lang':'Lingua', 'sub.time':'Formato ora', 'sub.preview':'Anteprima',
+    'sub.current_game':'Gioco attuale', 'sub.your_collection':'La tua collezione',
+    'sub.blocked':'Utenti bloccati', 'sub.ignored':'Utenti ignorati',
+    lang_title:'Lingua e ora', lang_section:'Lingua di visualizzazione', lang_desc:'Scegli la lingua in cui mostrare l’interfaccia. Le modifiche sono immediate.', lang_picker:'Lingua', time_section:'Formato dell’ora', time_desc:'Come vengono mostrate le ore nell’app.', time_24:'24 ore (14:30)', time_12:'12 ore (2:30 PM)', preview_section:'Anteprima', preview_desc:'Esempio dal vivo con le tue impostazioni.', preview_hello:'Ciao!', preview_today:'Oggi è', preview_now:'Adesso sono le',
+  },
+  pt: {
+    'nav.account':'Conta', 'nav.experience':'Experiência', 'nav.activity':'Atividade', 'nav.safety':'Segurança', 'nav.support':'Suporte',
+    'nav.search':'Buscar', 'nav.edit_profiles':'Editar perfis',
+    'tab.myprofile':'Meu perfil', 'tab.account':'Minha conta', 'tab.connections':'Conexões', 'tab.authorized_apps':'Apps autorizados', 'tab.notifications':'Notificações',
+    'tab.voice_settings':'Voz e vídeo', 'tab.appearance':'Aparência', 'tab.keybinds':'Atalhos', 'tab.language':'Idioma e hora',
+    'tab.game_collection':'Apps e jogos', 'tab.safety':'Segurança', 'tab.friend_privacy':'Pedidos de amizade', 'tab.support':'Suporte e políticas',
+    'sub.identity':'Identidade', 'sub.theme':'Tema', 'sub.aboutme':'Sobre mim',
+    'sub.account_info':'Informações da conta', 'sub.password':'Senha e segurança',
+    'sub.messages':'Mensagens', 'sub.social':'Social', 'sub.system':'Sistema',
+    'sub.input':'Entrada', 'sub.output':'Saída', 'sub.video':'Vídeo',
+    'sub.density':'Densidade', 'sub.scaling':'Escala', 'sub.cursor':'Cursor',
+    'sub.navigation':'Navegação', 'sub.messaging':'Mensagens', 'sub.voice':'Voz', 'sub.general':'Geral',
+    'sub.lang':'Idioma', 'sub.time':'Formato de hora', 'sub.preview':'Pré-visualização',
+    'sub.current_game':'Jogo atual', 'sub.your_collection':'Sua coleção',
+    'sub.blocked':'Usuários bloqueados', 'sub.ignored':'Usuários ignorados',
+    lang_title:'Idioma e hora', lang_section:'Idioma de exibição', lang_desc:'Escolha o idioma em que a interface deve aparecer. As mudanças são aplicadas na hora.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Como as horas são exibidas no app.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Pré-visualização', preview_desc:'Exemplo ao vivo com suas configurações.', preview_hello:'Olá!', preview_today:'Hoje é', preview_now:'Agora são',
+  },
+  ja: {
+    'nav.account':'アカウント', 'nav.experience':'体験', 'nav.activity':'アクティビティ', 'nav.safety':'安全', 'nav.support':'サポート',
+    'nav.search':'検索', 'nav.edit_profiles':'プロフィールを編集',
+    'tab.myprofile':'プロフィール', 'tab.account':'アカウント', 'tab.connections':'連携', 'tab.authorized_apps':'承認済みアプリ', 'tab.notifications':'通知',
+    'tab.voice_settings':'音声・ビデオ', 'tab.appearance':'外観', 'tab.keybinds':'キー設定', 'tab.language':'言語と時刻',
+    'tab.game_collection':'アプリ・ゲーム', 'tab.safety':'安全', 'tab.friend_privacy':'フレンドリクエスト', 'tab.support':'サポート・ポリシー',
+    'sub.identity':'アイデンティティ', 'sub.theme':'テーマ', 'sub.aboutme':'自己紹介',
+    'sub.account_info':'アカウント情報', 'sub.password':'パスワードとセキュリティ',
+    'sub.messages':'メッセージ', 'sub.social':'ソーシャル', 'sub.system':'システム',
+    'sub.input':'入力', 'sub.output':'出力', 'sub.video':'ビデオ',
+    'sub.density':'密度', 'sub.scaling':'拡大率', 'sub.cursor':'カーソル',
+    'sub.navigation':'ナビゲーション', 'sub.messaging':'メッセージング', 'sub.voice':'音声', 'sub.general':'全般',
+    'sub.lang':'言語', 'sub.time':'時刻表示', 'sub.preview':'プレビュー',
+    'sub.current_game':'現在のゲーム', 'sub.your_collection':'コレクション',
+    'sub.blocked':'ブロック中のユーザー', 'sub.ignored':'無視中のユーザー',
+    lang_title:'言語と時刻', lang_section:'表示言語', lang_desc:'UI を表示する言語を選んでください。変更はすぐに適用されます。', lang_picker:'言語', time_section:'時刻表示', time_desc:'アプリ全体での時刻表示です。', time_24:'24時間表記 (14:30)', time_12:'12時間表記 (2:30 PM)', preview_section:'プレビュー', preview_desc:'現在の設定でのサンプルです。', preview_hello:'こんにちは！', preview_today:'今日は', preview_now:'今は',
+  },
+  ar: {
+    'nav.account':'الحساب', 'nav.experience':'التجربة', 'nav.activity':'النشاط', 'nav.safety':'الأمان', 'nav.support':'الدعم',
+    'nav.search':'بحث', 'nav.edit_profiles':'تعديل الملفات الشخصية',
+    'tab.myprofile':'ملفي الشخصي', 'tab.account':'حسابي', 'tab.connections':'الاتصالات', 'tab.authorized_apps':'التطبيقات المعتمدة', 'tab.notifications':'الإشعارات',
+    'tab.voice_settings':'الصوت والفيديو', 'tab.appearance':'المظهر', 'tab.keybinds':'الاختصارات', 'tab.language':'اللغة والوقت',
+    'tab.game_collection':'التطبيقات والألعاب', 'tab.safety':'الأمان', 'tab.friend_privacy':'طلبات الصداقة', 'tab.support':'الدعم والسياسات',
+    'sub.identity':'الهوية', 'sub.theme':'المظهر', 'sub.aboutme':'نبذة عني',
+    'sub.account_info':'معلومات الحساب', 'sub.password':'كلمة المرور والأمان',
+    'sub.messages':'الرسائل', 'sub.social':'الاجتماعية', 'sub.system':'النظام',
+    'sub.input':'الإدخال', 'sub.output':'الإخراج', 'sub.video':'الفيديو',
+    'sub.density':'الكثافة', 'sub.scaling':'التكبير', 'sub.cursor':'المؤشر',
+    'sub.navigation':'التنقل', 'sub.messaging':'المراسلة', 'sub.voice':'الصوت', 'sub.general':'عام',
+    'sub.lang':'اللغة', 'sub.time':'تنسيق الوقت', 'sub.preview':'معاينة',
+    'sub.current_game':'اللعبة الحالية', 'sub.your_collection':'مجموعتك',
+    'sub.blocked':'المستخدمون المحظورون', 'sub.ignored':'المستخدمون المتجاهلون',
+    lang_title:'اللغة والوقت', lang_section:'لغة العرض', lang_desc:'اختر لغة عرض الواجهة. تدخل التغييرات حيّز التنفيذ فورًا.', lang_picker:'اللغة', time_section:'تنسيق الوقت', time_desc:'طريقة عرض الوقت في التطبيق.', time_24:'24 ساعة (14:30)', time_12:'12 ساعة (2:30 PM)', preview_section:'معاينة', preview_desc:'عيّنة حيّة بإعداداتك الحالية.', preview_hello:'مرحبًا!', preview_today:'اليوم هو', preview_now:'الآن الساعة',
+  },
 };
+// Literal label → translation-key map. Lets the existing NAV array stay
+// declarative in English while every render passes labels through _tn().
+// Anything not in this map falls through unchanged — which is what we want
+// for brand names and proper nouns.
+const _NAV_LABEL_TO_KEY = {
+  'ACCOUNT':'nav.account', 'EXPERIENCE':'nav.experience', 'ACTIVITY':'nav.activity', 'SAFETY':'nav.safety', 'SUPPORT':'nav.support',
+  'Search':'nav.search', 'Edit Profiles':'nav.edit_profiles',
+  'My Profile':'tab.myprofile', 'My Account':'tab.account', 'Connections':'tab.connections', 'Authorized Apps':'tab.authorized_apps', 'Notifications':'tab.notifications',
+  'Voice & Video':'tab.voice_settings', 'Appearance':'tab.appearance', 'Keybinds':'tab.keybinds', 'Language & Time':'tab.language',
+  'Apps & Games':'tab.game_collection', 'Safety':'tab.safety', 'Friend Requests':'tab.friend_privacy', 'Support & Policies':'tab.support',
+  'Identity':'sub.identity', 'Theme':'sub.theme', 'About Me':'sub.aboutme',
+  'Account Info':'sub.account_info', 'Password & Security':'sub.password',
+  'Messages':'sub.messages', 'Social':'sub.social', 'System':'sub.system',
+  'Input':'sub.input', 'Output':'sub.output', 'Video':'sub.video',
+  'Density':'sub.density', 'Scaling':'sub.scaling', 'Cursor':'sub.cursor',
+  'Navigation':'sub.navigation', 'Messaging':'sub.messaging', 'Voice':'sub.voice', 'General':'sub.general',
+  'Language':'sub.lang', 'Time Format':'sub.time', 'Preview':'sub.preview',
+  'Current Game':'sub.current_game', 'Your Collection':'sub.your_collection',
+  'Blocked Users':'sub.blocked', 'Ignored Users':'sub.ignored',
+};
+function _tn(label) {
+  const key = _NAV_LABEL_TO_KEY[label];
+  return key ? _t(key) : label;
+}
 function _ftzCurrentLangMeta() {
   const code = localStorage.getItem('ftz_language') || 'en';
   return _FTZ_LANGUAGES.find(l => l.code === code) || _FTZ_LANGUAGES[0];

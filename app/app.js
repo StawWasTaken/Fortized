@@ -19926,7 +19926,7 @@ const _SETTINGS_TAB_META = {
   voice_settings:  { icon:() => _faIcon('microphone', 24),  title:'Voice & Video' },
   appearance:      { icon:() => _faIcon('palette', 24),     title:'Appearance' },
   keybinds:        { icon:() => _faIcon('keyboard', 24),    title:'Keybinds' },
-  language:        { icon:() => _faIcon('language', 24),    title:'Language' },
+  language:        { icon:() => _faIcon('language', 24),    title:'Language & Time' },
   game_collection: { icon:() => _faIcon('gamepad', 24),     title:'Apps & Games' },
   safety:          { icon:() => _safetyIcon(24),            title:'Safety' },
   friend_privacy:  { icon:() => _faIcon('user-plus', 24),   title:'Friend Requests' },
@@ -20017,9 +20017,10 @@ function buildProfileNav(scroll, opts) {
         { spy:'voice',      label:'Voice' },
         { spy:'general',    label:'General' },
       ]},
-      { id:'language',        icon:ICN['language'],        label:'Language', subs:[
-        { spy:'lang',  label:'Language' },
-        { spy:'time',  label:'Time Format' },
+      { id:'language',        icon:ICN['language'],        label:'Language & Time', subs:[
+        { spy:'lang',     label:'Language' },
+        { spy:'time',     label:'Time Format' },
+        { spy:'preview',  label:'Preview' },
       ]},
     ]},
     { label:'ACTIVITY', items: [
@@ -20799,53 +20800,7 @@ function _buildProfileView(tab) {
   }
 
   else if (tab === 'language') {
-    const currentLang = localStorage.getItem('ftz_language') || 'en';
-    const timeFormat = localStorage.getItem('ftz_time_format') || '24h';
-    const languages = [
-      {code:'en',label:'English',flag:'🇬🇧'},
-      {code:'fr',label:'Français',flag:'🇫🇷'},
-      {code:'ar',label:'العربية',flag:'🇸🇦'},
-      {code:'da',label:'Dansk',flag:'🇩🇰'},
-      {code:'de',label:'Deutsch',flag:'🇩🇪'},
-      {code:'es',label:'Español',flag:'🇪🇸'},
-      {code:'fi',label:'Suomi',flag:'🇫🇮'},
-      {code:'hi',label:'हिन्दी',flag:'🇮🇳'},
-      {code:'it',label:'Italiano',flag:'🇮🇹'},
-      {code:'ja',label:'日本語',flag:'🇯🇵'},
-      {code:'ko',label:'한국어',flag:'🇰🇷'},
-      {code:'nl',label:'Nederlands',flag:'🇳🇱'},
-      {code:'no',label:'Norsk',flag:'🇳🇴'},
-      {code:'pl',label:'Polski',flag:'🇵🇱'},
-      {code:'pt',label:'Português',flag:'🇧🇷'},
-      {code:'ro',label:'Română',flag:'🇷🇴'},
-      {code:'ru',label:'Русский',flag:'🇷🇺'},
-      {code:'sv',label:'Svenska',flag:'🇸🇪'},
-      {code:'tr',label:'Türkçe',flag:'🇹🇷'},
-      {code:'uk',label:'Українська',flag:'🇺🇦'},
-      {code:'zh',label:'中文',flag:'🇨🇳'},
-    ];
-    main.innerHTML = `<div class="settings-panel">
-      ${_settingsHeader('language')}
-      <!-- Select Language -->
-      <div style="margin-bottom:24px;max-width:500px;">
-        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.75);margin-bottom:4px;">Select a Language</div>
-        <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:10px;">Choose the language you want Fortized to display.</div>
-        <select onchange="localStorage.setItem('ftz_language',this.value);toast('Language updated. Refresh to apply.','success');" style="width:100%;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;cursor:pointer;appearance:auto;">
-          ${languages.map(l => `<option value="${l.code}" ${currentLang===l.code?'selected':''}>${l.flag}  ${l.label}</option>`).join('')}
-        </select>
-      </div>
-      <!-- Time Format -->
-      <div style="max-width:500px;">
-        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.75);margin-bottom:10px;">Time Format</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${[{val:'24h',label:'Default — 24-hour'},{val:'12h',label:'12-hour'}].map(opt => `
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 0;">
-              <input type="radio" name="time-format" value="${opt.val}" ${timeFormat===opt.val?'checked':''} onchange="localStorage.setItem('ftz_time_format',this.value);toast('Time format updated','success');" style="accent-color:var(--accent);width:16px;height:16px;">
-              <span style="font-size:13px;color:rgba(255,255,255,.65);">${opt.label}</span>
-            </label>`).join('')}
-        </div>
-      </div>
-    </div>`;
+    _renderLanguageSettings(main);
   }
   else if (tab === 'friend_privacy') {
     main.innerHTML = `<div class="settings-panel">
@@ -49453,6 +49408,164 @@ function _resetKeybinds() {
   localStorage.removeItem('ftz_keybinds');
   buildProfileView('keybinds');
   toast('Keyboard shortcuts reset to defaults', 'success');
+}
+
+// ════════════════════════════════════════════
+// LANGUAGE & TIME
+// Real wiring: persist + apply (lang/dir + locale-aware time helper),
+// re-render the panel live, no full-page reload required.
+// ════════════════════════════════════════════
+const _FTZ_LANGUAGES = [
+  {code:'en',label:'English',native:'English',flag:'🇬🇧',locale:'en-GB'},
+  {code:'fr',label:'French',native:'Français',flag:'🇫🇷',locale:'fr-FR'},
+  {code:'es',label:'Spanish',native:'Español',flag:'🇪🇸',locale:'es-ES'},
+  {code:'de',label:'German',native:'Deutsch',flag:'🇩🇪',locale:'de-DE'},
+  {code:'it',label:'Italian',native:'Italiano',flag:'🇮🇹',locale:'it-IT'},
+  {code:'pt',label:'Portuguese',native:'Português',flag:'🇧🇷',locale:'pt-BR'},
+  {code:'nl',label:'Dutch',native:'Nederlands',flag:'🇳🇱',locale:'nl-NL'},
+  {code:'pl',label:'Polish',native:'Polski',flag:'🇵🇱',locale:'pl-PL'},
+  {code:'ro',label:'Romanian',native:'Română',flag:'🇷🇴',locale:'ro-RO'},
+  {code:'sv',label:'Swedish',native:'Svenska',flag:'🇸🇪',locale:'sv-SE'},
+  {code:'no',label:'Norwegian',native:'Norsk',flag:'🇳🇴',locale:'nb-NO'},
+  {code:'da',label:'Danish',native:'Dansk',flag:'🇩🇰',locale:'da-DK'},
+  {code:'fi',label:'Finnish',native:'Suomi',flag:'🇫🇮',locale:'fi-FI'},
+  {code:'tr',label:'Turkish',native:'Türkçe',flag:'🇹🇷',locale:'tr-TR'},
+  {code:'ru',label:'Russian',native:'Русский',flag:'🇷🇺',locale:'ru-RU'},
+  {code:'uk',label:'Ukrainian',native:'Українська',flag:'🇺🇦',locale:'uk-UA'},
+  {code:'ar',label:'Arabic',native:'العربية',flag:'🇸🇦',locale:'ar-SA',rtl:true},
+  {code:'hi',label:'Hindi',native:'हिन्दी',flag:'🇮🇳',locale:'hi-IN'},
+  {code:'ja',label:'Japanese',native:'日本語',flag:'🇯🇵',locale:'ja-JP'},
+  {code:'ko',label:'Korean',native:'한국어',flag:'🇰🇷',locale:'ko-KR'},
+  {code:'zh',label:'Chinese',native:'中文',flag:'🇨🇳',locale:'zh-CN'},
+];
+// Translation pack — covers the Language & Time page itself + a couple of
+// settings nav headers so switching gives instant visible feedback. Other
+// languages fall back to English keys (we still flip dir/locale/date format
+// even when the pack isn't present, so non-text wiring still works).
+const _LANG_PACK = {
+  en: { lang_title:'Language & Time', lang_section:'Display Language', lang_desc:'Pick the language Fortized should display in. Changes apply instantly.', lang_picker:'Language', time_section:'Time Format', time_desc:'How clock times are shown across the app.', time_24:'24-hour (14:30)', time_12:'12-hour (2:30 PM)', preview_section:'Preview', preview_desc:'Live sample using your current language and time settings.', preview_hello:'Hello!', preview_today:'Today is', preview_now:'Right now it is' },
+  fr: { lang_title:'Langue et heure', lang_section:'Langue d’affichage', lang_desc:'Choisissez la langue d’affichage de Fortized. Les changements s’appliquent instantanément.', lang_picker:'Langue', time_section:'Format de l’heure', time_desc:'Comment l’heure est affichée dans l’application.', time_24:'24 heures (14:30)', time_12:'12 heures (2:30 PM)', preview_section:'Aperçu', preview_desc:'Exemple en direct avec vos réglages actuels.', preview_hello:'Bonjour !', preview_today:'Nous sommes le', preview_now:'Il est' },
+  es: { lang_title:'Idioma y hora', lang_section:'Idioma de pantalla', lang_desc:'Elige el idioma con el que Fortized debe mostrarse. Los cambios se aplican al instante.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Cómo se muestran las horas en la aplicación.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Vista previa', preview_desc:'Muestra en vivo con tus ajustes actuales.', preview_hello:'¡Hola!', preview_today:'Hoy es', preview_now:'Ahora son las' },
+  de: { lang_title:'Sprache & Uhrzeit', lang_section:'Anzeigesprache', lang_desc:'Wähle die Sprache, in der Fortized angezeigt werden soll. Änderungen werden sofort übernommen.', lang_picker:'Sprache', time_section:'Uhrzeitformat', time_desc:'Wie Uhrzeiten in der App angezeigt werden.', time_24:'24-Stunden (14:30)', time_12:'12-Stunden (2:30 PM)', preview_section:'Vorschau', preview_desc:'Live-Beispiel mit deinen aktuellen Einstellungen.', preview_hello:'Hallo!', preview_today:'Heute ist', preview_now:'Jetzt ist es' },
+  it: { lang_title:'Lingua e ora', lang_section:'Lingua di visualizzazione', lang_desc:'Scegli la lingua in cui mostrare Fortized. Le modifiche sono immediate.', lang_picker:'Lingua', time_section:'Formato dell’ora', time_desc:'Come vengono mostrate le ore nell’app.', time_24:'24 ore (14:30)', time_12:'12 ore (2:30 PM)', preview_section:'Anteprima', preview_desc:'Esempio dal vivo con le tue impostazioni.', preview_hello:'Ciao!', preview_today:'Oggi è', preview_now:'Adesso sono le' },
+  pt: { lang_title:'Idioma e hora', lang_section:'Idioma de exibição', lang_desc:'Escolha o idioma em que o Fortized deve aparecer. As mudanças são aplicadas na hora.', lang_picker:'Idioma', time_section:'Formato de hora', time_desc:'Como as horas são exibidas no app.', time_24:'24 horas (14:30)', time_12:'12 horas (2:30 PM)', preview_section:'Pré-visualização', preview_desc:'Exemplo ao vivo com suas configurações.', preview_hello:'Olá!', preview_today:'Hoje é', preview_now:'Agora são' },
+  ja: { lang_title:'言語と時刻', lang_section:'表示言語', lang_desc:'Fortized を表示する言語を選んでください。変更はすぐに適用されます。', lang_picker:'言語', time_section:'時刻表示', time_desc:'アプリ全体での時刻表示です。', time_24:'24時間表記 (14:30)', time_12:'12時間表記 (2:30 PM)', preview_section:'プレビュー', preview_desc:'現在の設定でのサンプルです。', preview_hello:'こんにちは！', preview_today:'今日は', preview_now:'今は' },
+  ar: { lang_title:'اللغة والوقت', lang_section:'لغة العرض', lang_desc:'اختر اللغة التي تريد عرض Fortized بها. تدخل التغييرات حيّز التنفيذ فورًا.', lang_picker:'اللغة', time_section:'تنسيق الوقت', time_desc:'طريقة عرض الوقت في التطبيق.', time_24:'24 ساعة (14:30)', time_12:'12 ساعة (2:30 PM)', preview_section:'معاينة', preview_desc:'عيّنة حيّة بإعداداتك الحالية.', preview_hello:'مرحبًا!', preview_today:'اليوم هو', preview_now:'الآن الساعة' },
+};
+function _ftzCurrentLangMeta() {
+  const code = localStorage.getItem('ftz_language') || 'en';
+  return _FTZ_LANGUAGES.find(l => l.code === code) || _FTZ_LANGUAGES[0];
+}
+function _t(key) {
+  const code = (localStorage.getItem('ftz_language') || 'en');
+  return (_LANG_PACK[code] && _LANG_PACK[code][key]) || (_LANG_PACK.en[key]) || key;
+}
+// Locale-aware short time string. Other parts of the app can call this
+// instead of toLocaleTimeString() to honour the user's 12h/24h pick.
+function _fmtTime(date) {
+  const meta = _ftzCurrentLangMeta();
+  const fmt = localStorage.getItem('ftz_time_format') || '24h';
+  try {
+    return new Intl.DateTimeFormat(meta.locale, { hour:'2-digit', minute:'2-digit', hour12: fmt === '12h' }).format(date);
+  } catch(_) { return date.toLocaleTimeString(); }
+}
+function _fmtDate(date) {
+  const meta = _ftzCurrentLangMeta();
+  try {
+    return new Intl.DateTimeFormat(meta.locale, { weekday:'long', day:'numeric', month:'long' }).format(date);
+  } catch(_) { return date.toDateString(); }
+}
+function _applyLanguageGlobals() {
+  const meta = _ftzCurrentLangMeta();
+  document.documentElement.lang = meta.code;
+  document.documentElement.dir = meta.rtl ? 'rtl' : 'ltr';
+}
+document.addEventListener('DOMContentLoaded', _applyLanguageGlobals);
+setTimeout(_applyLanguageGlobals, 0);
+
+function _renderLanguageSettings(main) {
+  _applyLanguageGlobals();
+  const meta = _ftzCurrentLangMeta();
+  const timeFormat = localStorage.getItem('ftz_time_format') || '24h';
+  const flagImg = (flag, size=18) => `<img class="ftz-flag" src="${emojiToTwemojiUrl(flag)}" alt="" width="${size}" height="${size}" draggable="false">`;
+
+  const items = _FTZ_LANGUAGES.map(l => `
+    <div class="ftz-select__item ftz-select__item--rich${l.code === meta.code ? ' is-selected' : ''}"
+         data-value="${l.code}"
+         onclick="_ftzLanguagePick('${l.code}')">
+      ${flagImg(l.flag, 18)}
+      <div class="ftz-lang-meta">
+        <div class="ftz-lang-meta__native">${escapeHTML(l.native)}</div>
+        <div class="ftz-lang-meta__english">${escapeHTML(l.label)}</div>
+      </div>
+      ${l.code === meta.code ? '<svg class="ftz-select__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+    </div>`).join('');
+
+  const now = new Date();
+  const timeOpts = [
+    { val:'24h', label:_t('time_24') },
+    { val:'12h', label:_t('time_12') },
+  ];
+
+  main.innerHTML = `<div class="settings-panel">
+    ${_settingsHeader('language')}
+
+    <div class="voice-section" data-spy="lang">
+      <div class="voice-section__title">${escapeHTML(_t('lang_section'))}</div>
+      <div class="voice-section__desc">${escapeHTML(_t('lang_desc'))}</div>
+      <div class="voice-row">
+        <div class="voice-row__label">${escapeHTML(_t('lang_picker'))}</div>
+        <div class="voice-row__value">
+          <div class="ftz-select ftz-select--lang" id="ftz-sel-language">
+            <button type="button" class="ftz-select__trigger" onclick="_ftzSelectToggle('language')">
+              <span class="ftz-select__label ftz-select__label--rich">
+                ${flagImg(meta.flag, 18)}
+                <span class="ftz-lang-trigger__text">${escapeHTML(meta.native)}</span>
+                <span class="ftz-lang-trigger__sub">${escapeHTML(meta.label)}</span>
+              </span>
+              <svg class="ftz-select__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="ftz-select__menu ftz-select__menu--lang" role="listbox">${items}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="voice-section" data-spy="time">
+      <div class="voice-section__title">${escapeHTML(_t('time_section'))}</div>
+      <div class="voice-section__desc">${escapeHTML(_t('time_desc'))}</div>
+      <div class="time-format-row">
+        ${timeOpts.map(opt => `
+          <button type="button" class="time-format-chip${timeFormat === opt.val ? ' is-on' : ''}" onclick="_ftzTimeFormatPick('${opt.val}')">
+            <span class="time-format-chip__dot"></span>
+            <span>${escapeHTML(opt.label)}</span>
+          </button>`).join('')}
+      </div>
+    </div>
+
+    <div class="voice-section" data-spy="preview">
+      <div class="voice-section__title">${escapeHTML(_t('preview_section'))}</div>
+      <div class="voice-section__desc">${escapeHTML(_t('preview_desc'))}</div>
+      <div class="lang-preview">
+        <div class="lang-preview__hello">${escapeHTML(_t('preview_hello'))}</div>
+        <div class="lang-preview__line">${escapeHTML(_t('preview_today'))} <strong>${escapeHTML(_fmtDate(now))}</strong>.</div>
+        <div class="lang-preview__line">${escapeHTML(_t('preview_now'))} <strong>${escapeHTML(_fmtTime(now))}</strong>.</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function _ftzLanguagePick(code) {
+  localStorage.setItem('ftz_language', code);
+  _applyLanguageGlobals();
+  buildProfileView('language');
+  const meta = _ftzCurrentLangMeta();
+  toast(`${meta.flag} ${meta.native}`, 'success');
+}
+
+function _ftzTimeFormatPick(val) {
+  localStorage.setItem('ftz_time_format', val);
+  buildProfileView('language');
 }
 
 // ════════════════════════════════════════════

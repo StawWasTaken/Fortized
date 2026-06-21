@@ -12262,6 +12262,38 @@ select:focus,select:focus-visible,
 .kbd-reset-one{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:rgba(255,255,255,.55);border-radius:7px;cursor:pointer;transition:all .12s;padding:0;}
 .kbd-reset-one:hover{color:#fef83d;border-color:rgba(254,248,61,.4);background:rgba(254,248,61,.06);}
 
+/* ── Language & Time ────────────────────────────────────────
+   Rich language picker: each item shows the twemoji flag, the
+   native name, and the English name. The trigger mirrors the
+   item shape so the closed state already reads like a picked
+   option. Time format and the live preview share the same
+   .voice-section card shape used by every other settings page. */
+.ftz-flag{display:inline-block;border-radius:3px;flex:0 0 auto;vertical-align:middle;}
+.ftz-select--lang{min-width:280px;}
+.ftz-select__label--rich{display:flex;align-items:center;gap:10px;text-align:left;}
+.ftz-lang-trigger__text{font-weight:700;color:#fff;}
+.ftz-lang-trigger__sub{font-size:11.5px;color:rgba(255,255,255,.4);margin-left:auto;padding-left:8px;}
+.ftz-select__menu--lang{max-height:340px;overflow-y:auto;}
+.ftz-select__item--rich{display:flex;align-items:center;gap:12px;padding:9px 12px;}
+.ftz-lang-meta{display:flex;flex-direction:column;flex:1;min-width:0;}
+.ftz-lang-meta__native{font-size:13px;font-weight:700;color:#fff;line-height:1.2;}
+.ftz-lang-meta__english{font-size:11px;color:rgba(255,255,255,.4);line-height:1.2;margin-top:2px;}
+.ftz-select__item--rich .ftz-select__check{margin-left:auto;color:#fef83d;}
+
+.time-format-row{display:flex;gap:10px;flex-wrap:wrap;}
+.time-format-chip{display:flex;align-items:center;gap:10px;padding:14px 18px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);border-radius:12px;cursor:pointer;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;font-family:inherit;transition:all .14s;min-width:200px;}
+.time-format-chip:hover{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:#fff;}
+.time-format-chip__dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.25);flex:0 0 auto;position:relative;transition:all .14s;}
+.time-format-chip.is-on{border-color:rgba(254,248,61,.45);background:rgba(254,248,61,.06);color:#fff;}
+.time-format-chip.is-on .time-format-chip__dot{border-color:#fef83d;background:#fef83d;box-shadow:0 0 0 3px rgba(254,248,61,.18) inset;}
+.time-format-chip.is-on .time-format-chip__dot::after{content:'';position:absolute;inset:2px;border-radius:50%;background:#13161d;}
+
+.lang-preview{padding:18px 22px;border:1px solid rgba(254,248,61,.12);background:linear-gradient(180deg,rgba(254,248,61,.04),rgba(254,248,61,0));border-radius:12px;}
+.lang-preview__hello{font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-.01em;}
+.lang-preview__line{font-size:13.5px;color:rgba(255,255,255,.65);line-height:1.8;}
+.lang-preview__line strong{color:#fff;font-weight:700;}
+[dir="rtl"] .lang-preview,[dir="rtl"] .voice-section__desc,[dir="rtl"] .lang-preview__line{text-align:right;}
+
 /* ── Density rules — drive .msg-row spacing + chat list rows.
    The values are intentionally close to the default to avoid
    breaking dense pages like Bastion lists; the difference shows

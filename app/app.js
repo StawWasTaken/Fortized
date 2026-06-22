@@ -31691,17 +31691,19 @@ function applyRadianceFont() {
     const hasColor = CU?.displayColor && CU.displayColor !== '#fff';
     if (hasFont || hasEffect || hasColor) {
       const u = CU.username ? CSS.escape(CU.username) : '';
-      let effectCSS = '';
       const color = CU.displayColor || '#fff';
-      if (CU.displayEffect === 'neon') effectCSS = `text-shadow: 0 0 7px ${color}88, 0 0 14px ${color}44, 0 0 28px ${color}22 !important;`;
-      else if (CU.displayEffect === 'toon') effectCSS = `text-shadow: -1px -1px 0 rgba(0,0,0,.5), 1px -1px 0 rgba(0,0,0,.5), -1px 1px 0 rgba(0,0,0,.5), 1px 1px 0 rgba(0,0,0,.5) !important;`;
-      else if (CU.displayEffect === 'pop') effectCSS = `text-shadow: 2px 2px 0 rgba(0,0,0,.3), -1px -1px 0 rgba(255,255,255,.1) !important;`;
-      else if (CU.displayEffect === 'gradient') effectCSS = `background: linear-gradient(90deg, ${color}, #fff) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; background-clip: text !important;`;
-      const colorCSS = hasColor && CU.displayEffect !== 'gradient' ? `color: ${color} !important;` : '';
-      const fontCSS = hasFont ? `font-family: ${font} !important; font-weight: ${_getDisplayFontWeight(CU.displayFont)} !important;` : '';
+      const color2 = CU.displayColor2 || color;
+      // "About you" surfaces (userbar, profile card, popovers) get the
+      // full effect + colour. Chat messages get FONT ONLY — the resting
+      // state of a styled name in chat must be calm; effects show on
+      // hover via the .msg-author--styled / data-attr hover system.
+      const effectCSS = _getDisplayEffectCSS(CU.displayEffect || 'solid', color, color2)
+        .split(';').filter(Boolean).map(s => s.trim() + ' !important').join(';');
+      const colorCSS  = hasColor && CU.displayEffect !== 'gradient' ? `color: ${color} !important;` : '';
+      const fontCSS   = hasFont ? `font-family: ${font} !important; font-weight: ${_getDisplayFontWeight(CU.displayFont)} !important;` : '';
       styleEl.textContent = `
         .ua-name { ${fontCSS} ${colorCSS} ${effectCSS} }
-        .msg-author[data-author="${u}"] { ${fontCSS} ${colorCSS} ${effectCSS} }
+        .msg-author[data-author="${u}"] { ${fontCSS} }
         .ml-name { ${fontCSS} }
         .profile-display-name { ${fontCSS} ${colorCSS} ${effectCSS} }
       `;

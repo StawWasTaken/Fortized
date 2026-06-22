@@ -11830,6 +11830,84 @@ select:focus,select:focus-visible,
 .dns-effect-tile.sel{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
 .dns-effect-tile__anim{position:absolute;top:5px;right:6px;font-size:8px;color:var(--accent);line-height:1;text-shadow:0 0 4px rgba(254,248,61,.8);}
 
+/* ── Display Name Style modal v4 ─────────────────────────────
+   Uses the standard .modal-overlay / .modal chrome (same as the
+   Change Avatar Decoration modal). Inside: two-column grid with
+   tighter Discord-style controls on the left and a layered live
+   preview on the right (profile card → message → nameplate, with
+   the message floating slightly offset). */
+.dnsv4-modal{padding:0;overflow:hidden;}
+.dnsv4{display:grid;grid-template-columns:1fr 380px;}
+.dnsv4__left{padding:22px 22px 20px;overflow-y:auto;max-height:80vh;min-width:0;}
+.dnsv4__right{background:rgba(0,0,0,.22);border-left:1px solid var(--border);padding:22px 22px 18px;display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow:hidden;}
+
+.dnsv4__header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;}
+.dnsv4__title{font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;letter-spacing:-.005em;}
+.dnsv4__close{background:transparent;border:0;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:background .12s,color .12s;}
+.dnsv4__close:hover{background:rgba(255,255,255,.06);color:#fff;}
+.dnsv4__close svg{width:14px;height:14px;}
+
+.dnsv4__section-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#fff;margin:16px 0 10px;letter-spacing:.005em;}
+.dnsv4__section-label:first-of-type{margin-top:0;}
+.dnsv4-label-eye{color:rgba(255,255,255,.32);}
+
+.dnsv4__preview-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-light);}
+
+.dnsv4-color-stack{display:flex;flex-direction:column;gap:8px;}
+.dnsv4-color-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:10px;}
+.dnsv4-swatch{width:36px;height:36px;border-radius:9px;border:1.5px solid rgba(255,255,255,.18);box-shadow:0 0 0 1px rgba(0,0,0,.5) inset;cursor:pointer;padding:0;flex-shrink:0;transition:transform .12s,border-color .12s;}
+.dnsv4-swatch:hover{transform:scale(1.04);border-color:rgba(254,248,61,.5);}
+.dnsv4-color-meta{flex:1;min-width:0;}
+.dnsv4-color-meta__label{font-size:11.5px;font-weight:700;color:#fff;}
+.dnsv4-color-meta__hex{font-size:10.5px;color:rgba(255,255,255,.45);font-family:var(--font-mono,monospace);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
+
+/* Layered stage — three rows. Profile + nameplate sit at top + bottom
+   in their natural flow. The message preview is absolutely-positioned
+   between them, lightly offset to the right with a tiny rotation, so
+   the layout reads as "messier than a strict stack" without anything
+   covering the username, pronouns, or nameplate text. */
+.dnsv4-stage{position:relative;display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;overflow:hidden;}
+.dnsv4-stage__profile{margin:0;}
+.dnsv4-stage__nameplate{margin-top:auto;}
+.dnsv4-stage__msg{align-self:flex-start;width:calc(100% - 20px);margin-left:20px;transform:rotate(-1.2deg);transform-origin:left center;box-shadow:0 16px 32px -10px rgba(0,0,0,.55),0 0 0 1px rgba(254,248,61,.06);position:relative;z-index:5;}
+.dnsv4-stage__msg:hover{transform:rotate(-1.2deg) translateY(-1px);}
+
+/* Suppress the banner picker affordance when the profile card is
+   rendered inside the modal — no hover overlay, no pointer, no tip. */
+.dnsv4-no-banner-hover, .dnsv4-no-banner-hover .fpp__banner{cursor:default !important;}
+.dnsv4-no-banner-hover .fpp__banner::before,
+.dnsv4-no-banner-hover .fpp__banner::after{display:none !important;}
+.dnsv4-no-banner-hover .fpp__banner-hover-hint{display:none !important;}
+
+.dnsv4-actions{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.dnsv4-btn{flex:1;min-height:42px;padding:0 18px;border-radius:11px;font-family:var(--font-display);font-size:13px;font-weight:800;letter-spacing:.01em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid transparent;transition:background .14s,color .14s,border-color .14s,transform .14s,box-shadow .14s;white-space:nowrap;}
+.dnsv4-btn svg{width:14px;height:14px;flex-shrink:0;}
+.dnsv4-btn--ghost{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.8);}
+.dnsv4-btn--ghost:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);color:#fff;}
+.dnsv4-btn--primary{background:var(--accent);color:#13161d;border-color:var(--accent);}
+.dnsv4-btn--primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px -8px rgba(254,248,61,.5);}
+.dnsv4-btn--primary:active{transform:translateY(0);}
+
+@media (max-width:780px){
+  .dnsv4{grid-template-columns:1fr;}
+  .dnsv4__right{border-left:0;border-top:1px solid var(--border);}
+  .dnsv4-stage__msg{width:100%;margin-left:0;}
+}
+
+/* ── My Profile — "Display Name Styles" section ──────────────
+   Section heading with eye glyph, preview pill, and two-button
+   row (Change Style filled, Remove Style ghost). */
+.dns-section-head{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;}
+.dns-section-head__eye{color:rgba(255,255,255,.32);}
+.dns-preview-row{margin-bottom:10px;}
+.dns-preview-row__pill{display:inline-block;padding:9px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;}
+.dns-btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.dns-action-btn{padding:8px 18px;border-radius:10px;font-family:var(--font-display);font-size:12.5px;font-weight:800;cursor:pointer;border:1.5px solid transparent;transition:background .14s,color .14s,border-color .14s,transform .14s,box-shadow .14s;}
+.dns-action-btn--primary{background:var(--accent);color:#13161d;border-color:var(--accent);}
+.dns-action-btn--primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px -8px rgba(254,248,61,.5);}
+.dns-action-btn--ghost{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.75);}
+.dns-action-btn--ghost:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#fff;}
+
 /* dnsv3 — swatch + popover colour picker (mirrors the profile theme
    picker pattern), layered preview stage, and a proper action row. */
 .dnsv3-color-stack{display:flex;flex-direction:column;gap:8px;}

@@ -20393,14 +20393,21 @@ function _buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- Display Name Style & Effects -->
+            <!-- Display Name Styles — Discord-style two-button row with
+                 a preview pill to the left. Free everywhere on Fortized. -->
             <div>
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Display Name Style</div>
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                <div style="padding:8px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;flex:1;">
+              <div class="dns-section-head">
+                <span>Display Name Styles</span>
+                <svg class="dns-section-head__eye" width="13" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <div class="dns-preview-row">
+                <div class="dns-preview-row__pill">
                   <span id="dn-style-preview" style="font-size:16px;${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff', CU.displayColor2 || CU.displayColor || '#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
                 </div>
-                <button onclick="_openDisplayNameStyleModal()" class="settings-save-btn" style="padding:8px 18px;font-size:12px;">Change Style</button>
+              </div>
+              <div class="dns-btn-row">
+                <button onclick="_openDisplayNameStyleModal()" class="dns-action-btn dns-action-btn--primary">Change Style</button>
+                <button onclick="_dnResetStyle()" class="dns-action-btn dns-action-btn--ghost">Remove Style</button>
               </div>
             </div>
             ${sep}
@@ -31418,13 +31425,13 @@ function _openDisplayNameStyleModal() {
   _dnTempColor2 = curColor2;
   _dnDiceFace = 0;
 
-  document.querySelector('.dns-modal-overlay')?.remove();
+  document.querySelector('#dns-modal-overlay')?.remove();
   const overlay = document.createElement('div');
-  overlay.className = 'dns-modal-overlay';
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'dns-modal-overlay';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 
-  // Preview script — picks a real chat-style message for the floating
-  // preview, mirroring the My Profile page's "Message preview" surface.
+  // Preview script + reactions — mirrors My Profile's "Message preview".
   const _previewMsgs = [
     { text:"did anyone else hear that weird noise at 3am",          reactions:[{e:'👀',n:3,mine:false},{e:'😱',n:2,mine:true}] },
     { text:"who ate the last french fries without telling anyone?", reactions:[{e:'🥀',n:4,mine:true},{e:'🍟',n:1,mine:false}] },
@@ -31437,130 +31444,131 @@ function _openDisplayNameStyleModal() {
   }).join('');
   const sc = (typeof FtzStatus !== 'undefined' && FtzStatus.color) ? FtzStatus.color(CU.status||'online') : '#3ecf6e';
 
-  // Discord-style swatch that opens the HSV popover. Same UX as the
-  // profile-theme picker on the My Profile page; just routes to the
-  // displayname temp state instead of CU.profileTheme.
   const dnSwatch = (slot) => {
     const v = slot === 2 ? curColor2 : curColor;
-    return `<div class="dnsv3-color-row">
-      <button id="dnsv3-swatch-${slot}" onclick="_openDnColourPopover(this,${slot})" class="dnsv3-swatch" style="background:${v};" aria-label="Pick colour"></button>
-      <div class="dnsv3-color-meta">
-        <div class="dnsv3-color-meta__label">${slot===2?'Second colour':'Colour'}</div>
-        <div class="dnsv3-color-meta__hex" id="dnsv3-hex-${slot}">${v}</div>
+    return `<div class="dnsv4-color-row">
+      <button id="dnsv3-swatch-${slot}" onclick="_openDnColourPopover(this,${slot})" class="dnsv4-swatch" style="background:${v};" aria-label="Pick colour"></button>
+      <div class="dnsv4-color-meta">
+        <div class="dnsv4-color-meta__label">${slot===2?'Second colour':'Colour'}</div>
+        <div class="dnsv4-color-meta__hex" id="dnsv3-hex-${slot}">${v}</div>
       </div>
     </div>`;
   };
+  // Discord uses a tiny preview-eye glyph next to section labels —
+  // decorative, no handler. Adds visual rhythm so the labels don't read
+  // like dense uppercase text walls.
+  const eye = '<svg class="dnsv4-label-eye" width="13" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 
-  overlay.innerHTML = `<div class="dns-modal dnsv3">
-    <!-- LEFT — controls -->
-    <div class="dns-modal__pane">
-      <div class="dns-modal__header">
-        <div class="dns-modal__header-text">
-          <div class="dns-modal__title">Display Name Style</div>
-          <div class="dns-modal__free-pill" data-tip="Discord locks this behind Nitro. We don't.">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-            Free for everyone
+  overlay.innerHTML = `<div class="modal dnsv4-modal" style="max-width:920px;width:94vw;">
+    <div class="modal-bar"></div>
+    <div class="modal-body" style="padding:0;">
+      <div class="dnsv4">
+
+        <!-- LEFT — controls -->
+        <div class="dnsv4__left">
+          <div class="dnsv4__header">
+            <div class="dnsv4__title">Change Display Name Style</div>
+            <button class="dnsv4__close" onclick="document.getElementById('dns-modal-overlay').remove()" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
-        </div>
-        <button class="dns-modal__close" onclick="this.closest('.dns-modal-overlay').remove()" aria-label="Close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
 
-      <div class="dns-modal__section-label">Choose Font</div>
-      <div class="dns-font-grid" id="dns-font-grid">
-        ${DISPLAY_NAME_FONTS.map(f => `
-          <button type="button" class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')" data-tip="${escapeHTML(f.name)}">
-            <span class="dns-font-tile__sample" style="font-family:${f.css};font-weight:${f.weight};">${f.sample}</span>
-          </button>`).join('')}
-      </div>
-
-      <div class="dns-modal__section-label">Choose Effect</div>
-      <div class="dns-effect-grid" id="dns-effect-grid">
-        ${DISPLAY_NAME_EFFECTS.map(e => {
-          const cls = _getDisplayEffectClass(e.id);
-          return `<button type="button" class="dns-effect-tile ${curEffect===e.id?'sel':''} ${cls}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')"><span style="${_getDisplayEffectCSS(e.id,curColor,curColor2)}">${e.name}</span>${e.animated?'<span class="dns-effect-tile__anim" data-tip="Subtle idle animation">●</span>':''}</button>`;
-        }).join('')}
-      </div>
-
-      <div class="dns-modal__section-label">Choose Colour</div>
-      <div class="dnsv3-color-stack" id="dnsv3-color-stack">
-        ${dnSwatch(1)}
-        <div id="dnsv3-color2-wrap" style="display:${curEffect==='gradient'?'block':'none'};">
-          ${dnSwatch(2)}
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT — layered live previews + actions -->
-    <div class="dns-modal__preview dnsv3-preview">
-      <div class="dns-modal__preview-label">Preview</div>
-
-      <div class="dnsv3-stage">
-        <!-- BACK LAYER A — profile-card top (banner + avatar + identity) -->
-        <div class="dnsv3-stage__profile fpp fpp--settings" data-fpp-settings-card>
-          <div class="fpp__banner">
-            ${_fppBannerHTML(CU, hasRadiance)}
+          <div class="dnsv4__section-label">Choose Font ${eye}</div>
+          <div class="dns-font-grid" id="dns-font-grid">
+            ${DISPLAY_NAME_FONTS.map(f => `
+              <button type="button" class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')" data-tip="${escapeHTML(f.name)}">
+                <span class="dns-font-tile__sample" style="font-family:${f.css};font-weight:${f.weight};">${f.sample}</span>
+              </button>`).join('')}
           </div>
-          <div class="fpp__av-row">
-            <div class="fpp__av-wrap">
-              <div class="fpp__av">${buildAvatarHTML(CU.pfp, dn, 64, CU.pfpCrop)}</div>
-              ${CU.activeDecoration ? (()=>{ const d = PROFILE_DECORATIONS.find(dec => dec.id === CU.activeDecoration); return d ? '<img src="'+escapeHTML(d.src)+'" class="fpp__decoration" onerror="this.style.display=\'none\'">' : ''; })() : ''}
-              <span class="fpp__status-dot" data-dot-size="22">${(typeof FtzStatus!=='undefined' && FtzStatus.dotSvg) ? FtzStatus.dotSvg(FtzStatus.sanitize(CU.status||'online'), 22) : ''}</span>
-            </div>
-            ${cs && cs.text
-              ? '<div class="fpp__cs-bubble">'+(cs.emoji?'<span class="fpp__cs-emoji"><img src="'+emojiToTwemojiUrl(cs.emoji)+'" alt=""></span>':'')+'<span class="fpp__cs-text">'+escapeHTML(cs.text).slice(0,40)+'</span></div>'
-              : '<div class="fpp__cs-bubble fpp__cs-bubble--empty"><span class="fpp__cs-plus">'+_FPP_CS_PLUS_SVG+'</span><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
+
+          <div class="dnsv4__section-label">Choose Effect ${eye}</div>
+          <div class="dns-effect-grid" id="dns-effect-grid">
+            ${DISPLAY_NAME_EFFECTS.map(e => {
+              const cls = _getDisplayEffectClass(e.id);
+              return `<button type="button" class="dns-effect-tile ${curEffect===e.id?'sel':''} ${cls}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')"><span style="${_getDisplayEffectCSS(e.id,curColor,curColor2)}">${e.name}</span>${e.animated?'<span class="dns-effect-tile__anim" data-tip="Subtle idle animation">●</span>':''}</button>`;
+            }).join('')}
           </div>
-          <div class="fpp__identity">
-            <div class="fpp__name" id="dns-preview-name" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
-            <div class="fpp__handle-row">
-              <span class="fpp__handle">@${escapeHTML(CU.username)}</span>
-              ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">'+escapeHTML(CU.pronouns)+'</span>' : ''}
+
+          <div class="dnsv4__section-label">Choose Colour ${eye}</div>
+          <div class="dnsv4-color-stack">
+            ${dnSwatch(1)}
+            <div id="dnsv3-color2-wrap" style="display:${curEffect==='gradient'?'block':'none'};">
+              ${dnSwatch(2)}
             </div>
           </div>
         </div>
 
-        <!-- BACK LAYER B — nameplate row -->
-        <div class="dnsv3-stage__nameplate fpp-nameplate-preview">
-          <div class="fpp-nameplate-preview__row">
-            <div class="fpp-nameplate-preview__av-wrap">
-              <div class="fpp-nameplate-preview__av">${buildAvatarHTML(CU.pfp, dn, 32, CU.pfpCrop)}</div>
-              <span class="fpp-nameplate-preview__dot" style="background:${sc};"></span>
-            </div>
-            <div class="fpp-nameplate-preview__name" id="dns-preview-nameplate" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
-          </div>
-        </div>
+        <!-- RIGHT — layered previews + actions. Each layer is its own row;
+             the message preview floats in the middle, slightly offset and
+             rotated so the composition reads as 3 surfaces stacked at
+             different depths without anyone hiding anything important. -->
+        <div class="dnsv4__right">
+          <div class="dnsv4__preview-label">Preview</div>
+          <div class="dnsv4-stage">
 
-        <!-- FRONT LAYER — message preview, offset slightly left -->
-        <div class="dnsv3-stage__msg fpp-msg-preview">
-          <div class="fpp-msg-preview__row">
-            <div class="fpp-msg-preview__av">${buildAvatarHTML(CU.pfp, dn, 38, CU.pfpCrop)}</div>
-            <div class="fpp-msg-preview__body">
-              <div class="fpp-msg-preview__name-row">
-                <span class="fpp-msg-preview__name" id="dns-preview-chat-name" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</span>
-                <span class="fpp-msg-preview__time">·  Today at ${_localNow}</span>
+            <div class="dnsv4-stage__profile fpp fpp--settings dnsv4-no-banner-hover" data-fpp-settings-card>
+              <div class="fpp__banner dnsv4-no-banner-hover">
+                ${_fppBannerHTML(CU, hasRadiance)}
               </div>
-              <div class="fpp-msg-preview__text">${escapeHTML(_pm.text)}</div>
-              <div class="msg-reactions" style="margin-top:8px;">${_reactionsHTML}</div>
+              <div class="fpp__av-row">
+                <div class="fpp__av-wrap">
+                  <div class="fpp__av">${buildAvatarHTML(CU.pfp, dn, 64, CU.pfpCrop)}</div>
+                  ${CU.activeDecoration ? (()=>{ const d = PROFILE_DECORATIONS.find(dec => dec.id === CU.activeDecoration); return d ? '<img src="'+escapeHTML(d.src)+'" class="fpp__decoration" onerror="this.style.display=\'none\'">' : ''; })() : ''}
+                  <span class="fpp__status-dot" data-dot-size="22">${(typeof FtzStatus!=='undefined' && FtzStatus.dotSvg) ? FtzStatus.dotSvg(FtzStatus.sanitize(CU.status||'online'), 22) : ''}</span>
+                </div>
+                ${cs && cs.text
+                  ? '<div class="fpp__cs-bubble">'+(cs.emoji?'<span class="fpp__cs-emoji"><img src="'+emojiToTwemojiUrl(cs.emoji)+'" alt=""></span>':'')+'<span class="fpp__cs-text">'+escapeHTML(cs.text).slice(0,40)+'</span></div>'
+                  : '<div class="fpp__cs-bubble fpp__cs-bubble--empty"><span class="fpp__cs-plus">'+_FPP_CS_PLUS_SVG+'</span><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
+              </div>
+              <div class="fpp__identity">
+                <div class="fpp__name" id="dns-preview-name" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
+                <div class="fpp__handle-row">
+                  <span class="fpp__handle">@${escapeHTML(CU.username)}</span>
+                  ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">'+escapeHTML(CU.pronouns)+'</span>' : ''}
+                </div>
+              </div>
             </div>
+
+            <div class="dnsv4-stage__msg fpp-msg-preview">
+              <div class="fpp-msg-preview__row">
+                <div class="fpp-msg-preview__av">${buildAvatarHTML(CU.pfp, dn, 38, CU.pfpCrop)}</div>
+                <div class="fpp-msg-preview__body">
+                  <div class="fpp-msg-preview__name-row">
+                    <span class="fpp-msg-preview__name" id="dns-preview-chat-name" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</span>
+                    <span class="fpp-msg-preview__time">·  Today at ${_localNow}</span>
+                  </div>
+                  <div class="fpp-msg-preview__text">${escapeHTML(_pm.text)}</div>
+                  <div class="msg-reactions" style="margin-top:8px;">${_reactionsHTML}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="dnsv4-stage__nameplate fpp-nameplate-preview">
+              <div class="fpp-nameplate-preview__row">
+                <div class="fpp-nameplate-preview__av-wrap">
+                  <div class="fpp-nameplate-preview__av">${buildAvatarHTML(CU.pfp, dn, 32, CU.pfpCrop)}</div>
+                  <span class="fpp-nameplate-preview__dot" style="background:${sc};"></span>
+                </div>
+                <div class="fpp-nameplate-preview__name" id="dns-preview-nameplate" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="dnsv4-actions">
+            <button class="dnsv4-btn dnsv4-btn--ghost" id="dns-surprise-btn" onclick="_dnSurpriseMe()">
+              <span class="dns-modal__dice" id="dns-dice">${_dnDiceSvg(_DN_DICE_FACES[0])}</span>
+              Surprise Me
+            </button>
+            <button class="dnsv4-btn dnsv4-btn--primary" onclick="_dnApplyStyle()">Apply Style</button>
           </div>
         </div>
-      </div>
 
-      <div class="dnsv3-actions">
-        <button class="dnsv3-btn dnsv3-btn--ghost" id="dns-surprise-btn" onclick="_dnSurpriseMe()">
-          <span class="dns-modal__dice" id="dns-dice">${_dnDiceSvg(_DN_DICE_FACES[0])}</span>
-          Surprise Me
-        </button>
-        <button class="dnsv3-btn dnsv3-btn--primary" onclick="_dnApplyStyle()">Apply Style</button>
       </div>
     </div>
   </div>`;
 
   document.body.appendChild(overlay);
-  // Apply animation classes on initial mount (cssText alone doesn't
-  // include the class names).
   _dnUpdatePreview();
 }
 
@@ -31759,10 +31767,36 @@ async function _dnApplyStyle() {
       displayName: CU.displayName || CU.username,
     });
   }
-  document.querySelector('.dns-modal-overlay')?.remove();
+  document.querySelector('#dns-modal-overlay')?.remove();
   buildProfileView('myprofile');
   toast('Display name style updated!', 'success');
   _dnTempFont = null; _dnTempEffect = null; _dnTempColor = null; _dnTempColor2 = null;
+}
+
+// Wipes all display-name styling back to defaults. Wired to the
+// "Remove Style" button on the My Profile page (mirrors Discord's
+// Remove Style action, but free since we don't paywall this).
+async function _dnResetStyle() {
+  if (typeof showCustomConfirm === 'function') {
+    showCustomConfirm('Remove your display name style? Your name will use the default font and colour everywhere.', async () => {
+      CU.displayFont = 'default';
+      CU.displayEffect = 'solid';
+      CU.displayColor = '#fff';
+      CU.displayColor2 = '#fff';
+      await saveUser(true);
+      applyRadianceFont();
+      updateUserbar();
+      updateProfilePreview();
+      if (typeof FortizedSocial !== 'undefined' && FortizedSocial._socket) {
+        FortizedSocial._socket.emit('profile:update', {
+          displayFont: 'default', displayEffect: 'solid', displayColor: '#fff', displayColor2: '#fff',
+          displayName: CU.displayName || CU.username,
+        });
+      }
+      buildProfileView('myprofile');
+      toast('Display name style removed.', 'success');
+    });
+  }
 }
 
 function renderRadianceFontPicker() {

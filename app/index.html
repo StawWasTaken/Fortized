@@ -40,10 +40,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix185';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix186';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix185';
+    s4.src = '/firebase-compat-shim.js?v=2026fix186';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -52,14 +52,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix185">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix186">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix185', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix186', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -664,7 +664,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
     <!-- ATELIER VIEW -->
     <div class="view" id="view-atelier">
       <div class="atelier-wrap">
-        <div id="atelier-top-nav" style="display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.2);flex-shrink:0;"></div>
+        <div id="atelier-top-nav" class="disc-subnav"></div>
         <div class="atelier-scroll" id="atelier-scroll-outer">
           <div id="atelier-content"></div>
         </div>
@@ -1216,10 +1216,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix185"></script>
-<script src="/app/app.js?v=2026fix185"></script>
-<script src="/app/joy-system.js?v=2026fix185"></script>
-<script src="/app/chronicle-games.js?v=2026fix185"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix186"></script>
+<script src="/app/app.js?v=2026fix186"></script>
+<script src="/app/joy-system.js?v=2026fix186"></script>
+<script src="/app/chronicle-games.js?v=2026fix186"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

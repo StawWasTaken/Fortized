@@ -39842,7 +39842,7 @@ function renderAtelierTopNav() {
 
   navContainer.innerHTML = tabs.map(t => {
     const isActive = tab === t.id;
-    return `<button class="atel-top-nav-btn ${isActive ? 'active' : ''}" onclick="switchAtelierTab('${t.id}')" style="display:flex;align-items:center;gap:8px;padding:12px 16px;border:none;background:${isActive ? 'rgba(255,249,62,.08)' : 'transparent'};border-bottom:${isActive ? '2px solid var(--accent)' : '1px solid transparent'};color:${isActive ? 'var(--accent)' : 'rgba(255,255,255,.5)'};cursor:pointer;transition:all .2s;font-size:13px;font-weight:600;font-family:var(--font-display);position:relative;white-space:nowrap;">
+    return `<button class="disc-subnav-btn ${isActive ? 'active' : ''}" onclick="switchAtelierTab('${t.id}')">
       ${t.html}
       <span>${t.name}</span>
     </button>`;

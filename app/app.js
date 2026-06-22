@@ -20393,17 +20393,12 @@ function _buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- Display Name Styles — Discord-style two-button row with
-                 a preview pill to the left. Free everywhere on Fortized. -->
+            <!-- Display Name Styles — Discord-style two-button row.
+                 Free everywhere on Fortized, hence the NEW badge. -->
             <div>
               <div class="dns-section-head">
                 <span>Display Name Styles</span>
-                <svg class="dns-section-head__eye" width="13" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </div>
-              <div class="dns-preview-row">
-                <div class="dns-preview-row__pill">
-                  <span id="dn-style-preview" style="font-size:16px;${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff', CU.displayColor2 || CU.displayColor || '#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
-                </div>
+                ${_newBadge()}
               </div>
               <div class="dns-btn-row">
                 <button onclick="_openDisplayNameStyleModal()" class="dns-action-btn dns-action-btn--primary">Change Style</button>

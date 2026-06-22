@@ -19089,10 +19089,10 @@ function _getChatInputRight() {
 
 function randomizeChatbarEmoji(btn) {
   if (!btn || !_EMOJI_PACK_SVGS || _EMOJI_PACK_SVGS.length === 0) return;
-  const img = btn.querySelector('img');
-  if (!img) return;
+  const cur = btn.querySelector('img, svg.svgrepo-icon');
+  if (!cur) return;
   const d = _EMOJI_PACK_SVGS[Math.floor(Math.random() * _EMOJI_PACK_SVGS.length)];
-  img.outerHTML = `<svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`;
+  cur.outerHTML = `<svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`;
 }
 
 function toggleEmojiPicker(targetId) {
@@ -29482,7 +29482,7 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           <div class="chat-input-actions">
             <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" data-tip="GIFs"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310879/gif.svg" alt="" loading="lazy" draggable="false"></button>
             <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" data-tip="Stickers"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/311245/sticker.svg" alt="" loading="lazy" draggable="false"></button>
-            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" data-tip="Emoji" onmouseenter="this._hasHovered = true" onmouseleave="if(this._hasHovered) randomizeChatbarEmoji(this)"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false"></button>
+            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" data-tip="Emoji" onmouseleave="randomizeChatbarEmoji(this)"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false"></button>
             <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}" data-tip="Bot commands"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310556/bot.svg" alt="" loading="lazy" draggable="false"></button>
           </div>
         </div>

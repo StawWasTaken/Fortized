@@ -19094,11 +19094,7 @@ function randomizeChatbarEmoji(btn) {
   const cur = btn.querySelector('img, svg.svgrepo-icon');
   if (!cur) return;
   const [vb, d] = _EMOJI_PACK_SVGS[Math.floor(Math.random() * _EMOJI_PACK_SVGS.length)];
-  const [minX, minY, width, height] = vb.split(' ').map(Number);
-  const aspectRatio = width / height;
-  const h = 20;
-  const w = Math.round(h * aspectRatio);
-  cur.outerHTML = `<svg class="svgrepo-icon svgrepo-icon--20" width="${w}" height="${h}" viewBox="${vb}" xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`;
+  cur.outerHTML = `<svg class="svgrepo-icon svgrepo-icon--20" width="20" height="20" viewBox="${vb}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`;
 }
 
 function toggleEmojiPicker(targetId) {

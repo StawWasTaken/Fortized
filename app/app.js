@@ -31449,13 +31449,13 @@ function _openDisplayNameStyleModal() {
       </div>
     </div>`;
   };
-  // Discord uses a tiny preview-eye glyph next to section labels —
-  // decorative, no handler. Adds visual rhythm so the labels don't read
-  // like dense uppercase text walls.
-  const eye = '<svg class="dnsv4-label-eye" width="13" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  // Section labels — plain text, no decorative glyph.
 
   overlay.innerHTML = `<div class="modal dnsv4-modal" style="max-width:920px;width:94vw;">
     <div class="modal-bar"></div>
+    <button class="dnsv4__close" onclick="document.getElementById('dns-modal-overlay').remove()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
     <div class="modal-body" style="padding:0;">
       <div class="dnsv4">
 
@@ -31463,12 +31463,9 @@ function _openDisplayNameStyleModal() {
         <div class="dnsv4__left">
           <div class="dnsv4__header">
             <div class="dnsv4__title">Change Display Name Style</div>
-            <button class="dnsv4__close" onclick="document.getElementById('dns-modal-overlay').remove()" aria-label="Close">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
           </div>
 
-          <div class="dnsv4__section-label">Choose Font ${eye}</div>
+          <div class="dnsv4__section-label">Choose Font</div>
           <div class="dns-font-grid" id="dns-font-grid">
             ${DISPLAY_NAME_FONTS.map(f => `
               <button type="button" class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')" data-tip="${escapeHTML(f.name)}">
@@ -31476,7 +31473,7 @@ function _openDisplayNameStyleModal() {
               </button>`).join('')}
           </div>
 
-          <div class="dnsv4__section-label">Choose Effect ${eye}</div>
+          <div class="dnsv4__section-label">Choose Effect</div>
           <div class="dns-effect-grid" id="dns-effect-grid">
             ${DISPLAY_NAME_EFFECTS.map(e => {
               const cls = _getDisplayEffectClass(e.id);
@@ -31484,7 +31481,7 @@ function _openDisplayNameStyleModal() {
             }).join('')}
           </div>
 
-          <div class="dnsv4__section-label">Choose Colour ${eye}</div>
+          <div class="dnsv4__section-label">Choose Colour</div>
           <div class="dnsv4-color-stack">
             ${dnSwatch(1)}
             <div id="dnsv3-color2-wrap" style="display:${curEffect==='gradient'?'block':'none'};">
@@ -31584,7 +31581,9 @@ function _openDnColourPopover(anchorEl, slot) {
   const rect = anchorEl.getBoundingClientRect();
   const pop = document.createElement('div');
   pop.className = 'pt-colour-pop';
-  pop.style.cssText = `position:fixed;left:${Math.round(rect.left)}px;top:${Math.round(rect.bottom+8)}px;z-index:10000;`;
+  // Render off-screen first so we can measure the actual popover size,
+  // then flip / clamp so we never overflow the viewport.
+  pop.style.cssText = `position:fixed;left:-9999px;top:-9999px;z-index:10000;`;
   pop.innerHTML = `
     <div class="pt-pop-card pt-pop-card--discord">
       <div class="pt-pop-sq" id="dnpop-sq"><div class="pt-pop-sq-sat"></div><div class="pt-pop-sq-val"></div><div class="pt-pop-sq-thumb" id="dnpop-sq-thumb"></div></div>
@@ -31593,6 +31592,22 @@ function _openDnColourPopover(anchorEl, slot) {
       <div class="pt-pop-presets">${PRESETS.map(c => `<button type="button" class="pt-pop-preset" data-c="${c}" style="background:${c};"></button>`).join('')}</div>
     </div>`;
   document.body.appendChild(pop);
+  // Measure + place. Prefer below the swatch; flip above if there's no
+  // room. Clamp left so the popover never crosses the right edge.
+  const popH = pop.offsetHeight || 260;
+  const popW = pop.offsetWidth  || 260;
+  const margin = 8;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  let top = rect.bottom + margin;
+  if (top + popH + margin > vh) {
+    top = rect.top - popH - margin;
+    if (top < margin) top = Math.max(margin, vh - popH - margin);
+  }
+  let left = rect.left;
+  if (left + popW + margin > vw) left = vw - popW - margin;
+  if (left < margin) left = margin;
+  pop.style.cssText = `position:fixed;left:${Math.round(left)}px;top:${Math.round(top)}px;z-index:10000;`;
 
   const sq = pop.querySelector('#dnpop-sq');
   const sqThumb = pop.querySelector('#dnpop-sq-thumb');

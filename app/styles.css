@@ -11836,15 +11836,19 @@ select:focus,select:focus-visible,
    tighter Discord-style controls on the left and a layered live
    preview on the right (profile card → message → nameplate, with
    the message floating slightly offset). */
-.dnsv4-modal{padding:0;overflow:hidden;}
+.dnsv4-modal{padding:0;overflow:hidden;position:relative;}
 .dnsv4{display:grid;grid-template-columns:1fr 380px;}
 .dnsv4__left{padding:22px 22px 20px;overflow-y:auto;max-height:80vh;min-width:0;}
 .dnsv4__right{background:rgba(0,0,0,.22);border-left:1px solid var(--border);padding:22px 22px 18px;display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow:hidden;}
 
-.dnsv4__header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;}
+.dnsv4__header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
 .dnsv4__title{font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;letter-spacing:-.005em;}
-.dnsv4__close{background:transparent;border:0;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:background .12s,color .12s;}
-.dnsv4__close:hover{background:rgba(255,255,255,.06);color:#fff;}
+
+/* Close button now lives on the modal card itself (top-right of the
+   whole card, not just the left pane) so it stays consistent with
+   other Fortized modals. */
+.dnsv4__close{position:absolute;top:14px;right:14px;z-index:6;background:rgba(0,0,0,.35);border:0;color:rgba(255,255,255,.55);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:background .12s,color .12s;padding:0;}
+.dnsv4__close:hover{background:rgba(0,0,0,.55);color:#fff;}
 .dnsv4__close svg{width:14px;height:14px;}
 
 .dnsv4__section-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#fff;margin:16px 0 10px;letter-spacing:.005em;}

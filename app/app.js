@@ -1418,7 +1418,7 @@ async function refreshCU() {
         'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme',
         // 'activeDecoration' omitted — owned by ftz_deco_<name> key (see equipDecoration)
         'connections','socials','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
-        'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
+        'profileWidgets','displayFont','displayEffect','displayColor','displayColor2','wantToPlay','gameCollection',
         'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
         'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
         'createdAt','customStatus','verified','appearance','wishlist','wishlistPrivate',
@@ -1539,6 +1539,7 @@ async function refreshCU() {
       if (CU.displayFont && !fresh.displayFont) fresh.displayFont = CU.displayFont;
       if (CU.displayEffect && !fresh.displayEffect) fresh.displayEffect = CU.displayEffect;
       if (CU.displayColor && !fresh.displayColor) fresh.displayColor = CU.displayColor;
+      if (CU.displayColor2 && !fresh.displayColor2) fresh.displayColor2 = CU.displayColor2;
       if (CU.profileTheme && !fresh.profileTheme) fresh.profileTheme = CU.profileTheme;
       if (CU.wantToPlay?.length && !fresh.wantToPlay?.length) fresh.wantToPlay = CU.wantToPlay;
       // Preserve profile widgets
@@ -3406,7 +3407,7 @@ function showView(v, _skipPush) {
   if (v === 'profile') {
     closeModal('modal-bsettings'); // close other if open
     openModal('modal-settings');
-    _settingsOriginal = CU ? structuredClone({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,pfpCrop:CU.pfpCrop,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme,activeDecoration:CU.activeDecoration,displayFont:CU.displayFont,displayEffect:CU.displayEffect,displayColor:CU.displayColor,mentionPolicy:CU.mentionPolicy}) : null;
+    _settingsOriginal = CU ? structuredClone({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,pfpCrop:CU.pfpCrop,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme,activeDecoration:CU.activeDecoration,displayFont:CU.displayFont,displayEffect:CU.displayEffect,displayColor:CU.displayColor,displayColor2:CU.displayColor2,mentionPolicy:CU.mentionPolicy}) : null;
     clearSettingsDirty();
     buildProfileNav(document.getElementById('profile-nav'));
     buildProfileView('myprofile');
@@ -4631,6 +4632,36 @@ function _ftzTipRemove() {
 
 // ── Reaction tooltip (Discord-style: emoji + "reacted by" users) ──
 let _rTipEl = null, _rTipTimer = null;
+// ── Chat author display-name hover effect ──
+// In DM / GC, displayname styles (gradient/halo/inked/lifted + colour)
+// are suppressed at rest so messages read calmly. They reveal on hover
+// in place of an underline, then snap back when the cursor leaves.
+// Bastion channels keep the effect off entirely — that's handled at the
+// render site, not here.
+document.addEventListener('mouseover', function(e) {
+  const el = e.target?.closest?.('.msg-author--styled');
+  if (!el) return;
+  if (el._dnHover) return;
+  el._dnHover = true;
+  if (typeof _getDisplayEffectCSS !== 'function') return;
+  // Stash the resting cssText once so we can put it back verbatim.
+  if (el.dataset.dnRest === undefined) el.dataset.dnRest = el.style.cssText;
+  const eff  = el.dataset.dnEffect  || 'solid';
+  const col  = el.dataset.dnColor   || '#fff';
+  const col2 = el.dataset.dnColor2  || col;
+  el.style.cssText = (el.dataset.dnRest || '') + ';' + _getDisplayEffectCSS(eff, col, col2);
+  const animCls = _getDisplayEffectClass(eff);
+  if (animCls) el.classList.add(animCls);
+});
+document.addEventListener('mouseout', function(e) {
+  const el = e.target?.closest?.('.msg-author--styled');
+  if (!el) return;
+  // Stay hovered while moving over child nodes inside the author span.
+  if (el.contains(e.relatedTarget)) return;
+  el._dnHover = false;
+  el.style.cssText = el.dataset.dnRest || '';
+  el.classList.remove('ftz-fx-flow','ftz-fx-halo');
+});
 document.addEventListener('mouseover', function(e) {
   const pill = e.target.closest?.('.r-pill[data-r-emoji]');
   if (!pill) return;
@@ -6157,7 +6188,7 @@ async function renderDMSidebar(scroll) {
         if (dnEl) {
           dnEl.textContent = u.displayName || f;
           if (u.displayFont && u.displayFont !== 'default') { dnEl.style.fontFamily = _getDisplayFontCSS(u.displayFont); dnEl.style.fontWeight = _getDisplayFontWeight(u.displayFont); }
-          if (u.displayColor && u.displayColor !== '#fff') dnEl.style.cssText += _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor);
+          if (u.displayColor && u.displayColor !== '#fff') dnEl.style.cssText += _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor, u.displayColor2 || u.displayColor);
         }
         // Use live Socket.IO presence — if query failed (null), trust DB as initial display
         const liveSt = _dmPresenceMap?.[f]?.status;
@@ -7396,7 +7427,7 @@ async function showGCMemberPanel(meta) {
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
         if (nameEl) {
           if (ud.displayFont && ud.displayFont !== 'default') { nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont); nameEl.style.fontWeight = _getDisplayFontWeight(ud.displayFont); }
-          if (ud.displayColor && ud.displayColor !== '#fff') nameEl.style.cssText += _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor);
+          if (ud.displayColor && ud.displayColor !== '#fff') nameEl.style.cssText += _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor, ud.displayColor2 || ud.displayColor);
         }
         if (ud.pfp) {
           const avWrap = entry.querySelector('.gc-ml-av');
@@ -9549,15 +9580,36 @@ function appendMessage(container, msg, context, prevAuthor) {
       if (authorEl && u.displayName && u.displayName !== msg.from) {
         authorEl.textContent = u.displayName;
       }
-      // Apply their display name style (font, effect, color)
+      // Apply their display name style.
+      // Rule from product spec:
+      //   • Font always applies, in DM/GC/channel/anywhere.
+      //   • Effects (gradient/halo/inked/lifted) + displayColor only show
+      //     at REST when the message is "about you" elsewhere — never in
+      //     chat. In DM/GC they reveal on hover instead of an underline.
+      //     In bastion channels they're suppressed entirely; role colour
+      //     wins if the user has a role, otherwise default text.
       if (authorEl) {
         if (u.displayFont && u.displayFont !== 'default') {
           authorEl.style.fontFamily = _getDisplayFontCSS(u.displayFont);
           authorEl.style.fontWeight = _getDisplayFontWeight(u.displayFont);
         }
-        if (u.displayColor && u.displayColor !== '#fff' && !roleColor) {
-          const effectCSS = _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor);
-          authorEl.style.cssText += effectCSS;
+        const isBastion = (context === 'ch' || context === 'channel');
+        if (isBastion) {
+          // Bastion: no effects ever. Role colour if any; else default text.
+          if (roleColor) authorEl.style.color = roleColor;
+        } else {
+          // DM / GC: stash the effect data so the global hover handler can
+          // toggle the styled state on/off without re-querying the user.
+          const eff = u.displayEffect || 'solid';
+          const col = u.displayColor || '#fff';
+          const col2 = u.displayColor2 || col;
+          const hasStyle = (eff && eff !== 'solid') || (col && col !== '#fff');
+          if (hasStyle) {
+            authorEl.dataset.dnEffect = eff;
+            authorEl.dataset.dnColor  = col;
+            authorEl.dataset.dnColor2 = col2;
+            authorEl.classList.add('msg-author--styled');
+          }
         }
       }
     }).catch(()=>{});
@@ -10749,7 +10801,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         if (nameEl) {
           if (ud.displayFont && ud.displayFont !== 'default') { nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont); nameEl.style.fontWeight = _getDisplayFontWeight(ud.displayFont); }
           if (ud.displayColor && ud.displayColor !== '#fff') {
-            const _eCss = _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor);
+            const _eCss = _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor, ud.displayColor2 || ud.displayColor);
             nameEl.style.cssText += _eCss;
           }
         }
@@ -12490,7 +12542,7 @@ function initFortizedUXResilience() {
               // blob whose write may have quota-failed — re-equipping
               // an old decoration the user explicitly wanted gone.
               'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
-              'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
+              'profileWidgets','displayFont','displayEffect','displayColor','displayColor2','wantToPlay','gameCollection',
               'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
               'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
               'createdAt','customStatus','verified','appearance','badges',
@@ -13208,7 +13260,7 @@ function initFortizedUXResilience() {
               el.style.fontWeight = _getDisplayFontWeight(data.displayFont);
             }
             if (data.displayColor && data.displayColor !== '#fff') {
-              const _eCss = _getDisplayEffectCSS(data.displayEffect || 'solid', data.displayColor);
+              const _eCss = _getDisplayEffectCSS(data.displayEffect || 'solid', data.displayColor, data.displayColor2 || data.displayColor);
               el.style.cssText += _eCss;
             }
           });
@@ -13384,7 +13436,7 @@ function initFortizedUXResilience() {
                 if (data.displayFont) { nameEl.style.fontFamily = (typeof _getDisplayFontCSS === 'function') ? _getDisplayFontCSS(data.displayFont) : ''; nameEl.style.fontWeight = (typeof _getDisplayFontWeight === 'function') ? _getDisplayFontWeight(data.displayFont) : ''; }
                 if (data.displayColor || data.displayEffect) {
                   try {
-                    const effectCss = (typeof _getDisplayEffectCSS === 'function') ? _getDisplayEffectCSS(data.displayEffect || 'solid', data.displayColor || '#fff') : '';
+                    const effectCss = (typeof _getDisplayEffectCSS === 'function') ? _getDisplayEffectCSS(data.displayEffect || 'solid', data.displayColor || '#fff', data.displayColor2 || data.displayColor || '#fff') : '';
                     // _getDisplayEffectCSS returns a string of CSS declarations.
                     // Replace any prior effect declarations on the element.
                     nameEl.style.cssText = (nameEl.style.cssText || '').replace(/(text-shadow|background-image|-webkit-background-clip|background-clip|-webkit-text-fill-color)\s*:[^;]+;?/g, '') + ';' + effectCss;
@@ -20346,7 +20398,7 @@ function _buildProfileView(tab) {
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Display Name Style</div>
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
                 <div style="padding:8px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;flex:1;">
-                  <span id="dn-style-preview" style="font-size:16px;${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
+                  <span id="dn-style-preview" style="font-size:16px;${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff', CU.displayColor2 || CU.displayColor || '#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
                 </div>
                 <button onclick="_openDisplayNameStyleModal()" class="settings-save-btn" style="padding:8px 18px;font-size:12px;">Change Style</button>
               </div>
@@ -20533,7 +20585,7 @@ function _buildProfileView(tab) {
                       : '<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" data-for="'+escapeHTML(CU.username)+'" onclick="openStatusPicker()"><span class="fpp__cs-plus">'+_FPP_CS_PLUS_SVG+'</span><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
                   </div>
                   <div class="fpp__identity">
-                    <div class="fpp__name" id="preview-displayname" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
+                    <div class="fpp__name" id="preview-displayname" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff', CU.displayColor2 || CU.displayColor || '#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
                     <div class="fpp__handle-row" id="preview-handle-row">
                       <span class="fpp__handle">@${escapeHTML(CU.username)}</span>
                       ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns" data-tip-above>'+escapeHTML(CU.pronouns)+'</span>' : ''}
@@ -20582,7 +20634,7 @@ function _buildProfileView(tab) {
                     <div class="fpp-msg-preview__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 38, CU.pfpCrop)}</div>
                     <div class="fpp-msg-preview__body">
                       <div class="fpp-msg-preview__name-row">
-                        <span class="fpp-msg-preview__name" id="preview-msg-name" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
+                        <span class="fpp-msg-preview__name" id="preview-msg-name" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff', CU.displayColor2 || CU.displayColor || '#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
                         <span class="fpp-msg-preview__time">·  Today at ${_localNow}</span>
                       </div>
                       <div class="fpp-msg-preview__text">${escapeHTML(_pm.text)}</div>
@@ -20605,7 +20657,7 @@ function _buildProfileView(tab) {
                       <div class="fpp-nameplate-preview__av">${buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 32, CU.pfpCrop)}</div>
                       <span class="fpp-nameplate-preview__dot" style="background:${sc};"></span>
                     </div>
-                    <div class="fpp-nameplate-preview__name" id="preview-nameplate-name" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
+                    <div class="fpp-nameplate-preview__name" id="preview-nameplate-name" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff', CU.displayColor2 || CU.displayColor || '#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
                   </div>
                 </div>
               </div>
@@ -35653,7 +35705,7 @@ function openStatusPicker() {
           </button>
         </div>
         <div class="sp-prev-identity">
-          <div class="sp-prev-name" style="font-family:${typeof getDisplayFont === 'function' ? getDisplayFont(_csbForUser) : 'var(--font-display)'};${typeof _getDisplayEffectCSS === 'function' ? _getDisplayEffectCSS(_csbForUser.displayEffect||'solid', _csbForUser.displayColor||'#fff') : ''}">${_csbName}</div>
+          <div class="sp-prev-name" style="font-family:${typeof getDisplayFont === 'function' ? getDisplayFont(_csbForUser) : 'var(--font-display)'};${typeof _getDisplayEffectCSS === 'function' ? _getDisplayEffectCSS(_csbForUser.displayEffect||'solid', _csbForUser.displayColor||'#fff', _csbForUser.displayColor2 || _csbForUser.displayColor || '#fff') : ''}">${_csbName}</div>
           <div class="sp-prev-meta">${_csbHandle}${_csbPronouns}${_csbBadges ? `<span class="sp-prev-badges">${_csbBadges}</span>` : ''}</div>
         </div>
       </div>
@@ -45718,7 +45770,7 @@ function updateProfilePreview() {
   const pronouns = pronounsInp ? pronounsInp.value.trim() : (CU.pronouns || '');
 
   const fontStyle = _getDisplayFontStyle(CU.displayFont || 'default');
-  const effectCss = _getDisplayEffectCSS(CU.displayEffect || 'solid', CU.displayColor || '#fff');
+  const effectCss = _getDisplayEffectCSS(CU.displayEffect || 'solid', CU.displayColor || '#fff', CU.displayColor2 || CU.displayColor || '#fff');
   const fullStyle = `${fontStyle}${effectCss}`;
 
   // (1) Banner (profile preview only) — routes through the shared
@@ -46471,7 +46523,7 @@ function _fppCSBubbleHTML(u, isOwn) {
 
 function _fppIdentityHTML(u) {
   const dn = u.displayName || u.username;
-  const dnStyle = `font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor || '#fff')}`;
+  const dnStyle = `font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor || '#fff', u.displayColor2 || u.displayColor || '#fff')}`;
   // Badges live in their own .fpp-card section now — they used to
   // cram the handle row and push the username off-screen on narrow
   // variants. The identity row stays focused on name + handle +

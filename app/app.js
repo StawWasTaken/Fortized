@@ -31320,133 +31320,161 @@ function _getDisplayEffectClass(effect) {
   return '';
 }
 
+// Dice faces for the Surprise Me roll — default (2 dots) + 4 alternates.
+// Stored as raw <path d="…"> data; the SVG wrapper is added at render
+// time so the swap animation can mutate just the path.
+const _DN_DICE_FACES = [
+  // Default — two-dot die
+  'M0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zM352 352a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM128 192a32 32 0 1 0 0-64 32 32 0 1 0 0 64z',
+  // Six dots
+  'M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm64 96a32 32 0 1 1 0 64 32 32 0 1 1 0-64zM96 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM224 224a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm64-64a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32 160a32 32 0 1 1 0 64 32 32 0 1 1 0-64z',
+  // Three diagonal
+  'M0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zm160 64a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM128 288a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm32 64a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM320 192a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm32 64a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM320 384a32 32 0 1 0 0-64 32 32 0 1 0 0 64z',
+  // Diagonal three (alt)
+  'M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm64 96a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm64 128a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm128 64a32 32 0 1 1 0 64 32 32 0 1 1 0-64z',
+  // One dot (centre)
+  'M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zM224 224a32 32 0 1 1 0 64 32 32 0 1 1 0-64z',
+];
+function _dnDiceSvg(face) {
+  return `<svg viewBox="0 0 448 512" fill="currentColor"><path d="${face}"/></svg>`;
+}
+
+// Mini avatar HTML — used in every preview slot inside the modal so all
+// three previews look like the same person. Falls back to a coloured
+// initial if the user has no pfp set.
+function _dnAvHtml(size) {
+  const dn = CU.displayName || CU.username;
+  const init = (dn || '?')[0].toUpperCase();
+  return CU.pfp
+    ? `<img src="${escapeHTML(CU.pfp)}" alt="" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:50%;display:block;">`
+    : `<div style="width:${size}px;height:${size}px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:#13161d;border-radius:50%;font-size:${Math.round(size*0.42)}px;">${init}</div>`;
+}
+
 function _openDisplayNameStyleModal() {
   const curFont = CU.displayFont || 'default';
   const curEffect = CU.displayEffect || 'solid';
-  const curColor = CU.displayColor || '#fff';
+  const curColor = CU.displayColor || '#fef83d';
+  const curColor2 = CU.displayColor2 || curColor;
   const dn = CU.displayName || CU.username;
-  const avHtml = CU.pfp
-    ? `<img src="${escapeHTML(CU.pfp)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-    : `<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:var(--rail);border-radius:50%;">${dn[0].toUpperCase()}</div>`;
-  const profileTheme = (_hasRadiance(CU)) ? CU.profileTheme : null;
+  const handle = CU.username || 'username';
+  const hasRadiance = (typeof _hasRadiance === 'function') && _hasRadiance(CU);
+
+  // Seed temp state so Apply/Cancel see the user's current values, not nulls.
+  _dnTempFont = curFont;
+  _dnTempEffect = curEffect;
+  _dnTempColor = curColor;
+  _dnTempColor2 = curColor2;
+  _dnDiceFace = 0;
 
   document.querySelector('.dns-modal-overlay')?.remove();
   const overlay = document.createElement('div');
   overlay.className = 'dns-modal-overlay';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 
+  const colorTile = (c, which) => {
+    const sel = (which === 2 ? curColor2 : curColor)?.toLowerCase() === c.toLowerCase();
+    const fn = which === 2 ? '_dnSelectColor2' : '_dnSelectColor';
+    return `<button type="button" class="dns-color-tile ${sel?'sel':''}" data-color="${c}" onclick="${fn}('${c}')" style="background:${c};">${sel ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</button>`;
+  };
+  const customTile = (which) => {
+    const v = which === 2 ? curColor2 : curColor;
+    const fn = which === 2 ? '_dnSelectColor2' : '_dnSelectColor';
+    return `<label class="dns-color-tile dns-color-tile--custom" title="Custom colour"><div class="dns-color-tile__wheel"></div><input type="color" value="${v}" oninput="${fn}(this.value)"></label>`;
+  };
+
   overlay.innerHTML = `<div class="dns-modal">
-    <!-- Left: Controls -->
+    <!-- LEFT: controls -->
     <div class="dns-modal__pane">
       <div class="dns-modal__header">
-        <div>
+        <div class="dns-modal__header-text">
           <div class="dns-modal__title">Display Name Style</div>
-          <div class="dns-modal__subtitle">Personalise how your name reads everywhere on Fortized.</div>
+          <div class="dns-modal__free-pill" data-tip="Discord locks this behind Nitro. We don't.">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+            Free for everyone
+          </div>
         </div>
         <button class="dns-modal__close" onclick="this.closest('.dns-modal-overlay').remove()" aria-label="Close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
 
-      <!-- Choose Font -->
-      <div class="dns-modal__section-label">Font</div>
+      <!-- FONT -->
+      <div class="dns-modal__section-label">Choose Font</div>
       <div class="dns-font-grid" id="dns-font-grid">
         ${DISPLAY_NAME_FONTS.map(f => `
-          <button type="button" class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')">
-            <div class="dns-font-tile__sample" style="font-family:${f.css};font-weight:${f.weight};">${f.sample}</div>
-            <div class="dns-font-tile__label">${f.name}</div>
+          <button type="button" class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')" data-tip="${escapeHTML(f.name)}">
+            <span class="dns-font-tile__sample" style="font-family:${f.css};font-weight:${f.weight};">${f.sample}</span>
           </button>`).join('')}
       </div>
 
-      <!-- Choose Effect -->
-      <div class="dns-modal__section-label">Effect</div>
+      <!-- EFFECT -->
+      <div class="dns-modal__section-label">Choose Effect</div>
       <div class="dns-effect-grid" id="dns-effect-grid">
-        ${DISPLAY_NAME_EFFECTS.map(e => `
-          <button type="button" class="dns-effect-tile ${curEffect===e.id?'sel':''}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')" style="${_getDisplayEffectCSS(e.id,curColor)}">${e.name}</button>`).join('')}
+        ${DISPLAY_NAME_EFFECTS.map(e => {
+          const cls = _getDisplayEffectClass(e.id);
+          return `<button type="button" class="dns-effect-tile ${curEffect===e.id?'sel':''} ${cls}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')"><span style="${_getDisplayEffectCSS(e.id,curColor,curColor2)}">${e.name}</span>${e.animated?'<span class="dns-effect-tile__anim" data-tip="Subtle idle animation">●</span>':''}</button>`;
+        }).join('')}
       </div>
 
-      <!-- Choose Colour -->
-      <div class="dns-modal__section-label">Colour</div>
+      <!-- COLOUR -->
+      <div class="dns-modal__section-label" id="dns-color-label">Choose Colour</div>
       <div class="dns-color-grid" id="dns-color-grid">
-        ${DISPLAY_NAME_COLORS.map(c => `
-          <button type="button" class="dns-color-tile ${curColor===c?'sel':''}" data-color="${c}" onclick="_dnSelectColor('${c}')" style="background:${c};">
-            ${curColor===c ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-          </button>`).join('')}
-        <label class="dns-color-tile dns-color-tile--custom" title="Custom colour">
-          <div class="dns-color-tile__wheel"></div>
-          <input type="color" value="${curColor}" oninput="_dnSelectColor(this.value)">
-        </label>
+        ${DISPLAY_NAME_COLORS.map(c => colorTile(c, 1)).join('')}
+        ${customTile(1)}
+      </div>
+      <!-- Second colour row, only shown when Gradient is selected. -->
+      <div class="dns-modal__section-label dns-modal__section-label--sub" id="dns-color2-label" style="display:${curEffect==='gradient'?'block':'none'};">Second Colour</div>
+      <div class="dns-color-grid" id="dns-color2-grid" style="display:${curEffect==='gradient'?'grid':'none'};">
+        ${DISPLAY_NAME_COLORS.map(c => colorTile(c, 2)).join('')}
+        ${customTile(2)}
       </div>
     </div>
 
-    <!-- Right: Real Previews -->
+    <!-- RIGHT: live previews + actions -->
     <div class="dns-modal__preview">
       <div class="dns-modal__preview-label">Live Preview</div>
 
-      <!-- 1: Profile Card Preview (mini replica) -->
-      <div style="border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:var(--panel,#1b1e25);">
-        <div style="height:60px;background:${profileTheme ? `linear-gradient(135deg,${profileTheme.color1}66,${profileTheme.color2}44)` : 'linear-gradient(135deg,#1a1a2e,#0f3460)'};position:relative;">
-          ${CU.banner ? `<img src="${escapeHTML(CU.banner)}" style="width:100%;height:100%;object-fit:cover;">` : ''}
-          ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.6;"></div>` : ''}
+      <!-- Compact profile card (top of profile only) -->
+      <div class="dnsv2-card">
+        <div class="dnsv2-card__avatar-wrap">
+          ${_dnAvHtml(56)}
+          <span class="dnsv2-card__dot">${(typeof FtzStatus!=='undefined' && FtzStatus.dotSvg) ? FtzStatus.dotSvg(FtzStatus.sanitize(CU.status||'online'), 14) : ''}</span>
         </div>
-        <div style="padding:0 14px 14px;margin-top:-20px;position:relative;">
-          <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:8px;">
-            <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:3px solid var(--panel,#1b1e25);flex-shrink:0;background:var(--panel);">${avHtml}</div>
-            <div style="padding-bottom:4px;">
-              <div id="dns-preview-name" style="font-size:14px;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</div>
-              <div style="font-size:9.5px;color:rgba(255,255,255,.25);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; '+escapeHTML(CU.pronouns) : ''}</div>
-            </div>
+        <div class="dnsv2-card__body">
+          <div class="dnsv2-card__name-row">
+            <span id="dns-preview-name" class="${_getDisplayEffectClass(curEffect)}" style="font-size:17px;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</span>
+            <span class="dnsv2-card__badges">
+              ${hasRadiance ? '<span class="dnsv2-badge dnsv2-badge--radiance" data-tip="Radiance">✦</span>' : ''}
+              <span class="dnsv2-badge dnsv2-badge--early" data-tip="Early Adopter">★</span>
+            </span>
           </div>
-          <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:var(--radius-pill);">
-            <span style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(62,207,110,.4);"></span>
-            <span style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600;">Online</span>
-          </div>
+          <div class="dnsv2-card__handle">@${escapeHTML(handle)}</div>
         </div>
       </div>
 
-      <!-- 2: Chat Message Preview -->
-      <div style="border-radius:12px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.015);padding:10px 12px;">
-        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.2);margin-bottom:8px;">Chat Message</div>
-        <div style="display:flex;gap:10px;">
-          <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;">${avHtml}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;">
-              <span id="dns-preview-chat-name" style="font-size:12.5px;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</span>
-              <span style="font-size:9px;color:rgba(255,255,255,.15);">Today at 20:33</span>
-            </div>
-            <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.45;">hey, has anyone tried this new game?</div>
+      <!-- Message preview -->
+      <div class="dnsv2-msg">
+        <div class="dnsv2-msg__avatar">${_dnAvHtml(36)}</div>
+        <div class="dnsv2-msg__body">
+          <div class="dnsv2-msg__head">
+            <span id="dns-preview-chat-name" class="${_getDisplayEffectClass(curEffect)}" style="font-size:14px;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</span>
+            <span class="dnsv2-msg__time">Today at 20:33</span>
           </div>
+          <div class="dnsv2-msg__text">rate my new name style 😎</div>
         </div>
       </div>
 
-      <!-- 3: Member List / Nameplate Preview -->
-      <div style="border-radius:12px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.015);padding:10px 12px;">
-        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.2);margin-bottom:8px;">Member List</div>
-        <div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.02);">
-          <div style="position:relative;width:30px;height:30px;flex-shrink:0;">
-            <div style="width:30px;height:30px;border-radius:50%;overflow:hidden;">${avHtml}</div>
-            <span style="position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:var(--green);border:2px solid rgba(12,14,24,.98);"></span>
-          </div>
-          <div style="flex:1;min-width:0;">
-            <div id="dns-preview-nameplate" style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</div>
-          </div>
-        </div>
-        <!-- Second member for context -->
-        <div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;margin-top:4px;opacity:.35;">
-          <div style="position:relative;width:30px;height:30px;flex-shrink:0;">
-            <div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(255,255,255,.3);">A</div>
-            <span style="position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:#999;border:2px solid rgba(12,14,24,.98);"></span>
-          </div>
-          <div style="flex:1;"><div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.4);">AnotherUser</div></div>
-        </div>
+      <!-- Nameplate (member list row) -->
+      <div class="dnsv2-plate">
+        <div class="dnsv2-plate__avatar">${_dnAvHtml(28)}</div>
+        <div id="dns-preview-nameplate" class="${_getDisplayEffectClass(curEffect)}" style="font-size:13.5px;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
       </div>
 
       <div style="flex:1;"></div>
-      <!-- Actions -->
       <div class="dns-modal__actions">
-        <button class="dns-modal__btn dns-modal__btn--ghost" onclick="_dnSurpriseMe()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
-          Randomise
+        <button class="dns-modal__btn dns-modal__btn--ghost" id="dns-surprise-btn" onclick="_dnSurpriseMe()">
+          <span class="dns-modal__dice" id="dns-dice">${_dnDiceSvg(_DN_DICE_FACES[0])}</span>
+          Surprise Me
         </button>
         <button class="dns-modal__btn dns-modal__btn--primary" onclick="_dnApplyStyle()">Apply Style</button>
       </div>
@@ -31456,7 +31484,8 @@ function _openDisplayNameStyleModal() {
   document.body.appendChild(overlay);
 }
 
-let _dnTempFont = null, _dnTempEffect = null, _dnTempColor = null;
+let _dnTempFont = null, _dnTempEffect = null, _dnTempColor = null, _dnTempColor2 = null;
+let _dnDiceFace = 0;
 
 function _dnSelectFont(fontId) {
   _dnTempFont = fontId;
@@ -31473,6 +31502,12 @@ function _dnSelectEffect(effectId) {
   if (grid) grid.querySelectorAll('.dns-effect-tile').forEach(el => {
     el.classList.toggle('sel', el.dataset.effect === effectId);
   });
+  // Show / hide the second colour row.
+  const isGrad = effectId === 'gradient';
+  const c2lbl = document.getElementById('dns-color2-label');
+  const c2grid = document.getElementById('dns-color2-grid');
+  if (c2lbl)  c2lbl.style.display  = isGrad ? 'block' : 'none';
+  if (c2grid) c2grid.style.display = isGrad ? 'grid'  : 'none';
   _dnUpdatePreview();
 }
 
@@ -31484,59 +31519,94 @@ function _dnSelectColor(color) {
     el.classList.toggle('sel', isSel);
     el.innerHTML = isSel ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
   });
-  // Recolour effect-tile previews so Gradient/Neon/etc. show the new colour
-  const effectGrid = document.getElementById('dns-effect-grid');
-  if (effectGrid) effectGrid.querySelectorAll('.dns-effect-tile').forEach(el => {
-    const eff = el.dataset.effect;
-    el.style.cssText = _getDisplayEffectCSS(eff, color);
-  });
+  _dnRepaintEffectTiles();
   _dnUpdatePreview();
+}
+
+function _dnSelectColor2(color) {
+  _dnTempColor2 = color;
+  const grid = document.getElementById('dns-color2-grid');
+  if (grid) grid.querySelectorAll('.dns-color-tile:not(.dns-color-tile--custom)').forEach(el => {
+    const isSel = el.dataset.color?.toLowerCase() === color?.toLowerCase();
+    el.classList.toggle('sel', isSel);
+    el.innerHTML = isSel ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+  });
+  _dnRepaintEffectTiles();
+  _dnUpdatePreview();
+}
+
+function _dnRepaintEffectTiles() {
+  const color = _dnTempColor || CU.displayColor || '#fef83d';
+  const color2 = _dnTempColor2 || color;
+  const effectGrid = document.getElementById('dns-effect-grid');
+  if (!effectGrid) return;
+  effectGrid.querySelectorAll('.dns-effect-tile').forEach(el => {
+    const span = el.querySelector('span:not(.dns-effect-tile__anim)');
+    if (span) span.style.cssText = _getDisplayEffectCSS(el.dataset.effect, color, color2);
+  });
 }
 
 function _dnUpdatePreview() {
   const font = _dnTempFont || CU.displayFont || 'default';
   const effect = _dnTempEffect || CU.displayEffect || 'solid';
-  const color = _dnTempColor || CU.displayColor || '#fff';
+  const color = _dnTempColor || CU.displayColor || '#fef83d';
+  const color2 = _dnTempColor2 || color;
   const fontStyle = _getDisplayFontStyle(font);
-  const effectCSS = _getDisplayEffectCSS(effect, color);
-  const nameEl = document.getElementById('dns-preview-name');
-  const chatEl = document.getElementById('dns-preview-chat-name');
-  const plateEl = document.getElementById('dns-preview-nameplate');
-  if (nameEl) nameEl.style.cssText = 'font-size:14px;'+fontStyle+effectCSS;
-  if (chatEl) chatEl.style.cssText = 'font-size:12.5px;'+fontStyle+effectCSS;
-  if (plateEl) plateEl.style.cssText = 'font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'+fontStyle+effectCSS;
+  const effectCSS = _getDisplayEffectCSS(effect, color, color2);
+  const animClass = _getDisplayEffectClass(effect);
+  const apply = (el, baseSize) => {
+    if (!el) return;
+    el.style.cssText = `font-size:${baseSize}px;${fontStyle}${effectCSS}`;
+    el.className = el.className.replace(/\bftz-fx-[a-z]+\b/g, '').trim() + (animClass ? ' ' + animClass : '');
+  };
+  apply(document.getElementById('dns-preview-name'),      17);
+  apply(document.getElementById('dns-preview-chat-name'), 14);
+  apply(document.getElementById('dns-preview-nameplate'), 13.5);
 }
 
 function _dnSurpriseMe() {
-  const rFont = DISPLAY_NAME_FONTS[Math.floor(Math.random()*DISPLAY_NAME_FONTS.length)].id;
+  // Cycle the dice face and play a quick scale/rotate, regardless of
+  // whether the picked random combo actually changes anything visible.
+  _dnDiceFace = Math.floor(Math.random() * _DN_DICE_FACES.length);
+  const dice = document.getElementById('dns-dice');
+  if (dice) {
+    dice.classList.remove('is-rolling');
+    void dice.offsetWidth; // restart the animation
+    dice.classList.add('is-rolling');
+    dice.innerHTML = _dnDiceSvg(_DN_DICE_FACES[_dnDiceFace]);
+  }
+  const rFont   = DISPLAY_NAME_FONTS[Math.floor(Math.random()*DISPLAY_NAME_FONTS.length)].id;
   const rEffect = DISPLAY_NAME_EFFECTS[Math.floor(Math.random()*DISPLAY_NAME_EFFECTS.length)].id;
-  const rColor = DISPLAY_NAME_COLORS[Math.floor(Math.random()*DISPLAY_NAME_COLORS.length)];
+  const rColor  = DISPLAY_NAME_COLORS[Math.floor(Math.random()*DISPLAY_NAME_COLORS.length)];
+  const rColor2 = DISPLAY_NAME_COLORS[Math.floor(Math.random()*DISPLAY_NAME_COLORS.length)];
   _dnSelectFont(rFont);
   _dnSelectEffect(rEffect);
   _dnSelectColor(rColor);
+  _dnSelectColor2(rColor2);
 }
 
 async function _dnApplyStyle() {
-  CU.displayFont = _dnTempFont || CU.displayFont || 'default';
+  CU.displayFont   = _dnTempFont   || CU.displayFont   || 'default';
   CU.displayEffect = _dnTempEffect || CU.displayEffect || 'solid';
-  CU.displayColor = _dnTempColor || CU.displayColor || '#fff';
+  CU.displayColor  = _dnTempColor  || CU.displayColor  || '#fef83d';
+  CU.displayColor2 = _dnTempColor2 || CU.displayColor2 || CU.displayColor;
   await saveUser(true);
   applyRadianceFont();
   updateUserbar();
   updateProfilePreview();
-  // Broadcast style change to other users via Socket.IO
   if (typeof FortizedSocial !== 'undefined' && FortizedSocial._socket) {
     FortizedSocial._socket.emit('profile:update', {
       displayFont: CU.displayFont,
       displayEffect: CU.displayEffect,
       displayColor: CU.displayColor,
+      displayColor2: CU.displayColor2,
       displayName: CU.displayName || CU.username,
     });
   }
   document.querySelector('.dns-modal-overlay')?.remove();
   buildProfileView('myprofile');
   toast('Display name style updated!', 'success');
-  _dnTempFont = null; _dnTempEffect = null; _dnTempColor = null;
+  _dnTempFont = null; _dnTempEffect = null; _dnTempColor = null; _dnTempColor2 = null;
 }
 
 function renderRadianceFontPicker() {

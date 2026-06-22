@@ -11817,18 +11817,18 @@ select:focus,select:focus-visible,
 .dns-modal__section-label{font-size:10.5px;font-weight:800;color:var(--muted-light);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.08em;}
 .dns-modal__section-label:first-of-type{margin-top:0;}
 
-.dns-font-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.dns-font-tile{padding:14px 8px 10px;border-radius:12px;border:1.5px solid var(--surface-border);background:var(--surface-1);cursor:pointer;text-align:center;transition:border-color .14s,background .14s,transform .14s;font-family:var(--font-ui);}
+.dns-font-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.dns-font-tile{aspect-ratio:1;padding:0;border-radius:12px;border:1.5px solid var(--surface-border);background:var(--surface-1);cursor:pointer;text-align:center;transition:border-color .14s,background .14s,transform .14s;font-family:var(--font-ui);display:flex;align-items:center;justify-content:center;}
 .dns-font-tile:hover{background:var(--surface-2);border-color:var(--surface-border-hover);}
 .dns-font-tile.sel{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
-.dns-font-tile__sample{font-size:22px;color:#fff;line-height:1;margin-bottom:6px;}
-.dns-font-tile__label{font-size:10.5px;color:var(--muted-light);font-weight:700;letter-spacing:.02em;}
-.dns-font-tile.sel .dns-font-tile__label{color:var(--accent);}
+.dns-font-tile__sample{font-size:26px;color:#fff;line-height:1;}
+.dns-font-tile.sel .dns-font-tile__sample{color:var(--accent);}
 
 .dns-effect-grid{display:flex;flex-wrap:wrap;gap:8px;}
-.dns-effect-tile{padding:8px 18px;border-radius:10px;border:1.5px solid var(--surface-border);background:var(--surface-1);cursor:pointer;font-family:var(--font-display);font-size:12.5px;font-weight:700;transition:border-color .14s,background .14s;}
+.dns-effect-tile{position:relative;padding:8px 18px;border-radius:10px;border:1.5px solid var(--surface-border);background:var(--surface-1);cursor:pointer;font-family:var(--font-display);font-size:12.5px;font-weight:700;transition:border-color .14s,background .14s;color:inherit;overflow:visible;}
 .dns-effect-tile:hover{border-color:var(--surface-border-hover);}
 .dns-effect-tile.sel{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+.dns-effect-tile__anim{position:absolute;top:5px;right:6px;font-size:8px;color:var(--accent);line-height:1;text-shadow:0 0 4px rgba(254,248,61,.8);}
 
 .dns-color-grid{display:flex;flex-wrap:wrap;gap:6px;}
 .dns-color-tile{position:relative;width:28px;height:28px;border-radius:8px;cursor:pointer;border:2px solid transparent;padding:0;display:inline-flex;align-items:center;justify-content:center;transition:transform .12s,border-color .12s;}
@@ -11854,6 +11854,54 @@ select:focus,select:focus-visible,
   .dns-modal{flex-direction:column;max-height:92vh;}
   .dns-modal__preview{width:auto;border-left:none;border-top:1px solid var(--border);}
 }
+
+/* ── Display-name-style modal v2 extras ──────────────────────
+   The header's "Free for everyone" chip, the gradient sub-label,
+   the three preview cards (mini profile / message / nameplate),
+   and the dice-roll animation on Surprise Me. */
+.dns-modal__header-text{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;}
+.dns-modal__free-pill{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:linear-gradient(135deg,rgba(254,248,61,.16),rgba(254,248,61,.04));color:#fef83d;border:1px solid rgba(254,248,61,.3);cursor:help;}
+.dns-modal__free-pill svg{filter:drop-shadow(0 0 4px rgba(254,248,61,.5));}
+.dns-modal__section-label--sub{font-size:9.5px;color:rgba(254,248,61,.85);margin-top:14px;}
+
+/* Compact profile card preview — avatar with status dot,
+   display-name row with badges, @handle underneath. */
+.dnsv2-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border-radius:14px;}
+.dnsv2-card__avatar-wrap{position:relative;width:56px;height:56px;flex-shrink:0;}
+.dnsv2-card__dot{position:absolute;right:-2px;bottom:-2px;width:18px;height:18px;border-radius:50%;background:#13161d;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2.5px #13161d;}
+.dnsv2-card__dot svg{width:13px;height:13px;display:block;}
+.dnsv2-card__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.dnsv2-card__name-row{display:flex;align-items:center;gap:6px;}
+.dnsv2-card__badges{display:inline-flex;align-items:center;gap:3px;flex-shrink:0;}
+.dnsv2-badge{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;font-size:11px;font-weight:900;line-height:1;}
+.dnsv2-badge--radiance{background:linear-gradient(135deg,rgba(254,248,61,.2),rgba(254,248,61,.05));color:#fef83d;border:1px solid rgba(254,248,61,.35);}
+.dnsv2-badge--early{background:linear-gradient(135deg,rgba(167,139,250,.2),rgba(167,139,250,.05));color:#c4b5fd;border:1px solid rgba(167,139,250,.35);}
+.dnsv2-card__handle{font-size:11px;color:rgba(255,255,255,.4);font-weight:500;}
+
+/* Message preview — chat row with the prompt sentence. */
+.dnsv2-msg{display:flex;gap:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.015);border-radius:12px;}
+.dnsv2-msg__avatar{flex-shrink:0;width:36px;height:36px;}
+.dnsv2-msg__avatar img,.dnsv2-msg__avatar div{border-radius:50%;}
+.dnsv2-msg__body{flex:1;min-width:0;}
+.dnsv2-msg__head{display:flex;align-items:baseline;gap:7px;margin-bottom:3px;}
+.dnsv2-msg__time{font-size:10px;color:rgba(255,255,255,.25);font-weight:500;}
+.dnsv2-msg__text{font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.45;}
+
+/* Nameplate — single member-list-style row. */
+.dnsv2-plate{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.015);border-radius:10px;}
+.dnsv2-plate__avatar{flex-shrink:0;width:28px;height:28px;}
+.dnsv2-plate__avatar img,.dnsv2-plate__avatar div{border-radius:50%;}
+
+/* Surprise Me dice — sits inside the button, rolls on click. */
+.dns-modal__dice{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;color:currentColor;}
+.dns-modal__dice svg{width:14px;height:14px;display:block;}
+@keyframes ftz-dice-roll{
+  0%   {transform:rotate(0)   scale(1);}
+  35%  {transform:rotate(180deg) scale(.7);}
+  70%  {transform:rotate(360deg) scale(1.15);}
+  100% {transform:rotate(360deg) scale(1);}
+}
+.dns-modal__dice.is-rolling{animation:ftz-dice-roll .5s cubic-bezier(.4,.2,.4,1) 1;}
 
 /* ── "Why this ad?" card — uniformised with .rpt-modal so the
    backdrop blur + entrance match the report flow. The card itself

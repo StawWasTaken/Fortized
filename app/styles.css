@@ -11830,25 +11830,41 @@ select:focus,select:focus-visible,
 .dns-effect-tile.sel{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
 .dns-effect-tile__anim{position:absolute;top:5px;right:6px;font-size:8px;color:var(--accent);line-height:1;text-shadow:0 0 4px rgba(254,248,61,.8);}
 
-.dns-color-grid{display:flex;flex-wrap:wrap;gap:6px;}
-.dns-color-tile{position:relative;width:28px;height:28px;border-radius:8px;cursor:pointer;border:2px solid transparent;padding:0;display:inline-flex;align-items:center;justify-content:center;transition:transform .12s,border-color .12s;}
-.dns-color-tile:hover{transform:scale(1.08);}
-.dns-color-tile.sel{border-color:#fff;}
-.dns-color-tile svg{width:13px;height:13px;}
-.dns-color-tile--custom{overflow:hidden;border-color:rgba(255,255,255,.15);background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);}
-.dns-color-tile--custom .dns-color-tile__wheel{position:absolute;inset:0;}
-.dns-color-tile--custom input[type=color]{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);cursor:pointer;opacity:0;border:none;background:transparent;}
+/* dnsv3 — swatch + popover colour picker (mirrors the profile theme
+   picker pattern), layered preview stage, and a proper action row. */
+.dnsv3-color-stack{display:flex;flex-direction:column;gap:8px;}
+.dnsv3-color-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:10px;}
+.dnsv3-swatch{width:36px;height:36px;border-radius:9px;border:1.5px solid rgba(255,255,255,.18);box-shadow:0 0 0 1px rgba(0,0,0,.5) inset;cursor:pointer;padding:0;flex-shrink:0;transition:transform .12s,border-color .12s;}
+.dnsv3-swatch:hover{transform:scale(1.04);border-color:rgba(254,248,61,.5);}
+.dnsv3-color-meta{flex:1;min-width:0;}
+.dnsv3-color-meta__label{font-size:11.5px;font-weight:700;color:#fff;}
+.dnsv3-color-meta__hex{font-size:10.5px;color:rgba(255,255,255,.45);font-family:var(--font-mono,monospace);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
 
-.dns-modal__preview{width:300px;flex-shrink:0;background:rgba(0,0,0,.22);border-left:1px solid var(--border);padding:22px 20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.dns-modal{width:100%;max-width:900px;}
+.dns-modal__preview{width:360px;flex-shrink:0;background:rgba(0,0,0,.22);border-left:1px solid var(--border);padding:22px 22px 18px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
 .dns-modal__preview-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-light);}
 
-.dns-modal__actions{display:flex;gap:8px;margin-top:8px;}
-.dns-modal__btn{flex:1;padding:11px 14px;border-radius:11px;font-family:var(--font-display);font-size:12.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .14s,color .14s,border-color .14s,transform .14s;border:1px solid transparent;}
-.dns-modal__btn svg{width:14px;height:14px;}
-.dns-modal__btn--ghost{background:var(--surface-1);border-color:var(--surface-border);color:var(--muted-light);}
-.dns-modal__btn--ghost:hover{background:var(--surface-2);color:#fff;border-color:var(--surface-border-hover);}
-.dns-modal__btn--primary{background:var(--accent);color:var(--rail);}
-.dns-modal__btn--primary:hover{transform:translateY(-1px);box-shadow:0 8px 22px -8px rgba(255,249,62,.45);}
+/* Layered stage — profile preview at the top, nameplate at the bottom,
+   message preview floating in front and slightly off-axis to the left
+   so the composition reads as 3 surfaces stacked at different depths.
+   The negative margin on .dnsv3-stage__msg is what creates the overlap
+   and the translate gives it the off-centre nudge. */
+.dnsv3-stage{position:relative;display:flex;flex-direction:column;gap:18px;padding-bottom:6px;}
+.dnsv3-stage__profile{margin:0;}
+.dnsv3-stage__nameplate{margin:0;}
+.dnsv3-stage__msg{position:relative;margin:-32px 0 -32px -8px;transform:translateX(-6px) rotate(-1.5deg);box-shadow:0 18px 36px -10px rgba(0,0,0,.55),0 0 0 1px rgba(254,248,61,.06);z-index:5;}
+.dnsv3-stage__msg:hover{transform:translateX(-6px) rotate(-1.5deg) translateY(-1px);}
+
+/* Action row — generously sized buttons so neither label gets chopped
+   at narrow widths. Ghost = Surprise Me; Primary = Apply Style. */
+.dnsv3-actions{display:flex;gap:10px;margin-top:auto;padding-top:14px;border-top:1px solid var(--border);}
+.dnsv3-btn{flex:1;min-height:44px;padding:0 18px;border-radius:12px;font-family:var(--font-display);font-size:13.5px;font-weight:800;letter-spacing:.01em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid transparent;transition:background .14s,color .14s,border-color .14s,transform .14s,box-shadow .14s;white-space:nowrap;}
+.dnsv3-btn svg{width:14px;height:14px;flex-shrink:0;}
+.dnsv3-btn--ghost{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.8);}
+.dnsv3-btn--ghost:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);color:#fff;}
+.dnsv3-btn--primary{background:var(--accent);color:#13161d;border-color:var(--accent);}
+.dnsv3-btn--primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px -8px rgba(254,248,61,.5);}
+.dnsv3-btn--primary:active{transform:translateY(0);}
 
 @media (max-width:720px){
   .dns-modal{flex-direction:column;max-height:92vh;}

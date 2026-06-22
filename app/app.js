@@ -31408,7 +31408,7 @@ function _openDisplayNameStyleModal() {
   const curColor = CU.displayColor || '#fef83d';
   const curColor2 = CU.displayColor2 || curColor;
   const dn = CU.displayName || CU.username;
-  const handle = CU.username || 'username';
+  const cs = CU.customStatus;
   const hasRadiance = (typeof _hasRadiance === 'function') && _hasRadiance(CU);
 
   // Seed temp state so Apply/Cancel see the user's current values, not nulls.
@@ -31423,19 +31423,36 @@ function _openDisplayNameStyleModal() {
   overlay.className = 'dns-modal-overlay';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 
-  const colorTile = (c, which) => {
-    const sel = (which === 2 ? curColor2 : curColor)?.toLowerCase() === c.toLowerCase();
-    const fn = which === 2 ? '_dnSelectColor2' : '_dnSelectColor';
-    return `<button type="button" class="dns-color-tile ${sel?'sel':''}" data-color="${c}" onclick="${fn}('${c}')" style="background:${c};">${sel ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</button>`;
-  };
-  const customTile = (which) => {
-    const v = which === 2 ? curColor2 : curColor;
-    const fn = which === 2 ? '_dnSelectColor2' : '_dnSelectColor';
-    return `<label class="dns-color-tile dns-color-tile--custom" title="Custom colour"><div class="dns-color-tile__wheel"></div><input type="color" value="${v}" oninput="${fn}(this.value)"></label>`;
+  // Preview script — picks a real chat-style message for the floating
+  // preview, mirroring the My Profile page's "Message preview" surface.
+  const _previewMsgs = [
+    { text:"did anyone else hear that weird noise at 3am",          reactions:[{e:'👀',n:3,mine:false},{e:'😱',n:2,mine:true}] },
+    { text:"who ate the last french fries without telling anyone?", reactions:[{e:'🥀',n:4,mine:true},{e:'🍟',n:1,mine:false}] },
+  ];
+  const _pm = _previewMsgs[Math.floor(Math.random() * _previewMsgs.length)];
+  const _localNow = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  const _reactionsHTML = _pm.reactions.map(r => {
+    const url = (typeof emojiToTwemojiUrl === 'function') ? emojiToTwemojiUrl(r.e) : '';
+    return `<span class="r-pill${r.mine?' mine':''}"><img src="${url}" alt="${r.e}" style="width:16px;height:16px;object-fit:contain;" onerror="this.outerHTML='${r.e}'">${r.n}</span>`;
+  }).join('');
+  const sc = (typeof FtzStatus !== 'undefined' && FtzStatus.color) ? FtzStatus.color(CU.status||'online') : '#3ecf6e';
+
+  // Discord-style swatch that opens the HSV popover. Same UX as the
+  // profile-theme picker on the My Profile page; just routes to the
+  // displayname temp state instead of CU.profileTheme.
+  const dnSwatch = (slot) => {
+    const v = slot === 2 ? curColor2 : curColor;
+    return `<div class="dnsv3-color-row">
+      <button id="dnsv3-swatch-${slot}" onclick="_openDnColourPopover(this,${slot})" class="dnsv3-swatch" style="background:${v};" aria-label="Pick colour"></button>
+      <div class="dnsv3-color-meta">
+        <div class="dnsv3-color-meta__label">${slot===2?'Second colour':'Colour'}</div>
+        <div class="dnsv3-color-meta__hex" id="dnsv3-hex-${slot}">${v}</div>
+      </div>
+    </div>`;
   };
 
-  overlay.innerHTML = `<div class="dns-modal">
-    <!-- LEFT: controls -->
+  overlay.innerHTML = `<div class="dns-modal dnsv3">
+    <!-- LEFT — controls -->
     <div class="dns-modal__pane">
       <div class="dns-modal__header">
         <div class="dns-modal__header-text">
@@ -31450,7 +31467,6 @@ function _openDisplayNameStyleModal() {
         </button>
       </div>
 
-      <!-- FONT -->
       <div class="dns-modal__section-label">Choose Font</div>
       <div class="dns-font-grid" id="dns-font-grid">
         ${DISPLAY_NAME_FONTS.map(f => `
@@ -31459,7 +31475,6 @@ function _openDisplayNameStyleModal() {
           </button>`).join('')}
       </div>
 
-      <!-- EFFECT -->
       <div class="dns-modal__section-label">Choose Effect</div>
       <div class="dns-effect-grid" id="dns-effect-grid">
         ${DISPLAY_NAME_EFFECTS.map(e => {
@@ -31468,72 +31483,168 @@ function _openDisplayNameStyleModal() {
         }).join('')}
       </div>
 
-      <!-- COLOUR -->
-      <div class="dns-modal__section-label" id="dns-color-label">Choose Colour</div>
-      <div class="dns-color-grid" id="dns-color-grid">
-        ${DISPLAY_NAME_COLORS.map(c => colorTile(c, 1)).join('')}
-        ${customTile(1)}
-      </div>
-      <!-- Second colour row, only shown when Gradient is selected. -->
-      <div class="dns-modal__section-label dns-modal__section-label--sub" id="dns-color2-label" style="display:${curEffect==='gradient'?'block':'none'};">Second Colour</div>
-      <div class="dns-color-grid" id="dns-color2-grid" style="display:${curEffect==='gradient'?'grid':'none'};">
-        ${DISPLAY_NAME_COLORS.map(c => colorTile(c, 2)).join('')}
-        ${customTile(2)}
+      <div class="dns-modal__section-label">Choose Colour</div>
+      <div class="dnsv3-color-stack" id="dnsv3-color-stack">
+        ${dnSwatch(1)}
+        <div id="dnsv3-color2-wrap" style="display:${curEffect==='gradient'?'block':'none'};">
+          ${dnSwatch(2)}
+        </div>
       </div>
     </div>
 
-    <!-- RIGHT: live previews + actions -->
-    <div class="dns-modal__preview">
-      <div class="dns-modal__preview-label">Live Preview</div>
+    <!-- RIGHT — layered live previews + actions -->
+    <div class="dns-modal__preview dnsv3-preview">
+      <div class="dns-modal__preview-label">Preview</div>
 
-      <!-- Compact profile card (top of profile only) -->
-      <div class="dnsv2-card">
-        <div class="dnsv2-card__avatar-wrap">
-          ${_dnAvHtml(56)}
-          <span class="dnsv2-card__dot">${(typeof FtzStatus!=='undefined' && FtzStatus.dotSvg) ? FtzStatus.dotSvg(FtzStatus.sanitize(CU.status||'online'), 14) : ''}</span>
-        </div>
-        <div class="dnsv2-card__body">
-          <div class="dnsv2-card__name-row">
-            <span id="dns-preview-name" class="${_getDisplayEffectClass(curEffect)}" style="font-size:17px;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</span>
-            <span class="dnsv2-card__badges">
-              ${hasRadiance ? '<span class="dnsv2-badge dnsv2-badge--radiance" data-tip="Radiance">✦</span>' : ''}
-              <span class="dnsv2-badge dnsv2-badge--early" data-tip="Early Adopter">★</span>
-            </span>
+      <div class="dnsv3-stage">
+        <!-- BACK LAYER A — profile-card top (banner + avatar + identity) -->
+        <div class="dnsv3-stage__profile fpp fpp--settings" data-fpp-settings-card>
+          <div class="fpp__banner">
+            ${_fppBannerHTML(CU, hasRadiance)}
           </div>
-          <div class="dnsv2-card__handle">@${escapeHTML(handle)}</div>
-        </div>
-      </div>
-
-      <!-- Message preview -->
-      <div class="dnsv2-msg">
-        <div class="dnsv2-msg__avatar">${_dnAvHtml(36)}</div>
-        <div class="dnsv2-msg__body">
-          <div class="dnsv2-msg__head">
-            <span id="dns-preview-chat-name" class="${_getDisplayEffectClass(curEffect)}" style="font-size:14px;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</span>
-            <span class="dnsv2-msg__time">Today at 20:33</span>
+          <div class="fpp__av-row">
+            <div class="fpp__av-wrap">
+              <div class="fpp__av">${buildAvatarHTML(CU.pfp, dn, 64, CU.pfpCrop)}</div>
+              ${CU.activeDecoration ? (()=>{ const d = PROFILE_DECORATIONS.find(dec => dec.id === CU.activeDecoration); return d ? '<img src="'+escapeHTML(d.src)+'" class="fpp__decoration" onerror="this.style.display=\'none\'">' : ''; })() : ''}
+              <span class="fpp__status-dot" data-dot-size="22">${(typeof FtzStatus!=='undefined' && FtzStatus.dotSvg) ? FtzStatus.dotSvg(FtzStatus.sanitize(CU.status||'online'), 22) : ''}</span>
+            </div>
+            ${cs && cs.text
+              ? '<div class="fpp__cs-bubble">'+(cs.emoji?'<span class="fpp__cs-emoji"><img src="'+emojiToTwemojiUrl(cs.emoji)+'" alt=""></span>':'')+'<span class="fpp__cs-text">'+escapeHTML(cs.text).slice(0,40)+'</span></div>'
+              : '<div class="fpp__cs-bubble fpp__cs-bubble--empty"><span class="fpp__cs-plus">'+_FPP_CS_PLUS_SVG+'</span><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
           </div>
-          <div class="dnsv2-msg__text">rate my new name style 😎</div>
+          <div class="fpp__identity">
+            <div class="fpp__name" id="dns-preview-name" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
+            <div class="fpp__handle-row">
+              <span class="fpp__handle">@${escapeHTML(CU.username)}</span>
+              ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">'+escapeHTML(CU.pronouns)+'</span>' : ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- BACK LAYER B — nameplate row -->
+        <div class="dnsv3-stage__nameplate fpp-nameplate-preview">
+          <div class="fpp-nameplate-preview__row">
+            <div class="fpp-nameplate-preview__av-wrap">
+              <div class="fpp-nameplate-preview__av">${buildAvatarHTML(CU.pfp, dn, 32, CU.pfpCrop)}</div>
+              <span class="fpp-nameplate-preview__dot" style="background:${sc};"></span>
+            </div>
+            <div class="fpp-nameplate-preview__name" id="dns-preview-nameplate" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
+          </div>
+        </div>
+
+        <!-- FRONT LAYER — message preview, offset slightly left -->
+        <div class="dnsv3-stage__msg fpp-msg-preview">
+          <div class="fpp-msg-preview__row">
+            <div class="fpp-msg-preview__av">${buildAvatarHTML(CU.pfp, dn, 38, CU.pfpCrop)}</div>
+            <div class="fpp-msg-preview__body">
+              <div class="fpp-msg-preview__name-row">
+                <span class="fpp-msg-preview__name" id="dns-preview-chat-name" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</span>
+                <span class="fpp-msg-preview__time">·  Today at ${_localNow}</span>
+              </div>
+              <div class="fpp-msg-preview__text">${escapeHTML(_pm.text)}</div>
+              <div class="msg-reactions" style="margin-top:8px;">${_reactionsHTML}</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Nameplate (member list row) -->
-      <div class="dnsv2-plate">
-        <div class="dnsv2-plate__avatar">${_dnAvHtml(28)}</div>
-        <div id="dns-preview-nameplate" class="${_getDisplayEffectClass(curEffect)}" style="font-size:13.5px;${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
-      </div>
-
-      <div style="flex:1;"></div>
-      <div class="dns-modal__actions">
-        <button class="dns-modal__btn dns-modal__btn--ghost" id="dns-surprise-btn" onclick="_dnSurpriseMe()">
+      <div class="dnsv3-actions">
+        <button class="dnsv3-btn dnsv3-btn--ghost" id="dns-surprise-btn" onclick="_dnSurpriseMe()">
           <span class="dns-modal__dice" id="dns-dice">${_dnDiceSvg(_DN_DICE_FACES[0])}</span>
           Surprise Me
         </button>
-        <button class="dns-modal__btn dns-modal__btn--primary" onclick="_dnApplyStyle()">Apply Style</button>
+        <button class="dnsv3-btn dnsv3-btn--primary" onclick="_dnApplyStyle()">Apply Style</button>
       </div>
     </div>
   </div>`;
 
   document.body.appendChild(overlay);
+  // Apply animation classes on initial mount (cssText alone doesn't
+  // include the class names).
+  _dnUpdatePreview();
+}
+
+// Colour popover — same Discord-style HSV picker the profile theme
+// uses, but commits to the displayname temp state instead of CU.profileTheme.
+function _openDnColourPopover(anchorEl, slot) {
+  document.querySelector('.pt-colour-pop')?.remove();
+  const PRESETS = ['#fef83d','#ff4081','#7c4dff','#00e676','#40c4ff','#ff6e40'];
+  const startHex = (slot === 2 ? (_dnTempColor2 || '#fef83d') : (_dnTempColor || '#fef83d')).toLowerCase();
+  const rgbToHex = (r,g,b) => '#' + [r,g,b].map(v => Math.round(v).toString(16).padStart(2,'0')).join('');
+  const hexToRgb = (hex) => { const m=/^#?([0-9a-f]{6})$/i.exec(hex||''); if(!m) return {r:0,g:0,b:0}; const n=parseInt(m[1],16); return {r:(n>>16)&255,g:(n>>8)&255,b:n&255}; };
+  const rgbToHsv = (r,g,b) => { r/=255;g/=255;b/=255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn; let h=0; const v=mx,s=mx===0?0:d/mx; if(d){switch(mx){case r:h=((g-b)/d)%6;break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;} h*=60; if(h<0) h+=360;} return {h,s,v}; };
+  const hsvToRgb = (h,s,v) => { const c=v*s, x=c*(1-Math.abs(((h/60)%2)-1)), m=v-c; let r=0,g=0,b=0; if(h<60){r=c;g=x;}else if(h<120){r=x;g=c;}else if(h<180){g=c;b=x;}else if(h<240){g=x;b=c;}else if(h<300){r=x;b=c;}else{r=c;b=x;} return {r:(r+m)*255,g:(g+m)*255,b:(b+m)*255}; };
+  const startRgb = hexToRgb(startHex);
+  const startHsv = rgbToHsv(startRgb.r,startRgb.g,startRgb.b);
+  const state = { h:startHsv.h, s:startHsv.s, v:startHsv.v };
+
+  const rect = anchorEl.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'pt-colour-pop';
+  pop.style.cssText = `position:fixed;left:${Math.round(rect.left)}px;top:${Math.round(rect.bottom+8)}px;z-index:10000;`;
+  pop.innerHTML = `
+    <div class="pt-pop-card pt-pop-card--discord">
+      <div class="pt-pop-sq" id="dnpop-sq"><div class="pt-pop-sq-sat"></div><div class="pt-pop-sq-val"></div><div class="pt-pop-sq-thumb" id="dnpop-sq-thumb"></div></div>
+      <div class="pt-pop-hue" id="dnpop-hue"><div class="pt-pop-hue-thumb" id="dnpop-hue-thumb"></div></div>
+      <div class="pt-pop-hex-row"><span class="pt-pop-hex-prefix">#</span><input id="dnpop-hex" class="pt-pop-hex-input" type="text" maxlength="6" value="${startHex.slice(1)}" spellcheck="false" autocomplete="off"></div>
+      <div class="pt-pop-presets">${PRESETS.map(c => `<button type="button" class="pt-pop-preset" data-c="${c}" style="background:${c};"></button>`).join('')}</div>
+    </div>`;
+  document.body.appendChild(pop);
+
+  const sq = pop.querySelector('#dnpop-sq');
+  const sqThumb = pop.querySelector('#dnpop-sq-thumb');
+  const hue = pop.querySelector('#dnpop-hue');
+  const hueThumb = pop.querySelector('#dnpop-hue-thumb');
+  const hexInp = pop.querySelector('#dnpop-hex');
+  const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+
+  const refresh = (skipHexInput) => {
+    const hueRgb = hsvToRgb(state.h,1,1);
+    sq.style.setProperty('--pt-hue', rgbToHex(hueRgb.r,hueRgb.g,hueRgb.b));
+    const rgb = hsvToRgb(state.h,state.s,state.v);
+    const hex = rgbToHex(rgb.r,rgb.g,rgb.b);
+    sqThumb.style.left = (state.s*100)+'%';
+    sqThumb.style.top  = ((1-state.v)*100)+'%';
+    sqThumb.style.background = hex;
+    hueThumb.style.left = (state.h/360*100)+'%';
+    if (!skipHexInput) hexInp.value = hex.slice(1);
+    // Commit to the displayname temp state + repaint the page.
+    if (slot === 2) _dnSelectColor2(hex);
+    else _dnSelectColor(hex);
+  };
+  refresh();
+
+  let sqDragging = false;
+  const sqMove = (e) => { if(!sqDragging) return; const r=sq.getBoundingClientRect(); state.s=clamp((e.clientX-r.left)/r.width,0,1); state.v=clamp(1-(e.clientY-r.top)/r.height,0,1); refresh(); e.preventDefault(); };
+  sq.addEventListener('pointerdown',(e)=>{ sqDragging=true; sq.setPointerCapture?.(e.pointerId); sqMove(e); });
+  sq.addEventListener('pointermove',sqMove);
+  sq.addEventListener('pointerup',()=>{ sqDragging=false; });
+  sq.addEventListener('pointercancel',()=>{ sqDragging=false; });
+
+  let hueDragging = false;
+  const hueMove = (e) => { if(!hueDragging) return; const r=hue.getBoundingClientRect(); state.h=clamp((e.clientX-r.left)/r.width,0,1)*360; refresh(); e.preventDefault(); };
+  hue.addEventListener('pointerdown',(e)=>{ hueDragging=true; hue.setPointerCapture?.(e.pointerId); hueMove(e); });
+  hue.addEventListener('pointermove',hueMove);
+  hue.addEventListener('pointerup',()=>{ hueDragging=false; });
+  hue.addEventListener('pointercancel',()=>{ hueDragging=false; });
+
+  hexInp.addEventListener('input', () => {
+    const v = hexInp.value.replace(/[^0-9a-f]/gi,'').slice(0,6);
+    if (v.length !== 6) return;
+    const rgb = hexToRgb('#'+v); const hsv = rgbToHsv(rgb.r,rgb.g,rgb.b);
+    state.h = hsv.h; state.s = hsv.s; state.v = hsv.v;
+    refresh(true);
+  });
+  pop.querySelectorAll('.pt-pop-preset').forEach(b => b.onclick = () => {
+    const c = b.dataset.c; const rgb = hexToRgb(c); const hsv = rgbToHsv(rgb.r,rgb.g,rgb.b);
+    state.h = hsv.h; state.s = hsv.s; state.v = hsv.v; refresh();
+  });
+
+  // Click-outside to close.
+  setTimeout(() => {
+    const off = (e) => { if (!pop.contains(e.target) && e.target !== anchorEl) { pop.remove(); document.removeEventListener('mousedown', off, true); } };
+    document.addEventListener('mousedown', off, true);
+  }, 0);
 }
 
 let _dnTempFont = null, _dnTempEffect = null, _dnTempColor = null, _dnTempColor2 = null;
@@ -31554,35 +31665,28 @@ function _dnSelectEffect(effectId) {
   if (grid) grid.querySelectorAll('.dns-effect-tile').forEach(el => {
     el.classList.toggle('sel', el.dataset.effect === effectId);
   });
-  // Show / hide the second colour row.
-  const isGrad = effectId === 'gradient';
-  const c2lbl = document.getElementById('dns-color2-label');
-  const c2grid = document.getElementById('dns-color2-grid');
-  if (c2lbl)  c2lbl.style.display  = isGrad ? 'block' : 'none';
-  if (c2grid) c2grid.style.display = isGrad ? 'grid'  : 'none';
+  // Slide the second-colour row in/out for Gradient.
+  const wrap = document.getElementById('dnsv3-color2-wrap');
+  if (wrap) wrap.style.display = effectId === 'gradient' ? 'block' : 'none';
   _dnUpdatePreview();
 }
 
 function _dnSelectColor(color) {
   _dnTempColor = color;
-  const grid = document.getElementById('dns-color-grid');
-  if (grid) grid.querySelectorAll('.dns-color-tile:not(.dns-color-tile--custom)').forEach(el => {
-    const isSel = el.dataset.color?.toLowerCase() === color?.toLowerCase();
-    el.classList.toggle('sel', isSel);
-    el.innerHTML = isSel ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
-  });
+  const sw = document.getElementById('dnsv3-swatch-1');
+  if (sw) sw.style.background = color;
+  const hx = document.getElementById('dnsv3-hex-1');
+  if (hx) hx.textContent = color;
   _dnRepaintEffectTiles();
   _dnUpdatePreview();
 }
 
 function _dnSelectColor2(color) {
   _dnTempColor2 = color;
-  const grid = document.getElementById('dns-color2-grid');
-  if (grid) grid.querySelectorAll('.dns-color-tile:not(.dns-color-tile--custom)').forEach(el => {
-    const isSel = el.dataset.color?.toLowerCase() === color?.toLowerCase();
-    el.classList.toggle('sel', isSel);
-    el.innerHTML = isSel ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
-  });
+  const sw = document.getElementById('dnsv3-swatch-2');
+  if (sw) sw.style.background = color;
+  const hx = document.getElementById('dnsv3-hex-2');
+  if (hx) hx.textContent = color;
   _dnRepaintEffectTiles();
   _dnUpdatePreview();
 }

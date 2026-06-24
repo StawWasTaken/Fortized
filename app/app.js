@@ -21080,7 +21080,7 @@ function _buildProfileView(tab) {
     const allThemes = [
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deepest dark, yellow glow',    bg:'#0a0d12', sidebar:'#0f1217', channel:'#0f1217', panel:'#141820', accent:'#fef83d', border:'#1a1f29', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'fortized_classic', name:'Classic Fortized', desc:'The classic Fortized dark theme', bg:'#16191f', sidebar:'#1a1d24', channel:'#1a1d24', panel:'#20232a', accent:'#fef83d', border:'#2a2f3a', muted:'#4e5a6f', bodyGrad:'', free:true},
-      {id:'fortized_slate',   name:'Fortized Slate',   desc:'Soft slate-grey with a lighter feel', bg:'#272b35', sidebar:'#2c313d', channel:'#2c313d', panel:'#323742', accent:'#fef83d', border:'#3c4252', muted:'#5e6a7d', bodyGrad:'', free:true},
+      {id:'fortized_slate',   name:'Fortized Slate',   desc:'Soft slate-grey with a lighter feel', bg:'#1f232c', sidebar:'#232833', channel:'#232833', panel:'#282d3a', accent:'#fef83d', border:'#33384a', muted:'#5e6a7d', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
       {id:'green_leaves',     name:'Green Leaves',     desc:'Calm forest greens. A quieter place to talk.', bg:'#0a1410', sidebar:'#091310', channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:'', cost:130, locked:!unlocked.includes('green_leaves')},
@@ -47789,17 +47789,17 @@ function applyAppearance(themeId, _opts) {
     document.documentElement.style.setProperty('--muted',      '#3a4458');
     document.documentElement.style.setProperty('--muted-light','#5a6a7e');
   } else if (themeId === 'fortized_slate') {
-    canvasColor = '#272b35';
-    sidebarColor = '#2c313d';
+    canvasColor = '#1f232c';
+    sidebarColor = '#232833';
     glassHeavy = 'rgba(44,49,61,.94)'; glassMid = 'rgba(44,49,61,.88)'; glassLight = 'rgba(44,49,61,.82)';
-    document.documentElement.style.setProperty('--bg',         '#272b35');
+    document.documentElement.style.setProperty('--bg',         '#1f232c');
     document.documentElement.style.setProperty('--rail',       '#22262e');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
-    document.documentElement.style.setProperty('--channel',    '#2c313d');
-    document.documentElement.style.setProperty('--panel',      '#323742');
+    document.documentElement.style.setProperty('--channel',    '#232833');
+    document.documentElement.style.setProperty('--panel',      '#282d3a');
     document.documentElement.style.setProperty('--panel2',     '#363b47');
     document.documentElement.style.setProperty('--panel3',     '#3a3f4b');
-    document.documentElement.style.setProperty('--border',     '#3c4252');
+    document.documentElement.style.setProperty('--border',     '#33384a');
     document.documentElement.style.setProperty('--muted',      '#5e6a7d');
     document.documentElement.style.setProperty('--muted-light','#8d9aae');
   } else if (themeId === 'midnight_citadel') {
@@ -47896,7 +47896,7 @@ let _appearancePreviewId = null;
 const _appearanceThemeData = {
   fortized_classic: {id:'fortized_classic', name:'Classic Fortized', bg:'#16191f', sidebar:'#1a1d24', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#1a1d24', panel:'#20232a', accent:'#fef83d', border:'#2a2f3a', muted:'#4e5a6f', bodyGrad:''},
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#0a0d12', sidebar:'#0f1217', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0f1217', panel:'#141820', accent:'#fef83d', border:'#1a1f29', muted:'#3a4458', bodyGrad:''},
-  fortized_slate:   {id:'fortized_slate',   name:'Fortized Slate',   bg:'#272b35', sidebar:'#2c313d', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#2c313d', panel:'#323742', accent:'#fef83d', border:'#3c4252', muted:'#5e6a7d', bodyGrad:''},
+  fortized_slate:   {id:'fortized_slate',   name:'Fortized Slate',   bg:'#1f232c', sidebar:'#232833', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#232833', panel:'#282d3a', accent:'#fef83d', border:'#33384a', muted:'#5e6a7d', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
   green_leaves:     {id:'green_leaves',     name:'Green Leaves',     bg:'#0a1410', sidebar:'#091310', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:''},

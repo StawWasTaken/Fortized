@@ -6221,6 +6221,9 @@ async function renderDMSidebar(scroll) {
   // currently typing in a DM to me shows up immediately instead of
   // waiting for the next typing broadcast tick.
   try { _renderTypingBubbles(); } catch(_) {}
+  // Subscribe to every visible DM + GC room so the sidebar receives
+  // message:new for older convos too — not just the one currently open.
+  try { _subscribeToAllConversationRooms(); } catch(_) {}
 
   // ── Async: fetch last message timestamps, PFPs, display names, status, then sort ─────────
   // Load all friends and GCs in parallel (no staggered delays)
@@ -6822,11 +6825,13 @@ async function _updateDMSidebarForNewMessage(username, msg) {
     const fi = document.getElementById('dm-fi-' + username);
     if (!fi) return; // DM sidebar entry doesn't exist yet
 
-    // Move to top of DM list by re-ordering
-    const dmScroll = document.getElementById('dm-list-scroll');
+    // Move to top of DM list by re-ordering. Real container ID is
+    // dm-sorted-list (renderDMSidebar). The earlier "dm-list-scroll" lookup
+    // silently failed, which is why older convos didn't bubble up to the top.
+    const dmScroll = document.getElementById('dm-sorted-list');
     if (dmScroll && fi.parentElement === dmScroll) {
       // Only move if not already at top
-      if (fi !== dmScroll.querySelector('.dm-sortable')) {
+      if (fi !== dmScroll.firstElementChild) {
         dmScroll.insertBefore(fi, dmScroll.firstChild);
       }
     }
@@ -6845,11 +6850,33 @@ async function _updateDMSidebarForNewMessage(username, msg) {
       if (d) timeEl.textContent = _formatRelativeTime(d);
     }
 
-    // Update data attribute for sorting
-    if (fi) fi.dataset['last-time'] = msg.timestamp || Date.now();
+    // Update data attribute for sorting (camelCase to actually write through)
+    fi.dataset.lastTime = String(msg.timestamp || Date.now());
   } catch(e) {
     console.warn('[DM Sidebar] Update failed:', e?.message);
   }
+}
+
+// Subscribe to socket rooms for every visible DM partner + GC so the
+// sidebar receives message:new events for conversations the user hasn't
+// opened this session. Without this, the sidebar only updated for chats
+// the user actively viewed once (because joinRoom is called from openDMView).
+function _subscribeToAllConversationRooms() {
+  if (!CU?.username) return;
+  try {
+    const friends = CU?.friends || [];
+    const gcs = CU?.groupChats || [];
+    const hidden = (typeof getHiddenDMs === 'function') ? getHiddenDMs() : [];
+    const me = String(CU.username).toLowerCase();
+    friends.forEach(f => {
+      if (!f || hidden.includes('dm_' + f)) return;
+      try { FortizedSocial.joinRoom('dm', me, String(f).toLowerCase()); } catch(_) {}
+    });
+    gcs.forEach(gc => {
+      if (!gc?.id || hidden.includes('gc_' + gc.id)) return;
+      try { FortizedSocial.joinRoom('gc', String(gc.id).toLowerCase()); } catch(_) {}
+    });
+  } catch(e) { console.warn('[DM Sidebar] subscribe-all failed:', e?.message); }
 }
 
 async function loadDMMessages(username) {
@@ -7691,10 +7718,10 @@ async function _updateGCSidebarForNewMessage(gcId, msg) {
     const fi = document.getElementById('gc-fi-' + gcId);
     if (!fi) return;
 
-    // Move to top of GC list
-    const dmScroll = document.getElementById('dm-list-scroll');
+    // Move to top of GC list (real container is #dm-sorted-list).
+    const dmScroll = document.getElementById('dm-sorted-list');
     if (dmScroll && fi.parentElement === dmScroll) {
-      if (fi !== dmScroll.querySelector('.dm-sortable')) {
+      if (fi !== dmScroll.firstElementChild) {
         dmScroll.insertBefore(fi, dmScroll.firstChild);
       }
     }
@@ -7706,8 +7733,8 @@ async function _updateGCSidebarForNewMessage(gcId, msg) {
       previewEl.textContent = preview;
     }
 
-    // Update data attribute for sorting
-    if (fi) fi.dataset['last-time'] = msg.timestamp || Date.now();
+    // Update data attribute for sorting (camelCase to write through)
+    fi.dataset.lastTime = String(msg.timestamp || Date.now());
   } catch(e) {
     console.warn('[GC Sidebar] Update failed:', e?.message);
   }
@@ -13256,6 +13283,21 @@ function initFortizedUXResilience() {
         _dbg('[Socket.IO] Received message:new event', { room, msgId: msg.id, from: msg.from });
         // Reconcile our own optimistic-render first (fixes duplication when server echo arrives)
         if (msg.from === CU.username && _reconcilePendingSend(room, msg)) return;
+        // Sidebar update for ANY DM/GC the user is party to — fires even
+        // when the chat in question isn't open. Keeps preview text +
+        // ordering live for older convos too.
+        try {
+          if (room.startsWith('dm:')) {
+            const inner = room.slice(3); // strip "dm:"
+            const me = String(CU?.username||'').toLowerCase();
+            const parts = inner.split('__');
+            const partner = parts.find(p => p && p !== me);
+            if (partner) _updateDMSidebarForNewMessage(partner, msg);
+          } else if (room.startsWith('gc:')) {
+            const gcId = room.slice(3);
+            if (gcId) _updateGCSidebarForNewMessage(gcId, msg);
+          }
+        } catch(_) {}
         // Handle DM messages
         if (room.startsWith('dm:') && curDM) {
           const expectedRoom = 'dm:' + [CU.username, curDM].sort().join('__');
@@ -23541,7 +23583,7 @@ function handleContextMenu(e) {
 
     const groups = [profileGroup];
 
-    if (!isMe) {
+    if (!isMe && !isFortizedOfficialAccount(username)) {
       const safetyItems = [];
       safetyItems.push({ icon: '🚫', label: _ctxBlocked ? 'Unblock' : 'Block', danger: !_ctxBlocked, action: () => toggleBlockUser(username) });
       if (!_ctxBlocked) {
@@ -28297,6 +28339,13 @@ function _filterBastionInviteFriends(query) {
 }
 
 async function _sendBastionInviteDM(btn, username) {
+  // Official accounts can't be invited to bastions.
+  if (isFortizedOfficialAccount(username)) {
+    btn.disabled = true;
+    btn.textContent = 'Not available';
+    btn.style.opacity = '.5';
+    return;
+  }
   btn.disabled = true;
   btn.textContent = 'Sending...';
   btn.style.borderColor = '#4e5058';
@@ -32560,6 +32609,12 @@ function _getBlockedList() { return JSON.parse(localStorage.getItem('ftz_blocked
 function _saveBlockedList(list) { localStorage.setItem('ftz_blocked', JSON.stringify(list)); }
 
 function toggleBlockUser(username) {
+  // Official Fortized accounts are first-party — they can't be blocked.
+  // Otherwise their safety/system DMs would be silently dropped.
+  if (isFortizedOfficialAccount(username)) {
+    toast("This is an official Fortized account and can't be blocked.", 'info');
+    return;
+  }
   if (isUserBlocked(username)) {
     _unblockUser(username);
   } else {
@@ -32775,6 +32830,11 @@ function unignoreUser(username) {
 }
 
 function showIgnorePicker(username) {
+  // Official Fortized accounts can't be ignored — same reason as block.
+  if (isFortizedOfficialAccount(username)) {
+    toast("This is an official Fortized account and can't be ignored.", 'info');
+    return;
+  }
   try { closeModal('modal-user'); } catch (e) { _dbg('[Modal] close failed', e); }
   document.getElementById('modal-ignore-picker')?.remove();
   const overlay = document.createElement('div');
@@ -47240,8 +47300,12 @@ function _fppShowMoreMenu(evt, username) {
     const isBlocked = _asArr(CU?.blockedUsers).includes(username);
     const isIgnored = _asArr(CU?.ignoredUsers).includes(username);
     const myBastions = _asArr(CU?.bastions).filter(b => b && b.name);
+    const isOfficial = isFortizedOfficialAccount(username);
     const safeUser = escapeHTML(username);
-    const inviteItems = myBastions.length
+    // Official Fortized accounts are first-party — no bastion invites, no
+    // block/ignore. Only Report stays available so users still have a
+    // channel to flag bad behavior in case something goes wrong on our end.
+    const inviteItems = (myBastions.length && !isOfficial)
       ? `<div class="fpp-menu__item fpp-menu__item--has-sub" onmouseenter="_fppShowInviteSub(event,'${safeUser}')">
            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
            Invite to Bastion
@@ -47250,8 +47314,7 @@ function _fppShowMoreMenu(evt, username) {
          <div class="fpp-menu__divider"></div>`
       : '';
     const ignoreCall = isIgnored ? `unignoreUser('${safeUser}')` : `showIgnorePicker('${safeUser}')`;
-    const menuHTML = `
-      ${inviteItems}
+    const safetyItemsHTML = isOfficial ? '' : `
       <div class="fpp-menu__item" onclick="${ignoreCall};_fppClose()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
         ${isIgnored ? 'Unignore' : 'Ignore'}
@@ -47259,7 +47322,10 @@ function _fppShowMoreMenu(evt, username) {
       <div class="fpp-menu__item fpp-menu__item--danger" onclick="toggleBlockUser('${safeUser}');_fppClose()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
         ${isBlocked ? 'Unblock' : 'Block'}
-      </div>
+      </div>`;
+    const menuHTML = `
+      ${inviteItems}
+      ${safetyItemsHTML}
       <div class="fpp-menu__item fpp-menu__item--danger" onclick="reportUser('${safeUser}');_fppClose()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
         Report

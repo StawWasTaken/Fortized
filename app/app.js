@@ -21078,8 +21078,9 @@ function _buildProfileView(tab) {
     const currentTheme = (typeof _appearanceKey === 'function' ? (localStorage.getItem(_appearanceKey()) || 'fortized_classic') : 'fortized_classic');
     const unlocked = CU?.unlockedAppearances || [];
     const allThemes = [
-      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#13161d', sidebar:'#181a1f', channel:'#15171e', panel:'#1b1e25', accent:'#fef83d', border:'#252b3a', muted:'#4e5a6f', bodyGrad:'', free:true},
-      {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
+      {id:'dark_realm',       name:'Dark Realm',       desc:'Deepest dark, yellow glow',    bg:'#0a0d12', sidebar:'#0f1217', channel:'#0f1217', panel:'#141820', accent:'#fef83d', border:'#1a1f29', muted:'#3a4458', bodyGrad:'', free:true},
+      {id:'fortized_classic', name:'Classic Fortized', desc:'The classic Fortized dark theme', bg:'#16191f', sidebar:'#1a1d24', channel:'#1a1d24', panel:'#20232a', accent:'#fef83d', border:'#2a2f3a', muted:'#4e5a6f', bodyGrad:'', free:true},
+      {id:'fortized_slate',   name:'Fortized Slate',   desc:'Soft slate-grey with a lighter feel', bg:'#272b35', sidebar:'#2c313d', channel:'#2c313d', panel:'#323742', accent:'#fef83d', border:'#3c4252', muted:'#5e6a7d', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
       {id:'green_leaves',     name:'Green Leaves',     desc:'Calm forest greens. A quieter place to talk.', bg:'#0a1410', sidebar:'#091310', channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:'', cost:130, locked:!unlocked.includes('green_leaves')},
@@ -47774,19 +47775,33 @@ function applyAppearance(themeId, _opts) {
   let canvasColor, glassHeavy, glassMid, glassLight;
   let sidebarColor;
   if (themeId === 'dark_realm') {
-    canvasColor = '#030407';
-    sidebarColor = '#050710';
-    glassHeavy = 'rgba(3,4,7,.94)'; glassMid = 'rgba(3,4,7,.88)'; glassLight = 'rgba(3,4,7,.82)';
-    document.documentElement.style.setProperty('--bg',         '#030407');
-    document.documentElement.style.setProperty('--rail',       '#020304');
+    canvasColor = '#0a0d12';
+    sidebarColor = '#0f1217';
+    glassHeavy = 'rgba(15,18,23,.94)'; glassMid = 'rgba(15,18,23,.88)'; glassLight = 'rgba(15,18,23,.82)';
+    document.documentElement.style.setProperty('--bg',         '#0a0d12');
+    document.documentElement.style.setProperty('--rail',       '#070a0e');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
-    document.documentElement.style.setProperty('--channel',    '#060810');
-    document.documentElement.style.setProperty('--panel',      '#080b14');
-    document.documentElement.style.setProperty('--panel2',     '#0a0e18');
-    document.documentElement.style.setProperty('--panel3',     '#0d111c');
-    document.documentElement.style.setProperty('--border',     '#141a2a');
+    document.documentElement.style.setProperty('--channel',    '#0f1217');
+    document.documentElement.style.setProperty('--panel',      '#141820');
+    document.documentElement.style.setProperty('--panel2',     '#181c25');
+    document.documentElement.style.setProperty('--panel3',     '#1c202a');
+    document.documentElement.style.setProperty('--border',     '#1a1f29');
     document.documentElement.style.setProperty('--muted',      '#3a4458');
     document.documentElement.style.setProperty('--muted-light','#5a6a7e');
+  } else if (themeId === 'fortized_slate') {
+    canvasColor = '#272b35';
+    sidebarColor = '#2c313d';
+    glassHeavy = 'rgba(44,49,61,.94)'; glassMid = 'rgba(44,49,61,.88)'; glassLight = 'rgba(44,49,61,.82)';
+    document.documentElement.style.setProperty('--bg',         '#272b35');
+    document.documentElement.style.setProperty('--rail',       '#22262e');
+    document.documentElement.style.setProperty('--sidebar',    sidebarColor);
+    document.documentElement.style.setProperty('--channel',    '#2c313d');
+    document.documentElement.style.setProperty('--panel',      '#323742');
+    document.documentElement.style.setProperty('--panel2',     '#363b47');
+    document.documentElement.style.setProperty('--panel3',     '#3a3f4b');
+    document.documentElement.style.setProperty('--border',     '#3c4252');
+    document.documentElement.style.setProperty('--muted',      '#5e6a7d');
+    document.documentElement.style.setProperty('--muted-light','#8d9aae');
   } else if (themeId === 'midnight_citadel') {
     canvasColor = '#050812';
     sidebarColor = '#080e1a';
@@ -47830,18 +47845,18 @@ function applyAppearance(themeId, _opts) {
     document.documentElement.style.setProperty('--muted',      '#3a5848');
     document.documentElement.style.setProperty('--muted-light','#6aa782');
   } else {
-    // Fortized Classic (default)
-    canvasColor = '#13161d';
-    sidebarColor = '#181a1f';
-    glassHeavy = 'rgba(19,22,29,.96)'; glassMid = 'rgba(19,22,29,.82)'; glassLight = 'rgba(19,22,29,.68)';
-    document.documentElement.style.setProperty('--bg',         '#13161d');
-    document.documentElement.style.setProperty('--rail',       '#0f1119');
+    // Classic Fortized (default)
+    canvasColor = '#16191f';
+    sidebarColor = '#1a1d24';
+    glassHeavy = 'rgba(26,29,36,.96)'; glassMid = 'rgba(26,29,36,.82)'; glassLight = 'rgba(26,29,36,.68)';
+    document.documentElement.style.setProperty('--bg',         '#16191f');
+    document.documentElement.style.setProperty('--rail',       '#13161c');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
-    document.documentElement.style.setProperty('--channel',    '#15171e');
-    document.documentElement.style.setProperty('--panel',      '#1b1e25');
-    document.documentElement.style.setProperty('--panel2',     '#1f232b');
-    document.documentElement.style.setProperty('--panel3',     '#23272f');
-    document.documentElement.style.setProperty('--border',     '#252b3a');
+    document.documentElement.style.setProperty('--channel',    '#1a1d24');
+    document.documentElement.style.setProperty('--panel',      '#20232a');
+    document.documentElement.style.setProperty('--panel2',     '#24272e');
+    document.documentElement.style.setProperty('--panel3',     '#282b32');
+    document.documentElement.style.setProperty('--border',     '#2a2f3a');
     document.documentElement.style.setProperty('--muted',      '#4e5a6f');
     document.documentElement.style.setProperty('--muted-light','#7d8a9e');
   }
@@ -47872,15 +47887,16 @@ function applyAppearance(themeId, _opts) {
   const chatInputOuter = document.querySelector('.chat-input-outer');
   if (userbarEl) userbarEl.style.background = '';
   if (chatInputOuter) chatInputOuter.style.background = '';
-  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', green_leaves:'🍃 Green Leaves', fortized_classic:'⚡ Fortized Classic'};
+  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', green_leaves:'🍃 Green Leaves', fortized_classic:'⚡ Classic Fortized', fortized_slate:'🪨 Fortized Slate'};
   toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
 }
 
 // Appearance preview helpers
 let _appearancePreviewId = null;
 const _appearanceThemeData = {
-  fortized_classic: {id:'fortized_classic', name:'Fortized Classic', bg:'#13161d', sidebar:'#181a1f', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#15171e', panel:'#1b1e25', accent:'#fef83d', border:'#252b3a', muted:'#4e5a6f', bodyGrad:''},
-  dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
+  fortized_classic: {id:'fortized_classic', name:'Classic Fortized', bg:'#16191f', sidebar:'#1a1d24', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#1a1d24', panel:'#20232a', accent:'#fef83d', border:'#2a2f3a', muted:'#4e5a6f', bodyGrad:''},
+  dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#0a0d12', sidebar:'#0f1217', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0f1217', panel:'#141820', accent:'#fef83d', border:'#1a1f29', muted:'#3a4458', bodyGrad:''},
+  fortized_slate:   {id:'fortized_slate',   name:'Fortized Slate',   bg:'#272b35', sidebar:'#2c313d', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#2c313d', panel:'#323742', accent:'#fef83d', border:'#3c4252', muted:'#5e6a7d', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
   green_leaves:     {id:'green_leaves',     name:'Green Leaves',     bg:'#0a1410', sidebar:'#091310', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:''},

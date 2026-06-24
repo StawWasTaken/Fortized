@@ -424,6 +424,14 @@ function isFortizedOfficialAccount(username) {
 function fortizedOfficialCapsuleHTML() {
   return '<span class="ftz-official-capsule" aria-label="Official Fortized account">OFFICIAL</span>';
 }
+// Returns the OFFICIAL capsule if the username is a first-party Fortized
+// account, otherwise an empty string. Used to inject the capsule directly
+// next to the displayname in every UI surface (profile cards, forum cards,
+// staff console, messages, etc.) so it visually adjoins the name rather
+// than living in the badge row.
+function fortizedOfficialCapsuleIfOfficial(username) {
+  return isFortizedOfficialAccount(username) ? fortizedOfficialCapsuleHTML() : '';
+}
 // Role hierarchy: superadmin > admin > moderator
 // superadmin: maximum power, access to private data, can enable important stuff, has access to the privacy of the users (precise age)
 // admin: set by superadmins, limited data access, limited power, can do important stuff but with limits, only see age tier
@@ -26917,6 +26925,7 @@ async function adminSearchUser() {
           <div style="flex:1;">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
               <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;">${escapeHTML(u.displayName||u.username)}</div>
+              ${fortizedOfficialCapsuleIfOfficial(u.username)}
               ${isBanned?'<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;padding:3px 10px;border-radius:var(--radius-pill);animation:adm-badge-pulse 2s infinite;">BANNED</span>':''}
               ${_tgtStanding.id>0?`<span class="adm-standing-badge" style="background:${_tgtStanding.tint};color:${_tgtStanding.color};border:1px solid ${_tgtStanding.border};">${escapeHTML(_tgtStanding.label.toUpperCase())}</span>`:''}
               ${targetStaffBadge}
@@ -41845,7 +41854,7 @@ async function _forumViewThread(threadId, opts) {
             <div class="forum-op-card" id="fp-${escapeHTML(thread.id)}">
               <div class="forum-user-col">
                 <img class="forum-op-avatar" data-forum-author="${escapeHTML(thread.author||'')}" src="${escapeHTML(author?.pfp || _defaultPfpUrl(thread.author))}" onerror="this.src='${_defaultPfpUrl(thread.author)}'">
-                <div class="forum-user-name">${escapeHTML(author?.displayName || thread.author)}</div>
+                <div class="forum-user-name">${escapeHTML(author?.displayName || thread.author)}${fortizedOfficialCapsuleIfOfficial(thread.author)}</div>
                 <div class="forum-user-handle">@${escapeHTML(thread.author)}</div>
                 ${(function(){
                   // Was a Mod/Admin/Superadmin capsule under the PFP — replaced
@@ -42118,7 +42127,7 @@ function _forumRenderPostCard(post, threadId, thread) {
     <div class="forum-reply-card" id="fp-${post.id}">
       <div class="forum-user-col">
         <img class="forum-reply-avatar" data-forum-author="${escapeHTML(post.author||'')}" src="${escapeHTML(post.author_pfp || pfpFallback)}" onerror="this.src='${pfpFallback}'">
-        <div class="forum-user-name">${escapeHTML(post.author_displayName || post.author)}</div>
+        <div class="forum-user-name">${escapeHTML(post.author_displayName || post.author)}${fortizedOfficialCapsuleIfOfficial(post.author)}</div>
         <div class="forum-user-handle">@${escapeHTML(post.author)}</div>
         <div class="forum-author-badges" data-badges-for="${escapeHTML(post.author||'')}">${typeof renderBadgesHTML==='function' ? renderBadgesHTML({username:post.author}) : ''}</div>
       </div>
@@ -43498,8 +43507,7 @@ function getUserBadges(user) {
 
 function renderBadgesHTML(user) {
   const badges = getUserBadges(user);
-  const isOfficial = isFortizedOfficialAccount(user?.username);
-  if (!badges.length && !isOfficial) return '';
+  if (!badges.length) return '';
   // Tooltip layout matches the Discord-style two-line popover the team
   // asked for: bold name on top, optional level/role on the line below.
   // Badges without an image (or whose file isn't uploaded yet) hide
@@ -43513,8 +43521,7 @@ function renderBadgesHTML(user) {
     const sub  = b.level ? `<span class="badge-tooltip-sub">${escapeHTML(b.level)}</span>` : '';
     return `<span class="ftz-badge ${b.cls}${b.level?' has-level':''}">${icon}<span class="badge-tooltip"><span class="badge-tooltip-name">${name}</span>${sub}</span></span>`;
   }).join('');
-  const capsule = isOfficial ? fortizedOfficialCapsuleHTML() : '';
-  return '<span class="ftz-badge-row">' + capsule + badgesHTML + '</span>';
+  return '<span class="ftz-badge-row">' + badgesHTML + '</span>';
 }
 
 function spawnHeartAnimation(x, y) {
@@ -46914,7 +46921,10 @@ function _fppIdentityHTML(u) {
   // pronouns; badges render below via _fppBadgesCardHTML.
   return `
     <div class="fpp__identity">
-      <div class="fpp__name" data-action="open-profile" style="${dnStyle}">${escapeHTML(dn)}</div>
+      <div class="fpp__name-row" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+        <span class="fpp__name" data-action="open-profile" style="${dnStyle}">${escapeHTML(dn)}</span>
+        ${fortizedOfficialCapsuleIfOfficial(u.username)}
+      </div>
       <div class="fpp__handle-row">
         <span class="fpp__handle">@${escapeHTML(u.username)}</span>
         ${u.pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns" data-tip-above>${escapeHTML(u.pronouns)}</span>` : ''}

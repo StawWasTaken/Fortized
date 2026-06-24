@@ -120,9 +120,9 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 .rail-bastion.dragging{opacity:.5;transform:scale(.95);}
 .rail-bastion.drag-over{border-top:2px solid var(--accent);margin-top:-2px;}
 /* Custom tooltip for rail bastions */
-.rail-tooltip{position:fixed;left:0;top:0;background:var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:6px 10px 6px 8px;display:flex;align-items:center;gap:8px;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.22,1,.36,1),transform .15s cubic-bezier(.22,1,.36,1);z-index:9999;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:13px;font-weight:600;color:#f2f3f5;}
+.rail-tooltip{position:fixed;left:0;top:0;background:var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:6px 10px 6px 8px;display:flex;align-items:center;gap:8px;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.22,1,.36,1),transform .15s cubic-bezier(.22,1,.36,1);z-index:9999;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:13px;font-weight:600;color:#f2f3f5;}
 .rail-tooltip.visible{opacity:1;}
-.rail-tooltip::after{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:0;height:0;border:5px solid transparent;border-right-color:var(--channel);border-left:0;pointer-events:none;}
+.rail-tooltip::after{content:'';position:absolute;left:-5px;top:50%;transform:translateY(-50%);width:0;height:0;border:5px solid transparent;border-right-color:var(--channel);border-left:0;pointer-events:none;}
 .rail-tooltip-icon{width:22px;height:22px;border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(255,255,255,.06);}
 .rail-tooltip-icon img{width:100%;height:100%;object-fit:cover;border-radius:4px;}
 /* Bastion group */
@@ -907,7 +907,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Reactions */
 .msg-reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
 /* Guilded-style: rounder pill, slightly darker bg, brighter emoji+count */
-.r-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:3px 9px 3px 7px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;transition:all .12s;position:relative;line-height:1;}
+.r-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:5px 11px 5px 9px;font-size:14px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;transition:all .12s;position:relative;line-height:1;}
 .r-pill:hover{background:rgba(0,0,0,.08);border-color:rgba(255,255,255,.16);}
 .r-pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .r-pill:active{transform:scale(.95);}
@@ -3275,7 +3275,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 /* Compact starter-drops grid (Radiance Profile Theme presets). */
 .pt-starter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
 /* Main settings area */
-.profile-main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);scroll-behavior:smooth;overscroll-behavior:contain;}
+.profile-main{flex:1;overflow-y:auto;overflow-x:hidden;background:linear-gradient(rgba(0,0,0,.20),rgba(0,0,0,.20)),var(--channel);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);scroll-behavior:smooth;overscroll-behavior:contain;}
 /* Uniform settings padding: 48px L/R + 200px bottom. The bottom
    pad has to clear the floating .unsaved-bar (60px tall, bottom:24px)
    PLUS leave a comfortable margin so the last section can scroll
@@ -6608,29 +6608,29 @@ button[disabled],
 .rail-nav-tooltip::after{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:0;height:0;border:5px solid transparent;border-right-color:var(--channel);border-left:0;pointer-events:none;}
 .rail-nav-tooltip .rnt-hint{font-size:9px;color:rgba(255,255,255,.4);font-weight:500;padding:1px 5px;background:rgba(255,255,255,.06);border-radius:3px;border:1px solid rgba(255,255,255,.08);margin-left:4px;}
 /* Global custom tooltip (replaces browser title) — Discord-style dark + arrow */
-.ftz-tooltip{position:fixed;left:0;top:0;background:var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:6px 10px;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;z-index:var(--z-max);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:12px;font-weight:600;color:#f2f3f5;transform:translateY(2px);}
+.ftz-tooltip{position:fixed;left:0;top:0;background:var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:6px 10px;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;z-index:var(--z-max);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:12px;font-weight:600;color:#f2f3f5;transform:translateY(2px);}
 .ftz-tooltip.visible{opacity:1;transform:translateY(0);}
 /* Tooltip arrow — solid triangle pointing at the hovered element. */
 .ftz-tooltip::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border:5px solid transparent;pointer-events:none;}
 /* Default placement: tooltip below the element → arrow on top, pointing up */
-.ftz-tooltip[data-place="bottom"]::after{bottom:100%;border-bottom-color:var(--channel);border-top:0;}
+.ftz-tooltip[data-place="bottom"]::after{top:-5px;border-bottom-color:var(--channel);border-top:0;}
 /* Above the element → arrow on bottom, pointing down */
-.ftz-tooltip[data-place="top"]::after{top:100%;border-top-color:var(--channel);border-bottom:0;}
+.ftz-tooltip[data-place="top"]::after{bottom:-5px;border-top-color:var(--channel);border-bottom:0;}
 /* Left of the element → arrow on right */
-.ftz-tooltip[data-place="left"]::after{left:auto;right:-10px;top:50%;transform:translateY(-50%);border-left-color:var(--channel);border-right:0;}
+.ftz-tooltip[data-place="left"]::after{left:auto;right:-5px;top:50%;transform:translateY(-50%);border-left-color:var(--channel);border-right:0;}
 /* Right of the element → arrow on left */
-.ftz-tooltip[data-place="right"]::after{left:-10px;top:50%;transform:translateY(-50%);border-right-color:var(--channel);border-left:0;}
+.ftz-tooltip[data-place="right"]::after{left:-5px;top:50%;transform:translateY(-50%);border-right-color:var(--channel);border-left:0;}
 /* When the tooltip has been horizontally clamped to the viewport, the
    arrow's centered 50% offset stops aligning with the source element.
    We let JS write --arrow-x (a pixel offset from the tooltip's left
    edge) and snap the arrow there instead. */
 .ftz-tooltip[style*="--arrow-x"]::after{left:var(--arrow-x);transform:none;}
 /* Reaction tooltip (Discord-style) */
-.ftz-reaction-tip{position:fixed;left:0;top:0;background:var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:8px 12px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:var(--z-max);box-shadow:0 4px 16px rgba(0,0,0,.65);max-width:260px;transform:translateY(4px);}
+.ftz-reaction-tip{position:fixed;left:0;top:0;background:var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 12px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:var(--z-max);box-shadow:0 4px 16px rgba(0,0,0,.65);max-width:260px;transform:translateY(4px);}
 .ftz-reaction-tip.visible{opacity:1;transform:translateY(0);}
 .ftz-reaction-tip::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border:5px solid transparent;pointer-events:none;}
-.ftz-reaction-tip[data-place="top"]::after{bottom:-10px;border-top-color:var(--channel);border-bottom:0;}
-.ftz-reaction-tip[data-place="bottom"]::after{top:-10px;border-bottom-color:var(--channel);border-top:0;}
+.ftz-reaction-tip[data-place="top"]::after{bottom:-5px;border-top-color:var(--channel);border-bottom:0;}
+.ftz-reaction-tip[data-place="bottom"]::after{top:-5px;border-bottom-color:var(--channel);border-top:0;}
 .ftz-reaction-tip[style*="--arrow-x"]::after{left:var(--arrow-x);transform:none;}
 .ftz-reaction-tip .rt-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .ftz-reaction-tip .rt-emoji{font-size:22px;line-height:1;}
@@ -6695,17 +6695,17 @@ button[disabled],
 .reaction-picker-v2 .rpv-preview-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.5);}
 /* Reworked reaction pills — Discord-parity: rounder, solid grey when
    not mine, accent yellow when you reacted. Quick smiley-add follows. */
-.r-pill{display:inline-flex;align-items:center;gap:6px;background:#2a2d35;border:1px solid transparent;border-radius:8px;padding:3px 9px 3px 7px;font-size:13px;cursor:pointer;transition:background .12s,border-color .12s,transform .06s;user-select:none;line-height:1;}
+.r-pill{display:inline-flex;align-items:center;gap:6px;background:#2a2d35;border:1px solid transparent;border-radius:6px;padding:5px 11px 5px 9px;font-size:14px;cursor:pointer;transition:background .12s,border-color .12s,transform .06s;user-select:none;line-height:1;}
 .r-pill:hover{background:#33363f;border-color:rgba(255,255,255,.1);}
 .r-pill:active{transform:scale(.94);}
-.r-pill .r-emoji{font-size:16px;line-height:1;display:inline-flex;align-items:center;}
-.r-pill .r-count{font-size:12px;font-weight:700;color:rgba(255,255,255,.8);min-width:8px;text-align:center;font-variant-numeric:tabular-nums;}
+.r-pill .r-emoji{font-size:18px;line-height:1;display:inline-flex;align-items:center;}
+.r-pill .r-count{font-size:13px;font-weight:700;color:rgba(255,255,255,.8);min-width:8px;text-align:center;font-variant-numeric:tabular-nums;}
 .r-pill.mine{background:rgba(255,249,62,.14);border-color:rgba(255,249,62,.45);}
 .r-pill.mine:hover{background:rgba(255,249,62,.22);border-color:rgba(255,249,62,.6);}
 .r-pill.mine .r-count{color:var(--accent);}
-.r-pill.r-add-btn{background:var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:3px 8px;color:rgba(255,255,255,.55);cursor:pointer;transition:background .12s,color .12s,border-color .12s;}
+.r-pill.r-add-btn{background:var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:5px 10px;color:rgba(255,255,255,.55);cursor:pointer;transition:background .12s,color .12s,border-color .12s;}
 .r-pill.r-add-btn:hover{background:linear-gradient(rgba(255,255,255,.08),rgba(255,255,255,.08)),var(--channel);border-color:rgba(255,255,255,.16);color:rgba(255,255,255,.95);}
-.r-pill.r-add-btn svg,.r-pill.r-add-btn img{width:16px;height:16px;display:block;}
+.r-pill.r-add-btn svg,.r-pill.r-add-btn img{width:18px;height:18px;display:block;}
 
 /* ── Keyboard Shortcuts Settings ── */
 .kbd-settings-grid{display:flex;flex-direction:column;gap:4px;}

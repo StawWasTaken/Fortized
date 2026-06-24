@@ -4622,24 +4622,40 @@ function _ftzTipShow(e) {
     const rect = el.getBoundingClientRect();
     const tipRect = tip.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
-    let left = centerX - tipRect.width / 2;
-    // Source elements can opt into above-placement via data-tip-above
-    // (e.g. profile pronouns, where below would collide with the bio
-    // card directly underneath). Otherwise default below.
-    const preferAbove = el.hasAttribute('data-tip-above');
-    let top = preferAbove ? (rect.top - tipRect.height - 8) : (rect.bottom + 8);
-    let place = preferAbove ? 'top' : 'bottom';
-    // If above doesn't fit, fall back to below — and vice-versa.
-    if (place === 'top' && top < 4) {
-      top = rect.bottom + 8;
-      place = 'bottom';
-    } else if (place === 'bottom' && top + tipRect.height > window.innerHeight - 4) {
-      top = rect.top - tipRect.height - 8;
+    const centerY = rect.top + rect.height / 2;
+    // Always prefer ABOVE first; fall back to below, then left, then right.
+    const fitsTop    = (rect.top - tipRect.height - 8) >= 4;
+    const fitsBottom = (rect.bottom + tipRect.height + 8) <= (window.innerHeight - 4);
+    const fitsLeft   = (rect.left - tipRect.width - 8) >= 4;
+    const fitsRight  = (rect.right + tipRect.width + 8) <= (window.innerWidth - 4);
+    let place, top, left;
+    if (fitsTop) {
       place = 'top';
+      top = rect.top - tipRect.height - 8;
+      left = centerX - tipRect.width / 2;
+    } else if (fitsBottom) {
+      place = 'bottom';
+      top = rect.bottom + 8;
+      left = centerX - tipRect.width / 2;
+    } else if (fitsLeft) {
+      place = 'left';
+      top = centerY - tipRect.height / 2;
+      left = rect.left - tipRect.width - 8;
+    } else if (fitsRight) {
+      place = 'right';
+      top = centerY - tipRect.height / 2;
+      left = rect.right + 8;
+    } else {
+      // No side fits — fall back to bottom, clamped.
+      place = 'bottom';
+      top = rect.bottom + 8;
+      left = centerX - tipRect.width / 2;
     }
-    // Clamp horizontally to viewport
+    // Clamp to viewport
     if (left < 4) left = 4;
     if (left + tipRect.width > window.innerWidth - 4) left = window.innerWidth - tipRect.width - 4;
+    if (top < 4) top = 4;
+    if (top + tipRect.height > window.innerHeight - 4) top = window.innerHeight - tipRect.height - 4;
     tip.dataset.place = place;
     // Pin the arrow to the source element's center when horizontal
     // clamping has knocked the tooltip off-center.
@@ -20676,7 +20692,7 @@ function _buildProfileView(tab) {
                     <div class="fpp-msg-preview__body">
                       <div class="fpp-msg-preview__name-row">
                         <span class="fpp-msg-preview__name" id="preview-msg-name" style="${_getDisplayFontStyle(CU.displayFont||'default')}${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff', CU.displayColor2 || CU.displayColor || '#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
-                        <span class="fpp-msg-preview__time">·  Today at ${_localNow}</span>
+                        <span class="fpp-msg-preview__time">·  ${_localNow}</span>
                       </div>
                       <div class="fpp-msg-preview__text">${escapeHTML(_pm.text)}</div>
                       <div class="msg-reactions" style="margin-top:8px;">${_reactionsHTML}</div>
@@ -21078,9 +21094,9 @@ function _buildProfileView(tab) {
     const currentTheme = (typeof _appearanceKey === 'function' ? (localStorage.getItem(_appearanceKey()) || 'fortized_classic') : 'fortized_classic');
     const unlocked = CU?.unlockedAppearances || [];
     const allThemes = [
-      {id:'dark_realm',       name:'Dark Realm',       desc:'Deepest dark, yellow glow',    bg:'#0a0d12', sidebar:'#0f1217', channel:'#0f1217', panel:'#141820', accent:'#fef83d', border:'#1a1f29', muted:'#3a4458', bodyGrad:'', free:true},
-      {id:'fortized_classic', name:'Classic Fortized', desc:'The classic Fortized dark theme', bg:'#16191f', sidebar:'#1a1d24', channel:'#1a1d24', panel:'#20232a', accent:'#fef83d', border:'#2a2f3a', muted:'#4e5a6f', bodyGrad:'', free:true},
       {id:'fortized_slate',   name:'Fortized Slate',   desc:'Soft slate-grey with a lighter feel', bg:'#1f232c', sidebar:'#232833', channel:'#232833', panel:'#282d3a', accent:'#fef83d', border:'#33384a', muted:'#5e6a7d', bodyGrad:'', free:true},
+      {id:'fortized_classic', name:'Classic Fortized', desc:'The classic Fortized dark theme', bg:'#16191f', sidebar:'#1a1d24', channel:'#1a1d24', panel:'#20232a', accent:'#fef83d', border:'#2a2f3a', muted:'#4e5a6f', bodyGrad:'', free:true},
+      {id:'dark_realm',       name:'Dark Realm',       desc:'Deepest dark, yellow glow',    bg:'#0a0d12', sidebar:'#0f1217', channel:'#0f1217', panel:'#141820', accent:'#fef83d', border:'#1a1f29', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
       {id:'green_leaves',     name:'Green Leaves',     desc:'Calm forest greens. A quieter place to talk.', bg:'#0a1410', sidebar:'#091310', channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:'', cost:130, locked:!unlocked.includes('green_leaves')},
@@ -21094,7 +21110,10 @@ function _buildProfileView(tab) {
     const selTheme = allThemes.find(t => t.id === currentTheme) || allThemes[0];
 
     // Build a rich, accurate app preview for a given theme
-    function buildChatPreview(t, label) {
+    const buildChatPreview = (t, label) => _buildAppearanceFullPreview(t, label);
+    // (Implementation moved to global _buildAppearanceFullPreview below
+    // so selectAppearancePreview's crossfade can render the same surface)
+    function _unusedBuildChatPreview(t, label) {
       // Simplified Fortized bastion preview — same anatomy as the real
       // app (server rail, channel list, chat, member panel) but with
       // shape placeholders instead of fake text so the preview reads
@@ -21204,7 +21223,6 @@ function _buildProfileView(tab) {
       return `
       <button onclick="${clickAction}" class="apr-theme-sq${isActive?' is-active':''}${isLocked?' is-locked':''}" data-tip="${escapeHTML(tip)}" type="button">
         <div class="apr-theme-sq__swatch" style="background:${grad};">
-          <div class="apr-theme-sq__accent" style="background:${t.accent};box-shadow:0 0 0 2px rgba(0,0,0,.25), 0 4px 10px ${t.accent}55;"></div>
           ${isActive ? '<div class="apr-theme-sq__check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f1119" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' : ''}
           ${isLocked ? '<div class="apr-theme-sq__lock">🔒</div>' : ''}
         </div>
@@ -21249,10 +21267,13 @@ function _buildProfileView(tab) {
       <div class="voice-section" data-spy="theme">
         <div class="voice-section__title">Themes</div>
 
-        <!-- Live preview area -->
-        <div id="appearance-preview-area" style="display:flex;gap:16px;margin-bottom:18px;">
-          ${buildChatPreview(selTheme, 'CURRENT THEME')}
-          <div id="appearance-preview-selected" style="flex:1;min-width:0;display:none;"></div>
+        <!-- Live preview area (single morphing canvas) -->
+        <div id="appearance-preview-area" style="margin-bottom:18px;position:relative;">
+          <div id="appearance-preview-label" style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);margin-bottom:8px;transition:color .35s ease;">CURRENT THEME · ${escapeHTML(selTheme.name.toUpperCase())}</div>
+          <div id="appearance-preview-stage" style="position:relative;border-radius:12px;overflow:hidden;min-height:230px;">
+            <div id="appearance-preview-current" style="opacity:1;transition:opacity .42s cubic-bezier(.4,0,.2,1);">${buildChatPreview(selTheme, '')}</div>
+            <div id="appearance-preview-incoming" style="position:absolute;inset:0;opacity:0;transition:opacity .42s cubic-bezier(.4,0,.2,1);pointer-events:none;"></div>
+          </div>
         </div>
         <div id="appearance-apply-bar" style="display:none;margin-bottom:18px;padding:14px 18px;background:rgba(254,248,61,.04);border:1.5px solid rgba(254,248,61,.12);border-radius:14px;align-items:center;gap:12px;">
           <div style="flex:1;">
@@ -47969,10 +47990,91 @@ function _buildPreviewMockup(t, label) {
   </div>`;
 }
 
+function _buildAppearanceFullPreview(t, label) {
+  const isLight = !!t.light;
+  const textStrong = isLight ? '#1a1a1a' : '#fff';
+  const textDim    = isLight ? 'rgba(0,0,0,.10)' : 'rgba(255,255,255,.08)';
+  const textDim2   = isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.05)';
+  const textMuted  = isLight ? 'rgba(0,0,0,.45)' : 'rgba(255,255,255,.4)';
+  const msgBar     = isLight ? 'rgba(0,0,0,.10)' : 'rgba(255,255,255,.10)';
+  const msgBarLight= isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.06)';
+  const msgRow = (col, w1, w2, w3) => `
+    <div style="display:flex;gap:8px;align-items:flex-start;">
+      <div style="width:26px;height:26px;border-radius:50%;background:${col};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;gap:6px;"><div style="height:7px;width:${w1}px;background:${col};border-radius:4px;"></div><div style="height:5px;width:24px;background:${msgBarLight};border-radius:3px;"></div></div>
+        <div style="height:5px;width:${w2}px;background:${msgBar};border-radius:3px;"></div>
+        ${w3 ? `<div style="height:5px;width:${w3}px;background:${msgBar};border-radius:3px;"></div>` : ''}
+      </div>
+    </div>`;
+  const memberRow = (col) => `
+    <div style="display:flex;align-items:center;gap:6px;padding:3px 6px;">
+      <div style="width:16px;height:16px;border-radius:50%;background:${col};flex-shrink:0;"></div>
+      <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;max-width:50px;"></div>
+    </div>`;
+  return `
+  <div style="flex:1;min-width:0;">
+    ${label ? `<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);margin-bottom:8px;">${label}</div>` : ''}
+    <div style="border-radius:12px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};box-shadow:0 10px 28px rgba(0,0,0,.35);">
+      <div style="display:flex;height:230px;">
+        <div style="width:42px;background:${isLight ? 'rgba(0,0,0,.05)' : 'rgba(0,0,0,.25)'};display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:6px;">
+          <div style="width:28px;height:28px;border-radius:10px;background:${t.accent};opacity:.85;"></div>
+          <div style="width:18px;height:2px;background:${textDim};border-radius:1px;margin:2px 0;"></div>
+          <div style="width:28px;height:28px;border-radius:50%;background:${textDim};"></div>
+          <div style="width:28px;height:28px;border-radius:50%;background:${textDim2};"></div>
+        </div>
+        <div style="width:124px;background:${t.sidebar};border-right:1px solid ${t.border};padding:10px 8px;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
+          <div style="height:7px;width:80px;background:${textStrong};border-radius:3px;opacity:.85;margin-bottom:4px;"></div>
+          <div style="height:5px;width:46px;background:${textMuted};border-radius:3px;margin-top:4px;"></div>
+          <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;border-radius:4px;background:${isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.08)'};">
+            <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
+            <div style="height:5px;flex:1;background:${textStrong};border-radius:3px;opacity:.7;"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;">
+            <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
+            <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;">
+            <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
+            <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;"></div>
+          </div>
+          <div style="flex:1;"></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px;border-radius:6px;background:${isLight ? 'rgba(0,0,0,.06)' : 'rgba(0,0,0,.3)'};">
+            <div style="width:22px;height:22px;border-radius:50%;background:${t.accent};opacity:.8;flex-shrink:0;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><div style="height:5px;width:40px;background:${textStrong};border-radius:3px;opacity:.8;"></div><div style="height:4px;width:24px;background:${textMuted};border-radius:3px;"></div></div>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;background:${t.channel};overflow:hidden;">
+          <div style="height:30px;border-bottom:1px solid ${t.border};display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;">
+            <span style="font-size:13px;color:${textMuted};font-weight:600;">#</span>
+            <div style="height:6px;width:46px;background:${textStrong};border-radius:3px;opacity:.85;"></div>
+          </div>
+          <div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
+            ${msgRow(t.accent, 38, 110, 80)}
+            ${msgRow(msgBar, 30, 90, 0)}
+            ${msgRow('rgba(140,100,220,.6)', 26, 70, 0)}
+          </div>
+          <div style="padding:0 12px 12px;flex-shrink:0;">
+            <div style="height:30px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 12px;gap:8px;">
+              <div style="width:12px;height:12px;border-radius:50%;border:1.5px solid ${textMuted};opacity:.5;flex-shrink:0;"></div>
+              <div style="height:5px;flex:1;background:${msgBarLight};border-radius:3px;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="width:80px;background:${t.sidebar};border-left:1px solid ${t.border};padding:10px 4px;display:flex;flex-direction:column;gap:2px;overflow:hidden;">
+          <div style="height:5px;width:40px;background:${textMuted};border-radius:3px;margin:2px 6px 4px;"></div>
+          ${memberRow(t.accent)}
+          ${memberRow(msgBar)}
+          ${memberRow('rgba(140,100,220,.6)')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function selectAppearancePreview(themeId) {
   const currentTheme = localStorage.getItem(_appearanceKey()) || 'fortized_classic';
   if (themeId === currentTheme) {
-    // Already active, just apply
     applyAppearance(themeId);
     return;
   }
@@ -47980,14 +48082,35 @@ function selectAppearancePreview(themeId) {
   const t = _appearanceThemeData[themeId];
   if (!t) return;
 
-  // Show the selected preview
-  const selArea = document.getElementById('appearance-preview-selected');
-  if (selArea) {
-    selArea.style.display = '';
-    selArea.innerHTML = _buildPreviewMockup(t, 'SELECTED — ' + t.name.toUpperCase());
+  // Crossfade: incoming layer fades in over current, then they swap
+  const incoming = document.getElementById('appearance-preview-incoming');
+  const current  = document.getElementById('appearance-preview-current');
+  const label    = document.getElementById('appearance-preview-label');
+  if (incoming && current) {
+    incoming.innerHTML = _buildAppearanceFullPreview(t, '');
+    requestAnimationFrame(() => {
+      incoming.style.opacity = '1';
+      current.style.opacity = '0';
+    });
+    setTimeout(() => {
+      current.innerHTML = incoming.innerHTML;
+      current.style.transition = 'none';
+      current.style.opacity = '1';
+      incoming.style.transition = 'none';
+      incoming.style.opacity = '0';
+      incoming.innerHTML = '';
+      requestAnimationFrame(() => {
+        current.style.transition = '';
+        incoming.style.transition = '';
+      });
+    }, 420);
   }
+  if (label) label.textContent = 'PREVIEWING · ' + t.name.toUpperCase();
+  // Refresh active class on theme grid
+  document.querySelectorAll('.apr-theme-sq').forEach(b => b.classList.remove('is-preview'));
+  const btn = document.querySelector(`.apr-theme-sq[onclick*="'${themeId}'"]`);
+  if (btn) btn.classList.add('is-preview');
 
-  // Show the apply bar
   const applyBar = document.getElementById('appearance-apply-bar');
   if (applyBar) {
     applyBar.style.display = 'flex';
@@ -47997,9 +48120,34 @@ function selectAppearancePreview(themeId) {
 }
 
 function cancelAppearancePreview() {
+  // Restore current theme preview in the single canvas
+  const currentTheme = localStorage.getItem(_appearanceKey()) || 'fortized_classic';
+  const t = _appearanceThemeData[currentTheme];
   _appearancePreviewId = null;
-  const selArea = document.getElementById('appearance-preview-selected');
-  if (selArea) { selArea.style.display = 'none'; selArea.innerHTML = ''; }
+  const incoming = document.getElementById('appearance-preview-incoming');
+  const current  = document.getElementById('appearance-preview-current');
+  const label    = document.getElementById('appearance-preview-label');
+  if (t && incoming && current) {
+    incoming.innerHTML = _buildAppearanceFullPreview(t, '');
+    requestAnimationFrame(() => {
+      incoming.style.opacity = '1';
+      current.style.opacity = '0';
+    });
+    setTimeout(() => {
+      current.innerHTML = incoming.innerHTML;
+      current.style.transition = 'none';
+      current.style.opacity = '1';
+      incoming.style.transition = 'none';
+      incoming.style.opacity = '0';
+      incoming.innerHTML = '';
+      requestAnimationFrame(() => {
+        current.style.transition = '';
+        incoming.style.transition = '';
+      });
+    }, 420);
+  }
+  if (label && t) label.textContent = 'CURRENT THEME · ' + t.name.toUpperCase();
+  document.querySelectorAll('.apr-theme-sq').forEach(b => b.classList.remove('is-preview'));
   const applyBar = document.getElementById('appearance-apply-bar');
   if (applyBar) applyBar.style.display = 'none';
 }

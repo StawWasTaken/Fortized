@@ -47998,78 +47998,124 @@ function _buildAppearanceFullPreview(t, label) {
   const textMuted  = isLight ? 'rgba(0,0,0,.45)' : 'rgba(255,255,255,.4)';
   const msgBar     = isLight ? 'rgba(0,0,0,.10)' : 'rgba(255,255,255,.10)';
   const msgBarLight= isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.06)';
+  const textWeak   = isLight ? 'rgba(0,0,0,.55)' : 'rgba(255,255,255,.3)';
+
+  // Compute actual overlaid colors for realistic preview
+  const hexToRgb = (hex) => {
+    const r = parseInt(hex.slice(1,3), 16);
+    const g = parseInt(hex.slice(3,5), 16);
+    const b = parseInt(hex.slice(5,7), 16);
+    return [r, g, b];
+  };
+  const blendWithOverlay = (hex, opacity) => {
+    const [r, g, b] = hexToRgb(hex);
+    const br = Math.round(r * (1 - opacity) + 0 * opacity);
+    const bg = Math.round(g * (1 - opacity) + 0 * opacity);
+    const bb = Math.round(b * (1 - opacity) + 0 * opacity);
+    return `rgb(${br},${bg},${bb})`;
+  };
+  const mainChatBg = blendWithOverlay(t.channel, 0.30);
+  const sidebarBg = blendWithOverlay(t.channel, 0.20);
+
   const msgRow = (col, w1, w2, w3) => `
-    <div style="display:flex;gap:8px;align-items:flex-start;">
-      <div style="width:26px;height:26px;border-radius:50%;background:${col};flex-shrink:0;"></div>
-      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
-        <div style="display:flex;align-items:center;gap:6px;"><div style="height:7px;width:${w1}px;background:${col};border-radius:4px;"></div><div style="height:5px;width:24px;background:${msgBarLight};border-radius:3px;"></div></div>
+    <div style="display:flex;gap:10px;align-items:flex-start;opacity:.95;">
+      <div style="width:28px;height:28px;border-radius:50%;background:${col};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;align-items:center;gap:6px;"><div style="height:7px;width:${w1}px;background:${col};border-radius:4px;"></div><div style="height:5px;width:20px;background:${textWeak};border-radius:3px;"></div></div>
         <div style="height:5px;width:${w2}px;background:${msgBar};border-radius:3px;"></div>
         ${w3 ? `<div style="height:5px;width:${w3}px;background:${msgBar};border-radius:3px;"></div>` : ''}
       </div>
     </div>`;
   const memberRow = (col) => `
-    <div style="display:flex;align-items:center;gap:6px;padding:3px 6px;">
-      <div style="width:16px;height:16px;border-radius:50%;background:${col};flex-shrink:0;"></div>
-      <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;max-width:50px;"></div>
+    <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:4px;transition:background .2s ease;">
+      <div style="width:18px;height:18px;border-radius:50%;background:${col};flex-shrink:0;"></div>
+      <div style="height:4px;flex:1;background:${msgBar};border-radius:3px;max-width:45px;"></div>
     </div>`;
+
   return `
   <div style="flex:1;min-width:0;">
     ${label ? `<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);margin-bottom:8px;">${label}</div>` : ''}
-    <div style="border-radius:12px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};box-shadow:0 10px 28px rgba(0,0,0,.35);">
-      <div style="display:flex;height:230px;">
-        <div style="width:42px;background:${isLight ? 'rgba(0,0,0,.05)' : 'rgba(0,0,0,.25)'};display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:6px;">
-          <div style="width:28px;height:28px;border-radius:10px;background:${t.accent};opacity:.85;"></div>
-          <div style="width:18px;height:2px;background:${textDim};border-radius:1px;margin:2px 0;"></div>
-          <div style="width:28px;height:28px;border-radius:50%;background:${textDim};"></div>
-          <div style="width:28px;height:28px;border-radius:50%;background:${textDim2};"></div>
+    <div style="border-radius:14px;overflow:hidden;border:1.5px solid ${t.border};background:${t.bg};box-shadow:0 12px 32px rgba(0,0,0,.45);animation:fadeIn .42s cubic-bezier(.22,1,.36,1) forwards;">
+      <div style="display:flex;height:240px;">
+        <!-- Rail (leftmost nav) -->
+        <div style="width:48px;background:${sidebarBg};display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:8px;border-right:1px solid ${t.border};">
+          <div style="width:32px;height:32px;border-radius:10px;background:${t.accent};opacity:.85;animation:pulse 2.4s ease-in-out infinite;" transform="scale(1.05)"></div>
+          <div style="width:20px;height:2px;background:${textDim};border-radius:1px;margin:3px 0;"></div>
+          <div style="width:28px;height:28px;border-radius:50%;background:${textDim};opacity:.6;"></div>
+          <div style="width:28px;height:28px;border-radius:50%;background:${textDim2};opacity:.4;"></div>
+          <div style="flex:1;"></div>
+          <div style="width:28px;height:28px;border-radius:8px;background:${t.accent};opacity:.7;"></div>
         </div>
-        <div style="width:124px;background:${t.sidebar};border-right:1px solid ${t.border};padding:10px 8px;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
-          <div style="height:7px;width:80px;background:${textStrong};border-radius:3px;opacity:.85;margin-bottom:4px;"></div>
-          <div style="height:5px;width:46px;background:${textMuted};border-radius:3px;margin-top:4px;"></div>
-          <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;border-radius:4px;background:${isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.08)'};">
-            <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
-            <div style="height:5px;flex:1;background:${textStrong};border-radius:3px;opacity:.7;"></div>
+        <!-- Sidebar (DM/Bastion list) -->
+        <div style="width:136px;background:${sidebarBg};border-right:1px solid ${t.border};padding:10px 8px;display:flex;flex-direction:column;gap:3px;overflow:hidden;">
+          <div style="height:7px;width:76px;background:${textStrong};border-radius:3px;opacity:.85;margin-bottom:6px;"></div>
+          <div style="height:4px;width:48px;background:${textWeak};border-radius:3px;margin-bottom:8px;"></div>
+          <div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;background:${t.accent};opacity:.15;">
+            <span style="font-size:8px;color:${textMuted};font-weight:700;">#</span>
+            <div style="height:5px;flex:1;background:${t.accent};border-radius:3px;opacity:.6;"></div>
           </div>
-          <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;">
-            <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
+          <div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;">
+            <span style="font-size:8px;color:${textMuted};font-weight:700;">#</span>
             <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;"></div>
           </div>
-          <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;">
-            <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
+          <div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;">
+            <span style="font-size:8px;color:${textMuted};font-weight:700;">#</span>
             <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;"></div>
           </div>
           <div style="flex:1;"></div>
-          <div style="display:flex;align-items:center;gap:6px;padding:6px;border-radius:6px;background:${isLight ? 'rgba(0,0,0,.06)' : 'rgba(0,0,0,.3)'};">
-            <div style="width:22px;height:22px;border-radius:50%;background:${t.accent};opacity:.8;flex-shrink:0;"></div>
-            <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><div style="height:5px;width:40px;background:${textStrong};border-radius:3px;opacity:.8;"></div><div style="height:4px;width:24px;background:${textMuted};border-radius:3px;"></div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:8px;border-radius:8px;background:${isLight ? 'rgba(0,0,0,.08)' : 'rgba(0,0,0,.35)'};">
+            <div style="width:24px;height:24px;border-radius:50%;background:${t.accent};opacity:.75;flex-shrink:0;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><div style="height:4px;width:36px;background:${textStrong};border-radius:3px;opacity:.75;"></div><div style="height:3px;width:20px;background:${textWeak};border-radius:3px;"></div></div>
           </div>
         </div>
-        <div style="flex:1;display:flex;flex-direction:column;background:${t.channel};overflow:hidden;">
-          <div style="height:30px;border-bottom:1px solid ${t.border};display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;">
-            <span style="font-size:13px;color:${textMuted};font-weight:600;">#</span>
-            <div style="height:6px;width:46px;background:${textStrong};border-radius:3px;opacity:.85;"></div>
+        <!-- Main chat area -->
+        <div style="flex:1;display:flex;flex-direction:column;background:${mainChatBg};overflow:hidden;">
+          <!-- Topbar -->
+          <div style="height:36px;border-bottom:1px solid ${t.border};display:flex;align-items:center;justify-content:space-between;padding:0 14px;gap:12px;flex-shrink:0;background:${isLight ? 'rgba(0,0,0,.04)' : 'rgba(0,0,0,.4)'};">
+            <div style="display:flex;align-items:center;gap:6px;flex:1;">
+              <span style="font-size:13px;color:${textMuted};font-weight:600;">#</span>
+              <div style="height:5px;width:42px;background:${textStrong};border-radius:3px;opacity:.8;"></div>
+            </div>
+            <div style="display:flex;gap:4px;">
+              <div style="width:18px;height:18px;border-radius:4px;background:${textDim};"></div>
+              <div style="width:18px;height:18px;border-radius:4px;background:${textDim};"></div>
+            </div>
           </div>
-          <div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
-            ${msgRow(t.accent, 38, 110, 80)}
-            ${msgRow(msgBar, 30, 90, 0)}
-            ${msgRow('rgba(140,100,220,.6)', 26, 70, 0)}
+          <!-- Messages -->
+          <div style="flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:14px;overflow:hidden;">
+            ${msgRow(t.accent, 42, 115, 88)}
+            ${msgRow(msgBar, 32, 95, 60)}
+            ${msgRow('rgba(140,100,220,.5)', 28, 75, 0)}
           </div>
-          <div style="padding:0 12px 12px;flex-shrink:0;">
-            <div style="height:30px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 12px;gap:8px;">
-              <div style="width:12px;height:12px;border-radius:50%;border:1.5px solid ${textMuted};opacity:.5;flex-shrink:0;"></div>
-              <div style="height:5px;flex:1;background:${msgBarLight};border-radius:3px;"></div>
+          <!-- Message input -->
+          <div style="padding:12px 14px;flex-shrink:0;border-top:1px solid ${t.border};">
+            <div style="height:32px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 12px;">
+              <div style="height:4px;flex:1;background:${msgBarLight};border-radius:3px;"></div>
             </div>
           </div>
         </div>
-        <div style="width:80px;background:${t.sidebar};border-left:1px solid ${t.border};padding:10px 4px;display:flex;flex-direction:column;gap:2px;overflow:hidden;">
-          <div style="height:5px;width:40px;background:${textMuted};border-radius:3px;margin:2px 6px 4px;"></div>
+        <!-- Member list (rightmost) -->
+        <div style="width:88px;background:${sidebarBg};border-left:1px solid ${t.border};padding:10px 6px;display:flex;flex-direction:column;gap:1px;overflow:hidden;">
+          <div style="height:4px;width:44px;background:${textWeak};border-radius:3px;margin:2px 8px 6px;font-size:8px;opacity:.6;"></div>
           ${memberRow(t.accent)}
           ${memberRow(msgBar)}
-          ${memberRow('rgba(140,100,220,.6)')}
+          ${memberRow('rgba(140,100,220,.5)')}
+          <div style="height:1px;background:${textDim};margin:4px 8px;"></div>
+          ${memberRow(textWeak)}
         </div>
       </div>
     </div>
-  </div>`;
+  </div>
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+  </style>`;
 }
 
 function selectAppearancePreview(themeId) {

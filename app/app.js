@@ -6142,6 +6142,21 @@ function unhideDMConversation(id) {
 // Helper: DM path for Firebase queries (avoids loading ALL messages)
 function P_dm_path(a, b) { return `dms/${[a, b].sort().join('__')}`; }
 
+// Format timestamp into relative time string (e.g., "now", "5m", "2h", "3d", "Jan 15")
+function _formatRelativeTime(d) {
+  if (!d || isNaN(d)) return '';
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMs / 3600000);
+  const diffDay = Math.floor(diffMs / 86400000);
+  if (diffMin < 1) return 'now';
+  else if (diffMin < 60) return diffMin + 'm';
+  else if (diffHr < 24) return diffHr + 'h';
+  else if (diffDay < 7) return diffDay + 'd';
+  else return d.toLocaleDateString('en-GB', {month:'short', day:'numeric'});
+}
+
 async function renderDMSidebar(scroll) {
   const friends = CU?.friends||[];
   const gcs = CU?.groupChats||[];
@@ -6280,20 +6295,7 @@ async function renderDMSidebar(scroll) {
             // Defensive parse — bad/empty timestamps used to render literal
             // "Invalid Date" in the DM sidebar; now we just hide the field.
             const d = _safeDate(typeof lastTime === 'number' ? lastTime : Date.parse(lastTime));
-            if (!d) {
-              timeEl.textContent = '';
-            } else {
-              const now = new Date();
-              const diffMs = now - d;
-              const diffMin = Math.floor(diffMs / 60000);
-              const diffHr = Math.floor(diffMs / 3600000);
-              const diffDay = Math.floor(diffMs / 86400000);
-              if (diffMin < 1) timeEl.textContent = 'now';
-              else if (diffMin < 60) timeEl.textContent = diffMin + 'm';
-              else if (diffHr < 24) timeEl.textContent = diffHr + 'h';
-              else if (diffDay < 7) timeEl.textContent = diffDay + 'd';
-              else timeEl.textContent = d.toLocaleDateString('en-GB', {month:'short', day:'numeric'});
-            }
+            timeEl.textContent = d ? _formatRelativeTime(d) : '';
           }
         }
       }

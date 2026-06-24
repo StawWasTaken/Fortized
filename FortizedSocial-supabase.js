@@ -2409,6 +2409,62 @@ const FortizedSocial = (() => {
     }
   }
 
+  async function deleteAccount(username) {
+    if (!username) return { ok: false, msg: 'No username provided' };
+    try {
+      const normUsername = norm(username);
+      // Generate unique deletion ID to prevent username reuse
+      const deletedId = Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+      const deletedUsername = `deleted_user_${deletedId}`;
+
+      // Update user record: anonymize all personal data
+      const { error: updateError } = await sb
+        .from('users')
+        .update({
+          username: deletedUsername,
+          displayName: deletedUsername,
+          bio: '',
+          pfp: null,
+          pfpCrop: null,
+          banner: null,
+          email: '',
+          password: '',
+          status: 'offline',
+          currentGame: null,
+          customStatus: null,
+          socials: null,
+          pronouns: null,
+          profileTheme: null,
+          activeDecoration: null,
+          decorations: [],
+          displayFont: null,
+          displayEffect: null,
+          displayColor: null,
+          displayColor2: null,
+          mentionPolicy: 'all',
+          notifSettings: {},
+          deleted_at: new Date().toISOString(),
+          original_username: normUsername
+        })
+        .eq('username', normUsername);
+
+      if (updateError) {
+        console.error('[deleteAccount] User update failed:', updateError.message);
+        return { ok: false, msg: 'Failed to delete account: ' + updateError.message };
+      }
+
+      // Clear cache for this user
+      _cacheDel('user:' + normUsername);
+      _cacheDel('userEnf:' + normUsername);
+
+      console.log('[deleteAccount] Account deleted:', { original: normUsername, deleted: deletedUsername });
+      return { ok: true, msg: 'Account successfully deleted' };
+    } catch(e) {
+      console.error('[deleteAccount] Exception:', e.message);
+      return { ok: false, msg: 'Account deletion failed: ' + e.message };
+    }
+  }
+
   // ── Public API ───────────────────────────────────────
   return {
     sb, // Expose supabase client for direct calls in app code
@@ -2427,7 +2483,7 @@ const FortizedSocial = (() => {
       return result;
     },
     getUsersByNames,
-    getUserByName, saveUserObject, saveActiveDecoration, invalidateUserCache,
+    getUserByName, saveUserObject, saveActiveDecoration, deleteAccount, invalidateUserCache,
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,

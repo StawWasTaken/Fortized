@@ -21135,7 +21135,10 @@ function _buildProfileView(tab) {
         </div>
 
         <div class="danger-section-title" style="margin-top:36px;">DANGER ZONE</div>
-        <button class="danger-btn" onclick="showCustomConfirm('Delete your account permanently? This cannot be undone.',doLogout)">Delete Account</button>
+        <div style="background:rgba(248,113,113,.06);border:1.5px solid rgba(248,113,113,.15);border-radius:12px;padding:14px;margin-bottom:12px;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.7);">
+          <strong style="color:rgba(248,113,113,.8);">⚠️ Warning:</strong> Deleting your account is permanent and cannot be undone. Your username, profile picture, banner, and bio will be permanently deleted. Your username will be replaced with a placeholder and reserved so no one else can claim it. Your messages will remain but show as posted by the deleted account.
+        </div>
+        <button class="danger-btn" onclick="showAccountDeleteConfirmation()">Delete Account</button>
       </div>`;
   }
 
@@ -23317,6 +23320,63 @@ async function doLogout() {
   try{await FortizedSocial.logout(CU.username);}catch{}
   localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');
   window.location.href='/login';
+}
+
+function showAccountDeleteConfirmation() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay open';
+  modal.id = 'delete-account-modal';
+  modal.innerHTML = `
+    <div style="width:100%;max-width:400px;">
+      <div class="modal-content" style="background:var(--panel);border:1.5px solid var(--border);border-radius:16px;padding:24px;">
+        <div style="font-size:20px;font-weight:800;margin-bottom:12px;color:var(--red);">Delete Account?</div>
+        <div style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.6);margin-bottom:20px;">
+          This action cannot be undone. Your account will be permanently deleted:
+          <ul style="margin-top:8px;margin-left:16px;list-style:disc;color:rgba(255,255,255,.5);">
+            <li>Username and display name anonymized</li>
+            <li>Profile picture and banner removed</li>
+            <li>Bio and personal info deleted</li>
+            <li>Username reserved (can't be reused)</li>
+            <li>Messages remain but show as deleted account</li>
+          </ul>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">Type <strong>DELETE</strong> to confirm:</div>
+          <input type="text" id="delete-confirm-input" placeholder="Type DELETE" maxlength="50" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:8px;color:var(--text);font-family:var(--font-ui);font-size:13px;" onkeyup="this.value=this.value.toUpperCase()">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-g" style="flex:1;padding:10px;" onclick="document.getElementById('delete-account-modal').remove()">Cancel</button>
+          <button class="danger-btn" style="flex:1;padding:10px;" onclick="deleteAccountPermanently()">Delete Account</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('delete-confirm-input').focus();
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+async function deleteAccountPermanently() {
+  const input = document.getElementById('delete-confirm-input');
+  if (!input || input.value !== 'DELETE') {
+    toast('Please type DELETE to confirm', 'error');
+    return;
+  }
+  if (!CU?.username) { toast('Not logged in', 'error'); return; }
+  try {
+    const result = await FortizedSocial.deleteAccount(CU.username);
+    if (result.ok) {
+      document.getElementById('delete-account-modal')?.remove();
+      toast('Account deleted. Logging out...', 'success');
+      setTimeout(() => { doLogout(); }, 1200);
+    } else {
+      toast(result.msg || 'Failed to delete account', 'error');
+    }
+  } catch(e) {
+    console.error('[deleteAccount]', e);
+    toast('Error deleting account: ' + e.message, 'error');
+  }
 }
 
 // ════════════════════════════════════════════

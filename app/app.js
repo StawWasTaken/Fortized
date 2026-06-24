@@ -6794,6 +6794,46 @@ async function ensureDMExists(partnerUsername) {
   } catch(e) { _wrn('ensureDMExists', e); }
 }
 
+// ── Update DM sidebar when a new message arrives ──
+// Moves the sender/receiver to the top of the DM list and updates the
+// preview text + timestamp to reflect the latest message (Discord-style).
+// Called by real-time listeners when new messages come in.
+async function _updateDMSidebarForNewMessage(username, msg) {
+  if (!username || !msg) return;
+  try {
+    const fi = document.getElementById('dm-fi-' + username);
+    if (!fi) return; // DM sidebar entry doesn't exist yet
+
+    // Move to top of DM list by re-ordering
+    const dmScroll = document.getElementById('dm-list-scroll');
+    if (dmScroll && fi.parentElement === dmScroll) {
+      // Only move if not already at top
+      if (fi !== dmScroll.querySelector('.dm-sortable')) {
+        dmScroll.insertBefore(fi, dmScroll.firstChild);
+      }
+    }
+
+    // Update preview text
+    const previewEl = document.getElementById('dm-preview-' + username);
+    if (previewEl && msg.text) {
+      const preview = (msg.from === CU.username ? 'You: ' : '') + msg.text.replace(/\[FTZ[A-Z]+:[^\]]+\]/g, '📎 File').slice(0, 40);
+      previewEl.textContent = preview;
+    }
+
+    // Update timestamp
+    const timeEl = document.getElementById('dm-time-' + username);
+    if (timeEl && msg.timestamp) {
+      const d = _safeDate(typeof msg.timestamp === 'number' ? msg.timestamp : Date.parse(msg.timestamp));
+      if (d) timeEl.textContent = _formatRelativeTime(d);
+    }
+
+    // Update data attribute for sorting
+    if (fi) fi.dataset['last-time'] = msg.timestamp || Date.now();
+  } catch(e) {
+    console.warn('[DM Sidebar] Update failed:', e?.message);
+  }
+}
+
 async function loadDMMessages(username) {
   const msgsEl = document.getElementById('dm-msgs');
   if (!msgsEl) return;
@@ -6814,7 +6854,11 @@ async function loadDMMessages(username) {
     // Start polling for new DM messages to enable real-time sync across sessions
     FortizedSocial.startDMPolling(dmKey);
     _dmListener = FortizedSocial.listenDM(CU.username, username, msg => {
-      if (curDM!==username) return;
+      if (curDM!==username) {
+        // Update sidebar even when not viewing this DM (move to top + update preview)
+        _updateDMSidebarForNewMessage(username, msg);
+        return;
+      }
       // Handle edit/delete events from Supabase real-time
       if (msg._event === 'delete') { _liveRemoveMessage({ key: msg.id }); return; }
       if (msg._event === 'update') { _liveUpdateMessage({ key: msg.id, val: () => msg }, 'dm'); return; }
@@ -6822,8 +6866,13 @@ async function loadDMMessages(username) {
       if (el) {
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
-        _appendLiveMessage(el,msg,'dm'); _notifyNewMsg('dm-msgs');
+        _appendLiveMessage(el,msg,'dm');
+        // Always scroll to bottom when new message arrives while viewing this DM
+        scrollBottom('dm-msgs', true);
+        _notifyNewMsg('dm-msgs');
         if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', username)) playNotifSound('message');
+        // Update sidebar in real-time
+        _updateDMSidebarForNewMessage(username, msg);
       }
     });
   } catch(e){_wrn('DM load',e);}
@@ -7145,7 +7194,7 @@ async function sendDM() {
     const lastRows = msgsEl.querySelectorAll('.msg-row');
     const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
     appendMessage(msgsEl, msg, 'dm', lastAuthor);
-    scrollBottom('dm-msgs');
+    scrollBottom('dm-msgs', true);
     const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
     _registerPendingSend('dm:'+[CU.username, curDM].sort().join('__'), CU.username, text, _optimRow);
   }
@@ -7600,6 +7649,35 @@ function _filterGCMembers(query) {
   });
 }
 
+// ── Update GC sidebar when a new message arrives ──
+async function _updateGCSidebarForNewMessage(gcId, msg) {
+  if (!gcId || !msg) return;
+  try {
+    const fi = document.getElementById('gc-fi-' + gcId);
+    if (!fi) return;
+
+    // Move to top of GC list
+    const dmScroll = document.getElementById('dm-list-scroll');
+    if (dmScroll && fi.parentElement === dmScroll) {
+      if (fi !== dmScroll.querySelector('.dm-sortable')) {
+        dmScroll.insertBefore(fi, dmScroll.firstChild);
+      }
+    }
+
+    // Update preview text
+    const previewEl = document.getElementById('gc-preview-' + gcId);
+    if (previewEl && msg.text) {
+      const preview = (msg.from === CU.username ? 'You: ' : '') + msg.text.replace(/\[FTZ[A-Z]+:[^\]]+\]/g, '📎 File').slice(0, 40);
+      previewEl.textContent = preview;
+    }
+
+    // Update data attribute for sorting
+    if (fi) fi.dataset['last-time'] = msg.timestamp || Date.now();
+  } catch(e) {
+    console.warn('[GC Sidebar] Update failed:', e?.message);
+  }
+}
+
 // ── GC messages ────────────────────────────────────
 async function loadGCMessages(gcId) {
   const msgsEl = document.getElementById('gc-msgs');
@@ -7618,16 +7696,24 @@ async function loadGCMessages(gcId) {
     // Live listener
     const ref = firebase.database().ref('groupChats/'+gcId+'/messages');
     const handler = ref.on('child_added', snap => {
-      if (curGC !== gcId) return;
+      const msg = snap.val();
+      if (curGC !== gcId) {
+        // Update sidebar even when not viewing this GC
+        _updateGCSidebarForNewMessage(gcId, msg);
+        return;
+      }
       const el = document.getElementById('gc-msgs');
       if (!el) return;
-      const msg = snap.val();
       const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
       if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
       const echoKey = 'gc|'+msg.from+'|'+(msg.text||'');
       _appendLiveMessage(el, msg, 'gc');
+      // Always scroll to bottom when viewing this GC
+      scrollBottom('gc-msgs', true);
       _notifyNewMsg('gc-msgs');
       if (msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('gc', gcId)) playNotifSound('message');
+      // Update sidebar in real-time
+      _updateGCSidebarForNewMessage(gcId, msg);
     });
     _gcListener = () => ref.off('child_added', handler);
     // Attach live edit/remove listeners for GC
@@ -7712,7 +7798,7 @@ async function sendGCMessage() {
     const lastRows = gcMsgsEl.querySelectorAll('.msg-row');
     const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
     appendMessage(gcMsgsEl, msg, 'gc', lastAuthor);
-    scrollBottom('gc-msgs');
+    scrollBottom('gc-msgs', true);
     const _optimRow = gcMsgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
     _registerPendingSend('gc:'+curGC, CU.username, text, _optimRow);
   }
@@ -8504,6 +8590,8 @@ async function loadChannelMessages(idx) {
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         _appendLiveMessage(el,msg,'ch');
+        // Always scroll to bottom when viewing this channel
+        scrollBottom('ch-msgs-'+idx, true);
         _notifyNewMsg('ch-msgs-'+idx);
         if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('bastion',b.globalId||b.name)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
       }
@@ -8736,7 +8824,7 @@ async function sendChannelMsg(idx) {
     const lastRows = msgsEl.querySelectorAll('.msg-row');
     const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
     appendMessage(msgsEl, msg, 'ch', lastAuthor);
-    scrollBottom('ch-msgs-'+idx);
+    scrollBottom('ch-msgs-'+idx, true);
     const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
     _registerPendingSend('bastion:'+(b.globalId||b.name)+':'+ch.name, CU.username, text, _optimRow);
   }

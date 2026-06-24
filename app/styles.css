@@ -944,6 +944,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .msg-acts button:active{transform:scale(.9);}
 .msg-acts .msg-act-qr{font-size:15px;padding:0;line-height:1;}
 .msg-acts .msg-act-qr:hover{background:rgba(255,255,255,.1);transform:scale(1.15);}
+.msg-acts-divider{display:inline-block;width:1px;align-self:stretch;margin:4px 3px;background:rgba(255,255,255,.10);border-radius:1px;pointer-events:none;}
 /* Blocked / Ignored message blur */
 .msg-row.msg-blurred .msg-content-col{filter:blur(6px);user-select:none;pointer-events:none;transition:filter .2s;}
 .msg-row.msg-blurred .msg-acts{display:none!important;}
@@ -6603,9 +6604,9 @@ button[disabled],
 .pw-rotation-card .prc-name{padding:6px 8px;font-size:9.5px;font-weight:600;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
 
 /* ── Sidebar Tooltip Enhancement ── */
-.rail-nav-tooltip{position:fixed;left:0;top:0;background:#05060a;border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:6px 10px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:var(--z-max);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:12px;font-weight:600;color:#f2f3f5;display:flex;align-items:center;gap:6px;}
+.rail-nav-tooltip{position:fixed;left:0;top:0;background:var(--channel);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 10px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:var(--z-max);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:12px;font-weight:600;color:#f2f3f5;display:flex;align-items:center;gap:6px;}
 .rail-nav-tooltip.visible{opacity:1;}
-.rail-nav-tooltip::after{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:0;height:0;border:5px solid transparent;border-right-color:var(--channel);border-left:0;pointer-events:none;}
+.rail-nav-tooltip::after{content:'';position:absolute;left:-5px;top:50%;transform:translateY(-50%);width:0;height:0;border:5px solid transparent;border-right-color:var(--channel);border-left:0;pointer-events:none;filter:drop-shadow(-1px 0 0 rgba(255,255,255,.15));}
 .rail-nav-tooltip .rnt-hint{font-size:9px;color:rgba(255,255,255,.4);font-weight:500;padding:1px 5px;background:rgba(255,255,255,.06);border-radius:3px;border:1px solid rgba(255,255,255,.08);margin-left:4px;}
 /* Global custom tooltip (replaces browser title) — Discord-style dark + arrow */
 .ftz-tooltip{position:fixed;left:0;top:0;background:var(--channel);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 10px;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;z-index:var(--z-max);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:12px;font-weight:600;color:#f2f3f5;transform:translateY(2px);}
@@ -10025,32 +10026,23 @@ select:focus-visible {
 .rep-protected--mod{background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.14);color:rgba(96,165,250,.75);}
 .up-wl-card:hover{border-color:rgba(255,249,62,.2) !important;}
 
-/* ── Failed-message state + retry ─────────────────────── */
-.msg-row--failed{opacity:.72;}
-.msg-row--failed .msg-bubble{
-  border:1px dashed rgba(248,113,113,.32) !important;
-  background:rgba(248,113,113,.04) !important;
+/* ── Failed-message state ─────────────────────────────────
+   Failed messages render with their body text in a soft red so the
+   user can see at a glance that the send didn't go through. Actions
+   (delete + retry) only live in the msg-acts bar and the context
+   menu — no inline buttons cluttering the bubble. */
+.msg-row--failed .msg-text,
+.msg-row--failed .msg-text *{
+  color:#e88a8a !important;
 }
-.msg-row--failed .msg-bubble::after{
-  content:'Failed to send';
-  display:block;
-  font-size:10.5px;color:#f87171;
-  margin-top:4px;font-weight:600;letter-spacing:.02em;
+.msg-row--failed .msg-text a{
+  color:#f0a0a0 !important;
 }
-.msg-retry-btn{
-  display:inline-flex;align-items:center;gap:4px;
-  margin-top:6px;
-  padding:4px 10px;
-  background:rgba(248,113,113,.08);
-  border:1px solid rgba(248,113,113,.22);
-  border-radius:8px;
-  color:#f87171;
-  font-family:inherit;font-size:11px;font-weight:700;
-  cursor:pointer;
-  transition:all .12s;
+.msg-row--failed .msg-timestamp::before{
+  content:'Failed to send · ';
+  color:#e88a8a;font-weight:600;
 }
-.msg-retry-btn:hover{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.35);}
-.msg-retry-btn svg{flex-shrink:0;}
+.msg-row--failed .msg-reactions{display:none;}
 /* ════════════════════════════════════════════════════════════════
    STAFF CONSOLE — V2 VISUAL LAYER
    Polishes the existing .admin-* / .adm-* / .hq-* surface so every
@@ -12683,5 +12675,53 @@ select:focus,select:focus-visible,
   animation-iteration-count:1 !important;
   transition-duration:.001ms !important;
   scroll-behavior:auto !important;
+}
+
+/* ── OFFICIAL capsule for first-party Fortized accounts (Discord-style) ──
+   Yellow body, black text, no icon. Sits next to display name everywhere. */
+.ftz-official-capsule{
+  display:inline-flex;align-items:center;
+  font-family:var(--font-display,inherit);
+  font-size:9.5px;font-weight:800;
+  letter-spacing:.06em;
+  color:#0a0c10;
+  background:var(--accent);
+  padding:2px 5px 2px 6px;
+  border-radius:4px;
+  text-transform:uppercase;
+  line-height:1;
+  margin-left:4px;
+  vertical-align:middle;
+  flex-shrink:0;
+  user-select:none;
+}
+.msg-author + .ftz-official-capsule{margin-left:2px;}
+
+/* ── Chat-locked notice (no chatbar for @fortized/@fortizedsafety DMs) ──
+   Sits where the chat input usually goes. Same width / padding as the
+   chat-input-wrap so the message area doesn't visually shift. */
+.chat-locked-notice{
+  display:flex;align-items:center;gap:10px;
+  margin:10px 16px 16px;
+  padding:12px 16px;
+  background:linear-gradient(rgba(0,0,0,.30),rgba(0,0,0,.30)),var(--channel);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  color:rgba(255,255,255,.55);
+  font-size:13.5px;font-weight:600;
+}
+.chat-locked-notice__icon{
+  width:22px;height:22px;flex-shrink:0;
+  /* Recolor the Fortized Security logo to a muted theme-aware tint */
+  filter:brightness(0) invert(1) opacity(.55);
+}
+.chat-locked-notice__txt{flex:1;min-width:0;line-height:1.4;}
+.chat-locked-notice__txt strong{color:rgba(255,255,255,.85);font-weight:700;}
+
+/* ── Custom DM welcome card for the @fortized + @fortizedsafety accounts ── */
+.chat-welcome--official{position:relative;}
+.chat-welcome--official .w-av{box-shadow:0 0 0 3px rgba(255,249,62,.25);}
+.chat-welcome--official h3{
+  display:inline-flex;align-items:center;gap:6px;
 }
 

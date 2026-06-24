@@ -52155,14 +52155,7 @@ async function testFortizedSafetyMessage(targetUsername, messageText) {
   }
   try {
     await _ensureFortizedSafetyAccount();
-    const msg = {
-      from: FORTIZED_SAFETY_ACCOUNT,
-      to: targetUsername.toLowerCase(),
-      text: messageText,
-      created_at: new Date().toISOString(),
-      read: false,
-    };
-    await FortizedSocial.saveDMMessage(msg);
+    await FortizedSocial.sendDMMessage(FORTIZED_SAFETY_ACCOUNT, String(targetUsername).toLowerCase(), messageText);
     console.log(`[Test] Message sent from @${FORTIZED_SAFETY_ACCOUNT} to @${targetUsername}`);
   } catch(e) {
     console.error('[Test] Failed to send test message:', e?.message);

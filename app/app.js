@@ -6716,6 +6716,16 @@ function openDMView(username) {
         <div class="w-av" id="dm-welcome-av">${(() => { const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {}; return buildAvatarHTML(_cp.pfp || null, _cp.displayName || username, 60); })()}</div>
         <h3 id="dm-welcome-name">${escapeHTML((typeof cachedProfile === 'function' && cachedProfile(username)?.displayName) || username)}</h3>
         <p>Beginning of your conversation with <strong>${escapeHTML(username)}</strong>.</p>
+        <div class="chat-welcome-greeting" id="dm-welcome-greeting" style="display:none;">
+          <div class="chat-welcome-greeting-label">Start the conversation</div>
+          <div class="chat-welcome-greeting-btns">
+            ${GREETING_GIFS.map(g => `<button class="chat-welcome-greeting-btn" onclick="sendGreetingMessage('${escapeHTML(username)}','${escapeHTML(g.emoji)}');" title="${escapeHTML(g.text)}">${escapeHTML(g.emoji)}</button>`).join('')}
+          </div>
+          <div class="chat-welcome-greeting-flag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            System suggestion
+          </div>
+        </div>
       </div>`;
   const _lockedComposerHTML = `
       <div class="chat-locked-notice" role="note">
@@ -6803,6 +6813,8 @@ async function loadDMMessages(username) {
     if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
     _attachLazyLoadOlder(msgsEl, 'dm');
     _attachDMLiveEdits(CU.username, username);
+    // Show greeting button for empty/new conversations (not for official accounts)
+    _maybeShowGreetingButton(username, msgs);
     // Start polling for new DM messages to enable real-time sync across sessions
     FortizedSocial.startDMPolling(dmKey);
     _dmListener = FortizedSocial.listenDM(CU.username, username, msg => {
@@ -6816,6 +6828,12 @@ async function loadDMMessages(username) {
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         _appendLiveMessage(el,msg,'dm'); _notifyNewMsg('dm-msgs');
         if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', username)) playNotifSound('message');
+        // Hide greeting button once combined message count crosses threshold
+        const count = el.querySelectorAll('.msg-row').length;
+        if (count >= 5) {
+          const g = document.getElementById('dm-welcome-greeting');
+          if (g) g.style.display = 'none';
+        }
       }
     });
   } catch(e){_wrn('DM load',e);}
@@ -52134,6 +52152,102 @@ async function applyFortizedSafetyChatSuspension(targetUsername, minutes, reason
 function isViewerChatSuspended() {
   const until = +CU?.chatSuspendedUntil || 0;
   return until > Date.now();
+}
+
+// ── Greeting action button — appears in new DM conversations ──
+const GREETING_GIFS = [
+  { emoji: '👋', text: 'waving' },
+  { emoji: '🙌', text: 'raising hands' },
+  { emoji: '😊', text: 'friendly smile' },
+  { emoji: '✨', text: 'sparkle hi' },
+  { emoji: '👉👈', text: 'shy hello' },
+];
+
+// Reveal or hide the greeting button based on conversation state.
+// Hidden when: official account chat, message count >= 5, or 5h elapsed.
+function _maybeShowGreetingButton(username, msgs) {
+  const greetingEl = document.getElementById('dm-welcome-greeting');
+  if (!greetingEl) return;
+  if (isFortizedOfficialAccount(username)) { greetingEl.style.display = 'none'; return; }
+  const count = Array.isArray(msgs) ? msgs.length : 0;
+  if (count >= 5) { greetingEl.style.display = 'none'; return; }
+  // 5-hour visibility window — tracked on first open
+  const greetingKey = 'greeting_dm:' + String(username).toLowerCase();
+  let openedAt = null;
+  try {
+    const stored = localStorage.getItem(greetingKey);
+    if (stored) openedAt = JSON.parse(stored)?.openedAt || null;
+  } catch(_) {}
+  if (!openedAt) {
+    openedAt = Date.now();
+    try { localStorage.setItem(greetingKey, JSON.stringify({ openedAt })); } catch(_) {}
+  }
+  const elapsed = Date.now() - openedAt;
+  if (elapsed >= 5 * 60 * 60 * 1000) { greetingEl.style.display = 'none'; return; }
+  greetingEl.style.display = 'flex';
+}
+
+// Check if greeting button should be shown for a DM conversation.
+// Returns false if: message count >= 5, or >= 5 hours have passed since DM opened.
+function shouldShowGreeting(username) {
+  if (!username || !curDM || curDM !== username) return false;
+  const msgsEl = document.getElementById('dm-msgs');
+  if (!msgsEl) return false;
+  // Count actual message rows (exclude welcome card, date divs, etc.)
+  const msgRows = msgsEl.querySelectorAll('.msg-row').length;
+  if (msgRows >= 5) return false;
+  // Check if 5 hours have passed since DM was opened/viewed
+  const greetingKey = 'greeting_dm:' + String(username).toLowerCase();
+  const stored = localStorage.getItem(greetingKey);
+  if (stored) {
+    try {
+      const data = JSON.parse(stored);
+      const elapsed = Date.now() - (data.openedAt || 0);
+      if (elapsed >= 5 * 60 * 60 * 1000) return false; // 5 hours
+    } catch(_) {}
+  }
+  return true;
+}
+
+// Send a greeting GIF message. Flags message as greeting-initiated.
+async function sendGreetingMessage(username, greetingEmoji) {
+  if (!username || !curDM || curDM !== username) return;
+  const canonicalId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  const msg = {
+    id: canonicalId,
+    from: CU.username,
+    text: greetingEmoji,
+    timestamp: new Date().toISOString(),
+    flags: ['greeting'],
+  };
+  const msgsEl = document.getElementById('dm-msgs');
+  if (msgsEl) {
+    const lastRows = msgsEl.querySelectorAll('.msg-row');
+    const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
+    appendMessage(msgsEl, msg, 'dm', lastAuthor);
+    scrollBottom('dm-msgs', true);
+    const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
+    _registerPendingSend('dm:'+[CU.username, username].sort().join('__'), CU.username, greetingEmoji, _optimRow);
+  }
+  // Track when greeting was sent
+  const greetingKey = 'greeting_dm:' + String(username).toLowerCase();
+  localStorage.setItem(greetingKey, JSON.stringify({ openedAt: Date.now(), sentAt: Date.now() }));
+  // Send via API
+  FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: username, message: msg });
+  try {
+    const sendOpts = { id: canonicalId, flags: ['greeting'] };
+    await _withSendTimeout(
+      FortizedSocial.sendDMMessage(CU.username, username, greetingEmoji, sendOpts),
+      15000
+    );
+    _trackSendMsgQuest();
+  } catch (e) {
+    console.error('[sendGreetingMessage] Error:', e.message);
+    _markMessageFailed(msgsEl, msg.id, { kind: 'dm', target: username, text: greetingEmoji });
+  }
+  // Hide greeting button after sending
+  const greetingContainer = document.getElementById('dm-welcome-greeting');
+  if (greetingContainer) greetingContainer.style.display = 'none';
 }
 
 // ════════════════════════════════════════════════════════

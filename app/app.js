@@ -52146,6 +52146,29 @@ function isViewerChatSuspended() {
   return until > Date.now();
 }
 
+// ── Test helper: sends a message from @fortizedsafety to a user ──
+// Usage in console: testFortizedSafetyMessage('targetuser', 'Test message here')
+async function testFortizedSafetyMessage(targetUsername, messageText) {
+  if (!targetUsername || !messageText) {
+    console.error('[Test] Usage: testFortizedSafetyMessage("username", "message text")');
+    return;
+  }
+  try {
+    await _ensureFortizedSafetyAccount();
+    const msg = {
+      from: FORTIZED_SAFETY_ACCOUNT,
+      to: targetUsername.toLowerCase(),
+      text: messageText,
+      created_at: new Date().toISOString(),
+      read: false,
+    };
+    await FortizedSocial.saveDMMessage(msg);
+    console.log(`[Test] Message sent from @${FORTIZED_SAFETY_ACCOUNT} to @${targetUsername}`);
+  } catch(e) {
+    console.error('[Test] Failed to send test message:', e?.message);
+  }
+}
+
 // ════════════════════════════════════════════════════════
 // FORTSHOP — GIFTING · WISHLIST · TRADING · MARKETPLACE
 // ────────────────────────────────────────────────────────

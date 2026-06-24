@@ -767,21 +767,25 @@ const FortizedSocial = (() => {
   // ── Direct Messages ──────────────────────────────────
   function _dmKey(u1, u2) { return [norm(u1), norm(u2)].sort().join('__'); }
 
-  async function getDMMessages(user1, user2, limit) {
+  async function getDMMessages(user1, user2, limit, offset) {
     const key = _dmKey(user1, user2);
     const max = limit || 100;
-    const cacheKey = 'dm:' + key + ':' + max;
-    const cached = _cacheGet(cacheKey);
-    if (cached !== undefined) return cached;
+    const skip = offset || 0;
+    // Only cache the initial fetch (no offset); paginated calls are uncached
+    const cacheKey = skip === 0 ? 'dm:' + key + ':' + max : null;
+    if (cacheKey) {
+      const cached = _cacheGet(cacheKey);
+      if (cached !== undefined) return cached;
+    }
     try {
-      // Canonical schema: dm_key + timestamp. The old "from/username/time"
-      // fallback is permanently removed — those columns don't exist in this
-      // project, and concurrent lookups hammered Supabase with 400s.
+      // Canonical schema: dm_key + timestamp. Optimize by selecting only needed
+      // columns instead of * (faster query, less data transfer, avoids timeouts).
+      // The old "from/username/time" fallback is permanently removed.
       const { data, error } = await sb.from('dms')
-        .select('*')
+        .select('id,dm_key,from,text,timestamp,created_at,edited,new_text,reactions,forwarded,forwarded_by,reply_to,flags')
         .eq('dm_key', key)
         .order('timestamp', { ascending: false })
-        .limit(max);
+        .range(skip, skip + max - 1);
 
       if (error) {
         // Demote the common "column does not exist" schema-mismatch to a
@@ -824,7 +828,7 @@ const FortizedSocial = (() => {
       });
 
       console.debug('[getDMMessages]', { between: key, count: result.length, sample: result.slice(-3).map(m => ({ id: m.id, from: m.from, text: m.text?.slice(0,40) })) });
-      _cacheSet(cacheKey, result, _CACHE_TTL.dmMessages);
+      if (cacheKey) _cacheSet(cacheKey, result, _CACHE_TTL.dmMessages);
       return result;
     } catch(e) {
       console.error('[getDMMessages] Exception:', e.message);

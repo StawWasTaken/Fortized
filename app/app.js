@@ -9435,7 +9435,7 @@ async function _loadOlderMessages(barOrBtn) {
       const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
       if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId || b.name, ch.name, 50, offset);
     } else if (context === 'dm' && curDM) {
-      older = await FortizedSocial.getDMMessages(CU.username, curDM, 50);
+      older = await FortizedSocial.getDMMessages(CU.username, curDM, 50, offset);
     }
     if (older.length) {
       const container = bar.parentElement;

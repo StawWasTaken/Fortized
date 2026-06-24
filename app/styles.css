@@ -12729,3 +12729,13 @@ select:focus,select:focus-visible,
   display:inline-flex;align-items:center;gap:6px;
 }
 
+/* ── Greeting action button for new conversations ── */
+.chat-welcome-greeting{margin-top:16px;display:flex;flex-direction:column;gap:10px;}
+.chat-welcome-greeting-label{font-size:12px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.03em;font-weight:600;}
+.chat-welcome-greeting-btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;}
+.chat-welcome-greeting-btn{padding:10px 14px;background:rgba(255,249,62,.08);border:1.5px solid rgba(255,249,62,.25);border-radius:10px;color:rgba(255,255,255,.75);font-size:13px;font-family:var(--font-display);font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s cubic-bezier(.22,1,.36,1);text-align:center;}
+.chat-welcome-greeting-btn:hover{background:rgba(255,249,62,.14);border-color:rgba(255,249,62,.45);color:#fff;transform:translateY(-2px);box-shadow:0 4px 12px rgba(255,249,62,.1);}
+.chat-welcome-greeting-btn:active{transform:translateY(0);box-shadow:0 2px 6px rgba(255,249,62,.08);}
+.chat-welcome-greeting-flag{font-size:11px;color:rgba(255,255,255,.45);margin-top:8px;display:flex;align-items:center;gap:4px;}
+.chat-welcome-greeting-flag svg{width:12px;height:12px;opacity:.6;}
+

@@ -61,7 +61,7 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 /* Member list rows — same trick, uniform ~40px height. */
 .ml-entry{content-visibility:auto;contain-intrinsic-size:auto 40px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
-.sidebar{width:72px;min-width:72px;background:linear-gradient(rgba(0,0,0,.03),rgba(0,0,0,.03)),var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;align-items:center;border-right:none;position:relative;}
+.sidebar{width:72px;min-width:72px;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;align-items:center;border-right:none;position:relative;}
 .sidebar-logo{display:none;}
 .sidebar-logo-icon{display:none;}
 .sidebar-logo-icon img{display:none;}
@@ -120,7 +120,7 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 .rail-bastion.dragging{opacity:.5;transform:scale(.95);}
 .rail-bastion.drag-over{border-top:2px solid var(--accent);margin-top:-2px;}
 /* Custom tooltip for rail bastions */
-.rail-tooltip{position:fixed;left:0;top:0;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:6px 10px 6px 8px;display:flex;align-items:center;gap:8px;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.22,1,.36,1),transform .15s cubic-bezier(.22,1,.36,1);z-index:9999;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:13px;font-weight:600;color:#f2f3f5;}
+.rail-tooltip{position:fixed;left:0;top:0;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:6px 10px 6px 8px;display:flex;align-items:center;gap:8px;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.22,1,.36,1),transform .15s cubic-bezier(.22,1,.36,1);z-index:9999;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:13px;font-weight:600;color:#f2f3f5;}
 .rail-tooltip.visible{opacity:1;}
 .rail-tooltip::after{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:0;height:0;border:5px solid transparent;border-right-color:var(--channel);border-left:0;pointer-events:none;}
 .rail-tooltip-icon{width:22px;height:22px;border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(255,255,255,.06);}
@@ -319,10 +319,10 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 @keyframes vcPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.7);}}
 @keyframes voicePanelBg{0%{background-position:0 0;}100%{background-position:28px 28px;}}
 /* ── Secondary Sidebar (context panel) ────────────── */
-.sidebar-ctx{width:380px;min-width:380px;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid var(--glass-border);padding-bottom:0;}
+.sidebar-ctx{width:380px;min-width:380px;background:linear-gradient(rgba(255,255,255,.06),rgba(255,255,255,.06)),var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid var(--glass-border);padding-bottom:0;}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
-.topbar{height:44px;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;align-items:center;padding:0 191px 0 12px;gap:10px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;position:relative;z-index:5;}
+.topbar{height:44px;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;align-items:center;padding:0 191px 0 12px;gap:10px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;position:relative;z-index:5;}
 .topbar button,.topbar input,.topbar .tb-actions,.topbar .tb-onyx-pill,.topbar .tb-search,.topbar .tb-notif-btn,.topbar .tb-win-controls,.topbar .tb-nav-controls{-webkit-app-region:no-drag;}
 /* Navigation controls (back / forward / refresh) — sits above sidebar rail */
 .tb-nav-controls{display:flex;align-items:center;justify-content:center;gap:2px;flex-shrink:0;padding:10px 0 4px;width:100%;}
@@ -391,7 +391,7 @@ body.is-desktop-app .topbar{padding-right:0;}
    through both. Previously had a solid #15171e base to prevent
    bleed-through; that broke custom appearances because the userbar
    stopped being transparent. Returned to the alpha-only tint. */
-.ub-user-container{display:flex;align-items:center;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);border-radius:10px;height:60px;overflow:hidden;}
+.ub-user-container{display:flex;align-items:center;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);border-radius:10px;height:60px;overflow:hidden;}
 
 /* ── Userbar spans BOTH sidebars (sidebar + sidebar-ctx) ────────────
    The userbar is taken out of sidebar-ctx's column flow with
@@ -434,7 +434,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .ua-btns button:active{transform:scale(.94);}
 .ua-btns button.active{color:#f87171;background:rgba(248,113,113,.10);}
 .ua-btns button.active:hover{background:rgba(248,113,113,.16);}
-.ua-dev-popover{position:fixed;z-index:9999;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:6px;min-width:240px;box-shadow:0 12px 36px rgba(0,0,0,.5);font-family:'Syne',sans-serif;color:#fff;display:flex;gap:6px;}
+.ua-dev-popover{position:fixed;z-index:9999;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:6px;min-width:240px;box-shadow:0 12px 36px rgba(0,0,0,.5);font-family:'Syne',sans-serif;color:#fff;display:flex;gap:6px;}
 .ua-dev-popover__col{display:flex;flex-direction:column;gap:2px;min-width:220px;}
 .ua-dev-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:background .12s;}
 .ua-dev-row:hover{background:rgba(255,255,255,.05);}
@@ -457,7 +457,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .rail-userbar{display:flex;flex-direction:column;flex-shrink:0;padding:0 6px 8px;gap:0;box-sizing:border-box;z-index:15;width:100%;}
 .rail-ub-activity-row{display:none;align-items:center;gap:6px;padding:5px 8px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.08);border-radius:9px 9px 0 0;margin:0 2px;}
 .rail-ub-activity-row.active{display:flex;}
-.rail-ub-container{display:flex;align-items:center;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);border:1.5px solid var(--glass-border);border-radius:12px;height:54px;overflow:hidden;}
+.rail-ub-container{display:flex;align-items:center;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);border:1.5px solid var(--glass-border);border-radius:12px;height:54px;overflow:hidden;}
 .rail-ub-user-row{display:flex;align-items:center;padding:4px 4px 4px 8px;gap:4px;flex:1;min-width:0;height:100%;}
 .rail-ub-clickable{display:flex;align-items:center;gap:7px;flex:1;min-width:0;padding:3px 4px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:background .12s;justify-content:flex-start;}
 .rail-ub-clickable:hover{background:rgba(255,255,255,.05);}
@@ -930,7 +930,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    of containment — but only when NOT scrolling (the .is-scrolling
    guard prevents the cv flip from firing as the cursor crosses rows
    during a wheel/touch scroll, which was the prior smoothness issue). */
-.msg-acts{display:flex;gap:1px;position:absolute;right:16px;top:-14px;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:2px;z-index:30;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:translateY(3px);box-shadow:0 4px 12px rgba(0,0,0,.35);}
+.msg-acts{display:flex;gap:1px;position:absolute;right:16px;top:-14px;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:2px;z-index:30;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:translateY(3px);box-shadow:0 4px 12px rgba(0,0,0,.35);}
 /* When hovered AND not actively scrolling, lift the row out of
    content-visibility:auto so the absolute toolbar can paint outside
    the row's contain block (Discord-style overlap with the row above).
@@ -1336,7 +1336,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    The "+" button is borderless icon + 1px hairline divider (no
    square background). */
 .chat-input-outer{
-  background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);
+  background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);
   backdrop-filter:none; -webkit-backdrop-filter:none;
   border:1px solid rgba(255,255,255,.06);
   border-radius:10px;
@@ -1349,7 +1349,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 }
 .chat-input-outer:focus-within{
   border-color:rgba(255,255,255,.12);
-  background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);
+  background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);
   box-shadow:none;
 }
 /* Universal svgrepo-icon helper. Black SVGs from svgrepo get the
@@ -1408,7 +1408,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .attach-menu{
   position:fixed; z-index:9000;
   min-width:228px; max-width:260px;
-  background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);
+  background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);
   border:1px solid rgba(255,255,255,.06);
   border-radius:9px;
   padding:4px;
@@ -1571,7 +1571,7 @@ body.staw-frozen::before{
    past-bar up so they stack instead of overlapping. Chip + text
    sizes mirror .undo-toast exactly so both pills feel like the
    same component family. */
-.chat-past-bar{--toast-bottom:calc(100px + env(safe-area-inset-bottom, 0px));position:fixed;bottom:var(--toast-bottom);left:50%;transform:translateX(-50%);z-index:4500;display:none;align-items:center;gap:10px;padding:10px 14px 10px 10px;width:max-content;max-width:calc(100% - 24px);background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:14px;box-shadow:var(--elev-2);font-size:13px;font-weight:600;color:rgba(255,255,255,.85);pointer-events:none;animation:undoSlideUp .22s cubic-bezier(.22,1,.36,1);}
+.chat-past-bar{--toast-bottom:calc(100px + env(safe-area-inset-bottom, 0px));position:fixed;bottom:var(--toast-bottom);left:50%;transform:translateX(-50%);z-index:4500;display:none;align-items:center;gap:10px;padding:10px 14px 10px 10px;width:max-content;max-width:calc(100% - 24px);background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:14px;box-shadow:var(--elev-2);font-size:13px;font-weight:600;color:rgba(255,255,255,.85);pointer-events:none;animation:undoSlideUp .22s cubic-bezier(.22,1,.36,1);}
 .chat-past-bar.show{display:flex;pointer-events:auto;}
 .chat-past-bar .cpb-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(96,165,250,.12);color:#60a5fa;flex-shrink:0;box-sizing:border-box;}
 .chat-past-bar .cpb-icon svg{width:16px;height:16px;display:block;}
@@ -3895,7 +3895,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
    on top of opaque var(--channel). Reads as the chatbar/userbar tone,
    no content bleeds through, Radiance custom appearances re-skin it
    automatically by overriding --channel. */
-.ctx-menu{position:fixed;z-index:var(--z-max);background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-md);padding:6px 0;min-width:220px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);animation:ctxIn .14s var(--ease-out);display:none;overflow:hidden;}
+.ctx-menu{position:fixed;z-index:var(--z-max);background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-md);padding:6px 0;min-width:220px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);animation:ctxIn .14s var(--ease-out);display:none;overflow:hidden;}
 .ctx-menu.ctx-visible{display:block;}
 /* ── System Announcement Banner ─────────────────── */
 .sys-announce-bar{display:flex;align-items:center;justify-content:center;position:relative;width:100%;min-height:40px;height:40px;background:#3ecf6e;background-image:repeating-linear-gradient(-45deg,transparent,transparent 10px,rgba(255,255,255,0.15) 10px,rgba(255,255,255,0.15) 20px);border-bottom:1px solid rgba(62,207,110,.3);box-sizing:border-box;}
@@ -4183,7 +4183,7 @@ body.is-desktop-app .notif-panel{top:0;}
      of an opaque --channel base. Embeds read as the chatbar tone, no
      content bleeds through, Radiance custom appearances re-skin them
      automatically by overriding --channel. */
-  --embed-card-bg:      linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);
+  --embed-card-bg:      linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);
   --embed-card-border:  rgba(255,255,255,.08);
   --embed-code-bg:      rgba(0,0,0,.22);
   --embed-footer-bg:    rgba(0,0,0,.18);
@@ -4194,7 +4194,7 @@ body.is-desktop-app .notif-panel{top:0;}
   --embed-radius:       6px;
   --embed-radius-sm:    3px;
   --embed-accent-bar:   4px;
-  background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);
+  background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);
   border:1px solid rgba(255,255,255,.06);
   border-radius:var(--embed-radius);
   width:420px; max-width:100%;
@@ -5877,7 +5877,7 @@ button[disabled],
    land on the textbox. The :has() rule below pushes the past-bar
    up another 60 px when undo-toast is up at the same time so they
    stack instead of overlapping. */
-.undo-toast{--toast-bottom:calc(100px + env(safe-area-inset-bottom, 0px));position:fixed;bottom:var(--toast-bottom);left:50%;transform:translateX(-50%);background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 14px 10px 10px;display:flex;align-items:center;gap:10px;z-index:4500;box-shadow:var(--elev-2);animation:undoSlideUp .22s cubic-bezier(.22,1,.36,1);overflow:hidden;min-width:280px;}
+.undo-toast{--toast-bottom:calc(100px + env(safe-area-inset-bottom, 0px));position:fixed;bottom:var(--toast-bottom);left:50%;transform:translateX(-50%);background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 14px 10px 10px;display:flex;align-items:center;gap:10px;z-index:4500;box-shadow:var(--elev-2);animation:undoSlideUp .22s cubic-bezier(.22,1,.36,1);overflow:hidden;min-width:280px;}
 @keyframes undoSlideUp{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 .undo-toast .ut-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(248,113,113,.12);color:var(--red);flex-shrink:0;box-sizing:border-box;}
 .undo-toast .ut-icon svg{width:16px;height:16px;display:block;}
@@ -6608,7 +6608,7 @@ button[disabled],
 .rail-nav-tooltip::after{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:0;height:0;border:5px solid transparent;border-right-color:var(--channel);border-left:0;pointer-events:none;}
 .rail-nav-tooltip .rnt-hint{font-size:9px;color:rgba(255,255,255,.4);font-weight:500;padding:1px 5px;background:rgba(255,255,255,.06);border-radius:3px;border:1px solid rgba(255,255,255,.08);margin-left:4px;}
 /* Global custom tooltip (replaces browser title) — Discord-style dark + arrow */
-.ftz-tooltip{position:fixed;left:0;top:0;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:6px 10px;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;z-index:var(--z-max);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:12px;font-weight:600;color:#f2f3f5;transform:translateY(2px);}
+.ftz-tooltip{position:fixed;left:0;top:0;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:6px 10px;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;z-index:var(--z-max);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.6);font-size:12px;font-weight:600;color:#f2f3f5;transform:translateY(2px);}
 .ftz-tooltip.visible{opacity:1;transform:translateY(0);}
 /* Tooltip arrow — solid triangle pointing at the hovered element. */
 .ftz-tooltip::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border:5px solid transparent;pointer-events:none;}
@@ -6626,7 +6626,7 @@ button[disabled],
    edge) and snap the arrow there instead. */
 .ftz-tooltip[style*="--arrow-x"]::after{left:var(--arrow-x);transform:none;}
 /* Reaction tooltip (Discord-style) */
-.ftz-reaction-tip{position:fixed;left:0;top:0;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:8px 12px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:var(--z-max);box-shadow:0 4px 16px rgba(0,0,0,.65);max-width:260px;transform:translateY(4px);}
+.ftz-reaction-tip{position:fixed;left:0;top:0;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:8px 12px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:var(--z-max);box-shadow:0 4px 16px rgba(0,0,0,.65);max-width:260px;transform:translateY(4px);}
 .ftz-reaction-tip.visible{opacity:1;transform:translateY(0);}
 .ftz-reaction-tip::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border:5px solid transparent;pointer-events:none;}
 .ftz-reaction-tip[data-place="top"]::after{bottom:-10px;border-top-color:var(--channel);border-bottom:0;}
@@ -6677,7 +6677,7 @@ button[disabled],
 .asr-file-badge svg{opacity:.4;}
 
 /* ── Redesigned Reaction Panel ── */
-.reaction-picker-v2{position:fixed;z-index:9500;width:420px;max-height:440px;background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);}
+.reaction-picker-v2{position:fixed;z-index:9500;width:420px;max-height:440px;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);}
 .reaction-picker-v2 .rpv-quick{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;flex-wrap:wrap;gap:2px;}
 .reaction-picker-v2 .rpv-quick-btn{width:36px;height:36px;border:none;background:transparent;border-radius:10px;font-size:20px;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;}
 .reaction-picker-v2 .rpv-quick-btn:hover{background:rgba(255,255,255,.1);transform:scale(1.15);}
@@ -6703,7 +6703,7 @@ button[disabled],
 .r-pill.mine{background:rgba(255,249,62,.14);border-color:rgba(255,249,62,.45);}
 .r-pill.mine:hover{background:rgba(255,249,62,.22);border-color:rgba(255,249,62,.6);}
 .r-pill.mine .r-count{color:var(--accent);}
-.r-pill.r-add-btn{background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:3px 8px;color:rgba(255,255,255,.55);cursor:pointer;transition:background .12s,color .12s,border-color .12s;}
+.r-pill.r-add-btn{background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,.05)),var(--channel);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:3px 8px;color:rgba(255,255,255,.55);cursor:pointer;transition:background .12s,color .12s,border-color .12s;}
 .r-pill.r-add-btn:hover{background:linear-gradient(rgba(255,255,255,.08),rgba(255,255,255,.08)),var(--channel);border-color:rgba(255,255,255,.16);color:rgba(255,255,255,.95);}
 .r-pill.r-add-btn svg,.r-pill.r-add-btn img{width:16px;height:16px;display:block;}
 

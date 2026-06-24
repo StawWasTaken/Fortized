@@ -6669,6 +6669,14 @@ let _dmListener = null;
 function openDMView(username) {
   if (!username) return;
   username = (username||"").trim().toLowerCase();
+  // Clear any staged reply if switching to a different chat — replies are
+  // scoped to the chat they were composed in.
+  const _newKey = 'dm:' + username;
+  if (replyingTo && replyingTo.chatKey && replyingTo.chatKey !== _newKey) {
+    replyingTo = null;
+    document.querySelectorAll('.msg-row.is-reply-target').forEach(r => r.classList.remove('is-reply-target'));
+    ['dm-input-reply-bar','gc-input-reply-bar','ch-input-reply-bar'].forEach(id => { const b = document.getElementById(id); if (b) b.style.display = 'none'; });
+  }
   // Save scroll position of previous chat before switching
   if (curDM && curDM !== username) { const _el = document.getElementById('dm-msgs'); if (_el) _saveChatScroll('dm:'+curDM, _el); }
   if (curGC) { const _el = document.getElementById('gc-msgs'); if (_el) _saveChatScroll('gc:'+curGC, _el); }
@@ -7178,7 +7186,9 @@ async function sendDM() {
   document.getElementById('dm-not-friends-bar')?.remove();
   if (!text) return;
   clearChatInput(inp);
-  const rep=replyingTo;
+  // Reply scoping: a reply staged in another chat must not bleed through
+  // here. Drop it if the chatKey doesn't match the current DM.
+  const rep = (replyingTo && replyingTo.chatKey === _getCurrentChatKey()) ? replyingTo : null;
   cancelReply('dm');
   _removeNewMsgBar('dm-msgs');
   const isOutline = _outlineMode;
@@ -7426,6 +7436,13 @@ async function createGroupChat() {
 // ── Open a group chat ───────────────────────────────
 async function openGroupChatView(gcId) {
   if (!gcId) return;
+  // Clear any staged reply from a different chat.
+  const _newKey = 'gc:' + String(gcId).toLowerCase();
+  if (replyingTo && replyingTo.chatKey && replyingTo.chatKey !== _newKey) {
+    replyingTo = null;
+    document.querySelectorAll('.msg-row.is-reply-target').forEach(r => r.classList.remove('is-reply-target'));
+    ['dm-input-reply-bar','gc-input-reply-bar','ch-input-reply-bar'].forEach(id => { const b = document.getElementById(id); if (b) b.style.display = 'none'; });
+  }
   // Save scroll position of previous chat before switching
   if (curDM) { const _el = document.getElementById('dm-msgs'); if (_el) _saveChatScroll('dm:'+curDM, _el); }
   if (curGC && curGC !== gcId) { const _el = document.getElementById('gc-msgs'); if (_el) _saveChatScroll('gc:'+curGC, _el); }
@@ -7778,7 +7795,8 @@ async function sendGCMessage() {
 
   clearChatInput(inp);
   _stopGCTypingBroadcast();
-  const rep = replyingTo;
+  // Scoped reply — drop if user staged it in another chat.
+  const rep = (replyingTo && replyingTo.chatKey === _getCurrentChatKey()) ? replyingTo : null;
   cancelReply('gc');
 
   const now = new Date();
@@ -8414,6 +8432,13 @@ function selectChannel(idx) {
   const b=CU.bastions?.[curBastion];
   const ch=b?.channels?.[idx];
   if (!ch) return;
+  // Clear any staged reply from a different chat.
+  const _newKey = 'ch:' + String(b.globalId||b.name).toLowerCase() + ':' + String(ch.name).toLowerCase();
+  if (replyingTo && replyingTo.chatKey && replyingTo.chatKey !== _newKey) {
+    replyingTo = null;
+    document.querySelectorAll('.msg-row.is-reply-target').forEach(r => r.classList.remove('is-reply-target'));
+    ['dm-input-reply-bar','gc-input-reply-bar','ch-input-reply-bar'].forEach(id => { const b = document.getElementById(id); if (b) b.style.display = 'none'; });
+  }
   // Save scroll position of previous channel before switching
   if (curChannel !== null && curChannel !== idx && curChannel !== 'overview') {
     const _el = document.getElementById('ch-msgs-'+curChannel);
@@ -8811,7 +8836,8 @@ async function sendChannelMsg(idx) {
   if (autoModCheck(text,b)) return;
   clearChatInput(inp);
   _stopChannelTypingBroadcast();
-  const rep=replyingTo;
+  // Scoped reply — drop if user staged it in another chat.
+  const rep = (replyingTo && replyingTo.chatKey === _getCurrentChatKey()) ? replyingTo : null;
   cancelReply('ch');
   _removeNewMsgBar('ch-msgs-'+idx);
   const isOutline = _outlineMode;
@@ -10037,9 +10063,22 @@ function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) 
 // ════════════════════════════════════════════
 // MESSAGE ACTIONS
 // ════════════════════════════════════════════
+// Returns a stable string identifying the chat the user is currently in.
+// Used to scope replyingTo so a reply staged in one chat can't leak into
+// another when the user switches chats before sending.
+function _getCurrentChatKey() {
+  if (curDM) return 'dm:' + String(curDM).toLowerCase();
+  if (curGC) return 'gc:' + String(curGC).toLowerCase();
+  if (curBastion !== null && curChannel !== null && curChannel !== 'overview') {
+    const b = CU?.bastions?.[curBastion];
+    const ch = b?.channels?.[curChannel];
+    if (b && ch) return 'ch:' + String(b.globalId||b.name).toLowerCase() + ':' + String(ch.name).toLowerCase();
+  }
+  return null;
+}
 function replyToMsg(msgId, fromName, context) {
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-  replyingTo = {id:msgId, from:fromName, text:row?.dataset.text||''};
+  replyingTo = {id:msgId, from:fromName, text:row?.dataset.text||'', chatKey: _getCurrentChatKey()};
   // Highlight the message we're replying to — drop any prior highlight
   // first so only ever one row carries the cue.
   document.querySelectorAll('.msg-row.is-reply-target').forEach(r => r.classList.remove('is-reply-target'));
@@ -30736,8 +30775,8 @@ function parseMD(s) {
         + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>'
         + '</div>';
     }
-    return '<div style="margin:6px 0 2px 0;display:block;border-radius:10px;padding:0;overflow:hidden;max-width:360px;">'
-      + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">'
+    return '<div style="margin:6px 0 2px 0;display:block;border-radius:10px;padding:0;overflow:hidden;max-width:550px;">'
+      + '<img src="' + safeSrc + '" style="max-width:550px;max-height:450px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">'
       + '</div>';
   });
   // 0a2. Poll + Form tokens — replaced into unified embed shells.

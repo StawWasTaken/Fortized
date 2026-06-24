@@ -404,14 +404,26 @@ let quizIdx = 0;
 let quizCorrect = 0;
 let quizAnswers = [];
 let activeReportData = null;
-const SUPER_ADMINS = ['staw', 'fortized', 'joyster'];
+const SUPER_ADMINS = ['staw', 'fortized', 'joyster', 'fortizedsafety'];
 const SUPER_ADMIN = 'staw'; // legacy compat
 const JOYSTER_ACCOUNT = 'joyster';
 const FORTIZED_ACCOUNT = 'fortized';
+const FORTIZED_SAFETY_ACCOUNT = 'fortizedsafety';
 // User accounts the team operates as system/bot personalities. Each one gets
 // the Bot badge in getUserBadges() in addition to anyone with `isBot: true`
 // on their user record.
-const MANUAL_BOTS = ['fortized', 'joyster'];
+const MANUAL_BOTS = ['fortized', 'joyster', 'fortizedsafety'];
+// Official Fortized accounts (the team's first-party personas). They carry the
+// OFFICIAL capsule next to their display name everywhere and have a one-way
+// DM lock — only superadmins can message them back.
+const FORTIZED_OFFICIAL_ACCOUNTS = ['fortized', 'fortizedsafety'];
+function isFortizedOfficialAccount(username) {
+  if (!username) return false;
+  return FORTIZED_OFFICIAL_ACCOUNTS.includes(String(username).toLowerCase());
+}
+function fortizedOfficialCapsuleHTML() {
+  return '<span class="ftz-official-capsule" aria-label="Official Fortized account">OFFICIAL</span>';
+}
 // Role hierarchy: superadmin > admin > moderator
 // superadmin: maximum power, access to private data, can enable important stuff, has access to the privacy of the users (precise age)
 // admin: set by superadmins, limited data access, limited power, can do important stuff but with limits, only see age tier
@@ -6685,35 +6697,62 @@ function openDMView(username) {
 
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
+  // Official Fortized accounts (@fortized, @fortizedsafety) are
+  // broadcast-only: only superadmins can chat back. Everyone else sees a
+  // locked notice + tailored welcome card explaining the channel is
+  // reserved for official notifications.
+  const _isOfficialDM = isFortizedOfficialAccount(username);
+  const _viewerCanReply = isSuperAdmin();
+  const _lockChat = _isOfficialDM && !_viewerCanReply;
+  const _officialWelcomeHTML = _isOfficialDM
+    ? `<div class="chat-welcome chat-welcome--official">
+        <div class="w-av" id="dm-welcome-av">${(() => { const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {}; return buildAvatarHTML(_cp.pfp || null, _cp.displayName || username, 60); })()}</div>
+        <h3 id="dm-welcome-name">${escapeHTML((typeof cachedProfile === 'function' && cachedProfile(username)?.displayName) || username)} ${fortizedOfficialCapsuleHTML()}</h3>
+        <p>${username.toLowerCase() === FORTIZED_SAFETY_ACCOUNT
+            ? 'This channel carries automated safety notices from Fortized. Read them carefully — they affect your access. Replies are reserved for the Fortized team.'
+            : 'This channel is reserved for official messages from the Fortized team. We will never ask you for your password or account token.'}</p>
+      </div>`
+    : `<div class="chat-welcome">
+        <div class="w-av" id="dm-welcome-av">${(() => { const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {}; return buildAvatarHTML(_cp.pfp || null, _cp.displayName || username, 60); })()}</div>
+        <h3 id="dm-welcome-name">${escapeHTML((typeof cachedProfile === 'function' && cachedProfile(username)?.displayName) || username)}</h3>
+        <p>Beginning of your conversation with <strong>${escapeHTML(username)}</strong>.</p>
+      </div>`;
+  const _lockedComposerHTML = `
+      <div class="chat-locked-notice" role="note">
+        <img class="chat-locked-notice__icon" src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FortizedSecurity%20logo.png" alt="" loading="lazy" draggable="false">
+        <div class="chat-locked-notice__txt">
+          <strong>This chat is reserved for official Fortized notifications.</strong><br>
+          Fortized will never ask you for your password or account token.
+        </div>
+      </div>`;
   wrap.innerHTML = `
     <div class="chat-wrap">
       <div class="room-topbar">
         <span class="rt-hash"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
         <span class="rt-name">${escapeHTML(username)}</span>
+        ${_isOfficialDM ? fortizedOfficialCapsuleHTML() : ''}
       </div>
       <div class="chat-msgs" id="dm-msgs">
         <div class="new-messages-bar" id="dm-new-msgs-bar"><span id="dm-new-msgs-text">1 new message</span><button onclick="markDMRead()">Mark as Read</button></div>
-        <div class="chat-welcome">
-          <div class="w-av" id="dm-welcome-av">${(() => { const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {}; return buildAvatarHTML(_cp.pfp || null, _cp.displayName || username, 60); })()}</div>
-          <h3 id="dm-welcome-name">${escapeHTML((typeof cachedProfile === 'function' && cachedProfile(username)?.displayName) || username)}</h3>
-          <p>Beginning of your conversation with <strong>${escapeHTML(username)}</strong>.</p>
-        </div>
+        ${_officialWelcomeHTML}
       </div>
 
       <div class="typing-indicator" id="dm-typing-bar" style="opacity:0;">
         <div class="typing-dots"><span></span><span></span><span></span></div>
         <span id="dm-typing-text"></span>
       </div>
-      ${buildChatInputBar({inputId:'dm-input',placeholder:'Message '+escapeHTML(username)+'…',context:'dm'})}
+      ${_lockChat ? _lockedComposerHTML : buildChatInputBar({inputId:'dm-input',placeholder:'Message '+escapeHTML(username)+'…',context:'dm'})}
     </div>`;
   loadDMMessages(username);
   setTimeout(() => { if (window.innerWidth > 768) showDMUserPanel(username); _initChatScroll(document.getElementById('dm-msgs')); }, 80);
-  setupEmojiAutocomplete('dm-input');
-  // Restore composer draft (text + attached file) for this DM partner.
-  setTimeout(() => {
-    try { _restoreDraftFor('dm', 'dm-input'); } catch(_) {}
-    try { _wireInputSafetyNet('dm-input', 'dm'); } catch(_) {}
-  }, 50);
+  if (!_lockChat) {
+    setupEmojiAutocomplete('dm-input');
+    // Restore composer draft (text + attached file) for this DM partner.
+    setTimeout(() => {
+      try { _restoreDraftFor('dm', 'dm-input'); } catch(_) {}
+      try { _wireInputSafetyNet('dm-input', 'dm'); } catch(_) {}
+    }, 50);
+  }
   ensureDMExists(username).catch(e => console.warn('[DM] Failed to ensure DM:', e?.message));
   // Join Socket.io room for DM real-time events (typing, edits, deletes).
   // Always lowercased — server's roomKey sorts the names; mixed case
@@ -7021,6 +7060,21 @@ async function sendDM() {
   _stopTypingBroadcast();
   const inp=document.getElementById('dm-input');
   if (!inp||!curDM) return;
+  // Guard: official Fortized accounts are broadcast-only — only superadmins
+  // can chat back. The chatbar is normally replaced with a lock notice for
+  // everyone else, but enforce here too in case the input was reached
+  // through some other path.
+  if (isFortizedOfficialAccount(curDM) && !isSuperAdmin()) {
+    toast('This chat is reserved for official Fortized notifications.', 'info');
+    return;
+  }
+  // Guard: automod chat suspension. Blocks the user from sending in every
+  // channel/DM until the cooldown elapses.
+  if (isViewerChatSuspended()) {
+    const _left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
+    toast('Your chat is suspended for safety reasons. Try again in ' + _left + ' min.', 'error');
+    return;
+  }
   let text=preprocessMessageText(_readChatInput(inp));
   if (!text && !window._pendingAttachment) return;
   
@@ -7125,14 +7179,15 @@ function _markMessageFailed(msgsEl, localId, payload) {
   if (!row) return;
   row.classList.add('msg-row--failed');
   row.dataset.failedPayload = JSON.stringify(payload || {});
-  if (!row.querySelector('.msg-retry-btn')) {
-    const btn = document.createElement('button');
-    btn.className = 'msg-retry-btn';
-    btn.type = 'button';
-    btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 116.64 5.64"/></svg> Retry';
-    btn.onclick = (ev) => { ev.stopPropagation(); _retryFailedMessage(row); };
-    const bubble = row.querySelector('.msg-bubble') || row;
-    bubble.appendChild(btn);
+  // Retry/Delete live in the msg-acts bar + context menu only — no inline
+  // button. Re-render the actions strip so the failed state surfaces.
+  const acts = row.querySelector('.msg-acts');
+  if (acts) {
+    const safeId = row.dataset.msgid || localId;
+    const safeFrom = CU?.username || '';
+    const ctx = row.dataset.ctx || 'dm';
+    const isOwn = true;
+    acts.innerHTML = _buildMsgActsInner(safeId, safeFrom, '', ctx, isOwn, false);
   }
 }
 async function _retryFailedMessage(row) {
@@ -7177,6 +7232,16 @@ async function _retryFailedMessage(row) {
       }
     }
   } catch(_) {}
+}
+
+// ── Failed-message helpers (callable by id from msg-acts / context menu) ──
+function _retryFailedMessageById(msgId) {
+  const row = document.querySelector('.msg-row[data-msgid="'+CSS.escape(msgId)+'"]');
+  if (row) _retryFailedMessage(row);
+}
+function _deleteFailedMessageById(msgId) {
+  const row = document.querySelector('.msg-row[data-msgid="'+CSS.escape(msgId)+'"]');
+  if (row) row.remove();
 }
 
 // ════════════════════════════════════════════════════
@@ -7577,6 +7642,11 @@ function _attachGCLiveEdits(gcId) {
 }
 
 async function sendGCMessage() {
+  if (isViewerChatSuspended()) {
+    const _left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
+    toast('Your chat is suspended for safety reasons. Try again in ' + _left + ' min.', 'error');
+    return;
+  }
   const inp = document.getElementById('gc-input');
   if (!inp || !curGC) return;
   let text = preprocessMessageText(_readChatInput(inp));
@@ -8630,6 +8700,11 @@ function autoModCheck(text, bastion) {
 // Track recently sent texts to suppress Firebase real-time echo
 const _sentEcho = new Set();
 async function sendChannelMsg(idx) {
+  if (isViewerChatSuspended()) {
+    const _left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
+    toast('Your chat is suspended for safety reasons. Try again in ' + _left + ' min.', 'error');
+    return;
+  }
   const inp=document.getElementById('ch-input');
   if (!inp) return;
   let text=preprocessMessageText(_readChatInput(inp));
@@ -9626,6 +9701,11 @@ function appendMessage(container, msg, context, prevAuthor) {
       if (authorEl && u.displayName && u.displayName !== msg.from) {
         authorEl.textContent = u.displayName;
       }
+      // OFFICIAL capsule for first-party Fortized accounts. Sits right after
+      // the author name in the .msg-header row.
+      if (authorEl && isFortizedOfficialAccount(msg.from) && !authorEl.nextElementSibling?.classList?.contains('ftz-official-capsule')) {
+        authorEl.insertAdjacentHTML('afterend', fortizedOfficialCapsuleHTML());
+      }
       // Apply their display name style.
       // Rule from product spec:
       //   • Font always applies, in DM/GC/channel/anywhere.
@@ -9789,6 +9869,14 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
   const inBastion = (context==='ch'||context==='channel');
   const canPin = inBastion ? (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username) : (curDM || curGC);
 
+  // Failed-send mode — short-circuit to Retry + Delete only.
+  const failedRow = document.querySelector('.msg-row[data-msgid="'+safeId.replace(/"/g,'\\"')+'"]');
+  if (failedRow && failedRow.classList.contains('msg-row--failed')) {
+    return ''
+      + `<button onclick="event.stopPropagation();_retryFailedMessageById('${safeId}')" title="Retry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 116.64 5.64"/></svg></button>`
+      + `<button onclick="event.stopPropagation();_deleteFailedMessageById('${safeId}')" title="Delete" style="color:rgba(248,113,113,.75);">${_faMsg('trash')}</button>`;
+  }
+
   if (_shiftHeld) {
     // Shift mode: Pin, Thread, Reply, Add Reaction, Edit, Forward, Delete
     return ''
@@ -9808,6 +9896,8 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
   quickEmojis.forEach(em => {
     html += `<button class="msg-act-qr" onclick="event.stopPropagation();toggleReaction('${safeId}','${em}','${context}')" data-tip="React with ${em}"><img src="${emojiToTwemojiUrl(em)}" alt="${em}" style="width:16px;height:16px;object-fit:contain;" onerror="this.outerHTML='${em}'"></button>`;
   });
+  // Divider between emojis and action buttons
+  if (quickEmojis.length) html += `<span class="msg-acts-divider" aria-hidden="true"></span>`;
   // Add Reaction
   html += `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction">${_ADD_REACTION_ICON_HTML}</button>`;
   // Reply or Edit (if own message, show Edit; otherwise Reply)
@@ -9827,6 +9917,15 @@ function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) 
   e.stopPropagation();
   const inBastion = (context==='ch'||context==='channel');
   const canPin = inBastion ? (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username) : (curDM || curGC);
+  // Failed-send mode — short-circuit to Retry + Delete only.
+  const failedRow = document.querySelector('.msg-row[data-msgid="'+CSS.escape(msgId)+'"]');
+  if (failedRow && failedRow.classList.contains('msg-row--failed')) {
+    showCtxMenu(e.clientX, e.clientY, [{ items: [
+      { icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 116.64 5.64"/></svg>', label: 'Retry', action: () => _retryFailedMessageById(msgId) },
+      { icon: _faMsg('trash', 15), label: 'Delete', danger: true, action: () => _deleteFailedMessageById(msgId) },
+    ]}]);
+    return;
+  }
   const items = [];
   if (!isOwn) items.push({ icon: _faMsg('reply', 15), label: 'Reply', action: () => replyToMsg(msgId, from, context) });
   if (isOwn) items.push({ icon: _faMsg('edit', 15), label: 'Edit', action: () => editMsg(msgId) });
@@ -13620,6 +13719,7 @@ function initFortizedUXResilience() {
 
   setTimeout(_ensureJoysterAccount, 4000);
   setTimeout(_ensureFortizedAccount, 4500);
+  setTimeout(_ensureFortizedSafetyAccount, 5200);
   // Sync ignore list from Firebase
   setTimeout(_syncIgnoreListFromFirebase, 2000);
   // NSFW scanning disabled — no model preload needed
@@ -24911,6 +25011,11 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
     const admins = staff.admins || [];
     const moderators = staff.moderators || [];
+    // Bots are kept out of the Super Admins box even though MANUAL_BOTS
+    // entries are still permitted in SUPER_ADMINS for permission checks.
+    // They surface in the dedicated "Automation" box below.
+    const _humanSupers = SUPER_ADMINS.filter(a => !MANUAL_BOTS.includes(String(a).toLowerCase()));
+    const _automationAccounts = SUPER_ADMINS.filter(a => MANUAL_BOTS.includes(String(a).toLowerCase()));
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="font-family:var(--font-display);font-size:21px;font-weight:800;margin-bottom:6px;">Staff</div>
       <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:18px;">Only super admins can manage staff roles.</div>
@@ -24920,10 +25025,10 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffd93e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-5 4-5-4-5 4-3-4z"/><path d="M5 16h14v3H5z"/></svg>
             <span style="font-weight:700;color:#ffd93e;">Super Admins</span>
-            <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${SUPER_ADMINS.length}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${_humanSupers.length}</span>
           </div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Maximum power. Access to private data, can manage all settings, view precise user ages.</div>
-          ${SUPER_ADMINS.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+          ${_humanSupers.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffd93e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-5 4-5-4-5 4-3-4z"/><path d="M5 16h14v3H5z"/></svg><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
             <span style="font-size:10px;color:#ffd93e;font-weight:700;">PERMANENT</span>
           </div>`).join('')}
@@ -24961,6 +25066,33 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <input class="settings-input" id="new-mod-input" placeholder="Username" style="flex:1;">
             <button onclick="addStaff('moderator')" style="padding:7px 14px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:var(--blue);border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
           </div>
+        </div>
+      </div>
+      <!-- Automation — first-party Fortized bots. Kept separate from the
+           Super Admins box so adding more bots in future doesn't visually
+           pollute the human staff list. -->
+      <div style="background:var(--panel,#1b1e25);border:1px solid rgba(167,139,250,.15);border-radius:12px;padding:18px;margin-top:16px;max-width:900px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+          <span style="font-weight:700;color:#a78bfa;">Automation</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${_automationAccounts.length}</span>
+        </div>
+        <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">First-party Fortized bots. Used to deliver system, safety, and Joyster messages. Permission level matches Super Admin under the hood.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;">
+          ${_automationAccounts.map(a=>{
+            const meta = a === FORTIZED_ACCOUNT ? { label:'System / news', tone:'rgba(255,217,62,.2)' }
+                       : a === FORTIZED_SAFETY_ACCOUNT ? { label:'Automod & safety notices', tone:'rgba(248,113,113,.2)' }
+                       : a === JOYSTER_ACCOUNT ? { label:'Joyster — fun & quests', tone:'rgba(96,165,250,.2)' }
+                       : { label:'Bot', tone:'rgba(255,255,255,.1)' };
+            return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:linear-gradient(${meta.tone},${meta.tone}),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+                <span style="font-weight:700;color:#fff;font-size:13px;">@${escapeHTML(a)}</span>
+                <span style="font-size:10px;color:rgba(255,255,255,.45);">${meta.label}</span>
+              </div>
+              <span style="font-size:9.5px;color:#a78bfa;font-weight:700;letter-spacing:.04em;">BOT</span>
+            </div>`;
+          }).join('')}
         </div>
       </div>
       <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;margin-top:16px;max-width:300px;">
@@ -29474,6 +29606,21 @@ function _initRichInput(el) {
 // CHAT INPUT BAR BUILDER — shared by DM, GC, Channel
 // ════════════════════════════════════════════════════════
 function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
+  // Automod-triggered chat suspension renders a lock notice in place of
+  // the composer for every context. Same visual treatment as the
+  // @fortized broadcast-only lock.
+  if (isViewerChatSuspended()) {
+    const _untilStr = new Date(CU.chatSuspendedUntil).toLocaleString();
+    const _reason = escapeHTML(CU.chatSuspendedReason || 'Suspicious activity');
+    return `
+      <div class="chat-locked-notice chat-locked-notice--suspended" role="note">
+        <img class="chat-locked-notice__icon" src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FortizedSecurity%20logo.png" alt="" loading="lazy" draggable="false">
+        <div class="chat-locked-notice__txt">
+          <strong>Your chat has been suspended for safety reasons.</strong><br>
+          Reason: ${_reason}. You'll be able to chat again at <strong data-chat-suspend-until="${CU.chatSuspendedUntil}">${escapeHTML(_untilStr)}</strong>.
+        </div>
+      </div>`;
+  }
   const sendCall = context==='dm' ? "handleChatSend('dm')"
     : context==='gc' ? "sendGCMessage()"
     : `handleChatSend('ch',${chIdx??'curChannel'})`;
@@ -29682,8 +29829,23 @@ function runAutomod(text, contextMessages = []) {
     // Log for admin review
     _logAutomodAction('threat', text, null, threatCheck);
     result.logged = true;
+    // Fire-and-forget: @fortizedsafety drops a notice in the user's DMs.
+    // Severe matches additionally trigger a chat suspension (5–60 min,
+    // scaled by score). Wrapped in try/catch so an automod send failure
+    // can never block the original message path.
+    try {
+      const _suspendMinutes = threatCheck.score >= 1.2 ? 60
+                            : threatCheck.score >= 1.0 ? 30
+                            : threatCheck.score >= 0.9 ? 15
+                            : 0;
+      if (_suspendMinutes && CU?.username) {
+        applyFortizedSafetyChatSuspension(CU.username, _suspendMinutes, 'Automated safety check').catch(()=>{});
+      } else if (CU?.username) {
+        sendFortizedSafetyNotice(CU.username, { reason: 'Automated safety check' }).catch(()=>{});
+      }
+    } catch (_) {}
   }
-  
+
   return result;
 }
 
@@ -35766,6 +35928,14 @@ function _clearAttachment(){
 // HANDLE CHAT SEND (with file attachment support)
 // ═══════════════════════════════════════════════════════════
 async function handleChatSend(context, chIdx) {
+  // Automod chat suspension applies to every chat the user can normally
+  // post in (DMs, group chats, bastion channels). Fail fast before any
+  // upload / optimistic rendering.
+  if (isViewerChatSuspended()) {
+    const _left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
+    toast('Your chat is suspended for safety reasons. Try again in ' + _left + ' min.', 'error');
+    return;
+  }
   const att = window._pendingAttachment;
   if (att) {
     const isImage = att.type.startsWith('image/');
@@ -43328,20 +43498,23 @@ function getUserBadges(user) {
 
 function renderBadgesHTML(user) {
   const badges = getUserBadges(user);
-  if (!badges.length) return '';
+  const isOfficial = isFortizedOfficialAccount(user?.username);
+  if (!badges.length && !isOfficial) return '';
   // Tooltip layout matches the Discord-style two-line popover the team
   // asked for: bold name on top, optional level/role on the line below.
   // Badges without an image (or whose file isn't uploaded yet) hide
   // gracefully via onerror so a missing asset never leaves a broken
   // square in the badge row.
-  return '<span class="ftz-badge-row">' + badges.map(b => {
+  const badgesHTML = badges.map(b => {
     const icon = b.id === 'verified'
       ? _verifiedBadge(16)
       : (b.img ? `<img src="${b.img}" alt="${b.id}" onerror="this.parentNode.style.display='none'">` : '');
     const name = escapeHTML((b.tooltip || '').split(' · ')[0] || b.id);
     const sub  = b.level ? `<span class="badge-tooltip-sub">${escapeHTML(b.level)}</span>` : '';
     return `<span class="ftz-badge ${b.cls}${b.level?' has-level':''}">${icon}<span class="badge-tooltip"><span class="badge-tooltip-name">${name}</span>${sub}</span></span>`;
-  }).join('') + '</span>';
+  }).join('');
+  const capsule = isOfficial ? fortizedOfficialCapsuleHTML() : '';
+  return '<span class="ftz-badge-row">' + capsule + badgesHTML + '</span>';
 }
 
 function spawnHeartAnimation(x, y) {
@@ -47998,78 +48171,124 @@ function _buildAppearanceFullPreview(t, label) {
   const textMuted  = isLight ? 'rgba(0,0,0,.45)' : 'rgba(255,255,255,.4)';
   const msgBar     = isLight ? 'rgba(0,0,0,.10)' : 'rgba(255,255,255,.10)';
   const msgBarLight= isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.06)';
+  const textWeak   = isLight ? 'rgba(0,0,0,.55)' : 'rgba(255,255,255,.3)';
+
+  // Compute actual overlaid colors for realistic preview
+  const hexToRgb = (hex) => {
+    const r = parseInt(hex.slice(1,3), 16);
+    const g = parseInt(hex.slice(3,5), 16);
+    const b = parseInt(hex.slice(5,7), 16);
+    return [r, g, b];
+  };
+  const blendWithOverlay = (hex, opacity) => {
+    const [r, g, b] = hexToRgb(hex);
+    const br = Math.round(r * (1 - opacity) + 0 * opacity);
+    const bg = Math.round(g * (1 - opacity) + 0 * opacity);
+    const bb = Math.round(b * (1 - opacity) + 0 * opacity);
+    return `rgb(${br},${bg},${bb})`;
+  };
+  const mainChatBg = blendWithOverlay(t.channel, 0.30);
+  const sidebarBg = blendWithOverlay(t.channel, 0.20);
+
   const msgRow = (col, w1, w2, w3) => `
-    <div style="display:flex;gap:8px;align-items:flex-start;">
-      <div style="width:26px;height:26px;border-radius:50%;background:${col};flex-shrink:0;"></div>
-      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
-        <div style="display:flex;align-items:center;gap:6px;"><div style="height:7px;width:${w1}px;background:${col};border-radius:4px;"></div><div style="height:5px;width:24px;background:${msgBarLight};border-radius:3px;"></div></div>
+    <div style="display:flex;gap:10px;align-items:flex-start;opacity:.95;">
+      <div style="width:28px;height:28px;border-radius:50%;background:${col};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;align-items:center;gap:6px;"><div style="height:7px;width:${w1}px;background:${col};border-radius:4px;"></div><div style="height:5px;width:20px;background:${textWeak};border-radius:3px;"></div></div>
         <div style="height:5px;width:${w2}px;background:${msgBar};border-radius:3px;"></div>
         ${w3 ? `<div style="height:5px;width:${w3}px;background:${msgBar};border-radius:3px;"></div>` : ''}
       </div>
     </div>`;
   const memberRow = (col) => `
-    <div style="display:flex;align-items:center;gap:6px;padding:3px 6px;">
-      <div style="width:16px;height:16px;border-radius:50%;background:${col};flex-shrink:0;"></div>
-      <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;max-width:50px;"></div>
+    <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:4px;transition:background .2s ease;">
+      <div style="width:18px;height:18px;border-radius:50%;background:${col};flex-shrink:0;"></div>
+      <div style="height:4px;flex:1;background:${msgBar};border-radius:3px;max-width:45px;"></div>
     </div>`;
+
   return `
   <div style="flex:1;min-width:0;">
     ${label ? `<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);margin-bottom:8px;">${label}</div>` : ''}
-    <div style="border-radius:12px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};box-shadow:0 10px 28px rgba(0,0,0,.35);">
-      <div style="display:flex;height:230px;">
-        <div style="width:42px;background:${isLight ? 'rgba(0,0,0,.05)' : 'rgba(0,0,0,.25)'};display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:6px;">
-          <div style="width:28px;height:28px;border-radius:10px;background:${t.accent};opacity:.85;"></div>
-          <div style="width:18px;height:2px;background:${textDim};border-radius:1px;margin:2px 0;"></div>
-          <div style="width:28px;height:28px;border-radius:50%;background:${textDim};"></div>
-          <div style="width:28px;height:28px;border-radius:50%;background:${textDim2};"></div>
+    <div style="border-radius:14px;overflow:hidden;border:1.5px solid ${t.border};background:${t.bg};box-shadow:0 12px 32px rgba(0,0,0,.45);animation:fadeIn .42s cubic-bezier(.22,1,.36,1) forwards;">
+      <div style="display:flex;height:240px;">
+        <!-- Rail (leftmost nav) -->
+        <div style="width:48px;background:${sidebarBg};display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:8px;border-right:1px solid ${t.border};">
+          <div style="width:32px;height:32px;border-radius:10px;background:${t.accent};opacity:.85;animation:pulse 2.4s ease-in-out infinite;" transform="scale(1.05)"></div>
+          <div style="width:20px;height:2px;background:${textDim};border-radius:1px;margin:3px 0;"></div>
+          <div style="width:28px;height:28px;border-radius:50%;background:${textDim};opacity:.6;"></div>
+          <div style="width:28px;height:28px;border-radius:50%;background:${textDim2};opacity:.4;"></div>
+          <div style="flex:1;"></div>
+          <div style="width:28px;height:28px;border-radius:8px;background:${t.accent};opacity:.7;"></div>
         </div>
-        <div style="width:124px;background:${t.sidebar};border-right:1px solid ${t.border};padding:10px 8px;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
-          <div style="height:7px;width:80px;background:${textStrong};border-radius:3px;opacity:.85;margin-bottom:4px;"></div>
-          <div style="height:5px;width:46px;background:${textMuted};border-radius:3px;margin-top:4px;"></div>
-          <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;border-radius:4px;background:${isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.08)'};">
-            <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
-            <div style="height:5px;flex:1;background:${textStrong};border-radius:3px;opacity:.7;"></div>
+        <!-- Sidebar (DM/Bastion list) -->
+        <div style="width:136px;background:${sidebarBg};border-right:1px solid ${t.border};padding:10px 8px;display:flex;flex-direction:column;gap:3px;overflow:hidden;">
+          <div style="height:7px;width:76px;background:${textStrong};border-radius:3px;opacity:.85;margin-bottom:6px;"></div>
+          <div style="height:4px;width:48px;background:${textWeak};border-radius:3px;margin-bottom:8px;"></div>
+          <div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;background:${t.accent};opacity:.15;">
+            <span style="font-size:8px;color:${textMuted};font-weight:700;">#</span>
+            <div style="height:5px;flex:1;background:${t.accent};border-radius:3px;opacity:.6;"></div>
           </div>
-          <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;">
-            <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
+          <div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;">
+            <span style="font-size:8px;color:${textMuted};font-weight:700;">#</span>
             <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;"></div>
           </div>
-          <div style="display:flex;align-items:center;gap:5px;padding:4px 7px;">
-            <span style="font-size:9px;color:${textMuted};font-weight:700;">#</span>
+          <div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;">
+            <span style="font-size:8px;color:${textMuted};font-weight:700;">#</span>
             <div style="height:5px;flex:1;background:${msgBar};border-radius:3px;"></div>
           </div>
           <div style="flex:1;"></div>
-          <div style="display:flex;align-items:center;gap:6px;padding:6px;border-radius:6px;background:${isLight ? 'rgba(0,0,0,.06)' : 'rgba(0,0,0,.3)'};">
-            <div style="width:22px;height:22px;border-radius:50%;background:${t.accent};opacity:.8;flex-shrink:0;"></div>
-            <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><div style="height:5px;width:40px;background:${textStrong};border-radius:3px;opacity:.8;"></div><div style="height:4px;width:24px;background:${textMuted};border-radius:3px;"></div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:8px;border-radius:8px;background:${isLight ? 'rgba(0,0,0,.08)' : 'rgba(0,0,0,.35)'};">
+            <div style="width:24px;height:24px;border-radius:50%;background:${t.accent};opacity:.75;flex-shrink:0;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><div style="height:4px;width:36px;background:${textStrong};border-radius:3px;opacity:.75;"></div><div style="height:3px;width:20px;background:${textWeak};border-radius:3px;"></div></div>
           </div>
         </div>
-        <div style="flex:1;display:flex;flex-direction:column;background:${t.channel};overflow:hidden;">
-          <div style="height:30px;border-bottom:1px solid ${t.border};display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;">
-            <span style="font-size:13px;color:${textMuted};font-weight:600;">#</span>
-            <div style="height:6px;width:46px;background:${textStrong};border-radius:3px;opacity:.85;"></div>
+        <!-- Main chat area -->
+        <div style="flex:1;display:flex;flex-direction:column;background:${mainChatBg};overflow:hidden;">
+          <!-- Topbar -->
+          <div style="height:36px;border-bottom:1px solid ${t.border};display:flex;align-items:center;justify-content:space-between;padding:0 14px;gap:12px;flex-shrink:0;background:${isLight ? 'rgba(0,0,0,.04)' : 'rgba(0,0,0,.4)'};">
+            <div style="display:flex;align-items:center;gap:6px;flex:1;">
+              <span style="font-size:13px;color:${textMuted};font-weight:600;">#</span>
+              <div style="height:5px;width:42px;background:${textStrong};border-radius:3px;opacity:.8;"></div>
+            </div>
+            <div style="display:flex;gap:4px;">
+              <div style="width:18px;height:18px;border-radius:4px;background:${textDim};"></div>
+              <div style="width:18px;height:18px;border-radius:4px;background:${textDim};"></div>
+            </div>
           </div>
-          <div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
-            ${msgRow(t.accent, 38, 110, 80)}
-            ${msgRow(msgBar, 30, 90, 0)}
-            ${msgRow('rgba(140,100,220,.6)', 26, 70, 0)}
+          <!-- Messages -->
+          <div style="flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:14px;overflow:hidden;">
+            ${msgRow(t.accent, 42, 115, 88)}
+            ${msgRow(msgBar, 32, 95, 60)}
+            ${msgRow('rgba(140,100,220,.5)', 28, 75, 0)}
           </div>
-          <div style="padding:0 12px 12px;flex-shrink:0;">
-            <div style="height:30px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 12px;gap:8px;">
-              <div style="width:12px;height:12px;border-radius:50%;border:1.5px solid ${textMuted};opacity:.5;flex-shrink:0;"></div>
-              <div style="height:5px;flex:1;background:${msgBarLight};border-radius:3px;"></div>
+          <!-- Message input -->
+          <div style="padding:12px 14px;flex-shrink:0;border-top:1px solid ${t.border};">
+            <div style="height:32px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 12px;">
+              <div style="height:4px;flex:1;background:${msgBarLight};border-radius:3px;"></div>
             </div>
           </div>
         </div>
-        <div style="width:80px;background:${t.sidebar};border-left:1px solid ${t.border};padding:10px 4px;display:flex;flex-direction:column;gap:2px;overflow:hidden;">
-          <div style="height:5px;width:40px;background:${textMuted};border-radius:3px;margin:2px 6px 4px;"></div>
+        <!-- Member list (rightmost) -->
+        <div style="width:88px;background:${sidebarBg};border-left:1px solid ${t.border};padding:10px 6px;display:flex;flex-direction:column;gap:1px;overflow:hidden;">
+          <div style="height:4px;width:44px;background:${textWeak};border-radius:3px;margin:2px 8px 6px;font-size:8px;opacity:.6;"></div>
           ${memberRow(t.accent)}
           ${memberRow(msgBar)}
-          ${memberRow('rgba(140,100,220,.6)')}
+          ${memberRow('rgba(140,100,220,.5)')}
+          <div style="height:1px;background:${textDim};margin:4px 8px;"></div>
+          ${memberRow(textWeak)}
         </div>
       </div>
     </div>
-  </div>`;
+  </div>
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+  </style>`;
 }
 
 function selectAppearancePreview(themeId) {
@@ -51811,6 +52030,110 @@ async function _ensureFortizedAccount() {
       if (needsUpdate) await FortizedSocial.saveUserObject(fortizedUser);
     }
   } catch(e) { console.warn('[System] Fortized account init failed', e); }
+}
+
+// ── Fortized Safety Account (automod automation persona) ──
+// Mirrors the Fortized account shape so it gets the same badges, OFFICIAL
+// capsule, and chat lock automatically. Used by the automod system to send
+// safety notices and apply chat suspensions to users.
+async function _ensureFortizedSafetyAccount() {
+  try {
+    let safetyUser = await FortizedSocial.getUserByName(FORTIZED_SAFETY_ACCOUNT);
+    if (!safetyUser) {
+      safetyUser = {
+        username: FORTIZED_SAFETY_ACCOUNT,
+        password: '__system_fortizedsafety_' + Date.now(),
+        email: '',
+        displayName: 'Fortized Safety',
+        pfp: 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FortizedSecurity%20logo.png',
+        banner: '/Profile Banner.png',
+        onyx: 0,
+        status: 'online',
+        friends: [],
+        friendRequestsSent: [],
+        friendRequestsReceived: [],
+        bastions: [],
+        notifications: [],
+        radianceUntil: null,
+        lastDaily: null,
+        createdAt: new Date().toISOString(),
+        isBot: true,
+        isAdmin: true,
+        isSuperAdmin: true,
+        isProtected: true,
+        bio: 'Automated safety notices from Fortized. We will never ask you for your password or account token.',
+      };
+      await FortizedSocial.saveUserObject(safetyUser);
+    } else {
+      let needsUpdate = false;
+      if (!safetyUser.isBot) { safetyUser.isBot = true; needsUpdate = true; }
+      if (!safetyUser.isAdmin) { safetyUser.isAdmin = true; needsUpdate = true; }
+      if (!safetyUser.isProtected) { safetyUser.isProtected = true; needsUpdate = true; }
+      if (!safetyUser.isSuperAdmin) { safetyUser.isSuperAdmin = true; needsUpdate = true; }
+      if (safetyUser.displayName !== 'Fortized Safety') { safetyUser.displayName = 'Fortized Safety'; needsUpdate = true; }
+      if (needsUpdate) await FortizedSocial.saveUserObject(safetyUser);
+    }
+  } catch(e) { console.warn('[System] Fortized Safety account init failed', e); }
+}
+
+// ── Automod helpers — send notices + suspend chat from @fortizedsafety ──
+// Sends a templated message to a user from the Fortized Safety automation
+// account. Used by the automod when a rule fires.
+async function sendFortizedSafetyNotice(targetUsername, { reason, until, articleId } = {}) {
+  if (!targetUsername) return;
+  const lines = [];
+  lines.push('Hello,');
+  lines.push('');
+  if (until) {
+    const _t = new Date(until).toLocaleString();
+    lines.push(`Fortized has limited your access to some features until ${_t}.${reason ? ' Reason: ' + reason + '.' : ''} You may click here to learn more (/help/safety${articleId ? '#'+articleId : ''}).`);
+  } else if (reason) {
+    lines.push(`Fortized has flagged your recent activity. Reason: ${reason}. You may click here to learn more (/help/safety${articleId ? '#'+articleId : ''}).`);
+  } else {
+    lines.push('Fortized has flagged your recent activity. You may click here to learn more (/help/safety).');
+  }
+  lines.push('');
+  lines.push('If you would like to appeal this decision, you may do so here (/help/appeals).');
+  lines.push('');
+  lines.push('Fortized Safety');
+  const text = lines.join('\n');
+  try {
+    await FortizedSocial.sendDMMessage(FORTIZED_SAFETY_ACCOUNT, targetUsername, text);
+  } catch (e) { console.warn('[Safety] notice send failed', e?.message); }
+}
+
+// Suspend the user's chat ability for `minutes` (clamped 5–60). Stored on
+// CU so reloads pick it up; also written to the user row so the suspension
+// follows them across devices. Other devices reconcile on next load.
+async function applyFortizedSafetyChatSuspension(targetUsername, minutes, reason) {
+  if (!targetUsername) return;
+  const ms = Math.max(5, Math.min(60, +minutes || 5)) * 60_000;
+  const until = Date.now() + ms;
+  try {
+    const u = await FortizedSocial.getUserByName(targetUsername);
+    if (u) {
+      u.chatSuspendedUntil = until;
+      u.chatSuspendedReason = reason || 'Suspicious activity';
+      await FortizedSocial.saveUserObject(u);
+    }
+  } catch(e) { console.warn('[Safety] suspend write failed', e?.message); }
+  // Mirror to the current viewer's CU so the lock takes effect immediately.
+  if (typeof CU !== 'undefined' && CU && String(CU.username).toLowerCase() === String(targetUsername).toLowerCase()) {
+    CU.chatSuspendedUntil = until;
+    CU.chatSuspendedReason = reason || 'Suspicious activity';
+  }
+  // Send the standard notice DM alongside the suspension.
+  await sendFortizedSafetyNotice(targetUsername, {
+    reason: reason || 'Suspicious activity',
+    until,
+    articleId: 'chat-suspension',
+  });
+}
+
+// True if the current user is currently chat-suspended by the automod.
+function isViewerChatSuspended() {
+  const until = +CU?.chatSuspendedUntil || 0;
+  return until > Date.now();
 }
 
 // ════════════════════════════════════════════════════════

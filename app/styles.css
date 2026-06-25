@@ -3884,6 +3884,61 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .btn-pink:hover{filter:brightness(1.06);transform:translateY(-1px);}
 .btn-pink:active{transform:scale(.97);filter:brightness(.95);}
 .btn-pink:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+/* ── Message-embedded action buttons (inline, compact) ─── */
+.msg-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-family:var(--font-display);font-size:12.5px;font-weight:700;border:none;cursor:pointer;transition:all .12s;letter-spacing:.005em;line-height:1.2;}
+.msg-btn .msg-btn-ico{width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.msg-btn .msg-btn-ico svg,.msg-btn .msg-btn-ico img{width:100%;height:100%;display:block;}
+.msg-btn .msg-btn-ext{width:12px;height:12px;display:inline-flex;align-items:center;justify-content:center;margin-left:2px;opacity:.7;flex-shrink:0;}
+.msg-btn:hover{filter:brightness(1.07);transform:translateY(-1px);}
+.msg-btn:active{transform:scale(.97);filter:brightness(.95);}
+.msg-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none;}
+.msg-btn--yellow{background:var(--accent);color:#13161d;}
+.msg-btn--green{background:var(--green);color:#0a1410;}
+.msg-btn--red{background:var(--red);color:#fff;}
+.msg-btn--gray{background:rgba(255,255,255,.07);color:rgba(255,255,255,.78);border:1px solid rgba(255,255,255,.04);}
+.msg-btn--gray:hover{background:rgba(255,255,255,.11);color:#fff;}
+.msg-btn--white{background:#fff;color:#13161d;}
+.msg-btn--pink{background:#ff77e4;color:#13161d;}
+.msg-btn-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+/* ── Boost / Progress Bar (gradient fill) ──────────────── */
+.ftz-boost-bar{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--surface-border);}
+.ftz-boost-bar__head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.ftz-boost-bar__title{font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;}
+.ftz-boost-bar__count{font-size:12px;font-weight:700;color:rgba(255,255,255,.55);display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;}
+.ftz-boost-bar__count .ftz-boost-bar__suffix{color:rgba(255,255,255,.35);font-weight:600;}
+.ftz-boost-bar__track{position:relative;height:6px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;}
+.ftz-boost-bar__fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,var(--accent) 0%,#ff9a8e 55%,#ff77e4 100%);transition:width .6s var(--ease-out);box-shadow:0 0 12px rgba(255,119,228,.18);}
+.ftz-boost-bar.is-complete .ftz-boost-bar__fill::after{content:'';position:absolute;right:-2px;top:50%;transform:translateY(-50%);width:14px;height:14px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='18'>🎉</text></svg>") no-repeat center/contain;}
+/* ── Gift / Subscription Card ────────────────────────── */
+.ftz-gift-card{display:grid;grid-template-columns:1fr minmax(160px,38%);gap:0;background:#15171c;border:1px solid rgba(255,255,255,.05);border-radius:14px;overflow:hidden;max-width:760px;}
+.ftz-gift-card__body{padding:20px 22px;display:flex;flex-direction:column;justify-content:space-between;gap:16px;min-width:0;}
+.ftz-gift-card__title{font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;letter-spacing:-.005em;line-height:1.25;}
+.ftz-gift-card__desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.45;}
+.ftz-gift-card__desc strong{color:#fff;font-weight:700;}
+.ftz-gift-card__foot{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.ftz-gift-card__expires{font-size:11.5px;color:rgba(255,255,255,.35);font-weight:600;}
+.ftz-gift-card__art{position:relative;background:linear-gradient(135deg,#a06bff 0%,#ff77e4 100%);display:flex;align-items:center;justify-content:center;min-height:140px;overflow:hidden;}
+.ftz-gift-card__art img,.ftz-gift-card__art svg{max-width:80%;max-height:80%;display:block;}
+.ftz-gift-card__art-label{position:absolute;top:14px;left:14px;font-family:var(--font-display);font-size:18px;font-weight:900;color:#fff;letter-spacing:.04em;text-shadow:0 2px 8px rgba(0,0,0,.25);}
+.ftz-gift-card__art-sub{position:absolute;top:36px;left:14px;font-size:9.5px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.08em;text-transform:uppercase;}
+@media (max-width:520px){.ftz-gift-card{grid-template-columns:1fr;}.ftz-gift-card__art{min-height:120px;}}
+/* ── Form-submission warning banner (used in app-form modals) ─── */
+.ftz-form-warning{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.4);color:rgba(245,158,11,.95);font-size:12.5px;line-height:1.4;margin-bottom:14px;}
+.ftz-form-warning__ico{width:18px;height:18px;border-radius:50%;background:rgba(245,158,11,.95);color:#13161d;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;margin-top:1px;}
+.ftz-form-warning__body{flex:1;min-width:0;color:rgba(255,255,255,.82);}
+.ftz-form-warning__body strong{color:#fff;font-weight:700;}
+/* ── Char counter for inputs/textareas ───────────────── */
+.ftz-input-wrap{position:relative;}
+.ftz-input-wrap .ftz-char-count{position:absolute;right:10px;bottom:8px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.25);font-variant-numeric:tabular-nums;pointer-events:none;}
+.ftz-input-wrap .ftz-char-count.is-near{color:rgba(245,158,11,.85);}
+.ftz-input-wrap .ftz-char-count.is-over{color:var(--red);}
+/* ── Modal-footer with split actions (Back ⟂ Cancel/Okay) ─── */
+.ftz-modal-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 20px;border-top:1px solid var(--surface-border);background:rgba(0,0,0,.18);}
+.ftz-modal-foot__back{background:transparent;border:none;color:rgba(255,255,255,.7);font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;padding:8px 4px;transition:color .12s;}
+.ftz-modal-foot__back:hover{color:#fff;}
+.ftz-modal-foot__actions{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.ftz-modal-foot__cancel{background:transparent;border:none;color:rgba(255,255,255,.7);font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;padding:8px 12px;transition:color .12s;}
+.ftz-modal-foot__cancel:hover{color:#fff;}
 /* ── Normalized Design Token Components ─────────── */
 .ftz-panel{background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color .18s var(--ease-out);}
 .ftz-panel:hover{border-color:var(--surface-border-hover);}

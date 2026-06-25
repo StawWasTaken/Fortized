@@ -10359,16 +10359,18 @@ function deleteMsg(msgId, context) {
 
   const overlay = document.createElement('div');
   overlay.className = 'ftz-confirm-overlay';
-  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:440px;">
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <div class="ftz-confirm-title" style="margin-bottom:0;">Delete Message</div>
-      <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:18px;line-height:1;padding:4px;">&times;</button>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
     </div>
-    <div style="font-size:13px;color:rgba(255,255,255,.45);">Are you sure you want to delete this message?</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.55);margin-bottom:14px;">Are you sure you want to delete this message?</div>
     ${previewHTML}
-    <div class="ftz-confirm-actions">
-      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Cancel</button>
-      <button class="ftz-btn ftz-btn-danger" id="cc-ok">Delete</button>
+    <div class="ftz-modal-foot">
+      <div class="ftz-modal-foot__actions" style="width:100%;">
+        <button class="btn-g" id="cc-cancel" style="flex:1;justify-content:center;">Cancel</button>
+        <button class="btn-red" id="cc-ok" style="flex:1;justify-content:center;">Delete</button>
+      </div>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -11673,15 +11675,17 @@ function _confirmAcceptFriendRequest(username){
     const overlay = document.createElement('div');
     overlay.className = 'ftz-confirm-overlay';
     overlay.setAttribute('data-id', 'accept-friend');
-    overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:440px;">
+    overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
         <div class="ftz-confirm-title" style="margin-bottom:0;">Accept friend request?</div>
-        <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:18px;line-height:1;padding:4px;">&times;</button>
+        <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
       </div>
       <div class="ftz-confirm-text">This may be someone you don't know. You don't share any mutual friends or small mutual bastions with them.</div>
-      <div class="ftz-confirm-actions">
-        <button class="ftz-btn ftz-btn-ghost" data-act="cancel">Cancel</button>
-        <button class="ftz-btn ftz-btn-primary" data-act="ok">Accept</button>
+      <div class="ftz-modal-foot">
+        <div class="ftz-modal-foot__actions" style="width:100%;">
+          <button class="btn-g" data-act="cancel" style="flex:1;justify-content:center;">Cancel</button>
+          <button class="btn-green" data-act="ok" style="flex:1;justify-content:center;">Accept</button>
+        </div>
       </div>
     </div>`;
     overlay.onclick = e => { if (e.target === overlay) { overlay.remove(); resolve(false); } };
@@ -14984,8 +14988,8 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
-        <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;">Cancel</button>
-        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:var(--rail);font-family:var(--font-display);font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Create Channel</button>
+        <button id="crm-cancel" class="btn-g" style="flex:1;justify-content:center;">Cancel</button>
+        <button id="crm-create" class="btn-yellow" style="flex:1;justify-content:center;">Create Channel</button>
       </div>
     </div>
   </div>`;
@@ -17267,7 +17271,7 @@ async function _cmBoostAd(adIdx) {
         <div class="ftz-confirm-title" style="margin-bottom:2px;">Boost this ad</div>
         <div style="font-size:12px;color:var(--muted-light);">Spend Onyx to push <strong style="color:#fff;">${escapeHTML(ad.title||'Untitled')}</strong> higher in rotation.</div>
       </div>
-      <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:18px;line-height:1;padding:4px;">&times;</button>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin:14px 0 12px;padding:9px 12px;background:rgba(255,249,62,.05);border:1px solid rgba(255,249,62,.12);border-radius:10px;font-size:12px;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)"><circle cx="12" cy="12" r="10"/></svg>
@@ -17276,8 +17280,10 @@ async function _cmBoostAd(adIdx) {
     </div>
     <div class="ad-boost-grid">${tilesHTML}</div>
     <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.5;">Boost lasts as long as the ad does. Cancel or let it expire and the boost goes with it.</div>
-    <div class="ftz-confirm-actions" style="margin-top:14px;">
-      <button class="ftz-btn ftz-btn-ghost" onclick="this.closest('.ftz-confirm-overlay').remove()">Close</button>
+    <div class="ftz-modal-foot" style="margin-top:14px;">
+      <div class="ftz-modal-foot__actions" style="width:100%;">
+        <button class="btn-g" onclick="this.closest('.ftz-confirm-overlay').remove()" style="flex:1;justify-content:center;">Close</button>
+      </div>
     </div>
   </div>`;
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
@@ -22099,15 +22105,20 @@ function _toggleEmailReveal(btn) {
 function _openEmailEditor() {
   const overlay = document.createElement('div');
   overlay.className = 'ftz-confirm-overlay';
-  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:440px;">
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;">
     <div class="ftz-confirm-title">Change Email</div>
-    <div style="font-size:12.5px;color:rgba(255,255,255,.5);margin:6px 0 14px;">Confirm your password to update the email on this account.</div>
-    <input class="settings-input" id="em-pw"  type="password" placeholder="Current password" style="margin-bottom:6px;">
-    <input class="settings-input" id="em-new" type="email"    placeholder="new@email.com" value="${escapeHTML(CU.email||'')}" style="margin-bottom:4px;">
-    <div id="em-msg" style="font-size:12px;min-height:14px;margin-top:6px;color:var(--red);"></div>
-    <div class="ftz-confirm-actions">
-      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Cancel</button>
-      <button class="ftz-btn" id="cc-ok" style="background:var(--accent);color:var(--rail);">Update</button>
+    <div class="ftz-form-warning">
+      <div class="ftz-form-warning__ico">⚠</div>
+      <div class="ftz-form-warning__body">Confirm your password to update the email on this account.</div>
+    </div>
+    <input class="ftz-input" id="em-pw" type="password" placeholder="Current password" style="margin-bottom:8px;">
+    <input class="ftz-input" id="em-new" type="email" placeholder="new@email.com" value="${escapeHTML(CU.email||'')}" style="margin-bottom:8px;">
+    <div id="em-msg" style="font-size:12px;min-height:14px;margin-bottom:14px;color:var(--red);"></div>
+    <div class="ftz-modal-foot">
+      <button class="ftz-modal-foot__back" onclick="this.closest('.ftz-confirm-overlay').remove()">Cancel</button>
+      <div class="ftz-modal-foot__actions">
+        <button class="btn-yellow" id="cc-ok">Update</button>
+      </div>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -22123,21 +22134,26 @@ function _openEmailEditor() {
     overlay.remove();
     buildProfileView('account');
   };
-  document.getElementById('cc-cancel').onclick = () => overlay.remove();
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   setTimeout(() => document.getElementById('em-pw')?.focus(), 30);
 }
 function _openPasswordEditor() {
   const overlay = document.createElement('div');
   overlay.className = 'ftz-confirm-overlay';
-  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:420px;">
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;">
     <div class="ftz-confirm-title">Change Password</div>
-    <input class="settings-input" id="pw-old" type="password" placeholder="Current password" style="margin:14px 0 6px;">
-    <input class="settings-input" id="pw-new" type="password" placeholder="New password (min 6 chars)" style="margin-bottom:4px;">
-    <div id="pw-msg" style="font-size:12px;min-height:14px;margin-top:6px;"></div>
-    <div class="ftz-confirm-actions">
-      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Cancel</button>
-      <button class="ftz-btn" id="cc-ok" style="background:var(--accent);color:var(--rail);">Update</button>
+    <div class="ftz-form-warning">
+      <div class="ftz-form-warning__ico">🔒</div>
+      <div class="ftz-form-warning__body">Use a strong password different from your current one.</div>
+    </div>
+    <input class="ftz-input" id="pw-old" type="password" placeholder="Current password" style="margin-bottom:8px;">
+    <input class="ftz-input" id="pw-new" type="password" placeholder="New password (min 6 chars)" style="margin-bottom:8px;">
+    <div id="pw-msg" style="font-size:12px;min-height:14px;margin-bottom:14px;"></div>
+    <div class="ftz-modal-foot">
+      <button class="ftz-modal-foot__back" onclick="this.closest('.ftz-confirm-overlay').remove()">Cancel</button>
+      <div class="ftz-modal-foot__actions">
+        <button class="btn-yellow" id="cc-ok">Update</button>
+      </div>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -22146,7 +22162,6 @@ function _openPasswordEditor() {
     const msg = document.getElementById('pw-msg');
     if (msg && msg.textContent.includes('updated')) setTimeout(() => overlay.remove(), 600);
   };
-  document.getElementById('cc-cancel').onclick = () => overlay.remove();
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   setTimeout(() => document.getElementById('pw-old')?.focus(), 30);
 }
@@ -22154,7 +22169,7 @@ function _openSecurityKeysList() {
   const keys = (CU.security && Array.isArray(CU.security.passkeys)) ? CU.security.passkeys : [];
   const overlay = document.createElement('div');
   overlay.className = 'ftz-confirm-overlay';
-  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:460px;">
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;">
     <div class="ftz-confirm-title">Security Keys</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin:14px 0;">
       ${keys.length === 0 ? '<div style="font-size:12.5px;color:rgba(255,255,255,.4);">No keys registered yet.</div>' : keys.map(k => `
@@ -22163,17 +22178,18 @@ function _openSecurityKeysList() {
             <div style="font-size:13px;color:#fff;font-weight:600;">${escapeHTML(k.label||'Security key')}</div>
             <div style="font-size:11px;color:rgba(255,255,255,.4);">Registered ${new Date(k.registeredAt||Date.now()).toLocaleDateString()}</div>
           </div>
-          <button class="ftz-btn ftz-btn-ghost" onclick="_removeSecurityKey('${escapeHTML(k.id)}');this.closest('.ftz-confirm-overlay').remove();" style="color:var(--red);">Remove</button>
+          <button class="btn-red" style="padding:6px 12px;font-size:11.5px;" onclick="_removeSecurityKey('${escapeHTML(k.id)}');this.closest('.ftz-confirm-overlay').remove();">Remove</button>
         </div>`).join('')}
     </div>
-    <div class="ftz-confirm-actions">
-      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Close</button>
-      <button class="ftz-btn" id="cc-ok" style="background:var(--accent);color:var(--rail);">Add Another</button>
+    <div class="ftz-modal-foot">
+      <button class="ftz-modal-foot__back" onclick="this.closest('.ftz-confirm-overlay').remove()">Close</button>
+      <div class="ftz-modal-foot__actions">
+        <button class="btn-yellow" id="cc-ok">Add Another</button>
+      </div>
     </div>
   </div>`;
   document.body.appendChild(overlay);
   document.getElementById('cc-ok').onclick = () => { overlay.remove(); _setupSecurityKey(); };
-  document.getElementById('cc-cancel').onclick = () => overlay.remove();
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 }
 function _showAvatarPickerMenu(event) {

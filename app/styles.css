@@ -1597,7 +1597,9 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 /* New messages notification bar */
 .new-messages-bar{position:sticky;top:40px;z-index:19;display:none;align-items:center;justify-content:center;gap:12px;padding:8px 16px;background:linear-gradient(135deg,rgba(62,207,110,.12),rgba(62,207,110,.06));backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border-bottom:1px solid rgba(62,207,110,.18);font-size:12.5px;color:rgba(62,207,110,.8);pointer-events:none;font-weight:500;}
 .new-messages-bar.show{display:flex;pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.2);}
-.new-messages-bar button{background:transparent;border:1px solid rgba(62,207,110,.3);color:rgba(62,207,110,.9);border-radius:6px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font-ui);}
+.new-messages-bar button{background:var(--green);border:none;color:#fff;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--font-display);display:inline-flex;align-items:center;gap:6px;}
+.new-messages-bar button:hover{filter:brightness(1.08);}
+.new-messages-bar button:active{transform:scale(.97);}
 .new-messages-bar button:hover{background:rgba(62,207,110,.1);border-color:rgba(62,207,110,.5);}
 /* New messages floating button */
 .chat-new-msg-btn{position:absolute;bottom:80px;right:20px;z-index:15;display:none;align-items:center;gap:6px;background:var(--glass-heavy);border:1px solid rgba(255,249,62,.15);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);border-radius:var(--radius-pill);padding:6px 16px;font-size:11.5px;font-weight:600;color:var(--accent);cursor:pointer;transition:all .15s;box-shadow:0 4px 20px rgba(0,0,0,.4);}
@@ -2711,7 +2713,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .sim-checkout-actions { display:flex;justify-content:flex-end;gap:8px;padding:14px 18px; }
 .sim-checkout-cancel { background:transparent;border:1px solid var(--border);color:var(--muted-light);border-radius:8px;padding:9px 18px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer; }
 .sim-checkout-cancel:hover { color:var(--text); }
-.sim-checkout-buy { background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-family:var(--font-display);font-size:12.5px;font-weight:800;letter-spacing:.04em;cursor:pointer;transition:all .15s; }
+.sim-checkout-buy { background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-family:var(--font-display);font-size:12.5px;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .15s; }
 .sim-checkout-buy:hover:not(:disabled) { filter:brightness(1.1); }
 .sim-checkout-buy:disabled { opacity:.35;cursor:not-allowed; }
 
@@ -2742,7 +2744,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .sim-confirm-actions { display:flex;justify-content:flex-end;gap:8px;margin-top:12px; }
 .sim-confirm-cancel { background:transparent;border:1px solid var(--border);color:var(--muted-light);border-radius:8px;padding:9px 18px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer; }
 .sim-confirm-cancel:hover { color:var(--text); }
-.sim-confirm-buy { background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-family:var(--font-display);font-size:12.5px;font-weight:800;letter-spacing:.04em;cursor:pointer;transition:all .15s; }
+.sim-confirm-buy { background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-family:var(--font-display);font-size:12.5px;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .15s; }
 .sim-confirm-buy:hover:not(:disabled) { filter:brightness(1.1); }
 .sim-confirm-buy:disabled { opacity:.35;cursor:not-allowed; }
 
@@ -2874,7 +2876,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .sim-reseller-serial { font-size:11px;color:var(--muted);margin-top:2px; }
 .sim-reseller-price { display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--green);font-variant-numeric:tabular-nums;padding:0 4px; }
 .sim-reseller-price img { width:14px;height:14px; }
-.sim-reseller-buy { background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:.04em;cursor:pointer;text-transform:uppercase;transition:all .15s;white-space:nowrap; }
+.sim-reseller-buy { background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer;text-transform:uppercase;transition:all .15s;white-space:nowrap; }
 .sim-reseller-buy:hover:not(:disabled) { filter:brightness(1.1);transform:translateY(-1px); }
 .sim-reseller-buy--poor { background:rgba(255,255,255,.04);color:var(--muted);cursor:not-allowed; }
 .sim-reseller-buy--self { background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.3);font-size:10.5px;padding:6px 10px;white-space:nowrap; }
@@ -3861,6 +3863,27 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .btn-d{display:inline-flex;align-items:center;gap:7px;background:var(--state-danger-dim);color:var(--red);padding:9px 18px;border-radius:var(--radius-md);font-family:var(--font-display);font-size:var(--font-md);font-weight:700;border:1px solid rgba(248,113,113,.2);cursor:pointer;transition:all .1s;}
 .btn-d:hover{background:rgba(248,113,113,.18);}
 .btn-d:active{transform:scale(.97);}
+/* ── Unified Button Variants (Syne Bold) ─────────── */
+.btn-yellow{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#13161d;padding:10px 20px;border-radius:var(--radius-md);font-family:var(--font-display);font-size:var(--font-md);font-weight:700;border:none;cursor:pointer;transition:all .1s;position:relative;overflow:hidden;}
+.btn-yellow:hover{filter:brightness(1.06);transform:translateY(-1px);}
+.btn-yellow:active{transform:scale(.97);filter:brightness(.95);}
+.btn-yellow:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-green{display:inline-flex;align-items:center;gap:7px;background:var(--green);color:#13161d;padding:10px 20px;border-radius:var(--radius-md);font-family:var(--font-display);font-size:var(--font-md);font-weight:700;border:none;cursor:pointer;transition:all .1s;position:relative;overflow:hidden;}
+.btn-green:hover{filter:brightness(1.06);transform:translateY(-1px);}
+.btn-green:active{transform:scale(.97);filter:brightness(.95);}
+.btn-green:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-red{display:inline-flex;align-items:center;gap:7px;background:var(--red);color:#fff;padding:10px 20px;border-radius:var(--radius-md);font-family:var(--font-display);font-size:var(--font-md);font-weight:700;border:none;cursor:pointer;transition:all .1s;position:relative;overflow:hidden;}
+.btn-red:hover{filter:brightness(1.06);transform:translateY(-1px);}
+.btn-red:active{transform:scale(.97);filter:brightness(.95);}
+.btn-red:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-white{display:inline-flex;align-items:center;gap:7px;background:#fff;color:#13161d;padding:10px 20px;border-radius:var(--radius-md);font-family:var(--font-display);font-size:var(--font-md);font-weight:700;border:none;cursor:pointer;transition:all .1s;position:relative;overflow:hidden;}
+.btn-white:hover{filter:brightness(.94);transform:translateY(-1px);}
+.btn-white:active{transform:scale(.97);filter:brightness(1.05);}
+.btn-white:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-pink{display:inline-flex;align-items:center;gap:7px;background:#ff77e4;color:#13161d;padding:10px 20px;border-radius:var(--radius-md);font-family:var(--font-display);font-size:var(--font-md);font-weight:700;border:none;cursor:pointer;transition:all .1s;position:relative;overflow:hidden;}
+.btn-pink:hover{filter:brightness(1.06);transform:translateY(-1px);}
+.btn-pink:active{transform:scale(.97);filter:brightness(.95);}
+.btn-pink:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 /* ── Normalized Design Token Components ─────────── */
 .ftz-panel{background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color .18s var(--ease-out);}
 .ftz-panel:hover{border-color:var(--surface-border-hover);}

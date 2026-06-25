@@ -22099,7 +22099,7 @@ function _openEmailEditor() {
   overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;">
     <div class="ftz-confirm-title">Change Email</div>
     <div class="ftz-form-warning">
-      <div class="ftz-form-warning__ico">⚠</div>
+      <div class="ftz-form-warning__ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
       <div class="ftz-form-warning__body">Confirm your password to update the email on this account.</div>
     </div>
     <input class="ftz-input" id="em-pw" type="password" placeholder="Current password" style="margin-bottom:8px;">
@@ -22134,7 +22134,7 @@ function _openPasswordEditor() {
   overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;">
     <div class="ftz-confirm-title">Change Password</div>
     <div class="ftz-form-warning">
-      <div class="ftz-form-warning__ico">🔒</div>
+      <div class="ftz-form-warning__ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
       <div class="ftz-form-warning__body">Use a strong password different from your current one.</div>
     </div>
     <input class="ftz-input" id="pw-old" type="password" placeholder="Current password" style="margin-bottom:8px;">
@@ -28252,13 +28252,24 @@ async function openRadianceGiftModal() {
     </div>
 
     <!-- Cost Display -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;margin-bottom:10px;">
       <span style="font-size:12px;color:rgba(255,255,255,.5);">Cost for <span id="gift-count">0</span> friend<span id="gift-plural">s</span>:</span>
       <div style="display:flex;align-items:center;gap:6px;">
         <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;">
         <span id="gift-cost" style="font-family:var(--font-display);font-weight:700;font-size:14px;color:#fff93e;">0</span>
       </div>
     </div>
+
+    <!-- Or Copy Link Option -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.06);"></div>
+      <span style="font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);">or</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.06);"></div>
+    </div>
+    <button onclick="copyRadianceGiftLink(this)" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.85);font-family:var(--font-display);font-size:12.5px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.07)';this.style.borderColor='rgba(255,119,228,.3)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.borderColor='rgba(255,255,255,.08)'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      Copy Gift Link <span style="font-weight:600;color:rgba(255,255,255,.45);">(600 Onyx)</span>
+    </button>
 
     <!-- Buttons -->
     <div class="ftz-modal-foot">
@@ -28352,6 +28363,34 @@ async function sendRadianceGifts(usernames, cost) {
   }
 
   toast(`Gifted Radiance to ${usernames.length} friend${usernames.length!==1?'s':''}!`, 'success');
+}
+
+// Generate a unique gift link in /[username]/[giftId] form and copy to clipboard.
+async function copyRadianceGiftLink(btn) {
+  const cost = 600;
+  if ((CU?.onyx || 0) < cost) { toast('Not enough Onyx (600 required)', 'error'); return; }
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Creating link…';
+  try {
+    const giftId = Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2,6).toUpperCase();
+    CU.onyx = (CU.onyx || 0) - cost;
+    if (!CU.pendingGifts) CU.pendingGifts = {};
+    CU.pendingGifts[giftId] = { type:'radiance', days:30, from:CU.username, created:new Date().toISOString(), claimed:false };
+    try { await firebase.database().ref('gifts/' + giftId).set(CU.pendingGifts[giftId]); } catch(e) { console.warn('[Gift] link save failed', e); }
+    await saveUser();
+    updateOnyxDisplay();
+    if (typeof distributeOnyxRevenue === 'function') distributeOnyxRevenue(cost);
+    const link = location.origin + '/' + CU.username + '/' + giftId;
+    try { await navigator.clipboard.writeText(link); toast('Gift link copied to clipboard!', 'success'); }
+    catch(_) { toast('Link: ' + link, 'info'); }
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Link Copied!';
+    setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
+  } catch (err) {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    toast(err?.message || 'Failed to create gift link', 'error');
+  }
 }
 
 // ── Discord-style Bastion Invite UI ──────────────
@@ -46248,6 +46287,14 @@ function checkGiftLinks() {
   const itemGift = params.get('gift_item');
   if (radGift) { setTimeout(() => claimGift(radGift), 1500); }
   if (itemGift) { setTimeout(() => claimGift(itemGift), 1500); }
+  // New short-form gift links: /[username]/[giftId]
+  // Match a path with exactly two non-empty segments where the second looks
+  // like a gift id (timestamp+random base36 in CAPS) so we don't intercept
+  // normal app routes like /app/messages.
+  const segs = location.pathname.split('/').filter(Boolean);
+  if (segs.length === 2 && /^[A-Z0-9]{10,}$/.test(segs[1]) && segs[0] !== 'app') {
+    setTimeout(() => claimGift(segs[1]), 1500);
+  }
 }
 
 async function claimDailyQuest() {

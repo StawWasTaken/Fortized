@@ -3927,7 +3927,8 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 @media (max-width:520px){.ftz-gift-card{grid-template-columns:1fr;}.ftz-gift-card__art{min-height:120px;}}
 /* ── Form-submission warning banner (used in app-form modals) ─── */
 .ftz-form-warning{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.4);color:rgba(245,158,11,.95);font-size:12.5px;line-height:1.4;margin-bottom:14px;}
-.ftz-form-warning__ico{width:18px;height:18px;border-radius:50%;background:rgba(245,158,11,.95);color:#13161d;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;margin-top:1px;}
+.ftz-form-warning__ico{width:20px;height:20px;color:rgba(245,158,11,.95);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0;}
+.ftz-form-warning__ico svg{width:18px;height:18px;display:block;}
 .ftz-form-warning__body{flex:1;min-width:0;color:rgba(255,255,255,.82);}
 .ftz-form-warning__body strong{color:#fff;font-weight:700;}
 /* ── Char counter for inputs/textareas ───────────────── */
@@ -3948,6 +3949,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .ftz-crop-modal__zoom-ico:active{transform:scale(.94);}
 /* ── Modal-footer with split actions (Back ⟂ Cancel/Okay) ─── */
 .ftz-modal-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 20px;border-top:1px solid var(--surface-border);background:rgba(0,0,0,.18);}
+.ftz-confirm-card .ftz-modal-foot{margin:20px -24px -24px;border-radius:0 0 var(--radius-lg) var(--radius-lg);}
 .ftz-modal-foot__back{background:transparent;border:none;color:rgba(255,255,255,.7);font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;padding:8px 4px;transition:color .12s;}
 .ftz-modal-foot__back:hover{color:#fff;}
 .ftz-modal-foot__actions{display:flex;align-items:center;gap:10px;margin-left:auto;}

@@ -9855,7 +9855,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     // flashing the default placeholder for the hydration round-trip.
     const cachedReplyPfp = (rFrom === CU?.username) ? (CU?.pfp || null) : (_pfpCache[rFrom] || null);
     const rBody = rText || (rHasAttach ? '<em style="opacity:.5">attachment</em>' : '<em style="opacity:.4">click to view</em>');
-    replyHTML = `<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><span class="mrr-av" id="${rAvId}">${buildAvatarHTML(cachedReplyPfp, rFrom, 18)}</span><strong>${rSafe}</strong><span class="mrr-preview">${rBody}</span>${rAttachIcon}</div>`;
+    replyHTML = `<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><span class="mrr-av" id="${rAvId}">${buildAvatarHTML(cachedReplyPfp, rFrom, 18)}</span><strong class="mrr-name"><span class="mrr-at">@</span>${rSafe}</strong><span class="mrr-preview">${rBody}</span>${rAttachIcon}</div>`;
     // Hydrate only if we didn't already have a cached pfp.
     if (rFrom && !cachedReplyPfp) {
       Promise.resolve().then(() => FortizedSocial.getUserByName(rFrom)).then(u => {
@@ -45236,38 +45236,37 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
   const shapeLabel = isAvatar ? 'Circle (Avatar)' : isRoundedSquare ? 'Rounded Square (Emblem)' : 'Rectangle (Banner)';
 
   overlay.innerHTML = `
-    <div style="background:var(--panel);border:1px solid rgba(255,249,62,.06);border-radius:16px;max-width:${isBanner?'680px':'480px'};width:100%;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7);">
-      <div style="padding:16px 20px 12px;border-bottom:1px solid rgba(255,255,255,.06);">
-        <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:2px;">Edit Image</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="font-size:12px;color:rgba(255,255,255,.4);">Scroll or drag slider to zoom</div>
-          <div style="margin-left:auto;font-size:10px;padding:2px 8px;border-radius:var(--radius-pill);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);color:rgba(255,249,62,.6);font-weight:600;">${shapeLabel}</div>
-        </div>
+    <div class="ftz-crop-modal" style="max-width:${isBanner?'680px':'520px'};width:100%;">
+      <div class="ftz-crop-modal__head">
+        <div class="ftz-crop-modal__title">Crop Image</div>
+        <div class="ftz-crop-modal__chip">${shapeLabel}</div>
       </div>
-      <!-- Canvas area with checkered bg for transparency -->
-      <div id="crop-canvas-wrap" style="position:relative;width:100%;aspect-ratio:${isBanner?'16/5':'1/1'};cursor:default;overflow:hidden;background:repeating-conic-gradient(#1a1d28 0% 25%, #14171f 0% 50%) 0 0/20px 20px;touch-action:none;">
+      <div id="crop-canvas-wrap" class="ftz-crop-modal__canvas-wrap" style="aspect-ratio:${isBanner?'16/5':'1/1'};">
         <canvas id="crop-canvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
-        <!-- Crop guide overlay -->
         <div id="crop-guide" style="position:absolute;inset:0;pointer-events:none;">
-          <div style="position:absolute;inset:0;box-shadow:inset 0 0 0 9999px rgba(0,0,0,.5);border-radius:${borderRadius};"></div>
-          <div style="position:absolute;inset:0;border:2px solid rgba(255,249,62,.5);border-radius:${borderRadius};"></div>
+          <div style="position:absolute;inset:0;box-shadow:inset 0 0 0 9999px rgba(0,0,0,.58);border-radius:${borderRadius};"></div>
+          <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,.92);border-radius:${borderRadius};box-shadow:0 0 0 1px rgba(0,0,0,.25);"></div>
           ${!isAvatar && !isBanner ? `
-          <!-- Rule of thirds grid -->
           <div style="position:absolute;inset:0;border-radius:4px;background:
             linear-gradient(rgba(255,255,255,.12) 1px,transparent 1px) 0 33.3%/100% 33.3%,
             linear-gradient(90deg,rgba(255,255,255,.12) 1px,transparent 1px) 33.3% 0/33.3% 100%;"></div>` : ''}
         </div>
       </div>
-      <!-- Controls -->
-      <div style="padding:14px 20px;display:flex;align-items:center;gap:12px;border-top:1px solid rgba(255,255,255,.07);">
-        <div style="display:flex;align-items:center;gap:8px;flex:1;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-          <input type="range" id="crop-zoom" min="50" max="300" value="100" style="flex:1;accent-color:var(--accent);cursor:pointer;" oninput="setCropZoom(this.value/100)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
+      <div class="ftz-crop-modal__zoom">
+        <button class="ftz-crop-modal__zoom-ico" title="Smallest" onclick="setCropZoom(Math.max(.2,_cropData.scale*0.85));document.getElementById('crop-zoom').value=Math.round(_cropData.scale*100);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        </button>
+        <input type="range" id="crop-zoom" min="50" max="300" value="100" oninput="setCropZoom(this.value/100)">
+        <button class="ftz-crop-modal__zoom-ico" title="Largest" onclick="setCropZoom(Math.min(8,_cropData.scale*1.15));document.getElementById('crop-zoom').value=Math.round(_cropData.scale*100);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+        </button>
+      </div>
+      <div class="ftz-modal-foot">
+        <button class="ftz-modal-foot__back" onclick="resetCrop()">Reset</button>
+        <div class="ftz-modal-foot__actions">
+          <button class="ftz-modal-foot__cancel" onclick="document.getElementById('crop-modal-overlay').remove()">Cancel</button>
+          <button class="btn-yellow" onclick="applyCrop()">Apply</button>
         </div>
-        <button onclick="resetCrop()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;padding:7px 14px;cursor:pointer;transition:all .15s;">Reset</button>
-        <button onclick="document.getElementById('crop-modal-overlay').remove()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-size:12px;padding:7px 16px;cursor:pointer;transition:all .15s;">Cancel</button>
-        <button onclick="applyCrop()" style="background:linear-gradient(135deg,var(--accent),#e6e034);border:none;border-radius:10px;color:var(--rail);font-size:13px;font-weight:700;padding:8px 22px;cursor:pointer;font-family:var(--font-display);box-shadow:0 2px 10px rgba(255,249,62,.2);transition:all .15s;">Apply</button>
       </div>
     </div>`;
 

@@ -6142,6 +6142,21 @@ function unhideDMConversation(id) {
 // Helper: DM path for Firebase queries (avoids loading ALL messages)
 function P_dm_path(a, b) { return `dms/${[a, b].sort().join('__')}`; }
 
+// Format timestamp into relative time string (e.g., "now", "5m", "2h", "3d", "Jan 15")
+function _formatRelativeTime(d) {
+  if (!d || isNaN(d)) return '';
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMs / 3600000);
+  const diffDay = Math.floor(diffMs / 86400000);
+  if (diffMin < 1) return 'now';
+  else if (diffMin < 60) return diffMin + 'm';
+  else if (diffHr < 24) return diffHr + 'h';
+  else if (diffDay < 7) return diffDay + 'd';
+  else return d.toLocaleDateString('en-GB', {month:'short', day:'numeric'});
+}
+
 async function renderDMSidebar(scroll) {
   const friends = CU?.friends||[];
   const gcs = CU?.groupChats||[];
@@ -6280,20 +6295,7 @@ async function renderDMSidebar(scroll) {
             // Defensive parse — bad/empty timestamps used to render literal
             // "Invalid Date" in the DM sidebar; now we just hide the field.
             const d = _safeDate(typeof lastTime === 'number' ? lastTime : Date.parse(lastTime));
-            if (!d) {
-              timeEl.textContent = '';
-            } else {
-              const now = new Date();
-              const diffMs = now - d;
-              const diffMin = Math.floor(diffMs / 60000);
-              const diffHr = Math.floor(diffMs / 3600000);
-              const diffDay = Math.floor(diffMs / 86400000);
-              if (diffMin < 1) timeEl.textContent = 'now';
-              else if (diffMin < 60) timeEl.textContent = diffMin + 'm';
-              else if (diffHr < 24) timeEl.textContent = diffHr + 'h';
-              else if (diffDay < 7) timeEl.textContent = diffDay + 'd';
-              else timeEl.textContent = d.toLocaleDateString('en-GB', {month:'short', day:'numeric'});
-            }
+            timeEl.textContent = d ? _formatRelativeTime(d) : '';
           }
         }
       }
@@ -9433,7 +9435,7 @@ async function _loadOlderMessages(barOrBtn) {
       const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
       if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId || b.name, ch.name, 50, offset);
     } else if (context === 'dm' && curDM) {
-      older = await FortizedSocial.getDMMessages(CU.username, curDM, 50);
+      older = await FortizedSocial.getDMMessages(CU.username, curDM, 50, offset);
     }
     if (older.length) {
       const container = bar.parentElement;
@@ -21133,7 +21135,10 @@ function _buildProfileView(tab) {
         </div>
 
         <div class="danger-section-title" style="margin-top:36px;">DANGER ZONE</div>
-        <button class="danger-btn" onclick="showCustomConfirm('Delete your account permanently? This cannot be undone.',doLogout)">Delete Account</button>
+        <div style="background:rgba(248,113,113,.06);border:1.5px solid rgba(248,113,113,.15);border-radius:12px;padding:14px;margin-bottom:12px;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.7);">
+          <strong style="color:rgba(248,113,113,.8);">⚠️ Warning:</strong> Deleting your account is permanent and cannot be undone. Your username, profile picture, banner, and bio will be permanently deleted. Your username will be replaced with a placeholder and reserved so no one else can claim it. Your messages will remain but show as posted by the deleted account.
+        </div>
+        <button class="danger-btn" onclick="showAccountDeleteConfirmation()">Delete Account</button>
       </div>`;
   }
 
@@ -23315,6 +23320,63 @@ async function doLogout() {
   try{await FortizedSocial.logout(CU.username);}catch{}
   localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');
   window.location.href='/login';
+}
+
+function showAccountDeleteConfirmation() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay open';
+  modal.id = 'delete-account-modal';
+  modal.innerHTML = `
+    <div style="width:100%;max-width:400px;">
+      <div class="modal-content" style="background:var(--panel);border:1.5px solid var(--border);border-radius:16px;padding:24px;">
+        <div style="font-size:20px;font-weight:800;margin-bottom:12px;color:var(--red);">Delete Account?</div>
+        <div style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.6);margin-bottom:20px;">
+          This action cannot be undone. Your account will be permanently deleted:
+          <ul style="margin-top:8px;margin-left:16px;list-style:disc;color:rgba(255,255,255,.5);">
+            <li>Username and display name anonymized</li>
+            <li>Profile picture and banner removed</li>
+            <li>Bio and personal info deleted</li>
+            <li>Username reserved (can't be reused)</li>
+            <li>Messages remain but show as deleted account</li>
+          </ul>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">Type <strong>DELETE</strong> to confirm:</div>
+          <input type="text" id="delete-confirm-input" placeholder="Type DELETE" maxlength="50" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:8px;color:var(--text);font-family:var(--font-ui);font-size:13px;" onkeyup="this.value=this.value.toUpperCase()">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-g" style="flex:1;padding:10px;" onclick="document.getElementById('delete-account-modal').remove()">Cancel</button>
+          <button class="danger-btn" style="flex:1;padding:10px;" onclick="deleteAccountPermanently()">Delete Account</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('delete-confirm-input').focus();
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+async function deleteAccountPermanently() {
+  const input = document.getElementById('delete-confirm-input');
+  if (!input || input.value !== 'DELETE') {
+    toast('Please type DELETE to confirm', 'error');
+    return;
+  }
+  if (!CU?.username) { toast('Not logged in', 'error'); return; }
+  try {
+    const result = await FortizedSocial.deleteAccount(CU.username);
+    if (result.ok) {
+      document.getElementById('delete-account-modal')?.remove();
+      toast('Account deleted. Logging out...', 'success');
+      setTimeout(() => { doLogout(); }, 1200);
+    } else {
+      toast(result.msg || 'Failed to delete account', 'error');
+    }
+  } catch(e) {
+    console.error('[deleteAccount]', e);
+    toast('Error deleting account: ' + e.message, 'error');
+  }
 }
 
 // ════════════════════════════════════════════

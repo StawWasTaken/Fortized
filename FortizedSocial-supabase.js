@@ -767,21 +767,25 @@ const FortizedSocial = (() => {
   // ── Direct Messages ──────────────────────────────────
   function _dmKey(u1, u2) { return [norm(u1), norm(u2)].sort().join('__'); }
 
-  async function getDMMessages(user1, user2, limit) {
+  async function getDMMessages(user1, user2, limit, offset) {
     const key = _dmKey(user1, user2);
     const max = limit || 100;
-    const cacheKey = 'dm:' + key + ':' + max;
-    const cached = _cacheGet(cacheKey);
-    if (cached !== undefined) return cached;
+    const skip = offset || 0;
+    // Only cache the initial fetch (no offset); paginated calls are uncached
+    const cacheKey = skip === 0 ? 'dm:' + key + ':' + max : null;
+    if (cacheKey) {
+      const cached = _cacheGet(cacheKey);
+      if (cached !== undefined) return cached;
+    }
     try {
-      // Canonical schema: dm_key + timestamp. The old "from/username/time"
-      // fallback is permanently removed — those columns don't exist in this
-      // project, and concurrent lookups hammered Supabase with 400s.
+      // Canonical schema: dm_key + timestamp. Optimize by selecting only needed
+      // columns instead of * (faster query, less data transfer, avoids timeouts).
+      // The old "from/username/time" fallback is permanently removed.
       const { data, error } = await sb.from('dms')
-        .select('*')
+        .select('id,dm_key,from,text,timestamp,created_at,edited,new_text,reactions,forwarded,forwarded_by,reply_to,flags')
         .eq('dm_key', key)
         .order('timestamp', { ascending: false })
-        .limit(max);
+        .range(skip, skip + max - 1);
 
       if (error) {
         // Demote the common "column does not exist" schema-mismatch to a
@@ -824,7 +828,7 @@ const FortizedSocial = (() => {
       });
 
       console.debug('[getDMMessages]', { between: key, count: result.length, sample: result.slice(-3).map(m => ({ id: m.id, from: m.from, text: m.text?.slice(0,40) })) });
-      _cacheSet(cacheKey, result, _CACHE_TTL.dmMessages);
+      if (cacheKey) _cacheSet(cacheKey, result, _CACHE_TTL.dmMessages);
       return result;
     } catch(e) {
       console.error('[getDMMessages] Exception:', e.message);
@@ -2405,6 +2409,62 @@ const FortizedSocial = (() => {
     }
   }
 
+  async function deleteAccount(username) {
+    if (!username) return { ok: false, msg: 'No username provided' };
+    try {
+      const normUsername = norm(username);
+      // Generate unique deletion ID to prevent username reuse
+      const deletedId = Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+      const deletedUsername = `deleted_user_${deletedId}`;
+
+      // Update user record: anonymize all personal data
+      const { error: updateError } = await sb
+        .from('users')
+        .update({
+          username: deletedUsername,
+          displayName: deletedUsername,
+          bio: '',
+          pfp: null,
+          pfpCrop: null,
+          banner: null,
+          email: '',
+          password: '',
+          status: 'offline',
+          currentGame: null,
+          customStatus: null,
+          socials: null,
+          pronouns: null,
+          profileTheme: null,
+          activeDecoration: null,
+          decorations: [],
+          displayFont: null,
+          displayEffect: null,
+          displayColor: null,
+          displayColor2: null,
+          mentionPolicy: 'all',
+          notifSettings: {},
+          deleted_at: new Date().toISOString(),
+          original_username: normUsername
+        })
+        .eq('username', normUsername);
+
+      if (updateError) {
+        console.error('[deleteAccount] User update failed:', updateError.message);
+        return { ok: false, msg: 'Failed to delete account: ' + updateError.message };
+      }
+
+      // Clear cache for this user
+      _cacheDel('user:' + normUsername);
+      _cacheDel('userEnf:' + normUsername);
+
+      console.log('[deleteAccount] Account deleted:', { original: normUsername, deleted: deletedUsername });
+      return { ok: true, msg: 'Account successfully deleted' };
+    } catch(e) {
+      console.error('[deleteAccount] Exception:', e.message);
+      return { ok: false, msg: 'Account deletion failed: ' + e.message };
+    }
+  }
+
   // ── Public API ───────────────────────────────────────
   return {
     sb, // Expose supabase client for direct calls in app code
@@ -2423,7 +2483,7 @@ const FortizedSocial = (() => {
       return result;
     },
     getUsersByNames,
-    getUserByName, saveUserObject, saveActiveDecoration, invalidateUserCache,
+    getUserByName, saveUserObject, saveActiveDecoration, deleteAccount, invalidateUserCache,
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,

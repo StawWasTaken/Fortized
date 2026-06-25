@@ -4382,30 +4382,30 @@ function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
   const defaultUrl = _defaultPfpUrl(name);
   const initial = (name||'?')[0].toUpperCase();
   const fs = Math.floor(size/2.2);
-  // Auto-assign deterministic color when no explicit bgColor passed.
-  // Color shows behind every avatar — when pfp exists and loads it covers
-  // the color; when pfp fails or is missing, color shows through.
+  // Color is ONLY used for the default avatar case (user has no pfp).
+  // Users with pfps NEVER get a colored background — not on render,
+  // not on error fallback. Transparent pfps stay transparent.
   const color = bgColor || _getUserAvatarColor(name);
-  // Two-stage onerror: if a user-set pfp 404s, fall through to the
-  // deterministic default pfp instead of jumping straight to the
-  // initial-letter SVG. The fallback wraps in a colored container so
-  // the user's assigned color always shows through.
-  const colorWrapOpen = '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+color+';">';
-  const colorWrapClose = '</div>';
-  const defaultFallbackJS = 'this.onerror=null;this.src=\''+defaultUrl+'\';this.style.objectFit=\'contain\';this.onerror=function(){this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:'+color+';color:rgba(255,255,255,.9);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this);};';
+  // Fallback when user-set pfp 404s: drop to neutral panel bg + initial letter
+  // (the "before" behavior, no color). Color is reserved exclusively for
+  // the default-avatar case below.
+  const defaultFallbackJS = 'this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this);';
+  // When the DEFAULT image fails: keep the color background (we're already
+  // in default-avatar mode) and substitute the initial letter.
   const initialFallbackJS = 'this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:'+color+';color:rgba(255,255,255,.9);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)';
-  // GIF avatar with CSS-based crop (preserves animation) — wrap in color so it shows if crop fails
+  // GIF avatar with CSS-based crop (preserves animation) — NO colored wrap
   if (pfp && cropData && cropData.widthPct) {
-    return colorWrapOpen
+    return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:block;">'
       + '<img src="'+pfp+'" style="position:absolute;left:'+cropData.leftPct+'%;top:'+cropData.topPct+'%;width:'+cropData.widthPct+'%;height:auto;" onerror="'+defaultFallbackJS+'">'
-      + colorWrapClose;
+      + '</div>';
   }
-  // User has pfp — wrap in color container so it shows if pfp fails to load
-  if (pfp) return colorWrapOpen + '<img src="'+pfp+'" style="'+s+'" onerror="'+defaultFallbackJS+'">' + colorWrapClose;
-  // Default avatar: always wrapped in colored container
-  return colorWrapOpen
+  // User has pfp — render directly with NO colored background
+  if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="'+defaultFallbackJS+'">';
+  // Default avatar (no pfp): wrapped in colored container so transparent
+  // default image shows on user's assigned color
+  return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+color+';">'
     + '<img src="'+defaultUrl+'" style="width:'+size+'px;height:'+size+'px;object-fit:contain;" onerror="'+initialFallbackJS+'">'
-    + colorWrapClose;
+    + '</div>';
 }
 function renderRailBastions() {
   const cont = document.getElementById('rail-bastions');
@@ -5069,7 +5069,7 @@ function _renderFeedbackUser() {
   if (!el || !CU) return;
   const pfp = CU.pfp || _defaultPfpUrl(CU.username);
   const _hfbStyle = CU.pfp ? '' : `background:${_getUserAvatarColor(CU.username)};object-fit:contain;`;
-  el.innerHTML = `<img class="home-fb-pfp" src="${escapeHTML(pfp)}" style="${_hfbStyle}" onerror="this.src='${_defaultPfpUrl(CU.username)}';this.style.objectFit='contain';this.style.background='${_getUserAvatarColor(CU.username)}';">
+  el.innerHTML = `<img class="home-fb-pfp" src="${escapeHTML(pfp)}" style="${_hfbStyle}" onerror="this.src='${_defaultPfpUrl(CU.username)}'">
     <span class="home-fb-name">${escapeHTML(CU.displayName||CU.username)} <span class="home-fb-handle">@${escapeHTML(CU.username)}</span></span>`;
 }
 async function submitPlaceFeedback() {
@@ -5183,7 +5183,7 @@ async function _renderHomeFriendsToday() {
       const _hocStyle = realPfp ? '' : `background:${_getUserAvatarColor(u)};object-fit:contain;`;
       return `<div class="home-online-chip" onclick="openDMView('${escapeHTML(u)}')" title="${escapeHTML(dn)}">
         <span class="hoc-av-wrap">
-          <img class="hoc-av" src="${escapeHTML(pfp)}" style="${_hocStyle}" onerror="this.src='${_defaultPfpUrl(u)}';this.style.objectFit='contain';this.style.background='${_getUserAvatarColor(u)}';">
+          <img class="hoc-av" src="${escapeHTML(pfp)}" style="${_hocStyle}" onerror="this.src='${_defaultPfpUrl(u)}'">
           <span class="hoc-dot" style="background:${statusColor};"></span>
         </span>
         <span class="hoc-name">${escapeHTML(dn)}</span>
@@ -7702,7 +7702,7 @@ async function showGCMemberPanel(meta) {
             // Preserve existing status dot color instead of hardcoding offline
             const existingDot = avWrap.querySelector('.profile-status-dot');
             const dotStatus = existingDot?.dataset.dotStatus || 'offline';
-            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}';this.style.objectFit='contain';this.style.background='${_getUserAvatarColor(m)}';"><span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${dotStatus}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(dotStatus, 10)}</span>`;
+            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}'"><span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${dotStatus}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(dotStatus, 10)}</span>`;
           }
         }
       }).catch(()=>{});
@@ -11182,7 +11182,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
               existingImg.onerror = function() { this.src = _defaultPfpUrl(u); };
             } else {
               const currentStatus = _liveStatusCache[u] || entry.dataset.status || status;
-              avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}';this.style.objectFit='contain';this.style.background='${_getUserAvatarColor(u)}';"><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
+              avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
             }
           }
         }
@@ -28202,7 +28202,7 @@ async function openRadianceGiftModal() {
         <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;transition:background .12s;cursor:pointer;margin-bottom:4px;" onclick="toggleFriendSelection(${i},this)">
           <input type="checkbox" data-friend-idx="${i}" style="width:18px;height:18px;cursor:pointer;accent-color:#ff77e4;" onchange="updateGiftCost()">
           <div style="flex-shrink:0;">
-            <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;${f.pfp ? '' : 'background:'+_getUserAvatarColor(f.username)+';'}">${f.pfp ? `<img src="${escapeHTML(f.pfp)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(f.username)}';this.style.objectFit='contain';this.style.background='${_getUserAvatarColor(f.username)}';"/>` : buildAvatarHTML(null, f.displayName||f.username, 36)}</div>
+            <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;${f.pfp ? '' : 'background:'+_getUserAvatarColor(f.username)+';'}">${f.pfp ? `<img src="${escapeHTML(f.pfp)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(f.username)}';"/>` : buildAvatarHTML(null, f.displayName||f.username, 36)}</div>
           </div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.displayName)}</div>

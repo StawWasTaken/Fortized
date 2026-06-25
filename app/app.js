@@ -23997,9 +23997,11 @@ function showCustomConfirm(message,callback){
   overlay.innerHTML=`<div class="ftz-confirm-card">
     <div class="ftz-confirm-title">${_t('btn.confirm')}</div>
     <div class="ftz-confirm-text">${escapeHTML(message)}</div>
-    <div class="ftz-confirm-actions">
-      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">${_t('btn.cancel')}</button>
-      <button class="ftz-btn ftz-btn-danger" id="cc-ok">${_t('btn.confirm')}</button>
+    <div class="ftz-modal-foot">
+      <div class="ftz-modal-foot__actions" style="width:100%;gap:8px;">
+        <button class="btn-g" id="cc-cancel" style="flex:1;justify-content:center;">${_t('btn.cancel')}</button>
+        <button class="btn-red" id="cc-ok" style="flex:1;justify-content:center;">${_t('btn.confirm')}</button>
+      </div>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -36272,9 +36274,11 @@ function _showModifyAttachment() {
       <input type="checkbox" id="_mod-att-spoiler" ${att._spoiler ? 'checked' : ''} style="accent-color:var(--accent);width:16px;height:16px;">
       Mark as spoiler
     </label>
-    <div class="ftz-confirm-actions">
-      <button class="ftz-btn ftz-btn-ghost" onclick="this.closest('.ftz-confirm-overlay').remove()">Cancel</button>
-      <button class="ftz-btn ftz-btn-danger" style="background:var(--accent);color:#13161d;border-color:var(--accent);" onclick="_applyModifyAttachment(this)">Save</button>
+    <div class="ftz-modal-foot">
+      <div class="ftz-modal-foot__actions" style="width:100%;gap:8px;">
+        <button class="btn-g" style="flex:1;justify-content:center;" onclick="this.closest('.ftz-confirm-overlay').remove()">Cancel</button>
+        <button class="btn-yellow" style="flex:1;justify-content:center;" onclick="_applyModifyAttachment(this)">Save</button>
+      </div>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -48237,9 +48241,11 @@ function _openCustomCursorModal(editingId) {
         <div class="ftz-cursor-modal__size-hint">PNG / JPG / WebP / SVG are resampled to this size. GIFs keep their original frame size to preserve animation.</div>
       </div>
       <input class="settings-input ftz-cursor-modal__name" id="cursor-modal-name" placeholder="Name (optional)" maxlength="30" value="${escapeHTML(_cursorModalState.name)}">
-      <div class="ftz-confirm-actions" style="margin-top:14px;">
-        <button class="ftz-btn ftz-btn-ghost" id="cursor-modal-cancel">Cancel</button>
-        <button class="ftz-btn ftz-btn-primary" id="cursor-modal-save" style="background:var(--accent);color:#13161d;">Save</button>
+      <div class="ftz-modal-foot" style="margin-top:14px;">
+        <div class="ftz-modal-foot__actions" style="width:100%;gap:8px;">
+          <button class="btn-g" id="cursor-modal-cancel" style="flex:1;justify-content:center;">Cancel</button>
+          <button class="btn-yellow" id="cursor-modal-save" style="flex:1;justify-content:center;">Save</button>
+        </div>
       </div>
     </div>`;
   document.body.appendChild(overlay);

@@ -5068,9 +5068,8 @@ function _renderFeedbackUser() {
   const el = document.getElementById('home-fb-user');
   if (!el || !CU) return;
   const pfp = CU.pfp || _defaultPfpUrl(CU.username);
-  const _hfbColor = _getUserAvatarColor(CU.username);
-  const _hfbStyle = CU.pfp ? `background:${_hfbColor};` : `background:${_hfbColor};object-fit:contain;`;
-  el.innerHTML = `<img class="home-fb-pfp" src="${escapeHTML(pfp)}" style="${_hfbStyle}" onerror="this.src='${_defaultPfpUrl(CU.username)}';this.style.objectFit='contain';">
+  const _hfbStyle = CU.pfp ? '' : `background:${_getUserAvatarColor(CU.username)};object-fit:contain;`;
+  el.innerHTML = `<img class="home-fb-pfp" src="${escapeHTML(pfp)}" style="${_hfbStyle}" onerror="this.src='${_defaultPfpUrl(CU.username)}';this.style.objectFit='contain';this.style.background='${_getUserAvatarColor(CU.username)}';">
     <span class="home-fb-name">${escapeHTML(CU.displayName||CU.username)} <span class="home-fb-handle">@${escapeHTML(CU.username)}</span></span>`;
 }
 async function submitPlaceFeedback() {
@@ -5181,11 +5180,10 @@ async function _renderHomeFriendsToday() {
       const dn = ud.displayName || u;
       const status = presence?.[u]?.status || 'offline';
       const statusColor = (typeof FtzStatus !== 'undefined') ? FtzStatus.color(status) : (status==='online'?'#3ecf6e':status==='away'?'#f59e0b':status==='dnd'?'#f87171':'rgba(255,255,255,.15)');
-      const _hocColor = _getUserAvatarColor(u);
-      const _hocFit = realPfp ? '' : 'object-fit:contain;';
+      const _hocStyle = realPfp ? '' : `background:${_getUserAvatarColor(u)};object-fit:contain;`;
       return `<div class="home-online-chip" onclick="openDMView('${escapeHTML(u)}')" title="${escapeHTML(dn)}">
         <span class="hoc-av-wrap">
-          <img class="hoc-av" src="${escapeHTML(pfp)}" style="background:${_hocColor};${_hocFit}" onerror="this.src='${_defaultPfpUrl(u)}';this.style.objectFit='contain';">
+          <img class="hoc-av" src="${escapeHTML(pfp)}" style="${_hocStyle}" onerror="this.src='${_defaultPfpUrl(u)}';this.style.objectFit='contain';this.style.background='${_getUserAvatarColor(u)}';">
           <span class="hoc-dot" style="background:${statusColor};"></span>
         </span>
         <span class="hoc-name">${escapeHTML(dn)}</span>
@@ -6228,11 +6226,10 @@ async function renderDMSidebar(scroll) {
         const _cp = cachedProfile(f) || {};
         const _initStatus = _cp.status || 'offline';
         const _initName = _cp.displayName || f;
-        const _color = !_cp.pfp ? _getUserAvatarColor(f) : null;
         html += `
       <div class="friend-item dm-sortable" id="dm-fi-${escapeHTML(f)}" data-dm-id="dm_${escapeHTML(f)}" data-last-time="0" onclick="openDMView('${escapeHTML(f)}')" oncontextmenu="event.preventDefault();showDMCtxMenu(event,'${escapeHTML(f)}')">
         <div style="position:relative;flex-shrink:0;">
-          <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(_cp.pfp||null,_initName,34,null,_color)}</div>
+          <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(_cp.pfp||null,_initName,34)}</div>
           <span class="profile-status-dot" data-for="${escapeHTML(f)}" data-dot-size="12" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;">${FtzStatus.dotSvg(_initStatus, 12)}</span>
         </div>
         <div class="fi-info" style="min-width:0;flex:1;">
@@ -6296,10 +6293,7 @@ async function renderDMSidebar(scroll) {
         // Cache the pfp so the next render paints it immediately (no flash).
         if (u.pfp) { _pfpCache[f] = u.pfp; _persistPfpCache(); }
         const avEl = document.getElementById('dm-av-'+f);
-        if (avEl) {
-          const _color = !u.pfp ? _getUserAvatarColor(f) : null;
-          avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34, null, _color);
-        }
+        if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
         const dnEl = document.getElementById('dm-dn-'+f);
         if (dnEl) {
           dnEl.textContent = u.displayName || f;
@@ -6468,19 +6462,13 @@ async function renderDMFriendsHome() {
 
       // Update friend row avatar + display name
       const avEl = document.getElementById('dm-home-av-'+f);
-      if (avEl) {
-        const _color = !u.pfp ? _getUserAvatarColor(f) : null;
-        avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 42, null, _color);
-      }
+      if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 42);
       const dnEl = document.getElementById('dm-home-dn-'+f);
       if (dnEl) dnEl.textContent = u.displayName || f;
 
       // Update pending row avatar + display name
       const pavEl = document.getElementById('dm-home-pav-'+f);
-      if (pavEl) {
-        const _color = !u.pfp ? _getUserAvatarColor(f) : null;
-        pavEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 40, null, _color);
-      }
+      if (pavEl) pavEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 40);
       const pdnEl = document.getElementById('dm-home-pdn-'+f);
       if (pdnEl) pdnEl.textContent = u.displayName || f;
 
@@ -7714,8 +7702,7 @@ async function showGCMemberPanel(meta) {
             // Preserve existing status dot color instead of hardcoding offline
             const existingDot = avWrap.querySelector('.profile-status-dot');
             const dotStatus = existingDot?.dataset.dotStatus || 'offline';
-            const _gcMlColor = _getUserAvatarColor(m);
-            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;background:${_gcMlColor};" onerror="this.src='${_defaultPfpUrl(m)}';this.style.objectFit='contain';"><span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${dotStatus}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(dotStatus, 10)}</span>`;
+            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}';this.style.objectFit='contain';this.style.background='${_getUserAvatarColor(m)}';"><span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${dotStatus}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(dotStatus, 10)}</span>`;
           }
         }
       }).catch(()=>{});
@@ -11195,8 +11182,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
               existingImg.onerror = function() { this.src = _defaultPfpUrl(u); };
             } else {
               const currentStatus = _liveStatusCache[u] || entry.dataset.status || status;
-              const _frColor = _getUserAvatarColor(u);
-              avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;background:${_frColor};" onerror="this.src='${_defaultPfpUrl(u)}';this.style.objectFit='contain';"><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
+              avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}';this.style.objectFit='contain';this.style.background='${_getUserAvatarColor(u)}';"><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
             }
           }
         }
@@ -13609,22 +13595,13 @@ function initFortizedUXResilience() {
           document.querySelectorAll('img[data-pfp-for="'+data.username+'"]').forEach(img => { img.src = data.pfp; });
           // DM sidebar avatars
           const dmAv = document.getElementById('dm-av-'+data.username);
-          if (dmAv) {
-            const _color = !data.pfp ? _getUserAvatarColor(data.username) : null;
-            dmAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 34, _upCrop, _color);
-          }
+          if (dmAv) dmAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 34, _upCrop);
           // DM friends home avatars
           const dmHomeAv = document.getElementById('dm-home-av-'+data.username);
-          if (dmHomeAv) {
-            const _color = !data.pfp ? _getUserAvatarColor(data.username) : null;
-            dmHomeAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 42, _upCrop, _color);
-          }
+          if (dmHomeAv) dmHomeAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 42, _upCrop);
           // DM home preview avatar (active row's hover-preview)
           const dmHomePav = document.getElementById('dm-home-pav-'+data.username);
-          if (dmHomePav) {
-            const _color = !data.pfp ? _getUserAvatarColor(data.username) : null;
-            dmHomePav.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 40, _upCrop, _color);
-          }
+          if (dmHomePav) dmHomePav.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 40, _upCrop);
           // Message avatars in active chat — the old selector targeted a
           // data-av-for attribute that no msg-row actually emits. Use the
           // row's data-from instead and re-render the whole .msg-av-inner
@@ -28225,7 +28202,7 @@ async function openRadianceGiftModal() {
         <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;transition:background .12s;cursor:pointer;margin-bottom:4px;" onclick="toggleFriendSelection(${i},this)">
           <input type="checkbox" data-friend-idx="${i}" style="width:18px;height:18px;cursor:pointer;accent-color:#ff77e4;" onchange="updateGiftCost()">
           <div style="flex-shrink:0;">
-            <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:${_getUserAvatarColor(f.username)};">${f.pfp ? `<img src="${escapeHTML(f.pfp)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(f.username)}';this.style.objectFit='contain';"/>` : buildAvatarHTML(null, f.displayName||f.username, 36)}</div>
+            <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;${f.pfp ? '' : 'background:'+_getUserAvatarColor(f.username)+';'}">${f.pfp ? `<img src="${escapeHTML(f.pfp)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(f.username)}';this.style.objectFit='contain';this.style.background='${_getUserAvatarColor(f.username)}';"/>` : buildAvatarHTML(null, f.displayName||f.username, 36)}</div>
           </div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.displayName)}</div>
@@ -47223,8 +47200,7 @@ function _fppAvatarHTML(u, size) {
   // profile theme colours". We keep the inner status colour
   // (green/yellow/red/grey) untouched so the semantic still reads.
   const isSelf = CU?.username && String(u.username || '').toLowerCase() === String(CU.username).toLowerCase();
-  const color = !u.pfp ? _getUserAvatarColor(u.username) : null;
-  return `<div class="fpp__av" data-action="open-profile">${buildAvatarHTML(u.pfp, u.displayName || u.username, size, null, color)}</div>
+  return `<div class="fpp__av" data-action="open-profile">${buildAvatarHTML(u.pfp, u.displayName || u.username, size)}</div>
     ${dec ? `<img src="${escapeHTML(dec)}" class="fpp__decoration" onerror="this.style.display='none'">` : ''}
     <span class="fpp__status-dot profile-status-dot${isSelf ? ' fpp__status-dot--self' : ''}" data-for="${escapeHTML(u.username)}" data-dot-size="22">${FtzStatus.dotSvg(u.status || 'offline', 22)}</span>`;
 }

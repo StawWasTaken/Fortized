@@ -6737,16 +6737,6 @@ function openDMView(username) {
         <div class="w-av" id="dm-welcome-av">${(() => { const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {}; return buildAvatarHTML(_cp.pfp || null, _cp.displayName || username, 60); })()}</div>
         <h3 id="dm-welcome-name">${escapeHTML((typeof cachedProfile === 'function' && cachedProfile(username)?.displayName) || username)}</h3>
         <p>Beginning of your conversation with <strong>${escapeHTML(username)}</strong>.</p>
-        <div class="chat-welcome-greeting" id="dm-welcome-greeting" style="display:none;">
-          <div class="chat-welcome-greeting-label">Start the conversation</div>
-          <div class="chat-welcome-greeting-btns">
-            ${GREETING_GIFS.map(g => `<button class="chat-welcome-greeting-btn" onclick="sendGreetingMessage('${escapeHTML(username)}','${escapeHTML(g.emoji)}');" title="${escapeHTML(g.text)}">${escapeHTML(g.emoji)}</button>`).join('')}
-          </div>
-          <div class="chat-welcome-greeting-flag">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-            System suggestion
-          </div>
-        </div>
       </div>`;
   const _lockedComposerHTML = `
       <div class="chat-locked-notice" role="note">
@@ -6767,6 +6757,25 @@ function openDMView(username) {
         <div class="new-messages-bar" id="dm-new-msgs-bar"><span id="dm-new-msgs-text">1 new message</span><button onclick="markDMRead()">Mark as Read</button></div>
         ${_officialWelcomeHTML}
       </div>
+
+      ${!_isOfficialDM ? `<div class="chat-greeting-bar" id="dm-greeting-bar" style="display:none;">
+        <div class="chat-greeting-bar__inner">
+          <div class="chat-greeting-bar__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            Wave hello
+          </div>
+          <div class="chat-greeting-bar__chips">
+            ${GREETING_GIFS.map(g => `<button class="chat-greeting-bar__chip" onclick="sendGreetingMessage('${escapeHTML(username)}','${escapeHTML(g.emoji)}');" title="${escapeHTML(g.text)}"><span class="chat-greeting-bar__chip-emoji">${escapeHTML(g.emoji)}</span></button>`).join('')}
+          </div>
+          <div class="chat-greeting-bar__flag" title="System suggestion — your friend will see this as sent by you">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            System suggestion
+          </div>
+          <button class="chat-greeting-bar__close" onclick="dismissGreetingBar('${escapeHTML(username)}')" title="Dismiss">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>` : ''}
 
       <div class="typing-indicator" id="dm-typing-bar" style="opacity:0;">
         <div class="typing-dots"><span></span><span></span><span></span></div>
@@ -6922,10 +6931,10 @@ async function loadDMMessages(username) {
         if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', username)) playNotifSound('message');
         // Update sidebar in real-time
         _updateDMSidebarForNewMessage(username, msg);
-        // Hide greeting button once combined message count crosses threshold
+        // Hide greeting bar once combined message count crosses threshold
         const count = el.querySelectorAll('.msg-row').length;
         if (count >= 5) {
-          const g = document.getElementById('dm-welcome-greeting');
+          const g = document.getElementById('dm-greeting-bar');
           if (g) g.style.display = 'none';
         }
       }
@@ -22957,6 +22966,13 @@ async function _viewUserProfile(username) {
   username = (username || '').trim().toLowerCase();
   if (!username) throw new Error('No username provided');
   if (!CU?.username) throw new Error('Not signed in');
+  // Open the modal immediately with a skeleton placeholder so the user sees
+  // the card appear instantly instead of waiting for the network roundtrip.
+  const _earlyBody = document.getElementById('user-modal-body');
+  if (_earlyBody && !_earlyBody.querySelector('.up')) {
+    _earlyBody.innerHTML = _renderProfileCardSkeleton();
+    openModal('modal-user');
+  }
   let u = null;
   // noCache so the Profile Card modal always opens with the user's
   // CURRENT data instead of a 5-minute-old cached snapshot.
@@ -35321,9 +35337,30 @@ async function showDMUserPanel(username) {
   const panel = document.getElementById('dm-user-panel');
   if (!panel) return;
   panel.style.display = 'block';
-  panel.className = 'fpp fpp--dm';
+  panel.className = 'fpp fpp--dm fpp--loading';
   panel.setAttribute('data-fpp-user', username);
-  panel.innerHTML = '<div style="padding:24px;color:var(--muted-light);font-size:13px;text-align:center;">Loading\u2026</div>';
+
+  // Try to seed with cached profile so the panel paints something real
+  // immediately. Falls back to the skeleton layout if nothing is cached.
+  const cached = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || null;
+  if (cached) {
+    const seed = { ...cached, username, displayName: cached.displayName || username, status: 'offline' };
+    const isOwn = username === CU?.username;
+    const hasRadiance = _hasRadiance(seed);
+    panel.innerHTML = `
+      <div class="fpp__banner">${_fppBannerHTML(seed, hasRadiance)}</div>
+      <div class="fpp__av-row">
+        <div class="fpp__av-wrap">${_fppAvatarHTML(seed, 94)}</div>
+        ${_fppCSBubbleHTML(seed, isOwn)}
+      </div>
+      ${_fppIdentityHTML(seed)}
+      ${_fppAboutCardHTML(seed)}
+      <div style="flex:1;"></div>
+      ${_fppActionRowHTML(username, isOwn, 'dm')}`;
+    _fppApplyTheme(panel, seed);
+  } else {
+    panel.innerHTML = _fppSkeletonHTML() + '<div style="flex:1;"></div><div class="fpp-skel-actions"><div class="skeleton fpp-skel-pill"></div></div>';
+  }
   subscribeProfileStatus(username);
 
   let u = null;
@@ -35363,6 +35400,7 @@ async function showDMUserPanel(username) {
        </div>`
     : '';
 
+  panel.classList.remove('fpp--loading');
   panel.innerHTML = `
     <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
     <div class="fpp__av-row">
@@ -47480,6 +47518,117 @@ if (typeof window.inviteUserToBastion !== 'function') {
   };
 }
 
+// Profile card modal skeleton — mirrors the .fpp-card-modal split-pane
+// layout (left identity column + right tabs/content) so the swap is
+// jitter-free. Used by _viewUserProfile while the user record + presence
+// roundtrip is in flight.
+function _renderProfileCardSkeleton() {
+  return `
+    <div class="fpp-card-modal up-skel" data-fpp-user="">
+      <button class="fpp-card-modal__close" aria-label="Close" onclick="closeModal('modal-user')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="fpp-card-modal__left">
+        <div class="fpp__banner up-skel-banner"><div class="skeleton" style="width:100%;height:100%;border-radius:0;"></div></div>
+        <div class="fpp__av-row">
+          <div class="fpp__av-wrap"><div class="skeleton up-skel-avatar"></div></div>
+        </div>
+        <div class="up-skel-block">
+          <div class="skeleton" style="width:55%;height:22px;border-radius:6px;"></div>
+          <div class="skeleton" style="width:35%;height:13px;border-radius:6px;margin-top:8px;"></div>
+        </div>
+        <div class="up-skel-card">
+          <div class="skeleton" style="width:25%;height:10px;border-radius:6px;"></div>
+          <div class="skeleton" style="width:92%;height:11px;border-radius:6px;margin-top:8px;"></div>
+          <div class="skeleton" style="width:80%;height:11px;border-radius:6px;margin-top:6px;"></div>
+          <div class="skeleton" style="width:60%;height:11px;border-radius:6px;margin-top:6px;"></div>
+        </div>
+        <div class="up-skel-card">
+          <div class="skeleton" style="width:30%;height:10px;border-radius:6px;"></div>
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <div class="skeleton" style="width:28px;height:28px;border-radius:8px;"></div>
+            <div class="skeleton" style="width:28px;height:28px;border-radius:8px;"></div>
+            <div class="skeleton" style="width:28px;height:28px;border-radius:8px;"></div>
+          </div>
+        </div>
+        <div class="up-skel-actions">
+          <div class="skeleton" style="flex:1;height:36px;border-radius:10px;"></div>
+          <div class="skeleton" style="width:42px;height:36px;border-radius:10px;"></div>
+        </div>
+      </div>
+      <div class="fpp-card-modal__right">
+        <div class="fpp-card-modal__tabs" style="opacity:.4;">
+          <div class="fpp-card-modal__tab is-active"><div class="skeleton" style="width:54px;height:11px;border-radius:6px;"></div></div>
+          <div class="fpp-card-modal__tab"><div class="skeleton" style="width:54px;height:11px;border-radius:6px;"></div></div>
+        </div>
+        <div class="fpp-card-modal__content">
+          <div class="up-skel-card" style="margin:0 0 10px 0;">
+            <div class="skeleton" style="width:30%;height:12px;border-radius:6px;"></div>
+            <div class="skeleton" style="width:100%;height:90px;border-radius:8px;margin-top:10px;"></div>
+          </div>
+          <div class="up-skel-card" style="margin:0;">
+            <div class="skeleton" style="width:25%;height:12px;border-radius:6px;"></div>
+            <div class="skeleton" style="width:100%;height:60px;border-radius:8px;margin-top:10px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// Render a full popover (banner / av / identity / cards / actions) given a
+// resolved user object. Extracted so we can paint a skeleton-then-replace
+// flow without duplicating markup with the awaited path.
+function _fppRenderFullPanel(panel, u, username, isOwn) {
+  const hasRadiance = _hasRadiance(u);
+  const mutualFriends = isOwn ? [] : (CU?.friends || []).filter(f => f !== CU?.username && f !== username && (u.friends || []).includes(f));
+  const mutualsChip = mutualFriends.length
+    ? `<div class="fpp__mutuals-chip" onclick="_fppClose();viewUserProfile('${escapeHTML(username)}','mutuals')">
+         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+         ${mutualFriends.length} Mutual Friend${mutualFriends.length === 1 ? '' : 's'}
+       </div>`
+    : '';
+  panel.innerHTML = `
+    <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
+    <div class="fpp__av-row">
+      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 72)}</div>
+      ${_fppCSBubbleHTML(u, isOwn)}
+    </div>
+    ${_fppIdentityHTML(u)}
+    ${mutualsChip}
+    ${_fppAboutCardHTML(u)}
+    ${_fppBadgesCardHTML(u)}
+    ${_fppGamesCardHTML(u)}
+    ${_fppActionRowHTML(username, isOwn)}`;
+  panel.querySelectorAll('[data-action="open-profile"]').forEach(el => {
+    el.addEventListener('click', () => { _fppClose(); viewUserProfile(username); });
+  });
+  _fppApplyTheme(panel, u);
+}
+
+// Build skeleton markup that matches the real popover's layout (banner +
+// avatar + identity + about/badges/games cards + action row). The
+// dimensions and gaps mirror the real elements so the swap is jitter-free.
+function _fppSkeletonHTML() {
+  return `
+    <div class="fpp__banner fpp-skel-banner"><div class="skeleton fpp-skel-banner-fill"></div></div>
+    <div class="fpp__av-row">
+      <div class="fpp__av-wrap"><div class="skeleton fpp-skel-av"></div></div>
+    </div>
+    <div class="fpp-skel-identity">
+      <div class="skeleton fpp-skel-line" style="width:55%;height:18px;"></div>
+      <div class="skeleton fpp-skel-line" style="width:35%;height:12px;margin-top:6px;"></div>
+    </div>
+    <div class="fpp-skel-card">
+      <div class="skeleton fpp-skel-line" style="width:30%;height:10px;"></div>
+      <div class="skeleton fpp-skel-line" style="width:90%;height:11px;margin-top:8px;"></div>
+      <div class="skeleton fpp-skel-line" style="width:75%;height:11px;margin-top:6px;"></div>
+    </div>
+    <div class="fpp-skel-actions">
+      <div class="skeleton fpp-skel-pill"></div>
+      <div class="skeleton fpp-skel-pill" style="width:42px;"></div>
+    </div>`;
+}
+
 async function showMiniProfilePreview(username, anchorEl) {
   _fppClose();
   // Userbar anchor → dedicated own-profile popover (Discord parity).
@@ -47488,19 +47637,54 @@ async function showMiniProfilePreview(username, anchorEl) {
     return _renderOwnProfilePopover(anchorEl);
   }
 
+  const isOwn = username === CU?.username;
+
+  // Paint the popover immediately with cached data + skeleton placeholders
+  // so the user sees something *instantly* on click rather than waiting for
+  // the network roundtrip (~hundreds of ms on slow connections).
+  const cached = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || null;
+  const seed = cached
+    ? { ...cached, username, displayName: cached.displayName || username }
+    : { username, displayName: username };
+
+  const panel = document.createElement('div');
+  panel.id = 'fpp-mini';
+  panel.className = 'fpp fpp--mini fpp--loading';
+  panel.setAttribute('data-fpp-user', seed.username);
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-label', 'Profile preview for ' + (seed.displayName || seed.username));
+
+  if (cached) {
+    // We have stale data — paint the real layout immediately. The fresh
+    // fetch will swap in fresh values below.
+    _fppRenderFullPanel(panel, { ...seed, status: 'offline' }, username, isOwn);
+  } else {
+    // Cold first view: skeleton-only so layout doesn't jump when data lands.
+    panel.innerHTML = _fppSkeletonHTML();
+  }
+
+  document.body.appendChild(panel);
+  _fppPositionPopover(panel, anchorEl);
+
+  setTimeout(() => {
+    function _close() { panel.remove(); document.removeEventListener('mousedown', _onMouse); document.removeEventListener('keydown', _onKey); }
+    function _onMouse(e) {
+      if (panel.contains(e.target) || e.target === anchorEl) return;
+      if (document.getElementById('fpp-menu')?.contains(e.target)) return;
+      if (document.getElementById('fpp-invite-sub')?.contains(e.target)) return;
+      _close();
+    }
+    function _onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); _close(); } }
+    document.addEventListener('mousedown', _onMouse);
+    document.addEventListener('keydown', _onKey);
+  }, 100);
+
+  // Resolve the real user object + presence in parallel, then swap in.
   let u = null;
-  // noCache so the mini popover always shows the user's CURRENT pfp /
-  // banner / bio / pronouns / etc. — cached lookups can be up to TTL
-  // minutes stale and that's the "user A still sees the elephant after
-  // user B changed to a giraffe" bug.
   try { u = await FortizedSocial.getUserByName(username, { noCache: true }); } catch (e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   let status = 'offline';
-  if (username === CU?.username) {
-    // _publicViewOf reverts editable identity fields to the saved
-    // snapshot when settings is dirty, so the mini popover doesn't
-    // leak unsaved bio/banner/theme edits back at the user while
-    // they're still typing in Settings.
+  if (isOwn) {
     u = _publicViewOf({ ...u, ...CU });
     status = CU.status || 'online';
   } else {
@@ -47519,55 +47703,12 @@ async function showMiniProfilePreview(username, anchorEl) {
   u.status = status;
   subscribeProfileStatus(username);
 
-  const isOwn = username === CU?.username;
-  const hasRadiance = _hasRadiance(u);
-  const mutualFriends = isOwn ? [] : (CU?.friends || []).filter(f => f !== CU?.username && f !== username && (u.friends || []).includes(f));
-  const mutualsChip = mutualFriends.length
-    ? `<div class="fpp__mutuals-chip" onclick="_fppClose();viewUserProfile('${escapeHTML(username)}','mutuals')">
-         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-         ${mutualFriends.length} Mutual Friend${mutualFriends.length === 1 ? '' : 's'}
-       </div>`
-    : '';
-
-  const panel = document.createElement('div');
-  panel.id = 'fpp-mini';
-  panel.className = 'fpp fpp--mini';
-  panel.setAttribute('data-fpp-user', u.username);
-  panel.setAttribute('role', 'dialog');
-  panel.setAttribute('aria-label', 'Profile preview for ' + (u.displayName || u.username));
-  panel.innerHTML = `
-    <div class="fpp__banner">${_fppBannerHTML(u, hasRadiance)}</div>
-    <div class="fpp__av-row">
-      <div class="fpp__av-wrap">${_fppAvatarHTML(u, 72)}</div>
-      ${_fppCSBubbleHTML(u, isOwn)}
-    </div>
-    ${_fppIdentityHTML(u)}
-    ${mutualsChip}
-    ${_fppAboutCardHTML(u)}
-    ${_fppBadgesCardHTML(u)}
-    ${_fppGamesCardHTML(u)}
-    ${_fppActionRowHTML(username, isOwn)}`;
-
-  panel.querySelectorAll('[data-action="open-profile"]').forEach(el => {
-    el.addEventListener('click', () => { _fppClose(); viewUserProfile(username); });
-  });
-
-  _fppApplyTheme(panel, u);
-  document.body.appendChild(panel);
+  // Panel may have been closed while awaiting — abort gracefully.
+  if (!panel.isConnected) return;
+  panel.classList.remove('fpp--loading');
+  _fppRenderFullPanel(panel, u, username, isOwn);
+  // Re-position now that we have real dimensions
   _fppPositionPopover(panel, anchorEl);
-
-  setTimeout(() => {
-    function _close() { panel.remove(); document.removeEventListener('mousedown', _onMouse); document.removeEventListener('keydown', _onKey); }
-    function _onMouse(e) {
-      if (panel.contains(e.target) || e.target === anchorEl) return;
-      if (document.getElementById('fpp-menu')?.contains(e.target)) return;
-      if (document.getElementById('fpp-invite-sub')?.contains(e.target)) return;
-      _close();
-    }
-    function _onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); _close(); } }
-    document.addEventListener('mousedown', _onMouse);
-    document.addEventListener('keydown', _onKey);
-  }, 100);
 }
 
 function _fppPositionPopover(panel, anchorEl) {
@@ -52444,10 +52585,10 @@ const GREETING_GIFS = [
   { emoji: '👉👈', text: 'shy hello' },
 ];
 
-// Reveal or hide the greeting button based on conversation state.
-// Hidden when: official account chat, message count >= 5, or 5h elapsed.
+// Reveal or hide the greeting bar above the chatbar based on conversation state.
+// Hidden when: official account chat, message count >= 5, 5h elapsed, or dismissed.
 function _maybeShowGreetingButton(username, msgs) {
-  const greetingEl = document.getElementById('dm-welcome-greeting');
+  const greetingEl = document.getElementById('dm-greeting-bar');
   if (!greetingEl) return;
   if (isFortizedOfficialAccount(username)) { greetingEl.style.display = 'none'; return; }
   const count = Array.isArray(msgs) ? msgs.length : 0;
@@ -52455,17 +52596,36 @@ function _maybeShowGreetingButton(username, msgs) {
   // 5-hour visibility window — tracked on first open
   const greetingKey = 'greeting_dm:' + String(username).toLowerCase();
   let openedAt = null;
+  let dismissed = false;
   try {
     const stored = localStorage.getItem(greetingKey);
-    if (stored) openedAt = JSON.parse(stored)?.openedAt || null;
+    if (stored) {
+      const data = JSON.parse(stored);
+      openedAt = data?.openedAt || null;
+      dismissed = data?.dismissed || false;
+    }
   } catch(_) {}
+  if (dismissed) { greetingEl.style.display = 'none'; return; }
   if (!openedAt) {
     openedAt = Date.now();
     try { localStorage.setItem(greetingKey, JSON.stringify({ openedAt })); } catch(_) {}
   }
   const elapsed = Date.now() - openedAt;
   if (elapsed >= 5 * 60 * 60 * 1000) { greetingEl.style.display = 'none'; return; }
-  greetingEl.style.display = 'flex';
+  greetingEl.style.display = 'block';
+}
+
+// Dismiss the greeting bar for this conversation (persisted)
+function dismissGreetingBar(username) {
+  const greetingEl = document.getElementById('dm-greeting-bar');
+  if (greetingEl) greetingEl.style.display = 'none';
+  const greetingKey = 'greeting_dm:' + String(username).toLowerCase();
+  try {
+    const stored = localStorage.getItem(greetingKey);
+    const data = stored ? JSON.parse(stored) : { openedAt: Date.now() };
+    data.dismissed = true;
+    localStorage.setItem(greetingKey, JSON.stringify(data));
+  } catch(_) {}
 }
 
 // Check if greeting button should be shown for a DM conversation.
@@ -52526,8 +52686,8 @@ async function sendGreetingMessage(username, greetingEmoji) {
     console.error('[sendGreetingMessage] Error:', e.message);
     _markMessageFailed(msgsEl, msg.id, { kind: 'dm', target: username, text: greetingEmoji });
   }
-  // Hide greeting button after sending
-  const greetingContainer = document.getElementById('dm-welcome-greeting');
+  // Hide greeting bar after sending
+  const greetingContainer = document.getElementById('dm-greeting-bar');
   if (greetingContainer) greetingContainer.style.display = 'none';
 }
 

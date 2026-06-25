@@ -901,7 +901,10 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .msg-content-col{flex:1;min-width:0;padding-left:4px;}
 .msg-header{display:flex;align-items:center;gap:4px;margin-bottom:3px;flex-wrap:wrap;}
 .msg-author{font-size:15px;font-weight:700;color:#fff;cursor:pointer;line-height:1.3;}
-.msg-author:hover{text-decoration:underline;}
+/* No underline on hover — customized display name styles (gradient/halo/inked)
+   reveal on hover via the .msg-author--styled JS handler. An underline would
+   clash with the styled treatment and also looks dated next to it. */
+.msg-author:hover{text-decoration:none;}
 .msg-timestamp{font-size:11px;color:rgba(255,255,255,.4);margin-left:6px;font-weight:500;}
 .msg-text{font-size:15.5px;color:rgba(228,232,240,.94);line-height:1.55;word-break:break-word;letter-spacing:.005em;}
 .msg-text code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:5px;font-size:12px;font-family:monospace;}
@@ -8260,7 +8263,9 @@ textarea:focus::placeholder {
 .onyx-pill:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.8); }
 
 .msg-author { transition: color 0.12s ease; }
-.msg-author:hover { color: rgba(255,255,255,.95); text-decoration: underline; text-decoration-style: dotted; }
+/* Subtle brightness shift on hover; no underline — the styled name effect
+   handles its own visual reveal. */
+.msg-author:hover { color: rgba(255,255,255,.95); }
 
 .msg-blur-reveal { transition: background 0.15s ease, border-color 0.15s ease; }
 .msg-blur-reveal:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.12); }
@@ -12729,13 +12734,52 @@ select:focus,select:focus-visible,
   display:inline-flex;align-items:center;gap:6px;
 }
 
-/* ── Greeting action button for new conversations ── */
-.chat-welcome-greeting{margin-top:16px;display:flex;flex-direction:column;gap:10px;}
-.chat-welcome-greeting-label{font-size:12px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.03em;font-weight:600;}
-.chat-welcome-greeting-btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;}
-.chat-welcome-greeting-btn{padding:10px 14px;background:rgba(255,249,62,.08);border:1.5px solid rgba(255,249,62,.25);border-radius:10px;color:rgba(255,255,255,.75);font-size:13px;font-family:var(--font-display);font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s cubic-bezier(.22,1,.36,1);text-align:center;}
-.chat-welcome-greeting-btn:hover{background:rgba(255,249,62,.14);border-color:rgba(255,249,62,.45);color:#fff;transform:translateY(-2px);box-shadow:0 4px 12px rgba(255,249,62,.1);}
-.chat-welcome-greeting-btn:active{transform:translateY(0);box-shadow:0 2px 6px rgba(255,249,62,.08);}
-.chat-welcome-greeting-flag{font-size:11px;color:rgba(255,255,255,.45);margin-top:8px;display:flex;align-items:center;gap:4px;}
-.chat-welcome-greeting-flag svg{width:12px;height:12px;opacity:.6;}
+/* ── Profile-popover (fpp) skeleton loaders ──
+   Mirror the real popover's layout so the swap is jitter-free. */
+.fpp--loading{pointer-events:none;}
+.fpp--loading .fpp-skel-banner{width:100%;height:80px;background:transparent;}
+.fpp--loading .fpp-skel-banner-fill{width:100%;height:100%;border-radius:0;}
+.fpp--loading .fpp-skel-av{width:72px;height:72px;border-radius:50%;border:3px solid var(--panel);position:relative;top:-18px;left:14px;}
+.fpp-skel-identity{padding:0 16px 8px 16px;}
+.fpp-skel-card{margin:10px 16px;padding:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:10px;}
+.fpp-skel-line{border-radius:6px;}
+.fpp-skel-actions{display:flex;gap:8px;padding:10px 16px 14px 16px;}
+.fpp-skel-pill{flex:1;height:36px;border-radius:10px;}
+
+/* ── DM sidebar profile preview skeleton ── */
+.dm-side-preview-skel{display:flex;align-items:center;gap:12px;padding:10px 14px;}
+.dm-side-preview-skel .skeleton-avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;}
+.dm-side-preview-skel-body{flex:1;min-width:0;}
+
+/* ── Profile card modal skeleton — matches .fpp-card-modal layout ── */
+.up-skel{pointer-events:auto;}
+.up-skel-banner{width:100%;height:120px;background:rgba(255,255,255,.02);}
+.up-skel-avatar{width:92px;height:92px;border-radius:50%;border:4px solid var(--panel);position:relative;top:-22px;left:14px;}
+.up-skel-block{padding:0 18px 8px 18px;margin-top:-4px;}
+.up-skel-card{margin:8px 18px;padding:14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:12px;}
+.up-skel-actions{display:flex;gap:8px;padding:10px 18px 16px 18px;}
+
+/* ── Discord-style greeting bar above the chatbar ── */
+.chat-greeting-bar{padding:0 16px 8px 16px;animation:greetBarSlideIn .35s cubic-bezier(.22,1,.36,1);}
+.chat-greeting-bar__inner{display:flex;align-items:center;gap:12px;padding:10px 14px;background:linear-gradient(180deg,rgba(255,249,62,.06) 0%,rgba(255,249,62,.025) 100%);border:1.5px solid rgba(255,249,62,.18);border-radius:14px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.04);position:relative;overflow:hidden;}
+.chat-greeting-bar__inner::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 0% 50%,rgba(255,249,62,.08) 0%,transparent 40%);pointer-events:none;}
+.chat-greeting-bar__label{font-size:11.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:6px;flex-shrink:0;font-family:var(--font-display);}
+.chat-greeting-bar__label svg{width:13px;height:13px;}
+.chat-greeting-bar__chips{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;}
+.chat-greeting-bar__chips::-webkit-scrollbar{display:none;}
+.chat-greeting-bar__chip{padding:6px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.22,1,.36,1);flex-shrink:0;font-family:var(--font-ui);}
+.chat-greeting-bar__chip-emoji{font-size:18px;line-height:1;display:inline-block;transition:transform .18s cubic-bezier(.22,1,.36,1);}
+.chat-greeting-bar__chip:hover{background:rgba(255,249,62,.12);border-color:rgba(255,249,62,.4);transform:translateY(-2px);box-shadow:0 4px 12px rgba(255,249,62,.15);}
+.chat-greeting-bar__chip:hover .chat-greeting-bar__chip-emoji{transform:scale(1.25) rotate(-8deg);}
+.chat-greeting-bar__chip:active{transform:translateY(0) scale(.96);}
+.chat-greeting-bar__flag{font-size:10.5px;color:rgba(255,255,255,.35);display:flex;align-items:center;gap:4px;cursor:help;flex-shrink:0;}
+.chat-greeting-bar__flag svg{width:11px;height:11px;opacity:.6;}
+.chat-greeting-bar__close{width:24px;height:24px;border-radius:6px;background:transparent;border:none;color:rgba(255,255,255,.35);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s ease;flex-shrink:0;}
+.chat-greeting-bar__close svg{width:14px;height:14px;}
+.chat-greeting-bar__close:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);}
+@keyframes greetBarSlideIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@media (max-width:768px){
+  .chat-greeting-bar__label{display:none;}
+  .chat-greeting-bar__flag{display:none;}
+}
 

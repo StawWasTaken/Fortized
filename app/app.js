@@ -8244,6 +8244,20 @@ function renderBastionSidebar(scroll) {
   // ── Mood Bar ──
   html+=renderMoodBar(b);
 
+  // ── Boost Progress Bar ──
+  const boostProgress = boostLv > 0 ? Math.floor(Math.random() * 100) : 0;
+  const nextTierLevel = Math.min(3, boostLv + 1);
+  const boostBarColor = boostLv === 1 ? '#60a5fa' : boostLv === 2 ? '#a78bfa' : boostLv === 3 ? '#fbbf24' : 'rgba(255,255,255,.1)';
+  html += `<div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+      <span>Boost Level ${boostLv}</span>
+      <span style="color:rgba(255,255,255,.3);">→ T${nextTierLevel}</span>
+    </div>
+    <div style="width:100%;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;">
+      <div style="height:100%;width:${boostProgress}%;background:linear-gradient(90deg,${boostBarColor} 0%,rgba(255,119,228,.8) 55%,#ff77e4 100%);transition:width .3s ease;box-shadow:0 0 12px ${boostBarColor}99;"></div>
+    </div>
+  </div>`;
+
   // ── Custom Emojis Display ──
   const emojis = b.customEmojis || [];
   if (emojis.length > 0) {
@@ -28223,50 +28237,56 @@ async function openRadianceGiftModal() {
   }));
 
   const overlay = document.createElement('div');
-  overlay.className = 'radiance-gift-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease;';
-
-  overlay.innerHTML = `<div style="background:rgba(20,20,30,.95);border:1px solid rgba(255,119,228,.15);border-radius:14px;width:100%;max-width:480px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.8);overflow:hidden;animation:slideUp .25s cubic-bezier(.22,1,.36,1);">
-    <!-- Header -->
-    <div style="padding:24px;border-bottom:1px solid rgba(255,255,255,.05);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <h3 style="font-family:var(--font-display);font-size:18px;font-weight:900;color:#fff;margin:0;letter-spacing:-.02em;">Gift Radiance</h3>
-        <button onclick="this.closest('.radiance-gift-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;font-size:18px;line-height:1;padding:4px 8px;border-radius:8px;transition:all .15s;">&times;</button>
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:520px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div>
+        <div class="ftz-confirm-title" style="margin:0;display:flex;align-items:center;gap:10px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+          Gift Radiance
+        </div>
       </div>
-      <div style="font-size:12px;color:rgba(255,255,255,.45);">Select up to 5 friends and send them a Radiance subscription.</div>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
     </div>
+    <div style="font-size:13px;color:rgba(255,255,255,.55);margin-bottom:16px;">Select up to 5 friends to send them a 30-day Radiance subscription.</div>
 
     <!-- Search Box -->
-    <div style="padding:16px;border-bottom:1px solid rgba(255,255,255,.05);">
-      <input type="text" id="gift-friend-search" placeholder="Search friends..." style="width:100%;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:13px;outline:none;" oninput="filterGiftFriends(this.value)">
+    <div style="position:relative;margin-bottom:12px;">
+      <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="gift-friend-search" placeholder="Search friends..." style="width:100%;padding:8px 14px 8px 34px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:12.5px;outline:none;transition:border-color .2s;" oninput="filterGiftFriends(this.value)" onfocus="this.style.borderColor='rgba(255,119,228,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'">
     </div>
 
     <!-- Friends List -->
-    <div id="gift-friends-list" style="flex:1;overflow-y:auto;padding:12px;">
+    <div id="gift-friends-list" style="flex:1;overflow-y:auto;max-height:280px;padding-right:4px;margin-bottom:12px;">
       ${friends.map((f, i) => `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;transition:background .12s;cursor:pointer;margin-bottom:4px;" onclick="toggleFriendSelection(${i},this)">
+        <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;transition:background .12s;cursor:pointer;margin-bottom:2px;" onclick="toggleFriendSelection(${i},this)">
           <input type="checkbox" data-friend-idx="${i}" style="width:18px;height:18px;cursor:pointer;accent-color:#ff77e4;" onchange="updateGiftCost()">
           <div style="flex-shrink:0;">
-            <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:${_getUserAvatarColor(f.username)};">${f.pfp ? `<img src="${escapeHTML(f.pfp)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(f.username)}';this.style.objectFit='contain';"/>` : buildAvatarHTML(null, f.displayName||f.username, 36)}</div>
+            <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:${_getUserAvatarColor(f.username)};">${f.pfp ? `<img src="${escapeHTML(f.pfp)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(f.username)}';this.style.objectFit='contain';"/>` : buildAvatarHTML(null, f.displayName||f.username, 32)}</div>
           </div>
           <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.displayName)}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.3);">@${escapeHTML(f.username)}</div>
+            <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.displayName)}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);">@${escapeHTML(f.username)}</div>
           </div>
         </div>
       `).join('')}
     </div>
 
-    <!-- Footer with Cost and Button -->
-    <div style="padding:16px;border-top:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.3);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <span style="font-size:12px;color:rgba(255,255,255,.5);">Cost for <span id="gift-count">0</span> friend<span id="gift-plural">s</span>:</span>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;">
-          <span id="gift-cost" style="font-family:var(--font-display);font-weight:900;font-size:16px;color:#fff93e;">0</span>
-        </div>
+    <!-- Cost Display -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;margin-bottom:14px;">
+      <span style="font-size:12px;color:rgba(255,255,255,.5);">Cost for <span id="gift-count">0</span> friend<span id="gift-plural">s</span>:</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;">
+        <span id="gift-cost" style="font-family:var(--font-display);font-weight:700;font-size:14px;color:#fff93e;">0</span>
       </div>
-      <button id="gift-submit-btn" onclick="submitRadianceGift()" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(255,119,228,.2),rgba(255,119,228,.1));border:1px solid rgba(255,119,228,.3);border-radius:8px;color:#ff77e4;font-family:var(--font-display);font-size:14px;font-weight:800;cursor:pointer;transition:all .18s;letter-spacing:-.01em;" onmouseover="this.style.background='linear-gradient(135deg,rgba(255,119,228,.3),rgba(255,119,228,.2))';this.style.borderColor='rgba(255,119,228,.5)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,119,228,.2),rgba(255,119,228,.1))';this.style.borderColor='rgba(255,119,228,.3)'">Share Radiance</button>
+    </div>
+
+    <!-- Buttons -->
+    <div class="ftz-modal-foot">
+      <div class="ftz-modal-foot__actions" style="width:100%;gap:8px;">
+        <button class="btn-g" onclick="this.closest('.ftz-confirm-overlay').remove()" style="flex:1;justify-content:center;">Cancel</button>
+        <button class="btn-pink" id="gift-submit-btn" onclick="submitRadianceGift()" style="flex:1;justify-content:center;">Share Radiance</button>
+      </div>
     </div>
   </div>`;
 
@@ -46211,12 +46231,32 @@ function _renderGiftEmbed(type, giftCode) {
 function _buildGiftEmbedHTML(type, giftCode, giftData) {
   const from = giftData?.from || 'Someone';
   const claimed = giftData?.claimed || false;
-  const giftSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>';
+  const giftSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>';
   if (type === 'radiance') {
-    return `<div class="ftz-embed" style="--embed-color:#ffd93e;"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head">${giftSvg} Radiance Gift</div><div class="ftz-embed-body"><div class="ftz-embed-title">${escapeHTML(from)} gifts you Radiance</div><div class="ftz-embed-desc">30 days of Radiance perks — profile glow, custom banner, increased uploads & more</div></div>${claimed?'<div style="padding:6px 14px 12px;font-size:11px;color:rgba(255,255,255,.3);font-weight:600;">Already claimed</div>':'<div class="ftz-embed-btn primary" onclick="event.stopPropagation();claimGift(\''+escapeHTML(giftCode)+'\')">Claim Radiance</div>'}</div></div></div>`;
+    return `<div class="ftz-gift-card" style="border:1px solid rgba(255,119,228,.15);border-radius:14px;overflow:hidden;background:rgba(20,20,30,.6);box-shadow:0 8px 28px rgba(255,119,228,.08);">
+      <div style="background:linear-gradient(135deg,rgba(255,119,228,.15),rgba(255,249,62,.08));padding:0;height:120px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/radiance%20banner.png" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background='linear-gradient(135deg,#ff77e4,#ffd93e)';this.style.display='none';">
+      </div>
+      <div style="padding:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(255,119,228,.85);">${giftSvg} Radiance Gift</div>
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;">${escapeHTML(from)} gifts you Radiance</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:12px;line-height:1.4;">30 days of Radiance perks — profile glow, custom banner, increased uploads & more</div>
+        ${claimed?'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.4);font-weight:600;background:rgba(255,255,255,.02);border-radius:8px;text-align:center;">✓ Already claimed</div>':'<button class="btn-pink" style="width:100%;justify-content:center;padding:10px 16px;" onclick="event.stopPropagation();claimGift(\''+escapeHTML(giftCode)+'\')">Claim Radiance</button>'}
+      </div>
+    </div>`;
   } else {
     const itemName = giftData?.itemName || 'Shop Item';
-    return `<div class="ftz-embed" style="--embed-color:var(--purple);"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head">${giftSvg} Item Gift</div><div class="ftz-embed-body"><div class="ftz-embed-title">${escapeHTML(from)} gifts you: ${escapeHTML(itemName)}</div><div class="ftz-embed-desc">A shop item gift from a friend</div></div>${claimed?'<div style="padding:6px 14px 12px;font-size:11px;color:rgba(255,255,255,.3);font-weight:600;">Already claimed</div>':'<div class="ftz-embed-btn primary" style="background:#a78bfa;" onclick="event.stopPropagation();claimGift(\''+escapeHTML(giftCode)+'\')">Claim Item</div>'}</div></div></div>`;
+    return `<div class="ftz-gift-card" style="border:1px solid rgba(167,139,250,.15);border-radius:14px;overflow:hidden;background:rgba(20,20,30,.6);box-shadow:0 8px 28px rgba(167,139,250,.08);">
+      <div style="background:linear-gradient(135deg,rgba(167,139,250,.15),rgba(167,139,250,.05));padding:0;height:100px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(167,139,250,.85);">${giftSvg} Item Gift</div>
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;">${escapeHTML(from)} gifts you: ${escapeHTML(itemName)}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:12px;">A shop item gift from a friend</div>
+        ${claimed?'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.4);font-weight:600;background:rgba(255,255,255,.02);border-radius:8px;text-align:center;">✓ Already claimed</div>':'<button style="display:inline-flex;align-items:center;gap:7px;background:#a78bfa;color:#13161d;padding:10px 20px;border-radius:12px;font-family:var(--font-display);font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .1s;width:100%;justify-content:center;" onclick="event.stopPropagation();claimGift(\''+escapeHTML(giftCode)+'\')">Claim Item</button>'}
+      </div>
+    </div>`;
   }
 }
 

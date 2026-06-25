@@ -4383,8 +4383,8 @@ function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
   const initial = (name||'?')[0].toUpperCase();
   const fs = Math.floor(size/2.2);
   // Auto-assign deterministic color when no explicit bgColor passed.
-  // This ensures every default avatar surface gets the user's color
-  // automatically — no caller needs to know about it.
+  // Color shows behind every avatar — when pfp exists and loads it covers
+  // the color; when pfp fails or is missing, color shows through.
   const color = bgColor || _getUserAvatarColor(name);
   // Two-stage onerror: if a user-set pfp 404s, fall through to the
   // deterministic default pfp instead of jumping straight to the
@@ -4392,17 +4392,17 @@ function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
   // the user's assigned color always shows through.
   const colorWrapOpen = '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+color+';">';
   const colorWrapClose = '</div>';
-  const defaultFallbackJS = 'this.onerror=null;this.src=\''+defaultUrl+'\';this.style.objectFit=\'contain\';this.style.background=\''+color+'\';this.onerror=function(){this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:'+color+';color:rgba(255,255,255,.9);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this);};';
+  const defaultFallbackJS = 'this.onerror=null;this.src=\''+defaultUrl+'\';this.style.objectFit=\'contain\';this.onerror=function(){this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:'+color+';color:rgba(255,255,255,.9);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this);};';
   const initialFallbackJS = 'this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:'+color+';color:rgba(255,255,255,.9);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)';
-  // GIF avatar with CSS-based crop (preserves animation)
+  // GIF avatar with CSS-based crop (preserves animation) — wrap in color so it shows if crop fails
   if (pfp && cropData && cropData.widthPct) {
-    return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:block;">'
+    return colorWrapOpen
       + '<img src="'+pfp+'" style="position:absolute;left:'+cropData.leftPct+'%;top:'+cropData.topPct+'%;width:'+cropData.widthPct+'%;height:auto;" onerror="'+defaultFallbackJS+'">'
-      + '</div>';
+      + colorWrapClose;
   }
-  if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="'+defaultFallbackJS+'">';
-  // Default avatar: always wrapped in a colored container so the
-  // transparent-background image displays on top of the user's color.
+  // User has pfp — wrap in color container so it shows if pfp fails to load
+  if (pfp) return colorWrapOpen + '<img src="'+pfp+'" style="'+s+'" onerror="'+defaultFallbackJS+'">' + colorWrapClose;
+  // Default avatar: always wrapped in colored container
   return colorWrapOpen
     + '<img src="'+defaultUrl+'" style="width:'+size+'px;height:'+size+'px;object-fit:contain;" onerror="'+initialFallbackJS+'">'
     + colorWrapClose;

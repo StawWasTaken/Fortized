@@ -46955,7 +46955,10 @@ function _fppResolveTheme(u) {
   // names (main / bannerColor) so users from before this rework
   // still get themed; the inline widget writes color1 going forward.
   // If user has no custom theme, use their assigned avatar color.
-  const color1 = (t && (t.color1 || t.main || t.bannerColor)) || (u ? _getUserAvatarColor(u.username) : _FPP_BRAND_YELLOW);
+  // For users with no theme AND no pfp (default avatar), use their assigned
+  // color so banner matches the avatar background. Users with a pfp get
+  // the brand yellow as before — no random tint added to their card chrome.
+  const color1 = (t && (t.color1 || t.main || t.bannerColor)) || ((u && !u.pfp) ? _getUserAvatarColor(u.username) : _FPP_BRAND_YELLOW);
   // Second colour is RADIANCE-only — free users can't pick it, and
   // even if it's present in their data we ignore it so the surface
   // reads as a single reinforced colour. This is per brief: "Free

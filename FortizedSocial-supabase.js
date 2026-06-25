@@ -2417,34 +2417,38 @@ const FortizedSocial = (() => {
       const deletedId = Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
       const deletedUsername = `deleted_user_${deletedId}`;
 
-      // Update user record: anonymize all personal data
+      // Fetch existing row first to preserve extras under `raw` JSONB
+      const { data: existing } = await sb
+        .from('users')
+        .select('raw')
+        .eq('username', normUsername)
+        .maybeSingle();
+
+      // Mark deletion metadata in the raw JSONB column (extensible, no schema change)
+      const newRaw = {
+        ...(existing?.raw || {}),
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        originalUsername: normUsername,
+      };
+
+      // Update user record: anonymize all personal data using snake_case DB columns
       const { error: updateError } = await sb
         .from('users')
         .update({
           username: deletedUsername,
-          displayName: deletedUsername,
+          display_name: deletedUsername,
           bio: '',
           pfp: null,
-          pfpCrop: null,
           banner: null,
           email: '',
           password: '',
           status: 'offline',
-          currentGame: null,
-          customStatus: null,
-          socials: null,
-          pronouns: null,
-          profileTheme: null,
-          activeDecoration: null,
-          decorations: [],
-          displayFont: null,
-          displayEffect: null,
-          displayColor: null,
-          displayColor2: null,
-          mentionPolicy: 'all',
-          notifSettings: {},
-          deleted_at: new Date().toISOString(),
-          original_username: normUsername
+          custom_status: null,
+          game_activity: null,
+          profile_theme: null,
+          active_decoration: null,
+          raw: newRaw,
         })
         .eq('username', normUsername);
 

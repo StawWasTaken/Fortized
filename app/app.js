@@ -22206,10 +22206,10 @@ function _showAvatarPickerModal() {
   const recentAvatars = JSON.parse(localStorage.getItem('ftz_recent_avatars_'+CU.username)||'[]').slice(0,5);
   const ov = document.createElement('div');
   ov.className = 'ftz-confirm-overlay';
-  ov.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;padding:0;overflow:hidden;">
-    <div style="padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between;">
-      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;">Select an Image</div>
-      <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;">&times;</button>
+  ov.innerHTML = `<div class="ftz-confirm-card" style="max-width:520px;padding:0;overflow:hidden;">
+    <div style="padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.04);">
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Select Avatar</div>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
     </div>
     <div style="padding:0 24px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div onclick="this.closest('.ftz-confirm-overlay').remove();document.getElementById('pfp-file-inp')?.click();" style="padding:32px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">
@@ -23408,12 +23408,16 @@ function showAccountDeleteConfirmation() {
   modal.className = 'modal-overlay open';
   modal.id = 'delete-account-modal';
   modal.innerHTML = `
-    <div style="width:100%;max-width:400px;">
-      <div class="modal-content" style="background:var(--panel);border:1.5px solid var(--border);border-radius:16px;padding:24px;">
-        <div style="font-size:20px;font-weight:800;margin-bottom:12px;color:var(--red);">Delete Account?</div>
-        <div style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.6);margin-bottom:20px;">
-          This action cannot be undone. Your account will be permanently deleted:
-          <ul style="margin-top:8px;margin-left:16px;list-style:disc;color:rgba(255,255,255,.5);">
+    <div style="width:100%;max-width:480px;">
+      <div class="modal-content ftz-confirm-card">
+        <div class="ftz-confirm-title">Delete Account?</div>
+        <div class="ftz-form-warning" style="margin-bottom:16px;">
+          <div class="ftz-form-warning__ico">⚠</div>
+          <div class="ftz-form-warning__body">This action <strong>cannot be undone</strong>. All data will be permanently deleted.</div>
+        </div>
+        <div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,.55);margin-bottom:16px;">
+          Your account will be permanently deleted:
+          <ul style="margin-top:8px;margin-left:16px;list-style:disc;color:rgba(255,255,255,.5);font-size:12.5px;">
             <li>Username and display name anonymized</li>
             <li>Profile picture and banner removed</li>
             <li>Bio and personal info deleted</li>
@@ -23423,11 +23427,13 @@ function showAccountDeleteConfirmation() {
         </div>
         <div style="margin-bottom:16px;">
           <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">Type <strong>DELETE</strong> to confirm:</div>
-          <input type="text" id="delete-confirm-input" placeholder="Type DELETE" maxlength="50" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:8px;color:var(--text);font-family:var(--font-ui);font-size:13px;" onkeyup="this.value=this.value.toUpperCase()">
+          <input class="ftz-input" type="text" id="delete-confirm-input" placeholder="Type DELETE" maxlength="50" onkeyup="this.value=this.value.toUpperCase()">
         </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-g" style="flex:1;padding:10px;" onclick="document.getElementById('delete-account-modal').remove()">Cancel</button>
-          <button class="danger-btn" style="flex:1;padding:10px;" onclick="deleteAccountPermanently()">Delete Account</button>
+        <div class="ftz-modal-foot">
+          <button class="ftz-modal-foot__back" onclick="document.getElementById('delete-account-modal').remove()">Cancel</button>
+          <div class="ftz-modal-foot__actions">
+            <button class="btn-red" onclick="deleteAccountPermanently()">Delete Account</button>
+          </div>
         </div>
       </div>
     </div>`;

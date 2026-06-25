@@ -4358,12 +4358,26 @@ function renderAtelierSidebar(scroll) {
   // Show Direct Messages sidebar instead of Atelier navigation
   renderDMSidebar(scroll);
 }
-function _defaultPfpUrl(name) {
-  // Deterministic random based on name — always same for same user
-  const hash = (name||'').split('').reduce((a,c) => a + c.charCodeAt(0), 0);
-  return hash % 2 === 0 ? '/default%20pfp.png' : '/default%20pfp2.png';
+// Curated palette of good-looking colors for default avatars
+const _AVATAR_COLORS = [
+  '#FF6B6B', '#FF8C42', '#FFA500', '#FFD700', '#52A7E3',
+  '#6BCB77', '#4D96FF', '#9B59B6', '#E74C3C', '#3498DB',
+  '#1ABC9C', '#F39C12', '#E67E22', '#95A5A6', '#34495E',
+  '#2ECC71', '#C0392B', '#8E44AD', '#16A085', '#F1C40F',
+  '#27AE60', '#2980B9', '#D35400', '#C0392B', '#BDC3C7'
+];
+
+function _getUserAvatarColor(username) {
+  // Deterministic color assignment based on username hash
+  const hash = (username||'').split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+  return _AVATAR_COLORS[hash % _AVATAR_COLORS.length];
 }
-function buildAvatarHTML(pfp, name, size, cropData) {
+
+function _defaultPfpUrl(name) {
+  // Use the default avatar image with transparent background
+  return 'https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/default%20avatar.png';
+}
+function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
   const s = 'width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0;';
   const defaultUrl = _defaultPfpUrl(name);
   const initial = (name||'?')[0].toUpperCase();
@@ -4382,7 +4396,11 @@ function buildAvatarHTML(pfp, name, size, cropData) {
       + '</div>';
   }
   if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="'+defaultFallbackJS+'">';
-  return '<img src="'+defaultUrl+'" style="'+s+'" onerror="'+initialFallbackJS+'">';
+  // Default avatar: wrap in container with background color
+  const bg = bgColor ? 'background:'+bgColor+';' : '';
+  return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center;'+bg+'">'
+    + '<img src="'+defaultUrl+'" style="width:'+size+'px;height:'+size+'px;object-fit:contain;" onerror="'+initialFallbackJS+'">'
+    + '</div>';
 }
 function renderRailBastions() {
   const cont = document.getElementById('rail-bastions');
@@ -6200,10 +6218,11 @@ async function renderDMSidebar(scroll) {
         const _cp = cachedProfile(f) || {};
         const _initStatus = _cp.status || 'offline';
         const _initName = _cp.displayName || f;
+        const _color = !_cp.pfp ? _getUserAvatarColor(f) : null;
         html += `
       <div class="friend-item dm-sortable" id="dm-fi-${escapeHTML(f)}" data-dm-id="dm_${escapeHTML(f)}" data-last-time="0" onclick="openDMView('${escapeHTML(f)}')" oncontextmenu="event.preventDefault();showDMCtxMenu(event,'${escapeHTML(f)}')">
         <div style="position:relative;flex-shrink:0;">
-          <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(_cp.pfp||null,_initName,34)}</div>
+          <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(_cp.pfp||null,_initName,34,null,_color)}</div>
           <span class="profile-status-dot" data-for="${escapeHTML(f)}" data-dot-size="12" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;">${FtzStatus.dotSvg(_initStatus, 12)}</span>
         </div>
         <div class="fi-info" style="min-width:0;flex:1;">
@@ -6267,7 +6286,10 @@ async function renderDMSidebar(scroll) {
         // Cache the pfp so the next render paints it immediately (no flash).
         if (u.pfp) { _pfpCache[f] = u.pfp; _persistPfpCache(); }
         const avEl = document.getElementById('dm-av-'+f);
-        if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
+        if (avEl) {
+          const _color = !u.pfp ? _getUserAvatarColor(f) : null;
+          avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34, null, _color);
+        }
         const dnEl = document.getElementById('dm-dn-'+f);
         if (dnEl) {
           dnEl.textContent = u.displayName || f;
@@ -6436,13 +6458,19 @@ async function renderDMFriendsHome() {
 
       // Update friend row avatar + display name
       const avEl = document.getElementById('dm-home-av-'+f);
-      if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 42);
+      if (avEl) {
+        const _color = !u.pfp ? _getUserAvatarColor(f) : null;
+        avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 42, null, _color);
+      }
       const dnEl = document.getElementById('dm-home-dn-'+f);
       if (dnEl) dnEl.textContent = u.displayName || f;
 
       // Update pending row avatar + display name
       const pavEl = document.getElementById('dm-home-pav-'+f);
-      if (pavEl) pavEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 40);
+      if (pavEl) {
+        const _color = !u.pfp ? _getUserAvatarColor(f) : null;
+        pavEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 40, null, _color);
+      }
       const pdnEl = document.getElementById('dm-home-pdn-'+f);
       if (pdnEl) pdnEl.textContent = u.displayName || f;
 
@@ -13569,13 +13597,22 @@ function initFortizedUXResilience() {
           document.querySelectorAll('img[data-pfp-for="'+data.username+'"]').forEach(img => { img.src = data.pfp; });
           // DM sidebar avatars
           const dmAv = document.getElementById('dm-av-'+data.username);
-          if (dmAv) dmAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 34, _upCrop);
+          if (dmAv) {
+            const _color = !data.pfp ? _getUserAvatarColor(data.username) : null;
+            dmAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 34, _upCrop, _color);
+          }
           // DM friends home avatars
           const dmHomeAv = document.getElementById('dm-home-av-'+data.username);
-          if (dmHomeAv) dmHomeAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 42, _upCrop);
+          if (dmHomeAv) {
+            const _color = !data.pfp ? _getUserAvatarColor(data.username) : null;
+            dmHomeAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 42, _upCrop, _color);
+          }
           // DM home preview avatar (active row's hover-preview)
           const dmHomePav = document.getElementById('dm-home-pav-'+data.username);
-          if (dmHomePav) dmHomePav.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 40, _upCrop);
+          if (dmHomePav) {
+            const _color = !data.pfp ? _getUserAvatarColor(data.username) : null;
+            dmHomePav.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 40, _upCrop, _color);
+          }
           // Message avatars in active chat — the old selector targeted a
           // data-av-for attribute that no msg-row actually emits. Use the
           // row's data-from instead and re-render the whole .msg-av-inner
@@ -46928,7 +46965,8 @@ function _fppResolveTheme(u) {
   // Single source of truth for the picked colour. We accept legacy
   // names (main / bannerColor) so users from before this rework
   // still get themed; the inline widget writes color1 going forward.
-  const color1 = (t && (t.color1 || t.main || t.bannerColor)) || _FPP_BRAND_YELLOW;
+  // If user has no custom theme, use their assigned avatar color.
+  const color1 = (t && (t.color1 || t.main || t.bannerColor)) || (u ? _getUserAvatarColor(u.username) : _FPP_BRAND_YELLOW);
   // Second colour is RADIANCE-only — free users can't pick it, and
   // even if it's present in their data we ignore it so the surface
   // reads as a single reinforced colour. This is per brief: "Free
@@ -47173,7 +47211,8 @@ function _fppAvatarHTML(u, size) {
   // profile theme colours". We keep the inner status colour
   // (green/yellow/red/grey) untouched so the semantic still reads.
   const isSelf = CU?.username && String(u.username || '').toLowerCase() === String(CU.username).toLowerCase();
-  return `<div class="fpp__av" data-action="open-profile">${buildAvatarHTML(u.pfp, u.displayName || u.username, size)}</div>
+  const color = !u.pfp ? _getUserAvatarColor(u.username) : null;
+  return `<div class="fpp__av" data-action="open-profile">${buildAvatarHTML(u.pfp, u.displayName || u.username, size, null, color)}</div>
     ${dec ? `<img src="${escapeHTML(dec)}" class="fpp__decoration" onerror="this.style.display='none'">` : ''}
     <span class="fpp__status-dot profile-status-dot${isSelf ? ' fpp__status-dot--self' : ''}" data-for="${escapeHTML(u.username)}" data-dot-size="22">${FtzStatus.dotSvg(u.status || 'offline', 22)}</span>`;
 }

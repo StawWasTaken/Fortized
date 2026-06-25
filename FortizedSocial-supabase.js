@@ -2417,6 +2417,17 @@ const FortizedSocial = (() => {
       const deletedId = Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
       const deletedUsername = `deleted_user_${deletedId}`;
 
+      // Delete status record first (foreign key constraint must be satisfied)
+      const { error: statusError } = await sb
+        .from('statuses')
+        .delete()
+        .eq('username', normUsername);
+
+      if (statusError) {
+        console.warn('[deleteAccount] Status deletion warning:', statusError.message);
+        // Continue anyway — status might not exist
+      }
+
       // Fetch existing row first to preserve extras under `raw` JSONB
       const { data: existing } = await sb
         .from('users')

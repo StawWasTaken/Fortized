@@ -23193,10 +23193,10 @@ async function _viewUserProfile(username) {
          <div style="display:flex;flex-wrap:wrap;gap:5px;">${renderUserRoleTags(username) || '<span style="font-size:12px;color:var(--muted);">No roles</span>'}</div>
        </div>` : '';
 
-  const _noteHTML = !isOwn ? `<div class="fpp-card-modal__note">
+  const _noteHTML = `<div class="fpp-card-modal__note">
     <div class="fpp-card-modal__left-section-title" style="display:flex;align-items:center;gap:6px;">Note <span style="font-weight:500;color:rgba(255,255,255,.4);letter-spacing:0;text-transform:none;font-size:10px;">(only visible to you)</span></div>
-    <textarea class="fpp-card-modal__note-input" placeholder="Click to add a note…" maxlength="500" oninput="_saveInlineUserNote('${escapeHTML(username)}', this.value)">${escapeHTML(_userNote || '')}</textarea>
-  </div>` : '';
+    <textarea class="fpp-card-modal__note-input" placeholder="${isOwn ? 'A note to your future self…' : 'Click to add a note…'}" maxlength="500" oninput="_saveInlineUserNote('${escapeHTML(username)}', this.value)">${escapeHTML(_userNote || '')}</textarea>
+  </div>`;
 
   // Tabs visibility
   const wl = Array.isArray(u.wishlist) ? u.wishlist : [];

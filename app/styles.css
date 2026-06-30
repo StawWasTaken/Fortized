@@ -11874,14 +11874,14 @@ body.staff-inspector-open{ overflow:hidden; }
 .fpp-card-modal__note{ padding:14px 18px 18px; }
 .fpp-card-modal__note-input{
   width:100%; resize:none; min-height:36px; max-height:140px;
-  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06);
-  border-radius:8px; padding:8px 10px;
-  color:#fff; font-size:12px; font-family:inherit; line-height:1.5;
+  background:rgba(0,0,0,.22); border:1px solid var(--border);
+  border-radius:10px; padding:10px 12px;
+  color:var(--text); font-size:12.5px; font-family:inherit; line-height:1.55;
   outline:none; transition:border-color .15s, background .15s;
   overflow:auto;
 }
 .fpp-card-modal__note-input::placeholder{ color:var(--muted); font-style:italic; }
-.fpp-card-modal__note-input:focus{ border-color:rgba(255,249,62,.35); background:rgba(255,255,255,.06); }
+.fpp-card-modal__note-input:focus{ border-color:var(--surface-border-hover); background:rgba(0,0,0,.32); }
 
 /* Animations */
 @keyframes fppPopIn{

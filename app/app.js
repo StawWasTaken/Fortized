@@ -43534,16 +43534,15 @@ function _isItemOnSaleInShop(item) {
 }
 
 // ── Profile Decorations ──
-const PROFILE_DECORATIONS = [
-  {id:'blue_glow',name:'Blue Glow',src:'/profile decorations/Blue Glow.png',price:75,color:'#60a5fa'},
-  {id:'cyan_glow',name:'Cyan Glow',src:'/profile decorations/Cyan Glow.png',price:75,color:'#22d3ee'},
-  {id:'green_glow',name:'Green Glow',src:'/profile decorations/Green Glow.png',price:75,color:'#3ecf6e'},
-  {id:'orange_glow',name:'Orange Glow',src:'/profile decorations/Orange Glow.png',price:75,color:'#fb923c'},
-  {id:'pink_glow',name:'Pink Glow',src:'/profile decorations/Pink Glow.png',price:75,color:'#f472b6'},
-  {id:'red_glow',name:'Red Glow',src:'/profile decorations/Red Glow.png',price:75,color:'#f87171'},
-  {id:'yellow_glow',name:'Yellow Glow',src:'/profile decorations/Yellow Glow.png',price:75,color:'#fbbf24'},
-  {id:'sunset_halo',name:'Sunset Halo',src:'/profile decorations/Sunset Halo.png',price:120,color:'#fb923c',rarity:'rare',rare:true},
-];
+// PROFILE_DECORATIONS — temporarily empty: every decoration is out of
+// circulation. The system (getDecorationSrc, buildDecorationOverlay, the
+// picker modal, shop catalogue spread, _fppApplyTheme decoration overlay,
+// the CU.activeDecoration / ownedDecorations user fields) is fully intact;
+// users who previously owned/equipped a decoration keep that data on their
+// account and the decoration reappears the moment an entry is restored to
+// this array. To re-enable: push catalog rows back in the original shape
+//   {id, name, src, price, color, rarity?, rare?}
+const PROFILE_DECORATIONS = [];
 
 // Master appearance catalogue. Lives at module scope (not inside the shop
 // render) so _getShopItemById can resolve any appearance from anywhere —

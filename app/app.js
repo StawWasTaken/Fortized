@@ -47272,6 +47272,16 @@ function _fppApplyTheme(el, u) {
     el.style.setProperty('--fpp-accent', th.accent);
     el.style.setProperty('--fpp-accent-rgb', `${accRgb.r},${accRgb.g},${accRgb.b}`);
   }
+  // Banner shade — Discord-style. Use the banner image (if any) as a
+  // blurred backdrop bleeding down into the card body so the whole
+  // frame picks up the banner's tone, not just the top strip.
+  if (th.bannerImage) {
+    el.style.setProperty('--fpp-banner-img', `url("${th.bannerImage.replace(/"/g, '\\"')}")`);
+    el.classList.add('fpp--has-banner-shade');
+  } else {
+    el.style.removeProperty('--fpp-banner-img');
+    el.classList.remove('fpp--has-banner-shade');
+  }
   // Frame gradient — Radiance only. The CSS reads --fpp-frame to
   // paint a color1 → color2 sweep along the inner border / banner
   // bottom edge / avatar ring. Free users (no color2) get a flat

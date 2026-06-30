@@ -10459,8 +10459,8 @@ select:focus-visible {
   background-image:var(--fpp-banner-img);
   background-size:cover; background-position:center top;
   background-repeat:no-repeat;
-  filter:blur(38px) saturate(1.4) brightness(.55);
-  opacity:.5;
+  filter:blur(14px) saturate(1.25) brightness(.65);
+  opacity:.55;
   -webkit-mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.7) 30%, rgba(0,0,0,.2) 65%, transparent 100%);
           mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.7) 30%, rgba(0,0,0,.2) 65%, transparent 100%);
   pointer-events:none; z-index:-1;

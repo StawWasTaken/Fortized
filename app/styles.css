@@ -10455,14 +10455,14 @@ select:focus-visible {
    --fpp-banner-img variable is set by _fppApplyTheme. */
 .fpp-card-modal.fpp--has-banner-shade{ position:relative; isolation:isolate; }
 .fpp-card-modal.fpp--has-banner-shade::after{
-  content:""; position:absolute; inset:0;
+  content:""; position:absolute; left:0; right:0; top:0; height:45%;
   background-image:var(--fpp-banner-img);
   background-size:cover; background-position:center top;
   background-repeat:no-repeat;
-  filter:blur(14px) saturate(1.25) brightness(.65);
-  opacity:.55;
-  -webkit-mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.7) 30%, rgba(0,0,0,.2) 65%, transparent 100%);
-          mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.7) 30%, rgba(0,0,0,.2) 65%, transparent 100%);
+  filter:blur(14px) saturate(1.25) brightness(.7);
+  opacity:.45;
+  -webkit-mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.55) 45%, transparent 100%);
+          mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.55) 45%, transparent 100%);
   pointer-events:none; z-index:-1;
 }
 

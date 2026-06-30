@@ -10448,26 +10448,23 @@ select:focus-visible {
   box-shadow:0 0 14px rgba(var(--fpp-main-rgb),.35);
   pointer-events:none; z-index:5;
 }
-/* Banner shade — Discord-style. Renders the user's banner image as a
-   blurred backdrop bleeding down from the top of the card and fading
-   into the card surface. Sits under the banner strip + content but
-   above the base panel colour so the whole frame picks up the banner's
-   tone. Only painted when --fpp-banner-img is set by _fppApplyTheme. */
-.fpp.fpp--has-banner-shade::after,
+/* Banner shade — Discord-style. Profile-card modal ONLY (not the
+   popover/preview .fpp). Renders the user's banner image as a blurred
+   backdrop bleeding down from the top of the card and fading into the
+   card surface. Painted on .fpp-card-modal::after only when the
+   --fpp-banner-img variable is set by _fppApplyTheme. */
+.fpp-card-modal.fpp--has-banner-shade{ position:relative; isolation:isolate; }
 .fpp-card-modal.fpp--has-banner-shade::after{
   content:""; position:absolute; inset:0;
   background-image:var(--fpp-banner-img);
   background-size:cover; background-position:center top;
   background-repeat:no-repeat;
-  filter:blur(38px) saturate(1.4) brightness(.6);
-  opacity:.55;
-  -webkit-mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.78) 28%, rgba(0,0,0,.25) 65%, transparent 100%);
-          mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.78) 28%, rgba(0,0,0,.25) 65%, transparent 100%);
-  pointer-events:none; z-index:0;
+  filter:blur(38px) saturate(1.4) brightness(.55);
+  opacity:.5;
+  -webkit-mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.7) 30%, rgba(0,0,0,.2) 65%, transparent 100%);
+          mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.7) 30%, rgba(0,0,0,.2) 65%, transparent 100%);
+  pointer-events:none; z-index:-1;
 }
-/* Push all card content above the ::after shade so it stays readable. */
-.fpp.fpp--has-banner-shade > *,
-.fpp-card-modal.fpp--has-banner-shade > *{ position:relative; z-index:1; }
 
 /* ── Banner ────────────────────────────────────────────────────────── */
 /* Banner frame is always 680 × 235 (≈2.894 : 1) — the canonical

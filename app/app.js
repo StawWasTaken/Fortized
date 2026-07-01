@@ -522,6 +522,27 @@ function _chatCacheRemove(key, msgId) {
   const i = c.msgs.findIndex(m => _msgIdOf(m) === id);
   if (i >= 0) { c.msgs.splice(i, 1); c.ids.delete(id); }
 }
+// Ensure the container has a .load-more-bar so scroll-up can fetch older
+// history. Called on cache-hit and revived-surface paths (which skip
+// renderMessages and therefore skip the bar it normally adds).
+function _ensureLoadMoreBar(container, context) {
+  if (!container) return;
+  if (container.querySelector('.load-more-bar')) return;
+  // Only bother if there's actual history rendered — no msg-rows means
+  // there's nothing yet to have OLDER messages relative to.
+  if (!container.querySelector('.msg-row')) return;
+  const rowCount = container.querySelectorAll('.msg-row').length;
+  const bar = document.createElement('div');
+  bar.className = 'load-more-bar';
+  bar.dataset.context = context;
+  bar.dataset.offset = String(Math.max(rowCount, 50));
+  bar.innerHTML = _renderSkelMessages(6);
+  // Insert as the first message-list neighbour so scroll-up hits it before
+  // reaching msg-row content.
+  const firstRow = container.querySelector('.msg-row, .date-div');
+  if (firstRow && firstRow.parentNode) firstRow.parentNode.insertBefore(bar, firstRow);
+  else container.appendChild(bar);
+}
 // Compare a fresh fetch against the cache for a key and append any msgs
 // the cache didn't already have (arrived while the chat was closed and
 // its real-time listener was detached). No full re-render — just a
@@ -3705,11 +3726,15 @@ const _ftzRouter = {
     }
     if (view === 'dms' || view === 'friends') {
       // If the URL carries a ?u=<username> (from a prior session / reload),
-      // open that DM instead of the friends home.
+      // open that DM instead of the friends home. Set curDM FIRST so the
+      // showView() that runs inside openDMView doesn't strip the ?u= from
+      // the URL as it re-does its pushState/replaceState. Call openDMView
+      // directly — it handles the view switch internally.
       if (dmTarget && view === 'dms') {
-        showView('dms');
-        // Defer so view-dms is mounted before openDMView inserts into dm-chat-wrap.
-        setTimeout(() => { try { openDMView(dmTarget); } catch(e) { console.warn('[Route] openDM failed:', e?.message); } }, 0);
+        try {
+          curDM = dmTarget;
+          openDMView(dmTarget);
+        } catch(e) { console.warn('[Route] openDM failed:', e?.message); showView('dms'); }
         return;
       }
       showView('dms');
@@ -3734,8 +3759,7 @@ window.addEventListener('popstate', function(e) {
       if (idx >= 0) { openBastion(idx); return; }
     }
     if (view === 'dms' && dmTarget) {
-      showView('dms', true);
-      setTimeout(() => { try { openDMView(dmTarget); } catch(_){} }, 0);
+      try { curDM = dmTarget; openDMView(dmTarget); } catch(_) { showView('dms', true); }
       return;
     }
     showView(view || 'home', true);
@@ -3754,8 +3778,7 @@ window.addEventListener('popstate', function(e) {
     }
   }
   if (state.view === 'dms' && state.params?.dmTarget) {
-    showView('dms', true);
-    setTimeout(() => { try { openDMView(state.params.dmTarget); } catch(_){} }, 0);
+    try { curDM = state.params.dmTarget; openDMView(state.params.dmTarget); } catch(_) { showView('dms', true); }
     return;
   }
   showView(state.view || 'home', true);
@@ -7270,11 +7293,12 @@ async function loadDMMessages(username) {
     // Discord-style initial fetch: only the last 20 visible messages — the
     // ~one-screen Discord paints first. Older messages are lazy-loaded on
     // scroll-up via _attachLazyLoadOlder().
-    const msgs = await FortizedSocial.getDMMessages(CU.username, username, 20);
+    const msgs = await FortizedSocial.getDMMessages(CU.username, username, 50);
     if (surfaceRevived || hasCache) {
       // Cache-hit path OR revived surface: only patch in messages that
       // arrived while the chat was closed. No full re-render, no flicker.
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'dm');
+      _ensureLoadMoreBar(msgsEl, 'dm');
     } else {
       renderMessages(msgsEl, msgs||[], 'dm');
       if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
@@ -8170,6 +8194,7 @@ async function loadGCMessages(gcId) {
     const msgs = snap.exists() ? Object.values(snap.val()) : [];
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs, msgsEl, 'gc');
+      _ensureLoadMoreBar(msgsEl, 'gc');
     } else {
       renderMessages(msgsEl, msgs, 'gc');
       if (!_restoreChatScroll('gc:'+gcId, msgsEl)) scrollBottom('gc-msgs', true);
@@ -9115,9 +9140,10 @@ async function loadChannelMessages(idx) {
   }
   try {
     // Discord-style initial fetch: only the last 20 visible messages.
-    const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,20);
+    const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,50);
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'ch');
+      _ensureLoadMoreBar(msgsEl, 'ch');
     } else {
       renderMessages(msgsEl,msgs||[],'ch');
       if (!_restoreChatScroll('ch:'+curBastion+':'+idx, msgsEl)) scrollBottom('ch-msgs-'+idx, true);
@@ -9698,15 +9724,15 @@ function renderMessages(container, msgs, context) {
     root.querySelectorAll('.msg-row:not(.msg-pre-reveal), .date-div:not(.msg-pre-reveal)').forEach(el => el.classList.add('msg-pre-reveal'));
   } : null;
 
-  // Show the lazy-load bar whenever we hit the initial fetch limit (20) —
+  // Show the lazy-load bar whenever we hit the initial fetch limit (50) —
   // that tells us the server has more older messages waiting. Scroll-up
   // triggers _attachLazyLoadOlder() which clicks the bar's button auto-
-  // matically. Matches Discord: paint ~20 first, fetch more on scroll.
-  if (msgs.length >= 20) {
+  // matically. Matches Discord: paint ~50 first, fetch more on scroll.
+  if (msgs.length >= 50) {
     const loadMore = document.createElement('div');
     loadMore.className = 'load-more-bar';
     loadMore.dataset.context = context;
-    loadMore.dataset.offset = '20';
+    loadMore.dataset.offset = '50';
     loadMore.innerHTML = _renderSkelMessages(6);
     container.appendChild(loadMore);
   }

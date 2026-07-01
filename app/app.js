@@ -356,6 +356,55 @@ function _restoreChatScroll(key, el) {
   return true;
 }
 
+// ── Persistent DOM surfaces (Discord-parity phase 2) ─────────────────────
+// Pool detached .chat-msgs container elements keyed by chat so scroll
+// position, embedded video/audio playback, image-load state, expanded
+// embeds, and any DOM-attached widget state survive across chat switches.
+// On switching AWAY from a chat we detach its .chat-msgs and stash it here;
+// on switching BACK we swap the pooled node into the freshly-built wrap so
+// existing selectors keep working (`#dm-msgs` etc. are preserved verbatim).
+const _FTZ_MSGS_POOL_MAX = 15;
+const _ftzMsgsPool = new Map(); // chatKey → detached HTMLElement
+function _msgsPoolStash(chatKey, el) {
+  if (!chatKey || !el) return;
+  try { el.remove(); } catch(_) {}
+  // Refresh recency: delete + reset to move the entry to the tail (JS Map
+  // insertion order = iteration order).
+  if (_ftzMsgsPool.has(chatKey)) _ftzMsgsPool.delete(chatKey);
+  _ftzMsgsPool.set(chatKey, el);
+  while (_ftzMsgsPool.size > _FTZ_MSGS_POOL_MAX) {
+    const oldest = _ftzMsgsPool.keys().next().value;
+    _ftzMsgsPool.delete(oldest);
+  }
+}
+function _msgsPoolRevive(chatKey) {
+  if (!chatKey) return null;
+  const el = _ftzMsgsPool.get(chatKey);
+  if (el) _ftzMsgsPool.delete(chatKey);
+  return el || null;
+}
+// Convenience: called at the start of openDMView / loadGCMessages / channel
+// switch to stash the CURRENT active .chat-msgs container so the outgoing
+// chat's DOM survives. Reads curDM / curGC / (curBastion, curChannel) so it
+// works uniformly across all three chat types.
+function _stashCurrentActiveMsgs() {
+  try {
+    if (curDM) {
+      const el = document.getElementById('dm-msgs');
+      if (el) _msgsPoolStash(_chatKey('dm', curDM), el);
+    }
+    if (typeof curGC !== 'undefined' && curGC) {
+      const el = document.getElementById('gc-msgs');
+      if (el) _msgsPoolStash(_chatKey('gc', curGC), el);
+    }
+    if (curBastion !== null && curChannel !== null && curChannel !== 'overview') {
+      const b = CU?.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+      const el = document.getElementById('ch-msgs-' + curChannel);
+      if (b && ch && el) _msgsPoolStash(_chatKey('ch', (b.globalId||b.name), ch.name), el);
+    }
+  } catch(_) {}
+}
+
 // ── Persistent chat cache (Discord-style "no reload on return") ──────────
 // Keyed by chat id — 'dm:<username>' / 'gc:<gcId>' / 'ch:<bastionId>:<chName>'.
 // Fills on first fetch; append on every real-time message (including when the
@@ -6965,6 +7014,9 @@ function openDMView(username) {
 
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
+  // Persistent DOM: stash the outgoing chat's .chat-msgs before we blow the
+  // wrap away, so its scroll/video/embed state survives a return trip.
+  _stashCurrentActiveMsgs();
   // Official Fortized accounts (@fortized, @fortizedsafety) are
   // broadcast-only: only superadmins can chat back. Everyone else sees a
   // locked notice + tailored welcome card explaining the channel is
@@ -7030,6 +7082,17 @@ function openDMView(username) {
       </div>
       ${_lockChat ? _lockedComposerHTML : buildChatInputBar({inputId:'dm-input',placeholder:'Message '+escapeHTML(username)+'…',context:'dm'})}
     </div>`;
+  // Persistent DOM: if we have a pooled .chat-msgs for this DM, swap it in
+  // over the fresh one so scroll/video/embeds survive intact. loadDMMessages
+  // still runs to reattach live listeners and diff-append any messages that
+  // landed while the surface was pooled.
+  try {
+    const pooled = _msgsPoolRevive(_chatKey('dm', username));
+    if (pooled) {
+      const fresh = wrap.querySelector('#dm-msgs');
+      if (fresh && fresh.parentNode) fresh.parentNode.replaceChild(pooled, fresh);
+    }
+  } catch(_) {}
   loadDMMessages(username);
   setTimeout(() => { if (window.innerWidth > 768) showDMUserPanel(username); _initChatScroll(document.getElementById('dm-msgs')); }, 80);
   if (!_lockChat) {
@@ -7149,7 +7212,13 @@ async function loadDMMessages(username) {
   const cacheKey = _chatKey('dm', username);
   const cached = _chatCacheGet(cacheKey);
   const hasCache = _chatCacheHas(cacheKey);
-  if (hasCache) {
+  // Persistent-DOM detection: if the msgs container was revived from the
+  // pool, it already has .msg-row children in it. Skip the re-render so
+  // scroll/video/embed state stays intact — we'll only diff-append below.
+  const surfaceRevived = !!msgsEl.querySelector('.msg-row');
+  if (surfaceRevived) {
+    // Nothing to paint — the DOM already carries the messages. Skip skeleton.
+  } else if (hasCache) {
     renderMessages(msgsEl, cached.msgs.slice(), 'dm');
     if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
   } else {
@@ -7160,9 +7229,9 @@ async function loadDMMessages(username) {
     // ~one-screen Discord paints first. Older messages are lazy-loaded on
     // scroll-up via _attachLazyLoadOlder().
     const msgs = await FortizedSocial.getDMMessages(CU.username, username, 20);
-    if (hasCache) {
-      // Cache-hit path: only patch in messages that arrived while the chat
-      // was closed. No full re-render — no flicker.
+    if (surfaceRevived || hasCache) {
+      // Cache-hit path OR revived surface: only patch in messages that
+      // arrived while the chat was closed. No full re-render, no flicker.
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'dm');
     } else {
       renderMessages(msgsEl, msgs||[], 'dm');
@@ -7811,6 +7880,9 @@ async function openGroupChatView(gcId) {
   // Render chat area
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
+  // Persistent DOM: stash the outgoing chat's .chat-msgs so we can revive it
+  // if the user comes back.
+  _stashCurrentActiveMsgs();
   wrap.innerHTML = `
     <div class="chat-wrap" id="gc-chat-inner">
       <div class="room-topbar">
@@ -7834,6 +7906,15 @@ async function openGroupChatView(gcId) {
       </div>
       ${buildChatInputBar({inputId:'gc-input',placeholder:'Message '+escapeHTML(meta.name)+'…',context:'gc'})}
     </div>`;
+  // Persistent DOM: swap in pooled #gc-msgs if we have one so scroll/embed
+  // state survives the return trip.
+  try {
+    const pooled = _msgsPoolRevive(_chatKey('gc', gcId));
+    if (pooled) {
+      const fresh = wrap.querySelector('#gc-msgs');
+      if (fresh && fresh.parentNode) fresh.parentNode.replaceChild(pooled, fresh);
+    }
+  } catch(_) {}
 
   // Load messages
   loadGCMessages(gcId);
@@ -8033,7 +8114,10 @@ async function loadGCMessages(gcId) {
   const cacheKey = _chatKey('gc', gcId);
   const cached = _chatCacheGet(cacheKey);
   const hasCache = _chatCacheHas(cacheKey);
-  if (hasCache) {
+  const surfaceRevived = !!msgsEl.querySelector('.msg-row');
+  if (surfaceRevived) {
+    // DOM already carries messages via revived pooled surface — skip repaint.
+  } else if (hasCache) {
     renderMessages(msgsEl, cached.msgs.slice(), 'gc');
     if (!_restoreChatScroll('gc:'+gcId, msgsEl)) scrollBottom('gc-msgs', true);
   } else {
@@ -8042,7 +8126,7 @@ async function loadGCMessages(gcId) {
   try {
     const snap = await firebase.database().ref('groupChats/'+gcId+'/messages').orderByKey().get();
     const msgs = snap.exists() ? Object.values(snap.val()) : [];
-    if (hasCache) {
+    if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs, msgsEl, 'gc');
     } else {
       renderMessages(msgsEl, msgs, 'gc');
@@ -8896,6 +8980,9 @@ function loadChatChannel(idx) {
   const bastionBanner = b?.banner || '';
   const bannerSafe = bastionBanner ? escapeHTML(bastionBanner) : '';
   const chTypeIcon = ch.type==='voice'?ftzIcon('mic','14'):ch.type==='forum'?ftzIcon('chat','14'):ch.type==='announcement'?ftzIcon('megaphone','14'):ch.type==='poll'?ftzIcon('ballot','14'):'#';
+  // Persistent DOM: stash the outgoing chat's .chat-msgs before we rebuild
+  // the bastion chat wrap so returning restores scroll/video/embed state.
+  _stashCurrentActiveMsgs();
   wrap.innerHTML=`
     <div class="chat-wrap">
       <div class="room-topbar">
@@ -8925,6 +9012,20 @@ function loadChatChannel(idx) {
       </div>
       ${buildChatInputBar({inputId:'ch-input',placeholder:'Message #'+escapeHTML(ch.name)+'…',context:'ch',chIdx:idx})}
     </div>`;
+  // Persistent DOM: revive the pooled #ch-msgs-<idx> for this channel if we
+  // have one so scroll/video/embeds survive intact.
+  try {
+    const pooled = _msgsPoolRevive(_chatKey('ch', (b.globalId||b.name), ch.name));
+    if (pooled) {
+      const fresh = wrap.querySelector('#ch-msgs-'+idx);
+      if (fresh && fresh.parentNode) {
+        // Bring the pooled element's id in line with the current channel idx
+        // (idx can differ across sessions if channel order changed).
+        pooled.id = 'ch-msgs-' + idx;
+        fresh.parentNode.replaceChild(pooled, fresh);
+      }
+    }
+  } catch(_) {}
   // Apply focus mode if enabled
   if (ch.focusMode) {
     const chatWrapEl = wrap.querySelector('.chat-wrap');
@@ -8957,7 +9058,10 @@ async function loadChannelMessages(idx) {
   const cacheKey = _chatKey('ch', (b.globalId||b.name), ch.name);
   const cached = _chatCacheGet(cacheKey);
   const hasCache = _chatCacheHas(cacheKey);
-  if (hasCache) {
+  const surfaceRevived = !!msgsEl.querySelector('.msg-row');
+  if (surfaceRevived) {
+    // DOM already carries messages via revived pooled surface — skip repaint.
+  } else if (hasCache) {
     renderMessages(msgsEl, cached.msgs.slice(), 'ch');
     if (!_restoreChatScroll('ch:'+curBastion+':'+idx, msgsEl)) scrollBottom('ch-msgs-'+idx, true);
   } else {
@@ -8966,7 +9070,7 @@ async function loadChannelMessages(idx) {
   try {
     // Discord-style initial fetch: only the last 20 visible messages.
     const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,20);
-    if (hasCache) {
+    if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'ch');
     } else {
       renderMessages(msgsEl,msgs||[],'ch');

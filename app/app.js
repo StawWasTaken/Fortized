@@ -307,6 +307,47 @@ function rememberProfile(u) {
 function cachedProfile(username) {
   return _profileCache[username] || _profileCache[(username||'').toLowerCase()] || null;
 }
+// Full-profile cache — persists the full user object returned by
+// FortizedSocial.getUserByName so the Profile Card modal (and any other
+// caller that needs the "big" record) can paint instantly on return
+// instead of waiting for the network. Same pattern as the chat cache.
+const _fullProfileCache = (() => {
+  try {
+    const raw = localStorage.getItem('ftz_full_profile_cache_v1');
+    if (raw) return JSON.parse(raw) || {};
+  } catch {}
+  return {};
+})();
+let _fullProfileCacheSaveTimer = null;
+function _persistFullProfileCache() {
+  if (_fullProfileCacheSaveTimer) return;
+  _fullProfileCacheSaveTimer = setTimeout(() => {
+    _fullProfileCacheSaveTimer = null;
+    try {
+      // Bound size: cap at the newest 50 records so localStorage stays sane.
+      const keys = Object.keys(_fullProfileCache);
+      if (keys.length > 50) {
+        keys.sort((a, b) => (_fullProfileCache[b]._cachedAt || 0) - (_fullProfileCache[a]._cachedAt || 0));
+        const keep = keys.slice(0, 50);
+        const kept = {};
+        for (const k of keep) kept[k] = _fullProfileCache[k];
+        for (const k of Object.keys(_fullProfileCache)) delete _fullProfileCache[k];
+        Object.assign(_fullProfileCache, kept);
+      }
+      localStorage.setItem('ftz_full_profile_cache_v1', JSON.stringify(_fullProfileCache));
+    } catch {}
+  }, 500);
+}
+function rememberFullProfile(u) {
+  if (!u || !u.username) return;
+  const key = String(u.username).toLowerCase();
+  _fullProfileCache[key] = { ...u, _cachedAt: Date.now() };
+  _persistFullProfileCache();
+}
+function getFullCachedProfile(username) {
+  if (!username) return null;
+  return _fullProfileCache[username] || _fullProfileCache[String(username).toLowerCase()] || null;
+}
 // Legacy in-memory PFP cache retained for backwards compatibility — now
 // hydrated from the profile cache so existing call sites keep working.
 const _pfpCache = (() => {
@@ -6970,6 +7011,10 @@ let _dmListener = null;
 function openDMView(username) {
   if (!username) return;
   username = (username||"").trim().toLowerCase();
+  // Persistent DOM: stash the OUTGOING chat's .chat-msgs BEFORE any state
+  // variable is overwritten — otherwise the stash would be keyed by the
+  // incoming target, mixing DM histories together on subsequent revives.
+  _stashCurrentActiveMsgs();
   // Clear any staged reply if switching to a different chat — replies are
   // scoped to the chat they were composed in.
   const _newKey = 'dm:' + username;
@@ -7014,9 +7059,6 @@ function openDMView(username) {
 
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
-  // Persistent DOM: stash the outgoing chat's .chat-msgs before we blow the
-  // wrap away, so its scroll/video/embed state survives a return trip.
-  _stashCurrentActiveMsgs();
   // Official Fortized accounts (@fortized, @fortizedsafety) are
   // broadcast-only: only superadmins can chat back. Everyone else sees a
   // locked notice + tailored welcome card explaining the channel is
@@ -7266,7 +7308,7 @@ async function loadDMMessages(username) {
         // Always scroll to bottom when new message arrives while viewing this DM
         scrollBottom('dm-msgs', true);
         _notifyNewMsg('dm-msgs');
-        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', username)) playNotifSound('message');
+        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', username) && (!el._loadedAt || Date.now() - el._loadedAt > 1000)) playNotifSound('message');
         // Update sidebar in real-time
         _updateDMSidebarForNewMessage(username, msg);
         // Hide greeting bar once combined message count crosses threshold
@@ -7278,7 +7320,7 @@ async function loadDMMessages(username) {
       }
     });
   } catch(e){_wrn('DM load',e);}
-  finally { _finalizeChatSkeleton(msgsEl); }
+  finally { _finalizeChatSkeleton(msgsEl); if (msgsEl) msgsEl._loadedAt = Date.now(); }
 }
 
 // Reads a chat input safely whether the contenteditable shim is installed
@@ -7831,6 +7873,9 @@ async function createGroupChat() {
 // ── Open a group chat ───────────────────────────────
 async function openGroupChatView(gcId) {
   if (!gcId) return;
+  // Persistent DOM: stash the outgoing chat BEFORE cur* vars change so we
+  // pool the correct chat's DOM under the correct key.
+  _stashCurrentActiveMsgs();
   // Clear any staged reply from a different chat.
   const _newKey = 'gc:' + String(gcId).toLowerCase();
   if (replyingTo && replyingTo.chatKey && replyingTo.chatKey !== _newKey) {
@@ -7880,9 +7925,6 @@ async function openGroupChatView(gcId) {
   // Render chat area
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
-  // Persistent DOM: stash the outgoing chat's .chat-msgs so we can revive it
-  // if the user comes back.
-  _stashCurrentActiveMsgs();
   wrap.innerHTML = `
     <div class="chat-wrap" id="gc-chat-inner">
       <div class="room-topbar">
@@ -8154,7 +8196,7 @@ async function loadGCMessages(gcId) {
       // Always scroll to bottom when viewing this GC
       scrollBottom('gc-msgs', true);
       _notifyNewMsg('gc-msgs');
-      if (msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('gc', gcId)) playNotifSound('message');
+      if (msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('gc', gcId) && (!el._loadedAt || Date.now() - el._loadedAt > 1000)) playNotifSound('message');
       // Update sidebar in real-time
       _updateGCSidebarForNewMessage(gcId, msg);
     });
@@ -8162,7 +8204,7 @@ async function loadGCMessages(gcId) {
     // Attach live edit/remove listeners for GC
     _attachGCLiveEdits(gcId);
   } catch(e) { console.error('loadGCMessages', e); }
-  finally { _finalizeChatSkeleton(msgsEl); }
+  finally { _finalizeChatSkeleton(msgsEl); if (msgsEl) msgsEl._loadedAt = Date.now(); }
 }
 
 let _gcEditListenerPath = null;
@@ -8481,6 +8523,10 @@ function _stopBgChannelListeners() {
 
 function openBastion(idx) {
   if (idx<0||!CU.bastions?.[idx]) return;
+  // Persistent DOM: stash the outgoing chat's .chat-msgs BEFORE cur*
+  // variables get overwritten — otherwise the previous chat's DOM would
+  // be pooled under the wrong key and mix histories on next revive.
+  _stashCurrentActiveMsgs();
   // Save scroll position of previous channel before switching bastions
   if (curBastion !== null && curChannel !== null && curChannel !== 'overview') {
     const _el = document.getElementById('ch-msgs-'+curChannel);
@@ -8873,6 +8919,9 @@ function selectChannel(idx) {
   const b=CU.bastions?.[curBastion];
   const ch=b?.channels?.[idx];
   if (!ch) return;
+  // Persistent DOM: stash the outgoing chat BEFORE curChannel is
+  // overwritten so we pool under the right key.
+  _stashCurrentActiveMsgs();
   // Clear any staged reply from a different chat.
   const _newKey = 'ch:' + String(b.globalId||b.name).toLowerCase() + ':' + String(ch.name).toLowerCase();
   if (replyingTo && replyingTo.chatKey && replyingTo.chatKey !== _newKey) {
@@ -8980,9 +9029,6 @@ function loadChatChannel(idx) {
   const bastionBanner = b?.banner || '';
   const bannerSafe = bastionBanner ? escapeHTML(bastionBanner) : '';
   const chTypeIcon = ch.type==='voice'?ftzIcon('mic','14'):ch.type==='forum'?ftzIcon('chat','14'):ch.type==='announcement'?ftzIcon('megaphone','14'):ch.type==='poll'?ftzIcon('ballot','14'):'#';
-  // Persistent DOM: stash the outgoing chat's .chat-msgs before we rebuild
-  // the bastion chat wrap so returning restores scroll/video/embed state.
-  _stashCurrentActiveMsgs();
   wrap.innerHTML=`
     <div class="chat-wrap">
       <div class="room-topbar">
@@ -9097,7 +9143,7 @@ async function loadChannelMessages(idx) {
         // Always scroll to bottom when viewing this channel
         scrollBottom('ch-msgs-'+idx, true);
         _notifyNewMsg('ch-msgs-'+idx);
-        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('bastion',b.globalId||b.name)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
+        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('bastion',b.globalId||b.name) && (!el._loadedAt || Date.now() - el._loadedAt > 1000)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
       }
     });
     // Start polling to enable real-time message sync across sessions.
@@ -9110,7 +9156,7 @@ async function loadChannelMessages(idx) {
     // Make sure we're actually joined in the room for real-time events
     try { FortizedSocial.joinRoom('bastion', String(b.globalId||b.name).toLowerCase(), String(ch.name).toLowerCase()); } catch(_){}
   } catch(e){_wrn('Channel load',e);}
-  finally { _finalizeChatSkeleton(msgsEl); }
+  finally { _finalizeChatSkeleton(msgsEl); if (msgsEl) msgsEl._loadedAt = Date.now(); }
 }
 
 // ════════════════════════════════════════════
@@ -23463,17 +23509,28 @@ async function _viewUserProfile(username) {
   username = (username || '').trim().toLowerCase();
   if (!username) throw new Error('No username provided');
   if (!CU?.username) throw new Error('Not signed in');
-  // Open the modal immediately with a skeleton placeholder so the user sees
-  // the card appear instantly instead of waiting for the network roundtrip.
+  // Open the modal immediately. If we have a full-profile cache for this
+  // user, we DEFER painting the skeleton entirely — the cached record
+  // is rendered directly below as if it were fresh, then the background
+  // fetch swaps in the real values. Only cold first views see the
+  // skeleton, matching the chat cache pattern.
   const _earlyBody = document.getElementById('user-modal-body');
+  const _cachedFull = getFullCachedProfile(username);
   if (_earlyBody && !_earlyBody.querySelector('.up')) {
-    _earlyBody.innerHTML = _renderProfileCardSkeleton();
+    if (!_cachedFull) _earlyBody.innerHTML = _renderProfileCardSkeleton();
     openModal('modal-user');
   }
   let u = null;
+  // If we have a cached full record, use it as the seed so the modal
+  // renders instantly with real data. The refetch below will still run
+  // and, if the record has changed, we re-render silently at the end.
+  if (_cachedFull) u = { ..._cachedFull };
   // noCache so the Profile Card modal always opens with the user's
   // CURRENT data instead of a 5-minute-old cached snapshot.
-  try { u = await FortizedSocial.getUserByName(username, { noCache: true }); } catch (e) { _dbg('[Profile] user lookup failed', e); }
+  try {
+    const fresh = await FortizedSocial.getUserByName(username, { noCache: true });
+    if (fresh) { u = fresh; try { rememberFullProfile(fresh); } catch(_) {} }
+  } catch (e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   if (username === (CU.username||'').toLowerCase()) {
     // Public-view shim — own profile card paints from the SAVED

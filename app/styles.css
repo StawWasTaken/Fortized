@@ -35,8 +35,22 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 /* ── Global Canvas — the 'floor' of the entire app ── */
 .global-canvas{position:fixed;inset:0;z-index:0;background:var(--canvas-color);transition:background .5s ease,filter .5s ease;pointer-events:none;}
 ::selection{background:rgba(255,249,62,.2);}
-*{scrollbar-width:thin;scrollbar-color:rgba(255,249,62,.12) transparent;}
-::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,249,62,.12);border-radius:var(--radius-pill);border:1px solid rgba(255,249,62,.06);}::-webkit-scrollbar-thumb:hover{background:rgba(255,249,62,.22);}
+/* ── Custom scrollbars — applied globally so no default browser scrollbar
+   sneaks through, ever. Firefox uses scrollbar-* props; Chromium/Safari
+   need ::-webkit-scrollbar pseudo-elements. Applying to html, body, *,
+   and every likely scrollable element by attribute selector prevents
+   any component from opting out. */
+html,body,*{scrollbar-width:thin!important;scrollbar-color:rgba(255,249,62,.14) transparent!important;}
+*::-webkit-scrollbar{width:6px!important;height:6px!important;background:transparent!important;}
+*::-webkit-scrollbar-track{background:transparent!important;border:none!important;}
+*::-webkit-scrollbar-thumb{background:rgba(255,249,62,.14)!important;border-radius:100px!important;border:1px solid rgba(255,249,62,.06)!important;}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,249,62,.24)!important;}
+*::-webkit-scrollbar-corner{background:transparent!important;}
+*::-webkit-scrollbar-button{display:none!important;}
+/* textarea / contenteditable / select need explicit re-application in
+   some engines even under a universal selector. */
+textarea::-webkit-scrollbar,[contenteditable]::-webkit-scrollbar,select::-webkit-scrollbar{width:6px!important;height:6px!important;}
+textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,select::-webkit-scrollbar-thumb{background:rgba(255,249,62,.14)!important;border-radius:100px!important;}
 /* Performance: lazy-render off-screen elements.
    The `auto` keyword in contain-intrinsic-size tells the browser to REMEMBER
    the last rendered size of each element and reuse it as the intrinsic size

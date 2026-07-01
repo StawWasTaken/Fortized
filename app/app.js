@@ -452,6 +452,127 @@ function _chatCacheDiffAppendToDOM(key, freshMsgs, container, context) {
     _chatCacheAppend(key, m);
   });
 }
+
+// ── IndexedDB persistence for the chat cache ─────────────────────────────
+// Survives page refresh, tab reopen, and browser restart. Discord-style.
+// Store layout:
+//   DB      : ftz-chat
+//   Version : 1
+//   Store   : chats  (keyPath: 'chatKey')
+//   Record  : { chatKey: 'dm:foo', ownerUsername, updatedAt, msgs: [...] }
+// On boot we hydrate _ftzChatCache from IDB before any chat opens; from
+// then on, every cache mutation is debounced back to IDB. Only records
+// for the current logged-in user are read/written so switching accounts
+// on the same browser can't leak history between them.
+const _FTZ_CHAT_DB_NAME = 'ftz-chat';
+const _FTZ_CHAT_DB_VERSION = 1;
+const _FTZ_CHAT_STORE = 'chats';
+const _FTZ_CHAT_FLUSH_MS = 800;   // debounce IDB writes
+const _FTZ_CHAT_MAX_PERSIST = 200; // last-N msgs persisted per chat (cap size)
+let _ftzChatDBPromise = null;
+const _ftzChatDirtyKeys = new Set();
+let _ftzChatFlushTimer = null;
+let _ftzChatHydrated = false;
+
+function _openChatDB() {
+  if (_ftzChatDBPromise) return _ftzChatDBPromise;
+  _ftzChatDBPromise = new Promise((resolve) => {
+    try {
+      if (!('indexedDB' in window)) { resolve(null); return; }
+      const req = indexedDB.open(_FTZ_CHAT_DB_NAME, _FTZ_CHAT_DB_VERSION);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(_FTZ_CHAT_STORE)) {
+          db.createObjectStore(_FTZ_CHAT_STORE, { keyPath: 'chatKey' });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => { console.warn('[ChatDB] open failed:', req.error?.message); resolve(null); };
+    } catch (e) { console.warn('[ChatDB] open threw:', e?.message); resolve(null); }
+  });
+  return _ftzChatDBPromise;
+}
+async function _chatDBHydrate() {
+  if (_ftzChatHydrated) return;
+  _ftzChatHydrated = true;
+  const db = await _openChatDB();
+  if (!db) return;
+  const owner = String(CU?.username || '').toLowerCase();
+  if (!owner) return;
+  try {
+    await new Promise((resolve) => {
+      const tx = db.transaction(_FTZ_CHAT_STORE, 'readonly');
+      const store = tx.objectStore(_FTZ_CHAT_STORE);
+      const req = store.openCursor();
+      req.onsuccess = (e) => {
+        const c = e.target.result;
+        if (!c) { resolve(); return; }
+        const rec = c.value;
+        if (rec && rec.ownerUsername === owner && Array.isArray(rec.msgs) && rec.chatKey) {
+          // Skip if the in-memory cache already has entries (memory wins
+          // on race — e.g. a listener fired before hydrate finished).
+          if (!_chatCacheHas(rec.chatKey)) {
+            _chatCachePut(rec.chatKey, rec.msgs);
+          }
+        }
+        c.continue();
+      };
+      req.onerror = () => resolve();
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => resolve();
+      tx.onerror = () => resolve();
+    });
+  } catch (e) { console.warn('[ChatDB] hydrate failed:', e?.message); }
+}
+function _chatDBMark(key) {
+  if (!key || !CU?.username) return;
+  _ftzChatDirtyKeys.add(key);
+  if (_ftzChatFlushTimer) return;
+  _ftzChatFlushTimer = setTimeout(() => { _ftzChatFlushTimer = null; _chatDBFlush(); }, _FTZ_CHAT_FLUSH_MS);
+}
+async function _chatDBFlush() {
+  const db = await _openChatDB();
+  if (!db) { _ftzChatDirtyKeys.clear(); return; }
+  const owner = String(CU?.username || '').toLowerCase();
+  if (!owner) { _ftzChatDirtyKeys.clear(); return; }
+  const keys = Array.from(_ftzChatDirtyKeys);
+  _ftzChatDirtyKeys.clear();
+  try {
+    const tx = db.transaction(_FTZ_CHAT_STORE, 'readwrite');
+    const store = tx.objectStore(_FTZ_CHAT_STORE);
+    for (const key of keys) {
+      const c = _ftzChatCache.get(key);
+      if (!c || !c.msgs.length) { try { store.delete(key); } catch(_) {} continue; }
+      // Only persist the tail — 200 msgs is plenty for the "already loaded"
+      // feel on next boot; older will lazy-load on scroll.
+      const tail = c.msgs.slice(-_FTZ_CHAT_MAX_PERSIST);
+      try {
+        store.put({ chatKey: key, ownerUsername: owner, updatedAt: Date.now(), msgs: tail });
+      } catch (e) { console.warn('[ChatDB] put failed for', key, e?.message); }
+    }
+  } catch (e) { console.warn('[ChatDB] flush tx threw:', e?.message); }
+}
+// Force-flush before the tab is torn down so the very latest message
+// state survives a refresh triggered mid-typing.
+window.addEventListener('beforeunload', () => {
+  try { if (_ftzChatFlushTimer) { clearTimeout(_ftzChatFlushTimer); _ftzChatFlushTimer = null; _chatDBFlush(); } } catch(_) {}
+});
+// Wrap the in-memory cache mutation entry points so every write also
+// schedules an IDB flush. We patch the base fns AFTER they're defined
+// (they're already declared above) — replace the exports and preserve
+// the original behaviour.
+(function _installChatDBWraps(){
+  const _put = _chatCachePut;
+  _chatCachePut = function(key, msgs) { _put(key, msgs); _chatDBMark(key); };
+  const _app = _chatCacheAppend;
+  _chatCacheAppend = function(key, msg) { _app(key, msg); _chatDBMark(key); };
+  const _pre = _chatCachePrependOlder;
+  _chatCachePrependOlder = function(key, msgs) { _pre(key, msgs); _chatDBMark(key); };
+  const _upd = _chatCacheUpdate;
+  _chatCacheUpdate = function(key, msg) { _upd(key, msg); _chatDBMark(key); };
+  const _rem = _chatCacheRemove;
+  _chatCacheRemove = function(key, id) { _rem(key, id); _chatDBMark(key); };
+})();
 // Unread tracking per channel: Map<bastionIdx_chIdx, {count:number, mentions:number}>
 const _channelUnread = new Map();
 function getChannelUnreadKey(bIdx, chIdx) { return bIdx+'_'+chIdx; }
@@ -6362,6 +6483,9 @@ async function renderDMSidebar(scroll) {
   // Subscribe to every visible DM + GC room so the sidebar receives
   // message:new for older convos too — not just the one currently open.
   try { _subscribeToAllConversationRooms(); } catch(_) {}
+  // Hydrate the persistent chat cache from IndexedDB so returning to a
+  // chat you had open in a previous session still feels "already loaded".
+  try { _chatDBHydrate(); } catch(_) {}
 
   // ── Async: fetch last message timestamps, PFPs, display names, status, then sort ─────────
   // Load all friends and GCs in parallel (no staggered delays)
@@ -7085,6 +7209,7 @@ async function loadDMMessages(username) {
       }
     });
   } catch(e){_wrn('DM load',e);}
+  finally { _finalizeChatSkeleton(msgsEl); }
 }
 
 // Reads a chat input safely whether the contenteditable shim is installed
@@ -7953,6 +8078,7 @@ async function loadGCMessages(gcId) {
     // Attach live edit/remove listeners for GC
     _attachGCLiveEdits(gcId);
   } catch(e) { console.error('loadGCMessages', e); }
+  finally { _finalizeChatSkeleton(msgsEl); }
 }
 
 let _gcEditListenerPath = null;
@@ -8880,6 +9006,7 @@ async function loadChannelMessages(idx) {
     // Make sure we're actually joined in the room for real-time events
     try { FortizedSocial.joinRoom('bastion', String(b.globalId||b.name).toLowerCase(), String(ch.name).toLowerCase()); } catch(_){}
   } catch(e){_wrn('Channel load',e);}
+  finally { _finalizeChatSkeleton(msgsEl); }
 }
 
 // ════════════════════════════════════════════
@@ -9403,7 +9530,12 @@ function renderMessages(container, msgs, context) {
   if (container._seenIds) container._seenIds.clear();
   msgs.forEach(_normalizeMsg);
   if (!msgs.length) {
-    container.querySelector('.msg-skel-stack')?.remove();
+    // Empty payload → do NOT drop the skeleton here. The skeleton is a
+    // loading-state visual and we don't want it to flicker off before
+    // the loader has confirmed the chat is genuinely empty. The loader
+    // (loadDMMessages/loadGCMessages/channel loader) is responsible for
+    // calling _finalizeChatSkeleton(container) once the fetch completes
+    // so the skeleton is removed exactly once, at the right moment.
     return;
   }
   // Initial-load mode: hide messages while embeds are loading. The
@@ -9613,6 +9745,26 @@ function _paintInitialChatSkeleton(msgsEl) {
   // visible above the skeleton (otherwise the skeleton overlaps the
   // banner and #channel header).
   msgsEl.insertAdjacentHTML('beforeend', _renderSkelMessages(6));
+  msgsEl._skelAt = Date.now();
+}
+// Called by the loaders after the fetch has resolved (success OR failure) so
+// the skeleton is removed exactly once, at the correct moment. Guarantees a
+// minimum on-screen duration so a very-fast fetch doesn't cause a flicker.
+function _finalizeChatSkeleton(container) {
+  if (!container) return;
+  const doRemove = () => {
+    if (!container.querySelector('.msg-row')) {
+      container.querySelector('.msg-skel-stack')?.remove();
+    } else {
+      // Real rows landed — the reveal path in _revealAfterMediaSettle
+      // will pull the skeleton at the appropriate moment.
+    }
+  };
+  const paintedAt = container._skelAt || 0;
+  const elapsed = Date.now() - paintedAt;
+  const MIN_MS = 400;
+  if (paintedAt && elapsed < MIN_MS) setTimeout(doRemove, MIN_MS - elapsed);
+  else doRemove();
 }
 
 // Replaces the load-more-bar's content with a single retry button —

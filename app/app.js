@@ -355,6 +355,103 @@ function _restoreChatScroll(key, el) {
   el.scrollTop = saved.top;
   return true;
 }
+
+// ── Persistent chat cache (Discord-style "no reload on return") ──────────
+// Keyed by chat id — 'dm:<username>' / 'gc:<gcId>' / 'ch:<bastionId>:<chName>'.
+// Fills on first fetch; append on every real-time message (including when the
+// chat isn't currently visible). When the user re-opens a cached chat we
+// paint from the cache instantly, skip the skeleton, and only diff the
+// background refresh in. Bounded to CHAT_CACHE_MAX msgs per chat to keep
+// memory sane on long-running sessions.
+const CHAT_CACHE_MAX = 400;
+const _ftzChatCache = new Map();
+function _chatKey(type, id1, id2) {
+  if (type === 'dm') return 'dm:' + String(id1||'').toLowerCase();
+  if (type === 'gc') return 'gc:' + String(id1||'');
+  if (type === 'ch') return 'ch:' + String(id1||'') + ':' + String(id2||'');
+  return null;
+}
+function _chatCacheGet(key) {
+  return key ? (_ftzChatCache.get(key) || null) : null;
+}
+function _chatCacheHas(key) {
+  const c = _ftzChatCache.get(key);
+  return !!(c && c.msgs && c.msgs.length);
+}
+function _chatCachePut(key, msgs) {
+  if (!key) return;
+  const arr = (msgs || []).slice(-CHAT_CACHE_MAX);
+  const ids = new Set(arr.map(m => _msgIdOf(m)));
+  _ftzChatCache.set(key, { msgs: arr, ids });
+}
+function _msgIdOf(msg) {
+  if (!msg) return '';
+  return String(msg.id != null ? msg.id : ((msg.from||'') + '|' + (msg.timestamp||'')));
+}
+function _chatCacheAppend(key, msg) {
+  if (!key || !msg) return;
+  let c = _ftzChatCache.get(key);
+  if (!c) { c = { msgs: [], ids: new Set() }; _ftzChatCache.set(key, c); }
+  const id = _msgIdOf(msg);
+  if (c.ids.has(id)) return;
+  c.ids.add(id);
+  c.msgs.push(msg);
+  if (c.msgs.length > CHAT_CACHE_MAX) {
+    const dropped = c.msgs.splice(0, c.msgs.length - CHAT_CACHE_MAX);
+    dropped.forEach(m => c.ids.delete(_msgIdOf(m)));
+  }
+}
+function _chatCachePrependOlder(key, olderMsgs) {
+  if (!key || !olderMsgs || !olderMsgs.length) return;
+  let c = _ftzChatCache.get(key);
+  if (!c) { c = { msgs: [], ids: new Set() }; _ftzChatCache.set(key, c); }
+  const fresh = olderMsgs.filter(m => !c.ids.has(_msgIdOf(m)));
+  fresh.forEach(m => c.ids.add(_msgIdOf(m)));
+  c.msgs = fresh.concat(c.msgs);
+  if (c.msgs.length > CHAT_CACHE_MAX) {
+    // Prefer dropping the tail (newer) less often; here we keep the newest
+    // window so re-render stays consistent with what's on screen.
+    const excess = c.msgs.length - CHAT_CACHE_MAX;
+    const dropped = c.msgs.splice(0, excess);
+    dropped.forEach(m => c.ids.delete(_msgIdOf(m)));
+  }
+}
+function _chatCacheUpdate(key, msg) {
+  if (!key || !msg) return;
+  const c = _ftzChatCache.get(key);
+  if (!c) return;
+  const id = _msgIdOf(msg);
+  const i = c.msgs.findIndex(m => _msgIdOf(m) === id);
+  if (i >= 0) c.msgs[i] = { ...c.msgs[i], ...msg };
+}
+function _chatCacheRemove(key, msgId) {
+  if (!key || msgId == null) return;
+  const c = _ftzChatCache.get(key);
+  if (!c) return;
+  const id = String(msgId);
+  const i = c.msgs.findIndex(m => _msgIdOf(m) === id);
+  if (i >= 0) { c.msgs.splice(i, 1); c.ids.delete(id); }
+}
+// Compare a fresh fetch against the cache for a key and append any msgs
+// the cache didn't already have (arrived while the chat was closed and
+// its real-time listener was detached). No full re-render — just a
+// silent tail append into an already-rendered container.
+function _chatCacheDiffAppendToDOM(key, freshMsgs, container, context) {
+  if (!container || !freshMsgs || !freshMsgs.length) return;
+  const c = _ftzChatCache.get(key);
+  const known = c ? c.ids : new Set();
+  freshMsgs.forEach(m => {
+    const id = _msgIdOf(m);
+    if (known.has(id)) return;
+    // Also guard against a race where the DOM has it but cache missed it.
+    if (container.querySelector(`[data-msgid="${CSS.escape(id)}"]`)) {
+      _chatCacheAppend(key, m);
+      return;
+    }
+    _appendLiveMessage(container, m, context);
+    _chatCacheAppend(key, m);
+  });
+}
 // Unread tracking per channel: Map<bastionIdx_chIdx, {count:number, mentions:number}>
 const _channelUnread = new Map();
 function getChannelUnreadKey(bIdx, chIdx) { return bIdx+'_'+chIdx; }
@@ -6923,14 +7020,31 @@ async function loadDMMessages(username) {
   // Stop any existing DM polling for this conversation
   const dmKey = [CU.username, username].sort().join('__');
   FortizedSocial.stopDMPolling(dmKey);
-  _paintInitialChatSkeleton(msgsEl);
+  // Persistent-chat cache: if we already have messages for this DM this
+  // session, paint them instantly — no skeleton, no "loading" state.
+  const cacheKey = _chatKey('dm', username);
+  const cached = _chatCacheGet(cacheKey);
+  const hasCache = _chatCacheHas(cacheKey);
+  if (hasCache) {
+    renderMessages(msgsEl, cached.msgs.slice(), 'dm');
+    if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
+  } else {
+    _paintInitialChatSkeleton(msgsEl);
+  }
   try {
     // Discord-style initial fetch: only the last 20 visible messages — the
     // ~one-screen Discord paints first. Older messages are lazy-loaded on
     // scroll-up via _attachLazyLoadOlder().
     const msgs = await FortizedSocial.getDMMessages(CU.username, username, 20);
-    renderMessages(msgsEl, msgs||[], 'dm');
-    if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
+    if (hasCache) {
+      // Cache-hit path: only patch in messages that arrived while the chat
+      // was closed. No full re-render — no flicker.
+      _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'dm');
+    } else {
+      renderMessages(msgsEl, msgs||[], 'dm');
+      if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
+      _chatCachePut(cacheKey, msgs || []);
+    }
     _attachLazyLoadOlder(msgsEl, 'dm');
     _attachDMLiveEdits(CU.username, username);
     // Show greeting button for empty/new conversations (not for official accounts)
@@ -6938,6 +7052,11 @@ async function loadDMMessages(username) {
     // Start polling for new DM messages to enable real-time sync across sessions
     FortizedSocial.startDMPolling(dmKey);
     _dmListener = FortizedSocial.listenDM(CU.username, username, msg => {
+      // Persistent cache: patch edit/delete/insert into cache regardless of
+      // whether the chat is currently visible so a return trip is silent.
+      if (msg && msg._event === 'delete') _chatCacheRemove(cacheKey, msg.id);
+      else if (msg && msg._event === 'update') _chatCacheUpdate(cacheKey, msg);
+      else if (msg) _chatCacheAppend(cacheKey, msg);
       if (curDM!==username) {
         // Update sidebar even when not viewing this DM (move to top + update preview)
         _updateDMSidebarForNewMessage(username, msg);
@@ -7785,17 +7904,33 @@ async function loadGCMessages(gcId) {
   // Join Socket.io room for GC real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('gc', String(gcId).toLowerCase());
   window._activeSubs.gcRoom = gcId;
-  _paintInitialChatSkeleton(msgsEl);
+  // Persistent cache: paint from cache first if we already have this GC.
+  const cacheKey = _chatKey('gc', gcId);
+  const cached = _chatCacheGet(cacheKey);
+  const hasCache = _chatCacheHas(cacheKey);
+  if (hasCache) {
+    renderMessages(msgsEl, cached.msgs.slice(), 'gc');
+    if (!_restoreChatScroll('gc:'+gcId, msgsEl)) scrollBottom('gc-msgs', true);
+  } else {
+    _paintInitialChatSkeleton(msgsEl);
+  }
   try {
     const snap = await firebase.database().ref('groupChats/'+gcId+'/messages').orderByKey().get();
     const msgs = snap.exists() ? Object.values(snap.val()) : [];
-    renderMessages(msgsEl, msgs, 'gc');
-    if (!_restoreChatScroll('gc:'+gcId, msgsEl)) scrollBottom('gc-msgs', true);
+    if (hasCache) {
+      _chatCacheDiffAppendToDOM(cacheKey, msgs, msgsEl, 'gc');
+    } else {
+      renderMessages(msgsEl, msgs, 'gc');
+      if (!_restoreChatScroll('gc:'+gcId, msgsEl)) scrollBottom('gc-msgs', true);
+      _chatCachePut(cacheKey, msgs);
+    }
     _attachLazyLoadOlder(msgsEl, 'gc');
     // Live listener
     const ref = firebase.database().ref('groupChats/'+gcId+'/messages');
     const handler = ref.on('child_added', snap => {
       const msg = snap.val();
+      // Keep cache warm even when this GC isn't visible.
+      if (msg) _chatCacheAppend(cacheKey, msg);
       if (curGC !== gcId) {
         // Update sidebar even when not viewing this GC
         _updateGCSidebarForNewMessage(gcId, msg);
@@ -8692,16 +8827,34 @@ async function loadChannelMessages(idx) {
   if (_chListener){try{_chListener();}catch(e){_dbg('[CH] Listener cleanup:',e?.message);}_chListener=null;}
   // Join Socket.io room for bastion channel real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('bastion', String(b.globalId||b.name).toLowerCase(), String(ch.name).toLowerCase());
-  _paintInitialChatSkeleton(msgsEl);
+  // Persistent cache: paint from cache first when we've seen this channel.
+  const cacheKey = _chatKey('ch', (b.globalId||b.name), ch.name);
+  const cached = _chatCacheGet(cacheKey);
+  const hasCache = _chatCacheHas(cacheKey);
+  if (hasCache) {
+    renderMessages(msgsEl, cached.msgs.slice(), 'ch');
+    if (!_restoreChatScroll('ch:'+curBastion+':'+idx, msgsEl)) scrollBottom('ch-msgs-'+idx, true);
+  } else {
+    _paintInitialChatSkeleton(msgsEl);
+  }
   try {
     // Discord-style initial fetch: only the last 20 visible messages.
     const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,20);
-    renderMessages(msgsEl,msgs||[],'ch');
-    if (!_restoreChatScroll('ch:'+curBastion+':'+idx, msgsEl)) scrollBottom('ch-msgs-'+idx, true);
+    if (hasCache) {
+      _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'ch');
+    } else {
+      renderMessages(msgsEl,msgs||[],'ch');
+      if (!_restoreChatScroll('ch:'+curBastion+':'+idx, msgsEl)) scrollBottom('ch-msgs-'+idx, true);
+      _chatCachePut(cacheKey, msgs || []);
+    }
     _attachLazyLoadOlder(msgsEl, 'ch');
     _attachChLiveEdits(b.globalId||b.name, ch.name);
     listenChannelTyping(b.globalId||b.name, ch.name);
     _chListener=FortizedSocial.listenBastionChannel(b.globalId||b.name,ch.name,msg=>{
+      // Keep cache warm even when this channel isn't currently open.
+      if (msg && msg._event === 'delete') _chatCacheRemove(cacheKey, msg.id);
+      else if (msg && msg._event === 'update') _chatCacheUpdate(cacheKey, msg);
+      else if (msg) _chatCacheAppend(cacheKey, msg);
       if (curChannel!==idx) return;
       // Handle edit/delete events from Supabase real-time
       if (msg._event === 'delete') { _liveRemoveMessage({ key: msg.id }); return; }
@@ -9488,6 +9641,20 @@ async function _loadOlderMessages(barOrBtn) {
     }
     if (older.length) {
       const container = bar.parentElement;
+      // Persistent chat cache: merge older msgs so the cache reflects the
+      // full loaded history, not just the initial 20.
+      try {
+        let _key = null;
+        if (context === 'ch' && curBastion !== null && curChannel !== null) {
+          const _b = CU.bastions?.[curBastion]; const _ch = _b?.channels?.[curChannel];
+          if (_b && _ch) _key = _chatKey('ch', (_b.globalId||_b.name), _ch.name);
+        } else if (context === 'dm' && curDM) {
+          _key = _chatKey('dm', curDM);
+        } else if (context === 'gc' && typeof curGC !== 'undefined' && curGC) {
+          _key = _chatKey('gc', curGC);
+        }
+        if (_key) _chatCachePrependOlder(_key, older);
+      } catch(_) {}
       // Anchor: capture the first real message's offsetTop BEFORE prepending
       // so we can restore the scroll position relative to it. Browsers'
       // built-in overflow-anchor handles most cases; this is the fallback.
@@ -13347,10 +13514,28 @@ function initFortizedUXResilience() {
             const me = String(CU?.username||'').toLowerCase();
             const parts = inner.split('__');
             const partner = parts.find(p => p && p !== me);
-            if (partner) _updateDMSidebarForNewMessage(partner, msg);
+            if (partner) {
+              _updateDMSidebarForNewMessage(partner, msg);
+              // Keep the persistent chat cache warm for OTHER conversations
+              // — the "return to a chat and it's already there" trick.
+              const _key = _chatKey('dm', partner);
+              if (_chatCacheHas(_key)) _chatCacheAppend(_key, msg);
+            }
           } else if (room.startsWith('gc:')) {
             const gcId = room.slice(3);
-            if (gcId) _updateGCSidebarForNewMessage(gcId, msg);
+            if (gcId) {
+              _updateGCSidebarForNewMessage(gcId, msg);
+              const _key = _chatKey('gc', gcId);
+              if (_chatCacheHas(_key)) _chatCacheAppend(_key, msg);
+            }
+          } else if (room.startsWith('bastion:')) {
+            // Room format: bastion:<globalId>:<channelName>
+            const parts = room.slice(8).split(':');
+            if (parts.length >= 2) {
+              const _bid = parts[0]; const _ch = parts.slice(1).join(':');
+              const _key = _chatKey('ch', _bid, _ch);
+              if (_chatCacheHas(_key)) _chatCacheAppend(_key, msg);
+            }
           }
         } catch(_) {}
         // Handle DM messages

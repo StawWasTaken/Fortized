@@ -6560,10 +6560,37 @@ function _formatRelativeTime(d) {
   else return d.toLocaleDateString('en-GB', {month:'short', day:'numeric'});
 }
 
-async function renderDMSidebar(scroll) {
+// Signature of the current conversation set — friends + visible GC ids +
+// hidden ids. When this string hasn't changed since the last render, the
+// DM sidebar's DOM is already correct and we skip the rebuild entirely so
+// switching between DMs doesn't cause a visible reshuffle (Discord parity).
+function _dmSidebarSignature() {
+  const friends = (CU?.friends || []).slice().sort();
+  const gcIds = (CU?.groupChats || []).map(g => g?.id).filter(Boolean).sort();
+  const hidden = (typeof getHiddenDMs === 'function' ? getHiddenDMs() : []).slice().sort();
+  return 'v1|' + friends.join(',') + '|' + gcIds.join(',') + '|' + hidden.join(',');
+}
+async function renderDMSidebar(scroll, force) {
   const friends = CU?.friends||[];
   const gcs = CU?.groupChats||[];
   const hidden = getHiddenDMs();
+
+  // Stability guard: Discord's sidebar doesn't wipe-and-rebuild every time
+  // you click a different DM. If the visible conversation set hasn't
+  // changed since our last render AND the sidebar is already populated,
+  // we bail. Existing rows retain their sort order, and the "highlight
+  // active" toggle happens at the openDMView call site — no reshuffle.
+  const sig = _dmSidebarSignature();
+  if (!force && scroll && scroll._dmSidebarSig === sig && scroll.querySelector('#dm-sorted-list')) {
+    // Still refresh the "active" outline in case the caller expects it.
+    try {
+      scroll.querySelectorAll('.friend-item.active').forEach(el => el.classList.remove('active'));
+      if (curDM) scroll.querySelector('#dm-fi-' + CSS.escape(curDM))?.classList.add('active');
+      else if (curGC) scroll.querySelector('#gc-fi-' + CSS.escape(curGC))?.classList.add('active');
+    } catch(_) {}
+    return;
+  }
+  if (scroll) scroll._dmSidebarSig = sig;
 
   let html = '';
 

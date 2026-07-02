@@ -522,20 +522,30 @@ function _chatCacheRemove(key, msgId) {
   const i = c.msgs.findIndex(m => _msgIdOf(m) === id);
   if (i >= 0) { c.msgs.splice(i, 1); c.ids.delete(id); }
 }
+// Track chats where the server has confirmed no more older messages — we
+// don't want to re-add a load-more-bar on every revive and re-fire the
+// fruitless "give me older" fetch. Populated when _loadOlderMessages
+// returns fewer results than the page size.
+const _ftzChatExhausted = new Set();
+function _markChatExhausted(context, chatKey) { if (chatKey) _ftzChatExhausted.add(chatKey); }
+function _isChatExhausted(chatKey) { return chatKey && _ftzChatExhausted.has(chatKey); }
 // Ensure the container has a .load-more-bar so scroll-up can fetch older
 // history. Called on cache-hit and revived-surface paths (which skip
 // renderMessages and therefore skip the bar it normally adds).
-function _ensureLoadMoreBar(container, context) {
+function _ensureLoadMoreBar(container, context, chatKey) {
   if (!container) return;
   if (container.querySelector('.load-more-bar')) return;
   // Only bother if there's actual history rendered — no msg-rows means
   // there's nothing yet to have OLDER messages relative to.
   if (!container.querySelector('.msg-row')) return;
+  // Skip if we've already confirmed there's no older history.
+  if (_isChatExhausted(chatKey)) return;
   const rowCount = container.querySelectorAll('.msg-row').length;
   const bar = document.createElement('div');
   bar.className = 'load-more-bar';
   bar.dataset.context = context;
   bar.dataset.offset = String(Math.max(rowCount, 50));
+  if (chatKey) bar.dataset.chatKey = chatKey;
   bar.innerHTML = _renderSkelMessages(6);
   // Insert as the first message-list neighbour so scroll-up hits it before
   // reaching msg-row content.
@@ -7358,7 +7368,7 @@ async function loadDMMessages(username) {
       // Cache-hit path OR revived surface: only patch in messages that
       // arrived while the chat was closed. No full re-render, no flicker.
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'dm');
-      _ensureLoadMoreBar(msgsEl, 'dm');
+      _ensureLoadMoreBar(msgsEl, 'dm', cacheKey);
     } else {
       renderMessages(msgsEl, msgs||[], 'dm');
       if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
@@ -8254,7 +8264,7 @@ async function loadGCMessages(gcId) {
     const msgs = snap.exists() ? Object.values(snap.val()) : [];
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs, msgsEl, 'gc');
-      _ensureLoadMoreBar(msgsEl, 'gc');
+      _ensureLoadMoreBar(msgsEl, 'gc', cacheKey);
     } else {
       renderMessages(msgsEl, msgs, 'gc');
       if (!_restoreChatScroll('gc:'+gcId, msgsEl)) scrollBottom('gc-msgs', true);
@@ -9203,7 +9213,7 @@ async function loadChannelMessages(idx) {
     const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,50);
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'ch');
-      _ensureLoadMoreBar(msgsEl, 'ch');
+      _ensureLoadMoreBar(msgsEl, 'ch', cacheKey);
     } else {
       renderMessages(msgsEl,msgs||[],'ch');
       if (!_restoreChatScroll('ch:'+curBastion+':'+idx, msgsEl)) scrollBottom('ch-msgs-'+idx, true);
@@ -9793,6 +9803,18 @@ function renderMessages(container, msgs, context) {
     loadMore.className = 'load-more-bar';
     loadMore.dataset.context = context;
     loadMore.dataset.offset = '50';
+    // Carry the chatKey so _loadOlderMessages can mark this chat's
+    // history exhausted if the fetch tail returns nothing.
+    let _resolvedKey = null;
+    try {
+      if (context === 'dm' && curDM) _resolvedKey = _chatKey('dm', curDM);
+      else if (context === 'gc' && typeof curGC !== 'undefined' && curGC) _resolvedKey = _chatKey('gc', curGC);
+      else if (context === 'ch' && curBastion !== null && curChannel !== null) {
+        const _b = CU?.bastions?.[curBastion]; const _ch = _b?.channels?.[curChannel];
+        if (_b && _ch) _resolvedKey = _chatKey('ch', (_b.globalId||_b.name), _ch.name);
+      }
+    } catch(_) {}
+    if (_resolvedKey) loadMore.dataset.chatKey = _resolvedKey;
     loadMore.innerHTML = _renderSkelMessages(6);
     container.appendChild(loadMore);
   }
@@ -10070,10 +10092,17 @@ async function _loadOlderMessages(barOrBtn) {
       }
       bar.dataset.offset = (offset + older.length).toString();
       // If we got fewer than the page size, history is exhausted — remove
-      // the bar so the IntersectionObserver stops firing.
-      if (older.length < 50) { _detachOlderObserver(container); bar.remove(); }
+      // the bar so the IntersectionObserver stops firing, and remember
+      // the exhaustion so cache-hit revives don't re-add a bar and re-fire
+      // the fruitless fetch.
+      if (older.length < 50) {
+        _markChatExhausted(context, bar.dataset.chatKey);
+        _detachOlderObserver(container);
+        bar.remove();
+      }
       else bar.innerHTML = _renderSkelMessages(6); // ready for the next round
     } else {
+      _markChatExhausted(context, bar.dataset.chatKey);
       _detachOlderObserver(bar.parentElement);
       bar.remove();
     }
@@ -10091,7 +10120,22 @@ async function _loadOlderMessages(barOrBtn) {
 // beat before the user gets there). Cleaner + cheaper than a scroll
 // listener that fires every frame.
 function _attachLazyLoadOlder(container, context) {
-  if (!container || container._lazyIO) return;
+  if (!container) return;
+  // Reuse the observer if the container already has one (persistent DOM:
+  // a revived surface may have been through _attachLazyLoadOlder before).
+  // We ALWAYS re-run the observeBar sweep so newly-added bars (e.g. via
+  // _ensureLoadMoreBar on cache-hit) get picked up immediately instead of
+  // relying on the MutationObserver microtask arriving in time.
+  if (container._lazyIO) {
+    try {
+      const bar = container.querySelector('.load-more-bar');
+      if (bar && !bar._observed && container._lazyIO.observe) {
+        bar._observed = true;
+        container._lazyIO.observe(bar);
+      }
+    } catch(_) {}
+    return;
+  }
   if (typeof IntersectionObserver !== 'function') {
     // Old-browser fallback: scroll listener.
     let firing = false;

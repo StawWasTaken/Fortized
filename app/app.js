@@ -2433,9 +2433,41 @@ function showNewMessagesBar(chatType, count = 1) {
 function scrollToMsg(msgId) {
   if(!msgId)return;
   try {
-    const row=document.querySelector(`[data-msgid="${CSS.escape(String(msgId))}"]`);
-    if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.style.background='rgba(255,249,62,.06)';row.style.transition='background .3s';setTimeout(()=>row.style.background='',1500);}
+    const sel = `[data-msgid="${CSS.escape(String(msgId))}"]`;
+    let row = document.querySelector(sel);
+    if (row) return _flashJumpTarget(row);
+    // Row isn't in the DOM — walk the load-more bar back through history a
+    // few times, giving the lazy-load enough runs to surface it. Discord
+    // does the same "keep loading older until we find the anchor". Bail
+    // after 6 rounds so a busted reference doesn't spin forever.
+    _findAndFlashMsg(msgId, 0);
   } catch(e) { _wrn('scrollToMsg', e); }
+}
+async function _findAndFlashMsg(msgId, round) {
+  if (round >= 6) { try { toast('Original message is too far back to load.', 'info'); } catch(_) {} return; }
+  const sel = `[data-msgid="${CSS.escape(String(msgId))}"]`;
+  const bars = document.querySelectorAll('.chat-msgs .load-more-bar');
+  if (!bars.length) { try { toast("Can't jump to that message — it's not in this chat's history.", 'info'); } catch(_) {} return; }
+  const bar = bars[0];
+  await Promise.resolve(_loadOlderMessages(bar));
+  // Wait one frame for the DOM to settle then re-check.
+  await new Promise(r => requestAnimationFrame(() => r()));
+  const row = document.querySelector(sel);
+  if (row) { _flashJumpTarget(row); return; }
+  return _findAndFlashMsg(msgId, round + 1);
+}
+function _flashJumpTarget(row) {
+  if (!row) return;
+  try {
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Force-restart the animation so re-clicking the same reply
+    // re-plays the flash instead of no-op.
+    row.classList.remove('msg-row--jump-flash');
+    // Reflow to reset the animation.
+    void row.offsetWidth;
+    row.classList.add('msg-row--jump-flash');
+    setTimeout(() => { try { row.classList.remove('msg-row--jump-flash'); } catch(_) {} }, 2200);
+  } catch(_) {}
 }
 // Smart auto-scroll: track whether user is at bottom
 let _chatAutoScroll={};
@@ -7737,7 +7769,14 @@ async function sendDM() {
     appendMessage(msgsEl, msg, 'dm', lastAuthor);
     scrollBottom('dm-msgs', true);
     const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
-    _registerPendingSend('dm:'+[CU.username, curDM].sort().join('__'), CU.username, text, _optimRow);
+    _registerPendingSend('dm:'+[CU.username, curDM].sort().join('__'), CU.username, text, _optimRow, canonicalId);
+  }
+  // Offline path: if we know we're not online, stash the message in the
+  // persistent send queue so it drains automatically when connectivity
+  // returns — no toast, no failure state, just a subtle sticky bar.
+  if (!_isOnlineForSend()) {
+    _enqueueOfflineMessage({ kind: 'dm', id: canonicalId, target: curDM, text, replyTo: rep, flags: msgFlags });
+    return;
   }
   // Fire the Socket.IO notification BEFORE awaiting Supabase. The
   // Supabase insert is for persistence; receivers shouldn't wait on it
@@ -7754,6 +7793,13 @@ async function sendDM() {
     _trackSendMsgQuest();
   } catch (e) {
     console.error('[sendDM Error]', e.message);
+    // If the send failed because we lost connectivity mid-flight, drop
+    // into the offline queue instead of showing the failure state. The
+    // user probably didn't notice the network hiccup.
+    if (!_isOnlineForSend()) {
+      _enqueueOfflineMessage({ kind: 'dm', id: canonicalId, target: curDM, text, replyTo: rep, flags: msgFlags });
+      return;
+    }
     _markMessageFailed(msgsEl, msg.id, { kind: 'dm', target: curDM, text, replyTo: rep });
     toast('Message failed to send — tap to retry', 'error');
   }
@@ -8382,14 +8428,23 @@ async function sendGCMessage() {
     appendMessage(gcMsgsEl, msg, 'gc', lastAuthor);
     scrollBottom('gc-msgs', true);
     const _optimRow = gcMsgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
-    _registerPendingSend('gc:'+curGC, CU.username, text, _optimRow);
+    _registerPendingSend('gc:'+curGC, CU.username, text, _optimRow, msg.id);
   }
   _trackSendMsgQuest();
+  // Offline path: same treatment as sendDM — queue and drain later.
+  if (!_isOnlineForSend()) {
+    _enqueueOfflineMessage({ kind: 'gc', id: msg.id, target: curGC, text, replyTo: rep, flags: msgFlags });
+    return;
+  }
   try {
     // 15s timeout — same reliability rationale as DM/channel sends.
     await _withSendTimeout(msgRef.set(msg), 15000);
     FortizedSocial.socketEmit('message:send', { type: 'gc', id1: curGC, message: msg });
   } catch {
+    if (!_isOnlineForSend()) {
+      _enqueueOfflineMessage({ kind: 'gc', id: msg.id, target: curGC, text, replyTo: rep, flags: msgFlags });
+      return;
+    }
     _markMessageFailed(gcMsgsEl, msg.id, { kind: 'gc', target: curGC, text, replyTo: rep });
     toast('Message failed to send — tap to retry','error');
   }
@@ -9474,24 +9529,34 @@ async function sendChannelMsg(idx) {
     appendMessage(msgsEl, msg, 'ch', lastAuthor);
     scrollBottom('ch-msgs-'+idx, true);
     const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
-    _registerPendingSend('bastion:'+(b.globalId||b.name)+':'+ch.name, CU.username, text, _optimRow);
+    _registerPendingSend('bastion:'+(b.globalId||b.name)+':'+ch.name, CU.username, text, _optimRow, msg.id);
   }
   awardMessageRep(b.globalId||b.name, CU.username);
   _trackSendMsgQuest();
-  // Fire Socket.IO before awaiting Supabase — receivers get the message
-  // in real time instead of waiting on our persistence round-trip.
-  FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: msg });
-  try {
-    const sendOpts = { id: canonicalId };
-    if (rep) sendOpts.replyTo = rep;
-    await _withSendTimeout(
-      FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text, sendOpts),
-      15000
-    );
-  } catch (e) {
-    console.error('[sendChannelMsg Error]', e?.message);
-    _markMessageFailed(msgsEl, msg.id, { kind: 'ch', bastion: b.globalId||b.name, channel: ch.name, text, replyTo: rep });
-    toast('Message failed to send — tap to retry', 'error');
+  // Offline path: queue for later drain instead of emitting to a dead
+  // socket / hitting a failing Supabase request.
+  if (!_isOnlineForSend()) {
+    _enqueueOfflineMessage({ kind: 'ch', id: canonicalId, bastion: b.globalId||b.name, channel: ch.name, text, replyTo: rep });
+  } else {
+    // Fire Socket.IO before awaiting Supabase — receivers get the message
+    // in real time instead of waiting on our persistence round-trip.
+    FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: msg });
+    try {
+      const sendOpts = { id: canonicalId };
+      if (rep) sendOpts.replyTo = rep;
+      await _withSendTimeout(
+        FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text, sendOpts),
+        15000
+      );
+    } catch (e) {
+      console.error('[sendChannelMsg Error]', e?.message);
+      if (!_isOnlineForSend()) {
+        _enqueueOfflineMessage({ kind: 'ch', id: canonicalId, bastion: b.globalId||b.name, channel: ch.name, text, replyTo: rep });
+      } else {
+        _markMessageFailed(msgsEl, msg.id, { kind: 'ch', bastion: b.globalId||b.name, channel: ch.name, text, replyTo: rep });
+        toast('Message failed to send — tap to retry', 'error');
+      }
+    }
   }
   // Bot command handling — trigger deployed bots with ! prefix
   if (text.startsWith('!')) {
@@ -10238,25 +10303,174 @@ function _getLastAuthor(container) {
 // The server-emitted echo may arrive before we've swapped the id → dedupe by
 // content instead: (domain, from, text) within a 30s window.
 window._pendingSends = window._pendingSends || [];
-function _registerPendingSend(domain, from, text, row) {
+// ── Offline send queue ─────────────────────────────────────────────
+// Discord-style: if the network is down when the user hits Enter, the
+// message is optimistically rendered AND stashed in a persistent queue.
+// When connectivity returns, the queue drains in order and the rows
+// flip out of "sending" into normal state (or "failed" if the retry
+// itself fails). The queue is persisted to localStorage so a refresh
+// mid-blackout doesn't lose queued messages.
+const _FTZ_QUEUE_KEY = 'ftz_offline_queue_v1';
+function _loadOfflineQueue() {
+  try {
+    const raw = localStorage.getItem(_FTZ_QUEUE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function _saveOfflineQueue(q) {
+  try { localStorage.setItem(_FTZ_QUEUE_KEY, JSON.stringify(q.slice(-200))); } catch (_) {}
+}
+function _enqueueOfflineMessage(entry) {
+  if (!entry || !entry.kind) return;
+  const q = _loadOfflineQueue();
+  entry.owner = CU?.username || '';
+  entry.enqueuedAt = Date.now();
+  q.push(entry);
+  _saveOfflineQueue(q);
+  _updateOfflineQueueBadge();
+}
+// Remove an entry by canonical message id (called after a successful
+// drain-send so the queue reflects only truly pending messages).
+function _dequeueOfflineMessage(canonicalId) {
+  if (!canonicalId) return;
+  const q = _loadOfflineQueue().filter(e => String(e.id) !== String(canonicalId));
+  _saveOfflineQueue(q);
+  _updateOfflineQueueBadge();
+}
+function _isOnlineForSend() {
+  if (typeof navigator === 'undefined') return true;
+  if (navigator.onLine === false) return false;
+  // Best-effort socket-status check — falls back to true if the socket
+  // module doesn't expose one.
+  try {
+    if (typeof FortizedSocial !== 'undefined' && typeof FortizedSocial.isConnected === 'function') {
+      return !!FortizedSocial.isConnected();
+    }
+  } catch (_) {}
+  return true;
+}
+async function _drainOfflineQueue() {
+  if (!_isOnlineForSend()) return;
+  const owner = CU?.username || '';
+  const q = _loadOfflineQueue();
+  if (!q.length) return;
+  const mine = q.filter(e => e.owner === owner);
+  if (!mine.length) return;
+  for (const entry of mine) {
+    try {
+      if (entry.kind === 'dm') {
+        const opts = { id: entry.id };
+        if (entry.replyTo) opts.replyTo = entry.replyTo;
+        if (entry.flags?.length) opts.flags = entry.flags;
+        await FortizedSocial.sendDMMessage(owner, entry.target, entry.text, opts);
+        FortizedSocial.socketEmit('message:send', { type:'dm', id1: owner, id2: entry.target, message: { id: entry.id, from: owner, text: entry.text, timestamp: new Date(entry.enqueuedAt).toISOString(), replyTo: entry.replyTo, flags: entry.flags } });
+      } else if (entry.kind === 'gc') {
+        const path = 'groupChats/' + entry.target + '/messages/' + entry.id;
+        await firebase.database().ref(path).set({ id: entry.id, from: owner, text: entry.text, timestamp: entry.enqueuedAt, replyTo: entry.replyTo, flags: entry.flags });
+        FortizedSocial.socketEmit('message:send', { type:'gc', id1: entry.target, message: { id: entry.id, from: owner, text: entry.text, timestamp: new Date(entry.enqueuedAt).toISOString(), replyTo: entry.replyTo, flags: entry.flags } });
+      } else if (entry.kind === 'ch') {
+        const opts = { id: entry.id };
+        if (entry.replyTo) opts.replyTo = entry.replyTo;
+        if (entry.flags?.length) opts.flags = entry.flags;
+        await FortizedSocial.sendBastionChannelMessage(entry.bastion, entry.channel, owner, entry.text, opts);
+        FortizedSocial.socketEmit('message:send', { type:'bastion', id1: entry.bastion, id2: entry.channel, message: { id: entry.id, from: owner, text: entry.text, timestamp: new Date(entry.enqueuedAt).toISOString(), replyTo: entry.replyTo, flags: entry.flags } });
+      }
+      _dequeueOfflineMessage(entry.id);
+      // Flip the optimistic row (if still visible) out of sending state.
+      try {
+        const rowSel = '[data-msgid="'+CSS.escape(String(entry.id))+'"]';
+        document.querySelectorAll(rowSel).forEach(r => { r.classList.remove('msg-row--sending','msg-row--sending-slow','msg-row--failed'); });
+      } catch (_) {}
+    } catch (e) {
+      console.warn('[Offline queue] drain failed for', entry.id, e?.message);
+      // Leave it in the queue for the next attempt. Flag row as failed
+      // so the user has feedback the retry didn't work.
+      try {
+        const rowSel = '[data-msgid="'+CSS.escape(String(entry.id))+'"]';
+        document.querySelectorAll(rowSel).forEach(r => { r.classList.remove('msg-row--sending','msg-row--sending-slow'); r.classList.add('msg-row--failed'); });
+      } catch (_) {}
+    }
+  }
+  _updateOfflineQueueBadge();
+}
+function _updateOfflineQueueBadge() {
+  const owner = CU?.username || '';
+  const count = _loadOfflineQueue().filter(e => e.owner === owner).length;
+  // Show the sticky bar in any currently-visible chat surface. It sits
+  // above the composer and disappears the moment the queue drains.
+  ['dm-msgs','gc-msgs'].forEach(id => _paintOfflineBar(document.getElementById(id), count));
+  document.querySelectorAll('[id^="ch-msgs-"]').forEach(el => _paintOfflineBar(el, count));
+}
+function _paintOfflineBar(el, count) {
+  if (!el) return;
+  const wrap = el.closest('.chat-wrap') || el.parentElement;
+  if (!wrap) return;
+  let bar = wrap.querySelector('.ftz-offline-queue-bar');
+  if (count <= 0) { if (bar) bar.remove(); return; }
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.className = 'ftz-offline-queue-bar';
+    bar.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      <span class="ftz-offline-queue-bar__text"></span>
+      <button type="button" onclick="_drainOfflineQueue()">Retry now</button>`;
+    // Insert as the last child of chat-wrap so it sits just above the composer.
+    wrap.appendChild(bar);
+  }
+  const t = bar.querySelector('.ftz-offline-queue-bar__text');
+  if (t) t.textContent = count === 1
+    ? '1 message queued — will send when you\'re back online'
+    : `${count} messages queued — will send when you're back online`;
+}
+window.addEventListener('online', () => { setTimeout(_drainOfflineQueue, 500); });
+window.addEventListener('offline', () => { _updateOfflineQueueBadge(); });
+setTimeout(_updateOfflineQueueBadge, 800);
+function _registerPendingSend(domain, from, text, row, msgId) {
   if (!row) return;
   const now = Date.now();
-  window._pendingSends.push({ domain, from, text: text || '', ts: now, row });
-  if (window._pendingSends.length > 60) window._pendingSends.splice(0, window._pendingSends.length - 60);
+  // Mark the optimistic row as "sending" so the visual state matches the
+  // actual send lifecycle. If the send takes >900 ms we escalate to
+  // "sending-slow" which surfaces the tiny clock + text hint (Discord
+  // does the same beat threshold — anything faster stays silent).
+  row.classList.add('msg-row--sending');
+  const slowTimer = setTimeout(() => {
+    if (row.isConnected) row.classList.add('msg-row--sending-slow');
+  }, 900);
+  const entry = { domain, from, text: text || '', ts: now, row, id: msgId || (row.dataset.msgid || null), slowTimer };
+  window._pendingSends.push(entry);
+  if (window._pendingSends.length > 60) {
+    const dropped = window._pendingSends.splice(0, window._pendingSends.length - 60);
+    dropped.forEach(e => { try { clearTimeout(e.slowTimer); } catch(_) {} });
+  }
   const cutoff = now - 30000;
-  window._pendingSends = window._pendingSends.filter(e => e.ts > cutoff && e.row && e.row.isConnected);
+  window._pendingSends = window._pendingSends.filter(e => {
+    if (e.ts > cutoff && e.row && e.row.isConnected) return true;
+    try { clearTimeout(e.slowTimer); } catch(_) {}
+    return false;
+  });
 }
 function _reconcilePendingSend(domain, incoming) {
-  if (!incoming || !incoming.from || incoming.text == null) return false;
+  if (!incoming || !incoming.from) return false;
   const now = Date.now();
+  const incomingId = incoming.id != null ? String(incoming.id) : null;
+  // Prefer ID-based reconciliation — the sender pre-generates a
+  // canonical id and passes it as sendOpts.id, so the echo carries the
+  // exact same id. Text match is the fallback for older servers or
+  // legacy payloads where id didn't ride through.
   for (let i = 0; i < window._pendingSends.length; i++) {
     const e = window._pendingSends[i];
     if (!e || e.domain !== domain) continue;
     if (e.from !== incoming.from) continue;
-    if ((e.text || '') !== (incoming.text || '')) continue;
     if (now - e.ts > 30000) continue;
+    const idMatch = incomingId && e.id && String(e.id) === incomingId;
+    const textMatch = !idMatch && (e.text || '') === (incoming.text || '');
+    if (!idMatch && !textMatch) continue;
     if (!e.row || !e.row.isConnected) { window._pendingSends.splice(i, 1); return false; }
-    if (incoming.id != null) e.row.dataset.msgid = String(incoming.id);
+    if (incomingId) e.row.dataset.msgid = incomingId;
+    // Reconciled — flip out of the sending state so the visual matches.
+    e.row.classList.remove('msg-row--sending', 'msg-row--sending-slow');
+    try { clearTimeout(e.slowTimer); } catch(_) {}
     window._pendingSends.splice(i, 1);
     return true;
   }

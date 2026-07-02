@@ -10890,6 +10890,13 @@ select:focus-visible {
   opacity:.6;
 }
 .fpp-card--about > div + .fpp-card__title{ margin-top:0; }
+/* Two-column dates block ("Member Since" beside "Friends Since") — a
+   two-slot grid so the labels/dates line up neatly on the same row. */
+.fpp-card__dates{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;
+}
+.fpp-card__date-col{ min-width:0; }
+.fpp-card__date-col .fpp-card__body{ margin-top:2px; }
 .fpp-card__body--muted{ color:var(--muted-light); font-weight:500; }
 .fpp-card__body strong{ color:var(--text); font-weight:700; }
 .fpp-card__body a{ color:var(--fpp-main); text-decoration:none; }

@@ -48347,15 +48347,51 @@ function _fppMemberSinceCardHTML(u) {
 function _fppAboutCardHTML(u) {
   const memberSinceTxt = _fppFormatDate(u.joinedAt || u.createdAt);
   const hasBio = !!u.bio;
-  if (!hasBio && !memberSinceTxt) return '';
+  // "Friends Since" — only shows when viewer + target are actual friends and
+  // we have a stamped date from acceptFriendRequest. The record can live on
+  // either side (CU's friendsSince[u.username] OR u.friendsSince[CU.username])
+  // so newly-viewed profiles work before the viewer's CU refreshes.
+  let friendsSinceTxt = null;
+  try {
+    const me = String(CU?.username || '').toLowerCase();
+    const them = String(u.username || '').toLowerCase();
+    const isFriend = me && them && (CU?.friends || []).some(f => String(f).toLowerCase() === them);
+    if (me && them && me !== them && isFriend) {
+      const mineFs = CU?.friendsSince || {};
+      const theirFs = u.friendsSince || {};
+      const iso = mineFs[them] || mineFs[u.username] || theirFs[me] || theirFs[CU.username] || null;
+      if (iso) friendsSinceTxt = _fppFormatDate(iso);
+    }
+  } catch(_) {}
+  if (!hasBio && !memberSinceTxt && !friendsSinceTxt) return '';
   const bioBlock = hasBio
     ? `<div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(u.bio.slice(0, 300), u.username)}${u.bio.length > 300 ? '…' : ''}</div>`
     : '';
-  const sep = (hasBio && memberSinceTxt) ? '<div class="fpp-card__sep"></div>' : '';
-  const memberBlock = memberSinceTxt
-    ? `<div class="fpp-card__title"${hasBio ? ' style="margin-top:10px;"' : ''}>Member Since</div><div class="fpp-card__body fpp-card__body--muted">${memberSinceTxt}</div>`
-    : '';
-  return `<div class="fpp-card fpp-card--about">${bioBlock}${sep}${memberBlock}</div>`;
+  const sep = (hasBio && (memberSinceTxt || friendsSinceTxt)) ? '<div class="fpp-card__sep"></div>' : '';
+  // Two-column layout when we have BOTH dates. When only one, it takes the
+  // full row like the old single-column layout so short cards don't feel
+  // half-empty.
+  let datesBlock = '';
+  if (memberSinceTxt || friendsSinceTxt) {
+    const marginTopStyle = hasBio ? ' style="margin-top:10px;"' : '';
+    if (memberSinceTxt && friendsSinceTxt) {
+      datesBlock = `<div class="fpp-card__dates"${marginTopStyle}>
+        <div class="fpp-card__date-col">
+          <div class="fpp-card__title" style="margin:0;">Member Since</div>
+          <div class="fpp-card__body fpp-card__body--muted">${memberSinceTxt}</div>
+        </div>
+        <div class="fpp-card__date-col">
+          <div class="fpp-card__title" style="margin:0;">Friends Since</div>
+          <div class="fpp-card__body fpp-card__body--muted">${friendsSinceTxt}</div>
+        </div>
+      </div>`;
+    } else if (memberSinceTxt) {
+      datesBlock = `<div class="fpp-card__title"${marginTopStyle}>Member Since</div><div class="fpp-card__body fpp-card__body--muted">${memberSinceTxt}</div>`;
+    } else {
+      datesBlock = `<div class="fpp-card__title"${marginTopStyle}>Friends Since</div><div class="fpp-card__body fpp-card__body--muted">${friendsSinceTxt}</div>`;
+    }
+  }
+  return `<div class="fpp-card fpp-card--about">${bioBlock}${sep}${datesBlock}</div>`;
 }
 
 function _fppGamesCardHTML(u) {

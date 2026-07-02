@@ -681,12 +681,30 @@ const FortizedSocial = (() => {
     const hisFriends = [...(fu.friends || [])];
     if (!myFriends.includes(fromUsername))  myFriends.push(fromUsername);
     if (!hisFriends.includes(myUsername))   hisFriends.push(myUsername);
+    // Stamp "friends since" symmetrically in the raw JSONB so the profile
+    // card can show it on both sides. Only sets if not already stamped
+    // (idempotent) so re-accepts after an unfriend don't reset the date.
+    const nowIso = new Date().toISOString();
+    const mineRawFs = { ...(mu.friendsSince || {}) };
+    if (!mineRawFs[fromUsername]) mineRawFs[fromUsername] = nowIso;
+    const theirRawFs = { ...(fu.friendsSince || {}) };
+    if (!theirRawFs[myUsername]) theirRawFs[myUsername] = nowIso;
 
     try {
+      // Load existing raw payloads so we merge instead of clobber. Every
+      // extra field we care about lives on this JSONB column.
+      const [{ data: myRow }, { data: theirRow }] = await Promise.all([
+        sb.from('users').select('raw').eq('username', myUsername).maybeSingle(),
+        sb.from('users').select('raw').eq('username', fromUsername).maybeSingle(),
+      ]);
+      const myRaw    = { ...(myRow?.raw    || {}), friendsSince: mineRawFs };
+      const theirRaw = { ...(theirRow?.raw || {}), friendsSince: theirRawFs };
+
       const { error: err1 } = await sb.from('users').update({
         friends: myFriends,
         friend_requests_received: (mu.friendRequestsReceived || []).filter(u => u !== fromUsername),
         friend_requests_sent: (mu.friendRequestsSent || []).filter(u => u !== fromUsername),
+        raw: myRaw,
       }).eq('username', myUsername);
       if (err1) throw new Error(`Update my profile failed: ${err1.message}`);
 
@@ -694,6 +712,7 @@ const FortizedSocial = (() => {
         friends: hisFriends,
         friend_requests_sent: (fu.friendRequestsSent || []).filter(u => u !== myUsername),
         friend_requests_received: (fu.friendRequestsReceived || []).filter(u => u !== myUsername),
+        raw: theirRaw,
       }).eq('username', fromUsername);
       if (err2) throw new Error(`Update their profile failed: ${err2.message}`);
 

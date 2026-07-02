@@ -7034,6 +7034,18 @@ let _dmListener = null;
 function openDMView(username) {
   if (!username) return;
   username = (username||"").trim().toLowerCase();
+  // Guard: you cannot DM yourself. Someone typing their own username into
+  // the URL (or a stale share link) should not land in a "self-DM" that
+  // Fortized has no support for. Bounce to the friends home instead.
+  if (CU?.username && username === String(CU.username).toLowerCase()) {
+    try { toast("You can't DM yourself.", 'info'); } catch(_) {}
+    try {
+      // Drop the ?u=<self> from the URL so a refresh doesn't loop back here.
+      if (typeof _ftzRouter !== 'undefined') _ftzRouter.replaceState('dms');
+    } catch(_) {}
+    showView('dms');
+    return;
+  }
   // Persistent DOM: stash the OUTGOING chat's .chat-msgs BEFORE any state
   // variable is overwritten — otherwise the stash would be keyed by the
   // incoming target, mixing DM histories together on subsequent revives.

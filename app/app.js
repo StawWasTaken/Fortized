@@ -7031,6 +7031,41 @@ function _leaveActiveChannel() {
 function _leaveAllActiveChats() { _leaveActiveDM(); _leaveActiveGC(); _leaveActiveChannel(); }
 
 let _dmListener = null;
+// Decide whether the current user is allowed to open a DM with `target`.
+// Allowed when ANY of these are true:
+//   · target is a Fortized official account (broadcast-only channels)
+//   · viewer is a superadmin (staff can reach anyone)
+//   · target is in your friends list
+//   · you share a group chat with target
+//   · you share a bastion with target (member of the same server)
+//   · you have DM history with target already cached this session or
+//     hydrated from IndexedDB (i.e. you've talked to them before)
+// Everything else falls through as "not allowed" — a stranger can't be
+// opened as a DM just by pasting their username in the URL.
+function _canDMUser(target) {
+  if (!target || !CU?.username) return false;
+  const t = String(target).toLowerCase();
+  if (isFortizedOfficialAccount(t)) return true;
+  try { if (typeof isSuperAdmin === 'function' && isSuperAdmin()) return true; } catch(_) {}
+  // Friends
+  const friends = CU.friends || [];
+  if (friends.some(f => String(f).toLowerCase() === t)) return true;
+  // Group chats — any GC we share
+  const gcs = CU.groupChats || [];
+  for (const gc of gcs) {
+    const members = gc?.members || [];
+    if (members.some(m => String(m).toLowerCase() === t)) return true;
+  }
+  // Bastions — any server whose member roster or roles carry the target
+  const bastions = CU.bastions || [];
+  for (const b of bastions) {
+    if (Array.isArray(b?.members) && b.members.some(m => String(m).toLowerCase() === t)) return true;
+    if (b?.memberRoles && Object.keys(b.memberRoles).some(k => String(k).toLowerCase() === t)) return true;
+  }
+  // Prior DM history — session cache OR IDB-hydrated cache
+  try { if (_chatCacheHas(_chatKey('dm', t))) return true; } catch(_) {}
+  return false;
+}
 function openDMView(username) {
   if (!username) return;
   username = (username||"").trim().toLowerCase();
@@ -7041,6 +7076,19 @@ function openDMView(username) {
     try { toast("You can't DM yourself.", 'info'); } catch(_) {}
     try {
       // Drop the ?u=<self> from the URL so a refresh doesn't loop back here.
+      if (typeof _ftzRouter !== 'undefined') _ftzRouter.replaceState('dms');
+    } catch(_) {}
+    showView('dms');
+    return;
+  }
+  // Guard: you can only DM someone you SHARE a context with (friend, GC,
+  // bastion) OR someone you've talked to before (existing DM history).
+  // Otherwise a stale share link / random URL / typo could drop you into
+  // a DM view for a stranger. Fortized official accounts + staff bypass
+  // this check since they need to reach anyone.
+  if (CU?.username && !_canDMUser(username)) {
+    try { toast("You can only DM friends, mutual server members, or people you've messaged before.", 'info'); } catch(_) {}
+    try {
       if (typeof _ftzRouter !== 'undefined') _ftzRouter.replaceState('dms');
     } catch(_) {}
     showView('dms');

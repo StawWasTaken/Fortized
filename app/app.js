@@ -6689,7 +6689,13 @@ async function renderDMSidebar(scroll) {
       if (dmMsgs && dmMsgs.length > 0) {
         const last = dmMsgs[dmMsgs.length - 1];
         if (last) {
-          lastTime = last.timestamp || last.time || 0;
+          // Normalise to milliseconds — Supabase gives ISO strings, RTDB
+          // gives numeric epoch. Feeding an ISO string into parseInt at
+          // sort-time collapses to the year (2024, 2025) and breaks the
+          // "most recent on top" ordering.
+          const rawTs = last.timestamp || last.time || 0;
+          if (typeof rawTs === 'number') lastTime = rawTs;
+          else { const p = Date.parse(rawTs || ''); lastTime = Number.isFinite(p) ? p : 0; }
           const el = document.getElementById('dm-preview-'+f);
           if (el) {
             const preview = (last.from===CU.username?'You: ':'') + (last.text||'').replace(/\[FTZ[A-Z]+:[^\]]+\]/g,'📎 File').slice(0,40);
@@ -6716,7 +6722,9 @@ async function renderDMSidebar(scroll) {
       const snap = await firebase.database().ref('groupChats/'+gc.id+'/messages').orderByKey().limitToLast(1).get();
       if (snap.exists()) {
         const last = Object.values(snap.val())[0];
-        lastTime = last.time || last.timestamp || 0;
+        const rawTs = last.timestamp || last.time || 0;
+        if (typeof rawTs === 'number') lastTime = rawTs;
+        else { const p = Date.parse(rawTs || ''); lastTime = Number.isFinite(p) ? p : 0; }
         const el = document.getElementById('gc-preview-'+gc.id);
         if (el && last) {
           el.textContent = (last.from===CU.username?'You: ':last.from+': ') + (last.text||'').slice(0,35);
@@ -7342,8 +7350,24 @@ async function _updateDMSidebarForNewMessage(username, msg) {
       if (d) timeEl.textContent = _formatRelativeTime(d);
     }
 
-    // Update data attribute for sorting (camelCase to actually write through)
-    fi.dataset.lastTime = String(msg.timestamp || Date.now());
+    // Update data attribute for sorting — MUST be milliseconds since epoch
+    // so parseInt() in the sort compares correctly. Passing an ISO string
+    // here would parseInt to just the year (e.g. 2024), which is what made
+    // "most recent conversation on top" break for Supabase-backed DMs.
+    const _msMoved = (() => {
+      if (typeof msg.timestamp === 'number') return msg.timestamp;
+      const p = Date.parse(msg.timestamp || '');
+      return Number.isFinite(p) ? p : Date.now();
+    })();
+    fi.dataset.lastTime = String(_msMoved);
+    // Immediate re-sort so the DM row bubbles to the top even before the
+    // next full renderDMSidebar pass — matches Discord's snappy behaviour.
+    try {
+      const dmScroll = document.getElementById('dm-sorted-list');
+      if (dmScroll && fi.parentElement === dmScroll && fi !== dmScroll.firstElementChild) {
+        dmScroll.insertBefore(fi, dmScroll.firstChild);
+      }
+    } catch(_) {}
   } catch(e) {
     console.warn('[DM Sidebar] Update failed:', e?.message);
   }

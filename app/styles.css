@@ -847,7 +847,8 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    white-transparency layers so the skeleton reads against any
    appearance theme without a hard repaint.
    ════════════════════════════════════════════════════════════════ */
-.load-more-bar{padding:0;margin-bottom:6px;overflow-anchor:none;}
+.load-more-bar{padding:0;margin-bottom:6px;overflow-anchor:none;cursor:pointer;}
+.load-more-bar:hover .msg-skel-stack{filter:brightness(1.35);}
 /* Explicit left-alignment + overflow-anchor:none on every inner skeleton
    element so the browser's scroll-anchor never picks a placeholder bar
    as the anchor (which would cause the visible content to jump when the

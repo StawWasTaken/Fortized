@@ -547,6 +547,10 @@ function _ensureLoadMoreBar(container, context, chatKey) {
   bar.dataset.offset = String(Math.max(rowCount, 50));
   if (chatKey) bar.dataset.chatKey = chatKey;
   bar.innerHTML = _renderSkelMessages(6);
+  // Click fallback for the rare case where IntersectionObserver misses
+  // (mobile Safari edge cases, off-screen containers). onclick handler
+  // is safe to fire alongside IO — both gate through bar._loading.
+  bar.onclick = () => _loadOlderMessages(bar);
   // Insert as the first message-list neighbour so scroll-up hits it before
   // reaching msg-row content.
   const firstRow = container.querySelector('.msg-row, .date-div');
@@ -7786,9 +7790,11 @@ async function sendDM() {
     const sendOpts = { id: canonicalId };
     if (msgFlags.length) sendOpts.flags = msgFlags;
     if (rep) sendOpts.replyTo = rep;
-    await _withSendTimeout(
-      FortizedSocial.sendDMMessage(CU.username, curDM, text, sendOpts),
-      15000
+    // Silent-retry twice with 20 s per attempt before showing failed —
+    // brief network hiccups no longer flash the red state.
+    await _sendWithAutoRetry(
+      () => FortizedSocial.sendDMMessage(CU.username, curDM, text, sendOpts),
+      2, 20000
     );
     _trackSendMsgQuest();
   } catch (e) {
@@ -7815,6 +7821,26 @@ function _withSendTimeout(promise, ms) {
       ms
     )),
   ]);
+}
+// Wrapper that silently retries the send once on transient failure before
+// surfacing the failed-message state. Prevents the "Message failed to
+// send" toast from firing on brief hiccups (dropped packet, slow server
+// beat, etc.) — Discord does the same soft retry under the hood.
+async function _sendWithAutoRetry(sendFn, attempts = 2, perTryMs = 20000) {
+  let lastErr = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await _withSendTimeout(sendFn(), perTryMs);
+    } catch (e) {
+      lastErr = e;
+      // If the network dropped between attempts, bail — the offline
+      // queue path will handle it. No point burning a retry offline.
+      if (!_isOnlineForSend()) throw e;
+      // Small backoff so we don't hammer a struggling server.
+      if (i < attempts - 1) await new Promise(r => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+  throw lastErr;
 }
 
 function _markMessageFailed(msgsEl, localId, payload) {
@@ -8437,8 +8463,8 @@ async function sendGCMessage() {
     return;
   }
   try {
-    // 15s timeout — same reliability rationale as DM/channel sends.
-    await _withSendTimeout(msgRef.set(msg), 15000);
+    // Silent-retry twice — same reliability rationale as DM/channel sends.
+    await _sendWithAutoRetry(() => msgRef.set(msg), 2, 20000);
     FortizedSocial.socketEmit('message:send', { type: 'gc', id1: curGC, message: msg });
   } catch {
     if (!_isOnlineForSend()) {
@@ -9544,9 +9570,9 @@ async function sendChannelMsg(idx) {
     try {
       const sendOpts = { id: canonicalId };
       if (rep) sendOpts.replyTo = rep;
-      await _withSendTimeout(
-        FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text, sendOpts),
-        15000
+      await _sendWithAutoRetry(
+        () => FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text, sendOpts),
+        2, 20000
       );
     } catch (e) {
       console.error('[sendChannelMsg Error]', e?.message);
@@ -9835,8 +9861,14 @@ function renderMessages(container, msgs, context) {
   }
   // Keep the .msg-skel-stack for now if it's present — we'll drop it once
   // the new messages have settled their inline media. Wipe only the old
-  // message content.
+  // message content. CRITICAL: preserve any .msg-row--sending rows so a
+  // message the user sent DURING the load isn't destroyed by the render
+  // pipeline (the "sends bug when loading" scenario). We DETACH them,
+  // run the wipe + fresh render, then re-attach at the end so they stay
+  // pinned at the bottom of the chat as the latest content.
   const hadSkeleton = !!container.querySelector('.msg-skel-stack');
+  const _preservedSending = Array.from(container.querySelectorAll('.msg-row--sending, .msg-row--sending-slow'));
+  _preservedSending.forEach(el => { try { el.remove(); } catch(_) {} });
   container.querySelectorAll('.msg-row,.date-div,.load-more-bar').forEach(el => el.remove());
   if (container._seenIds) container._seenIds.clear();
   msgs.forEach(_normalizeMsg);
@@ -9881,6 +9913,9 @@ function renderMessages(container, msgs, context) {
     } catch(_) {}
     if (_resolvedKey) loadMore.dataset.chatKey = _resolvedKey;
     loadMore.innerHTML = _renderSkelMessages(6);
+    // Click fallback in case the IntersectionObserver never fires (mobile
+    // Safari edge cases, hidden container, etc.). Discord-parity safety.
+    loadMore.onclick = () => _loadOlderMessages(loadMore);
     container.appendChild(loadMore);
   }
 
@@ -9888,6 +9923,7 @@ function renderMessages(container, msgs, context) {
   if (msgs.length <= 40) {
     _renderMsgBatch(container, msgs, context);
     if (tagInitialRender) tagInitialRender(container);
+    _preservedSending.forEach(el => container.appendChild(el));
     if (hadSkeleton) _revealAfterMediaSettle(container);
     return;
   }
@@ -9927,13 +9963,13 @@ function renderMessages(container, msgs, context) {
     if (ctrl.aborted) return;
     const wasAtBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 80;
     const chunk = rest.slice(ctrl.idx, ctrl.idx + CHUNK);
-    if (!chunk.length) { cleanup(); if (hadSkeleton) _revealAfterMediaSettle(container); return; }
+    if (!chunk.length) { cleanup(); _preservedSending.forEach(el => container.appendChild(el)); if (hadSkeleton) _revealAfterMediaSettle(container); return; }
     _renderMsgBatch(container, chunk, context, state);
     if (tagInitialRender) tagInitialRender(container);
     ctrl.idx += CHUNK;
     if (wasAtBottom) container.scrollTop = container.scrollHeight;
     if (ctrl.idx < rest.length) requestAnimationFrame(step);
-    else { cleanup(); if (hadSkeleton) _revealAfterMediaSettle(container); }
+    else { cleanup(); _preservedSending.forEach(el => container.appendChild(el)); if (hadSkeleton) _revealAfterMediaSettle(container); }
   };
   requestAnimationFrame(step);
 }
@@ -10904,8 +10940,8 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
   const failedRow = document.querySelector('.msg-row[data-msgid="'+safeId.replace(/"/g,'\\"')+'"]');
   if (failedRow && failedRow.classList.contains('msg-row--failed')) {
     return ''
-      + `<button onclick="event.stopPropagation();_retryFailedMessageById('${safeId}')" title="Retry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 116.64 5.64"/></svg></button>`
-      + `<button onclick="event.stopPropagation();_deleteFailedMessageById('${safeId}')" title="Delete" style="color:rgba(248,113,113,.75);">${_faMsg('trash')}</button>`;
+      + `<button onclick="event.stopPropagation();_retryFailedMessageById('${safeId}')" title="Retry">${_faMsg('retry')}</button>`
+      + `<button onclick="event.stopPropagation();_deleteFailedMessageById('${safeId}')" title="Delete" style="color:rgba(235,69,69,.85);">${_faMsg('trash')}</button>`;
   }
 
   if (_shiftHeld) {
@@ -10952,7 +10988,7 @@ function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) 
   const failedRow = document.querySelector('.msg-row[data-msgid="'+CSS.escape(msgId)+'"]');
   if (failedRow && failedRow.classList.contains('msg-row--failed')) {
     showCtxMenu(e.clientX, e.clientY, [{ items: [
-      { icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 116.64 5.64"/></svg>', label: 'Retry', action: () => _retryFailedMessageById(msgId) },
+      { icon: _faMsg('retry', 15), label: 'Retry', action: () => _retryFailedMessageById(msgId) },
       { icon: _faMsg('trash', 15), label: 'Delete', danger: true, action: () => _deleteFailedMessageById(msgId) },
     ]}]);
     return;
@@ -24361,6 +24397,7 @@ const _faMsgIcons = {
   translate:'<svg viewBox="0 0 576 512" fill="currentColor"><path d="M160 0c17.7 0 32 14.3 32 32l0 32 128 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-9.6 0-8.4 23.1c-16.4 45.2-41.1 86.5-72.2 122 14.2 8.8 29 16.6 44.4 23.5l50.4 22.4 62.2-140c5.1-11.6 16.6-19 29.2-19s24.1 7.4 29.2 19l128 288c7.2 16.2-.1 35.1-16.2 42.2s-35.1-.1-42.2-16.2l-20-45-157.5 0-20 45c-7.2 16.2-26.1 23.4-42.2 16.2s-23.4-26.1-16.2-42.2l39.8-89.5-50.4-22.4c-23-10.2-45-22.4-65.8-36.4-21.3 17.2-44.6 32.2-69.5 44.7L78.3 380.6c-15.8 7.9-35 1.5-42.9-14.3s-1.5-35 14.3-42.9l34.5-17.3c16.3-8.2 31.8-17.7 46.4-28.3-13.8-12.7-26.8-26.4-38.9-40.9L81.6 224.7c-11.3-13.6-9.5-33.8 4.1-45.1s33.8-9.5 45.1 4.1l10.2 12.2c11.5 13.9 24.1 26.8 37.4 38.7 27.5-30.4 49.2-66.1 63.5-105.4l.5-1.2-210.3 0C14.3 128 0 113.7 0 96S14.3 64 32 64l96 0 0-32c0-17.7 14.3-32 32-32zM416 270.8L365.7 384 466.3 384 416 270.8z"/></svg>',
   report:   '<svg viewBox="0 0 448 512" fill="currentColor"><path d="M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32L0 480c0 17.7 14.3 32 32 32s32-14.3 32-32l0-121.6 62.7-18.8c41.9-12.6 87.1-8.7 126.2 10.9 42.7 21.4 92.5 24 137.2 7.2l37.1-13.9c12.5-4.7 20.8-16.6 20.8-30l0-247.7c0-23-24.2-38-44.8-27.7l-11.8 5.9c-44.9 22.5-97.8 22.5-142.8 0-36.4-18.2-78.3-21.8-117.2-10.1L64 54.4 64 32z"/></svg>',
   bell:     '<svg viewBox="0 0 448 512" fill="currentColor"><path d="M224 0c-17.7 0-32 14.3-32 32l0 3.2C119 50 64 114.6 64 192l0 21.7c0 48.1-16.4 94.8-46.4 132.4L7.8 358.3C2.7 364.6 0 372.4 0 380.5 0 400.1 15.9 416 35.5 416l376.9 0c19.6 0 35.5-15.9 35.5-35.5 0-8.1-2.7-15.9-7.8-22.2l-9.8-12.2C400.4 308.5 384 261.8 384 213.7l0-21.7c0-77.4-55-142-128-156.8l0-3.2c0-17.7-14.3-32-32-32zM162 464c7.1 27.6 32.2 48 62 48s54.9-20.4 62-48l-124 0z"/></svg>',
+  retry:    '<svg viewBox="0 0 512 512" fill="currentColor"><path d="M436.7 74.7L448 85.4 448 32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 128c0 17.7-14.3 32-32 32l-128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l47.9 0-7.6-7.2c-.2-.2-.4-.4-.6-.6-75-75-196.5-75-271.5 0s-75 196.5 0 271.5 196.5 75 271.5 0c8.2-8.2 15.5-16.9 21.9-26.1 10.1-14.5 30.1-18 44.6-7.9s18 30.1 7.9 44.6c-8.5 12.2-18.2 23.8-29.1 34.7-100 100-262.1 100-362 0S-25 175 75 75c99.9-99.9 261.7-100 361.7-.3z"/></svg>',
 };
 function _faMsg(name, size = 14) {
   const raw = _faMsgIcons[name] || '';

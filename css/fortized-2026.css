@@ -10,8 +10,8 @@
   --accent-mid: rgba(255,249,62,.18);
   --accent-glow: rgba(255,249,62,.35);
 
-  --bg: #080a0f;
-  --bg-2: #0d1018;
+  --bg: #0e1218;
+  --bg-2: #141a22;
   --ink: #04050a;
   --panel: #141a26;
   --panel-2: #19202f;
@@ -39,7 +39,7 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 img, svg { -webkit-user-drag: none; user-select: none; display: block; max-width:100%; }
 html { scroll-behavior: smooth; }
-html, body { background: #080a0f; }
+html, body { background: #0e1218; }
 body {
   color: #fff;
   font-family: var(--font-body);

@@ -9789,7 +9789,7 @@ const _SYSTEM_EVENT_PATTERNS = [
   { key: 'join',       icon: 'sys_join',     color: '#3ecf6e', test: /\b(joined|welcome to|has entered|just joined|has joined)\b/i },
   { key: 'leave',      icon: 'sys_leave',    color: '#eb4545', test: /\b(left|has left|kicked|removed from)\b/i },
   { key: 'ban',        icon: 'sys_ban',      color: '#eb4545', test: /\b(banned|banished)\b/i },
-  { key: 'bot',        iconHTML: '<img src="https://www.svgrepo.com/show/310556/bot.svg" style="width:14px;height:14px;display:inline-block;vertical-align:middle;filter:invert(57%) sepia(91%) saturate(2167%) hue-rotate(193deg) brightness(101%) contrast(94%);">', color: '#60a5fa', test: /\b(integrated|deployed|bot added|installed bot)\b/i },
+  { key: 'bot',        iconHTML: '<svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;display:inline-block;vertical-align:middle;filter:invert(57%) sepia(91%) saturate(2167%) hue-rotate(193deg) brightness(101%) contrast(94%);"><path d="M17.75,14C19,14 20,15.01 20,16.25V17.16C20,18.25 19.53,19.29 18.7,20C17.13,21.34 14.89,22 12,22C9.11,22 6.87,21.34 5.31,20C4.48,19.29 4,18.25 4,17.16V16.25C4,15.01 5.01,14 6.25,14H17.75ZM11.9,2C12.28,2 12.6,2.28 12.64,2.65L12.65,2.75L12.65,3.5L16.25,3.5C17.49,3.5 18.5,4.51 18.5,5.75V10.25C18.5,11.5 17.49,12.5 16.25,12.5H7.75C6.51,12.5 5.5,11.5 5.5,10.25V5.75C5.5,4.51 6.51,3.5 7.75,3.5L11.25,3.5L11.25,2.75C11.25,2.37 11.53,2.06 11.9,2.01L12,2L11.9,2ZM9.75,6.5C9.06,6.5 8.5,7.06 8.5,7.75C8.5,8.44 9.06,9 9.75,9C10.44,9 11,8.44 11,7.75C11,7.06 10.44,6.5 9.75,6.5ZM14.24,6.5C13.55,6.5 12.99,7.06 12.99,7.75C12.99,8.44 13.55,9 14.24,9C14.93,9 15.49,8.44 15.49,7.75C15.49,7.06 14.93,6.5 14.24,6.5Z"/></svg>', color: '#60a5fa', test: /\b(integrated|deployed|bot added|installed bot)\b/i },
   { key: 'channel',    icon: 'sys_channel',  color: '#3ecf6e', test: /\b(channel created|created the channel|new channel)\b/i },
   { key: 'rename',     icon: 'sys_rename',   color: '#fe9c3b', test: /\b(renamed|name changed)\b/i },
   { key: 'role',       icon: 'sys_role',     color: '#fff93e', test: /\b(role|promoted|demoted)\b/i },
@@ -13258,16 +13258,9 @@ async function promptJoinPublicBastion(bastionId){
     if(b.public===false){toast('This bastion is invite-only. Ask the owner for an invite link.','error');return;}
     if((b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
     const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[],moodDisabled:b.moodDisabled||false,moodLocked:b.moodLocked||false,lockedMood:b.lockedMood||'',customMood:b.customMood||null,memberCount:b.memberCount||1};
-    CU.bastions=[...(CU.bastions||[]),localB];
-    // Persist user record immediately (skip 300ms debounce) so a refresh
-    // right after join doesn't lose the membership, and verify the row
-    // actually made it to the DB before broadcasting the join.
+    CU.bastions=[...(CU.bastions||[]).filter(ub=>ub.globalId!==gid),localB];
     await saveUser(true);
     await FortizedSocial.addBastionMember(gid,CU.username);
-    // Safety re-save: if any realtime sync clobbered CU.bastions between
-    // the first save and addBastionMember, this forces our local state
-    // (which includes the new bastion) back onto the row.
-    try { if (!(CU.bastions||[]).some(x=>x.globalId===gid)) CU.bastions=[...(CU.bastions||[]),localB]; await saveUser(true); } catch(_){}
     // Update member count in global
     try{
       const members=await FortizedSocial.getBastionMembers(gid)||[];
@@ -13880,6 +13873,8 @@ function initFortizedUXResilience() {
 
   // Set defaults
   if (!CU.bastions)CU.bastions=[];
+  // Dedup bastions by globalId (keep last occurrence)
+  { const _seen=new Set(); CU.bastions=CU.bastions.filter(b=>{const k=b.globalId||b.name;if(_seen.has(k))return false;_seen.add(k);return true;}); }
   if (!CU.friends)CU.friends=[];
   if (CU.onyx===undefined)CU.onyx=0;
   if (!_isFortizedUserId(CU.id) && navigator.onLine && FortizedSocial?.ensureUserPublicId) {
@@ -20422,13 +20417,13 @@ function toggleEmojiPicker(targetId) {
 }
 
 function _pickerTopTabs(active) {
-  // svgrepo icon URLs matched to each tab. .svgrepo-icon CSS handles
-  // size + colour inversion so the black source SVGs read as light
-  // on our dark theme.
+  const _gifSvg = `<svg class="svgrepo-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.75,3.5C20.54,3.5 22,4.96 22,6.75V17.25C22,19.05 20.54,20.5 18.75,20.5H5.25C3.46,20.5 2,19.05 2,17.25V6.75C2,4.96 3.46,3.5 5.25,3.5H18.75ZM8.01,8.87C6.39,8.87 5.26,10.28 5.26,12C5.26,13.71 6.39,15.12 8.01,15.12C8.9,15.12 9.72,14.69 10.13,13.91L10.2,13.74L10.23,13.67L10.24,13.6L10.25,13.52L10.25,12L10.25,11.9C10.21,11.64 10,11.42 9.73,11.38L9.63,11.37H8.63L8.53,11.38C8.26,11.42 8.05,11.63 8.01,11.89L8,12L8.01,12.09C8.05,12.36 8.26,12.57 8.52,12.61L8.63,12.62H9V13.35L8.99,13.37C8.81,13.69 8.44,13.87 8.01,13.87C7.15,13.87 6.51,13.07 6.51,12C6.51,10.92 7.15,10.12 8.01,10.12C8.44,10.12 8.68,10.17 8.98,10.31C9.29,10.46 9.66,10.33 9.81,10.02C9.96,9.71 9.83,9.33 9.52,9.19C9.03,8.95 8.61,8.87 8.01,8.87ZM12.63,8.99C12.32,8.99 12.06,9.23 12.01,9.53L12,9.62V14.38L12.01,14.47C12.06,14.77 12.32,15.01 12.63,15.01C12.94,15.01 13.2,14.77 13.25,14.47L13.25,14.38V9.62L13.25,9.53C13.2,9.23 12.94,8.99 12.63,8.99ZM17.62,9L15.62,8.99C15.31,8.99 15.05,9.22 15,9.52L15,9.62V14.36L15,14.46C15.04,14.73 15.25,14.94 15.52,14.98L15.62,14.99L15.71,14.98C15.98,14.94 16.2,14.73 16.24,14.47L16.25,14.36V13.25H17.37L17.46,13.24C17.73,13.2 17.94,12.99 17.99,12.73L18,12.63L17.99,12.53C17.95,12.27 17.74,12.05 17.47,12.01L17.37,12L16.25,12V10.24L17.62,10.25L17.71,10.24C18.01,10.2 18.24,9.94 18.25,9.63C18.25,9.31 18.02,9.05 17.71,9.01L17.62,9Z"/></svg>`;
+  const _stickerSvg = `<svg class="svgrepo-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5zm4 4h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>`;
+  const _emojiSvg = `<svg class="svgrepo-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-8c.79 0 1.5-.71 1.5-1.5S8.79 9 8 9s-1.5.71-1.5 1.5S7.21 12 8 12zm8 0c.79 0 1.5-.71 1.5-1.5S16.79 9 16 9s-1.5.71-1.5 1.5.71 1.5 1.5 1.5zm-4 5.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>`;
   return `<div class="picker-top-tabs">
-    <button class="picker-top-tab${active==='gif'?' active':''}" onclick="_switchPickerTab('gif')"><img class="svgrepo-icon" src="https://www.svgrepo.com/show/310879/gif.svg" alt="" loading="lazy" draggable="false">GIFs</button>
-    <button class="picker-top-tab${active==='sticker'?' active':''}" onclick="_switchPickerTab('sticker')"><img class="svgrepo-icon" src="https://www.svgrepo.com/show/311245/sticker.svg" alt="" loading="lazy" draggable="false">Stickers</button>
-    <button class="picker-top-tab${active==='emoji'?' active':''}" onclick="_switchPickerTab('emoji')"><img class="svgrepo-icon" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false">Emoji</button>
+    <button class="picker-top-tab${active==='gif'?' active':''}" onclick="_switchPickerTab('gif')">${_gifSvg}GIFs</button>
+    <button class="picker-top-tab${active==='sticker'?' active':''}" onclick="_switchPickerTab('sticker')">${_stickerSvg}Stickers</button>
+    <button class="picker-top-tab${active==='emoji'?' active':''}" onclick="_switchPickerTab('emoji')">${_emojiSvg}Emoji</button>
   </div>`;
 }
 function _switchPickerTab(tab) {
@@ -21845,7 +21840,7 @@ function _buildProfileView(tab) {
                 <div id="bio-input" class="bio-textbox__input chat-input-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write something about yourself…" spellcheck="true" data-maxlen="300"
                   oninput="_onBioInput(this)"
                   onpaste="handlePaste(event,'bio-input')">${escapeHTML(CU.bio||'')}</div>
-                <button class="bio-textbox__emoji" onclick="toggleEmojiPicker('bio-input')" id="emoji-btn-bio" data-tip="Emoji" type="button" aria-label="Insert emoji"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false"></button>
+                <button class="bio-textbox__emoji" onclick="toggleEmojiPicker('bio-input')" id="emoji-btn-bio" data-tip="Emoji" type="button" aria-label="Insert emoji"><svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-8c.79 0 1.5-.71 1.5-1.5S8.79 9 8 9s-1.5.71-1.5 1.5S7.21 12 8 12zm8 0c.79 0 1.5-.71 1.5-1.5S16.79 9 16 9s-1.5.71-1.5 1.5.71 1.5 1.5 1.5zm-4 5.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>
                 <span id="bio-char-count" class="bio-textbox__count">${300-(CU.bio||'').length}</span>
               </div>
               <!-- Mention policy: who can @-tag me in their About Me.
@@ -24443,7 +24438,7 @@ function _faMsg(name, size = 14) {
   return raw.replace('<svg ', `<svg width="${size}" height="${size}" `);
 }
 // Add-Reaction icon mirrors the chatbar emoji-picker opener (svgrepo emoji-laugh).
-const _ADD_REACTION_ICON_HTML = '<img class="svgrepo-icon" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false" style="width:16px;height:16px;">';
+const _ADD_REACTION_ICON_HTML = '<svg class="svgrepo-icon" viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-8c.79 0 1.5-.71 1.5-1.5S8.79 9 8 9s-1.5.71-1.5 1.5S7.21 12 8 12zm8 0c.79 0 1.5-.71 1.5-1.5S16.79 9 16 9s-1.5.71-1.5 1.5.71 1.5 1.5 1.5zm-4 5.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>';
 
 // ── Translate message using browser built-in or fallback ──
 async function _translateMessage(msgRow, text) {
@@ -30251,7 +30246,7 @@ async function joinBastionById(bastionId, hasInvite) {
   if(!hasInvite && b.public===false){toast('This bastion is invite-only.','error');return;}
   if(!hasInvite && (b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
   const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[],moodDisabled:b.moodDisabled||false,moodLocked:b.moodLocked||false,lockedMood:b.lockedMood||'',customMood:b.customMood||null,memberCount:b.memberCount||1};
-  CU.bastions=[...(CU.bastions||[]),localB];
+  CU.bastions=[...(CU.bastions||[]).filter(ub=>ub.globalId!==gid),localB];
   await saveUser(true);
   await FortizedSocial.addBastionMember(gid,CU.username);
   try{const members=await FortizedSocial.getBastionMembers(gid)||[];const _gb=await FortizedSocial.getGlobalBastion(gid);if(_gb){_gb.memberCount=members.length;await FortizedSocial.saveGlobalBastion(gid,_gb);}}catch{}
@@ -31337,10 +31332,10 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
             onpaste="handlePaste(event,'${inputId}')"></div>
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">
-            <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" data-tip="GIFs"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310879/gif.svg" alt="" loading="lazy" draggable="false"></button>
-            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" data-tip="Stickers"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/311245/sticker.svg" alt="" loading="lazy" draggable="false"></button>
-            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" data-tip="Emoji" onmouseleave="randomizeChatbarEmoji(this)"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310822/emoji-laugh.svg" alt="" loading="lazy" draggable="false"></button>
-            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}" data-tip="Bot commands"><img class="svgrepo-icon svgrepo-icon--20" src="https://www.svgrepo.com/show/310556/bot.svg" alt="" loading="lazy" draggable="false"></button>
+            <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" data-tip="GIFs"><svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.75,3.5C20.54,3.5 22,4.96 22,6.75V17.25C22,19.05 20.54,20.5 18.75,20.5H5.25C3.46,20.5 2,19.05 2,17.25V6.75C2,4.96 3.46,3.5 5.25,3.5H18.75ZM8.01,8.87C6.39,8.87 5.26,10.28 5.26,12C5.26,13.71 6.39,15.12 8.01,15.12C8.9,15.12 9.72,14.69 10.13,13.91L10.2,13.74L10.23,13.67L10.24,13.6L10.25,13.52L10.25,12L10.25,11.9C10.21,11.64 10,11.42 9.73,11.38L9.63,11.37H8.63L8.53,11.38C8.26,11.42 8.05,11.63 8.01,11.89L8,12L8.01,12.09C8.05,12.36 8.26,12.57 8.52,12.61L8.63,12.62H9V13.35L8.99,13.37C8.81,13.69 8.44,13.87 8.01,13.87C7.15,13.87 6.51,13.07 6.51,12C6.51,10.92 7.15,10.12 8.01,10.12C8.44,10.12 8.68,10.17 8.98,10.31C9.29,10.46 9.66,10.33 9.81,10.02C9.96,9.71 9.83,9.33 9.52,9.19C9.03,8.95 8.61,8.87 8.01,8.87ZM12.63,8.99C12.32,8.99 12.06,9.23 12.01,9.53L12,9.62V14.38L12.01,14.47C12.06,14.77 12.32,15.01 12.63,15.01C12.94,15.01 13.2,14.77 13.25,14.47L13.25,14.38V9.62L13.25,9.53C13.2,9.23 12.94,8.99 12.63,8.99ZM17.62,9L15.62,8.99C15.31,8.99 15.05,9.22 15,9.52L15,9.62V14.36L15,14.46C15.04,14.73 15.25,14.94 15.52,14.98L15.62,14.99L15.71,14.98C15.98,14.94 16.2,14.73 16.24,14.47L16.25,14.36V13.25H17.37L17.46,13.24C17.73,13.2 17.94,12.99 17.99,12.73L18,12.63L17.99,12.53C17.95,12.27 17.74,12.05 17.47,12.01L17.37,12L16.25,12V10.24L17.62,10.25L17.71,10.24C18.01,10.2 18.24,9.94 18.25,9.63C18.25,9.31 18.02,9.05 17.71,9.01L17.62,9Z"/></svg></button>
+            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" data-tip="Stickers"><svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5zm4 4h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg></button>
+            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" data-tip="Emoji" onmouseleave="randomizeChatbarEmoji(this)"><svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-8c.79 0 1.5-.71 1.5-1.5S8.79 9 8 9s-1.5.71-1.5 1.5S7.21 12 8 12zm8 0c.79 0 1.5-.71 1.5-1.5S16.79 9 16 9s-1.5.71-1.5 1.5.71 1.5 1.5 1.5zm-4 5.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>
+            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}" data-tip="Bot commands"><svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.75,14C19,14 20,15.01 20,16.25V17.16C20,18.25 19.53,19.29 18.7,20C17.13,21.34 14.89,22 12,22C9.11,22 6.87,21.34 5.31,20C4.48,19.29 4,18.25 4,17.16V16.25C4,15.01 5.01,14 6.25,14H17.75ZM11.9,2C12.28,2 12.6,2.28 12.64,2.65L12.65,2.75L12.65,3.5L16.25,3.5C17.49,3.5 18.5,4.51 18.5,5.75V10.25C18.5,11.5 17.49,12.5 16.25,12.5H7.75C6.51,12.5 5.5,11.5 5.5,10.25V5.75C5.5,4.51 6.51,3.5 7.75,3.5L11.25,3.5L11.25,2.75C11.25,2.37 11.53,2.06 11.9,2.01L12,2L11.9,2ZM9.75,6.5C9.06,6.5 8.5,7.06 8.5,7.75C8.5,8.44 9.06,9 9.75,9C10.44,9 11,8.44 11,7.75C11,7.06 10.44,6.5 9.75,6.5ZM14.24,6.5C13.55,6.5 12.99,7.06 12.99,7.75C12.99,8.44 13.55,9 14.24,9C14.93,9 15.49,8.44 15.49,7.75C15.49,7.06 14.93,6.5 14.24,6.5Z"/></svg></button>
           </div>
         </div>
       </div>

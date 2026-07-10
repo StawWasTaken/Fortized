@@ -11394,17 +11394,18 @@ select:focus-visible {
    carry the look on its own. */
 .fpp--own.fpp--stroked{ border-color:transparent; }
 
-/* ── DM right sidebar column (only container is rounded) ────── */
+/* ── DM right sidebar column (floating card — all corners rounded) ────── */
 .fpp--dm{
   width:100%;
   border:none;
-  border-radius:16px 0 0 16px;
+  border-radius:16px;
   background:var(--channel);
   overflow-y:auto;
   height:100%;
   display:flex; flex-direction:column;
   gap:0;
   padding:0;
+  border:1px solid var(--border);
 }
 /* Inner sections keep their original card look (backgrounds, borders,
    rounded corners) — same as the mini popover style. */

@@ -13758,28 +13758,6 @@ function initFortizedUXResilience() {
               }
             }
           } catch {}
-          // Same dedicated-key pattern for banner. The main ftz_user blob
-          // drops banner first under quota pressure (see _trimCUForStorage),
-          // and Supabase row-size limits sometimes silently swallow large
-          // data-URL banners — without this guard the user would see their
-          // old banner come back on every refresh.
-          try {
-            const bannerEntry = _readPersistedBannerLocal(CU.username);
-            if (bannerEntry && CU.banner !== bannerEntry.val) {
-              CU.banner = bannerEntry.val;
-            }
-          } catch {}
-          // Same guard for pfp — covers the "avatar appears transparent
-          // after refresh" case where _trimCUForStorage stripped the
-          // data-URL out of ftz_user_<name> to fit the localStorage
-          // quota, or where Supabase rejected the oversized row.
-          try {
-            const pfpEntry = _readPersistedPfpLocal(CU.username);
-            if (pfpEntry && pfpEntry.val && CU.pfp !== pfpEntry.val) {
-              CU.pfp = pfpEntry.val;
-              if (pfpEntry.crop !== undefined) CU.pfpCrop = pfpEntry.crop;
-            }
-          } catch {}
           console.log('[DECO][boot] DB fetch returned activeDecoration =', JSON.stringify(CU.activeDecoration), '| localStorage ftz_user activeDecoration =', JSON.stringify(local?.activeDecoration), '| ftz_recent_edits activeDecoration =', recent.activeDecoration ? Math.round((_nowR - recent.activeDecoration)/1000)+'s ago' : 'none');
           if (local) {
             // Trust local over the freshly-fetched DB row for any
@@ -13820,6 +13798,7 @@ function initFortizedUXResilience() {
               // just-cleared-to-null decoration from a stale ftz_user
               // blob whose write may have quota-failed — re-equipping
               // an old decoration the user explicitly wanted gone.
+              'pfp','pfpCrop','banner','bio',
               'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
               'profileWidgets','displayFont','displayEffect','displayColor','displayColor2','wantToPlay','gameCollection',
               'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',

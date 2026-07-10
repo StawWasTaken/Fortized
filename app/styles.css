@@ -11394,24 +11394,24 @@ select:focus-visible {
    carry the look on its own. */
 .fpp--own.fpp--stroked{ border-color:transparent; }
 
-/* ── DM right sidebar column (floating card — all corners rounded) ────── */
+/* ── DM right sidebar column (between topbar and chatbar) ────── */
 .fpp--dm{
   width:100%;
   border:none;
-  border-radius:16px;
+  border-radius:16px 0 0 16px;
   background:var(--channel);
   overflow-y:auto;
-  height:auto;
-  max-height:calc(100vh - 24px);
   display:flex; flex-direction:column;
   gap:0;
   padding:0;
   border:1px solid var(--border);
+  border-right:none;
+  margin-top:46px;
+  max-height:calc(100% - 46px - 70px);
+  box-shadow:0 4px 24px rgba(0,0,0,.35);
 }
-/* Inner sections keep their original card look (backgrounds, borders,
-   rounded corners) — same as the mini popover style. */
 .fpp--dm .fpp__banner{
-  border-radius:0; overflow:hidden;
+  border-radius:15px 0 0 0; overflow:hidden;
   margin:0;
 }
 .fpp--dm .fpp__av-row{
@@ -11419,9 +11419,6 @@ select:focus-visible {
   padding:0 14px;
 }
 .fpp--dm .fpp__av{ width:94px; height:94px; border-width:3px; }
-/* Identity, mutuals, cards, and actions keep their default .fpp-card
-   styling — backgrounds, borders, border-radius are inherited from the
-   base .fpp rules. Only override spacing to tighten the DM column. */
 .fpp--dm .fpp__identity{
   padding:14px 18px 0;
 }

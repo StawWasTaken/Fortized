@@ -137,7 +137,7 @@ const FortizedSocial = (() => {
 
   // ── User CRUD ────────────────────────────────────────
   // Lightweight columns for list views (no heavy arrays/JSON)
-  const _USER_LIST_COLS = 'username,display_name,pfp,banner,status,onyx,custom_status,bio,badges,radiance_until,radiance_plus,active_decoration,profile_theme,game_activity,last_seen,created_at';
+  const _USER_LIST_COLS = 'username,display_name,pfp,banner,status,onyx,custom_status,bio,badges,radiance_until,radiance_plus,active_decoration,profile_theme,game_activity,last_seen,created_at,raw';
   // Columns needed for enforcement checks only
   const _USER_ENFORCE_COLS = 'username,banned,ban_reason,suspension,suspended_until,active_warning,raw';
 
@@ -191,6 +191,48 @@ const FortizedSocial = (() => {
     return results;
   }
 
+
+  function _isPublicUserId(v) { return /^ftz-u\d+$/.test(String(v || '')); }
+  function _isPublicBastionId(v) { return /^ftz-b\d+$/.test(String(v || '')); }
+  async function _nextPublicId(kind) {
+    const k = kind === 'bastion' || kind === 'b' ? 'b' : 'u';
+    try {
+      const { data, error } = await sb.rpc('ftz_next_id', { p_type: k === 'u' ? 'user' : 'bastion' });
+      if (!error && typeof data === 'number') return `ftz-${k}${data}`;
+      if (!error && typeof data === 'string' && /^\d+$/.test(data)) return `ftz-${k}${data}`;
+      if (error) console.warn('[ID] ftz_next_id RPC error:', error.message);
+    } catch(e) { console.warn('[ID] ftz_next_id RPC failed:', e?.message); }
+    return `ftz-${k}${Date.now()}${Math.floor(Math.random()*10000)}`;
+  }
+  async function ensureUserPublicId(username) {
+    const u = await getUserByName(username, { noCache: true });
+    if (!u) return norm(username);
+    if (_isPublicUserId(u.id)) return u.id;
+    u.id = await _nextPublicId('user');
+    await saveUserObject(u);
+    return u.id;
+  }
+  async function getUserByPublicId(publicId) {
+    publicId = String(publicId || '').toLowerCase();
+    if (!_isPublicUserId(publicId)) return null;
+    const { data } = await sb.from('users').select('*').contains('raw', { id: publicId }).maybeSingle();
+    return data ? _userFromRow(data) : null;
+  }
+  async function resolveUsername(identifier) {
+    const id = String(identifier || '').toLowerCase();
+    if (!id) return '';
+    if (_isPublicUserId(id)) {
+      const u = await getUserByPublicId(id);
+      return u?.username || '';
+    }
+    return norm(id);
+  }
+  async function getUserPublicId(username) { return ensureUserPublicId(username); }
+  async function getDMKey(user1, user2) {
+    const [id1, id2] = await Promise.all([ensureUserPublicId(user1), ensureUserPublicId(user2)]);
+    return [id1, id2].sort().join('__');
+  }
+
   // Convert DB row → Firebase-shaped user object for compatibility
   // Helper: BIGINT epoch-ms ↔ ISO string conversion for radiance timestamps
   function _bigintToISO(v) {
@@ -212,6 +254,7 @@ const FortizedSocial = (() => {
     // Merge any extra fields stored in raw JSONB
     const extra = r.raw || {};
     return {
+      id: extra.id || null,
       username: r.username,
       password: r.password,
       email: r.email || '',
@@ -381,6 +424,7 @@ const FortizedSocial = (() => {
     console.log('[DECO][saveUserObject] called for', user.username, '— activeDecoration =', JSON.stringify(user.activeDecoration));
     _cacheDel('user:' + norm(user.username));
     _cacheDel('userEnf:' + norm(user.username));
+    if (!_isPublicUserId(user.id)) user.id = await _nextPublicId('user');
     let row = _userToRow(user);
     if (_isHardProtected(user.username)) {
       try {
@@ -450,6 +494,7 @@ const FortizedSocial = (() => {
     }
 
     const user = {
+      id: await _nextPublicId('user'),
       username, password, email,
       displayName: username,
       pfp: null, banner: null,
@@ -784,10 +829,11 @@ const FortizedSocial = (() => {
   }
 
   // ── Direct Messages ──────────────────────────────────
-  function _dmKey(u1, u2) { return [norm(u1), norm(u2)].sort().join('__'); }
+  function _dmKey(u1, u2) { return [norm(u1), norm(u2)].sort().join('__'); } // legacy username key
 
   async function getDMMessages(user1, user2, limit, offset) {
-    const key = _dmKey(user1, user2);
+    const key = await getDMKey(user1, user2);
+    const legacyKey = _dmKey(user1, user2);
     const max = limit || 100;
     const skip = offset || 0;
     // Only cache the initial fetch (no offset); paginated calls are uncached
@@ -802,7 +848,7 @@ const FortizedSocial = (() => {
       // The old "from/username/time" fallback is permanently removed.
       const { data, error } = await sb.from('dms')
         .select('id,dm_key,from,text,timestamp,created_at,edited,new_text,reactions,forwarded,forwarded_by,reply_to,flags')
-        .eq('dm_key', key)
+        .in('dm_key', key === legacyKey ? [key] : [key, legacyKey])
         .order('timestamp', { ascending: false })
         .range(skip, skip + max - 1);
 
@@ -917,7 +963,7 @@ const FortizedSocial = (() => {
   async function sendDMMessage(fromUsername, toUsername, text, opts) {
     fromUsername = norm(fromUsername);
     toUsername   = norm(toUsername);
-    const key = _dmKey(fromUsername, toUsername);
+    const key = await getDMKey(fromUsername, toUsername);
     _cacheInvalidatePrefix('dm:' + key);
     const now = new Date();
     // Use the caller's pre-generated id if provided. Lets the caller
@@ -996,7 +1042,7 @@ const FortizedSocial = (() => {
   async function editMessage(type, opts) {
     const editData = { text: opts.newText, edited: true };
     if (type === 'dm') {
-      const key = _dmKey(opts.user1, opts.user2);
+      const key = await getDMKey(opts.user1, opts.user2);
       _cacheInvalidatePrefix('dm:' + key);
       const { error } = await sb.from('dms').update(editData).eq('dm_key', key).eq('id', opts.messageId);
       if (error) console.error('[editMessage] DM edit failed:', error.message);
@@ -1013,7 +1059,7 @@ const FortizedSocial = (() => {
 
   async function deleteMessage(type, opts) {
     if (type === 'dm') {
-      const key = _dmKey(opts.user1, opts.user2);
+      const key = await getDMKey(opts.user1, opts.user2);
       _cacheInvalidatePrefix('dm:' + key);
       const { error } = await sb.from('dms').delete().eq('dm_key', key).eq('id', opts.messageId);
       if (error) throw new Error('Failed to delete DM: ' + error.message);
@@ -1432,6 +1478,7 @@ const FortizedSocial = (() => {
 
   function getSocket() { return _socket; }
   function isSocketReady() { return _socketReady; }
+  function isConnected() { return !!(_socket && _socketReady); }
 
   // Client-side rate limiting for Socket.IO events
   var _emitLastTime = {};
@@ -2517,7 +2564,7 @@ const FortizedSocial = (() => {
       return result;
     },
     getUsersByNames,
-    getUserByName, saveUserObject, saveActiveDecoration, deleteAccount, invalidateUserCache,
+    getUserByName, getUserByPublicId, resolveUsername, getUserPublicId, ensureUserPublicId, getDMKey, saveUserObject, saveActiveDecoration, deleteAccount, invalidateUserCache,
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,
@@ -2556,7 +2603,7 @@ const FortizedSocial = (() => {
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
     startFriendRequestPolling, stopFriendRequestPolling, startVoiceRoomPolling, stopVoiceRoomPolling,
-    initSocket, getSocket, isSocketReady, socketEmit,
+    initSocket, getSocket, isSocketReady, isConnected, socketEmit,
     joinRoom, leaveRoom, queryPresence, disconnectSocket,
     playNotificationSound,
     _sb: sb,

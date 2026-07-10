@@ -95,32 +95,41 @@ const _EMOJI_PACK_SVGS = [
 
 // Generate a Fortized-schema identifier for user-generated content.
 //
-//   bastion  → "bastion?FTZB<n>"
-//   <type>   → "<type>?FTZ<initial><n>"        (e.g. group → "group?FTZG3")
+//   user     → "ftz-u<n>"
+//   bastion  → "ftz-b<n>"
+//   <type>   → "ftz-<initial><n>"
 //
 // <n> is the global creation index for that type, taken atomically from
 // Supabase via the `ftz_next_id` RPC so two concurrent creators can't
 // collide. Owner usernames no longer leak into the ID (the old scheme
 // broke when ownership moved).
 //
-// Users are NOT issued FTZ-style IDs — their canonical ID is the username.
+// Users and bastions both have public IDs now: ftz-u<number> and ftz-b<number>.
 //
 // The RPC must exist server-side (see migration SQL in the chat reply
 // that introduced this helper). If it's missing we fall back to a
 // timestamp-derived index — still unique, just not gap-free.
 async function _nextFortizedId(type) {
-  const initial = String(type || 'item').charAt(0).toUpperCase();
-  const prefix = String(type || 'item').toLowerCase();
+  const raw = String(type || 'item').toLowerCase();
+  const kind = raw.startsWith('user') || raw === 'u' ? 'user' : raw.startsWith('bastion') || raw === 'b' ? 'bastion' : raw;
+  const prefix = kind === 'user' ? 'ftz-u' : kind === 'bastion' ? 'ftz-b' : `ftz-${kind.charAt(0) || 'x'}`;
   try {
     if (FortizedSocial?._sb) {
-      const { data, error } = await FortizedSocial._sb.rpc('ftz_next_id', { p_type: prefix });
-      if (!error && typeof data === 'number') return `${prefix}?FTZ${initial}${data}`;
+      const { data, error } = await FortizedSocial._sb.rpc('ftz_next_id', { p_type: kind });
+      if (!error && typeof data === 'number') return `${prefix}${data}`;
+      if (!error && typeof data === 'string' && /^\d+$/.test(data)) return `${prefix}${data}`;
       if (error) console.warn('[ID] ftz_next_id RPC error:', error.message);
     }
   } catch (e) { console.warn('[ID] counter RPC failed, falling back', e?.message); }
-  // Offline / RPC unavailable: stamp a base36 timestamp so the ID still
-  // sorts roughly by creation order and is globally unique.
-  return `${prefix}?FTZ${initial}${Date.now().toString(36)}`;
+  // Offline / RPC unavailable: stamp a millisecond number so the ID still
+  // follows the requested ftz-u<number> / ftz-b<number> shape.
+  return `${prefix}${Date.now()}${Math.floor(Math.random()*10000)}`;
+}
+function _isFortizedUserId(v) { return /^ftz-u\d+$/.test(String(v || '')); }
+function _isFortizedBastionId(v) { return /^ftz-b\d+$/.test(String(v || '')); }
+function _publicDMTarget(username) {
+  const u = typeof cachedProfile === 'function' ? cachedProfile(username) : null;
+  return _isFortizedUserId(u?.id) ? u.id : username;
 }
 
 function ftzIcon(name, size, color) {
@@ -1737,7 +1746,8 @@ async function _syncBastionToGlobal(bastionIdx) {
     const b = CU?.bastions?.[bastionIdx];
     if (!b) return;
     // Ensure bastion always has a unique globalId
-    if (!b.globalId) {
+    if (!_isFortizedBastionId(b.globalId)) {
+      if (b.globalId) b.legacyGlobalId = b.globalId;
       b.globalId = await _nextFortizedId('bastion');
       await saveUser();
       await FortizedSocial.addBastionMember(b.globalId, CU.username);
@@ -3719,7 +3729,7 @@ const _ftzRouter = {
       if (params.roomId != null) url += '/' + encodeURIComponent(params.roomId);
     }
     if (view === 'dms' && params?.dmTarget) {
-      url = '/app/messages?u=' + encodeURIComponent(params.dmTarget);
+      url = '/app/messages?u=' + encodeURIComponent(_publicDMTarget(params.dmTarget));
     }
     if (window.location.pathname + window.location.search !== url) {
       history.pushState({ view, params: params || {} }, '', url);
@@ -3733,7 +3743,7 @@ const _ftzRouter = {
       if (params.roomId != null) url += '/' + encodeURIComponent(params.roomId);
     }
     if (view === 'dms' && params?.dmTarget) {
-      url = '/app/messages?u=' + encodeURIComponent(params.dmTarget);
+      url = '/app/messages?u=' + encodeURIComponent(_publicDMTarget(params.dmTarget));
     }
     history.replaceState({ view, params: params || {} }, '', url);
   },
@@ -3771,15 +3781,16 @@ const _ftzRouter = {
       // Bastion not found — fall through to home
     }
     if (view === 'dms' || view === 'friends') {
-      // If the URL carries a ?u=<username> (from a prior session / reload),
-      // open that DM instead of the friends home. Set curDM FIRST so the
+      // If the URL carries a ?u=<ftz-u...> public ID (or a legacy username),
+      // open that DM instead of the friends home. Resolve to username internally so the
       // showView() that runs inside openDMView doesn't strip the ?u= from
       // the URL as it re-does its pushState/replaceState. Call openDMView
       // directly — it handles the view switch internally.
       if (dmTarget && view === 'dms') {
         try {
-          curDM = dmTarget;
-          openDMView(dmTarget);
+          const resolvedDM = await FortizedSocial.resolveUsername(dmTarget) || dmTarget;
+          curDM = resolvedDM;
+          openDMView(resolvedDM);
         } catch(e) { console.warn('[Route] openDM failed:', e?.message); showView('dms'); }
         return;
       }
@@ -3795,7 +3806,7 @@ const _ftzRouter = {
 };
 
 // Handle browser back/forward
-window.addEventListener('popstate', function(e) {
+window.addEventListener('popstate', async function(e) {
   const state = e.state;
   if (!state || !state.view) {
     // No state — parse from URL
@@ -3805,7 +3816,7 @@ window.addEventListener('popstate', function(e) {
       if (idx >= 0) { openBastion(idx); return; }
     }
     if (view === 'dms' && dmTarget) {
-      try { curDM = dmTarget; openDMView(dmTarget); } catch(_) { showView('dms', true); }
+      try { const resolvedDM = await FortizedSocial.resolveUsername(dmTarget) || dmTarget; curDM = resolvedDM; openDMView(resolvedDM); } catch(_) { showView('dms', true); }
       return;
     }
     showView(view || 'home', true);
@@ -3824,7 +3835,7 @@ window.addEventListener('popstate', function(e) {
     }
   }
   if (state.view === 'dms' && state.params?.dmTarget) {
-    try { curDM = state.params.dmTarget; openDMView(state.params.dmTarget); } catch(_) { showView('dms', true); }
+    try { const resolvedDM = await FortizedSocial.resolveUsername(state.params.dmTarget) || state.params.dmTarget; curDM = resolvedDM; openDMView(resolvedDM); } catch(_) { showView('dms', true); }
     return;
   }
   showView(state.view || 'home', true);
@@ -7316,9 +7327,14 @@ function openDMView(username) {
   FortizedSocial.joinRoom('dm', String(CU.username).toLowerCase(), String(username).toLowerCase());
   window._activeSubs.dmRoom = { id1: CU.username, id2: username };
   // Start polling for instant message delivery
-  const dmKey = [CU.username.toLowerCase(), username.toLowerCase()].sort().join('__');
-  if (FortizedSocial.startDMPolling) FortizedSocial.startDMPolling(dmKey);
-  window._activeSubs.dmKey = dmKey;
+  FortizedSocial.getDMKey(CU.username, username).then(dmKey => {
+    if (FortizedSocial.startDMPolling) FortizedSocial.startDMPolling(dmKey);
+    window._activeSubs.dmKey = dmKey;
+  }).catch(() => {
+    const dmKey = [CU.username.toLowerCase(), username.toLowerCase()].sort().join('__');
+    if (FortizedSocial.startDMPolling) FortizedSocial.startDMPolling(dmKey);
+    window._activeSubs.dmKey = dmKey;
+  });
   _listenTyping(username);
 }
 function openDMChat(u) { openDMView(u); }
@@ -7833,20 +7849,22 @@ async function sendDM() {
     _enqueueOfflineMessage({ kind: 'dm', id: canonicalId, target: curDM, text, replyTo: rep, flags: msgFlags });
     return;
   }
-  // Fire the Socket.IO notification BEFORE awaiting Supabase. The
-  // Supabase insert is for persistence; receivers shouldn't wait on it
-  // to see the message. Was the root cause of 5–10s delivery delays.
-  FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: msg });
+  // Discord-style delivery: the sender sees an optimistic translucent row,
+  // but everyone else only receives the message after persistence succeeds.
+  // The socket event is the server fan-out hint, not the source of truth.
   try {
     const sendOpts = { id: canonicalId };
     if (msgFlags.length) sendOpts.flags = msgFlags;
     if (rep) sendOpts.replyTo = rep;
     // Silent-retry twice with 20 s per attempt before showing failed —
     // brief network hiccups no longer flash the red state.
-    await _sendWithAutoRetry(
+    const savedMsg = await _sendWithAutoRetry(
       () => FortizedSocial.sendDMMessage(CU.username, curDM, text, sendOpts),
       2, 20000
     );
+    const committedMsg = savedMsg || msg;
+    FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: committedMsg });
+    _confirmOptimisticSend('dm:'+[CU.username, curDM].sort().join('__'), committedMsg);
     _trackSendMsgQuest();
   } catch (e) {
     console.error('[sendDM Error]', e.message);
@@ -8517,6 +8535,7 @@ async function sendGCMessage() {
     // Silent-retry twice — same reliability rationale as DM/channel sends.
     await _sendWithAutoRetry(() => msgRef.set(msg), 2, 20000);
     FortizedSocial.socketEmit('message:send', { type: 'gc', id1: curGC, message: msg });
+    _confirmOptimisticSend('gc:'+curGC, msg);
   } catch {
     if (!_isOnlineForSend()) {
       _enqueueOfflineMessage({ kind: 'gc', id: msg.id, target: curGC, text, replyTo: rep, flags: msgFlags });
@@ -9615,16 +9634,18 @@ async function sendChannelMsg(idx) {
   if (!_isOnlineForSend()) {
     _enqueueOfflineMessage({ kind: 'ch', id: canonicalId, bastion: b.globalId||b.name, channel: ch.name, text, replyTo: rep });
   } else {
-    // Fire Socket.IO before awaiting Supabase — receivers get the message
-    // in real time instead of waiting on our persistence round-trip.
-    FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: msg });
+    // Discord-style delivery: keep the local optimistic row translucent,
+    // then fan out only after the canonical row is committed.
     try {
       const sendOpts = { id: canonicalId };
       if (rep) sendOpts.replyTo = rep;
-      await _sendWithAutoRetry(
+      const savedMsg = await _sendWithAutoRetry(
         () => FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text, sendOpts),
         2, 20000
       );
+      const committedMsg = savedMsg || msg;
+      FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: committedMsg });
+      _confirmOptimisticSend('bastion:'+(b.globalId||b.name)+':'+ch.name, committedMsg);
     } catch (e) {
       console.error('[sendChannelMsg Error]', e?.message);
       if (!_isOnlineForSend()) {
@@ -10536,6 +10557,23 @@ function _registerPendingSend(domain, from, text, row, msgId) {
     try { clearTimeout(e.slowTimer); } catch(_) {}
     return false;
   });
+}
+
+function _confirmOptimisticSend(domain, msg) {
+  // If the socket echo is delayed or the current tab is the only room member,
+  // still clear the Discord-style pending translucency once persistence has
+  // acknowledged the canonical message. The echo path may call this first;
+  // both routes are intentionally idempotent. Also refresh the persistent
+  // chat cache with the committed row so page switches keep canonical data.
+  try { if (domain && msg) _chatCacheUpdate(domain, msg); } catch (_) {}
+  if (_reconcilePendingSend(domain, msg)) return;
+  try {
+    const id = msg?.id != null ? String(msg.id) : '';
+    if (!id) return;
+    document.querySelectorAll('[data-msgid="'+CSS.escape(id)+'"]').forEach(row => {
+      row.classList.remove('msg-row--sending', 'msg-row--sending-slow', 'msg-row--failed');
+    });
+  } catch (_) {}
 }
 function _reconcilePendingSend(domain, incoming) {
   if (!incoming || !incoming.from) return false;
@@ -13899,6 +13937,10 @@ function initFortizedUXResilience() {
   if (!CU.bastions)CU.bastions=[];
   if (!CU.friends)CU.friends=[];
   if (CU.onyx===undefined)CU.onyx=0;
+  if (!_isFortizedUserId(CU.id) && navigator.onLine && FortizedSocial?.ensureUserPublicId) {
+    try { CU.id = await FortizedSocial.ensureUserPublicId(CU.username); }
+    catch(e) { console.warn('[Init] User public ID migration failed:', e?.message); }
+  }
   notifSettings=Object.assign({}, notifSettings, CU.notifSettings||{});
 
   // Apply this user's appearance from DB (cross-device sync). localStorage
@@ -13951,9 +13993,15 @@ function initFortizedUXResilience() {
   // Migrate: ensure all bastions have unique globalIds
   let _needsSave = false;
   for (const b of CU.bastions) {
-    if (!b.globalId) {
+    if (!_isFortizedBastionId(b.globalId)) {
+      if (b.globalId) b.legacyGlobalId = b.globalId;
       b.globalId = await _nextFortizedId('bastion');
       _needsSave = true;
+      try {
+        const globalData = { ...b, id: b.globalId, owner: b.owner || CU.username };
+        await FortizedSocial.saveGlobalBastion(b.globalId, globalData);
+        await FortizedSocial.addBastionMember(b.globalId, CU.username);
+      } catch(e) { console.warn('[Init] Bastion public ID global migration failed:', e?.message); }
     }
   }
   if (_needsSave && navigator.onLine) { try { await FortizedSocial.saveUserObject(CU); } catch(e) { console.warn('[Init] User save failed:', e?.message); } }

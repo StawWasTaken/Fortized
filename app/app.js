@@ -13675,7 +13675,7 @@ function initFortizedUXResilience() {
     // with a short backoff between attempts. Worst case is bounded by
     // FETCH_ATTEMPTS * (FETCH_TIMEOUT_MS + FETCH_BACKOFF_MS) so the
     // 20s loader safety timer above always has time to spare.
-    const FETCH_ATTEMPTS = 2;
+    const FETCH_ATTEMPTS = 1;
     const FETCH_TIMEOUT_MS = 6000;
     const FETCH_BACKOFF_MS = 1200;
     let _fetchErr = null;
@@ -13893,6 +13893,11 @@ function initFortizedUXResilience() {
       } catch(_) { /* give up, init continues from in-memory CU */ }
     }
   }
+
+  // Sync CU's own profile into the light-cache so DM sidebar, member
+  // list, and chat avatars paint the fresh DB data instead of a stale
+  // localStorage snapshot from a previous session.
+  try { rememberProfile(CU); } catch(_) {}
 
   // Set defaults
   if (!CU.bastions)CU.bastions=[];
@@ -25409,14 +25414,8 @@ function tryOpenAdmin() {
 
 function _openStaffConsole() {
   _syncAdminData();
-  const role = getStaffRole(CU.username);
-  const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
-  const roleColor = role === 'superadmin' ? '#ffd93e' : role === 'admin' ? '#f87171' : '#60a5fa';
-  const roleSvg = role === 'superadmin' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' : role === 'admin' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
   _adminPreviousView = _currentView;
   adminTab = 'dashboard';
-  const hdr = document.getElementById('sc-header');
-  if (hdr) hdr.innerHTML = '<div style="display:flex;align-items:center;gap:12px;width:100%;"><div class="sc-header-logo"><div class="sc-header-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="sc-header-title">STAFF CONSOLE</div><div class="sc-header-sub">FORTIZED &middot; INTERNAL</div></div></div><div class="sc-header-status"><div class="sc-header-status-dot"></div>LIVE</div><div class="sc-header-role" style="background:'+roleColor+'0d;border:1px solid '+roleColor+'25;"><span style="color:'+roleColor+';display:flex;">'+roleSvg+'</span><span style="color:'+roleColor+';">'+roleLabel.toUpperCase()+'</span></div><span class="sc-header-user">@'+escapeHTML(CU.username)+'</span><button onclick="_closeStaffConsole()" class="sc-header-exit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>EXIT</button></div>';
   _renderStaffNav('dashboard');
   _loadStaffPage('dashboard');
   openModal('modal-staff-console');
@@ -25454,10 +25453,10 @@ function _renderStaffNav(active) {
   const navItems = [
     {section:'Overview', items:[
       {id:'dashboard', svg:'<i class="fas fa-chart-pie"></i>', label:'Dashboard'},
-      {id:'live_ops', svg:'<i class="fas fa-bolt"></i>', label:'Live Ops'},
+      {id:'live_ops', svg:'<i class="fas fa-earth-europe"></i>', label:'Global Monitor'},
     ]},
     {section:'User Content', items:[
-      ...(role!=='moderator' ? [{id:'broadcasts', svg:'<i class="fas fa-bullhorn"></i>', label:'User Ads'}] : []),
+      ...(role!=='moderator' ? [{id:'broadcasts', svg:'<i class="fas fa-bullhorn"></i>', label:'Broadcasts'}] : []),
       {id:'nsfw_queue', svg:'<i class="fas fa-image"></i>', label:'Content Review'},
       {id:'feedback', svg:'<i class="fas fa-comment"></i>', label:'Feedback'},
     ]},
@@ -25524,7 +25523,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
   if (tab === 'users' || tab === 'members') { await _loadAdminMembers(main); return; }
   if (tab === 'bastions' || tab === '_bastions' || tab === '_economy') { await _loadAdminDomain(main, tab === '_economy' ? 'economy' : 'bastions', tab); return; }
   if (tab === 'broadcasts'){ await _loadAdminDomain(main, 'broadcasts'); return; }
-  if (tab === 'feedback')  { await _loadAdminFeedback(main); return; }
+  if (tab === 'feedback' || tab === '_feedback')  { await _loadAdminFeedback(main, tab === '_feedback' ? 'support_tickets' : undefined); return; }
   if (tab === 'system')    { await _loadAdminDomain(main, 'system'); return; }
   if (tab === 'platform')  { await _loadAdminDomain(main, 'system'); return; }
 
@@ -25556,7 +25555,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page">
       <div class="sc-dash-head">
         <div>
-          <div class="sc-dash-title"><i class="fas fa-chart-pie" style="color:var(--accent);"></i> Staff Console</div>
+          <div class="sc-dash-title"><i class="fas fa-chart-pie" style="color:var(--accent);"></i> Dashboard</div>
           <div class="sc-dash-meta"><i class="fas fa-user"></i> ${escapeHTML(CU.displayName||CU.username)} <i class="fas fa-circle" style="color:var(--green);font-size:6px;margin:0 6px;"></i> ${new Date().toLocaleString()}</div>
         </div>
         <div class="sc-dash-actions">
@@ -25679,8 +25678,8 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     </div>`;
   }
   // ── Old tab IDs redirect to new consolidated tabs ──
-  else if (tab === 'reports' || tab === 'bans' || tab === 'suspensions' || tab === 'nsfw_queue') { await _loadAdminModeration(main, tab); return; }
-  else if (tab === 'users' || tab === 'all_users') { await _loadAdminMembers(main, tab); return; }
+  else if (tab === 'reports' || tab === '_reports' || tab === 'bans' || tab === '_bans' || tab === 'suspensions' || tab === '_suspensions' || tab === 'nsfw_queue' || tab === '_nsfw_queue') { await _loadAdminModeration(main, tab.replace(/^_/,'')); return; }
+  else if (tab === 'users' || tab === '_users' || tab === 'all_users' || tab === '_all_users') { await _loadAdminMembers(main, tab.replace(/^_/,'')); return; }
   // Legacy sub-tab ids (deep links from outside the console) — route to the
   // domain that now owns them via the _SC_SUB_TO_DOMAIN map.
   else if (_SC_SUB_TO_DOMAIN[tab]) { await _loadAdminDomain(main, _SC_SUB_TO_DOMAIN[tab], tab); return; }
@@ -25926,7 +25925,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-gavel" style="color:#f87171;"></i> Moderation Actions</div>
+          <div class="sc-head-title"><i class="fas fa-gavel" style="color:#f87171;"></i> Bans</div>
           <div class="sc-head-meta">Bans, suspensions, and warnings — unified view</div>
         </div>
         <div class="sc-head-actions">
@@ -25984,7 +25983,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-users" style="color:#60a5fa;"></i> User Database</div>
+          <div class="sc-head-title"><i class="fas fa-users" style="color:#60a5fa;"></i> Users</div>
           <div id="admin-users-count" class="sc-head-meta"></div>
         </div>
         <div class="sc-head-actions">
@@ -26105,7 +26104,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-clipboard-list" style="color:#60a5fa;"></i> Activity Log</div>
+          <div class="sc-head-title"><i class="fas fa-clock-rotate-left" style="color:#60a5fa;"></i> Audit Log</div>
           <div class="sc-head-meta">${allLog.length} events total</div>
         </div>
         <div class="sc-head-actions">
@@ -26211,7 +26210,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     } catch (e) { _dbg('[Admin] settings fetch failed', e); }
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
-      <div class="sc-head"><div><div class="sc-head-title"><i class="fas fa-sliders" style="color:#60a5fa;"></i> Configuration</div></div></div>
+      <div class="sc-head"><div><div class="sc-head-title"><i class="fas fa-gear" style="color:#60a5fa;"></i> System</div></div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
         <!-- Column 1: Controls & Moderation -->
         <div style="display:flex;flex-direction:column;gap:10px;">
@@ -26387,7 +26386,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-ticket" style="color:#38bdf8;"></i> Inbox & Feedback</div>
+          <div class="sc-head-title"><i class="fas fa-comment" style="color:#38bdf8;"></i> Feedback</div>
           <div class="sc-head-meta">${isSA ? 'All tickets & user feedback' : 'Non-sensitive tickets only'}</div>
         </div>
         <div class="sc-head-actions">
@@ -26482,7 +26481,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-tower-broadcast" style="color:#3ecf6e;"></i> Broadcast Center</div>
+          <div class="sc-head-title"><i class="fas fa-bullhorn" style="color:#3ecf6e;"></i> Broadcasts</div>
           <div class="sc-head-meta">Send system-wide announcements and manage platform messaging.</div>
         </div>
       </div>
@@ -26571,7 +26570,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-chart-line" style="color:#60a5fa;"></i> Platform Analytics</div>
+          <div class="sc-head-title"><i class="fas fa-chart-bar" style="color:#60a5fa;"></i> Statistics</div>
           <div class="sc-head-meta">Real-time platform metrics and growth tracking.</div>
         </div>
       </div>
@@ -26714,7 +26713,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-chart-bar" style="color:#60a5fa;"></i> Platform Statistics</div>
+          <div class="sc-head-title"><i class="fas fa-chart-bar" style="color:#60a5fa;"></i> Statistics</div>
           <div class="sc-head-meta" id="stats-last-updated"></div>
         </div>
         <div class="sc-head-actions">
@@ -27514,7 +27513,7 @@ function _openUnifiedActionPopup(prefillUser) {
       <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Duration</div>
       <div style="display:flex;gap:8px;">
         <input id="_ua-dur-amount" class="settings-input" type="number" min="1" value="1" style="flex:1;">
-        <select id="_ua-dur-unit" class="settings-input" style="flex:1;background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px;">
+        <select id="_ua-dur-unit" class="settings-input" style="flex:1;background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27rgba(255,255,255,.3)%27 stroke-width=%272.5%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center;padding-right:32px;cursor:pointer;">
           <option value="minutes">Minutes</option>
           <option value="hours" selected>Hours</option>
           <option value="days">Days</option>
@@ -27661,7 +27660,7 @@ async function _loadPlatformStats() {
     const verifiedUsers = users.filter(u => u.verified).length;
     const bannedUsers = users.filter(u => u.banned || bans.some(b => b.username === u.username)).length;
     const suspendedUsers = users.filter(u => u.suspension && new Date(u.suspension.until) > new Date()).length;
-    const radianceUsers = users.filter(u => u.radiance).length;
+    const radianceUsers = users.filter(u => u.radianceUntil && new Date(u.radianceUntil) > new Date()).length;
     const totalBastions = bastions.length;
     const publicBastions = bastions.filter(b => b.public !== false).length;
     const verifiedBastions = bastions.filter(b => b.verified).length;

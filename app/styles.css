@@ -11360,7 +11360,7 @@ select:focus-visible {
    carry the look on its own. */
 .fpp--own.fpp--stroked{ border-color:transparent; }
 
-/* ── DM right sidebar column (rounded bar — left corners only) ────── */
+/* ── DM right sidebar column (only container is rounded) ────── */
 .fpp--dm{
   width:100%;
   border:none;
@@ -11369,29 +11369,28 @@ select:focus-visible {
   overflow-y:auto;
   height:100%;
   display:flex; flex-direction:column;
-  gap:10px;
-  padding:12px 10px 12px 12px;
+  gap:0;
+  padding:0;
 }
-/* Each visual section inside the DM panel becomes a rounded card */
 .fpp--dm .fpp__banner{
-  border-radius:14px; overflow:hidden;
+  border-radius:0; overflow:hidden;
   margin:0;
 }
 .fpp--dm .fpp__av-row{
   margin-top:-52px;
-  padding:0 4px;
+  padding:0 14px;
 }
 .fpp--dm .fpp__av{ width:94px; height:94px; border-width:3px; }
 .fpp--dm .fpp__identity,
 .fpp--dm .fpp__mutuals-chip,
 .fpp--dm .fpp-card,
 .fpp--dm .fpp__actions{
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:14px;
+  background:transparent;
+  border:none;
+  border-radius:0;
   padding:14px 16px;
   margin:0;
-  box-shadow:0 2px 8px rgba(0,0,0,.15);
+  box-shadow:none;
 }
 .fpp--dm .fpp__actions{
   margin-top:auto;

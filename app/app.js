@@ -141,7 +141,7 @@ function ftzIcon(name, size, color) {
   return out;
 }
 // Shorthand icon helpers — Radiance & Onyx use PNG images (displayed inline like SVGs), Boost uses SVG
-function _onyxImg(size){const s=size||'18';return '<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);" alt="Onyx">';}
+function _onyxImg(size){const s=size||'18';return '<span class="icon-onyx" style="width:'+s+'px;height:'+s+'px;" aria-label="Onyx"></span>';}
 function _radianceImg(size){const s=size||'16';return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;object-fit:contain;" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="radianceGrad-'+Math.random()+'" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ff77e4;stop-opacity:1" /><stop offset="100%" style="stop-color:#fff93e;stop-opacity:1" /></linearGradient></defs><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#radianceGrad-'+Math.random()+')" /></svg>';}
 // Radiance basic + Radiance Plus were merged into a single Radiance tier
 // a long time ago. `radiancePlus` is kept as a legacy field for back-compat
@@ -25415,6 +25415,8 @@ function _openStaffConsole() {
   const roleSvg = role === 'superadmin' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' : role === 'admin' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
   _adminPreviousView = _currentView;
   adminTab = 'dashboard';
+  const hdr = document.getElementById('sc-header');
+  if (hdr) hdr.innerHTML = '<div style="display:flex;align-items:center;gap:12px;width:100%;"><div class="sc-header-logo"><div class="sc-header-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="sc-header-title">STAFF CONSOLE</div><div class="sc-header-sub">FORTIZED &middot; INTERNAL</div></div></div><div class="sc-header-status"><div class="sc-header-status-dot"></div>LIVE</div><div class="sc-header-role" style="background:'+roleColor+'0d;border:1px solid '+roleColor+'25;"><span style="color:'+roleColor+';display:flex;">'+roleSvg+'</span><span style="color:'+roleColor+';">'+roleLabel.toUpperCase()+'</span></div><span class="sc-header-user">@'+escapeHTML(CU.username)+'</span><button onclick="_closeStaffConsole()" class="sc-header-exit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>EXIT</button></div>';
   _renderStaffNav('dashboard');
   _loadStaffPage('dashboard');
   openModal('modal-staff-console');
@@ -25436,8 +25438,8 @@ function _setupAdminLiveSync() {
     try {
       await _syncAdminData();
       if (typeof adminTab !== 'undefined' && adminTab) {
-        _renderAdminNav(adminTab);
-        _loadAdminPage(adminTab, true);
+        _renderStaffNav(adminTab);
+        _loadStaffPage(adminTab, true);
       }
     } catch (e) { _dbg('[Admin] live sync failed', e); }
   }, 60000);
@@ -25452,6 +25454,7 @@ function _renderStaffNav(active) {
   const navItems = [
     {section:'Overview', items:[
       {id:'dashboard', svg:'<i class="fas fa-chart-pie"></i>', label:'Dashboard'},
+      {id:'live_ops', svg:'<i class="fas fa-bolt"></i>', label:'Live Ops'},
     ]},
     {section:'User Content', items:[
       ...(role!=='moderator' ? [{id:'broadcasts', svg:'<i class="fas fa-bullhorn"></i>', label:'User Ads'}] : []),
@@ -25459,8 +25462,8 @@ function _renderStaffNav(active) {
       {id:'feedback', svg:'<i class="fas fa-comment"></i>', label:'Feedback'},
     ]},
     {section:'Community', items:[
-      {id:'members', svg:'<i class="fas fa-users"></i>', label:'Members'},
-      {id:'bastions', svg:'<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/BastionSVG.png" style="width:16px;height:16px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;">', label:'Bastions'},
+      {id:'users', svg:'<i class="fas fa-users"></i>', label:'Users'},
+      {id:'bastions', svg:'<span class="icon-bastion" style="width:16px;height:16px;"></span>', label:'Bastions'},
     ]},
     {section:'Moderation', items:[
       {id:'reports', svg:'<i class="fas fa-flag"></i>', label:'Reports'},
@@ -25469,7 +25472,7 @@ function _renderStaffNav(active) {
     {section:'Administration', items:[
       ...(role!=='moderator' ? [{id:'staff', svg:'<i class="fas fa-user-tie"></i>', label:'Staff'}] : []),
       ...(role!=='moderator' ? [{id:'system', svg:'<i class="fas fa-gear"></i>', label:'System'}] : []),
-      ...(role!=='moderator' ? [{id:'economy', svg:'<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:16px;height:16px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;">', label:'Economy'}] : []),
+      ...(role!=='moderator' ? [{id:'economy', svg:'<span class="icon-onyx" style="width:16px;height:16px;"></span>', label:'Economy'}] : []),
     ]},
     {section:'Insights', items:[
       {id:'statistics', svg:'<i class="fas fa-chart-bar"></i>', label:'Statistics'},
@@ -25477,12 +25480,14 @@ function _renderStaffNav(active) {
     ]},
   ];
   let html = '';
-  for (const sec of navItems) {
+  for (let i = 0; i < navItems.length; i++) {
+    const sec = navItems[i];
     html += `<div class="sc-nav-section"><div class="sc-nav-section-label">${sec.section}</div>`;
     for (const item of sec.items) {
       html += `<button class="sc-nav-item${active===item.id?' active':''}" onclick="_loadStaffPage('${item.id}')">${item.svg}${item.label}</button>`;
     }
     html += '</div>';
+    if (i < navItems.length - 1) html += '<div class="sc-nav-sep"></div>';
   }
   nav.innerHTML = html;
 }
@@ -25493,6 +25498,8 @@ async function loadStaffTab(tab) { _loadStaffPage(tab); }
 async function _loadStaffPage(tab, _isAutoRefresh) {
   if (!_isAutoRefresh && _adminAutoRefresh) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; }
   const _origTab = tab;
+  // Live Ops opens the tactical console as a full-screen overlay
+  if (tab === 'live_ops') { try { openStaffOps(); } catch (e) { console.warn('[StaffOps] open failed:', e); } return; }
   // Map new nav tab names to legacy tab ids for inline rendering
   const tabMap = {audit:'_audit', staff:'_staff', nsfw_queue:'_nsfw_queue', economy:'_economy', bastions:'_bastions', users:'_users', all_users:'_all_users', support_tickets:'_support_tickets', place_where:'_place_where', onboarding:'_onboarding', statistics:'_statistics'};
   tab = tabMap[tab] || tab;
@@ -25508,7 +25515,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
   }
 
   // ── Top-level domain routing (one tab per domain) ──
-  if (tab === 'members')   { await _loadAdminMembers(main); return; }
+  if (tab === 'users' || tab === 'members') { await _loadAdminMembers(main); return; }
   if (tab === 'bastions' || tab === '_bastions' || tab === '_economy') { await _loadAdminDomain(main, tab === '_economy' ? 'economy' : 'bastions', tab); return; }
   if (tab === 'broadcasts'){ await _loadAdminDomain(main, 'broadcasts'); return; }
   if (tab === 'feedback')  { await _loadAdminFeedback(main); return; }
@@ -26016,7 +26023,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;"> Economy</div>
+          <div class="sc-head-title"><span class="icon-onyx" style="width:18px;height:18px;"></span> Economy</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:800px;margin-bottom:20px;">
@@ -26060,7 +26067,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/BastionSVG.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;"> Bastions</div>
+          <div class="sc-head-title"><span class="icon-bastion" style="width:18px;height:18px;"></span> Bastions</div>
           <div id="admin-bastion-count" class="sc-head-meta"></div>
         </div>
         <div class="sc-head-actions">
@@ -26788,6 +26795,7 @@ async function _loadAdminMembers(main, subTab) {
   const tabs = [
     {id:'users', label:'Lookup'},
     ...(isAdm ? [{id:'all_users', label:'All Members'}] : []),
+    ...(isSup ? [{id:'staff', label:'Staff'}] : []),
   ];
   const valid = tabs.map(t => t.id);
   let active = subTab && valid.includes(subTab) ? subTab : (_adminSubTab.members && valid.includes(_adminSubTab.members) ? _adminSubTab.members : tabs[0].id);
@@ -26808,7 +26816,8 @@ const _SC_SUB_TO_DOMAIN = {
   // Platform → System (operational tools)
   settings:'system', audit:'system', analytics:'system',
   network_monitor:'system', backup_restore:'system',
-  // Platform → Members (no sub-tabs currently)
+  // Platform → Members
+  staff:'members',
 };
 
 // Returns the sub-tab list for a given top-level domain.
@@ -26831,6 +26840,7 @@ function _scDomainSubs(domainKey) {
     case 'system':
       return [
         ...(isSup ? [{id:'settings', label:'Configuration'}] : []),
+        ...(isAdm ? [{id:'audit', label:'Activity Log'}] : []),
         ...(isSup ? [{id:'analytics', label:'Analytics'}] : []),
         ...(isAdm ? [{id:'network_monitor', label:'Network'}] : []),
         ...(isSup ? [{id:'backup_restore', label:'Backup'}] : []),
@@ -27472,14 +27482,19 @@ function _openUnifiedActionPopup(prefillUser) {
     <div style="margin-bottom:14px;">
       <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Username</div>
       <div style="position:relative;">
-        <input id="_ua-user" class="settings-input" placeholder="Start typing a username…" value="${escapeHTML(prefillUser||'')}" style="width:100%;padding-left:36px;" oninput="_adminUserSuggest(this)">
+        <input id="_ua-user" class="settings-input" placeholder="Start typing a username…" value="${escapeHTML(prefillUser||'')}" style="width:100%;padding-left:36px;box-sizing:border-box;" oninput="_adminUserSuggest(this)">
         <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);font-size:13px;pointer-events:none;"></i>
+        <div id="_ua-suggestions" style="display:none;position:absolute;z-index:10;background:var(--panel2);border:1px solid var(--border);border-radius:10px;max-height:180px;overflow-y:auto;left:0;right:0;box-shadow:0 8px 32px rgba(0,0,0,.4);box-sizing:border-box;"></div>
       </div>
-      <div id="_ua-user-preview" style="display:none;margin-top:8px;padding:8px 12px;background:var(--panel2);border-radius:8px;border:1px solid var(--border);align-items:center;gap:10px;">
-        <div id="_ua-pfp" style="width:32px;height:32px;border-radius:50%;background:var(--panel3);flex-shrink:0;"></div>
-        <div><div id="_ua-preview-name" style="font-weight:600;font-size:13px;"></div><div id="_ua-preview-status" style="font-size:11px;color:rgba(255,255,255,.4);"></div></div>
+      <div id="_ua-user-preview" style="display:none;margin-top:8px;padding:10px 12px;background:var(--panel2);border-radius:8px;border:1px solid var(--border);align-items:center;gap:10px;">
+        <div id="_ua-pfp" style="width:36px;height:36px;border-radius:50%;background:var(--panel3);flex-shrink:0;overflow:hidden;"></div>
+        <div style="flex:1;min-width:0;">
+          <div id="_ua-preview-name" style="font-weight:600;font-size:13px;color:#fff;"></div>
+          <div id="_ua-preview-status" style="font-size:11px;color:rgba(255,255,255,.4);"></div>
+          <div id="_ua-preview-meta" style="font-size:10px;color:rgba(255,255,255,.2);margin-top:2px;"></div>
+        </div>
+        <div id="_ua-preview-actions" style="display:flex;gap:4px;"></div>
       </div>
-      <div id="_ua-suggestions" style="display:none;position:absolute;z-index:10;background:var(--panel2);border:1px solid var(--border);border-radius:10px;max-height:180px;overflow-y:auto;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.4);"></div>
     </div>
     <div style="margin-bottom:14px;">
       <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Action Type</div>
@@ -27568,21 +27583,26 @@ async function _updateUserPreview(username) {
   const pfp = document.getElementById('_ua-pfp');
   const name = document.getElementById('_ua-preview-name');
   const status = document.getElementById('_ua-preview-status');
+  const meta = document.getElementById('_ua-preview-meta');
+  const actions = document.getElementById('_ua-preview-actions');
   if (!username || !preview) return;
   try {
-    const users = await FortizedSocial.getUsers().catch(()=>[]);
-    const u = users.find(x => x.username?.toLowerCase() === username.toLowerCase());
+    const u = await FortizedSocial.getUserByName(username).catch(()=>null);
     if (u) {
       preview.style.display = 'flex';
-      pfp.innerHTML = u.avatar ? `<img src="${escapeHTML(u.avatar)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : `<div style="width:32px;height:32px;border-radius:50%;background:var(--panel3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">${(u.username||'?')[0].toUpperCase()}</div>`;
-      name.textContent = `@${u.username}`;
+      const avHTML = buildAvatarHTML(u.pfp, u.displayName || u.username, 36);
+      pfp.innerHTML = avHTML;
+      name.textContent = (u.displayName && u.displayName !== u.username ? u.displayName + ' ' : '') + '@' + u.username;
       const badges = [];
-      if (u.verified) badges.push('✓ Verified');
-      if (u.radiance) badges.push('✦ Radiance');
-      if (u.staff) badges.push('⚙ Staff');
-      if (u.banned) badges.push('🔨 Banned');
-      if (u.suspension) { const su = new Date(u.suspension.until); if (su > new Date()) badges.push('⏳ Suspended'); }
-      status.textContent = badges.length ? badges.join(' · ') : 'No special status';
+      if (u.verified) badges.push('<span style="color:#3b82f6;">✓ Verified</span>');
+      if (u.radiance) badges.push('<span style="color:#ffd93e;">✦ Radiance</span>');
+      if (u.banned) badges.push('<span style="color:#f87171;">🔨 Banned</span>');
+      if (u.suspension) { const su = new Date(u.suspension.until); if (su > new Date()) badges.push('<span style="color:#a855f7;">⏳ Suspended</span>'); }
+      status.innerHTML = badges.length ? badges.join(' · ') : 'No special status';
+      const joined = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'unknown';
+      const onyxBal = typeof u.onyx === 'number' ? u.onyx.toLocaleString() : '0';
+      meta.textContent = `Joined ${joined} · ${onyxBal} Onyx`;
+      actions.innerHTML = `<button class="hq-quick-btn" onclick="openDMView('${escapeHTML(u.username)}')" style="padding:4px 8px;font-size:10px;"><i class="fas fa-comment"></i></button><button class="hq-quick-btn" onclick="viewUserProfile('${escapeHTML(u.username)}')" style="padding:4px 8px;font-size:10px;"><i class="fas fa-eye"></i></button>`;
     } else {
       preview.style.display = 'none';
     }

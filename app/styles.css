@@ -11406,6 +11406,8 @@ select:focus-visible {
   gap:0;
   padding:0;
 }
+/* Inner sections keep their original card look (backgrounds, borders,
+   rounded corners) — same as the mini popover style. */
 .fpp--dm .fpp__banner{
   border-radius:0; overflow:hidden;
   margin:0;
@@ -11415,16 +11417,17 @@ select:focus-visible {
   padding:0 14px;
 }
 .fpp--dm .fpp__av{ width:94px; height:94px; border-width:3px; }
-.fpp--dm .fpp__identity,
-.fpp--dm .fpp__mutuals-chip,
-.fpp--dm .fpp-card,
-.fpp--dm .fpp__actions{
-  background:transparent;
-  border:none;
-  border-radius:0;
-  padding:14px 16px;
-  margin:0;
-  box-shadow:none;
+/* Identity, mutuals, cards, and actions keep their default .fpp-card
+   styling — backgrounds, borders, border-radius are inherited from the
+   base .fpp rules. Only override spacing to tighten the DM column. */
+.fpp--dm .fpp__identity{
+  padding:14px 18px 0;
+}
+.fpp--dm .fpp__mutuals-chip{
+  margin:14px 16px 0;
+}
+.fpp--dm .fpp-card{
+  margin:14px 16px 0;
 }
 .fpp--dm .fpp__actions{
   margin-top:auto;

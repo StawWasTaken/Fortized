@@ -462,7 +462,7 @@ function _stashCurrentActiveMsgs() {
 // paint from the cache instantly, skip the skeleton, and only diff the
 // background refresh in. Bounded to CHAT_CACHE_MAX msgs per chat to keep
 // memory sane on long-running sessions.
-const CHAT_CACHE_MAX = 500;
+const CHAT_CACHE_MAX = 2000;
 const _ftzChatCache = new Map();
 function _chatKey(type, id1, id2) {
   if (type === 'dm') return 'dm:' + String(id1||'').toLowerCase();
@@ -553,7 +553,7 @@ function _ensureLoadMoreBar(container, context, chatKey) {
   const bar = document.createElement('div');
   bar.className = 'load-more-bar';
   bar.dataset.context = context;
-  bar.dataset.offset = String(Math.max(rowCount, 100));
+  bar.dataset.offset = String(Math.max(rowCount, 200));
   if (chatKey) bar.dataset.chatKey = chatKey;
   bar.innerHTML = _renderSkelMessages(6);
   // Click fallback for the rare case where IntersectionObserver misses
@@ -602,7 +602,7 @@ const _FTZ_CHAT_DB_NAME = 'ftz-chat';
 const _FTZ_CHAT_DB_VERSION = 1;
 const _FTZ_CHAT_STORE = 'chats';
 const _FTZ_CHAT_FLUSH_MS = 800;   // debounce IDB writes
-const _FTZ_CHAT_MAX_PERSIST = 400; // last-N msgs persisted per chat (cap size)
+  const _FTZ_CHAT_MAX_PERSIST = 1000; // last-N msgs persisted per chat (cap size)
 let _ftzChatDBPromise = null;
 const _ftzChatDirtyKeys = new Set();
 let _ftzChatFlushTimer = null;
@@ -7463,10 +7463,8 @@ async function loadDMMessages(username) {
     _paintInitialChatSkeleton(msgsEl);
   }
   try {
-    const msgs = await FortizedSocial.getDMMessages(CU.username, username, 100);
+    const msgs = await FortizedSocial.getDMMessages(CU.username, username, 1000);
     if (surfaceRevived || hasCache) {
-      // Cache-hit path OR revived surface: only patch in messages that
-      // arrived while the chat was closed. No full re-render, no flicker.
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'dm');
       _ensureLoadMoreBar(msgsEl, 'dm', cacheKey);
     } else {
@@ -9357,7 +9355,7 @@ async function loadChannelMessages(idx) {
     _paintInitialChatSkeleton(msgsEl);
   }
   try {
-    const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,100);
+    const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,1000);
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'ch');
       _ensureLoadMoreBar(msgsEl, 'ch', cacheKey);
@@ -9967,7 +9965,7 @@ function renderMessages(container, msgs, context) {
     const loadMore = document.createElement('div');
     loadMore.className = 'load-more-bar';
     loadMore.dataset.context = context;
-    loadMore.dataset.offset = '50';
+    loadMore.dataset.offset = String(msgs.length);
     // Carry the chatKey so _loadOlderMessages can mark this chat's
     // history exhausted if the fetch tail returns nothing.
     let _resolvedKey = null;
@@ -10094,7 +10092,7 @@ async function _resyncActiveChat() {
   let msgs = [], containerId = null, ctx = null;
   try {
     if (curDM) {
-      msgs = await FortizedSocial.getDMMessages(CU.username, curDM, 100);
+      msgs = await FortizedSocial.getDMMessages(CU.username, curDM, 500);
       containerId = 'dm-msgs'; ctx = 'dm';
     } else if (curGC) {
       // GC uses Firebase RTDB, not getter — let the live listener handle it.
@@ -10103,7 +10101,7 @@ async function _resyncActiveChat() {
       const b = CU?.bastions?.[curBastion];
       const ch = b?.channels?.[curChannel];
       if (!b || !ch) return;
-      msgs = await FortizedSocial.getBastionChannelMessages(b.globalId||b.name, ch.name, 100);
+      msgs = await FortizedSocial.getBastionChannelMessages(b.globalId||b.name, ch.name, 500);
       containerId = 'ch-msgs-' + curChannel; ctx = 'ch';
     } else {
       return;
@@ -10211,12 +10209,13 @@ async function _loadOlderMessages(barOrBtn) {
   // it with a button, then back to skeleton here).
   if (!bar.querySelector('.msg-skel-stack')) bar.innerHTML = _renderSkelMessages(6);
   try {
+    const OLDER_PAGE_SIZE = 200;
     let older = [];
     if (context === 'ch' && curBastion !== null && curChannel !== null) {
       const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
-      if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId || b.name, ch.name, 100, offset);
+      if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId || b.name, ch.name, OLDER_PAGE_SIZE, offset);
     } else if (context === 'dm' && curDM) {
-      older = await FortizedSocial.getDMMessages(CU.username, curDM, 100, offset);
+      older = await FortizedSocial.getDMMessages(CU.username, curDM, OLDER_PAGE_SIZE, offset);
     }
     if (older.length) {
       const container = bar.parentElement;
@@ -10264,7 +10263,7 @@ async function _loadOlderMessages(barOrBtn) {
       // the bar so the IntersectionObserver stops firing, and remember
       // the exhaustion so cache-hit revives don't re-add a bar and re-fire
       // the fruitless fetch.
-      if (older.length < 100) {
+      if (older.length < OLDER_PAGE_SIZE) {
         _markChatExhausted(context, bar.dataset.chatKey);
         _detachOlderObserver(container);
         bar.remove();
@@ -25436,81 +25435,36 @@ async function _saveNsfwQueueToServer(queue) {
 const _saveNsfwQueueToFirebase = _saveNsfwQueueToServer; // backward compat alias
 
 function tryOpenAdmin() {
-  if (isSuperAdmin()) { adminAuthed = true; openAdminPanel(); return; }
-  if (adminAuthed && hasStaffAccess()) { openAdminPanel(); return; }
-  showCustomInput('🛡 Staff Access', 'Enter the staff access code:', (code) => {
-    if (code === '1478') {
-      if (!hasStaffAccess()) { toast('Access denied — you are not a staff member.', 'error'); return; }
-      adminAuthed = true;
-      openAdminPanel();
-    } else {
-      toast('Invalid access code.', 'error');
-    }
-  });
-}
-
-function openAdminPanel() {
   if (!hasStaffAccess()) { toast('Access denied','error'); return; }
   if (!adminAuthed && !isSuperAdmin()) {
-    showCustomInput('🛡 Staff Code', 'Enter staff access code:', (code) => {
-      if (code !== '1478') { toast('Wrong code','error'); return; }
+    showCustomInput('Staff Access', 'Enter staff access code:', (code) => {
+      if (code !== '1478') { toast('Invalid code','error'); return; }
       if (!hasStaffAccess()) { toast('Not a staff member','error'); return; }
-      adminAuthed = true; _openAdminUI();
+      adminAuthed = true; _openStaffConsole();
     }); return;
   }
-  if (isSuperAdmin()) adminAuthed = true;
-  _openAdminUI();
+  adminAuthed = true; _openStaffConsole();
 }
 
-async function _openAdminUI() {
-  document.getElementById('admin-panel-overlay')?.remove();
-  // Kick the data sync off in the background — DON'T block the UI on it.
-  // The current tab will re-render automatically from _setupAdminLiveSync's
-  // poll once fresh data lands. This fixes the "console takes forever to
-  // open / shows blank" bug when one Supabase table is slow.
-  _syncAdminData().then(() => {
-    if (typeof adminTab !== 'undefined' && adminTab) {
-      try { _renderAdminNav(adminTab); _loadAdminPage(adminTab, true); } catch(_) {}
-    }
-  }).catch(()=>{});
+function _openStaffConsole() {
+  _syncAdminData();
   const role = getStaffRole(CU.username);
   const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
   const roleColor = role === 'superadmin' ? '#ffd93e' : role === 'admin' ? '#f87171' : '#60a5fa';
   const roleSvg = role === 'superadmin' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' : role === 'admin' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
   _adminPreviousView = _currentView;
-  showView('admin');
-  const hdr = document.getElementById('admin-header-bar');
-  if (hdr) hdr.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:32px;height:32px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;">
-          <img src="/FortizedSecurity logo.png" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='<svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'var(--accent)\\' stroke-width=\\'2\\'><path d=\\'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\\'/></svg>'">
-        </div>
-        <div>
-          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:.04em;line-height:1;">STAFF CONSOLE</div>
-          <div style="font-size:9px;color:var(--accent-mid);font-weight:600;letter-spacing:.1em;margin-top:2px;">FORTIZED · INTERNAL</div>
-        </div>
-      </div>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
-        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--green);font-weight:700;"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(62,207,110,.5);animation:adm-badge-pulse 2s infinite;"></div>LIVE</div>
-        <div style="width:1px;height:16px;background:rgba(255,255,255,.06);"></div>
-        <div style="display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:var(--radius-pill);background:${roleColor}0d;border:1px solid ${roleColor}25;">
-          <span style="color:${roleColor};display:flex;">${roleSvg}</span>
-          <span style="font-size:10px;font-weight:800;color:${roleColor};letter-spacing:.04em;">${roleLabel.toUpperCase()}</span>
-        </div>
-        <span style="font-size:10.5px;color:rgba(255,255,255,.25);font-weight:500;">@${escapeHTML(CU.username)}</span>
-        <button onclick="_closeAdminPanel()" class="admin-exit-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>EXIT</button>
-      </div>`;
-  startReportPolling();
-  _setupAdminLiveSync();
-  _renderAdminNav('dashboard');
-  _loadAdminPage('dashboard');
+  adminTab = 'dashboard';
+  const hdr = document.getElementById('sc-header');
+  if (hdr) hdr.innerHTML = '<div style="display:flex;align-items:center;gap:10px;width:100%;"><div class="sc-header-logo"><div class="sc-header-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="sc-header-title">STAFF CONSOLE</div><div class="sc-header-sub">FORTIZED &middot; INTERNAL</div></div></div><div class="sc-header-status"><div class="sc-header-status-dot"></div>LIVE</div><div class="sc-header-role" style="background:'+roleColor+'0d;border:1px solid '+roleColor+'25;"><span style="color:'+roleColor+';display:flex;">'+roleSvg+'</span><span style="color:'+roleColor+';">'+roleLabel.toUpperCase()+'</span></div><span class="sc-header-user">@'+escapeHTML(CU.username)+'</span><button onclick="_closeStaffConsole()" class="sc-header-exit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>EXIT</button></div>';
+  _renderStaffNav('dashboard');
+  _loadStaffPage('dashboard');
+  openModal('modal-staff-console');
 }
 
-function _closeAdminPanel() {
-  document.getElementById('admin-panel-overlay')?.remove();
+function _closeStaffConsole() {
   if (_reportPollInterval) { clearInterval(_reportPollInterval); _reportPollInterval = null; }
   _teardownAdminLiveSync();
-  showView(_adminPreviousView || 'home');
+  closeModal('modal-staff-console');
 }
 
 // ── Admin Live Sync — periodic polling from Supabase ──
@@ -25533,83 +25487,64 @@ function _teardownAdminLiveSync() {
   if (_adminLiveSyncInterval) { clearInterval(_adminLiveSyncInterval); _adminLiveSyncInterval = null; }
 }
 
-function _renderAdminNav(active) {
-  const nav = document.getElementById('adm-nav'); if (!nav) return;
+function _renderStaffNav(active) {
+  const nav = document.getElementById('sc-nav'); if (!nav) return;
   const role = getStaffRole(CU.username);
-  const _admSvg = {
-    dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
-    moderation:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
-    members:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    bastions:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
-    economy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-    broadcasts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2l13 4V7L3 11zm15-1v4l3-1v-2l-3-1z"/></svg>',
-    feedback:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-    system:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-  };
-
-  // 8 top-level tabs in 3 grouped sections. The old "Platform Management"
-  // was a 11-sub-tab dumping ground — split into Bastions / Economy /
-  // Broadcasts / System so each domain stands on its own. The Broadcasts
-  // tab is the single home for everything pushed out to users (banner ads,
-  // system messages, scheduled actions) so the duplication is gone.
-  // "Live Ops" is the new full-screen tactical console (Phase 3 of
-  // the rewrite). It opens via openStaffOps() instead of loading
-  // into adm-content — the tab is intercepted in _loadAdminPage.
-  const operations = [
-    {id:'live_ops',   svg:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>', label:'Live Ops'},
-    {id:'dashboard',  svg:_admSvg.dashboard,  label:'Overview'},
-    {id:'moderation', svg:_admSvg.moderation, label:'Moderation'},
-    {id:'members',    svg:_admSvg.members,    label:'Members'},
+  const navItems = [
+    {section:'Management', items:[
+      {id:'dashboard', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>', label:'Dashboard'},
+      {id:'reports', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>', label:'Reports'},
+      {id:'members', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', label:'Members'},
+      {id:'bastions', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', label:'Bastions'},
+      {id:'bans', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>', label:'Bans'},
+      ...(role!=='moderator' ? [{id:'economy', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>', label:'Economy'}] : []),
+    ]},
+    {section:'Oversight', items:[
+      ...(role!=='moderator' ? [{id:'broadcasts', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11v2l13 4V7L3 11zm15-1v4l3-1v-2l-3-1z"/></svg>', label:'Broadcasts'}] : []),
+      {id:'feedback', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', label:'Feedback'},
+      {id:'audit', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>', label:'Audit Log'},
+      ...(role!=='moderator' ? [{id:'staff', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', label:'Staff Mgmt'}] : []),
+      ...(role!=='moderator' ? [{id:'system', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>', label:'System'}] : []),
+    ]},
   ];
-  const platform = [
-    {id:'bastions',   svg:_admSvg.bastions,   label:'Bastions'},
-    ...(role!=='moderator' ? [{id:'economy',    svg:_admSvg.economy,    label:'Economy'}] : []),
-    ...(role!=='moderator' ? [{id:'broadcasts', svg:_admSvg.broadcasts, label:'Broadcasts'}] : []),
-  ];
-  const support = [
-    {id:'feedback', svg:_admSvg.feedback, label:'Feedback'},
-    ...(role!=='moderator' ? [{id:'system', svg:_admSvg.system, label:'System'}] : []),
-  ];
-
-  const _renderTab = t => `<div id="adm-tab-${t.id}" class="adm-tab${active===t.id?' active':''}" onclick="_loadAdminPage('${t.id}')">${t.svg}<span>${t.label}</span></div>`;
-  let html = '<div class="adm-sec-label">Operations</div>' + operations.map(_renderTab).join('');
-  if (platform.length) html += '<div class="adm-sec-label">Platform</div>' + platform.map(_renderTab).join('');
-  if (support.length)  html += '<div class="adm-sec-label">Support</div>'  + support.map(_renderTab).join('');
+  let html = '';
+  for (const sec of navItems) {
+    html += `<div class="sc-nav-section"><div class="sc-nav-section-label">${sec.section}</div>`;
+    for (const item of sec.items) {
+      html += `<button class="sc-nav-item${active===item.id?' active':''}" onclick="_loadStaffPage('${item.id}')">${item.svg}${item.label}</button>`;
+    }
+    html += '</div>';
+  }
   nav.innerHTML = html;
 }
 
-function renderAdminPanel() { _renderAdminNav('dashboard'); _loadAdminPage('dashboard'); }
-async function loadAdminTab(tab) { _loadAdminPage(tab); }
+function renderStaffPanel() { _renderStaffNav('dashboard'); _loadStaffPage('dashboard'); }
+async function loadStaffTab(tab) { _loadStaffPage(tab); }
 
-async function _loadAdminPage(tab, _isAutoRefresh) {
+async function _loadStaffPage(tab, _isAutoRefresh) {
   if (!_isAutoRefresh && _adminAutoRefresh) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; }
-  // Live Ops opens the new tactical console as a full-screen overlay,
-  // not a panel inside #view-admin. The nav still shows it as the
-  // top entry so it's the first thing staff see.
-  if (tab === 'live_ops') { try { openStaffOps(); } catch (e) { console.warn('[StaffOps] open failed:', e); } return; }
-  _renderAdminNav(tab); adminTab = tab;
-  // Legacy tabs (prefixed with _) render into sub-content if available; top-level tabs use main content
-  const _isLegacySub = tab.startsWith('_');
-  let main = (_isLegacySub && document.getElementById('adm-sub-content')) || document.getElementById('adm-content'); if (!main) return;
-  if (!_isAutoRefresh && !_isLegacySub) main.innerHTML = '<div style="display:flex;justify-content:center;padding:40px;"><div class="pl-spinner" style="width:24px;height:24px;border-width:2.5px;"></div></div>';
-  // Auto-refresh moderation and feedback tabs
-  if (!_isAutoRefresh && (tab === 'moderation' || tab === 'feedback')) {
+  const _origTab = tab;
+  // Map new nav tab names to legacy tab ids for inline rendering
+  const tabMap = {audit:'_audit', staff:'_staff', nsfw_queue:'_nsfw_queue', economy:'_economy', bastions:'_bastions', users:'_users', all_users:'_all_users', support_tickets:'_support_tickets', place_where:'_place_where', onboarding:'_onboarding'};
+  tab = tabMap[tab] || tab;
+  _renderStaffNav(_origTab); adminTab = tab;
+  let main = document.getElementById('sc-main'); if (!main) return;
+  main.innerHTML = '<div style="display:flex;justify-content:center;padding:40px;"><div class="pl-spinner" style="width:24px;height:24px;border-width:2.5px;"></div></div>';
+  // Auto-refresh feedback tab
+  if (!_isAutoRefresh && tab === 'feedback') {
     _adminAutoRefresh = setInterval(() => {
       if (adminTab !== tab) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; return; }
-      _loadAdminPage(tab, true);
+      _loadStaffPage(tab, true);
     }, 30000);
   }
 
   // ── Top-level domain routing (one tab per domain) ──
-  if (tab === 'moderation') { await _loadAdminModeration(main); return; }
-  if (tab === 'members')    { await _loadAdminMembers(main); return; }
-  if (tab === 'bastions')   { await _loadAdminDomain(main, 'bastions'); return; }
-  if (tab === 'economy')    { await _loadAdminDomain(main, 'economy'); return; }
-  if (tab === 'broadcasts') { await _loadAdminDomain(main, 'broadcasts'); return; }
-  if (tab === 'system')     { await _loadAdminDomain(main, 'system'); return; }
-  if (tab === 'feedback')   { await _loadAdminFeedback(main); return; }
-  // Legacy "platform" id (deep links / bookmarks) → System by default
-  if (tab === 'platform')   { await _loadAdminDomain(main, 'system'); return; }
+  if (tab === 'members')   { await _loadAdminMembers(main); return; }
+  if (tab === 'bastions' || tab === '_bastions' || tab === '_economy') { await _loadAdminDomain(main, tab === '_economy' ? 'economy' : 'bastions', tab); return; }
+  if (tab === 'broadcasts'){ await _loadAdminDomain(main, 'broadcasts'); return; }
+  if (tab === 'feedback')  { await _loadAdminFeedback(main); return; }
+  if (tab === 'system')    { await _loadAdminDomain(main, 'system'); return; }
+  if (tab === 'platform')  { await _loadAdminDomain(main, 'system'); return; }
 
   // ── OVERVIEW (dashboard) ──
   if (tab === 'dashboard') {
@@ -25623,9 +25558,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       const usersList = await FortizedSocial.getUsers();
       totalUsers = usersList.length;
       radianceCount = usersList.filter(u => _hasRadiance(u)).length;
-      newestUsers = usersList.filter(u=>u.createdAt||u.joinedAt).sort((a,b)=>new Date(b.createdAt||b.joinedAt)-new Date(a.createdAt||a.joinedAt)).slice(0,5);
+      const sortedByDate = usersList.filter(u=>u.createdAt||u.joinedAt).sort((a,b)=>new Date(b.createdAt||b.joinedAt)-new Date(a.createdAt||a.joinedAt));
+      newestUsers = sortedByDate.slice(0,5);
       topOnyx = [...usersList].sort((a,b)=>(b.onyx||0)-(a.onyx||0)).slice(0,5);
-      // Count by status
       onlineCount = usersList.filter(u => u.status === 'online').length;
       awayCount = usersList.filter(u => u.status === 'away' || u.status === 'idle').length;
       dndCount = usersList.filter(u => u.status === 'dnd').length;
@@ -26751,6 +26686,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
 
   else main.innerHTML = '<div style="padding:32px;text-align:center;color:rgba(255,255,255,.3);">Unknown tab</div>';
 }
+
+// Alias for legacy caller compatibility
+const _loadAdminPage = _loadStaffPage;
 
 // ── Consolidated Admin Tab Loaders ──────────────────────
 // Each renders a sub-nav bar + delegates to legacy tab rendering
@@ -28035,7 +27973,7 @@ function _syncAdminRailButton() {
   // Revoke in-memory admin session if staff access was revoked.
   if (!hasStaffAccess() && _currentView === 'admin') {
     adminAuthed = false;
-    _closeAdminPanel();
+    _closeStaffConsole();
     toast('Your staff access has been revoked.', 'error');
   }
   if (!hasStaffAccess()) adminAuthed = false;
@@ -28260,8 +28198,8 @@ async function adminSearchUser() {
           ${isSuperAdmin()?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')" style="border-color:rgba(255,249,62,.18);background:rgba(255,249,62,.05);color:rgba(255,249,62,.7);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff93e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${u.verified?'Unverify':'Verify'}</button>`:''}
           ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','force_logout')" style="border-color:rgba(248,113,113,.12);background:rgba(248,113,113,.03);color:rgba(248,113,113,.5);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Force Logout</button>`:''}
         `}
-        <button class="hq-quick-btn" onclick="openDMView('${escapeHTML(username)}');_closeAdminPanel();" style="border-color:rgba(96,165,250,.15);background:rgba(96,165,250,.04);color:rgba(96,165,250,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</button>
-        <button class="hq-quick-btn" onclick="viewUserProfile('${escapeHTML(username)}');_closeAdminPanel();" style="border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.02);color:rgba(255,255,255,.4);">View Profile</button>
+        <button class="hq-quick-btn" onclick="openDMView('${escapeHTML(username)}');_closeStaffConsole();" style="border-color:rgba(96,165,250,.15);background:rgba(96,165,250,.04);color:rgba(96,165,250,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</button>
+        <button class="hq-quick-btn" onclick="viewUserProfile('${escapeHTML(username)}');_closeStaffConsole();" style="border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.02);color:rgba(255,255,255,.4);">View Profile</button>
       </div>
 
       <!-- Intel Grid -->

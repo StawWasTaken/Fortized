@@ -834,7 +834,7 @@ const FortizedSocial = (() => {
   async function getDMMessages(user1, user2, limit, offset) {
     const key = await getDMKey(user1, user2);
     const legacyKey = _dmKey(user1, user2);
-    const max = limit || 100;
+    const max = Math.min(limit || 500, 1000);
     const skip = offset || 0;
     // Only cache the initial fetch (no offset); paginated calls are uncached
     const cacheKey = skip === 0 ? 'dm:' + key + ':' + max : null;
@@ -1092,7 +1092,7 @@ const FortizedSocial = (() => {
 
   // ── Bastion Messages ─────────────────────────────────
   async function getBastionChannelMessages(bastionId, channelId, limit, offset) {
-    const _limit = limit || 100;
+    const _limit = Math.min(limit || 500, 1000);
     const _offset = offset || 0;
     if (!_offset) {
       const cacheKey = 'bm:' + bastionId + ':' + channelId;
@@ -1557,13 +1557,13 @@ const FortizedSocial = (() => {
     const pollInterval = setInterval(async () => {
       if (_tabHidden()) return;
       try {
-        // Fetch the last 20 messages. Wider window ensures no messages
+        // Fetch the last 50 messages. Wider window ensures no messages
         // are missed during brief disconnects, even when socket.io hiccups.
         const { data, error } = await sb.from('dms')
           .select('id,from,text,time,timestamp,edited,reactions')
           .eq('dm_key', dmKey)
           .order('timestamp', { ascending: false })
-          .limit(20);
+          .limit(50);
 
         if (error || !data) return;
 
@@ -1628,7 +1628,7 @@ const FortizedSocial = (() => {
           .eq('bastion_id', bastionId)
           .eq('channel_id', channelId)
           .order('timestamp', { ascending: false })
-          .limit(20);
+          .limit(50);
 
         if (error) return; // silently skip on error
 

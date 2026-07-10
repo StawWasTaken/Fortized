@@ -25781,10 +25781,10 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       const typePillCls = type === 'ad' ? 'rep-pill--ad' : type === 'message' ? 'rep-pill--msg' : 'rep-pill--user';
       const typeLabel = type === 'ad' ? 'Ad Report' : type === 'message' ? 'Message Report' : 'User Report';
       const typeIcon = type === 'ad'
-        ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
+        ? '<i class="fas fa-rectangle-ad" style="font-size:10px;"></i>'
         : type === 'message'
-        ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
-        : '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+        ? '<i class="fas fa-comment" style="font-size:10px;"></i>'
+        : '<i class="fas fa-user" style="font-size:10px;"></i>';
 
       // Content block varies by type
       let contentBlock = '';
@@ -25920,12 +25920,12 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           </div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button onclick="loadAllReportsFromServer()" class="admin-sync-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Sync Server</button>
+          <button onclick="loadAllReportsFromServer()" class="admin-sync-btn"><i class="fas fa-rotate" style="vertical-align:middle;margin-right:4px;"></i>Sync Server</button>
         </div>
       </div>
-      ${reps.length===0?'<div style="text-align:center;padding:80px 20px;color:rgba(255,255,255,.3);"><div style="margin-bottom:12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(62,207,110,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-size:14px;">No reports — all clear!</div></div>':
+      ${reps.length===0?'<div style="text-align:center;padding:80px 20px;color:rgba(255,255,255,.3);"><div style="margin-bottom:12px;"><i class="fas fa-circle-check" style="font-size:40px;color:rgba(62,207,110,.5);"></i></div><div style="font-size:14px;">No reports — all clear!</div></div>':
       `${pendingReps.length>0?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 16px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.08);border-radius:10px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <i class="fas fa-triangle-exclamation" style="color:#f87171;font-size:16px;"></i>
         <span style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--red);">${pendingReps.length} report${pendingReps.length>1?'s':''} pending review</span>
       </div>`:''}
       <div style="display:flex;flex-direction:column;gap:14px;">
@@ -25974,10 +25974,10 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       </div>
       <div style="display:flex;gap:8px;margin-bottom:20px;">
         <div style="position:relative;flex:1;max-width:400px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(248,113,113,.3)" stroke-width="2" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(248,113,113,.3);font-size:14px;"></i>
           <input id="admin-user-search" class="settings-input" placeholder="Enter target username…" style="padding-left:38px;background:rgba(248,113,113,.03);border:1.5px solid rgba(248,113,113,.1);font-size:13px;" onkeydown="if(event.key==='Enter')adminSearchUser()">
         </div>
-        <button class="hq-quick-btn" onclick="adminSearchUser()" style="padding:9px 20px;font-size:12px;font-weight:700;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Scan</button>
+        <button class="hq-quick-btn" onclick="adminSearchUser()" style="padding:9px 20px;font-size:12px;font-weight:700;"><i class="fas fa-search" style="font-size:13px;"></i> Scan</button>
       </div>
       <div id="admin-user-result"></div>
     </div>`;
@@ -26031,13 +26031,13 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       <div style="font-family:var(--font-display);font-size:21px;font-weight:800;margin-bottom:20px;">Economy</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:800px;margin-bottom:20px;">
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-          <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> Give Onyx</div>
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><i class="fas fa-coins" style="font-size:14px;"></i> Give Onyx</div>
           <input class="settings-input" id="eco-username" placeholder="Username" style="margin-bottom:9px;">
           <input class="settings-input" id="eco-amount" type="number" placeholder="Amount" style="margin-bottom:11px;">
           <button onclick="adminGiveOnyx()" style="width:100%;padding:8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:9px;color:var(--accent);cursor:pointer;font-weight:700;">Give Onyx</button>
         </div>
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-          <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Grant Radiance</div>
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><i class="fas fa-star" style="color:var(--accent);font-size:14px;"></i> Grant Radiance</div>
           <input class="settings-input" id="radiance-username" placeholder="Username" style="margin-bottom:9px;">
           <select class="settings-input" id="radiance-days" style="margin-bottom:11px;"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">365 days</option></select>
           <button onclick="adminGrantRadiance()" style="width:100%;padding:8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:9px;color:var(--accent);cursor:pointer;font-weight:700;margin-bottom:8px;">Grant Radiance</button>
@@ -26112,7 +26112,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">${queue.length} items awaiting review</div>
         </div>
       </div>
-      ${queue.length===0?'<div style="text-align:center;padding:60px;color:rgba(255,255,255,.3);"><div style="margin-bottom:12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(62,207,110,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>Queue is clear — no flagged content</div>':
+      ${queue.length===0?'<div style="text-align:center;padding:60px;color:rgba(255,255,255,.3);"><div style="margin-bottom:12px;"><i class="fas fa-circle-check" style="font-size:40px;color:rgba(62,207,110,.5);"></i></div>Queue is clear — no flagged content</div>':
       `<div style="display:flex;flex-direction:column;gap:10px;">
         ${queue.map((item,i)=>{
           const typeIcon = item.type==='video'?'🎬':item.type==='gif'?'🎞️':'🖼️';
@@ -26142,7 +26142,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             </div>
             <!-- Media preview (fully visible) -->
             ${mediaSrc?`<div style="margin-bottom:14px;">
-              <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.49"/></svg> Flagged Content</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px;"><i class="fas fa-paperclip" style="font-size:12px;"></i> Flagged Content</div>
               <div style="display:flex;flex-wrap:wrap;gap:8px;">
                 ${(()=>{ if(item.type==='video'){ const _vp='nsfwvid-'+Math.random().toString(36).slice(2); return `<div style="display:inline-block;max-width:320px;"><div class="ftz-vp" id="${_vp}-wrap" style="border-radius:10px;"><video id="${_vp}" src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;display:block;cursor:pointer;" preload="metadata" crossorigin="anonymous" onclick="ftzVideoToggle('${_vp}')" ontimeupdate="ftzVideoTick('${_vp}')" onloadedmetadata="ftzVideoMeta('${_vp}')" onended="ftzVideoEnd('${_vp}')" onerror="ftzVideoError('${_vp}')"></video><div class="ftz-vp-overlay" id="${_vp}-overlay" onclick="ftzVideoToggle('${_vp}')"><div class="ftz-vp-overlay-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div></div></div>`; } return `<img src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openLightboxFromImg(this)" loading="lazy" onerror="console.warn('[Image] Load error:',this.src);this.style.display='none'">`; })()}
               </div>
@@ -26150,8 +26150,8 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             <!-- AI Feedback -->
             <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.04);">
               <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.25);align-self:center;margin-right:4px;">AI Verdict:</span>
-              <button onclick="nsfwAIFeedback(${i},true)" class="ai-fb-correct"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> AI was Right (NSFW)</button>
-              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> AI was Wrong (NOT NSFW)</button>
+              <button onclick="nsfwAIFeedback(${i},true)" class="ai-fb-correct"><i class="fas fa-check" style="font-size:12px;"></i> AI was Right (NSFW)</button>
+              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;"><i class="fas fa-xmark" style="font-size:12px;"></i> AI was Wrong (NOT NSFW)</button>
             </div>
             <!-- Actions (same style as reports) -->
             ${(()=>{
@@ -26193,7 +26193,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <!-- Column 1: Controls & Moderation -->
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
-            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Platform Controls</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><i class="fas fa-sliders" style="font-size:12px;"></i> Platform Controls</div>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.maintenanceMode?'checked':''} onchange="_updateGlobalSetting('maintenanceMode',this.checked)"><span style="font-size:12px;${gs.maintenanceMode?'color:var(--red);font-weight:600;':''}">Maintenance Mode</span></label>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.disableRegistration?'checked':''} onchange="_updateGlobalSetting('disableRegistration',this.checked)"><span style="font-size:12px;">Disable Registrations</span></label>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.enableNSFWScan!==false?'checked':''} onchange="_updateGlobalSetting('enableNSFWScan',this.checked)"><span style="font-size:12px;">NSFW AI Scanner</span></label>
@@ -26201,7 +26201,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.requireEmailVerification?'checked':''} onchange="_updateGlobalSetting('requireEmailVerification',this.checked)"><span style="font-size:12px;">Require Email for Signup</span></label>
           </div>
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
-            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Moderation</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><i class="fas fa-shield" style="font-size:12px;"></i> Moderation</div>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.autoModEnabled?'checked':''} onchange="_updateGlobalSetting('autoModEnabled',this.checked)"><span style="font-size:12px;">Auto-Mod (profanity filter)</span></label>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.linkPreviewEnabled!==false?'checked':''} onchange="_updateGlobalSetting('linkPreviewEnabled',this.checked)"><span style="font-size:12px;">Allow Link Previews</span></label>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.dmRequireMutualFriends?'checked':''} onchange="_updateGlobalSetting('dmRequireMutualFriends',this.checked)"><span style="font-size:12px;">DMs Require Mutual Friends</span></label>
@@ -26211,17 +26211,17 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <!-- Column 2: Announcement & Status -->
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,249,62,.1);border-radius:10px;padding:12px 14px;">
-            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent,#fff93e);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 005 2.18"/><path d="M14 21a2 2 0 01-4 0"/><path d="M13.73 21a2 2 0 01-3.46 0"/><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg> System Announcement</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent,#fff93e);display:flex;align-items:center;gap:6px;"><i class="fas fa-bell" style="font-size:12px;"></i> System Announcement</div>
             <div style="font-size:10px;color:rgba(255,255,255,.3);margin-bottom:8px;">Broadcasts a banner to all users in real-time.</div>
             <textarea class="settings-input" id="gs-announcement" placeholder="Type announcement…" style="width:100%;font-size:12px;padding:8px;min-height:60px;resize:vertical;margin-bottom:8px;">${escapeHTML(gs.announcement||'')}</textarea>
             <div style="display:flex;gap:6px;">
-              <button onclick="_broadcastAnnouncement()" style="padding:6px 14px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:8px;color:var(--accent);cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Broadcast</button>
+              <button onclick="_broadcastAnnouncement()" style="padding:6px 14px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:8px;color:var(--accent);cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;gap:6px;"><i class="fas fa-paper-plane" style="font-size:12px;"></i> Broadcast</button>
               <button onclick="_updateGlobalSetting('announcement','');document.getElementById('gs-announcement').value='';toast('Cleared','success');" style="padding:6px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.5);cursor:pointer;font-size:12px;">Clear</button>
             </div>
             ${gs.announcement?'<div style="margin-top:8px;padding:8px 12px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.08);border-radius:8px;font-size:11px;color:rgba(255,249,62,.6);"><strong>Active:</strong> '+escapeHTML(gs.announcement)+'</div>':''}
           </div>
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
-            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Platform Status</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><i class="fas fa-desktop" style="font-size:12px;"></i> Platform Status</div>
             <div style="margin-bottom:6px;"><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Status Page Message</div><input class="settings-input" type="text" value="${escapeHTML(gs.statusMessage||'')}" placeholder="All systems operational" style="width:100%;font-size:12px;padding:6px 8px;" onchange="_updateGlobalSetting('statusMessage',this.value)"></div>
             <div style="margin-bottom:6px;"><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Platform Version</div><input class="settings-input" type="text" value="${escapeHTML(gs.platformVersion||'1.0.0')}" placeholder="1.0.0" style="width:100%;font-size:12px;padding:6px 8px;" onchange="_updateGlobalSetting('platformVersion',this.value)"></div>
             <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">NSFW Hashes Banned</div><div style="font-size:11px;color:rgba(255,255,255,.3);padding:5px 0;">${_nsfwBannedHashes.length} hashes in blocklist</div></div>
@@ -26230,19 +26230,19 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <!-- Column 3: Deployment -->
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 14px;">
-            <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:var(--red);display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Deployment</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:var(--red);display:flex;align-items:center;gap:6px;"><i class="fas fa-cloud-upload-alt" style="font-size:14px;color:#f87171;"></i> Deployment</div>
             <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Push updates and manage active sessions.</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Migrate to Next Update</button>
-              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Reset All Sessions</button>
+              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-arrow-right-arrow-left" style="font-size:14px;"></i> Migrate to Next Update</button>
+              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-right-from-bracket" style="font-size:14px;"></i> Reset All Sessions</button>
             </div>
           </div>
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
-            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Quick Actions</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><i class="fas fa-bolt" style="font-size:12px;"></i> Quick Actions</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <button onclick="_purgeDeletedMessages()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Purge Deleted Messages</button>
-              <button onclick="_syncAllToServer()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Sync Local to Server</button>
-              <button onclick="_exportAuditLog()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Audit Log</button>
+              <button onclick="_purgeDeletedMessages()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-trash-can" style="font-size:14px;"></i> Purge Deleted Messages</button>
+              <button onclick="_syncAllToServer()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-rotate" style="font-size:14px;"></i> Sync Local to Server</button>
+              <button onclick="_exportAuditLog()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-download" style="font-size:14px;"></i> Export Audit Log</button>
             </div>
           </div>
         </div>
@@ -26265,26 +26265,26 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <!-- Super Admins -->
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,215,62,.15);border-radius:12px;padding:18px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffd93e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-5 4-5-4-5 4-3-4z"/><path d="M5 16h14v3H5z"/></svg>
+            <i class="fas fa-crown" style="color:#ffd93e;font-size:16px;"></i>
             <span style="font-weight:700;color:#ffd93e;">Super Admins</span>
             <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${_humanSupers.length}</span>
           </div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Maximum power. Access to private data, can manage all settings, view precise user ages.</div>
           ${_humanSupers.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffd93e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-5 4-5-4-5 4-3-4z"/><path d="M5 16h14v3H5z"/></svg><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
+            <i class="fas fa-crown" style="color:#ffd93e;font-size:14px;"></i><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
             <span style="font-size:10px;color:#ffd93e;font-weight:700;">PERMANENT</span>
           </div>`).join('')}
         </div>
         <!-- Admins -->
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.15);border-radius:12px;padding:18px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <i class="fas fa-shield" style="color:#f87171;font-size:16px;"></i>
             <span style="font-weight:700;color:var(--red);">Admins</span>
             <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${admins.length}</span>
           </div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Limited data access. Can moderate, manage economy, view age tiers (not precise ages).</div>
           ${admins.map((a,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
+            <i class="fas fa-shield" style="color:#f87171;font-size:14px;"></i><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
             <button onclick="removeStaff('admin',${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
           </div>`).join('')||'<div style="color:rgba(255,255,255,.25);font-size:12px;padding:8px 0;">No admins yet</div>'}
           <div style="display:flex;gap:7px;margin-top:10px;">
@@ -26295,13 +26295,13 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <!-- Moderators -->
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(96,165,250,.15);border-radius:12px;padding:18px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+            <i class="fas fa-wrench" style="color:#60a5fa;font-size:16px;"></i>
             <span style="font-weight:700;color:var(--blue);">Moderators</span>
             <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${moderators.length}</span>
           </div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Very limited power. Only moderation tools: NSFW detection, reports, restrained user lookup.</div>
           ${moderators.map((m,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg><span style="flex:1;font-weight:600;">${escapeHTML(m)}</span>
+            <i class="fas fa-wrench" style="color:#60a5fa;font-size:14px;"></i><span style="flex:1;font-weight:600;">${escapeHTML(m)}</span>
             <button onclick="removeStaff('moderator',${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
           </div>`).join('')||'<div style="color:rgba(255,255,255,.25);font-size:12px;padding:8px 0;">No moderators yet</div>'}
           <div style="display:flex;gap:7px;margin-top:10px;">
@@ -26315,7 +26315,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
            pollute the human staff list. -->
       <div style="background:var(--panel,#1b1e25);border:1px solid rgba(167,139,250,.15);border-radius:12px;padding:18px;margin-top:16px;max-width:900px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+          <i class="fas fa-robot" style="color:#a78bfa;font-size:16px;"></i>
           <span style="font-weight:700;color:#a78bfa;">Automation</span>
           <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${_automationAccounts.length}</span>
         </div>
@@ -26327,7 +26327,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
                        : a === JOYSTER_ACCOUNT ? { label:'Joyster — fun & quests', tone:'rgba(96,165,250,.2)' }
                        : { label:'Bot', tone:'rgba(255,255,255,.1)' };
             return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:linear-gradient(${meta.tone},${meta.tone}),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg>
+              <i class="fas fa-robot" style="color:#a78bfa;font-size:14px;"></i>
               <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
                 <span style="font-weight:700;color:#fff;font-size:13px;">@${escapeHTML(a)}</span>
                 <span style="font-size:10px;color:rgba(255,255,255,.45);">${meta.label}</span>
@@ -26471,30 +26471,21 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg);margin-top:var(--space-lg);">
         <div class="hq-panel">
           <div class="hq-panel-head">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <i class="fas fa-bell" style="color:var(--accent);font-size:14px;"></i>
             <h3>System Announcement</h3>
           </div>
           <div style="padding:var(--space-lg);">
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">This banner is shown to ALL users at the top of the app.</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Icon</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-sm);">
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/498076/health.svg" width="22" height="22" style="filter:brightness(0)invert(1);"></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/527693/download-minimalistic.svg" width="22" height="22" style="filter:brightness(0)invert(1);"></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/524897/rocket.svg" width="22" height="22" style="filter:brightness(0)invert(1);"></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/497913/danger.svg" width="22" height="22" style="filter:brightness(0)invert(1);"></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/528914/confetti-minimalistic.svg" width="22" height="22" style="filter:brightness(0)invert(1);"></button>
-              <button class="hq-quick-btn" style="padding:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;" onclick="document.getElementById('_broadcast-icon').value=this.querySelector('img').src"><img src="https://www.svgrepo.com/show/455734/chemical-lab.svg" width="22" height="22" style="filter:brightness(0)invert(1);"></button>
-            </div>
             <input type="hidden" id="_broadcast-icon" value="${escapeHTML(announcementIcon)}">            <textarea id="_broadcast-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(currentMsg)}</textarea>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
-              <button class="hq-quick-btn" onclick="_broadcastAnnouncement()" style="background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);font-weight:700;">🔴 Broadcast</button>
+              <button class="hq-quick-btn" onclick="_broadcastAnnouncement()" style="background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);font-weight:700;"><i class="fas fa-paper-plane" style="font-size:12px;"></i> Broadcast</button>
               <button class="hq-quick-btn" onclick="_clearAnnouncement()">Clear</button>
             </div>
           </div>
         </div>
         <div class="hq-panel">
           <div class="hq-panel-head">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <i class="fas fa-clock" style="color:#3ecf6e;font-size:14px;"></i>
             <h3>Platform Status</h3>
             ${statusMsg ? '<div style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:var(--green);font-weight:600;"><div style="width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px #3ecf6e88;"></div>ACTIVE</div>' : ''}
           </div>
@@ -26512,7 +26503,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       </div>
       <div class="hq-panel" style="margin-top:var(--space-lg);">
         <div class="hq-panel-head">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <i class="fas fa-newspaper" style="color:#60a5fa;font-size:14px;"></i>
           <h3>What's New Announcements</h3>
         </div>
         <div style="padding:var(--space-lg);">
@@ -26524,15 +26515,14 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <div class="hq-panel-head"><h3>Quick Messages</h3></div>
         <div style="padding:var(--space-lg);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);">
           ${[
-            {t:'Maintenance',m:'Fortized will undergo scheduled maintenance shortly. Please save your work and prepare for a brief interruption.',i:'https://www.svgrepo.com/show/498076/health.svg'},
-            {t:'Update',m:'A new update is available! Please refresh your page to enjoy latest improvements.',i:'https://www.svgrepo.com/show/527693/download-minimalistic.svg'},
-            {t:'Welcome',m:'Welcome to the community! Check out the Forum or blog for updates.',i:'https://www.svgrepo.com/show/524897/rocket.svg'},
-            {t:'Emergency',m:'We are aware of issues and working on a fix. Thank you for your patience!',i:'https://www.svgrepo.com/show/497913/danger.svg'},
-            {t:'Celebration',m:'Thank you for being part of Fortized! We are so grateful to have you!',i:'https://www.svgrepo.com/show/528914/confetti-minimalistic.svg'},
-            {t:'Experimental',m:'We are testing something new! Share feedback in Forum - it helps shape Fortized!',i:'https://www.svgrepo.com/show/455734/chemical-lab.svg'},
-          ].map((q,i)=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" data-msg="${q.m}" data-icon="${q.i}" onclick="_setQuickMessage(this.dataset.msg, this.dataset.icon)">
-            <span style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:12px;margin-left:4px;"><img src="${q.i}" style="width:22px;height:22px;filter:brightness(0)invert(1);"><span>${q.t}</span></span>
-            <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,50)}…</span>
+            {t:'Maintenance',i:'fas fa-wrench'},
+            {t:'Update',i:'fas fa-download'},
+            {t:'Welcome',i:'fas fa-rocket'},
+            {t:'Emergency',i:'fas fa-triangle-exclamation'},
+            {t:'Celebration',i:'fas fa-glass-cheers'},
+            {t:'Experimental',i:'fas fa-flask'},
+          ].map((q,i)=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="_setQuickMessage('...','...')">
+            <span style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:12px;margin-left:4px;"><i class="${q.i}" style="font-size:22px;"></i><span>${q.t}</span></span>
           </button>`).join('')}
         </div>
       </div>
@@ -26598,16 +26588,16 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <div class="hq-panel">
           <div class="hq-panel-head"><h3>Export Data</h3></div>
           <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('audit')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Audit Log</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('reports')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Reports</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('bans')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Ban List</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('users')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export User Database</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('audit')"><i class="fas fa-download" style="font-size:13px;"></i> Export Audit Log</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('reports')"><i class="fas fa-download" style="font-size:13px;"></i> Export Reports</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('bans')"><i class="fas fa-download" style="font-size:13px;"></i> Export Ban List</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('users')"><i class="fas fa-download" style="font-size:13px;"></i> Export User Database</button>
           </div>
         </div>
         <div class="hq-panel">
           <div class="hq-panel-head"><h3>Deployment Actions</h3></div>
           <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_syncAdminData().then(()=>{toast('Full sync complete','success')})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync Data</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_syncAdminData().then(()=>{toast('Full sync complete','success')})"><i class="fas fa-rotate" style="font-size:13px;"></i> Sync Data</button>
             <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--yellow);border-color:rgba(245,158,11,.2);" onclick="showCustomConfirm('Force refresh all connected users?',()=>_forceRefreshAllUsers())">Force Refresh All Users</button>
             <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(248,113,113,.2);" onclick="showCustomConfirm('Reset ALL user sessions? Users will be logged out.',()=>_resetAllSessions())">Reset All Sessions</button>
             <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="showCustomConfirm('Purge soft-deleted messages from database?',()=>_purgeDeletedMessages())">Purge Deleted Messages</button>
@@ -26938,11 +26928,11 @@ function _renderAdminAdRow(m, totalWeight) {
       </div>
       <div class="adm-ads-actions">
         <button class="adm-ads-btn adm-ads-btn--boost" onclick="_adminAdSetBoost('${escapeHTML(adId)}')" title="Set priority boost">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          <i class="fas fa-arrow-trend-up" style="font-size:13px;"></i>
           Boost
         </button>
         <button class="adm-ads-btn adm-ads-btn--down" onclick="_adminAdTakedown('${escapeHTML(adId)}')" title="Take down this ad">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          <i class="fas fa-trash-can" style="font-size:13px;"></i>
           Take down
         </button>
       </div>

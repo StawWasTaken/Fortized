@@ -462,7 +462,7 @@ function _stashCurrentActiveMsgs() {
 // paint from the cache instantly, skip the skeleton, and only diff the
 // background refresh in. Bounded to CHAT_CACHE_MAX msgs per chat to keep
 // memory sane on long-running sessions.
-const CHAT_CACHE_MAX = 400;
+const CHAT_CACHE_MAX = 500;
 const _ftzChatCache = new Map();
 function _chatKey(type, id1, id2) {
   if (type === 'dm') return 'dm:' + String(id1||'').toLowerCase();
@@ -553,7 +553,7 @@ function _ensureLoadMoreBar(container, context, chatKey) {
   const bar = document.createElement('div');
   bar.className = 'load-more-bar';
   bar.dataset.context = context;
-  bar.dataset.offset = String(Math.max(rowCount, 50));
+  bar.dataset.offset = String(Math.max(rowCount, 100));
   if (chatKey) bar.dataset.chatKey = chatKey;
   bar.innerHTML = _renderSkelMessages(6);
   // Click fallback for the rare case where IntersectionObserver misses
@@ -602,7 +602,7 @@ const _FTZ_CHAT_DB_NAME = 'ftz-chat';
 const _FTZ_CHAT_DB_VERSION = 1;
 const _FTZ_CHAT_STORE = 'chats';
 const _FTZ_CHAT_FLUSH_MS = 800;   // debounce IDB writes
-const _FTZ_CHAT_MAX_PERSIST = 200; // last-N msgs persisted per chat (cap size)
+const _FTZ_CHAT_MAX_PERSIST = 400; // last-N msgs persisted per chat (cap size)
 let _ftzChatDBPromise = null;
 const _ftzChatDirtyKeys = new Set();
 let _ftzChatFlushTimer = null;
@@ -7463,10 +7463,7 @@ async function loadDMMessages(username) {
     _paintInitialChatSkeleton(msgsEl);
   }
   try {
-    // Discord-style initial fetch: only the last 20 visible messages — the
-    // ~one-screen Discord paints first. Older messages are lazy-loaded on
-    // scroll-up via _attachLazyLoadOlder().
-    const msgs = await FortizedSocial.getDMMessages(CU.username, username, 50);
+    const msgs = await FortizedSocial.getDMMessages(CU.username, username, 100);
     if (surfaceRevived || hasCache) {
       // Cache-hit path OR revived surface: only patch in messages that
       // arrived while the chat was closed. No full re-render, no flicker.
@@ -9360,8 +9357,7 @@ async function loadChannelMessages(idx) {
     _paintInitialChatSkeleton(msgsEl);
   }
   try {
-    // Discord-style initial fetch: only the last 20 visible messages.
-    const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,50);
+    const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name,100);
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'ch');
       _ensureLoadMoreBar(msgsEl, 'ch', cacheKey);
@@ -10098,7 +10094,7 @@ async function _resyncActiveChat() {
   let msgs = [], containerId = null, ctx = null;
   try {
     if (curDM) {
-      msgs = await FortizedSocial.getDMMessages(CU.username, curDM, 30);
+      msgs = await FortizedSocial.getDMMessages(CU.username, curDM, 100);
       containerId = 'dm-msgs'; ctx = 'dm';
     } else if (curGC) {
       // GC uses Firebase RTDB, not getter — let the live listener handle it.
@@ -10107,7 +10103,7 @@ async function _resyncActiveChat() {
       const b = CU?.bastions?.[curBastion];
       const ch = b?.channels?.[curChannel];
       if (!b || !ch) return;
-      msgs = await FortizedSocial.getBastionChannelMessages(b.globalId||b.name, ch.name, 30);
+      msgs = await FortizedSocial.getBastionChannelMessages(b.globalId||b.name, ch.name, 100);
       containerId = 'ch-msgs-' + curChannel; ctx = 'ch';
     } else {
       return;
@@ -10218,9 +10214,9 @@ async function _loadOlderMessages(barOrBtn) {
     let older = [];
     if (context === 'ch' && curBastion !== null && curChannel !== null) {
       const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
-      if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId || b.name, ch.name, 50, offset);
+      if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId || b.name, ch.name, 100, offset);
     } else if (context === 'dm' && curDM) {
-      older = await FortizedSocial.getDMMessages(CU.username, curDM, 50, offset);
+      older = await FortizedSocial.getDMMessages(CU.username, curDM, 100, offset);
     }
     if (older.length) {
       const container = bar.parentElement;
@@ -10268,7 +10264,7 @@ async function _loadOlderMessages(barOrBtn) {
       // the bar so the IntersectionObserver stops firing, and remember
       // the exhaustion so cache-hit revives don't re-add a bar and re-fire
       // the fruitless fetch.
-      if (older.length < 50) {
+      if (older.length < 100) {
         _markChatExhausted(context, bar.dataset.chatKey);
         _detachOlderObserver(container);
         bar.remove();

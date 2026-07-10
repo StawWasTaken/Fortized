@@ -1557,15 +1557,13 @@ const FortizedSocial = (() => {
     const pollInterval = setInterval(async () => {
       if (_tabHidden()) return;
       try {
-        // Fetch the last 10 messages (was 3). A 3-message window made it
-        // possible to lose messages during a brief disconnect when more
-        // than 3 arrived in the gap — Discord polls a wider window for
-        // exactly this resilience reason.
+        // Fetch the last 20 messages. Wider window ensures no messages
+        // are missed during brief disconnects, even when socket.io hiccups.
         const { data, error } = await sb.from('dms')
           .select('id,from,text,time,timestamp,edited,reactions')
           .eq('dm_key', dmKey)
           .order('timestamp', { ascending: false })
-          .limit(10);
+          .limit(20);
 
         if (error || !data) return;
 
@@ -1593,7 +1591,7 @@ const FortizedSocial = (() => {
         _lastPollIds.set('dm:'+dmKey, currentIds);
         if (data.length > 0) _lastDmTimestamp.set(dmKey, new Date(data[data.length-1].timestamp).getTime());
       } catch(e) { /* silently skip */ }
-    }, 4000); // Poll every 4s (reduced from 1.5s to cut Supabase egress; socket.io handles live delivery)
+    }, 2000); // Poll every 2s for quicker real-time feel
 
     _dmPollingIntervals.set(dmKey, pollInterval);
   }
@@ -1630,7 +1628,7 @@ const FortizedSocial = (() => {
           .eq('bastion_id', bastionId)
           .eq('channel_id', channelId)
           .order('timestamp', { ascending: false })
-          .limit(10);
+          .limit(20);
 
         if (error) return; // silently skip on error
 
@@ -1663,7 +1661,7 @@ const FortizedSocial = (() => {
           if (data.length > 0) _lastChannelTimestamp.set(channelKey, new Date(data[data.length-1].timestamp).getTime());
         }
       } catch (err) { /* silently skip */ }
-    }, 4000); // Poll every 4s (reduced from 1.5s to cut Supabase egress; socket.io handles live delivery)
+    }, 2000); // Poll every 2s for quicker real-time feel
 
     _channelPollingIntervals.set(channelKey, pollInterval);
   }

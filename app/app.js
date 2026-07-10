@@ -25909,89 +25909,98 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       if (aPend !== bPend) return aPend - bPend;
       return new Date(b.createdAt||0) - new Date(a.createdAt||0);
     });
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
         <div>
-          <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Reports</div>
-          <div style="display:flex;gap:12px;margin-top:6px;">
-            <span style="font-size:12px;padding:3px 10px;border-radius:var(--radius-pill);background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);">${reps.length} total</span>
-            <span style="font-size:12px;padding:3px 10px;border-radius:var(--radius-pill);background:${pendingReps.length>0?'rgba(248,113,113,.1)':'rgba(62,207,110,.1)'};color:${pendingReps.length>0?'#f87171':'#3ecf6e'};font-weight:600;">${pendingReps.length} pending</span>
-            <span style="font-size:12px;padding:3px 10px;border-radius:var(--radius-pill);background:rgba(62,207,110,.06);color:rgba(62,207,110,.6);">${resolvedReps.length} resolved</span>
+          <div class="sc-head-title"><i class="fas fa-flag" style="color:#f87171;"></i> Reports</div>
+          <div class="sc-head-meta">
+            <span class="sc-badge-sm" style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);">${reps.length} total</span>
+            <span class="sc-badge-sm" style="background:${pendingReps.length>0?'rgba(248,113,113,.1)':'rgba(62,207,110,.1)'};color:${pendingReps.length>0?'#f87171':'#3ecf6e'};font-weight:600;">${pendingReps.length} pending</span>
+            <span class="sc-badge-sm" style="background:rgba(62,207,110,.06);color:rgba(62,207,110,.6);">${resolvedReps.length} resolved</span>
           </div>
         </div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="loadAllReportsFromServer()" class="admin-sync-btn"><i class="fas fa-rotate" style="vertical-align:middle;margin-right:4px;"></i>Sync Server</button>
+        <div class="sc-head-actions">
+          <button onclick="loadAllReportsFromServer()" class="sc-btn sc-btn-ghost"><i class="fas fa-rotate"></i> Sync Server</button>
         </div>
       </div>
-      ${reps.length===0?'<div style="text-align:center;padding:80px 20px;color:rgba(255,255,255,.3);"><div style="margin-bottom:12px;"><i class="fas fa-circle-check" style="font-size:40px;color:rgba(62,207,110,.5);"></i></div><div style="font-size:14px;">No reports — all clear!</div></div>':
-      `${pendingReps.length>0?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 16px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.08);border-radius:10px;">
+      ${reps.length===0?'<div class="sc-empty"><i class="fas fa-circle-check" style="font-size:32px;color:rgba(62,207,110,.4);margin-bottom:8px;display:block;"></i>No reports — all clear!</div>':
+      `${pendingReps.length>0?`<div class="sc-row" style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.08);border-radius:10px;margin-bottom:14px;cursor:default;">
         <i class="fas fa-triangle-exclamation" style="color:#f87171;font-size:16px;"></i>
         <span style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--red);">${pendingReps.length} report${pendingReps.length>1?'s':''} pending review</span>
       </div>`:''}
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        ${sortedReps.map((r)=>{
-          const origIdx = reps.indexOf(r);
-          return _renderReportCard(r, origIdx);
-        }).join('')}
+      <div class="sc-card">
+        <div class="sc-card-body">
+          ${sortedReps.map((r)=>{
+            const origIdx = reps.indexOf(r);
+            return _renderReportCard(r, origIdx);
+          }).join('')}
+        </div>
       </div>`}
     </div>`;
   }
   else if (tab === '_bans') {
     const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-        <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Bans (${bans.length})</div>
-        <button onclick="showCustomInput('Ban User','Enter username to ban:',(name)=>{if(!name)return;showCustomInput('Ban Reason','Enter reason:',(reason)=>{if(!reason)return;const b=JSON.parse(localStorage.getItem('ftz_bans')||'[]');const obj={username:name.trim(),reason,bannedBy:CU.username,bannedAt:new Date().toISOString()};b.push(obj);localStorage.setItem('ftz_bans',JSON.stringify(b));_saveBanToFirebase(obj);logAudit('ban',name.trim(),reason);toast(name.trim()+' banned','success');_loadAdminPage('bans');})})" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;">+ Ban User</button>
-      </div>
-      ${bans.length?`<div style="display:flex;flex-direction:column;gap:8px;">${bans.map((b,i)=>`<div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
-        <div style="flex:1;">
-          <div style="font-weight:600;">${escapeHTML(b.username)}</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.4);">Reason: ${escapeHTML(b.reason||'–')}</div>
-          <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Banned by ${escapeHTML(b.bannedBy||'admin')} ${b.bannedAt?' · '+new Date(b.bannedAt).toLocaleDateString():''}</div>
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
+        <div>
+          <div class="sc-head-title"><i class="fas fa-gavel" style="color:#f87171;"></i> Bans <span class="sc-badge-sm" style="background:rgba(248,113,113,.1);color:#f87171;">${bans.length}</span></div>
         </div>
-        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.username)}';adminSearchUser();}},150);" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:12px;cursor:pointer;">Inspect</button>
-        <button onclick="unbanUser('${escapeHTML(b.username)}')" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:var(--green);font-size:12px;cursor:pointer;">Unban</button>
-      </div>`).join('')}</div>`:'<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">No bans</div></div>'}
+        <div class="sc-head-actions">
+          <button class="sc-btn sc-btn-danger" onclick="showCustomInput('Ban User','Enter username to ban:',(name)=>{if(!name)return;showCustomInput('Ban Reason','Enter reason:',(reason)=>{if(!reason)return;const b=JSON.parse(localStorage.getItem('ftz_bans')||'[]');const obj={username:name.trim(),reason,bannedBy:CU.username,bannedAt:new Date().toISOString()};b.push(obj);localStorage.setItem('ftz_bans',JSON.stringify(b));_saveBanToFirebase(obj);logAudit('ban',name.trim(),reason);toast(name.trim()+' banned','success');_loadAdminPage('bans');})})"><i class="fas fa-plus"></i> Ban User</button>
+        </div>
+      </div>
+      ${bans.length?`<div class="sc-card"><div class="sc-card-body">${bans.map((b,i)=>`<div class="sc-row" style="border:1px solid rgba(248,113,113,.08);border-radius:8px;margin:4px 8px;padding:10px 14px;">
+        <div class="sc-row-c">
+          <div class="sc-row-t">${escapeHTML(b.username)}</div>
+          <div class="sc-row-s">Reason: ${escapeHTML(b.reason||'–')} · Banned by ${escapeHTML(b.bannedBy||'admin')}${b.bannedAt?' · '+new Date(b.bannedAt).toLocaleDateString():''}</div>
+        </div>
+        <button class="sc-btn sc-btn-ghost" style="color:#60a5fa;" onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.username)}';adminSearchUser();}},150);"><i class="fas fa-search"></i> Inspect</button>
+        <button class="sc-btn sc-btn-ghost" style="color:#3ecf6e;" onclick="unbanUser('${escapeHTML(b.username)}')"><i class="fas fa-check"></i> Unban</button>
+      </div>`).join('')}</div></div>`:'<div class="sc-empty"><i class="fas fa-circle-check" style="font-size:32px;color:rgba(62,207,110,.4);margin-bottom:8px;display:block;"></i>No bans</div>'}
     </div>`;
   }
   else if (tab === '_suspensions') {
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-        <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Suspensions</div>
-        <button onclick="showCustomInput('Suspend User','Username to suspend:',(u)=>{if(u&&u.trim())adminActionUser(u.trim(),'suspend');})" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#a855f7;font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;">+ Suspend User</button>
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
+        <div>
+          <div class="sc-head-title"><i class="fas fa-clock" style="color:#a855f7;"></i> Suspensions</div>
+        </div>
+        <div class="sc-head-actions">
+          <button class="sc-btn sc-btn-ghost" style="color:#a855f7;" onclick="showCustomInput('Suspend User','Username to suspend:',(u)=>{if(u&&u.trim())adminActionUser(u.trim(),'suspend');})"><i class="fas fa-plus"></i> Suspend User</button>
+        </div>
       </div>
-      <div id="admin-suspensions-list" style="color:rgba(255,255,255,.3);text-align:center;padding:20px;">Loading suspensions...</div>
+      <div id="admin-suspensions-list" style="color:rgba(255,255,255,.3);text-align:center;padding:40px;">Loading suspensions...</div>
     </div>`;
     _loadAdminSuspensions();
   }
   else if (tab === '_users') {
-    main.innerHTML = `<div style="padding:24px 28px;">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
         <div>
-          <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;">Subject Lookup</div>
-          <div style="font-size:11px;color:rgba(248,113,113,.35);font-weight:600;">Search and inspect any user in the database</div>
+          <div class="sc-head-title"><i class="fas fa-search" style="color:#60a5fa;"></i> Subject Lookup</div>
+          <div class="sc-head-meta">Search and inspect any user in the database</div>
         </div>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <div class="sc-toolbar">
         <div style="position:relative;flex:1;max-width:400px;">
-          <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(248,113,113,.3);font-size:14px;"></i>
-          <input id="admin-user-search" class="settings-input" placeholder="Enter target username…" style="padding-left:38px;background:rgba(248,113,113,.03);border:1.5px solid rgba(248,113,113,.1);font-size:13px;" onkeydown="if(event.key==='Enter')adminSearchUser()">
+          <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,.2);font-size:14px;"></i>
+          <input id="admin-user-search" class="sc-input" placeholder="Enter target username…" style="padding-left:38px;" onkeydown="if(event.key==='Enter')adminSearchUser()">
         </div>
-        <button class="hq-quick-btn" onclick="adminSearchUser()" style="padding:9px 20px;font-size:12px;font-weight:700;"><i class="fas fa-search" style="font-size:13px;"></i> Scan</button>
+        <button class="sc-btn sc-btn-primary" onclick="adminSearchUser()"><i class="fas fa-search"></i> Scan</button>
       </div>
       <div id="admin-user-result"></div>
     </div>`;
   }
   else if (tab === '_all_users') {
-    main.innerHTML = `<div style="padding:24px 28px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
         <div>
-          <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;">User Database</div>
-          <div id="admin-users-count" style="font-size:11px;color:rgba(248,113,113,.4);margin-top:2px;font-weight:600;"></div>
+          <div class="sc-head-title"><i class="fas fa-users" style="color:#60a5fa;"></i> User Database</div>
+          <div id="admin-users-count" class="sc-head-meta"></div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input id="all-users-search" class="settings-input" placeholder="Search users…" style="width:220px;font-size:12px;background:rgba(248,113,113,.03);border-color:rgba(248,113,113,.1);" oninput="filterAllUsers(this.value)">
-          <select id="hq-user-filter" class="settings-input" style="width:140px;font-size:11px;background:rgba(248,113,113,.03);border-color:rgba(248,113,113,.1);" onchange="_hqFilterUsers()">
+        <div class="sc-head-actions">
+          <input id="all-users-search" class="sc-input" placeholder="Search users…" style="width:200px;" oninput="filterAllUsers(this.value)">
+          <select id="hq-user-filter" class="sc-select" style="width:140px;" onchange="_hqFilterUsers()">
             <option value="all">All Users</option>
             <option value="online">Online</option>
             <option value="radiance">Radiance</option>
@@ -26005,59 +26014,65 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           </select>
         </div>
       </div>
-      <!-- Column Headers (sortable) -->
-      <div class="hq-col-header" style="border-radius:12px 12px 0 0;border:1px solid rgba(255,255,255,.05);">
-        <div style="width:30px;text-align:center;">#</div>
-        <div style="width:32px;"></div>
-        <div style="flex:1;min-width:100px;cursor:pointer;" onclick="_hqSortUsers('username')">User <span id="hq-sort-username"></span></div>
-        <div style="width:70px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('status')">Status <span id="hq-sort-status"></span></div>
-        <div style="width:65px;cursor:pointer;text-align:right;" onclick="_hqSortUsers('onyx')">Onyx <span id="hq-sort-onyx"></span></div>
-        <div style="width:55px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('friends')">Friends <span id="hq-sort-friends"></span></div>
-        <div style="width:60px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('bastions')">Bastions <span id="hq-sort-bastions"></span></div>
-        <div style="width:50px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('age')">Age <span id="hq-sort-age"></span></div>
-        <div style="width:75px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('joined')">Joined <span id="hq-sort-joined"></span></div>
-        <div style="width:75px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('lastSeen')">Last Seen <span id="hq-sort-lastSeen"></span></div>
-        <div style="width:65px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('radiance')">Radiance <span id="hq-sort-radiance"></span></div>
-        <div style="width:50px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('role')">Role <span id="hq-sort-role"></span></div>
-        <div style="width:55px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('risk')">Risk <span id="hq-sort-risk"></span></div>
+      <div class="sc-card">
+        <div class="sc-table-header">
+          <div style="width:30px;text-align:center;">#</div>
+          <div style="width:32px;"></div>
+          <div style="flex:1;min-width:100px;cursor:pointer;" onclick="_hqSortUsers('username')">User <span id="hq-sort-username"></span></div>
+          <div style="width:70px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('status')">Status <span id="hq-sort-status"></span></div>
+          <div style="width:65px;cursor:pointer;text-align:right;" onclick="_hqSortUsers('onyx')">Onyx <span id="hq-sort-onyx"></span></div>
+          <div style="width:55px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('friends')">Friends <span id="hq-sort-friends"></span></div>
+          <div style="width:60px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('bastions')">Bastions <span id="hq-sort-bastions"></span></div>
+          <div style="width:50px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('age')">Age <span id="hq-sort-age"></span></div>
+          <div style="width:75px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('joined')">Joined <span id="hq-sort-joined"></span></div>
+          <div style="width:75px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('lastSeen')">Last Seen <span id="hq-sort-lastSeen"></span></div>
+          <div style="width:65px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('radiance')">Radiance <span id="hq-sort-radiance"></span></div>
+          <div style="width:50px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('role')">Role <span id="hq-sort-role"></span></div>
+          <div style="width:55px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('risk')">Risk <span id="hq-sort-risk"></span></div>
+        </div>
+        <div id="all-users-list"></div>
       </div>
-      <div id="all-users-list" style="border:1px solid rgba(255,255,255,.04);border-top:none;border-radius:0 0 12px 12px;overflow:hidden;max-height:calc(100vh - 260px);overflow-y:auto;"></div>
     </div>`;
     await loadAllUsers(false);
   }
   else if (tab === '_economy') {
     const trialLinks = JSON.parse(localStorage.getItem('ftz_trial_links')||'[]');
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="font-family:var(--font-display);font-size:21px;font-weight:800;margin-bottom:20px;">Economy</div>
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
+        <div>
+          <div class="sc-head-title"><i class="fas fa-coins" style="color:#ffd93e;"></i> Economy</div>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:800px;margin-bottom:20px;">
-        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-          <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><i class="fas fa-coins" style="font-size:14px;"></i> Give Onyx</div>
-          <input class="settings-input" id="eco-username" placeholder="Username" style="margin-bottom:9px;">
-          <input class="settings-input" id="eco-amount" type="number" placeholder="Amount" style="margin-bottom:11px;">
-          <button onclick="adminGiveOnyx()" style="width:100%;padding:8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:9px;color:var(--accent);cursor:pointer;font-weight:700;">Give Onyx</button>
+        <div class="sc-card" style="padding:18px;">
+          <div class="sc-card-head" style="border:none;padding:0 0 12px 0;background:none;"><i class="fas fa-coins" style="color:#ffd93e;"></i> Give Onyx</div>
+          <input class="sc-input" id="eco-username" placeholder="Username" style="width:100%;margin-bottom:9px;">
+          <input class="sc-input" id="eco-amount" type="number" placeholder="Amount" style="width:100%;margin-bottom:11px;">
+          <button class="sc-btn" style="width:100%;justify-content:center;background:rgba(255,249,62,.1);color:#ffd93e;" onclick="adminGiveOnyx()">Give Onyx</button>
         </div>
-        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-          <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><i class="fas fa-star" style="color:var(--accent);font-size:14px;"></i> Grant Radiance</div>
-          <input class="settings-input" id="radiance-username" placeholder="Username" style="margin-bottom:9px;">
-          <select class="settings-input" id="radiance-days" style="margin-bottom:11px;"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">365 days</option></select>
-          <button onclick="adminGrantRadiance()" style="width:100%;padding:8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:9px;color:var(--accent);cursor:pointer;font-weight:700;margin-bottom:8px;">Grant Radiance</button>
-          <button onclick="adminGrantRadiancePlus()" style="width:100%;padding:8px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:9px;color:#a855f7;cursor:pointer;font-weight:700;">Grant Radiance</button>
+        <div class="sc-card" style="padding:18px;">
+          <div class="sc-card-head" style="border:none;padding:0 0 12px 0;background:none;"><i class="fas fa-star" style="color:var(--accent);"></i> Grant Radiance</div>
+          <input class="sc-input" id="radiance-username" placeholder="Username" style="width:100%;margin-bottom:9px;">
+          <select class="sc-select" id="radiance-days" style="width:100%;margin-bottom:11px;"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">365 days</option></select>
+          <button class="sc-btn" style="width:100%;justify-content:center;background:rgba(255,249,62,.1);color:#ffd93e;margin-bottom:8px;" onclick="adminGrantRadiance()">Grant Radiance</button>
+          <button class="sc-btn" style="width:100%;justify-content:center;background:rgba(168,85,247,.1);color:#a855f7;" onclick="adminGrantRadiancePlus()">Grant Radiance</button>
         </div>
-        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-          <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;">🎟️ Trial Link</div>
-          <select class="settings-input" id="trial-days" style="margin-bottom:11px;"><option value="7">7 days</option><option value="14">14 days</option><option value="30" selected>30 days</option></select>
-          <button onclick="generateTrialLink()" style="width:100%;padding:8px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);border-radius:9px;color:var(--green);cursor:pointer;font-weight:700;">Generate Trial Link</button>
+        <div class="sc-card" style="padding:18px;">
+          <div class="sc-card-head" style="border:none;padding:0 0 12px 0;background:none;">🎟️ Trial Link</div>
+          <select class="sc-select" id="trial-days" style="width:100%;margin-bottom:11px;"><option value="7">7 days</option><option value="14">14 days</option><option value="30" selected>30 days</option></select>
+          <button class="sc-btn" style="width:100%;justify-content:center;background:rgba(62,207,110,.1);color:#3ecf6e;" onclick="generateTrialLink()">Generate Trial Link</button>
           <div id="trial-link-result" style="margin-top:10px;"></div>
         </div>
       </div>
       ${trialLinks.length?`
-      <div style="font-family:var(--font-display);font-size:13.5px;font-weight:700;margin-bottom:10px;">Recent Trial Links</div>
-      <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;max-width:800px;">
-        ${trialLinks.slice(-5).reverse().map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
-          <div style="flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(t.code||t.link||'–')}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.3);">${t.days}d · ${t.created||''}</div>
-          ${t.link?`<button onclick="navigator.clipboard.writeText('${(t.link||'').replace(/'/g,"\\'")}').then(()=>toast('Copied!','success'))" style="padding:3px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;">Copy</button>`:''}
-        </div>`).join('')}
+      <div class="sc-section-head" style="max-width:800px;">Recent Trial Links</div>
+      <div class="sc-card" style="max-width:800px;">
+        <div class="sc-card-body">
+          ${trialLinks.slice(-5).reverse().map(t=>`<div class="sc-row">
+            <div class="sc-row-c"><div class="sc-row-t" style="font-family:monospace;font-size:12px;">${escapeHTML(t.code||t.link||'–')}</div><div class="sc-row-s">${t.days}d · ${t.created||''}</div></div>
+            ${t.link?`<button class="sc-btn sc-btn-ghost" style="font-size:10px;padding:4px 10px;" onclick="navigator.clipboard.writeText('${(t.link||'').replace(/'/g,"\\'")}').then(()=>toast('Copied!','success'))">Copy</button>`:''}
+          </div>`).join('')}
+        </div>
       </div>`:''}
     </div>`;
   }
@@ -26066,12 +26081,16 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     return;
   }
   else if (tab === '_bastions') {
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Bastions</div>
-        <div id="admin-bastion-count" style="font-size:12px;color:rgba(255,255,255,.35);"></div>
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
+        <div>
+          <div class="sc-head-title"><i class="fas fa-shield" style="color:#a78bfa;"></i> Bastions</div>
+          <div id="admin-bastion-count" class="sc-head-meta"></div>
+        </div>
+        <div class="sc-head-actions">
+          <input class="sc-input" placeholder="Filter by name…" style="width:240px;" oninput="filterAdminBastions(this.value)">
+        </div>
       </div>
-      <input class="settings-input" placeholder="Filter by name…" style="max-width:280px;margin-bottom:14px;" oninput="filterAdminBastions(this.value)">
       <div id="admin-bastion-result"></div>
     </div>`;
     loadAdminBastions(false);
@@ -26080,39 +26099,40 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     const allLog = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
     const log = allLog.slice(0,200);
     const actionTypes = [...new Set(allLog.map(e=>e.action).filter(Boolean))].sort();
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
         <div>
-          <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Activity Log</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">${allLog.length} events total</div>
+          <div class="sc-head-title"><i class="fas fa-clipboard-list" style="color:#60a5fa;"></i> Activity Log</div>
+          <div class="sc-head-meta">${allLog.length} events total</div>
         </div>
-        <div style="display:flex;gap:8px;">
-          <input id="audit-search" class="settings-input" placeholder="Search…" style="max-width:200px;font-size:12px;" oninput="_filterAuditLog()">
-          <select id="audit-filter" class="settings-input" style="max-width:160px;font-size:12px;" onchange="_filterAuditLog()">
+        <div class="sc-head-actions">
+          <input id="audit-search" class="sc-input" placeholder="Search…" style="width:180px;" oninput="_filterAuditLog()">
+          <select id="audit-filter" class="sc-select" style="width:150px;" onchange="_filterAuditLog()">
             <option value="">All Actions</option>
             ${actionTypes.map(a=>`<option value="${escapeHTML(a)}">${escapeHTML(a)}</option>`).join('')}
           </select>
         </div>
       </div>
-      <div id="audit-log-container" style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
-        ${log.length?log.map(e=>`<div class="audit-row" data-action="${escapeHTML(e.action||'')}" data-text="${escapeHTML((e.action||'')+(e.target||'')+(e.by||'')+(e.note||''))}" style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
-          <div style="font-size:10.5px;font-family:monospace;color:rgba(255,255,255,.22);flex-shrink:0;min-width:130px;">${e.at?new Date(e.at).toLocaleString():(e.timestamp?new Date(e.timestamp).toLocaleString():'')}</div>
-          <div style="flex:1;font-size:12.5px;min-width:0;"><strong style="color:var(--red);">${escapeHTML(e.action||'?')}</strong> <span style="color:rgba(255,255,255,.5);">·</span> ${escapeHTML(e.target||'')}${e.note?` <span style="color:rgba(255,255,255,.3);">— ${escapeHTML(e.note)}</span>`:''}</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.3);flex-shrink:0;">by ${escapeHTML(e.by||'?')}</div>
-        </div>`).join(''):'<div style="padding:18px;text-align:center;color:rgba(255,255,255,.3);">No events</div>'}
+      <div class="sc-card">
+        <div class="sc-card-body">
+          ${log.length?log.map(e=>`<div class="audit-row sc-row" data-action="${escapeHTML(e.action||'')}" data-text="${escapeHTML((e.action||'')+(e.target||'')+(e.by||'')+(e.note||''))}">
+            <div style="font-size:10.5px;font-family:monospace;color:rgba(255,255,255,.22);flex-shrink:0;min-width:130px;">${e.at?new Date(e.at).toLocaleString():(e.timestamp?new Date(e.timestamp).toLocaleString():'')}</div>
+            <div class="sc-row-c"><div class="sc-row-t"><strong style="color:var(--red);">${escapeHTML(e.action||'?')}</strong> · ${escapeHTML(e.target||'')}${e.note?` <span style="color:rgba(255,255,255,.3);">— ${escapeHTML(e.note)}</span>`:''}</div><div class="sc-row-s">by ${escapeHTML(e.by||'?')}</div></div>
+          </div>`).join(''):'<div class="sc-empty">No events</div>'}
+        </div>
       </div>
     </div>`;
   }
   else if (tab === '_nsfw_queue') {
     const queue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
         <div>
-          <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Content Review</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">${queue.length} items awaiting review</div>
+          <div class="sc-head-title"><i class="fas fa-eye-slash" style="color:#f59e0b;"></i> Content Review</div>
+          <div class="sc-head-meta">${queue.length} items awaiting review</div>
         </div>
       </div>
-      ${queue.length===0?'<div style="text-align:center;padding:60px;color:rgba(255,255,255,.3);"><div style="margin-bottom:12px;"><i class="fas fa-circle-check" style="font-size:40px;color:rgba(62,207,110,.5);"></i></div>Queue is clear — no flagged content</div>':
+      ${queue.length===0?'<div class="sc-empty"><i class="fas fa-circle-check" style="font-size:32px;color:rgba(62,207,110,.4);margin-bottom:8px;display:block;"></i>Queue is clear — no flagged content</div>':
       `<div style="display:flex;flex-direction:column;gap:10px;">
         ${queue.map((item,i)=>{
           const typeIcon = item.type==='video'?'🎬':item.type==='gif'?'🎞️':'🖼️';
@@ -26187,8 +26207,8 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       }
     } catch (e) { _dbg('[Admin] settings fetch failed', e); }
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
-    main.innerHTML = `<div style="padding:20px 24px;height:100%;overflow:auto;">
-      <div style="font-family:var(--font-display);font-size:19px;font-weight:800;margin-bottom:14px;">Configuration</div>
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head"><div><div class="sc-head-title"><i class="fas fa-sliders" style="color:#60a5fa;"></i> Configuration</div></div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
         <!-- Column 1: Controls & Moderation -->
         <div style="display:flex;flex-direction:column;gap:10px;">
@@ -26258,9 +26278,13 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     // They surface in the dedicated "Automation" box below.
     const _humanSupers = SUPER_ADMINS.filter(a => !MANUAL_BOTS.includes(String(a).toLowerCase()));
     const _automationAccounts = SUPER_ADMINS.filter(a => MANUAL_BOTS.includes(String(a).toLowerCase()));
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="font-family:var(--font-display);font-size:21px;font-weight:800;margin-bottom:6px;">Staff</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:18px;">Only super admins can manage staff roles.</div>
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
+        <div>
+          <div class="sc-head-title"><i class="fas fa-user-shield" style="color:#a78bfa;"></i> Staff</div>
+          <div class="sc-head-meta">Only super admins can manage staff roles.</div>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:900px;">
         <!-- Super Admins -->
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,215,62,.15);border-radius:12px;padding:18px;">
@@ -26357,21 +26381,21 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     const negCount = feedbackData.filter(f=>f.rating==='negative').length;
     const withComments = feedbackData.filter(f=>f.comment).length;
     const total = feedbackData.length || 1;
-    main.innerHTML = `<div style="padding:24px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
         <div>
-          <div style="font-size:20px;font-weight:800;">Inbox & Feedback</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:3px;">${isSA ? 'All tickets & user feedback' : 'Non-sensitive tickets only'}</div>
+          <div class="sc-head-title"><i class="fas fa-ticket" style="color:#38bdf8;"></i> Inbox & Feedback</div>
+          <div class="sc-head-meta">${isSA ? 'All tickets & user feedback' : 'Non-sensitive tickets only'}</div>
         </div>
-        <div style="display:flex;gap:8px;">
-          <select id="_fb-rating-filter" onchange="_filterFeedbackList()" style="background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;">
+        <div class="sc-head-actions">
+          <select id="_fb-rating-filter" onchange="_filterFeedbackList()" class="sc-select">
             <option value="all">All Feedback</option>
             <option value="positive">Positive</option>
             <option value="neutral">Neutral</option>
             <option value="negative">Negative</option>
             <option value="comments">With Comments</option>
           </select>
-          <select id="_ticket-filter" onchange="_filterTickets()" style="background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;">
+          <select id="_ticket-filter" onchange="_filterTickets()" class="sc-select">
             <option value="all">All Tickets</option>
             <option value="open">Open</option>
             <option value="closed">Closed</option>
@@ -26380,11 +26404,11 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       </div>
       <!-- Feedback Summary -->
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">
-        <div class="hq-stat" style="--stat-accent:#60a5fa;"><div class="hq-stat-val" style="color:var(--blue);font-size:20px;">${feedbackData.length}</div><div class="hq-stat-label">Total</div></div>
-        <div class="hq-stat" style="--stat-accent:#3ecf6e;"><div class="hq-stat-val" style="color:var(--green);font-size:20px;">${posCount}</div><div class="hq-stat-label">Positive</div></div>
-        <div class="hq-stat" style="--stat-accent:#f59e0b;"><div class="hq-stat-val" style="color:#f59e0b;font-size:20px;">${neuCount}</div><div class="hq-stat-label">Neutral</div></div>
-        <div class="hq-stat" style="--stat-accent:#f87171;"><div class="hq-stat-val" style="color:var(--red);font-size:20px;">${negCount}</div><div class="hq-stat-label">Negative</div></div>
-        <div class="hq-stat" style="--stat-accent:#a78bfa;"><div class="hq-stat-val" style="color:#a78bfa;font-size:20px;">${withComments}</div><div class="hq-stat-label">With Comments</div></div>
+        <div class="sc-stat" style="--stat-accent:#60a5fa;"><div class="sc-stat-val" style="color:var(--blue);font-size:20px;">${feedbackData.length}</div><div class="sc-stat-lbl">Total</div></div>
+        <div class="sc-stat" style="--stat-accent:#3ecf6e;"><div class="sc-stat-val" style="color:var(--green);font-size:20px;">${posCount}</div><div class="sc-stat-lbl">Positive</div></div>
+        <div class="sc-stat" style="--stat-accent:#f59e0b;"><div class="sc-stat-val" style="color:#f59e0b;font-size:20px;">${neuCount}</div><div class="sc-stat-lbl">Neutral</div></div>
+        <div class="sc-stat" style="--stat-accent:#f87171;"><div class="sc-stat-val" style="color:var(--red);font-size:20px;">${negCount}</div><div class="sc-stat-lbl">Negative</div></div>
+        <div class="sc-stat" style="--stat-accent:#a78bfa;"><div class="sc-stat-val" style="color:#a78bfa;font-size:20px;">${withComments}</div><div class="sc-stat-lbl">With Comments</div></div>
       </div>
       <!-- Satisfaction Bar -->
       <div style="margin-bottom:20px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:12px;">
@@ -26452,25 +26476,24 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       statusMsg = gs.platformStatus || '';
       announcementIcon = gs.announcementIcon || '';
     }
-    main.innerHTML = `<div style="padding:var(--space-xl);">
-      <div style="display:flex;align-items:center;gap:var(--space-md);margin-bottom:var(--space-xs);">
-        <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(62,207,110,.2),rgba(62,207,110,.08));border:1px solid rgba(62,207,110,.3);display:flex;align-items:center;justify-content:center;font-size:20px;">📡</div>
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
         <div>
-          <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Broadcast Center</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.35);">Send system-wide announcements and manage platform messaging.</div>
+          <div class="sc-head-title"><i class="fas fa-tower-broadcast" style="color:#3ecf6e;"></i> Broadcast Center</div>
+          <div class="sc-head-meta">Send system-wide announcements and manage platform messaging.</div>
         </div>
       </div>
       ${currentMsg ? `<div style="margin:var(--space-lg) 0;padding:14px 18px;background:#3ecf6e;background-image:url('https://cdn.polytoria.com/assets/48VK9iyM9VB8fMA3VWGQDfGa4OrSbolq.png');background-repeat:repeat;background-size:24px 24px;border:1px solid rgba(62,207,110,.4);border-radius:14px;display:flex;align-items:center;gap:12px;">
         <div style="width:8px;height:8px;border-radius:50%;background:#000;box-shadow:0 0 8px rgba(0,0,0,.5);flex-shrink:0;"></div>
         <div style="flex:1;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(0,0,0,.6);margin-bottom:2px;">LIVE BROADCAST</div><div style="font-size:13px;color:rgba(0,0,0,.85);">${escapeHTML(currentMsg)}</div></div>
-        <button class="hq-quick-btn" onclick="_clearAnnouncement()" style="flex-shrink:0;background:rgba(0,0,0,.1);border-color:rgba(0,0,0,.2);color:#000;">End Broadcast</button>
+        <button class="sc-btn sc-btn-ghost" onclick="_clearAnnouncement()" style="flex-shrink:0;background:rgba(0,0,0,.1);border-color:rgba(0,0,0,.2);color:#000;">End Broadcast</button>
       </div>` : `<div style="margin:var(--space-lg) 0;padding:14px 18px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;display:flex;align-items:center;gap:12px;">
         <div style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;"></div>
         <div style="font-size:13px;color:var(--muted);">No active broadcast</div>
       </div>`}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg);margin-top:var(--space-lg);">
-        <div class="hq-panel">
-          <div class="hq-panel-head">
+        <div class="sc-card">
+          <div class="sc-card-head">
             <i class="fas fa-bell" style="color:var(--accent);font-size:14px;"></i>
             <h3>System Announcement</h3>
           </div>
@@ -26478,13 +26501,13 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">This banner is shown to ALL users at the top of the app.</div>
             <input type="hidden" id="_broadcast-icon" value="${escapeHTML(announcementIcon)}">            <textarea id="_broadcast-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(currentMsg)}</textarea>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
-              <button class="hq-quick-btn" onclick="_broadcastAnnouncement()" style="background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);font-weight:700;"><i class="fas fa-paper-plane" style="font-size:12px;"></i> Broadcast</button>
-              <button class="hq-quick-btn" onclick="_clearAnnouncement()">Clear</button>
+              <button class="sc-btn sc-btn-ghost" onclick="_broadcastAnnouncement()" style="background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);font-weight:700;"><i class="fas fa-paper-plane" style="font-size:12px;"></i> Broadcast</button>
+              <button class="sc-btn sc-btn-ghost" onclick="_clearAnnouncement()">Clear</button>
             </div>
           </div>
         </div>
-        <div class="hq-panel">
-          <div class="hq-panel-head">
+        <div class="sc-card">
+          <div class="sc-card-head">
             <i class="fas fa-clock" style="color:#3ecf6e;font-size:14px;"></i>
             <h3>Platform Status</h3>
             ${statusMsg ? '<div style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:var(--green);font-weight:600;"><div style="width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px #3ecf6e88;"></div>ACTIVE</div>' : ''}
@@ -26495,24 +26518,24 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
               <textarea id="_status-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(statusMsg)}</textarea>
             </div>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
-              <button class="hq-quick-btn" onclick="_updatePlatformStatus()" style="background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.15);color:var(--green);">Update Status</button>
-              <button class="hq-quick-btn" onclick="document.getElementById('_status-msg').value='';_updatePlatformStatus()">Clear Status</button>
+              <button class="sc-btn sc-btn-ghost" onclick="_updatePlatformStatus()" style="background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.15);color:var(--green);">Update Status</button>
+              <button class="sc-btn sc-btn-ghost" onclick="document.getElementById('_status-msg').value='';_updatePlatformStatus()">Clear Status</button>
             </div>
           </div>
         </div>
       </div>
-      <div class="hq-panel" style="margin-top:var(--space-lg);">
-        <div class="hq-panel-head">
+      <div class="sc-card" style="margin-top:var(--space-lg);">
+        <div class="sc-card-head">
           <i class="fas fa-newspaper" style="color:#60a5fa;font-size:14px;"></i>
           <h3>What's New Announcements</h3>
         </div>
         <div style="padding:var(--space-lg);">
           <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:var(--space-sm);line-height:1.6;">The "What's New" card shown to every user is now powered by the most recent post in the <strong style="color:var(--accent);">Announcements</strong> forum category. Post a new thread there to push an update.</div>
-          <a href="/app/forum" onclick="event.preventDefault();showView('forum');" class="hq-quick-btn" style="display:inline-flex;background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.15);color:#60a5fa;font-weight:700;text-decoration:none;">→ Open Forum</a>
+          <a href="/app/forum" onclick="event.preventDefault();showView('forum');" class="sc-btn sc-btn-ghost" style="display:inline-flex;background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.15);color:#60a5fa;font-weight:700;text-decoration:none;">→ Open Forum</a>
         </div>
       </div>
-      <div class="hq-panel" style="margin-top:var(--space-lg);">
-        <div class="hq-panel-head"><h3>Quick Messages</h3></div>
+      <div class="sc-card" style="margin-top:var(--space-lg);">
+        <div class="sc-card-head"><h3>Quick Messages</h3></div>
         <div style="padding:var(--space-lg);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);">
           ${[
             {t:'Maintenance',i:'fas fa-wrench'},
@@ -26521,7 +26544,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             {t:'Emergency',i:'fas fa-triangle-exclamation'},
             {t:'Celebration',i:'fas fa-glass-cheers'},
             {t:'Experimental',i:'fas fa-flask'},
-          ].map((q,i)=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="_setQuickMessage('...','...')">
+          ].map((q,i)=>`<button class="sc-btn sc-btn-ghost" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="_setQuickMessage('...','...')">
             <span style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:12px;margin-left:4px;"><i class="${q.i}" style="font-size:22px;"></i><span>${q.t}</span></span>
           </button>`).join('')}
         </div>
@@ -26542,30 +26565,34 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       if (bastSnap.exists()) { const bv=Object.values(bastSnap.val()); totalBastions=bv.length; topBastions=bv.sort((a,b)=>(b.members||[]).length-(a.members||[]).length).slice(0,5); }
     } catch (e) { console.warn('[Admin] analytics fetch failed', e); }
     const convRate = totalUsers > 0 ? ((radianceCount/totalUsers)*100).toFixed(1) : '0';
-    main.innerHTML = `<div style="padding:var(--space-xl);">
-      <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Platform Analytics</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:var(--space-xl);">Real-time platform metrics and growth tracking.</div>
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
+        <div>
+          <div class="sc-head-title"><i class="fas fa-chart-line" style="color:#60a5fa;"></i> Platform Analytics</div>
+          <div class="sc-head-meta">Real-time platform metrics and growth tracking.</div>
+        </div>
+      </div>
       <div class="ftz-grid cols-4" style="margin-bottom:var(--space-xl);">
         ${[
           {l:'Total Users',v:totalUsers,c:'#60a5fa'},
           {l:'Active Now',v:onlineNow,c:'#3ecf6e'},
           {l:'Bastions',v:totalBastions,c:'#a78bfa'},
           {l:'Radiance Conv.',v:convRate+'%',c:'#ffd93e'},
-        ].map(s=>`<div class="hq-stat" style="--stat-accent:${s.c};"><div class="hq-stat-val" style="color:${s.c};">${s.v}</div><div class="hq-stat-label">${s.l}</div></div>`).join('')}
+        ].map(s=>`<div class="sc-stat" style="--stat-accent:${s.c};"><div class="sc-stat-val" style="color:${s.c};">${s.v}</div><div class="sc-stat-lbl">${s.l}</div></div>`).join('')}
       </div>
       <div class="ftz-grid cols-2" style="gap:var(--space-lg);">
-        <div class="hq-panel">
-          <div class="hq-panel-head"><h3>Top Bastions by Members</h3></div>
+        <div class="sc-card">
+          <div class="sc-card-head"><h3>Top Bastions by Members</h3></div>
           <div style="padding:0;">
-            ${topBastions.length ? topBastions.map((b,i)=>`<div class="hq-user-row">
+            ${topBastions.length ? topBastions.map((b,i)=>`<div class="sc-row">
               <div style="width:24px;text-align:center;font-size:13px;font-weight:800;color:${i===0?'#ffd93e':i===1?'#c0c0c0':i===2?'#cd7f32':'rgba(255,255,255,.3)'};">${i+1}</div>
               <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(b.name||'Unknown')}</div></div>
               <div style="font-size:12px;color:rgba(255,255,255,.4);">${(b.members||[]).length} members</div>
             </div>`).join('') : '<div style="padding:var(--space-lg);text-align:center;color:rgba(255,255,255,.3);">No bastions yet</div>'}
           </div>
         </div>
-        <div class="hq-panel">
-          <div class="hq-panel-head"><h3>Growth Insights</h3></div>
+        <div class="sc-card">
+          <div class="sc-card-head"><h3>Growth Insights</h3></div>
           <div style="padding:var(--space-lg);">
             <div style="display:flex;flex-direction:column;gap:var(--space-md);">
               <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:rgba(255,255,255,.5);">Radiance subscribers</span><span style="font-size:14px;font-weight:700;color:#ffd93e;">${radianceCount}</span></div>
@@ -26581,26 +26608,30 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
 
   else if (tab === '_backup_restore') {
     if (!isSuperAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
-    main.innerHTML = `<div style="padding:var(--space-xl);">
-      <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Backup & Restore</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:var(--space-xl);">Export platform data and manage recovery options.</div>
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
+        <div>
+          <div class="sc-head-title"><i class="fas fa-database" style="color:#60a5fa;"></i> Backup & Restore</div>
+          <div class="sc-head-meta">Export platform data and manage recovery options.</div>
+        </div>
+      </div>
       <div class="ftz-grid cols-2" style="gap:var(--space-lg);">
-        <div class="hq-panel">
-          <div class="hq-panel-head"><h3>Export Data</h3></div>
+        <div class="sc-card">
+          <div class="sc-card-head"><h3>Export Data</h3></div>
           <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('audit')"><i class="fas fa-download" style="font-size:13px;"></i> Export Audit Log</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('reports')"><i class="fas fa-download" style="font-size:13px;"></i> Export Reports</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('bans')"><i class="fas fa-download" style="font-size:13px;"></i> Export Ban List</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('users')"><i class="fas fa-download" style="font-size:13px;"></i> Export User Database</button>
+            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('audit')"><i class="fas fa-download" style="font-size:13px;"></i> Export Audit Log</button>
+            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('reports')"><i class="fas fa-download" style="font-size:13px;"></i> Export Reports</button>
+            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('bans')"><i class="fas fa-download" style="font-size:13px;"></i> Export Ban List</button>
+            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('users')"><i class="fas fa-download" style="font-size:13px;"></i> Export User Database</button>
           </div>
         </div>
-        <div class="hq-panel">
-          <div class="hq-panel-head"><h3>Deployment Actions</h3></div>
+        <div class="sc-card">
+          <div class="sc-card-head"><h3>Deployment Actions</h3></div>
           <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_syncAdminData().then(()=>{toast('Full sync complete','success')})"><i class="fas fa-rotate" style="font-size:13px;"></i> Sync Data</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--yellow);border-color:rgba(245,158,11,.2);" onclick="showCustomConfirm('Force refresh all connected users?',()=>_forceRefreshAllUsers())">Force Refresh All Users</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(248,113,113,.2);" onclick="showCustomConfirm('Reset ALL user sessions? Users will be logged out.',()=>_resetAllSessions())">Reset All Sessions</button>
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="showCustomConfirm('Purge soft-deleted messages from database?',()=>_purgeDeletedMessages())">Purge Deleted Messages</button>
+            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);" onclick="_syncAdminData().then(()=>{toast('Full sync complete','success')})"><i class="fas fa-rotate" style="font-size:13px;"></i> Sync Data</button>
+            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);color:var(--yellow);border-color:rgba(245,158,11,.2);" onclick="showCustomConfirm('Force refresh all connected users?',()=>_forceRefreshAllUsers())">Force Refresh All Users</button>
+            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(248,113,113,.2);" onclick="showCustomConfirm('Reset ALL user sessions? Users will be logged out.',()=>_resetAllSessions())">Reset All Sessions</button>
+            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);" onclick="showCustomConfirm('Purge soft-deleted messages from database?',()=>_purgeDeletedMessages())">Purge Deleted Messages</button>
           </div>
         </div>
       </div>
@@ -26611,24 +26642,26 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     if (!isAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
     let scheduledItems = [];
     try { const acts = await FortizedSocial.adminGetScheduledActions(); scheduledItems = acts.map((v,i)=>({...v,_key:i})); } catch (e) { _dbg('[Admin] scheduled actions fetch failed', e); }
-    main.innerHTML = `<div style="padding:var(--space-xl);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-xl);">
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
         <div>
-          <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Scheduled Actions</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:3px;">Schedule timed moderation actions and automated tasks.</div>
+          <div class="sc-head-title"><i class="fas fa-clock" style="color:#f59e0b;"></i> Scheduled Actions</div>
+          <div class="sc-head-meta">Schedule timed moderation actions and automated tasks.</div>
         </div>
-        <button class="hq-quick-btn" onclick="_showScheduleActionModal()">+ New Scheduled Action</button>
+        <div class="sc-head-actions">
+          <button class="sc-btn" style="background:rgba(245,158,11,.1);color:#f59e0b;" onclick="_showScheduleActionModal()"><i class="fas fa-plus"></i> New Scheduled Action</button>
+        </div>
       </div>
-      <div class="hq-panel">
-        <div class="hq-panel-head"><h3>Active Schedules</h3></div>
+      <div class="sc-card">
+        <div class="sc-card-head"><h3>Active Schedules</h3></div>
         <div style="padding:0;">
-          ${scheduledItems.length ? scheduledItems.map(s=>`<div class="hq-user-row">
+          ${scheduledItems.length ? scheduledItems.map(s=>`<div class="sc-row">
             <div style="flex:1;">
               <div style="font-size:13px;font-weight:600;color:#fff;">${escapeHTML(s.type||'Action')} — ${escapeHTML(s.target||'')}</div>
               <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">Scheduled for: ${s.executeAt ? new Date(s.executeAt).toLocaleString() : 'Unknown'} · By: ${escapeHTML(s.createdBy||'?')}</div>
             </div>
             <div style="font-size:11px;font-weight:600;color:${new Date(s.executeAt)>new Date()?'var(--yellow)':'var(--green)'};">${new Date(s.executeAt)>new Date()?'Pending':'Executed'}</div>
-            <button class="hq-quick-btn" style="font-size:10px;padding:5px 10px;color:var(--red);border-color:rgba(248,113,113,.2);" onclick="_cancelScheduledAction('${s._key}')">Cancel</button>
+            <button class="sc-btn sc-btn-ghost" style="font-size:10px;padding:5px 10px;color:var(--red);border-color:rgba(248,113,113,.2);" onclick="_cancelScheduledAction('${s._key}')">Cancel</button>
           </div>`).join('') : '<div style="padding:var(--space-xl);text-align:center;color:rgba(255,255,255,.3);">No scheduled actions. Create one to automate timed moderation tasks.</div>'}
         </div>
       </div>
@@ -26642,18 +26675,22 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       const statSnap = await firebase.database().ref('statuses').get();
       if (statSnap.exists()) activeConnections = Object.values(statSnap.val()).filter(s=>s!=='offline').length;
     } catch (e) { _dbg('[Admin] network stats fetch failed', e); }
-    main.innerHTML = `<div style="padding:var(--space-xl);">
-      <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Network Monitor</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:var(--space-xl);">Monitor active connections, database health, and service status.</div>
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
+        <div>
+          <div class="sc-head-title"><i class="fas fa-network-wired" style="color:#3ecf6e;"></i> Network Monitor</div>
+          <div class="sc-head-meta">Monitor active connections, database health, and service status.</div>
+        </div>
+      </div>
       <div class="ftz-grid cols-3" style="margin-bottom:var(--space-xl);">
         ${[
           {l:'Active Connections',v:activeConnections,c:'#3ecf6e'},
           {l:'Firebase Status',v:'Connected',c:'#3ecf6e'},
           {l:'WebRTC Peers',v:'Available',c:'#60a5fa'},
-        ].map(s=>`<div class="hq-stat" style="--stat-accent:${s.c};"><div class="hq-stat-val" style="color:${s.c};font-size:20px;">${s.v}</div><div class="hq-stat-label">${s.l}</div></div>`).join('')}
+        ].map(s=>`<div class="sc-stat" style="--stat-accent:${s.c};"><div class="sc-stat-val" style="color:${s.c};font-size:20px;">${s.v}</div><div class="sc-stat-lbl">${s.l}</div></div>`).join('')}
       </div>
-      <div class="hq-panel">
-        <div class="hq-panel-head"><h3>Service Health</h3></div>
+      <div class="sc-card">
+        <div class="sc-card-head"><h3>Service Health</h3></div>
         <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
           ${[
             {name:'Firebase Realtime DB',status:'Operational',ok:true},
@@ -28139,7 +28176,7 @@ async function adminSearchUser() {
   result.innerHTML = `
     <div style="max-width:860px;">
       <!-- Subject Header -->
-      <div class="hq-panel" style="margin-bottom:14px;position:relative;${_tgtStanding.id>0?`box-shadow:inset 0 0 0 1px ${_tgtStanding.border};background:linear-gradient(90deg,${_tgtStanding.tint},transparent 35%);`:''}">
+      <div class="sc-card" style="margin-bottom:14px;position:relative;${_tgtStanding.id>0?`box-shadow:inset 0 0 0 1px ${_tgtStanding.border};background:linear-gradient(90deg,${_tgtStanding.tint},transparent 35%);`:''}">
         ${_tgtStanding.id>0?`<div class="adm-standing-stripe" style="background:${_tgtStanding.color};opacity:${0.35 + _tgtStanding.id*0.16};"></div>`:''}
         <div style="display:flex;align-items:center;gap:18px;padding:22px 24px;position:relative;">
           <div style="position:relative;flex-shrink:0;">
@@ -28170,26 +28207,26 @@ async function adminSearchUser() {
       <!-- Quick Actions Toolbar -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
         ${myRole==='moderator'?`
-          ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','warn')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Warn</button>`:''}
+          ${!isMe?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','warn')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Warn</button>`:''}
         `:`
-          ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','warn')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Warn</button>`:''}
-          ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','suspend')" style="border-color:rgba(168,85,247,.15);background:rgba(168,85,247,.04);color:rgba(168,85,247,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Suspend</button>`:''}
-          ${!isMe?(isBanned?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','unban')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Unban</button>`:`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','ban')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Ban</button>`):''}
-          ${!isMe && !alreadyFriends?`<button class="hq-quick-btn" onclick="adminForceFriend('${escapeHTML(username)}')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);">Force Friend</button>`:''}
-          <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Give Onyx</button>
-          <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Radiance</button>
-          ${isSuperAdmin()?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')" style="border-color:rgba(255,249,62,.18);background:rgba(255,249,62,.05);color:rgba(255,249,62,.7);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff93e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${u.verified?'Unverify':'Verify'}</button>`:''}
-          ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','force_logout')" style="border-color:rgba(248,113,113,.12);background:rgba(248,113,113,.03);color:rgba(248,113,113,.5);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Force Logout</button>`:''}
+          ${!isMe?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','warn')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Warn</button>`:''}
+          ${!isMe?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','suspend')" style="border-color:rgba(168,85,247,.15);background:rgba(168,85,247,.04);color:rgba(168,85,247,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Suspend</button>`:''}
+          ${!isMe?(isBanned?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','unban')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Unban</button>`:`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','ban')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Ban</button>`):''}
+          ${!isMe && !alreadyFriends?`<button class="sc-btn sc-btn-ghost" onclick="adminForceFriend('${escapeHTML(username)}')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);">Force Friend</button>`:''}
+          <button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Give Onyx</button>
+          <button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Radiance</button>
+          ${isSuperAdmin()?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')" style="border-color:rgba(255,249,62,.18);background:rgba(255,249,62,.05);color:rgba(255,249,62,.7);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff93e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${u.verified?'Unverify':'Verify'}</button>`:''}
+          ${!isMe?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','force_logout')" style="border-color:rgba(248,113,113,.12);background:rgba(248,113,113,.03);color:rgba(248,113,113,.5);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Force Logout</button>`:''}
         `}
-        <button class="hq-quick-btn" onclick="openDMView('${escapeHTML(username)}');_closeStaffConsole();" style="border-color:rgba(96,165,250,.15);background:rgba(96,165,250,.04);color:rgba(96,165,250,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</button>
-        <button class="hq-quick-btn" onclick="viewUserProfile('${escapeHTML(username)}');_closeStaffConsole();" style="border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.02);color:rgba(255,255,255,.4);">View Profile</button>
+        <button class="sc-btn sc-btn-ghost" onclick="openDMView('${escapeHTML(username)}');_closeStaffConsole();" style="border-color:rgba(96,165,250,.15);background:rgba(96,165,250,.04);color:rgba(96,165,250,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</button>
+        <button class="sc-btn sc-btn-ghost" onclick="viewUserProfile('${escapeHTML(username)}');_closeStaffConsole();" style="border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.02);color:rgba(255,255,255,.4);">View Profile</button>
       </div>
 
       <!-- Intel Grid -->
       <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;">
         <!-- Left: Data Grid -->
-        <div class="hq-panel">
-          <div class="hq-panel-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h3>Subject Intel</h3></div>
+        <div class="sc-card">
+          <div class="sc-card-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h3>Subject Intel</h3></div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);">
             ${[
               ['Onyx Balance', (u.onyx||0).toLocaleString(), '#ffd93e'],
@@ -28218,15 +28255,15 @@ async function adminSearchUser() {
 
         <!-- Right: Activity Timeline + Ban Info -->
         <div style="display:flex;flex-direction:column;gap:14px;">
-          ${isBanned && banInfo ? `<div class="hq-panel">
-            <div class="hq-panel-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><h3 style="color:var(--red);">Ban Record</h3></div>
+          ${isBanned && banInfo ? `<div class="sc-card">
+            <div class="sc-card-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><h3 style="color:var(--red);">Ban Record</h3></div>
             <div style="padding:12px 16px;">
               <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;"><strong>Reason:</strong> ${escapeHTML(banInfo.reason||'No reason')}</div>
               ${banInfo.bannedBy?`<div style="font-size:11px;color:rgba(255,255,255,.3);">Banned by: ${escapeHTML(banInfo.bannedBy)} · ${banInfo.bannedAt?new Date(banInfo.bannedAt).toLocaleDateString():''}</div>`:''}
             </div>
           </div>` : ''}
-          <div class="hq-panel" style="flex:1;">
-            <div class="hq-panel-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><h3>Mod History</h3></div>
+          <div class="sc-card" style="flex:1;">
+            <div class="sc-card-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><h3>Mod History</h3></div>
             <div style="max-height:200px;overflow-y:auto;">
               ${userAudit.length ? userAudit.slice(0,10).map(e=>{
                 const aColor = (e.action||'').includes('ban')?'#f87171':(e.action||'').includes('warn')?'#f59e0b':(e.action||'').includes('suspend')?'#a855f7':'#60a5fa';
@@ -30227,7 +30264,7 @@ function renderAllUsersList(users) {
     const ageDays = u.dateOfBirth ? Math.floor((Date.now() - new Date(u.dateOfBirth)) / 86400000 / 365.25) : null;
     const joinDate = u.createdAt || u.joinedAt;
 
-    return `<div class="hq-user-row" onclick="adminInspectUser('${escapeHTML(u.username)}')" ${isBanned?'style="background:rgba(248,113,113,.03);"':''}>
+    return `<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')" ${isBanned?'style="background:rgba(248,113,113,.03);"':''}>
       <div style="width:30px;text-align:center;font-size:10px;color:rgba(255,255,255,.2);font-weight:700;">${i+1}</div>
       <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;position:relative;">${buildAvatarHTML(u.pfp,u.displayName||u.username,32)}
         <div style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2px solid #0a0e18;"></div>

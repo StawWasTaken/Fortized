@@ -3085,6 +3085,23 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .icon-onyx{-webkit-mask-image:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png');mask-image:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png');}
 .icon-bastion{-webkit-mask-image:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/BastionSVG.png');mask-image:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/BastionSVG.png');}
 .sc-main{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px 24px;background:var(--bg);}
+/* Unify legacy admin page styles with the sc-* design system */
+.sc-main .adm-sub-nav{border-radius:12px;margin:0 0 18px;padding:4px;background:var(--surface);border:1px solid var(--border);backdrop-filter:none;}
+.sc-main .adm-sub-tab{padding:7px 12px;border-radius:8px;font-size:12px;color:rgba(255,255,255,.45);}
+.sc-main .adm-sub-tab:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.8);}
+.sc-main .adm-sub-tab.active{background:var(--accent-dim);color:var(--accent);border-color:transparent;box-shadow:none;}
+.sc-main .adm-sub-tab .adm-sub-badge{background:#f87171;font-size:9px;}
+/* Unify report card styles */
+.sc-main .rep-card,.sc-main .rep-resolution{background:var(--panel);border:1px solid var(--border);border-radius:12px;}
+.sc-main .rep-pill--pend{background:rgba(245,158,11,.15);color:#f59e0b;}
+.sc-main .rep-pill--warned{background:rgba(248,113,113,.15);color:#f87171;}
+.sc-main .rep-pill--dismissed,.sc-main .rep-pill--resolved{background:rgba(62,207,110,.15);color:#3ecf6e;}
+.sc-main .rep-meta-row{font-size:11px;color:rgba(255,255,255,.25);gap:12px;}
+.sc-main .rep-card__actors{font-size:12px;}
+.sc-main .rep-card__arrow{color:rgba(255,255,255,.2);}
+/* Unify bastions table with sc-table-header */
+.sc-main .sc-table-header{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.015);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.32);}
+.sc-main .sc-table-header>div{flex-shrink:0;}
 
 /* Staff console card/page content */
 .sc-page{}

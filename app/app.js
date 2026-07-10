@@ -25503,7 +25503,13 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
   // Map new nav tab names to legacy tab ids for inline rendering
   const tabMap = {audit:'_audit', staff:'_staff', nsfw_queue:'_nsfw_queue', economy:'_economy', bastions:'_bastions', users:'_users', all_users:'_all_users', support_tickets:'_support_tickets', place_where:'_place_where', onboarding:'_onboarding', statistics:'_statistics'};
   tab = tabMap[tab] || tab;
-  _renderStaffNav(_origTab); adminTab = tab;
+  // Sub-tabs (prefixed with _) inherit the nav highlight from the parent domain
+  let navActive = _origTab;
+  if (_origTab.startsWith('_')) {
+    const subId = _origTab.slice(1);
+    navActive = _SC_SUB_TO_DOMAIN[subId] || subId;
+  }
+  _renderStaffNav(navActive); adminTab = tab;
   let main = document.getElementById('sc-main'); if (!main) return;
   main.innerHTML = '<div style="display:flex;justify-content:center;padding:40px;"><div class="pl-spinner" style="width:24px;height:24px;border-width:2.5px;"></div></div>';
   // Auto-refresh feedback tab
@@ -25659,7 +25665,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             </div>`).join('')||'<div class="sc-empty"><i class="fas fa-user-slash"></i> No data</div>'}
           </div>
           <div class="sc-card-head" style="margin-top:8px;">
-            <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;"><h3>Top Onyx</h3>
+            <span class="icon-onyx" style="width:18px;height:18px;"></span><h3>Top Onyx</h3>
           </div>
           <div class="sc-card-body">
             ${topOnyx.map((u,i)=>`<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
@@ -26028,7 +26034,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:800px;margin-bottom:20px;">
         <div class="sc-card" style="padding:18px;">
-          <div class="sc-card-head" style="border:none;padding:0 0 12px 0;background:none;"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;"> Give Onyx</div>
+          <div class="sc-card-head" style="border:none;padding:0 0 12px 0;background:none;"><span class="icon-onyx" style="width:18px;height:18px;"></span> Give Onyx</div>
           <input class="sc-input" id="eco-username" placeholder="Username" style="width:100%;margin-bottom:9px;">
           <input class="sc-input" id="eco-amount" type="number" placeholder="Amount" style="width:100%;margin-bottom:11px;">
           <button class="sc-btn" style="width:100%;justify-content:center;background:rgba(255,249,62,.1);color:#ffd93e;" onclick="adminGiveOnyx()">Give Onyx</button>
@@ -27587,7 +27593,8 @@ async function _updateUserPreview(username) {
   const actions = document.getElementById('_ua-preview-actions');
   if (!username || !preview) return;
   try {
-    const u = await FortizedSocial.getUserByName(username).catch(()=>null);
+    if (!_suggestUsersCache) _suggestUsersCache = await FortizedSocial.getUsers().catch(()=>[]);
+    const u = _suggestUsersCache.find(x => x.username?.toLowerCase() === username.toLowerCase());
     if (u) {
       preview.style.display = 'flex';
       const avHTML = buildAvatarHTML(u.pfp, u.displayName || u.username, 36);
@@ -27609,6 +27616,7 @@ async function _updateUserPreview(username) {
   } catch(e) { preview.style.display = 'none'; }
 }
 let _suggestDebounce = null;
+let _suggestUsersCache = null;
 async function _adminUserSuggest(input) {
   clearTimeout(_suggestDebounce);
   const val = input.value.trim();
@@ -27617,7 +27625,8 @@ async function _adminUserSuggest(input) {
   if (val.length < 1) { document.getElementById('_ua-suggestions').style.display = 'none'; return; }
   _suggestDebounce = setTimeout(async () => {
     try {
-      const users = await FortizedSocial.getUsers().catch(()=>[]);
+      if (!_suggestUsersCache) _suggestUsersCache = await FortizedSocial.getUsers().catch(()=>[]);
+      const users = _suggestUsersCache;
       const suggestions = users.filter(u => u.username?.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
       const el = document.getElementById('_ua-suggestions');
       if (!el) return;

@@ -25454,8 +25454,6 @@ function _openStaffConsole() {
   const roleSvg = role === 'superadmin' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' : role === 'admin' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
   _adminPreviousView = _currentView;
   adminTab = 'dashboard';
-  const hdr = document.getElementById('sc-header');
-  if (hdr) hdr.innerHTML = '<div style="display:flex;align-items:center;gap:10px;width:100%;"><div class="sc-header-logo"><div class="sc-header-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="sc-header-title">STAFF CONSOLE</div><div class="sc-header-sub">FORTIZED &middot; INTERNAL</div></div></div><div class="sc-header-status"><div class="sc-header-status-dot"></div>LIVE</div><div class="sc-header-role" style="background:'+roleColor+'0d;border:1px solid '+roleColor+'25;"><span style="color:'+roleColor+';display:flex;">'+roleSvg+'</span><span style="color:'+roleColor+';">'+roleLabel.toUpperCase()+'</span></div><span class="sc-header-user">@'+escapeHTML(CU.username)+'</span><button onclick="_closeStaffConsole()" class="sc-header-exit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>EXIT</button></div>';
   _renderStaffNav('dashboard');
   _loadStaffPage('dashboard');
   openModal('modal-staff-console');
@@ -25492,19 +25490,19 @@ function _renderStaffNav(active) {
   const role = getStaffRole(CU.username);
   const navItems = [
     {section:'Management', items:[
-      {id:'dashboard', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>', label:'Dashboard'},
-      {id:'reports', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>', label:'Reports'},
-      {id:'members', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', label:'Members'},
-      {id:'bastions', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', label:'Bastions'},
-      {id:'bans', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>', label:'Bans'},
-      ...(role!=='moderator' ? [{id:'economy', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>', label:'Economy'}] : []),
+      {id:'dashboard', svg:'<i class="fas fa-chart-pie"></i>', label:'Dashboard'},
+      {id:'reports', svg:'<i class="fas fa-flag"></i>', label:'Reports'},
+      {id:'members', svg:'<i class="fas fa-users"></i>', label:'Members'},
+      {id:'bastions', svg:'<i class="fas fa-shield-halved"></i>', label:'Bastions'},
+      {id:'bans', svg:'<i class="fas fa-gavel"></i>', label:'Bans'},
+      ...(role!=='moderator' ? [{id:'economy', svg:'<i class="fas fa-coins"></i>', label:'Economy'}] : []),
     ]},
     {section:'Oversight', items:[
-      ...(role!=='moderator' ? [{id:'broadcasts', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11v2l13 4V7L3 11zm15-1v4l3-1v-2l-3-1z"/></svg>', label:'Broadcasts'}] : []),
-      {id:'feedback', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', label:'Feedback'},
-      {id:'audit', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>', label:'Audit Log'},
-      ...(role!=='moderator' ? [{id:'staff', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', label:'Staff Mgmt'}] : []),
-      ...(role!=='moderator' ? [{id:'system', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>', label:'System'}] : []),
+      ...(role!=='moderator' ? [{id:'broadcasts', svg:'<i class="fas fa-bullhorn"></i>', label:'Broadcasts'}] : []),
+      {id:'feedback', svg:'<i class="fas fa-comment"></i>', label:'Feedback'},
+      {id:'audit', svg:'<i class="fas fa-clock-rotate-left"></i>', label:'Audit Log'},
+      ...(role!=='moderator' ? [{id:'staff', svg:'<i class="fas fa-user-tie"></i>', label:'Staff Mgmt'}] : []),
+      ...(role!=='moderator' ? [{id:'system', svg:'<i class="fas fa-gear"></i>', label:'System'}] : []),
     ]},
   ];
   let html = '';
@@ -26761,7 +26759,6 @@ async function _loadAdminMembers(main, subTab) {
   const tabs = [
     {id:'users', label:'Lookup'},
     ...(isAdm ? [{id:'all_users', label:'All Members'}] : []),
-    ...(isSup ? [{id:'staff', label:'Staff'}] : []),
   ];
   const valid = tabs.map(t => t.id);
   let active = subTab && valid.includes(subTab) ? subTab : (_adminSubTab.members && valid.includes(_adminSubTab.members) ? _adminSubTab.members : tabs[0].id);
@@ -26782,8 +26779,7 @@ const _SC_SUB_TO_DOMAIN = {
   // Platform → System (operational tools)
   settings:'system', audit:'system', analytics:'system',
   network_monitor:'system', backup_restore:'system',
-  // Platform → Members
-  staff:'members',
+  // Platform → Members (no sub-tabs currently)
 };
 
 // Returns the sub-tab list for a given top-level domain.

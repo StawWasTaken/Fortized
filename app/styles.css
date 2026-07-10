@@ -11362,38 +11362,36 @@ select:focus-visible {
 
 /* ── DM right sidebar column (rounded bar — left corners only) ────── */
 .fpp--dm{
+  width:100%;
+  border:none;
   border-radius:16px 0 0 16px;
-  background:var(--panel);
+  background:var(--channel);
   overflow-y:auto;
-  display:flex; flex-direction:column;
-  margin:0;
   height:100%;
+  display:flex; flex-direction:column;
+  gap:10px;
+  padding:12px 10px 12px 12px;
 }
+/* Each visual section inside the DM panel becomes a rounded card */
 .fpp--dm .fpp__banner{
-  border-radius:16px 0 0 0;
-  overflow:hidden;
+  border-radius:14px; overflow:hidden;
   margin:0;
-  flex-shrink:0;
 }
 .fpp--dm .fpp__av-row{
-  margin-top:-48px;
-  padding:0 16px;
-  flex-shrink:0;
+  margin-top:-52px;
+  padding:0 4px;
 }
-.fpp--dm .fpp__av{ width:88px; height:88px; border-width:3px; }
+.fpp--dm .fpp__av{ width:94px; height:94px; border-width:3px; }
 .fpp--dm .fpp__identity,
 .fpp--dm .fpp__mutuals-chip,
 .fpp--dm .fpp-card,
 .fpp--dm .fpp__actions{
-  background:transparent;
-  border:none;
-  border-radius:0;
-  padding:8px 16px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 16px;
   margin:0;
-}
-.fpp--dm .fpp-card{
-  border-top:1px solid rgba(255,255,255,.06);
-  border-radius:0;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
 .fpp--dm .fpp__actions{
   margin-top:auto;
@@ -11401,7 +11399,6 @@ select:focus-visible {
   display:flex;
   gap:8px;
   flex-wrap:wrap;
-  border-top:1px solid rgba(255,255,255,.06);
 }
 .fpp--dm .fpp__msg-input{ margin-top:auto; }
 .fpp--dm > *:last-child{ margin-bottom:0; }

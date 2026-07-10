@@ -25546,7 +25546,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
 
   // ── OVERVIEW (dashboard) ──
   if (tab === 'dashboard') {
-    FortizedSocial.adminInvalidateCache(); // Always fresh data
+    FortizedSocial.adminInvalidateCache();
     const reps = await FortizedSocial.adminGetReports().catch(()=>[]);
     const bans = await FortizedSocial.adminGetBans().catch(()=>[]);
     const staff = await FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]}));
@@ -25555,13 +25555,9 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     try {
       const stats = await FortizedSocial.adminGetDashboardStats();
       if (stats) {
-        totalUsers = stats.totalUsers;
-        onlineCount = stats.onlineCount;
-        awayCount = stats.awayCount;
-        dndCount = stats.dndCount;
-        radianceCount = stats.radianceCount;
-        newestUsers = stats.newestUsers;
-        topOnyx = stats.topOnyx;
+        totalUsers = stats.totalUsers; onlineCount = stats.onlineCount; awayCount = stats.awayCount;
+        dndCount = stats.dndCount; radianceCount = stats.radianceCount;
+        newestUsers = stats.newestUsers; topOnyx = stats.topOnyx;
       }
     } catch (e) { console.warn('[Admin] stats fetch failed', e); }
     const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
@@ -25569,129 +25565,130 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     const auditLog = await FortizedSocial.adminGetAuditLog().catch(()=>[]);
     const tickets = await FortizedSocial.adminGetSupportTickets().catch(()=>({}));
     const openTickets = Object.values(tickets).filter(t=>t.status==='open').length;
-
-    // Threat level calculation
     const threatScore = pending * 3 + nsfwQueue.length * 2 + bans.length + openTickets;
-    const _threatDot = (col) => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};box-shadow:0 0 6px ${col}99;vertical-align:1px;margin-right:5px;"></span>`;
-    const threat = threatScore > 20 ? {level:'CRITICAL',cls:'critical',icon:_threatDot('#f87171')} : threatScore > 10 ? {level:'HIGH',cls:'high',icon:_threatDot('#fb923c')} : threatScore > 3 ? {level:'MODERATE',cls:'medium',icon:_threatDot('#fbbf24')} : {level:'LOW',cls:'low',icon:_threatDot('#3ecf6e')};
+    const threat = threatScore > 20 ? {level:'CRITICAL',cls:'sc-threat--critical',icon:'<i class="fas fa-circle-exclamation" style="color:#f87171;font-size:10px;"></i>'} : threatScore > 10 ? {level:'HIGH',cls:'sc-threat--high',icon:'<i class="fas fa-circle-exclamation" style="color:#fb923c;font-size:10px;"></i>'} : threatScore > 3 ? {level:'MODERATE',cls:'sc-threat--medium',icon:'<i class="fas fa-circle" style="color:#fbbf24;font-size:10px;"></i>'} : {level:'LOW',cls:'sc-threat--low',icon:'<i class="fas fa-circle-check" style="color:#3ecf6e;font-size:10px;"></i>'};
     const activeNow = onlineCount + awayCount + dndCount;
-    const uptime = '99.9%'; // placeholder
 
-    main.innerHTML = `<div style="padding:var(--space-xl) var(--space-xl);">
-      <!-- Command Center Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg);">
+    main.innerHTML = `<div class="sc-page">
+      <div class="sc-dash-head">
         <div>
-          <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-xs);">
-            <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Staff Console</div>
-            <div class="hq-threat ${threat.cls}">${threat.icon} THREAT: ${threat.level}</div>
-          </div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.3);">Operator: <span style="color:var(--accent);">${escapeHTML(CU.displayName||CU.username)}</span> · ${new Date().toLocaleString()} · Session Active</div>
+          <div class="sc-dash-title"><i class="fas fa-chart-pie" style="color:var(--accent);"></i> Staff Console</div>
+          <div class="sc-dash-meta"><i class="fas fa-user"></i> ${escapeHTML(CU.displayName||CU.username)} <i class="fas fa-circle" style="color:var(--green);font-size:6px;margin:0 6px;"></i> ${new Date().toLocaleString()}</div>
         </div>
-        <div style="display:flex;gap:var(--space-sm);">
-          <button class="hq-quick-btn" style="background:linear-gradient(135deg,rgba(62,207,110,.18),rgba(255,249,62,.12));border-color:rgba(62,207,110,.35);color:#fff;font-weight:800;" onclick="openStaffOps()" title="Open the new Live Ops console (Cmd+K)"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px #3ecf6e;margin-right:6px;animation:adm-badge-pulse 2s infinite;"></span>Live Ops</button>
-          <button class="hq-quick-btn" onclick="openStaffPalette()" title="Command palette (Cmd+K)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> ⌘K</button>
-          <button class="hq-quick-btn" onclick="_syncAdminData().then(()=>{toast('Data synced','success');_loadAdminPage('dashboard');})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync</button>
-          <button class="hq-quick-btn" onclick="_loadAdminPage('all_users')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Users DB</button>
+        <div class="sc-dash-actions">
+          <span class="sc-threat ${threat.cls}">${threat.icon} ${threat.level}</span>
+          <button class="sc-btn" onclick="openStaffPalette()"><i class="fas fa-search"></i> ⌘K</button>
+          <button class="sc-btn" onclick="_syncAdminData().then(()=>{toast('Synced','success');_loadAdminPage('dashboard');})"><i class="fas fa-rotate"></i> Sync</button>
+          <button class="sc-btn" onclick="_loadAdminPage('all_users')"><i class="fas fa-users"></i> Users</button>
         </div>
       </div>
 
-      <!-- Primary Stats Row -->
-      <div class="sc-section-label">Threat &amp; Activity</div>
-      <div class="ftz-grid cols-5" style="margin-bottom:var(--space-sm);">
-        ${[
-          {l:'Total Users',v:totalUsers,c:'#60a5fa',t:'all_users'},
-          {l:'Active Now',v:activeNow,c:'#3ecf6e',t:'all_users',sub:onlineCount+' online · '+awayCount+' idle · '+dndCount+' dnd'},
-          {l:'Pending Reports',v:pending,c:pending>0?'#f87171':'#3ecf6e',t:'reports'},
-          {l:'Content Queue',v:nsfwQueue.length,c:nsfwQueue.length>0?'#f59e0b':'#3ecf6e',t:'nsfw_queue'},
-          {l:'Banned',v:bans.length,c:bans.length>0?'#f87171':'#3ecf6e',t:'bans'},
-        ].map(s=>`<div class="hq-stat" style="--stat-accent:${s.c};" onclick="_loadAdminPage('${s.t}')">
-          <div class="hq-stat-val" style="color:${s.c};">${s.v}</div>
-          <div class="hq-stat-label">${s.l}</div>
-          ${s.sub?`<div style="font-size:9px;color:rgba(255,255,255,.2);margin-top:3px;">${s.sub}</div>`:''}
-        </div>`).join('')}
-      </div>
-      <div class="sc-section-label">Community Health</div>
-      <div class="ftz-grid cols-5" style="margin-bottom:var(--space-xl);">
-        ${[
-          {l:'Radiance',v:radianceCount,c:'#ffd93e'},
-          {l:'Staff Members',v:totalStaff,c:'#a78bfa'},
-          {l:'Total Reports',v:reps.length,c:'#60a5fa'},
-          {l:'Open Tickets',v:openTickets,c:openTickets>0?'#38bdf8':'#3ecf6e',t:'support_tickets'},
-          {l:'Uptime',v:uptime,c:'#3ecf6e'},
-        ].map(s=>`<div class="hq-stat" style="--stat-accent:${s.c};" ${s.t?`onclick="_loadAdminPage('${s.t}')"`:''}>
-          <div class="hq-stat-val" style="color:${s.c};font-size:22px;">${s.v}</div>
-          <div class="hq-stat-label">${s.l}</div>
-        </div>`).join('')}
+      <div class="sc-dash-stats">
+        <div class="sc-stat" onclick="_loadAdminPage('all_users')" style="--sc-accent:#60a5fa;">
+          <div class="sc-stat-icon"><i class="fas fa-users"></i></div>
+          <div class="sc-stat-val">${totalUsers}</div>
+          <div class="sc-stat-lbl">Total Users</div>
+        </div>
+        <div class="sc-stat" onclick="_loadAdminPage('all_users')" style="--sc-accent:#3ecf6e;">
+          <div class="sc-stat-icon"><i class="fas fa-signal"></i></div>
+          <div class="sc-stat-val">${activeNow}</div>
+          <div class="sc-stat-lbl">Active Now</div>
+          <div class="sc-stat-sub">${onlineCount} online · ${awayCount} idle · ${dndCount} dnd</div>
+        </div>
+        <div class="sc-stat" onclick="_loadAdminPage('reports')" style="--sc-accent:${pending>0?'#f87171':'#3ecf6e'};">
+          <div class="sc-stat-icon"><i class="fas fa-flag"></i></div>
+          <div class="sc-stat-val">${pending}</div>
+          <div class="sc-stat-lbl">Pending Reports</div>
+        </div>
+        <div class="sc-stat" onclick="_loadAdminPage('nsfw_queue')" style="--sc-accent:${nsfwQueue.length>0?'#f59e0b':'#3ecf6e'};">
+          <div class="sc-stat-icon"><i class="fas fa-eye-slash"></i></div>
+          <div class="sc-stat-val">${nsfwQueue.length}</div>
+          <div class="sc-stat-lbl">Content Queue</div>
+        </div>
+        <div class="sc-stat" onclick="_loadAdminPage('bans')" style="--sc-accent:${bans.length>0?'#f87171':'#3ecf6e'};">
+          <div class="sc-stat-icon"><i class="fas fa-gavel"></i></div>
+          <div class="sc-stat-val">${bans.length}</div>
+          <div class="sc-stat-lbl">Banned</div>
+        </div>
       </div>
 
-      <!-- Three-column bottom section -->
-      <div class="sc-section-label">Live Operations</div>
-      <div class="ftz-grid cols-3">
-        <!-- Recent Reports -->
-        <div class="hq-panel">
-          <div class="hq-panel-head">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-            <h3>Incoming Reports</h3>
-            <div style="margin-left:auto;font-size:10px;color:rgba(248,113,113,.5);font-weight:700;">${pending} PENDING</div>
+      <div class="sc-dash-stats">
+        <div class="sc-stat" style="--sc-accent:#ffd93e;">
+          <div class="sc-stat-icon"><i class="fas fa-crown"></i></div>
+          <div class="sc-stat-val">${radianceCount}</div>
+          <div class="sc-stat-lbl">Radiance</div>
+        </div>
+        <div class="sc-stat" style="--sc-accent:#a78bfa;">
+          <div class="sc-stat-icon"><i class="fas fa-user-shield"></i></div>
+          <div class="sc-stat-val">${totalStaff}</div>
+          <div class="sc-stat-lbl">Staff</div>
+        </div>
+        <div class="sc-stat" style="--sc-accent:#60a5fa;">
+          <div class="sc-stat-icon"><i class="fas fa-list"></i></div>
+          <div class="sc-stat-val">${reps.length}</div>
+          <div class="sc-stat-lbl">Total Reports</div>
+        </div>
+        <div class="sc-stat" onclick="_loadAdminPage('support_tickets')" style="--sc-accent:${openTickets>0?'#38bdf8':'#3ecf6e'};">
+          <div class="sc-stat-icon"><i class="fas fa-ticket"></i></div>
+          <div class="sc-stat-val">${openTickets}</div>
+          <div class="sc-stat-lbl">Open Tickets</div>
+        </div>
+        <div class="sc-stat" style="--sc-accent:#3ecf6e;">
+          <div class="sc-stat-icon"><i class="fas fa-heart-pulse"></i></div>
+          <div class="sc-stat-val">99.9%</div>
+          <div class="sc-stat-lbl">Uptime</div>
+        </div>
+      </div>
+
+      <div class="sc-dash-grid">
+        <div class="sc-card">
+          <div class="sc-card-head">
+            <i class="fas fa-flag" style="color:#f87171;"></i><h3>Incoming Reports</h3>
+            <span class="sc-card-badge" style="color:#f87171;">${pending} pending</span>
           </div>
-          <div style="max-height:300px;overflow-y:auto;">
-            ${reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').slice(0,8).map((r,i)=>{const _t=r.username||r.msgFrom||null;return `<div class="hq-user-row" onclick="_loadAdminPage('reports')">
-              <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;box-shadow:0 0 6px rgba(248,113,113,.4);"></div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(r.reason||'No reason')}</div>
-                <div style="font-size:10px;color:rgba(255,255,255,.25);">${escapeHTML(r.reporter||'?')}${_t?' → '+escapeHTML(_t):''} · ${r.createdAt?formatTimeAgo(r.createdAt):''}</div>
-              </div>
-            </div>`;}).join('')||'<div style="padding:24px;text-align:center;color:rgba(62,207,110,.4);font-size:12px;font-weight:600;">All clear</div>'}
+          <div class="sc-card-body">
+            ${reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').slice(0,8).map(r=>{const _t=r.username||r.msgFrom||null;return `<div class="sc-row" onclick="_loadAdminPage('reports')">
+              <i class="fas fa-circle" style="color:#f87171;font-size:8px;"></i>
+              <div class="sc-row-c"><div class="sc-row-t">${escapeHTML(r.reason||'No reason')}</div><div class="sc-row-s">${escapeHTML(r.reporter||'?')}${_t?' → '+escapeHTML(_t):''} · ${r.createdAt?formatTimeAgo(r.createdAt):''}</div></div>
+            </div>`;}).join('')||'<div class="sc-empty"><i class="fas fa-circle-check" style="color:var(--green);"></i> All clear</div>'}
           </div>
         </div>
 
-        <!-- Live Activity Feed -->
-        <div class="hq-panel">
-          <div class="hq-panel-head">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            <h3>Activity Feed</h3>
-            <div style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:var(--green);font-weight:600;"><div style="width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px #3ecf6e88;animation:adm-badge-pulse 2s infinite;"></div>LIVE</div>
+        <div class="sc-card">
+          <div class="sc-card-head">
+            <i class="fas fa-bolt" style="color:#3ecf6e;"></i><h3>Activity Feed</h3>
+            <span class="sc-card-badge" style="color:var(--green);"><i class="fas fa-circle" style="font-size:8px;"></i> LIVE</span>
           </div>
-          <div style="max-height:300px;overflow-y:auto;" id="hq-live-feed">
+          <div class="sc-card-body">
             ${auditLog.slice(0,10).map(e=>{
-              const actionColor = (e.action||'').includes('ban')?'#f87171':(e.action||'').includes('warn')?'#f59e0b':(e.action||'').includes('give')||((e.action||'').includes('grant'))?'#ffd93e':(e.action||'').includes('report')?'#a855f7':'#60a5fa';
-              return `<div class="hq-feed-item">
-                <div style="width:6px;height:6px;border-radius:50%;background:${actionColor};flex-shrink:0;margin-top:5px;box-shadow:0 0 4px ${actionColor}55;"></div>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:11.5px;color:rgba(255,255,255,.6);"><span style="color:${actionColor};font-weight:700;">${escapeHTML(e.action||'?')}</span> <span style="color:rgba(255,255,255,.3);">on</span> ${escapeHTML(e.target||'?')}</div>
-                  <div style="font-size:9.5px;color:rgba(255,255,255,.2);">${escapeHTML(e.by||'?')} · ${e.at?formatTimeAgo(e.at):''}</div>
-                </div>
-              </div>`;}).join('')||'<div style="padding:24px;text-align:center;color:rgba(255,255,255,.2);font-size:12px;">No activity yet</div>'}
+              const c = (e.action||'').includes('ban')?'#f87171':(e.action||'').includes('warn')?'#f59e0b':(e.action||'').includes('give')||((e.action||'').includes('grant'))?'#ffd93e':(e.action||'').includes('report')?'#a855f7':'#60a5fa';
+              return `<div class="sc-row">
+                <i class="fas fa-circle" style="color:${c};font-size:7px;"></i>
+                <div class="sc-row-c"><div class="sc-row-t"><span style="color:${c};font-weight:700;">${escapeHTML(e.action||'?')}</span> on ${escapeHTML(e.target||'?')}</div><div class="sc-row-s">${escapeHTML(e.by||'?')} · ${e.at?formatTimeAgo(e.at):''}</div></div>
+              </div>`;
+            }).join('')||'<div class="sc-empty"><i class="fas fa-clock"></i> No activity</div>'}
           </div>
         </div>
 
-        <!-- Quick Intel -->
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          <!-- Newest Users -->
-          <div class="hq-panel" style="flex:1;">
-            <div class="hq-panel-head">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-              <h3>New Arrivals</h3>
-            </div>
-            ${newestUsers.map(u=>`<div class="hq-user-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
-              <div style="width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(u.pfp,u.display_name||u.username,26)}</div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,.7);">@${escapeHTML(u.username)}</div>
-                <div style="font-size:9.5px;color:rgba(255,255,255,.2);">${u.createdAt?formatTimeAgo(u.createdAt):(u.joinedAt?formatTimeAgo(u.joinedAt):'')}</div>
-              </div>
-            </div>`).join('')||'<div style="padding:14px;text-align:center;color:rgba(255,255,255,.2);font-size:11px;">No data</div>'}
+        <div class="sc-card">
+          <div class="sc-card-head">
+            <i class="fas fa-user-plus" style="color:#60a5fa;"></i><h3>New Arrivals</h3>
           </div>
-          <!-- Top Onyx -->
-          <div class="hq-panel" style="flex:1;">
-            <div class="hq-panel-head">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffd93e" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-              <h3>Top Onyx</h3>
-            </div>
-            ${topOnyx.map((u,i)=>`<div class="hq-user-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
-              <div style="font-size:10px;font-weight:800;color:${i===0?'#ffd93e':i===1?'#c0c0c0':i===2?'#cd7f32':'rgba(255,255,255,.3)'};width:16px;text-align:center;">#${i+1}</div>
-              <div style="flex:1;min-width:0;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);">@${escapeHTML(u.username)}</div>
-              <div style="font-size:12px;font-weight:800;color:#ffd93e;font-family:var(--font-display);">${(u.onyx||0).toLocaleString()}</div>
-            </div>`).join('')||'<div style="padding:14px;text-align:center;color:rgba(255,255,255,.2);font-size:11px;">No data</div>'}
+          <div class="sc-card-body">
+            ${newestUsers.map(u=>`<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
+              <div class="sc-avatar">${buildAvatarHTML(u.pfp,u.display_name||u.username,24)}</div>
+              <div class="sc-row-c"><div class="sc-row-t">@${escapeHTML(u.username)}</div><div class="sc-row-s">${u.createdAt?formatTimeAgo(u.createdAt):''}</div></div>
+            </div>`).join('')||'<div class="sc-empty"><i class="fas fa-user-slash"></i> No data</div>'}
+          </div>
+          <div class="sc-card-head" style="margin-top:8px;">
+            <i class="fas fa-coins" style="color:#ffd93e;"></i><h3>Top Onyx</h3>
+          </div>
+          <div class="sc-card-body">
+            ${topOnyx.map((u,i)=>`<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
+              <div class="sc-rank" style="color:${i===0?'#ffd93e':i===1?'#c0c0c0':i===2?'#cd7f32':'rgba(255,255,255,.3)'};">#${i+1}</div>
+              <div class="sc-row-c"><div class="sc-row-t">@${escapeHTML(u.username)}</div></div>
+              <div class="sc-onyx">${(u.onyx||0).toLocaleString()}</div>
+            </div>`).join('')||'<div class="sc-empty">No data</div>'}
           </div>
         </div>
       </div>

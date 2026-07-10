@@ -30254,7 +30254,6 @@ async function joinBastionById(bastionId, hasInvite) {
   CU.bastions=[...(CU.bastions||[]),localB];
   await saveUser(true);
   await FortizedSocial.addBastionMember(gid,CU.username);
-  try { if (!(CU.bastions||[]).some(x=>x.globalId===gid)) CU.bastions=[...(CU.bastions||[]),localB]; await saveUser(true); } catch(_){}
   try{const members=await FortizedSocial.getBastionMembers(gid)||[];const _gb=await FortizedSocial.getGlobalBastion(gid);if(_gb){_gb.memberCount=members.length;await FortizedSocial.saveGlobalBastion(gid,_gb);}}catch{}
   renderRailBastions();
   toast('Joined '+b.name+'!','success');

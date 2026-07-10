@@ -2021,7 +2021,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 /* ── Focus Mode 2027 ──────────────────────────── */
 .focus-mode-chat .chat-msgs{background:rgba(255,255,255,.008);}
 .focus-mode-chat .msg-text{font-size:14.5px;color:rgba(221,227,237,.7);letter-spacing:.02em;line-height:1.75;}
-.focus-mode-chat .msg-reactions,.focus-mode-chat .cit-gif,.focus-mode-chat .msg-acts button[title="React"]{display:none!important;}
+.focus-mode-chat .msg-reactions,.focus-mode-chat .msg-acts button[title="React"]{display:none!important;}
 .focus-mode-chat .typing-dots span{background:rgba(255,255,255,.08);}
 .focus-mode-chat .chat-input-outer{border-color:rgba(255,255,255,.03);}
 .focus-mode-chat .msg-row{border-bottom:1px solid rgba(255,255,255,.015);padding-bottom:6px;margin-bottom:2px;}
@@ -11401,7 +11401,8 @@ select:focus-visible {
   border-radius:16px;
   background:var(--channel);
   overflow-y:auto;
-  height:100%;
+  height:auto;
+  max-height:calc(100vh - 24px);
   display:flex; flex-direction:column;
   gap:0;
   padding:0;

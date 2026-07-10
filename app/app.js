@@ -26806,7 +26806,6 @@ function _scDomainSubs(domainKey) {
     case 'system':
       return [
         ...(isSup ? [{id:'settings', label:'Configuration'}] : []),
-        ...(isAdm ? [{id:'audit', label:'Activity Log'}] : []),
         ...(isSup ? [{id:'analytics', label:'Analytics'}] : []),
         ...(isAdm ? [{id:'network_monitor', label:'Network'}] : []),
         ...(isSup ? [{id:'backup_restore', label:'Backup'}] : []),

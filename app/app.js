@@ -308,13 +308,16 @@ function rememberProfile(u) {
   if (u.displayName && entry.displayName !== u.displayName) { entry.displayName = u.displayName; dirty = true; }
   if (u.status && entry.status !== u.status) { entry.status = u.status; dirty = true; }
   if (dirty) {
+    entry._ts = Date.now();
     _profileCache[u.username] = entry;
     _persistProfileCache();
-    if (u.pfp) _pfpCache[u.username] = u.pfp; // keep legacy cache aligned
+    if (u.pfp) _pfpCache[u.username] = u.pfp;
   }
 }
 function cachedProfile(username) {
-  return _profileCache[username] || _profileCache[(username||'').toLowerCase()] || null;
+  const entry = _profileCache[username] || _profileCache[(username||'').toLowerCase()] || null;
+  if (entry && entry._ts && Date.now() - entry._ts > 300000) return null;
+  return entry;
 }
 // Full-profile cache — persists the full user object returned by
 // FortizedSocial.getUserByName so the Profile Card modal (and any other
@@ -1816,10 +1819,9 @@ async function refreshCU() {
       // window._recentlyEditedFields at the call sites that mutate them
       // (equipDecoration, setMyStatus, updateBanner, updatePfp, etc.).
       const protectFields = [
-        'pfp','pfpCrop','banner','bio','displayName','status','pronouns',
+        'status','pronouns',
         'friends','friendRequestsSent','friendRequestsReceived',
         'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme',
-        // 'activeDecoration' omitted — owned by ftz_deco_<name> key (see equipDecoration)
         'connections','socials','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
         'profileWidgets','displayFont','displayEffect','displayColor','displayColor2','wantToPlay','gameCollection',
         'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
@@ -1830,18 +1832,9 @@ async function refreshCU() {
         // pick that hasn't reached the DB yet.
         'cursor','density','scale'
       ];
-      const _recentEdits = window._recentlyEditedFields || {};
-      const _now = Date.now();
-      for (const k of protectFields) {
-        // If the user just edited this field locally (within 10s), trust
-        // the local copy regardless of what DB returned. Stops the race
-        // where a stale DB read undoes a just-cleared field. Window is
-        // longer than typical save round-trip + Firebase replication.
-        if (_recentEdits[k] && (_now - _recentEdits[k]) < 10000) {
-          fresh[k] = CU[k];
-          continue;
-        }
-      }
+      // DB is source of truth — don't block fresh values with a
+      // recent-edit guard. Previously a 10-second window prevented
+      // cross-device updates from showing.
       // Stricter protection for super-admins: also rescue from "DB returned
       // empty/falsy" cases (covers migration races and badge-vs-write conflicts).
       if (SUPER_ADMINS.includes((fresh.username || '').toLowerCase())) {
@@ -1855,38 +1848,11 @@ async function refreshCU() {
         }
       }
 
-      // ── Dedicated pfp / banner keys win over the DB row ────────────
-      // ftz_pfp_<name> + ftz_banner_<name> hold the last value the user
-      // actually committed locally. If the Supabase row write failed
-      // silently (row size / RLS) or got reverted by a stale replica,
-      // the DB will keep returning the old pfp/banner — and without
-      // this guard refreshCU would happily overwrite the just-uploaded
-      // local copy with that stale value. That's the "every time we
-      // deploy, my avatar/banner snap back to the old ones" bug.
-      try {
-        const pfpEntry = _readPersistedPfpLocal(CU.username);
-        if (pfpEntry && pfpEntry.val && pfpEntry.val !== fresh.pfp) {
-          fresh.pfp = pfpEntry.val;
-          if (pfpEntry.crop !== undefined) fresh.pfpCrop = pfpEntry.crop;
-        }
-      } catch {}
-      try {
-        const bannerEntry = _readPersistedBannerLocal(CU.username);
-        if (bannerEntry && bannerEntry.val && bannerEntry.val !== fresh.banner) {
-          fresh.banner = bannerEntry.val;
-        }
-      } catch {}
-      // Same idea for "About me" — written to ftz_bio_<name> by
-      // saveLocal whenever CU.bio changes locally.
-      try {
-        const raw = localStorage.getItem('ftz_bio_' + CU.username);
-        if (raw) {
-          const bioEntry = JSON.parse(raw);
-          if (bioEntry && typeof bioEntry.val === 'string' && bioEntry.val !== (fresh.bio || '')) {
-            fresh.bio = bioEntry.val;
-          }
-        }
-      } catch {}
+      // DB is source of truth for pfp, banner, bio — never override
+      // with localStorage. Previously these dedicated keys could
+      // resurrect old values for up to 5 minutes (pfp/banner) or
+      // indefinitely (bio), causing the "every deploy reverts my
+      // avatar" bug and cross-device staleness.
       // Preserve radiance data if DB returned null but local had active values
       if(!fresh.radianceUntil && prevRad && new Date(prevRad)>new Date()) fresh.radianceUntil=prevRad;
       if(!fresh.radiancePlus && prevPlus && new Date(prevPlus)>new Date()) fresh.radiancePlus=prevPlus;
@@ -13846,7 +13812,7 @@ function initFortizedUXResilience() {
           }
           if (local) {
             const protectFields = [
-              'pfp','banner','bio','displayName','pronouns','friends','friendRequestsSent','friendRequestsReceived',
+              'pronouns','friends','friendRequestsSent','friendRequestsReceived',
               'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme',
               // 'activeDecoration' INTENTIONALLY OMITTED — owned by the
               // dedicated ftz_deco_<name> key (handled above). Leaving it
@@ -15091,13 +15057,8 @@ function initFortizedUXResilience() {
         // Preserve shop inventory — local is source of truth since saves may be in-flight
         if (CU.unlockedAppearances?.length) { const m = new Set([...(fresh.unlockedAppearances||[]), ...CU.unlockedAppearances]); fresh.unlockedAppearances = [...m]; }
         if (CU.ownedDecorations?.length) { const m = new Set([...(fresh.ownedDecorations||[]), ...CU.ownedDecorations]); fresh.ownedDecorations = [...m]; }
-        // activeDecoration is client-canonical. CU's value (written
-      // synchronously to localStorage via saveLocal the moment the
-      // user equipped/cleared) wins over what the DB read returned —
-      // DB reads can lag a fresh write by enough to resurrect a
-      // just-cleared decoration. Previously this only restored CU→
-      // fresh when CU was truthy, so cleared decorations came back.
-      if ('activeDecoration' in CU) fresh.activeDecoration = CU.activeDecoration;
+      // DB is source of truth for activeDecoration — don't resurrect
+      // previously equipped decorations from local state.
         if (CU.onyxBadge && !fresh.onyxBadge) { fresh.onyxBadge = true; fresh.onyxBadgeSpent = Math.max(fresh.onyxBadgeSpent||0, CU.onyxBadgeSpent||0); }
         if (CU.displayFont && !fresh.displayFont) fresh.displayFont = CU.displayFont;
         if (CU.displayEffect && !fresh.displayEffect) fresh.displayEffect = CU.displayEffect;

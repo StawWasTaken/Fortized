@@ -2236,6 +2236,34 @@ const FortizedSocial = (() => {
   }
 
   // Invalidate all admin-related caches so next fetch hits Supabase directly
+  async function adminGetDashboardStats() {
+    const cached = _cacheGet('dashStats');
+    if (cached !== undefined) return cached;
+    try {
+      const now = new Date().toISOString();
+      const [totalRes, onlineRes, awayRes, dndRes, radianceRes, topOnyxRes, newestRes] = await Promise.all([
+        sb.from('users').select('*', { count: 'exact', head: true }),
+        sb.from('users').select('*', { count: 'exact', head: true }).eq('status', 'online'),
+        sb.from('users').select('*', { count: 'exact', head: true }).in('status', ['away', 'idle']),
+        sb.from('users').select('*', { count: 'exact', head: true }).eq('status', 'dnd'),
+        sb.from('users').select('*', { count: 'exact', head: true }).gte('radiance_until', now),
+        sb.from('users').select('username,display_name,pfp,onyx').order('onyx', { ascending: false }).limit(5),
+        sb.from('users').select('username,display_name,pfp,created_at').order('created_at', { ascending: false }).limit(5),
+      ]);
+      const result = {
+        totalUsers: totalRes.count || 0,
+        onlineCount: onlineRes.count || 0,
+        awayCount: awayRes.count || 0,
+        dndCount: dndRes.count || 0,
+        radianceCount: radianceRes.count || 0,
+        topOnyx: (topOnyxRes.data || []).map(r => ({ username: r.username, display_name: r.display_name, pfp: r.pfp, onyx: r.onyx })),
+        newestUsers: (newestRes.data || []).map(r => ({ username: r.username, display_name: r.display_name, pfp: r.pfp, createdAt: r.created_at })),
+      };
+      _cacheSet('dashStats', result, _CACHE_TTL.user);
+      return result;
+    } catch (e) { console.warn('[adminGetDashboardStats]', e); return null; }
+  }
+
   function adminInvalidateCache() {
     _cacheDel('reports');
     _cacheDel('akv:bans');
@@ -2248,6 +2276,7 @@ const FortizedSocial = (() => {
     _cacheDel('akv:feedback');
     _cacheDel('akv:place_feedback');
     _cacheDel('akv:onboarding_stats');
+    _cacheDel('dashStats');
     _cacheDel('globalSettings');
   }
 
@@ -2595,6 +2624,7 @@ const FortizedSocial = (() => {
     adminSetSignal, adminGetSignal,
     adminGetFeedback, adminPushFeedback,
     adminInvalidateCache,
+    adminGetDashboardStats,
     getForumThreads, getForumThread, createForumThread, updateForumThread, deleteForumThread,
     getForumPosts, getForumPostsForThreads, createForumPost, updateForumPost, deleteForumPost, searchForumThreads,
     uploadFile,

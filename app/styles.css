@@ -3040,7 +3040,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .settings-close svg{display:block;}
 
 /* ── Staff Console Modal ──── */
-.sc-modal{width:min(1300px,calc(100vw - 40px)) !important;height:min(860px,calc(100vh - 40px)) !important;max-width:none !important;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;box-shadow:0 0 0 1.5px var(--glass-border) !important;position:relative;background:var(--bg2);}
+.sc-modal{width:min(1180px,calc(100vw - 40px)) !important;height:min(820px,calc(100vh - 40px)) !important;max-width:none !important;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;box-shadow:0 0 0 1.5px var(--glass-border) !important;position:relative;background:var(--bg2);}
 @media(max-width:768px){.sc-modal{width:calc(100vw - 12px);height:calc(100vh - 12px);border-radius:14px;}}
 .sc-header{display:flex;align-items:center;gap:12px;padding:16px 48px 12px 24px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.05);}
 .sc-header-logo{display:flex;align-items:center;gap:10px;}

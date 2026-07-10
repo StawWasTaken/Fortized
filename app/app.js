@@ -25555,15 +25555,16 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     const totalStaff = SUPER_ADMINS.length + (staff.admins||[]).length + (staff.moderators||[]).length;
     let totalUsers = '–', onlineCount = 0, radianceCount = 0, awayCount = 0, dndCount = 0, newestUsers = [], topOnyx = [];
     try {
-      const usersList = await FortizedSocial.getUsers();
-      totalUsers = usersList.length;
-      radianceCount = usersList.filter(u => _hasRadiance(u)).length;
-      const sortedByDate = usersList.filter(u=>u.createdAt||u.joinedAt).sort((a,b)=>new Date(b.createdAt||b.joinedAt)-new Date(a.createdAt||a.joinedAt));
-      newestUsers = sortedByDate.slice(0,5);
-      topOnyx = [...usersList].sort((a,b)=>(b.onyx||0)-(a.onyx||0)).slice(0,5);
-      onlineCount = usersList.filter(u => u.status === 'online').length;
-      awayCount = usersList.filter(u => u.status === 'away' || u.status === 'idle').length;
-      dndCount = usersList.filter(u => u.status === 'dnd').length;
+      const stats = await FortizedSocial.adminGetDashboardStats();
+      if (stats) {
+        totalUsers = stats.totalUsers;
+        onlineCount = stats.onlineCount;
+        awayCount = stats.awayCount;
+        dndCount = stats.dndCount;
+        radianceCount = stats.radianceCount;
+        newestUsers = stats.newestUsers;
+        topOnyx = stats.topOnyx;
+      }
     } catch (e) { console.warn('[Admin] stats fetch failed', e); }
     const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
     const nsfwQueue = await FortizedSocial.adminGetNsfwQueue().catch(()=>[]);
@@ -25675,7 +25676,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
               <h3>New Arrivals</h3>
             </div>
             ${newestUsers.map(u=>`<div class="hq-user-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
-              <div style="width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(u.pfp,u.displayName||u.username,26)}</div>
+              <div style="width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(u.pfp,u.display_name||u.username,26)}</div>
               <div style="flex:1;min-width:0;">
                 <div style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,.7);">@${escapeHTML(u.username)}</div>
                 <div style="font-size:9.5px;color:rgba(255,255,255,.2);">${u.createdAt?formatTimeAgo(u.createdAt):(u.joinedAt?formatTimeAgo(u.joinedAt):'')}</div>

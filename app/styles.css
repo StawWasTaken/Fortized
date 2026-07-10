@@ -1703,37 +1703,32 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
    The row's DOM structure differs (friend-item vs ml-entry) but the
    look is identical. */
 .ml-entry,
-/* ── DM Sidebar: rounded card style (Discord 2026) ──── */
 .friend-item{
-  display:flex;align-items:center;gap:12px;
-  padding:10px 14px;margin:4px 10px;
-  border-radius:14px;cursor:pointer;position:relative;
-  background:var(--surface,rgba(255,255,255,.03));
-  border:1px solid rgba(255,255,255,.04);
-  box-shadow:0 1px 3px rgba(0,0,0,.15);
-  transition:all .15s ease;
+  display:flex;align-items:center;gap:10px;
+  padding:6px 10px;margin:1px 6px;
+  border-radius:8px;cursor:pointer;position:relative;
+  transition:background .12s;
 }
 .ml-entry:hover,
-.friend-item:hover{ background:var(--surface-hover,rgba(255,255,255,.06));border-color:rgba(255,255,255,.08);transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.2); }
+.friend-item:hover{ background:rgba(255,255,255,.04); }
 .ml-entry:active,
-.friend-item:active{ transform:scale(.98); }
-.friend-item.active{ background:rgba(255,249,62,.06);border-color:rgba(255,249,62,.12);box-shadow:0 1px 4px rgba(255,249,62,.08); }
-.friend-item.active .fi-name{ color:var(--accent); }
-/* Avatars — slightly larger for the card style */
-.friend-item .fa{ width:36px!important;height:36px!important; }
+.friend-item:active{ transform:scale(.985); }
+.friend-item.active{ background:rgba(255,255,255,.06); }
+/* Avatars — both rows land on the same 32 px pill so densities match. */
+.friend-item .fa{ width:32px!important;height:32px!important; }
 .ml-entry .ml-av,
 .ml-entry .gc-ml-av{ width:32px;height:32px; }
 /* Name typography aligns across both surfaces. */
 .friend-item .fi-name,
 .ml-entry .ml-name{
-  font-size:14px!important;font-weight:600!important;
-  color:rgba(255,255,255,.6);
+  font-size:13.5px!important;font-weight:600!important;
+  color:rgba(255,255,255,.55);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   transition:color .12s;
 }
 .friend-item:hover .fi-name,
 .ml-entry:hover .ml-name{ color:rgba(255,255,255,.9); }
-.friend-item.active .fi-name{ color:var(--accent); }
+.friend-item.active .fi-name{ color:#fff; }
 .ml-av{width:32px;height:32px;border-radius:50%;background:var(--panel);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:visible;position:relative;}
 .ml-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
 .ml-status{position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:transparent;z-index:2;}
@@ -6975,7 +6970,7 @@ button[disabled],
 /* Transparent PFP support — don't add opaque bg behind transparent avatars */
 .ua img,.fa img,.ml-av img,.msg-av-inner img,.mpp-av img,.profile-av-big img,.chat-welcome .w-av img,.ftz-notif-av img,.voice-avatar-ring img{background:transparent!important;}
 /* DM sidebar close button — appears on hover */
-.dm-close-btn{display:none;background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:16px;width:24px;height:24px;border-radius:8px;align-items:center;justify-content:center;transition:all .12s;line-height:1;padding:0;z-index:2;flex-shrink:0;}
+.dm-close-btn{display:none;background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:14px;width:18px;height:18px;border-radius:4px;align-items:center;justify-content:center;transition:all .12s;line-height:1;padding:0;z-index:2;}
 .dm-close-btn:hover{color:#fff;background:rgba(255,255,255,.1);}
 .friend-item:hover .dm-close-btn{display:flex;}
 .dm-friends-link{transition:background .12s;}
@@ -11314,36 +11309,49 @@ select:focus-visible {
    carry the look on its own. */
 .fpp--own.fpp--stroked{ border-color:transparent; }
 
-/* ── DM right sidebar column ──────────────────────────────────────── */
+/* ── DM right sidebar column (rounded card style) ─────────────────── */
 .fpp--dm{
   width:100%;
   border:none;
   border-radius:0;
   border-left:1px solid var(--border);
-  box-shadow:none;
-  /* Same accent wash + flat panel + dark overlay stack as the base
-     .fpp, just without the radial since the panel is much taller
-     than wide — a radial originating from 18% top would look
-     awkwardly cropped against this aspect ratio. */
-  background:
-    linear-gradient(rgba(var(--fpp-accent-rgb),.025), rgba(var(--fpp-accent-rgb),.025)),
-    linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)),
-    var(--panel);
+  background:var(--channel);
   overflow-y:auto;
   height:100%;
   display:flex; flex-direction:column;
+  gap:10px;
+  padding:12px 10px 12px 12px;
 }
-/* DM panel avatar — tuned down from the first pass after user
-   review. Was 108px (×1.5), the screenshot read as "too big" —
-   now 94px (×1.3) so it still anchors the column without
-   crowding the banner edge. */
+/* Each visual section inside the DM panel becomes a rounded card */
+.fpp--dm .fpp__banner{
+  border-radius:14px; overflow:hidden;
+  margin:0;
+}
+.fpp--dm .fpp__av-row{
+  margin-top:-52px;
+  padding:0 4px;
+}
 .fpp--dm .fpp__av{ width:94px; height:94px; border-width:3px; }
-.fpp--dm .fpp__av-row{ margin-top:-52px; }
-.fpp--dm > *:last-child{ margin-bottom:0; }
+.fpp--dm .fpp__identity,
+.fpp--dm .fpp__mutuals-chip,
+.fpp--dm .fpp-card,
+.fpp--dm .fpp__actions{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 16px;
+  margin:0;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+.fpp--dm .fpp__actions{
+  margin-top:auto;
+  padding:12px 16px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
 .fpp--dm .fpp__msg-input{ margin-top:auto; }
-/* DM panel is a sidebar column, not a freestanding card — a Main-
-   coloured halo extending past the viewport edge would look wrong.
-   The accent tint + top stripe already carry the theme. */
+.fpp--dm > *:last-child{ margin-bottom:0; }
 .fpp--dm.fpp--stroked{ box-shadow:none; }
 
 /* ── Settings preview stack (three small stacked previews) ────────── */
@@ -13091,4 +13099,9 @@ select:focus,select:focus-visible,
   .chat-greeting-bar__label{display:none;}
   .chat-greeting-bar__flag{display:none;}
 }
+/* ── Unified Moderation (bans page) ─────────────── */
+._ua-sug-item:hover{background:rgba(255,255,255,.06);}
+._ua-sug-item:last-child{border-bottom:none!important;}
+#_ua-duration-wrap{display:flex;flex-direction:column;}
+[data-uav].sc-btn-primary{font-weight:700;}
 

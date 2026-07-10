@@ -299,7 +299,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
     </button>
     <div class="tb-wallet">
       <div class="tb-cap tb-cap--onyx" id="onyx-display" onclick="showView('atelier')" oncontextmenu="onOnyxCtxMenu&amp;&amp;onOnyxCtxMenu(event);return false;" title="Onyx balance · click to open Atelier · right-click for options">
-        <div class="tb-cap-ic"><img src="/Onyx.png" alt=""></div>
+        <div class="tb-cap-ic"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt=""></div>
         <span id="onyx-val" class="tb-cap-val">0</span>
         <span class="tb-cap-lbl">Onyx</span>
       </div>
@@ -694,20 +694,6 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
       </div>
     </div>
 
-    <!-- STAFF CONSOLE MODAL (card-style like settings) -->
-    <div class="modal-overlay" role="dialog" id="modal-staff-console">
-      <div class="modal settings-modal">
-        <button class="settings-close" aria-label="Close staff console" onclick="_closeStaffConsole()" data-tip="Close">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-        <div class="modal-bar"></div>
-        <div class="modal-body" style="padding:0;display:flex;height:100%;overflow:hidden;">
-          <div class="sc-nav" id="sc-nav"></div>
-          <div class="sc-main" id="sc-main"></div>
-        </div>
-      </div>
-    </div>
-
   </div><!-- /content -->
   </div><!-- /main -->
 <!-- Activity Mini-Pill — global, stays visible on all pages when minimized -->
@@ -720,6 +706,20 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </button>
 </div>
 </div><!-- /main-wrap -->
+
+<!-- STAFF CONSOLE MODAL (card-style like settings) -->
+<div class="modal-overlay" role="dialog" id="modal-staff-console">
+  <div class="modal settings-modal">
+    <button class="settings-close" aria-label="Close staff console" onclick="_closeStaffConsole()" data-tip="Close">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-bar"></div>
+    <div class="modal-body" style="padding:0;display:flex;height:100%;overflow:hidden;">
+      <div class="sc-nav" id="sc-nav"></div>
+      <div class="sc-main" id="sc-main"></div>
+    </div>
+  </div>
+</div>
 
 <!-- SETTINGS MODAL (opens over current page like Create Bastion) -->
 <div class="modal-overlay" role="dialog" id="modal-settings">

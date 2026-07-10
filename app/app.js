@@ -141,7 +141,7 @@ function ftzIcon(name, size, color) {
   return out;
 }
 // Shorthand icon helpers — Radiance & Onyx use PNG images (displayed inline like SVGs), Boost uses SVG
-function _onyxImg(size){const s=size||'18';return '<img src="/badges/onyx.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Onyx">';}
+function _onyxImg(size){const s=size||'18';return '<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);" alt="Onyx">';}
 function _radianceImg(size){const s=size||'16';return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;object-fit:contain;" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="radianceGrad-'+Math.random()+'" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ff77e4;stop-opacity:1" /><stop offset="100%" style="stop-color:#fff93e;stop-opacity:1" /></linearGradient></defs><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#radianceGrad-'+Math.random()+')" /></svg>';}
 // Radiance basic + Radiance Plus were merged into a single Radiance tier
 // a long time ago. `radiancePlus` is kept as a legacy field for back-compat
@@ -4461,7 +4461,7 @@ function updateOnyxDisplay() {
 function onOnyxCtxMenu(ev) {
   ev.preventDefault();
   const balance = CU?.onyx || 0;
-  const onyxIcon = '<img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
+  const onyxIcon = '<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
   const shopIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
   const questIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
   const radIcon = '<img src="/radiance-logo.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
@@ -5690,7 +5690,7 @@ async function _renderWhatArePeopleBuying() {
       return `<div class="${cardClass}" onclick="_openFortshop()" title="${escapeHTML(name)}">
         <div class="hbc-img">${pfpPreview}${img ? `<img class="hbc-deco" src="${escapeHTML(img)}" onerror="this.onerror=null;this.style.opacity='0'">` : ''}${ownedBadge}</div>
         <div class="hbc-name">${escapeHTML(name)}</div>
-        <div class="hbc-price"><img class="hbc-onyx" src="/Onyx.png" onerror="this.style.display='none'"><span>${price}</span></div>
+        <div class="hbc-price"><img class="hbc-onyx" src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" onerror="this.style.display='none'"><span>${price}</span></div>
         ${buyersHtml}
       </div>`;
     }).join('') + `</div>`;
@@ -24253,7 +24253,7 @@ async function _viewUserProfile(username) {
                 return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:8px;">
                   ${items.map(({ id, it }) => `<div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:rgba(0,0,0,.22);display:flex;flex-direction:column;gap:6px;">
                     <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);">${escapeHTML(it.name || id)}</div>
-                    <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:10px;height:10px;">${it.price || '-'}</div>
+                    <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:10px;height:10px;">${it.price || '-'}</div>
                     ${isOwn
                       ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}','wishlist'),60);" style="background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.22);border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
                       : `<button onclick="openGiftModal('${escapeHTML(id)}','${escapeHTML(u.username)}')" style="background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.22);border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;justify-content:center;">${_svgIcon('gift', 10)} Gift</button>`}
@@ -25489,20 +25489,30 @@ function _renderStaffNav(active) {
   const nav = document.getElementById('sc-nav'); if (!nav) return;
   const role = getStaffRole(CU.username);
   const navItems = [
-    {section:'Management', items:[
+    {section:'Overview', items:[
       {id:'dashboard', svg:'<i class="fas fa-chart-pie"></i>', label:'Dashboard'},
-      {id:'reports', svg:'<i class="fas fa-flag"></i>', label:'Reports'},
-      {id:'members', svg:'<i class="fas fa-users"></i>', label:'Members'},
-      {id:'bastions', svg:'<i class="fas fa-shield-halved"></i>', label:'Bastions'},
-      {id:'bans', svg:'<i class="fas fa-gavel"></i>', label:'Bans'},
-      ...(role!=='moderator' ? [{id:'economy', svg:'<i class="fas fa-coins"></i>', label:'Economy'}] : []),
     ]},
-    {section:'Oversight', items:[
-      ...(role!=='moderator' ? [{id:'broadcasts', svg:'<i class="fas fa-bullhorn"></i>', label:'Broadcasts'}] : []),
+    {section:'User Content', items:[
+      ...(role!=='moderator' ? [{id:'broadcasts', svg:'<i class="fas fa-bullhorn"></i>', label:'User Ads'}] : []),
+      {id:'nsfw_queue', svg:'<i class="fas fa-image"></i>', label:'Content Review'},
       {id:'feedback', svg:'<i class="fas fa-comment"></i>', label:'Feedback'},
-      {id:'audit', svg:'<i class="fas fa-clock-rotate-left"></i>', label:'Audit Log'},
-      ...(role!=='moderator' ? [{id:'staff', svg:'<i class="fas fa-user-tie"></i>', label:'Staff Mgmt'}] : []),
+    ]},
+    {section:'Community', items:[
+      {id:'members', svg:'<i class="fas fa-users"></i>', label:'Members'},
+      {id:'bastions', svg:'<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/BastionSVG.png" style="width:16px;height:16px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;">', label:'Bastions'},
+    ]},
+    {section:'Moderation', items:[
+      {id:'reports', svg:'<i class="fas fa-flag"></i>', label:'Reports'},
+      {id:'bans', svg:'<i class="fas fa-gavel"></i>', label:'Bans'},
+    ]},
+    {section:'Administration', items:[
+      ...(role!=='moderator' ? [{id:'staff', svg:'<i class="fas fa-user-tie"></i>', label:'Staff'}] : []),
       ...(role!=='moderator' ? [{id:'system', svg:'<i class="fas fa-gear"></i>', label:'System'}] : []),
+      ...(role!=='moderator' ? [{id:'economy', svg:'<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:16px;height:16px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;">', label:'Economy'}] : []),
+    ]},
+    {section:'Insights', items:[
+      {id:'statistics', svg:'<i class="fas fa-chart-bar"></i>', label:'Statistics'},
+      {id:'audit', svg:'<i class="fas fa-clock-rotate-left"></i>', label:'Audit Log'},
     ]},
   ];
   let html = '';
@@ -25523,7 +25533,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
   if (!_isAutoRefresh && _adminAutoRefresh) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; }
   const _origTab = tab;
   // Map new nav tab names to legacy tab ids for inline rendering
-  const tabMap = {audit:'_audit', staff:'_staff', nsfw_queue:'_nsfw_queue', economy:'_economy', bastions:'_bastions', users:'_users', all_users:'_all_users', support_tickets:'_support_tickets', place_where:'_place_where', onboarding:'_onboarding'};
+  const tabMap = {audit:'_audit', staff:'_staff', nsfw_queue:'_nsfw_queue', economy:'_economy', bastions:'_bastions', users:'_users', all_users:'_all_users', support_tickets:'_support_tickets', place_where:'_place_where', onboarding:'_onboarding', statistics:'_statistics'};
   tab = tabMap[tab] || tab;
   _renderStaffNav(_origTab); adminTab = tab;
   let main = document.getElementById('sc-main'); if (!main) return;
@@ -25681,7 +25691,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             </div>`).join('')||'<div class="sc-empty"><i class="fas fa-user-slash"></i> No data</div>'}
           </div>
           <div class="sc-card-head" style="margin-top:8px;">
-            <i class="fas fa-coins" style="color:#ffd93e;"></i><h3>Top Onyx</h3>
+            <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;"><h3>Top Onyx</h3>
           </div>
           <div class="sc-card-body">
             ${topOnyx.map((u,i)=>`<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
@@ -25939,25 +25949,30 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     </div>`;
   }
   else if (tab === '_bans') {
-    const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-gavel" style="color:#f87171;"></i> Bans <span class="sc-badge-sm" style="background:rgba(248,113,113,.1);color:#f87171;">${bans.length}</span></div>
+          <div class="sc-head-title"><i class="fas fa-gavel" style="color:#f87171;"></i> Moderation Actions</div>
+          <div class="sc-head-meta">Bans, suspensions, and warnings — unified view</div>
         </div>
         <div class="sc-head-actions">
-          <button class="sc-btn sc-btn-danger" onclick="showCustomInput('Ban User','Enter username to ban:',(name)=>{if(!name)return;showCustomInput('Ban Reason','Enter reason:',(reason)=>{if(!reason)return;const b=JSON.parse(localStorage.getItem('ftz_bans')||'[]');const obj={username:name.trim(),reason,bannedBy:CU.username,bannedAt:new Date().toISOString()};b.push(obj);localStorage.setItem('ftz_bans',JSON.stringify(b));_saveBanToFirebase(obj);logAudit('ban',name.trim(),reason);toast(name.trim()+' banned','success');_loadAdminPage('bans');})})"><i class="fas fa-plus"></i> Ban User</button>
+          <button class="sc-btn sc-btn-danger" onclick="_openUnifiedActionPopup()"><i class="fas fa-gavel"></i> Take Action</button>
         </div>
       </div>
-      ${bans.length?`<div class="sc-card"><div class="sc-card-body">${bans.map((b,i)=>`<div class="sc-row" style="border:1px solid rgba(248,113,113,.08);border-radius:8px;margin:4px 8px;padding:10px 14px;">
-        <div class="sc-row-c">
-          <div class="sc-row-t">${escapeHTML(b.username)}</div>
-          <div class="sc-row-s">Reason: ${escapeHTML(b.reason||'–')} · Banned by ${escapeHTML(b.bannedBy||'admin')}${b.bannedAt?' · '+new Date(b.bannedAt).toLocaleDateString():''}</div>
-        </div>
-        <button class="sc-btn sc-btn-ghost" style="color:#60a5fa;" onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.username)}';adminSearchUser();}},150);"><i class="fas fa-search"></i> Inspect</button>
-        <button class="sc-btn sc-btn-ghost" style="color:#3ecf6e;" onclick="unbanUser('${escapeHTML(b.username)}')"><i class="fas fa-check"></i> Unban</button>
-      </div>`).join('')}</div></div>`:'<div class="sc-empty"><i class="fas fa-circle-check" style="font-size:32px;color:rgba(62,207,110,.4);margin-bottom:8px;display:block;"></i>No bans</div>'}
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;" id="ban-filter-bar">
+        <button class="sc-btn sc-btn-primary" data-banf="all" onclick="_setBanFilter('all')">All</button>
+        <button class="sc-btn sc-btn-ghost" data-banf="ban" onclick="_setBanFilter('ban')" style="color:#f87171;">Bans</button>
+        <button class="sc-btn sc-btn-ghost" data-banf="suspend" onclick="_setBanFilter('suspend')" style="color:#a855f7;">Suspensions</button>
+        <button class="sc-btn sc-btn-ghost" data-banf="warn" onclick="_setBanFilter('warn')" style="color:#f59e0b;">Warnings</button>
+      </div>
+      <div id="ban-unified-list"><div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto 12px;"></div>Loading...</div></div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#f87171;" id="ban-count-bans">0</div><div class="sc-stat-lbl">Active Bans</div></div>
+        <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#a855f7;" id="ban-count-susp">0</div><div class="sc-stat-lbl">Active Suspensions</div></div>
+        <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#f59e0b;" id="ban-count-warn">0</div><div class="sc-stat-lbl">Active Warnings</div></div>
+      </div>
     </div>`;
+    _loadUnifiedModerationData();
   }
   else if (tab === '_suspensions') {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
@@ -26040,12 +26055,12 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-coins" style="color:#ffd93e;"></i> Economy</div>
+          <div class="sc-head-title"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;"> Economy</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:800px;margin-bottom:20px;">
         <div class="sc-card" style="padding:18px;">
-          <div class="sc-card-head" style="border:none;padding:0 0 12px 0;background:none;"><i class="fas fa-coins" style="color:#ffd93e;"></i> Give Onyx</div>
+          <div class="sc-card-head" style="border:none;padding:0 0 12px 0;background:none;"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;"> Give Onyx</div>
           <input class="sc-input" id="eco-username" placeholder="Username" style="width:100%;margin-bottom:9px;">
           <input class="sc-input" id="eco-amount" type="number" placeholder="Amount" style="width:100%;margin-bottom:11px;">
           <button class="sc-btn" style="width:100%;justify-content:center;background:rgba(255,249,62,.1);color:#ffd93e;" onclick="adminGiveOnyx()">Give Onyx</button>
@@ -26084,14 +26099,28 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-shield" style="color:#a78bfa;"></i> Bastions</div>
+          <div class="sc-head-title"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/BastionSVG.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0)saturate(100%)invert(1);vertical-align:middle;"> Bastions</div>
           <div id="admin-bastion-count" class="sc-head-meta"></div>
         </div>
         <div class="sc-head-actions">
-          <input class="sc-input" placeholder="Filter by name…" style="width:240px;" oninput="filterAdminBastions(this.value)">
+          <input class="sc-input" placeholder="Filter by name or owner…" style="width:240px;" oninput="filterAdminBastions(this.value)">
         </div>
       </div>
-      <div id="admin-bastion-result"></div>
+      <div class="sc-card">
+        <div class="sc-table-header">
+          <div style="width:36px;"></div>
+          <div style="flex:1;min-width:120px;cursor:pointer;" onclick="_hqSortBastions('name')">Name <span id="hq-sort-bname"></span></div>
+          <div style="width:100px;cursor:pointer;" onclick="_hqSortBastions('owner')">Owner <span id="hq-sort-bowner"></span></div>
+          <div style="width:70px;cursor:pointer;text-align:center;" onclick="_hqSortBastions('members')">Members <span id="hq-sort-bmembers"></span></div>
+          <div style="width:70px;cursor:pointer;text-align:center;" onclick="_hqSortBastions('channels')">Channels <span id="hq-sort-bchannels"></span></div>
+          <div style="width:55px;cursor:pointer;text-align:center;" onclick="_hqSortBastions('nsfw')">NSFW <span id="hq-sort-bnsfw"></span></div>
+          <div style="width:60px;cursor:pointer;text-align:center;" onclick="_hqSortBastions('boost')">Boost <span id="hq-sort-bboost"></span></div>
+          <div style="width:70px;cursor:pointer;text-align:center;" onclick="_hqSortBastions('verified')">Verified <span id="hq-sort-bverified"></span></div>
+          <div style="width:50px;cursor:pointer;text-align:center;" onclick="_hqSortBastions('privacy')">Type <span id="hq-sort-bprivacy"></span></div>
+          <div style="width:80px;text-align:center;">Actions</div>
+        </div>
+        <div id="admin-bastion-result"></div>
+      </div>
     </div>`;
     loadAdminBastions(false);
   }
@@ -26707,6 +26736,21 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     </div>`;
   }
 
+  else if (tab === '_statistics') {
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
+        <div>
+          <div class="sc-head-title"><i class="fas fa-chart-bar" style="color:#60a5fa;"></i> Platform Statistics</div>
+          <div class="sc-head-meta" id="stats-last-updated"></div>
+        </div>
+        <div class="sc-head-actions">
+          <button class="sc-btn sc-btn-primary" onclick="_loadPlatformStats()"><i class="fas fa-rotate"></i> Refresh</button>
+        </div>
+      </div>
+      <div id="stats-content"><div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto 12px;"></div>Loading statistics...</div></div>
+    </div>`;
+    _loadPlatformStats();
+  }
   else main.innerHTML = '<div style="padding:32px;text-align:center;color:rgba(255,255,255,.3);">Unknown tab</div>';
 }
 
@@ -27371,6 +27415,319 @@ async function _loadAdminSuspensions() {
       </div>`).join('');
   } catch(e) {
     el.innerHTML = '<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">Failed to load suspensions</div></div>';
+  }
+}
+
+/* ── Unified Moderation Data (bans + suspensions + warnings) ── */
+let _banFilter = 'all';
+let _moderationData = {bans:[], suspensions:[], warnings:[]};
+
+async function _loadUnifiedModerationData() {
+  try {
+    const [bans, users] = await Promise.all([
+      FortizedSocial.adminGetBans().catch(()=>[]),
+      FortizedSocial.getUsers().catch(()=>[])
+    ]);
+    const suspensions = [];
+    const warnings = [];
+    for (const u of users) {
+      if (u.suspension) {
+        const s = u.suspension;
+        const isActive = new Date(s.until) > new Date();
+        if (isActive) suspensions.push({ username: u.username, ...s, type:'suspend', active:true, avatar: u.avatar });
+      }
+      if (u.activeWarning) {
+        warnings.push({ username: u.username, ...u.activeWarning, type:'warn', active:true, avatar: u.avatar });
+      }
+    }
+    suspensions.sort((a,b) => new Date(b.suspendedAt||0) - new Date(a.suspendedAt||0));
+    bans.forEach(b => b.type = 'ban');
+    _moderationData = { bans: bans||[], suspensions, warnings };
+    _renderUnifiedList('all');
+    document.getElementById('ban-count-bans').textContent = bans.length;
+    document.getElementById('ban-count-susp').textContent = suspensions.length;
+    document.getElementById('ban-count-warn').textContent = warnings.length;
+  } catch(e) {
+    document.getElementById('ban-unified-list').innerHTML = '<div class="sc-empty"><i class="fas fa-exclamation-triangle"></i> Failed to load data</div>';
+  }
+}
+function _setBanFilter(f) {
+  _banFilter = f;
+  document.querySelectorAll('#ban-filter-bar .sc-btn').forEach(b => {
+    b.className = b.dataset.banf === f ? 'sc-btn sc-btn-primary' : 'sc-btn sc-btn-ghost';
+  });
+  _renderUnifiedList(f);
+}
+function _renderUnifiedList(filter) {
+  const all = [..._moderationData.bans, ..._moderationData.suspensions, ..._moderationData.warnings];
+  all.sort((a,b) => new Date(b.bannedAt||b.suspendedAt||b.issuedAt||0) - new Date(a.bannedAt||a.suspendedAt||a.issuedAt||0));
+  const filtered = filter === 'all' ? all : all.filter(i => i.type === filter);
+  const el = document.getElementById('ban-unified-list');
+  if (!el) return;
+  if (!filtered.length) {
+    el.innerHTML = '<div class="sc-empty"><i class="fas fa-circle-check" style="font-size:32px;color:rgba(62,207,110,.4);margin-bottom:8px;display:block;"></i>No records</div>';
+    return;
+  }
+  const typeMeta = { ban:{icon:'fa-gavel',color:'#f87171',label:'Ban'}, suspend:{icon:'fa-clock',color:'#a855f7',label:'Suspension'}, warn:{icon:'fa-triangle-exclamation',color:'#f59e0b',label:'Warning'} };
+  el.innerHTML = `<div class="sc-card"><div class="sc-card-body">${filtered.map(i => {
+    const m = typeMeta[i.type] || typeMeta.ban;
+    const avatarHtml = i.avatar ? `<img src="${escapeHTML(i.avatar)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div style="width:28px;height:28px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:rgba(255,255,255,.4);flex-shrink:0;">${(i.username||'?')[0].toUpperCase()}</div>`;
+    const date = i.bannedAt || i.suspendedAt || i.issuedAt || '';
+    const by = i.bannedBy || i.suspendedBy || i.issuedBy || 'admin';
+    const reason = i.reason || '–';
+    return `<div class="sc-row" style="border:1px solid ${m.color}15;border-radius:10px;margin:5px 8px;padding:10px 14px;">
+      <i class="fas ${m.icon}" style="color:${m.color};font-size:14px;width:20px;text-align:center;flex-shrink:0;"></i>
+      ${avatarHtml}
+      <div class="sc-row-c" style="min-width:0;">
+        <div class="sc-row-t" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span>${escapeHTML(i.username)}</span><span class="sc-badge-sm" style="background:${m.color}15;color:${m.color};font-size:9px;padding:1px 6px;">${m.label}</span></div>
+        <div class="sc-row-s">${escapeHTML(reason)} · by ${escapeHTML(by)}${date?' · '+new Date(date).toLocaleDateString():''}</div>
+      </div>
+      <button class="sc-btn sc-btn-ghost" style="color:#60a5fa;flex-shrink:0;" onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(i.username)}';adminSearchUser();}},150);"><i class="fas fa-search"></i></button>
+      ${i.type==='ban'?`<button class="sc-btn sc-btn-ghost" style="color:#3ecf6e;flex-shrink:0;" onclick="adminActionUser('${escapeHTML(i.username)}','unban')"><i class="fas fa-check"></i></button>`:''}
+      ${i.type==='suspend'?`<button class="sc-btn sc-btn-ghost" style="color:#3ecf6e;flex-shrink:0;" onclick="FortizedSocial.adminUnsuspendUser('${escapeHTML(i.username)}').then(()=>{logAudit('unsuspend','${escapeHTML(i.username)}','Lifted by admin');toast('${escapeHTML(i.username)} unsuspended','success');_loadUnifiedModerationData();});"><i class="fas fa-check"></i></button>`:''}
+    </div>`;
+  }).join('')}</div></div>`;
+}
+
+/* ── Unified Action Popup (warn / suspend / ban with presets & autocomplete) ── */
+const _ACTION_PRESETS = [
+  { label:'Spam', reason:'Posting spam or excessive self-promotion' },
+  { label:'Harassment', reason:'Harassing or bullying other users' },
+  { label:'NSFW', reason:'Posting inappropriate or NSFW content' },
+  { label:'Impersonation', reason:'Impersonating another user or staff member' },
+  { label:'Toxicity', reason:'Toxic behaviour in chat or comments' },
+  { label:'Evasion', reason:'Ban or suspension evasion' },
+  { label:'Advertising', reason:'Unauthorised advertising' },
+  { label:'Other', reason:'' },
+];
+function _openUnifiedActionPopup(prefillUser) {
+  const role = getStaffRole(CU.username);
+  const isMod = role === 'moderator';
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;font-family:inherit;animation:overlayFadeIn .15s ease;';
+  overlay.innerHTML = `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:28px 32px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;">
+    <div style="font-size:18px;font-weight:800;margin-bottom:6px;color:#fff;">Take Action</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:18px;">Issue a warning, suspension, or ban to a user</div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Username</div>
+      <div style="position:relative;">
+        <input id="_ua-user" class="settings-input" placeholder="Start typing a username…" value="${escapeHTML(prefillUser||'')}" style="width:100%;padding-left:36px;" oninput="_adminUserSuggest(this)">
+        <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);font-size:13px;pointer-events:none;"></i>
+      </div>
+      <div id="_ua-user-preview" style="display:none;margin-top:8px;padding:8px 12px;background:var(--panel2);border-radius:8px;border:1px solid var(--border);align-items:center;gap:10px;">
+        <div id="_ua-pfp" style="width:32px;height:32px;border-radius:50%;background:var(--panel3);flex-shrink:0;"></div>
+        <div><div id="_ua-preview-name" style="font-weight:600;font-size:13px;"></div><div id="_ua-preview-status" style="font-size:11px;color:rgba(255,255,255,.4);"></div></div>
+      </div>
+      <div id="_ua-suggestions" style="display:none;position:absolute;z-index:10;background:var(--panel2);border:1px solid var(--border);border-radius:10px;max-height:180px;overflow-y:auto;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.4);"></div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Action Type</div>
+      <div style="display:flex;gap:6px;" id="_ua-action-type">
+        <button class="sc-btn sc-btn-ghost" data-uav="warn" onclick="_setUAAction('warn')" style="flex:1;justify-content:center;color:#f59e0b;border-color:rgba(245,158,11,.2);${!isMod?'':'opacity:.5;'}">⚠️ Warn</button>
+        <button class="sc-btn sc-btn-primary" data-uav="suspend" onclick="_setUAAction('suspend')" style="flex:1;justify-content:center;color:#a855f7;">⏳ Suspend</button>
+        ${isMod?'':`<button class="sc-btn sc-btn-ghost" data-uav="ban" onclick="_setUAAction('ban')" style="flex:1;justify-content:center;color:#f87171;border-color:rgba(248,113,113,.2);">🔨 Ban</button>`}
+      </div>
+    </div>
+    <div id="_ua-duration-wrap" style="margin-bottom:14px;">
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Duration</div>
+      <div style="display:flex;gap:8px;">
+        <input id="_ua-dur-amount" class="settings-input" type="number" min="1" value="1" style="flex:1;">
+        <select id="_ua-dur-unit" class="settings-input" style="flex:1;background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px;">
+          <option value="minutes">Minutes</option>
+          <option value="hours" selected>Hours</option>
+          <option value="days">Days</option>
+          <option value="weeks">Weeks</option>
+          <option value="months">Months</option>
+          <option value="permanent">Permanent</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Reason Presets</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${_ACTION_PRESETS.map(p => `<button class="sc-btn sc-btn-ghost" onclick="document.getElementById('_ua-reason').value='${escapeHTML(p.reason)}'" style="font-size:11px;padding:4px 10px;color:rgba(255,255,255,.6);">${escapeHTML(p.label)}</button>`).join('')}</div>
+      <input id="_ua-reason" class="settings-input" placeholder="Or type a custom reason…" style="width:100%;">
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Moderator Note (optional, sent to user)</div>
+      <input id="_ua-note" class="settings-input" placeholder="Note shown to the user…" style="width:100%;">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button id="_ua-cancel" style="padding:9px 20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;">Cancel</button>
+      <button id="_ua-confirm" style="padding:9px 20px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);border-radius:9px;color:#f87171;cursor:pointer;font-weight:700;font-family:inherit;">Apply</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#_ua-cancel').onclick = () => overlay.remove();
+  overlay.querySelector('#_ua-confirm').onclick = async () => {
+    const username = document.getElementById('_ua-user').value.trim();
+    const action = overlay.querySelector('#_ua-action-type .sc-btn-primary')?.dataset?.uav || 'suspend';
+    const reason = document.getElementById('_ua-reason').value.trim();
+    const note = document.getElementById('_ua-note').value.trim();
+    if (!username) { toast('Enter a username', 'error'); return; }
+    if (!reason) { toast('Enter a reason', 'error'); return; }
+    overlay.remove();
+    if (action === 'warn') {
+      await FortizedSocial.adminWarnUser(username, { reason, issuedBy: CU.username, issuedAt: new Date().toISOString() }).catch(()=>{});
+      await FortizedSocial.addNotification(username, { type: 'system', text: note ? `Admin Warning: ${reason} — ${note}` : `Admin Warning: ${reason}` }).catch(()=>{});
+      logAudit('warn', username, reason);
+      toast(`Warning issued to ${username}`, 'success');
+    } else if (action === 'suspend') {
+      const amount = parseInt(document.getElementById('_ua-dur-amount').value);
+      const unit = document.getElementById('_ua-dur-unit').value;
+      if (!amount || amount <= 0) { toast('Enter a valid duration', 'error'); return; }
+      const multipliers = { minutes:60000, hours:3600000, days:86400000, weeks:604800000, months:2592000000 };
+      const until = unit === 'permanent' ? new Date('2099-12-31').toISOString() : new Date(Date.now() + amount * (multipliers[unit]||3600000)).toISOString();
+      const suspObj = { until, reason, suspendedBy: CU.username, suspendedAt: new Date().toISOString(), moderatorMessage: note, duration: unit==='permanent'?'Permanent':amount+' '+unit };
+      await FortizedSocial.adminSuspendUser(username, suspObj).catch(()=>{});
+      logAudit('suspend', username, `${unit==='permanent'?'Permanent':amount+' '+unit} — ${reason}`);
+      toast(`${username} suspended`, 'success');
+    } else if (action === 'ban') {
+      const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+      const banObj = { username, reason, bannedBy: CU.username, bannedAt: new Date().toISOString() };
+      bans.push(banObj);
+      localStorage.setItem('ftz_bans', JSON.stringify(bans));
+      _saveBanToFirebase(banObj);
+      FortizedSocial.addNotification(username, { type: 'system', text: note ? `You have been banned. Reason: ${reason} — ${note}` : `You have been banned. Reason: ${reason}` }).catch(()=>{});
+      logAudit('ban', username, reason);
+      toast(`${username} banned`, 'success');
+    }
+    _loadUnifiedModerationData();
+  };
+  if (prefillUser) { _updateUserPreview(prefillUser); }
+}
+function _setUAAction(type) {
+  document.querySelectorAll('#_ua-action-type .sc-btn').forEach(b => {
+    b.className = b.dataset.uav === type ? 'sc-btn sc-btn-primary' : 'sc-btn sc-btn-ghost';
+  });
+  const durWrap = document.getElementById('_ua-duration-wrap');
+  if (durWrap) durWrap.style.display = type === 'warn' ? 'none' : 'flex';
+}
+async function _updateUserPreview(username) {
+  const preview = document.getElementById('_ua-user-preview');
+  const pfp = document.getElementById('_ua-pfp');
+  const name = document.getElementById('_ua-preview-name');
+  const status = document.getElementById('_ua-preview-status');
+  if (!username || !preview) return;
+  try {
+    const users = await FortizedSocial.getUsers().catch(()=>[]);
+    const u = users.find(x => x.username?.toLowerCase() === username.toLowerCase());
+    if (u) {
+      preview.style.display = 'flex';
+      pfp.innerHTML = u.avatar ? `<img src="${escapeHTML(u.avatar)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : `<div style="width:32px;height:32px;border-radius:50%;background:var(--panel3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">${(u.username||'?')[0].toUpperCase()}</div>`;
+      name.textContent = `@${u.username}`;
+      const badges = [];
+      if (u.verified) badges.push('✓ Verified');
+      if (u.radiance) badges.push('✦ Radiance');
+      if (u.staff) badges.push('⚙ Staff');
+      if (u.banned) badges.push('🔨 Banned');
+      if (u.suspension) { const su = new Date(u.suspension.until); if (su > new Date()) badges.push('⏳ Suspended'); }
+      status.textContent = badges.length ? badges.join(' · ') : 'No special status';
+    } else {
+      preview.style.display = 'none';
+    }
+  } catch(e) { preview.style.display = 'none'; }
+}
+let _suggestDebounce = null;
+async function _adminUserSuggest(input) {
+  clearTimeout(_suggestDebounce);
+  const val = input.value.trim();
+  const preview = document.getElementById('_ua-user-preview');
+  if (preview) preview.style.display = 'none';
+  if (val.length < 1) { document.getElementById('_ua-suggestions').style.display = 'none'; return; }
+  _suggestDebounce = setTimeout(async () => {
+    try {
+      const users = await FortizedSocial.getUsers().catch(()=>[]);
+      const suggestions = users.filter(u => u.username?.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
+      const el = document.getElementById('_ua-suggestions');
+      if (!el) return;
+      if (!suggestions.length) { el.style.display = 'none'; return; }
+      el.innerHTML = suggestions.map(u => `<div class="_ua-sug-item" data-user="${escapeHTML(u.username)}" onclick="document.getElementById('_ua-user').value='${escapeHTML(u.username)}';document.getElementById('_ua-suggestions').style.display='none';_updateUserPreview('${escapeHTML(u.username)}')" style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .1s;">
+        ${u.avatar?`<img src="${escapeHTML(u.avatar)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`:`<div style="width:24px;height:24px;border-radius:50%;background:var(--panel3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${(u.username||'?')[0].toUpperCase()}</div>`}
+        <span style="font-size:13px;">${escapeHTML(u.username)}</span>
+      </div>`).join('');
+      el.style.display = 'block';
+    } catch(e) {}
+  }, 200);
+}
+document.addEventListener('click', (e) => {
+  const sug = document.getElementById('_ua-suggestions');
+  if (sug && !e.target.closest('#_ua-user, #_ua-suggestions, ._ua-sug-item')) sug.style.display = 'none';
+});
+
+/* ── Platform Statistics ── */
+async function _loadPlatformStats() {
+  const el = document.getElementById('stats-content');
+  if (!el) return;
+  document.getElementById('stats-last-updated').textContent = 'Loading...';
+  try {
+    const [users, bastionsData, bans] = await Promise.all([
+      FortizedSocial.getUsers().catch(()=>[]),
+      FortizedSocial.getGlobalBastions().catch(()=>({})),
+      FortizedSocial.adminGetBans().catch(()=>[])
+    ]);
+    const bastions = Object.values(bastionsData||{});
+    const totalUsers = users.length;
+    const onlineUsers = users.filter(u => u.lastSeen && Date.now() - new Date(u.lastSeen).getTime() < 300000).length;
+    const verifiedUsers = users.filter(u => u.verified).length;
+    const bannedUsers = users.filter(u => u.banned || bans.some(b => b.username === u.username)).length;
+    const suspendedUsers = users.filter(u => u.suspension && new Date(u.suspension.until) > new Date()).length;
+    const radianceUsers = users.filter(u => u.radiance).length;
+    const totalBastions = bastions.length;
+    const publicBastions = bastions.filter(b => b.public !== false).length;
+    const verifiedBastions = bastions.filter(b => b.verified).length;
+    const totalOnyx = users.reduce((sum, u) => sum + (u.onyx||0), 0);
+    const totalChannels = bastions.reduce((sum, b) => sum + (b.channels||[]).length, 0);
+    const totalMemberships = bastions.reduce((sum, b) => sum + Object.keys(b.memberRoles||{}).length, 0);
+    const adsCount = JSON.parse(localStorage.getItem('ftz_ads')||'[]').length;
+    const avgMembersPerBastion = totalBastions ? (totalMemberships / totalBastions).toFixed(1) : '0';
+
+    document.getElementById('stats-last-updated').textContent = `Updated ${new Date().toLocaleString()}`;
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#60a5fa;font-size:28px;">${totalUsers.toLocaleString()}</div><div class="sc-stat-lbl">Total Accounts</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#3ecf6e;font-size:28px;">${onlineUsers.toLocaleString()}</div><div class="sc-stat-lbl">Online Now</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#60a5fa;font-size:28px;">${verifiedUsers.toLocaleString()}</div><div class="sc-stat-lbl">Verified Users</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#ffd93e;font-size:28px;">${radianceUsers.toLocaleString()}</div><div class="sc-stat-lbl">Radiance Subscribers</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#a78bfa;font-size:28px;">${totalBastions.toLocaleString()}</div><div class="sc-stat-lbl">Total Bastions</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#3ecf6e;font-size:28px;">${publicBastions.toLocaleString()}</div><div class="sc-stat-lbl">Public Bastions</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:var(--accent);font-size:28px;">${verifiedBastions.toLocaleString()}</div><div class="sc-stat-lbl">Verified Bastions</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#38bdf8;font-size:28px;">${totalChannels.toLocaleString()}</div><div class="sc-stat-lbl">Total Channels</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#f87171;font-size:28px;">${bans.length.toLocaleString()}</div><div class="sc-stat-lbl">Active Bans</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#a855f7;font-size:28px;">${suspendedUsers.toLocaleString()}</div><div class="sc-stat-lbl">Active Suspensions</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#38bdf8;font-size:28px;">${adsCount.toLocaleString()}</div><div class="sc-stat-lbl">User Ads</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#ffd93e;font-size:28px;">${totalOnyx.toLocaleString()}</div><div class="sc-stat-lbl">Total Onyx Supply</div></div>
+      </div>
+      <div class="sc-card" style="margin-bottom:16px;">
+        <div class="sc-card-head"><h3>Platform Snapshot</h3></div>
+        <div class="sc-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="padding:10px 14px;background:var(--panel2);border-radius:10px;display:flex;justify-content:space-between;align-items:center;"><span style="color:rgba(255,255,255,.5);font-size:13px;">Avg members per bastion</span><span style="font-weight:700;font-size:15px;">${avgMembersPerBastion}</span></div>
+          <div style="padding:10px 14px;background:var(--panel2);border-radius:10px;display:flex;justify-content:space-between;align-items:center;"><span style="color:rgba(255,255,255,.5);font-size:13px;">Total memberships</span><span style="font-weight:700;font-size:15px;">${totalMemberships.toLocaleString()}</span></div>
+          <div style="padding:10px 14px;background:var(--panel2);border-radius:10px;display:flex;justify-content:space-between;align-items:center;"><span style="color:rgba(255,255,255,.5);font-size:13px;">Ban rate</span><span style="font-weight:700;font-size:15px;">${totalUsers ? (bans.length/totalUsers*100).toFixed(2) : '0'}%</span></div>
+          <div style="padding:10px 14px;background:var(--panel2);border-radius:10px;display:flex;justify-content:space-between;align-items:center;"><span style="color:rgba(255,255,255,.5);font-size:13px;">Radiance rate</span><span style="font-weight:700;font-size:15px;">${totalUsers ? (radianceUsers/totalUsers*100).toFixed(2) : '0'}%</span></div>
+        </div>
+      </div>
+      <div class="sc-card">
+        <div class="sc-card-head"><h3>Activity Distribution</h3></div>
+        <div class="sc-card-body">
+          <div style="display:flex;height:32px;border-radius:8px;overflow:hidden;gap:2px;margin-bottom:8px;">
+            ${totalUsers ? `
+              <div style="flex:${onlineUsers};background:var(--green);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;min-width:fit-content;padding:0 6px;" title="Online">${(onlineUsers/totalUsers*100).toFixed(1)}%</div>
+              <div style="flex:${totalUsers-onlineUsers};background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.4);min-width:fit-content;padding:0 6px;" title="Offline">${((totalUsers-onlineUsers)/totalUsers*100).toFixed(1)}%</div>
+            ` : '<div style="flex:1;background:rgba(255,255,255,.05);"></div>'}
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);">
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px;"></span> Online (${onlineUsers})</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);margin-right:4px;"></span> Offline (${(totalUsers-onlineUsers).toLocaleString()})</span>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch(e) {
+    el.innerHTML = '<div class="sc-empty"><i class="fas fa-exclamation-triangle"></i> Failed to load statistics</div>';
   }
 }
 
@@ -29187,7 +29544,7 @@ async function openRadianceGiftModal() {
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;margin-bottom:10px;">
       <span style="font-size:12px;color:rgba(255,255,255,.5);">Cost for <span id="gift-count">0</span> friend<span id="gift-plural">s</span>:</span>
       <div style="display:flex;align-items:center;gap:6px;">
-        <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;">
+        <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:14px;height:14px;object-fit:contain;">
         <span id="gift-cost" style="font-family:var(--font-display);font-weight:700;font-size:14px;color:#fff93e;">0</span>
       </div>
     </div>
@@ -30459,39 +30816,79 @@ function filterAdminBastions(q) {
   renderAdminBastionsList(filtered);
 }
 
+/* ── Bastion Sort State ── */
+let _hqBastionSortField = 'name';
+let _hqBastionSortDir = 1;
+
+function _hqSortBastions(field) {
+  _hqBastionSortDir = _hqBastionSortField === field ? -_hqBastionSortDir : 1;
+  _hqBastionSortField = field;
+  const q = document.querySelector('#admin-bastion-result')?.closest('.sc-page')?.querySelector('.sc-input')?.value || '';
+  const sorted = [..._adminBastionsCache].sort((a,b) => {
+    let va, vb;
+    const mcA = Object.keys(a.memberRoles||{}).length || (a.members||[]).length || 0;
+    const mcB = Object.keys(b.memberRoles||{}).length || (b.members||[]).length || 0;
+    const ccA = (a.channels||[]).length;
+    const ccB = (b.channels||[]).length;
+    const nfA = (a.channels||[]).filter(c=>c.nsfw).length;
+    const nfB = (b.channels||[]).filter(c=>c.nsfw).length;
+    switch(field) {
+      case 'name': va=(a.name||'').toLowerCase(); vb=(b.name||'').toLowerCase(); break;
+      case 'owner': va=(a.owner||'').toLowerCase(); vb=(b.owner||'').toLowerCase(); break;
+      case 'members': va=mcA; vb=mcB; break;
+      case 'channels': va=ccA; vb=ccB; break;
+      case 'nsfw': va=nfA; vb=nfB; break;
+      case 'boost': va=a.boostLevel||0; vb=b.boostLevel||0; break;
+      case 'verified': va=a.verified?1:0; vb=b.verified?1:0; break;
+      case 'privacy': va=a.public===false?0:1; vb=b.public===false?0:1; break;
+      default: va=0; vb=0;
+    }
+    if (typeof va === 'string') return _hqBastionSortDir * va.localeCompare(vb);
+    return _hqBastionSortDir * (va - vb);
+  });
+  // Update sort indicators
+  document.querySelectorAll('[id^="hq-sort-b"]').forEach(el => el.textContent = '');
+  const ind = document.getElementById('hq-sort-b'+field);
+  if (ind) ind.textContent = _hqBastionSortDir > 0 ? ' ▲' : ' ▼';
+  const filtered = q ? sorted.filter(b => (b.name||'').toLowerCase().includes(q.toLowerCase()) || (b.owner||'').toLowerCase().includes(q.toLowerCase())) : sorted;
+  renderAdminBastionsList(filtered);
+}
+
 function renderAdminBastionsList(bastions) {
   const el = document.getElementById('admin-bastion-result');
   const cnt = document.getElementById('admin-bastion-count');
   if (!el) return;
   if (cnt) cnt.textContent = bastions.length + ' bastions';
-  if (!bastions.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:32px;">No bastions found.</div>'; return; }
-  el.innerHTML = bastions.map(b => {
+  if (!bastions.length) { el.innerHTML = '<div class="sc-empty" style="padding:32px;">No bastions found.</div>'; return; }
+  el.innerHTML = bastions.map((b,idx) => {
     const memberCount = Object.keys(b.memberRoles||{}).length || (b.members||[]).length || 1;
     const channelCount = (b.channels||[]).length;
     const boostLv = b.boostLevel || 0;
     const nsfwChannels = (b.channels||[]).filter(c => c.nsfw).length;
-    return `
-    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;transition:border-color .15s;">
-      <div style="width:42px;height:42px;border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0;">
-        ${b.icon ? `<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:11px;">` : (b.emblem||'🏰')}
-      </div>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span style="font-weight:700;font-size:13.5px;">${escapeHTML(b.name||'Unnamed')}</span>
-          ${b.verified?_verifiedBadge(14):''}
-          ${b.public===false?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);">PRIVATE</span>':''}
-          ${nsfwChannels?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:var(--red);">${nsfwChannels} NSFW</span>`:''}
-          ${boostLv?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,249,62,.08);color:#ffd93e;display:inline-flex;align-items:center;gap:2px;">${_boostSvg('9')} Lv${boostLv}</span>`:''}
+    return `<div class="sc-row" style="border-bottom:1px solid var(--border);">
+      <div style="width:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <div style="width:28px;height:28px;border-radius:8px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;">
+          ${b.icon ? `<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:7px;">` : (b.emblem||'🏰')}
         </div>
-        <div style="font-size:11px;color:var(--muted);">Owner: <strong>${escapeHTML(b.owner||'?')}</strong> · ${memberCount} members · ${channelCount} channels</div>
       </div>
-      <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.owner||'')}';adminSearchUser();}},150);" style="padding:5px 10px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:11px;cursor:pointer;">Owner</button>
-        <button onclick="logAudit('bastion_review','${escapeHTML(b.name||'')}','Manual inspection');toast('Flagged for review','info')" style="padding:5px 10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;">Flag</button>
-        ${isSuperAdmin()?`<button onclick="_toggleVerifyBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}',${!!b.verified})" style="padding:5px 10px;background:${b.verified?'rgba(62,207,110,.12)':'rgba(255,249,62,.08)'};border:1px solid ${b.verified?'rgba(62,207,110,.25)':'rgba(255,249,62,.18)'};border-radius:7px;color:${b.verified?'var(--green)':'var(--accent)'};font-size:11px;cursor:pointer;font-weight:600;">${b.verified?'✓ Verified':'Verify'}</button>`:''}
-        ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" style="padding:5px 10px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;font-weight:700;">Delete</button>`:''}
+      <div style="flex:1;min-width:120px;font-weight:600;font-size:13px;display:flex;align-items:center;gap:4px;">
+        ${escapeHTML(b.name||'Unnamed')}
+        ${b.verified?`<span style="color:var(--accent);font-size:11px;">✓</span>`:''}
       </div>
-    </div>`}).join('');
+      <div style="width:100px;font-size:12px;color:rgba(255,255,255,.55);">${escapeHTML(b.owner||'?')}</div>
+      <div style="width:70px;text-align:center;font-size:12px;">${memberCount}</div>
+      <div style="width:70px;text-align:center;font-size:12px;">${channelCount}</div>
+      <div style="width:55px;text-align:center;font-size:12px;">${nsfwChannels?`<span style="color:#f87171;">${nsfwChannels}</span>`:'0'}</div>
+      <div style="width:60px;text-align:center;font-size:12px;">${boostLv?`<span style="color:#ffd93e;font-weight:700;">Lv${boostLv}</span>`:'–'}</div>
+      <div style="width:70px;text-align:center;font-size:12px;">${b.verified?`<span style="color:var(--accent);">Yes</span>`:'<span style="color:rgba(255,255,255,.3);">No</span>'}</div>
+      <div style="width:50px;text-align:center;font-size:11px;">${b.public===false?'<span style="color:rgba(255,255,255,.4);">Private</span>':'Public'}</div>
+      <div style="width:80px;text-align:center;display:flex;gap:4px;justify-content:center;">
+        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.owner||'')}';adminSearchUser();}},150);" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#60a5fa;" title="Inspect owner"><i class="fas fa-search"></i></button>
+        <button onclick="_toggleVerifyBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}',${!!b.verified})" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:${b.verified?'var(--green)':'var(--accent)'};" title="${b.verified?'Unverify':'Verify'}">${b.verified?'<i class="fas fa-check-circle"></i>':'<i class="fas fa-check"></i>'}</button>
+        ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#f87171;" title="Delete"><i class="fas fa-trash"></i></button>`:''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ════════════════════════════════════════════
@@ -41405,8 +41802,8 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
     const discCalc = _calculateFinalPrice(item.price, false);
     const priceContent = !owned
       ? (discCalc.totalDiscount > 0
-        ? `<div class="sic-price"><img src="/Onyx.png"> <span style="text-decoration:line-through;opacity:.4;margin-right:3px;">${item.price}</span>${discCalc.finalPrice}</div>`
-        : `<div class="sic-price"><img src="/Onyx.png"> ${item.price}</div>`)
+        ? `<div class="sic-price"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png"> <span style="text-decoration:line-through;opacity:.4;margin-right:3px;">${item.price}</span>${discCalc.finalPrice}</div>`
+        : `<div class="sic-price"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png"> ${item.price}</div>`)
       : '<div class="sic-owned">Owned</div>';
     return '<div class="shop-item-card" style="position:relative;background:'+item.gradient+';border-color:'+item.borderColor+';" onmouseover="this.style.borderColor=\''+item.hoverBorder+'\'" onmouseout="this.style.borderColor=\''+item.borderColor+'\'">'
       + '<div class="sic-quick">'
@@ -41436,8 +41833,8 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
       : owned
         ? '<div class="sic-owned">Owned</div>'
         : (discCalc.totalDiscount > 0
-          ? `<div class="sic-price" style="justify-content:center;flex-direction:column;gap:4px;"><span style="font-size:10px;color:rgba(255,255,255,.5);"><span style="text-decoration:line-through;">${item.price}</span> <span style="color:#fff93e;font-weight:700;">${discCalc.finalPrice}</span></span><img src="/Onyx.png"></div>`
-          : '<div class="sic-price" style="justify-content:center;"><img src="/Onyx.png"> '+item.price+'</div>');
+          ? `<div class="sic-price" style="justify-content:center;flex-direction:column;gap:4px;"><span style="font-size:10px;color:rgba(255,255,255,.5);"><span style="text-decoration:line-through;">${item.price}</span> <span style="color:#fff93e;font-weight:700;">${discCalc.finalPrice}</span></span><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png"></div>`
+          : '<div class="sic-price" style="justify-content:center;"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png"> '+item.price+'</div>');
     return '<div class="shop-item-card" style="position:relative;background:rgba(255,255,255,.02);border-color:'+(equipped?item.color+'44':'rgba(255,255,255,.05)')+';text-align:center;" onmouseover="this.style.borderColor=\''+item.color+'44\'" onmouseout="this.style.borderColor=\''+(equipped?item.color+'44':'rgba(255,255,255,.05)')+'\'">'
       + '<div class="sic-quick">'
       + '<button class="sic-qb '+(onWL?'on':'')+'" title="'+(onWL?'Remove from wishlist':'Add to wishlist')+'" onclick="event.stopPropagation();toggleWishlist(\''+item.id+'\')">'+_svgIcon('heart',12)+'</button>'
@@ -41466,7 +41863,7 @@ function _renderShopBundle(id, name, origPrice, price, items, gradient, borderCo
     + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">'
     + items.map(it => '<span style="font-size:9.5px;padding:3px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-weight:600;">'+it+'</span>').join('')
     + '</div>'
-    + (bundleOwned ? '<div class="sic-owned">Owned</div>' : '<div class="sic-price"><img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;"> <span style="text-decoration:line-through;opacity:.4;margin-right:3px;">'+origPrice+'</span> '+price+'</div>')
+    + (bundleOwned ? '<div class="sic-owned">Owned</div>' : '<div class="sic-price"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:13px;height:13px;object-fit:contain;"> <span style="text-decoration:line-through;opacity:.4;margin-right:3px;">'+origPrice+'</span> '+price+'</div>')
     + '</div></div>';
 }
 
@@ -41583,7 +41980,7 @@ function renderAtelierTab(tab) {
                   <div style="font-size:20px;font-weight:900;${isPopular?'background:linear-gradient(90deg,#ff77e4,#fff93e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;':'color:rgba(255,255,255,.8);'}">${pl.onyx}</div>
                   ${isPopular?'<div style="font-size:9px;font-weight:900;color:#fff93e;margin-top:1px;">BEST VALUE</div>':''}
                 </div>
-                <img src="/Onyx.png" style="width:22px;height:22px;object-fit:contain;"/>
+                <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:22px;height:22px;object-fit:contain;"/>
               </div>
             </button>`;
           }).join('')}
@@ -41668,7 +42065,7 @@ function renderAtelierTab(tab) {
         <!-- Bottom Section: Reward and Action -->
         <div style="padding:0 20px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid ${borderColor};margin:0 0 0 0;padding-top:16px;">
           <div style="display:flex;align-items:center;gap:8px;">
-            <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(255,249,62,.2));">
+            <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(255,249,62,.2));">
             <span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--accent);">+${q.reward}</span>
             <span style="font-size:11px;color:rgba(255,255,255,.35);font-weight:600;">${q.unit}</span>
           </div>
@@ -46927,7 +47324,7 @@ async function purchaseRadiance(isPlus, days, cost) {
     ov.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:380px;width:90%;text-align:center;">
       <div style="font-size:40px;margin-bottom:14px;">😕</div>
       <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
-      <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong> but only have <strong>${balance} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong>.<br>Complete quests to earn more Onyx!</div>
+      <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong> but only have <strong>${balance} <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong>.<br>Complete quests to earn more Onyx!</div>
       <div style="display:flex;gap:8px;">
         <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:var(--rail);font-family:var(--font-display);font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
         <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:var(--muted-light);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Not Now</button>
@@ -47324,7 +47721,7 @@ function _showDailyQuestPopup() {
         <div class="quest-popup-title">Hearken, Hearken!</div>
         <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">20 Onyx</strong>. Resets at midnight.</div>
         <div class="quest-popup-reward">
-          <img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;">
+          <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:12px;height:12px;object-fit:contain;">
           +20 Onyx
         </div>
         <div class="quest-popup-btns">
@@ -53983,7 +54380,7 @@ function _renderTradeModalHTML() {
           ${cover}
           <div class="trade-item-meta">
             <div class="trade-item-name">${escapeHTML(it.name || id)}</div>
-            <div class="trade-item-price"><img src="/Onyx.png" alt="">${it.price || 0}</div>
+            <div class="trade-item-price"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${it.price || 0}</div>
           </div>
           <span class="trade-item-check">${sel ? '✓' : ''}</span>
         </div>`;
@@ -54023,7 +54420,7 @@ function _renderTradeModalHTML() {
             </div>
             <label class="trade-field-label">Onyx</label>
             <div class="trade-onyx-input">
-              <img src="/Onyx.png" alt="">
+              <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">
               <input id="trade-my-onyx" type="number" min="0" max="${CU?.onyx || 0}" placeholder="0" oninput="_tradeUpdateTotals()">
               <span class="trade-onyx-avail">/ ${(CU?.onyx || 0).toLocaleString()}</span>
             </div>
@@ -54044,7 +54441,7 @@ function _renderTradeModalHTML() {
             </div>
             <label class="trade-field-label">Onyx</label>
             <div class="trade-onyx-input">
-              <img src="/Onyx.png" alt="">
+              <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">
               <input id="trade-their-onyx" type="number" min="0" placeholder="0" oninput="_tradeUpdateTotals()">
               <span class="trade-onyx-avail">paid to you</span>
             </div>
@@ -54095,13 +54492,13 @@ function _tradeUpdateTotals() {
   const themEl = document.getElementById('trade-net-them');
   if (meEl) {
     meEl.innerHTML = meReceives > 0
-      ? `<img src="/Onyx.png" style="width:12px;height:12px;vertical-align:-2px;"> ${meReceives.toLocaleString()}`
+      ? `<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:12px;height:12px;vertical-align:-2px;"> ${meReceives.toLocaleString()}`
       : '—';
     meEl.style.color = meReceives > 0 ? 'var(--green)' : 'var(--muted)';
   }
   if (themEl) {
     themEl.innerHTML = themReceives > 0
-      ? `<img src="/Onyx.png" style="width:12px;height:12px;vertical-align:-2px;"> ${themReceives.toLocaleString()}`
+      ? `<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:12px;height:12px;vertical-align:-2px;"> ${themReceives.toLocaleString()}`
       : '—';
     themEl.style.color = themReceives > 0 ? 'var(--green)' : 'var(--muted)';
   }
@@ -54415,8 +54812,8 @@ function _renderItemOfTheDay(appearances, ownedAppearances) {
           return `<div style="font-size:11px;color:rgba(255,249,62,.7);margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">${radLine}${streakChip}${iotdChip}</div>`;
         })()}
         <div class="iotd-price-row">
-          <span class="iotd-price-orig"><img src="/Onyx.png" alt="">${origPrice}</span>
-          <span class="iotd-price-now"><img src="/Onyx.png" alt="">${dealPrice}</span>
+          <span class="iotd-price-orig"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${origPrice}</span>
+          <span class="iotd-price-now"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${dealPrice}</span>
           <span class="iotd-discount">-${totalDiscountPct}%</span>
         </div>
         <div class="iotd-countdown">
@@ -54524,7 +54921,7 @@ function _renderFortshopUnifiedCard(kind, item, ownedAppearances) {
       <div class="fortshop-card-name">${escapeHTML(item.name)}</div>
       ${isOwned
         ? '<button class="fortshop-card-btn fortshop-card-btn--owned" onclick="event.stopPropagation();">✓ Owned</button>'
-        : `<button class="fortshop-card-btn" onclick="event.stopPropagation();${buyAction}"><img src="/Onyx.png" alt="">${item.price}</button>`}
+        : `<button class="fortshop-card-btn" onclick="event.stopPropagation();${buyAction}"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${item.price}</button>`}
     </div>
   </div>`;
 }
@@ -54696,7 +55093,7 @@ async function _fsLoadResellers(it) {
   }
 
   listings.sort((a, b) => (a.price || 0) - (b.price || 0));
-  if (countEl) countEl.innerHTML = `${listings.length} active · from <img src="/Onyx.png" alt="" style="width:10px;height:10px;vertical-align:-1px;object-fit:contain;margin-right:2px;">${listings[0].price.toLocaleString()}`;
+  if (countEl) countEl.innerHTML = `${listings.length} active · from <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="" style="width:10px;height:10px;vertical-align:-1px;object-fit:contain;margin-right:2px;">${listings[0].price.toLocaleString()}`;
 
   const sellerNames = [...new Set(listings.map(l => l.seller).filter(Boolean))];
   const sellerData = {};
@@ -54722,7 +55119,7 @@ async function _fsLoadResellers(it) {
         <div class="sim-reseller-name">${escapeHTML(displayName)}</div>
         <div class="sim-reseller-serial">Serial ${escapeHTML(String(serial))}</div>
       </div>
-      <div class="sim-reseller-price"><img src="/Onyx.png" alt="">${(l.price || 0).toLocaleString()}</div>
+      <div class="sim-reseller-price"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${(l.price || 0).toLocaleString()}</div>
       ${isSelf
         ? ownerActions
         : `<button class="sim-reseller-buy${canAfford ? '' : ' sim-reseller-buy--poor'}" ${canAfford ? '' : 'disabled'} onclick="_fsBuyReseller('${escapeHTML(l.id)}','${escapeHTML(it.id)}')">${canAfford ? 'Buy' : 'Need more Onyx'}</button>`}
@@ -54793,7 +55190,7 @@ function _fsEditResellListing(listingId, itemId, currentPrice) {
     <div class="sim-list-resale-row">
       <label for="sim-list-resale-price">New price</label>
       <div class="sim-list-resale-input-wrap">
-        <img src="/Onyx.png" alt="">
+        <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">
         <input id="sim-list-resale-price" type="number" min="1" max="999999" value="${currentPrice}" autofocus>
       </div>
     </div>
@@ -54859,7 +55256,7 @@ async function _fsPromptListResale(itemId) {
     <div class="sim-list-resale-row">
       <label for="sim-list-resale-price">Asking price</label>
       <div class="sim-list-resale-input-wrap">
-        <img src="/Onyx.png" alt="">
+        <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">
         <input id="sim-list-resale-price" type="number" min="1" max="999999" value="${item.price || 100}" autofocus>
       </div>
     </div>
@@ -54920,7 +55317,7 @@ function _fsRenderItemDetail(it, kind) {
             <div class="sim-ph-chart"><svg id="sim-ph-svg" viewBox="0 0 640 220" preserveAspectRatio="none"></svg></div>
             <div class="sim-ph-stats" id="sim-ph-stats">
               <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">- -</div></div>
-              <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div></div>
+              <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${it.price.toLocaleString()}</div></div>
               <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--muted);">- -</div></div>
             </div>
             <div class="sim-ph-note">Price history appears once resellers list this item on the Marketplace.</div>
@@ -54942,7 +55339,7 @@ function _fsRenderItemDetail(it, kind) {
         <div class="sim-buy-panel">
           <div class="sim-buy-price">
             <div class="sim-buy-price-lbl">Price</div>
-            <div class="sim-buy-price-num"><img src="/Onyx.png" alt="">${priceLabel}</div>
+            <div class="sim-buy-price-num"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${priceLabel}</div>
             ${discCalc.totalDiscount > 0 ? `<div style="font-size:11px;color:rgba(255,249,62,.7);margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">${discCalc.breakdown.radiance ? `<span class="sic-discount-radiance"><img src="/badges/radiance.png" alt="Radiance" onerror="this.style.display='none'"><span>10% off · Radiance</span></span>` : ''}${discCalc.breakdown.streak ? '<span style="padding:1px 6px;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:3px;">Streak 5%</span>' : ''}</div>` : ''}
           </div>
           <div class="sim-buy-actions">
@@ -54950,7 +55347,7 @@ function _fsRenderItemDetail(it, kind) {
               ? '<button class="sim-buy-btn sim-buy-btn--owned" disabled>✓ Owned</button>'
               : (!seasonOpen
                 ? '<button class="sim-buy-btn sim-buy-btn--owned" disabled>Season ended - check resellers</button>'
-                : `<button class="sim-buy-btn" id="sim-buy-btn" onclick="_fsArmPurchase('${safeId}','${escapeHTML(kind)}',${finalPrice})">Buy · <img src="/Onyx.png" alt="" style="width:13px;height:13px;vertical-align:-2px;"> ${finalPrice.toLocaleString()}</button>`)}
+                : `<button class="sim-buy-btn" id="sim-buy-btn" onclick="_fsArmPurchase('${safeId}','${escapeHTML(kind)}',${finalPrice})">Buy · <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="" style="width:13px;height:13px;vertical-align:-2px;"> ${finalPrice.toLocaleString()}</button>`)}
             ${!isOwned ? `<button class="sim-wl-btn${onWL ? ' sim-wl-btn--on' : ''}" onclick="toggleWishlist('${safeId}');_fsRefreshModalWL('${safeId}')" title="${onWL ? 'Remove from wishlist' : 'Add to wishlist'}">${_svgIcon('heart',13)} ${onWL ? 'On wishlist' : 'Wishlist'}</button>` : ''}
           </div>
         </div>
@@ -55078,8 +55475,8 @@ async function _fsDrawPriceHistory(it) {
   if (statsEl) {
     statsEl.innerHTML = `
       <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Sales</div><div class="sim-ph-stat-num">${totalSales.toLocaleString()}</div></div>
-      <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div></div>
-      <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="/Onyx.png" alt="">${avgPrice.toLocaleString()}</div></div>`;
+      <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Original Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${it.price.toLocaleString()}</div></div>
+      <div class="sim-ph-stat"><div class="sim-ph-stat-lbl">Average Price</div><div class="sim-ph-stat-num" style="color:var(--green);"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${avgPrice.toLocaleString()}</div></div>`;
   }
 
   const days = priceSeries.length;
@@ -55165,18 +55562,18 @@ function _legacyOpenShopCheckout_unused(itemId, kind) {
           <div class="sim-checkout-item-name">${escapeHTML(it.name)}</div>
           <div class="sim-checkout-item-type">${escapeHTML(typeLabel)}</div>
         </div>
-        <div class="sim-checkout-item-price"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</div>
+        <div class="sim-checkout-item-price"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${it.price.toLocaleString()}</div>
       </div>
       <div class="sim-checkout-method">
         <div class="sim-checkout-method-lbl">Payment method</div>
         <div class="sim-checkout-method-row">
-          <img src="/Onyx.png" alt="" style="width:18px;height:18px;">
+          <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="" style="width:18px;height:18px;">
           <span>Onyx balance · ${(CU?.onyx || 0).toLocaleString()} available</span>
         </div>
       </div>
       <div class="sim-checkout-total">
         <span>Total due</span>
-        <span class="sim-checkout-total-num"><img src="/Onyx.png" alt="">${it.price.toLocaleString()}</span>
+        <span class="sim-checkout-total-num"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${it.price.toLocaleString()}</span>
       </div>
       <div class="sim-checkout-legal">
         <label class="sim-checkout-agree">
@@ -55276,7 +55673,7 @@ function openShopBundleModal(id) {
       <div class="sim-bundle-item-meta">
         <div class="sim-bundle-item-type">${entry.kind === 'appearance' ? 'Appearance' : 'Avatar Decoration'}</div>
         <div class="sim-bundle-item-name">${escapeHTML(it.name)}</div>
-        <div class="sim-bundle-item-price"><img src="/Onyx.png" alt="">${it.price}</div>
+        <div class="sim-bundle-item-price"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${it.price}</div>
         ${owned ? '<div class="sim-bundle-item-owned">✓ Already on your profile</div>' : ''}
       </div>
     </div>`;
@@ -55299,13 +55696,13 @@ function openShopBundleModal(id) {
         <div class="sim-buy-panel">
           <div class="sim-buy-price">
             <div class="sim-buy-price-lbl">Bundle price</div>
-            <div class="sim-buy-price-num"><img src="/Onyx.png" alt="">${bundle.price.toLocaleString()}</div>
-            ${savings > 0 ? `<div class="sim-buy-savings">Save <img src="/Onyx.png" alt="">${savings.toLocaleString()} vs. buying alone</div>` : ''}
+            <div class="sim-buy-price-num"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${bundle.price.toLocaleString()}</div>
+            ${savings > 0 ? `<div class="sim-buy-savings">Save <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">${savings.toLocaleString()} vs. buying alone</div>` : ''}
           </div>
           <div class="sim-buy-actions">
             ${allOwned
               ? '<button class="sim-buy-btn sim-buy-btn--owned" disabled>✓ Bundle already on your profile</button>'
-              : `<button class="sim-buy-btn" id="sim-buy-btn" onclick="_fsArmPurchase('${safeId}','bundle',${bundle.price})">Buy bundle · <img src="/Onyx.png" alt="" style="width:13px;height:13px;vertical-align:-2px;"> ${bundle.price.toLocaleString()}</button>`}
+              : `<button class="sim-buy-btn" id="sim-buy-btn" onclick="_fsArmPurchase('${safeId}','bundle',${bundle.price})">Buy bundle · <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="" style="width:13px;height:13px;vertical-align:-2px;"> ${bundle.price.toLocaleString()}</button>`}
           </div>
         </div>
         ${!allOwned ? `<div id="sim-confirm-panel" class="sim-confirm-panel" style="display:none;">
@@ -55350,7 +55747,7 @@ async function _loadShopMarketplace() {
         ${it.desc ? `<div style="font-size:11.5px;color:var(--muted-light);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHTML(it.desc)}</div>` : ''}
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px;border-top:1px solid var(--border);">
           <div style="display:flex;align-items:center;gap:5px;font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--accent);">
-            <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;"> ${l.price}
+            <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:13px;height:13px;object-fit:contain;"> ${l.price}
           </div>
           <button onclick="buyListing('${escapeHTML(l.id)}').then(()=>{ _loadShopMarketplace(); })" style="padding:8px 16px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all .15s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">Buy</button>
         </div>

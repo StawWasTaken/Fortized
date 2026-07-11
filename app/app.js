@@ -37745,7 +37745,11 @@ const STATUS_PRESETS = [
   {emoji:'😊',text:'Feeling great!',color:'#fde68a'},
 ];
 
-function _closeStatusPicker(){const s=document.getElementById("ftz-status-picker");if(s)s.remove();}
+function _closeStatusPicker(){
+  const s=document.getElementById("ftz-status-picker");if(s)s.remove();
+  const ep=document.getElementById("emoji-picker");if(ep)ep.classList.remove("show");
+  window._statusEmojiInsertOverride=false;
+}
 
 // ── Status Picker — clean rebuild ──
 // Uses the chatbar emoji panel directly. Emoji is optional. No blurry overlay.
@@ -37756,15 +37760,6 @@ function openStatusPicker() {
   const cur = CU?.customStatus || {};
   _spSelectedEmoji = cur.emoji || '';
   const curText = cur.text || '';
-
-  // Create hidden target for the chatbar emoji panel
-  let target = document.getElementById('status-emoji-target');
-  if (!target) {
-    target = document.createElement('input');
-    target.id = 'status-emoji-target';
-    target.style.cssText = 'position:absolute;opacity:0;pointer-events:none;width:0;height:0;';
-    document.body.appendChild(target);
-  }
 
   const overlay = document.createElement('div');
   overlay.id = 'ftz-status-picker';
@@ -37847,20 +37842,40 @@ function openStatusPicker() {
 }
 
 function _spOpenEmoji() {
-  // Wire the emoji callback to update our status emoji
+  const btn = document.getElementById('sp-emoji-btn');
   window._statusEmojiInsertOverride = true;
   const orig = window._emojiInsertCallback;
   window._emojiInsertCallback = (emoji) => {
     _spSelectedEmoji = emoji;
-    const btn = document.getElementById('sp-emoji-btn');
-    if (btn) {
-      btn.innerHTML = `<img src="${emojiToTwemojiUrl(emoji)}" style="width:20px;height:20px;" onerror="this.parentElement.textContent='${escapeHTML(emoji)}'">`;
+    const b = document.getElementById('sp-emoji-btn');
+    if (b) {
+      b.innerHTML = `<img src="${emojiToTwemojiUrl(emoji)}" style="width:20px;height:20px;" onerror="this.parentElement.textContent='${escapeHTML(emoji)}'">`;
     }
     window._statusEmojiInsertOverride = false;
     window._emojiInsertCallback = orig;
     document.getElementById('emoji-picker')?.classList.remove('show');
   };
-  toggleEmojiPicker('status-emoji-target');
+  if (btn) {
+    const rect = btn.getBoundingClientRect();
+    const PW = Math.min(448, window.innerWidth - 16);
+    const PH = 440;
+    let left = Math.max(8, rect.left - PW + rect.width);
+    left = Math.min(left, window.innerWidth - PW - 8);
+    let top;
+    if (rect.top - 8 > PH) {
+      top = Math.max(8, rect.top - PH - 8);
+    } else {
+      top = Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
+    }
+    const panel = document.getElementById('emoji-picker');
+    if (panel) {
+      if (panel.classList.contains('show')) { panel.classList.remove('show'); return; }
+      buildEmojiPicker();
+      panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;`;
+      panel.classList.add('show');
+      setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
+    }
+  }
 }
 
 function _spOnInput() {

@@ -10991,26 +10991,26 @@ select:focus-visible {
   opacity:.85;
 }
 .fpp__cs-bubble:hover .fpp__cs-plus{ color:var(--text); opacity:1; }
-/* Status bubble controls: edit/delete for own, reply for others */
-.fpp__cs-controls{
-  display:inline-flex; gap:3px; margin-left:4px; flex-shrink:0;
+/* Status bubble wrapper — positions floating controls relative to the bubble */
+.fpp__cs-wrap{ position:relative; display:inline-flex; align-items:center; }
+.fpp__cs-wrap--empty{ cursor:pointer; }
+/* Floating controls — appear outside the bubble on hover (Discord-style) */
+.fpp__cs-floating{
+  display:inline-flex; gap:3px; margin-left:6px; flex-shrink:0;
   opacity:0; transition:opacity .15s;
 }
-.fpp__cs-bubble:hover .fpp__cs-controls{ opacity:1; }
-.fpp__cs-btn{
-  width:20px; height:20px; border-radius:6px; border:none;
+.fpp__cs-wrap:hover .fpp__cs-floating{ opacity:1; }
+.fpp__cs-float-btn{
+  width:22px; height:22px; border-radius:6px; border:none;
   display:inline-flex; align-items:center; justify-content:center;
   cursor:pointer; transition:all .12s; padding:0;
   background:rgba(255,255,255,.06); color:rgba(255,255,255,.45);
 }
-.fpp__cs-btn:hover{ background:rgba(255,255,255,.12); color:#fff; }
-.fpp__cs-edit:hover{ color:var(--accent); }
-.fpp__cs-delete:hover{ color:var(--red); }
-.fpp__cs-reply{
-  opacity:0; transition:opacity .15s; margin-left:2px;
-}
-.fpp__cs-bubble:hover .fpp__cs-reply{ opacity:1; }
-.fpp__cs-reply:hover{ color:var(--blue); }
+.fpp__cs-float-btn:hover{ background:rgba(255,255,255,.12); color:#fff; }
+.fpp__cs-float-edit:hover{ color:var(--accent); }
+.fpp__cs-float-delete:hover{ color:var(--red); }
+.fpp__cs-float-reply{ color:rgba(255,255,255,.45); }
+.fpp__cs-float-reply:hover{ color:var(--blue); }
 
 /* ── Identity (name + handle row + badges) ────────────────────────── */
 .fpp__identity{ padding:12px 18px 0; }

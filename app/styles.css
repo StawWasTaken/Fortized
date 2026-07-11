@@ -540,11 +540,13 @@ body.is-desktop-app .topbar{padding-right:0;}
 .content{flex:1;overflow:hidden;position:relative;display:flex;min-width:0;min-height:0;}
 .view{display:none;flex:1;min-width:0;min-height:0;overflow:hidden;animation:viewFadeIn .2s ease;}.view.active{display:flex;}
 @keyframes viewFadeIn{from{opacity:0;}to{opacity:1;}}
-.app-loading{position:fixed;inset:0;background:linear-gradient(135deg,var(--rail),var(--bg));display:flex;align-items:center;justify-content:center;z-index:var(--z-max);flex-direction:column;gap:24px;animation:forceHideLoading .4s ease 12s forwards;backdrop-filter:blur(2px);}
-.app-loading::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(255,249,62,.02),transparent);pointer-events:none;}
-@keyframes forceHideLoading{to{opacity:0;pointer-events:none;visibility:hidden;z-index:-1;backdrop-filter:blur(0);}}
-.app-loading .app-loading-anim{width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 4px 20px rgba(255,249,62,.1));animation:pulse 2s ease-in-out infinite;will-change:opacity,transform;}
-.app-loading .lbl{font-family:var(--font-display);font-size:14px;font-weight:700;color:rgba(255,255,255,.6);position:relative;z-index:1;text-align:center;}
+.app-loading{position:fixed;inset:0;background:linear-gradient(135deg,var(--rail),var(--bg));display:flex;align-items:center;justify-content:center;z-index:var(--z-max);animation:forceHideLoading .4s ease 12s forwards;}
+.app-loading-inner{display:flex;flex-direction:column;align-items:center;gap:20px;}
+.app-loading .app-loading-anim{width:72px;height:72px;object-fit:contain;filter:brightness(0) invert(1);opacity:.9;animation:pulse 2s ease-in-out infinite;will-change:opacity,transform;}
+.app-loading-text{font-family:var(--font-display);font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;}
+.app-loading-dots{display:inline-block;width:0;overflow:hidden;vertical-align:bottom;animation:dots 1.4s steps(4,end) infinite;}
+@keyframes dots{0%{width:0;}100%{width:1.2em;}}
+@keyframes forceHideLoading{to{opacity:0;pointer-events:none;visibility:hidden;z-index:-1;}}
 @keyframes pulse{0%,100%{opacity:.7;transform:scale(1);}50%{opacity:1;transform:scale(1.02);}}
 @keyframes spin{to{transform:rotate(360deg);}}
 .load-spinner{width:40px;height:40px;border:3px solid rgba(255,249,62,.12);border-top:3px solid var(--accent);border-right:3px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite;box-shadow:0 0 20px rgba(255,249,62,.15),inset 0 0 10px rgba(255,249,62,.08);will-change:transform;}

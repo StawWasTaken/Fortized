@@ -1,34 +1,14 @@
 // ── FAIL-SAFE: guaranteed loading screen dismissal ──
-// Cooperative with appInit. appInit installs its own 20s safety + own
-// retry labels ("Retrying… (n/N)"). This file used to fire at 5s, swap
-// the label to "Taking too long…", add a Retry button, then at 8s
-// force-hide the loader AND force-show #view-home — which raced
-// appInit mid-fetch and bugged the layout when the fetch later
-// succeeded against a half-mounted view.
-//
-// New behaviour:
-//   • Wait 18s before doing anything (appInit's own loop bounds at ~16s)
-//   • If appInit already finished, do nothing
-//   • If appInit installed _hideAppLoader, delegate to it (no force-show)
-//   • Never auto-flip views; appInit owns that
-//   • Only ever add the Retry button — no silent redirect to /login
-//     unless there is literally no user state at all
+// If appInit hasn't finished after the timeout, auto-refresh instead of
+// showing a retry button — the user shouldn't have to do anything.
 (function(){
   var el=document.getElementById('app-loading');
   if(!el)return;
   window._loadingSafetyTimer=setTimeout(function(){
     if(window._appInitDone)return;
     if(!el||el.style.display==='none'||el.style.visibility==='hidden')return;
-    var lbl=el.querySelector('.lbl');
-    if(lbl) lbl.textContent = navigator.onLine ? 'Taking too long…' : 'Offline — loading from cache…';
-    if(!el.querySelector('button.ftz-loading-retry')){
-      var retry=document.createElement('button');
-      retry.className='ftz-loading-retry';
-      retry.style.cssText='margin-top:12px;padding:8px 20px;border-radius:10px;border:1px solid rgba(255,249,62,.2);background:rgba(255,249,62,.06);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;';
-      retry.textContent='Retry';
-      retry.onclick=function(){ window.location.reload(); };
-      el.appendChild(retry);
-    }
+    // Just refresh — don't show retry UI or cache messages
+    window.location.reload();
   }, navigator.onLine ? 18000 : 6000);
 })();
 
@@ -54,9 +34,8 @@
     }
   }
   if (!navigator.onLine) {
-    var el = document.getElementById('app-loading');
-    var lbl = el && el.querySelector('.lbl');
-    if (lbl) lbl.textContent = 'Loading offline…';
+    // Offline — the loading screen stays as-is with animated dots
+    // and will auto-refresh via the safety timer above
   }
   window.addEventListener('online', function(){ setOffline(false); });
   window.addEventListener('offline', function(){ setOffline(true); });

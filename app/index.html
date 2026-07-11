@@ -74,11 +74,34 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
 <!-- GLOBAL CANVAS — the 'source of truth' for theme colour -->
 <div class="global-canvas" id="global-canvas"></div>
 
-<!-- APP LOADING -->
+<!-- APP LOADING — theme-aware background, white animation, animated dots -->
 <div class="app-loading" id="app-loading">
-  <img src="/fortized loading animation.gif" class="app-loading-anim" alt="" onerror="this.src='/Fortized icon.png';this.style.width='50px';this.style.height='50px';this.style.filter='drop-shadow(0 0 16px rgba(255,249,62,.4))';">
-  <div class="lbl">Loading Fortized...</div>
+  <div class="app-loading-inner">
+    <img src="/fortized loading animation.gif" class="app-loading-anim" alt="" onerror="this.style.display='none'">
+    <div class="app-loading-text">Loading<span class="app-loading-dots">...</span></div>
+  </div>
 </div>
+<script>
+// Apply theme background to loading screen immediately (before CSS vars load)
+(function(){
+  try {
+    var u = localStorage.getItem('ftz_current') || localStorage.getItem('fortized_current_user') || '';
+    u = u.replace(/^["']|["']$/g,'').trim();
+    var key = u ? 'ftz_appearance_' + u : 'ftz_appearance';
+    var theme = localStorage.getItem(key) || 'fortized_classic';
+    var colors = {
+      dark_realm:       {bg:'#0a0d12',rail:'#070a0e'},
+      fortized_slate:   {bg:'#1f232c',rail:'#22262e'},
+      midnight_citadel: {bg:'#050812',rail:'#030610'},
+      onyx_pure:        {bg:'#010103',rail:'#010102'},
+      green_leaves:     {bg:'#0a1410',rail:'#06100d'}
+    };
+    var c = colors[theme] || {bg:'#16191f',rail:'#13161c'};
+    var el = document.getElementById('app-loading');
+    if (el) el.style.background = 'linear-gradient(135deg,'+c.rail+','+c.bg+')';
+  } catch(e){}
+})();
+</script>
 <script src="/app/utils.js"></script>
 
 <!-- TOAST -->

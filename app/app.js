@@ -13561,16 +13561,10 @@ function initFortizedUXResilience() {
 // ════════════════════════════════════════════
 (async function appInit(){
   const _sl=document.getElementById('app-loading');
-  // The inner appInit retry chain can take up to ~18s in the worst case
-  // (5s FortizedSocial wait + 7s fetch race + 1.5s pause + 5s retry).
-  // The old 10s safety timer fired *inside* that window, fading the
-  // loader while init was still running — users then saw a blank app
-  // shell or were silently redirected to /login. Give the chain time
-  // to actually complete; if it really hangs, utils.js already swaps
-  // in a Retry button at 8s, which is the right escalation point.
   const _hideLoader = () => { if(_sl){_sl.style.opacity='0';setTimeout(()=>{_sl.style.display='none';},300);} };
-  // Cancel utils.js's "Retry" fallback timer — appInit owns the loader
+  // Cancel utils.js's auto-refresh fallback timer — appInit owns the loader
   // from this point on. Otherwise both timers race and the user sees
+  // conflicting states.
   // "Retrying… (2/2)" from appInit AND "Taking too long…" + a Retry
   // button from utils.js stacked on top of each other.
   if (window._loadingSafetyTimer) { try { clearTimeout(window._loadingSafetyTimer); } catch {} }
@@ -13602,9 +13596,7 @@ function initFortizedUXResilience() {
     ]);
   }
   if (typeof FortizedSocial === 'undefined') {
-    // Scripts never loaded — show offline state from cache if possible
-    const lbl = document.querySelector('#app-loading .lbl');
-    if (lbl) lbl.textContent = '⚠️ Network issue — loading cached data…';
+    // Scripts never loaded — will fall through to cache/refresh logic below
   }
 
   // Detect Electron desktop app via preload bridge OR User-Agent string
@@ -13660,7 +13652,6 @@ function initFortizedUXResilience() {
   } else {
     // Online — fetch fresh data from database (bypass cache to ensure latest)
     const lbl=document.querySelector('#app-loading .lbl');
-    if(lbl)lbl.textContent='Fetching your profile…';
     // ── BOUNDED FETCH LOOP ────────────────────────────────────────────
     // The old code did a 7s race → catch → 1.5s sleep → 5s race, all
     // hard-coded and hard to reason about. Replaced with a single
@@ -13674,7 +13665,6 @@ function initFortizedUXResilience() {
     let _fetchErr = null;
     for (let attempt = 0; attempt < FETCH_ATTEMPTS && !CU?.username; attempt++) {
       if (attempt > 0) {
-        if (lbl) lbl.textContent = `Retrying… (${attempt + 1}/${FETCH_ATTEMPTS})`;
         await new Promise(r => setTimeout(r, FETCH_BACKOFF_MS));
       }
       try {
@@ -13692,7 +13682,6 @@ function initFortizedUXResilience() {
       // Every attempt failed — fall back to localStorage cache so the
       // user can at least see their last-known state instead of being
       // bounced to /login.
-      if (lbl) lbl.textContent = '⚠️ Connection issue — loading cached data…';
       const cached = localStorage.getItem('ftz_user_' + username);
       if (cached) {
         try { CU = JSON.parse(cached); } catch { CU = null; }

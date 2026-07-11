@@ -7,7 +7,9 @@ const _wrn = FTZ_DEBUG ? console.warn.bind(console) : () => {};
 // ══════════════════════════════════════════════════════════
 // SVG ICON SYSTEM  (replaces emoji icons throughout the UI)
 // ══════════════════════════════════════════════════════════
+const _CHATBAR_EMOJI_SVG = '<svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 24 24" fill="#212121"><path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2ZM14.49,9.36C14.43,9.77 14.05,10.05 13.64,9.99C13.23,9.93 12.95,9.55 13.01,9.14C13.17,8.05 14.13,7.25 15.25,7.25C16.37,7.25 17.33,8.05 17.49,9.14C17.55,9.55 17.27,9.93 16.86,9.99C16.45,10.05 16.07,9.77 16.01,9.36C15.96,9.04 15.66,8.75 15.25,8.75C14.84,8.75 14.54,9.04 14.49,9.36ZM12,18C8.86,18 6.76,15.64 6.5,12.75H17.5C17.24,15.64 15.14,18 12,18ZM8.75,8.75C8.34,8.75 8.04,9.04 7.99,9.36C7.93,9.77 7.55,10.05 7.14,9.99C6.73,9.93 6.45,9.55 6.51,9.14C6.67,8.05 7.63,7.25 8.75,7.25C9.87,7.25 10.83,8.05 10.99,9.14C11.05,9.55 10.77,9.93 10.36,9.99C9.95,10.05 9.57,9.77 9.51,9.36C9.46,9.04 9.16,8.75 8.75,8.75Z"/></svg>';
 const _svgIcons = {
+
   castle:     `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l3-4 3 4v14"/><path d="M13 21V7l3-4 3 4v14"/><rect x="9" y="17" width="2" height="4"/><rect x="4" y="10" width="2" height="3"/><rect x="14" y="10" width="2" height="3"/></svg>`,
   chat:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
   users:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
@@ -10756,7 +10758,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     if (msg.replyTo.id === 'status-reply') {
       // Custom status reply — show a special indicator
       const rStatusText = escapeHTML(String(msg.replyTo.text || 'custom status').slice(0,80));
-      replyHTML = `<div class="msg-reply-ref msg-reply-ref--status"><span class="mrr-av">${_CHATBAR_EMOJI_SVG}</span><strong class="mrr-name">Status reply</strong><span class="mrr-preview">@${rSafe}${rStatusText ? '·' + rStatusText : ''}</span></div>`;
+      replyHTML = `<div class="msg-reply-ref msg-reply-ref--status"><span class="mrr-av">${_CHATBAR_EMOJI_SVG}</span><strong class="mrr-name">status reply</strong><span class="mrr-preview">${rStatusText}</span></div>`;
     } else {
       const rRaw = String(msg.replyTo.text || '');
       const rHasAttach = _FTZ_FILE_TOKEN_RE.test(rRaw);
@@ -37764,7 +37766,6 @@ function _closeStatusPicker(){
 // Uses the chatbar emoji panel directly. Emoji is optional. No blurry overlay.
 let _spSelectedEmoji = '';
 
-const _CHATBAR_EMOJI_SVG = '<svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 24 24" fill="#212121"><path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2ZM14.49,9.36C14.43,9.77 14.05,10.05 13.64,9.99C13.23,9.93 12.95,9.55 13.01,9.14C13.17,8.05 14.13,7.25 15.25,7.25C16.37,7.25 17.33,8.05 17.49,9.14C17.55,9.55 17.27,9.93 16.86,9.99C16.45,10.05 16.07,9.77 16.01,9.36C15.96,9.04 15.66,8.75 15.25,8.75C14.84,8.75 14.54,9.04 14.49,9.36ZM12,18C8.86,18 6.76,15.64 6.5,12.75H17.5C17.24,15.64 15.14,18 12,18ZM8.75,8.75C8.34,8.75 8.04,9.04 7.99,9.36C7.93,9.77 7.55,10.05 7.14,9.99C6.73,9.93 6.45,9.55 6.51,9.14C6.67,8.05 7.63,7.25 8.75,7.25C9.87,7.25 10.83,8.05 10.99,9.14C11.05,9.55 10.77,9.93 10.36,9.99C9.95,10.05 9.57,9.77 9.51,9.36C9.46,9.04 9.16,8.75 8.75,8.75Z"/></svg>';
 
 function openStatusPicker() {
   _closeStatusPicker();
@@ -37779,9 +37780,6 @@ function openStatusPicker() {
 
   const u = CU || {};
   const dn = escapeHTML(u.displayName || u.username || 'You');
-
-  // Avatar
-  const avSrc = u.pfp || '/default%20pfp2.png';
 
   // Emoji display
   const emojiDisplay = _spSelectedEmoji
@@ -37800,15 +37798,12 @@ function openStatusPicker() {
     `<button class="sp-dur${d.id === '24h' ? ' sp-dur--active' : ''}" data-dur="${d.id}" onclick="_spPickDur(this)">${d.label}</button>`
   ).join('');
 
-  // Profile preview (simplified from the settings FPP — banner, avatar, name, pronouns, custom status)
-  const bannerSrc = u.banner || '';
-  const bannerHTML = bannerSrc
-    ? `<img class="sp-preview-banner" src="${escapeHTML(bannerSrc)}" onerror="this.style.display='none'" alt="">`
-    : '';
-  const pronouns = u.pronouns || '';
-  const pronounsHTML = pronouns ? `<span style="color:var(--muted)">${escapeHTML(pronouns)}</span>` : '';
-  const csPreview = u.customStatus?.text
-    ? `<div class="sp-preview-cs">${u.customStatus.emoji ? `<img src="${emojiToTwemojiUrl(u.customStatus.emoji)}" onerror="this.outerHTML='${escapeHTML(u.customStatus.emoji)}'">` : ''}${escapeHTML(u.customStatus.text)}</div>`
+  // Profile preview: use actual FPP helpers for consistency
+  const banner = _fppBannerHTML(u, false);
+  const avatar = _fppAvatarHTML(u, 48);
+  const identity = _fppIdentityHTML(u);
+  const status = u.customStatus?.text
+    ? `<div class="fpp__cs-bubble" style="margin-top:4px; font-size:12px; color:var(--muted-light); display:flex; align-items:center; gap:4px;">${u.customStatus.emoji ? `<img src="${emojiToTwemojiUrl(u.customStatus.emoji)}" style="width:14px;height:14px;">` : ''}${escapeHTML(u.customStatus.text)}</div>`
     : '';
 
   overlay.innerHTML = `
@@ -37818,24 +37813,19 @@ function openStatusPicker() {
         <button class="sp-card-close" onclick="_closeStatusPicker()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- Profile preview banner + avatar row -->
       <div class="sp-preview-wrap">
-        ${bannerHTML || '<div style="height:60px;background:var(--panel2)"></div>'}
+        ${banner}
         <div class="sp-preview-body">
-          <div class="sp-preview-av">
-            <img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20pfp2.png'">
-          </div>
+          ${avatar}
           <div class="sp-preview-info">
-            <div class="sp-preview-dn">${dn}</div>
-            <div class="sp-preview-sub">@${escapeHTML(u.username)}${pronounsHTML ? ' · ' + pronounsHTML : ''}</div>
-            ${csPreview}
+            ${identity}
+            ${status}
           </div>
         </div>
       </div>
 
-      <!-- Status input -->
       <div class="sp-input-wrap">
-        <button class="sp-emoji-opener" id="sp-emoji-btn" onclick="_spOpenEmoji()" title="Add an emoji (optional)">
+        <button class="sp-emoji-opener" id="sp-emoji-btn" onclick="_spOpenEmoji()" title="Add an emoji">
           ${_spSelectedEmoji ? emojiDisplay : _CHATBAR_EMOJI_SVG}
         </button>
         <input type="text" class="sp-text-input" id="sp-text-input" placeholder="What's going on?" value="${escapeHTML(curText)}" maxlength="120" oninput="_spOnInput()">
@@ -37844,13 +37834,11 @@ function openStatusPicker() {
         </button>
       </div>
 
-      <!-- Clear after -->
       <div class="sp-dur-row">
         <span class="sp-dur-label">Clear after</span>
         <div class="sp-dur-options" id="sp-dur-options">${durHTML}</div>
       </div>
 
-      <!-- Actions -->
       <div class="sp-actions">
         ${curText ? '<button class="sp-btn sp-btn--ghost" onclick="clearCustomStatus();_closeStatusPicker()">Clear Status</button>' : ''}
         <button class="sp-btn sp-btn--save" onclick="_spSave()">Save</button>
@@ -37858,34 +37846,26 @@ function openStatusPicker() {
     </div>`;
 
   document.body.appendChild(overlay);
-
-  // Focus input after a tick
-  setTimeout(() => {
-    const inp = document.getElementById('sp-text-input');
-    if (inp) inp.focus();
-  }, 50);
+  setTimeout(() => document.getElementById('sp-text-input')?.focus(), 50);
 }
 
 function _spOpenEmoji() {
   const panel = document.getElementById('emoji-picker');
   const btn = document.getElementById('sp-emoji-btn');
+  if (!btn || !panel) return;
 
-  // If panel is already showing (from chatbar or previous call), close it
-  if (panel && panel.classList.contains('show')) {
+  if (panel.classList.contains('show')) {
     panel.classList.remove('show');
     window._statusEmojiInsertOverride = false;
-    if (window._emojiInsertCallback === _spEmojiCallback) {
+    if (window._emojiInsertCallback === window._spEmojiCallback) {
       window._emojiInsertCallback = window._spEmojiOrigCallback || null;
     }
     return;
   }
 
-  // Close other pickers that might be open
   document.getElementById('giphy-picker')?.remove();
   document.getElementById('sticker-picker')?.remove();
   document.getElementById('botcmd-picker')?.remove();
-
-  if (!btn || !panel) return;
 
   window._spEmojiOrigCallback = window._emojiInsertCallback;
   window._spEmojiCallback = (emoji) => {
@@ -37896,26 +37876,20 @@ function _spOpenEmoji() {
     }
     window._statusEmojiInsertOverride = false;
     window._emojiInsertCallback = window._spEmojiOrigCallback || null;
-    document.getElementById('emoji-picker')?.classList.remove('show');
+    panel.classList.remove('show');
   };
   window._statusEmojiInsertOverride = true;
   window._emojiInsertCallback = window._spEmojiCallback;
 
-  // Position the panel relative to the button
   const rect = btn.getBoundingClientRect();
   const PW = Math.min(448, window.innerWidth - 16);
   const PH = 440;
   let left = Math.max(8, rect.left - PW + rect.width);
   left = Math.min(left, window.innerWidth - PW - 8);
-  let top;
-  if (rect.top - 8 > PH) {
-    top = Math.max(8, rect.top - PH - 8);
-  } else {
-    top = Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
-  }
+  let top = (rect.top - 8 > PH) ? Math.max(8, rect.top - PH - 8) : Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
 
   buildEmojiPicker();
-  panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;`;
+  panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;z-index:11000;display:flex;`;
   panel.classList.add('show');
   setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
 }
@@ -37957,6 +37931,10 @@ function _spSave() {
         saveUser();
         toast('Status cleared', 'info');
       }
+    }, ms);
+  }
+  saveUser().catch(e => console.warn('[Status Save] Failed:', e?.message));
+}
     }, ms);
   }
   saveUser();
@@ -48741,7 +48719,7 @@ function _showStatusReplyModal(targetUser) {
   overlay.innerHTML = `
     <div class="sr-card">
       <div class="sr-header">
-        <div class="sr-title">Reply to @${un}</div>
+        <div class="sr-title">Reply to ${cn}'s status</div>
         <button class="sr-close" onclick="_closeStatusReplyModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="sr-target">
@@ -48753,7 +48731,7 @@ function _showStatusReplyModal(targetUser) {
       </div>
       <div class="sr-input-wrap">
         <button class="sr-emoji-btn" id="sr-emoji-btn" onclick="_srOpenEmoji()" title="Add an emoji">${_CHATBAR_EMOJI_SVG}</button>
-        <input type="text" class="sr-text-input" id="sr-text-input" placeholder="Message (text only)" maxlength="500" oninput="_srOnInput()">
+        <input type="text" class="sr-text-input" id="sr-text-input" placeholder="Message" maxlength="500" oninput="_srOnInput()">
         <button class="sr-send-btn" id="sr-send-btn" onclick="_srSend()" disabled><i class="fa-solid fa-arrow-up"></i></button>
       </div>
     </div>`;
@@ -48770,7 +48748,9 @@ function _srOnInput() {
 function _srOpenEmoji() {
   const panel = document.getElementById('emoji-picker');
   const btn = document.getElementById('sr-emoji-btn');
-  if (panel && panel.classList.contains('show')) {
+  if (!btn || !panel) return;
+
+  if (panel.classList.contains('show')) {
     panel.classList.remove('show');
     window._statusEmojiInsertOverride = false;
     if (window._emojiInsertCallback === window._srEmojiCallback) {
@@ -48778,10 +48758,10 @@ function _srOpenEmoji() {
     }
     return;
   }
+
   document.getElementById('giphy-picker')?.remove();
   document.getElementById('sticker-picker')?.remove();
   document.getElementById('botcmd-picker')?.remove();
-  if (!btn || !panel) return;
 
   window._srEmojiOrigCallback = window._emojiInsertCallback;
   window._srEmojiCallback = (emoji) => {
@@ -48792,7 +48772,7 @@ function _srOpenEmoji() {
     }
     window._statusEmojiInsertOverride = false;
     window._emojiInsertCallback = window._srEmojiOrigCallback || null;
-    document.getElementById('emoji-picker')?.classList.remove('show');
+    panel.classList.remove('show');
   };
   window._statusEmojiInsertOverride = true;
   window._emojiInsertCallback = window._srEmojiCallback;
@@ -48802,14 +48782,10 @@ function _srOpenEmoji() {
   const PH = 440;
   let left = Math.max(8, rect.left - PW + rect.width);
   left = Math.min(left, window.innerWidth - PW - 8);
-  let top;
-  if (rect.top - 8 > PH) {
-    top = Math.max(8, rect.top - PH - 8);
-  } else {
-    top = Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
-  }
+  let top = (rect.top - 8 > PH) ? Math.max(8, rect.top - PH - 8) : Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
+
   buildEmojiPicker();
-  panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;`;
+  panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;z-index:11000;display:flex;`;
   panel.classList.add('show');
   setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
 }

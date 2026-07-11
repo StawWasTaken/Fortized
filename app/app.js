@@ -10753,23 +10753,29 @@ function appendMessage(container, msg, context, prevAuthor) {
   if (msg.replyTo) {
     const rFrom = msg.replyTo.from || '';
     const rSafe = escapeHTML(rFrom);
-    const rRaw = String(msg.replyTo.text || '');
-    const rHasAttach = _FTZ_FILE_TOKEN_RE.test(rRaw);
-    _FTZ_FILE_TOKEN_RE.lastIndex = 0;
-    const rStripped = rRaw.replace(_FTZ_FILE_TOKEN_RE, '').trim();
-    const rText = escapeHTML(rStripped.slice(0,80));
-    const rAttachIcon = rHasAttach ? '<span class="mrr-attach-ico" aria-label="attachment"><svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M2 5a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5Zm13.35 8.13 3.5 4.67c.37.5.02 1.2-.6 1.2H5.81a.75.75 0 0 1-.59-1.22l1.86-2.32a1.5 1.5 0 0 1 2.34 0l.5.64 2.23-2.97a2 2 0 0 1 3.2 0ZM10.2 5.98c.23-.91-.88-1.55-1.55-.9a.93.93 0 0 1-1.3 0c-.67-.65-1.78-.01-1.55.9a.93.93 0 0 1-.65 1.12c-.9.26-.9 1.54 0 1.8.48.14.77.63.65 1.12-.23.91.88 1.55 1.55.9a.93.93 0 0 1 1.3 0c.67.65 1.78.01 1.55-.9a.93.93 0 0 1 .65-1.12c.9-.26.9-1.54 0-1.8a.93.93 0 0 1-.65-1.12Z" clip-rule="evenodd"></path></svg></span>' : '';
-    const rAvId = 'rav-' + (msg.id||'').replace(/[^a-z0-9]/gi,'-');
-    // Cache-first paint so the avatar shows immediately instead of
-    // flashing the default placeholder for the hydration round-trip.
-    const cachedReplyPfp = (rFrom === CU?.username) ? (CU?.pfp || null) : (_pfpCache[rFrom] || null);
-    const rBody = rText || (rHasAttach ? '<em style="opacity:.5">attachment</em>' : '<em style="opacity:.4">click to view</em>');
-    replyHTML = `<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><span class="mrr-av" id="${rAvId}">${buildAvatarHTML(cachedReplyPfp, rFrom, 18)}</span><strong class="mrr-name"><span class="mrr-at">@</span>${rSafe}</strong><span class="mrr-preview">${rBody}</span>${rAttachIcon}</div>`;
-    // Hydrate only if we didn't already have a cached pfp.
-    if (rFrom && !cachedReplyPfp) {
-      Promise.resolve().then(() => FortizedSocial.getUserByName(rFrom)).then(u => {
-        if (u?.pfp) { _pfpCache[rFrom] = u.pfp; const el = document.getElementById(rAvId); if (el) el.innerHTML = buildAvatarHTML(u.pfp, rFrom, 18); }
-      }).catch(()=>{});
+    if (msg.replyTo.id === 'status-reply') {
+      // Custom status reply — show a special indicator
+      const rStatusText = escapeHTML(String(msg.replyTo.text || 'custom status').slice(0,80));
+      replyHTML = `<div class="msg-reply-ref msg-reply-ref--status"><span class="mrr-av">${_CHATBAR_EMOJI_SVG}</span><strong class="mrr-name">Status reply</strong><span class="mrr-preview">@${rSafe}${rStatusText ? '·' + rStatusText : ''}</span></div>`;
+    } else {
+      const rRaw = String(msg.replyTo.text || '');
+      const rHasAttach = _FTZ_FILE_TOKEN_RE.test(rRaw);
+      _FTZ_FILE_TOKEN_RE.lastIndex = 0;
+      const rStripped = rRaw.replace(_FTZ_FILE_TOKEN_RE, '').trim();
+      const rText = escapeHTML(rStripped.slice(0,80));
+      const rAttachIcon = rHasAttach ? '<span class="mrr-attach-ico" aria-label="attachment"><svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M2 5a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5Zm13.35 8.13 3.5 4.67c.37.5.02 1.2-.6 1.2H5.81a.75.75 0 0 1-.59-1.22l1.86-2.32a1.5 1.5 0 0 1 2.34 0l.5.64 2.23-2.97a2 2 0 0 1 3.2 0ZM10.2 5.98c.23-.91-.88-1.55-1.55-.9a.93.93 0 0 1-1.3 0c-.67-.65-1.78-.01-1.55.9a.93.93 0 0 1-.65 1.12c-.9.26-.9 1.54 0 1.8.48.14.77.63.65 1.12-.23.91.88 1.55 1.55.9a.93.93 0 0 1 1.3 0c.67.65 1.78.01 1.55-.9a.93.93 0 0 1 .65-1.12c.9-.26.9-1.54 0-1.8a.93.93 0 0 1-.65-1.12Z" clip-rule="evenodd"></path></svg></span>' : '';
+      const rAvId = 'rav-' + (msg.id||'').replace(/[^a-z0-9]/gi,'-');
+      // Cache-first paint so the avatar shows immediately instead of
+      // flashing the default placeholder for the hydration round-trip.
+      const cachedReplyPfp = (rFrom === CU?.username) ? (CU?.pfp || null) : (_pfpCache[rFrom] || null);
+      const rBody = rText || (rHasAttach ? '<em style="opacity:.5">attachment</em>' : '<em style="opacity:.4">click to view</em>');
+      replyHTML = `<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><span class="mrr-av" id="${rAvId}">${buildAvatarHTML(cachedReplyPfp, rFrom, 18)}</span><strong class="mrr-name"><span class="mrr-at">@</span>${rSafe}</strong><span class="mrr-preview">${rBody}</span>${rAttachIcon}</div>`;
+      // Hydrate only if we didn't already have a cached pfp.
+      if (rFrom && !cachedReplyPfp) {
+        Promise.resolve().then(() => FortizedSocial.getUserByName(rFrom)).then(u => {
+          if (u?.pfp) { _pfpCache[rFrom] = u.pfp; const el = document.getElementById(rAvId); if (el) el.innerHTML = buildAvatarHTML(u.pfp, rFrom, 18); }
+        }).catch(()=>{});
+      }
     }
   }
   const fwdHTML = msg.forwarded ? _renderForwardedCard(msg) : '';
@@ -37749,11 +37755,16 @@ function _closeStatusPicker(){
   const s=document.getElementById("ftz-status-picker");if(s)s.remove();
   const ep=document.getElementById("emoji-picker");if(ep)ep.classList.remove("show");
   window._statusEmojiInsertOverride=false;
+  if (window._emojiInsertCallback === window._spEmojiCallback) {
+    window._emojiInsertCallback = window._spEmojiOrigCallback || null;
+  }
 }
 
 // ── Status Picker — clean rebuild ──
 // Uses the chatbar emoji panel directly. Emoji is optional. No blurry overlay.
 let _spSelectedEmoji = '';
+
+const _CHATBAR_EMOJI_SVG = '<svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 24 24" fill="#212121"><path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2ZM14.49,9.36C14.43,9.77 14.05,10.05 13.64,9.99C13.23,9.93 12.95,9.55 13.01,9.14C13.17,8.05 14.13,7.25 15.25,7.25C16.37,7.25 17.33,8.05 17.49,9.14C17.55,9.55 17.27,9.93 16.86,9.99C16.45,10.05 16.07,9.77 16.01,9.36C15.96,9.04 15.66,8.75 15.25,8.75C14.84,8.75 14.54,9.04 14.49,9.36ZM12,18C8.86,18 6.76,15.64 6.5,12.75H17.5C17.24,15.64 15.14,18 12,18ZM8.75,8.75C8.34,8.75 8.04,9.04 7.99,9.36C7.93,9.77 7.55,10.05 7.14,9.99C6.73,9.93 6.45,9.55 6.51,9.14C6.67,8.05 7.63,7.25 8.75,7.25C9.87,7.25 10.83,8.05 10.99,9.14C11.05,9.55 10.77,9.93 10.36,9.99C9.95,10.05 9.57,9.77 9.51,9.36C9.46,9.04 9.16,8.75 8.75,8.75Z"/></svg>';
 
 function openStatusPicker() {
   _closeStatusPicker();
@@ -37789,6 +37800,17 @@ function openStatusPicker() {
     `<button class="sp-dur${d.id === '24h' ? ' sp-dur--active' : ''}" data-dur="${d.id}" onclick="_spPickDur(this)">${d.label}</button>`
   ).join('');
 
+  // Profile preview (simplified from the settings FPP — banner, avatar, name, pronouns, custom status)
+  const bannerSrc = u.banner || '';
+  const bannerHTML = bannerSrc
+    ? `<img class="sp-preview-banner" src="${escapeHTML(bannerSrc)}" onerror="this.style.display='none'" alt="">`
+    : '';
+  const pronouns = u.pronouns || '';
+  const pronounsHTML = pronouns ? `<span style="color:var(--muted)">${escapeHTML(pronouns)}</span>` : '';
+  const csPreview = u.customStatus?.text
+    ? `<div class="sp-preview-cs">${u.customStatus.emoji ? `<img src="${emojiToTwemojiUrl(u.customStatus.emoji)}" onerror="this.outerHTML='${escapeHTML(u.customStatus.emoji)}'">` : ''}${escapeHTML(u.customStatus.text)}</div>`
+    : '';
+
   overlay.innerHTML = `
     <div class="sp-card">
       <div class="sp-card-header">
@@ -37796,22 +37818,25 @@ function openStatusPicker() {
         <button class="sp-card-close" onclick="_closeStatusPicker()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- User row -->
-      <div class="sp-user-row">
-        <div class="sp-user-avatar">
-          <img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20pfp2.png'">
-          <span class="sp-user-dot">${FtzStatus.dotSvg(CU.status || 'online', 10)}</span>
-        </div>
-        <div class="sp-user-info">
-          <div class="sp-user-name">${dn}</div>
-          <div class="sp-user-handle">@${escapeHTML(u.username)}</div>
+      <!-- Profile preview banner + avatar row -->
+      <div class="sp-preview-wrap">
+        ${bannerHTML || '<div style="height:60px;background:var(--panel2)"></div>'}
+        <div class="sp-preview-body">
+          <div class="sp-preview-av">
+            <img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20pfp2.png'">
+          </div>
+          <div class="sp-preview-info">
+            <div class="sp-preview-dn">${dn}</div>
+            <div class="sp-preview-sub">@${escapeHTML(u.username)}${pronounsHTML ? ' · ' + pronounsHTML : ''}</div>
+            ${csPreview}
+          </div>
         </div>
       </div>
 
       <!-- Status input -->
       <div class="sp-input-wrap">
         <button class="sp-emoji-opener" id="sp-emoji-btn" onclick="_spOpenEmoji()" title="Add an emoji (optional)">
-          ${_spSelectedEmoji ? emojiDisplay : '<i class="fa-regular fa-face-smile"></i>'}
+          ${_spSelectedEmoji ? emojiDisplay : _CHATBAR_EMOJI_SVG}
         </button>
         <input type="text" class="sp-text-input" id="sp-text-input" placeholder="What's going on?" value="${escapeHTML(curText)}" maxlength="120" oninput="_spOnInput()">
         <button class="sp-clear-btn" id="sp-clear-btn" onclick="_spClearInput()" style="${curText ? '' : 'display:none'}">
@@ -37842,40 +37867,57 @@ function openStatusPicker() {
 }
 
 function _spOpenEmoji() {
+  const panel = document.getElementById('emoji-picker');
   const btn = document.getElementById('sp-emoji-btn');
-  window._statusEmojiInsertOverride = true;
-  const orig = window._emojiInsertCallback;
-  window._emojiInsertCallback = (emoji) => {
+
+  // If panel is already showing (from chatbar or previous call), close it
+  if (panel && panel.classList.contains('show')) {
+    panel.classList.remove('show');
+    window._statusEmojiInsertOverride = false;
+    if (window._emojiInsertCallback === _spEmojiCallback) {
+      window._emojiInsertCallback = window._spEmojiOrigCallback || null;
+    }
+    return;
+  }
+
+  // Close other pickers that might be open
+  document.getElementById('giphy-picker')?.remove();
+  document.getElementById('sticker-picker')?.remove();
+  document.getElementById('botcmd-picker')?.remove();
+
+  if (!btn || !panel) return;
+
+  window._spEmojiOrigCallback = window._emojiInsertCallback;
+  window._spEmojiCallback = (emoji) => {
     _spSelectedEmoji = emoji;
     const b = document.getElementById('sp-emoji-btn');
     if (b) {
       b.innerHTML = `<img src="${emojiToTwemojiUrl(emoji)}" style="width:20px;height:20px;" onerror="this.parentElement.textContent='${escapeHTML(emoji)}'">`;
     }
     window._statusEmojiInsertOverride = false;
-    window._emojiInsertCallback = orig;
+    window._emojiInsertCallback = window._spEmojiOrigCallback || null;
     document.getElementById('emoji-picker')?.classList.remove('show');
   };
-  if (btn) {
-    const rect = btn.getBoundingClientRect();
-    const PW = Math.min(448, window.innerWidth - 16);
-    const PH = 440;
-    let left = Math.max(8, rect.left - PW + rect.width);
-    left = Math.min(left, window.innerWidth - PW - 8);
-    let top;
-    if (rect.top - 8 > PH) {
-      top = Math.max(8, rect.top - PH - 8);
-    } else {
-      top = Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
-    }
-    const panel = document.getElementById('emoji-picker');
-    if (panel) {
-      if (panel.classList.contains('show')) { panel.classList.remove('show'); return; }
-      buildEmojiPicker();
-      panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;`;
-      panel.classList.add('show');
-      setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
-    }
+  window._statusEmojiInsertOverride = true;
+  window._emojiInsertCallback = window._spEmojiCallback;
+
+  // Position the panel relative to the button
+  const rect = btn.getBoundingClientRect();
+  const PW = Math.min(448, window.innerWidth - 16);
+  const PH = 440;
+  let left = Math.max(8, rect.left - PW + rect.width);
+  left = Math.min(left, window.innerWidth - PW - 8);
+  let top;
+  if (rect.top - 8 > PH) {
+    top = Math.max(8, rect.top - PH - 8);
+  } else {
+    top = Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
   }
+
+  buildEmojiPicker();
+  panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;`;
+  panel.classList.add('show');
+  setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
 }
 
 function _spOnInput() {
@@ -48657,24 +48699,174 @@ function _fppCSBubbleHTML(u, isOwn) {
   return '';
 }
 
-// Reply to a user's custom status — opens DM with a pre-filled mention
+// Reply to a user's custom status — opens a mini modal to compose a reply
 function replyToStatus(username) {
   if (!username) return;
+  // Fetch user data to show custom status
+  FortizedSocial.getUserByName(username).then(u => {
+    if (!u) { toast("Could not find that user.", 'error'); return; }
+    _showStatusReplyModal(u);
+  }).catch(() => toast("Could not load user data.", 'error'));
+}
+
+function _closeStatusReplyModal() {
+  const el = document.getElementById('ftz-status-reply');
+  if (el) el.remove();
+  const ep = document.getElementById('emoji-picker');
+  if (ep) ep.classList.remove('show');
+  window._statusEmojiInsertOverride = false;
+  if (window._emojiInsertCallback === window._srEmojiCallback) {
+    window._emojiInsertCallback = window._srEmojiOrigCallback || null;
+  }
+}
+
+function _showStatusReplyModal(targetUser) {
+  _closeStatusReplyModal();
+  const overlay = document.createElement('div');
+  overlay.id = 'ftz-status-reply';
+  overlay.className = 'sr-overlay';
+  overlay.onclick = e => { if (e.target === overlay) _closeStatusReplyModal(); };
+
+  const cn = escapeHTML(targetUser.displayName || targetUser.username);
+  const un = escapeHTML(targetUser.username);
+  const avSrc = targetUser.pfp || '/default%20pfp2.png';
+  const cs = targetUser.customStatus || {};
+  const csEmoji = cs.emoji || '';
+  const csText = cs.text || '';
+
+  const csHTML = csText
+    ? `<div class="sr-target-cs">${csEmoji ? `<img src="${emojiToTwemojiUrl(csEmoji)}" onerror="this.outerHTML='${escapeHTML(csEmoji)}'">` : ''}${escapeHTML(csText)}</div>`
+    : '<div class="sr-target-cs" style="opacity:.4">No custom status set</div>';
+
+  overlay.innerHTML = `
+    <div class="sr-card">
+      <div class="sr-header">
+        <div class="sr-title">Reply to @${un}</div>
+        <button class="sr-close" onclick="_closeStatusReplyModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="sr-target">
+        <div class="sr-target-av"><img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20pfp2.png'"></div>
+        <div class="sr-target-info">
+          <div>${cn}</div>
+          ${csHTML}
+        </div>
+      </div>
+      <div class="sr-input-wrap">
+        <button class="sr-emoji-btn" id="sr-emoji-btn" onclick="_srOpenEmoji()" title="Add an emoji">${_CHATBAR_EMOJI_SVG}</button>
+        <input type="text" class="sr-text-input" id="sr-text-input" placeholder="Message (text only)" maxlength="500" oninput="_srOnInput()">
+        <button class="sr-send-btn" id="sr-send-btn" onclick="_srSend()" disabled><i class="fa-solid fa-arrow-up"></i></button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('sr-text-input')?.focus(), 50);
+}
+
+function _srOnInput() {
+  const inp = document.getElementById('sr-text-input');
+  const btn = document.getElementById('sr-send-btn');
+  if (btn) btn.disabled = !(inp?.value?.trim());
+}
+
+function _srOpenEmoji() {
+  const panel = document.getElementById('emoji-picker');
+  const btn = document.getElementById('sr-emoji-btn');
+  if (panel && panel.classList.contains('show')) {
+    panel.classList.remove('show');
+    window._statusEmojiInsertOverride = false;
+    if (window._emojiInsertCallback === window._srEmojiCallback) {
+      window._emojiInsertCallback = window._srEmojiOrigCallback || null;
+    }
+    return;
+  }
+  document.getElementById('giphy-picker')?.remove();
+  document.getElementById('sticker-picker')?.remove();
+  document.getElementById('botcmd-picker')?.remove();
+  if (!btn || !panel) return;
+
+  window._srEmojiOrigCallback = window._emojiInsertCallback;
+  window._srEmojiCallback = (emoji) => {
+    const inp = document.getElementById('sr-text-input');
+    if (inp) {
+      inp.value += emoji;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    window._statusEmojiInsertOverride = false;
+    window._emojiInsertCallback = window._srEmojiOrigCallback || null;
+    document.getElementById('emoji-picker')?.classList.remove('show');
+  };
+  window._statusEmojiInsertOverride = true;
+  window._emojiInsertCallback = window._srEmojiCallback;
+
+  const rect = btn.getBoundingClientRect();
+  const PW = Math.min(448, window.innerWidth - 16);
+  const PH = 440;
+  let left = Math.max(8, rect.left - PW + rect.width);
+  left = Math.min(left, window.innerWidth - PW - 8);
+  let top;
+  if (rect.top - 8 > PH) {
+    top = Math.max(8, rect.top - PH - 8);
+  } else {
+    top = Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
+  }
+  buildEmojiPicker();
+  panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;`;
+  panel.classList.add('show');
+  setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
+}
+
+function _srSend() {
+  const inp = document.getElementById('sr-text-input');
+  if (!inp || !inp.value.trim()) return;
+  const text = inp.value.trim();
+  const overlay = document.getElementById('ftz-status-reply');
+  // Get the target username from the overlay title
+  const titleEl = overlay?.querySelector('.sr-title');
+  const targetName = titleEl?.textContent?.replace('Reply to @', '')?.trim();
+  if (!targetName) { toast("Could not determine target.", 'error'); return; }
+  _closeStatusReplyModal();
+
+  // Navigate to the DM and set up the reply
   showView('dms');
   setTimeout(() => {
-    openDM(username);
+    openDMView(targetName);
     setTimeout(() => {
-      const ta = document.getElementById('dm-input');
-      if (ta) {
-        if (ta.isContentEditable) {
-          ta.focus();
-          ta.textContent = `@${username} `;
-          ta.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          ta.value = `@${username} `;
-          ta.focus();
+      // Look up the user's custom status for the reply context
+      FortizedSocial.getUserByName(targetName).then(u => {
+        const cs = u?.customStatus || {};
+        const csPreview = (cs.emoji || '') + ' ' + (cs.text || '');
+        const chatKey = 'dm:' + targetName.toLowerCase();
+        replyingTo = { id: 'status-reply', from: targetName, text: csPreview.trim() || 'custom status', chatKey: chatKey };
+        const bar = document.getElementById('dm-input-reply-bar');
+        if (bar) {
+          bar.style.display = 'flex';
+          const nameEl = document.getElementById('dm-input-reply-name');
+          if (nameEl) nameEl.textContent = "@" + targetName + "'s status";
         }
-      }
+        // Pre-fill the input with the composed message
+        const ta = document.getElementById('dm-input');
+        if (ta) {
+          if (ta.isContentEditable) {
+            ta.textContent = text;
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+          } else {
+            ta.value = text;
+          }
+          ta.focus();
+
+          // Auto-send after a short delay so the UI settles
+          setTimeout(() => {
+            const sendBtn = ta.closest('.chat-input-outer')?.querySelector('.chat-send-btn') || document.querySelector('.chat-submit-btn, [data-action="send"]');
+            if (sendBtn) {
+              sendBtn.click();
+            } else {
+              // Fallback: dispatch Enter key
+              ta.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', which: 13, keyCode: 13, bubbles: true }));
+            }
+          }, 300);
+        }
+      }).catch(() => {
+        toast("Could not send status reply.", 'error');
+      });
     }, 200);
   }, 100);
 }

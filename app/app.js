@@ -37921,7 +37921,6 @@ function _spSave() {
   const dur = durEl?.dataset?.dur || '24h';
 
   CU.customStatus = { emoji, text, createdAt: Date.now() };
-  // Set auto-clear timeout
   if (dur !== 'never') {
     const ms = { '30min': 1800000, '1h': 3600000, '4h': 14400000, '24h': 86400000 }[dur] || 86400000;
     if (window._statusClearTimer) clearTimeout(window._statusClearTimer);
@@ -37934,13 +37933,8 @@ function _spSave() {
     }, ms);
   }
   saveUser().catch(e => console.warn('[Status Save] Failed:', e?.message));
-}
-    }, ms);
-  }
-  saveUser();
   _closeStatusPicker();
   toast('Status updated!', 'success');
-  // Refresh UI
   try { updateUserbar(); } catch(_) {}
   try { updateProfilePreview(); } catch(_) {}
 }

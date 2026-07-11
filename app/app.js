@@ -37747,137 +37747,167 @@ const STATUS_PRESETS = [
 
 function _closeStatusPicker(){const s=document.getElementById("ftz-status-picker");if(s)s.remove();}
 
-// Discord-style status setter: real profile card preview, chatbar emoji panel,
-// optional emoji, FontAwesome icons.
+// ── Status Picker — clean rebuild ──
+// Uses the chatbar emoji panel directly. Emoji is optional. No blurry overlay.
+let _spSelectedEmoji = '';
+
 function openStatusPicker() {
   _closeStatusPicker();
   const cur = CU?.customStatus || {};
-  const status = CU?.status || 'online';
-  const curEmoji = cur.emoji || '';
+  _spSelectedEmoji = cur.emoji || '';
   const curText = cur.text || '';
 
+  // Create hidden target for the chatbar emoji panel
+  let target = document.getElementById('status-emoji-target');
+  if (!target) {
+    target = document.createElement('input');
+    target.id = 'status-emoji-target';
+    target.style.cssText = 'position:absolute;opacity:0;pointer-events:none;width:0;height:0;';
+    document.body.appendChild(target);
+  }
+
   const overlay = document.createElement('div');
-  overlay.className = 'status-picker-modal';
   overlay.id = 'ftz-status-picker';
+  overlay.className = 'sp-overlay';
   overlay.onclick = e => { if (e.target === overlay) _closeStatusPicker(); };
 
   const u = CU || {};
-  const displayName = escapeHTML(u.displayName || u.username || 'You');
-  const username = escapeHTML('@' + (u.username || ''));
-  const pronouns = u.pronouns ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">${escapeHTML(u.pronouns)}</span>` : '';
+  const dn = escapeHTML(u.displayName || u.username || 'You');
 
-  const DURATIONS = [
-    { id: 'never',  label: "Don't clear" },
-    { id: '30min',  label: '30 minutes' },
-    { id: '1h',     label: '1 hour' },
-    { id: '4h',     label: '4 hours' },
-    { id: '24h',    label: '24 hours', def: true },
+  // Avatar
+  const avSrc = u.pfp || '/default%20pfp2.png';
+
+  // Emoji display
+  const emojiDisplay = _spSelectedEmoji
+    ? `<img src="${emojiToTwemojiUrl(_spSelectedEmoji)}" style="width:20px;height:20px;" onerror="this.parentElement.textContent='${escapeHTML(_spSelectedEmoji)}'">`
+    : '';
+
+  // Duration options
+  const durations = [
+    { id: '30min', label: '30 minutes' },
+    { id: '1h',    label: '1 hour' },
+    { id: '4h',    label: '4 hours' },
+    { id: '24h',   label: '24 hours' },
+    { id: 'never', label: 'Until I close it' },
   ];
-  const _defaultDur = DURATIONS.find(d => d.def);
-
-  // Build the real profile card preview (read-only, no bio/badges)
-  const hasRadiance = typeof _hasRadiance === 'function' && _hasRadiance(u);
-  const bannerHTML = (u.banner && hasRadiance)
-    ? `<img src="${escapeHTML(u.banner)}" style="width:100%;height:100%;object-fit:cover;">`
-    : `<div style="width:100%;height:100%;background:url('/wrapBackground.png') center/cover no-repeat,linear-gradient(135deg,#1a1a2e,#0f3460);"></div>`;
-
-  const avatarHTML = u.pfp
-    ? `<img src="${escapeHTML(u.pfp)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:rgba(255,255,255,.5);background:var(--panel2);">${displayName[0]}</div>`;
-
-  const dnStyle = `font-family:${typeof getDisplayFont === 'function' ? getDisplayFont(u) : 'var(--font-display)'};${typeof _getDisplayEffectCSS === 'function' ? _getDisplayEffectCSS(u.displayEffect||'solid', u.displayColor||'#fff', u.displayColor2 || u.displayColor || '#fff') : ''}`;
-
-  // Status bubble in preview — shows current or placeholder
-  const previewBubble = curText
-    ? `<div class="fpp__cs-bubble profile-custom-status" style="cursor:default;">
-         ${curEmoji ? `<span class="fpp__cs-emoji"><img src="${emojiToTwemojiUrl(curEmoji)}" alt="" onerror="this.outerHTML='${escapeHTML(curEmoji).replace(/'/g,"\\'")}'"></span>` : ''}
-         <span class="fpp__cs-text">${escapeHTML(curText).slice(0,40)}</span>
-       </div>`
-    : `<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" style="cursor:default;">
-         <i class="fa-solid fa-plus" style="font-size:11px;opacity:.5;"></i>
-         <span class="fpp__cs-text" style="color:var(--muted-light);font-style:italic;">Set a status</span>
-       </div>`;
-
-  // Emoji button content — FontAwesome
-  const emojiBtnHTML = curEmoji
-    ? `<img src="${emojiToTwemojiUrl(curEmoji)}" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<i class=\\'fa-regular fa-face-smile\\' style=\\'font-size:18px;color:var(--muted-light);\\'></i>'">`
-    : `<i class="fa-regular fa-face-smile" style="font-size:18px;color:var(--muted-light);"></i>`;
+  const durHTML = durations.map(d =>
+    `<button class="sp-dur${d.id === '24h' ? ' sp-dur--active' : ''}" data-dur="${d.id}" onclick="_spPickDur(this)">${d.label}</button>`
+  ).join('');
 
   overlay.innerHTML = `
     <div class="sp-card">
-      <div class="sp-header">
-        <div class="sp-title">Set your status</div>
-        <button class="sp-close-btn" onclick="_closeStatusPicker()" aria-label="Close">
-          <i class="fa-solid fa-xmark" style="font-size:16px;"></i>
+      <div class="sp-card-header">
+        <div class="sp-card-title">Set a status</div>
+        <button class="sp-card-close" onclick="_closeStatusPicker()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- User row -->
+      <div class="sp-user-row">
+        <div class="sp-user-avatar">
+          <img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20pfp2.png'">
+          <span class="sp-user-dot">${FtzStatus.dotSvg(CU.status || 'online', 10)}</span>
+        </div>
+        <div class="sp-user-info">
+          <div class="sp-user-name">${dn}</div>
+          <div class="sp-user-handle">@${escapeHTML(u.username)}</div>
+        </div>
+      </div>
+
+      <!-- Status input -->
+      <div class="sp-input-wrap">
+        <button class="sp-emoji-opener" id="sp-emoji-btn" onclick="_spOpenEmoji()" title="Add an emoji (optional)">
+          ${_spSelectedEmoji ? emojiDisplay : '<i class="fa-regular fa-face-smile"></i>'}
+        </button>
+        <input type="text" class="sp-text-input" id="sp-text-input" placeholder="What's going on?" value="${escapeHTML(curText)}" maxlength="120" oninput="_spOnInput()">
+        <button class="sp-clear-btn" id="sp-clear-btn" onclick="_spClearInput()" style="${curText ? '' : 'display:none'}">
+          <i class="fa-solid fa-circle-xmark"></i>
         </button>
       </div>
 
-      <!-- Real profile card preview (read-only, compact) -->
-      <div class="sp-preview">
-        <div class="fpp__banner" style="height:60px;border-radius:12px 12px 0 0;">${bannerHTML}</div>
-        <div style="padding:0 16px 16px;">
-          <div class="fpp__av-row" style="margin-top:-24px;">
-            <div class="fpp__av-wrap" style="width:64px;height:64px;">
-              <div class="fpp__av" style="width:64px;height:64px;border:3px solid var(--bg);border-radius:50%;overflow:hidden;">${avatarHTML}</div>
-              <span class="fpp__status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="18" style="width:18px;height:18px;bottom:-2px;right:-2px;">${FtzStatus.dotSvg(status, 18)}</span>
-            </div>
-          </div>
-          <div id="sp-preview-bubble-wrap" style="margin-top:6px;">${previewBubble}</div>
-          <div class="fpp__identity" style="padding:8px 0 0;">
-            <div class="fpp__name" style="${dnStyle}">${displayName}</div>
-            <div class="fpp__handle-row">${username}${pronouns}</div>
-          </div>
-        </div>
+      <!-- Clear after -->
+      <div class="sp-dur-row">
+        <span class="sp-dur-label">Clear after</span>
+        <div class="sp-dur-options" id="sp-dur-options">${durHTML}</div>
       </div>
 
-      <!-- Body -->
-      <div class="sp-body">
-        <div class="sp-label">Status</div>
-        <div class="sp-input-row">
-          <button id="status-emoji-btn" class="sp-emoji-btn" data-emoji="${escapeHTML(curEmoji)}" onclick="pickStatusEmoji()" title="Pick an emoji (optional)">${emojiBtnHTML}</button>
-          <input id="status-text-input" class="sp-input" placeholder="What's on your mind?" value="${escapeHTML(curText)}" maxlength="100" oninput="_updateStatusPreview()">
-          <button class="sp-clear-input" onclick="document.getElementById('status-text-input').value='';document.getElementById('status-emoji-btn').dataset.emoji='';document.getElementById('status-emoji-btn').innerHTML='<i class=\\'fa-regular fa-face-smile\\' style=\\'font-size:18px;color:var(--muted-light);\\'></i>';_updateStatusPreview()" aria-label="Clear status">
-            <i class="fa-solid fa-circle-xmark" style="font-size:14px;"></i>
-          </button>
-        </div>
-
-        <div class="sp-footer">
-          <button id="sp-clear-after-trigger" class="sp-clear-after" data-dur="${_defaultDur.id}" onclick="_spToggleDurationMenu(event)">
-            <span>Clear after: <strong id="sp-clear-after-label">${_defaultDur.label}</strong></span>
-            <i class="fa-solid fa-chevron-down" style="font-size:10px;margin-left:4px;"></i>
-          </button>
-          <div class="sp-actions-right">
-            ${curText ? '<button class="sp-clear-btn" onclick="clearCustomStatus()">Clear status</button>' : ''}
-            <button class="sp-save-btn" onclick="saveCustomStatus()">Save</button>
-          </div>
-        </div>
-
-        <div id="sp-duration-menu" class="sp-duration-menu" style="display:none;">
-          ${DURATIONS.map(d => `<button class="sp-dur-item${d.def ? ' on' : ''}" data-dur="${d.id}" onclick="_spPickDuration('${d.id}','${escapeHTML(d.label)}')">${d.label}${d.def ? '<i class="fa-solid fa-check" style="font-size:11px;margin-left:4px;"></i>' : ''}</button>`).join('')}
-        </div>
+      <!-- Actions -->
+      <div class="sp-actions">
+        ${curText ? '<button class="sp-btn sp-btn--ghost" onclick="clearCustomStatus();_closeStatusPicker()">Clear Status</button>' : ''}
+        <button class="sp-btn sp-btn--save" onclick="_spSave()">Save</button>
       </div>
     </div>`;
 
   document.body.appendChild(overlay);
+
+  // Focus input after a tick
+  setTimeout(() => {
+    const inp = document.getElementById('sp-text-input');
+    if (inp) inp.focus();
+  }, 50);
 }
 
-// Toggle the "Clear after" dropdown menu open/closed.
-function _spToggleDurationMenu(e) {
-  if (e) e.stopPropagation();
-  const menu = document.getElementById('sp-duration-menu');
-  if (!menu) return;
-  const isOpen = menu.style.display !== 'none';
-  menu.style.display = isOpen ? 'none' : 'block';
+function _spOpenEmoji() {
+  // Wire the emoji callback to update our status emoji
+  window._statusEmojiInsertOverride = true;
+  const orig = window._emojiInsertCallback;
+  window._emojiInsertCallback = (emoji) => {
+    _spSelectedEmoji = emoji;
+    const btn = document.getElementById('sp-emoji-btn');
+    if (btn) {
+      btn.innerHTML = `<img src="${emojiToTwemojiUrl(emoji)}" style="width:20px;height:20px;" onerror="this.parentElement.textContent='${escapeHTML(emoji)}'">`;
+    }
+    window._statusEmojiInsertOverride = false;
+    window._emojiInsertCallback = orig;
+    document.getElementById('emoji-picker')?.classList.remove('show');
+  };
+  toggleEmojiPicker('status-emoji-target');
 }
 
-// Pick a duration from the dropdown.
-function _spPickDuration(durId, label) {
-  const trigger = document.getElementById('sp-clear-after-trigger');
-  const lbl = document.getElementById('sp-clear-after-label');
-  if (trigger) trigger.dataset.dur = durId;
-  if (lbl) lbl.textContent = label;
-  document.querySelectorAll('.sp-dur-item').forEach(b => b.classList.toggle('on', b.dataset.dur === durId));
-  document.getElementById('sp-duration-menu').style.display = 'none';
+function _spOnInput() {
+  const inp = document.getElementById('sp-text-input');
+  const clear = document.getElementById('sp-clear-btn');
+  if (clear) clear.style.display = inp?.value ? '' : 'none';
+}
+
+function _spClearInput() {
+  const inp = document.getElementById('sp-text-input');
+  const clear = document.getElementById('sp-clear-btn');
+  if (inp) inp.value = '';
+  if (clear) clear.style.display = 'none';
+  inp?.focus();
+}
+
+function _spPickDur(el) {
+  document.querySelectorAll('.sp-dur').forEach(b => b.classList.remove('sp-dur--active'));
+  el.classList.add('sp-dur--active');
+}
+
+function _spSave() {
+  const text = (document.getElementById('sp-text-input')?.value || '').trim();
+  if (!text) { toast('Add some text!', 'error'); return; }
+  const emoji = _spSelectedEmoji || '';
+  const durEl = document.querySelector('.sp-dur--active');
+  const dur = durEl?.dataset?.dur || '24h';
+
+  CU.customStatus = { emoji, text, createdAt: Date.now() };
+  // Set auto-clear timeout
+  if (dur !== 'never') {
+    const ms = { '30min': 1800000, '1h': 3600000, '4h': 14400000, '24h': 86400000 }[dur] || 86400000;
+    if (window._statusClearTimer) clearTimeout(window._statusClearTimer);
+    window._statusClearTimer = setTimeout(() => {
+      if (CU.customStatus?.createdAt === CU.customStatus?.createdAt) {
+        CU.customStatus = null;
+        saveUser();
+        toast('Status cleared', 'info');
+      }
+    }, ms);
+  }
+  saveUser();
+  _closeStatusPicker();
+  toast('Status updated!', 'success');
+  // Refresh UI
+  try { updateUserbar(); } catch(_) {}
+  try { updateProfilePreview(); } catch(_) {}
 }
 
 function pickStatusMode(mode, el) {
@@ -37893,73 +37923,16 @@ function pickStatusMode(mode, el) {
   toast(`Status: ${FtzStatus.label(mode)}`, 'info');
 }
 
-
-function pickStatusEmoji() {
-  // Create a hidden target for the chatbar emoji picker
-  let target = document.getElementById('status-emoji-target');
-  if (!target) {
-    target = document.createElement('input');
-    target.id = 'status-emoji-target';
-    target.style.cssText = 'position:absolute;opacity:0;pointer-events:none;width:0;height:0;';
-    document.body.appendChild(target);
-  }
-  // Override the emoji insert callback to set the status emoji
-  window._statusEmojiInsertOverride = true;
-  const origInsert = window._emojiInsertCallback;
-  window._emojiInsertCallback = (emoji) => {
-    const btn = document.getElementById('status-emoji-btn');
-    if (btn) {
-      btn.dataset.emoji = emoji;
-      const url = emojiToTwemojiUrl(emoji);
-      btn.innerHTML = `<img src="${url}" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='<i class=\\'fa-regular fa-face-smile\\' style=\\'font-size:18px;color:var(--muted-light);\\'></i>'">`;
-    }
-    _updateStatusPreview();
-    window._statusEmojiInsertOverride = false;
-    window._emojiInsertCallback = origInsert;
-  };
-  toggleEmojiPicker('status-emoji-target');
-}
-
-function _updateStatusPreview() {
-  const text = (document.getElementById('status-text-input')?.value||'').trim();
-  const emoji = document.getElementById('status-emoji-btn')?.dataset?.emoji||'';
-  const wrap = document.getElementById('sp-preview-bubble-wrap');
-  if (!wrap) return;
-  if (text) {
-    const emojiHTML = emoji
-      ? `<span class="fpp__cs-emoji"><img src="${emojiToTwemojiUrl(emoji)}" alt="" onerror="this.outerHTML='${escapeHTML(emoji).replace(/'/g,"\\'")}'"></span>`
-      : '';
-    wrap.innerHTML = `<div class="fpp__cs-bubble profile-custom-status" style="cursor:default;">${emojiHTML}<span class="fpp__cs-text">${escapeHTML(text).slice(0,40)}</span></div>`;
-  } else {
-    wrap.innerHTML = `<div class="fpp__cs-bubble fpp__cs-bubble--empty profile-custom-status" style="cursor:default;"><i class="fa-solid fa-plus" style="font-size:11px;opacity:.5;"></i><span class="fpp__cs-text" style="color:var(--muted-light);font-style:italic;">Set a status</span></div>`;
-  }
-}
-
-async function saveCustomStatus() {
-  const emojiBtn = document.getElementById('status-emoji-btn');
-  const emoji = emojiBtn?.dataset?.emoji || emojiBtn?.textContent?.trim() || '';
-  const text = ((document.getElementById('status-text-input')||{}).value||'').trim();
-  if (!text) { toast('Add some text!','error'); return; }
-  // Read selected duration: prefer the new sp-clear-after-trigger
-  // (Discord-style dropdown) and fall back to legacy radio buttons.
-  const trigger = document.getElementById('sp-clear-after-trigger');
-  const legacyBtn = document.querySelector('.status-dur-btn[data-selected="true"]');
-  const rawDur = trigger?.dataset?.dur || legacyBtn?.dataset?.dur || 'never';
-  // Map the new "never" value to the legacy "forever" so downstream
-  // setCustomStatusWithDuration logic still recognises it.
-  const duration = rawDur === 'never' ? 'forever' : rawDur;
-  setCustomStatusWithDuration(emoji, text, duration);
-  document.getElementById('ftz-status-picker')?.remove();
-  buildProfileView('myprofile');
-  toast('Custom status updated!','success');
-  showFeedbackToast('setting your Custom status', 'custom_status');
-}
+// Old pickStatusEmoji / _updateStatusPreview / _spToggleDurationMenu /
+// _spPickDuration / saveCustomStatus are replaced by _spOpenEmoji / _spOnInput /
+// _spPickDur / _spSave in the rebuild above. Keep stubs for any callers.
 
 async function clearCustomStatus() {
   FtzStatus.clearCustom();
-  document.getElementById('ftz-status-picker')?.remove();
-  buildProfileView('myprofile');
+  _closeStatusPicker();
   toast('Custom status cleared','info');
+  try { updateUserbar(); } catch(_) {}
+  try { updateProfilePreview(); } catch(_) {}
 }
 
 // ═══════════════════════════════════════════════════════════

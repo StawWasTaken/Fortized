@@ -6187,179 +6187,40 @@ button[disabled],
 .page-loader .pl-text { font-size:13px;color:var(--muted);font-weight:600; }
 
 /* ── STATUS MODE FIX ──────────────────────────────── */
-.status-picker-modal { position:fixed;inset:0;background:rgba(4,6,10,.85);backdrop-filter:none;z-index:4000;display:flex;align-items:center;justify-content:center; }
-
-/* Discord-style status setter modal. Header + preview card + status
-   input row + footer with "Clear after" dropdown and Save button. */
-.sp-card{
-  background:var(--panel);border:1px solid rgba(255,255,255,.06);
-  border-radius:14px;
-  width:440px;max-width:calc(100vw - 24px);
-  max-height:calc(100vh - 32px);overflow:hidden;
-  box-shadow:0 24px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.02);
-  position:relative;
-  display:flex;flex-direction:column;
-}
-.sp-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;}
-.sp-title{font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;letter-spacing:-.01em;}
-.sp-close-btn{
-  width:30px;height:30px;border-radius:9px;border:none;
-  background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);
-  display:inline-flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .15s;
-}
-.sp-close-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
-
-/* Profile-preview card showing the user's banner + avatar + identity. */
-.sp-preview{
-  margin:0 22px 14px;
-  background:rgba(255,255,255,.025);
-  border:1px solid rgba(255,255,255,.05);
-  border-radius:12px;overflow:hidden;
-  position:relative;
-}
-.sp-prev-banner{height:80px;background:#141a2e;position:relative;}
-.sp-prev-row{
-  position:relative;display:flex;align-items:flex-end;gap:10px;
-  padding:0 16px;margin-top:-22px;z-index:2;
-}
-.sp-prev-av-wrap{position:relative;width:54px;height:54px;flex-shrink:0;}
-.sp-prev-avatar{
-  width:54px;height:54px;border-radius:50%;
-  overflow:hidden;
-  border:3px solid var(--panel);
-  background:var(--panel2);
-  box-shadow:0 6px 16px rgba(0,0,0,.5);
-}
-.sp-prev-status{
-  position:absolute;bottom:-2px;right:-2px;z-index:3;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--panel);border-radius:50%;padding:2px;
-}
-.sp-prev-bubble{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:5px 10px;border-radius:var(--radius-pill);
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.07);
-  color:rgba(255,255,255,.78);
-  font-family:var(--font-ui);font-size:11.5px;font-weight:500;
-  margin-bottom:4px;cursor:default;
-  max-width:240px;overflow:hidden;
-}
-.sp-prev-bubble-emoji{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;flex-shrink:0;}
-.sp-prev-bubble-emoji img{width:13px;height:13px;display:block;}
-.sp-prev-bubble-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-
-.sp-prev-identity{padding:10px 18px 16px;}
-.sp-prev-name{
-  font-family:var(--font-display);font-size:18px;font-weight:800;
-  color:#fff;line-height:1.15;letter-spacing:-.01em;word-break:break-word;
-}
-.sp-prev-meta{
-  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
-  font-size:12px;color:rgba(255,255,255,.4);font-weight:500;
-  margin-top:4px;
-}
-.sp-prev-dot{margin:0 4px;color:rgba(255,255,255,.18);}
-.sp-prev-badges{display:inline-flex;align-items:center;gap:1px;flex-shrink:0;margin-left:6px;}
-.sp-prev-badges .ftz-badge{width:14px;height:14px;margin:0;flex-shrink:0;}
-.sp-prev-badges .ftz-badge img,
-.sp-prev-badges .ftz-badge svg{width:100%;height:100%;display:block;}
-
-/* Body: status input row + footer */
-.sp-body{padding:0 22px 18px;display:flex;flex-direction:column;gap:14px;}
-.sp-label{
-  font-family:var(--font-display);font-size:11px;font-weight:800;
-  letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.42);
-}
-.sp-input-row{
-  display:flex;align-items:center;gap:8px;
-  padding:8px;border-radius:11px;
-  background:rgba(0,0,0,.3);
-  border:1px solid rgba(255,255,255,.06);
-}
-.sp-emoji-btn{
-  width:32px;height:32px;border-radius:8px;
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.06);
-  cursor:pointer;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  color:rgba(255,255,255,.5);
-  transition:all .15s;
-}
-.sp-emoji-btn:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.2);color:var(--accent);}
-.sp-input{
-  flex:1;min-width:0;
-  background:transparent;border:none;outline:none;
-  color:#fff;
-  font-family:var(--font-ui);font-size:13.5px;
-  padding:0 4px;
-}
-.sp-input::placeholder{color:rgba(255,255,255,.32);}
-.sp-clear-input{
-  width:24px;height:24px;border-radius:50%;
-  background:rgba(255,255,255,.06);
-  border:none;cursor:pointer;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  color:rgba(255,255,255,.45);
-  transition:all .12s;
-}
-.sp-clear-input:hover{background:rgba(255,255,255,.1);color:#fff;}
-
-/* Footer: Clear-after dropdown + action buttons */
-.sp-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:4px;}
-.sp-clear-after{
-  background:none;border:none;cursor:pointer;
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:12px;color:rgba(255,255,255,.55);
-  padding:4px 0;
-  font-family:var(--font-ui);
-}
-.sp-clear-after:hover{color:#fff;}
-.sp-clear-after strong{color:rgba(255,255,255,.85);font-weight:600;}
-.sp-clear-after svg{flex-shrink:0;color:rgba(255,255,255,.4);}
-.sp-actions-right{display:flex;align-items:center;gap:8px;}
-.sp-clear-btn{
-  background:none;border:none;cursor:pointer;
-  font-size:12.5px;color:rgba(235,69,69,.7);font-weight:600;
-  padding:8px 12px;border-radius:8px;
-  transition:all .15s;
-}
-.sp-clear-btn:hover{background:rgba(235,69,69,.08);color:var(--red);}
-.sp-save-btn{
-  background:var(--accent);color:var(--rail);
-  border:none;border-radius:10px;
-  font-family:var(--font-display);font-size:13px;font-weight:800;
-  padding:10px 22px;cursor:pointer;
-  transition:all .15s cubic-bezier(.22,1,.36,1);
-}
-.sp-save-btn:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 6px 16px rgba(255,249,62,.18);}
-
-/* Duration dropdown menu (shown when "Clear after" trigger is clicked). */
-.sp-duration-menu{
-  position:absolute;left:22px;bottom:60px;
-  background:var(--panel);border:1px solid rgba(255,255,255,.08);
-  border-radius:10px;padding:6px;min-width:200px;
-  box-shadow:0 12px 40px rgba(0,0,0,.6);
-  z-index:10;
-}
-.sp-dur-item{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  width:100%;padding:9px 12px;
-  background:none;border:none;cursor:pointer;
-  font-family:var(--font-ui);font-size:13px;font-weight:500;
-  color:rgba(255,255,255,.65);
-  border-radius:7px;
-  text-align:left;
-  transition:background .12s;
-}
-.sp-dur-item:hover{background:rgba(255,255,255,.06);color:#fff;}
-.sp-dur-item.on{background:rgba(255,249,62,.08);color:var(--accent);}
-.sp-dur-item svg{flex-shrink:0;color:var(--accent);}
-.sp-mode-row { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px; }
-.sp-mode-opt { flex:1;min-width:80px;padding:10px 8px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;font-weight:600;transition:all .15s; }
-.sp-mode-opt:hover,.sp-mode-opt.sel { border-color:var(--accent-mid);background:var(--accent-dim);color:var(--accent); }
-.sp-mode-dot { width:12px;height:12px;border-radius:50%; }
+/* ═══ STATUS PICKER — clean rebuild ═══ */
+.sp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;display:flex;align-items:center;justify-content:center;}
+.sp-card{background:var(--bg);border:1px solid var(--border);border-radius:14px;width:420px;max-width:calc(100vw - 24px);overflow:hidden;box-shadow:0 16px 56px rgba(0,0,0,.55);}
+.sp-card-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);}
+.sp-card-title{font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;}
+.sp-card-close{width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;}
+.sp-card-close:hover{background:rgba(255,255,255,.1);color:#fff;}
+.sp-user-row{display:flex;align-items:center;gap:10px;padding:14px 18px;}
+.sp-user-avatar{position:relative;width:36px;height:36px;flex-shrink:0;}
+.sp-user-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.sp-user-dot{position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;}
+.sp-user-name{font-size:14px;font-weight:700;color:#fff;}
+.sp-user-handle{font-size:11.5px;color:var(--muted);}
+.sp-input-wrap{display:flex;align-items:center;gap:6px;margin:0 18px 12px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);}
+.sp-emoji-opener{width:30px;height:30px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted-light);font-size:18px;flex-shrink:0;transition:all .12s;}
+.sp-emoji-opener:hover{color:var(--accent);background:rgba(255,255,255,.05);}
+.sp-text-input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:4px 2px;}
+.sp-text-input::placeholder{color:rgba(255,255,255,.3);}
+.sp-clear-btn{width:22px;height:22px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;}
+.sp-clear-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
+.sp-dur-row{display:flex;align-items:center;gap:10px;padding:0 18px 14px;flex-wrap:wrap;}
+.sp-dur-label{font-size:11.5px;font-weight:600;color:var(--muted);white-space:nowrap;}
+.sp-dur-options{display:flex;gap:4px;flex-wrap:wrap;}
+.sp-dur{padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--muted-light);font-size:11px;font-weight:600;font-family:var(--font-ui);cursor:pointer;transition:all .12s;white-space:nowrap;}
+.sp-dur:hover{border-color:rgba(255,255,255,.12);color:#fff;}
+.sp-dur--active{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.2);color:var(--accent);}
+.sp-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border);}
+.sp-btn{border:none;border-radius:8px;font-family:var(--font-ui);font-size:12.5px;font-weight:600;cursor:pointer;padding:8px 16px;transition:all .12s;}
+.sp-btn--ghost{background:transparent;color:rgba(235,69,69,.7);}
+.sp-btn--ghost:hover{background:rgba(235,69,69,.08);color:var(--red);}
+.sp-btn--save{background:var(--accent);color:var(--rail);font-weight:700;}
+.sp-btn--save:hover{filter:brightness(1.06);}
+/* Keep old .sp-mode-* for backwards compat but unused now */
+.sp-mode-row { display:none; }
 
 /* ── GAME DETECTION ENHANCED ──────────────────────── */
 .detected-app-item { display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;transition:all .15s; }
@@ -7942,6 +7803,18 @@ select:focus-visible,
   background: rgba(255,255,255,.22);
   border: 2px solid transparent;
   background-clip: padding-box;
+}
+
+/* DM topbar: extend to full page width past the user panel */
+#dm-chat-wrap .room-topbar {
+  margin-right: -341px;
+  padding-right: calc(18px + 341px);
+  z-index: 10;
+  position: relative;
+}
+/* DM user panel: stretch from topbar to chatbar */
+#dm-user-panel {
+  align-self: stretch;
 }
 
 /* Sidebar scrollbars (thin) */
@@ -11428,8 +11301,8 @@ select:focus-visible {
   padding:0;
   border:1px solid var(--border);
   border-right:none;
-  margin-top:46px;
-  max-height:calc(100% - 46px - 70px);
+  margin-top:0;
+  max-height:100%;
   box-shadow:0 4px 24px rgba(0,0,0,.35);
 }
 .fpp--dm .fpp__banner{

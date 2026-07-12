@@ -1156,13 +1156,26 @@ const FtzStatus = (() => {
   function clearCustom() {
     _clearCustomTimer();
     delete CU.customStatus;
-    // Explicitly null out in Firebase — dbUpdate won't remove deleted fields
+    // saveUser → saveUserObject would go through _mergeProtectedRow for
+    // hard-protected accounts, and its null-guard (which stops accidental
+    // wipes) would treat this deliberate clear as an accidental empty
+    // value and keep the OLD custom_status in the DB row. Write directly
+    // so the guard is bypassed for this explicit, user-driven action.
     try {
       const uname = (CU.username || '').toLowerCase();
-      if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(null);
+      if (uname && typeof FortizedSocial !== 'undefined' && FortizedSocial.sb) {
+        FortizedSocial.sb.from('users').update({ custom_status: null }).eq('username', uname)
+          .then(() => {
+            try { FortizedSocial.invalidateUserCache?.(uname); } catch(_){}
+            try { FortizedSocial.socketEmit?.('profile:update', { username: uname, customStatus: null }); } catch(_){}
+          })
+          .then(null, e => console.warn('[Status] Custom status clear failed:', e?.message));
+      }
     } catch(e) { console.warn('[Status] Custom status clear failed:', e?.message); }
-    saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
-    refreshCustomStatusBubble();
+    saveLocal();
+    // Local UI refresh
+    try { updateUserbar(); } catch(_){}
+    try { updateProfilePreview?.(); } catch(_){}
   }
 
   function restoreCustomTimer() {
@@ -37816,29 +37829,44 @@ function openStatusPicker() {
     { id: '24h',   label: '24 hours' },
     { id: 'custom', label: 'Custom…' },
   ];
-  const durOpts = durations.map(d =>
-    `<option value="${d.id}"${d.id === '24h' ? ' selected' : ''}>${d.label}</option>`
+  // Custom dropdown items (not a native <select> — that popup can't be
+  // themed with CSS, which read as "browser's neutral design" earlier).
+  const durItemsHTML = durations.map(d =>
+    `<div class="sp-ddl-item${d.id === '24h' ? ' sp-ddl-item--sel' : ''}" data-dur="${d.id}" onclick="_spDDLPick(this)" role="option">${d.label}</div>`
   ).join('');
 
-  // Profile preview — built from scratch (NOT the FPP helpers, which
-  // rendered active decorations as position:absolute images that
-  // escaped their container and scattered across the banner). Simple
-  // banner + avatar overlap + name/@handle/pronouns row. Live-updates
-  // via _spOnInput / _spEmojiCallback.
-  const bannerSrc = u.banner || '';
-  const bannerBg = bannerSrc
-    ? `background:#000 url('${escapeHTML(bannerSrc)}') center/cover no-repeat;`
-    : `background:linear-gradient(135deg, var(--accent-dim), rgba(167,139,250,.12));`;
-  const banner = `<div class="sp-preview-banner" style="${bannerBg}"></div>`;
-  const _pfpUrl = u.pfp || _defaultPfpUrl(u.displayName || u.username);
-  const avatar = `<div class="sp-preview-av"><img src="${escapeHTML(_pfpUrl)}" alt="" onerror="this.src='${_defaultPfpUrl(u.displayName||u.username)}'"></div>`;
-  const pronounsHTML = u.pronouns
-    ? `<span class="sp-preview-pronouns">${escapeHTML(u.pronouns)}</span>`
+  // Profile preview — reuse the actual FPP settings profile card
+  // structure (same one shown as "Preview" in Settings → Profile), just
+  // without the bio + badges cards. Same .fpp / .fpp__banner /
+  // .fpp__av-row / .fpp__identity classes so it inherits all the
+  // theming, spacing, typography, and status-dot rendering the rest
+  // of the app already uses. The live speech-bubble preview is
+  // rendered separately below via _spOnInput.
+  const decHTML = u.activeDecoration
+    ? (()=>{ const d = (typeof PROFILE_DECORATIONS !== 'undefined') ? PROFILE_DECORATIONS.find(dec => dec.id === u.activeDecoration) : null; return d ? `<img src="${escapeHTML(d.src)}" class="fpp__decoration" onerror="this.style.display='none'">` : ''; })()
     : '';
-  const dn2 = escapeHTML(u.displayName || u.username || 'You');
-  const un = escapeHTML((u.username || '').toLowerCase());
-  const identity = `<div class="sp-preview-name">${dn2}</div>
-    <div class="sp-preview-handle-row"><span class="sp-preview-handle">@${un}</span>${pronounsHTML ? '<span class="sp-preview-dot">•</span>' + pronounsHTML : ''}</div>`;
+  const dnStyle = `${_getDisplayFontStyle ? _getDisplayFontStyle(u.displayFont||'default') : ''}${_getDisplayEffectCSS ? _getDisplayEffectCSS(u.displayEffect||'solid', u.displayColor||'#fff', u.displayColor2 || u.displayColor || '#fff') : ''}`;
+  const pronounsBadge = u.pronouns
+    ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns" data-tip-above>${escapeHTML(u.pronouns)}</span>`
+    : '';
+  const previewCard = `
+    <div class="fpp fpp--settings sp-preview-fpp" data-fpp-settings-card>
+      <div class="fpp__banner">${_fppBannerHTML(u, false)}</div>
+      <div class="fpp__av-row">
+        <div class="fpp__av-wrap">
+          <div class="fpp__av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 64, u.pfpCrop)}</div>
+          ${decHTML}
+          <span class="fpp__status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22">${FtzStatus.dotSvg(u.status||'online', 22)}</span>
+        </div>
+      </div>
+      <div class="fpp__identity">
+        <div class="fpp__name" style="${dnStyle}">${escapeHTML(u.displayName||u.username)}</div>
+        <div class="fpp__handle-row">
+          <span class="fpp__handle">@${escapeHTML(u.username)}</span>
+          ${pronounsBadge}
+        </div>
+      </div>
+    </div>`;
   const initialPreviewText = curText || u.customStatus?.text || "What's on your mind?";
   const initialPreviewEmoji = _spSelectedEmoji || u.customStatus?.emoji || '';
   const initialPreviewEmojiSrc = _spSelectedEmojiUrl
@@ -37861,21 +37889,15 @@ function openStatusPicker() {
       </div>
 
       <div class="sp-preview-wrap">
-        ${banner}
+        ${previewCard}
         ${status}
-        <div class="sp-preview-body">
-          ${avatar}
-          <div class="sp-preview-info">
-            ${identity}
-          </div>
-        </div>
       </div>
 
       <div class="sp-input-wrap">
         <button class="sp-emoji-opener" id="sp-emoji-btn" onclick="_spOpenEmoji()" title="Add an emoji">
           ${_spSelectedEmoji ? emojiDisplay : _CHATBAR_EMOJI_SVG}
         </button>
-        <input type="text" class="sp-text-input" id="sp-text-input" placeholder="What's going on?" value="${escapeHTML(curText)}" maxlength="120" oninput="_spOnInput()">
+        <div class="sp-text-input" id="sp-text-input" contenteditable="true" role="textbox" data-placeholder="What's going on?" oninput="_spOnInput()"></div>
         <button class="sp-clear-btn" id="sp-clear-btn" onclick="_spClearInput()" style="${curText ? '' : 'display:none'}">
           <i class="fa-solid fa-circle-xmark"></i>
         </button>
@@ -37883,7 +37905,13 @@ function openStatusPicker() {
 
       <div class="sp-dur-row">
         <span class="sp-dur-label">Clear after</span>
-        <select id="sp-dur-select" class="sp-dur-select" onchange="_spOnDurChange(this)">${durOpts}</select>
+        <div class="sp-ddl" id="sp-ddl">
+          <button class="sp-ddl-btn" id="sp-ddl-btn" type="button" onclick="_spDDLToggle()" data-value="24h" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sp-ddl-value">24 hours</span>
+            <i class="fa-solid fa-chevron-down sp-ddl-chev"></i>
+          </button>
+          <div class="sp-ddl-menu" id="sp-ddl-menu" role="listbox">${durItemsHTML}</div>
+        </div>
       </div>
       <div class="sp-custom-dur" id="sp-custom-dur-box" style="display:none;">
         <input type="number" id="sp-custom-dur-amt" class="sp-custom-dur-amt" min="1" max="720" value="2" placeholder="Amount">
@@ -37901,7 +37929,18 @@ function openStatusPicker() {
     </div>`;
 
   document.body.appendChild(overlay);
-  setTimeout(() => document.getElementById('sp-text-input')?.focus(), 50);
+  // Rich contenteditable input + :name: autocomplete popup (same
+  // infrastructure the chatbar uses), so the status text field feels
+  // exactly like typing in chat: inline emoji rendering, custom emoji
+  // tokens, and a Discord-style shortcut popup on ':'.
+  setTimeout(() => {
+    const el = document.getElementById('sp-text-input');
+    if (!el) return;
+    _initRichInput(el);
+    if (curText) el.value = curText;
+    try { setupEmojiAutocomplete('sp-text-input'); } catch(_) {}
+    el.focus();
+  }, 30);
 }
 
 function _spOpenEmoji() {
@@ -37992,13 +38031,48 @@ function _spOnDurChange(sel) {
   const box = document.getElementById('sp-custom-dur-box');
   if (box) box.style.display = sel.value === 'custom' ? 'flex' : 'none';
 }
+function _spDDLToggle() {
+  const menu = document.getElementById('sp-ddl-menu');
+  const btn = document.getElementById('sp-ddl-btn');
+  if (!menu || !btn) return;
+  const open = menu.classList.toggle('sp-ddl-menu--open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  // Click-outside dismiss — installed once per open.
+  if (open) {
+    const onDoc = (e) => {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.remove('sp-ddl-menu--open');
+        btn.setAttribute('aria-expanded', 'false');
+        document.removeEventListener('mousedown', onDoc, true);
+      }
+    };
+    document.addEventListener('mousedown', onDoc, true);
+  }
+}
+function _spDDLPick(el) {
+  const menu = document.getElementById('sp-ddl-menu');
+  const btn = document.getElementById('sp-ddl-btn');
+  const valEl = btn?.querySelector('.sp-ddl-value');
+  if (!menu || !btn) return;
+  menu.querySelectorAll('.sp-ddl-item').forEach(i => i.classList.remove('sp-ddl-item--sel'));
+  el.classList.add('sp-ddl-item--sel');
+  btn.dataset.value = el.dataset.dur;
+  if (valEl) valEl.textContent = el.textContent;
+  menu.classList.remove('sp-ddl-menu--open');
+  btn.setAttribute('aria-expanded', 'false');
+  const box = document.getElementById('sp-custom-dur-box');
+  if (box) box.style.display = el.dataset.dur === 'custom' ? 'flex' : 'none';
+}
 
 function _spSave() {
   const text = (document.getElementById('sp-text-input')?.value || '').trim();
   const emoji = _spSelectedEmoji || '';
   if (!text && !emoji) { toast('Add an emoji or some text!', 'error'); return; }
-  const durSel = document.getElementById('sp-dur-select');
-  const dur = durSel?.value || document.querySelector('.sp-dur--active')?.dataset?.dur || '24h';
+  const ddlBtn = document.getElementById('sp-ddl-btn');
+  const dur = ddlBtn?.dataset?.value
+    || document.getElementById('sp-dur-select')?.value
+    || document.querySelector('.sp-dur--active')?.dataset?.dur
+    || '24h';
 
   CU.customStatus = { emoji, emojiUrl: _spSelectedEmojiUrl || undefined, text, createdAt: Date.now() };
   let ms = 0;
@@ -48826,18 +48900,39 @@ function _showStatusReplyModal(targetUser) {
       </div>
       <div class="sr-input-wrap">
         <button class="sr-emoji-btn" id="sr-emoji-btn" onclick="_srOpenEmoji()" title="Add an emoji">${_CHATBAR_EMOJI_SVG}</button>
-        <input type="text" class="sr-text-input" id="sr-text-input" placeholder="Say something to ${cn}…" maxlength="500" oninput="_srOnInput()">
+        <div class="sr-text-input" id="sr-text-input" contenteditable="true" role="textbox" data-placeholder="Say something to ${cn}…" oninput="_srOnInput()" onkeydown="_srOnKeydown(event)"></div>
         <button class="sr-send-btn" id="sr-send-btn" onclick="_srSend()" disabled aria-label="Send"><i class="fa-solid fa-paper-plane"></i></button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  setTimeout(() => document.getElementById('sr-text-input')?.focus(), 50);
+  // Rich input: :name: → inline emoji image, unicode → twemoji, paste-safe.
+  // setupEmojiAutocomplete wires the Discord-style :shortcut: popup +
+  // auto-completes finished :name: patterns (same code the chatbar uses).
+  setTimeout(() => {
+    const el = document.getElementById('sr-text-input');
+    if (!el) return;
+    _initRichInput(el);
+    try { setupEmojiAutocomplete('sr-text-input'); } catch(_) {}
+    el.focus();
+  }, 30);
 }
 
 function _srOnInput() {
   const inp = document.getElementById('sr-text-input');
   const btn = document.getElementById('sr-send-btn');
   if (btn) btn.disabled = !(inp?.value?.trim());
+}
+function _srOnKeydown(e) {
+  // Enter → send; Shift+Enter → newline (handled by _initRichInput).
+  if (e.key === 'Enter' && !e.shiftKey) {
+    // Autocomplete panel takes priority — let its Enter handler pick a suggestion.
+    const ac = document.getElementById('emoji-ac-panel');
+    if (ac && ac.classList.contains('show')) return;
+    const sp = document.getElementById('smart-suggest-panel');
+    if (sp && sp.style.display !== 'none') return;
+    e.preventDefault();
+    _srSend();
+  }
 }
 
 function _srOpenEmoji() {
@@ -48859,11 +48954,23 @@ function _srOpenEmoji() {
   document.getElementById('botcmd-picker')?.remove();
 
   window._srEmojiOrigCallback = window._emojiInsertCallback;
-  window._srEmojiCallback = (emoji) => {
+  window._srEmojiCallback = (emoji, custom) => {
     const inp = document.getElementById('sr-text-input');
     if (inp) {
-      inp.value += emoji;
+      // Custom emoji (Fortized guide / bastion / radiance) → insert at
+      // caret using the same helper the chatbar uses so the token
+      // renders as an inline <img>. Unicode → append the char (rich
+      // input's value setter will re-render as twemoji on next input).
+      if (custom?.name) {
+        _initRichInput(inp);
+        _richInsertEmojiAtCaret(inp, custom.name);
+      } else {
+        _initRichInput(inp);
+        const cur = inp.value || '';
+        inp.value = cur + emoji;
+      }
       inp.dispatchEvent(new Event('input', { bubbles: true }));
+      inp.focus();
     }
     window._statusEmojiInsertOverride = false;
     window._emojiInsertCallback = window._srEmojiOrigCallback || null;
@@ -48885,59 +48992,62 @@ function _srOpenEmoji() {
   setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
 }
 
-function _srSend() {
+async function _srSend() {
   const inp = document.getElementById('sr-text-input');
-  if (!inp || !inp.value.trim()) return;
-  const text = inp.value.trim();
+  if (!inp) return;
+  // Rich-input .value shim returns plain text with :name: tokens for
+  // custom emojis and unicode chars for regular emojis — same shape a
+  // chatbar send would produce.
+  const text = (inp.value || '').trim();
+  if (!text) return;
   const overlay = document.getElementById('ftz-status-reply');
   const targetName = overlay?.dataset?.targetUsername || '';
   if (!targetName) { toast("Could not determine target.", 'error'); return; }
-  _closeStatusReplyModal();
 
-  // Navigate to the DM and set up the reply
-  showView('dms');
-  setTimeout(() => {
-    openDMView(targetName);
-    setTimeout(() => {
-      // Look up the user's custom status for the reply context
-      FortizedSocial.getUserByName(targetName).then(u => {
-        const cs = u?.customStatus || {};
-        const csPreview = (cs.emoji || '') + ' ' + (cs.text || '');
-        const chatKey = 'dm:' + targetName.toLowerCase();
-        replyingTo = { id: 'status-reply', from: targetName, text: csPreview.trim() || 'custom status', chatKey: chatKey };
-        const bar = document.getElementById('dm-input-reply-bar');
-        if (bar) {
-          bar.style.display = 'flex';
-          const nameEl = document.getElementById('dm-input-reply-name');
-          if (nameEl) nameEl.textContent = "@" + targetName + "'s status";
-        }
-        // Pre-fill the input with the composed message
-        const ta = document.getElementById('dm-input');
-        if (ta) {
-          if (ta.isContentEditable) {
-            ta.textContent = text;
-            ta.dispatchEvent(new Event('input', { bubbles: true }));
-          } else {
-            ta.value = text;
-          }
-          ta.focus();
+  const sendBtn = document.getElementById('sr-send-btn');
+  if (sendBtn) sendBtn.disabled = true;
 
-          // Auto-send after a short delay so the UI settles
-          setTimeout(() => {
-            const sendBtn = ta.closest('.chat-input-outer')?.querySelector('.chat-send-btn') || document.querySelector('.chat-submit-btn, [data-action="send"]');
-            if (sendBtn) {
-              sendBtn.click();
-            } else {
-              // Fallback: dispatch Enter key
-              ta.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', which: 13, keyCode: 13, bubbles: true }));
-            }
-          }, 300);
-        }
-      }).catch(() => {
-        toast("Could not send status reply.", 'error');
+  try {
+    // Snapshot target's current status so the reply reference the
+    // recipient sees carries context ("status reply · working on X").
+    let csPreview = 'custom status';
+    try {
+      const target = await FortizedSocial.getUserByName(targetName);
+      const cs = target?.customStatus || {};
+      const composed = ((cs.emoji || '') + ' ' + (cs.text || '')).trim();
+      if (composed) csPreview = composed;
+    } catch(_) { /* fall through with default */ }
+
+    const msgId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    const replyTo = { id: 'status-reply', from: targetName, text: csPreview };
+    const sendOpts = { id: msgId, replyTo };
+
+    // Send directly through the real DM pipeline — persists in Supabase
+    // and returns the canonical stored message. No UI navigation / auto-
+    // click fragility. Recipients receive via the socket broadcast below.
+    const savedMsg = await FortizedSocial.sendDMMessage(
+      CU.username, targetName, text, sendOpts
+    );
+    const committedMsg = savedMsg || {
+      id: msgId, from: CU.username, text,
+      time: new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }),
+      timestamp: new Date().toISOString(),
+      replyTo,
+    };
+    // Broadcast so the target (and any other tabs/devices) sees it live.
+    try {
+      FortizedSocial.socketEmit('message:send', {
+        type: 'dm', id1: CU.username, id2: targetName, message: committedMsg
       });
-    }, 200);
-  }, 100);
+    } catch(_) {}
+
+    _closeStatusReplyModal();
+    toast('Reply sent', 'success');
+  } catch (e) {
+    console.error('[srSend]', e);
+    if (sendBtn) sendBtn.disabled = false;
+    toast('Failed to send reply', 'error');
+  }
 }
 
 function _fppIdentityHTML(u) {

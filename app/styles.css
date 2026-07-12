@@ -6229,6 +6229,12 @@ button[disabled],
 .sp-clear-btn{width:22px;height:22px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;}
 .sp-clear-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
 .sp-dur-row{display:flex;align-items:center;gap:10px;padding:0 18px 14px;flex-wrap:wrap;}
+.sp-custom-dur{display:none;align-items:center;gap:8px;padding:0 18px 14px;}
+.sp-custom-dur-amt{width:90px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:#fff;font-size:12.5px;outline:none;-moz-appearance:textfield;}
+.sp-custom-dur-amt::-webkit-outer-spin-button,.sp-custom-dur-amt::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.sp-custom-dur-amt:focus{border-color:var(--accent-mid);}
+.sp-custom-dur-unit{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:#fff;font-size:12.5px;outline:none;cursor:pointer;}
+.sp-custom-dur-unit:focus{border-color:var(--accent-mid);}
 .sp-dur-label{font-size:11.5px;font-weight:600;color:var(--muted);white-space:nowrap;}
 .sp-dur-options{display:flex;gap:4px;flex-wrap:wrap;}
 .sp-dur{padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--muted-light);font-size:11px;font-weight:600;font-family:var(--font-ui);cursor:pointer;transition:all .12s;white-space:nowrap;}
@@ -10927,22 +10933,61 @@ select:focus-visible {
 /* Status bubble wrapper — positions floating controls relative to the bubble */
 .fpp__cs-wrap{ position:relative; display:inline-flex; align-items:center; }
 .fpp__cs-wrap--empty{ cursor:pointer; }
-/* Floating controls — appear outside the bubble on hover (Discord-style) */
+/* Floating circular action bubbles — hover the status bubble to reveal.
+   Positioned above the bubble's top-right so they don't shift layout,
+   each with a small pill tooltip that appears above on hover. */
 .fpp__cs-floating{
-  display:inline-flex; gap:3px; margin-left:6px; flex-shrink:0;
-  opacity:0; transition:opacity .15s;
+  position:absolute; top:-6px; right:-6px;
+  transform:translateY(-100%);
+  display:inline-flex; gap:5px;
+  opacity:0; pointer-events:none;
+  transition:opacity .15s, transform .15s;
+  z-index:3;
 }
-.fpp__cs-wrap:hover .fpp__cs-floating{ opacity:1; }
+.fpp__cs-wrap:hover .fpp__cs-floating,
+.fpp__cs-floating:hover{
+  opacity:1; pointer-events:auto;
+  transform:translateY(-100%) translateY(0);
+}
 .fpp__cs-float-btn{
-  width:22px; height:22px; border-radius:6px; border:none;
+  width:30px; height:30px; border-radius:50%;
+  border:1px solid rgba(255,255,255,.08);
+  background:var(--panel2, rgba(30,32,40,.98));
+  color:rgba(255,255,255,.7);
   display:inline-flex; align-items:center; justify-content:center;
-  cursor:pointer; transition:all .12s; padding:0;
-  background:rgba(255,255,255,.06); color:rgba(255,255,255,.45);
+  cursor:pointer; padding:0;
+  box-shadow:0 4px 12px rgba(0,0,0,.35);
+  position:relative;
+  transition:transform .12s, background .12s, color .12s, border-color .12s;
 }
-.fpp__cs-float-btn:hover{ background:rgba(255,255,255,.12); color:#fff; }
+.fpp__cs-float-btn i{ font-size:11px; }
+.fpp__cs-float-btn:hover{
+  background:var(--panel, rgba(50,52,60,1));
+  color:#fff;
+  border-color:rgba(255,255,255,.14);
+  transform:translateY(-1px);
+}
+.fpp__cs-float-btn::after{
+  content:attr(data-tip);
+  position:absolute;
+  bottom:calc(100% + 6px);
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(20,22,28,.98);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:600;
+  white-space:nowrap;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .12s;
+  box-shadow:0 4px 12px rgba(0,0,0,.4);
+}
+.fpp__cs-float-btn:hover::after{ opacity:1; }
 .fpp__cs-float-edit:hover{ color:var(--accent); }
 .fpp__cs-float-delete:hover{ color:var(--red); }
-.fpp__cs-float-reply{ color:rgba(255,255,255,.45); }
 .fpp__cs-float-reply:hover{ color:var(--blue); }
 
 /* ── Identity (name + handle row + badges) ────────────────────────── */

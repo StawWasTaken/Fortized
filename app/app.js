@@ -1852,7 +1852,12 @@ async function refreshCU() {
         // Cross-device cosmetics — same protection pattern as
         // appearance so a background refresh doesn't clobber a
         // pick that hasn't reached the DB yet.
-        'cursor','density','scale'
+        'cursor','density','scale',
+        // Profile fields — for super-admins these must never be silently
+        // reverted by an empty/stale DB read racing an in-flight save.
+        // (See related write-side fix in _mergeProtectedRow.) If DB has a
+        // real new value it still wins because the isEmpty check fails.
+        'pfp','pfpCrop','banner','bio','displayName','activeDecoration',
       ];
       // DB is source of truth — don't block fresh values with a
       // recent-edit guard. Previously a 10-second window prevented
@@ -37788,13 +37793,14 @@ function openStatusPicker() {
     ? `<img src="${emojiToTwemojiUrl(_spSelectedEmoji)}" style="width:20px;height:20px;" onerror="this.parentElement.textContent='${escapeHTML(_spSelectedEmoji)}'">`
     : '';
 
-  // Duration options
+  // Duration options — default 24h, "Custom" is a Fortized feature
   const durations = [
+    { id: 'never', label: "Don't clear" },
     { id: '30min', label: '30 minutes' },
     { id: '1h',    label: '1 hour' },
     { id: '4h',    label: '4 hours' },
     { id: '24h',   label: '24 hours' },
-    { id: 'never', label: 'Until I close it' },
+    { id: 'custom', label: 'Custom…' },
   ];
   const durHTML = durations.map(d =>
     `<button class="sp-dur${d.id === '24h' ? ' sp-dur--active' : ''}" data-dur="${d.id}" onclick="_spPickDur(this)">${d.label}</button>`
@@ -37839,6 +37845,14 @@ function openStatusPicker() {
       <div class="sp-dur-row">
         <span class="sp-dur-label">Clear after</span>
         <div class="sp-dur-options" id="sp-dur-options">${durHTML}</div>
+      </div>
+      <div class="sp-custom-dur" id="sp-custom-dur-box" style="display:none;">
+        <input type="number" id="sp-custom-dur-amt" class="sp-custom-dur-amt" min="1" max="720" value="2" placeholder="Amount">
+        <select id="sp-custom-dur-unit" class="sp-custom-dur-unit">
+          <option value="min">minutes</option>
+          <option value="h" selected>hours</option>
+          <option value="d">days</option>
+        </select>
       </div>
 
       <div class="sp-actions">
@@ -37913,6 +37927,8 @@ function _spClearInput() {
 function _spPickDur(el) {
   document.querySelectorAll('.sp-dur').forEach(b => b.classList.remove('sp-dur--active'));
   el.classList.add('sp-dur--active');
+  const box = document.getElementById('sp-custom-dur-box');
+  if (box) box.style.display = (el.dataset.dur === 'custom') ? 'flex' : 'none';
 }
 
 function _spSave() {
@@ -37923,8 +37939,17 @@ function _spSave() {
   const dur = durEl?.dataset?.dur || '24h';
 
   CU.customStatus = { emoji, text, createdAt: Date.now() };
-  if (dur !== 'never') {
-    const ms = { '30min': 1800000, '1h': 3600000, '4h': 14400000, '24h': 86400000 }[dur] || 86400000;
+  let ms = 0;
+  if (dur === 'custom') {
+    const amt = parseInt(document.getElementById('sp-custom-dur-amt')?.value, 10);
+    const unit = document.getElementById('sp-custom-dur-unit')?.value || 'h';
+    if (!amt || amt < 1) { toast('Enter a valid duration', 'error'); return; }
+    const perUnit = { min: 60000, h: 3600000, d: 86400000 }[unit] || 3600000;
+    ms = amt * perUnit;
+  } else if (dur !== 'never') {
+    ms = { '30min': 1800000, '1h': 3600000, '4h': 14400000, '24h': 86400000 }[dur] || 86400000;
+  }
+  if (ms > 0) {
     const stamp = CU.customStatus.createdAt;
     if (window._statusClearTimer) clearTimeout(window._statusClearTimer);
     window._statusClearTimer = setTimeout(() => {
@@ -48662,10 +48687,10 @@ function _fppCSBubbleHTML(u, isOwn) {
     // Floating controls — appear outside the bubble on hover
     const floatingControls = isOwn
       ? `<span class="fpp__cs-floating">
-           <button class="fpp__cs-float-btn fpp__cs-float-edit" onclick="event.stopPropagation();openStatusPicker()" title="Edit status"><i class="fa-solid fa-pen" style="font-size:10px;"></i></button>
-           <button class="fpp__cs-float-btn fpp__cs-float-delete" onclick="event.stopPropagation();clearCustomStatus()" title="Delete status"><i class="fa-solid fa-trash" style="font-size:10px;"></i></button>
+           <button class="fpp__cs-float-btn fpp__cs-float-edit" data-tip="Edit" onclick="event.stopPropagation();openStatusPicker()"><i class="fa-solid fa-pen"></i></button>
+           <button class="fpp__cs-float-btn fpp__cs-float-delete" data-tip="Clear" onclick="event.stopPropagation();clearCustomStatus()"><i class="fa-solid fa-trash"></i></button>
          </span>`
-      : `<button class="fpp__cs-float-btn fpp__cs-float-reply" onclick="event.stopPropagation();replyToStatus('${escapeHTML(u.username)}')" title="Reply to status"><i class="fa-solid fa-reply" style="font-size:10px;"></i></button>`;
+      : `<span class="fpp__cs-floating"><button class="fpp__cs-float-btn fpp__cs-float-reply" data-tip="Reply" onclick="event.stopPropagation();replyToStatus('${escapeHTML(u.username)}')"><i class="fa-solid fa-reply"></i></button></span>`;
     return `<div class="fpp__cs-wrap profile-custom-status" data-for="${escapeHTML(u.username)}"${isOwn ? ' onclick="openStatusPicker()"' : ''}><div class="fpp__cs-bubble">${emojiHTML}<span class="fpp__cs-text">${escapeHTML(cs.text).slice(0, 60)}</span></div>${floatingControls}</div>`;
   }
   if (isOwn) {

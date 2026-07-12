@@ -37806,13 +37806,23 @@ function openStatusPicker() {
     `<button class="sp-dur${d.id === '24h' ? ' sp-dur--active' : ''}" data-dur="${d.id}" onclick="_spPickDur(this)">${d.label}</button>`
   ).join('');
 
-  // Profile preview: use actual FPP helpers for consistency
+  // Profile preview: reuse FPP helpers (banner + avatar + identity) but
+  // render the custom-status bubble as a floating speech-bubble anchored
+  // over the banner — like Discord's picker. Bubble reflects what the
+  // user is typing / picking LIVE (updated by _spOnInput / _spEmojiCallback).
   const banner = _fppBannerHTML(u, false);
   const avatar = _fppAvatarHTML(u, 48);
   const identity = _fppIdentityHTML(u);
-  const status = u.customStatus?.text
-    ? `<div class="fpp__cs-bubble" style="margin-top:4px; font-size:12px; color:var(--muted-light); display:flex; align-items:center; gap:4px;">${u.customStatus.emoji ? `<img src="${emojiToTwemojiUrl(u.customStatus.emoji)}" style="width:14px;height:14px;">` : ''}${escapeHTML(u.customStatus.text)}</div>`
+  const initialPreviewText = curText || u.customStatus?.text || "What's on your mind?";
+  const initialPreviewEmoji = _spSelectedEmoji || u.customStatus?.emoji || '';
+  const previewEmojiHTML = initialPreviewEmoji
+    ? `<img src="${emojiToTwemojiUrl(initialPreviewEmoji)}" style="width:14px;height:14px;flex-shrink:0;" onerror="this.replaceWith(document.createTextNode('${escapeHTML(initialPreviewEmoji)}'))">`
     : '';
+  const previewIsPlaceholder = !curText && !u.customStatus?.text && !_spSelectedEmoji;
+  const status = `<div class="sp-preview-cs${previewIsPlaceholder ? ' sp-preview-cs--empty' : ''}" id="sp-preview-cs">
+    <span class="sp-preview-cs-emoji" id="sp-preview-cs-emoji">${previewEmojiHTML}</span>
+    <span class="sp-preview-cs-text" id="sp-preview-cs-text">${escapeHTML(initialPreviewText)}</span>
+  </div>`;
 
   overlay.innerHTML = `
     <div class="sp-card">
@@ -37823,11 +37833,11 @@ function openStatusPicker() {
 
       <div class="sp-preview-wrap">
         ${banner}
+        ${status}
         <div class="sp-preview-body">
           ${avatar}
           <div class="sp-preview-info">
             ${identity}
-            ${status}
           </div>
         </div>
       </div>
@@ -37890,6 +37900,11 @@ function _spOpenEmoji() {
     if (b) {
       b.innerHTML = `<img src="${emojiToTwemojiUrl(emoji)}" style="width:20px;height:20px;" onerror="this.parentElement.textContent='${escapeHTML(emoji)}'">`;
     }
+    // Live-update the speech-bubble preview emoji
+    const pe = document.getElementById('sp-preview-cs-emoji');
+    const wrap = document.getElementById('sp-preview-cs');
+    if (pe) pe.innerHTML = `<img src="${emojiToTwemojiUrl(emoji)}" style="width:14px;height:14px;flex-shrink:0;" onerror="this.replaceWith(document.createTextNode('${escapeHTML(emoji)}'))">`;
+    if (wrap) wrap.classList.remove('sp-preview-cs--empty');
     window._statusEmojiInsertOverride = false;
     window._emojiInsertCallback = window._spEmojiOrigCallback || null;
     panel.classList.remove('show');
@@ -37914,6 +37929,15 @@ function _spOnInput() {
   const inp = document.getElementById('sp-text-input');
   const clear = document.getElementById('sp-clear-btn');
   if (clear) clear.style.display = inp?.value ? '' : 'none';
+  // Live-update the speech-bubble preview
+  const textEl = document.getElementById('sp-preview-cs-text');
+  const wrap = document.getElementById('sp-preview-cs');
+  if (textEl && wrap) {
+    const v = inp?.value || '';
+    textEl.textContent = v || "What's on your mind?";
+    const empty = !v && !_spSelectedEmoji;
+    wrap.classList.toggle('sp-preview-cs--empty', empty);
+  }
 }
 
 function _spClearInput() {
@@ -37921,6 +37945,7 @@ function _spClearInput() {
   const clear = document.getElementById('sp-clear-btn');
   if (inp) inp.value = '';
   if (clear) clear.style.display = 'none';
+  _spOnInput();
   inp?.focus();
 }
 

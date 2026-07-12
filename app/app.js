@@ -8585,7 +8585,7 @@ async function addMembersToGC(gcId) {
 
   // Show a simple overlay to pick members
   const ov = document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;background:rgba(12,14,20,.85);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(12,14,20,.85);backdrop-filter:none;z-index:9100;display:flex;align-items:center;justify-content:center;';
   ov.innerHTML=`
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:26px;max-width:380px;width:100%;">
       <div style="font-family:var(--font-display);font-size:17px;font-weight:800;margin-bottom:14px;">Add Members</div>
@@ -12257,7 +12257,7 @@ function _renderVoicePanel(ch, idx) {
         ${voiceParticipants.map(p => _renderVoiceAvatar(p)).join('')}
       </div>
       <!-- Controls -->
-      <div class="voice-controls" style="display:flex;gap:14px;align-items:center;padding:18px 28px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px;backdrop-filter:blur(10px);">
+      <div class="voice-controls" style="display:flex;gap:14px;align-items:center;padding:18px 28px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px;backdrop-filter:none;">
         <button class="vc-btn ${isMuted?'active':''}" onclick="toggleVoiceMute()" title="${isMuted?'Unmute':'Mute'}" style="width:52px;height:52px;border-radius:50%;background:${isMuted?'rgba(248,113,113,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isMuted?'rgba(248,113,113,.35)':'rgba(255,255,255,.1)'};color:${isMuted?'#f87171':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isMuted?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'}</button>
         <button class="vc-btn ${isDeafened?'active':''}" onclick="toggleVoiceDeafen()" title="${isDeafened?'Undeafen':'Deafen'}" style="width:52px;height:52px;border-radius:50%;background:${isDeafened?'rgba(245,158,11,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isDeafened?'rgba(245,158,11,.35)':'rgba(255,255,255,.1)'};color:${isDeafened?'#f59e0b':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isDeafened?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3z"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>'}</button>
         <div style="width:1px;height:32px;background:rgba(255,255,255,.08);margin:0 4px;"></div>
@@ -12694,7 +12694,7 @@ function _renderDiscoverFeatured(bastions){
     const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
     const mc = b.memberCount||1;
     const boostBadge = (b.boostLevel||0)>0?(['🟦 Tier 1','🟪 Tier 2','👑 Tier 3'][(b.boostLevel||1)-1]):'';
-    return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,${(b.boostLevel||0)>0?'rgba(255,249,62,.08)':'rgba(255,249,62,.04)'},rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.12)'};border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(12px);" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px ${(b.boostLevel||0)>0?'rgba(255,249,62,.12)':'rgba(255,249,62,.06)'}';" onmouseleave="this.style.transform='';this.style.boxShadow='';">
+    return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,${(b.boostLevel||0)>0?'rgba(255,249,62,.08)':'rgba(255,249,62,.04)'},rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.12)'};border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:none;" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px ${(b.boostLevel||0)>0?'rgba(255,249,62,.12)':'rgba(255,249,62,.06)'}';" onmouseleave="this.style.transform='';this.style.boxShadow='';">
       <div style="width:52px;height:52px;border-radius:14px;background:${(b.boostLevel||0)>0?'linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,249,62,.05))':'rgba(255,249,62,.06)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.1)'};overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
       <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}${b.verified?_verifiedBadge(16):''} ${boostBadge?'<span style="font-size:10px;margin-left:6px;font-weight:700;color:var(--accent);">'+boostBadge+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>`:`<span style="color:rgba(255,255,255,.4);">💤 ${mc>1?'Active':'Quiet'}</span>`}</div></div>
       ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">✓ Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);padding:5px 12px;border-radius:10px;">+ Join</span>`}
@@ -12733,7 +12733,7 @@ function renderDiscoverGrid(bastions){
       ? `<img src="${escapeHTML(bannerSrc)}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer" onload="try{_extractCardColor(this,'${_cardId}')}catch{}" onerror="this.style.display='none'">`
       : `<div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(80,80,120,.3),rgba(30,30,50,.8));"></div>`;
     return `<div class="bc" id="${_cardId}" onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">
-      ${boostLevel>0?`<div style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:3px 8px;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);border-radius:6px;color:#fff;z-index:3;">${['🟦','🟪','👑'][boostLevel-1]} T${boostLevel}</div>`:''}
+      ${boostLevel>0?`<div style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:3px 8px;background:rgba(0,0,0,.5);backdrop-filter:none;border-radius:6px;color:#fff;z-index:3;">${['🟦','🟪','👑'][boostLevel-1]} T${boostLevel}</div>`:''}
       <div class="bc-banner">${bannerHTML}</div>
       <div class="bc-body">
         <div class="bc-meta">
@@ -12841,7 +12841,7 @@ function _renderDiscoverActivities() {
     const [r,g,b] = act.dominantRgb;
     const ownerBadge = act.ownerVerified ? _verifiedBadge(11) : '';
     return `<div class="ac" onclick="openActivityOverview('${act.id}')" style="cursor:pointer;">
-      ${act.comingSoon ? `<div style="position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-radius:6px;padding:3px 9px;font-size:9px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;">Soon</div>` : ''}
+      ${act.comingSoon ? `<div style="position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.6);backdrop-filter:none;border-radius:6px;padding:3px 9px;font-size:9px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;">Soon</div>` : ''}
       <div class="ac-banner">${_actBanner(act)}</div>
       <div class="ac-body" style="background:linear-gradient(180deg,rgba(${r},${g},${b},.14) 0%,rgba(${r},${g},${b},.04) 100%);">
         <div class="ac-meta">
@@ -12922,7 +12922,7 @@ function openActivityOverview(id) {
       <div class="act-ov-banner">
         ${_actBanner(act, false)}
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(${r},${g},${b},.18) 80%,var(--channel,#12141b) 100%);pointer-events:none;"></div>
-        ${act.comingSoon ? `<div style="position:absolute;top:16px;left:20px;z-index:5;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 11px;font-size:10px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-ui);"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Coming Soon</div>` : ''}
+        ${act.comingSoon ? `<div style="position:absolute;top:16px;left:20px;z-index:5;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.65);backdrop-filter:none;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 11px;font-size:10px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-ui);"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Coming Soon</div>` : ''}
         ${act.owner === 'Fortized' ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" class="act-ov-banner-gjg" style="height:58px;">` : ''}
       </div>
 
@@ -13036,7 +13036,7 @@ function _showActivityPermDialog(act, onAccept) {
     ? `<img src="/app/Chronicle/chapter1/assets/Grand%20Joy%20Games.png" alt="Grand Joy Games" style="height:14px;margin-left:4px;vertical-align:middle;filter:brightness(0) invert(1);opacity:.6;">` : '';
   const modal = document.createElement('div');
   modal.id = 'modal-activity-perm';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:none;';
   modal.innerHTML = `
     <div style="background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:22px;max-width:400px;width:92%;box-shadow:0 32px 100px rgba(0,0,0,.6);overflow:hidden;">
       <div style="height:6px;background:linear-gradient(90deg,rgba(${r},${g},${b},.8),rgba(${r},${g},${b},.35));"></div>
@@ -13454,7 +13454,7 @@ function _showThreatRecipientCard(senderUsername, text) {
   document.getElementById('ftz-threat-recipient-card')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'ftz-threat-recipient-card';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,10,15,.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .25s ease;';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,10,15,.92);backdrop-filter:none;display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .25s ease;';
   overlay.innerHTML = `<div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;width:100%;max-width:520px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);">
     <div style="width:60px;height:60px;border-radius:16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -13489,7 +13489,7 @@ function _showWarningOverlay(reason, issuedBy, contentData) {
   const safeMod = (issuedBy && typeof issuedBy === 'string') ? issuedBy : 'Fortized Moderation';
   const overlay = document.createElement('div');
   overlay.id = 'ftz-warning-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,10,15,.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .3s ease;';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,10,15,.92);backdrop-filter:none;display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .3s ease;';
   overlay.innerHTML = `<div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;width:100%;max-width:520px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);">
     <div style="width:60px;height:60px;border-radius:16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -23216,7 +23216,7 @@ function _openAvatarGifPicker() {
 
   const ov = document.createElement('div');
   ov.className = 'ftz-gif-avatar-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:8400;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .18s ease;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:none;-webkit-backdrop-filter:none;z-index:8400;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .18s ease;';
 
   const picker = document.createElement('div');
   picker.id = 'avgif-picker';
@@ -30644,7 +30644,7 @@ async function checkTrialLink() {
   const existing = JSON.parse(localStorage.getItem('ftz_trial_links')||'[]');
   const linkData = existing.find(l=>l.code===trial);
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.97);backdrop-filter:blur(24px);z-index:9500;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.97);backdrop-filter:none;z-index:9500;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `
     <div style="background:var(--panel);border:1px solid rgba(255,249,62,.2);border-radius:28px;max-width:460px;width:100%;overflow:hidden;text-align:center;">
       <div style="height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);"></div>
@@ -33908,7 +33908,7 @@ function showBastionInviteModal(bastion, inviteCode) {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    backdrop-filter:none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -33924,7 +33924,7 @@ function showBastionInviteModal(bastion, inviteCode) {
       max-width: 500px;
       width: 90%;
       text-align: center;
-      backdrop-filter: blur(40px);
+      backdrop-filter:none;
       box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
     ">
       <div style="font-size: 48px; margin-bottom: 20px;">🏰</div>
@@ -34026,7 +34026,7 @@ async function detectRunningApps() {
 function addRegisteredGame() {
   // Show app picker overlay
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.9);backdrop-filter:blur(16px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.9);backdrop-filter:none;z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:480px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
       <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border);">
@@ -34509,7 +34509,7 @@ function showBastionApplicationForm(b) {
   const questions = b.applicationQuestions || [];
   if (!questions.length) { promptJoinPublicBastion(b.id || b.name); return; }
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.92);backdrop-filter:blur(16px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.92);backdrop-filter:none;z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
   let qHtml = '';
   questions.forEach((q, i) => {
     qHtml += '<div style="margin-bottom:14px;">'
@@ -35257,7 +35257,7 @@ function _openAddWidgetPanel() {
   overlay.className = 'pw-add-widget-modal-overlay';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `<div class="pw-add-widget-modal" style="max-width:520px;width:92%;max-height:85vh;overflow-y:auto;">
-    <div class="pwm-header" style="position:sticky;top:0;z-index:2;background:var(--panel,rgba(16,18,28,.98));backdrop-filter:blur(20px);padding:20px 24px 16px;">
+    <div class="pwm-header" style="position:sticky;top:0;z-index:2;background:var(--panel,rgba(16,18,28,.98));backdrop-filter:none;padding:20px 24px 16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div>
           <h3 style="margin:0;font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Add Widgets</h3>
@@ -36642,7 +36642,7 @@ async function openAddGameModal() {
   _closeEl('add-game-modal');
   const modal = document.createElement('div');
   modal.id = 'add-game-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.8);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.8);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:none;';
   const box = document.createElement('div');
   box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;width:420px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7);';
   box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0;">'
@@ -36899,7 +36899,7 @@ function renderFavGifs(targetInput) {
     return `<div class="gif-card" data-id="${gif.id}" data-url="${escapeHTML(url)}" data-input="${escapeHTML(targetInput)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
       <img src="${escapeHTML(url)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
       <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;"></div>
-      <button onclick="event.stopPropagation();removeFavGif('${gif.id}');renderFavGifs('${escapeHTML(targetInput)}')" title="Remove" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:#ff6b6b;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">✕</button>
+      <button onclick="event.stopPropagation();removeFavGif('${gif.id}');renderFavGifs('${escapeHTML(targetInput)}')" title="Remove" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:none;border:1px solid rgba(255,255,255,.1);color:#ff6b6b;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">✕</button>
     </div>`;
   }).join('');
   grid.querySelectorAll('.gif-card').forEach(card => {
@@ -37260,7 +37260,7 @@ function renderGiphyResults(gifs, inputId) {
       <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;">
         <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,.6);max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(g.title||'')}</div>
       </div>
-      <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${escapeHTML(fullUrl)}'})" title="Save" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:#ffd93e;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">★</button>
+      <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${escapeHTML(fullUrl)}'})" title="Save" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:none;border:1px solid rgba(255,255,255,.1);color:#ffd93e;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">★</button>
     </div>`;
   }).join('');
   grid.querySelectorAll('.gif-card').forEach(card => {
@@ -37923,9 +37923,10 @@ function _spSave() {
   CU.customStatus = { emoji, text, createdAt: Date.now() };
   if (dur !== 'never') {
     const ms = { '30min': 1800000, '1h': 3600000, '4h': 14400000, '24h': 86400000 }[dur] || 86400000;
+    const stamp = CU.customStatus.createdAt;
     if (window._statusClearTimer) clearTimeout(window._statusClearTimer);
     window._statusClearTimer = setTimeout(() => {
-      if (CU.customStatus?.createdAt === CU.customStatus?.createdAt) {
+      if (CU.customStatus?.createdAt === stamp) {
         CU.customStatus = null;
         saveUser();
         toast('Status cleared', 'info');
@@ -38069,7 +38070,7 @@ function editForumPost(chIdx, postIdx) {
   const ch = b.channels&&b.channels[chIdx]; if (!ch) return;
   const p = ch.posts&&ch.posts[postIdx]; if (!p) return;
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:none;z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.className = 'ftz-edit-post-overlay';
   overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:560px;width:100%;padding:26px;max-height:90vh;overflow-y:auto;">'
     +'<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:18px;">✏ Edit Post</div>'
@@ -38124,7 +38125,7 @@ async function deleteForumReply(chIdx, postIdx, replyIdx) {
 
 function openNewForumPost(chIdx) {
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;'; overlay.className='ftz-new-post-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:none;z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;'; overlay.className='ftz-new-post-overlay';
   overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:560px;width:100%;padding:26px;max-height:90vh;overflow-y:auto;">'
     +'<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:18px;">📝 New Post</div>'
     +'<input id="fp-title" class="field-input" placeholder="Post title…" maxlength="120" style="margin-bottom:10px;font-size:14px;font-weight:600;">'
@@ -38396,7 +38397,7 @@ function _deletePoll(pollKey, chIdx) {
 function openCreatePollModal(chIdx) {
   const overlay = document.createElement('div');
   overlay.className = 'ftz-poll-create-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:none;z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:520px;width:100%;padding:28px;max-height:90vh;overflow-y:auto;">
     <div style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:6px;">🗳 Create Poll</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Ask a question and let your community vote.</div>
@@ -38570,7 +38571,7 @@ async function showCallingScreen(partner) {
 
   const modal = document.createElement('div');
   modal.id = 'calling-screen-modal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9700;background:rgba(7,9,14,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;backdrop-filter:blur(8px);';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9700;background:rgba(7,9,14,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;backdrop-filter:none;';
 
   // Create the DOM structure
   // -- Avatar with pulsing rings --
@@ -38926,7 +38927,7 @@ async function renderVoiceCallUI(partner, isCaller) {
 
   const room = document.createElement('div');
   room.id = 'vc-call-bar';
-  room.style.cssText = 'position:fixed;inset:0;z-index:8500;background:rgba(7,9,14,.97);display:flex;flex-direction:column;backdrop-filter:blur(6px);';
+  room.style.cssText = 'position:fixed;inset:0;z-index:8500;background:rgba(7,9,14,.97);display:flex;flex-direction:column;backdrop-filter:none;';
 
   // --- TOP BAR ---
   const topBar = document.createElement('div');
@@ -39206,7 +39207,7 @@ async function showIncomingCall(caller, offerSdp) {
 
   const modal = document.createElement('div');
   modal.id = 'incoming-call-modal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(12,14,20,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;backdrop-filter:blur(12px);animation:fadeIn .3s ease;';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(12,14,20,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;backdrop-filter:none;animation:fadeIn .3s ease;';
 
   // Pulsing avatar
   const avWrap = document.createElement('div');
@@ -41222,7 +41223,7 @@ async function openGameActivityPicker() {
   const recents = _loadRecentActivities();
   const modal = document.createElement('div');
   modal.id = 'game-activity-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.8);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.8);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:none;';
   const box = document.createElement('div');
   box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:22px;width:420px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7);';
 
@@ -41882,7 +41883,7 @@ function renderAtelierTab(tab) {
         ${hasRad||hasPlus?`
         <div style="position:relative;z-index:1;margin-top:20px;display:flex;align-items:center;gap:12px;">
           <span style="font-size:12px;color:rgba(255,255,255,.6);">${(hasPlus?daysPlus:daysRad)} days remaining · Auto-renews monthly</span>
-          <button onclick="cancelRadiance()" style="padding:6px 14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:rgba(255,255,255,.7);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;backdrop-filter:blur(4px);" onmouseover="this.style.background='rgba(0,0,0,.5)'" onmouseout="this.style.background='rgba(0,0,0,.3)'">Cancel Subscription</button>
+          <button onclick="cancelRadiance()" style="padding:6px 14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:rgba(255,255,255,.7);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;backdrop-filter:none;" onmouseover="this.style.background='rgba(0,0,0,.5)'" onmouseout="this.style.background='rgba(0,0,0,.3)'">Cancel Subscription</button>
         </div>
         `:''}
       </div>
@@ -41908,9 +41909,9 @@ function renderAtelierTab(tab) {
 
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;">
           ${PERK_CARDS.map(c=>`
-            <div style="background:linear-gradient(180deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.015) 100%);border:1.5px solid rgba(255,255,255,.09);border-radius:16px;overflow:hidden;transition:all .28s cubic-bezier(.34,.1,.68,1);cursor:default;display:flex;flex-direction:column;position:relative;height:100%;backdrop-filter:blur(4px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);" onmouseover="this.style.borderColor='rgba(${c.colorRgb},.35)';this.style.background='linear-gradient(180deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,.03) 100%)';this.style.transform='translateY(-6px)';this.style.boxShadow='inset 0 1px 0 rgba(255,255,255,.08), 0 16px 40px rgba(0,0,0,.4)';this.style.borderColor='rgba(${c.colorRgb},.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.09)';this.style.background='linear-gradient(180deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.015) 100%)';this.style.transform='';this.style.boxShadow='inset 0 1px 0 rgba(255,255,255,.08)'">
+            <div style="background:linear-gradient(180deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.015) 100%);border:1.5px solid rgba(255,255,255,.09);border-radius:16px;overflow:hidden;transition:all .28s cubic-bezier(.34,.1,.68,1);cursor:default;display:flex;flex-direction:column;position:relative;height:100%;backdrop-filter:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);" onmouseover="this.style.borderColor='rgba(${c.colorRgb},.35)';this.style.background='linear-gradient(180deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,.03) 100%)';this.style.transform='translateY(-6px)';this.style.boxShadow='inset 0 1px 0 rgba(255,255,255,.08), 0 16px 40px rgba(0,0,0,.4)';this.style.borderColor='rgba(${c.colorRgb},.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.09)';this.style.background='linear-gradient(180deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.015) 100%)';this.style.transform='';this.style.boxShadow='inset 0 1px 0 rgba(255,255,255,.08)'">
               <!-- Badge -->
-              <div style="position:absolute;top:14px;left:14px;padding:5px 11px;background:rgba(${c.colorRgb},.25);border:1px solid rgba(${c.colorRgb},.5);border-radius:7px;font-size:8px;font-weight:900;color:${c.color};text-transform:uppercase;letter-spacing:.1em;z-index:2;backdrop-filter:blur(8px);box-shadow:0 4px 12px rgba(${c.colorRgb},.15);">Perk</div>
+              <div style="position:absolute;top:14px;left:14px;padding:5px 11px;background:rgba(${c.colorRgb},.25);border:1px solid rgba(${c.colorRgb},.5);border-radius:7px;font-size:8px;font-weight:900;color:${c.color};text-transform:uppercase;letter-spacing:.1em;z-index:2;backdrop-filter:none;box-shadow:0 4px 12px rgba(${c.colorRgb},.15);">Perk</div>
 
               <!-- Image Area -->
               <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:28px 18px;background:linear-gradient(135deg,rgba(${c.colorRgb},.12) 0%,rgba(${c.colorRgb},.04) 100%),linear-gradient(180deg,rgba(255,255,255,.04) 0%,transparent 100%);min-height:150px;border-bottom:1px solid rgba(255,255,255,.05);">
@@ -46586,7 +46587,7 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
 
   const overlay = document.createElement('div');
   overlay.id = 'crop-modal-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:none;';
 
   const isBanner = (aspectRatio||1) > 2;
   const isAvatar = (aspectRatio||1) === 1 && cropShape !== 'rounded-square';
@@ -47289,7 +47290,7 @@ async function purchaseRadiance(isPlus, days, cost) {
   if (balance < cost) {
     // Not enough onyx — show dialog
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:none;z-index:9100;display:flex;align-items:center;justify-content:center;';
     ov.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:380px;width:90%;text-align:center;">
       <div style="font-size:40px;margin-bottom:14px;">😕</div>
       <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
@@ -51172,7 +51173,7 @@ function renderMoodBar(b) {
     const dur = 6 + Math.random() * 5;
     particles += `<div class="mood-particle" style="left:${left}%;bottom:0;background:${particleColor};animation-delay:${delay}s;animation-duration:${dur}s;"></div>`;
   }
-  return `<div class="bastion-mood-bar" style="background:linear-gradient(90deg,${tint},${tint}ee);border:1.5px solid ${particleColor}25;box-shadow:0 4px 16px ${particleColor}15;backdrop-filter:blur(8px);" title="Bastion Mood: ${displayLabel}">
+  return `<div class="bastion-mood-bar" style="background:linear-gradient(90deg,${tint},${tint}ee);border:1.5px solid ${particleColor}25;box-shadow:0 4px 16px ${particleColor}15;backdrop-filter:none;" title="Bastion Mood: ${displayLabel}">
     <div class="mood-particles">${particles}</div>
     <span class="mood-emoji" style="font-size:18px;margin-right:8px;">${displayEmoji}</span>
     <span class="mood-label" style="font-weight:700;letter-spacing:.02em;flex:1;">${displayLabel}</span>
@@ -53255,7 +53256,7 @@ function _openEventForm(editKey) {
 
   const ov = document.createElement('div');
   ov.className = 'input-dialog-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9950;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:none;z-index:9950;display:flex;align-items:center;justify-content:center;padding:20px;';
 
   const now = new Date();
   const defDate = existing ? new Date(existing.date) : new Date(now.getTime() + 3600000);
@@ -53937,7 +53938,7 @@ function _createPoll2(container, context) {
   let isAnonymous = false;
   let expiresIn = 0;
   const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(12px);z-index:8000;display:flex;align-items:center;justify-content:center;';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:none;z-index:8000;display:flex;align-items:center;justify-content:center;';
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
   const _renderPollCreate = () => {
     modal.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:420px;width:100%;padding:24px;">
@@ -54004,7 +54005,7 @@ function _showQuickModal(id, html) {
   document.getElementById(id)?.remove();
   const el = document.createElement('div');
   el.id = id;
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.85);backdrop-filter:blur(12px);z-index:8000;display:flex;align-items:center;justify-content:center;';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.85);backdrop-filter:none;z-index:8000;display:flex;align-items:center;justify-content:center;';
   el.onclick = e => { if (e.target === el) el.remove(); };
   el.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;max-width:400px;width:100%;">${html}</div>`;
   document.body.appendChild(el);

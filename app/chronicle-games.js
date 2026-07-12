@@ -189,7 +189,7 @@ async function gameDialogue(eventId, title, npcImage, dialogues, reward) {
   screen.style.cssText = `
     position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
     z-index: 9999; display: flex; align-items: center; justify-content: center;
-    font-family: ${FONT}; padding: 20px; backdrop-filter: blur(3px);
+    font-family: ${FONT}; padding: 20px; backdrop-filter:none;
   `;
 
   let idx = 0;

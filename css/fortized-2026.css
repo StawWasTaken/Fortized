@@ -96,7 +96,7 @@ body::before {
   display: flex; align-items: center;
   padding: 0 8px 0 18px;
   background: rgba(20,26,38,.78);
-  backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter:none;
   border: 1px solid var(--border);
   border-radius: 999px;
   box-shadow: 0 12px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.02) inset;
@@ -163,7 +163,7 @@ body::before {
 .mobile-menu {
   position: fixed; top: 74px; left: 10px; right: 10px;
   background: rgba(20,26,38,.96);
-  backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter:none;
   border: 1px solid var(--border);
   border-radius: 22px;
   padding: 16px; display: none; flex-direction: column; gap: 2px;

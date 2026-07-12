@@ -114,7 +114,7 @@ function _mcShowRules() {
   if (existing) existing.remove();
   const m = document.createElement('div');
   m.id = 'mc-rules-modal';
-  m.style.cssText = 'position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);';
+  m.style.cssText = 'position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:none;';
   m.innerHTML = `
     <div style="background:#14141a;border:1px solid rgba(236,230,217,.12);border-radius:18px;padding:28px;max-width:420px;width:90%;font-family:'Fraunces',serif;color:#ece6d9;box-shadow:0 24px 80px rgba(0,0,0,.6);">
       <div style="font-family:'Syne',serif;font-size:20px;font-weight:700;margin-bottom:4px;">The Rules</div>

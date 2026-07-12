@@ -37782,266 +37782,195 @@ const STATUS_PRESETS = [
   {emoji:'😊',text:'Feeling great!',color:'#fde68a'},
 ];
 
-function _closeStatusPicker(){
-  const s=document.getElementById("ftz-status-picker");if(s)s.remove();
-  const ep=document.getElementById("emoji-picker");if(ep)ep.classList.remove("show");
-  window._statusEmojiInsertOverride=false;
-  if (window._emojiInsertCallback === window._spEmojiCallback) {
-    window._emojiInsertCallback = window._spEmojiOrigCallback || null;
+// ══════════════════════════════════════════════════════════════
+// CUSTOM STATUS PICKER (ftz-csp) — ground-up rewrite
+// Public API: openStatusPicker() / _closeStatusPicker()
+// Nothing carried over from the previous sp-* implementation.
+// ══════════════════════════════════════════════════════════════
+let _ftzCspSelectedEmoji = '';
+let _ftzCspSelectedEmojiUrl = '';
+
+function _closeStatusPicker() {
+  const el = document.getElementById('ftz-csp-overlay');
+  if (el) el.remove();
+  const ep = document.getElementById('emoji-picker');
+  if (ep) ep.classList.remove('show');
+  window._statusEmojiInsertOverride = false;
+  if (window._emojiInsertCallback === window._ftzCspEmojiCallback) {
+    window._emojiInsertCallback = window._ftzCspEmojiOrig || null;
   }
 }
 
-// ── Status Picker — clean rebuild ──
-// Uses the chatbar emoji panel directly. Emoji is optional. No blurry overlay.
-let _spSelectedEmoji = '';
-let _spSelectedEmojiUrl = '';
-
-
 function openStatusPicker() {
   _closeStatusPicker();
-  const cur = CU?.customStatus || {};
-  _spSelectedEmoji = cur.emoji || '';
-  _spSelectedEmojiUrl = cur.emojiUrl || '';
+  const u = CU || {};
+  const cur = u.customStatus || {};
+  _ftzCspSelectedEmoji = cur.emoji || '';
+  _ftzCspSelectedEmojiUrl = cur.emojiUrl || '';
   const curText = cur.text || '';
 
   const overlay = document.createElement('div');
-  overlay.id = 'ftz-status-picker';
-  overlay.className = 'sp-overlay';
+  overlay.id = 'ftz-csp-overlay';
+  overlay.className = 'ftz-csp__overlay';
   overlay.onclick = e => { if (e.target === overlay) _closeStatusPicker(); };
 
-  const u = CU || {};
-  const dn = escapeHTML(u.displayName || u.username || 'You');
-
-  // Emoji display (button icon) — use custom URL if the selected emoji is
-  // a Fortized custom emoji, otherwise Twemoji CDN.
-  const _spInitEmojiSrc = _spSelectedEmojiUrl
-    || (_spSelectedEmoji ? emojiToTwemojiUrl(_spSelectedEmoji) : '');
-  const emojiDisplay = _spSelectedEmoji
-    ? `<img src="${_spInitEmojiSrc}" style="width:20px;height:20px;object-fit:contain;" onerror="this.parentElement.textContent='${escapeHTML(_spSelectedEmoji)}'">`
-    : '';
-
-  // Duration options — default 24h, "Custom" is a Fortized feature
-  const durations = [
-    { id: 'never', label: "Don't clear" },
-    { id: '30min', label: '30 minutes' },
-    { id: '1h',    label: '1 hour' },
-    { id: '4h',    label: '4 hours' },
-    { id: '24h',   label: '24 hours' },
-    { id: 'custom', label: 'Custom…' },
-  ];
-  // Custom dropdown items (not a native <select> — that popup can't be
-  // themed with CSS, which read as "browser's neutral design" earlier).
-  const durItemsHTML = durations.map(d =>
-    `<div class="sp-ddl-item${d.id === '24h' ? ' sp-ddl-item--sel' : ''}" data-dur="${d.id}" onclick="_spDDLPick(this)" role="option">${d.label}</div>`
-  ).join('');
-
-  // Profile preview — reuse the actual FPP settings profile card
-  // structure (same one shown as "Preview" in Settings → Profile), just
-  // without the bio + badges cards. Same .fpp / .fpp__banner /
-  // .fpp__av-row / .fpp__identity classes so it inherits all the
-  // theming, spacing, typography, and status-dot rendering the rest
-  // of the app already uses. The live speech-bubble preview is
-  // rendered separately below via _spOnInput.
+  // Profile preview — reuse the SAME .fpp / .fpp--settings markup the
+  // Settings > Profile "Preview" pane emits, so the picker preview
+  // matches every other profile surface in the app. Bio + badges
+  // cards are hidden via CSS to keep the preview compact.
   const decHTML = u.activeDecoration
-    ? (()=>{ const d = (typeof PROFILE_DECORATIONS !== 'undefined') ? PROFILE_DECORATIONS.find(dec => dec.id === u.activeDecoration) : null; return d ? `<img src="${escapeHTML(d.src)}" class="fpp__decoration" onerror="this.style.display='none'">` : ''; })()
+    ? (() => {
+        const d = (typeof PROFILE_DECORATIONS !== 'undefined')
+          ? PROFILE_DECORATIONS.find(dec => dec.id === u.activeDecoration) : null;
+        return d ? `<img src="${escapeHTML(d.src)}" class="fpp__decoration" onerror="this.style.display='none'">` : '';
+      })()
     : '';
-  const dnStyle = `${_getDisplayFontStyle ? _getDisplayFontStyle(u.displayFont||'default') : ''}${_getDisplayEffectCSS ? _getDisplayEffectCSS(u.displayEffect||'solid', u.displayColor||'#fff', u.displayColor2 || u.displayColor || '#fff') : ''}`;
+  const dnStyle = `${typeof _getDisplayFontStyle === 'function' ? _getDisplayFontStyle(u.displayFont || 'default') : ''}${typeof _getDisplayEffectCSS === 'function' ? _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor || '#fff', u.displayColor2 || u.displayColor || '#fff') : ''}`;
   const pronounsBadge = u.pronouns
-    ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns" data-tip="Pronouns" data-tip-above>${escapeHTML(u.pronouns)}</span>`
+    ? `<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">${escapeHTML(u.pronouns)}</span>`
     : '';
-  const previewCard = `
-    <div class="fpp fpp--settings sp-preview-fpp" data-fpp-settings-card>
+  const previewFpp = `
+    <div class="fpp fpp--settings">
       <div class="fpp__banner">${_fppBannerHTML(u, false)}</div>
       <div class="fpp__av-row">
         <div class="fpp__av-wrap">
-          <div class="fpp__av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 64, u.pfpCrop)}</div>
+          <div class="fpp__av">${buildAvatarHTML(u.pfp, u.displayName || u.username, 64, u.pfpCrop)}</div>
           ${decHTML}
-          <span class="fpp__status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22">${FtzStatus.dotSvg(u.status||'online', 22)}</span>
+          <span class="fpp__status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22">${FtzStatus.dotSvg(u.status || 'online', 22)}</span>
         </div>
       </div>
       <div class="fpp__identity">
-        <div class="fpp__name" style="${dnStyle}">${escapeHTML(u.displayName||u.username)}</div>
+        <div class="fpp__name" style="${dnStyle}">${escapeHTML(u.displayName || u.username)}</div>
         <div class="fpp__handle-row">
           <span class="fpp__handle">@${escapeHTML(u.username)}</span>
           ${pronounsBadge}
         </div>
       </div>
     </div>`;
-  const initialPreviewText = curText || u.customStatus?.text || "What's on your mind?";
-  const initialPreviewEmoji = _spSelectedEmoji || u.customStatus?.emoji || '';
-  const initialPreviewEmojiSrc = _spSelectedEmojiUrl
-    || (u.customStatus?.emojiUrl)
-    || (initialPreviewEmoji ? emojiToTwemojiUrl(initialPreviewEmoji) : '');
-  const previewEmojiHTML = initialPreviewEmoji
-    ? `<img src="${initialPreviewEmojiSrc}" style="width:14px;height:14px;flex-shrink:0;object-fit:contain;" onerror="this.replaceWith(document.createTextNode('${escapeHTML(initialPreviewEmoji)}'))">`
+
+  // Speech bubble anchored to the FPP banner region — updates live.
+  const initEmoji = _ftzCspSelectedEmoji;
+  const initSrc = _ftzCspSelectedEmojiUrl || (initEmoji ? emojiToTwemojiUrl(initEmoji) : '');
+  const emojiSpan = initEmoji
+    ? `<img src="${initSrc}" style="width:14px;height:14px;object-fit:contain;" onerror="this.replaceWith(document.createTextNode('${escapeHTML(initEmoji)}'))">`
     : '';
-  const previewIsPlaceholder = !curText && !u.customStatus?.text && !_spSelectedEmoji;
-  const status = `<div class="sp-preview-cs${previewIsPlaceholder ? ' sp-preview-cs--empty' : ''}" id="sp-preview-cs">
-    <span class="sp-preview-cs-emoji" id="sp-preview-cs-emoji">${previewEmojiHTML}</span>
-    <span class="sp-preview-cs-text" id="sp-preview-cs-text">${escapeHTML(initialPreviewText)}</span>
-  </div>`;
+  const csEmpty = !initEmoji && !curText;
+  const csBubble = `
+    <div class="ftz-csp__csbubble${csEmpty ? ' ftz-csp__csbubble--empty' : ''}" id="ftz-csp-preview">
+      <span class="ftz-csp__csbubble-emoji" id="ftz-csp-preview-emoji">${emojiSpan}</span>
+      <span class="ftz-csp__csbubble-text" id="ftz-csp-preview-text">${escapeHTML(curText || "What's on your mind?")}</span>
+    </div>`;
+
+  // Composer button initial content — either the selected emoji as an image
+  // or the shared chatbar smiley SVG.
+  const emojiBtnInner = initEmoji
+    ? `<img src="${initSrc}" onerror="this.parentElement.textContent='${escapeHTML(initEmoji)}'">`
+    : (typeof _CHATBAR_EMOJI_SVG !== 'undefined' ? _CHATBAR_EMOJI_SVG : '<i class="fa-regular fa-face-smile"></i>');
+
+  // Duration options
+  const durations = [
+    { id: 'never', label: "Don't clear" },
+    { id: '30min', label: '30 minutes' },
+    { id: '1h', label: '1 hour' },
+    { id: '4h', label: '4 hours' },
+    { id: '24h', label: '24 hours' },
+    { id: 'custom', label: 'Custom…' },
+  ];
+  const ddlItems = durations.map(d =>
+    `<div class="ftz-csp__ddl-item${d.id === '24h' ? ' ftz-csp__ddl-item--sel' : ''}" data-dur="${d.id}" onclick="_ftzCspDDLPick(this)" role="option">${d.label}</div>`
+  ).join('');
 
   overlay.innerHTML = `
-    <div class="sp-card">
-      <div class="sp-card-header">
-        <div class="sp-card-title">Set a status</div>
-        <button class="sp-card-close" onclick="_closeStatusPicker()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="ftz-csp__card" role="dialog" aria-label="Set your status">
+      <div class="ftz-csp__head">
+        <div class="ftz-csp__title">Set your status</div>
+        <button class="ftz-csp__x" onclick="_closeStatusPicker()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
-      <div class="sp-preview-wrap">
-        ${previewCard}
-        ${status}
+      <div class="ftz-csp__preview">
+        ${previewFpp}
+        ${csBubble}
       </div>
-
-      <div class="sp-input-wrap">
-        <button class="sp-emoji-opener" id="sp-emoji-btn" onclick="_spOpenEmoji()" title="Add an emoji">
-          ${_spSelectedEmoji ? emojiDisplay : _CHATBAR_EMOJI_SVG}
-        </button>
-        <div class="sp-text-input" id="sp-text-input" contenteditable="true" role="textbox" data-placeholder="What's going on?" oninput="_spOnInput()"></div>
-        <button class="sp-clear-btn" id="sp-clear-btn" onclick="_spClearInput()" style="${curText ? '' : 'display:none'}">
-          <i class="fa-solid fa-circle-xmark"></i>
-        </button>
+      <div class="ftz-csp__composer">
+        <button class="ftz-csp__emoji" id="ftz-csp-emoji-btn" onclick="_ftzCspOpenEmoji()" title="Add an emoji">${emojiBtnInner}</button>
+        <div class="ftz-csp__input" id="ftz-csp-input" contenteditable="true" role="textbox" data-placeholder="What's going on?" oninput="_ftzCspOnInput()" onkeydown="_ftzCspOnKeydown(event)"></div>
+        <button class="ftz-csp__clear" id="ftz-csp-clear" onclick="_ftzCspClearInput()" style="${curText ? '' : 'display:none;'}" aria-label="Clear text"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
-      <div class="sp-dur-row">
-        <span class="sp-dur-label">Clear after</span>
-        <div class="sp-ddl" id="sp-ddl">
-          <button class="sp-ddl-btn" id="sp-ddl-btn" type="button" onclick="_spDDLToggle()" data-value="24h" aria-haspopup="listbox" aria-expanded="false">
-            <span class="sp-ddl-value">24 hours</span>
-            <i class="fa-solid fa-chevron-down sp-ddl-chev"></i>
+      <div class="ftz-csp__durrow">
+        <span class="ftz-csp__durlbl">Clear after</span>
+        <div class="ftz-csp__ddl" id="ftz-csp-ddl">
+          <button class="ftz-csp__ddl-btn" id="ftz-csp-ddl-btn" type="button" onclick="_ftzCspDDLToggle()" data-value="24h" aria-haspopup="listbox" aria-expanded="false">
+            <span id="ftz-csp-ddl-val">24 hours</span>
+            <i class="fa-solid fa-chevron-down ftz-csp__ddl-chev"></i>
           </button>
-          <div class="sp-ddl-menu" id="sp-ddl-menu" role="listbox">${durItemsHTML}</div>
+          <div class="ftz-csp__ddl-menu" id="ftz-csp-ddl-menu" role="listbox">${ddlItems}</div>
         </div>
       </div>
-      <div class="sp-custom-dur" id="sp-custom-dur-box" style="display:none;">
-        <input type="number" id="sp-custom-dur-amt" class="sp-custom-dur-amt" min="1" max="720" value="2" placeholder="Amount">
-        <select id="sp-custom-dur-unit" class="sp-custom-dur-unit">
+      <div class="ftz-csp__custom" id="ftz-csp-custom-box">
+        <input type="number" id="ftz-csp-custom-amt" class="ftz-csp__custom-amt" min="1" max="720" value="2" placeholder="Amount">
+        <select id="ftz-csp-custom-unit" class="ftz-csp__custom-unit">
           <option value="min">minutes</option>
           <option value="h" selected>hours</option>
           <option value="d">days</option>
         </select>
       </div>
-
-      <div class="sp-actions">
-        ${curText ? '<button class="sp-btn sp-btn--ghost" onclick="clearCustomStatus();_closeStatusPicker()">Clear Status</button>' : ''}
-        <button class="sp-btn sp-btn--save" onclick="_spSave()">Save</button>
+      <div class="ftz-csp__actions">
+        ${curText || _ftzCspSelectedEmoji ? '<button class="ftz-csp__btn ftz-csp__btn--ghost" onclick="clearCustomStatus();_closeStatusPicker()">Clear Status</button>' : ''}
+        <button class="ftz-csp__btn ftz-csp__btn--save" onclick="_ftzCspSave()">Save</button>
       </div>
     </div>`;
-
   document.body.appendChild(overlay);
-  // Rich contenteditable input + :name: autocomplete popup (same
-  // infrastructure the chatbar uses), so the status text field feels
-  // exactly like typing in chat: inline emoji rendering, custom emoji
-  // tokens, and a Discord-style shortcut popup on ':'.
+
+  // Rich contenteditable + shared :name: autocomplete (same infra chatbar uses)
   setTimeout(() => {
-    const el = document.getElementById('sp-text-input');
+    const el = document.getElementById('ftz-csp-input');
     if (!el) return;
     _initRichInput(el);
     if (curText) el.value = curText;
-    try { setupEmojiAutocomplete('sp-text-input'); } catch(_) {}
+    try { setupEmojiAutocomplete('ftz-csp-input'); } catch (_) {}
     el.focus();
   }, 30);
 }
 
-function _spOpenEmoji() {
-  const panel = document.getElementById('emoji-picker');
-  const btn = document.getElementById('sp-emoji-btn');
-  if (!btn || !panel) return;
-
-  if (panel.classList.contains('show')) {
-    panel.classList.remove('show');
-    window._statusEmojiInsertOverride = false;
-    if (window._emojiInsertCallback === window._spEmojiCallback) {
-      window._emojiInsertCallback = window._spEmojiOrigCallback || null;
-    }
-    return;
-  }
-
-  document.getElementById('giphy-picker')?.remove();
-  document.getElementById('sticker-picker')?.remove();
-  document.getElementById('botcmd-picker')?.remove();
-
-  window._spEmojiOrigCallback = window._emojiInsertCallback;
-  window._spEmojiCallback = (emoji, custom) => {
-    _spSelectedEmoji = emoji;
-    _spSelectedEmojiUrl = custom?.url || '';
-    // Choose the image URL: custom emoji if provided, else Twemoji CDN
-    const src = _spSelectedEmojiUrl || emojiToTwemojiUrl(emoji);
-    const b = document.getElementById('sp-emoji-btn');
-    if (b) {
-      b.innerHTML = `<img src="${src}" style="width:20px;height:20px;object-fit:contain;" onerror="this.parentElement.textContent='${escapeHTML(emoji)}'">`;
-    }
-    // Live-update the speech-bubble preview emoji
-    const pe = document.getElementById('sp-preview-cs-emoji');
-    const wrap = document.getElementById('sp-preview-cs');
-    if (pe) pe.innerHTML = `<img src="${src}" style="width:14px;height:14px;flex-shrink:0;object-fit:contain;" onerror="this.replaceWith(document.createTextNode('${escapeHTML(emoji)}'))">`;
-    if (wrap) wrap.classList.remove('sp-preview-cs--empty');
-    window._statusEmojiInsertOverride = false;
-    window._emojiInsertCallback = window._spEmojiOrigCallback || null;
-    panel.classList.remove('show');
-  };
-  window._statusEmojiInsertOverride = true;
-  window._emojiInsertCallback = window._spEmojiCallback;
-
-  const rect = btn.getBoundingClientRect();
-  const PW = Math.min(448, window.innerWidth - 16);
-  const PH = 440;
-  let left = Math.max(8, rect.left - PW + rect.width);
-  left = Math.min(left, window.innerWidth - PW - 8);
-  let top = (rect.top - 8 > PH) ? Math.max(8, rect.top - PH - 8) : Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
-
-  buildEmojiPicker();
-  panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;z-index:11000;display:flex;`;
-  panel.classList.add('show');
-  setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
+function _ftzCspOnInput() {
+  const inp = document.getElementById('ftz-csp-input');
+  const clr = document.getElementById('ftz-csp-clear');
+  const v = inp?.value || '';
+  if (clr) clr.style.display = v ? '' : 'none';
+  // Live update the speech-bubble preview
+  const txt = document.getElementById('ftz-csp-preview-text');
+  const wrap = document.getElementById('ftz-csp-preview');
+  if (txt) txt.textContent = v || "What's on your mind?";
+  if (wrap) wrap.classList.toggle('ftz-csp__csbubble--empty', !v && !_ftzCspSelectedEmoji);
 }
 
-function _spOnInput() {
-  const inp = document.getElementById('sp-text-input');
-  const clear = document.getElementById('sp-clear-btn');
-  if (clear) clear.style.display = inp?.value ? '' : 'none';
-  // Live-update the speech-bubble preview
-  const textEl = document.getElementById('sp-preview-cs-text');
-  const wrap = document.getElementById('sp-preview-cs');
-  if (textEl && wrap) {
-    const v = inp?.value || '';
-    textEl.textContent = v || "What's on your mind?";
-    const empty = !v && !_spSelectedEmoji;
-    wrap.classList.toggle('sp-preview-cs--empty', empty);
+function _ftzCspOnKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    const ac = document.getElementById('emoji-ac-panel');
+    if (ac && ac.classList.contains('show')) return;
+    const sp = document.getElementById('smart-suggest-panel');
+    if (sp && sp.style.display !== 'none') return;
+    e.preventDefault();
+    _ftzCspSave();
   }
 }
 
-function _spClearInput() {
-  const inp = document.getElementById('sp-text-input');
-  const clear = document.getElementById('sp-clear-btn');
+function _ftzCspClearInput() {
+  const inp = document.getElementById('ftz-csp-input');
   if (inp) inp.value = '';
-  if (clear) clear.style.display = 'none';
-  _spOnInput();
+  _ftzCspOnInput();
   inp?.focus();
 }
 
-function _spPickDur(el) {
-  // legacy button-row callback (now unused; keep as a shim)
-  document.querySelectorAll('.sp-dur').forEach(b => b.classList.remove('sp-dur--active'));
-  if (el?.classList) el.classList.add('sp-dur--active');
-  const box = document.getElementById('sp-custom-dur-box');
-  if (box) box.style.display = (el?.dataset?.dur === 'custom') ? 'flex' : 'none';
-}
-function _spOnDurChange(sel) {
-  const box = document.getElementById('sp-custom-dur-box');
-  if (box) box.style.display = sel.value === 'custom' ? 'flex' : 'none';
-}
-function _spDDLToggle() {
-  const menu = document.getElementById('sp-ddl-menu');
-  const btn = document.getElementById('sp-ddl-btn');
+function _ftzCspDDLToggle() {
+  const menu = document.getElementById('ftz-csp-ddl-menu');
+  const btn = document.getElementById('ftz-csp-ddl-btn');
   if (!menu || !btn) return;
-  const open = menu.classList.toggle('sp-ddl-menu--open');
+  const open = menu.classList.toggle('ftz-csp__ddl-menu--open');
   btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  // Click-outside dismiss — installed once per open.
   if (open) {
     const onDoc = (e) => {
       if (!btn.contains(e.target) && !menu.contains(e.target)) {
-        menu.classList.remove('sp-ddl-menu--open');
+        menu.classList.remove('ftz-csp__ddl-menu--open');
         btn.setAttribute('aria-expanded', 'false');
         document.removeEventListener('mousedown', onDoc, true);
       }
@@ -38049,36 +37978,86 @@ function _spDDLToggle() {
     document.addEventListener('mousedown', onDoc, true);
   }
 }
-function _spDDLPick(el) {
-  const menu = document.getElementById('sp-ddl-menu');
-  const btn = document.getElementById('sp-ddl-btn');
-  const valEl = btn?.querySelector('.sp-ddl-value');
+
+function _ftzCspDDLPick(el) {
+  const menu = document.getElementById('ftz-csp-ddl-menu');
+  const btn = document.getElementById('ftz-csp-ddl-btn');
+  const val = document.getElementById('ftz-csp-ddl-val');
   if (!menu || !btn) return;
-  menu.querySelectorAll('.sp-ddl-item').forEach(i => i.classList.remove('sp-ddl-item--sel'));
-  el.classList.add('sp-ddl-item--sel');
+  menu.querySelectorAll('.ftz-csp__ddl-item').forEach(i => i.classList.remove('ftz-csp__ddl-item--sel'));
+  el.classList.add('ftz-csp__ddl-item--sel');
   btn.dataset.value = el.dataset.dur;
-  if (valEl) valEl.textContent = el.textContent;
-  menu.classList.remove('sp-ddl-menu--open');
+  if (val) val.textContent = el.textContent;
+  menu.classList.remove('ftz-csp__ddl-menu--open');
   btn.setAttribute('aria-expanded', 'false');
-  const box = document.getElementById('sp-custom-dur-box');
+  const box = document.getElementById('ftz-csp-custom-box');
   if (box) box.style.display = el.dataset.dur === 'custom' ? 'flex' : 'none';
 }
 
-function _spSave() {
-  const text = (document.getElementById('sp-text-input')?.value || '').trim();
-  const emoji = _spSelectedEmoji || '';
-  if (!text && !emoji) { toast('Add an emoji or some text!', 'error'); return; }
-  const ddlBtn = document.getElementById('sp-ddl-btn');
-  const dur = ddlBtn?.dataset?.value
-    || document.getElementById('sp-dur-select')?.value
-    || document.querySelector('.sp-dur--active')?.dataset?.dur
-    || '24h';
+function _ftzCspOpenEmoji() {
+  const panel = document.getElementById('emoji-picker');
+  const btn = document.getElementById('ftz-csp-emoji-btn');
+  if (!btn || !panel) return;
+  if (panel.classList.contains('show')) {
+    panel.classList.remove('show');
+    window._statusEmojiInsertOverride = false;
+    if (window._emojiInsertCallback === window._ftzCspEmojiCallback) {
+      window._emojiInsertCallback = window._ftzCspEmojiOrig || null;
+    }
+    return;
+  }
+  document.getElementById('giphy-picker')?.remove();
+  document.getElementById('sticker-picker')?.remove();
+  document.getElementById('botcmd-picker')?.remove();
 
-  CU.customStatus = { emoji, emojiUrl: _spSelectedEmojiUrl || undefined, text, createdAt: Date.now() };
+  window._ftzCspEmojiOrig = window._emojiInsertCallback;
+  window._ftzCspEmojiCallback = (emoji, custom) => {
+    _ftzCspSelectedEmoji = emoji;
+    _ftzCspSelectedEmojiUrl = custom?.url || '';
+    const src = _ftzCspSelectedEmojiUrl || emojiToTwemojiUrl(emoji);
+    const b = document.getElementById('ftz-csp-emoji-btn');
+    if (b) b.innerHTML = `<img src="${src}" onerror="this.parentElement.textContent='${escapeHTML(emoji)}'">`;
+    const pe = document.getElementById('ftz-csp-preview-emoji');
+    const wrap = document.getElementById('ftz-csp-preview');
+    if (pe) pe.innerHTML = `<img src="${src}" style="width:14px;height:14px;object-fit:contain;" onerror="this.replaceWith(document.createTextNode('${escapeHTML(emoji)}'))">`;
+    if (wrap) wrap.classList.remove('ftz-csp__csbubble--empty');
+    window._statusEmojiInsertOverride = false;
+    window._emojiInsertCallback = window._ftzCspEmojiOrig || null;
+    panel.classList.remove('show');
+  };
+  window._statusEmojiInsertOverride = true;
+  window._emojiInsertCallback = window._ftzCspEmojiCallback;
+
+  const rect = btn.getBoundingClientRect();
+  const PW = Math.min(448, window.innerWidth - 16);
+  const PH = 440;
+  let left = Math.max(8, rect.left - PW + rect.width);
+  left = Math.min(left, window.innerWidth - PW - 8);
+  let top = (rect.top - 8 > PH) ? Math.max(8, rect.top - PH - 8) : Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
+  buildEmojiPicker();
+  panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;z-index:11000;display:flex;`;
+  panel.classList.add('show');
+  setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
+}
+
+function _ftzCspSave() {
+  const inp = document.getElementById('ftz-csp-input');
+  const text = (inp?.value || '').trim();
+  const emoji = _ftzCspSelectedEmoji || '';
+  if (!text && !emoji) { toast('Add an emoji or some text!', 'error'); return; }
+  const dur = document.getElementById('ftz-csp-ddl-btn')?.dataset?.value || '24h';
+
+  CU.customStatus = {
+    emoji,
+    emojiUrl: _ftzCspSelectedEmojiUrl || undefined,
+    text,
+    createdAt: Date.now(),
+  };
+
   let ms = 0;
   if (dur === 'custom') {
-    const amt = parseInt(document.getElementById('sp-custom-dur-amt')?.value, 10);
-    const unit = document.getElementById('sp-custom-dur-unit')?.value || 'h';
+    const amt = parseInt(document.getElementById('ftz-csp-custom-amt')?.value, 10);
+    const unit = document.getElementById('ftz-csp-custom-unit')?.value || 'h';
     if (!amt || amt < 1) { toast('Enter a valid duration', 'error'); return; }
     const perUnit = { min: 60000, h: 3600000, d: 86400000 }[unit] || 3600000;
     ms = amt * perUnit;
@@ -38091,16 +38070,16 @@ function _spSave() {
     window._statusClearTimer = setTimeout(() => {
       if (CU.customStatus?.createdAt === stamp) {
         CU.customStatus = null;
-        saveUser();
+        saveUser().catch(() => {});
         toast('Status cleared', 'info');
       }
     }, ms);
   }
-  saveUser().catch(e => console.warn('[Status Save] Failed:', e?.message));
+  saveUser().catch(e => console.warn('[Status] save failed:', e?.message));
   _closeStatusPicker();
   toast('Status updated!', 'success');
-  try { updateUserbar(); } catch(_) {}
-  try { updateProfilePreview(); } catch(_) {}
+  try { updateUserbar(); } catch (_) {}
+  try { updateProfilePreview?.(); } catch (_) {}
 }
 
 function pickStatusMode(mode, el) {
@@ -48812,172 +48791,181 @@ function _fppRandomCSPrompt() {
   return _FPP_CS_PROMPTS[Math.floor(Math.random() * _FPP_CS_PROMPTS.length)];
 }
 // plus-circle icon — FontAwesome
-const _FPP_CS_PLUS_SVG = '<i class="fa-solid fa-plus" style="font-size:11px;"></i>';
 
-// Resolve the image URL for a custom-status emoji. Custom emojis stored
-// as :name: with an emojiUrl use that URL directly (Fortized guide or
-// bastion emoji). Unicode emojis fall back to Twemoji CDN. Returns ''
-// for empty. Handles legacy status entries with no emojiUrl.
-function _csEmojiSrc(cs) {
-  if (!cs?.emoji) return '';
-  if (cs.emojiUrl) return cs.emojiUrl;
-  return emojiToTwemojiUrl(cs.emoji);
-}
 
+// FontAwesome + icon used for the empty-state prompt inside the status
+// bubble. Kept separate so callers can reuse it as-is.
+const _FTZ_CS_PLUS_SVG = '<i class="fa-solid fa-plus" style="font-size:11px;"></i>';
+
+// ══════════════════════════════════════════════════════════════
+// STATUS BUBBLE + INTERACTIVE ACTIONS
+// ══════════════════════════════════════════════════════════════
+// Public: _fppCSBubbleHTML(user, isOwn) — the existing name is kept
+// because it's called from FPP popovers, settings preview, message
+// author blocks, etc. Only the emitted markup + inner action classes
+// are new (.ftz-csa). The bubble's own classnames stay .fpp__cs-*
+// so the restored bubble CSS keeps applying everywhere.
+// ══════════════════════════════════════════════════════════════
 function _fppCSBubbleHTML(u, isOwn) {
   const cs = u.customStatus;
-  if (cs?.text) {
+  const uname = escapeHTML(u.username || '');
+  if (cs?.text || cs?.emoji) {
+    const src = (typeof _csEmojiSrc === 'function')
+      ? _csEmojiSrc(cs)
+      : (cs.emoji ? emojiToTwemojiUrl(cs.emoji) : '');
     const emojiHTML = cs.emoji
-      ? `<span class="fpp__cs-emoji"><img src="${_csEmojiSrc(cs)}" alt="" onerror="this.outerHTML='${escapeHTML(cs.emoji).replace(/'/g, "\\'")}'"></span>`
+      ? `<span class="fpp__cs-emoji"><img src="${src}" alt="" onerror="this.outerHTML='${escapeHTML(cs.emoji).replace(/'/g, "\\'")}'"></span>`
       : '';
-    // Floating controls — appear outside the bubble on hover
-    const floatingControls = isOwn
-      ? `<span class="fpp__cs-floating">
-           <button class="fpp__cs-float-btn fpp__cs-float-edit" data-tip="Edit" onclick="event.stopPropagation();openStatusPicker()"><i class="fa-solid fa-pen"></i></button>
-           <button class="fpp__cs-float-btn fpp__cs-float-delete" data-tip="Clear" onclick="event.stopPropagation();clearCustomStatus()"><i class="fa-solid fa-trash"></i></button>
-         </span>`
-      : `<span class="fpp__cs-floating"><button class="fpp__cs-float-btn fpp__cs-float-reply" data-tip="Reply" onclick="event.stopPropagation();replyToStatus('${escapeHTML(u.username)}')"><i class="fa-solid fa-reply"></i></button></span>`;
-    return `<div class="fpp__cs-wrap profile-custom-status" data-for="${escapeHTML(u.username)}"${isOwn ? ' onclick="openStatusPicker()"' : ''}><div class="fpp__cs-bubble">${emojiHTML}<span class="fpp__cs-text">${escapeHTML(cs.text).slice(0, 60)}</span></div>${floatingControls}</div>`;
+    const textHTML = cs.text
+      ? `<span class="fpp__cs-text">${escapeHTML(cs.text).slice(0, 60)}</span>`
+      : '';
+    const actions = isOwn
+      ? `<div class="ftz-csa">
+           <button class="ftz-csa__btn ftz-csa__btn--edit" data-tip="Edit" onclick="event.stopPropagation();openStatusPicker()"><i class="fa-solid fa-pen"></i></button>
+           <button class="ftz-csa__btn ftz-csa__btn--clear" data-tip="Clear" onclick="event.stopPropagation();clearCustomStatus()"><i class="fa-solid fa-trash"></i></button>
+         </div>`
+      : `<div class="ftz-csa">
+           <button class="ftz-csa__btn ftz-csa__btn--reply" data-tip="Reply" onclick="event.stopPropagation();replyToStatus('${uname}')"><i class="fa-solid fa-reply"></i></button>
+         </div>`;
+    return `<div class="fpp__cs-wrap profile-custom-status" data-for="${uname}"${isOwn ? ' onclick="openStatusPicker()"' : ''}>
+      <div class="fpp__cs-bubble">${emojiHTML}${textHTML}</div>
+      ${actions}
+    </div>`;
   }
   if (isOwn) {
-    return `<div class="fpp__cs-wrap fpp__cs-wrap--empty profile-custom-status" data-for="${escapeHTML(u.username)}" onclick="openStatusPicker()"><div class="fpp__cs-bubble fpp__cs-bubble--empty"><span class="fpp__cs-plus">${_FPP_CS_PLUS_SVG}</span><span class="fpp__cs-text">${escapeHTML(_fppRandomCSPrompt())}</span></div></div>`;
+    const prompt = (typeof _fppRandomCSPrompt === 'function') ? _fppRandomCSPrompt() : 'Set a status';
+    return `<div class="fpp__cs-wrap fpp__cs-wrap--empty profile-custom-status" data-for="${uname}" onclick="openStatusPicker()">
+      <div class="fpp__cs-bubble fpp__cs-bubble--empty">
+        <span class="fpp__cs-plus">${_FTZ_CS_PLUS_SVG}</span>
+        <span class="fpp__cs-text">${escapeHTML(prompt)}</span>
+      </div>
+    </div>`;
   }
   return '';
 }
 
-// Reply to a user's custom status — opens a mini modal to compose a reply
+// ══════════════════════════════════════════════════════════════
+// REPLY-TO-STATUS POPUP (ftz-csr) — ground-up rewrite
+// Public API: replyToStatus(username)
+// ══════════════════════════════════════════════════════════════
 function replyToStatus(username) {
   if (!username) return;
-  // Fetch user data to show custom status
   FortizedSocial.getUserByName(username).then(u => {
-    if (!u) { toast("Could not find that user.", 'error'); return; }
-    _showStatusReplyModal(u);
-  }).catch(() => toast("Could not load user data.", 'error'));
+    if (!u) { toast('Could not find that user.', 'error'); return; }
+    _ftzCsrOpen(u);
+  }).catch(() => toast('Could not load user data.', 'error'));
 }
 
 function _closeStatusReplyModal() {
-  const el = document.getElementById('ftz-status-reply');
+  const el = document.getElementById('ftz-csr-overlay');
   if (el) el.remove();
   const ep = document.getElementById('emoji-picker');
   if (ep) ep.classList.remove('show');
   window._statusEmojiInsertOverride = false;
-  if (window._emojiInsertCallback === window._srEmojiCallback) {
-    window._emojiInsertCallback = window._srEmojiOrigCallback || null;
+  if (window._emojiInsertCallback === window._ftzCsrEmojiCallback) {
+    window._emojiInsertCallback = window._ftzCsrEmojiOrig || null;
   }
 }
 
-function _showStatusReplyModal(targetUser) {
+function _ftzCsrOpen(targetUser) {
   _closeStatusReplyModal();
   const overlay = document.createElement('div');
-  overlay.id = 'ftz-status-reply';
-  overlay.className = 'sr-overlay';
+  overlay.id = 'ftz-csr-overlay';
+  overlay.className = 'ftz-csr__overlay';
+  overlay.dataset.target = targetUser.username || '';
   overlay.onclick = e => { if (e.target === overlay) _closeStatusReplyModal(); };
 
   const cn = escapeHTML(targetUser.displayName || targetUser.username);
-  const un = escapeHTML(targetUser.username);
   const avSrc = targetUser.pfp || '/default%20pfp2.png';
   const cs = targetUser.customStatus || {};
   const csEmoji = cs.emoji || '';
   const csText = cs.text || '';
+  const src = (typeof _csEmojiSrc === 'function')
+    ? _csEmojiSrc(cs)
+    : (csEmoji ? emojiToTwemojiUrl(csEmoji) : '');
+  const quoteBody = (csText || csEmoji)
+    ? `${csEmoji ? `<span class="ftz-csr__quote-emoji"><img src="${src}" onerror="this.outerHTML='${escapeHTML(csEmoji)}'"></span>` : ''}${csText ? `<span class="ftz-csr__quote-text">${escapeHTML(csText)}</span>` : ''}`
+    : `<span class="ftz-csr__quote-text ftz-csr__quote-text--empty">${cn} has no custom status.</span>`;
 
-  const quoteBody = csText
-    ? `${csEmoji ? `<span class="sr-quote-emoji"><img src="${_csEmojiSrc(cs)}" onerror="this.outerHTML='${escapeHTML(csEmoji)}'"></span>` : ''}<span class="sr-quote-text">${escapeHTML(csText)}</span>`
-    : `<span class="sr-quote-text sr-quote-text--empty">${cn} has no custom status.</span>`;
-
-  overlay.dataset.targetUsername = targetUser.username || '';
   overlay.innerHTML = `
-    <div class="sr-card">
-      <button class="sr-close" onclick="_closeStatusReplyModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-      <div class="sr-heading">
-        <div class="sr-heading-label">Replying to a status</div>
-      </div>
-      <div class="sr-quote">
-        <div class="sr-quote-av"><img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20pfp2.png'"></div>
-        <div class="sr-quote-body">
-          <div class="sr-quote-name">${cn}</div>
-          <div class="sr-quote-bubble">${quoteBody}</div>
+    <div class="ftz-csr__card" role="dialog" aria-label="Reply to status">
+      <button class="ftz-csr__x" onclick="_closeStatusReplyModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      <div class="ftz-csr__lbl">Replying to a status</div>
+      <div class="ftz-csr__quote">
+        <div class="ftz-csr__quote-av"><img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20pfp2.png'"></div>
+        <div class="ftz-csr__quote-body">
+          <div class="ftz-csr__quote-name">${cn}</div>
+          <div class="ftz-csr__quote-bubble">${quoteBody}</div>
         </div>
       </div>
-      <div class="sr-input-wrap">
-        <button class="sr-emoji-btn" id="sr-emoji-btn" onclick="_srOpenEmoji()" title="Add an emoji">${_CHATBAR_EMOJI_SVG}</button>
-        <div class="sr-text-input" id="sr-text-input" contenteditable="true" role="textbox" data-placeholder="Say something to ${cn}…" oninput="_srOnInput()" onkeydown="_srOnKeydown(event)"></div>
-        <button class="sr-send-btn" id="sr-send-btn" onclick="_srSend()" disabled aria-label="Send"><i class="fa-solid fa-paper-plane"></i></button>
+      <div class="ftz-csr__composer">
+        <button class="ftz-csr__emoji" id="ftz-csr-emoji-btn" onclick="_ftzCsrOpenEmoji()" title="Add an emoji">${typeof _CHATBAR_EMOJI_SVG !== 'undefined' ? _CHATBAR_EMOJI_SVG : '<i class="fa-regular fa-face-smile"></i>'}</button>
+        <div class="ftz-csr__input" id="ftz-csr-input" contenteditable="true" role="textbox" data-placeholder="Say something to ${cn}…" oninput="_ftzCsrOnInput()" onkeydown="_ftzCsrOnKeydown(event)"></div>
+        <button class="ftz-csr__send" id="ftz-csr-send" onclick="_ftzCsrSend()" disabled aria-label="Send"><i class="fa-solid fa-paper-plane"></i></button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  // Rich input: :name: → inline emoji image, unicode → twemoji, paste-safe.
-  // setupEmojiAutocomplete wires the Discord-style :shortcut: popup +
-  // auto-completes finished :name: patterns (same code the chatbar uses).
+
   setTimeout(() => {
-    const el = document.getElementById('sr-text-input');
+    const el = document.getElementById('ftz-csr-input');
     if (!el) return;
     _initRichInput(el);
-    try { setupEmojiAutocomplete('sr-text-input'); } catch(_) {}
+    try { setupEmojiAutocomplete('ftz-csr-input'); } catch (_) {}
     el.focus();
   }, 30);
 }
 
-function _srOnInput() {
-  const inp = document.getElementById('sr-text-input');
-  const btn = document.getElementById('sr-send-btn');
+function _ftzCsrOnInput() {
+  const inp = document.getElementById('ftz-csr-input');
+  const btn = document.getElementById('ftz-csr-send');
   if (btn) btn.disabled = !(inp?.value?.trim());
 }
-function _srOnKeydown(e) {
-  // Enter → send; Shift+Enter → newline (handled by _initRichInput).
+
+function _ftzCsrOnKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
-    // Autocomplete panel takes priority — let its Enter handler pick a suggestion.
     const ac = document.getElementById('emoji-ac-panel');
     if (ac && ac.classList.contains('show')) return;
     const sp = document.getElementById('smart-suggest-panel');
     if (sp && sp.style.display !== 'none') return;
     e.preventDefault();
-    _srSend();
+    _ftzCsrSend();
   }
 }
 
-function _srOpenEmoji() {
+function _ftzCsrOpenEmoji() {
   const panel = document.getElementById('emoji-picker');
-  const btn = document.getElementById('sr-emoji-btn');
+  const btn = document.getElementById('ftz-csr-emoji-btn');
   if (!btn || !panel) return;
-
   if (panel.classList.contains('show')) {
     panel.classList.remove('show');
     window._statusEmojiInsertOverride = false;
-    if (window._emojiInsertCallback === window._srEmojiCallback) {
-      window._emojiInsertCallback = window._srEmojiOrigCallback || null;
+    if (window._emojiInsertCallback === window._ftzCsrEmojiCallback) {
+      window._emojiInsertCallback = window._ftzCsrEmojiOrig || null;
     }
     return;
   }
-
   document.getElementById('giphy-picker')?.remove();
   document.getElementById('sticker-picker')?.remove();
   document.getElementById('botcmd-picker')?.remove();
-
-  window._srEmojiOrigCallback = window._emojiInsertCallback;
-  window._srEmojiCallback = (emoji, custom) => {
-    const inp = document.getElementById('sr-text-input');
+  window._ftzCsrEmojiOrig = window._emojiInsertCallback;
+  window._ftzCsrEmojiCallback = (emoji, custom) => {
+    const inp = document.getElementById('ftz-csr-input');
     if (inp) {
-      // Custom emoji (Fortized guide / bastion / radiance) → insert at
-      // caret using the same helper the chatbar uses so the token
-      // renders as an inline <img>. Unicode → append the char (rich
-      // input's value setter will re-render as twemoji on next input).
+      _initRichInput(inp);
       if (custom?.name) {
-        _initRichInput(inp);
         _richInsertEmojiAtCaret(inp, custom.name);
       } else {
-        _initRichInput(inp);
-        const cur = inp.value || '';
-        inp.value = cur + emoji;
+        inp.value = (inp.value || '') + emoji;
       }
       inp.dispatchEvent(new Event('input', { bubbles: true }));
       inp.focus();
     }
     window._statusEmojiInsertOverride = false;
-    window._emojiInsertCallback = window._srEmojiOrigCallback || null;
+    window._emojiInsertCallback = window._ftzCsrEmojiOrig || null;
     panel.classList.remove('show');
   };
   window._statusEmojiInsertOverride = true;
-  window._emojiInsertCallback = window._srEmojiCallback;
+  window._emojiInsertCallback = window._ftzCsrEmojiCallback;
 
   const rect = btn.getBoundingClientRect();
   const PW = Math.min(448, window.innerWidth - 16);
@@ -48985,66 +48973,54 @@ function _srOpenEmoji() {
   let left = Math.max(8, rect.left - PW + rect.width);
   left = Math.min(left, window.innerWidth - PW - 8);
   let top = (rect.top - 8 > PH) ? Math.max(8, rect.top - PH - 8) : Math.min(rect.bottom + 8, window.innerHeight - PH - 8);
-
   buildEmojiPicker();
   panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;z-index:11000;display:flex;`;
   panel.classList.add('show');
   setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
 }
 
-async function _srSend() {
-  const inp = document.getElementById('sr-text-input');
-  if (!inp) return;
-  // Rich-input .value shim returns plain text with :name: tokens for
-  // custom emojis and unicode chars for regular emojis — same shape a
-  // chatbar send would produce.
-  const text = (inp.value || '').trim();
+async function _ftzCsrSend() {
+  const inp = document.getElementById('ftz-csr-input');
+  const text = (inp?.value || '').trim();
   if (!text) return;
-  const overlay = document.getElementById('ftz-status-reply');
-  const targetName = overlay?.dataset?.targetUsername || '';
-  if (!targetName) { toast("Could not determine target.", 'error'); return; }
+  const overlay = document.getElementById('ftz-csr-overlay');
+  const targetName = overlay?.dataset?.target || '';
+  if (!targetName) { toast('Could not determine target.', 'error'); return; }
 
-  const sendBtn = document.getElementById('sr-send-btn');
+  const sendBtn = document.getElementById('ftz-csr-send');
   if (sendBtn) sendBtn.disabled = true;
 
   try {
-    // Snapshot target's current status so the reply reference the
-    // recipient sees carries context ("status reply · working on X").
+    // Snapshot target's status for the reply reference
     let csPreview = 'custom status';
     try {
       const target = await FortizedSocial.getUserByName(targetName);
       const cs = target?.customStatus || {};
       const composed = ((cs.emoji || '') + ' ' + (cs.text || '')).trim();
       if (composed) csPreview = composed;
-    } catch(_) { /* fall through with default */ }
+    } catch (_) {}
 
     const msgId = Date.now().toString(36) + Math.random().toString(36).slice(2);
     const replyTo = { id: 'status-reply', from: targetName, text: csPreview };
-    const sendOpts = { id: msgId, replyTo };
-
-    // Send directly through the real DM pipeline — persists in Supabase
-    // and returns the canonical stored message. No UI navigation / auto-
-    // click fragility. Recipients receive via the socket broadcast below.
     const savedMsg = await FortizedSocial.sendDMMessage(
-      CU.username, targetName, text, sendOpts
+      CU.username, targetName, text, { id: msgId, replyTo }
     );
     const committedMsg = savedMsg || {
       id: msgId, from: CU.username, text,
-      time: new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       timestamp: new Date().toISOString(),
       replyTo,
     };
-    // Broadcast so the target (and any other tabs/devices) sees it live.
     try {
       FortizedSocial.socketEmit('message:send', {
         type: 'dm', id1: CU.username, id2: targetName, message: committedMsg
       });
-    } catch(_) {}
+    } catch (_) {}
 
     _closeStatusReplyModal();
     toast('Reply sent', 'success');
   } catch (e) {
-    console.error('[srSend]', e);
+    console.error('[csrSend]', e);
     if (sendBtn) sendBtn.disabled = false;
     toast('Failed to send reply', 'error');
   }

@@ -4115,7 +4115,6 @@ function updateUserbar() {
   // Status sync handled by FtzStatus.set() and presence system — no redundant broadcast here
   _updateUserbarActivity();
   updateOnyxDisplay();
-  refreshCustomStatusBubble();
   // Sync rail userbar (full userbar in fortized sidebar)
   const railUbAvatar = document.getElementById('rail-ub-avatar');
   if (railUbAvatar) {
@@ -37732,23 +37731,6 @@ async function handleChatSend(context, chIdx) {
 // ═══════════════════════════════════════════════════════════
 // CUSTOM STATUS BUBBLES
 // ═══════════════════════════════════════════════════════════
-function refreshCustomStatusBubble() {
-  const el = document.getElementById('ua-custom-status');
-  if (!el) return;
-  const cs = CU && CU.customStatus;
-  if (cs && cs.text) {
-    const emojiUrl = cs.emoji ? emojiToTwemojiUrl(cs.emoji) : '';
-    const emojiHTML = emojiUrl
-      ? `<span class="csb-emoji"><img src="${emojiUrl}" style="width:13px;height:13px;object-fit:contain;" onerror="this.outerHTML='${escapeHTML(cs.emoji)}'"></span>`
-      : (cs.emoji ? `<span class="csb-emoji">${escapeHTML(cs.emoji)}</span>` : '');
-    el.innerHTML = emojiHTML + `<span class="csb-text">${escapeHTML(cs.text)}</span>`;
-    if (!el.classList.contains('active')) el.classList.add('active');
-  } else {
-    el.innerHTML = '';
-    el.classList.remove('active');
-  }
-}
-
 // Also update all custom status displays with twemoji rendering
 function _renderStatusEmoji(emoji) {
   if (!emoji) return '';
@@ -37935,8 +37917,8 @@ function _spPickDur(el) {
 
 function _spSave() {
   const text = (document.getElementById('sp-text-input')?.value || '').trim();
-  if (!text) { toast('Add some text!', 'error'); return; }
   const emoji = _spSelectedEmoji || '';
+  if (!text && !emoji) { toast('Add an emoji or some text!', 'error'); return; }
   const durEl = document.querySelector('.sp-dur--active');
   const dur = durEl?.dataset?.dur || '24h';
 

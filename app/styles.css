@@ -11316,57 +11316,111 @@ select:focus-visible {
    ascending from the avatar so the text reads as "spoken" by the
    user (comic speech-bubble convention). Less pill-round than
    before (10px corners) so it reads as a bubble rather than a tag. */
-/* ── Custom-status bubble (Fortized-native) ───────────────────────
-   Used everywhere a user's custom status renders: in FPP popovers,
-   profile card panels, alongside the userbar avatar, etc. Sharp
-   sibling design to the picker/reply cards (same panel/border/token
-   language), with a compact speech-bubble tail. */
+/* Custom-status bubble — speech-bubble style. Sits vertically
+   centred on the banner/body boundary line, with two trailing dots
+   ascending from the avatar so the text reads as "spoken" by the
+   user (comic speech-bubble convention). Less pill-round than
+   before (10px corners) so it reads as a bubble rather than a tag. */
 .fpp__cs-bubble{
   position:relative;
+  /* Vertically centred on the avatar by .fpp__av-row's align-items:
+     center. Trail dots descend down-left from the bubble's bottom
+     edge toward the avatar's lower-right, so the bubble reads as
+     "spoken by the avatar" rather than the username. */
   display:inline-flex; align-items:center; gap:7px;
-  max-width:220px;
-  padding:6px 12px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)),
-    var(--panel2);
+  max-width:180px;
+  padding:6px 11px;
+  background:var(--panel2);
+  /* Neutral grey-dark border — used to be Main-tinted, which read
+     as a yellow halo on bright themes. Keeping the bubble neutral
+     so the avatar + card body do the colour-carrying. */
   border:1px solid var(--border);
-  border-radius:11px;
-  font-family:var(--font-ui);
+  border-radius:10px;
   font-size:11.5px; font-weight:500;
   color:var(--text);
   box-shadow:
-    0 6px 18px rgba(0,0,0,.42),
+    0 8px 22px rgba(0,0,0,.45),
     inset 0 1px 0 rgba(255,255,255,.04);
   cursor:pointer;
   transition:background .15s, border-color .15s, transform .15s, box-shadow .15s;
 }
+/* Trail dots rise UP-LEFT from the bubble toward the avatar.
+   Bubble now sits at the avatar's lower edge (align-items:flex-end
+   on the row), so the upper portion of the avatar is clear and the
+   dots have somewhere to go. Matches Discord's tail convention:
+   one bigger dot sticking out the bubble's top-left like a
+   speech-tail anchor, one smaller dot floating up-left between
+   that anchor and the avatar. */
+.fpp__cs-bubble::before,
+.fpp__cs-bubble::after{
+  content:""; position:absolute;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  box-shadow:0 4px 10px rgba(0,0,0,.4);
+  border-radius:50%;
+  pointer-events:none;
+}
+/* Bigger anchor — sits MERGED into the bubble's top-left like
+   two soap bubbles touching. Implementation: a full circle whose
+   bottom half is clipped off + a 1 px overlap into the bubble's
+   border. The clip eats the lower arc that would otherwise draw
+   inside the bubble (the "line cutting the dot off from the
+   capsule" the user reported), while the 1 px overlap lets the
+   anchor's bg cover the bubble's top border at the meeting point.
+   The bubble's outer outline and the anchor's outer arc form one
+   continuous silhouette. */
+.fpp__cs-bubble::before{
+  top:-7px; left:8px;
+  width:14px; height:14px;
+  clip-path:inset(0 0 calc(50% - 1px) 0);
+  z-index:1;
+}
+.fpp__cs-bubble::after{
+  /* Smaller floater bridging the anchor and the avatar's right
+     edge. Lower, further left, slightly bigger than before so it
+     reads as a clear intermediate dot rather than a stray speck. */
+  top:-12px; left:-4px;
+  width:8px; height:8px;
+}
+/* Hover: no transparency. Lift the bubble a hair, brighten the
+   panel, intensify the border so it reads as interactive without
+   the washed-out look the previous .05 alpha white wash gave it. */
 .fpp__cs-bubble:hover{
-  border-color:rgba(255,255,255,.12);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
-    var(--panel2);
+  background:var(--panel-elev, #1c2030);
+  border-color:var(--surface-border-hover);
+  transform:translateY(-1px);
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.06);
 }
-.fpp__cs-bubble--empty{
-  color:var(--muted-light);
-  font-style:italic;
+.fpp__cs-bubble:hover::before,
+.fpp__cs-bubble:hover::after{
+  background:var(--panel-elev, #1c2030);
+  border-color:var(--surface-border-hover);
 }
-.fpp__cs-bubble .fpp__cs-emoji{display:inline-flex; align-items:center; flex-shrink:0;}
-.fpp__cs-bubble .fpp__cs-emoji img{width:14px; height:14px; display:block; object-fit:contain;}
+.fpp__cs-bubble--empty{ color:var(--muted-light); font-style:italic; }
+.fpp__cs-bubble .fpp__cs-emoji{ display:inline-flex; align-items:center; flex-shrink:0; }
+.fpp__cs-bubble .fpp__cs-emoji img{ width:14px; height:14px; display:block; }
+/* Allow up to two wrapped lines so longer prompts don't truncate
+   on the first ellipsis. The pill stays compact at 180 px wide. */
 .fpp__cs-bubble .fpp__cs-text{
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  min-width:0;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  line-height:1.3;
+  word-break:break-word;
 }
+/* The "+" plus-circle icon that hints "click to set your status".
+   Only present in the empty state. */
 .fpp__cs-bubble .fpp__cs-plus{
   display:inline-flex; align-items:center; justify-content:center;
-  width:16px; height:16px;
-  border-radius:50%;
-  background:rgba(255,249,62,.14);
-  color:var(--accent);
   flex-shrink:0;
-  transition:background .12s, transform .15s;
+  width:14px; height:14px;
+  color:var(--muted-light);
+  opacity:.85;
 }
-.fpp__cs-bubble:hover .fpp__cs-plus{background:rgba(255,249,62,.24); transform:scale(1.06);}
-
+.fpp__cs-bubble:hover .fpp__cs-plus{ color:var(--text); opacity:1; }
 /* Wrap: bubble + hover-revealed floating action cluster */
 .fpp__cs-wrap{position:relative; display:inline-flex; align-items:center;}
 .fpp__cs-wrap--empty{cursor:pointer;}

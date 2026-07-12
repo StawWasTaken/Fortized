@@ -6291,26 +6291,42 @@ button[disabled],
 .sp-preview-cs{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:11.5px;color:var(--muted-light);}
 .sp-preview-cs img{width:14px;height:14px;}
 /* Reply-to-status mini modal */
-.sr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;display:flex;align-items:center;justify-content:center;}
-.sr-card{background:var(--channel);border:1px solid var(--border);border-radius:14px;width:420px;max-width:calc(100vw - 24px);overflow:hidden;box-shadow:none;}
-.sr-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);}
-.sr-title{font-family:var(--font-display);font-size:15px;font-weight:700;color:#fff;}
-.sr-close{width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;}
-.sr-close:hover{background:rgba(255,255,255,.1);color:#fff;}
-.sr-target{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.04);}
-.sr-target-av{width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel2);}
-.sr-target-av img{width:100%;height:100%;object-fit:cover;}
-.sr-target-info{font-size:13px;font-weight:600;color:#fff;}
-.sr-target-cs{font-size:11.5px;color:var(--muted-light);margin-top:1px;display:flex;align-items:center;gap:4px;}
-.sr-target-cs img{width:14px;height:14px;}
-.sr-input-wrap{display:flex;align-items:center;gap:6px;margin:12px 18px;padding:6px 8px;border-radius:10px;background:var(--channel);border:1px solid rgba(255,255,255,.06);}
-.sr-input-wrap:focus-within{border-color:rgba(255,255,255,.12);}
-.sr-emoji-btn{width:30px;height:30px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:none;}
+/* ── Reply-to-custom-status popup ─────────────────────────────
+   Original design (not a shrunken DM composer): compact card, a
+   "Replying to a status" strip, the target's status shown as a
+   quoted chat bubble (their avatar + name + speech bubble), and
+   a chat-style composer at the bottom. Feels like an in-thread
+   reply that just happens to be free-floating. */
+.sr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;display:flex;align-items:center;justify-content:center;animation:sr-fade .18s ease-out;}
+@keyframes sr-fade{from{opacity:0;}to{opacity:1;}}
+.sr-card{position:relative;background:var(--panel2, #1e2028);border:1px solid rgba(255,255,255,.08);border-radius:16px;width:440px;max-width:calc(100vw - 24px);overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:16px 16px 12px;display:flex;flex-direction:column;gap:12px;animation:sr-pop .22s cubic-bezier(.22,1,.36,1);}
+@keyframes sr-pop{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.sr-close{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s,color .12s;z-index:2;padding:0;font-size:12px;}
+.sr-close:hover{background:rgba(255,255,255,.12);color:#fff;}
+.sr-heading{display:flex;align-items:center;gap:6px;padding:2px 34px 0 2px;}
+.sr-heading-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-light);}
+/* Quoted status — target's speech bubble */
+.sr-quote{display:flex;align-items:flex-start;gap:10px;padding:8px 4px 0;}
+.sr-quote-av{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);}
+.sr-quote-av img{width:100%;height:100%;object-fit:cover;display:block;}
+.sr-quote-body{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1;}
+.sr-quote-name{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.2;}
+.sr-quote-bubble{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;border-top-left-radius:4px;padding:8px 12px;font-size:12.5px;color:var(--text);line-height:1.35;word-break:break-word;max-width:100%;box-sizing:border-box;}
+.sr-quote-emoji{display:inline-flex;flex-shrink:0;}
+.sr-quote-emoji img{width:15px;height:15px;display:block;}
+.sr-quote-text{overflow:hidden;text-overflow:ellipsis;}
+.sr-quote-text--empty{color:var(--muted-light);font-style:italic;}
+/* Composer */
+.sr-input-wrap{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);transition:border-color .12s,background .12s;}
+.sr-input-wrap:focus-within{border-color:rgba(255,249,62,.35);background:rgba(255,255,255,.045);}
+.sr-emoji-btn{width:32px;height:32px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s;padding:0;}
+.sr-emoji-btn:hover{background:rgba(255,255,255,.06);}
 .sr-emoji-btn svg{width:20px;height:20px;filter:invert(85%) opacity(.75);pointer-events:none;}
 .sr-text-input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:4px 2px;}
-.sr-text-input::placeholder{color:rgba(255,255,255,.3);}
-.sr-send-btn{width:32px;height:32px;border-radius:8px;border:none;background:var(--accent);color:var(--rail);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;font-size:14px;}
-.sr-send-btn:hover{filter:brightness(1.1);}
+.sr-text-input::placeholder{color:rgba(255,255,255,.35);}
+.sr-send-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--accent);color:var(--rail);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .12s,filter .12s,opacity .12s;font-size:12px;padding:0;}
+.sr-send-btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px);}
+.sr-send-btn:disabled{opacity:.35;cursor:not-allowed;}
 .sr-send-btn:disabled{opacity:.35;cursor:default;filter:none;}
 
 /* Status reply reference inside messages */

@@ -48759,27 +48759,27 @@ function _showStatusReplyModal(targetUser) {
   const csEmoji = cs.emoji || '';
   const csText = cs.text || '';
 
-  const csHTML = csText
-    ? `<div class="sr-target-cs">${csEmoji ? `<img src="${emojiToTwemojiUrl(csEmoji)}" onerror="this.outerHTML='${escapeHTML(csEmoji)}'">` : ''}${escapeHTML(csText)}</div>`
-    : '<div class="sr-target-cs" style="opacity:.4">No custom status set</div>';
+  const quoteBody = csText
+    ? `${csEmoji ? `<span class="sr-quote-emoji"><img src="${emojiToTwemojiUrl(csEmoji)}" onerror="this.outerHTML='${escapeHTML(csEmoji)}'"></span>` : ''}<span class="sr-quote-text">${escapeHTML(csText)}</span>`
+    : `<span class="sr-quote-text sr-quote-text--empty">${cn} has no custom status.</span>`;
 
   overlay.innerHTML = `
     <div class="sr-card">
-      <div class="sr-header">
-        <div class="sr-title">Reply to ${cn}'s status</div>
-        <button class="sr-close" onclick="_closeStatusReplyModal()"><i class="fa-solid fa-xmark"></i></button>
+      <button class="sr-close" onclick="_closeStatusReplyModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      <div class="sr-heading">
+        <div class="sr-heading-label">Replying to a status</div>
       </div>
-      <div class="sr-target">
-        <div class="sr-target-av"><img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20pfp2.png'"></div>
-        <div class="sr-target-info">
-          <div>${cn}</div>
-          ${csHTML}
+      <div class="sr-quote">
+        <div class="sr-quote-av"><img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20pfp2.png'"></div>
+        <div class="sr-quote-body">
+          <div class="sr-quote-name">${cn}</div>
+          <div class="sr-quote-bubble">${quoteBody}</div>
         </div>
       </div>
       <div class="sr-input-wrap">
         <button class="sr-emoji-btn" id="sr-emoji-btn" onclick="_srOpenEmoji()" title="Add an emoji">${_CHATBAR_EMOJI_SVG}</button>
-        <input type="text" class="sr-text-input" id="sr-text-input" placeholder="Message" maxlength="500" oninput="_srOnInput()">
-        <button class="sr-send-btn" id="sr-send-btn" onclick="_srSend()" disabled><i class="fa-solid fa-arrow-up"></i></button>
+        <input type="text" class="sr-text-input" id="sr-text-input" placeholder="Say something to ${cn}…" maxlength="500" oninput="_srOnInput()">
+        <button class="sr-send-btn" id="sr-send-btn" onclick="_srSend()" disabled aria-label="Send"><i class="fa-solid fa-paper-plane"></i></button>
       </div>
     </div>`;
   document.body.appendChild(overlay);

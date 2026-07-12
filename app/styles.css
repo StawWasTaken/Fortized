@@ -4023,7 +4023,24 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .modal.tall{max-height:80vh;display:flex;flex-direction:column;}
 .modal.tall .modal-body{overflow-y:auto;flex:1;}
 .modal::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,249,62,.02),rgba(167,139,250,.01));pointer-events:none;border-radius:var(--radius-xl);}
-.modal-bar{height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);position:relative;z-index:1;}
+.modal-bar{height:2px;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.25) 12%,var(--accent) 50%,rgba(255,249,62,.25) 88%,transparent 100%);box-shadow:0 0 14px rgba(255,249,62,.35);position:relative;z-index:1;}
+/* Unified card decoration rule: only BIG cards keep the yellow top bar.
+   Small popup .modal instances (forward, invite, add-friend, new-dm, boost,
+   events, role editors, etc.) hide it — they're "regular popup cards". */
+.modal .modal-bar{display:none;}
+.settings-modal .modal-bar,.sc-modal .modal-bar,.overview-modal .modal-bar,.ftz-card--big .modal-bar{display:block;}
+
+/* ── Unified card primitives (for new/JS-built cards) ────────────
+   .ftz-card       — shared base: bg, border, radius, shadow
+   .ftz-card--big  — big card variant (settings/staff/profile/games size + yellow bar)
+   .ftz-card--small— small popup variant (invite/forward/reply — no yellow)
+   Existing .modal / .settings-modal / .sc-modal keep working; new
+   components should prefer these classes for consistency. */
+.ftz-card{position:relative;background:var(--glass-heavy);border:1.5px solid var(--glass-border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.65),0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.08);display:flex;flex-direction:column;}
+.ftz-card--big{width:min(1180px,calc(100vw - 40px));height:min(820px,calc(100vh - 40px));max-width:none;border-radius:18px;}
+.ftz-card--big::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.25) 12%,var(--accent) 50%,rgba(255,249,62,.25) 88%,transparent 100%);box-shadow:0 0 14px rgba(255,249,62,.35);pointer-events:none;z-index:10;}
+.ftz-card--small{width:420px;max-width:calc(100vw - 24px);border-radius:14px;}
+@media(max-width:768px){.ftz-card--big{width:calc(100vw - 12px);height:calc(100vh - 12px);border-radius:14px;}}
 .modal-body{padding:26px;}
 .modal-title{font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:5px;}
 .modal-sub{font-size:13px;color:var(--muted-light);margin-bottom:22px;}

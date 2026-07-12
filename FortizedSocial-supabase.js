@@ -391,14 +391,21 @@ const FortizedSocial = (() => {
     if (!existingRow) return newRow;
     const out = { ...existingRow, ...newRow };
     for (const col of Object.keys(newRow)) {
-      if (_PROTECTED_WRITABLE_COLS.has(col)) continue;
       const nv = newRow[col];
       const ev = existingRow[col];
       const isEmpty = nv == null
         || (Array.isArray(nv) && nv.length === 0 && Array.isArray(ev) && ev.length > 0)
         || (typeof nv === 'string' && nv === '' && typeof ev === 'string' && ev !== '')
         || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && ev && typeof ev === 'object' && Object.keys(ev).length > 0);
-      if (isEmpty) out[col] = ev;
+      // For hard-protected accounts, ANY empty incoming value must not
+      // overwrite an existing one — including pfp/banner/bio/display_name/
+      // active_decoration/profile_theme. Previously the "writable" list
+      // exempted those from the guard, so any partial save with an
+      // unhydrated CU (page-refresh race, socket-init before profile
+      // fetch) would wipe them. If the user genuinely wants to clear a
+      // field, they must do so via a dedicated non-protected code path.
+      if (isEmpty) { out[col] = ev; continue; }
+      if (_PROTECTED_WRITABLE_COLS.has(col)) continue;
     }
     // Password is special: even though it's in the writable set, we never want
     // to accept a falsy new value (null/''/undefined) over a real existing one.

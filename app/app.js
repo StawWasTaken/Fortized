@@ -1720,6 +1720,26 @@ async function saveUser(immediate) {
     _saveUserPromise = (async () => {
       try {
         await FortizedSocial.saveUserObject(CU);
+        // Self-echo: fire the same DOM-patching handler the socket would,
+        // so pfp/banner/bio/displayName/decoration changes appear instantly
+        // on chat rows, member lists, popovers, DM sidebar — without
+        // waiting for the socket round-trip (which may not echo to sender).
+        try {
+          window._ftzSocketCallbacks?.onProfileUpdate?.({
+            username: CU.username,
+            displayName: CU.displayName,
+            pfp: CU.pfp,
+            pfpCrop: CU.pfpCrop,
+            banner: CU.banner,
+            bio: CU.bio,
+            pronouns: CU.pronouns,
+            displayFont: CU.displayFont,
+            displayEffect: CU.displayEffect,
+            displayColor: CU.displayColor,
+            displayColor2: CU.displayColor2,
+            activeDecoration: CU.activeDecoration,
+          });
+        } catch(_) {}
       } catch(e) {
         console.warn('saveUser failed, retrying:', e);
         try { await new Promise(r => setTimeout(r, 1000)); await FortizedSocial.saveUserObject(CU); }

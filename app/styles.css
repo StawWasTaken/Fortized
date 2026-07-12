@@ -4013,6 +4013,9 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .emoji-info-popover .eip-name{font-family:monospace;font-size:12px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:8px;}
 .emoji-info-popover .eip-type{font-size:11px;color:rgba(255,255,255,.3);text-align:center;padding:4px 10px;background:rgba(255,255,255,.04);border-radius:6px;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:none;-webkit-backdrop-filter:none;z-index:1000;align-items:center;justify-content:center;animation:overlayFadeIn .2s ease-out;}
+/* Stackable sub-modals sit above a parent big-modal so they don't get
+   dismissed by openModal's single-modal policy and paint on top. */
+.modal-overlay[data-modal-stack="1"]{z-index:1100;}
 .modal-overlay.open,.modal-overlay.show{display:flex;}
 @keyframes overlayFadeIn{from{opacity:0;backdrop-filter:none;}to{opacity:1;backdrop-filter:none;}}
 @keyframes mIn{from{opacity:0;transform:scale(.93) translateY(14px);}to{opacity:1;transform:none;}}

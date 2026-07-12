@@ -540,12 +540,20 @@ body.is-desktop-app .topbar{padding-right:0;}
 .content{flex:1;overflow:hidden;position:relative;display:flex;min-width:0;min-height:0;}
 .view{display:none;flex:1;min-width:0;min-height:0;overflow:hidden;animation:viewFadeIn .2s ease;}.view.active{display:flex;}
 @keyframes viewFadeIn{from{opacity:0;}to{opacity:1;}}
-.app-loading{position:fixed;inset:0;background:linear-gradient(135deg,var(--rail),var(--bg));display:flex;align-items:center;justify-content:center;z-index:var(--z-max);animation:forceHideLoading .4s ease 12s forwards;}
+/* forceHideLoading is a pure-CSS dead-man switch for when ALL boot JS is
+   broken — it must fire AFTER the JS refresh timers (18s utils.js / 20s
+   appInit), never before, or a stuck boot flashes a half-rendered app. */
+.app-loading{position:fixed;inset:0;background:linear-gradient(135deg,var(--rail),var(--bg));display:flex;align-items:center;justify-content:center;z-index:var(--z-max);animation:forceHideLoading .4s ease 30s forwards;}
 .app-loading-inner{display:flex;flex-direction:column;align-items:center;gap:20px;}
 .app-loading .app-loading-anim{width:72px;height:72px;object-fit:contain;filter:brightness(0) invert(1);opacity:.9;animation:pulse 2s ease-in-out infinite;will-change:opacity,transform;}
 .app-loading-text{font-family:var(--font-display);font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;}
-.app-loading-dots{display:inline-block;width:0;overflow:hidden;vertical-align:bottom;animation:dots 1.4s steps(4,end) infinite;}
-@keyframes dots{0%{width:0;}100%{width:1.2em;}}
+/* "Loading." → "Loading.." → "Loading..." — dot 1 is always on; dots 2
+   and 3 blink in per phase. All three keep their layout width so the
+   text never shifts. */
+.app-loading-dots span:nth-child(2){animation:dotPhase2 1.2s linear infinite;}
+.app-loading-dots span:nth-child(3){animation:dotPhase3 1.2s linear infinite;}
+@keyframes dotPhase2{0%,33%{opacity:0;}33.1%,100%{opacity:1;}}
+@keyframes dotPhase3{0%,66%{opacity:0;}66.1%,100%{opacity:1;}}
 @keyframes forceHideLoading{to{opacity:0;pointer-events:none;visibility:hidden;z-index:-1;}}
 @keyframes pulse{0%,100%{opacity:.7;transform:scale(1);}50%{opacity:1;transform:scale(1.02);}}
 @keyframes spin{to{transform:rotate(360deg);}}

@@ -13622,7 +13622,12 @@ function initFortizedUXResilience() {
   // "Retrying… (2/2)" from appInit AND "Taking too long…" + a Retry
   // button from utils.js stacked on top of each other.
   if (window._loadingSafetyTimer) { try { clearTimeout(window._loadingSafetyTimer); } catch {} }
-  const _st=setTimeout(_hideLoader, 20000);
+  // Stuck past the safety window → refresh the page, don't drop the
+  // splash over a half-initialized app. The guard in utils.js caps
+  // consecutive auto-refreshes at 2; only then hide as a last resort.
+  const _st=setTimeout(() => {
+    if (!(window._ftzBootRefresh && window._ftzBootRefresh())) _hideLoader();
+  }, 20000);
   window._loadingSafetyTimer = _st;
   // Surface unhandled init errors so the loader never silently sits
   // for the full 20s safety window — if init throws, log + hide.
@@ -13649,8 +13654,11 @@ function initFortizedUXResilience() {
       new Promise(r => setTimeout(r, 5000))
     ]);
   }
-  if (typeof FortizedSocial === 'undefined') {
-    // Scripts never loaded — will fall through to cache/refresh logic below
+  if (typeof FortizedSocial === 'undefined' && navigator.onLine) {
+    // Scripts never loaded while online — a refresh re-fetches them.
+    // Booting from cache here would give a dead app (no data layer).
+    // If the guard is exhausted, fall through to the cache logic below.
+    if (window._ftzBootRefresh && window._ftzBootRefresh()) return;
   }
 
   // Detect Electron desktop app via preload bridge OR User-Agent string
@@ -13705,7 +13713,6 @@ function initFortizedUXResilience() {
     }
   } else {
     // Online — fetch fresh data from database (bypass cache to ensure latest)
-    const lbl=document.querySelector('#app-loading .lbl');
     // ── BOUNDED FETCH LOOP ────────────────────────────────────────────
     // The old code did a 7s race → catch → 1.5s sleep → 5s race, all
     // hard-coded and hard to reason about. Replaced with a single
@@ -13733,9 +13740,13 @@ function initFortizedUXResilience() {
       }
     }
     if (!CU?.username) {
-      // Every attempt failed — fall back to localStorage cache so the
-      // user can at least see their last-known state instead of being
-      // bounced to /login.
+      // Every attempt failed. Never silently boot from a stale cache
+      // while online — refresh the page instead (a reload re-fetches
+      // HTML, scripts, AND data). Only once the guard is exhausted
+      // (2 auto-refreshes without a successful boot) fall back to the
+      // localStorage snapshot so a genuinely-down backend still lets
+      // the user in instead of trapping them in a reload loop.
+      if (window._ftzBootRefresh && window._ftzBootRefresh()) return;
       const cached = localStorage.getItem('ftz_user_' + username);
       if (cached) {
         try { CU = JSON.parse(cached); } catch { CU = null; }
@@ -13997,6 +14008,9 @@ function initFortizedUXResilience() {
     if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
   } catch{}
   window._appInitDone = true;
+  // Successful boot — reset the auto-refresh guard so a future stuck
+  // load gets its full 2 refresh attempts again.
+  try { sessionStorage.removeItem('ftz_boot_refresh_n'); } catch{}
 
   // Route to the correct view based on URL (or home as fallback)
   _ftzRouter._initialLoad = true;

@@ -6229,6 +6229,26 @@ button[disabled],
 .sp-clear-btn{width:22px;height:22px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;}
 .sp-clear-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
 .sp-dur-row{display:flex;align-items:center;gap:10px;padding:0 18px 14px;flex-wrap:wrap;}
+.sp-dur-select{
+  flex:1;min-width:0;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:8px 32px 8px 12px;
+  color:#fff;
+  font-family:var(--font-ui);
+  font-size:13px;
+  outline:none;
+  cursor:pointer;
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,.5)' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+  transition:border-color .12s;
+}
+.sp-dur-select:hover{border-color:rgba(255,255,255,.15);}
+.sp-dur-select:focus{border-color:var(--accent-mid);}
 .sp-custom-dur{display:none;align-items:center;gap:8px;padding:0 18px 14px;}
 .sp-custom-dur-amt{width:90px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:#fff;font-size:12.5px;outline:none;-moz-appearance:textfield;}
 .sp-custom-dur-amt::-webkit-outer-spin-button,.sp-custom-dur-amt::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
@@ -6247,7 +6267,44 @@ button[disabled],
 .sp-btn--save{background:var(--accent);color:var(--rail);font-weight:700;}
 .sp-btn--save:hover{filter:brightness(1.06);}
 /* Profile preview inside status picker */
-.sp-preview-wrap{margin:0 18px 12px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:var(--panel);position:relative;}
+.sp-preview-wrap{
+  margin:0 18px 12px;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.06);
+  background:var(--panel);
+  position:relative;
+  min-height:150px;
+}
+.sp-preview-banner{
+  width:100%; height:82px;
+  background-color:rgba(255,255,255,.03);
+  background-size:cover; background-position:center;
+}
+.sp-preview-av{
+  width:64px; height:64px;
+  border-radius:50%;
+  overflow:hidden;
+  border:4px solid var(--panel);
+  background:var(--panel2);
+  flex-shrink:0;
+  box-shadow:0 4px 12px rgba(0,0,0,.25);
+}
+.sp-preview-av img{width:100%;height:100%;object-fit:cover;display:block;}
+.sp-preview-name{
+  font-family:var(--font-display);
+  font-size:15px; font-weight:800;
+  color:var(--text);
+  line-height:1.15;
+}
+.sp-preview-handle-row{
+  display:flex; align-items:center; gap:6px;
+  font-size:12px; color:var(--muted-light);
+  margin-top:2px;
+}
+.sp-preview-handle{color:var(--muted-light);}
+.sp-preview-dot{color:rgba(255,255,255,.2);}
+.sp-preview-pronouns{color:var(--muted-light);}
 /* Speech-bubble custom status floating on the banner (Discord-style).
    Anchored to the right of the banner, offset just below the top.
    Live-updates from _spOnInput / _spEmojiCallback while typing/picking. */
@@ -6282,10 +6339,10 @@ button[disabled],
 .sp-preview-cs-emoji:empty{display:none;}
 @keyframes sp-cs-pop{from{opacity:0;transform:translateY(4px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
 .sp-preview-banner{width:100%;height:60px;object-fit:cover;display:block;background:var(--panel2);}
-.sp-preview-body{display:flex;align-items:flex-start;gap:10px;padding:0 14px 14px;margin-top:-18px;position:relative;z-index:1;}
+.sp-preview-body{display:flex;align-items:flex-end;gap:12px;padding:0 14px 14px;margin-top:-30px;position:relative;z-index:1;}
 .sp-preview-av{width:48px;height:48px;border-radius:50%;overflow:hidden;border:3px solid var(--panel);flex-shrink:0;background:var(--panel2);}
 .sp-preview-av img{width:100%;height:100%;object-fit:cover;}
-.sp-preview-info{min-width:0;padding-top:18px;}
+.sp-preview-info{min-width:0;padding-bottom:2px;flex:1;}
 .sp-preview-dn{font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sp-preview-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sp-preview-cs{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:11.5px;color:var(--muted-light);}
@@ -10999,13 +11056,18 @@ select:focus-visible {
   transform:translateY(-100%) translateY(0);
 }
 .fpp__cs-float-btn{
+  /* Matches .fpp__cs-bubble exactly (same bg/border/shadow) so the
+     action buttons read as siblings floating around the same speech
+     bubble, not separate chrome from another design system. */
   width:30px; height:30px; border-radius:50%;
-  border:1px solid rgba(255,255,255,.08);
-  background:var(--panel2, rgba(30,32,40,.98));
+  border:1px solid var(--border);
+  background:var(--panel2);
   color:rgba(255,255,255,.7);
   display:inline-flex; align-items:center; justify-content:center;
   cursor:pointer; padding:0;
-  box-shadow:0 4px 12px rgba(0,0,0,.35);
+  box-shadow:
+    0 8px 22px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.04);
   position:relative;
   transition:transform .12s, background .12s, color .12s, border-color .12s;
 }

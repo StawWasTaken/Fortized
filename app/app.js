@@ -21201,6 +21201,15 @@ function _hasActiveRadiance() {
 // Non-Radiance users cannot access emoji/sticker reactions.
 
 function insertFortizedEmoji(name, url) {
+  // Status picker / status reply override — send the custom emoji through
+  // the shared callback instead of injecting a :name: token into the chat.
+  // The callback treats the emoji as { name, url } so the status can render
+  // Fortized custom emojis (guide free, bastion radiance-gated).
+  if (window._statusEmojiInsertOverride && typeof window._emojiInsertCallback === 'function') {
+    window._emojiInsertCallback(':' + name + ':', { name, url });
+    document.getElementById('emoji-picker')?.classList.remove('show');
+    return;
+  }
   if (_emojiPickerMode === 'react' && _reactionContext) {
     const { msgId, context } = _reactionContext;
     // Use the custom-emoji name as the reaction key, so the rendering layer
@@ -37772,12 +37781,14 @@ function _closeStatusPicker(){
 // ── Status Picker — clean rebuild ──
 // Uses the chatbar emoji panel directly. Emoji is optional. No blurry overlay.
 let _spSelectedEmoji = '';
+let _spSelectedEmojiUrl = '';
 
 
 function openStatusPicker() {
   _closeStatusPicker();
   const cur = CU?.customStatus || {};
   _spSelectedEmoji = cur.emoji || '';
+  _spSelectedEmojiUrl = cur.emojiUrl || '';
   const curText = cur.text || '';
 
   const overlay = document.createElement('div');
@@ -37788,9 +37799,12 @@ function openStatusPicker() {
   const u = CU || {};
   const dn = escapeHTML(u.displayName || u.username || 'You');
 
-  // Emoji display
+  // Emoji display (button icon) — use custom URL if the selected emoji is
+  // a Fortized custom emoji, otherwise Twemoji CDN.
+  const _spInitEmojiSrc = _spSelectedEmojiUrl
+    || (_spSelectedEmoji ? emojiToTwemojiUrl(_spSelectedEmoji) : '');
   const emojiDisplay = _spSelectedEmoji
-    ? `<img src="${emojiToTwemojiUrl(_spSelectedEmoji)}" style="width:20px;height:20px;" onerror="this.parentElement.textContent='${escapeHTML(_spSelectedEmoji)}'">`
+    ? `<img src="${_spInitEmojiSrc}" style="width:20px;height:20px;object-fit:contain;" onerror="this.parentElement.textContent='${escapeHTML(_spSelectedEmoji)}'">`
     : '';
 
   // Duration options — default 24h, "Custom" is a Fortized feature
@@ -37802,21 +37816,36 @@ function openStatusPicker() {
     { id: '24h',   label: '24 hours' },
     { id: 'custom', label: 'Custom…' },
   ];
-  const durHTML = durations.map(d =>
-    `<button class="sp-dur${d.id === '24h' ? ' sp-dur--active' : ''}" data-dur="${d.id}" onclick="_spPickDur(this)">${d.label}</button>`
+  const durOpts = durations.map(d =>
+    `<option value="${d.id}"${d.id === '24h' ? ' selected' : ''}>${d.label}</option>`
   ).join('');
 
-  // Profile preview: reuse FPP helpers (banner + avatar + identity) but
-  // render the custom-status bubble as a floating speech-bubble anchored
-  // over the banner — like Discord's picker. Bubble reflects what the
-  // user is typing / picking LIVE (updated by _spOnInput / _spEmojiCallback).
-  const banner = _fppBannerHTML(u, false);
-  const avatar = _fppAvatarHTML(u, 48);
-  const identity = _fppIdentityHTML(u);
+  // Profile preview — built from scratch (NOT the FPP helpers, which
+  // rendered active decorations as position:absolute images that
+  // escaped their container and scattered across the banner). Simple
+  // banner + avatar overlap + name/@handle/pronouns row. Live-updates
+  // via _spOnInput / _spEmojiCallback.
+  const bannerSrc = u.banner || '';
+  const bannerBg = bannerSrc
+    ? `background:#000 url('${escapeHTML(bannerSrc)}') center/cover no-repeat;`
+    : `background:linear-gradient(135deg, var(--accent-dim), rgba(167,139,250,.12));`;
+  const banner = `<div class="sp-preview-banner" style="${bannerBg}"></div>`;
+  const _pfpUrl = u.pfp || _defaultPfpUrl(u.displayName || u.username);
+  const avatar = `<div class="sp-preview-av"><img src="${escapeHTML(_pfpUrl)}" alt="" onerror="this.src='${_defaultPfpUrl(u.displayName||u.username)}'"></div>`;
+  const pronounsHTML = u.pronouns
+    ? `<span class="sp-preview-pronouns">${escapeHTML(u.pronouns)}</span>`
+    : '';
+  const dn2 = escapeHTML(u.displayName || u.username || 'You');
+  const un = escapeHTML((u.username || '').toLowerCase());
+  const identity = `<div class="sp-preview-name">${dn2}</div>
+    <div class="sp-preview-handle-row"><span class="sp-preview-handle">@${un}</span>${pronounsHTML ? '<span class="sp-preview-dot">•</span>' + pronounsHTML : ''}</div>`;
   const initialPreviewText = curText || u.customStatus?.text || "What's on your mind?";
   const initialPreviewEmoji = _spSelectedEmoji || u.customStatus?.emoji || '';
+  const initialPreviewEmojiSrc = _spSelectedEmojiUrl
+    || (u.customStatus?.emojiUrl)
+    || (initialPreviewEmoji ? emojiToTwemojiUrl(initialPreviewEmoji) : '');
   const previewEmojiHTML = initialPreviewEmoji
-    ? `<img src="${emojiToTwemojiUrl(initialPreviewEmoji)}" style="width:14px;height:14px;flex-shrink:0;" onerror="this.replaceWith(document.createTextNode('${escapeHTML(initialPreviewEmoji)}'))">`
+    ? `<img src="${initialPreviewEmojiSrc}" style="width:14px;height:14px;flex-shrink:0;object-fit:contain;" onerror="this.replaceWith(document.createTextNode('${escapeHTML(initialPreviewEmoji)}'))">`
     : '';
   const previewIsPlaceholder = !curText && !u.customStatus?.text && !_spSelectedEmoji;
   const status = `<div class="sp-preview-cs${previewIsPlaceholder ? ' sp-preview-cs--empty' : ''}" id="sp-preview-cs">
@@ -37854,7 +37883,7 @@ function openStatusPicker() {
 
       <div class="sp-dur-row">
         <span class="sp-dur-label">Clear after</span>
-        <div class="sp-dur-options" id="sp-dur-options">${durHTML}</div>
+        <select id="sp-dur-select" class="sp-dur-select" onchange="_spOnDurChange(this)">${durOpts}</select>
       </div>
       <div class="sp-custom-dur" id="sp-custom-dur-box" style="display:none;">
         <input type="number" id="sp-custom-dur-amt" class="sp-custom-dur-amt" min="1" max="720" value="2" placeholder="Amount">
@@ -37894,16 +37923,19 @@ function _spOpenEmoji() {
   document.getElementById('botcmd-picker')?.remove();
 
   window._spEmojiOrigCallback = window._emojiInsertCallback;
-  window._spEmojiCallback = (emoji) => {
+  window._spEmojiCallback = (emoji, custom) => {
     _spSelectedEmoji = emoji;
+    _spSelectedEmojiUrl = custom?.url || '';
+    // Choose the image URL: custom emoji if provided, else Twemoji CDN
+    const src = _spSelectedEmojiUrl || emojiToTwemojiUrl(emoji);
     const b = document.getElementById('sp-emoji-btn');
     if (b) {
-      b.innerHTML = `<img src="${emojiToTwemojiUrl(emoji)}" style="width:20px;height:20px;" onerror="this.parentElement.textContent='${escapeHTML(emoji)}'">`;
+      b.innerHTML = `<img src="${src}" style="width:20px;height:20px;object-fit:contain;" onerror="this.parentElement.textContent='${escapeHTML(emoji)}'">`;
     }
     // Live-update the speech-bubble preview emoji
     const pe = document.getElementById('sp-preview-cs-emoji');
     const wrap = document.getElementById('sp-preview-cs');
-    if (pe) pe.innerHTML = `<img src="${emojiToTwemojiUrl(emoji)}" style="width:14px;height:14px;flex-shrink:0;" onerror="this.replaceWith(document.createTextNode('${escapeHTML(emoji)}'))">`;
+    if (pe) pe.innerHTML = `<img src="${src}" style="width:14px;height:14px;flex-shrink:0;object-fit:contain;" onerror="this.replaceWith(document.createTextNode('${escapeHTML(emoji)}'))">`;
     if (wrap) wrap.classList.remove('sp-preview-cs--empty');
     window._statusEmojiInsertOverride = false;
     window._emojiInsertCallback = window._spEmojiOrigCallback || null;
@@ -37950,20 +37982,25 @@ function _spClearInput() {
 }
 
 function _spPickDur(el) {
+  // legacy button-row callback (now unused; keep as a shim)
   document.querySelectorAll('.sp-dur').forEach(b => b.classList.remove('sp-dur--active'));
-  el.classList.add('sp-dur--active');
+  if (el?.classList) el.classList.add('sp-dur--active');
   const box = document.getElementById('sp-custom-dur-box');
-  if (box) box.style.display = (el.dataset.dur === 'custom') ? 'flex' : 'none';
+  if (box) box.style.display = (el?.dataset?.dur === 'custom') ? 'flex' : 'none';
+}
+function _spOnDurChange(sel) {
+  const box = document.getElementById('sp-custom-dur-box');
+  if (box) box.style.display = sel.value === 'custom' ? 'flex' : 'none';
 }
 
 function _spSave() {
   const text = (document.getElementById('sp-text-input')?.value || '').trim();
   const emoji = _spSelectedEmoji || '';
   if (!text && !emoji) { toast('Add an emoji or some text!', 'error'); return; }
-  const durEl = document.querySelector('.sp-dur--active');
-  const dur = durEl?.dataset?.dur || '24h';
+  const durSel = document.getElementById('sp-dur-select');
+  const dur = durSel?.value || document.querySelector('.sp-dur--active')?.dataset?.dur || '24h';
 
-  CU.customStatus = { emoji, text, createdAt: Date.now() };
+  CU.customStatus = { emoji, emojiUrl: _spSelectedEmojiUrl || undefined, text, createdAt: Date.now() };
   let ms = 0;
   if (dur === 'custom') {
     const amt = parseInt(document.getElementById('sp-custom-dur-amt')?.value, 10);
@@ -48703,11 +48740,21 @@ function _fppRandomCSPrompt() {
 // plus-circle icon — FontAwesome
 const _FPP_CS_PLUS_SVG = '<i class="fa-solid fa-plus" style="font-size:11px;"></i>';
 
+// Resolve the image URL for a custom-status emoji. Custom emojis stored
+// as :name: with an emojiUrl use that URL directly (Fortized guide or
+// bastion emoji). Unicode emojis fall back to Twemoji CDN. Returns ''
+// for empty. Handles legacy status entries with no emojiUrl.
+function _csEmojiSrc(cs) {
+  if (!cs?.emoji) return '';
+  if (cs.emojiUrl) return cs.emojiUrl;
+  return emojiToTwemojiUrl(cs.emoji);
+}
+
 function _fppCSBubbleHTML(u, isOwn) {
   const cs = u.customStatus;
   if (cs?.text) {
     const emojiHTML = cs.emoji
-      ? `<span class="fpp__cs-emoji"><img src="${emojiToTwemojiUrl(cs.emoji)}" alt="" onerror="this.outerHTML='${escapeHTML(cs.emoji).replace(/'/g, "\\'")}'"></span>`
+      ? `<span class="fpp__cs-emoji"><img src="${_csEmojiSrc(cs)}" alt="" onerror="this.outerHTML='${escapeHTML(cs.emoji).replace(/'/g, "\\'")}'"></span>`
       : '';
     // Floating controls — appear outside the bubble on hover
     const floatingControls = isOwn
@@ -48760,9 +48807,10 @@ function _showStatusReplyModal(targetUser) {
   const csText = cs.text || '';
 
   const quoteBody = csText
-    ? `${csEmoji ? `<span class="sr-quote-emoji"><img src="${emojiToTwemojiUrl(csEmoji)}" onerror="this.outerHTML='${escapeHTML(csEmoji)}'"></span>` : ''}<span class="sr-quote-text">${escapeHTML(csText)}</span>`
+    ? `${csEmoji ? `<span class="sr-quote-emoji"><img src="${_csEmojiSrc(cs)}" onerror="this.outerHTML='${escapeHTML(csEmoji)}'"></span>` : ''}<span class="sr-quote-text">${escapeHTML(csText)}</span>`
     : `<span class="sr-quote-text sr-quote-text--empty">${cn} has no custom status.</span>`;
 
+  overlay.dataset.targetUsername = targetUser.username || '';
   overlay.innerHTML = `
     <div class="sr-card">
       <button class="sr-close" onclick="_closeStatusReplyModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
@@ -48842,9 +48890,7 @@ function _srSend() {
   if (!inp || !inp.value.trim()) return;
   const text = inp.value.trim();
   const overlay = document.getElementById('ftz-status-reply');
-  // Get the target username from the overlay title
-  const titleEl = overlay?.querySelector('.sr-title');
-  const targetName = titleEl?.textContent?.replace('Reply to @', '')?.trim();
+  const targetName = overlay?.dataset?.targetUsername || '';
   if (!targetName) { toast("Could not determine target.", 'error'); return; }
   _closeStatusReplyModal();
 

@@ -6207,184 +6207,444 @@ button[disabled],
 .page-loader .pl-text { font-size:13px;color:var(--muted);font-weight:600; }
 
 /* ── STATUS MODE FIX ──────────────────────────────── */
-/* ═══ STATUS PICKER — clean rebuild ═══ */
-.sp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;display:flex;align-items:center;justify-content:center;}
-.sp-card{background:var(--channel);border:1px solid var(--border);border-radius:14px;width:420px;max-width:calc(100vw - 24px);overflow:hidden;box-shadow:none;}
-.sp-card-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);}
-.sp-card-title{font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;}
-.sp-card-close{width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;}
-.sp-card-close:hover{background:rgba(255,255,255,.1);color:#fff;}
-.sp-user-row{display:flex;align-items:center;gap:10px;padding:14px 18px;}
-.sp-user-avatar{position:relative;width:36px;height:36px;flex-shrink:0;}
-.sp-user-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
-.sp-user-dot{position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;}
-.sp-user-name{font-size:14px;font-weight:700;color:#fff;}
-.sp-user-handle{font-size:11.5px;color:var(--muted);}
-.sp-input-wrap{display:flex;align-items:center;gap:6px;margin:0 18px 12px;padding:6px 8px;border-radius:10px;background:var(--channel);border:1px solid rgba(255,255,255,.06);}
-.sp-emoji-opener{width:30px;height:30px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted-light);font-size:18px;flex-shrink:0;transition:none;}
-.sp-emoji-opener:hover{color:var(--muted-light);background:transparent;}
-.sp-emoji-opener svg{width:20px;height:20px;filter:invert(85%) opacity(.75);pointer-events:none;}
-.sp-text-input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:4px 2px;}
-.sp-text-input::placeholder{color:rgba(255,255,255,.3);}
-.sp-clear-btn{width:22px;height:22px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;}
-.sp-clear-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
-.sp-dur-row{display:flex;align-items:center;gap:10px;padding:0 18px 14px;flex-wrap:wrap;}
-.sp-dur-select{
-  flex:1;min-width:0;
-  background:rgba(255,255,255,.04);
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:8px 32px 8px 12px;
-  color:#fff;
-  font-family:var(--font-ui);
-  font-size:13px;
-  outline:none;
-  cursor:pointer;
-  appearance:none;
-  -webkit-appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,.5)' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;
-  background-position:right 10px center;
-  transition:border-color .12s;
+/* ══════════════════════════════════════════════════════════════════
+   FORTIZED CUSTOM STATUS SYSTEM — ground-up rebuild
+   Native tokens throughout (--panel/--panel2/--border/--accent/Syne).
+   Namespace: legacy .sp-* / .sr-* kept as anchors so JS doesn't need
+   to change, but every rule below is redesigned from zero.
+   Design language: sharper corners (10-12px), grouped panels with
+   subtle inset highlights, yellow accent only on primary intent,
+   Syne for all display copy, no borrowed Discord/Slack chrome.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Shared card + overlay treatment (used by picker + reply) */
+.sp-overlay,
+.sr-overlay{
+  position:fixed; inset:0;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.55), rgba(0,0,0,.72));
+  z-index:4000;
+  display:flex; align-items:center; justify-content:center;
+  animation:ftz-status-fade .18s ease-out;
 }
-.sp-dur-select:hover{border-color:rgba(255,255,255,.15);}
-.sp-dur-select:focus{border-color:var(--accent-mid);}
-.sp-custom-dur{display:none;align-items:center;gap:8px;padding:0 18px 14px;}
-.sp-custom-dur-amt{width:90px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:#fff;font-size:12.5px;outline:none;-moz-appearance:textfield;}
-.sp-custom-dur-amt::-webkit-outer-spin-button,.sp-custom-dur-amt::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
-.sp-custom-dur-amt:focus{border-color:var(--accent-mid);}
-.sp-custom-dur-unit{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:#fff;font-size:12.5px;outline:none;cursor:pointer;}
-.sp-custom-dur-unit:focus{border-color:var(--accent-mid);}
-.sp-dur-label{font-size:11.5px;font-weight:600;color:var(--muted);white-space:nowrap;}
-.sp-dur-options{display:flex;gap:4px;flex-wrap:wrap;}
-.sp-dur{padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--muted-light);font-size:11px;font-weight:600;font-family:var(--font-ui);cursor:pointer;transition:all .12s;white-space:nowrap;}
-.sp-dur:hover{border-color:rgba(255,255,255,.12);color:#fff;}
-.sp-dur--active{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.2);color:var(--accent);}
-.sp-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border);}
-.sp-btn{border:none;border-radius:8px;font-family:var(--font-ui);font-size:12.5px;font-weight:600;cursor:pointer;padding:8px 16px;transition:all .12s;}
-.sp-btn--ghost{background:transparent;color:rgba(235,69,69,.7);}
-.sp-btn--ghost:hover{background:rgba(235,69,69,.08);color:var(--red);}
-.sp-btn--save{background:var(--accent);color:var(--rail);font-weight:700;}
-.sp-btn--save:hover{filter:brightness(1.06);}
-/* Profile preview inside status picker */
+@keyframes ftz-status-fade{from{opacity:0;}to{opacity:1;}}
+@keyframes ftz-status-pop{from{opacity:0;transform:translateY(6px) scale(.985);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+.sp-card,
+.sr-card{
+  position:relative;
+  width:440px; max-width:calc(100vw - 24px);
+  background:
+    radial-gradient(600px 140px at 12% 0%, rgba(255,249,62,.05), transparent 65%),
+    linear-gradient(180deg, var(--panel), var(--panel2));
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:
+    0 24px 64px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(255,255,255,.04);
+  animation:ftz-status-pop .22s cubic-bezier(.22,1,.36,1);
+}
+/* Yellow accent hairline — Fortized signature on small cards */
+.sp-card::before,
+.sr-card::before{
+  content:"";
+  position:absolute; top:0; left:0; right:0;
+  height:1px;
+  background:linear-gradient(90deg,
+    transparent 0%, rgba(255,249,62,.35) 30%,
+    rgba(255,249,62,.35) 70%, transparent 100%);
+  pointer-events:none; z-index:5;
+}
+
+/* ── Set-a-status card ─────────────────────────────────────── */
+.sp-card{display:flex; flex-direction:column;}
+.sp-card-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px 12px;
+  gap:12px;
+}
+.sp-card-title{
+  font-family:var(--font-display);
+  font-size:15px; font-weight:800;
+  letter-spacing:.005em;
+  color:var(--text);
+  line-height:1;
+}
+.sp-card-close{
+  width:28px; height:28px;
+  border-radius:8px; border:1px solid transparent;
+  background:transparent;
+  color:var(--muted-light);
+  display:inline-flex; align-items:center; justify-content:center;
+  cursor:pointer; padding:0; font-size:11px;
+  transition:background .12s, color .12s, border-color .12s;
+}
+.sp-card-close:hover{
+  background:rgba(255,255,255,.05);
+  border-color:var(--border);
+  color:var(--text);
+}
+
+/* Preview strip */
 .sp-preview-wrap{
-  margin:0 18px 12px;
+  position:relative;
+  margin:0 18px 14px;
   border-radius:12px;
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.06);
-  background:var(--panel);
-  position:relative;
+  background:var(--rail);
+  border:1px solid var(--border);
   min-height:150px;
 }
 .sp-preview-banner{
   width:100%; height:82px;
-  background-color:rgba(255,255,255,.03);
   background-size:cover; background-position:center;
+  background-color:rgba(255,255,255,.02);
+}
+/* Empty/gradient banner state */
+.sp-preview-banner:not([style*="url"]){
+  background:linear-gradient(135deg, rgba(255,249,62,.14), rgba(167,139,250,.08));
+}
+.sp-preview-body{
+  display:flex; align-items:flex-end; gap:12px;
+  padding:0 14px 14px;
+  margin-top:-30px;
+  position:relative; z-index:1;
 }
 .sp-preview-av{
   width:64px; height:64px;
   border-radius:50%;
   overflow:hidden;
-  border:4px solid var(--panel);
+  border:4px solid var(--rail);
   background:var(--panel2);
   flex-shrink:0;
-  box-shadow:0 4px 12px rgba(0,0,0,.25);
+  box-shadow:0 6px 18px rgba(0,0,0,.35);
 }
 .sp-preview-av img{width:100%;height:100%;object-fit:cover;display:block;}
+.sp-preview-info{min-width:0; flex:1; padding-bottom:4px;}
 .sp-preview-name{
   font-family:var(--font-display);
   font-size:15px; font-weight:800;
   color:var(--text);
   line-height:1.15;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .sp-preview-handle-row{
   display:flex; align-items:center; gap:6px;
-  font-size:12px; color:var(--muted-light);
-  margin-top:2px;
+  font-size:11.5px; color:var(--muted-light);
+  margin-top:3px;
+  white-space:nowrap; overflow:hidden;
 }
-.sp-preview-handle{color:var(--muted-light);}
-.sp-preview-dot{color:rgba(255,255,255,.2);}
+.sp-preview-handle,
 .sp-preview-pronouns{color:var(--muted-light);}
-/* Speech-bubble custom status floating on the banner (Discord-style).
-   Anchored to the right of the banner, offset just below the top.
-   Live-updates from _spOnInput / _spEmojiCallback while typing/picking. */
+.sp-preview-dot{color:rgba(255,255,255,.2); flex-shrink:0;}
+
+/* Floating speech-bubble preview anchored to the banner */
 .sp-preview-cs{
   position:absolute;
-  top:52px; right:14px;
+  top:34px; right:14px;
   z-index:2;
   display:inline-flex; align-items:center; gap:6px;
-  background:var(--panel2, #1e2028);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:12px;
   padding:6px 12px;
-  max-width:60%;
+  border-radius:12px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+    var(--panel2);
+  border:1px solid var(--border);
   font-size:12px;
   color:var(--text);
-  box-shadow:0 4px 14px rgba(0,0,0,.35);
-  animation:sp-cs-pop .22s cubic-bezier(.22,1,.36,1);
+  max-width:58%;
+  box-shadow:0 6px 20px rgba(0,0,0,.35);
+  animation:ftz-status-pop .22s cubic-bezier(.22,1,.36,1);
 }
 .sp-preview-cs::before{
   content:"";
   position:absolute;
-  left:-6px; top:12px;
-  width:10px; height:10px;
+  left:-5px; top:12px;
+  width:9px; height:9px;
   background:inherit;
-  border-left:1px solid rgba(255,255,255,.08);
-  border-bottom:1px solid rgba(255,255,255,.08);
+  border-left:1px solid var(--border);
+  border-bottom:1px solid var(--border);
   transform:rotate(45deg);
-  border-radius:0 0 0 3px;
+  border-radius:0 0 0 2px;
 }
-.sp-preview-cs--empty{color:var(--muted-light);font-style:italic;}
-.sp-preview-cs-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sp-preview-cs--empty{color:var(--muted); font-style:italic;}
+.sp-preview-cs-text{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.sp-preview-cs-emoji{display:inline-flex; align-items:center; flex-shrink:0;}
 .sp-preview-cs-emoji:empty{display:none;}
-@keyframes sp-cs-pop{from{opacity:0;transform:translateY(4px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
-.sp-preview-banner{width:100%;height:60px;object-fit:cover;display:block;background:var(--panel2);}
-.sp-preview-body{display:flex;align-items:flex-end;gap:12px;padding:0 14px 14px;margin-top:-30px;position:relative;z-index:1;}
-.sp-preview-av{width:48px;height:48px;border-radius:50%;overflow:hidden;border:3px solid var(--panel);flex-shrink:0;background:var(--panel2);}
-.sp-preview-av img{width:100%;height:100%;object-fit:cover;}
-.sp-preview-info{min-width:0;padding-bottom:2px;flex:1;}
-.sp-preview-dn{font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sp-preview-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sp-preview-cs{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:11.5px;color:var(--muted-light);}
-.sp-preview-cs img{width:14px;height:14px;}
-/* Reply-to-status mini modal */
-/* ── Reply-to-custom-status popup ─────────────────────────────
-   Original design (not a shrunken DM composer): compact card, a
-   "Replying to a status" strip, the target's status shown as a
-   quoted chat bubble (their avatar + name + speech bubble), and
-   a chat-style composer at the bottom. Feels like an in-thread
-   reply that just happens to be free-floating. */
-.sr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;display:flex;align-items:center;justify-content:center;animation:sr-fade .18s ease-out;}
-@keyframes sr-fade{from{opacity:0;}to{opacity:1;}}
-.sr-card{position:relative;background:var(--panel2, #1e2028);border:1px solid rgba(255,255,255,.08);border-radius:16px;width:440px;max-width:calc(100vw - 24px);overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:16px 16px 12px;display:flex;flex-direction:column;gap:12px;animation:sr-pop .22s cubic-bezier(.22,1,.36,1);}
-@keyframes sr-pop{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
-.sr-close{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s,color .12s;z-index:2;padding:0;font-size:12px;}
-.sr-close:hover{background:rgba(255,255,255,.12);color:#fff;}
-.sr-heading{display:flex;align-items:center;gap:6px;padding:2px 34px 0 2px;}
-.sr-heading-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-light);}
-/* Quoted status — target's speech bubble */
-.sr-quote{display:flex;align-items:flex-start;gap:10px;padding:8px 4px 0;}
-.sr-quote-av{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);}
-.sr-quote-av img{width:100%;height:100%;object-fit:cover;display:block;}
-.sr-quote-body{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1;}
-.sr-quote-name{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.2;}
-.sr-quote-bubble{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;border-top-left-radius:4px;padding:8px 12px;font-size:12.5px;color:var(--text);line-height:1.35;word-break:break-word;max-width:100%;box-sizing:border-box;}
-.sr-quote-emoji{display:inline-flex;flex-shrink:0;}
-.sr-quote-emoji img{width:15px;height:15px;display:block;}
-.sr-quote-text{overflow:hidden;text-overflow:ellipsis;}
-.sr-quote-text--empty{color:var(--muted-light);font-style:italic;}
-/* Composer */
-.sr-input-wrap{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);transition:border-color .12s,background .12s;}
-.sr-input-wrap:focus-within{border-color:rgba(255,249,62,.35);background:rgba(255,255,255,.045);}
-.sr-emoji-btn{width:32px;height:32px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s;padding:0;}
-.sr-emoji-btn:hover{background:rgba(255,255,255,.06);}
-.sr-emoji-btn svg{width:20px;height:20px;filter:invert(85%) opacity(.75);pointer-events:none;}
-.sr-text-input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:4px 2px;}
-.sr-text-input::placeholder{color:rgba(255,255,255,.35);}
-.sr-send-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--accent);color:var(--rail);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .12s,filter .12s,opacity .12s;font-size:12px;padding:0;}
-.sr-send-btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px);}
-.sr-send-btn:disabled{opacity:.35;cursor:not-allowed;}
-.sr-send-btn:disabled{opacity:.35;cursor:default;filter:none;}
+.sp-preview-cs-emoji img{width:14px; height:14px; display:block; object-fit:contain;}
+
+/* Composer row (emoji + input + clear) */
+.sp-input-wrap{
+  display:flex; align-items:center; gap:6px;
+  margin:0 18px 14px;
+  padding:6px 8px;
+  border-radius:12px;
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--border);
+  transition:border-color .14s, background .14s;
+}
+.sp-input-wrap:focus-within{
+  border-color:rgba(255,249,62,.35);
+  background:rgba(255,255,255,.04);
+  box-shadow:0 0 0 3px rgba(255,249,62,.06);
+}
+.sp-emoji-opener{
+  width:34px; height:34px;
+  border-radius:8px; border:none;
+  background:transparent;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; padding:0;
+  transition:background .12s;
+}
+.sp-emoji-opener:hover{background:rgba(255,255,255,.05);}
+.sp-emoji-opener svg{width:20px; height:20px; filter:invert(85%) opacity(.75); pointer-events:none;}
+.sp-emoji-opener img{width:22px; height:22px; object-fit:contain;}
+.sp-text-input{
+  flex:1; min-width:0;
+  background:transparent; border:none; outline:none;
+  color:var(--text);
+  font-family:var(--font-ui);
+  font-size:13.5px;
+  padding:4px 2px;
+}
+.sp-text-input::placeholder{color:rgba(255,255,255,.28);}
+.sp-clear-btn{
+  width:24px; height:24px;
+  border-radius:50%; border:none;
+  background:rgba(255,255,255,.06);
+  color:var(--muted);
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  transition:background .12s, color .12s;
+  font-size:11px;
+}
+.sp-clear-btn:hover{background:rgba(255,255,255,.12); color:var(--text);}
+
+/* Clear-after dropdown */
+.sp-dur-row{
+  display:flex; align-items:center; gap:10px;
+  padding:0 18px 14px;
+}
+.sp-dur-label{
+  font-family:var(--font-display);
+  font-size:10px; font-weight:700;
+  letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted-light);
+  white-space:nowrap;
+}
+.sp-dur-select{
+  flex:1; min-width:0;
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:9px 34px 9px 12px;
+  color:var(--text);
+  font-family:var(--font-ui);
+  font-size:12.5px; font-weight:600;
+  outline:none; cursor:pointer;
+  appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,249,62,.75)' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  transition:border-color .12s, background-color .12s;
+}
+.sp-dur-select:hover{border-color:rgba(255,255,255,.12); background-color:rgba(255,255,255,.035);}
+.sp-dur-select:focus{border-color:rgba(255,249,62,.4); box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+
+/* Custom duration inline expand */
+.sp-custom-dur{
+  display:none; align-items:center; gap:8px;
+  padding:0 18px 14px;
+}
+.sp-custom-dur-amt{
+  width:110px;
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:9px 12px;
+  color:var(--text);
+  font-family:var(--font-ui);
+  font-size:12.5px; font-weight:600;
+  outline:none;
+  -moz-appearance:textfield;
+}
+.sp-custom-dur-amt::-webkit-outer-spin-button,
+.sp-custom-dur-amt::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+.sp-custom-dur-amt:focus,
+.sp-custom-dur-unit:focus{border-color:rgba(255,249,62,.4); box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+.sp-custom-dur-unit{
+  flex:1;
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:9px 34px 9px 12px;
+  color:var(--text);
+  font-family:var(--font-ui);
+  font-size:12.5px; font-weight:600;
+  outline:none; cursor:pointer;
+  appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,249,62,.75)' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+}
+
+/* Actions row */
+.sp-actions{
+  display:flex; align-items:center; justify-content:flex-end;
+  gap:8px;
+  padding:14px 18px;
+  border-top:1px solid var(--border);
+  background:rgba(0,0,0,.15);
+}
+.sp-btn{
+  border:1px solid transparent;
+  border-radius:10px;
+  font-family:var(--font-ui);
+  font-size:12.5px; font-weight:700;
+  cursor:pointer;
+  padding:8px 18px;
+  transition:background .12s, color .12s, border-color .12s, transform .12s, filter .12s;
+}
+.sp-btn:active{transform:translateY(1px);}
+.sp-btn--ghost{
+  background:transparent;
+  color:var(--muted);
+  border-color:transparent;
+}
+.sp-btn--ghost:hover{
+  color:var(--red);
+  background:rgba(235,69,69,.06);
+}
+.sp-btn--save{
+  background:var(--accent);
+  color:var(--rail);
+  border-color:var(--accent);
+  box-shadow:0 4px 14px rgba(255,249,62,.2);
+}
+.sp-btn--save:hover{filter:brightness(1.08); box-shadow:0 6px 20px rgba(255,249,62,.28);}
+
+/* ── Reply-to-status popup ─────────────────────────────────── */
+.sr-card{
+  padding:18px 18px 14px;
+  display:flex; flex-direction:column; gap:14px;
+  width:420px;
+}
+.sr-close{
+  position:absolute; top:14px; right:14px;
+  width:28px; height:28px;
+  border-radius:8px;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--muted-light);
+  display:inline-flex; align-items:center; justify-content:center;
+  cursor:pointer; padding:0; font-size:11px;
+  transition:background .12s, color .12s, border-color .12s;
+  z-index:2;
+}
+.sr-close:hover{
+  background:rgba(255,255,255,.05);
+  border-color:var(--border);
+  color:var(--text);
+}
+.sr-heading{padding-right:36px;}
+.sr-heading-label{
+  font-family:var(--font-display);
+  font-size:10px; font-weight:700;
+  letter-spacing:.12em; text-transform:uppercase;
+  color:var(--accent);
+}
+/* Quoted target status */
+.sr-quote{display:flex; align-items:flex-start; gap:10px;}
+.sr-quote-av{
+  width:40px; height:40px;
+  border-radius:50%;
+  overflow:hidden; flex-shrink:0;
+  background:var(--panel2);
+  border:1px solid var(--border);
+}
+.sr-quote-av img{width:100%; height:100%; object-fit:cover; display:block;}
+.sr-quote-body{
+  display:flex; flex-direction:column; gap:5px;
+  min-width:0; flex:1;
+}
+.sr-quote-name{
+  font-family:var(--font-display);
+  font-size:13px; font-weight:800;
+  color:var(--text);
+  line-height:1.15;
+}
+.sr-quote-bubble{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:9px 13px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)),
+    var(--panel2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  border-top-left-radius:3px;
+  font-size:12.5px;
+  color:var(--text);
+  line-height:1.35;
+  word-break:break-word;
+  max-width:100%;
+  box-sizing:border-box;
+}
+.sr-quote-emoji{display:inline-flex; align-items:center; flex-shrink:0;}
+.sr-quote-emoji img{width:15px; height:15px; display:block; object-fit:contain;}
+.sr-quote-text{overflow:hidden; text-overflow:ellipsis;}
+.sr-quote-text--empty{color:var(--muted-light); font-style:italic;}
+
+/* Composer row */
+.sr-input-wrap{
+  display:flex; align-items:center; gap:6px;
+  padding:6px 8px;
+  border-radius:12px;
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--border);
+  transition:border-color .14s, background .14s;
+}
+.sr-input-wrap:focus-within{
+  border-color:rgba(255,249,62,.35);
+  background:rgba(255,255,255,.04);
+  box-shadow:0 0 0 3px rgba(255,249,62,.06);
+}
+.sr-emoji-btn{
+  width:34px; height:34px;
+  border-radius:8px; border:none;
+  background:transparent;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; padding:0;
+  transition:background .12s;
+}
+.sr-emoji-btn:hover{background:rgba(255,255,255,.05);}
+.sr-emoji-btn svg{width:20px; height:20px; filter:invert(85%) opacity(.75); pointer-events:none;}
+.sr-emoji-btn img{width:22px; height:22px; object-fit:contain;}
+.sr-text-input{
+  flex:1; min-width:0;
+  background:transparent; border:none; outline:none;
+  color:var(--text);
+  font-family:var(--font-ui);
+  font-size:13.5px;
+  padding:4px 2px;
+}
+.sr-text-input::placeholder{color:rgba(255,255,255,.28);}
+.sr-send-btn{
+  width:34px; height:34px;
+  border-radius:50%; border:none;
+  background:var(--accent);
+  color:var(--rail);
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; padding:0; font-size:12px;
+  transition:filter .12s, transform .12s, opacity .12s, box-shadow .12s;
+  box-shadow:0 4px 14px rgba(255,249,62,.2);
+}
+.sr-send-btn:hover:not(:disabled){filter:brightness(1.08); transform:translateY(-1px); box-shadow:0 6px 20px rgba(255,249,62,.28);}
+.sr-send-btn:disabled{opacity:.3; cursor:not-allowed; filter:none; box-shadow:none;}
+
 
 /* Status reply reference inside messages */
 .msg-reply-ref--status .mrr-av svg{width:16px;height:16px;filter:invert(85%) opacity(.75);display:block;}
@@ -10936,170 +11196,142 @@ select:focus-visible {
    ascending from the avatar so the text reads as "spoken" by the
    user (comic speech-bubble convention). Less pill-round than
    before (10px corners) so it reads as a bubble rather than a tag. */
+/* ── Custom-status bubble (Fortized-native) ───────────────────────
+   Used everywhere a user's custom status renders: in FPP popovers,
+   profile card panels, alongside the userbar avatar, etc. Sharp
+   sibling design to the picker/reply cards (same panel/border/token
+   language), with a compact speech-bubble tail. */
 .fpp__cs-bubble{
   position:relative;
-  /* Vertically centred on the avatar by .fpp__av-row's align-items:
-     center. Trail dots descend down-left from the bubble's bottom
-     edge toward the avatar's lower-right, so the bubble reads as
-     "spoken by the avatar" rather than the username. */
   display:inline-flex; align-items:center; gap:7px;
-  max-width:180px;
-  padding:6px 11px;
-  background:var(--panel2);
-  /* Neutral grey-dark border — used to be Main-tinted, which read
-     as a yellow halo on bright themes. Keeping the bubble neutral
-     so the avatar + card body do the colour-carrying. */
+  max-width:220px;
+  padding:6px 12px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)),
+    var(--panel2);
   border:1px solid var(--border);
-  border-radius:10px;
+  border-radius:11px;
+  font-family:var(--font-ui);
   font-size:11.5px; font-weight:500;
   color:var(--text);
   box-shadow:
-    0 8px 22px rgba(0,0,0,.45),
+    0 6px 18px rgba(0,0,0,.42),
     inset 0 1px 0 rgba(255,255,255,.04);
   cursor:pointer;
   transition:background .15s, border-color .15s, transform .15s, box-shadow .15s;
 }
-/* Trail dots rise UP-LEFT from the bubble toward the avatar.
-   Bubble now sits at the avatar's lower edge (align-items:flex-end
-   on the row), so the upper portion of the avatar is clear and the
-   dots have somewhere to go. Matches Discord's tail convention:
-   one bigger dot sticking out the bubble's top-left like a
-   speech-tail anchor, one smaller dot floating up-left between
-   that anchor and the avatar. */
-.fpp__cs-bubble::before,
-.fpp__cs-bubble::after{
-  content:""; position:absolute;
-  background:var(--panel2);
-  border:1px solid var(--border);
-  box-shadow:0 4px 10px rgba(0,0,0,.4);
-  border-radius:50%;
-  pointer-events:none;
-}
-/* Bigger anchor — sits MERGED into the bubble's top-left like
-   two soap bubbles touching. Implementation: a full circle whose
-   bottom half is clipped off + a 1 px overlap into the bubble's
-   border. The clip eats the lower arc that would otherwise draw
-   inside the bubble (the "line cutting the dot off from the
-   capsule" the user reported), while the 1 px overlap lets the
-   anchor's bg cover the bubble's top border at the meeting point.
-   The bubble's outer outline and the anchor's outer arc form one
-   continuous silhouette. */
-.fpp__cs-bubble::before{
-  top:-7px; left:8px;
-  width:14px; height:14px;
-  clip-path:inset(0 0 calc(50% - 1px) 0);
-  z-index:1;
-}
-.fpp__cs-bubble::after{
-  /* Smaller floater bridging the anchor and the avatar's right
-     edge. Lower, further left, slightly bigger than before so it
-     reads as a clear intermediate dot rather than a stray speck. */
-  top:-12px; left:-4px;
-  width:8px; height:8px;
-}
-/* Hover: no transparency. Lift the bubble a hair, brighten the
-   panel, intensify the border so it reads as interactive without
-   the washed-out look the previous .05 alpha white wash gave it. */
 .fpp__cs-bubble:hover{
-  background:var(--panel-elev, #1c2030);
-  border-color:var(--surface-border-hover);
-  transform:translateY(-1px);
-  box-shadow:
-    0 10px 26px rgba(0,0,0,.55),
-    inset 0 1px 0 rgba(255,255,255,.06);
+  border-color:rgba(255,255,255,.12);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+    var(--panel2);
 }
-.fpp__cs-bubble:hover::before,
-.fpp__cs-bubble:hover::after{
-  background:var(--panel-elev, #1c2030);
-  border-color:var(--surface-border-hover);
+.fpp__cs-bubble--empty{
+  color:var(--muted-light);
+  font-style:italic;
 }
-.fpp__cs-bubble--empty{ color:var(--muted-light); font-style:italic; }
-.fpp__cs-bubble .fpp__cs-emoji{ display:inline-flex; align-items:center; flex-shrink:0; }
-.fpp__cs-bubble .fpp__cs-emoji img{ width:14px; height:14px; display:block; }
-/* Allow up to two wrapped lines so longer prompts don't truncate
-   on the first ellipsis. The pill stays compact at 180 px wide. */
+.fpp__cs-bubble .fpp__cs-emoji{display:inline-flex; align-items:center; flex-shrink:0;}
+.fpp__cs-bubble .fpp__cs-emoji img{width:14px; height:14px; display:block; object-fit:contain;}
 .fpp__cs-bubble .fpp__cs-text{
-  display:-webkit-box;
-  -webkit-line-clamp:2;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-  line-height:1.3;
-  word-break:break-word;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  min-width:0;
 }
-/* The "+" plus-circle icon that hints "click to set your status".
-   Only present in the empty state. */
 .fpp__cs-bubble .fpp__cs-plus{
   display:inline-flex; align-items:center; justify-content:center;
+  width:16px; height:16px;
+  border-radius:50%;
+  background:rgba(255,249,62,.14);
+  color:var(--accent);
   flex-shrink:0;
-  width:14px; height:14px;
-  color:var(--muted-light);
-  opacity:.85;
+  transition:background .12s, transform .15s;
 }
-.fpp__cs-bubble:hover .fpp__cs-plus{ color:var(--text); opacity:1; }
-/* Status bubble wrapper — positions floating controls relative to the bubble */
-.fpp__cs-wrap{ position:relative; display:inline-flex; align-items:center; }
-.fpp__cs-wrap--empty{ cursor:pointer; }
-/* Floating circular action bubbles — hover the status bubble to reveal.
-   Positioned above the bubble's top-right so they don't shift layout,
-   each with a small pill tooltip that appears above on hover. */
+.fpp__cs-bubble:hover .fpp__cs-plus{background:rgba(255,249,62,.24); transform:scale(1.06);}
+
+/* Wrap: bubble + hover-revealed floating action cluster */
+.fpp__cs-wrap{position:relative; display:inline-flex; align-items:center;}
+.fpp__cs-wrap--empty{cursor:pointer;}
+
+/* Floating circular action bubbles — siblings to the status bubble.
+   Live above the bubble's top edge (Discord-style) with a small pill
+   tooltip above each on hover. Reveal only when hovering the wrap or
+   the buttons themselves so hover flicker is contained. */
 .fpp__cs-floating{
-  position:absolute; top:-6px; right:-6px;
+  position:absolute;
+  top:-8px; right:-8px;
   transform:translateY(-100%);
-  display:inline-flex; gap:5px;
+  display:inline-flex; gap:6px;
   opacity:0; pointer-events:none;
-  transition:opacity .15s, transform .15s;
-  z-index:3;
+  transition:opacity .14s ease, transform .14s ease;
+  z-index:4;
 }
 .fpp__cs-wrap:hover .fpp__cs-floating,
 .fpp__cs-floating:hover{
   opacity:1; pointer-events:auto;
-  transform:translateY(-100%) translateY(0);
 }
 .fpp__cs-float-btn{
-  /* Matches .fpp__cs-bubble exactly (same bg/border/shadow) so the
-     action buttons read as siblings floating around the same speech
-     bubble, not separate chrome from another design system. */
-  width:30px; height:30px; border-radius:50%;
+  width:30px; height:30px;
+  border-radius:50%;
   border:1px solid var(--border);
-  background:var(--panel2);
-  color:rgba(255,255,255,.7);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)),
+    var(--panel2);
+  color:var(--muted-light);
   display:inline-flex; align-items:center; justify-content:center;
   cursor:pointer; padding:0;
   box-shadow:
-    0 8px 22px rgba(0,0,0,.45),
+    0 6px 18px rgba(0,0,0,.42),
     inset 0 1px 0 rgba(255,255,255,.04);
   position:relative;
-  transition:transform .12s, background .12s, color .12s, border-color .12s;
+  transition:transform .12s, color .12s, border-color .12s, background .12s;
 }
-.fpp__cs-float-btn i{ font-size:11px; }
+.fpp__cs-float-btn i{font-size:11px;}
 .fpp__cs-float-btn:hover{
-  background:var(--panel, rgba(50,52,60,1));
-  color:#fff;
-  border-color:rgba(255,255,255,.14);
   transform:translateY(-1px);
+  border-color:rgba(255,255,255,.14);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02)),
+    var(--panel2);
+  color:var(--text);
 }
+/* Semantic hover colors — edit yellow, clear red, reply muted-white */
+.fpp__cs-float-edit:hover{
+  color:var(--accent);
+  border-color:rgba(255,249,62,.35);
+  box-shadow:0 6px 18px rgba(0,0,0,.42), 0 0 0 2px rgba(255,249,62,.08);
+}
+.fpp__cs-float-delete:hover{
+  color:var(--red);
+  border-color:rgba(235,69,69,.35);
+  box-shadow:0 6px 18px rgba(0,0,0,.42), 0 0 0 2px rgba(235,69,69,.1);
+}
+.fpp__cs-float-reply:hover{
+  color:#93c5fd;
+  border-color:rgba(96,165,250,.35);
+  box-shadow:0 6px 18px rgba(0,0,0,.42), 0 0 0 2px rgba(96,165,250,.1);
+}
+/* Pill tooltip above each button */
 .fpp__cs-float-btn::after{
   content:attr(data-tip);
   position:absolute;
   bottom:calc(100% + 6px);
   left:50%;
   transform:translateX(-50%);
-  background:rgba(20,22,28,.98);
-  color:#fff;
   padding:4px 10px;
-  border-radius:6px;
-  font-size:11px;
-  font-weight:600;
+  background:var(--rail);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-family:var(--font-display);
+  font-size:10px; font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
   white-space:nowrap;
   opacity:0;
   pointer-events:none;
   transition:opacity .12s;
-  box-shadow:0 4px 12px rgba(0,0,0,.4);
+  box-shadow:0 6px 18px rgba(0,0,0,.5);
 }
-.fpp__cs-float-btn:hover::after{ opacity:1; }
-.fpp__cs-float-edit:hover{ color:var(--accent); }
-.fpp__cs-float-delete:hover{ color:var(--red); }
-.fpp__cs-float-reply:hover{ color:var(--blue); }
+.fpp__cs-float-btn:hover::after{opacity:1;}
 
 /* ── Identity (name + handle row + badges) ────────────────────────── */
 .fpp__identity{ padding:12px 18px 0; }

@@ -452,6 +452,25 @@ const FortizedSocial = (() => {
     }
     console.log('[DECO][saveUserObject] upsert ok');
     console.debug('[saveUserObject] ✓ Successfully saved user data');
+    // Broadcast so friends/DM partners/bastion-mates see displayName / pfp /
+    // banner / bio / decoration / status changes without refreshing. Payload
+    // is deliberately small; the receiver's onProfileUpdated hook patches
+    // visible surfaces (fpp cards, message rows, DM sidebar).
+    try {
+      socketEmit('profile:update', {
+        username: user.username,
+        displayName: user.displayName,
+        pfp: user.pfp,
+        banner: user.banner,
+        bio: user.bio,
+        pronouns: user.pronouns,
+        displayFont: user.displayFont,
+        displayEffect: user.displayEffect,
+        displayColor: user.displayColor,
+        displayColor2: user.displayColor2,
+        activeDecoration: user.activeDecoration,
+      });
+    } catch(_) {}
   }
 
   // ── Auth ─────────────────────────────────────────────
@@ -1264,6 +1283,10 @@ const FortizedSocial = (() => {
     _cacheDel('globalBastions');
     _cacheDel('gb:' + id);
     await sb.from('global_bastions').upsert({ id, data: bdata }, { onConflict: 'id' });
+    // Broadcast so every viewer of this bastion refreshes name/icon/banner/
+    // desc/emblem/channels/emoji/etc. onBastionUpdate on the client refetches
+    // and re-renders. Rate-limited on the socket layer if hot-spammed.
+    try { socketEmit('bastion:update', { bastionId: id, field: 'save' }); } catch(_) {}
   }
   async function getGlobalBastion(id) {
     const cacheKey = 'gb:' + id;
@@ -1482,7 +1505,7 @@ const FortizedSocial = (() => {
 
   // Client-side rate limiting for Socket.IO events
   var _emitLastTime = {};
-  var _emitCooldowns = { 'status:set': 2000, 'typing:start': 1000, 'typing:stop': 1000, 'activity:set': 3000, 'activity:update': 3000 };
+  var _emitCooldowns = { 'status:set': 2000, 'typing:start': 1000, 'typing:stop': 1000, 'activity:set': 3000, 'activity:update': 3000, 'profile:update': 500, 'bastion:update': 500 };
   function socketEmit(event, data) {
     try {
       if (!_socket || !_socketReady) return false;

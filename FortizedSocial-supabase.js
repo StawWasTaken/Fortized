@@ -251,10 +251,30 @@ const FortizedSocial = (() => {
 
   function _userFromRow(r) {
     if (!r) return null;
-    // Merge any extra fields stored in raw JSONB
-    const extra = r.raw || {};
+    // Merge any extra fields stored in raw JSONB. IMPORTANT: strip the
+    // known-column keys from `extra` before spreading. Legacy rows can
+    // carry stale pfp/banner/bio/etc inside `raw` from a past write
+    // that mis-stored them there; spreading raw at the end would let
+    // those stale values overwrite the fresh column values on every
+    // read, which is what surfaced as "loads an older version of my
+    // avatar / banner / about-me" on refresh. Column value ALWAYS
+    // wins for known fields.
+    const rawSrc = r.raw || {};
+    const STALE_KEYS = new Set([
+      'id','username','password','email','displayName','pfp','banner',
+      'onyx','status','customStatus','friends','friendRequestsSent',
+      'friendRequestsReceived','bastions','notifications','radianceUntil',
+      'radiancePlus','lastDaily','blockedUsers','ignoredUsers','groupChats',
+      'suspension','suspendedUntil','activeWarning','gameActivity',
+      'lastSeen','profileTheme','activeDecoration','bio','badges',
+      'connections','banned','banReason','createdAt',
+    ]);
+    const extra = {};
+    for (const k of Object.keys(rawSrc)) {
+      if (!STALE_KEYS.has(k)) extra[k] = rawSrc[k];
+    }
     return {
-      id: extra.id || null,
+      id: rawSrc.id || null,
       username: r.username,
       password: r.password,
       email: r.email || '',
@@ -269,8 +289,8 @@ const FortizedSocial = (() => {
       friendRequestsReceived: r.friend_requests_received || [],
       bastions: r.bastions || [],
       notifications: [],
-      radianceUntil: _bigintToISO(r.radiance_until) || (extra.radianceUntil || null),
-      radiancePlus: _bigintToISO(r.radiance_plus) || (extra.radiancePlus || null),
+      radianceUntil: _bigintToISO(r.radiance_until) || (rawSrc.radianceUntil || null),
+      radiancePlus: _bigintToISO(r.radiance_plus) || (rawSrc.radiancePlus || null),
       lastDaily: r.last_daily || null,
       blockedUsers: r.blocked_users || [],
       ignoredUsers: r.ignored_users || {},

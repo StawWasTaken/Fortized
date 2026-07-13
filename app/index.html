@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix240';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix241';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix240';
+    s4.src = '/firebase-compat-shim.js?v=2026fix241';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix240">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix241">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix240', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix241', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix240"></script>
+<script src="/app/utils.js?v=2026fix241"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -416,10 +416,6 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
           <div class="home-hero" id="home-hero-area">
             <!-- Background Knight (ghosted) -->
             <img src="/Fortized Knight.png" class="hero-knight-bg" onerror="this.style.display='none'" alt="">
-            <!-- Floating items -->
-            <div class="hero-float-items" id="hero-float-items"></div>
-            <!-- Sparkle particles -->
-            <div class="hero-sparkles" id="hero-sparkles"></div>
             <!-- Left content -->
             <div class="hero-left-content">
               <div class="hero-greeting"><span data-i18n="home.hero.welcome">Welcome back,</span> <span id="hero-username" style="color:var(--accent);font-weight:700;margin:0 4px;"></span> <span class="wave-emoji" style="font-size:18px;">👋</span></div>
@@ -448,11 +444,8 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
             <div class="joyster-bubble" id="joyster-bubble"></div>
           </div>
 
-          <!-- QUICK ACTIONS -->
-          <div id="home-quick-actions" style="padding:12px 28px 0;"></div>
-          <!-- HOMEPAGE FEED -->
-          <div class="home-main-scroll" style="padding:12px 0 48px;">
-            <div id="home-dyk-strip" style="padding:0 28px;"></div>
+          <!-- HOMEPAGE FEED — centered reading column -->
+          <div class="home-main-scroll">
             <!-- 1) Banner ad emplacement (card placeholder if empty) -->
             <div class="realm-section" style="margin-top:4px;">
               <div id="home-ads" class="home-banner-ad home-banner-card"></div>
@@ -516,6 +509,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
                   </div>
                 </div>
               </div>
+            </div>
+            <!-- 6) Did-you-know / lore / tips — quiet footer strip -->
+            <div class="realm-section" style="margin-bottom:8px;">
+              <div id="home-dyk-strip"></div>
             </div>
           </div>
         </div>
@@ -1253,10 +1250,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix240"></script>
-<script src="/app/app.js?v=2026fix240"></script>
-<script src="/app/joy-system.js?v=2026fix240"></script>
-<script src="/app/chronicle-games.js?v=2026fix240"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix241"></script>
+<script src="/app/app.js?v=2026fix241"></script>
+<script src="/app/joy-system.js?v=2026fix241"></script>
+<script src="/app/chronicle-games.js?v=2026fix241"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

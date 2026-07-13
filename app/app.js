@@ -6099,35 +6099,9 @@ function _animateCounter(elId, target) {
 
 // ── Hero floating items & sparkles ──
 function _initHeroEffects() {
-  // Sparkles
-  const sparkleContainer = document.getElementById('hero-sparkles');
-  if (sparkleContainer && !sparkleContainer.children.length) {
-    for (let i = 0; i < 12; i++) {
-      const s = document.createElement('div');
-      s.className = 'hero-sparkle';
-      s.style.left = Math.random() * 100 + '%';
-      s.style.top = (40 + Math.random() * 50) + '%';
-      s.style.animationDelay = (Math.random() * 6) + 's';
-      s.style.animationDuration = (4 + Math.random() * 4) + 's';
-      sparkleContainer.appendChild(s);
-    }
-  }
-  // Floating items
-  const floatContainer = document.getElementById('hero-float-items');
-  if (floatContainer && !floatContainer.children.length) {
-    const items = ['🎲','#','🎮','🎧','⚔️','🛡️','💎','🏰'];
-    items.forEach((item, i) => {
-      const el = document.createElement('div');
-      el.className = 'hero-float-item';
-      el.textContent = item;
-      el.style.left = (8 + (i / items.length) * 80) + '%';
-      el.style.top = (15 + Math.random() * 55) + '%';
-      el.style.animationDelay = (Math.random() * 8) + 's';
-      el.style.animationDuration = (10 + Math.random() * 8) + 's';
-      el.style.fontSize = (14 + Math.random() * 10) + 'px';
-      floatContainer.appendChild(el);
-    });
-  }
+  // Ambient sparkles + floating emoji removed in the calm-home redesign —
+  // motion is reserved for feedback (hover, press, Joyster reactions),
+  // never ambient decoration. Kept as a no-op so old callers stay valid.
 }
 
 // ── Joyster character interactions ──

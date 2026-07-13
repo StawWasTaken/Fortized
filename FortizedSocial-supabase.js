@@ -401,6 +401,13 @@ const FortizedSocial = (() => {
     'bastions', 'blocked_users', 'ignored_users', 'group_chats',
   ]);
 
+  // Columns the implicit (whole-object) save path never writes at all —
+  // the relationship engine below is their only writer. Explicit-field
+  // saves may still target them (admin tooling).
+  const _RELATIONSHIP_COLS = new Set([
+    'friends', 'friend_requests_sent', 'friend_requests_received',
+  ]);
+
   // App-level field name -> DB column, for explicit-field saves.
   // Anything not listed here lives inside the raw JSONB column.
   const _FIELD_TO_COL = {
@@ -492,6 +499,13 @@ const FortizedSocial = (() => {
       } else {
         for (const col of Object.keys(desired)) {
           if (col === 'username' || col === 'created_at' || col === 'raw') continue;
+          // Relationship columns are owned by the friend ops
+          // (_setPairState) — they always write both users' rows
+          // together. A whole-object save works from a single-user CU
+          // snapshot that may predate the other side's action, so it is
+          // NEVER authoritative for these; letting it write them is how
+          // a just-accepted request used to get re-added by the sender.
+          if (_RELATIONSHIP_COLS.has(col)) continue;
           const nv = desired[col], ev = base[col];
           if (_sameVal(nv, ev)) continue;
           if (col === 'password' && !nv) continue;
@@ -516,7 +530,10 @@ const FortizedSocial = (() => {
           throw new Error(`Update failed: ${error.message}`);
         }
         _lastRowByUser[uname] = { ...base, ...changed };
-        console.debug('[saveUserObject] ✓ wrote [' + Object.keys(changed).join(', ') + '] for', uname);
+        // console.info (not .debug) so the write trail is visible in a
+        // default DevTools console — this line is the first thing to ask
+        // for when someone reports a save that "didn't stick".
+        console.info('[saveUserObject] ✓ wrote [' + Object.keys(changed).join(', ') + '] for', uname);
       }
     }
     // Broadcast so friends/DM partners/bastion-mates see displayName / pfp /
@@ -753,187 +770,253 @@ const FortizedSocial = (() => {
   }
 
   // ── Friend System ────────────────────────────────────
+  // ── Relationship engine ──────────────────────────────
+  // A relationship lives denormalized on BOTH users' rows (friends,
+  // friend_requests_sent, friend_requests_received) and the two row
+  // writes are not transactional. Historically a failed second write
+  // left the pair permanently split — one user saw "friends", the
+  // other didn't, and nothing ever repaired it. Every mutation now
+  // funnels through _setPairState: compute the ONE state the pair
+  // should be in, write minimal membership patches to both rows
+  // (the OTHER user's row first — a half-applied op then always
+  // leaves the actor's UI an affordance to retry), verify, and
+  // retry once. syncRelationship() runs the same convergence for a
+  // pair without an op, which is how legacy split rows self-heal.
+  function _hasU(arr, u)    { return (arr || []).map(norm).includes(u); }
+  function _withU(arr, u)   { const a = (arr || []).map(norm); return a.includes(u) ? a : [...a, u]; }
+  function _withoutU(arr, u){ return (arr || []).map(norm).filter(x => x !== u); }
+
+  // The one consistent state for a pair, given both fresh user objects.
+  // 'a>b' = a has a pending request to b. Pendings are RECEIVER-
+  // authoritative: a request exists iff the receiver's row carries it,
+  // so a sender-side leftover from a silent ignore can never resurrect
+  // a request in the receiver's inbox.
+  function _pairTargetState(a, b) {
+    const an = norm(a.username), bn = norm(b.username);
+    if (_hasU(a.blockedUsers, bn) || _hasU(b.blockedUsers, an)) return 'none';
+    const fA = _hasU(a.friends, bn), fB = _hasU(b.friends, an);
+    if (fA && fB) return 'friends';
+    const aToB = _hasU(b.friendRequestsReceived, an);
+    const bToA = _hasU(a.friendRequestsReceived, bn);
+    if (fA !== fB) {
+      // One row says friends, the other doesn't. Any surviving request
+      // half means a half-finished ACCEPT — complete it. No request
+      // linkage means a half-finished REMOVE — complete that instead.
+      const anyReq = aToB || bToA || _hasU(a.friendRequestsSent, bn) || _hasU(b.friendRequestsSent, an);
+      return anyReq ? 'friends' : 'none';
+    }
+    if (aToB && bToA) return 'friends'; // crossed requests auto-accept
+    if (aToB) return 'a>b';
+    if (bToA) return 'b>a';
+    return 'none';
+  }
+
+  // Membership patch for one row so it matches the wanted relation to
+  // `other`. Only the three relationship columns, only when they differ.
+  function _pairRowPatch(row, other, want) {
+    const patch = {};
+    if (_hasU(row.friends, other) !== want.friend)
+      patch.friends = want.friend ? _withU(row.friends, other) : _withoutU(row.friends, other);
+    if (_hasU(row.friendRequestsSent, other) !== want.sent)
+      patch.friend_requests_sent = want.sent ? _withU(row.friendRequestsSent, other) : _withoutU(row.friendRequestsSent, other);
+    if (_hasU(row.friendRequestsReceived, other) !== want.received)
+      patch.friend_requests_received = want.received ? _withU(row.friendRequestsReceived, other) : _withoutU(row.friendRequestsReceived, other);
+    return patch;
+  }
+
+  // Write one row's patch; optionally stamp raw.friendsSince[other]
+  // (merged over the freshest raw so nothing else gets clobbered).
+  // Refreshes the delta baseline + kills caches so every later reader
+  // sees the new state.
+  async function _applyPairPatch(username, patch, stampSinceFor) {
+    const un = norm(username);
+    if (stampSinceFor) {
+      try {
+        const { data: rr } = await sb.from('users').select('raw').eq('username', un).maybeSingle();
+        const raw = { ...(rr?.raw || {}) };
+        const fs = { ...(raw.friendsSince || {}) };
+        if (!fs[stampSinceFor]) {
+          fs[stampSinceFor] = new Date().toISOString();
+          patch = { ...patch, raw: { ...raw, friendsSince: fs } };
+        }
+      } catch (_) { /* stamp is cosmetic — never block the relationship write */ }
+    }
+    if (!Object.keys(patch).length) return true;
+    const { error } = await sb.from('users').update(patch).eq('username', un);
+    if (error) {
+      console.error('[friends] row write failed for', un, '—', error.message);
+      return false;
+    }
+    if (_lastRowByUser[un]) _lastRowByUser[un] = { ..._lastRowByUser[un], ...patch };
+    _cacheDel('user:' + un); _cacheDel('userEnf:' + un);
+    return true;
+  }
+
+  // Drive the pair to `target` ('friends' | 'a>b' | 'b>a' | 'none').
+  // Fetches fresh rows itself so it also repairs drift that happened
+  // since the caller looked.
+  async function _setPairState(aName, bName, target, _retried) {
+    const [a, b] = await Promise.all([
+      getUserByName(aName, { noCache: true }),
+      getUserByName(bName, { noCache: true }),
+    ]);
+    if (!a || !b) return { ok: false, msg: 'User not found.', state: 'none' };
+    const an = norm(a.username), bn = norm(b.username);
+    const wantA = { friend: target === 'friends', sent: target === 'a>b', received: target === 'b>a' };
+    const wantB = { friend: target === 'friends', sent: target === 'b>a', received: target === 'a>b' };
+    const patchA = _pairRowPatch(a, bn, wantA);
+    const patchB = _pairRowPatch(b, an, wantB);
+    const becameFriends = target === 'friends' && ('friends' in patchA || 'friends' in patchB);
+    const okB = await _applyPairPatch(bn, patchB, becameFriends ? an : null);
+    const okA = await _applyPairPatch(an, patchA, becameFriends ? bn : null);
+    if (!(okA && okB)) {
+      if (!_retried) return _setPairState(aName, bName, target, true);
+      return { ok: false, msg: 'Could not update both accounts — it will self-heal on the next sync.', state: target };
+    }
+    const changed = Object.keys(patchA).length + Object.keys(patchB).length > 0;
+    if (changed) console.info('[friends] pair', an, '+', bn, '→', target);
+    return { ok: true, state: target, changed };
+  }
+
+  // Converge a pair to whatever consistent state its rows imply.
+  // Exposed as syncRelationship — the app calls it when it notices two
+  // rows disagreeing (legacy half-applied ops heal here).
+  async function _syncPair(u1, u2) {
+    const [a, b] = await Promise.all([
+      getUserByName(u1, { noCache: true }),
+      getUserByName(u2, { noCache: true }),
+    ]);
+    if (!a || !b) return { ok: false, msg: 'User not found.', state: 'none' };
+    return _setPairState(u1, u2, _pairTargetState(a, b));
+  }
+  const syncRelationship = _syncPair;
+
   async function sendFriendRequest(fromUsername, toUsername) {
     fromUsername = norm(fromUsername);
     toUsername   = norm(toUsername);
-    _cacheDel('user:' + fromUsername); _cacheDel('user:' + toUsername);
     if (!toUsername) return { ok: false, msg: 'Enter a username.' };
     if (fromUsername === toUsername) return { ok: false, msg: "Can't add yourself." };
-
-    // Fetch fresh data to avoid stale friend lists
     const [fu, tu] = await Promise.all([
       getUserByName(fromUsername, { noCache: true }),
       getUserByName(toUsername, { noCache: true })
     ]);
     if (!fu) return { ok: false, msg: 'Your account not found.' };
     if (!tu) return { ok: false, msg: `User "${toUsername}" not found.` };
-
     // Block guard — a block by EITHER side prevents new friend requests.
     // The "they blocked you" case gets a deliberately vague message so a
     // block is never confirmed to the blocked person.
-    if ((fu.blockedUsers || []).map(norm).includes(toUsername))
+    if (_hasU(fu.blockedUsers, toUsername))
       return { ok: false, msg: 'You have this user blocked. Unblock them first.' };
-    if ((tu.blockedUsers || []).map(norm).includes(fromUsername))
+    if (_hasU(tu.blockedUsers, fromUsername))
       return { ok: false, msg: "Couldn't send the request." };
 
-    const friends       = fu.friends           || [];
-    const sentReqs      = fu.friendRequestsSent || [];
-    const theirSentReqs = tu.friendRequestsSent || [];
-
-    if (friends.includes(toUsername))   return { ok: false, msg: 'Already friends.' };
-    if (sentReqs.includes(toUsername))  return { ok: false, msg: 'Request already sent.' };
-
-    if (theirSentReqs.includes(fromUsername)) {
-      return acceptFriendRequest(fromUsername, toUsername);
+    const cur = _pairTargetState(fu, tu);
+    if (cur === 'friends') {
+      // Also converges half-finished accepts the moment either side
+      // tries to re-add the other.
+      await _setPairState(fromUsername, toUsername, 'friends');
+      return { ok: false, msg: 'Already friends.' };
     }
+    if (cur === 'a>b') return { ok: false, msg: 'Request already sent.' };
 
-    try {
-      const { error: err1 } = await sb.from('users').update({ friend_requests_sent: [...sentReqs, toUsername] }).eq('username', fromUsername);
-      if (err1) throw new Error(`Update sender failed: ${err1.message}`);
-
-      const theirReceived = tu.friendRequestsReceived || [];
-      if (!theirReceived.includes(fromUsername)) {
-        const { error: err2 } = await sb.from('users').update({ friend_requests_received: [...theirReceived, fromUsername] }).eq('username', toUsername);
-        if (err2) throw new Error(`Update receiver failed: ${err2.message}`);
-      }
-
-      await addNotification(toUsername, { type: 'friend_request', from: fromUsername });
-      console.debug('[Friend Request] Sent from', fromUsername, 'to', toUsername);
-      return { ok: true, msg: `Friend request sent to ${toUsername}!` };
-    } catch (e) {
-      console.error('[sendFriendRequest Error]', e.message);
-      return { ok: false, msg: 'Failed to send request: ' + e.message };
+    const target = cur === 'b>a' ? 'friends' : 'a>b'; // they already asked → instant accept
+    const r = await _setPairState(fromUsername, toUsername, target);
+    if (!r.ok) return { ok: false, msg: 'Failed to send request: ' + (r.msg || 'connection error') };
+    if (target === 'friends') {
+      await addNotification(toUsername, { type: 'friend_accept', from: fromUsername });
+      try { socketEmit('friend:accepted', { from: toUsername, to: fromUsername }); } catch (_) {}
+      return { ok: true, accepted: true, msg: `You are now friends with ${toUsername}!` };
     }
+    await addNotification(toUsername, { type: 'friend_request', from: fromUsername });
+    try { socketEmit('friend:request', { from: fromUsername, to: toUsername }); } catch (_) {}
+    console.debug('[Friend Request] Sent from', fromUsername, 'to', toUsername);
+    return { ok: true, msg: `Friend request sent to ${toUsername}!` };
   }
 
   async function acceptFriendRequest(myUsername, fromUsername) {
     myUsername   = norm(myUsername);
     fromUsername = norm(fromUsername);
-    _cacheDel('user:' + myUsername); _cacheDel('user:' + fromUsername);
-    // Fetch fresh data to ensure friend lists are current
     const [mu, fu] = await Promise.all([
       getUserByName(myUsername, { noCache: true }),
       getUserByName(fromUsername, { noCache: true })
     ]);
     if (!mu || !fu) return { ok: false, msg: 'User not found.' };
-
     // Block guard — accepting is off the table while either side blocks.
-    if ((mu.blockedUsers || []).map(norm).includes(fromUsername))
+    if (_hasU(mu.blockedUsers, fromUsername))
       return { ok: false, msg: 'You have this user blocked. Unblock them first.' };
-    if ((fu.blockedUsers || []).map(norm).includes(myUsername))
+    if (_hasU(fu.blockedUsers, myUsername))
       return { ok: false, msg: "Couldn't accept the request." };
 
-    const myFriends  = [...(mu.friends || [])];
-    const hisFriends = [...(fu.friends || [])];
-    if (!myFriends.includes(fromUsername))  myFriends.push(fromUsername);
-    if (!hisFriends.includes(myUsername))   hisFriends.push(myUsername);
-    // Stamp "friends since" symmetrically in the raw JSONB so the profile
-    // card can show it on both sides. Only sets if not already stamped
-    // (idempotent) so re-accepts after an unfriend don't reset the date.
-    const nowIso = new Date().toISOString();
-    const mineRawFs = { ...(mu.friendsSince || {}) };
-    if (!mineRawFs[fromUsername]) mineRawFs[fromUsername] = nowIso;
-    const theirRawFs = { ...(fu.friendsSince || {}) };
-    if (!theirRawFs[myUsername]) theirRawFs[myUsername] = nowIso;
+    const cur = _pairTargetState(mu, fu);
+    if (cur === 'a>b') return { ok: false, msg: "They haven't accepted your request yet." };
+    if (cur === 'none') return { ok: false, msg: 'That request is no longer there.' };
+    const alreadyFriends = cur === 'friends';
 
-    try {
-      // Load existing raw payloads so we merge instead of clobber. Every
-      // extra field we care about lives on this JSONB column.
-      const [{ data: myRow }, { data: theirRow }] = await Promise.all([
-        sb.from('users').select('raw').eq('username', myUsername).maybeSingle(),
-        sb.from('users').select('raw').eq('username', fromUsername).maybeSingle(),
-      ]);
-      const myRaw    = { ...(myRow?.raw    || {}), friendsSince: mineRawFs };
-      const theirRaw = { ...(theirRow?.raw || {}), friendsSince: theirRawFs };
-
-      const { error: err1 } = await sb.from('users').update({
-        friends: myFriends,
-        friend_requests_received: (mu.friendRequestsReceived || []).filter(u => u !== fromUsername),
-        friend_requests_sent: (mu.friendRequestsSent || []).filter(u => u !== fromUsername),
-        raw: myRaw,
-      }).eq('username', myUsername);
-      if (err1) throw new Error(`Update my profile failed: ${err1.message}`);
-
-      const { error: err2 } = await sb.from('users').update({
-        friends: hisFriends,
-        friend_requests_sent: (fu.friendRequestsSent || []).filter(u => u !== myUsername),
-        friend_requests_received: (fu.friendRequestsReceived || []).filter(u => u !== myUsername),
-        raw: theirRaw,
-      }).eq('username', fromUsername);
-      if (err2) throw new Error(`Update their profile failed: ${err2.message}`);
-
+    const r = await _setPairState(myUsername, fromUsername, 'friends');
+    if (!r.ok) return { ok: false, msg: 'Failed to accept: ' + (r.msg || 'connection error') };
+    if (!alreadyFriends) {
       await addNotification(fromUsername, { type: 'friend_accept', from: myUsername });
       console.debug('[Friend Accept] Users', myUsername, 'and', fromUsername, 'are now friends');
-      return { ok: true, msg: `You are now friends with ${fromUsername}!` };
-    } catch (e) {
-      console.error('[acceptFriendRequest Error]', e.message);
-      return { ok: false, msg: 'Failed to accept: ' + e.message };
     }
+    try { socketEmit('friend:accepted', { from: fromUsername, to: myUsername }); } catch (_) {}
+    return { ok: true, msg: `You are now friends with ${fromUsername}!` };
   }
 
   const acceptFriend = acceptFriendRequest;
 
+  // Decline (a.k.a. ignore) an INCOMING request. Deliberately silent:
+  // no notification, no socket event — the sender's UI converges on
+  // its next fresh read instead of getting a live "you were ignored"
+  // signal. A crossed outgoing request from me survives the decline.
   async function declineFriendRequest(myUsername, fromUsername) {
     myUsername   = norm(myUsername);
     fromUsername = norm(fromUsername);
-    try {
-      const [mu, fu] = await Promise.all([
-        getUserByName(myUsername, { noCache: true }),
-        getUserByName(fromUsername, { noCache: true })
-      ]);
-      if (mu) {
-        const { error: err1 } = await sb.from('users').update({
-          friend_requests_received: (mu.friendRequestsReceived || []).filter(u => u !== fromUsername)
-        }).eq('username', myUsername);
-        if (err1) throw new Error(`Decline for ${myUsername} failed: ${err1.message}`);
-      }
-      if (fu) {
-        const { error: err2 } = await sb.from('users').update({
-          friend_requests_sent: (fu.friendRequestsSent || []).filter(u => u !== myUsername)
-        }).eq('username', fromUsername);
-        if (err2) throw new Error(`Decline for ${fromUsername} failed: ${err2.message}`);
-      }
-      console.debug('[declineFriendRequest] Request declined:', { myUsername, fromUsername });
-      return { ok: true };
-    } catch(e) {
-      console.error('[declineFriendRequest Error]', e.message);
-      return { ok: false, msg: 'Failed to decline: ' + e.message };
-    }
+    const [mu, fu] = await Promise.all([
+      getUserByName(myUsername, { noCache: true }),
+      getUserByName(fromUsername, { noCache: true })
+    ]);
+    if (!mu || !fu) return { ok: false, msg: 'User not found.' };
+    // Genuine friendship check (NOT _pairTargetState — that reads
+    // crossed pendings as friends-to-be, and declining one half of a
+    // crossed pair is legitimate).
+    if (_hasU(mu.friends, fromUsername) && _hasU(fu.friends, myUsername))
+      return { ok: false, msg: 'You are already friends — remove them instead.' };
+    const mineStillOut = _hasU(fu.friendRequestsReceived, myUsername);
+    const r = await _setPairState(myUsername, fromUsername, mineStillOut ? 'a>b' : 'none');
+    if (!r.ok) return { ok: false, msg: 'Failed to decline: ' + (r.msg || 'connection error') };
+    console.debug('[declineFriendRequest] Request declined:', { myUsername, fromUsername });
+    return { ok: true };
   }
 
-  // Cancel an OUTGOING friend request: removes it from my sent list and
-  // the target's received list. Row-wise this is exactly a decline with
-  // the roles swapped, so we delegate.
+  // Cancel an OUTGOING request. Emits friend:removed so the receiver's
+  // pending entry disappears live. A crossed incoming request from them
+  // survives the cancel.
   async function cancelFriendRequest(myUsername, toUsername) {
-    return declineFriendRequest(toUsername, myUsername);
+    myUsername = norm(myUsername);
+    toUsername = norm(toUsername);
+    const [mu, tu] = await Promise.all([
+      getUserByName(myUsername, { noCache: true }),
+      getUserByName(toUsername, { noCache: true })
+    ]);
+    if (!mu || !tu) return { ok: false, msg: 'User not found.' };
+    // Genuine friendship check — see declineFriendRequest.
+    if (_hasU(mu.friends, toUsername) && _hasU(tu.friends, myUsername))
+      return { ok: false, msg: 'You are already friends — remove them instead.' };
+    const theirsStillIn = _hasU(mu.friendRequestsReceived, toUsername);
+    const r = await _setPairState(myUsername, toUsername, theirsStillIn ? 'b>a' : 'none');
+    if (!r.ok) return { ok: false, msg: 'Failed to cancel: ' + (r.msg || 'connection error') };
+    try { socketEmit('friend:removed', { from: myUsername, to: toUsername }); } catch (_) {}
+    return { ok: true };
   }
 
   async function removeFriend(myUsername, friendUsername) {
     myUsername     = norm(myUsername);
     friendUsername = norm(friendUsername);
-    try {
-      const [mu, fu] = await Promise.all([
-        getUserByName(myUsername, { noCache: true }),
-        getUserByName(friendUsername, { noCache: true })
-      ]);
-      if (mu) {
-        const { error: err1 } = await sb.from('users').update({
-          friends: (mu.friends || []).filter(u => u !== friendUsername)
-        }).eq('username', myUsername);
-        if (err1) throw new Error(`Remove for ${myUsername} failed: ${err1.message}`);
-      }
-      if (fu) {
-        const { error: err2 } = await sb.from('users').update({
-          friends: (fu.friends || []).filter(u => u !== myUsername)
-        }).eq('username', friendUsername);
-        if (err2) throw new Error(`Remove for ${friendUsername} failed: ${err2.message}`);
-      }
-      console.debug('[removeFriend] Friend removed:', { myUsername, friendUsername });
-      return { ok: true };
-    } catch(e) {
-      console.error('[removeFriend Error]', e.message);
-      return { ok: false, msg: 'Failed to remove friend: ' + e.message };
-    }
+    const r = await _setPairState(myUsername, friendUsername, 'none');
+    if (!r.ok) return { ok: false, msg: 'Failed to remove friend: ' + (r.msg || 'connection error') };
+    try { socketEmit('friend:removed', { from: myUsername, to: friendUsername }); } catch (_) {}
+    console.debug('[removeFriend] Friend removed:', { myUsername, friendUsername });
+    return { ok: true };
   }
 
   // ── Direct Messages ──────────────────────────────────
@@ -1788,9 +1871,15 @@ const FortizedSocial = (() => {
     }
   }
 
-  // ── Friend Request Polling ──
+  // ── Friend / relationship polling ──
+  // The 15s safety net under the socket events: watches the WHOLE
+  // relationship state (friends + both request lists), not just request
+  // counts — so a lost friend:accepted / friend:removed packet can delay
+  // convergence by at most one poll, never forever. Membership is
+  // compared by content, not length: an accept that swaps a request for
+  // a friendship leaves counts unchanged but must still fire.
   let _friendRequestPollingInterval = null;
-  let _lastFriendRequestState = { sent: 0, received: 0 };
+  let _lastFriendState = null;
 
   async function startFriendRequestPolling(username) {
     if (_friendRequestPollingInterval) {
@@ -1805,7 +1894,7 @@ const FortizedSocial = (() => {
       if (_tabHidden()) return;
       try {
         const { data, error } = await sb.from('users')
-          .select('friend_requests_sent,friend_requests_received')
+          .select('friends,friend_requests_sent,friend_requests_received')
           .eq('username', username)
           .maybeSingle();
 
@@ -1815,16 +1904,21 @@ const FortizedSocial = (() => {
         }
 
         if (data) {
-          const sent = (data.friend_requests_sent || []).length;
-          const received = (data.friend_requests_received || []).length;
-
-          if (sent !== _lastFriendRequestState.sent || received !== _lastFriendRequestState.received) {
-            console.log('[FriendRequestPolling] 🔔 FRIEND REQUEST CHANGE:', { sent, received });
-            _lastFriendRequestState = { sent, received };
+          const snapshot = JSON.stringify([
+            (data.friends || []).slice().sort(),
+            (data.friend_requests_sent || []).slice().sort(),
+            (data.friend_requests_received || []).slice().sort(),
+          ]);
+          if (snapshot !== _lastFriendState) {
+            const first = _lastFriendState === null;
+            _lastFriendState = snapshot;
+            if (!first) console.log('[FriendRequestPolling] 🔔 relationship state changed');
             if (_callbacks.onFriendRequestsUpdate) {
               _callbacks.onFriendRequestsUpdate({
+                friends: data.friends || [],
                 sent: data.friend_requests_sent || [],
-                received: data.friend_requests_received || []
+                received: data.friend_requests_received || [],
+                initial: first,
               });
             }
           }
@@ -1832,7 +1926,7 @@ const FortizedSocial = (() => {
       } catch (e) {
         console.error('[FriendRequestPolling] Error:', e?.message);
       }
-    }, 15000); // Poll every 15s (reduced from 4s to cut egress; socket events handle real-time)
+    }, 15000); // Poll every 15s (socket events handle the instant path)
   }
 
   function stopFriendRequestPolling() {
@@ -2706,7 +2800,7 @@ const FortizedSocial = (() => {
     getUserByName, getUserByPublicId, resolveUsername, getUserPublicId, ensureUserPublicId, getDMKey, saveUserObject, saveActiveDecoration, deleteAccount, invalidateUserCache,
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
-    sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, cancelFriendRequest, removeFriend,
+    sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, cancelFriendRequest, removeFriend, syncRelationship,
     getDMMessages, sendDMMessage, editMessage, deleteMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,
     getGlobalBastions, saveGlobalBastion, getGlobalBastion, deleteGlobalBastion, clearBastionCache,

@@ -1591,66 +1591,65 @@ const GAME_REVIEW_REASONS = ['Harassment','Hate speech','Spam or fake review','U
 const AGE_TIERS = {CHILD:'child',TEEN:'teen',ADULT:'adult'};
 
 // ── Helpers ──────────────────────────────────────────────────
-// Dedicated banner storage (mirrors ftz_deco_<name> pattern). The
-// banner is the largest single field on a user row — when the main
-// ftz_user_<name> blob hits localStorage quota, _trimCUForStorage
-// drops banner first. That left a "set banner → refresh → old banner"
-// bug when the Supabase write also lagged or rejected the row. The
-// dedicated key is just the banner string + a timestamp — tiny, no
-// quota competition with the main blob. Boot/refresh reads this and
-// trusts it over the DB value for ~24h, long enough that the DB
-// write reliably catches up.
-function _persistBannerLocal(username, banner) {
-  if (!username) return;
+// The dedicated ftz_pfp_/ftz_banner_/ftz_bio_ keys are GONE. They were
+// written on every save (a second full copy of megabyte data-URLs) but
+// nothing ever read them — pure quota ballast that made the real
+// ftz_user_<name> blob write fail more often, which is precisely the
+// condition that armed the stale-avatar resurrection bug. Purged once
+// at boot in _purgeDeadLocalKeys().
+function _purgeDeadLocalKeys() {
   try {
-    localStorage.setItem('ftz_banner_' + username, JSON.stringify({ val: banner || '', ts: Date.now() }));
-  } catch {}
-}
-function _readPersistedBannerLocal(username) {
-  if (!username) return null;
-  try {
-    const raw = localStorage.getItem('ftz_banner_' + username);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || !('val' in parsed)) return null;
-    // 5-minute freshness window — covers our own save's network
-    // round-trip + Supabase replica lag, but NOT cross-device updates.
-    // Was 24h; that meant a banner edited on device A would be reverted
-    // by device B's stale localStorage on load.
-    if ((Date.now() - (parsed.ts || 0)) > 5 * 60 * 1000) {
-      try { localStorage.removeItem('ftz_banner_' + username); } catch {}
-      return null;
+    const dead = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('ftz_pfp_') || k.startsWith('ftz_banner_') || k.startsWith('ftz_bio_'))) dead.push(k);
     }
-    return parsed;
-  } catch { return null; }
+    dead.forEach(k => { try { localStorage.removeItem(k); } catch {} });
+    if (dead.length) console.info('[boot] purged', dead.length, 'dead localStorage keys (reclaimed quota)');
+  } catch {}
 }
 
-// Dedicated pfp storage — same pattern as banner. The main ftz_user_<name>
-// blob can get trimmed under localStorage quota pressure (_trimCUForStorage
-// drops pfp at >1.5MB) which is the "avatar appears transparent on
-// reload" bug. The dedicated key sits outside that storage and the boot
-// guard trusts it for 24h, so even if the row gets trimmed locally the
-// pfp survives the refresh.
-function _persistPfpLocal(username, pfp, pfpCrop) {
-  if (!username) return;
+// A fully-transparent avatar is never intentional — it's the residue of
+// the old crop-modal bug (a blank canvas exported as a perfectly valid
+// PNG), which the write-side fix can prevent but not detect in rows it
+// already poisoned. Decode + alpha-sample the current user's PNG avatar
+// once per boot; if EVERY sampled pixel is alpha-0, clear it locally and
+// in the DB (explicit-field save) so it stops resurrecting across
+// devices. PNG-only: that's what canvas.toDataURL emitted, and JPEG
+// can't be transparent / GIF first frames can't be sampled reliably.
+async function _healBlankAvatar() {
   try {
-    localStorage.setItem('ftz_pfp_' + username, JSON.stringify({ val: pfp || '', crop: pfpCrop || null, ts: Date.now() }));
-  } catch {}
-}
-function _readPersistedPfpLocal(username) {
-  if (!username) return null;
-  try {
-    const raw = localStorage.getItem('ftz_pfp_' + username);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || !('val' in parsed)) return null;
-    // 5-minute window — see _readPersistedBannerLocal comment.
-    if ((Date.now() - (parsed.ts || 0)) > 5 * 60 * 1000) {
-      try { localStorage.removeItem('ftz_pfp_' + username); } catch {}
-      return null;
-    }
-    return parsed;
-  } catch { return null; }
+    const p = CU?.pfp;
+    if (!p || typeof p !== 'string' || !p.startsWith('data:image/png')) return;
+    const blank = await new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const w = Math.max(1, Math.min(img.naturalWidth || 0, 32));
+          const h = Math.max(1, Math.min(img.naturalHeight || 0, 32));
+          if (!img.naturalWidth || !img.naturalHeight) return resolve(true); // 0×0 PNG = broken export
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const ctx = c.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0, w, h);
+          const d = ctx.getImageData(0, 0, w, h).data;
+          for (let i = 3; i < d.length; i += 4) if (d[i] !== 0) return resolve(false);
+          resolve(true);
+        } catch (_) { resolve(false); } // canvas hiccup ≠ evidence of corruption
+      };
+      img.onerror = () => resolve(true); // undecodable data URL = corrupt
+      img.src = p;
+    });
+    if (!blank) return;
+    console.warn('[avatar] stored avatar decodes fully transparent (' + p.length + ' chars) — clearing the corrupt image from CU + DB');
+    CU.pfp = '';
+    CU.pfpCrop = null;
+    try { delete _pfpCropCache[CU.username]; } catch (_) {}
+    try { saveLocal(); } catch (_) {}
+    try { updateUserbar(); } catch (_) {}
+    await FortizedSocial.saveUserObject(CU, { fields: ['pfp', 'pfpCrop'] });
+    toast('Your avatar image was corrupted, so it was removed — please upload it again.', 'info');
+  } catch (e) { console.warn('[avatar] blank-check failed:', e?.message); }
 }
 
 function _trimCUForStorage(cu) {
@@ -1681,15 +1680,6 @@ function saveLocal() {
     localStorage.setItem('ftz_current', CU.username);
     localStorage.setItem('fortized_current_user', CU.username);
   } catch {}
-  // Mirror bio to a dedicated key (same pattern as ftz_pfp_<name> /
-  // ftz_banner_<name>) so a stale DB read can't resurrect the
-  // previous "About me" after a deploy. refreshCU reads this back
-  // and overrides fresh.bio when they differ.
-  try {
-    if (CU.bio !== undefined) {
-      localStorage.setItem('ftz_bio_' + CU.username, JSON.stringify({ val: CU.bio || '', ts: Date.now() }));
-    }
-  } catch {}
   // Persist recent-edit timestamps too — without this they live only
   // in window memory, so a refresh between a save and Supabase's
   // replica catching up leaves the boot guard with no signal that
@@ -1701,12 +1691,21 @@ function saveLocal() {
       localStorage.setItem('ftz_recent_edits_' + CU.username, JSON.stringify(r));
     }
   } catch {}
+  // The sibling ftz_user_ts_ stamp records WHEN the blob write actually
+  // succeeded (written only after a successful setItem). The boot guard
+  // compares it against the recent-edit timestamps: a quota-failed blob
+  // write leaves a fresh edit-timestamp over a STALE blob, and blindly
+  // trusting that blob resurrected old avatars/banners — then the boot
+  // heal-save wrote them back into the DB. With the stamp, a stale blob
+  // simply loses to the DB.
   try {
     localStorage.setItem('ftz_user_' + CU.username, JSON.stringify(CU));
+    localStorage.setItem('ftz_user_ts_' + CU.username, String(Date.now()));
   } catch (e) {
     // Full quota — usually a massive data-URL avatar or banner. Trim and retry.
     try {
       localStorage.setItem('ftz_user_' + CU.username, JSON.stringify(_trimCUForStorage(CU)));
+      localStorage.setItem('ftz_user_ts_' + CU.username, String(Date.now()));
     } catch {
       // Still too big; give up silently — the server is the source of truth.
       if (!window._saveLocalQuotaWarned) {
@@ -1739,7 +1738,7 @@ async function saveUser(immediate, fields) {
       // (same shared CU). An explicit-fields save cannot — it forces
       // specific columns (including clears) — so it falls through and
       // performs its own write.
-      if (!explicit) return;
+      if (!explicit) return true;
     }
     if (_saveUserPromise) await _saveUserPromise.catch(()=>{});
     _isSaving = true;
@@ -1766,19 +1765,25 @@ async function saveUser(immediate, fields) {
             activeDecoration: CU.activeDecoration,
           });
         } catch(_) {}
+        return true;
       } catch(e) {
         console.warn('saveUser failed, retrying:', e);
-        try { await new Promise(r => setTimeout(r, 1000)); await FortizedSocial.saveUserObject(CU, explicit ? { fields } : undefined); }
+        try {
+          await new Promise(r => setTimeout(r, 1000));
+          await FortizedSocial.saveUserObject(CU, explicit ? { fields } : undefined);
+          return true;
+        }
         catch(e2) {
           console.error('saveUser retry failed:', e2);
           // Data is already in localStorage from saveLocal() above, so the
           // user hasn't lost anything — it just hasn't synced yet. Only
           // surface a toast for a genuinely offline state; for backend
           // upsert failures (5xx, schema issue, row size, etc.) stay
-          // quiet and let the next saveUser() retry. Was falsely warning
-          // everyone about their connection on every transient backend
-          // hiccup.
+          // quiet and let the next saveUser() retry — but DO report the
+          // failure to the caller: flows that promise the user "saved!"
+          // (settings) must be able to tell the truth.
           if (!navigator.onLine) toast('Offline — changes saved locally and will sync on reconnect.', 'info');
+          return false;
         }
       } finally { _saveUserPromise = null; _isSaving = false; }
     })();
@@ -1786,7 +1791,7 @@ async function saveUser(immediate, fields) {
   };
   if (immediate) return doSave();
   return new Promise(resolve => {
-    _saveUserTimer = setTimeout(() => { doSave().then(resolve).catch(resolve); }, 300);
+    _saveUserTimer = setTimeout(() => { doSave().then(resolve).catch(() => resolve(false)); }, 300);
   });
 }
 // Verified badge SVG helper
@@ -1868,7 +1873,10 @@ async function refreshCU() {
       // (equipDecoration, setMyStatus, updateBanner, updatePfp, etc.).
       const protectFields = [
         'status','pronouns',
-        'friends','friendRequestsSent','friendRequestsReceived',
+        // friends / friendRequestsSent / friendRequestsReceived are
+        // deliberately NOT protected: the relationship engine owns them
+        // and the DB is always authoritative. Guarding them here made a
+        // cleared request rise from the dead on the next refresh.
         'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme',
         'connections','socials','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
         'profileWidgets','displayFont','displayEffect','displayColor','displayColor2','wantToPlay','gameCollection',
@@ -6828,8 +6836,8 @@ async function renderDMFriendsHome() {
         <div style="position:relative;flex-shrink:0;"><div class="fa" id="dm-home-pav-${escapeHTML(f)}" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(_pfpCache[f]||null,f,40)}</div></div>
         <div style="flex:1;min-width:0;"><div id="dm-home-pdn-${escapeHTML(f)}" style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div><div style="font-size:11.5px;color:var(--muted);">Incoming friend request</div><div id="dm-home-pact-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;"></div></div>
         <div style="display:flex;gap:6px;">
-          <button class="btn-a" style="padding:6px 14px;font-size:12px;" onclick="acceptFriend('${escapeHTML(f)}')">Accept</button>
-          <button class="btn-g" style="padding:6px 14px;font-size:12px;" onclick="declineFriend('${escapeHTML(f)}')">Ignore</button>
+          <button class="btn-a" style="padding:6px 14px;font-size:12px;display:inline-flex;align-items:center;gap:6px;" onclick="acceptFriend('${escapeHTML(f)}')"><i class="fa-solid fa-user-check" aria-hidden="true"></i> Accept</button>
+          <button class="btn-g" style="padding:6px 14px;font-size:12px;display:inline-flex;align-items:center;gap:6px;" onclick="declineFriend('${escapeHTML(f)}')"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Ignore</button>
         </div>
       </div>`;
     });
@@ -12666,20 +12674,32 @@ async function acceptFriend(username){
       const ok = await _confirmAcceptFriendRequest(username);
       if (!ok) return;
     }
-    await FortizedSocial.acceptFriendRequest(CU.username, username);
+    // The module writes both rows, verifies, and emits friend:accepted
+    // (the missing emit here is why the requester's client used to keep
+    // showing "pending" until a full reload). Its result is trustworthy:
+    // ok:false means the pair is NOT friends — never claim otherwise.
+    const r = await FortizedSocial.acceptFriendRequest(CU.username, username);
+    if (!r?.ok) {
+      toast(r?.msg || 'Failed to accept friend request. Please try again.', 'error');
+      await refreshCU();
+      renderFriendsList();
+      return;
+    }
     await refreshCU();
     toast('Now friends with '+username+'!','success');
     if (typeof _logJoysterEvent === 'function') _logJoysterEvent(`added friend "${username}"`);
     showFeedbackToast('adding a friend', 'friend_accept');
     renderFriendsList();
     renderDMSidebar(document.getElementById('sidebar-scroll'));
+    try { _refreshFppFriendButton(username); } catch(_){}
     // Auto-open DM
     openDMView(username);
   } catch(e){ console.error('[Friends] Accept failed:', e); toast('Failed to accept friend request. Please try again.','error'); }
 }
 async function declineFriend(username){
   try{
-    await FortizedSocial.declineFriendRequest(CU.username, username);
+    const r = await FortizedSocial.declineFriendRequest(CU.username, username);
+    if (!r?.ok) { toast(r?.msg || 'Failed to decline.', 'error'); return; }
     await refreshCU();
     renderFriendsList();
     toast('Declined','info');
@@ -12688,15 +12708,9 @@ async function declineFriend(username){
 async function removeFriend(username){
   showCustomConfirm('Remove '+username+' from friends?', async()=>{
     try{
-      await FortizedSocial.removeFriend(CU.username, username);
-      // Bilateral notify: the server-side removeFriend already updates
-      // both users' friends arrays in Supabase. This emit is what makes
-      // the other user's UI reflect that in real time instead of only
-      // on their next refresh.
-      try {
-        const s = FortizedSocial.getSocket();
-        if (s) s.emit('friend:removed', { from: CU.username, to: username });
-      } catch(_){}
+      // Module updates both rows, verifies, and emits friend:removed.
+      const r = await FortizedSocial.removeFriend(CU.username, username);
+      if (!r?.ok) { toast(r?.msg || 'An error occurred. Please try again.', 'error'); return; }
       await refreshCU();
       toast('Removed '+username,'info');
       renderFriendsList();
@@ -12731,11 +12745,9 @@ async function cancelFriendRequestTo(username){
   username = (username || '').trim().toLowerCase();
   if (!username) return;
   try {
-    await FortizedSocial.cancelFriendRequest(CU.username, username);
-    try {
-      const s = FortizedSocial.getSocket();
-      if (s) s.emit('friend:removed', { from: CU.username, to: username });
-    } catch(_){}
+    // Module clears both rows, verifies, and emits friend:removed.
+    const r = await FortizedSocial.cancelFriendRequest(CU.username, username);
+    if (!r?.ok) { toast(r?.msg || 'Failed to cancel the request.', 'error'); return; }
     await refreshCU();
     toast('Request canceled', 'info');
     renderFriendsList();
@@ -12744,16 +12756,50 @@ async function cancelFriendRequestTo(username){
 }
 
 // Ignore an incoming request — returns the relation to 'none' without
-// notifying the sender (decline is already silent server-side; this
-// wrapper only exists so UI copy can say what it means).
+// notifying the sender (decline is silent by design: no notification,
+// no socket event; their client converges on its next poll).
 async function ignoreFriendRequest(username){
   try{
-    await FortizedSocial.declineFriendRequest(CU.username, username);
+    const r = await FortizedSocial.declineFriendRequest(CU.username, username);
+    if (!r?.ok) { toast(r?.msg || 'Failed to ignore the request.', 'error'); return; }
     await refreshCU();
     renderFriendsList();
     try { _refreshFppFriendButton(username); } catch(_){}
     toast('Request ignored', 'info');
   } catch(e){ console.error('[Friends] ignore failed:', e); }
+}
+
+// ── Lazy relationship repair ───────────────────────────
+// Whenever the app holds a FRESH copy of another user's row (popover,
+// profile modal), compare their relationship view of us with ours of
+// them. Any disagreement — a half-applied accept/remove from an old
+// client or a failed second write — gets handed to the module's
+// syncRelationship, which converges both rows. Throttled per user so
+// render loops can't hammer the DB.
+const _relRepairAt = {};
+function _maybeRepairRelationship(otherUser) {
+  try {
+    if (!otherUser?.username || !CU?.username) return;
+    const them = (otherUser.username || '').toLowerCase();
+    if (them === CU.username) return;
+    const now = Date.now();
+    if (_relRepairAt[them] && now - _relRepairAt[them] < 60000) return;
+    const mineF   = (CU.friends || []).includes(them);
+    const theirsF = (otherUser.friends || []).includes(CU.username);
+    const iSent   = (CU.friendRequestsSent || []).includes(them);
+    const theyGot = (otherUser.friendRequestsReceived || []).includes(CU.username);
+    const theySent= (otherUser.friendRequestsSent || []).includes(CU.username);
+    const iGot    = (CU.friendRequestsReceived || []).includes(them);
+    if (mineF === theirsF && iSent === theyGot && theySent === iGot) return;
+    _relRepairAt[them] = now;
+    console.info('[friends] rows disagree for', them, '— running syncRelationship');
+    FortizedSocial.syncRelationship(CU.username, them).then(async r => {
+      if (!r?.ok) return;
+      await refreshCU();
+      try { renderFriendsList?.(); } catch(_){}
+      try { _refreshFppFriendButton(them); } catch(_){}
+    }).catch(()=>{});
+  } catch(_){}
 }
 
 // ── DM block lock ──────────────────────────────────────
@@ -13784,6 +13830,9 @@ function initFortizedUXResilience() {
     localStorage.removeItem('ftz_cache_user:' + nk);
     localStorage.removeItem('ftz_cache_userEnf:' + nk);
   } catch {}
+  // Reclaim quota from the retired ftz_pfp_/ftz_banner_/ftz_bio_ keys —
+  // they held second copies of megabyte data-URLs that nothing read.
+  _purgeDeadLocalKeys();
 
   // CRITICAL: Always fetch fresh user data from database on page load
   // This ensures PFP changes, messages, and friends sync properly across sessions
@@ -13877,6 +13926,13 @@ function initFortizedUXResilience() {
           } catch {}
           const recent = window._recentlyEditedFields || {};
           const _nowR = Date.now();
+          // When the ftz_user_ blob was last SUCCESSFULLY written (the
+          // stamp only lands after a setItem that didn't throw). 0 for
+          // legacy blobs — which then simply don't qualify for the
+          // recent-edit override below, so the DB wins. Safe direction.
+          let _blobTs = 0;
+          try { _blobTs = parseInt(localStorage.getItem('ftz_user_ts_' + CU.username) || '0', 10) || 0; } catch {}
+          let _guardChanged = false;
           // Dedicated decoration key wins over EVERYTHING else (DB,
           // ftz_user blob, recent-edits guard). It's the only storage
           // small enough to be reliable for a user with a huge CU
@@ -13892,6 +13948,7 @@ function initFortizedUXResilience() {
                 const ageMs = _nowR - (parsed.ts || 0);
                 if (ageMs < 600000) {
                   console.log('[DECO][boot] dedicated key wins: CU.activeDecoration', JSON.stringify(CU.activeDecoration), '→', JSON.stringify(parsed.val), '(', Math.round(ageMs/1000), 's old)');
+                  if (JSON.stringify(CU.activeDecoration ?? null) !== JSON.stringify(parsed.val ?? null)) _guardChanged = true;
                   CU.activeDecoration = parsed.val;
                 }
               }
@@ -13917,7 +13974,18 @@ function initFortizedUXResilience() {
             ];
             for (const k of recentEditFields) {
               if (recent[k] && (_nowR - recent[k]) < 600000 && k in local) {
-                if (k === 'activeDecoration') console.log('[DECO][boot] recent-edit guard OVERRODE CU.activeDecoration from', JSON.stringify(CU[k]), '→', JSON.stringify(local[k]));
+                // Blob-freshness gate: only trust the snapshot if it was
+                // written AT/AFTER the edit it claims to carry. A quota-
+                // failed blob write leaves a fresh edit-timestamp over a
+                // stale blob — restoring from it resurrects the previous
+                // value (old/corrupt avatar), and the heal-save below
+                // then writes that back into the DB. This was the
+                // "my avatar keeps coming back transparent" loop.
+                if (_blobTs < recent[k] - 2000) {
+                  console.warn('[boot] recent-edit guard SKIPPED for', k, '— snapshot ('+_blobTs+') predates the edit ('+recent[k]+'); trusting DB');
+                  continue;
+                }
+                if (JSON.stringify(CU[k] ?? null) !== JSON.stringify(local[k] ?? null)) _guardChanged = true;
                 CU[k] = local[k];
               }
             }
@@ -13929,7 +13997,12 @@ function initFortizedUXResilience() {
           }
           if (local) {
             const protectFields = [
-              'pronouns','friends','friendRequestsSent','friendRequestsReceived',
+              'pronouns',
+              // friends / friendRequestsSent / friendRequestsReceived
+              // OMITTED — module-owned, DB-authoritative (see refreshCU).
+              // Restoring them from a stale localStorage snapshot here
+              // meant the 1.5s heal-save below could write a dead
+              // request or a removed friend straight back into the DB.
               'bastions','blockedUsers','ignoredUsers','groupChats','profileTheme',
               // 'activeDecoration' INTENTIONALLY OMITTED — owned by the
               // dedicated ftz_deco_<name> key (handled above). Leaving it
@@ -13957,6 +14030,7 @@ function initFortizedUXResilience() {
               if (isEmpty && lv != null) {
                 if (k === 'activeDecoration') console.log('[DECO][boot] isEmpty guard restored activeDecoration from local:', JSON.stringify(lv));
                 CU[k] = lv;
+                _guardChanged = true;
               }
             }
             console.log('[DECO][boot] FINAL CU.activeDecoration after both guards =', JSON.stringify(CU.activeDecoration));
@@ -13965,9 +14039,16 @@ function initFortizedUXResilience() {
             // *increases* (admin grants, server-side awards).
             if (typeof local.onyx === 'number' && (typeof CU.onyx !== 'number' || CU.onyx < local.onyx)) {
               CU.onyx = local.onyx;
+              _guardChanged = true;
             }
-            // Schedule a save so the recovered state heals the DB row too.
-            setTimeout(() => { try { saveUser(true); } catch {} }, 1500);
+            // Heal-save ONLY when a guard actually recovered something.
+            // This used to fire on EVERY boot; combined with a guard that
+            // restored stale values it was the vector that wrote them
+            // back into the DB.
+            if (_guardChanged) {
+              console.info('[boot] guards recovered local state — scheduling heal-save');
+              setTimeout(() => { try { saveUser(true); } catch {} }, 1500);
+            }
           }
         } catch(e) { console.warn('[Init] Data-loss guard merge failed:', e?.message); }
       }
@@ -13999,6 +14080,7 @@ function initFortizedUXResilience() {
     // kill init — the in-memory CU is already populated from the server.
     try {
       localStorage.setItem('ftz_user_'+username, JSON.stringify(CU));
+      localStorage.setItem('ftz_user_ts_'+username, String(Date.now()));
     } catch (e) {
       // quota exceeded — in-memory CU is still valid; skip noisy log;
       // Best-effort: try again with the heaviest field (pfp data URL) stripped
@@ -14008,6 +14090,7 @@ function initFortizedUXResilience() {
         if (typeof trimmed.pfp === 'string' && trimmed.pfp.startsWith('data:') && trimmed.pfp.length > 200_000) delete trimmed.pfp;
         if (typeof trimmed.banner === 'string' && trimmed.banner.startsWith('data:') && trimmed.banner.length > 200_000) delete trimmed.banner;
         localStorage.setItem('ftz_user_'+username, JSON.stringify(trimmed));
+        localStorage.setItem('ftz_user_ts_'+username, String(Date.now()));
       } catch(_) { /* give up, init continues from in-memory CU */ }
     }
   }
@@ -14016,6 +14099,12 @@ function initFortizedUXResilience() {
   // list, and chat avatars paint the fresh DB data instead of a stale
   // localStorage snapshot from a previous session.
   try { rememberProfile(CU); } catch(_) {}
+
+  // Corrupt-avatar healing (the transparent-avatar bug): if the avatar
+  // that survived boot + guards decodes to a fully-transparent PNG,
+  // clear it here AND in the DB. Deferred so it never blocks first
+  // paint; only acts when the image is provably blank.
+  if (!usedCache) setTimeout(() => { _healBlankAvatar(); }, 2500);
 
   // Set defaults
   if (!CU.bastions)CU.bastions=[];
@@ -14949,19 +15038,22 @@ function initFortizedUXResilience() {
       },
       onFriendRequestsUpdate: function(data) {
         if (!data) return;
-        _dbg('[onFriendRequestsUpdate] Friend requests changed:', { sent: data.sent?.length || 0, received: data.received?.length || 0 });
-        // Update the user object with fresh friend request data
+        _dbg('[onFriendRequestsUpdate] Relationship state changed:', { friends: data.friends?.length ?? 'n/a', sent: data.sent?.length || 0, received: data.received?.length || 0 });
+        // The DB is authoritative for the whole relationship triple —
+        // this poller is the convergence net under the socket events, so
+        // BOTH users land on identical state within one poll even if a
+        // live event was missed.
         CU.friendRequestsSent = data.sent || [];
         CU.friendRequestsReceived = data.received || [];
+        if (Array.isArray(data.friends)) CU.friends = data.friends;
         saveLocal();
-        // Refresh friend request UI. There's no dedicated
-        // refreshFriendRequests / updateNotificationBar — renderFriendsList()
-        // is what actually re-renders the requests panel, and the rail
-        // badge / notif list pick up the new CU.friendRequestsReceived
-        // on their own through buildNotifList()'s recompute.
+        // First snapshot after boot only baselines the poller — the boot
+        // fetch already painted this exact state, skip the re-render.
+        if (data.initial) return;
         try {
           if (typeof renderFriendsList === 'function') renderFriendsList();
           if (typeof buildNotifList === 'function') buildNotifList();
+          if (typeof renderDMSidebar === 'function') renderDMSidebar(document.getElementById('sidebar-scroll'));
         } catch (e) {
           console.warn('[onFriendRequestsUpdate] UI refresh failed:', e?.message);
         }
@@ -21918,7 +22010,7 @@ function _buildProfileView(tab) {
               <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)">
               <div style="display:flex;gap:8px;">
                 <button onclick="${hasRadiance?"_showBannerPickerMenu(event)":"toast('Custom banners require Radiance','error')"}" class="settings-save-btn">Change Banner</button>
-                ${hasRadiance && CU.banner ? '<button onclick="CU.banner=&#39;&#39;;_persistBannerLocal(CU.username,&#39;&#39;);markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Banner</button>' : ''}
+                ${hasRadiance && CU.banner ? '<button onclick="CU.banner=&#39;&#39;;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Banner</button>' : ''}
               </div>
             </div>
             ${sep}
@@ -23311,10 +23403,7 @@ function _showAvatarPickerModal() {
 
 async function _pickRecentAvatar(url) {
   // QUEUE the pfp change instead of auto-saving so the unsaved-changes
-  // bar shows up — user clicks Save Changes to commit + broadcast. The
-  // dedicated ftz_pfp_<name> key persists the draft locally so a
-  // refresh mid-draft doesn't lose the avatar to localStorage quota
-  // trimming (the "avatar appears transparent on reload" bug).
+  // bar shows up — user clicks Save Changes to commit + broadcast.
   _syncSettingsInputsToCU();
   CU.pfp = url;
   CU.pfpCrop = null;
@@ -23323,7 +23412,6 @@ async function _pickRecentAvatar(url) {
   window._recentlyEditedFields.pfp = Date.now();
   window._recentlyEditedFields.pfpCrop = Date.now();
   _saveRecentAvatar(url);
-  _persistPfpLocal(CU.username, url, null);
   try { saveLocal(); } catch(_){}
   try { updateUserbar(); } catch(_){}
   try { buildProfileView('myprofile'); } catch(_){}
@@ -23552,7 +23640,6 @@ async function _applyGifAvatar(url) {
       _syncSettingsInputsToCU();
       const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
       CU.banner = finalBanner;
-      _persistBannerLocal(CU.username, finalBanner);
       window._recentlyEditedFields = window._recentlyEditedFields || {};
       window._recentlyEditedFields.banner = Date.now();
       try { saveLocal(); } catch (_) {}
@@ -23582,7 +23669,6 @@ async function _applyGifAvatar(url) {
     window._recentlyEditedFields.pfp = Date.now();
     window._recentlyEditedFields.pfpCrop = Date.now();
     _saveRecentAvatar(CU.pfp);
-    _persistPfpLocal(CU.username, CU.pfp, CU.pfpCrop);
     try { saveLocal(); } catch(_){}
     try { updateUserbar(); } catch(_){}
     try { buildProfileView('myprofile'); } catch(_){}
@@ -23640,7 +23726,6 @@ async function updatePfp(e) {
         window._recentlyEditedFields.pfp = Date.now();
         window._recentlyEditedFields.pfpCrop = Date.now();
         _saveRecentAvatar(result.gifData);
-        _persistPfpLocal(CU.username, result.gifData, result.crop);
         try { saveLocal(); } catch(_){}
         updateUserbar();
         buildProfileView('myprofile');
@@ -23667,7 +23752,6 @@ async function updatePfp(e) {
         window._recentlyEditedFields.pfp = Date.now();
         window._recentlyEditedFields.pfpCrop = Date.now();
         _saveRecentAvatar(cropped);
-        _persistPfpLocal(CU.username, cropped, null);
         try { saveLocal(); } catch(_){}
         updateUserbar();
         buildProfileView('myprofile');
@@ -23699,7 +23783,6 @@ async function updateBanner(e) {
     const applyBanner = async (finalBanner) => {
       _syncSettingsInputsToCU();
       CU.banner = finalBanner;
-      _persistBannerLocal(CU.username, finalBanner);
       // Auto-sample a card accent from the new banner so the rest of
       // the profile card harmonises with the image. Best-effort —
       // failure is fine, the resolver falls back to the default.
@@ -23765,7 +23848,7 @@ function _showBannerPickerMenu(event) {
       <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:8px;">Current</div>
       <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.06);aspect-ratio:16/5;background:#0e1117;">
         <img src="${escapeHTML(CU.banner)}" style="width:100%;height:100%;object-fit:cover;display:block;">
-        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';_persistBannerLocal(CU.username,'');saveUser(true,['banner']);markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.35);color:#fca5a5;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
+        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';saveUser(true,['banner']);markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.35);color:#fca5a5;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
       </div>
     </div>` : ''}
     <div style="padding:12px 24px 16px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:rgba(255,255,255,.28);">Banners are cropped to 16:5. Upload up to 8 MB or pick an animated GIF.</div>
@@ -24004,9 +24087,9 @@ async function buildNotifList() {
     const _stillPending = n.type==='friend_request' && !_alreadyFriends && (CU?.friendRequestsReceived||[]).includes(n.from);
     let actions = '';
     if (_stillPending) {
-      actions = '<div class="np-actions"><button class="np-accept" onclick="event.stopPropagation();acceptFriend(\''+escapeHTML(n.from||'')+'\');buildNotifList()">Accept</button></div>';
+      actions = '<div class="np-actions"><button class="np-accept" onclick="event.stopPropagation();acceptFriend(\''+escapeHTML(n.from||'')+'\');buildNotifList()"><i class="fa-solid fa-user-check" aria-hidden="true"></i> Accept</button></div>';
     } else if (n.type==='friend_request' && _alreadyFriends) {
-      actions = '<div class="np-actions"><span style="font-size:11px;color:var(--green);font-weight:600;">Friends</span></div>';
+      actions = '<div class="np-actions"><span style="font-size:11px;color:var(--green);font-weight:600;"><i class="fa-solid fa-user-group" aria-hidden="true"></i> Friends</span></div>';
     } else if (n.type === 'trade_offer' && n.data) {
       const offer = n.data;
       const expired = offer.expires_at && Date.now() > offer.expires_at;
@@ -24113,6 +24196,9 @@ async function _viewUserProfile(username) {
     if (fresh) { u = fresh; try { rememberFullProfile(fresh); } catch(_) {} }
   } catch (e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
+  // Fresh row in hand — heal any relationship disagreement between
+  // their row and ours (see _maybeRepairRelationship).
+  if (username !== (CU.username || '').toLowerCase()) { try { _maybeRepairRelationship(u); } catch(_){} }
   if (username === (CU.username||'').toLowerCase()) {
     // Public-view shim — own profile card paints from the SAVED
     // snapshot while Settings is mid-edit, so unsaved bio/banner/
@@ -24436,21 +24522,10 @@ async function quickAddFriend(username) {
     const r=await FortizedSocial.sendFriendRequest(CU.username,username);
     toast(r.msg,r.ok?'success':'error');
     if(r.ok){
+      // Real-time fanout (friend:request / friend:accepted on the
+      // mutual-pending auto-accept) is emitted by the module itself now,
+      // so no call site can forget it.
       await refreshCU();
-      // Real-time fanout: tell the other client whether this was a
-      // brand-new request or an immediate accept (when there was already
-      // a pending request from them, sendFriendRequest auto-accepts).
-      const wasAccept = (CU?.friends || []).includes(username);
-      try {
-        const s = FortizedSocial.getSocket();
-        if (s) {
-          if (wasAccept) {
-            s.emit('friend:accepted', { from: username, to: CU.username });
-          } else {
-            s.emit('friend:request', { from: CU.username, to: username });
-          }
-        }
-      } catch(_){}
       // Patch any open .fpp friend buttons for this user without a full
       // re-render of the surrounding popover.
       try { _refreshFppFriendButton(username); } catch(_){}
@@ -48325,11 +48400,19 @@ async function _saveAllSettingsImpl() {
   // Explicit field list: settings owns these fields, so clears (removed
   // avatar/banner, emptied bio/pronouns) persist instead of being dropped
   // by the delta-writer's empty-value guard.
-  await saveUser(true, [
+  const saved = await saveUser(true, [
     'displayName','bio','email','password','pronouns','mentionPolicy',
     'notifSettings','socials','pfp','pfpCrop','banner','profileTheme',
     'activeDecoration','displayFont','displayEffect','displayColor','displayColor2',
   ]);
+  if (saved === false) {
+    // The DB write failed (both attempts). Telling the user "Settings
+    // saved!" here is how avatars silently reverted on the next boot:
+    // the UI showed the new image while the row kept the old one. Keep
+    // the unsaved-changes bar up, skip the broadcast, tell the truth.
+    toast("Couldn't reach the server — your changes are NOT saved yet. Try again in a moment.", 'error');
+    return;
+  }
   // Broadcast all editable cosmetic + identity fields so other
   // clients see the changes in real time without waiting for a
   // page reload. Previously saveAllSettings was silent over the
@@ -48357,12 +48440,6 @@ async function _saveAllSettingsImpl() {
   } catch (e) { _dbg('[Profile] broadcast failed:', e?.message); }
   updateUserbar();
   applyRadianceFont();
-  // Refresh dedicated banner/pfp keys so the 24h fallback window
-  // restarts at "now". The DB is authoritative once Save lands but
-  // these keep working if Supabase rejects a future row or local-
-  // Storage trims under quota pressure.
-  try { _persistBannerLocal(CU.username, CU.banner || ''); } catch (_) {}
-  try { _persistPfpLocal(CU.username, CU.pfp || '', CU.pfpCrop || null); } catch (_) {}
   // Update snapshot so future edits compare against saved state
   _settingsOriginal = CU ? structuredClone({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,pfpCrop:CU.pfpCrop,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme,activeDecoration:CU.activeDecoration,displayFont:CU.displayFont,displayEffect:CU.displayEffect,displayColor:CU.displayColor,mentionPolicy:CU.mentionPolicy}) : null;
   clearSettingsDirty();
@@ -49310,7 +49387,7 @@ function _fppActionRowHTML(username, isOwn, variant) {
   if (isOwn) {
     return `<div class="fpp__actions">
       <button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();showView('profile')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <i class="fa-solid fa-user-pen fpp__btn-fa" aria-hidden="true"></i>
         Edit Profile
       </button>
     </div>`;
@@ -49319,22 +49396,21 @@ function _fppActionRowHTML(username, isOwn, variant) {
   const isFriend = rel.state === 'friends';
   const hasPendingOut = rel.state === 'outgoing';
   const hasPendingIn = rel.state === 'incoming';
-  // Uniformized "person + small glyph" family so all friend states read
-  // as one family:
-  //   add friend   → person + small plus    (action: send request)
-  //   pending out  → person + small clock   (you sent — click to CANCEL)
-  //   pending in   → person + small check   (they sent, click to accept)
-  //   friends      → person + small check w/ filled badge (you're friends)
-  //   blocked      → person + slash         (click to unblock)
+  // Font Awesome person-family so all friend states read as one set:
+  //   add friend   → fa-user-plus   (action: send request)
+  //   pending out  → fa-user-clock  (you sent — click to CANCEL)
+  //   pending in   → fa-user-check  (they sent, click to accept)
+  //   friends      → fa-user-group  (you're friends — click to unfriend)
+  //   blocked      → fa-ban         (click to unblock)
   const friendBtn = rel.blockedByMe
-    ? `<button class="fpp__btn fpp__btn--square is-blocked" data-tip="Blocked — click to unblock" onclick="toggleBlockUser('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></button>`
+    ? `<button class="fpp__btn fpp__btn--square is-blocked" data-tip="Blocked — click to unblock" onclick="toggleBlockUser('${escapeHTML(username)}')"><i class="fa-solid fa-ban fpp__btn-fa" aria-hidden="true"></i></button>`
     : isFriend
-    ? `<button class="fpp__btn fpp__btn--square is-friend" data-tip="Friends — click to unfriend" onclick="_fppClose();removeFriend('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></button>`
+    ? `<button class="fpp__btn fpp__btn--square is-friend" data-tip="Friends — click to unfriend" onclick="_fppClose();removeFriend('${escapeHTML(username)}')"><i class="fa-solid fa-user-group fpp__btn-fa" aria-hidden="true"></i></button>`
     : hasPendingOut
-      ? `<button class="fpp__btn fpp__btn--square is-pending" data-tip="Request sent — click to cancel" onclick="_fppClose();cancelFriendRequestTo('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><circle cx="19" cy="13" r="3.5"/><polyline points="19 11.2 19 13 20.2 13.9"/></svg></button>`
+      ? `<button class="fpp__btn fpp__btn--square is-pending" data-tip="Request sent — click to cancel" onclick="_fppClose();cancelFriendRequestTo('${escapeHTML(username)}')"><i class="fa-solid fa-user-clock fpp__btn-fa" aria-hidden="true"></i></button>`
       : hasPendingIn
-        ? `<button class="fpp__btn fpp__btn--square is-incoming" data-tip="Accept friend request" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><circle cx="19" cy="13" r="3.5" fill="currentColor" fill-opacity=".15"/><polyline points="17.5 13 18.5 14 20.5 12"/></svg></button>`
-        : `<button class="fpp__btn fpp__btn--square" data-tip="Add friend" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="19" y1="10" x2="19" y2="16"/><line x1="22" y1="13" x2="16" y2="13"/></svg></button>`;
+        ? `<button class="fpp__btn fpp__btn--square is-incoming" data-tip="Accept friend request" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><i class="fa-solid fa-user-check fpp__btn-fa" aria-hidden="true"></i></button>`
+        : `<button class="fpp__btn fpp__btn--square" data-tip="Add friend" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><i class="fa-solid fa-user-plus fpp__btn-fa" aria-hidden="true"></i></button>`;
   // Primary action: most surfaces use "Message" (the natural CTA when
   // you're previewing someone you might want to DM). The DM right-side
   // panel is the exception — there you're already in a DM, so the
@@ -49344,17 +49420,17 @@ function _fppActionRowHTML(username, isOwn, variant) {
   const safeUser = escapeHTML(username);
   const primaryBtn = isDM
     ? `<button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="viewUserProfile('${safeUser}')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 4a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zm0 13.4a8 8 0 0 1-6.5-3.34c.03-2.16 4.33-3.34 6.5-3.34 2.16 0 6.47 1.18 6.5 3.34A8 8 0 0 1 12 19.4z"/></svg>
+        <i class="fa-solid fa-circle-user fpp__btn-fa" aria-hidden="true"></i>
         View Profile
       </button>`
     : `<button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();openDMView('${safeUser}')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        <i class="fa-solid fa-message fpp__btn-fa" aria-hidden="true"></i>
         Message
       </button>`;
   return `<div class="fpp__actions" data-variant="${isDM ? 'dm' : 'mini'}">
     ${primaryBtn}
     ${friendBtn}
-    <button class="fpp__btn fpp__btn--square" data-tip="More" onclick="_fppShowMoreMenu(event,'${safeUser}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+    <button class="fpp__btn fpp__btn--square" data-tip="More" onclick="_fppShowMoreMenu(event,'${safeUser}')"><i class="fa-solid fa-ellipsis fpp__btn-fa" aria-hidden="true"></i></button>
   </div>`;
 }
 
@@ -49694,6 +49770,12 @@ async function showMiniProfilePreview(username, anchorEl) {
   }
   u.status = status;
   subscribeProfileStatus(username);
+
+  // Their fresh row is in hand — if their view of the relationship
+  // disagrees with ours (half-applied accept/remove from before the
+  // relationship engine), converge both rows in the background. The
+  // button patches itself when the repair lands.
+  if (!isOwn) _maybeRepairRelationship(u);
 
   // Panel may have been closed while awaiting — abort gracefully.
   if (!panel.isConnected) return;
@@ -51016,7 +51098,6 @@ async function _applyStarterPack(id) {
   if (!pack) return;
   const colour = _sanitizeThemeHex(pack.colour);
   CU.banner = pack.url;
-  _persistBannerLocal(CU.username, pack.url);
   CU.profileTheme = { mode: 'custom', color1: colour, color2: _ptHexComplement(colour) };
   window._recentlyEditedFields = window._recentlyEditedFields || {};
   window._recentlyEditedFields.banner = Date.now();
@@ -54138,12 +54219,12 @@ async function renderFriendsSorted(mode) {
   // relation to 'none' without notifying the sender)
   if (pending.length) {
     html += `<div style="font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Incoming — ${pending.length}</div>`;
-    pending.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong> sent you a friend request</p></div><div style="display:flex;gap:6px;"><button class="rn-accept" title="Accept" onclick="acceptFriend('${escapeHTML(f)}')">✓</button><button class="rn-decline" title="Ignore — they won't be notified" onclick="ignoreFriendRequest('${escapeHTML(f)}')">✕</button></div></div>`; });
+    pending.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong> sent you a friend request</p></div><div style="display:flex;gap:6px;"><button class="rn-accept" title="Accept" onclick="acceptFriend('${escapeHTML(f)}')"><i class="fa-solid fa-user-check" aria-hidden="true"></i></button><button class="rn-decline" title="Ignore — they won't be notified" onclick="ignoreFriendRequest('${escapeHTML(f)}')"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div></div>`; });
   }
   // Outgoing requests — cancelable
   if (outgoing.length) {
     html += `<div style="font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:${pending.length?'12px':'0'} 0 8px;">Sent — ${outgoing.length}</div>`;
-    outgoing.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong></p><div style="font-size:10.5px;color:var(--muted);">Outgoing friend request</div></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;" onclick="cancelFriendRequestTo('${escapeHTML(f)}')">Cancel</button></div></div>`; });
+    outgoing.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong></p><div style="font-size:10.5px;color:var(--muted);">Outgoing friend request</div></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;" onclick="cancelFriendRequestTo('${escapeHTML(f)}')"><i class="fa-solid fa-user-clock" aria-hidden="true"></i> Cancel</button></div></div>`; });
   }
   if (!friends.length) { list.innerHTML = html || `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('users','48')}</div><h3>No friends yet</h3><p>Add friends by username!</p><button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button></div>`; return; }
   // Fetch statuses
@@ -54164,7 +54245,7 @@ async function renderFriendsSorted(mode) {
   sorted.forEach(f => {
     const st = statuses[f] || 'offline';
     const stColor = st==='online'?'#3ecf6e':st==='away'?'#f59e0b':st==='dnd'?'#f87171':'#4a4a5a';
-    html += `<div class="activity-item" id="friend-sorted-${escapeHTML(f)}"><div class="act-icon" style="position:relative;">${buildAvatarHTML(null,f,40)}<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${stColor};border:2px solid var(--panel);"></div></div><div class="act-text"><p style="font-weight:600;">${escapeHTML(f)}</p><div><span style="font-size:10px;color:${stColor};">${st}</span><span id="friend-sorted-act-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.2);margin-left:6px;"></span></div></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;" onclick="openDMView('${escapeHTML(f)}')" style="display:inline-flex;align-items:center;">${ftzIcon('chat','14')}</button><button class="btn-d" style="padding:6px 12px;font-size:12px;" onclick="removeFriend('${escapeHTML(f)}')">Remove</button></div></div>`;
+    html += `<div class="activity-item" id="friend-sorted-${escapeHTML(f)}"><div class="act-icon" style="position:relative;">${buildAvatarHTML(null,f,40)}<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${stColor};border:2px solid var(--panel);"></div></div><div class="act-text"><p style="font-weight:600;">${escapeHTML(f)}</p><div><span style="font-size:10px;color:${stColor};">${st}</span><span id="friend-sorted-act-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.2);margin-left:6px;"></span></div></div><div style="display:flex;gap:6px;"><button class="btn-g" title="Message" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;" onclick="openDMView('${escapeHTML(f)}')"><i class="fa-solid fa-message" aria-hidden="true"></i></button><button class="btn-d" title="Remove friend" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;" onclick="removeFriend('${escapeHTML(f)}')"><i class="fa-solid fa-user-minus" aria-hidden="true"></i> Remove</button></div></div>`;
   });
   list.innerHTML = html;
 

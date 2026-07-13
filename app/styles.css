@@ -11797,8 +11797,10 @@ select:focus-visible {
   color:var(--yellow);
   border-color:rgba(245,158,11,.22);
   background:rgba(245,158,11,.05);
-  cursor:default;
+  /* clickable since outgoing requests became cancelable */
+  cursor:pointer;
 }
+.fpp__btn--square.is-pending:hover{ background:rgba(245,158,11,.12); }
 .fpp__btn--square.is-incoming{
   color:var(--green);
   border-color:rgba(62,207,110,.3);
@@ -11812,6 +11814,12 @@ select:focus-visible {
 }
 .fpp__btn--square.is-blocked:hover{ background:rgba(235,69,69,.14); }
 .fpp__btn--square svg{ display:block; }
+/* Font Awesome glyphs inside fpp buttons — sized to match the old
+   inline SVGs so the hand-tuned button metrics don't move. */
+.fpp__btn .fpp__btn-fa{ font-size:13px; line-height:1; }
+.fpp__btn--square .fpp__btn-fa{ font-size:14px; }
+/* FA glyphs in the friends-view round accept/ignore chips */
+.rn-accept .fa-solid, .rn-decline .fa-solid{ font-size:12px; line-height:1; }
 
 /* ── Dropdown menu (popped from ⋯) ─────────────────────────────────── */
 .fpp-menu{

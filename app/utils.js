@@ -27,7 +27,7 @@ window._ftzBootRefresh = function(){
       el.style.opacity='0';
       setTimeout(function(){el.style.display='none';},300);
     }
-  }, navigator.onLine ? 18000 : 6000);
+  }, navigator.onLine ? 18000 : 12000); // offline boots parse everything cold — 6s fired mid-boot on slow devices and reload-looped
 })();
 
 // ── Offline/Online Detection ──

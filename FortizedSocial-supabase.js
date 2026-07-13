@@ -768,6 +768,14 @@ const FortizedSocial = (() => {
     if (!fu) return { ok: false, msg: 'Your account not found.' };
     if (!tu) return { ok: false, msg: `User "${toUsername}" not found.` };
 
+    // Block guard — a block by EITHER side prevents new friend requests.
+    // The "they blocked you" case gets a deliberately vague message so a
+    // block is never confirmed to the blocked person.
+    if ((fu.blockedUsers || []).map(norm).includes(toUsername))
+      return { ok: false, msg: 'You have this user blocked. Unblock them first.' };
+    if ((tu.blockedUsers || []).map(norm).includes(fromUsername))
+      return { ok: false, msg: "Couldn't send the request." };
+
     const friends       = fu.friends           || [];
     const sentReqs      = fu.friendRequestsSent || [];
     const theirSentReqs = tu.friendRequestsSent || [];
@@ -808,6 +816,12 @@ const FortizedSocial = (() => {
       getUserByName(fromUsername, { noCache: true })
     ]);
     if (!mu || !fu) return { ok: false, msg: 'User not found.' };
+
+    // Block guard — accepting is off the table while either side blocks.
+    if ((mu.blockedUsers || []).map(norm).includes(fromUsername))
+      return { ok: false, msg: 'You have this user blocked. Unblock them first.' };
+    if ((fu.blockedUsers || []).map(norm).includes(myUsername))
+      return { ok: false, msg: "Couldn't accept the request." };
 
     const myFriends  = [...(mu.friends || [])];
     const hisFriends = [...(fu.friends || [])];
@@ -885,6 +899,13 @@ const FortizedSocial = (() => {
       console.error('[declineFriendRequest Error]', e.message);
       return { ok: false, msg: 'Failed to decline: ' + e.message };
     }
+  }
+
+  // Cancel an OUTGOING friend request: removes it from my sent list and
+  // the target's received list. Row-wise this is exactly a decline with
+  // the roles swapped, so we delegate.
+  async function cancelFriendRequest(myUsername, toUsername) {
+    return declineFriendRequest(toUsername, myUsername);
   }
 
   async function removeFriend(myUsername, friendUsername) {
@@ -2685,7 +2706,7 @@ const FortizedSocial = (() => {
     getUserByName, getUserByPublicId, resolveUsername, getUserPublicId, ensureUserPublicId, getDMKey, saveUserObject, saveActiveDecoration, deleteAccount, invalidateUserCache,
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
-    sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,
+    sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, cancelFriendRequest, removeFriend,
     getDMMessages, sendDMMessage, editMessage, deleteMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,
     getGlobalBastions, saveGlobalBastion, getGlobalBastion, deleteGlobalBastion, clearBastionCache,

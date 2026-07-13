@@ -7332,6 +7332,9 @@ function openDMView(username) {
       try { _wireInputSafetyNet('dm-input', 'dm'); } catch(_) {}
     }, 50);
   }
+  // Block lock: if either side blocks the other, the composer becomes
+  // a lock notice (async — profile fetch rides the cache).
+  _applyDMBlockLock(username).catch(()=>{});
   ensureDMExists(username).catch(e => console.warn('[DM] Failed to ensure DM:', e?.message));
   // Join Socket.io room for DM real-time events (typing, edits, deletes).
   // Always lowercased — server's roomKey sorts the names; mixed case
@@ -7772,6 +7775,17 @@ async function sendDM() {
   // through some other path.
   if (isFortizedOfficialAccount(curDM) && !isSuperAdmin()) {
     toast('This chat is reserved for official Fortized notifications.', 'info');
+    return;
+  }
+  // Guard: blocks sever DMs in both directions. The composer is already
+  // replaced by a lock notice, but enforce here too in case the input
+  // was reached through another path (drafts, forward, greeting chips).
+  if (isUserBlocked(curDM)) {
+    toast('You blocked this user. Unblock them to send messages.', 'info');
+    return;
+  }
+  if (window._dmBlockedPeer === curDM) {
+    toast("You can't send messages to this user.", 'info');
     return;
   }
   // Guard: automod chat suspension. Blocks the user from sending in every
@@ -12690,6 +12704,86 @@ async function removeFriend(username){
       try { _refreshFppFriendButton(username); } catch(_){}
     } catch(e){ console.error(e); toast('An error occurred. Please try again.','error'); }
   });
+}
+
+// ── Relationship state machine ─────────────────────────
+// Single source of truth for "what is my relation to X". States:
+// self | friends | outgoing | incoming | none. blocked/ignored are
+// orthogonal flags carried alongside — a block coexists with 'none'
+// (blocking auto-unfriends and clears requests), an ignore coexists
+// with any state (soft mute, never unfriends).
+function relationWith(username) {
+  const u = (username || '').trim().toLowerCase();
+  if (!CU || !u) return { state: 'none', blockedByMe: false, ignored: false };
+  if (u === CU.username) return { state: 'self', blockedByMe: false, ignored: false };
+  const state = (CU.friends || []).includes(u) ? 'friends'
+    : (CU.friendRequestsSent || []).includes(u) ? 'outgoing'
+    : (CU.friendRequestsReceived || []).includes(u) ? 'incoming'
+    : 'none';
+  return { state, blockedByMe: isUserBlocked(u), ignored: isUserIgnored(u) };
+}
+
+// Cancel an OUTGOING friend request (spec: outgoing requests are
+// cancelable). The friend:removed socket event doubles as the
+// real-time signal — its handler prunes both request lists on the
+// other client, which is exactly what a cancel needs.
+async function cancelFriendRequestTo(username){
+  username = (username || '').trim().toLowerCase();
+  if (!username) return;
+  try {
+    await FortizedSocial.cancelFriendRequest(CU.username, username);
+    try {
+      const s = FortizedSocial.getSocket();
+      if (s) s.emit('friend:removed', { from: CU.username, to: username });
+    } catch(_){}
+    await refreshCU();
+    toast('Request canceled', 'info');
+    renderFriendsList();
+    try { _refreshFppFriendButton(username); } catch(_){}
+  } catch(e){ console.error('[Friends] cancel failed:', e); toast('Failed to cancel the request.', 'error'); }
+}
+
+// Ignore an incoming request — returns the relation to 'none' without
+// notifying the sender (decline is already silent server-side; this
+// wrapper only exists so UI copy can say what it means).
+async function ignoreFriendRequest(username){
+  try{
+    await FortizedSocial.declineFriendRequest(CU.username, username);
+    await refreshCU();
+    renderFriendsList();
+    try { _refreshFppFriendButton(username); } catch(_){}
+    toast('Request ignored', 'info');
+  } catch(e){ console.error('[Friends] ignore failed:', e); }
+}
+
+// ── DM block lock ──────────────────────────────────────
+// Blocking severs DMs in BOTH directions. Runs after the DM view
+// renders: swaps the composer for a lock notice when either side
+// blocks the other. The profile fetch rides the normal 30s cache.
+async function _applyDMBlockLock(username) {
+  if (window._dmBlockedPeer === username) window._dmBlockedPeer = null;
+  let lockText = null;
+  if (isUserBlocked(username)) {
+    lockText = 'You blocked <strong>' + escapeHTML(username) + '</strong>. Unblock them to send messages.';
+  } else {
+    try {
+      const pu = await FortizedSocial.getUserByName(username);
+      if (Array.isArray(pu?.blockedUsers) && pu.blockedUsers.includes(CU.username)) {
+        lockText = "You can't send messages to this user.";
+      }
+    } catch (_) {}
+  }
+  if (!lockText) return;
+  if (curDM !== username) return; // navigated away while we fetched
+  window._dmBlockedPeer = username;
+  const bar = document.querySelector('#dm-chat-wrap .chat-input-wrap');
+  if (bar) {
+    const note = document.createElement('div');
+    note.className = 'chat-locked-notice';
+    note.setAttribute('role', 'note');
+    note.innerHTML = '<div class="chat-locked-notice__txt">' + lockText + '</div>';
+    bar.replaceWith(note);
+  }
 }
 
 // ════════════════════════════════════════════
@@ -34176,7 +34270,7 @@ function toggleBlockUser(username) {
 function _blockUserConfirm(username) {
   const isFriend = (CU.friends || []).includes(username);
   showCustomConfirm(
-    `Block ${username}?${isFriend ? ' This will also remove them from your friends.' : ''} They won't be able to send you friend requests, and their messages will be hidden.`,
+    `Block ${username}?${isFriend ? ' This will also remove them from your friends.' : ''} Neither of you will be able to message or send friend requests to the other, and their messages will be hidden.`,
     async () => {
       const blocked = _getBlockedList();
       if (!blocked.includes(username)) blocked.push(username);
@@ -49221,19 +49315,23 @@ function _fppActionRowHTML(username, isOwn, variant) {
       </button>
     </div>`;
   }
-  const isFriend = Array.isArray(CU?.friends) && CU.friends.includes(username);
-  const hasPendingOut = Array.isArray(CU?.friendRequestsSent) && CU.friendRequestsSent.includes(username);
-  const hasPendingIn = Array.isArray(CU?.friendRequestsReceived) && CU.friendRequestsReceived.includes(username);
-  // Uniformized "person + small glyph" family so all four friend
-  // states read as one family:
+  const rel = relationWith(username);
+  const isFriend = rel.state === 'friends';
+  const hasPendingOut = rel.state === 'outgoing';
+  const hasPendingIn = rel.state === 'incoming';
+  // Uniformized "person + small glyph" family so all friend states read
+  // as one family:
   //   add friend   → person + small plus    (action: send request)
-  //   pending out  → person + small clock   (you sent, waiting)
+  //   pending out  → person + small clock   (you sent — click to CANCEL)
   //   pending in   → person + small check   (they sent, click to accept)
   //   friends      → person + small check w/ filled badge (you're friends)
-  const friendBtn = isFriend
+  //   blocked      → person + slash         (click to unblock)
+  const friendBtn = rel.blockedByMe
+    ? `<button class="fpp__btn fpp__btn--square is-blocked" data-tip="Blocked — click to unblock" onclick="toggleBlockUser('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></button>`
+    : isFriend
     ? `<button class="fpp__btn fpp__btn--square is-friend" data-tip="Friends — click to unfriend" onclick="_fppClose();removeFriend('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></button>`
     : hasPendingOut
-      ? `<button class="fpp__btn fpp__btn--square is-pending" data-tip="Friend request sent — waiting"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><circle cx="19" cy="13" r="3.5"/><polyline points="19 11.2 19 13 20.2 13.9"/></svg></button>`
+      ? `<button class="fpp__btn fpp__btn--square is-pending" data-tip="Request sent — click to cancel" onclick="_fppClose();cancelFriendRequestTo('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><circle cx="19" cy="13" r="3.5"/><polyline points="19 11.2 19 13 20.2 13.9"/></svg></button>`
       : hasPendingIn
         ? `<button class="fpp__btn fpp__btn--square is-incoming" data-tip="Accept friend request" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><circle cx="19" cy="13" r="3.5" fill="currentColor" fill-opacity=".15"/><polyline points="17.5 13 18.5 14 20.5 12"/></svg></button>`
         : `<button class="fpp__btn fpp__btn--square" data-tip="Add friend" onclick="_fppClose();quickAddFriend('${escapeHTML(username)}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="19" y1="10" x2="19" y2="16"/><line x1="22" y1="13" x2="16" y2="13"/></svg></button>`;
@@ -54034,11 +54132,18 @@ async function renderFriendsSorted(mode) {
   if (!list) return;
   const friends = CU?.friends || [];
   const pending = CU?.friendRequestsReceived || [];
+  const outgoing = CU?.friendRequestsSent || [];
   let html = '';
-  // Pending section first
+  // Incoming requests first — Accept, or Ignore (silent, returns the
+  // relation to 'none' without notifying the sender)
   if (pending.length) {
-    html += `<div style="font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Pending — ${pending.length}</div>`;
-    pending.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong> sent you a friend request</p></div><div style="display:flex;gap:6px;"><button class="rn-accept" onclick="acceptFriend('${escapeHTML(f)}')">✓</button><button class="rn-decline" onclick="declineFriend('${escapeHTML(f)}')">✕</button></div></div>`; });
+    html += `<div style="font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Incoming — ${pending.length}</div>`;
+    pending.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong> sent you a friend request</p></div><div style="display:flex;gap:6px;"><button class="rn-accept" title="Accept" onclick="acceptFriend('${escapeHTML(f)}')">✓</button><button class="rn-decline" title="Ignore — they won't be notified" onclick="ignoreFriendRequest('${escapeHTML(f)}')">✕</button></div></div>`; });
+  }
+  // Outgoing requests — cancelable
+  if (outgoing.length) {
+    html += `<div style="font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:${pending.length?'12px':'0'} 0 8px;">Sent — ${outgoing.length}</div>`;
+    outgoing.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong></p><div style="font-size:10.5px;color:var(--muted);">Outgoing friend request</div></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;" onclick="cancelFriendRequestTo('${escapeHTML(f)}')">Cancel</button></div></div>`; });
   }
   if (!friends.length) { list.innerHTML = html || `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('users','48')}</div><h3>No friends yet</h3><p>Add friends by username!</p><button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button></div>`; return; }
   // Fetch statuses

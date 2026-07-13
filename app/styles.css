@@ -11805,6 +11805,12 @@ select:focus-visible {
   background:rgba(62,207,110,.10);
 }
 .fpp__btn--square.is-incoming:hover{ background:rgba(62,207,110,.16); }
+.fpp__btn--square.is-blocked{
+  color:var(--red);
+  border-color:rgba(235,69,69,.28);
+  background:rgba(235,69,69,.07);
+}
+.fpp__btn--square.is-blocked:hover{ background:rgba(235,69,69,.14); }
 .fpp__btn--square svg{ display:block; }
 
 /* ── Dropdown menu (popped from ⋯) ─────────────────────────────────── */

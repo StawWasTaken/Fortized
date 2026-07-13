@@ -1719,20 +1719,33 @@ function saveLocal() {
 let _saveUserTimer = null;
 let _saveUserPromise = null;
 let _isSaving = false; // Prevent concurrent saves
-async function saveUser(immediate) {
+// saveUser()                — debounced whole-object save (delta-diffed
+//                             server-side; empty values never clobber)
+// saveUser(true)            — immediate whole-object save
+// saveUser(true, ['banner']) — explicit-field save: writes exactly these
+//                             fields INCLUDING empty values. The only way
+//                             a clear (removed banner, emptied bio, left
+//                             last bastion) persists to the DB.
+async function saveUser(immediate, fields) {
   saveLocal();
+  const explicit = Array.isArray(fields) && fields.length > 0;
+  if (explicit) immediate = true; // explicit saves are never debounced
   if (!immediate && _saveUserTimer) clearTimeout(_saveUserTimer);
   const doSave = async () => {
     // Wait for any in-flight save to complete
     if (_isSaving) {
       while (_isSaving) await new Promise(r => setTimeout(r, 50));
-      return;
+      // A whole-object save can piggyback on the save that just ran
+      // (same shared CU). An explicit-fields save cannot — it forces
+      // specific columns (including clears) — so it falls through and
+      // performs its own write.
+      if (!explicit) return;
     }
     if (_saveUserPromise) await _saveUserPromise.catch(()=>{});
     _isSaving = true;
     _saveUserPromise = (async () => {
       try {
-        await FortizedSocial.saveUserObject(CU);
+        await FortizedSocial.saveUserObject(CU, explicit ? { fields } : undefined);
         // Self-echo: fire the same DOM-patching handler the socket would,
         // so pfp/banner/bio/displayName/decoration changes appear instantly
         // on chat rows, member lists, popovers, DM sidebar — without
@@ -1755,7 +1768,7 @@ async function saveUser(immediate) {
         } catch(_) {}
       } catch(e) {
         console.warn('saveUser failed, retrying:', e);
-        try { await new Promise(r => setTimeout(r, 1000)); await FortizedSocial.saveUserObject(CU); }
+        try { await new Promise(r => setTimeout(r, 1000)); await FortizedSocial.saveUserObject(CU, explicit ? { fields } : undefined); }
         catch(e2) {
           console.error('saveUser retry failed:', e2);
           // Data is already in localStorage from saveLocal() above, so the
@@ -9094,7 +9107,7 @@ async function _leaveBastionDirect(idx) {
   try{await FortizedSocial.removeBastionMember(b.globalId||b.name,CU.username);}catch(e){console.warn('[Bastion] Leave failed:',e?.message);}
   if(b.memberRoles) delete b.memberRoles[CU.username];
   CU.bastions.splice(idx,1);
-  await saveUser();
+  await saveUser(true, ['bastions']); // explicit: leaving the last bastion must persist
   curBastion=null; curChannel=null;
   renderRailBastions();
   showView('home');
@@ -19307,7 +19320,7 @@ async function confirmLeaveBastion() {
     try{await FortizedSocial.removeBastionMember(b.globalId||b.name,CU.username);}catch(e){console.warn('[Bastion] Leave failed:',e?.message);}
     if(b.memberRoles) delete b.memberRoles[CU.username];
     CU.bastions.splice(curBastion,1);
-    await saveUser(); closeModal('modal-leave-bastion'); curBastion=null;
+    await saveUser(true, ['bastions']); closeModal('modal-leave-bastion'); curBastion=null;
     renderRailBastions(); showView('home'); toast('Left bastion','info');
   };
   openModal('modal-leave-bastion');
@@ -19362,7 +19375,7 @@ function confirmDeleteBastion(idx) {
     overlay.remove();
     try { await FortizedSocial.deleteGlobalBastion(b.globalId || b.name); } catch(e) { console.warn('[Bastion] Global remove failed:', e?.message); }
     CU.bastions.splice(idx, 1);
-    await saveUser();
+    await saveUser(true, ['bastions']);
     curBastion = null;
     curChannel = null;
     renderRailBastions();
@@ -23673,7 +23686,7 @@ function _showBannerPickerMenu(event) {
       <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:8px;">Current</div>
       <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.06);aspect-ratio:16/5;background:#0e1117;">
         <img src="${escapeHTML(CU.banner)}" style="width:100%;height:100%;object-fit:cover;display:block;">
-        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';_persistBannerLocal(CU.username,'');saveUser();markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.35);color:#fca5a5;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
+        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';_persistBannerLocal(CU.username,'');saveUser(true,['banner']);markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.35);color:#fca5a5;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
       </div>
     </div>` : ''}
     <div style="padding:12px 24px 16px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:rgba(255,255,255,.28);">Banners are cropped to 16:5. Upload up to 8 MB or pick an animated GIF.</div>
@@ -30397,7 +30410,7 @@ async function saveBio() {
   const inp = document.getElementById('bio-input');
   if (!inp) return;
   CU.bio = inp.value.trim().slice(0,300);
-  await saveUser();
+  await saveUser(true, ['bio']); // explicit so an emptied bio persists
   toast('Bio saved!','success');
 }
 
@@ -30785,7 +30798,7 @@ function leaveBastion(idx) {
     // Clean local memberRoles so member list doesn't ghost
     if(b.memberRoles) delete b.memberRoles[CU.username];
     CU.bastions.splice(idx, 1);
-    await saveUser();
+    await saveUser(true, ['bastions']);
     renderRailBastions();
     if (curBastion === idx) { curBastion = null; showView('home'); }
     toast('Left ' + b.name, 'info');
@@ -38084,7 +38097,7 @@ function _ftzCspSave() {
     window._statusClearTimer = setTimeout(() => {
       if (CU.customStatus?.createdAt === stamp) {
         CU.customStatus = null;
-        saveUser().catch(() => {});
+        saveUser(true, ['customStatus']).catch(() => {}); // explicit: clear must persist
         toast('Status cleared', 'info');
       }
     }, ms);
@@ -47368,7 +47381,7 @@ function initCrossDeviceSync() {
     if (data.username === CU.username) {
       if (b.memberRoles) delete b.memberRoles[CU.username];
       CU.bastions.splice(idx, 1);
-      try { saveUser?.(true); } catch(_){}
+      try { saveUser?.(true, ['bastions']); } catch(_){}
       if (curBastion === idx) { curBastion = null; curChannel = null; showView('home'); }
       else if (curBastion !== null && curBastion > idx) curBastion -= 1;
       renderRailBastions();
@@ -47388,7 +47401,7 @@ function initCrossDeviceSync() {
     if (data.username === CU.username) {
       if (b.memberRoles) delete b.memberRoles[CU.username];
       CU.bastions.splice(idx, 1);
-      try { saveUser?.(true); } catch(_){}
+      try { saveUser?.(true, ['bastions']); } catch(_){}
       if (curBastion === idx) { curBastion = null; curChannel = null; showView('home'); }
       else if (curBastion !== null && curBastion > idx) curBastion -= 1;
       renderRailBastions();
@@ -48200,7 +48213,14 @@ async function _saveAllSettingsImpl() {
       else delete CU.socials[key];
     }
   });
-  await saveUser();
+  // Explicit field list: settings owns these fields, so clears (removed
+  // avatar/banner, emptied bio/pronouns) persist instead of being dropped
+  // by the delta-writer's empty-value guard.
+  await saveUser(true, [
+    'displayName','bio','email','password','pronouns','mentionPolicy',
+    'notifSettings','socials','pfp','pfpCrop','banner','profileTheme',
+    'activeDecoration','displayFont','displayEffect','displayColor','displayColor2',
+  ]);
   // Broadcast all editable cosmetic + identity fields so other
   // clients see the changes in real time without waiting for a
   // page reload. Previously saveAllSettings was silent over the

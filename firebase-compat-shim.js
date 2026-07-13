@@ -486,10 +486,14 @@
         }
         return;
       }
-      // Partial field update: users/{username}/fieldName or deeper
+      // Partial field update: users/{username}/fieldName or deeper.
+      // Explicit field save: per-field sets are deliberate (unblock the
+      // last user, clear the ignore list, leave the last group chat) —
+      // the delta writer must persist this field even when it's now empty.
+      const fieldPath = _mapUserField(parts.slice(2));
       const user = await FortizedSocial.getUserByName(parts[1]) || { username: parts[1] };
-      setNestedValue(user, _mapUserField(parts.slice(2)), val);
-      await FortizedSocial.saveUserObject(user);
+      setNestedValue(user, fieldPath, val);
+      await FortizedSocial.saveUserObject(user, { fields: [fieldPath[0]] });
       return;
     }
 
@@ -1022,11 +1026,12 @@
   async function supaUpdate(pathStr, updates) {
     const parts = parsePath(pathStr);
 
-    // users/{username} — partial update
+    // users/{username} — partial update. The update's own keys are the
+    // explicit field list so deliberate clears in `updates` persist.
     if (parts[0] === 'users' && parts.length === 2 && typeof updates === 'object') {
       const user = await FortizedSocial.getUserByName(parts[1]) || { username: parts[1] };
       Object.assign(user, updates);
-      await FortizedSocial.saveUserObject(user);
+      await FortizedSocial.saveUserObject(user, { fields: Object.keys(updates) });
       return;
     }
 

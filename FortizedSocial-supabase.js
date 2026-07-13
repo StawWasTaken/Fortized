@@ -162,6 +162,8 @@ const FortizedSocial = (() => {
       if (cached !== undefined) return cached;
     }
     const { data } = await sb.from('users').select(cols).eq('username', norm(username)).maybeSingle();
+    // Full rows become the delta-write baseline for this user.
+    if (data && cols === '*') _rememberRow(data);
     const result = data ? _userFromRow(data) : null;
     _cacheSet(cacheKey, result, ttl);
     return result;
@@ -216,6 +218,7 @@ const FortizedSocial = (() => {
     publicId = String(publicId || '').toLowerCase();
     if (!_isPublicUserId(publicId)) return null;
     const { data } = await sb.from('users').select('*').contains('raw', { id: publicId }).maybeSingle();
+    if (data) _rememberRow(data);
     return data ? _userFromRow(data) : null;
   }
   async function resolveUsername(identifier) {
@@ -371,114 +374,151 @@ const FortizedSocial = (() => {
     return row;
   }
 
-  // Protected accounts: writes must never clobber profile data (pfp/banner/bio/
-  // friends/radiance/etc) with empty values. Only badges + admin perms (role,
-  // isAdmin, isModerator, forceLogoutAt, banned, banReason, suspension) may be
-  // freely changed. Everything else is non-destructively merged against the
-  // existing DB row so stale/partial saves can't erase data.
-  const _PROTECTED_ACCOUNTS_HARD = new Set(['staw', 'fortized', 'joyster']);
-  // Admin/moderation fields that ARE allowed to change freely (even to empty).
-  // Cosmetic fields the user controls themselves (profile theme, decoration,
-  // pfp, banner, bio, custom status) are also writable — without them, a
-  // protected user trying to remove their decoration / reset their theme /
-  // clear their banner would silently fail because the merge would always
-  // restore the old value.
-  const _PROTECTED_WRITABLE_FIELDS = new Set([
-    'badges', 'role', 'isAdmin', 'isModerator', 'isSuperAdmin',
-    'forceLogoutAt', 'banned', 'banReason', 'suspension', 'suspendedUntil',
-    'activeWarning', 'lastSeen', 'status', 'customStatus', 'gameActivity',
-    'onyx', 'password',
-    'pfp', 'banner', 'bio', 'profileTheme', 'activeDecoration',
-    'displayName', 'pronouns', 'displayFont', 'displayEffect', 'displayColor',
-  ]);
-  const _PROTECTED_WRITABLE_COLS = new Set([
-    'badges', 'banned', 'ban_reason', 'suspension', 'suspended_until',
-    'active_warning', 'last_seen', 'status', 'custom_status', 'game_activity',
-    'onyx', 'password', 'raw',
-    'pfp', 'banner', 'bio', 'profile_theme', 'active_decoration', 'display_name',
-  ]);
-
-  function _isHardProtected(username) {
-    return _PROTECTED_ACCOUNTS_HARD.has(norm(username));
+  // ── Delta-write engine ───────────────────────────────
+  // The single biggest source of data loss was whole-row upserts: any
+  // stale or partially-hydrated in-memory user object rewrote EVERY
+  // column, wiping whatever it didn't carry. saveUserObject now diffs
+  // against the last full DB row seen this session and writes only the
+  // columns that actually changed. Wipes become structurally impossible;
+  // saves also get dramatically smaller (no more re-sending megabyte
+  // data-URL avatars to update lastSeen).
+  const _lastRowByUser = {}; // username -> last full DB row seen
+  function _rememberRow(row) {
+    if (row && row.username) _lastRowByUser[norm(row.username)] = row;
   }
 
-  // Given incoming row + existing DB row for a protected account, return a
-  // merged row where empty/null fields in the new row fall back to existing
-  // values. Fields in _PROTECTED_WRITABLE_COLS are always taken from the new
-  // row. For `raw` JSONB, we shallow-merge so admin fields in raw can update
-  // without erasing unrelated extras.
-  function _mergeProtectedRow(newRow, existingRow) {
-    if (!existingRow) return newRow;
-    const out = { ...existingRow, ...newRow };
-    for (const col of Object.keys(newRow)) {
-      const nv = newRow[col];
-      const ev = existingRow[col];
-      const isEmpty = nv == null
-        || (Array.isArray(nv) && nv.length === 0 && Array.isArray(ev) && ev.length > 0)
-        || (typeof nv === 'string' && nv === '' && typeof ev === 'string' && ev !== '')
-        || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && ev && typeof ev === 'object' && Object.keys(ev).length > 0);
-      // For hard-protected accounts, ANY empty incoming value must not
-      // overwrite an existing one — including pfp/banner/bio/display_name/
-      // active_decoration/profile_theme. Previously the "writable" list
-      // exempted those from the guard, so any partial save with an
-      // unhydrated CU (page-refresh race, socket-init before profile
-      // fetch) would wipe them. If the user genuinely wants to clear a
-      // field, they must do so via a dedicated non-protected code path.
-      if (isEmpty) { out[col] = ev; continue; }
-      if (_PROTECTED_WRITABLE_COLS.has(col)) continue;
-    }
-    // Password is special: even though it's in the writable set, we never want
-    // to accept a falsy new value (null/''/undefined) over a real existing one.
-    // This is the last line of defence against the 'system'-password bug.
-    if (!newRow.password && existingRow.password) out.password = existingRow.password;
-    // created_at is IMMUTABLE for protected accounts once set. Even if a new
-    // row carries a fresh ISO date (e.g. from _ensureJoysterAccount falling
-    // into its "create" branch after a transient fetch miss), the real join
-    // date in the DB wins. Only adopt the new value if there truly is none
-    // stored yet.
-    if (existingRow.created_at) out.created_at = existingRow.created_at;
-    // Shallow merge raw JSONB so protected extras survive partial saves.
-    if (existingRow.raw && typeof existingRow.raw === 'object') {
-      out.raw = { ...existingRow.raw, ...(newRow.raw || {}) };
-    }
-    // username always from new row (normalized)
-    out.username = newRow.username;
-    return out;
+  // Columns where an empty value arriving via a whole-object save is far
+  // more likely a partially-hydrated CU than a deliberate clear. These
+  // never go from non-empty to empty on the implicit path; deliberate
+  // clears pass an explicit field list (saveUserObject(user,{fields}))
+  // which bypasses this guard. Ephemeral/presence/moderation columns
+  // (status, last_seen, game_activity, suspension…) are NOT listed —
+  // they may empty freely, e.g. clearing suspension or game activity.
+  const _EMPTY_GUARDED_COLS = new Set([
+    'pfp', 'banner', 'bio', 'display_name', 'custom_status',
+    'active_decoration', 'profile_theme', 'email', 'badges', 'connections',
+    'friends', 'friend_requests_sent', 'friend_requests_received',
+    'bastions', 'blocked_users', 'ignored_users', 'group_chats',
+  ]);
+
+  // App-level field name -> DB column, for explicit-field saves.
+  // Anything not listed here lives inside the raw JSONB column.
+  const _FIELD_TO_COL = {
+    email: 'email', displayName: 'display_name', pfp: 'pfp', banner: 'banner',
+    onyx: 'onyx', status: 'status', customStatus: 'custom_status',
+    friends: 'friends', friendRequestsSent: 'friend_requests_sent',
+    friendRequestsReceived: 'friend_requests_received', bastions: 'bastions',
+    radianceUntil: 'radiance_until', radiancePlus: 'radiance_plus',
+    lastDaily: 'last_daily', blockedUsers: 'blocked_users',
+    ignoredUsers: 'ignored_users', groupChats: 'group_chats',
+    suspension: 'suspension', suspendedUntil: 'suspended_until',
+    activeWarning: 'active_warning', gameActivity: 'game_activity',
+    lastSeen: 'last_seen', profileTheme: 'profile_theme',
+    activeDecoration: 'active_decoration', bio: 'bio', badges: 'badges',
+    connections: 'connections', banned: 'banned', banReason: 'ban_reason',
+    password: 'password',
+  };
+
+  function _sameVal(a, b) {
+    return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+  }
+  function _isEmptier(nv, ev) {
+    return nv == null
+      || (Array.isArray(nv) && nv.length === 0 && Array.isArray(ev) && ev.length > 0)
+      || (typeof nv === 'string' && nv === '' && typeof ev === 'string' && ev !== '')
+      || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && ev && typeof ev === 'object' && Object.keys(ev).length > 0);
   }
 
-  async function saveUserObject(user) {
+  // saveUserObject(user)             — implicit: diff vs baseline, guarded
+  // saveUserObject(user, {fields})   — explicit: write exactly these fields,
+  //                                    empties included (how clears persist)
+  async function saveUserObject(user, opts) {
     if (!user?.username) return;
-    console.log('[DECO][saveUserObject] called for', user.username, '— activeDecoration =', JSON.stringify(user.activeDecoration));
-    _cacheDel('user:' + norm(user.username));
-    _cacheDel('userEnf:' + norm(user.username));
+    const uname = norm(user.username);
+    _cacheDel('user:' + uname);
+    _cacheDel('userEnf:' + uname);
     if (!_isPublicUserId(user.id)) user.id = await _nextPublicId('user');
-    let row = _userToRow(user);
-    if (_isHardProtected(user.username)) {
-      try {
-        const { data: existing } = await sb.from('users').select('*').eq('username', norm(user.username)).maybeSingle();
-        if (existing) {
-          row = _mergeProtectedRow(row, existing);
-          console.debug('[saveUserObject] Protected account merge applied for', user.username);
+    const desired = _userToRow(user);
+
+    // Baseline = last full row seen this session; fetch once if we have
+    // none. If the fetch ITSELF fails, abort: a blind write with no
+    // baseline is exactly the stale-overwrite bug this path exists to kill.
+    let base = _lastRowByUser[uname];
+    if (!base) {
+      const { data, error } = await sb.from('users').select('*').eq('username', uname).maybeSingle();
+      if (error) {
+        console.warn('[saveUserObject] baseline fetch failed, aborting write to avoid data loss:', error.message);
+        throw new Error('Baseline fetch failed: ' + error.message);
+      }
+      if (data) { base = data; _rememberRow(data); }
+    }
+
+    if (!base) {
+      // Row genuinely doesn't exist — brand-new user, full insert.
+      const { error } = await sb.from('users').upsert(desired, { onConflict: 'username' });
+      if (error) {
+        console.error('[saveUserObject] INSERT FAILED:', error.message, error.code);
+        throw new Error(`Upsert failed: ${error.message}`);
+      }
+      _rememberRow(desired);
+    } else {
+      const explicit = (Array.isArray(opts?.fields) && opts.fields.length) ? opts.fields : null;
+      const changed = {};
+      if (explicit) {
+        let rawOut = null;
+        for (const f of explicit) {
+          const col = _FIELD_TO_COL[f];
+          if (col === 'password') {
+            // Never write a falsy password over a real one, even explicitly.
+            if (typeof user.password === 'string' && user.password.length > 0) changed.password = user.password;
+          } else if (col) {
+            changed[col] = (desired[col] === undefined) ? null : desired[col];
+          } else {
+            // raw-resident field (pronouns, socials, pfpCrop, …). Merge
+            // over the FRESHEST raw we can get so we don't resurrect
+            // stale keys from an old baseline.
+            if (!rawOut) {
+              let freshRaw = base.raw;
+              try {
+                const { data: rr } = await sb.from('users').select('raw').eq('username', uname).maybeSingle();
+                if (rr) freshRaw = rr.raw;
+              } catch (_) {}
+              rawOut = { ...(freshRaw || {}) };
+            }
+            if (user[f] === undefined) delete rawOut[f]; else rawOut[f] = user[f];
+          }
         }
-      } catch (e) {
-        console.warn('[saveUserObject] Protected merge lookup failed, aborting write to avoid data loss:', e?.message);
-        return;
+        if (rawOut) changed.raw = rawOut;
+      } else {
+        for (const col of Object.keys(desired)) {
+          if (col === 'username' || col === 'created_at' || col === 'raw') continue;
+          const nv = desired[col], ev = base[col];
+          if (_sameVal(nv, ev)) continue;
+          if (col === 'password' && !nv) continue;
+          if (_EMPTY_GUARDED_COLS.has(col) && _isEmptier(nv, ev)) continue;
+          changed[col] = nv;
+        }
+        // raw JSONB: shallow-merge so extras a partial CU doesn't carry
+        // survive; keys the CU does carry win (including empty values —
+        // raw-resident fields clear normally on this path).
+        const mergedRaw = { ...(base.raw || {}), ...(desired.raw || {}) };
+        if (!_sameVal(mergedRaw, base.raw || {})) changed.raw = mergedRaw;
+      }
+      // created_at is immutable once set — the real join date always wins.
+      if (!base.created_at && desired.created_at) changed.created_at = desired.created_at;
+
+      if (Object.keys(changed).length === 0) {
+        console.debug('[saveUserObject] no-op — nothing changed for', uname);
+      } else {
+        const { error } = await sb.from('users').update(changed).eq('username', uname);
+        if (error) {
+          console.error('[saveUserObject] UPDATE FAILED:', error.message, error.code);
+          throw new Error(`Update failed: ${error.message}`);
+        }
+        _lastRowByUser[uname] = { ...base, ...changed };
+        console.debug('[saveUserObject] ✓ wrote [' + Object.keys(changed).join(', ') + '] for', uname);
       }
     }
-    console.debug('[saveUserObject] Saving user:', {
-      username: user.username,
-      pfp: row.pfp ? 'set' : 'null',
-      banner: row.banner ? 'set' : 'null',
-      onyx: row.onyx
-    });
-    console.log('[DECO][saveUserObject] about to upsert row.active_decoration =', JSON.stringify(row.active_decoration));
-    const { data, error } = await sb.from('users').upsert(row, { onConflict: 'username' });
-    if (error) {
-      console.error('[saveUserObject] UPSERT FAILED:', error.message, error.code);
-      throw new Error(`Upsert failed: ${error.message}`);
-    }
-    console.log('[DECO][saveUserObject] upsert ok');
-    console.debug('[saveUserObject] ✓ Successfully saved user data');
     // Broadcast so friends/DM partners/bastion-mates see displayName / pfp /
     // banner / bio / decoration / status changes without refreshing. Payload
     // is deliberately small; the receiver's onProfileUpdated hook patches
@@ -578,6 +618,7 @@ const FortizedSocial = (() => {
       try {
         const emailLower = raw.toLowerCase();
         const { data } = await sb.from('users').select('*').eq('email', emailLower).limit(1).maybeSingle();
+        if (data) _rememberRow(data);
         user = data ? _userFromRow(data) : null;
       } catch(e) { console.warn('[login] email lookup failed', e?.message); }
     }

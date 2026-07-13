@@ -4792,7 +4792,18 @@ function _defaultPfpUrl(name) {
   // Use the default avatar image with transparent background
   return 'https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/default%20avatar.png';
 }
+// Reject degenerate GIF-crop data (NaN / ~zero width) — rendering it
+// positions the avatar image at width:0% and the avatar shows as
+// transparent. Old rows in the DB may still carry such crops from the
+// pre-guard crop modal; treating them as "no crop" heals them on render.
+function _saneCrop(c) {
+  if (!c) return null;
+  const l = +c.leftPct, t = +c.topPct, w = +c.widthPct;
+  if (!isFinite(l) || !isFinite(t) || !isFinite(w) || w < 5) return null;
+  return c;
+}
 function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
+  cropData = _saneCrop(cropData);
   const s = 'width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0;';
   const defaultUrl = _defaultPfpUrl(name);
   const initial = (name||'?')[0].toUpperCase();
@@ -12151,7 +12162,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         }
         const avWrap = entry.querySelector('.ml-av-wrap');
         if (ud.pfp && avWrap) {
-          const _uCrop = ud.pfpCrop || _pfpCropCache[u] || null;
+          const _uCrop = _saneCrop(ud.pfpCrop || _pfpCropCache[u] || null);
           const _isGifPfp = _uCrop && /\.gif|data:image\/gif/i.test(ud.pfp);
           if (_isGifPfp) {
             // GIF with crop: use CSS-based cropping to preserve animation
@@ -46794,7 +46805,7 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
         <button class="ftz-modal-foot__back" onclick="resetCrop()">Reset</button>
         <div class="ftz-modal-foot__actions">
           <button class="ftz-modal-foot__cancel" onclick="document.getElementById('crop-modal-overlay').remove()">Cancel</button>
-          <button class="btn-yellow" onclick="applyCrop()">Apply</button>
+          <button class="btn-yellow" id="crop-apply-btn" onclick="applyCrop()" disabled>Apply</button>
         </div>
       </div>
     </div>`;
@@ -46829,6 +46840,14 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
     _cropData.x = (w - _cropImg.width * _cropData.scale) / 2;
     _cropData.y = (h - _cropImg.height * _cropData.scale) / 2;
     drawCrop();
+    // Only now is Apply safe — applying before the image loads exported
+    // a blank canvas (the "my avatar turned transparent" bug).
+    const ab = document.getElementById('crop-apply-btn');
+    if (ab) ab.disabled = false;
+  };
+  _cropImg.onerror = () => {
+    document.getElementById('crop-modal-overlay')?.remove();
+    toast("Couldn't load that image — the site may block hotlinking. Download it and upload the file instead.", 'error');
   };
   _cropImg.src = src;
 
@@ -46904,6 +46923,13 @@ function drawCrop() {
 function applyCrop() {
   const wrap = document.getElementById('crop-canvas-wrap');
   if (!wrap || !_cropCanvas || !_cropImg) return;
+  // Applying before the image finished loading exported a blank canvas
+  // (drawImage of an unloaded image silently draws nothing) — the saved
+  // avatar came out transparent/black and persisted that way.
+  if (!_cropImg.complete || !_cropImg.naturalWidth) {
+    toast('Image is still loading — one sec, then hit Apply again.', 'info');
+    return;
+  }
   const dpr = window.devicePixelRatio || 1;
   const w = _cropCanvas.width / dpr;
   const h = _cropCanvas.height / dpr;
@@ -46916,6 +46942,12 @@ function applyCrop() {
       topPct: (_cropData.y / h) * 100,
       widthPct: (imgDisplayW / w) * 100
     };
+    // Degenerate crop percentages render the avatar invisible everywhere
+    // and persist to the DB — refuse to emit them.
+    if (!isFinite(crop.leftPct) || !isFinite(crop.topPct) || !isFinite(crop.widthPct) || crop.widthPct < 5) {
+      toast('Crop failed — try re-uploading the image.', 'error');
+      return;
+    }
     document.getElementById('crop-modal-overlay')?.remove();
     if (_cropCallback) _cropCallback({ gifData: _cropData._gifSrc, crop: crop });
     return;
@@ -46935,6 +46967,15 @@ function applyCrop() {
     _cropData.x * scaleX, _cropData.y * scaleY,
     _cropImg.width * _cropData.scale * scaleX,
     _cropImg.height * _cropData.scale * scaleY);
+
+  // Never emit a blank avatar: sample the export's alpha and abort
+  // (keeping the modal open) if nothing was actually drawn.
+  try {
+    const probe = ctx.getImageData(0, 0, outW, outH).data;
+    let visible = false;
+    for (let i = 3; i < probe.length; i += 388) { if (probe[i] > 8) { visible = true; break; } }
+    if (!visible) { toast('Crop came out empty — try again.', 'error'); return; }
+  } catch (_) { /* tainted canvas — toBlob below will fail loudly instead */ }
 
   document.getElementById('crop-modal-overlay')?.remove();
 

@@ -4810,6 +4810,54 @@ function _saneCrop(c) {
   if (!isFinite(l) || !isFinite(t) || !isFinite(w) || w < 5) return null;
   return c;
 }
+// ── Blank-avatar detection for OTHER users' pfps ─────────────
+// _healBlankAvatar fixes the CURRENT user's corrupt (fully-transparent)
+// PNG at boot, but accounts poisoned by the old crop bug stay invisible
+// to everyone else until THEY log in. This registry probes each unique
+// data-URL PNG once, off the render path; once an avatar proves blank,
+// every future build renders the neutral initial fallback synchronously
+// and already-painted instances get swapped via their onerror machinery.
+// Purely visual — never writes to another user's row.
+const _blankPfpKnown = new Map();   // fingerprint -> true (blank) | false (fine)
+const _blankPfpProbing = new Set();
+function _pfpFingerprint(pfp) { return pfp.length + ':' + pfp.slice(-24); }
+function _probeBlankPfp(pfp) {
+  try {
+    if (!pfp || typeof pfp !== 'string' || !pfp.startsWith('data:image/png')) return;
+    const fp = _pfpFingerprint(pfp);
+    if (_blankPfpKnown.has(fp) || _blankPfpProbing.has(fp)) return;
+    _blankPfpProbing.add(fp);
+    const img = new Image();
+    img.onload = () => {
+      let blank = false;
+      try {
+        if (!img.naturalWidth || !img.naturalHeight) blank = true;
+        else {
+          const w = Math.min(img.naturalWidth, 32), h = Math.min(img.naturalHeight, 32);
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          const ctx = c.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0, w, h);
+          const d = ctx.getImageData(0, 0, w, h).data;
+          blank = true;
+          for (let i = 3; i < d.length; i += 4) if (d[i] !== 0) { blank = false; break; }
+        }
+      } catch (_) { blank = false; } // canvas hiccup ≠ proof of corruption
+      _blankPfpProbing.delete(fp);
+      _blankPfpKnown.set(fp, blank);
+      if (blank) {
+        console.warn('[avatar] fully-transparent avatar detected (' + pfp.length + ' chars) — rendering initial fallback');
+        // Already-painted instances: fire their existing onerror fallback,
+        // which swaps in the initial-letter span.
+        document.querySelectorAll('img[data-ftz-pfp-fp="' + fp + '"]').forEach(el => {
+          try { el.dispatchEvent(new Event('error')); } catch (_) {}
+        });
+      }
+    };
+    img.onerror = () => { _blankPfpProbing.delete(fp); _blankPfpKnown.set(fp, true); };
+    img.src = pfp;
+  } catch (_) {}
+}
+
 function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
   cropData = _saneCrop(cropData);
   const s = 'width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0;';
@@ -4827,14 +4875,29 @@ function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
   // When the DEFAULT image fails: keep the color background (we're already
   // in default-avatar mode) and substitute the initial letter.
   const initialFallbackJS = 'this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:'+color+';color:rgba(255,255,255,.9);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)';
+  // Known fully-transparent PNG (old crop-bug residue on an account that
+  // hasn't logged in since the fix): neutral initial fallback instead of
+  // an invisible circle. Unknown PNGs kick an async probe; the fp attr
+  // lets the probe swap instances it already painted.
+  let _fpAttr = '';
+  if (pfp && typeof pfp === 'string' && pfp.startsWith('data:image/png')) {
+    const fp = _pfpFingerprint(pfp);
+    if (_blankPfpKnown.get(fp) === true) {
+      return '<span style="display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;">'+initial+'</span>';
+    }
+    if (!_blankPfpKnown.has(fp)) {
+      _fpAttr = ' data-ftz-pfp-fp="'+fp+'"';
+      _probeBlankPfp(pfp);
+    }
+  }
   // GIF avatar with CSS-based crop (preserves animation) — NO colored wrap
   if (pfp && cropData && cropData.widthPct) {
     return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:block;">'
-      + '<img src="'+pfp+'" style="position:absolute;left:'+cropData.leftPct+'%;top:'+cropData.topPct+'%;width:'+cropData.widthPct+'%;height:auto;" onerror="'+defaultFallbackJS+'">'
+      + '<img src="'+pfp+'"'+_fpAttr+' style="position:absolute;left:'+cropData.leftPct+'%;top:'+cropData.topPct+'%;width:'+cropData.widthPct+'%;height:auto;" onerror="'+defaultFallbackJS+'">'
       + '</div>';
   }
   // User has pfp — render directly with NO colored background
-  if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="'+defaultFallbackJS+'">';
+  if (pfp) return '<img src="'+pfp+'"'+_fpAttr+' style="'+s+'" onerror="'+defaultFallbackJS+'">';
   // Default avatar (no pfp): wrapped in colored container so transparent
   // default image shows on user's assigned color
   return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+color+';">'
@@ -14861,7 +14924,7 @@ function initFortizedUXResilience() {
             if (data.bio !== undefined) {
               const inlineBio = card.querySelector('.fpp__inline-bio');
               if (inlineBio) {
-                if (data.bio) inlineBio.innerHTML = parseBioMD(data.bio.slice(0, 500), data.username) + (data.bio.length > 500 ? '…' : '');
+                if (data.bio) inlineBio.innerHTML = parseBioMD(data.bio.slice(0, 500), data.username, data) + (data.bio.length > 500 ? '…' : '');
                 else inlineBio.remove();
               }
               // About card variant (mini popover / own popover): swap
@@ -14872,7 +14935,7 @@ function initFortizedUXResilience() {
               if (aboutCard) {
                 const aboutBody = aboutCard.querySelector('.fpp-card__body:not(.fpp-card__body--muted)');
                 if (data.bio) {
-                  if (aboutBody) aboutBody.innerHTML = parseBioMD(data.bio.slice(0, 300), data.username) + (data.bio.length > 300 ? '…' : '');
+                  if (aboutBody) aboutBody.innerHTML = parseBioMD(data.bio.slice(0, 300), data.username, data) + (data.bio.length > 300 ? '…' : '');
                   // If bio was absent originally there's nothing to swap; the
                   // next organic re-render will pick it up.
                 } else if (aboutBody) {
@@ -22166,7 +22229,7 @@ function _buildProfileView(tab) {
                   <div class="fpp-card fpp-card--about" id="preview-about-card" style="${(CU.bio||CU.joinedAt||CU.createdAt)?'':'display:none;'}">
                     <div id="preview-bio-section" style="${CU.bio?'':'display:none;'}">
                       <div class="fpp-card__title">About Me</div>
-                      <div class="fpp-card__body" id="preview-bio-body">${CU.bio ? (parseBioMD(CU.bio.slice(0,300), CU.username)+(CU.bio.length>300?'…':'')) : ''}</div>
+                      <div class="fpp-card__body" id="preview-bio-body">${CU.bio ? (parseBioMD(CU.bio.slice(0,300), CU.username, CU)+(CU.bio.length>300?'…':'')) : ''}</div>
                     </div>
                     ${(CU.joinedAt||CU.createdAt) ? `
                       ${CU.bio ? '<div class="fpp-card__sep"></div>' : ''}
@@ -32195,7 +32258,7 @@ function _augmentShortcodes() {
 //   ✓ bold ** / italic * / bold-italic *** / strike ~~ / inline code `
 //   ✓ spoiler ||x|| / highlight ==x== / small ~x~
 //   ✓ "quoted" → italic-muted span
-function parseBioMD(s, authorUsername) {
+function parseBioMD(s, authorUsername, authorObj) {
   if (!s) return '';
   let out = String(s);
   // Escape HTML first so user-supplied content can't inject markup.
@@ -32246,7 +32309,7 @@ function parseBioMD(s, authorUsername) {
   // where non-Radiance can only use bastion emojis inside that
   // bastion — About Me is a global surface so Radiance is required).
   out = out.replace(/:([a-zA-Z0-9_+-]{2,40}):/g, (m, name) => {
-    const r = _bioEmojiHTML(name, authorUsername);
+    const r = _bioEmojiHTML(name, authorUsername, authorObj);
     if (!r) return m;
     _slots.push(r); return '\x00BIO'+(_slots.length-1)+'\x00';
   });
@@ -32329,7 +32392,7 @@ function _bioMentionAllowed(authorUsername, mentionedHandle) {
 // an About Me is a global surface so Radiance is required to use any
 // bastion emoji there). Returns '' for unknown shortcodes — caller
 // leaves the raw ':name:' text in place.
-function _bioEmojiHTML(name, authorUsername) {
+function _bioEmojiHTML(name, authorUsername, authorObj) {
   if (!name) return '';
   const lower = String(name).toLowerCase();
   // 1) Unicode shortcode (always free). Friendly title — flag names
@@ -32346,7 +32409,7 @@ function _bioEmojiHTML(name, authorUsername) {
         return `<img class="rci-emoji bio-emoji emoji msg-emoji" data-emoji="${escapeHTML(lower)}" data-emoji-uni="${escapeHTML(uni)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(url)}" alt="${escapeHTML(uni)}" draggable="false" title="${friendly}">`;
       }
     }
-  } catch (_) {}
+  } catch (e) { _bioEmojiWarnOnce('unicode', e); }
   // 2) Official FORTIZED_EMOJI_MAP (always free)
   try {
     if (typeof FORTIZED_EMOJI_MAP === 'object' && FORTIZED_EMOJI_MAP[lower]) {
@@ -32354,31 +32417,42 @@ function _bioEmojiHTML(name, authorUsername) {
       const friendly = _shortcodeToTitle(lower).replace(/"/g, '&quot;');
       return `<img class="rci-emoji bio-emoji emoji msg-emoji" data-emoji="${escapeHTML(lower)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(src)}" alt=":${escapeHTML(lower)}:" draggable="false" title="${friendly}">`;
     }
-  } catch (_) {}
+  } catch (e) { _bioEmojiWarnOnce('fortized', e); }
   // 3) Custom bastion emoji — STRICT Radiance gate on the author.
   //    Per brief: "make sure bastion emojis are ONLY usable by
-  //    Radiance users". Previously we defaulted to permissive when
-  //    we couldn't resolve the author's entitlement from cache —
-  //    that meant a missed cache lookup let a free user render a
-  //    bastion emoji on their bio. Now: render ONLY when we can
-  //    PROVE Radiance. Self renders use CU directly so the user
-  //    always sees the correct behaviour for their own bio.
+  //    Radiance users". Render ONLY when we can PROVE Radiance — but
+  //    callers that already HOLD the author's row (profile card,
+  //    popover, settings preview) pass it in as authorObj so a cold
+  //    profile cache doesn't degrade a legit bio to :name: text,
+  //    which is exactly what it did.
   const author = (authorUsername || '').toLowerCase();
   const isSelf = author && CU?.username && author === CU.username.toLowerCase();
-  let authorObj = null;
   if (isSelf) authorObj = CU;
-  else if (typeof cachedProfile === 'function') {
+  else if (!authorObj && typeof cachedProfile === 'function') {
     try { authorObj = cachedProfile(author) || null; } catch (_) {}
   }
   if (!authorObj || !_hasRadiance(authorObj)) return '';
-  // Walk every bastion to find the emoji.
+  // Walk every bastion to find the emoji. Match case-insensitively:
+  // custom emojis keep their creator's casing (":CLCK:") while the
+  // shortcode arrives lowercased — the old exact match silently
+  // dropped every non-lowercase custom emoji.
   for (let bi = 0; bi < (CU?.bastions || []).length; bi++) {
-    const ce = (CU.bastions[bi]?.customEmojis || []).find(e => e.name === lower);
+    const ce = (CU.bastions[bi]?.customEmojis || []).find(e => e && typeof e.name === 'string' && e.name.toLowerCase() === lower);
     if (!ce) continue;
     const friendly = _shortcodeToTitle(lower).replace(/"/g, '&quot;');
     return `<img class="rci-emoji bio-emoji emoji msg-emoji" data-emoji="${escapeHTML(lower)}" data-emoji-name="${escapeHTML(lower)}" src="${escapeHTML(ce.data)}" alt=":${escapeHTML(lower)}:" draggable="false" title="${friendly}">`;
   }
   return '';
+}
+
+// One console.warn per session per branch — a runtime throw inside
+// _bioEmojiHTML used to be swallowed silently, which turned EVERY bio
+// emoji into literal :name: text with zero diagnostic trail.
+function _bioEmojiWarnOnce(branch, e) {
+  window._bioEmojiWarned = window._bioEmojiWarned || {};
+  if (window._bioEmojiWarned[branch]) return;
+  window._bioEmojiWarned[branch] = true;
+  console.warn('[bio-emoji] ' + branch + ' branch threw — bios will show :name: text:', e?.message || e);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -33656,7 +33730,7 @@ function _openDisplayNameStyleModal() {
                 </div>
                 ${cs && cs.text
                   ? '<div class="fpp__cs-bubble">'+(cs.emoji?'<span class="fpp__cs-emoji"><img src="'+emojiToTwemojiUrl(cs.emoji)+'" alt=""></span>':'')+'<span class="fpp__cs-text">'+escapeHTML(cs.text).slice(0,40)+'</span></div>'
-                  : '<div class="fpp__cs-bubble fpp__cs-bubble--empty"><span class="fpp__cs-plus">'+_FPP_CS_PLUS_SVG+'</span><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
+                  : '<div class="fpp__cs-bubble fpp__cs-bubble--empty"><span class="fpp__cs-plus">'+_FTZ_CS_PLUS_SVG+'</span><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
               </div>
               <div class="fpp__identity">
                 <div class="fpp__name" id="dns-preview-name" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
@@ -48295,7 +48369,7 @@ function updateProfilePreview() {
   const aboutCard = document.getElementById('preview-about-card');
   if (bioBody) {
     if (bio) {
-      bioBody.innerHTML = parseBioMD(bio.slice(0, 300), CU?.username) + (bio.length > 300 ? '…' : '');
+      bioBody.innerHTML = parseBioMD(bio.slice(0, 300), CU?.username, CU) + (bio.length > 300 ? '…' : '');
       if (bioSection) bioSection.style.display = '';
     } else if (bioSection) {
       bioSection.style.display = 'none';
@@ -49278,7 +49352,7 @@ function _fppBioCardHTML(u, maxLen, openFull) {
   const viewFull = (openFull && u.bio.length > maxLen)
     ? `<a href="#" onclick="event.preventDefault();${openFull}" style="color:var(--accent);text-decoration:none;font-size:11.5px;display:inline-block;margin-top:6px;">View Full Bio</a>`
     : '';
-  return `<div class="fpp-card"><div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(snippet, u.username)}${viewFull}</div></div>`;
+  return `<div class="fpp-card"><div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(snippet, u.username, u)}${viewFull}</div></div>`;
 }
 
 function _fppMemberSinceCardHTML(u) {
@@ -49313,7 +49387,7 @@ function _fppAboutCardHTML(u) {
   } catch(_) {}
   if (!hasBio && !memberSinceTxt && !friendsSinceTxt) return '';
   const bioBlock = hasBio
-    ? `<div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(u.bio.slice(0, 300), u.username)}${u.bio.length > 300 ? '…' : ''}</div>`
+    ? `<div class="fpp-card__title">About Me</div><div class="fpp-card__body">${parseBioMD(u.bio.slice(0, 300), u.username, u)}${u.bio.length > 300 ? '…' : ''}</div>`
     : '';
   const sep = (hasBio && (memberSinceTxt || friendsSinceTxt)) ? '<div class="fpp-card__sep"></div>' : '';
   // Two-column layout when we have BOTH dates. When only one, it takes the

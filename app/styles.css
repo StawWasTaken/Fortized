@@ -499,12 +499,14 @@ body.is-desktop-app .topbar{padding-right:0;}
 .onyx-pill img{width:14px;height:14px;object-fit:contain;}
 /* ═══ Topbar wallet capsules (onyx + streak) — gamescard aesthetic ═══ */
 .tb-wallet{display:flex;align-items:center;gap:8px;}
-.tb-cap{position:relative;display:flex;align-items:center;gap:9px;padding:6px 14px 6px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.03) 0%,rgba(255,255,255,.01) 100%);border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:border-color .18s cubic-bezier(.22,1,.36,1),transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s cubic-bezier(.22,1,.36,1);white-space:nowrap;overflow:hidden;}
+/* Icon + amount only, per the Discord-orb / Robux reference. Regular
+   bold (700) value — was 800 extra-bold with a text label. */
+.tb-cap{position:relative;display:flex;align-items:center;gap:7px;padding:6px 12px 6px 10px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.03) 0%,rgba(255,255,255,.01) 100%);border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:border-color .18s cubic-bezier(.22,1,.36,1),transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s cubic-bezier(.22,1,.36,1);white-space:nowrap;overflow:hidden;}
 .tb-cap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0,rgba(255,255,255,.14) 50%,transparent 100%);pointer-events:none;}
 /* Icon holder — no box, no border. Just a flex cell that sizes the icon. */
 .tb-cap-ic{display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:0;}
-.tb-cap-ic svg,.tb-cap-ic img{width:18px;height:18px;object-fit:contain;display:block;}
-.tb-cap-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;}
+.tb-cap-ic svg,.tb-cap-ic img{width:16px;height:16px;object-fit:contain;display:block;}
+.tb-cap-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1;}
 .tb-cap-lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.35);letter-spacing:.02em;line-height:1;}
 /* Onyx capsule — yellow accent */
 .tb-cap--onyx .tb-cap-val{color:#fff93e;}
@@ -9706,16 +9708,25 @@ button[style*="background: var(--accent)"]:active {
 .rpt-modal__textarea::placeholder{color:rgba(255,255,255,.25);}
 .rpt-modal__textarea:focus{border-color:rgba(235,69,69,.32);background:rgba(0,0,0,.32);}
 .rpt-modal__error{font-size:12px;color:var(--red);margin-top:10px;min-height:16px;font-weight:500;}
-.rpt-modal__actions{display:flex;gap:8px;margin-top:14px;}
-.rpt-modal__submit{flex:1;background:var(--red);color:#fff;border:none;border-radius:12px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:12px;cursor:pointer;letter-spacing:.02em;transition:filter .12s,transform .08s,opacity .12s;}
-.rpt-modal__submit:hover{filter:brightness(1.08);}
-.rpt-modal__submit:active{transform:scale(.985);}
-.rpt-modal__submit:disabled{opacity:.4;cursor:not-allowed;filter:saturate(.5);}
-.rpt-modal__cancel{padding:12px 18px;border-radius:12px;background:rgba(255,255,255,.04);border:1.5px solid var(--border);color:rgba(255,255,255,.55);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;transition:background .12s,color .12s;}
-.rpt-modal__cancel:hover{background:rgba(255,255,255,.08);color:#fff;}
+.rpt-modal__actions{display:flex;gap:10px;margin-top:16px;}
+/* 3D buttons — same .btn-3d recipe as the rest of the app (2px ink
+   border + hard offset shadow, lift on hover, press on active). */
+.rpt-modal__submit{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--red);color:#fff;border:2px solid var(--ink);box-shadow:0 4px 0 0 var(--ink);border-radius:var(--radius-md,12px);font-family:var(--font-display);font-size:13px;font-weight:800;padding:11px;cursor:pointer;letter-spacing:.02em;transition:transform .12s ease,box-shadow .12s ease,filter .15s,opacity .12s;}
+.rpt-modal__submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 0 0 var(--ink);filter:brightness(1.06);}
+.rpt-modal__submit:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 0 var(--ink);}
+.rpt-modal__submit:disabled{opacity:.4;cursor:not-allowed;filter:saturate(.5);transform:none;box-shadow:0 4px 0 0 var(--ink);}
+.rpt-modal__submit .fa-solid{font-size:12px;line-height:1;}
+.rpt-modal__cancel{padding:11px 18px;border-radius:var(--radius-md,12px);background:var(--panel);border:2px solid var(--ink);box-shadow:0 4px 0 0 var(--ink);color:rgba(255,255,255,.65);font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,background .15s,color .12s;}
+.rpt-modal__cancel:hover{background:rgba(255,255,255,.06);color:#fff;transform:translateY(-1px);box-shadow:0 5px 0 0 var(--ink);}
+.rpt-modal__cancel:active{transform:translateY(2px);box-shadow:0 2px 0 0 var(--ink);}
 .rpt-modal__footer{margin-top:14px;padding:10px 12px;background:rgba(0,0,0,.18);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;gap:8px;}
 .rpt-modal__footer svg{width:14px;height:14px;color:var(--muted-light);flex-shrink:0;}
+.rpt-modal__footer .fa-solid{font-size:13px;color:var(--muted-light);flex-shrink:0;line-height:1;}
 .rpt-modal__footer span{font-size:11px;color:var(--muted-light);line-height:1.4;}
+/* FA glyph sizing in the header/subject icon wells + close chip */
+.rpt-modal__icon .fa-solid{font-size:17px;line-height:1;}
+.rpt-modal__subject-icon .fa-solid{font-size:12px;line-height:1;}
+.rpt-modal__close .fa-solid{font-size:13px;line-height:1;}
 
 /* Legacy class kept so any third-party reference to .report-reason-label
    / .report-submit-btn still renders. Internal callers should use the

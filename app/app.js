@@ -1621,34 +1621,54 @@ async function _healBlankAvatar() {
   try {
     const p = CU?.pfp;
     if (!p || typeof p !== 'string' || !p.startsWith('data:image/png')) return;
-    const blank = await new Promise(resolve => {
-      const img = new Image();
-      img.onload = () => {
+    const blank = await _pfpIsBlank(p);
+    if (blank) {
+      console.warn('[avatar] stored avatar decodes fully transparent (' + p.length + ' chars) — clearing the corrupt image from CU + DB');
+      CU.pfp = '';
+      CU.pfpCrop = null;
+      try { delete _pfpCropCache[CU.username]; } catch (_) {}
+      try { saveLocal(); } catch (_) {}
+      try { updateUserbar(); } catch (_) {}
+      await FortizedSocial.saveUserObject(CU, { fields: ['pfp', 'pfpCrop'] });
+      toast('Your avatar image was corrupted, so it was removed — please upload it again.', 'info');
+      return;
+    }
+    // Healthy but oversized legacy PNG: re-encode to webp once. Every
+    // profile fetch ships these bytes, so shrinking the stored avatar is
+    // the per-account contribution to getting Supabase egress back under
+    // the plan. Skipped for GIF/webp/http avatars and for crops (pfpCrop
+    // paths keep their original pixels).
+    if (p.length > 300000 && !CU.pfpCrop) {
+      const smaller = await new Promise(resolve => {
         try {
-          const w = Math.max(1, Math.min(img.naturalWidth || 0, 32));
-          const h = Math.max(1, Math.min(img.naturalHeight || 0, 32));
-          if (!img.naturalWidth || !img.naturalHeight) return resolve(true); // 0×0 PNG = broken export
-          const c = document.createElement('canvas');
-          c.width = w; c.height = h;
-          const ctx = c.getContext('2d', { willReadFrequently: true });
-          ctx.drawImage(img, 0, 0, w, h);
-          const d = ctx.getImageData(0, 0, w, h).data;
-          for (let i = 3; i < d.length; i += 4) if (d[i] !== 0) return resolve(false);
-          resolve(true);
-        } catch (_) { resolve(false); } // canvas hiccup ≠ evidence of corruption
-      };
-      img.onerror = () => resolve(true); // undecodable data URL = corrupt
-      img.src = p;
-    });
-    if (!blank) return;
-    console.warn('[avatar] stored avatar decodes fully transparent (' + p.length + ' chars) — clearing the corrupt image from CU + DB');
-    CU.pfp = '';
-    CU.pfpCrop = null;
-    try { delete _pfpCropCache[CU.username]; } catch (_) {}
-    try { saveLocal(); } catch (_) {}
-    try { updateUserbar(); } catch (_) {}
-    await FortizedSocial.saveUserObject(CU, { fields: ['pfp', 'pfpCrop'] });
-    toast('Your avatar image was corrupted, so it was removed — please upload it again.', 'info');
+          const img = new Image();
+          img.onload = () => {
+            try {
+              const side = Math.min(480, Math.max(img.naturalWidth, 1));
+              const c = document.createElement('canvas');
+              c.width = side; c.height = side;
+              const ctx = c.getContext('2d');
+              ctx.drawImage(img, 0, 0, side, side);
+              c.toBlob(b => {
+                if (!b || b.type !== 'image/webp') return resolve(null);
+                const r = new FileReader();
+                r.onload = e => resolve(e.target.result);
+                r.onerror = () => resolve(null);
+                r.readAsDataURL(b);
+              }, 'image/webp', 0.85);
+            } catch (_) { resolve(null); }
+          };
+          img.onerror = () => resolve(null);
+          img.src = p;
+        } catch (_) { resolve(null); }
+      });
+      if (smaller && smaller.length < p.length * 0.6) {
+        console.info('[avatar] recompressed legacy PNG avatar', Math.round(p.length / 1024) + 'KB →', Math.round(smaller.length / 1024) + 'KB (webp)');
+        CU.pfp = smaller;
+        try { saveLocal(); } catch (_) {}
+        await FortizedSocial.saveUserObject(CU, { fields: ['pfp'] });
+      }
+    }
   } catch (e) { console.warn('[avatar] blank-check failed:', e?.message); }
 }
 
@@ -4643,16 +4663,13 @@ async function _checkStreakValidity() {
   if (typeof updateStreakDisplay === 'function') updateStreakDisplay();
 }
 
-// Fire-left icon: single solid path, leans to the left, inherits currentColor
-// so the capsule's state colour (orange / blue-protected / grey-zero) flows
-// through automatically. Size is px; color is optional (defaults to inherit).
+// Streak flame: Font Awesome fa-fire (solid) as an inline path so the
+// numeric size params keep working and currentColor still flows the
+// capsule's state colour (orange / blue-protected / grey-zero) through.
+// Single source of truth — every streak surface pulls from here.
 function _streakFlameSvg(size, color) {
   const s = size || 18;
-  // SVGRepo flame-solid (id 371895) — uses currentColor so the glyph
-  // inherits from the parent (orange when active streak, grey when
-  // dormant), and the surrounding rect keeps the original 36x36 viewBox
-  // padding identical to the source icon.
-  return `<svg width="${s}" height="${s}" viewBox="0 0 36 36" fill="currentColor" style="display:inline-block;vertical-align:middle;"><path d="M31.3,16.32c-1.19-2.09-7.94-14.15-7.94-14.15a1,1,0,0,0-1.75,0l-6,10.64-3-5.28a1,1,0,0,0-1.75,0S5.4,17.43,4.42,19.15A9.3,9.3,0,0,0,3,24.26c0,5.11,3.88,9.65,8.67,9.74H22.48C28.28,34,33,28.62,33,22.44A11.13,11.13,0,0,0,31.3,16.32ZM21.48,32H14.54A4.68,4.68,0,0,1,10,27.41a3.91,3.91,0,0,1,.75-2.34l3.35-5.21a.5.5,0,0,1,.84,0l1.78,2.77,0-.08c.63-1.11,4.23-7.48,4.23-7.48a.5.5,0,0,1,.87,0s3.6,6.38,4.23,7.48A5.83,5.83,0,0,1,27,25.76C27,32,22.1,32,21.48,32Z"/></svg>`;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 448 512" fill="currentColor" style="display:inline-block;vertical-align:middle;"><path d="M159.3 5.4c7.8-7.3 19.9-7.2 27.7 .1c27.6 25.9 53.5 53.8 77.7 84c11-14.4 23.5-30.1 37-42.9c7.9-7.4 20.1-7.4 28 .1c34.6 33 63.9 76.6 84.5 118c20.3 40.8 33.8 82.5 33.8 111.9C448 404.2 348.2 512 224 512C98.4 512 0 404.1 0 276.5c0-38.4 17.8-85.3 45.4-131.7C73.3 97.7 112.7 48.6 159.3 5.4zM225.7 416c25.3 0 47.7-7 68.8-21c42.1-29.4 53.4-88.2 28.1-134.4c-4.5-9-16-9.6-22.5-2l-25.2 29.3c-6.6 7.6-18.5 7.4-24.7-.5c-16.5-21-46-58.5-62.8-79.8c-6.3-8-18.3-8.1-24.7-.1c-33.8 42.5-50.8 69.3-50.8 99.4C112 375.4 162.6 416 225.7 416z"/></svg>`;
 }
 // Back-compat alias: _streakFlameSvgSolid(size, color) — same glyph.
 function _streakFlameSvgSolid(size, color) { return _streakFlameSvg(size || 12, color || 'currentColor'); }
@@ -4821,27 +4838,41 @@ function _saneCrop(c) {
 const _blankPfpKnown = new Map();   // fingerprint -> true (blank) | false (fine)
 const _blankPfpProbing = new Set();
 function _pfpFingerprint(pfp) { return pfp.length + ':' + pfp.slice(-24); }
-function _probeBlankPfp(pfp) {
-  try {
-    if (!pfp || typeof pfp !== 'string' || !pfp.startsWith('data:image/png')) return;
-    const fp = _pfpFingerprint(pfp);
-    if (_blankPfpKnown.has(fp) || _blankPfpProbing.has(fp)) return;
-    _blankPfpProbing.add(fp);
-    const img = new Image();
-    img.onload = () => {
-      let blank = false;
-      try {
-        if (!img.naturalWidth || !img.naturalHeight) blank = true;
-        else {
+// Is this a data-URL raster we can and should alpha-probe?
+function _pfpProbeable(pfp) {
+  return typeof pfp === 'string' && (pfp.startsWith('data:image/png') || pfp.startsWith('data:image/webp'));
+}
+// Decode + alpha-sample: resolves true when the image is provably blank
+// (every sampled pixel alpha-0, zero-sized, or undecodable). Shared by
+// the boot heal, the render probe, and the incoming-socket gate.
+function _pfpIsBlank(pfp) {
+  return new Promise(resolve => {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          if (!img.naturalWidth || !img.naturalHeight) return resolve(true);
           const w = Math.min(img.naturalWidth, 32), h = Math.min(img.naturalHeight, 32);
           const c = document.createElement('canvas'); c.width = w; c.height = h;
           const ctx = c.getContext('2d', { willReadFrequently: true });
           ctx.drawImage(img, 0, 0, w, h);
           const d = ctx.getImageData(0, 0, w, h).data;
-          blank = true;
-          for (let i = 3; i < d.length; i += 4) if (d[i] !== 0) { blank = false; break; }
-        }
-      } catch (_) { blank = false; } // canvas hiccup ≠ proof of corruption
+          for (let i = 3; i < d.length; i += 4) if (d[i] !== 0) return resolve(false);
+          resolve(true);
+        } catch (_) { resolve(false); } // canvas hiccup ≠ proof of corruption
+      };
+      img.onerror = () => resolve(true); // undecodable data URL = corrupt
+      img.src = pfp;
+    } catch (_) { resolve(false); }
+  });
+}
+function _probeBlankPfp(pfp) {
+  try {
+    if (!_pfpProbeable(pfp)) return;
+    const fp = _pfpFingerprint(pfp);
+    if (_blankPfpKnown.has(fp) || _blankPfpProbing.has(fp)) return;
+    _blankPfpProbing.add(fp);
+    _pfpIsBlank(pfp).then(blank => {
       _blankPfpProbing.delete(fp);
       _blankPfpKnown.set(fp, blank);
       if (blank) {
@@ -4852,9 +4883,30 @@ function _probeBlankPfp(pfp) {
           try { el.dispatchEvent(new Event('error')); } catch (_) {}
         });
       }
-    };
-    img.onerror = () => { _blankPfpProbing.delete(fp); _blankPfpKnown.set(fp, true); };
-    img.src = pfp;
+    });
+  } catch (_) {}
+}
+// Gate for pfps arriving over the wire (socket profile updates, realtime
+// row events). Old clients that still carry the original crop-bug
+// corruption re-broadcast their blank avatar on every save — accepting
+// it blindly re-poisoned CU (and then saveLocal / the next explicit save
+// persisted it, which is why the bug kept COMING BACK on every account).
+// Apply-callback runs immediately for known-good / non-probeable values,
+// after an async decode for unknown data-URLs, and never for blanks.
+function _acceptIncomingPfp(pfp, apply) {
+  try {
+    if (!pfp || typeof pfp !== 'string') return;
+    if (!_pfpProbeable(pfp)) { apply(pfp); return; }
+    if (pfp.length < 200) { console.warn('[avatar] rejected implausibly small incoming pfp (' + pfp.length + ' chars)'); return; }
+    const fp = _pfpFingerprint(pfp);
+    const known = _blankPfpKnown.get(fp);
+    if (known === true) { console.warn('[avatar] rejected KNOWN-blank incoming pfp'); return; }
+    if (known === false) { apply(pfp); return; }
+    _pfpIsBlank(pfp).then(blank => {
+      _blankPfpKnown.set(fp, blank);
+      if (blank) console.warn('[avatar] rejected incoming pfp — decodes fully transparent (' + pfp.length + ' chars)');
+      else apply(pfp);
+    });
   } catch (_) {}
 }
 
@@ -14168,6 +14220,9 @@ function initFortizedUXResilience() {
   // clear it here AND in the DB. Deferred so it never blocks first
   // paint; only acts when the image is provably blank.
   if (!usedCache) setTimeout(() => { _healBlankAvatar(); }, 2500);
+  // Notification retention — one fire-and-forget prune per session keeps
+  // the notifications table from growing forever (read + >30 days old).
+  if (!usedCache) setTimeout(() => { try { FortizedSocial.pruneNotifications(CU.username); } catch (_) {} }, 12000);
 
   // Set defaults
   if (!CU.bastions)CU.bastions=[];
@@ -14780,7 +14835,10 @@ function initFortizedUXResilience() {
 
         // ── SELF PROFILE SYNC (cross-tab/device) ──
         if (data.username === CU.username) {
-          if (data.pfp) CU.pfp = data.pfp;
+          // Gate incoming pfps: an old client's broadcast can carry the
+          // blank-avatar corruption; assigning it here + saveLocal was a
+          // re-poisoning vector for EVERY account.
+          if (data.pfp) _acceptIncomingPfp(data.pfp, p => { CU.pfp = p; saveLocal(); try { updateUserbar(); } catch(_){} });
           if (data.pfpCrop !== undefined) CU.pfpCrop = data.pfpCrop;
           if (data.displayName) CU.displayName = data.displayName;
           saveLocal();
@@ -24000,12 +24058,15 @@ async function buyRadiancePlus(days, cost) {
 // NOTIFICATIONS
 // ════════════════════════════════════════════
 let _notifBadgeSeq = 0;
-async function updateNotifBadge() {
+// force=true bypasses the module's 2-minute unread cache — used by the
+// notification:new socket handler so the badge moves the moment a
+// notification lands instead of up to two minutes later.
+async function updateNotifBadge(force) {
   const seq = ++_notifBadgeSeq;
   const badge=document.getElementById('notif-badge');
   const tbBadge=document.getElementById('tb-notif-badge');
   let unread = 0;
-  try { unread = await FortizedSocial.getUnreadCount(CU.username) || 0; } catch (e) { _dbg('[Notif] unread count failed', e); }
+  try { unread = await FortizedSocial.getUnreadCount(CU.username, force ? { noCache: true } : undefined) || 0; } catch (e) { _dbg('[Notif] unread count failed', e); }
   // Discard stale overlapping calls so a late-resolving older fetch can't
   // overwrite a fresher count in the DOM.
   if (seq !== _notifBadgeSeq) return;
@@ -25400,12 +25461,25 @@ function confirmNSFWView() {
 const _RPT_DEFAULT_HEADER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
 const _RPT_DEFAULT_SUBJECT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
 
+// Per-type Font Awesome glyphs — the single icon source for every report
+// variant. Variants still pass legacy headerIcon/subjectIcon SVG strings;
+// those are deliberately ignored so the family can never drift again.
+const _RPT_TYPE_FA = {
+  message: 'fa-message',
+  user:    'fa-user-shield',
+  bastion: 'fa-chess-rook',
+  ad:      'fa-rectangle-ad',
+  review:  'fa-star-half-stroke',
+  game:    'fa-gamepad',
+  issue:   'fa-flag',
+};
 function showReport(opts) {
   if (!opts || typeof opts !== 'object') return;
   document.getElementById('modal-report-unified')?.remove();
+  const faIcon = `<i class="fa-solid ${_RPT_TYPE_FA[opts.type] || 'fa-flag'}" aria-hidden="true"></i>`;
   const subjectHTML = (opts.subjectLabel || opts.subjectText)
     ? `<div class="rpt-modal__subject">
-        <div class="rpt-modal__subject-icon">${opts.subjectIcon || _RPT_DEFAULT_SUBJECT_SVG}</div>
+        <div class="rpt-modal__subject-icon">${faIcon}</div>
         <div class="rpt-modal__subject-body">
           ${opts.subjectLabel ? `<div class="rpt-modal__subject-label">${escapeHTML(opts.subjectLabel)}</div>` : ''}
           ${opts.subjectText ? `<div class="rpt-modal__subject-text">${opts.subjectText}</div>` : ''}
@@ -25426,13 +25500,13 @@ function showReport(opts) {
   overlay.innerHTML = `
     <div class="rpt-modal" role="dialog" aria-label="${escapeHTML(opts.title || 'Report')}">
       <div class="rpt-modal__header">
-        <div class="rpt-modal__icon">${opts.headerIcon || _RPT_DEFAULT_HEADER_SVG}</div>
+        <div class="rpt-modal__icon">${faIcon}</div>
         <div class="rpt-modal__title-block">
           <div class="rpt-modal__title">${escapeHTML(opts.title || 'Report')}</div>
           <div class="rpt-modal__subtitle">${escapeHTML(opts.subtitle || 'Help us keep Fortized safe')}</div>
         </div>
         <button class="rpt-modal__close" aria-label="Close" onclick="this.closest('.modal-overlay').remove()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
       </div>
       <div class="rpt-modal__body">
@@ -25443,11 +25517,11 @@ function showReport(opts) {
         <textarea class="rpt-modal__textarea" placeholder="${escapeHTML(opts.placeholder || 'Describe what happened in more detail…')}" rows="3"></textarea>
         <div class="rpt-modal__error" role="alert"></div>
         <div class="rpt-modal__actions">
-          <button class="rpt-modal__submit" disabled>Submit Report</button>
+          <button class="rpt-modal__submit" disabled><i class="fa-solid fa-flag" aria-hidden="true"></i> Submit Report</button>
           <button class="rpt-modal__cancel" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
         </div>
         <div class="rpt-modal__footer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
           <span>Your report is anonymous and reviewed by our Safety team.</span>
         </div>
       </div>
@@ -25456,6 +25530,7 @@ function showReport(opts) {
   const submitBtn = overlay.querySelector('.rpt-modal__submit');
   const errEl = overlay.querySelector('.rpt-modal__error');
   const textarea = overlay.querySelector('.rpt-modal__textarea');
+  const submitIdleHTML = submitBtn.innerHTML;
   overlay.querySelectorAll('input[name="rpt-reason"]').forEach(input => {
     input.addEventListener('change', () => { submitBtn.disabled = false; if (errEl) errEl.textContent = ''; });
   });
@@ -25471,7 +25546,7 @@ function showReport(opts) {
       console.error('[Report] submit failed:', e);
       errEl.textContent = e?.message || 'Failed to submit. Please try again.';
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Submit Report';
+      submitBtn.innerHTML = submitIdleHTML;
     }
   });
 }
@@ -47196,42 +47271,42 @@ function applyCrop() {
 
   document.getElementById('crop-modal-overlay')?.remove();
 
-  // Use blob conversion for better compression and file handling
-  const mimeType = _cropData.hasAlpha ? 'image/png' : 'image/jpeg';
-  const quality = _cropData.hasAlpha ? 1 : 0.93;
+  // WebP first: alpha-capable AND ~20-30× smaller than the PNGs we used
+  // to store (a 480px PNG avatar was often ~1 MB; webp q0.85 is ~30-60 KB).
+  // Every row fetch pulls these bytes, so this is also the single biggest
+  // Supabase-egress lever we have. Browsers that can't encode webp hand
+  // back a differently-typed blob — those fall through to png/jpeg.
+  const legacyMime = _cropData.hasAlpha ? 'image/png' : 'image/jpeg';
+  const legacyQuality = _cropData.hasAlpha ? 1 : 0.93;
 
-  out.toBlob((blob) => {
+  const _emit = (blob, mime, quality) => {
     if (!blob) {
       console.error('[Crop] Failed to create blob');
-      // Fallback to data URL
-      const fallback = _cropData.hasAlpha
-        ? out.toDataURL('image/png')
-        : out.toDataURL('image/jpeg', quality);
+      const fallback = out.toDataURL(legacyMime, legacyQuality);
       if (_cropCallback) _cropCallback(fallback);
       return;
     }
-
-    // Convert blob to data URL for storage (creates actual cropped image)
     const reader = new FileReader();
     reader.onload = (e) => {
-      const result = e.target.result;
-      _dbg('[Crop] Image cropped and converted:', {
-        mimeType,
-        size: blob.size,
-        dimensions: `${outW}x${outH}`
-      });
-      if (_cropCallback) _cropCallback(result);
+      _dbg('[Crop] Image cropped and converted:', { mime, size: blob.size, dimensions: `${outW}x${outH}` });
+      if (_cropCallback) _cropCallback(e.target.result);
     };
     reader.onerror = () => {
       console.error('[Crop] Failed to read blob');
-      // Fallback to toDataURL
-      const fallback = _cropData.hasAlpha
-        ? out.toDataURL('image/png')
-        : out.toDataURL('image/jpeg', quality);
+      const fallback = out.toDataURL(legacyMime, legacyQuality);
       if (_cropCallback) _cropCallback(fallback);
     };
     reader.readAsDataURL(blob);
-  }, mimeType, quality);
+  };
+
+  out.toBlob((webpBlob) => {
+    if (webpBlob && webpBlob.type === 'image/webp') {
+      _emit(webpBlob, 'image/webp', 0.85);
+    } else {
+      // Encoder unsupported (some Safari) — legacy formats.
+      out.toBlob((blob) => _emit(blob, legacyMime, legacyQuality), legacyMime, legacyQuality);
+    }
+  }, 'image/webp', 0.85);
 }
 
 
@@ -47282,10 +47357,12 @@ function initCrossDeviceSync() {
               }
               if (newData.pfp && newData.pfp !== CU.pfp) {
                 _dbg('[Sync] Avatar updated');
-                CU.pfp = newData.pfp;
-                updateUserbar();
-                document.querySelectorAll('.msg-av-inner img, .ua img, .up-left-av img').forEach(img => {
-                  if (img.src !== newData.pfp) img.src = newData.pfp;
+                _acceptIncomingPfp(newData.pfp, p => {
+                  CU.pfp = p;
+                  updateUserbar();
+                  document.querySelectorAll('.msg-av-inner img, .ua img, .up-left-av img').forEach(img => {
+                    if (img.src !== p) img.src = p;
+                  });
                 });
               }
               if (newData.banner && newData.banner !== CU.banner) {
@@ -47385,17 +47462,21 @@ function initCrossDeviceSync() {
     // Cross-user avatar refresh: if another user changes their pfp, update all <img> we render for them
     if (data.username && data.username !== CU.username) {
       if (data.pfp) {
-        document.querySelectorAll(`[data-av-user="${data.username}"] img, .msg-row[data-from="${data.username}"] .msg-av-inner img`).forEach(img => {
-          if (img.src !== data.pfp) img.src = data.pfp;
+        _acceptIncomingPfp(data.pfp, p => {
+          document.querySelectorAll(`[data-av-user="${data.username}"] img, .msg-row[data-from="${data.username}"] .msg-av-inner img`).forEach(img => {
+            if (img.src !== p) img.src = p;
+          });
         });
       }
       return;
     }
     if (data.pfp && data.pfp !== CU.pfp) {
-      CU.pfp = data.pfp;
-      updateUserbar();
-      document.querySelectorAll('.msg-av-inner img, .ua img').forEach(img => {
-        if (img.src !== data.pfp) img.src = data.pfp;
+      _acceptIncomingPfp(data.pfp, p => {
+        CU.pfp = p;
+        updateUserbar();
+        document.querySelectorAll('.msg-av-inner img, .ua img').forEach(img => {
+          if (img.src !== p) img.src = p;
+        });
       });
     }
     if (data.banner !== undefined && data.banner !== CU.banner) {
@@ -47585,7 +47666,9 @@ function initCrossDeviceSync() {
   // 6. Notification broadcast
   socket.on('notification:new', (notif) => {
     if (notif.username === CU.username || notif.to === CU.username) {
-      updateNotifBadge().catch(()=>{});
+      // force=true bypasses the 2-minute unread cache — the whole point
+      // of the live event is that the badge moves NOW.
+      updateNotifBadge(true).catch(()=>{});
       if (notif.type === 'dm' && notif.from) {
         unhideDMConversation('dm_' + notif.from);
       }
@@ -52871,7 +52954,7 @@ const _LANG_PACK = {
     // Common chrome — buttons, toasts, confirms used everywhere.
     'btn.save':'Save', 'btn.cancel':'Cancel', 'btn.delete':'Delete', 'btn.confirm':'Confirm', 'btn.close':'Close', 'btn.copy':'Copy', 'btn.send':'Send', 'btn.edit':'Edit', 'btn.add':'Add', 'btn.remove':'Remove', 'btn.back':'Back', 'btn.next':'Next', 'btn.reset':'Reset', 'btn.apply':'Apply',
     'toast.saved':'Saved', 'toast.copied':'Copied', 'toast.deleted':'Deleted', 'toast.failed':'Something went wrong', 'toast.sent':'Sent',
-    'notif.inbox':'Inbox', 'notif.mark_all':'Mark all read', 'notif.tab.all':'All', 'notif.tab.unread':'Unread', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Friends', 'notif.empty.title':'All caught up!', 'notif.empty.body':'No new notifications',
+    'notif.inbox':'Notifications', 'notif.mark_all':'Mark all read', 'notif.tab.all':'All', 'notif.tab.unread':'Unread', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Friends', 'notif.empty.title':'All caught up!', 'notif.empty.body':'No new notifications',
     'dms.friends_subtitle':'Your conversations & friends', 'dms.search_friends':'Search friends…',
     'ub.loading':'Loading…', 'ub.playing':'Playing', 'ub.status.online':'Online',
     'ub.tip.mute':'Mute / Unmute', 'ub.tip.deafen':'Deafen / Undeafen', 'ub.tip.input':'Input options', 'ub.tip.output':'Output options', 'ub.tip.settings':'Settings',
@@ -52909,7 +52992,7 @@ const _LANG_PACK = {
     'dms.empty.title':'Sélectionnez une conversation', 'dms.empty.body':'Choisissez un message direct dans la barre latérale ou commencez-en un nouveau.',
     'btn.save':'Enregistrer', 'btn.cancel':'Annuler', 'btn.delete':'Supprimer', 'btn.confirm':'Confirmer', 'btn.close':'Fermer', 'btn.copy':'Copier', 'btn.send':'Envoyer', 'btn.edit':'Modifier', 'btn.add':'Ajouter', 'btn.remove':'Retirer', 'btn.back':'Retour', 'btn.next':'Suivant', 'btn.reset':'Réinitialiser', 'btn.apply':'Appliquer',
     'toast.saved':'Enregistré', 'toast.copied':'Copié', 'toast.deleted':'Supprimé', 'toast.failed':'Une erreur est survenue', 'toast.sent':'Envoyé',
-    'notif.inbox':'Boîte de réception', 'notif.mark_all':'Tout marquer comme lu', 'notif.tab.all':'Tout', 'notif.tab.unread':'Non lus', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Amis', 'notif.empty.title':'Tout est à jour !', 'notif.empty.body':'Aucune nouvelle notification',
+    'notif.inbox':'Notifications', 'notif.mark_all':'Tout marquer comme lu', 'notif.tab.all':'Tout', 'notif.tab.unread':'Non lus', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Amis', 'notif.empty.title':'Tout est à jour !', 'notif.empty.body':'Aucune nouvelle notification',
     'dms.friends_subtitle':'Vos conversations et amis', 'dms.search_friends':'Rechercher des amis…',
     'ub.loading':'Chargement…', 'ub.playing':'Joue à', 'ub.status.online':'En ligne',
     'ub.tip.mute':'Couper / Activer le micro', 'ub.tip.deafen':'Couper / Activer le son', 'ub.tip.input':'Options d’entrée', 'ub.tip.output':'Options de sortie', 'ub.tip.settings':'Paramètres',
@@ -52947,7 +53030,7 @@ const _LANG_PACK = {
     'dms.empty.title':'Selecciona una conversación', 'dms.empty.body':'Elige un mensaje directo en la barra lateral o empieza uno nuevo.',
     'btn.save':'Guardar', 'btn.cancel':'Cancelar', 'btn.delete':'Eliminar', 'btn.confirm':'Confirmar', 'btn.close':'Cerrar', 'btn.copy':'Copiar', 'btn.send':'Enviar', 'btn.edit':'Editar', 'btn.add':'Añadir', 'btn.remove':'Quitar', 'btn.back':'Atrás', 'btn.next':'Siguiente', 'btn.reset':'Restablecer', 'btn.apply':'Aplicar',
     'toast.saved':'Guardado', 'toast.copied':'Copiado', 'toast.deleted':'Eliminado', 'toast.failed':'Algo salió mal', 'toast.sent':'Enviado',
-    'notif.inbox':'Bandeja', 'notif.mark_all':'Marcar todo como leído', 'notif.tab.all':'Todo', 'notif.tab.unread':'No leídas', 'notif.tab.mentions':'Menciones', 'notif.tab.friends':'Amigos', 'notif.empty.title':'¡Todo al día!', 'notif.empty.body':'Sin notificaciones nuevas',
+    'notif.inbox':'Notificaciones', 'notif.mark_all':'Marcar todo como leído', 'notif.tab.all':'Todo', 'notif.tab.unread':'No leídas', 'notif.tab.mentions':'Menciones', 'notif.tab.friends':'Amigos', 'notif.empty.title':'¡Todo al día!', 'notif.empty.body':'Sin notificaciones nuevas',
     'dms.friends_subtitle':'Tus conversaciones y amigos', 'dms.search_friends':'Buscar amigos…',
     'ub.loading':'Cargando…', 'ub.playing':'Jugando a', 'ub.status.online':'En línea',
     'ub.tip.mute':'Silenciar / Activar micro', 'ub.tip.deafen':'Silenciar / Activar audio', 'ub.tip.input':'Opciones de entrada', 'ub.tip.output':'Opciones de salida', 'ub.tip.settings':'Configuración',
@@ -52985,7 +53068,7 @@ const _LANG_PACK = {
     'dms.empty.title':'Wähle eine Unterhaltung', 'dms.empty.body':'Wähle eine Direktnachricht in der Seitenleiste oder starte eine neue.',
     'btn.save':'Speichern', 'btn.cancel':'Abbrechen', 'btn.delete':'Löschen', 'btn.confirm':'Bestätigen', 'btn.close':'Schließen', 'btn.copy':'Kopieren', 'btn.send':'Senden', 'btn.edit':'Bearbeiten', 'btn.add':'Hinzufügen', 'btn.remove':'Entfernen', 'btn.back':'Zurück', 'btn.next':'Weiter', 'btn.reset':'Zurücksetzen', 'btn.apply':'Übernehmen',
     'toast.saved':'Gespeichert', 'toast.copied':'Kopiert', 'toast.deleted':'Gelöscht', 'toast.failed':'Etwas ist schiefgelaufen', 'toast.sent':'Gesendet',
-    'notif.inbox':'Posteingang', 'notif.mark_all':'Alle als gelesen markieren', 'notif.tab.all':'Alle', 'notif.tab.unread':'Ungelesen', 'notif.tab.mentions':'Erwähnungen', 'notif.tab.friends':'Freunde', 'notif.empty.title':'Alles erledigt!', 'notif.empty.body':'Keine neuen Benachrichtigungen',
+    'notif.inbox':'Benachrichtigungen', 'notif.mark_all':'Alle als gelesen markieren', 'notif.tab.all':'Alle', 'notif.tab.unread':'Ungelesen', 'notif.tab.mentions':'Erwähnungen', 'notif.tab.friends':'Freunde', 'notif.empty.title':'Alles erledigt!', 'notif.empty.body':'Keine neuen Benachrichtigungen',
     'dms.friends_subtitle':'Deine Unterhaltungen und Freunde', 'dms.search_friends':'Freunde suchen…',
     'ub.loading':'Laden…', 'ub.playing':'Spielt', 'ub.status.online':'Online',
     'ub.tip.mute':'Stumm / Laut', 'ub.tip.deafen':'Taub / Hören', 'ub.tip.input':'Eingangsoptionen', 'ub.tip.output':'Ausgangsoptionen', 'ub.tip.settings':'Einstellungen',
@@ -53023,7 +53106,7 @@ const _LANG_PACK = {
     'dms.empty.title':'Seleziona una conversazione', 'dms.empty.body':'Scegli un messaggio diretto dalla barra laterale o iniziane uno nuovo.',
     'btn.save':'Salva', 'btn.cancel':'Annulla', 'btn.delete':'Elimina', 'btn.confirm':'Conferma', 'btn.close':'Chiudi', 'btn.copy':'Copia', 'btn.send':'Invia', 'btn.edit':'Modifica', 'btn.add':'Aggiungi', 'btn.remove':'Rimuovi', 'btn.back':'Indietro', 'btn.next':'Avanti', 'btn.reset':'Reimposta', 'btn.apply':'Applica',
     'toast.saved':'Salvato', 'toast.copied':'Copiato', 'toast.deleted':'Eliminato', 'toast.failed':'Qualcosa è andato storto', 'toast.sent':'Inviato',
-    'notif.inbox':'Posta in arrivo', 'notif.mark_all':'Segna tutto come letto', 'notif.tab.all':'Tutto', 'notif.tab.unread':'Non lette', 'notif.tab.mentions':'Menzioni', 'notif.tab.friends':'Amici', 'notif.empty.title':'Tutto in ordine!', 'notif.empty.body':'Nessuna nuova notifica',
+    'notif.inbox':'Notifiche', 'notif.mark_all':'Segna tutto come letto', 'notif.tab.all':'Tutto', 'notif.tab.unread':'Non lette', 'notif.tab.mentions':'Menzioni', 'notif.tab.friends':'Amici', 'notif.empty.title':'Tutto in ordine!', 'notif.empty.body':'Nessuna nuova notifica',
     'dms.friends_subtitle':'Le tue conversazioni e amici', 'dms.search_friends':'Cerca amici…',
     'ub.loading':'Caricamento…', 'ub.playing':'Sta giocando a', 'ub.status.online':'Online',
     'ub.tip.mute':'Disattiva / Attiva microfono', 'ub.tip.deafen':'Disattiva / Attiva audio', 'ub.tip.input':'Opzioni di ingresso', 'ub.tip.output':'Opzioni di uscita', 'ub.tip.settings':'Impostazioni',
@@ -53061,7 +53144,7 @@ const _LANG_PACK = {
     'dms.empty.title':'Selecione uma conversa', 'dms.empty.body':'Escolha uma mensagem direta na barra lateral ou inicie uma nova.',
     'btn.save':'Salvar', 'btn.cancel':'Cancelar', 'btn.delete':'Excluir', 'btn.confirm':'Confirmar', 'btn.close':'Fechar', 'btn.copy':'Copiar', 'btn.send':'Enviar', 'btn.edit':'Editar', 'btn.add':'Adicionar', 'btn.remove':'Remover', 'btn.back':'Voltar', 'btn.next':'Próximo', 'btn.reset':'Redefinir', 'btn.apply':'Aplicar',
     'toast.saved':'Salvo', 'toast.copied':'Copiado', 'toast.deleted':'Excluído', 'toast.failed':'Algo deu errado', 'toast.sent':'Enviado',
-    'notif.inbox':'Caixa de entrada', 'notif.mark_all':'Marcar tudo como lido', 'notif.tab.all':'Tudo', 'notif.tab.unread':'Não lidas', 'notif.tab.mentions':'Menções', 'notif.tab.friends':'Amigos', 'notif.empty.title':'Tudo em dia!', 'notif.empty.body':'Sem notificações novas',
+    'notif.inbox':'Notificações', 'notif.mark_all':'Marcar tudo como lido', 'notif.tab.all':'Tudo', 'notif.tab.unread':'Não lidas', 'notif.tab.mentions':'Menções', 'notif.tab.friends':'Amigos', 'notif.empty.title':'Tudo em dia!', 'notif.empty.body':'Sem notificações novas',
     'dms.friends_subtitle':'Suas conversas e amigos', 'dms.search_friends':'Buscar amigos…',
     'ub.loading':'Carregando…', 'ub.playing':'Jogando', 'ub.status.online':'On-line',
     'ub.tip.mute':'Mudo / Reativar microfone', 'ub.tip.deafen':'Mudo / Reativar áudio', 'ub.tip.input':'Opções de entrada', 'ub.tip.output':'Opções de saída', 'ub.tip.settings':'Configurações',
@@ -53099,7 +53182,7 @@ const _LANG_PACK = {
     'dms.empty.title':'会話を選択', 'dms.empty.body':'サイドバーからダイレクトメッセージを選ぶか、新しく始めましょう。',
     'btn.save':'保存', 'btn.cancel':'キャンセル', 'btn.delete':'削除', 'btn.confirm':'確定', 'btn.close':'閉じる', 'btn.copy':'コピー', 'btn.send':'送信', 'btn.edit':'編集', 'btn.add':'追加', 'btn.remove':'外す', 'btn.back':'戻る', 'btn.next':'次へ', 'btn.reset':'リセット', 'btn.apply':'適用',
     'toast.saved':'保存しました', 'toast.copied':'コピーしました', 'toast.deleted':'削除しました', 'toast.failed':'問題が発生しました', 'toast.sent':'送信しました',
-    'notif.inbox':'受信箱', 'notif.mark_all':'すべて既読にする', 'notif.tab.all':'すべて', 'notif.tab.unread':'未読', 'notif.tab.mentions':'メンション', 'notif.tab.friends':'フレンド', 'notif.empty.title':'すべて確認済み！', 'notif.empty.body':'新しい通知はありません',
+    'notif.inbox':'通知', 'notif.mark_all':'すべて既読にする', 'notif.tab.all':'すべて', 'notif.tab.unread':'未読', 'notif.tab.mentions':'メンション', 'notif.tab.friends':'フレンド', 'notif.empty.title':'すべて確認済み！', 'notif.empty.body':'新しい通知はありません',
     'dms.friends_subtitle':'会話とフレンド', 'dms.search_friends':'フレンドを検索…',
     'ub.loading':'読み込み中…', 'ub.playing':'プレイ中', 'ub.status.online':'オンライン',
     'ub.tip.mute':'ミュート / 解除', 'ub.tip.deafen':'スピーカーをミュート / 解除', 'ub.tip.input':'入力オプション', 'ub.tip.output':'出力オプション', 'ub.tip.settings':'設定',
@@ -53137,7 +53220,7 @@ const _LANG_PACK = {
     'dms.empty.title':'اختر محادثة', 'dms.empty.body':'اختر رسالة مباشرة من الشريط الجانبي أو ابدأ واحدة جديدة.',
     'btn.save':'حفظ', 'btn.cancel':'إلغاء', 'btn.delete':'حذف', 'btn.confirm':'تأكيد', 'btn.close':'إغلاق', 'btn.copy':'نسخ', 'btn.send':'إرسال', 'btn.edit':'تعديل', 'btn.add':'إضافة', 'btn.remove':'إزالة', 'btn.back':'رجوع', 'btn.next':'التالي', 'btn.reset':'إعادة تعيين', 'btn.apply':'تطبيق',
     'toast.saved':'تم الحفظ', 'toast.copied':'تم النسخ', 'toast.deleted':'تم الحذف', 'toast.failed':'حدث خطأ ما', 'toast.sent':'تم الإرسال',
-    'notif.inbox':'صندوق الوارد', 'notif.mark_all':'تعليم الكل كمقروء', 'notif.tab.all':'الكل', 'notif.tab.unread':'غير مقروء', 'notif.tab.mentions':'الإشارات', 'notif.tab.friends':'الأصدقاء', 'notif.empty.title':'كل شيء على ما يرام!', 'notif.empty.body':'لا توجد إشعارات جديدة',
+    'notif.inbox':'الإشعارات', 'notif.mark_all':'تعليم الكل كمقروء', 'notif.tab.all':'الكل', 'notif.tab.unread':'غير مقروء', 'notif.tab.mentions':'الإشارات', 'notif.tab.friends':'الأصدقاء', 'notif.empty.title':'كل شيء على ما يرام!', 'notif.empty.body':'لا توجد إشعارات جديدة',
     'dms.friends_subtitle':'محادثاتك وأصدقاؤك', 'dms.search_friends':'بحث عن الأصدقاء…',
     'ub.loading':'جارٍ التحميل…', 'ub.playing':'يلعب', 'ub.status.online':'متصل',
     'ub.tip.mute':'كتم / إلغاء كتم الميكروفون', 'ub.tip.deafen':'كتم / إلغاء كتم الصوت', 'ub.tip.input':'خيارات الإدخال', 'ub.tip.output':'خيارات الإخراج', 'ub.tip.settings':'الإعدادات',

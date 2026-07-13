@@ -689,10 +689,12 @@ const FortizedSocial = (() => {
   }
 
   // ── Notifications ────────────────────────────────────
-  async function getNotifications(username) {
+  async function getNotifications(username, opts) {
     const cacheKey = 'notifs:' + norm(username);
-    const cached = _cacheGet(cacheKey);
-    if (cached !== undefined) return cached;
+    if (!opts?.noCache) {
+      const cached = _cacheGet(cacheKey);
+      if (cached !== undefined) return cached;
+    }
     const { data } = await sb.from('notifications').select('id,type,from,time,read,data')
       .eq('username', norm(username))
       .order('time', { ascending: false })
@@ -759,14 +761,32 @@ const FortizedSocial = (() => {
     await q;
   }
 
-  async function getUnreadCount(username) {
+  async function getUnreadCount(username, opts) {
     const cacheKey = 'unread:' + norm(username);
-    const cached = _cacheGet(cacheKey);
-    if (cached !== undefined) return cached;
+    if (!opts?.noCache) {
+      const cached = _cacheGet(cacheKey);
+      if (cached !== undefined) return cached;
+    }
     const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('username', norm(username)).eq('read', false);
     const result = count || 0;
     _cacheSet(cacheKey, result, _CACHE_TTL.unreadCount);
     return result;
+  }
+
+  // Retention: the notifications table only ever grew — every insert
+  // stayed forever. Prune the caller's READ notifications older than
+  // `olderThanDays` (default 30); unread ones are kept indefinitely so
+  // nothing vanishes before it was seen. Called fire-and-forget after
+  // boot.
+  async function pruneNotifications(username, opts) {
+    const days = Math.max(1, opts?.olderThanDays || 30);
+    const cutoff = new Date(Date.now() - days * 86400000).toISOString();
+    try {
+      const { error } = await sb.from('notifications').delete()
+        .eq('username', norm(username)).eq('read', true).lt('time', cutoff);
+      if (error) console.warn('[pruneNotifications]', error.message);
+      else console.debug('[pruneNotifications] pruned read notifications older than', days, 'days for', norm(username));
+    } catch (e) { console.warn('[pruneNotifications]', e?.message); }
   }
 
   // ── Friend System ────────────────────────────────────
@@ -2799,7 +2819,7 @@ const FortizedSocial = (() => {
     getUsersByNames,
     getUserByName, getUserByPublicId, resolveUsername, getUserPublicId, ensureUserPublicId, getDMKey, saveUserObject, saveActiveDecoration, deleteAccount, invalidateUserCache,
     getStatus, setStatus,
-    getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
+    getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount, pruneNotifications,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, cancelFriendRequest, removeFriend, syncRelationship,
     getDMMessages, sendDMMessage, editMessage, deleteMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,

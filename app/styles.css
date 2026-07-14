@@ -13794,6 +13794,8 @@ select:focus,select:focus-visible,
 }
 .chat-locked-notice__txt{flex:1;min-width:0;line-height:1.4;}
 .chat-locked-notice__txt strong{color:rgba(255,255,255,.85);font-weight:700;}
+.chat-locked-notice__btn{flex-shrink:0;background:rgba(255,255,255,.06);border:1px solid var(--border);color:rgba(255,255,255,.8);font-family:var(--font-display);font-size:12.5px;font-weight:700;padding:7px 16px;border-radius:8px;cursor:pointer;transition:background .13s,color .13s,border-color .13s;}
+.chat-locked-notice__btn:hover{background:rgba(255,255,255,.12);color:#fff;border-color:var(--surface-border-hover);}
 
 /* ── Custom DM welcome card for the @fortized + @fortizedsafety accounts ── */
 .chat-welcome--official{position:relative;}

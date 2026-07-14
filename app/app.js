@@ -1704,37 +1704,23 @@ function _purgeDeadLocalKeys() {
 // in the DB (explicit-field save) so it stops resurrecting across
 // devices. PNG-only: that's what canvas.toDataURL emitted, and JPEG
 // can't be transparent / GIF first frames can't be sampled reliably.
+// DIAGNOSTIC ONLY — this used to CLEAR the avatar from the DB when it
+// thought the image was blank, and to re-encode "oversized" PNGs to webp
+// and overwrite the row. Both are avatar-specific, destructive, and had
+// no banner equivalent — the perfect fit for "banner works, avatar
+// doesn't". Neutered: it now only LOGS what it sees so we can diagnose
+// from the console, and NEVER modifies CU.pfp or the DB. The render-side
+// fallback already covers genuinely-blank display.
 async function _healBlankAvatar() {
   try {
     const p = CU?.pfp;
+    console.info('[AVATAR-DIAG] boot pfp:', typeof p, 'len=' + (p ? p.length : 0),
+      'head=' + (typeof p === 'string' ? p.slice(0, 30) : 'n/a'),
+      'crop=' + JSON.stringify(CU?.pfpCrop || null));
     if (!p || typeof p !== 'string' || !p.startsWith('data:image/png')) return;
     const blank = await _pfpIsBlank(p);
-    if (blank) {
-      console.warn('[avatar] stored avatar decodes fully transparent (' + p.length + ' chars) — clearing the corrupt image from CU + DB');
-      CU.pfp = '';
-      CU.pfpCrop = null;
-      try { delete _pfpCropCache[CU.username]; } catch (_) {}
-      try { saveLocal(); } catch (_) {}
-      try { updateUserbar(); } catch (_) {}
-      await FortizedSocial.saveUserObject(CU, { fields: ['pfp', 'pfpCrop'] });
-      toast('Your avatar image was corrupted, so it was removed — please upload it again.', 'info');
-      return;
-    }
-    // Healthy but oversized legacy PNG/JPEG: re-encode to webp once.
-    // Every profile fetch ships these bytes, so shrinking the stored
-    // avatar is the per-account contribution to getting Supabase egress
-    // back under the plan. Skipped for GIF/webp/http avatars and for
-    // crops (pfpCrop paths keep their original pixels).
-    if (p.length > 300000 && !CU.pfpCrop) {
-      const smaller = await _reencodeDataUrl(p, 480, 480, 0.85);
-      if (smaller && smaller.length < p.length * 0.6) {
-        console.info('[avatar] recompressed legacy avatar', Math.round(p.length / 1024) + 'KB →', Math.round(smaller.length / 1024) + 'KB (webp)');
-        CU.pfp = smaller;
-        try { saveLocal(); } catch (_) {}
-        await FortizedSocial.saveUserObject(CU, { fields: ['pfp'] });
-      }
-    }
-  } catch (e) { console.warn('[avatar] blank-check failed:', e?.message); }
+    console.info('[AVATAR-DIAG] stored PNG blank-probe =', blank, '(no action taken — heal disabled)');
+  } catch (e) { console.warn('[AVATAR-DIAG] check failed:', e?.message); }
 }
 
 // Draw a data-URL raster onto a bounded canvas and hand back a webp data
@@ -13245,8 +13231,11 @@ function _maybeRepairRelationship(otherUser) {
 async function _applyDMBlockLock(username) {
   if (window._dmBlockedPeer === username) window._dmBlockedPeer = null;
   let lockText = null;
+  let iBlocked = false;
   if (isUserBlocked(username)) {
-    lockText = 'You blocked <strong>' + escapeHTML(username) + '</strong>. Unblock them to send messages.';
+    // Discord copy — an Unblock action sits on the right (see below).
+    lockText = 'You cannot send messages to a user you have blocked.';
+    iBlocked = true;
   } else {
     try {
       const pu = await FortizedSocial.getUserByName(username);
@@ -13263,9 +13252,23 @@ async function _applyDMBlockLock(username) {
     const note = document.createElement('div');
     note.className = 'chat-locked-notice';
     note.setAttribute('role', 'note');
-    note.innerHTML = '<div class="chat-locked-notice__txt">' + lockText + '</div>';
+    // Locked composer bar (same treatment as official-account DMs): a
+    // notice on the left, and — when it's YOUR block — an Unblock button
+    // on the right that lifts the lock and restores the composer.
+    note.innerHTML = '<div class="chat-locked-notice__txt">' + lockText + '</div>'
+      + (iBlocked ? '<button class="chat-locked-notice__btn" onclick="_unblockFromDM(\'' + escapeHTML(username) + '\')">Unblock</button>' : '');
     bar.replaceWith(note);
   }
+}
+
+// Unblock from the locked DM composer → lifts the block and rebuilds the
+// DM so the real chatbar comes back.
+async function _unblockFromDM(username) {
+  try {
+    if (typeof toggleBlockUser === 'function') { await toggleBlockUser(username); }
+    window._dmBlockedPeer = null;
+    if (curDM === username) { try { openDMView(username); } catch (_) {} }
+  } catch (e) { console.error('[block] unblock from DM failed:', e); toast('Could not unblock. Try again.', 'error'); }
 }
 
 // ════════════════════════════════════════════
@@ -49086,6 +49089,7 @@ async function _saveAllSettingsImpl() {
       else delete CU.socials[key];
     }
   });
+  console.info('[AVATAR-DIAG] saving — CU.pfp', typeof CU.pfp, 'len=' + ((CU.pfp||'').length), 'head=' + String(CU.pfp||'').slice(0,30), '| CU.banner len=' + ((CU.banner||'').length));
   // Explicit field list: settings owns these fields, so clears (removed
   // avatar/banner, emptied bio/pronouns) persist instead of being dropped
   // by the delta-writer's empty-value guard.

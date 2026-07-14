@@ -1574,6 +1574,20 @@ const FortizedSocial = (() => {
     const u = norm(username);
     if (!members.includes(u)) members.push(u);
     await sb.from('bastion_members').upsert({ bastion_id: bastionId, members }, { onConflict: 'bastion_id' });
+    // Stamp a "member since" date on the global bastion (idempotent — a
+    // re-join never overwrites the original). No join dates existed
+    // before this; existing members simply have none until they rejoin.
+    try {
+      const b = await getGlobalBastion(bastionId);
+      if (b) {
+        const joins = { ...(b.memberJoins || {}) };
+        if (!joins[u]) {
+          joins[u] = new Date().toISOString();
+          b.memberJoins = joins;
+          await saveGlobalBastion(bastionId, b);
+        }
+      }
+    } catch (_) {}
   }
   async function removeBastionMember(bastionId, username) {
     const u = norm(username);

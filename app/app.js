@@ -4089,6 +4089,9 @@ function updateTopbar(v) {
     _updateBastionTitle();
   } else {
     document.title = docTitles[v] ? 'Fortized | ' + docTitles[v] : 'Fortized';
+    // Left the bastion — drop its member-since context so a DM profile
+    // can't show a stale bastion "member since".
+    window._ftzBastionJoinCtx = null;
   }
   // On mobile, add member list toggle for bastion views
   if (_isMobile() && v === 'bastion' && acts) {
@@ -4623,10 +4626,10 @@ function updateOnyxDisplay() {
 function onOnyxCtxMenu(ev) {
   ev.preventDefault();
   const balance = CU?.onyx || 0;
-  const onyxIcon = '<img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
-  const shopIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
-  const questIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
-  const radIcon = '<img src="/radiance-logo.png" style="width:14px;height:14px;object-fit:contain;" alt="">';
+  const onyxIcon = _maskIcon('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png', 14);
+  const shopIcon = '<i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>';
+  const questIcon = '<i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>';
+  const radIcon = _maskIcon('/radiance-logo.png', 14);
   const items = [
     { icon: onyxIcon, label: `${balance.toLocaleString()} Onyx`, hint: 'Balance', disabled: true },
     {
@@ -4836,6 +4839,15 @@ async function buyStreakProtection() {
   });
 }
 
+// A brand PNG (onyx / radiance / Fortized logo) rendered as a
+// monochrome glyph that takes currentColor — so custom image icons sit
+// in menus/rows at exactly the surrounding text colour, same as an SVG.
+function _maskIcon(url, size) {
+  const s = size || 14;
+  const u = String(url).replace(/'/g, "%27");
+  return `<span style="display:inline-block;width:${s}px;height:${s}px;background-color:currentColor;-webkit-mask:url('${u}') center/contain no-repeat;mask:url('${u}') center/contain no-repeat;vertical-align:-2px;"></span>`;
+}
+
 // Right-click handler for the streak capsule — opens the unified ctx menu.
 function onStreakCtxMenu(ev) {
   ev.preventDefault();
@@ -4845,10 +4857,9 @@ function onStreakCtxMenu(ev) {
   const graceOK = _isStreakGraceAvailable();
   const graceNext = !graceOK ? new Date((+CU.streakGraceUsedAt || 0) + STREAK_GRACE_COOLDOWN_MS).toLocaleDateString() : null;
 
-  const flameIcon = _streakFlameSvgSolid(14);
-  const shieldIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
-  const statusIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-  const questIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  const flameIcon = '<i class="fa-solid fa-fire" aria-hidden="true"></i>';
+  const shieldIcon = '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i>';
+  const questIcon = '<i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>';
 
   const headerLabel = streak > 0 ? `${streak}-day streak` : 'No streak yet';
   const statusLabel = protected_
@@ -5510,9 +5521,14 @@ document.addEventListener('mouseover', function(e) {
   const tipRect = tip.getBoundingClientRect();
   let left = rect.left + rect.width / 2 - tipRect.width / 2;
   let top = rect.top - tipRect.height - 8;
-  if (top < 4) top = rect.bottom + 8;
+  let place = 'top';
+  if (top < 4) { top = rect.bottom + 8; place = 'bottom'; }
   if (left < 4) left = 4;
   if (left + tipRect.width > window.innerWidth - 4) left = window.innerWidth - tipRect.width - 4;
+  tip.dataset.place = place;
+  // Keep the centered arrow pointing at the badge even after the tip is
+  // clamped horizontally (--arrow-x = px from the tip's left edge).
+  tip.style.setProperty('--arrow-x', (rect.left + rect.width / 2 - left) + 'px');
   tip.style.left = left + 'px';
   tip.style.top = top + 'px';
   requestAnimationFrame(() => tip.classList.add('visible'));
@@ -12248,6 +12264,15 @@ async function renderMemberList() {
   if (!ml) return;
   const b = CU.bastions?.[curBastion];
   if (!b) return;
+
+  // Stash this bastion's member-join dates so the profile card can show
+  // a "member since" for the bastion (emblem + date). Best-effort +
+  // async; the card reads whatever's cached at render time.
+  try {
+    FortizedSocial.getGlobalBastion(b.globalId || b.name).then(g => {
+      window._ftzBastionJoinCtx = { emblem: b.emblem || b.icon || (g && (g.emblem || g.icon)) || null, joins: (g && g.memberJoins) || {} };
+    }).catch(() => {});
+  } catch (_) {}
 
   // Build member list: always include self + owner + anyone in memberRoles + fetched list
   let members = [];
@@ -24298,9 +24323,8 @@ async function toggleNotifPanel() {
   panel.className = 'notif-panel-v2';
   panel.id = 'notif-panel-v2';
   panel.innerHTML = `
-    <div class="modal-bar" style="flex-shrink:0;border-radius:18px 18px 0 0;"></div>
     <div class="npv-header">
-      <span style="color:var(--accent);display:inline-flex;">${_faMsg('bell', 18)}</span>
+      <span style="color:inherit;display:inline-flex;"><svg width="18" height="18" viewBox="0 0 512 512" fill="currentColor"><path d="M91.8 32C59.9 32 32.9 55.4 28.4 86.9L.6 281.2c-.4 3-.6 6-.6 9.1L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-125.7c0-3-.2-6.1-.6-9.1L483.6 86.9C479.1 55.4 452.1 32 420.2 32L91.8 32zm0 64l328.5 0 27.4 192-59.9 0c-12.1 0-23.2 6.8-28.6 17.7l-14.3 28.6c-5.4 10.8-16.5 17.7-28.6 17.7l-120.4 0c-12.1 0-23.2-6.8-28.6-17.7l-14.3-28.6c-5.4-10.8-16.5-17.7-28.6-17.7L64.3 288 91.8 96z"/></svg></span>
       <h3>${_t('notif.inbox')}</h3>
       <button onclick="markAllRead()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;">${_t('notif.mark_all')}</button>
       <button onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
@@ -37424,7 +37448,7 @@ async function showDMUserPanel(username) {
   const mutualFriends = isOwn ? [] : (CU?.friends || []).filter(f => f !== CU?.username && f !== username && (u.friends || []).includes(f));
   const mutualsChip = mutualFriends.length
     ? `<div class="fpp__mutuals-chip" onclick="viewUserProfile('${escapeHTML(username)}','mutuals')">
-         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+         <i class="fa-solid fa-user-group" aria-hidden="true" style="font-size:12px;"></i>
          ${mutualFriends.length} Mutual Friend${mutualFriends.length === 1 ? '' : 's'}
        </div>`
     : '';
@@ -46088,6 +46112,77 @@ function addAnotherAccount() {
   showAddAccountModal();
 }
 
+// ── Unified Manage Accounts card (Discord-style) ───────────────────
+// One place to switch, add, and log out of accounts. Replaces the old
+// bespoke "Switch Accounts" submenu.
+function openManageAccounts() {
+  try { saveCurrentToAccounts(); } catch (_) {}
+  document.getElementById('manage-accts-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'manage-accts-overlay';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="macct-card" role="dialog" aria-label="Manage Accounts">
+      <div class="macct-head">
+        <div class="macct-head__text">
+          <div class="macct-title">Manage Accounts</div>
+          <div class="macct-sub">Switch accounts, sign in, sign out, go wild.</div>
+        </div>
+        <button class="macct-close" aria-label="Close" onclick="this.closest('.modal-overlay').remove()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <div class="macct-list" id="macct-list"></div>
+      <button class="macct-add" onclick="document.getElementById('manage-accts-overlay').remove();showAddAccountModal()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> Add an account
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+  renderManageAccounts();
+}
+function renderManageAccounts() {
+  const list = document.getElementById('macct-list');
+  if (!list) return;
+  const accounts = getSavedAccounts();
+  if (!accounts.length && CU) accounts.push({ username: CU.username, displayName: CU.displayName || CU.username, pfp: CU.pfp || null });
+  list.innerHTML = accounts.map(a => {
+    const isActive = a.username === CU?.username;
+    const safe = escapeHTML(a.username);
+    return `<div class="macct-item ${isActive ? 'is-active' : ''}">
+      <div class="macct-item__av" ${isActive ? '' : `onclick="switchToAccount('${safe}')"`}>${buildAvatarHTML(a.pfp || null, a.username, 40)}</div>
+      <div class="macct-item__body" ${isActive ? '' : `onclick="switchToAccount('${safe}')"`}>
+        <div class="macct-item__name">${escapeHTML(a.displayName || a.username)}</div>
+        <div class="macct-item__meta">${isActive ? '<span class="macct-item__active">Active account</span>' : '@' + safe}</div>
+      </div>
+      <button class="macct-item__more" aria-label="Options" onclick="_macctMore(event,'${safe}',${isActive})"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></button>
+    </div>`;
+  }).join('');
+}
+function _macctMore(evt, username, isActive) {
+  evt.stopPropagation();
+  const items = [];
+  if (!isActive) items.push({ icon: '<i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>', label: 'Switch to this account', action: () => switchToAccount(username) });
+  items.push({ icon: '<i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>', label: 'Log out', danger: true, action: () => _macctLogout(username, isActive) });
+  if (typeof showCtxMenu === 'function') showCtxMenu(evt.clientX, evt.clientY, [{ items }]);
+}
+function _macctLogout(username, isActive) {
+  // Drop the account from the saved list either way.
+  try {
+    const remaining = getSavedAccounts().filter(a => a.username !== username);
+    localStorage.setItem('ftz_saved_accounts', JSON.stringify(remaining));
+    localStorage.removeItem('ftz_user_' + username);
+  } catch (_) {}
+  if (isActive) {
+    // Logging out the ACTIVE account: hop to another saved account if
+    // one exists, otherwise full logout.
+    const next = getSavedAccounts()[0];
+    if (next && next.username !== username) { switchToAccount(next.username); return; }
+    doLogout();
+    return;
+  }
+  renderManageAccounts();
+  toast('Signed out of @' + username, 'info');
+}
+
 function showAddAccountModal() {
   document.getElementById('add-acct-modal')?.remove();
   // Re-uses the .ftz-onboarding-* card system so the look matches
@@ -49703,9 +49798,31 @@ function _fppMemberSinceCardHTML(u) {
 // 300 chars (matches own popover) so it never blows past the card
 // height on bigger surfaces. Both sections share one .fpp-card-- about
 // frame with a thin separator between them.
+// Fortized logo as a monochrome glyph (matches surrounding text colour).
+const _FTZ_LOGO_ICON = _maskIcon('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20logo.png', 13);
+const _FTZ_FRIENDS_ICON = '<i class="fa-solid fa-user-group" aria-hidden="true" style="font-size:12px;"></i>';
+// Bastion emblem as a tiny inline icon for the "member since" dot.
+function _bastionEmblemIcon(src, size) {
+  const s = size || 13;
+  if (!src) return '<i class="fa-solid fa-chess-rook" aria-hidden="true" style="font-size:12px;"></i>';
+  return `<img src="${escapeHTML(src)}" style="width:${s}px;height:${s}px;border-radius:4px;object-fit:cover;vertical-align:-2px;" onerror="this.outerHTML='<i class=&quot;fa-solid fa-chess-rook&quot;></i>'">`;
+}
+
 function _fppAboutCardHTML(u) {
   const memberSinceTxt = _fppFormatDate(u.joinedAt || u.createdAt);
   const hasBio = !!u.bio;
+  // Bastion "member since" — only when viewing a member inside an open
+  // bastion AND we have a join date for them (see _ftzBastionJoinCtx,
+  // populated when a bastion is active; dates accrue from the moment
+  // join-stamping shipped, so older members may have none).
+  let bastionJoinTxt = null, bastionEmblem = null;
+  try {
+    const ctx = window._ftzBastionJoinCtx;
+    if (ctx && ctx.joins) {
+      const iso = ctx.joins[String(u.username || '').toLowerCase()];
+      if (iso) { bastionJoinTxt = _fppFormatDate(iso); bastionEmblem = ctx.emblem || null; }
+    }
+  } catch (_) {}
   // "Friends Since" — only shows when viewer + target are actual friends and
   // we have a stamped date from acceptFriendRequest. The record can live on
   // either side (CU's friendsSince[u.username] OR u.friendsSince[CU.username])
@@ -49730,6 +49847,16 @@ function _fppAboutCardHTML(u) {
   // Two-column layout when we have BOTH dates. When only one, it takes the
   // full row like the old single-column layout so short cards don't feel
   // half-empty.
+  // "Member Since" value: Fortized logo + join date, and — inside a
+  // bastion where we know the member's join date — a dot then the
+  // bastion emblem + bastion join date, under the SAME label.
+  const memberSinceVal = memberSinceTxt
+    ? `<span class="fpp-since">${_FTZ_LOGO_ICON} ${memberSinceTxt}</span>`
+      + (bastionJoinTxt ? `<span class="fpp-since__dot">·</span><span class="fpp-since">${_bastionEmblemIcon(bastionEmblem)} ${bastionJoinTxt}</span>` : '')
+    : '';
+  const friendsSinceVal = friendsSinceTxt
+    ? `<span class="fpp-since">${_FTZ_FRIENDS_ICON} ${friendsSinceTxt}</span>`
+    : '';
   let datesBlock = '';
   if (memberSinceTxt || friendsSinceTxt) {
     const marginTopStyle = hasBio ? ' style="margin-top:10px;"' : '';
@@ -49737,17 +49864,17 @@ function _fppAboutCardHTML(u) {
       datesBlock = `<div class="fpp-card__dates"${marginTopStyle}>
         <div class="fpp-card__date-col">
           <div class="fpp-card__title" style="margin:0;">Member Since</div>
-          <div class="fpp-card__body fpp-card__body--muted">${memberSinceTxt}</div>
+          <div class="fpp-card__body fpp-card__body--muted">${memberSinceVal}</div>
         </div>
         <div class="fpp-card__date-col">
           <div class="fpp-card__title" style="margin:0;">Friends Since</div>
-          <div class="fpp-card__body fpp-card__body--muted">${friendsSinceTxt}</div>
+          <div class="fpp-card__body fpp-card__body--muted">${friendsSinceVal}</div>
         </div>
       </div>`;
     } else if (memberSinceTxt) {
-      datesBlock = `<div class="fpp-card__title"${marginTopStyle}>Member Since</div><div class="fpp-card__body fpp-card__body--muted">${memberSinceTxt}</div>`;
+      datesBlock = `<div class="fpp-card__title"${marginTopStyle}>Member Since</div><div class="fpp-card__body fpp-card__body--muted">${memberSinceVal}</div>`;
     } else {
-      datesBlock = `<div class="fpp-card__title"${marginTopStyle}>Friends Since</div><div class="fpp-card__body fpp-card__body--muted">${friendsSinceTxt}</div>`;
+      datesBlock = `<div class="fpp-card__title"${marginTopStyle}>Friends Since</div><div class="fpp-card__body fpp-card__body--muted">${friendsSinceVal}</div>`;
     }
   }
   return `<div class="fpp-card fpp-card--about">${bioBlock}${sep}${datesBlock}</div>`;
@@ -50062,7 +50189,7 @@ function _fppRenderFullPanel(panel, u, username, isOwn) {
   const mutualFriends = isOwn ? [] : (CU?.friends || []).filter(f => f !== CU?.username && f !== username && (u.friends || []).includes(f));
   const mutualsChip = mutualFriends.length
     ? `<div class="fpp__mutuals-chip" onclick="_fppClose();viewUserProfile('${escapeHTML(username)}','mutuals')">
-         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+         <i class="fa-solid fa-user-group" aria-hidden="true" style="font-size:12px;"></i>
          ${mutualFriends.length} Mutual Friend${mutualFriends.length === 1 ? '' : 's'}
        </div>`
     : '';
@@ -50251,7 +50378,7 @@ function _renderOwnProfilePopover(anchorEl) {
     ${_fppGamesCardHTML(u)}
     <div class="fpp__actions">
       <button class="fpp__btn fpp__btn--wide fpp__btn--primary" onclick="_fppClose();showView('profile')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <i class="fa-solid fa-user-pen fpp__btn-fa" aria-hidden="true"></i>
         Edit Profile
       </button>
     </div>
@@ -50260,8 +50387,8 @@ function _renderOwnProfilePopover(anchorEl) {
       <span class="fpp-row__label">${statusLabel}</span>
       <span class="fpp-row__chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
     </div>
-    <div class="fpp-row" onclick="_fppShowAccountsSubmenu(event)">
-      <span class="fpp-row__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></span>
+    <div class="fpp-row" onclick="_fppClose();openManageAccounts()">
+      <span class="fpp-row__icon"><i class="fa-solid fa-right-left" aria-hidden="true"></i></span>
       <span class="fpp-row__label">Switch Accounts</span>
       <span class="fpp-row__chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
     </div>

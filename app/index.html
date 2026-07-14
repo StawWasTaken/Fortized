@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix249';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix250';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix249';
+    s4.src = '/firebase-compat-shim.js?v=2026fix250';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix249">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix250">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix249', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix250', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix249"></script>
+<script src="/app/utils.js?v=2026fix250"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -329,7 +329,6 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
       <div class="tb-cap tb-cap--streak is-zero" id="streak-display" onclick="showView('atelier');setTimeout(()=>switchAtelierTab&amp;&amp;switchAtelierTab('quests'),80)" oncontextmenu="onStreakCtxMenu&amp;&amp;onStreakCtxMenu(event);return false;" title="Daily streak · click to claim daily · right-click for options">
         <div class="tb-cap-ic" id="streak-ic"></div>
         <span id="streak-val" class="tb-cap-val">0</span>
-        <span class="tb-streak-shield" style="display:none;" title="Streak protected"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></span>
       </div>
     </div>
     <div class="tb-search">
@@ -1253,10 +1252,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix249"></script>
-<script src="/app/app.js?v=2026fix249"></script>
-<script src="/app/joy-system.js?v=2026fix249"></script>
-<script src="/app/chronicle-games.js?v=2026fix249"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix250"></script>
+<script src="/app/app.js?v=2026fix250"></script>
+<script src="/app/joy-system.js?v=2026fix250"></script>
+<script src="/app/chronicle-games.js?v=2026fix250"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

@@ -3263,6 +3263,65 @@ new MutationObserver(muts => {
   });
 }).observe(document.body, { childList: true, subtree: true });
 
+// ── Global autofill / password-manager suppression ─────────────────
+// The user doesn't want the browser (or 1Password / LastPass / Bitwarden)
+// proposing autofills anywhere a password / email / account is asked.
+// Chrome ignores autocomplete="off" on password fields, so we combine:
+//   • autocomplete="off" (email/text) or "new-password" (password) — the
+//     only value Chrome reliably won't offer SAVED credentials for;
+//   • the password-manager opt-out data-attributes;
+//   • a readonly-until-focus shim as the last-resort belt for the native
+//     dropdown (removed the instant the user focuses, so typing is normal).
+// Runs once now + on every dynamically-added input (modals inject them).
+const _AUTOFILL_SENSITIVE_RE = /pass|email|user|account|login|otp|code|credential|pin/i;
+function _isSensitiveInput(el) {
+  if (!el || el.tagName !== 'INPUT') return false;
+  const t = (el.type || '').toLowerCase();
+  if (t === 'password' || t === 'email') return true;
+  if (t && !['text', 'tel', 'search', 'url', ''].includes(t)) return false;
+  return _AUTOFILL_SENSITIVE_RE.test((el.name || '') + ' ' + (el.id || '') + ' ' + (el.getAttribute('autocomplete') || '') + ' ' + (el.placeholder || ''));
+}
+function _hardenInputAutofill(el) {
+  if (!el || el._ftzNoAutofill) return;
+  if (!_isSensitiveInput(el)) return;
+  el._ftzNoAutofill = true;
+  const isPw = (el.type || '').toLowerCase() === 'password';
+  try {
+    el.setAttribute('autocomplete', isPw ? 'new-password' : 'off');
+    el.setAttribute('autocapitalize', 'off');
+    el.setAttribute('autocorrect', 'off');
+    el.setAttribute('spellcheck', 'false');
+    el.setAttribute('data-lpignore', 'true');     // LastPass
+    el.setAttribute('data-1p-ignore', '');         // 1Password
+    el.setAttribute('data-bwignore', '');          // Bitwarden
+    el.setAttribute('data-form-type', 'other');    // Dashlane
+    // Native-dropdown belt: readonly until first interaction. Removed on
+    // focus/pointerdown so the field behaves normally the moment it's used.
+    if (!el.readOnly && !el.hasAttribute('data-ftz-af-typed')) {
+      el.setAttribute('readonly', '');
+      const unlock = () => { el.removeAttribute('readonly'); el.setAttribute('data-ftz-af-typed', '1'); };
+      el.addEventListener('focus', unlock, { once: true });
+      el.addEventListener('pointerdown', unlock, { once: true });
+    }
+    // Neutralize a name/id the browser recognizes ("email","password")
+    // by also marking the parent form.
+    const form = el.closest('form');
+    if (form && !form._ftzNoAutofill) { form._ftzNoAutofill = true; form.setAttribute('autocomplete', 'off'); }
+  } catch (_) {}
+}
+function _sweepAutofill(root) {
+  try { (root || document).querySelectorAll?.('input').forEach(_hardenInputAutofill); } catch (_) {}
+}
+document.addEventListener('DOMContentLoaded', () => _sweepAutofill());
+_sweepAutofill();
+new MutationObserver(muts => {
+  for (const m of muts) m.addedNodes.forEach(n => {
+    if (n.nodeType !== 1) return;
+    if (n.tagName === 'INPUT') _hardenInputAutofill(n);
+    else _sweepAutofill(n);
+  });
+}).observe(document.documentElement, { childList: true, subtree: true });
+
 // ── Form fill-in modal ─────────────────────────────────────────────
 function _openFormFiller(formId, b64) {
   document.getElementById('ftz-form-filler')?.remove();

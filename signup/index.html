@@ -366,6 +366,25 @@ function setLoading(on) {
   signupBtn.disabled = on;
   signupBtn.classList.toggle('loading', on);
 }
+// Suppress browser/password-manager autofill on the credential fields
+// (matches the app-wide policy). Sign-up keeps password as
+// 'new-password' so no SAVED credential is offered; readonly-until-focus
+// belts Chrome's native dropdown and is removed on first use.
+(function(){
+  var ids = ['email','username','password'];
+  ids.forEach(function(id){
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.setAttribute('autocomplete', el.type === 'password' ? 'new-password' : 'off');
+    el.setAttribute('autocapitalize','off'); el.setAttribute('autocorrect','off'); el.setAttribute('spellcheck','false');
+    el.setAttribute('data-lpignore','true'); el.setAttribute('data-1p-ignore',''); el.setAttribute('data-bwignore',''); el.setAttribute('data-form-type','other');
+    el.setAttribute('readonly','');
+    var unlock = function(){ el.removeAttribute('readonly'); };
+    el.addEventListener('focus', unlock, { once:true });
+    el.addEventListener('pointerdown', unlock, { once:true });
+  });
+  var f = document.querySelector('form'); if (f) f.setAttribute('autocomplete','off');
+})();
 </script>
 <script src="/css/fortized-2026.js"></script>
 </body>

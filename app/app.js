@@ -874,12 +874,18 @@ const FtzStatus = (() => {
   const IDLE_TIMEOUT_ACTIVE  = 10 * 60 * 1000; // 10 min when tab visible
   const IDLE_TIMEOUT_HIDDEN  = 3 * 60 * 1000;  // 3 min when tab hidden
 
+  // Unified duration set — shared by custom status AND timed statuses
+  // (idle/dnd/invisible for N time). 'today' clears at local midnight;
+  // 'sync' means "expire exactly when my paired thing expires" (the
+  // Fortized status<->custom-status sync) and is resolved by the caller.
   const CUSTOM_DURATIONS = Object.freeze([
-    { id: '30m',     label: '30 min',     ms: 30 * 60000 },
-    { id: '1h',      label: '1 hour',     ms: 60 * 60000 },
-    { id: '4h',      label: '4 hours',    ms: 4 * 60 * 60000 },
-    { id: 'today',   label: 'Today',      ms: null },      // computed at set-time
-    { id: 'forever', label: "Don't Clear", ms: Infinity },
+    { id: '30m',     label: '30 min',      ms: 30 * 60000 },
+    { id: '1h',      label: '1 hour',      ms: 60 * 60000 },
+    { id: '8h',      label: '8 hours',     ms: 8 * 60 * 60000 },
+    { id: '24h',     label: '24 hours',    ms: 24 * 60 * 60000 },
+    { id: '3d',      label: '3 days',      ms: 3 * 24 * 60 * 60000 },
+    { id: 'today',   label: 'Today',       ms: null },      // computed at set-time
+    { id: 'forever', label: "Don't clear", ms: Infinity },
   ]);
 
   // ── Helpers ──────────────────────────────────────────────
@@ -1018,22 +1024,41 @@ const FtzStatus = (() => {
     try { updateDots(CU.username, vis); } catch {}
   }
 
-  function set(status) {
+  let _statusExpiryTimer = null;
+  // set(status, opts)
+  //   opts.durationId — how long to hold this status before auto-
+  //                     reverting to Online (idle/dnd/invisible "for 1h"
+  //                     etc). Omitted / 'forever' = no expiry.
+  function set(status, opts) {
     if (!CU?.username) return;
+    opts = opts || {};
     status = sanitize(status);
     const prev = _manualStatus;
     _manualStatus = status;
     _autoAway = false;
     CU.status = status;
-    // Save manual status to localStorage for persistence across reloads
+    // Timed status: schedule the revert + stamp an expiry the custom-
+    // status sync can read.
+    if (_statusExpiryTimer) { clearTimeout(_statusExpiryTimer); _statusExpiryTimer = null; }
+    const durId = opts.durationId;
+    const ms = (durId && durId !== 'forever') ? durationMs(durId) : Infinity;
+    if (status !== 'online' && ms !== Infinity && ms > 0) {
+      CU.statusExpiresAt = new Date(Date.now() + ms).toISOString();
+      _statusExpiryTimer = setTimeout(() => { set('online'); }, ms);
+    } else {
+      delete CU.statusExpiresAt;
+    }
+    // Sync teardown: a custom status marked syncWithStatus clears when
+    // the user drops to a non-present state (invisible/offline) — the
+    // "if your account is offline/invisible your custom status isn't
+    // showing" rule, made permanent.
+    if (CU.customStatus?.syncWithStatus && (status === 'invisible' || status === 'offline')) {
+      try { clearCustom(); } catch (_) {}
+    }
     try { localStorage.setItem('ftz_manual_status_' + CU.username, status); } catch (e) { _dbg('[Status] localStorage write failed', e); }
-    // Mark for refreshCU recent-edit guard so a stale refresh doesn't
-    // revert us to the previous status mid-flight.
     window._recentlyEditedFields = window._recentlyEditedFields || {};
     window._recentlyEditedFields.status = Date.now();
     _broadcast(status);
-    // Immediate save (no 300 ms debounce) — status is a high-frequency
-    // visible change; a fast refresh after click must not lose it.
     saveUser(true).catch(e => console.warn('[Save] Failed:', e?.message));
     updateUserbar();
     refreshCustomStatusBubble();
@@ -1183,22 +1208,32 @@ const FtzStatus = (() => {
     toast('Custom status cleared', 'info');
   }
 
-  function setCustom(emoji, text, durationId) {
-    if (!text) return;
+  // setCustom(emoji, text, durationId, opts)
+  //   opts.syncWithStatus  — clear the custom status when the current
+  //                          status expires / goes offline (Fortized
+  //                          feature). Stored on the object so a reload
+  //                          re-establishes the link.
+  //   opts.clearAtMs       — absolute expiry override (used by the sync
+  //                          path so both sides share one timestamp).
+  function setCustom(emoji, text, durationId, opts) {
+    if (!text && !emoji) return;
+    opts = opts || {};
     _clearCustomTimer();
-    const cs = { emoji: emoji || '😊', text, set: new Date().toISOString() };
-    const ms = durationMs(durationId || 'forever');
-    if (ms !== Infinity && ms > 0) {
-      cs.clearAt = new Date(Date.now() + ms).toISOString();
-      _customStatusTimer = setTimeout(_onCustomExpiry, ms);
+    const cs = { emoji: emoji || '', text: text || '', set: new Date().toISOString() };
+    if (opts.syncWithStatus) cs.syncWithStatus = true;
+    let clearAtMs = opts.clearAtMs || 0;
+    if (!clearAtMs) {
+      const ms = durationMs(durationId || 'forever');
+      if (ms !== Infinity && ms > 0) clearAtMs = Date.now() + ms;
+    }
+    if (clearAtMs) {
+      cs.clearAt = new Date(clearAtMs).toISOString();
+      _customStatusTimer = setTimeout(_onCustomExpiry, Math.max(0, clearAtMs - Date.now()));
     }
     CU.customStatus = cs;
-    // Direct write to customStatus sub-path so Firebase listeners fire immediately
-    try {
-      const uname = (CU.username || '').toLowerCase();
-      if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(cs);
-    } catch(e) { console.warn('[Status] Custom status write failed:', e?.message); }
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
+    // Broadcast so other clients repaint the bubble live.
+    try { FortizedSocial.socketEmit?.('profile:update', { username: (CU.username||'').toLowerCase(), customStatus: cs }); } catch(_){}
     refreshCustomStatusBubble();
     if (typeof _logJoysterEvent === 'function') {
       _logJoysterEvent(`set custom status ${cs.emoji || ''} "${text}"`);
@@ -24203,9 +24238,9 @@ function _openBannerGifPicker() {
   window._fppGifPickerMode = 'banner';
   _openAvatarGifPicker();
 }
-async function setMyStatus(s) {
+async function setMyStatus(s, durationId) {
   if (!CU?.username) return;
-  setUserStatus(s);
+  FtzStatus.set(s, durationId ? { durationId } : undefined);
   // Re-render own profile panel if open
   const own = document.getElementById('own-profile-panel');
   if (own) { toggleOwnProfilePanel(); toggleOwnProfilePanel(); }
@@ -38459,23 +38494,27 @@ function openStatusPicker() {
     ? `<img src="${initSrc}" onerror="this.parentElement.textContent='${escapeHTML(initEmoji)}'">`
     : (typeof _CHATBAR_EMOJI_SVG !== 'undefined' ? _CHATBAR_EMOJI_SVG : '<i class="fa-regular fa-face-smile"></i>');
 
-  // Duration options
+  // Duration chips — the full set the user asked for. 'sync' is the
+  // Fortized feature (clears when your status expires / you go offline).
   const durations = [
-    { id: 'never', label: "Don't clear" },
-    { id: '30min', label: '30 minutes' },
-    { id: '1h', label: '1 hour' },
-    { id: '4h', label: '4 hours' },
-    { id: '24h', label: '24 hours' },
-    { id: 'custom', label: 'Custom…' },
+    { id: '30m', label: '30m' },
+    { id: '1h', label: '1h' },
+    { id: '8h', label: '8h' },
+    { id: '24h', label: '24h' },
+    { id: '3d', label: '3d' },
+    { id: 'forever', label: 'Forever' },
+    { id: 'custom', label: 'Custom' },
   ];
-  const ddlItems = durations.map(d =>
-    `<div class="ftz-csp__ddl-item${d.id === '24h' ? ' ftz-csp__ddl-item--sel' : ''}" data-dur="${d.id}" onclick="_ftzCspDDLPick(this)" role="option">${d.label}</div>`
+  const curDur = cur.syncWithStatus ? 'sync' : (cur.clearAt ? '24h' : 'forever');
+  const chips = durations.map(d =>
+    `<button type="button" class="ftz-csp__chip${d.id === curDur ? ' is-sel' : ''}" data-dur="${d.id}" onclick="_ftzCspPickDur(this)">${d.label}</button>`
   ).join('');
+  const syncActive = !!cur.syncWithStatus;
 
   overlay.innerHTML = `
     <div class="ftz-csp__card" role="dialog" aria-label="Set your status">
       <div class="ftz-csp__head">
-        <div class="ftz-csp__title">Set your status</div>
+        <div class="ftz-csp__title">Set a custom status</div>
         <button class="ftz-csp__x" onclick="_closeStatusPicker()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="ftz-csp__preview">
@@ -38487,27 +38526,27 @@ function openStatusPicker() {
         <div class="ftz-csp__input" id="ftz-csp-input" contenteditable="true" role="textbox" data-placeholder="What's going on?" oninput="_ftzCspOnInput()" onkeydown="_ftzCspOnKeydown(event)"></div>
         <button class="ftz-csp__clear" id="ftz-csp-clear" onclick="_ftzCspClearInput()" style="${curText ? '' : 'display:none;'}" aria-label="Clear text"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="ftz-csp__durrow">
-        <span class="ftz-csp__durlbl">Clear after</span>
-        <div class="ftz-csp__ddl" id="ftz-csp-ddl">
-          <button class="ftz-csp__ddl-btn" id="ftz-csp-ddl-btn" type="button" onclick="_ftzCspDDLToggle()" data-value="24h" aria-haspopup="listbox" aria-expanded="false">
-            <span id="ftz-csp-ddl-val">24 hours</span>
-            <i class="fa-solid fa-chevron-down ftz-csp__ddl-chev"></i>
-          </button>
-          <div class="ftz-csp__ddl-menu" id="ftz-csp-ddl-menu" role="listbox">${ddlItems}</div>
-        </div>
-      </div>
-      <div class="ftz-csp__custom" id="ftz-csp-custom-box">
-        <input type="number" id="ftz-csp-custom-amt" class="ftz-csp__custom-amt" min="1" max="720" value="2" placeholder="Amount">
+      <div class="ftz-csp__section-lbl">Clear after</div>
+      <div class="ftz-csp__chips" id="ftz-csp-chips" data-dur="${curDur}">${chips}</div>
+      <div class="ftz-csp__custom" id="ftz-csp-custom-box" style="display:${curDur === 'custom' ? 'flex' : 'none'};">
+        <input type="number" id="ftz-csp-custom-amt" class="ftz-csp__custom-amt" min="1" max="720" value="2">
         <select id="ftz-csp-custom-unit" class="ftz-csp__custom-unit">
           <option value="min">minutes</option>
           <option value="h" selected>hours</option>
           <option value="d">days</option>
         </select>
       </div>
+      <button type="button" class="ftz-csp__sync${syncActive ? ' is-on' : ''}" id="ftz-csp-sync" onclick="_ftzCspToggleSync()" aria-pressed="${syncActive}">
+        <span class="ftz-csp__sync-ic"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
+        <span class="ftz-csp__sync-body">
+          <span class="ftz-csp__sync-title">Sync with my status</span>
+          <span class="ftz-csp__sync-sub">Clears when your status expires or you go offline</span>
+        </span>
+        <span class="ftz-csp__toggle"><span class="ftz-csp__toggle-knob"></span></span>
+      </button>
       <div class="ftz-csp__actions">
-        ${curText || _ftzCspSelectedEmoji ? '<button class="ftz-csp__btn ftz-csp__btn--ghost" onclick="clearCustomStatus();_closeStatusPicker()">Clear Status</button>' : ''}
-        <button class="ftz-csp__btn ftz-csp__btn--save" onclick="_ftzCspSave()">Save</button>
+        ${curText || _ftzCspSelectedEmoji ? '<button class="ftz-csp__btn ftz-csp__btn--ghost" onclick="clearCustomStatus();_closeStatusPicker()"><i class="fa-solid fa-trash" aria-hidden="true"></i> Clear</button>' : ''}
+        <button class="ftz-csp__btn ftz-csp__btn--save" onclick="_ftzCspSave()"><i class="fa-solid fa-check" aria-hidden="true"></i> Save</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -38553,25 +38592,36 @@ function _ftzCspClearInput() {
   inp?.focus();
 }
 
-function _ftzCspDDLToggle() {
-  const menu = document.getElementById('ftz-csp-ddl-menu');
-  const btn = document.getElementById('ftz-csp-ddl-btn');
-  if (!menu || !btn) return;
-  const open = menu.classList.toggle('ftz-csp__ddl-menu--open');
-  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  if (open) {
-    const onDoc = (e) => {
-      if (!btn.contains(e.target) && !menu.contains(e.target)) {
-        menu.classList.remove('ftz-csp__ddl-menu--open');
-        btn.setAttribute('aria-expanded', 'false');
-        document.removeEventListener('mousedown', onDoc, true);
-      }
-    };
-    document.addEventListener('mousedown', onDoc, true);
+// Segmented duration chips. Picking a real duration turns the sync
+// toggle off (they're mutually exclusive — sync IS a duration source).
+function _ftzCspPickDur(el) {
+  const chips = document.getElementById('ftz-csp-chips');
+  if (!chips || !el) return;
+  chips.querySelectorAll('.ftz-csp__chip').forEach(c => c.classList.remove('is-sel'));
+  el.classList.add('is-sel');
+  chips.dataset.dur = el.dataset.dur;
+  const box = document.getElementById('ftz-csp-custom-box');
+  if (box) box.style.display = el.dataset.dur === 'custom' ? 'flex' : 'none';
+  const sync = document.getElementById('ftz-csp-sync');
+  if (sync) { sync.classList.remove('is-on'); sync.setAttribute('aria-pressed', 'false'); }
+}
+// The Fortized sync toggle. Turning it ON deselects the duration chips
+// (sync supplies the expiry instead).
+function _ftzCspToggleSync() {
+  const sync = document.getElementById('ftz-csp-sync');
+  if (!sync) return;
+  const on = !sync.classList.contains('is-on');
+  sync.classList.toggle('is-on', on);
+  sync.setAttribute('aria-pressed', on ? 'true' : 'false');
+  if (on) {
+    const chips = document.getElementById('ftz-csp-chips');
+    if (chips) { chips.querySelectorAll('.ftz-csp__chip').forEach(c => c.classList.remove('is-sel')); chips.dataset.dur = 'sync'; }
+    const box = document.getElementById('ftz-csp-custom-box');
+    if (box) box.style.display = 'none';
   }
 }
 
-function _ftzCspDDLPick(el) {
+function _ftzCspDDLPick_legacy(el) {
   const menu = document.getElementById('ftz-csp-ddl-menu');
   const btn = document.getElementById('ftz-csp-ddl-btn');
   const val = document.getElementById('ftz-csp-ddl-val');
@@ -38637,41 +38687,41 @@ function _ftzCspSave() {
   const text = (inp?.value || '').trim();
   const emoji = _ftzCspSelectedEmoji || '';
   if (!text && !emoji) { toast('Add an emoji or some text!', 'error'); return; }
-  const dur = document.getElementById('ftz-csp-ddl-btn')?.dataset?.value || '24h';
+  const dur = document.getElementById('ftz-csp-chips')?.dataset?.dur || 'forever';
 
-  CU.customStatus = {
-    emoji,
-    emojiUrl: _ftzCspSelectedEmojiUrl || undefined,
-    text,
-    createdAt: Date.now(),
-  };
-
-  let ms = 0;
-  if (dur === 'custom') {
+  const opts = {};
+  if (dur === 'sync') {
+    // Fortized sync: clear exactly when the current status expires. If the
+    // status has no expiry (plain online), sync means "don't clear" —
+    // it'll still clear the moment the user goes offline (handled at boot
+    // + on the status-expiry path).
+    opts.syncWithStatus = true;
+    const stExp = _ftzStatusExpiryMs();
+    if (stExp) opts.clearAtMs = stExp;
+  } else if (dur === 'custom') {
     const amt = parseInt(document.getElementById('ftz-csp-custom-amt')?.value, 10);
     const unit = document.getElementById('ftz-csp-custom-unit')?.value || 'h';
     if (!amt || amt < 1) { toast('Enter a valid duration', 'error'); return; }
     const perUnit = { min: 60000, h: 3600000, d: 86400000 }[unit] || 3600000;
-    ms = amt * perUnit;
-  } else if (dur !== 'never') {
-    ms = { '30min': 1800000, '1h': 3600000, '4h': 14400000, '24h': 86400000 }[dur] || 86400000;
+    opts.clearAtMs = Date.now() + amt * perUnit;
   }
-  if (ms > 0) {
-    const stamp = CU.customStatus.createdAt;
-    if (window._statusClearTimer) clearTimeout(window._statusClearTimer);
-    window._statusClearTimer = setTimeout(() => {
-      if (CU.customStatus?.createdAt === stamp) {
-        CU.customStatus = null;
-        saveUser(true, ['customStatus']).catch(() => {}); // explicit: clear must persist
-        toast('Status cleared', 'info');
-      }
-    }, ms);
-  }
-  saveUser().catch(e => console.warn('[Status] save failed:', e?.message));
+  // FtzStatus.setCustom is the single write path (was a divergent inline
+  // write here — the source of the two-code-path inconsistency).
+  FtzStatus.setCustom(emoji, text, dur === 'custom' || dur === 'sync' ? 'forever' : dur, opts);
+  if (_ftzCspSelectedEmojiUrl && CU.customStatus) { CU.customStatus.emojiUrl = _ftzCspSelectedEmojiUrl; saveLocal(); }
   _closeStatusPicker();
   toast('Status updated!', 'success');
   try { updateUserbar(); } catch (_) {}
   try { updateProfilePreview?.(); } catch (_) {}
+}
+
+// Milliseconds-since-epoch at which the CURRENT status is scheduled to
+// expire, or 0 if it has none. Set by the timed-status flow below.
+function _ftzStatusExpiryMs() {
+  const iso = CU?.statusExpiresAt;
+  if (!iso) return 0;
+  const t = new Date(iso).getTime();
+  return (t > Date.now()) ? t : 0;
 }
 
 function pickStatusMode(mode, el) {
@@ -48730,6 +48780,25 @@ function _blendColorsForProfileCard(color1, color2) {
 
   return '#' + [r, g, b].map(x => ('0' + x.toString(16)).slice(-2)).join('');
 }
+// Re-render every surface that shows the current user's custom-status
+// bubble so a set/clear reflects instantly. Was referenced by FtzStatus
+// (set / setCustom / clearCustom) but never actually defined — a latent
+// ReferenceError on those paths. Repaints the userbar + any open own
+// profile popover / settings preview + the picker's live bubble.
+function refreshCustomStatusBubble() {
+  try { updateUserbar?.(); } catch (_) {}
+  try {
+    const safe = CSS.escape(CU?.username || '');
+    document.querySelectorAll('.profile-custom-status[data-for="' + safe + '"]').forEach(el => {
+      const wrap = document.createElement('div');
+      wrap.innerHTML = _fppCSBubbleHTML(CU, true);
+      const fresh = wrap.firstElementChild;
+      if (fresh) el.replaceWith(fresh);
+    });
+  } catch (_) {}
+  try { if (document.querySelector('[data-fpp-settings-card]')) updateProfilePreview?.(); } catch (_) {}
+}
+
 function updateProfilePreview() {
   // Live-update the settings triple-preview as the user edits inputs.
   // Touches all three previews (profile card, message bubble, nameplate)
@@ -49535,7 +49604,11 @@ const _FTZ_CS_PLUS_SVG = '<i class="fa-solid fa-plus" style="font-size:11px;"></
 function _fppCSBubbleHTML(u, isOwn) {
   const cs = u.customStatus;
   const uname = escapeHTML(u.username || '');
-  if (cs?.text || cs?.emoji) {
+  // Invisible/offline hides the custom status from OTHERS (your own
+  // view always shows it so you can still edit/clear).
+  const hiddenByStatus = !isOwn && (typeof FtzStatus !== 'undefined')
+    && FtzStatus.visible(u.status || 'offline') === 'offline';
+  if (!hiddenByStatus && (cs?.text || cs?.emoji)) {
     const src = (typeof _csEmojiSrc === 'function')
       ? _csEmojiSrc(cs)
       : (cs.emoji ? emojiToTwemojiUrl(cs.emoji) : '');
@@ -49574,12 +49647,39 @@ function _fppCSBubbleHTML(u, isOwn) {
 // REPLY-TO-STATUS POPUP (ftz-csr) — ground-up rewrite
 // Public API: replyToStatus(username)
 // ══════════════════════════════════════════════════════════════
-function replyToStatus(username) {
+// Reply to someone's custom status → opens the DM and drops a quoted
+// reference to their status into the composer, so the conversation
+// starts with context (Discord-style, but in-thread rather than a
+// separate modal). Falls back gracefully if they cleared it meanwhile.
+async function replyToStatus(username) {
   if (!username) return;
-  FortizedSocial.getUserByName(username).then(u => {
-    if (!u) { toast('Could not find that user.', 'error'); return; }
-    _ftzCsrOpen(u);
-  }).catch(() => toast('Could not load user data.', 'error'));
+  username = String(username).trim().toLowerCase();
+  let u = null;
+  try { u = await FortizedSocial.getUserByName(username); } catch (_) {}
+  if (!u) { toast('Could not find that user.', 'error'); return; }
+  const cs = u.customStatus || {};
+  const csText = (cs.emoji ? cs.emoji + ' ' : '') + (cs.text || '');
+  try { _fppClose?.(); } catch (_) {}
+  try { openDMView(username); } catch (_) { toast('Could not open the DM.', 'error'); return; }
+  // Prefill the composer with a quoted reference to their status (a
+  // markdown blockquote), caret placed after it. No shared reply-bar
+  // state, so it can't collide with the message-reply feature.
+  setTimeout(() => {
+    try {
+      const inp = document.getElementById('dm-input');
+      if (!inp) return;
+      const quote = csText ? '> ' + csText.slice(0, 80) + '\n' : '';
+      if ('value' in inp) inp.value = quote;
+      else inp.textContent = quote;
+      try { autoResize?.(inp); } catch (_) {}
+      inp.focus?.();
+      // Caret to end.
+      try {
+        if (inp.setSelectionRange) inp.setSelectionRange(inp.value.length, inp.value.length);
+        else { const r = document.createRange(); r.selectNodeContents(inp); r.collapse(false); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+      } catch (_) {}
+    } catch (_) {}
+  }, 260);
 }
 
 function _closeStatusReplyModal() {
@@ -50416,6 +50516,54 @@ function _renderOwnProfilePopover(anchorEl) {
   }, 100);
 }
 
+// Second-level duration chooser for a timed status (idle/dnd/invisible).
+// Durations mirror the custom-status set; "Sync with custom status"
+// clears the status exactly when the custom status expires (the reverse
+// Fortized link).
+function _fppStatusPickDuration(evt, statusId) {
+  evt.stopPropagation();
+  document.getElementById('fpp-status-dur-menu')?.remove();
+  const opts = [
+    { id: 'forever', label: 'Until I turn it off' },
+    { id: '1h', label: 'For 1 hour' },
+    { id: '8h', label: 'For 8 hours' },
+    { id: '24h', label: 'For 24 hours' },
+    { id: '3d', label: 'For 3 days' },
+  ];
+  // Offer the sync option only when a custom status with an expiry exists.
+  const csExp = CU?.customStatus?.clearAt ? new Date(CU.customStatus.clearAt).getTime() : 0;
+  const menu = document.createElement('div');
+  menu.id = 'fpp-status-dur-menu';
+  menu.className = 'fpp-menu';
+  menu.style.minWidth = '210px';
+  menu.innerHTML = opts.map(o =>
+    `<div class="fpp-menu__item" onclick="setMyStatus('${statusId}','${o.id}');_fppClose()">${o.label}</div>`
+  ).join('')
+    + (csExp > Date.now() ? `<div class="fpp-menu__divider"></div><div class="fpp-menu__item" onclick="_fppSyncStatusToCS('${statusId}');_fppClose()"><i class="fa-solid fa-link" aria-hidden="true" style="font-size:12px;width:14px;text-align:center;"></i> Sync with custom status</div>` : '');
+  document.body.appendChild(menu);
+  const anchor = evt.currentTarget.getBoundingClientRect();
+  let left = anchor.right + 6, top = anchor.top;
+  if (left + menu.offsetWidth > window.innerWidth - 8) left = anchor.left - menu.offsetWidth - 6;
+  if (top + menu.offsetHeight > window.innerHeight - 8) top = window.innerHeight - menu.offsetHeight - 8;
+  menu.style.left = Math.max(8, left) + 'px';
+  menu.style.top = Math.max(8, top) + 'px';
+  setTimeout(() => {
+    const off = e => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', off); } };
+    document.addEventListener('mousedown', off);
+  }, 50);
+}
+// Set a timed status whose expiry matches the custom status's expiry.
+function _fppSyncStatusToCS(statusId) {
+  const csExp = CU?.customStatus?.clearAt ? new Date(CU.customStatus.clearAt).getTime() : 0;
+  if (!csExp || csExp <= Date.now()) { setMyStatus(statusId); return; }
+  FtzStatus.set(statusId);
+  CU.statusExpiresAt = new Date(csExp).toISOString();
+  if (window._ftzStatusSyncTimer) clearTimeout(window._ftzStatusSyncTimer);
+  window._ftzStatusSyncTimer = setTimeout(() => { try { FtzStatus.set('online'); } catch (_) {} }, csExp - Date.now());
+  try { saveUser(true); } catch (_) {}
+  toast('Status synced to your custom status', 'success');
+}
+
 function _fppShowStatusSubmenu(evt) {
   evt.stopPropagation();
   document.getElementById('fpp-status-submenu')?.remove();
@@ -50433,19 +50581,25 @@ function _fppShowStatusSubmenu(evt) {
   const sub = document.createElement('div');
   sub.id = 'fpp-status-submenu';
   sub.className = 'fpp-menu';
-  sub.style.minWidth = '260px';
-  sub.innerHTML = STATUS_OPTS.map(o => `
-    <div class="fpp-menu__item" style="align-items:flex-start;padding:9px 10px;" onclick="setMyStatus('${o.id}');_fppClose()">
+  sub.style.minWidth = '270px';
+  // online applies instantly; idle/dnd/invisible are "timed" — clicking
+  // them opens a duration chooser (For how long?) inline.
+  sub.innerHTML = STATUS_OPTS.map(o => {
+    const timed = o.id !== 'online';
+    const onClick = timed ? `_fppStatusPickDuration(event,'${o.id}')` : `setMyStatus('${o.id}');_fppClose()`;
+    return `
+    <div class="fpp-menu__item" style="align-items:flex-start;padding:9px 10px;" onclick="${onClick}">
       <span style="flex-shrink:0;display:inline-flex;align-items:center;margin-top:2px;">${FtzStatus.dotSvg(o.id, 16)}</span>
       <div style="flex:1;min-width:0;">
         <div style="font-weight:${cur===o.id?'700':'500'};color:${cur===o.id?'var(--text)':'var(--muted-light)'};">${o.label}</div>
         ${o.desc ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">${o.desc}</div>` : ''}
       </div>
-      ${cur===o.id?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fpp-main, var(--accent))" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px;"><polyline points="20 6 9 17 4 12"/></svg>':''}
-    </div>`).join('') + `
+      ${cur===o.id?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fpp-main, var(--accent))" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px;"><polyline points="20 6 9 17 4 12"/></svg>' : (timed ? '<i class="fa-solid fa-chevron-right" style="font-size:10px;color:var(--muted);flex-shrink:0;margin-top:4px;" aria-hidden="true"></i>' : '')}
+    </div>`;
+  }).join('') + `
     <div class="fpp-menu__divider"></div>
     <div class="fpp-menu__item" onclick="openStatusPicker();_fppClose()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <i class="fa-solid fa-face-smile" aria-hidden="true" style="font-size:14px;width:14px;text-align:center;"></i>
       ${CU?.customStatus?.text ? 'Edit Custom Status' : 'Set Custom Status'}
     </div>`;
   document.body.appendChild(sub);

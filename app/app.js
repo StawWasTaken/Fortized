@@ -2028,19 +2028,30 @@ async function refreshCU() {
         // real new value it still wins because the isEmpty check fails.
         'pfp','pfpCrop','banner','bio','displayName','activeDecoration',
       ];
-      // DB is source of truth — don't block fresh values with a
-      // recent-edit guard. Previously a 10-second window prevented
-      // cross-device updates from showing.
-      // Stricter protection for super-admins: also rescue from "DB returned
-      // empty/falsy" cases (covers migration races and badge-vs-write conflicts).
-      if (SUPER_ADMINS.includes((fresh.username || '').toLowerCase())) {
-        for (const k of protectFields) {
-          const nv = fresh[k], lv = CU[k];
-          const isEmpty = nv == null
-            || (Array.isArray(nv) && nv.length === 0 && Array.isArray(lv) && lv.length > 0)
-            || (typeof nv === 'string' && nv === '' && typeof lv === 'string' && lv !== '')
-            || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && lv && typeof lv === 'object' && Object.keys(lv).length > 0);
-          if (isEmpty && lv != null) fresh[k] = lv;
+      // Empty-rescue for EVERYONE (was super-admin-only — THE avatar bug):
+      // a refreshCU firing right after a save often reads a Supabase
+      // replica that hasn't caught up, so fresh.pfp/banner/etc come back
+      // empty and used to overwrite the just-saved value IN MEMORY, "a
+      // bit after save", on every normal account. A blank/empty fresh
+      // value never replaces a populated local one.
+      for (const k of protectFields) {
+        const nv = fresh[k], lv = CU[k];
+        const isEmpty = nv == null
+          || (Array.isArray(nv) && nv.length === 0 && Array.isArray(lv) && lv.length > 0)
+          || (typeof nv === 'string' && nv === '' && typeof lv === 'string' && lv !== '')
+          || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && lv && typeof lv === 'object' && Object.keys(lv).length > 0);
+        if (isEmpty && lv != null) fresh[k] = lv;
+      }
+      // Recent-edit guard for cosmetic identity fields: within ~90s of
+      // editing one, keep the LOCAL value even over a NON-empty fresh
+      // read — covers the replica returning the PREVIOUS avatar (not
+      // just an empty one) in the moments after a change. A genuine
+      // cross-device edit lands after the window and wins normally.
+      const _recentEdits = window._recentlyEditedFields || {};
+      const _now = Date.now();
+      for (const k of ['pfp','pfpCrop','banner','bio','displayName','customStatus','activeDecoration','pronouns','displayFont','displayEffect','displayColor','displayColor2','profileTheme']) {
+        if (_recentEdits[k] && (_now - _recentEdits[k]) < 90000 && k in CU && CU[k] != null) {
+          fresh[k] = CU[k];
         }
       }
 

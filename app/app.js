@@ -306,14 +306,28 @@ function rememberProfile(u) {
   if (!u || !u.username) return;
   const entry = _profileCache[u.username] || {};
   let dirty = false;
-  if (u.pfp && entry.pfp !== u.pfp) { entry.pfp = u.pfp; dirty = true; }
+  // Cache hygiene: a KNOWN-blank avatar never enters the persisted
+  // profile cache (and evicts any stale copy already in there). This
+  // cache outlives DB cleanups — it's why some surfaces kept painting
+  // transparent avatars after the rows were healed.
+  let pfpOk = !!u.pfp;
+  if (pfpOk && typeof _pfpProbeable === 'function' && _pfpProbeable(u.pfp)) {
+    const known = _blankPfpKnown.get(_pfpFingerprint(u.pfp));
+    if (known === true) {
+      pfpOk = false;
+      if (entry.pfp === u.pfp) { delete entry.pfp; delete _pfpCache[u.username]; dirty = true; }
+    } else if (known === undefined) {
+      try { _probeBlankPfp(u.pfp); } catch (_) {}
+    }
+  }
+  if (pfpOk && entry.pfp !== u.pfp) { entry.pfp = u.pfp; dirty = true; }
   if (u.displayName && entry.displayName !== u.displayName) { entry.displayName = u.displayName; dirty = true; }
   if (u.status && entry.status !== u.status) { entry.status = u.status; dirty = true; }
   if (dirty) {
     entry._ts = Date.now();
     _profileCache[u.username] = entry;
     _persistProfileCache();
-    if (u.pfp) _pfpCache[u.username] = u.pfp;
+    if (pfpOk && u.pfp) _pfpCache[u.username] = u.pfp;
   }
 }
 function cachedProfile(username) {
@@ -355,8 +369,43 @@ function _persistFullProfileCache() {
 function rememberFullProfile(u) {
   if (!u || !u.username) return;
   const key = String(u.username).toLowerCase();
-  _fullProfileCache[key] = { ...u, _cachedAt: Date.now() };
+  const rec = { ...u, _cachedAt: Date.now() };
+  // Same hygiene as rememberProfile: known-blank avatars don't get to
+  // live in a persisted cache.
+  try {
+    if (rec.pfp && typeof _pfpProbeable === 'function' && _pfpProbeable(rec.pfp)) {
+      const known = _blankPfpKnown.get(_pfpFingerprint(rec.pfp));
+      if (known === true) delete rec.pfp;
+      else if (known === undefined) _probeBlankPfp(rec.pfp);
+    }
+  } catch (_) {}
+  _fullProfileCache[key] = rec;
   _persistFullProfileCache();
+}
+
+// One-shot repair of the persisted avatar caches. The profile caches
+// live in localStorage and OUTLIVE every DB cleanup — after the rows
+// were healed, chat rows / sidebars / reply chips kept painting the old
+// corrupt bytes from here, which is exactly the "fixed in some places,
+// still transparent in others" split. Strips every cached avatar image
+// once (cheap: entries refill from light fetches as views render) so a
+// plain refresh brings every account's real avatar back.
+function _purgePoisonedAvatarCaches() {
+  try {
+    if (localStorage.getItem('ftz_avcache_fix_v1')) return;
+    let n = 0;
+    for (const k of Object.keys(_profileCache)) {
+      if (_profileCache[k] && _profileCache[k].pfp) { delete _profileCache[k].pfp; n++; }
+    }
+    for (const k of Object.keys(_pfpCache)) { delete _pfpCache[k]; }
+    for (const k of Object.keys(_fullProfileCache)) {
+      if (_fullProfileCache[k] && _fullProfileCache[k].pfp) { delete _fullProfileCache[k].pfp; n++; }
+    }
+    _persistProfileCache();
+    _persistFullProfileCache();
+    localStorage.setItem('ftz_avcache_fix_v1', '1');
+    if (n) console.info('[boot] one-shot avatar cache purge: dropped', n, 'cached avatar images (will refetch fresh)');
+  } catch (_) {}
 }
 function getFullCachedProfile(username) {
   if (!username) return null;
@@ -4904,12 +4953,35 @@ function _probeBlankPfp(pfp) {
       _blankPfpProbing.delete(fp);
       _blankPfpKnown.set(fp, blank);
       if (blank) {
-        console.warn('[avatar] fully-transparent avatar detected (' + pfp.length + ' chars) — rendering initial fallback');
-        // Already-painted instances: fire their existing onerror fallback,
-        // which swaps in the initial-letter span.
+        console.warn('[avatar] fully-transparent avatar detected (' + pfp.length + ' chars) — evicting from caches + refetching owner');
+        // Immediate: painted instances fall back to the initial letter.
         document.querySelectorAll('img[data-ftz-pfp-fp="' + fp + '"]').forEach(el => {
           try { el.dispatchEvent(new Event('error')); } catch (_) {}
         });
+        // Evict the corrupt bytes from every persisted cache and refetch
+        // the owners' CURRENT avatar — if they re-uploaded, the real
+        // image comes back without waiting for a new session.
+        const owners = [];
+        try {
+          for (const [k, v] of Object.entries(_profileCache)) {
+            if (v && v.pfp === pfp) { delete v.pfp; owners.push(k); }
+          }
+          for (const k of Object.keys(_pfpCache)) { if (_pfpCache[k] === pfp) delete _pfpCache[k]; }
+          for (const [k, v] of Object.entries(_fullProfileCache)) {
+            if (v && v.pfp === pfp) delete v.pfp;
+          }
+          _persistProfileCache(); _persistFullProfileCache();
+        } catch (_) {}
+        if (owners.length && typeof FortizedSocial !== 'undefined') {
+          try {
+            FortizedSocial.getUsersByNames(owners).then(users => {
+              (users || []).forEach(u => {
+                if (!u || !u.pfp || u.pfp === pfp) return;
+                try { rememberProfile(u); } catch (_) {}
+              });
+            }).catch(() => {});
+          } catch (_) {}
+        }
       }
     });
   } catch (_) {}
@@ -13976,6 +14048,9 @@ function initFortizedUXResilience() {
   // Reclaim quota from the retired ftz_pfp_/ftz_banner_/ftz_bio_ keys —
   // they held second copies of megabyte data-URLs that nothing read.
   _purgeDeadLocalKeys();
+  // Drop poisoned avatar images from the persisted profile caches (one
+  // shot) so this refresh repaints every account from fresh data.
+  _purgePoisonedAvatarCaches();
 
   // CRITICAL: Always fetch fresh user data from database on page load
   // This ensures PFP changes, messages, and friends sync properly across sessions
@@ -14004,8 +14079,12 @@ function initFortizedUXResilience() {
     // with a short backoff between attempts. Worst case is bounded by
     // FETCH_ATTEMPTS * (FETCH_TIMEOUT_MS + FETCH_BACKOFF_MS) so the
     // 20s loader safety timer above always has time to spare.
-    const FETCH_ATTEMPTS = 1;
-    const FETCH_TIMEOUT_MS = 6000;
+    // 2 × 8s (+1.2s backoff) = worst case 17.2s, safely inside the 20s
+    // loader guard. One 6s attempt was too twitchy for a Supabase that's
+    // being throttled over its plan — a single slow response triggered
+    // the auto-refresh, which users experienced as boot reload loops.
+    const FETCH_ATTEMPTS = 2;
+    const FETCH_TIMEOUT_MS = 8000;
     const FETCH_BACKOFF_MS = 1200;
     let _fetchErr = null;
     for (let attempt = 0; attempt < FETCH_ATTEMPTS && !CU?.username; attempt++) {
@@ -14881,8 +14960,11 @@ function initFortizedUXResilience() {
         }
 
         // ── UPDATE PFP EVERYWHERE ──
+        // rememberProfile gates blank avatars itself; the direct
+        // _pfpCache write gets the same guard so a stale client's
+        // broadcast can't re-poison the persisted cache.
         rememberProfile({ username: data.username, pfp: data.pfp, displayName: data.displayName, status: data.status });
-        if (data.pfp) {
+        if (data.pfp && !(typeof _pfpProbeable === 'function' && _pfpProbeable(data.pfp) && _blankPfpKnown.get(_pfpFingerprint(data.pfp)) === true)) {
           _pfpCache[data.username] = data.pfp;
           _persistPfpCache();
           const _upCrop = data.pfpCrop || _pfpCropCache[data.username] || null;
@@ -24154,7 +24236,9 @@ async function buildNotifList() {
   const list=document.getElementById('np-list-v2')||document.getElementById('np-list'); if(!list) return;
   try {
   let notifs=[];
-  try{notifs=await FortizedSocial.getNotifications(CU.username)||[];}catch(e){_wrn('[inbox] notif fetch:',e);}
+  // Opening the panel is a deliberate "show me what's new" — bypass the
+  // 5-minute cache so it can never show stale items (the rows are tiny).
+  try{notifs=await FortizedSocial.getNotifications(CU.username,{noCache:true})||[];}catch(e){_wrn('[inbox] notif fetch:',e);}
   // Robust normalization — handle all possible Firebase return types
   if (!Array.isArray(notifs)) {
     if (notifs && typeof notifs === 'object') notifs = Object.values(notifs);
@@ -24188,22 +24272,27 @@ async function buildNotifList() {
 
   if(!notifs.length){
     list.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;">'
-      +'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>'
+      +'<i class="fa-solid fa-bell-slash" style="font-size:28px;color:rgba(255,255,255,.15);" aria-hidden="true"></i>'
       +'<div style="font-size:13px;color:var(--muted);text-align:center;">'+_t('notif.empty.title')+'<br><span style="font-size:11.5px;opacity:.6;">'+_t('notif.empty.body')+'</span></div></div>';
     return;
   }
-  const svgs = {
-    friend_request:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
-    friend_accept: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>',
-    dm:            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
-    mention:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.92 7.94"/></svg>',
-    bastion:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
-    call:          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 012 1.18a2 2 0 012-2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 6.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>',
-    support_ticket:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  // Per-type Font Awesome glyphs — one family for the whole inbox.
+  const faIcons = {
+    friend_request: 'fa-user-plus',
+    friend_accept:  'fa-user-check',
+    dm:             'fa-message',
+    mention:        'fa-at',
+    bastion:        'fa-chess-rook',
+    call:           'fa-phone',
+    support_ticket: 'fa-file-lines',
+    trade_offer:    'fa-right-left',
+    trade_accepted: 'fa-right-left',
+    trade_declined: 'fa-right-left',
   };
   const colors = {
     friend_request:'#60a5fa', friend_accept:'#3ecf6e', dm:'#a78bfa',
     mention:'#ffd93e', bastion:'var(--accent)', call:'#3ecf6e', support_ticket:'#38bdf8',
+    trade_offer:'#f472b6', trade_accepted:'#3ecf6e', trade_declined:'#f87171',
   };
   // Pre-fetch user pfps for notifications that have a 'from' user
   const _notifUsers = {};
@@ -24212,9 +24301,26 @@ async function buildNotifList() {
     try { const u = await FortizedSocial.getUserByName(uname); if (u) _notifUsers[uname] = u; } catch (e) { _dbg('[Notif] user lookup failed', e); }
   }));
 
+  // Day grouping (Discord-inbox style): Today / Yesterday / This Week /
+  // Earlier. Computed once per item from local midnight.
+  const _dayStart = new Date(); _dayStart.setHours(0, 0, 0, 0);
+  const _todayMs = _dayStart.getTime();
+  const _groupOf = t => {
+    const ms = new Date(t || 0).getTime();
+    if (ms >= _todayMs) return 'Today';
+    if (ms >= _todayMs - 86400000) return 'Yesterday';
+    if (ms >= _todayMs - 6 * 86400000) return 'This Week';
+    return 'Earlier';
+  };
+  let _lastGroup = null;
   list.innerHTML = notifs.slice(0,25).map(n => {
-    const svg = svgs[n.type] || svgs.bastion;
+    const fa = faIcons[n.type] || 'fa-bell';
     const col = colors[n.type] || 'var(--accent)';
+    const group = _groupOf(n.time);
+    const groupHTML = group !== _lastGroup
+      ? '<div class="np-group-label">' + group + '</div>'
+      : '';
+    _lastGroup = group;
     let text='';
     if(n.type==='friend_request') text='<strong>'+escapeHTML(n.from||'')+'</strong> sent you a friend request';
     else if(n.type==='friend_accept') text='<strong>'+escapeHTML(n.from||'')+'</strong> accepted your request — you are now friends!';
@@ -24254,18 +24360,24 @@ async function buildNotifList() {
     // Use user's actual profile picture for personal notifications
     const _nu = _notifUsers[n.from];
     const useAvatar = n.from && n.type !== 'support_ticket' && _nu;
+    // Avatar rows get a small type-glyph badge on the corner (Guilded
+    // style) so the notification kind reads at a glance even with a pfp.
     const iconHtml = useAvatar
-      ? '<div class="np-icon" style="padding:0;border:none;background:none;overflow:hidden;">'+buildAvatarHTML(_nu.pfp||null, _nu.displayName||n.from, 36)+'</div>'
-      : '<div class="np-icon" style="color:'+col+';background:'+col+'1a;border-color:'+col+'33;">'+svg+'</div>';
+      ? '<div class="np-icon np-icon--avatar">'+buildAvatarHTML(_nu.pfp||null, _nu.displayName||n.from, 36)
+        +'<span class="np-icon-badge" style="color:'+col+';"><i class="fa-solid '+fa+'" aria-hidden="true"></i></span></div>'
+      : '<div class="np-icon" style="color:'+col+';background:'+col+'1a;border-color:'+col+'33;"><i class="fa-solid '+fa+'" aria-hidden="true"></i></div>';
     const clickAction = n.type==='dm' ? "FortizedSocial.markNotificationReadBySource(CU.username,'dm','"+escapeHTML(n.from||'')+"').then(()=>updateNotifBadge()).catch(()=>{});openDMChat('"+escapeHTML(n.from||'')+"');toggleNotifPanel()"
       : (n.type==='friend_request'||n.type==='friend_accept') ? "FortizedSocial.markNotificationReadBySource(CU.username,'"+n.type+"','"+escapeHTML(n.from||'')+"').then(()=>updateNotifBadge()).catch(()=>{});viewUserProfile('"+escapeHTML(n.from||'')+"');toggleNotifPanel()"
       : (n.type==='mention') ? "FortizedSocial.markNotificationReadBySource(CU.username,'mention','"+escapeHTML(n.from||'')+"').then(()=>updateNotifBadge()).catch(()=>{});toggleNotifPanel()"
       : (n.type==='call') ? "FortizedSocial.markNotificationReadBySource(CU.username,'call','"+escapeHTML(n.from||'')+"').then(()=>updateNotifBadge()).catch(()=>{});toggleNotifPanel()"
       : '';
-    return '<div class="np-item '+(n.read?'':'unread')+'" onclick="'+clickAction+'" style="cursor:'+(clickAction?'pointer':'default')+';">'
+    return groupHTML
+      +'<div class="np-item '+(n.read?'':'unread')+'" onclick="'+clickAction+'" style="cursor:'+(clickAction?'pointer':'default')+';">'
       +iconHtml
       +'<div class="np-text"><p>'+text+'</p>'
-      +'<div class="np-time">'+timeAgoHTML(n.time||'')+'</div>'+actions+'</div></div>';
+      +'<div class="np-time">'+timeAgoHTML(n.time||'')+'</div>'+actions+'</div>'
+      +(n.read?'':'<span class="np-unread-dot" title="Unread"></span>')
+      +'</div>';
   }).join('');
   } catch(err) {
     console.error('[inbox] buildNotifList error:', err);

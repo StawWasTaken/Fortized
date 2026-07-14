@@ -52,16 +52,21 @@ AND    length(pfp) < 12000;
 -- (pfp = '') stay allowed — the in-app "Remove avatar" and the client-
 -- side heal both use them.
 --
--- Trade-off, documented on purpose: a genuine sub-12 KB PNG avatar
--- (a tiny flat-color icon) would be silently kept out by this rule.
--- New client uploads are webp, so legitimate uploads never hit it.
+-- Threshold history: first shipped at <12000, which ALSO caught some
+-- legitimately-tiny PNG avatars — the user saved, saw the avatar
+-- locally, then the next refresh "removed" it because the row silently
+-- kept the old value. Now <6000 (the blank 480×480 export is ~2-4 KB
+-- as a data URL; real avatars above 6 KB pass), and the client does a
+-- read-back after save so any rejection is reported immediately
+-- instead of vanishing later. RE-RUN this block if you applied the old
+-- version — CREATE OR REPLACE updates it in place.
 -- To retire the guard later: DROP TRIGGER trg_users_reject_blank_pfp ON users;
 CREATE OR REPLACE FUNCTION ftz_reject_blank_pfp()
 RETURNS trigger AS $$
 BEGIN
   IF NEW.pfp IS NOT NULL
      AND NEW.pfp LIKE 'data:image/png%'
-     AND length(NEW.pfp) < 12000
+     AND length(NEW.pfp) < 6000
      AND NEW.pfp IS DISTINCT FROM OLD.pfp THEN
     RAISE NOTICE 'ftz_reject_blank_pfp: refused blank-signature avatar for % (% chars)', NEW.username, length(NEW.pfp);
     NEW.pfp := OLD.pfp;   -- keep whatever the row already had

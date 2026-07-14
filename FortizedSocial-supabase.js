@@ -716,6 +716,7 @@ const FortizedSocial = (() => {
     notif.read = false;
     _cacheDel('notifs:' + norm(toUsername));
     _cacheDel('unread:' + norm(toUsername));
+    _cacheDel('unreadSum:' + norm(toUsername));
     try {
       const { error } = await sb.from('notifications').insert({
         id: notif.id,
@@ -740,6 +741,7 @@ const FortizedSocial = (() => {
     username = norm(username);
     _cacheDel('notifs:' + username);
     _cacheDel('unread:' + username);
+    _cacheDel('unreadSum:' + username);
     try {
       const { error } = await sb.from('notifications').update({ read: true }).eq('username', username);
       if (error) {
@@ -755,6 +757,7 @@ const FortizedSocial = (() => {
   async function markNotificationReadBySource(username, type, from) {
     _cacheDel('notifs:' + norm(username));
     _cacheDel('unread:' + norm(username));
+    _cacheDel('unreadSum:' + norm(username));
     let q = sb.from('notifications').update({ read: true }).eq('username', norm(username)).eq('read', false);
     if (type) q = q.eq('type', type);
     if (from) q = q.eq('from', norm(from));
@@ -771,6 +774,58 @@ const FortizedSocial = (() => {
     const result = count || 0;
     _cacheSet(cacheKey, result, _CACHE_TTL.unreadCount);
     return result;
+  }
+
+  // Direct-mention notification: called by the app's send paths when a
+  // message contains @usernames. Light checks only (existence + "did
+  // they block the sender" via the 5-column relationship fetch), capped
+  // by the caller. Never notifies the sender about themselves.
+  async function notifyMention(fromUsername, toUsername, data) {
+    const from = norm(fromUsername), to = norm(toUsername);
+    if (!from || !to || from === to) return { ok: false };
+    try {
+      const target = await _fetchRelRow(to);
+      if (!target) return { ok: false };                      // no such account
+      if (_hasU(target.blockedUsers, from)) return { ok: false }; // they blocked the sender — stay silent
+      await addNotification(to, { type: 'mention', from, data: data || {} });
+      try { socketEmit('notification:new', { username: to, type: 'mention', from }); } catch (_) {}
+      return { ok: true };
+    } catch (_) { return { ok: false }; }
+  }
+
+  // Unread breakdown in ONE light query: total unread + how many are
+  // direct mentions. Drives the Discord-style topbar badge (white dot =
+  // "something unread", white 1-9+ = unread mentions).
+  async function getUnreadSummary(username, opts) {
+    const cacheKey = 'unreadSum:' + norm(username);
+    if (!opts?.noCache) {
+      const cached = _cacheGet(cacheKey);
+      if (cached !== undefined) return cached;
+    }
+    let result = { total: 0, mentions: 0 };
+    try {
+      const { data } = await sb.from('notifications').select('type')
+        .eq('username', norm(username)).eq('read', false).limit(100);
+      const rows = data || [];
+      result = { total: rows.length, mentions: rows.filter(r => r.type === 'mention').length };
+    } catch (_) {}
+    _cacheSet(cacheKey, result, _CACHE_TTL.unreadCount);
+    return result;
+  }
+
+  // Read back a single column's stored length — the settings flow uses
+  // this to VERIFY an avatar actually landed (a DB-side guard trigger
+  // can silently keep the old value; without a read-back the client
+  // shows the new image until the next refresh "removes" it).
+  async function getStoredFieldLength(username, col) {
+    const allowed = { pfp: 'pfp', banner: 'banner' };
+    const c = allowed[col];
+    if (!c) return null;
+    try {
+      const { data } = await sb.from('users').select(c).eq('username', norm(username)).maybeSingle();
+      if (!data) return null;
+      return (data[c] || '').length;
+    } catch (_) { return null; }
   }
 
   // Retention: the notifications table only ever grew — every insert
@@ -2820,7 +2875,7 @@ const FortizedSocial = (() => {
     getUsersByNames,
     getUserByName, getUserByPublicId, resolveUsername, getUserPublicId, ensureUserPublicId, getDMKey, saveUserObject, saveActiveDecoration, deleteAccount, invalidateUserCache,
     getStatus, setStatus,
-    getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount, pruneNotifications,
+    getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount, getUnreadSummary, pruneNotifications, getStoredFieldLength, notifyMention,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, cancelFriendRequest, removeFriend, syncRelationship,
     getDMMessages, sendDMMessage, editMessage, deleteMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,

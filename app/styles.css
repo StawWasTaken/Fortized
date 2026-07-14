@@ -499,32 +499,28 @@ body.is-desktop-app .topbar{padding-right:0;}
 .onyx-pill img{width:14px;height:14px;object-fit:contain;}
 /* ═══ Topbar wallet capsules (onyx + streak) — gamescard aesthetic ═══ */
 .tb-wallet{display:flex;align-items:center;gap:8px;}
-/* Icon + amount only, per the Discord-orb / Robux reference. Regular
-   bold (700) value — was 800 extra-bold with a text label. */
-.tb-cap{position:relative;display:flex;align-items:center;gap:7px;padding:6px 12px 6px 10px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.03) 0%,rgba(255,255,255,.01) 100%);border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:border-color .18s cubic-bezier(.22,1,.36,1),transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s cubic-bezier(.22,1,.36,1);white-space:nowrap;overflow:hidden;}
-.tb-cap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0,rgba(255,255,255,.14) 50%,transparent 100%);pointer-events:none;}
+/* Icon + amount only, NO capsule (user spec): quiet monochrome that
+   matches the inbox button (#b3b2b4), including the icons — the onyx
+   PNG renders through a CSS mask so even the image takes the colour.
+   Hover brightens to white like the inbox button. */
+.tb-cap{position:relative;display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:10px;background:none;border:none;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;color:#b3b2b4;}
+.tb-cap:hover{background:rgba(255,255,255,.06);color:#fff;}
 /* Icon holder — no box, no border. Just a flex cell that sizes the icon. */
-.tb-cap-ic{display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:0;}
-.tb-cap-ic svg,.tb-cap-ic img{width:16px;height:16px;object-fit:contain;display:block;}
-.tb-cap-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1;}
+.tb-cap-ic{display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:0;color:inherit;}
+.tb-cap-ic svg{width:15px;height:15px;display:block;}
+/* Onyx PNG → monochrome via mask: the image becomes a silhouette filled
+   with currentColor, so it always matches the inbox icon exactly. */
+.tb-cap--onyx .tb-cap-ic{width:15px;height:15px;background-color:currentColor;-webkit-mask:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png') center/contain no-repeat;mask:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png') center/contain no-repeat;}
+.tb-cap--onyx .tb-cap-ic img{display:none;}
+.tb-cap-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1;color:inherit;}
 .tb-cap-lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.35);letter-spacing:.02em;line-height:1;}
-/* Onyx capsule — yellow accent */
-.tb-cap--onyx .tb-cap-val{color:#fff93e;}
-.tb-cap--onyx:hover{border-color:rgba(255,249,62,.3);transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,249,62,.08),inset 0 1px 0 rgba(255,249,62,.08);}
-.tb-cap--onyx:hover::before{background:linear-gradient(90deg,transparent 0,rgba(255,249,62,.4) 50%,transparent 100%);}
-/* Streak capsule — flame accent. Icon color inherits from capsule state. */
-.tb-cap--streak .tb-cap-ic{color:#ff8a3e;filter:drop-shadow(0 0 4px rgba(255,138,62,.35));}
-.tb-cap--streak .tb-cap-val{color:#ff9d5e;}
-.tb-cap--streak:hover{border-color:rgba(255,138,62,.32);transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,138,62,.09),inset 0 1px 0 rgba(255,138,62,.08);}
-.tb-cap--streak:hover::before{background:linear-gradient(90deg,transparent 0,rgba(255,138,62,.4) 50%,transparent 100%);}
+.tb-cap--streak .tb-cap-ic{color:inherit;filter:none;}
+.tb-cap--streak .tb-cap-val{color:inherit;}
 .tb-cap--streak.is-zero{opacity:.55;}
-.tb-cap--streak.is-zero .tb-cap-val{color:rgba(255,255,255,.35);}
-.tb-cap--streak.is-zero .tb-cap-ic{color:rgba(255,255,255,.25);filter:none;}
 /* Shield overlay when protected */
 .tb-streak-shield{position:absolute;top:-3px;right:-3px;width:14px;height:14px;display:flex;align-items:center;justify-content:center;background:#0c0f1a;border-radius:50%;border:1.5px solid rgba(74,144,245,.5);color:#4a90f5;}
-.tb-cap--streak.is-protected{border-color:rgba(74,144,245,.22);}
-.tb-cap--streak.is-protected .tb-cap-val{color:#7eb8f7;}
-.tb-cap--streak.is-protected .tb-cap-ic{color:#7eb8f7;filter:drop-shadow(0 0 4px rgba(74,144,245,.35));}
+/* protected state: the little shield badge is the only signal — the
+   text/icon stay monochrome like everything else on the topbar */
 /* Legacy .tb-onyx-pill selector retained for backwards-compat with any
    remaining references; visually equivalent to the new onyx capsule. */
 .tb-onyx-pill{display:flex;align-items:center;gap:9px;padding:6px 14px 6px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,249,62,.15);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);white-space:nowrap;}
@@ -9745,6 +9741,42 @@ button[style*="background: var(--accent)"]:active {
 .report-submit-btn{flex:1;background:var(--red);color:#fff;border:none;border-radius:12px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:12px;cursor:pointer;letter-spacing:.02em;transition:filter .12s,transform .08s;}
 .report-submit-btn:hover{filter:brightness(1.08);}
 .report-submit-btn:active{transform:scale(.985);}
+
+/* ── Room-topbar action cluster (per-DM/GC/channel buttons) ── */
+.rt-actions{margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.rt-act-btn{background:none;border:none;color:#b3b2b4;cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .13s,color .13s;}
+.rt-act-btn:hover{background:rgba(255,255,255,.07);color:#fff;}
+.rt-act-btn .fa-solid{font-size:13px;line-height:1;}
+
+/* ── Add Friend modal (afr) — 2026 card language, FA icons, 3D send ── */
+.afr-head{display:flex;align-items:flex-start;gap:14px;padding:26px 26px 14px;position:relative;}
+.afr-head__icon{width:44px;height:44px;border-radius:13px;background:var(--accent-dim,rgba(255,249,62,.09));border:1px solid var(--accent-mid,rgba(255,249,62,.22));display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;}
+.afr-head__icon .fa-solid{font-size:17px;line-height:1;}
+.afr-head__text{flex:1;min-width:0;padding-right:96px;}
+.afr-head__title{font-family:var(--font-display);font-size:21px;font-weight:900;color:#fff;letter-spacing:-.01em;line-height:1.1;}
+.afr-head__sub{font-size:12.5px;color:var(--muted-light);margin-top:4px;line-height:1.4;}
+.afr-head__mascot{position:absolute;right:18px;top:-26px;width:104px;height:104px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35));pointer-events:none;}
+.afr-input-zone{padding:0 26px 20px;}
+.afr-input-row{display:flex;align-items:center;gap:8px;padding:5px 5px 5px 14px;border-radius:14px;background:var(--panel);border:1.5px solid var(--border);transition:border-color .15s,box-shadow .15s;}
+.afr-input-row:focus-within{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.07);}
+.afr-input-at{font-size:13px;color:var(--muted);flex-shrink:0;}
+.afr-input-row input{flex:1;padding:10px 4px;background:transparent;border:none!important;box-shadow:none!important;color:#fff;font-size:13.5px;outline:none;margin:0;min-width:0;}
+.afr-send-btn{padding:10px 16px!important;border-radius:10px!important;font-size:12px!important;white-space:nowrap;flex-shrink:0;gap:7px!important;}
+.afr-send-btn .fa-solid{font-size:11px;line-height:1;}
+.afr-places{padding:16px 26px 24px;border-top:1px solid var(--border);}
+.afr-places__title{font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;}
+.afr-places__sub{font-size:11.5px;color:var(--muted-light);margin-bottom:12px;line-height:1.4;}
+.afr-places__grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:520px){.afr-places__grid{grid-template-columns:1fr;}}
+.afr-place{display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:12px;border:2px solid var(--ink);background:var(--panel);box-shadow:0 3px 0 0 var(--ink);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,background .15s;}
+.afr-place:hover{transform:translateY(-1px);box-shadow:0 4px 0 0 var(--ink);background:rgba(255,249,62,.04);}
+.afr-place:active{transform:translateY(1px);box-shadow:0 2px 0 0 var(--ink);}
+.afr-place__icon{width:32px;height:32px;border-radius:9px;background:var(--accent-dim,rgba(255,249,62,.09));display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent);}
+.afr-place__icon .fa-solid{font-size:14px;line-height:1;}
+.afr-place__body{flex:1;min-width:0;}
+.afr-place__name{font-family:var(--font-display);font-size:12.5px;font-weight:800;color:#fff;line-height:1.2;}
+.afr-place__desc{font-size:10.5px;color:var(--muted-light);line-height:1.3;margin-top:2px;}
+.afr-place__go{font-size:10px;color:var(--muted);flex-shrink:0;}
 
 /* ── Game picker item ── */
 .game-picker-item {

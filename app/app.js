@@ -61,7 +61,10 @@ const _svgIcons = {
 };
 
 const _FPP_MOON_SVG     = '<svg viewBox="0 0 512 512" fill="currentColor" style="width:1em;height:1em;"><path d="M256 0C114.6 0 0 114.6 0 256S114.6 512 256 512c68.8 0 131.3-27.2 177.3-71.4 7.3-7 9.4-17.9 5.3-27.1s-13.7-14.9-23.8-14.1c-4.9 .4-9.8 .6-14.8 .6-101.6 0-184-82.4-184-184 0-72.1 41.5-134.6 102.1-164.8 9.1-4.5 14.3-14.3 13.1-24.4S322.6 8.5 312.7 6.3C294.4 2.2 275.4 0 256 0z"/></svg>';
-const _FPP_MUTUAL_SVG   = '<svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;vertical-align:-2px;margin-right:6px;"><path d="M64 128a112 112 0 1 1 224 0 112 112 0 1 1 -224 0zM0 464c0-97.2 78.8-176 176-176s176 78.8 176 176l0 6c0 23.2-18.8 42-42 42L42 512c-23.2 0-42-18.8-42-42l0-6zM432 64a96 96 0 1 1 0 192 96 96 0 1 1 0-192zm0 240c79.5 0 144 64.5 144 144l0 22.4c0 23-18.6 41.6-41.6 41.6l-144.8 0c6.6-12.5 10.4-26.8 10.4-42l0-6c0-51.5-17.4-98.9-46.5-136.7 22.6-14.7 49.6-23.3 78.5-23.3z"/></svg>';
+// Same Font Awesome glyph as the friends surfaces (fa-user-group) so
+// "friends" reads as one icon everywhere — DM right panel, profile
+// card tabs, mutual friends sections.
+const _FPP_MUTUAL_SVG   = '<i class="fa-solid fa-user-group" aria-hidden="true" style="font-size:1em;vertical-align:-1px;margin-right:6px;"></i>';
 const _FPP_ACTIVITY_SVG = '<svg viewBox="0 0 48 48" fill="currentColor" style="width:1em;height:1em;"><path d="M45.2906 23.0038c-1.9884 -8.9896 -4.9808 -13.78764 -9.4198 -15.09825 -0.9331 -0.2737 -1.9011 -0.41044 -2.8734 -0.40593 -1.2853 0 -2.4047 0.31312 -3.5888 0.64499 -1.4268 0.40031 -3.0477 0.85499 -5.4111 0.85499 -2.3634 0 -3.9853 -0.45374 -5.415 -0.85405 -1.1849 -0.33281 -2.3034 -0.64593 -3.5849 -0.64593 -1.0056 -0.00349 -2.0067 0.13281 -2.9747 0.40499C7.60736 9.2096 4.61677 14.0058 2.5993 22.9981 0.42995 32.6749 1.49775 38.7845 5.59364 40.202c0.56144 0.1979 1.15217 0.3 1.74747 0.3018 2.80589 0 5.05589 -2.3371 6.59339 -4.2505 1.7371 -2.1656 3.7706 -3.2644 10.063 -3.2644 5.6202 0 7.9461 0.7622 9.9552 3.2644 1.2627 1.5731 2.4562 2.6737 3.6468 3.3665 1.5834 0.9206 3.1659 1.125 4.7024 0.5972 2.4206 -0.826 3.8081 -3.0094 4.125 -6.4912 0.2409 -2.67 -0.1303 -6.1771 -1.1363 -10.722Zm-25.7931 -0.5044h-2.9999v3c0 0.3978 -0.1581 0.7793 -0.4394 1.0606s-0.6628 0.4393 -1.0606 0.4393c-0.3979 0 -0.7793 -0.158 -1.0607 -0.4393 -0.2813 -0.2813 -0.4393 -0.6628 -0.4393 -1.0606v-3h-2.9999c-0.3979 0 -0.77938 -0.1581 -1.06072 -0.4393 -0.28129 -0.2813 -0.43933 -0.6628 -0.43933 -1.0607 0 -0.3978 0.15804 -0.7793 0.43933 -1.0607 0.28134 -0.2812 0.66282 -0.4393 1.06072 -0.4393h2.9999v-2.9999c0 -0.3978 0.158 -0.7794 0.4393 -1.0607 0.2814 -0.2812 0.6628 -0.4393 1.0607 -0.4393 0.3978 0 0.7793 0.1581 1.0606 0.4393 0.2813 0.2813 0.4394 0.6629 0.4394 1.0607v2.9999h2.9999c0.3978 0 0.7794 0.1581 1.0606 0.4393 0.2814 0.2814 0.4394 0.6629 0.4394 1.0607 0 0.3979 -0.158 0.7794 -0.4394 1.0607 -0.2812 0.2812 -0.6628 0.4393 -1.0606 0.4393Zm7.8749 0.375c-0.3708 0 -0.7334 -0.11 -1.0417 -0.3159 -0.3083 -0.2061 -0.5486 -0.499 -0.6906 -0.8415 -0.1419 -0.3427 -0.179 -0.7196 -0.1066 -1.0834 0.0723 -0.3636 0.2509 -0.6978 0.5131 -0.96s0.5963 -0.4408 0.96 -0.5132c0.3638 -0.0722 0.7407 -0.0351 1.0833 0.1068 0.3426 0.1419 0.6355 0.3822 0.8415 0.6906 0.206 0.3083 0.316 0.6708 0.316 1.0416 0 0.4973 -0.1975 0.9743 -0.5492 1.3258 -0.3516 0.3517 -0.8285 0.5492 -1.3258 0.5492Zm4.125 4.1249c-0.3711 0 -0.7338 -0.11 -1.0422 -0.3163 -0.3085 -0.2062 -0.5487 -0.4993 -0.6906 -0.8422 -0.1417 -0.3428 -0.1786 -0.7201 -0.1058 -1.0839 0.0727 -0.3639 0.2517 -0.698 0.5144 -0.96s0.5972 -0.4403 0.9613 -0.5121c0.364 -0.0718 0.7411 -0.0339 1.0836 0.1087 0.3426 0.1426 0.6351 0.3837 0.8405 0.6926 0.2055 0.309 0.3147 0.6719 0.3137 1.043 -0.0012 0.4964 -0.1993 0.9721 -0.5508 1.3227 -0.3515 0.3507 -0.8277 0.5475 -1.3241 0.5475Zm0 -8.2498c-0.3709 0 -0.7334 -0.11 -1.0418 -0.316 -0.3083 -0.206 -0.5486 -0.4989 -0.6905 -0.8415 -0.142 -0.3426 -0.1791 -0.7196 -0.1067 -1.0833 0.0724 -0.3637 0.251 -0.6978 0.5132 -0.96s0.5962 -0.4408 0.96 -0.5132c0.3637 -0.0723 0.7407 -0.0352 1.0832 0.1068 0.3427 0.1418 0.6356 0.3822 0.8415 0.6905 0.2061 0.3084 0.316 0.6709 0.316 1.0417 0 0.4973 -0.1975 0.9742 -0.5491 1.3258 -0.3517 0.3516 -0.8286 0.5492 -1.3258 0.5492Zm4.1249 4.1249c-0.3709 0 -0.7334 -0.11 -1.0417 -0.3159 -0.3084 -0.2061 -0.5486 -0.499 -0.6906 -0.8415 -0.1419 -0.3427 -0.179 -0.7196 -0.1067 -1.0834 0.0724 -0.3636 0.251 -0.6978 0.5132 -0.96s0.5963 -0.4408 0.96 -0.5132c0.3638 -0.0722 0.7407 -0.0351 1.0833 0.1068 0.3426 0.1419 0.6355 0.3822 0.8415 0.6906 0.206 0.3083 0.316 0.6708 0.316 1.0416 0 0.4973 -0.1975 0.9743 -0.5492 1.3258 -0.3516 0.3517 -0.8285 0.5492 -1.3258 0.5492Z"/></svg>';
 const _FPP_BOARD_SVG    = '<svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;vertical-align:-2px;margin-right:6px;"><path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l448 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm96 96c17.7 0 32 14.3 32 32l0 192c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-192c0-17.7 14.3-32 32-32l32 0zm160 0c17.7 0 32 14.3 32 32l0 192c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-192c0-17.7 14.3-32 32-32l32 0zm160 0c17.7 0 32 14.3 32 32l0 192c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-192c0-17.7 14.3-32 32-32l32 0z"/></svg>';
 const _FPP_WISHLIST_SVG = '<svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;vertical-align:-2px;margin-right:6px;"><path d="M288 0c6.6 0 12.9 2.7 17.4 7.5l144 152 .5 .5 78.1 0c17.7 0 32 14.3 32 32 0 14.5-9.6 26.7-22.8 30.7L491.1 429.9c-6.5 29.3-32.5 50.1-62.5 50.1l-281.3 0c-30 0-56-20.8-62.5-50.1l-46-207.2c-13.2-3.9-22.8-16.2-22.8-30.7 0-17.7 14.3-32 32-32l78.1 0 .5-.5 144-152C275.1 2.7 281.4 0 288 0zm0 58.9L192.2 160 383.8 160 288 58.9zM208 264c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112zm80-24c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm128 24c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112z"/></svg>';
@@ -4111,18 +4114,17 @@ function _updateBastionTitle() {
     document.title = 'Fortized | #' + chName + ' | ' + bName;
   }
 }
+// Per-conversation actions moved from the GLOBAL topbar into each
+// room-topbar (user spec): voice/video/pinned/add-to-DM live on the DM
+// and GC headers, pinned + member-list toggle on bastion channel
+// headers. These setters now just clear the old global slot.
 function setTopbarDMActions() {
   const acts = document.getElementById('tb-actions');
-  if (!acts) return;
-  acts.innerHTML = `
-    <button class="tb-act-btn" title="Voice Call" onclick="if(curDM)startVoiceCall(curDM);else toast('No active DM','error')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
-    <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()">${_faMsg('pin', 16)}</button>`;
+  if (acts) acts.innerHTML = '';
 }
 function setTopbarChannelActions() {
   const acts = document.getElementById('tb-actions');
-  if (!acts) return;
-  acts.innerHTML = `
-    <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()">${_faMsg('pin', 16)}</button>`;
+  if (acts) acts.innerHTML = '';
 }
 
 function updateSidebar(v) {
@@ -4466,6 +4468,34 @@ function toggleMobileMemberPanel() {
 function closeMobileMemberPanel() {
   const ml = document.getElementById('member-list');
   if (ml) ml.classList.remove('mobile-members-open');
+}
+// Desktop hide/show member list — driven by the channel room-topbar
+// button. Persisted per session so switching channels keeps the choice.
+function toggleMemberListPanel() {
+  const ml = document.getElementById('member-list');
+  if (!ml) return;
+  const hidden = ml.style.display === 'none';
+  ml.style.display = hidden ? '' : 'none';
+  try { sessionStorage.setItem('ftz_ml_hidden', hidden ? '' : '1'); } catch (_) {}
+}
+// Video calls: the room-topbar buttons exist now; the call system
+// itself lands with the LiveKit integration (per plan — instructions
+// to follow). Until then the button is honest about it.
+function startVideoCall(target) {
+  toast('Video calls are coming with the new call system — soon!', 'info');
+}
+// Group-chat voice calls also arrive with the LiveKit call system.
+function startGCVoiceCall() {
+  toast('Group calls are coming with the new call system — soon!', 'info');
+}
+// Add friends to a DM → until the DM-revamp lands this routes to the
+// existing group-chat creation flow (a DM + added friends IS a GC).
+function _openAddToDM(username) {
+  try {
+    if (typeof openCreateGCModal === 'function') { openCreateGCModal(username); return; }
+    if (typeof openModal === 'function' && document.getElementById('modal-create-gc')) { openModal('modal-create-gc'); return; }
+  } catch (_) {}
+  toast('Create a group chat to talk with more friends at once.', 'info');
 }
 function _updateMobileBackBtn() {}
 /* Close mobile sidebars on resize to desktop */
@@ -7503,6 +7533,12 @@ function openDMView(username) {
         <span class="rt-hash"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
         <span class="rt-name">${escapeHTML(username)}</span>
         ${_isOfficialDM ? fortizedOfficialCapsuleHTML() : ''}
+        <span class="rt-actions">
+          <button class="rt-act-btn" title="Voice Call" onclick="startVoiceCall('${escapeHTML(username)}')"><i class="fa-solid fa-phone" aria-hidden="true"></i></button>
+          <button class="rt-act-btn" title="Video Call" onclick="startVideoCall&&startVideoCall('${escapeHTML(username)}')"><i class="fa-solid fa-video" aria-hidden="true"></i></button>
+          <button class="rt-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><i class="fa-solid fa-thumbtack" aria-hidden="true"></i></button>
+          <button class="rt-act-btn" title="Add Friends to DM" onclick="_openAddToDM&&_openAddToDM('${escapeHTML(username)}')"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></button>
+        </span>
       </div>
       <div class="chat-msgs" id="dm-msgs">
         <div class="new-messages-bar" id="dm-new-msgs-bar"><span id="dm-new-msgs-text">1 new message</span><button onclick="markDMRead()">Mark as Read</button></div>
@@ -8411,6 +8447,11 @@ async function openGroupChatView(gcId) {
         <span class="rt-name">${escapeHTML(meta.name)}</span>
         <span class="rt-sep"></span>
         <span class="rt-desc">${(meta.members||[]).length} members</span>
+        <span class="rt-actions">
+          <button class="rt-act-btn" title="Voice Call" onclick="startGCVoiceCall&&startGCVoiceCall()"><i class="fa-solid fa-phone" aria-hidden="true"></i></button>
+          <button class="rt-act-btn" title="Video Call" onclick="startVideoCall&&startVideoCall(curGC)"><i class="fa-solid fa-video" aria-hidden="true"></i></button>
+          <button class="rt-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><i class="fa-solid fa-thumbtack" aria-hidden="true"></i></button>
+        </span>
       </div>
       <div class="chat-msgs" id="gc-msgs">
         <div class="new-messages-bar" id="gc-new-msgs-bar"><span id="gc-new-msgs-text">1 new message</span><button onclick="markGCRead()">Mark as Read</button></div>
@@ -8701,6 +8742,28 @@ function _attachGCLiveEdits(gcId) {
   ref.on('child_removed', snap => _liveRemoveMessage(snap));
 }
 
+// Fire direct-mention notifications for a just-sent message. Bastion
+// channels + group chats only — DMs already notify per-message through
+// their own 'dm' notification. Capped at 5 mentions per message; the
+// module side re-checks account existence and "did they block the
+// sender" before writing anything.
+function _notifyMentionsInText(text, ctx) {
+  try {
+    if (!text || text.indexOf('@') === -1) return;
+    if (typeof FortizedSocial === 'undefined' || !FortizedSocial.notifyMention) return;
+    const seen = new Set();
+    const re = /(^|[^A-Za-z0-9_])@([A-Za-z0-9_]{2,32})/g;
+    let m, count = 0;
+    while ((m = re.exec(text)) && count < 5) {
+      const u = m[2].toLowerCase();
+      if (u === 'everyone' || u === 'here') continue;
+      if (seen.has(u) || u === (CU?.username || '')) continue;
+      seen.add(u); count++;
+      Promise.resolve(FortizedSocial.notifyMention(CU.username, u, { preview: String(text).slice(0, 80), ...(ctx || {}) })).catch(() => {});
+    }
+  } catch (_) {}
+}
+
 async function sendGCMessage() {
   if (isViewerChatSuspended()) {
     const _left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
@@ -8780,6 +8843,7 @@ async function sendGCMessage() {
     await _sendWithAutoRetry(() => msgRef.set(msg), 2, 20000);
     FortizedSocial.socketEmit('message:send', { type: 'gc', id1: curGC, message: msg });
     _confirmOptimisticSend('gc:'+curGC, msg);
+    _notifyMentionsInText(text, { gc: curGC });
   } catch {
     if (!_isOnlineForSend()) {
       _enqueueOfflineMessage({ kind: 'gc', id: msg.id, target: curGC, text, replyTo: rep, flags: msgFlags });
@@ -9526,6 +9590,10 @@ function loadChatChannel(idx) {
         <span class="rt-name">${escapeHTML(ch.name)}</span>
         ${ch.desc?`<span class="rt-sep"></span><span class="rt-desc">${escapeHTML(ch.desc)}</span>`:''}
         ${nsfwBadge}
+        <span class="rt-actions">
+          <button class="rt-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><i class="fa-solid fa-thumbtack" aria-hidden="true"></i></button>
+          <button class="rt-act-btn" title="Hide / Show Member List" onclick="toggleMemberListPanel()"><i class="fa-solid fa-users" aria-hidden="true"></i></button>
+        </span>
       </div>
       <div class="chat-msgs" id="ch-msgs-${idx}">
         <div class="new-messages-bar" id="ch-new-msgs-bar-${idx}"><span id="ch-new-msgs-text-${idx}">1 new message</span><button onclick="markChannelRead(${idx})">Mark as Read</button></div>
@@ -9889,6 +9957,7 @@ async function sendChannelMsg(idx) {
       const committedMsg = savedMsg || msg;
       FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: committedMsg });
       _confirmOptimisticSend('bastion:'+(b.globalId||b.name)+':'+ch.name, committedMsg);
+      _notifyMentionsInText(text, { bastion: b.globalId || b.name, bastionName: b.name, channel: ch.name });
     } catch (e) {
       console.error('[sendChannelMsg Error]', e?.message);
       if (!_isOnlineForSend()) {
@@ -24172,17 +24241,29 @@ let _notifBadgeSeq = 0;
 // force=true bypasses the module's 2-minute unread cache — used by the
 // notification:new socket handler so the badge moves the moment a
 // notification lands instead of up to two minutes later.
+// Badge language (user spec, Discord-style): red bubble with a WHITE DOT
+// for "you have unread stuff"; red bubble with a WHITE COUNT (1-9+) when
+// any of it is a direct mention.
 async function updateNotifBadge(force) {
   const seq = ++_notifBadgeSeq;
   const badge=document.getElementById('notif-badge');
   const tbBadge=document.getElementById('tb-notif-badge');
-  let unread = 0;
-  try { unread = await FortizedSocial.getUnreadCount(CU.username, force ? { noCache: true } : undefined) || 0; } catch (e) { _dbg('[Notif] unread count failed', e); }
+  let sum = { total: 0, mentions: 0 };
+  try { sum = await FortizedSocial.getUnreadSummary(CU.username, force ? { noCache: true } : undefined) || sum; } catch (e) { _dbg('[Notif] unread summary failed', e); }
   // Discard stale overlapping calls so a late-resolving older fetch can't
   // overwrite a fresher count in the DOM.
   if (seq !== _notifBadgeSeq) return;
-  if(badge){badge.textContent=unread;badge.style.display=unread>0?'flex':'none';}
-  if(tbBadge){tbBadge.textContent=unread;tbBadge.style.display=unread>0?'block':'none';}
+  const unread = sum.total;
+  const mentionTxt = sum.mentions > 9 ? '9+' : String(sum.mentions);
+  const dotHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;vertical-align:middle;"></span>';
+  if (badge) {
+    badge.innerHTML = sum.mentions > 0 ? mentionTxt : (unread > 0 ? dotHTML : '');
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+  }
+  if (tbBadge) {
+    tbBadge.innerHTML = sum.mentions > 0 ? mentionTxt : (unread > 0 ? dotHTML : '');
+    tbBadge.style.display = unread > 0 ? 'inline-flex' : 'none';
+  }
   setFaviconNotif(unread>0);
   if (unread === 0) {
     document.querySelectorAll('.rail-notif-badge').forEach(b=>b.remove());
@@ -24325,7 +24406,13 @@ async function buildNotifList() {
     if(n.type==='friend_request') text='<strong>'+escapeHTML(n.from||'')+'</strong> sent you a friend request';
     else if(n.type==='friend_accept') text='<strong>'+escapeHTML(n.from||'')+'</strong> accepted your request — you are now friends!';
     else if(n.type==='dm') text='<strong>'+escapeHTML(n.from||'')+'</strong>: '+escapeHTML((n.data?.preview||'').slice(0,60));
-    else if(n.type==='mention') text='<strong>'+escapeHTML(n.from||'')+'</strong> mentioned you';
+    else if(n.type==='mention') {
+      const d = n.data || {};
+      const where = d.channel ? ' in <strong>#'+escapeHTML(d.channel)+'</strong>'+(d.bastionName?' ('+escapeHTML(d.bastionName)+')':'')
+        : d.gc ? ' in a group chat' : '';
+      text='<strong>'+escapeHTML(n.from||'')+'</strong> mentioned you'+where
+        +(d.preview?'<span style="display:block;font-size:11.5px;color:var(--muted-light);margin-top:2px;">“'+escapeHTML(String(d.preview).slice(0,80))+'”</span>':'');
+    }
     else if(n.type==='call') text='<strong>'+escapeHTML(n.from||'')+'</strong> called you';
     else if(n.type==='support_ticket') {
       const st = n.data?.status==='closed'?'<span style="color:var(--green);">Closed</span>':'<span style="color:#38bdf8;">Open</span>';
@@ -48711,6 +48798,22 @@ async function _saveAllSettingsImpl() {
     toast("Couldn't reach the server — your changes are NOT saved yet. Try again in a moment.", 'error');
     return;
   }
+  // Avatar read-back: the DB-side guard trigger can silently keep the
+  // OLD pfp (it refuses small PNGs that match the blank-corruption
+  // signature). Without this check the user sees their new avatar until
+  // the next background refresh "removes" it — the "save, wait a bit,
+  // gone" report. Verify the row actually took the new value and say so
+  // if it didn't.
+  if (typeof CU.pfp === 'string' && CU.pfp.startsWith('data:')) {
+    try {
+      const storedLen = await FortizedSocial.getStoredFieldLength(CU.username, 'pfp');
+      if (storedLen !== null && storedLen !== CU.pfp.length) {
+        toast('The server rejected that avatar image (safety filter for corrupt uploads). Please pick a different image.', 'error');
+        console.warn('[avatar] read-back mismatch after save: sent', CU.pfp.length, 'chars, row has', storedLen);
+        return;
+      }
+    } catch (_) {}
+  }
   // Broadcast all editable cosmetic + identity fields so other
   // clients see the changes in real time without waiting for a
   // page reload. Previously saveAllSettings was silent over the
@@ -53095,7 +53198,7 @@ const _LANG_PACK = {
     // Common chrome — buttons, toasts, confirms used everywhere.
     'btn.save':'Save', 'btn.cancel':'Cancel', 'btn.delete':'Delete', 'btn.confirm':'Confirm', 'btn.close':'Close', 'btn.copy':'Copy', 'btn.send':'Send', 'btn.edit':'Edit', 'btn.add':'Add', 'btn.remove':'Remove', 'btn.back':'Back', 'btn.next':'Next', 'btn.reset':'Reset', 'btn.apply':'Apply',
     'toast.saved':'Saved', 'toast.copied':'Copied', 'toast.deleted':'Deleted', 'toast.failed':'Something went wrong', 'toast.sent':'Sent',
-    'notif.inbox':'Notifications', 'notif.mark_all':'Mark all read', 'notif.tab.all':'All', 'notif.tab.unread':'Unread', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Friends', 'notif.empty.title':'All caught up!', 'notif.empty.body':'No new notifications',
+    'notif.inbox':'Inbox', 'notif.mark_all':'Mark all read', 'notif.tab.all':'All', 'notif.tab.unread':'Unread', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Friends', 'notif.empty.title':'All caught up!', 'notif.empty.body':'No new notifications',
     'dms.friends_subtitle':'Your conversations & friends', 'dms.search_friends':'Search friends…',
     'ub.loading':'Loading…', 'ub.playing':'Playing', 'ub.status.online':'Online',
     'ub.tip.mute':'Mute / Unmute', 'ub.tip.deafen':'Deafen / Undeafen', 'ub.tip.input':'Input options', 'ub.tip.output':'Output options', 'ub.tip.settings':'Settings',
@@ -53133,7 +53236,7 @@ const _LANG_PACK = {
     'dms.empty.title':'Sélectionnez une conversation', 'dms.empty.body':'Choisissez un message direct dans la barre latérale ou commencez-en un nouveau.',
     'btn.save':'Enregistrer', 'btn.cancel':'Annuler', 'btn.delete':'Supprimer', 'btn.confirm':'Confirmer', 'btn.close':'Fermer', 'btn.copy':'Copier', 'btn.send':'Envoyer', 'btn.edit':'Modifier', 'btn.add':'Ajouter', 'btn.remove':'Retirer', 'btn.back':'Retour', 'btn.next':'Suivant', 'btn.reset':'Réinitialiser', 'btn.apply':'Appliquer',
     'toast.saved':'Enregistré', 'toast.copied':'Copié', 'toast.deleted':'Supprimé', 'toast.failed':'Une erreur est survenue', 'toast.sent':'Envoyé',
-    'notif.inbox':'Notifications', 'notif.mark_all':'Tout marquer comme lu', 'notif.tab.all':'Tout', 'notif.tab.unread':'Non lus', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Amis', 'notif.empty.title':'Tout est à jour !', 'notif.empty.body':'Aucune nouvelle notification',
+    'notif.inbox':'Boîte de réception', 'notif.mark_all':'Tout marquer comme lu', 'notif.tab.all':'Tout', 'notif.tab.unread':'Non lus', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Amis', 'notif.empty.title':'Tout est à jour !', 'notif.empty.body':'Aucune nouvelle notification',
     'dms.friends_subtitle':'Vos conversations et amis', 'dms.search_friends':'Rechercher des amis…',
     'ub.loading':'Chargement…', 'ub.playing':'Joue à', 'ub.status.online':'En ligne',
     'ub.tip.mute':'Couper / Activer le micro', 'ub.tip.deafen':'Couper / Activer le son', 'ub.tip.input':'Options d’entrée', 'ub.tip.output':'Options de sortie', 'ub.tip.settings':'Paramètres',
@@ -53171,7 +53274,7 @@ const _LANG_PACK = {
     'dms.empty.title':'Selecciona una conversación', 'dms.empty.body':'Elige un mensaje directo en la barra lateral o empieza uno nuevo.',
     'btn.save':'Guardar', 'btn.cancel':'Cancelar', 'btn.delete':'Eliminar', 'btn.confirm':'Confirmar', 'btn.close':'Cerrar', 'btn.copy':'Copiar', 'btn.send':'Enviar', 'btn.edit':'Editar', 'btn.add':'Añadir', 'btn.remove':'Quitar', 'btn.back':'Atrás', 'btn.next':'Siguiente', 'btn.reset':'Restablecer', 'btn.apply':'Aplicar',
     'toast.saved':'Guardado', 'toast.copied':'Copiado', 'toast.deleted':'Eliminado', 'toast.failed':'Algo salió mal', 'toast.sent':'Enviado',
-    'notif.inbox':'Notificaciones', 'notif.mark_all':'Marcar todo como leído', 'notif.tab.all':'Todo', 'notif.tab.unread':'No leídas', 'notif.tab.mentions':'Menciones', 'notif.tab.friends':'Amigos', 'notif.empty.title':'¡Todo al día!', 'notif.empty.body':'Sin notificaciones nuevas',
+    'notif.inbox':'Bandeja de entrada', 'notif.mark_all':'Marcar todo como leído', 'notif.tab.all':'Todo', 'notif.tab.unread':'No leídas', 'notif.tab.mentions':'Menciones', 'notif.tab.friends':'Amigos', 'notif.empty.title':'¡Todo al día!', 'notif.empty.body':'Sin notificaciones nuevas',
     'dms.friends_subtitle':'Tus conversaciones y amigos', 'dms.search_friends':'Buscar amigos…',
     'ub.loading':'Cargando…', 'ub.playing':'Jugando a', 'ub.status.online':'En línea',
     'ub.tip.mute':'Silenciar / Activar micro', 'ub.tip.deafen':'Silenciar / Activar audio', 'ub.tip.input':'Opciones de entrada', 'ub.tip.output':'Opciones de salida', 'ub.tip.settings':'Configuración',
@@ -53209,7 +53312,7 @@ const _LANG_PACK = {
     'dms.empty.title':'Wähle eine Unterhaltung', 'dms.empty.body':'Wähle eine Direktnachricht in der Seitenleiste oder starte eine neue.',
     'btn.save':'Speichern', 'btn.cancel':'Abbrechen', 'btn.delete':'Löschen', 'btn.confirm':'Bestätigen', 'btn.close':'Schließen', 'btn.copy':'Kopieren', 'btn.send':'Senden', 'btn.edit':'Bearbeiten', 'btn.add':'Hinzufügen', 'btn.remove':'Entfernen', 'btn.back':'Zurück', 'btn.next':'Weiter', 'btn.reset':'Zurücksetzen', 'btn.apply':'Übernehmen',
     'toast.saved':'Gespeichert', 'toast.copied':'Kopiert', 'toast.deleted':'Gelöscht', 'toast.failed':'Etwas ist schiefgelaufen', 'toast.sent':'Gesendet',
-    'notif.inbox':'Benachrichtigungen', 'notif.mark_all':'Alle als gelesen markieren', 'notif.tab.all':'Alle', 'notif.tab.unread':'Ungelesen', 'notif.tab.mentions':'Erwähnungen', 'notif.tab.friends':'Freunde', 'notif.empty.title':'Alles erledigt!', 'notif.empty.body':'Keine neuen Benachrichtigungen',
+    'notif.inbox':'Posteingang', 'notif.mark_all':'Alle als gelesen markieren', 'notif.tab.all':'Alle', 'notif.tab.unread':'Ungelesen', 'notif.tab.mentions':'Erwähnungen', 'notif.tab.friends':'Freunde', 'notif.empty.title':'Alles erledigt!', 'notif.empty.body':'Keine neuen Benachrichtigungen',
     'dms.friends_subtitle':'Deine Unterhaltungen und Freunde', 'dms.search_friends':'Freunde suchen…',
     'ub.loading':'Laden…', 'ub.playing':'Spielt', 'ub.status.online':'Online',
     'ub.tip.mute':'Stumm / Laut', 'ub.tip.deafen':'Taub / Hören', 'ub.tip.input':'Eingangsoptionen', 'ub.tip.output':'Ausgangsoptionen', 'ub.tip.settings':'Einstellungen',
@@ -53247,7 +53350,7 @@ const _LANG_PACK = {
     'dms.empty.title':'Seleziona una conversazione', 'dms.empty.body':'Scegli un messaggio diretto dalla barra laterale o iniziane uno nuovo.',
     'btn.save':'Salva', 'btn.cancel':'Annulla', 'btn.delete':'Elimina', 'btn.confirm':'Conferma', 'btn.close':'Chiudi', 'btn.copy':'Copia', 'btn.send':'Invia', 'btn.edit':'Modifica', 'btn.add':'Aggiungi', 'btn.remove':'Rimuovi', 'btn.back':'Indietro', 'btn.next':'Avanti', 'btn.reset':'Reimposta', 'btn.apply':'Applica',
     'toast.saved':'Salvato', 'toast.copied':'Copiato', 'toast.deleted':'Eliminato', 'toast.failed':'Qualcosa è andato storto', 'toast.sent':'Inviato',
-    'notif.inbox':'Notifiche', 'notif.mark_all':'Segna tutto come letto', 'notif.tab.all':'Tutto', 'notif.tab.unread':'Non lette', 'notif.tab.mentions':'Menzioni', 'notif.tab.friends':'Amici', 'notif.empty.title':'Tutto in ordine!', 'notif.empty.body':'Nessuna nuova notifica',
+    'notif.inbox':'Posta in arrivo', 'notif.mark_all':'Segna tutto come letto', 'notif.tab.all':'Tutto', 'notif.tab.unread':'Non lette', 'notif.tab.mentions':'Menzioni', 'notif.tab.friends':'Amici', 'notif.empty.title':'Tutto in ordine!', 'notif.empty.body':'Nessuna nuova notifica',
     'dms.friends_subtitle':'Le tue conversazioni e amici', 'dms.search_friends':'Cerca amici…',
     'ub.loading':'Caricamento…', 'ub.playing':'Sta giocando a', 'ub.status.online':'Online',
     'ub.tip.mute':'Disattiva / Attiva microfono', 'ub.tip.deafen':'Disattiva / Attiva audio', 'ub.tip.input':'Opzioni di ingresso', 'ub.tip.output':'Opzioni di uscita', 'ub.tip.settings':'Impostazioni',
@@ -53285,7 +53388,7 @@ const _LANG_PACK = {
     'dms.empty.title':'Selecione uma conversa', 'dms.empty.body':'Escolha uma mensagem direta na barra lateral ou inicie uma nova.',
     'btn.save':'Salvar', 'btn.cancel':'Cancelar', 'btn.delete':'Excluir', 'btn.confirm':'Confirmar', 'btn.close':'Fechar', 'btn.copy':'Copiar', 'btn.send':'Enviar', 'btn.edit':'Editar', 'btn.add':'Adicionar', 'btn.remove':'Remover', 'btn.back':'Voltar', 'btn.next':'Próximo', 'btn.reset':'Redefinir', 'btn.apply':'Aplicar',
     'toast.saved':'Salvo', 'toast.copied':'Copiado', 'toast.deleted':'Excluído', 'toast.failed':'Algo deu errado', 'toast.sent':'Enviado',
-    'notif.inbox':'Notificações', 'notif.mark_all':'Marcar tudo como lido', 'notif.tab.all':'Tudo', 'notif.tab.unread':'Não lidas', 'notif.tab.mentions':'Menções', 'notif.tab.friends':'Amigos', 'notif.empty.title':'Tudo em dia!', 'notif.empty.body':'Sem notificações novas',
+    'notif.inbox':'Caixa de entrada', 'notif.mark_all':'Marcar tudo como lido', 'notif.tab.all':'Tudo', 'notif.tab.unread':'Não lidas', 'notif.tab.mentions':'Menções', 'notif.tab.friends':'Amigos', 'notif.empty.title':'Tudo em dia!', 'notif.empty.body':'Sem notificações novas',
     'dms.friends_subtitle':'Suas conversas e amigos', 'dms.search_friends':'Buscar amigos…',
     'ub.loading':'Carregando…', 'ub.playing':'Jogando', 'ub.status.online':'On-line',
     'ub.tip.mute':'Mudo / Reativar microfone', 'ub.tip.deafen':'Mudo / Reativar áudio', 'ub.tip.input':'Opções de entrada', 'ub.tip.output':'Opções de saída', 'ub.tip.settings':'Configurações',
@@ -53323,7 +53426,7 @@ const _LANG_PACK = {
     'dms.empty.title':'会話を選択', 'dms.empty.body':'サイドバーからダイレクトメッセージを選ぶか、新しく始めましょう。',
     'btn.save':'保存', 'btn.cancel':'キャンセル', 'btn.delete':'削除', 'btn.confirm':'確定', 'btn.close':'閉じる', 'btn.copy':'コピー', 'btn.send':'送信', 'btn.edit':'編集', 'btn.add':'追加', 'btn.remove':'外す', 'btn.back':'戻る', 'btn.next':'次へ', 'btn.reset':'リセット', 'btn.apply':'適用',
     'toast.saved':'保存しました', 'toast.copied':'コピーしました', 'toast.deleted':'削除しました', 'toast.failed':'問題が発生しました', 'toast.sent':'送信しました',
-    'notif.inbox':'通知', 'notif.mark_all':'すべて既読にする', 'notif.tab.all':'すべて', 'notif.tab.unread':'未読', 'notif.tab.mentions':'メンション', 'notif.tab.friends':'フレンド', 'notif.empty.title':'すべて確認済み！', 'notif.empty.body':'新しい通知はありません',
+    'notif.inbox':'受信箱', 'notif.mark_all':'すべて既読にする', 'notif.tab.all':'すべて', 'notif.tab.unread':'未読', 'notif.tab.mentions':'メンション', 'notif.tab.friends':'フレンド', 'notif.empty.title':'すべて確認済み！', 'notif.empty.body':'新しい通知はありません',
     'dms.friends_subtitle':'会話とフレンド', 'dms.search_friends':'フレンドを検索…',
     'ub.loading':'読み込み中…', 'ub.playing':'プレイ中', 'ub.status.online':'オンライン',
     'ub.tip.mute':'ミュート / 解除', 'ub.tip.deafen':'スピーカーをミュート / 解除', 'ub.tip.input':'入力オプション', 'ub.tip.output':'出力オプション', 'ub.tip.settings':'設定',
@@ -53361,7 +53464,7 @@ const _LANG_PACK = {
     'dms.empty.title':'اختر محادثة', 'dms.empty.body':'اختر رسالة مباشرة من الشريط الجانبي أو ابدأ واحدة جديدة.',
     'btn.save':'حفظ', 'btn.cancel':'إلغاء', 'btn.delete':'حذف', 'btn.confirm':'تأكيد', 'btn.close':'إغلاق', 'btn.copy':'نسخ', 'btn.send':'إرسال', 'btn.edit':'تعديل', 'btn.add':'إضافة', 'btn.remove':'إزالة', 'btn.back':'رجوع', 'btn.next':'التالي', 'btn.reset':'إعادة تعيين', 'btn.apply':'تطبيق',
     'toast.saved':'تم الحفظ', 'toast.copied':'تم النسخ', 'toast.deleted':'تم الحذف', 'toast.failed':'حدث خطأ ما', 'toast.sent':'تم الإرسال',
-    'notif.inbox':'الإشعارات', 'notif.mark_all':'تعليم الكل كمقروء', 'notif.tab.all':'الكل', 'notif.tab.unread':'غير مقروء', 'notif.tab.mentions':'الإشارات', 'notif.tab.friends':'الأصدقاء', 'notif.empty.title':'كل شيء على ما يرام!', 'notif.empty.body':'لا توجد إشعارات جديدة',
+    'notif.inbox':'صندوق الوارد', 'notif.mark_all':'تعليم الكل كمقروء', 'notif.tab.all':'الكل', 'notif.tab.unread':'غير مقروء', 'notif.tab.mentions':'الإشارات', 'notif.tab.friends':'الأصدقاء', 'notif.empty.title':'كل شيء على ما يرام!', 'notif.empty.body':'لا توجد إشعارات جديدة',
     'dms.friends_subtitle':'محادثاتك وأصدقاؤك', 'dms.search_friends':'بحث عن الأصدقاء…',
     'ub.loading':'جارٍ التحميل…', 'ub.playing':'يلعب', 'ub.status.online':'متصل',
     'ub.tip.mute':'كتم / إلغاء كتم الميكروفون', 'ub.tip.deafen':'كتم / إلغاء كتم الصوت', 'ub.tip.input':'خيارات الإدخال', 'ub.tip.output':'خيارات الإخراج', 'ub.tip.settings':'الإعدادات',

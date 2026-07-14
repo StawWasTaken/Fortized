@@ -3788,7 +3788,7 @@ function _setPastBar(msgsId) {
   bar.id = 'chat-past-bar-floater';
   bar.className = 'chat-past-bar show';
   bar.dataset.target = msgsId;
-  bar.innerHTML = `<span class="cpb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>You're viewing older messages</span><button type="button">Jump to Present</button>`;
+  bar.innerHTML = `<span class="cpb-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M256 0a256 256 0 1 1 0 512 256 256 0 1 1 0-512zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></svg></span><span>You're viewing older messages</span><button type="button">Jump to Present</button>`;
   bar.querySelector('button').addEventListener('click', () => {
     if (typeof scrollBottom === 'function') scrollBottom(msgsId);
     bar.remove();
@@ -4714,9 +4714,14 @@ function updateOnyxDisplay() {
     const el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
-  // Keep the Onyx capsule tooltip in sync with the balance (unified format).
+  // Soft custom tooltip (data-tip) — just the amount, e.g. "1 256 Onyx".
+  // No native title (that verbose "· click to open · right-click…" line
+  // was the overwhelming one). Space thousands separator per spec.
   const onyxPill = document.getElementById('onyx-display');
-  if (onyxPill) onyxPill.title = `${bal.toLocaleString()} Onyx · click to open Atelier · right-click for options`;
+  if (onyxPill) {
+    onyxPill.removeAttribute('title');
+    onyxPill.setAttribute('data-tip', `${bal.toLocaleString('fr-FR')} Onyx`);
+  }
   if (_lastOnyxSeen !== null && bal !== _lastOnyxSeen && typeof _logJoysterEvent === 'function') {
     const delta = bal - _lastOnyxSeen;
     if (delta <= -5) _logJoysterEvent(`spent ${Math.abs(delta)} Onyx (now ${bal})`);
@@ -4905,14 +4910,21 @@ function updateStreakDisplay() {
   if (valEl) valEl.textContent = streak;
   pillEl.classList.toggle('is-protected', protected_);
   pillEl.classList.toggle('is-zero', streak === 0);
-  const shield = pillEl.querySelector('.tb-streak-shield');
-  if (shield) shield.style.display = protected_ ? '' : 'none';
-  // Unified tooltip format: "<state> · click to X · right-click for options"
-  let state;
-  if (streak === 0) state = 'No streak yet';
-  else if (protected_) state = `${streak}-day streak · protected until ${new Date(+CU.streakProtectedUntil).toLocaleDateString()}`;
-  else state = `${streak}-day streak`;
-  pillEl.title = `${state} · click to claim daily · right-click for options`;
+  // Protected → a subtle corner badge (not coloured text, not a verbose
+  // tooltip). Added/removed here so the capsule stays monochrome.
+  let badge = pillEl.querySelector('.tb-streak-badge');
+  if (protected_ && !badge) {
+    badge = document.createElement('span');
+    badge.className = 'tb-streak-badge';
+    badge.setAttribute('data-tip', `Protected until ${new Date(+CU.streakProtectedUntil).toLocaleDateString()}`);
+    badge.innerHTML = '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i>';
+    pillEl.appendChild(badge);
+  } else if (!protected_ && badge) {
+    badge.remove();
+  }
+  // Soft custom tooltip — just the streak amount. No verbose native title.
+  pillEl.removeAttribute('title');
+  pillEl.setAttribute('data-tip', streak === 0 ? 'No streak yet' : `${streak}-day streak`);
 }
 
 // Buy or extend streak protection. Stacks from the existing expiry, so calling
@@ -11871,7 +11883,7 @@ function _showUndoDelete(ref, msgSnapshot, msgId, ctx, dm, gc, bastion, channel)
   clearTimeout(_undoDeleteTimer);
   const el = document.createElement('div');
   el.className = 'undo-toast';
-  el.innerHTML = `<span class="ut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></span><span class="ut-text">Message deleted</span><button class="ut-btn" onclick="_undoDelete()">Undo</button><div class="ut-progress"></div>`;
+  el.innerHTML = `<span class="ut-icon"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M136.7 5.9C141.1-7.2 153.3-16 167.1-16l113.9 0c13.8 0 26 8.8 30.4 21.9L320 32 416 32c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 8.7-26.1zM32 144l384 0 0 304c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-304zm88 64c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24z"/></svg></span><span class="ut-text">Message deleted</span><button class="ut-btn" onclick="_undoDelete()">Undo</button><div class="ut-progress"></div>`;
   document.body.appendChild(el);
   _undoDeleteTimer = setTimeout(() => {
     _undoDeleteQueue = [];
@@ -30633,11 +30645,14 @@ function animateOnyxGain(amount) {
     el.style.opacity = '0';
   });
   setTimeout(() => el.remove(), 1300);
-  // Pulse the balance counter
+  // Pulse the balance counter. The reset used to set color:var(--accent)
+  // (yellow) permanently — that's the "onyx text sometimes turns yellow"
+  // bug, since the capsule is meant to be monochrome. Clear the inline
+  // color so it falls back to the CSS (inherited grey / white on hover).
   balEl.style.transition = 'transform .2s,color .2s';
   balEl.style.transform = 'scale(1.25)';
   balEl.style.color = '#fff';
-  setTimeout(() => { balEl.style.transform = ''; balEl.style.color = 'var(--accent)'; }, 400);
+  setTimeout(() => { balEl.style.transform = ''; balEl.style.color = ''; }, 400);
 }
 
 // ════════════════════════════════════════════

@@ -1633,43 +1633,71 @@ async function _healBlankAvatar() {
       toast('Your avatar image was corrupted, so it was removed — please upload it again.', 'info');
       return;
     }
-    // Healthy but oversized legacy PNG: re-encode to webp once. Every
-    // profile fetch ships these bytes, so shrinking the stored avatar is
-    // the per-account contribution to getting Supabase egress back under
-    // the plan. Skipped for GIF/webp/http avatars and for crops (pfpCrop
-    // paths keep their original pixels).
+    // Healthy but oversized legacy PNG/JPEG: re-encode to webp once.
+    // Every profile fetch ships these bytes, so shrinking the stored
+    // avatar is the per-account contribution to getting Supabase egress
+    // back under the plan. Skipped for GIF/webp/http avatars and for
+    // crops (pfpCrop paths keep their original pixels).
     if (p.length > 300000 && !CU.pfpCrop) {
-      const smaller = await new Promise(resolve => {
-        try {
-          const img = new Image();
-          img.onload = () => {
-            try {
-              const side = Math.min(480, Math.max(img.naturalWidth, 1));
-              const c = document.createElement('canvas');
-              c.width = side; c.height = side;
-              const ctx = c.getContext('2d');
-              ctx.drawImage(img, 0, 0, side, side);
-              c.toBlob(b => {
-                if (!b || b.type !== 'image/webp') return resolve(null);
-                const r = new FileReader();
-                r.onload = e => resolve(e.target.result);
-                r.onerror = () => resolve(null);
-                r.readAsDataURL(b);
-              }, 'image/webp', 0.85);
-            } catch (_) { resolve(null); }
-          };
-          img.onerror = () => resolve(null);
-          img.src = p;
-        } catch (_) { resolve(null); }
-      });
+      const smaller = await _reencodeDataUrl(p, 480, 480, 0.85);
       if (smaller && smaller.length < p.length * 0.6) {
-        console.info('[avatar] recompressed legacy PNG avatar', Math.round(p.length / 1024) + 'KB →', Math.round(smaller.length / 1024) + 'KB (webp)');
+        console.info('[avatar] recompressed legacy avatar', Math.round(p.length / 1024) + 'KB →', Math.round(smaller.length / 1024) + 'KB (webp)');
         CU.pfp = smaller;
         try { saveLocal(); } catch (_) {}
         await FortizedSocial.saveUserObject(CU, { fields: ['pfp'] });
       }
     }
   } catch (e) { console.warn('[avatar] blank-check failed:', e?.message); }
+}
+
+// Draw a data-URL raster onto a bounded canvas and hand back a webp data
+// URL (null when the encoder/decode fails). maxW/maxH bound the output;
+// aspect is preserved.
+function _reencodeDataUrl(src, maxW, maxH, quality) {
+  return new Promise(resolve => {
+    try {
+      if (typeof src !== 'string' || !(src.startsWith('data:image/png') || src.startsWith('data:image/jpeg'))) return resolve(null);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          if (!img.naturalWidth || !img.naturalHeight) return resolve(null);
+          const scale = Math.min(1, maxW / img.naturalWidth, maxH / img.naturalHeight);
+          const w = Math.max(1, Math.round(img.naturalWidth * scale));
+          const h = Math.max(1, Math.round(img.naturalHeight * scale));
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          c.toBlob(b => {
+            if (!b || b.type !== 'image/webp') return resolve(null);
+            const r = new FileReader();
+            r.onload = e => resolve(e.target.result);
+            r.onerror = () => resolve(null);
+            r.readAsDataURL(b);
+          }, 'image/webp', quality || 0.85);
+        } catch (_) { resolve(null); }
+      };
+      img.onerror = () => resolve(null);
+      img.src = src;
+    } catch (_) { resolve(null); }
+  });
+}
+
+// Banners were never covered by the avatar pass — and they're the single
+// biggest blobs in the table (one account carries a 3.4 MB banner, which
+// every profile open ships). Recompress a legacy oversized data-URL
+// banner to webp once at boot, same rules as the avatar.
+async function _shrinkLegacyBanner() {
+  try {
+    const b = CU?.banner;
+    if (!b || typeof b !== 'string' || b.length < 300000) return;
+    const smaller = await _reencodeDataUrl(b, 1280, 512, 0.82);
+    if (smaller && smaller.length < b.length * 0.6) {
+      console.info('[banner] recompressed legacy banner', Math.round(b.length / 1024) + 'KB →', Math.round(smaller.length / 1024) + 'KB (webp)');
+      CU.banner = smaller;
+      try { saveLocal(); } catch (_) {}
+      await FortizedSocial.saveUserObject(CU, { fields: ['banner'] });
+    }
+  } catch (e) { console.warn('[banner] shrink failed:', e?.message); }
 }
 
 function _trimCUForStorage(cu) {
@@ -14220,6 +14248,7 @@ function initFortizedUXResilience() {
   // clear it here AND in the DB. Deferred so it never blocks first
   // paint; only acts when the image is provably blank.
   if (!usedCache) setTimeout(() => { _healBlankAvatar(); }, 2500);
+  if (!usedCache) setTimeout(() => { _shrinkLegacyBanner(); }, 6000);
   // Notification retention — one fire-and-forget prune per session keeps
   // the notifications table from growing forever (read + >30 days old).
   if (!usedCache) setTimeout(() => { try { FortizedSocial.pruneNotifications(CU.username); } catch (_) {} }, 12000);

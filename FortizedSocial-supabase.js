@@ -806,6 +806,25 @@ const FortizedSocial = (() => {
   function _withU(arr, u)   { const a = (arr || []).map(norm); return a.includes(u) ? a : [...a, u]; }
   function _withoutU(arr, u){ return (arr || []).map(norm).filter(x => x !== u); }
 
+  // Relationship ops only need five tiny columns. Fetching full rows
+  // here shipped every avatar/banner data-URL along for the ride — a
+  // single friend op against a heavy account moved MEGABYTES of
+  // Supabase egress for data the op never looked at.
+  const _REL_COLS = 'username,friends,friend_requests_sent,friend_requests_received,blocked_users';
+  async function _fetchRelRow(username) {
+    const un = norm(username);
+    if (!un) return null;
+    const { data } = await sb.from('users').select(_REL_COLS).eq('username', un).maybeSingle();
+    if (!data) return null;
+    return {
+      username: data.username,
+      friends: data.friends || [],
+      friendRequestsSent: data.friend_requests_sent || [],
+      friendRequestsReceived: data.friend_requests_received || [],
+      blockedUsers: data.blocked_users || [],
+    };
+  }
+
   // The one consistent state for a pair, given both fresh user objects.
   // 'a>b' = a has a pending request to b. Pendings are RECEIVER-
   // authoritative: a request exists iff the receiver's row carries it,
@@ -876,10 +895,7 @@ const FortizedSocial = (() => {
   // Fetches fresh rows itself so it also repairs drift that happened
   // since the caller looked.
   async function _setPairState(aName, bName, target, _retried) {
-    const [a, b] = await Promise.all([
-      getUserByName(aName, { noCache: true }),
-      getUserByName(bName, { noCache: true }),
-    ]);
+    const [a, b] = await Promise.all([_fetchRelRow(aName), _fetchRelRow(bName)]);
     if (!a || !b) return { ok: false, msg: 'User not found.', state: 'none' };
     const an = norm(a.username), bn = norm(b.username);
     const wantA = { friend: target === 'friends', sent: target === 'a>b', received: target === 'b>a' };
@@ -902,10 +918,7 @@ const FortizedSocial = (() => {
   // Exposed as syncRelationship — the app calls it when it notices two
   // rows disagreeing (legacy half-applied ops heal here).
   async function _syncPair(u1, u2) {
-    const [a, b] = await Promise.all([
-      getUserByName(u1, { noCache: true }),
-      getUserByName(u2, { noCache: true }),
-    ]);
+    const [a, b] = await Promise.all([_fetchRelRow(u1), _fetchRelRow(u2)]);
     if (!a || !b) return { ok: false, msg: 'User not found.', state: 'none' };
     return _setPairState(u1, u2, _pairTargetState(a, b));
   }
@@ -916,10 +929,7 @@ const FortizedSocial = (() => {
     toUsername   = norm(toUsername);
     if (!toUsername) return { ok: false, msg: 'Enter a username.' };
     if (fromUsername === toUsername) return { ok: false, msg: "Can't add yourself." };
-    const [fu, tu] = await Promise.all([
-      getUserByName(fromUsername, { noCache: true }),
-      getUserByName(toUsername, { noCache: true })
-    ]);
+    const [fu, tu] = await Promise.all([_fetchRelRow(fromUsername), _fetchRelRow(toUsername)]);
     if (!fu) return { ok: false, msg: 'Your account not found.' };
     if (!tu) return { ok: false, msg: `User "${toUsername}" not found.` };
     // Block guard — a block by EITHER side prevents new friend requests.
@@ -956,10 +966,7 @@ const FortizedSocial = (() => {
   async function acceptFriendRequest(myUsername, fromUsername) {
     myUsername   = norm(myUsername);
     fromUsername = norm(fromUsername);
-    const [mu, fu] = await Promise.all([
-      getUserByName(myUsername, { noCache: true }),
-      getUserByName(fromUsername, { noCache: true })
-    ]);
+    const [mu, fu] = await Promise.all([_fetchRelRow(myUsername), _fetchRelRow(fromUsername)]);
     if (!mu || !fu) return { ok: false, msg: 'User not found.' };
     // Block guard — accepting is off the table while either side blocks.
     if (_hasU(mu.blockedUsers, fromUsername))
@@ -991,10 +998,7 @@ const FortizedSocial = (() => {
   async function declineFriendRequest(myUsername, fromUsername) {
     myUsername   = norm(myUsername);
     fromUsername = norm(fromUsername);
-    const [mu, fu] = await Promise.all([
-      getUserByName(myUsername, { noCache: true }),
-      getUserByName(fromUsername, { noCache: true })
-    ]);
+    const [mu, fu] = await Promise.all([_fetchRelRow(myUsername), _fetchRelRow(fromUsername)]);
     if (!mu || !fu) return { ok: false, msg: 'User not found.' };
     // Genuine friendship check (NOT _pairTargetState — that reads
     // crossed pendings as friends-to-be, and declining one half of a
@@ -1014,10 +1018,7 @@ const FortizedSocial = (() => {
   async function cancelFriendRequest(myUsername, toUsername) {
     myUsername = norm(myUsername);
     toUsername = norm(toUsername);
-    const [mu, tu] = await Promise.all([
-      getUserByName(myUsername, { noCache: true }),
-      getUserByName(toUsername, { noCache: true })
-    ]);
+    const [mu, tu] = await Promise.all([_fetchRelRow(myUsername), _fetchRelRow(toUsername)]);
     if (!mu || !tu) return { ok: false, msg: 'User not found.' };
     // Genuine friendship check — see declineFriendRequest.
     if (_hasU(mu.friends, toUsername) && _hasU(tu.friends, myUsername))

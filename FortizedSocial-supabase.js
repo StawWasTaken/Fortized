@@ -1155,8 +1155,12 @@ const FortizedSocial = (() => {
       // Canonical schema: dm_key + timestamp. Optimize by selecting only needed
       // columns instead of * (faster query, less data transfer, avoids timeouts).
       // The old "from/username/time" fallback is permanently removed.
+      // NOTE: no created_at — that column does not exist on `dms`, and
+      // including it made the WHOLE select error out ('column dms.created_at
+      // does not exist') → every DM thread returned empty. The timestamp
+      // logic falls back to the `timestamp` column just fine.
       const { data, error } = await sb.from('dms')
-        .select('id,dm_key,from,text,timestamp,created_at,edited,new_text,reactions,forwarded,forwarded_by,reply_to,flags')
+        .select('id,dm_key,from,text,timestamp,edited,new_text,reactions,forwarded,forwarded_by,reply_to,flags')
         .in('dm_key', key === legacyKey ? [key] : [key, legacyKey])
         .order('timestamp', { ascending: false })
         .range(skip, skip + max - 1);

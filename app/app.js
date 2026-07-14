@@ -5191,10 +5191,10 @@ function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
   // Fallback when user-set pfp 404s: drop to neutral panel bg + initial letter
   // (the "before" behavior, no color). Color is reserved exclusively for
   // the default-avatar case below.
-  const defaultFallbackJS = 'this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this);';
+  const defaultFallbackJS = 'this.onerror=null;if(!this.parentElement)return;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this);';
   // When the DEFAULT image fails: keep the color background (we're already
   // in default-avatar mode) and substitute the initial letter.
-  const initialFallbackJS = 'this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:'+color+';color:rgba(255,255,255,.9);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)';
+  const initialFallbackJS = 'this.onerror=null;if(!this.parentElement)return;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:'+color+';color:rgba(255,255,255,.9);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)';
   // Known fully-transparent PNG (old crop-bug residue on an account that
   // hasn't logged in since the fix): neutral initial fallback instead of
   // an invisible circle. Unknown PNGs kick an async probe; the fp attr
@@ -14179,8 +14179,14 @@ function initFortizedUXResilience() {
     const t = e.target;
     if (!(t instanceof HTMLImageElement)) return;
     if (t.dataset.fallbackApplied) return;
+    // Avatars built by buildAvatarHTML carry their OWN onerror (initial-
+    // letter fallback) — don't fight it with a src swap.
+    if (t.hasAttribute('onerror') || t.dataset.ftzPfpFp !== undefined) return;
     t.dataset.fallbackApplied = '1';
-    t.src = '/default pfp2.png';
+    // '/default pfp2.png' does NOT exist (404) — that broken redirect was
+    // the source of transparent avatars + the insertBefore crash. Point
+    // at the real file that ships in the repo root.
+    t.src = '/default%20avatar.png';
   }, true);
 }
 
@@ -49817,7 +49823,7 @@ function _ftzCsrOpen(targetUser) {
   overlay.onclick = e => { if (e.target === overlay) _closeStatusReplyModal(); };
 
   const cn = escapeHTML(targetUser.displayName || targetUser.username);
-  const avSrc = targetUser.pfp || '/default%20pfp2.png';
+  const avSrc = targetUser.pfp || '/default%20avatar.png';
   const cs = targetUser.customStatus || {};
   const csEmoji = cs.emoji || '';
   const csText = cs.text || '';
@@ -49833,7 +49839,7 @@ function _ftzCsrOpen(targetUser) {
       <button class="ftz-csr__x" onclick="_closeStatusReplyModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       <div class="ftz-csr__lbl">Replying to a status</div>
       <div class="ftz-csr__quote">
-        <div class="ftz-csr__quote-av"><img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20pfp2.png'"></div>
+        <div class="ftz-csr__quote-av"><img src="${escapeHTML(avSrc)}" onerror="this.src='/default%20avatar.png'"></div>
         <div class="ftz-csr__quote-body">
           <div class="ftz-csr__quote-name">${cn}</div>
           <div class="ftz-csr__quote-bubble">${quoteBody}</div>

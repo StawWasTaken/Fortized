@@ -161,7 +161,18 @@ const FortizedSocial = (() => {
       const cached = _cacheGetWithFallback(cacheKey, ttl);
       if (cached !== undefined) return cached;
     }
-    const { data } = await sb.from('users').select(cols).eq('username', norm(username)).maybeSingle();
+    // Retry once on a backend ERROR (over-plan connection/egress limit —
+    // the transient "demand exceeded" that made boot right after login
+    // fail until a manual refresh). A genuine miss (data null, no error)
+    // is NOT retried — that's just "no such user".
+    let data = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 350));
+      const res = await sb.from('users').select(cols).eq('username', norm(username)).maybeSingle();
+      data = res.data;
+      if (!res.error) break;
+      console.warn('[getUserByName] query error (attempt ' + (attempt + 1) + '):', res.error.message);
+    }
     // Full rows become the delta-write baseline for this user.
     if (data && cols === '*') _rememberRow(data);
     const result = data ? _userFromRow(data) : null;
@@ -626,20 +637,48 @@ const FortizedSocial = (() => {
     // back to an email lookup when the identifier looks like an email.
     const raw = (identifier || '').trim();
     if (!raw) return { ok: false, msg: 'Please enter your username or email.' };
-    let user = null;
     const looksLikeEmail = raw.includes('@');
-    if (!looksLikeEmail) {
-      user = await getUserByName(norm(raw));
+
+    // The account is over its Supabase plan, so a lookup query can
+    // intermittently come back as an ERROR (connection/egress limit —
+    // the "demand exceeded" the user sees) rather than a clean miss.
+    // Distinguishing "genuinely no such user" from "transient backend
+    // error" matters: the old code treated a thrown query as null →
+    // "User not found" for correct credentials, and only a manual page
+    // refresh (a fresh attempt after the limit cleared) got them in.
+    // Look the user up with bounded retries, and — critically — surface
+    // a "busy, try again" error instead of a false "not found" when
+    // every attempt errored.
+    async function _lookup() {
+      let lastErr = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) await new Promise(r => setTimeout(r, 400 * attempt));
+        try {
+          if (!looksLikeEmail) {
+            const { data, error } = await sb.from('users').select('*').eq('username', norm(raw)).maybeSingle();
+            if (error) { lastErr = error; continue; }
+            if (data) _rememberRow(data);
+            return { user: data ? _userFromRow(data) : null, errored: false };
+          } else {
+            const { data, error } = await sb.from('users').select('*').eq('email', raw.toLowerCase()).limit(1).maybeSingle();
+            if (error) { lastErr = error; continue; }
+            if (data) _rememberRow(data);
+            return { user: data ? _userFromRow(data) : null, errored: false };
+          }
+        } catch (e) { lastErr = e; }
+      }
+      console.warn('[login] lookup errored on every attempt:', lastErr?.message);
+      return { user: null, errored: true };
     }
-    if (!user && looksLikeEmail) {
-      try {
-        const emailLower = raw.toLowerCase();
-        const { data } = await sb.from('users').select('*').eq('email', emailLower).limit(1).maybeSingle();
-        if (data) _rememberRow(data);
-        user = data ? _userFromRow(data) : null;
-      } catch(e) { console.warn('[login] email lookup failed', e?.message); }
+
+    const { user, errored } = await _lookup();
+    if (!user) {
+      // Every attempt hit a backend error → don't lie with "not found";
+      // tell the user it's the server so retrying (not re-checking their
+      // password) is the obvious move.
+      if (errored) return { ok: false, msg: 'The server is busy right now — please try again in a moment.', retry: true };
+      return { ok: false, msg: looksLikeEmail ? 'No account found for that email.' : 'User not found.' };
     }
-    if (!user) return { ok: false, msg: looksLikeEmail ? 'No account found for that email.' : 'User not found.' };
     if (user.password !== password) return { ok: false, msg: 'Wrong password.' };
     setCurrentUsername(user.username);
     // setStatus does a network round-trip to the statuses table + a

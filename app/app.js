@@ -24324,14 +24324,15 @@ async function updateNotifBadge(force) {
   // overwrite a fresher count in the DOM.
   if (seq !== _notifBadgeSeq) return;
   const unread = sum.total;
-  const mentionTxt = sum.mentions > 9 ? '9+' : String(sum.mentions);
+  const counted = sum.counted ?? sum.mentions ?? 0;
+  const mentionTxt = counted > 9 ? '9+' : String(counted);
   const dotHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;vertical-align:middle;"></span>';
   if (badge) {
-    badge.innerHTML = sum.mentions > 0 ? mentionTxt : (unread > 0 ? dotHTML : '');
+    badge.innerHTML = counted > 0 ? mentionTxt : (unread > 0 ? dotHTML : '');
     badge.style.display = unread > 0 ? 'flex' : 'none';
   }
   if (tbBadge) {
-    tbBadge.innerHTML = sum.mentions > 0 ? mentionTxt : (unread > 0 ? dotHTML : '');
+    tbBadge.innerHTML = counted > 0 ? mentionTxt : (unread > 0 ? dotHTML : '');
     tbBadge.style.display = unread > 0 ? 'inline-flex' : 'none';
   }
   setFaviconNotif(unread>0);
@@ -47985,7 +47986,9 @@ function initCrossDeviceSync() {
   // 4. Friend request notifications
   socket.on('friend:request', (data) => {
     if (data.to === CU.username) {
-      updateNotifBadge().catch(()=>{});
+      // force=true: the sender invalidated ITS cache, not ours, so bypass
+      // our local unread cache to reflect the new request in the badge now.
+      updateNotifBadge(true).catch(()=>{});
       if (Notification?.permission === 'granted' && document.hidden && CU?.status !== 'dnd') {
         try {
           const n = new Notification('Friend Request', {

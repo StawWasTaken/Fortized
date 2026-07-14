@@ -794,20 +794,23 @@ const FortizedSocial = (() => {
   }
 
   // Unread breakdown in ONE light query: total unread + how many are
-  // direct mentions. Drives the Discord-style topbar badge (white dot =
-  // "something unread", white 1-9+ = unread mentions).
+  // "counted" (direct mentions AND friend requests). Drives the
+  // Discord-style topbar badge — white dot = "something unread", white
+  // 1-9+ = unread mentions/friend-requests.
+  const _BADGE_COUNTED = new Set(['mention', 'friend_request']);
   async function getUnreadSummary(username, opts) {
     const cacheKey = 'unreadSum:' + norm(username);
     if (!opts?.noCache) {
       const cached = _cacheGet(cacheKey);
       if (cached !== undefined) return cached;
     }
-    let result = { total: 0, mentions: 0 };
+    let result = { total: 0, mentions: 0, counted: 0 };
     try {
       const { data } = await sb.from('notifications').select('type')
         .eq('username', norm(username)).eq('read', false).limit(100);
       const rows = data || [];
-      result = { total: rows.length, mentions: rows.filter(r => r.type === 'mention').length };
+      const counted = rows.filter(r => _BADGE_COUNTED.has(r.type)).length;
+      result = { total: rows.length, mentions: counted, counted };
     } catch (_) {}
     _cacheSet(cacheKey, result, _CACHE_TTL.unreadCount);
     return result;

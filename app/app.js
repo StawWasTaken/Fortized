@@ -4945,13 +4945,23 @@ function _saneCrop(c) {
 const _blankPfpKnown = new Map();   // fingerprint -> true (blank) | false (fine)
 const _blankPfpProbing = new Set();
 function _pfpFingerprint(pfp) { return pfp.length + ':' + pfp.slice(-24); }
-// Is this a data-URL raster we can and should alpha-probe?
+// Is this a data-URL raster we can and should alpha-probe? PNG-ONLY on
+// purpose: the transparent-avatar corruption was ALWAYS a blank PNG
+// export, and every new avatar we write is webp from our own crop
+// pipeline (which already refuses blank exports). Probing webp gained
+// nothing and risked yanking good avatars on a decode hiccup — the
+// recurring "save, wait a bit, it disappears" bug. Also skip anything
+// big enough to plainly contain real content.
+const _BLANK_PROBE_MAX = 20000; // chars; a blank 480² PNG export is ~2-4 KB
 function _pfpProbeable(pfp) {
-  return typeof pfp === 'string' && (pfp.startsWith('data:image/png') || pfp.startsWith('data:image/webp'));
+  return typeof pfp === 'string' && pfp.startsWith('data:image/png') && pfp.length <= _BLANK_PROBE_MAX;
 }
-// Decode + alpha-sample: resolves true when the image is provably blank
-// (every sampled pixel alpha-0, zero-sized, or undecodable). Shared by
-// the boot heal, the render probe, and the incoming-socket gate.
+// Decode + alpha-sample: resolves true ONLY when the image PROVABLY
+// decodes to all-transparent (or zero-sized). A decode FAILURE resolves
+// false — it is inconclusive, never proof of corruption. Treating an
+// onerror as "blank" is what let transient decode failures (many
+// avatars decoding at once, memory pressure) rip out perfectly good
+// avatars and even clear them from the DB via the boot heal.
 function _pfpIsBlank(pfp) {
   return new Promise(resolve => {
     try {
@@ -4968,7 +4978,7 @@ function _pfpIsBlank(pfp) {
           resolve(true);
         } catch (_) { resolve(false); } // canvas hiccup ≠ proof of corruption
       };
-      img.onerror = () => resolve(true); // undecodable data URL = corrupt
+      img.onerror = () => resolve(false); // decode failure is INCONCLUSIVE — never yank on it
       img.src = pfp;
     } catch (_) { resolve(false); }
   });
@@ -5062,7 +5072,7 @@ function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
   // an invisible circle. Unknown PNGs kick an async probe; the fp attr
   // lets the probe swap instances it already painted.
   let _fpAttr = '';
-  if (pfp && typeof pfp === 'string' && pfp.startsWith('data:image/png')) {
+  if (_pfpProbeable(pfp)) {
     const fp = _pfpFingerprint(pfp);
     if (_blankPfpKnown.get(fp) === true) {
       return '<span style="display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;">'+initial+'</span>';

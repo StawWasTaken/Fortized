@@ -9800,6 +9800,26 @@ button[style*="background: var(--accent)"]:active {
 .macct-add{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;background:var(--panel);border:2px solid var(--ink);box-shadow:0 3px 0 0 var(--ink);color:#fff;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,background .15s;}
 .macct-add:hover{transform:translateY(-1px);box-shadow:0 4px 0 0 var(--ink);background:rgba(255,255,255,.05);}
 .macct-add:active{transform:translateY(1px);box-shadow:0 2px 0 0 var(--ink);}
+/* Add-account form (inside the .macct shell) */
+.macct-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+.addacct-form{display:flex;flex-direction:column;}
+.addacct-lbl{font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.addacct-field{display:flex;align-items:center;gap:9px;padding:0 12px;border-radius:12px;background:var(--panel);border:1.5px solid var(--border);transition:border-color .14s,box-shadow .14s;}
+.addacct-field:focus-within{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.07);}
+.addacct-field__ic{font-size:13px;color:var(--muted);flex-shrink:0;}
+.addacct-field input{flex:1;padding:11px 2px;background:transparent;border:none!important;box-shadow:none!important;color:#fff;font-size:13.5px;outline:none;min-width:0;}
+.addacct-hint{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:11px;color:var(--muted-light);line-height:1.4;}
+.addacct-hint .fa-solid{font-size:11px;color:var(--muted);flex-shrink:0;}
+.addacct-err{font-size:12.5px;color:var(--red);margin-top:12px;border-radius:9px;padding:9px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);}
+.addacct-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--radius-md,12px);border:2px solid var(--ink);box-shadow:0 3px 0 0 var(--ink);font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,filter .12s,background .12s,color .12s;}
+.addacct-btn .fa-solid{font-size:11px;line-height:1;}
+.addacct-btn:hover{transform:translateY(-1px);box-shadow:0 4px 0 0 var(--ink);}
+.addacct-btn:active{transform:translateY(1px);box-shadow:0 2px 0 0 var(--ink);}
+.addacct-btn--ghost{background:var(--panel);color:var(--muted-light);}
+.addacct-btn--ghost:hover{color:#fff;}
+.addacct-btn--go{background:var(--accent);color:var(--ink);}
+.addacct-btn--go:hover{filter:brightness(1.05);}
+.addacct-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:0 3px 0 0 var(--ink);}
 
 /* ── Room-topbar action cluster (per-DM/GC/channel buttons) ── */
 .rt-actions{margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0;}

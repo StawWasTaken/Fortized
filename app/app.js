@@ -46233,41 +46233,69 @@ function _macctLogout(username, isActive) {
   toast('Signed out of @' + username, 'info');
 }
 
+// WebAuthn helpers ported from the login page so the add-account flow
+// can enforce the SAME security-key second factor.
+function _b64uToBuf(s) {
+  s = String(s || '').replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  try {
+    const bin = atob(s);
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    return buf.buffer;
+  } catch { return new ArrayBuffer(0); }
+}
+async function _verifySecurityKeyFactor(passkeys) {
+  if (!window.PublicKeyCredential || !navigator.credentials || !navigator.credentials.get) {
+    toast('This browser does not support security keys. Use a passkey-capable browser.', 'error');
+    return false;
+  }
+  try {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const allowCredentials = (passkeys || []).map(k => ({ type: 'public-key', id: _b64uToBuf(k.id) }));
+    const cred = await navigator.credentials.get({
+      publicKey: { challenge, allowCredentials, userVerification: 'preferred', timeout: 60000, rpId: location.hostname || 'fortized.com' },
+    });
+    return !!cred;
+  } catch (e) { console.error('Security key verification failed', e); return false; }
+}
+
+// Rebuilt in the Manage Accounts card language (.macct shell) — was the
+// old .ftz-onboarding sheet. Same auth flow underneath + the passkey
+// second factor.
 function showAddAccountModal() {
   document.getElementById('add-acct-modal')?.remove();
-  // Re-uses the .ftz-onboarding-* card system so the look matches
-  // the "Personalize Your Experience" sheet — same backdrop blur,
-  // same accent bar, same display-font title, same button stack.
   const overlay = document.createElement('div');
   overlay.id = 'add-acct-modal';
-  overlay.className = 'ftz-onboarding-overlay';
+  overlay.className = 'modal-overlay open';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
-    <div class="ftz-onboarding-card" style="max-width:420px;">
-      <div class="ftz-onboarding-bar"></div>
-      <div class="ftz-onboarding-body">
-        <div class="ftz-onboarding-eyebrow">ACCOUNT</div>
-        <div class="ftz-onboarding-title">Add Account</div>
-        <div class="ftz-onboarding-sub">Signing in to another account will let you switch easily between accounts on this device.</div>
-        <div style="margin-top:18px;">
-          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:6px;">Username or Email <span style="color:#f87171;">*</span></label>
-          <input id="add-acct-user" class="field-input" placeholder="username or email" style="width:100%;" autocomplete="username">
+    <div class="macct-card" role="dialog" aria-label="Add an account" style="width:min(440px,94vw);">
+      <div class="macct-head">
+        <div class="macct-head__text">
+          <div class="macct-title">Add an account</div>
+          <div class="macct-sub">Sign in to another account to switch between them on this device.</div>
         </div>
-        <div style="margin-top:14px;">
-          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:6px;">Password <span style="color:#f87171;">*</span></label>
-          <input id="add-acct-pass" type="password" class="field-input" placeholder="Enter password" style="width:100%;" autocomplete="current-password">
-        </div>
-        <div id="add-acct-err" style="font-size:12.5px;color:var(--red);margin-top:14px;display:none;border-radius:9px;padding:9px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);"></div>
-        <div class="ftz-onboarding-btns">
-          <button class="ftz-ob-btn ftz-ob-skip" onclick="document.getElementById('add-acct-modal').remove()">Back</button>
-          <button class="ftz-ob-btn ftz-ob-next" id="add-acct-btn" onclick="submitAddAccount()">Continue</button>
-        </div>
+        <button class="macct-close" aria-label="Close" onclick="this.closest('.modal-overlay').remove()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <div class="addacct-form">
+        <label class="addacct-lbl">Username or email</label>
+        <div class="addacct-field"><i class="fa-solid fa-user addacct-field__ic" aria-hidden="true"></i><input id="add-acct-user" placeholder="username or email" autocomplete="username" spellcheck="false"></div>
+        <label class="addacct-lbl" style="margin-top:12px;">Password</label>
+        <div class="addacct-field"><i class="fa-solid fa-lock addacct-field__ic" aria-hidden="true"></i><input id="add-acct-pass" type="password" placeholder="Enter password" autocomplete="current-password"></div>
+        <div class="addacct-hint"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> If this account has a security key, you'll be asked for it next.</div>
+        <div id="add-acct-err" class="addacct-err" style="display:none;"></div>
+      </div>
+      <div class="macct-actions">
+        <button class="addacct-btn addacct-btn--ghost" onclick="document.getElementById('add-acct-modal').remove()">Cancel</button>
+        <button class="addacct-btn addacct-btn--go" id="add-acct-btn" onclick="submitAddAccount()"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Sign in</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('visible')));
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   setTimeout(() => document.getElementById('add-acct-user')?.focus(), 60);
-  document.getElementById('add-acct-pass')?.addEventListener('keydown', e => { if(e.key==='Enter') submitAddAccount(); });
+  document.getElementById('add-acct-pass')?.addEventListener('keydown', e => { if (e.key === 'Enter') submitAddAccount(); });
+  document.getElementById('add-acct-user')?.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('add-acct-pass')?.focus(); });
 }
 
 async function submitAddAccount() {
@@ -46307,6 +46335,14 @@ async function submitAddAccount() {
       result = u;
     }
     if (!result?.username) throw new Error('Could not authenticate — check credentials');
+    // Security-key second factor — same gate as the login page. If the
+    // account being added has registered passkeys, require one.
+    const passkeys = (result.security && Array.isArray(result.security.passkeys)) ? result.security.passkeys : [];
+    if (passkeys.length > 0) {
+      if (btn) btn.textContent = 'Waiting for security key…';
+      const ok = await _verifySecurityKeyFactor(passkeys);
+      if (!ok) throw new Error('Security key verification failed or was cancelled.');
+    }
     // Save current user's full data before switching
     saveCurrentToAccounts();
     if (CU?.username) {
@@ -46329,7 +46365,7 @@ async function submitAddAccount() {
     setTimeout(()=>window.location.reload(), 700);
   } catch(e) {
     if(errEl){errEl.textContent=e.message||'Login failed — please check your credentials';errEl.style.display='block';}
-    if(btn){btn.disabled=false;btn.textContent='Sign In & Switch';}
+    if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Sign in';}
   }
 }
 // Close switcher on outside click
@@ -48972,22 +49008,13 @@ async function _saveAllSettingsImpl() {
     toast("Couldn't reach the server — your changes are NOT saved yet. Try again in a moment.", 'error');
     return;
   }
-  // Avatar read-back: the DB-side guard trigger can silently keep the
-  // OLD pfp (it refuses small PNGs that match the blank-corruption
-  // signature). Without this check the user sees their new avatar until
-  // the next background refresh "removes" it — the "save, wait a bit,
-  // gone" report. Verify the row actually took the new value and say so
-  // if it didn't.
-  if (typeof CU.pfp === 'string' && CU.pfp.startsWith('data:')) {
-    try {
-      const storedLen = await FortizedSocial.getStoredFieldLength(CU.username, 'pfp');
-      if (storedLen !== null && storedLen !== CU.pfp.length) {
-        toast('The server rejected that avatar image (safety filter for corrupt uploads). Please pick a different image.', 'error');
-        console.warn('[avatar] read-back mismatch after save: sent', CU.pfp.length, 'chars, row has', storedLen);
-        return;
-      }
-    } catch (_) {}
-  }
+  // (Removed) The avatar read-back check lived here. It compared the
+  // row's pfp length immediately after saving and errored on a
+  // mismatch — but Supabase read replicas lag a fresh write, so it read
+  // the OLD value and false-rejected genuinely-successful saves with a
+  // scary "safety filter" message. saveUser already returns false on a
+  // REAL write failure (handled just above), so this added nothing but
+  // false positives. Gone.
   // Broadcast all editable cosmetic + identity fields so other
   // clients see the changes in real time without waiting for a
   // page reload. Previously saveAllSettings was silent over the

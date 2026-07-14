@@ -1253,7 +1253,9 @@ const FortizedSocial = (() => {
       timestamp: ts,
       edited: msgData.edited || false,
       newText: msgData.newText || msgData.new_text || undefined,
-      reactions: msgData.reactions || undefined,
+      // Prefer the top-level reactions column (where toggleReaction now
+      // writes) over any legacy copy inside the data blob.
+      reactions: r.reactions || msgData.reactions || undefined,
       forwarded: msgData.forwarded || false,
       forwardedBy: msgData.forwardedBy || msgData.forwarded_by || undefined,
       replyTo: _parseJSONIsh(msgData.replyTo || msgData.reply_to || r.reply_to)
@@ -1496,15 +1498,46 @@ const FortizedSocial = (() => {
       let updateSuccess = false;
 
       if (context === 'dm') {
-        // DMs - find the message and toggle reaction
+        // DMs — the reaction lives in the top-level `reactions` column
+        // (that's what getDMMessages reads: r.reactions). The old code
+        // wrote it into the `data` JSON blob instead, so the toggle
+        // succeeded but the read never saw it — reactions silently did
+        // nothing in DMs. Read + write the `reactions` column, like GC.
         const { data, error: err1 } = await sb.from('dms')
-          .select('*')
+          .select('reactions')
           .eq('id', msgId)
           .maybeSingle();
 
         if (err1 || !data) throw new Error('Message not found');
 
-        const msgData = typeof data.data === 'string' ? JSON.parse(data.data) : (data.data || {});
+        reactions = data.reactions || {};
+        const arr = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
+        const idx = arr.indexOf(username);
+        if (idx !== -1) arr.splice(idx, 1);
+        else arr.push(username);
+        if (arr.length) reactions[emoji] = arr;
+        else delete reactions[emoji];
+
+        const { error: err2 } = await sb.from('dms')
+          .update({ reactions: Object.keys(reactions).length ? reactions : null })
+          .eq('id', msgId);
+
+        if (err2) throw new Error(`Update failed: ${err2.message}`);
+        updateSuccess = true;
+      } else if (context === 'gc') {
+        // Group chats — GC messages are read through the firebase-compat
+        // shim, which surfaces reactions from the `data` JSON blob
+        // (…, ...r.data), NOT the `reactions` column. The old code wrote
+        // the column, so GC reactions were invisible (same failure as
+        // DMs). Read + write data.reactions to match the read path.
+        const { data, error: err1 } = await sb.from('group_chat_messages')
+          .select('data')
+          .eq('id', msgId)
+          .maybeSingle();
+
+        if (err1 || !data) throw new Error('Message not found');
+
+        const msgData = (data.data && typeof data.data === 'object') ? { ...data.data } : {};
         reactions = msgData.reactions || {};
         const arr = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
         const idx = arr.indexOf(username);
@@ -1514,31 +1547,8 @@ const FortizedSocial = (() => {
         else delete reactions[emoji];
 
         msgData.reactions = Object.keys(reactions).length ? reactions : undefined;
-        const { error: err2 } = await sb.from('dms')
-          .update({ data: msgData })
-          .eq('id', msgId);
-
-        if (err2) throw new Error(`Update failed: ${err2.message}`);
-        updateSuccess = true;
-      } else if (context === 'gc') {
-        // Group chats - find and update reaction
-        const { data, error: err1 } = await sb.from('group_chat_messages')
-          .select('reactions')
-          .eq('id', msgId)
-          .maybeSingle();
-
-        if (err1 || !data) throw new Error('Message not found');
-
-        reactions = data?.reactions || {};
-        const arr = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
-        const idx = arr.indexOf(username);
-        if (idx !== -1) arr.splice(idx, 1);
-        else arr.push(username);
-        if (arr.length) reactions[emoji] = arr;
-        else delete reactions[emoji];
-
         const { error: err2 } = await sb.from('group_chat_messages')
-          .update({ reactions: Object.keys(reactions).length ? reactions : null })
+          .update({ data: msgData })
           .eq('id', msgId);
 
         if (err2) throw new Error(`Update failed: ${err2.message}`);

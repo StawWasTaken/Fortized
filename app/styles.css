@@ -12049,7 +12049,7 @@ select:focus-visible {
 .fpp-clear-dd__sync{ display:none; align-items:center; justify-content:center; width:18px; height:18px; border-radius:5px; color:var(--accent); font-size:9px; background:rgba(255,249,62,.1); }
 .fpp-clear-dd__sync.is-on{ display:flex; }
 .fpp-clear-dd__chev{ font-size:10px; color:var(--accent); flex-shrink:0; }
-.fpp-cleardd-menu{ min-width:210px; }
+.fpp-cleardd-menu{ left:auto; right:auto; min-width:210px; max-height:none; }
 .fpp-menu__group-label{
   padding:6px 10px 4px;
   font-family:var(--font-display);

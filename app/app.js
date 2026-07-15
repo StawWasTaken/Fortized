@@ -5281,8 +5281,14 @@ function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
       _probeBlankPfp(pfp);
     }
   }
-  // GIF avatar with CSS-based crop (preserves animation) — NO colored wrap
-  if (pfp && cropData && cropData.widthPct) {
+  // GIF avatar with CSS-based crop (preserves animation) — NO colored wrap.
+  // The CSS crop is ONLY valid for animated GIFs (static images bake the
+  // crop into the pixels at export time). A stale GIF-era pfpCrop left on a
+  // now-static JPEG/PNG/WebP avatar would position it mostly outside the
+  // circle and render as a blank/transparent-looking gap — one of the
+  // "avatar vanished" reports. Apply the CSS crop only to real GIFs.
+  const _isGifPfp = typeof pfp === 'string' && /^data:image\/gif/i.test(pfp);
+  if (pfp && _isGifPfp && cropData && cropData.widthPct) {
     return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:block;">'
       + '<img src="'+pfp+'"'+_fpAttr+' style="position:absolute;left:'+cropData.leftPct+'%;top:'+cropData.topPct+'%;width:'+cropData.widthPct+'%;height:auto;" onerror="'+defaultFallbackJS+'">'
       + '</div>';
@@ -50955,7 +50961,13 @@ function _fppStatusOpenDur(evt, statusId) {
   document.body.appendChild(menu);
   const anchor = evt.currentTarget.getBoundingClientRect();
   menu.style.position = 'fixed';
-  menu.style.minWidth = Math.max(200, anchor.width) + 'px';
+  // The base .ftz-csp__ddl-menu is right:0 (it's designed to stretch inside
+  // a relative parent). Here it's body-level and fixed, so pin the width and
+  // kill the right anchor or it spans the whole viewport.
+  menu.style.right = 'auto';
+  menu.style.width = Math.round(Math.max(210, anchor.width)) + 'px';
+  menu.style.minWidth = '0';
+  menu.style.maxHeight = 'none';
   menu.style.zIndex = '13000';
   let left = anchor.left, top = anchor.bottom + 5;
   if (top + menu.offsetHeight > window.innerHeight - 8) top = Math.max(8, anchor.top - menu.offsetHeight - 5);

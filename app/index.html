@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix266';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix267';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix266';
+    s4.src = '/firebase-compat-shim.js?v=2026fix267';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix266">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix267">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix266', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix267', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix266"></script>
+<script src="/app/utils.js?v=2026fix267"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -980,8 +980,13 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
           <input id="friend-target" placeholder="Enter a username..." data-i18n-placeholder="modal.add_friend.placeholder" autocomplete="off" spellcheck="false" oninput="checkFriendTarget(this.value)" onkeydown="if(event.key==='Enter')sendFriendRequest()">
           <button class="btn-a afr-send-btn" id="friend-send-btn" onclick="sendFriendRequest()"><svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;" aria-hidden="true"><path d="M536.4-26.3c9.8-3.5 20.6-1 28 6.3s9.8 18.2 6.3 28l-178 496.9c-5 13.9-18.1 23.1-32.8 23.1-14.2 0-27-8.6-32.3-21.7l-64.2-158c-4.5-11-2.5-23.6 5.2-32.6l94.5-112.4c5.1-6.1 4.7-15-.9-20.6s-14.6-6-20.6-.9L229.2 276.1c-9.1 7.6-21.6 9.6-32.6 5.2L38.1 216.8c-13.1-5.3-21.7-18.1-21.7-32.3 0-14.7 9.2-27.8 23.1-32.8l496.9-178z"/></svg><span data-i18n="modal.add_friend.send">Send Friend Request</span></button>
         </div>
-        <div id="friend-target-preview" style="display:none;margin-top:10px;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:12px;"></div>
-        <div id="friend-target-hint" style="font-size:11px;min-height:14px;margin-top:6px;transition:color .15s;"></div>
+        <div id="friend-target-preview" class="afr-preview">
+          <div class="afr-preview__empty">
+            <div class="afr-preview__empty-ic"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div>
+            <div class="afr-preview__empty-txt">Type a username above to preview who you're adding before you send the request.</div>
+          </div>
+        </div>
+        <div id="friend-target-hint" style="font-size:11px;min-height:14px;margin-top:8px;transition:color .15s;"></div>
         <div class="modal-error" id="friend-error"></div>
         <div class="modal-success" id="friend-success"></div>
       </div>
@@ -1252,10 +1257,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix266"></script>
-<script src="/app/app.js?v=2026fix266"></script>
-<script src="/app/joy-system.js?v=2026fix266"></script>
-<script src="/app/chronicle-games.js?v=2026fix266"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix267"></script>
+<script src="/app/app.js?v=2026fix267"></script>
+<script src="/app/joy-system.js?v=2026fix267"></script>
+<script src="/app/chronicle-games.js?v=2026fix267"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

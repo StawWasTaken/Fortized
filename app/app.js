@@ -42731,52 +42731,73 @@ async function checkFriendTarget(val) {
   if (!hint) return;
   clearTimeout(_friendCheckTimer);
   const q = (val || '').trim().toLowerCase();
-  if (!q) { hint.textContent = ''; if(preview) preview.style.display='none'; return; }
-  if (q === CU.username) { hint.style.color = 'var(--red)'; hint.textContent = "That's you!"; if(preview) preview.style.display='none'; return; }
+  if (!q) { hint.textContent = ''; if (preview) { preview.classList.remove('has-user'); preview.innerHTML = _afrPreviewEmpty(); } return; }
+  if (q === CU.username) { hint.style.color = 'var(--red)'; hint.textContent = "That's you!"; if (preview) { preview.classList.remove('has-user'); preview.innerHTML = _afrPreviewEmpty('self'); } return; }
   hint.style.color = 'var(--muted)';
   hint.textContent = 'Searching…';
-  if(preview) preview.style.display='none';
+  if (preview) { preview.classList.remove('has-user'); preview.innerHTML = _afrPreviewEmpty('searching', q); }
   _friendCheckTimer = setTimeout(async () => {
     try {
       const u = await FortizedSocial.getUserByName(q);
       if (u) {
         const isFriend = (CU.friends||[]).includes(q);
         const hasPending = (CU.friendRequestsSent||[]).includes(q);
-        // Show user preview card
+        // Rich preview card — fills the zone with the person you're adding.
         if (preview) {
-          let statusLabel = '';
-          if (isFriend) statusLabel = '<span style="font-size:10.5px;color:var(--green);font-weight:700;padding:2px 8px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.15);border-radius:6px;">Already Friends</span>';
-          else if (hasPending) statusLabel = '<span style="font-size:10.5px;color:var(--accent);font-weight:700;padding:2px 8px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);border-radius:6px;">Pending</span>';
-          preview.innerHTML = '<div style="display:flex;align-items:center;gap:12px;">'
-            + '<div style="flex-shrink:0;">'+buildAvatarHTML(u.pfp||null, u.displayName||u.username, 44)+'</div>'
-            + '<div style="flex:1;min-width:0;">'
-            + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
-            + '<span style="font-family:var(--font-display);font-weight:800;font-size:14px;color:#fff;">'+escapeHTML(u.displayName||u.username)+'</span>'
-            + statusLabel
+          let badge = '';
+          if (isFriend) badge = '<span class="afr-preview__badge afr-preview__badge--friend">Already friends</span>';
+          else if (hasPending) badge = '<span class="afr-preview__badge afr-preview__badge--pending">Request pending</span>';
+          const dot = (typeof FtzStatus !== 'undefined' && u.status && u.status !== 'offline')
+            ? FtzStatus.dotSvg(u.status, 13) : '';
+          const stLabel = (typeof FtzStatus !== 'undefined' && u.status)
+            ? (FtzStatus.publicLabel ? FtzStatus.publicLabel(u.status) : (FtzStatus.label ? FtzStatus.label(u.status) : '')) : '';
+          const safe = escapeHTML(u.username);
+          preview.classList.add('has-user');
+          preview.innerHTML =
+              '<div class="afr-preview__av">' + buildAvatarHTML(u.pfp||null, u.displayName||u.username, 52, u.pfpCrop) + '</div>'
+            + '<div class="afr-preview__info">'
+            +   '<div class="afr-preview__name-row"><span class="afr-preview__name">' + escapeHTML(u.displayName||u.username) + '</span>' + badge + '</div>'
+            +   '<div class="afr-preview__handle">@' + safe + '</div>'
+            +   (stLabel ? '<div class="afr-preview__status">' + dot + '<span>' + escapeHTML(stLabel) + '</span></div>' : '')
             + '</div>'
-            + '<div style="font-size:11.5px;color:rgba(255,255,255,.3);margin-top:2px;">@'+escapeHTML(u.username)+'</div>'
-            + '</div>'
-            + '<div style="flex-shrink:0;cursor:pointer;opacity:.5;transition:opacity .15s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.5" onclick="closeModal(\'modal-add-friend\');viewUserProfile(\''+escapeHTML(u.username)+'\')" title="View Profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>'
-            + '</div>';
-          preview.style.display = 'block';
+            + '<button class="afr-preview__view" onclick="closeModal(\'modal-add-friend\');viewUserProfile(\'' + safe + '\')" title="View full profile">View profile <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></button>';
         }
-        if (isFriend) {
-          hint.style.color = 'var(--muted)';
-          hint.textContent = '';
-        } else if (hasPending) {
-          hint.style.color = 'var(--accent)';
-          hint.textContent = '';
-        } else {
-          hint.style.color = '#3ecf6e';
-          hint.textContent = 'Ready to send friend request!';
-        }
+        if (isFriend) { hint.style.color = 'var(--muted)'; hint.textContent = ''; }
+        else if (hasPending) { hint.style.color = 'var(--accent)'; hint.textContent = ''; }
+        else { hint.style.color = '#3ecf6e'; hint.textContent = 'Ready to send friend request!'; }
       } else {
-        hint.style.color = 'var(--red)';
-        hint.textContent = 'No user found with that username';
-        if(preview) preview.style.display='none';
+        hint.textContent = '';
+        if (preview) { preview.classList.remove('has-user'); preview.innerHTML = _afrPreviewEmpty('none', q); }
       }
-    } catch { hint.textContent = ''; if(preview) preview.style.display='none'; }
+    } catch { hint.textContent = ''; if (preview) { preview.classList.remove('has-user'); preview.innerHTML = _afrPreviewEmpty(); } }
   }, 350);
+}
+
+// Empty / transitional states for the add-friend preview zone. Keeping the
+// zone always-populated is what fills the "big empty space" under the input.
+function _afrPreviewEmpty(kind, q) {
+  if (kind === 'none') {
+    return '<div class="afr-preview__empty afr-preview__empty--none">'
+      + '<div class="afr-preview__empty-ic"><i class="fa-solid fa-user-slash" aria-hidden="true"></i></div>'
+      + '<div class="afr-preview__empty-txt">No one on Fortized goes by <b>@' + escapeHTML(q||'') + '</b>. Double-check the username.</div>'
+      + '</div>';
+  }
+  if (kind === 'self') {
+    return '<div class="afr-preview__empty">'
+      + '<div class="afr-preview__empty-ic"><i class="fa-solid fa-face-smile" aria-hidden="true"></i></div>'
+      + '<div class="afr-preview__empty-txt">That\'s you! You\'re already your own best friend.</div>'
+      + '</div>';
+  }
+  if (kind === 'searching') {
+    return '<div class="afr-preview__empty">'
+      + '<div class="afr-preview__empty-ic"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i></div>'
+      + '<div class="afr-preview__empty-txt">Looking for <b>@' + escapeHTML(q||'') + '</b>…</div>'
+      + '</div>';
+  }
+  return '<div class="afr-preview__empty">'
+    + '<div class="afr-preview__empty-ic"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div>'
+    + '<div class="afr-preview__empty-txt">Type a username above to preview who you\'re adding before you send the request.</div>'
+    + '</div>';
 }
 
 // ════════════════════════════════════════════

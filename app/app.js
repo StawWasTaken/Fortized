@@ -223,6 +223,89 @@ function _warningDuration(existingCount) {
 // Suspensions always sit on the record for a year.
 const _SUSPENSION_DURATION_MS = 365 * 86400000;
 
+// Records past their expiry — no longer counted toward standing, shown in
+// the "Expired violations" drawer.
+function _expiredWarnings(u) {
+  const now = Date.now();
+  return (u && u.disciplinary && Array.isArray(u.disciplinary.warnings) ? u.disciplinary.warnings : [])
+    .filter(w => w.expiresAt && w.expiresAt <= now);
+}
+function _expiredSuspensions(u) {
+  const now = Date.now();
+  return (u && u.disciplinary && Array.isArray(u.disciplinary.suspensions) ? u.disciplinary.suspensions : [])
+    .filter(s => s.until && s.until <= now);
+}
+// Fold warnings + suspensions into one violation shape the standing card
+// renders (newest first). `at` is the issue date, `until` the expiry.
+function _standingViolations(warnings, suspensions) {
+  const out = [];
+  (suspensions || []).forEach(s => out.push({
+    kind: 'suspend',
+    reason: s.reason || 'a suspension',
+    at: s.issuedAt || s.suspendedAt || s.bannedAt || null,
+    until: s.until || null,
+  }));
+  (warnings || []).forEach(w => out.push({
+    kind: 'warn',
+    reason: w.reason || 'a violation',
+    at: w.issuedAt || w.at || null,
+    until: w.expiresAt || null,
+  }));
+  out.sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0));
+  return out;
+}
+// Long-form relative age for violation pills ("18 days ago", "a day ago").
+function _violationAge(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  if (isNaN(diff)) return '';
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + ' minute' + (mins !== 1 ? 's' : '') + ' ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + ' hour' + (hrs !== 1 ? 's' : '') + ' ago';
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'a day ago';
+  if (days < 30) return days + ' days ago';
+  const months = Math.floor(days / 30);
+  if (months === 1) return 'a month ago';
+  if (months < 12) return months + ' months ago';
+  const yrs = Math.floor(days / 365);
+  return yrs === 1 ? 'a year ago' : yrs + ' years ago';
+}
+// A violation issued within the last 48h wears the "NEW" badge.
+function _isNewViolation(iso) {
+  if (!iso) return false;
+  const diff = Date.now() - new Date(iso).getTime();
+  return !isNaN(diff) && diff >= 0 && diff < 48 * 3600000;
+}
+// The node icon (FA solid) that sits inside the current standing dot.
+function _standingIcon(level) {
+  if (level === 0) return 'fa-check';
+  if (level === 4) return 'fa-xmark';
+  return 'fa-exclamation';
+}
+// Renders one violation card for the standing drawers.
+function _renderViolationCard(v, opts) {
+  opts = opts || {};
+  const isNew = !opts.expired && _isNewViolation(v.at);
+  const age = _violationAge(v.at);
+  const badge = isNew
+    ? '<span class="std-viol-card__badge std-viol-card__badge--new">NEW</span>'
+    : (age ? `<span class="std-viol-card__badge std-viol-card__badge--age">${escapeHTML(age)}</span>` : '');
+  const verb = v.kind === 'suspend' ? 'were suspended for' : 'broke the rules for';
+  return `<div class="std-viol-card${isNew ? ' std-viol-card--new' : ''}${opts.expired ? ' std-viol-card--expired' : ''}">
+    ${badge}
+    <div class="std-viol-card__text">You ${verb} <strong>${escapeHTML(v.reason)}</strong>.</div>
+  </div>`;
+}
+// Collapse/expand a standing drawer + flip its chevron.
+function _toggleStandingDrawer(headEl) {
+  const drawer = headEl.closest('.std-drawer');
+  if (!drawer) return;
+  drawer.classList.toggle('std-drawer--open');
+}
+
 // ══════════════════════════════════════════════════════════
 // COMPANION BRIDGE  (localhost process scanner)
 // ══════════════════════════════════════════════════════════
@@ -22769,7 +22852,46 @@ function _buildProfileView(tab) {
           </div>
         </div>
 
-        <!-- Account Standing -->
+        <!-- Account Standing (Discord-style: labelled progress track +
+             collapsible Active / Expired violation drawers) -->
+        ${(() => {
+          const _labels = ['All good!','Limited','Very limited','At risk','Suspended'];
+          const _cur = _meta.id;
+          const _activeViol = _standingViolations(_activeW, _activeS);
+          const _expiredViol = _standingViolations(_expiredWarnings(CU), _expiredSuspensions(CU));
+          // Node track: only the CURRENT node is a big coloured dot with an
+          // icon; connectors up to it are filled with the standing colour.
+          const _track = _labels.map((lbl, i) => {
+            const isCur = i === _cur;
+            const lFill = i <= _cur && i > 0;      // connector arriving at node i
+            const rFill = i < _cur;                // connector leaving node i
+            const lLine = i === 0 ? '' : `<span class="std-track__line${lFill ? ' std-track__line--fill' : ''}" style="${lFill ? '--sc:' + _meta.color + ';' : ''}"></span>`;
+            const rLine = i === _labels.length - 1 ? '' : `<span class="std-track__line${rFill ? ' std-track__line--fill' : ''}" style="${rFill ? '--sc:' + _meta.color + ';' : ''}"></span>`;
+            const dot = isCur
+              ? `<span class="std-track__dot std-track__dot--cur" style="background:${_meta.color};box-shadow:0 0 0 4px ${_meta.tint};"><i class="fa-solid ${_standingIcon(i)}" aria-hidden="true"></i></span>`
+              : `<span class="std-track__dot"></span>`;
+            return `<div class="std-track__node">
+              <div class="std-track__rail">${lLine}${dot}${rLine}</div>
+              <div class="std-track__label" style="${isCur ? 'color:' + _meta.color + ';font-weight:800;' : ''}">${lbl}</div>
+            </div>`;
+          }).join('');
+          const _drawer = (title, sub, list, expired, openByDefault) => `
+            <div class="std-drawer${openByDefault ? ' std-drawer--open' : ''}">
+              <button class="std-drawer__head" type="button" onclick="_toggleStandingDrawer(this)">
+                <span class="std-drawer__head-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+                <span class="std-drawer__head-text">
+                  <span class="std-drawer__head-title">${title} &ndash; ${list.length}</span>
+                  <span class="std-drawer__head-sub">${sub}</span>
+                </span>
+                <i class="fa-solid fa-chevron-down std-drawer__chev" aria-hidden="true"></i>
+              </button>
+              <div class="std-drawer__body">
+                ${list.length
+                  ? list.map(v => _renderViolationCard(v, { expired })).join('')
+                  : `<div class="std-drawer__empty">${expired ? 'No expired violations.' : 'No active violations. Keep it up!'}</div>`}
+              </div>
+            </div>`;
+          return `
         <div class="acct-section acct-standing" data-spy="standing" style="background:${_meta.tint};border-color:${_meta.border};">
           <div class="acct-section__title">Account Standing</div>
           <div class="acct-standing__row">
@@ -22778,42 +22900,18 @@ function _buildProfileView(tab) {
             </div>
             <div class="acct-standing__body">
               <div class="acct-standing__headline">Your account is <span style="color:${_meta.color};">${_meta.label.toLowerCase()}</span></div>
-              <div class="acct-standing__msg">${_meta.msg} <a href="https://www.fortized.com/legal/terms-of-use/" target="_blank" rel="noopener noreferrer" style="color:${_meta.color};">Terms of Service</a> and <a href="https://www.fortized.com/legal/terms-of-use/" target="_blank" rel="noopener noreferrer" style="color:${_meta.color};">Terms of Use</a>.</div>
+              <div class="acct-standing__msg">${_meta.msg} Review our <a href="https://www.fortized.com/legal/terms-of-use/" target="_blank" rel="noopener noreferrer" style="color:${_meta.color};">Terms of Use</a>.</div>
             </div>
           </div>
-          <!-- 5-segment meter; the segments up to and including the current
-               level are filled with that level's colour. -->
-          <div class="acct-standing__meter">
-            ${[0,1,2,3,4].map(i => {
-              const active = i <= _meta.id;
-              const m = _STANDING_META[i];
-              return `<div class="acct-standing__seg-wrap">
-                <div class="acct-standing__seg" style="background:${active ? m.color : 'rgba(255,255,255,.08)'};"></div>
-                <div class="acct-standing__seg-label" style="color:${active ? m.color : 'rgba(255,255,255,.32)'};">${m.label}</div>
-              </div>`;
-            }).join('')}
-          </div>
-          ${_activeS.length > 0 ? `
-          <div class="acct-standing__detail">
-            <div class="acct-standing__detail-label">Active suspension</div>
-            ${_activeS.map(s => {
-              const until = s.until ? new Date(s.until).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'indefinite';
-              return `<div class="acct-standing__detail-row">${escapeHTML(s.reason||'No reason recorded')} <span style="color:rgba(255,255,255,.4);">· lifts ${until}</span></div>`;
-            }).join('')}
-          </div>` : ''}
-          ${_activeW.length > 0 ? `
-          <div class="acct-standing__detail">
-            <div class="acct-standing__detail-label">Active warnings (${_activeW.length})</div>
-            ${_activeW.map(w => {
-              const exp = w.expiresAt ? new Date(w.expiresAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'no expiry';
-              return `<div class="acct-standing__detail-row">${escapeHTML(w.reason||'No reason recorded')} <span style="color:rgba(255,255,255,.4);">· clears ${exp}</span></div>`;
-            }).join('')}
-          </div>` : ''}
-        </div>
+          <div class="std-track">${_track}</div>
+          ${_drawer('Active violations', 'These affect your account status until they expire.', _activeViol, false, _activeViol.length > 0)}
+          ${_drawer('Expired violations', 'These no longer affect your account status.', _expiredViol, true, false)}
+        </div>`;
+        })()}
 
         <div class="danger-section-title" style="margin-top:36px;">DANGER ZONE</div>
         <div style="background:rgba(248,113,113,.06);border:1.5px solid rgba(248,113,113,.15);border-radius:12px;padding:14px;margin-bottom:12px;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.7);">
-          <strong style="color:rgba(248,113,113,.8);">⚠️ Warning:</strong> Deleting your account is permanent and cannot be undone. Your username, profile picture, banner, and bio will be permanently deleted. Your username will be replaced with a placeholder and reserved so no one else can claim it. Your messages will remain but show as posted by the deleted account.
+          <strong style="color:rgba(248,113,113,.8);"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true" style="margin-right:6px;"></i>Warning:</strong> Deleting your account is permanent and cannot be undone. Your username, profile picture, banner, and bio will be permanently deleted. Your username will be replaced with a placeholder and reserved so no one else can claim it. Your messages will remain but show as posted by the deleted account.
         </div>
         <button class="danger-btn" onclick="showAccountDeleteConfirmation()">Delete Account</button>
       </div>`;
@@ -49089,7 +49187,25 @@ async function _saveAllSettingsImpl() {
       else delete CU.socials[key];
     }
   });
-  console.info('[AVATAR-DIAG] saving — CU.pfp', typeof CU.pfp, 'len=' + ((CU.pfp||'').length), 'head=' + String(CU.pfp||'').slice(0,30), '| CU.banner len=' + ((CU.banner||'').length));
+  // Loud (console.warn is never hidden by the default Info filter, which is
+  // why earlier console.info diags "showed nothing"). Also decodes the pfp
+  // and reports whether it is fully transparent — the definitive signal.
+  if (typeof CU.pfp === 'string' && CU.pfp.startsWith('data:image') && CU.pfp.length > 0) {
+    let _t = false; try { _t = await _pfpIsBlank(CU.pfp); } catch (_) {}
+    console.warn('[AVATAR-DIAG] saving — CU.pfp len=' + CU.pfp.length + ' head=' + CU.pfp.slice(0,30) + ' transparent=' + _t + ' | banner len=' + ((CU.banner||'').length));
+    if (_t) {
+      // Immediate, honest feedback instead of silently persisting a blank
+      // image. Restore the last-known-good avatar so the UI never flips to
+      // transparent, and refuse the save.
+      const prev = (_settingsOriginal && _settingsOriginal.pfp) ? _settingsOriginal.pfp : '';
+      CU.pfp = prev;
+      try { updateUserbar(); buildProfileView('myprofile'); } catch (_) {}
+      toast('That avatar exported blank/transparent — please re-upload it. Your previous avatar was kept.', 'error');
+      return;
+    }
+  } else {
+    console.warn('[AVATAR-DIAG] saving — CU.pfp', typeof CU.pfp, 'len=' + ((CU.pfp||'').length), '| banner len=' + ((CU.banner||'').length));
+  }
   // Explicit field list: settings owns these fields, so clears (removed
   // avatar/banner, emptied bio/pronouns) persist instead of being dropped
   // by the delta-writer's empty-value guard.

@@ -13517,13 +13517,39 @@ select:focus,select:focus-visible,
 .acct-standing__body{flex:1;min-width:0;}
 .acct-standing__headline{font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:5px;}
 .acct-standing__msg{font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.55;}
-.acct-standing__meter{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
-.acct-standing__seg-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;}
-.acct-standing__seg{width:100%;height:6px;border-radius:3px;transition:background .25s;}
-.acct-standing__seg-label{font-size:10.5px;font-weight:700;text-align:center;letter-spacing:.02em;transition:color .25s;}
-.acct-standing__detail{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);}
-.acct-standing__detail-label{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px;}
-.acct-standing__detail-row{font-size:12.5px;color:rgba(255,255,255,.7);padding:4px 0;}
+/* ── Standing progress track (labelled dots + connectors) ── */
+.std-track{display:grid;grid-template-columns:repeat(5,1fr);margin:18px 0 4px;}
+.std-track__node{display:flex;flex-direction:column;align-items:center;gap:9px;min-width:0;}
+.std-track__rail{display:flex;align-items:center;justify-content:center;width:100%;height:24px;}
+.std-track__line{flex:1;height:2px;background:rgba(255,255,255,.10);border-radius:2px;}
+.std-track__line--fill{background:var(--sc,#f59e0b);}
+.std-track__dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.16);flex-shrink:0;}
+.std-track__dot--cur{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;}
+.std-track__dot--cur i{line-height:1;}
+.std-track__label{font-size:10.5px;font-weight:700;text-align:center;color:rgba(255,255,255,.34);letter-spacing:.01em;line-height:1.2;padding:0 2px;}
+
+/* ── Violation drawers (collapsible) ── */
+.std-drawer{margin-top:12px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:rgba(0,0,0,.14);overflow:hidden;}
+.std-drawer__head{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;background:none;border:none;cursor:pointer;text-align:left;font-family:inherit;color:inherit;}
+.std-drawer__head-icon{width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);font-size:13px;}
+.std-drawer__head-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.std-drawer__head-title{font-family:var(--font-display);font-size:14.5px;font-weight:800;color:#fff;}
+.std-drawer__head-sub{font-size:11.5px;color:rgba(255,255,255,.42);line-height:1.4;}
+.std-drawer__chev{color:rgba(255,255,255,.4);font-size:13px;transition:transform .22s;flex-shrink:0;}
+.std-drawer--open .std-drawer__chev{transform:rotate(180deg);}
+.std-drawer__body{display:none;padding:0 14px 14px;}
+.std-drawer--open .std-drawer__body{display:block;}
+.std-drawer__empty{font-size:12.5px;color:rgba(255,255,255,.4);padding:6px 4px 4px;}
+
+/* ── Violation card ── */
+.std-viol-card{position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px 16px;margin-top:8px;}
+.std-viol-card--new{border-color:var(--accent,#6979ff);background:rgba(105,121,255,.06);box-shadow:0 0 0 1px var(--accent,#6979ff) inset;}
+.std-viol-card--expired{opacity:.62;}
+.std-viol-card__badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 9px;border-radius:var(--radius-pill,999px);margin-bottom:9px;}
+.std-viol-card__badge--new{background:var(--accent,#6979ff);color:#fff;text-transform:uppercase;}
+.std-viol-card__badge--age{background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);}
+.std-viol-card__text{font-size:15px;color:#fff;line-height:1.4;}
+.std-viol-card__text strong{font-weight:800;}
 
 /* Admin user-search card highlight when the target has an active
    standing record. The left border ramps up with severity so a

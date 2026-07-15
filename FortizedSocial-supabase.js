@@ -447,6 +447,40 @@ const FortizedSocial = (() => {
       || (typeof nv === 'object' && !Array.isArray(nv) && nv && Object.keys(nv).length === 0 && ev && typeof ev === 'object' && Object.keys(ev).length > 0);
   }
 
+  // ── AVATAR CORRUPTION GUARD (root fix for "avatar gets replaced by a
+  // totally transparent image") ─────────────────────────────────────────
+  // A fully-transparent pfp reaching the row is THE avatar bug: it renders
+  // blank to EVERYONE and overwrites the user's real stored avatar. It can
+  // ride in on ANY full-object save (voice save, init save, cross-device
+  // echo) if CU.pfp got corrupted in memory — so we gate it here at the one
+  // shared DB-write boundary instead of at ~30 call sites. Only drops the
+  // pfp when it PROVABLY decodes to all-transparent; a decode failure is
+  // inconclusive and never drops. Empty string ('' = "Remove avatar") is
+  // not a data-URL and passes straight through.
+  function _pfpProvablyTransparent(v) {
+    return new Promise(resolve => {
+      try {
+        if (typeof v !== 'string' || !v.startsWith('data:image') || v.length < 64) return resolve(false);
+        if (typeof document === 'undefined' || typeof Image === 'undefined') return resolve(false);
+        const img = new Image();
+        img.onload = () => {
+          try {
+            if (!img.naturalWidth || !img.naturalHeight) return resolve(true);
+            const w = Math.min(img.naturalWidth, 32), h = Math.min(img.naturalHeight, 32);
+            const c = document.createElement('canvas'); c.width = w; c.height = h;
+            const ctx = c.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(img, 0, 0, w, h);
+            const d = ctx.getImageData(0, 0, w, h).data;
+            for (let i = 3; i < d.length; i += 4) if (d[i] !== 0) return resolve(false);
+            resolve(true);
+          } catch (_) { resolve(false); }
+        };
+        img.onerror = () => resolve(false); // inconclusive — never drop on a decode failure
+        img.src = v;
+      } catch (_) { resolve(false); }
+    });
+  }
+
   // saveUserObject(user)             — implicit: diff vs baseline, guarded
   // saveUserObject(user, {fields})   — explicit: write exactly these fields,
   //                                    empties included (how clears persist)
@@ -473,6 +507,10 @@ const FortizedSocial = (() => {
 
     if (!base) {
       // Row genuinely doesn't exist — brand-new user, full insert.
+      if (await _pfpProvablyTransparent(desired.pfp)) {
+        console.warn('[saveUserObject] BLOCKED transparent pfp on INSERT for ' + uname + ' — storing blank instead.');
+        desired.pfp = '';
+      }
       const { error } = await sb.from('users').upsert(desired, { onConflict: 'username' });
       if (error) {
         console.error('[saveUserObject] INSERT FAILED:', error.message, error.code);
@@ -531,6 +569,16 @@ const FortizedSocial = (() => {
       }
       // created_at is immutable once set — the real join date always wins.
       if (!base.created_at && desired.created_at) changed.created_at = desired.created_at;
+
+      // Keystone avatar guard: never let a fully-transparent pfp overwrite
+      // the stored avatar. The stack pinpoints WHICH save carried the bad
+      // value, turning a silent corruption into one loud, actionable line.
+      if (typeof changed.pfp === 'string' && changed.pfp.length && await _pfpProvablyTransparent(changed.pfp)) {
+        console.warn('[saveUserObject] BLOCKED transparent pfp for ' + uname
+          + ' — keeping the previous avatar (' + changed.pfp.length + ' chars). Origin:\n'
+          + ((new Error().stack || '').split('\n').slice(2, 7).join('\n')));
+        delete changed.pfp;
+      }
 
       if (Object.keys(changed).length === 0) {
         console.debug('[saveUserObject] no-op — nothing changed for', uname);

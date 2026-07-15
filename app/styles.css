@@ -6542,6 +6542,8 @@ button[disabled],
 .ftz-csp__ddl-menu--open{display:block;}
 @keyframes ftz-csp-ddl-in{from{opacity:0; transform:translateY(-4px);}to{opacity:1; transform:translateY(0);}}
 .ftz-csp__ddl-item{
+  display:block; width:100%; text-align:left;
+  background:none; border:none;
   padding:9px 12px;
   border-radius:8px;
   font-family:var(--font-ui);
@@ -6553,6 +6555,22 @@ button[disabled],
 .ftz-csp__ddl-item:hover{background:rgba(255,255,255,.05); color:var(--text);}
 .ftz-csp__ddl-item--sel{background:rgba(255,249,62,.1); color:var(--accent);}
 .ftz-csp__ddl-item--sel:hover{background:rgba(255,249,62,.14); color:var(--accent);}
+/* Compact "Clear after" dropdown as used in the status picker: inset to
+   match the other sections, with a sync indicator on the button and the
+   sync toggle folded into the menu. */
+.ftz-csp__ddl{margin:8px 20px 2px;}
+.ftz-csp__ddl-val{flex:1; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.ftz-csp__ddl-syncind{display:none; align-items:center; justify-content:center; width:20px; height:20px; border-radius:6px; margin-left:8px; color:var(--accent); font-size:10px; background:rgba(255,249,62,.1);}
+.ftz-csp__ddl-syncind.is-on{display:flex;}
+.ftz-csp__ddl-sep{height:1px; background:rgba(255,255,255,.07); margin:5px 4px;}
+.ftz-csp__ddl-sync{display:flex; align-items:center; gap:10px; width:100%; padding:9px 10px; border-radius:8px; background:none; border:none; cursor:pointer; text-align:left; font-family:inherit; color:inherit; transition:background .1s;}
+.ftz-csp__ddl-sync:hover{background:rgba(255,255,255,.04);}
+.ftz-csp__ddl-sync-ic{width:26px; height:26px; border-radius:7px; background:var(--accent-dim,rgba(255,249,62,.09)); display:flex; align-items:center; justify-content:center; color:var(--accent); flex-shrink:0; font-size:12px;}
+.ftz-csp__ddl-sync-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px;}
+.ftz-csp__ddl-sync-title{font-family:var(--font-display); font-size:12px; font-weight:800; color:#fff;}
+.ftz-csp__ddl-sync-sub{font-size:10px; color:var(--muted-light); line-height:1.3;}
+.ftz-csp__ddl-sync.is-on .ftz-csp__toggle{background:var(--accent);}
+.ftz-csp__ddl-sync.is-on .ftz-csp__toggle-knob{transform:translateX(16px);}
 
 .ftz-csp__custom{
   display:none; align-items:center; gap:8px;

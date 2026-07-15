@@ -38687,20 +38687,23 @@ function openStatusPicker() {
     ? `<img src="${initSrc}" onerror="this.parentElement.textContent='${escapeHTML(initEmoji)}'">`
     : (typeof _CHATBAR_EMOJI_SVG !== 'undefined' ? _CHATBAR_EMOJI_SVG : '<i class="fa-regular fa-face-smile"></i>');
 
-  // Duration chips — the full set the user asked for. 'sync' is the
-  // Fortized feature (clears when your status expires / you go offline).
+  // "Clear after" is a compact dropdown (was a chip row) so the picker
+  // stays short; the Sync toggle lives INSIDE the menu instead of eating a
+  // whole extra row. 'sync' is the Fortized feature (clears when your
+  // status expires / you go offline).
   const durations = [
-    { id: '30m', label: '30m' },
-    { id: '1h', label: '1h' },
-    { id: '8h', label: '8h' },
-    { id: '24h', label: '24h' },
-    { id: '3d', label: '3d' },
+    { id: '30m',     label: '30 minutes' },
+    { id: '1h',      label: '1 hour' },
+    { id: '8h',      label: '8 hours' },
+    { id: '24h',     label: '24 hours' },
+    { id: '3d',      label: '3 days' },
     { id: 'forever', label: 'Forever' },
-    { id: 'custom', label: 'Custom' },
+    { id: 'custom',  label: 'Custom…' },
   ];
+  const _durLabel = id => id === 'sync' ? 'Sync with status' : (durations.find(d => d.id === id)?.label || 'Forever');
   const curDur = cur.syncWithStatus ? 'sync' : (cur.clearAt ? '24h' : 'forever');
-  const chips = durations.map(d =>
-    `<button type="button" class="ftz-csp__chip${d.id === curDur ? ' is-sel' : ''}" data-dur="${d.id}" onclick="_ftzCspPickDur(this)">${d.label}</button>`
+  const ddlItems = durations.map(d =>
+    `<button type="button" class="ftz-csp__ddl-item${d.id === curDur ? ' ftz-csp__ddl-item--sel' : ''}" role="option" data-dur="${d.id}" onclick="_ftzCspPickDur(this)">${d.label}</button>`
   ).join('');
   const syncActive = !!cur.syncWithStatus;
 
@@ -38720,7 +38723,25 @@ function openStatusPicker() {
         <button class="ftz-csp__clear" id="ftz-csp-clear" onclick="_ftzCspClearInput()" style="${curText ? '' : 'display:none;'}" aria-label="Clear text"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="ftz-csp__section-lbl">Clear after</div>
-      <div class="ftz-csp__chips" id="ftz-csp-chips" data-dur="${curDur}">${chips}</div>
+      <div class="ftz-csp__ddl" id="ftz-csp-ddl" data-dur="${curDur}">
+        <button type="button" class="ftz-csp__ddl-btn" id="ftz-csp-ddl-btn" aria-haspopup="listbox" aria-expanded="false" onclick="_ftzCspToggleDDL(event)">
+          <span class="ftz-csp__ddl-val" id="ftz-csp-ddl-val">${_durLabel(curDur)}</span>
+          <span class="ftz-csp__ddl-syncind${syncActive ? ' is-on' : ''}" id="ftz-csp-ddl-syncind" title="Synced with your status"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
+          <i class="fa-solid fa-chevron-down ftz-csp__ddl-chev" aria-hidden="true"></i>
+        </button>
+        <div class="ftz-csp__ddl-menu" id="ftz-csp-ddl-menu" role="listbox">
+          ${ddlItems}
+          <div class="ftz-csp__ddl-sep"></div>
+          <button type="button" class="ftz-csp__ddl-sync${syncActive ? ' is-on' : ''}" id="ftz-csp-sync" onclick="_ftzCspToggleSync(event)" aria-pressed="${syncActive}">
+            <span class="ftz-csp__ddl-sync-ic"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
+            <span class="ftz-csp__ddl-sync-body">
+              <span class="ftz-csp__ddl-sync-title">Sync with my status</span>
+              <span class="ftz-csp__ddl-sync-sub">Clears when your status expires or you go offline</span>
+            </span>
+            <span class="ftz-csp__toggle"><span class="ftz-csp__toggle-knob"></span></span>
+          </button>
+        </div>
+      </div>
       <div class="ftz-csp__custom" id="ftz-csp-custom-box" style="display:${curDur === 'custom' ? 'flex' : 'none'};">
         <input type="number" id="ftz-csp-custom-amt" class="ftz-csp__custom-amt" min="1" max="720" value="2">
         <select id="ftz-csp-custom-unit" class="ftz-csp__custom-unit">
@@ -38729,14 +38750,6 @@ function openStatusPicker() {
           <option value="d">days</option>
         </select>
       </div>
-      <button type="button" class="ftz-csp__sync${syncActive ? ' is-on' : ''}" id="ftz-csp-sync" onclick="_ftzCspToggleSync()" aria-pressed="${syncActive}">
-        <span class="ftz-csp__sync-ic"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
-        <span class="ftz-csp__sync-body">
-          <span class="ftz-csp__sync-title">Sync with my status</span>
-          <span class="ftz-csp__sync-sub">Clears when your status expires or you go offline</span>
-        </span>
-        <span class="ftz-csp__toggle"><span class="ftz-csp__toggle-knob"></span></span>
-      </button>
       <div class="ftz-csp__actions">
         ${curText || _ftzCspSelectedEmoji ? '<button class="ftz-csp__btn ftz-csp__btn--ghost" onclick="clearCustomStatus();_closeStatusPicker()"><i class="fa-solid fa-trash" aria-hidden="true"></i> Clear</button>' : ''}
         <button class="ftz-csp__btn ftz-csp__btn--save" onclick="_ftzCspSave()"><i class="fa-solid fa-check" aria-hidden="true"></i> Save</button>
@@ -38785,32 +38798,84 @@ function _ftzCspClearInput() {
   inp?.focus();
 }
 
-// Segmented duration chips. Picking a real duration turns the sync
-// toggle off (they're mutually exclusive — sync IS a duration source).
+// Compact "Clear after" dropdown. The chosen duration lives on
+// #ftz-csp-ddl's data-dur (read by _ftzCspSave); the label + sync
+// indicator on the button reflect it.
+function _ftzCspToggleDDL(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('ftz-csp-ddl-menu');
+  const btn = document.getElementById('ftz-csp-ddl-btn');
+  if (!menu || !btn) return;
+  const open = !menu.classList.contains('ftz-csp__ddl-menu--open');
+  menu.classList.toggle('ftz-csp__ddl-menu--open', open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) {
+    // Close on the next outside click (captured once, self-removing).
+    setTimeout(() => {
+      const off = (ev) => {
+        if (document.getElementById('ftz-csp-ddl')?.contains(ev.target)) return;
+        menu.classList.remove('ftz-csp__ddl-menu--open');
+        btn.setAttribute('aria-expanded', 'false');
+        document.removeEventListener('mousedown', off, true);
+      };
+      document.addEventListener('mousedown', off, true);
+    }, 0);
+  }
+}
+// _durLabel mirror for the handlers (module-scope copy of the picker's).
+function _ftzCspDurLabel(id) {
+  const map = { '30m':'30 minutes','1h':'1 hour','8h':'8 hours','24h':'24 hours','3d':'3 days','forever':'Forever','custom':'Custom…','sync':'Sync with status' };
+  return map[id] || 'Forever';
+}
+// Picking a real duration turns Sync OFF (they're mutually exclusive —
+// sync IS a duration source) and closes the menu.
 function _ftzCspPickDur(el) {
-  const chips = document.getElementById('ftz-csp-chips');
-  if (!chips || !el) return;
-  chips.querySelectorAll('.ftz-csp__chip').forEach(c => c.classList.remove('is-sel'));
-  el.classList.add('is-sel');
-  chips.dataset.dur = el.dataset.dur;
+  const ddl = document.getElementById('ftz-csp-ddl');
+  if (!ddl || !el) return;
+  const dur = el.dataset.dur;
+  ddl.querySelectorAll('.ftz-csp__ddl-item').forEach(c => c.classList.remove('ftz-csp__ddl-item--sel'));
+  el.classList.add('ftz-csp__ddl-item--sel');
+  ddl.dataset.dur = dur;
+  const val = document.getElementById('ftz-csp-ddl-val');
+  if (val) val.textContent = _ftzCspDurLabel(dur);
   const box = document.getElementById('ftz-csp-custom-box');
-  if (box) box.style.display = el.dataset.dur === 'custom' ? 'flex' : 'none';
+  if (box) box.style.display = dur === 'custom' ? 'flex' : 'none';
   const sync = document.getElementById('ftz-csp-sync');
   if (sync) { sync.classList.remove('is-on'); sync.setAttribute('aria-pressed', 'false'); }
+  const ind = document.getElementById('ftz-csp-ddl-syncind');
+  if (ind) ind.classList.remove('is-on');
+  const menu = document.getElementById('ftz-csp-ddl-menu');
+  const btn = document.getElementById('ftz-csp-ddl-btn');
+  if (menu) menu.classList.remove('ftz-csp__ddl-menu--open');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
 }
-// The Fortized sync toggle. Turning it ON deselects the duration chips
-// (sync supplies the expiry instead).
-function _ftzCspToggleSync() {
+// The Fortized sync toggle, now inside the dropdown menu. Turning it ON
+// deselects the duration items (sync supplies the expiry instead) and
+// surfaces the link indicator on the dropdown button. Stays in the menu
+// (stopPropagation) so a toggle doesn't close it.
+function _ftzCspToggleSync(e) {
+  if (e) e.stopPropagation();
   const sync = document.getElementById('ftz-csp-sync');
-  if (!sync) return;
+  const ddl = document.getElementById('ftz-csp-ddl');
+  if (!sync || !ddl) return;
   const on = !sync.classList.contains('is-on');
   sync.classList.toggle('is-on', on);
   sync.setAttribute('aria-pressed', on ? 'true' : 'false');
+  const ind = document.getElementById('ftz-csp-ddl-syncind');
+  const val = document.getElementById('ftz-csp-ddl-val');
+  const box = document.getElementById('ftz-csp-custom-box');
   if (on) {
-    const chips = document.getElementById('ftz-csp-chips');
-    if (chips) { chips.querySelectorAll('.ftz-csp__chip').forEach(c => c.classList.remove('is-sel')); chips.dataset.dur = 'sync'; }
-    const box = document.getElementById('ftz-csp-custom-box');
+    ddl.querySelectorAll('.ftz-csp__ddl-item').forEach(c => c.classList.remove('ftz-csp__ddl-item--sel'));
+    ddl.dataset.dur = 'sync';
+    if (val) val.textContent = _ftzCspDurLabel('sync');
+    if (ind) ind.classList.add('is-on');
     if (box) box.style.display = 'none';
+  } else {
+    ddl.dataset.dur = 'forever';
+    if (val) val.textContent = _ftzCspDurLabel('forever');
+    if (ind) ind.classList.remove('is-on');
+    const fv = ddl.querySelector('.ftz-csp__ddl-item[data-dur="forever"]');
+    if (fv) fv.classList.add('ftz-csp__ddl-item--sel');
   }
 }
 
@@ -38880,7 +38945,7 @@ function _ftzCspSave() {
   const text = (inp?.value || '').trim();
   const emoji = _ftzCspSelectedEmoji || '';
   if (!text && !emoji) { toast('Add an emoji or some text!', 'error'); return; }
-  const dur = document.getElementById('ftz-csp-chips')?.dataset?.dur || 'forever';
+  const dur = (document.getElementById('ftz-csp-ddl') || document.getElementById('ftz-csp-chips'))?.dataset?.dur || 'forever';
 
   const opts = {};
   if (dur === 'sync') {

@@ -1188,6 +1188,11 @@ const FortizedSocial = (() => {
   // ── Direct Messages ──────────────────────────────────
   function _dmKey(u1, u2) { return [norm(u1), norm(u2)].sort().join('__'); } // legacy username key
 
+  // Full desired column set, the must-exist floor, and the session-remembered
+  // working set (see the resilient select in getDMMessages).
+  const _DM_COLS_FULL = ['id','dm_key','from','text','timestamp','edited','new_text','reactions','forwarded','forwarded_by','reply_to','flags'];
+  const _DM_COLS_CORE = ['id','dm_key','from','text','timestamp'];
+  let _dmWorkingCols = null;
   async function getDMMessages(user1, user2, limit, offset) {
     const key = await getDMKey(user1, user2);
     const legacyKey = _dmKey(user1, user2);
@@ -1207,24 +1212,37 @@ const FortizedSocial = (() => {
       // including it made the WHOLE select error out ('column dms.created_at
       // does not exist') → every DM thread returned empty. The timestamp
       // logic falls back to the `timestamp` column just fine.
-      const { data, error } = await sb.from('dms')
-        .select('id,dm_key,from,text,timestamp,edited,new_text,reactions,forwarded,forwarded_by,reply_to,flags')
-        .in('dm_key', key === legacyKey ? [key] : [key, legacyKey])
-        .order('timestamp', { ascending: false })
-        .range(skip, skip + max - 1);
-
-      if (error) {
-        // Demote the common "column does not exist" schema-mismatch to a
-        // single warn per session — otherwise every DM thread retry logs it.
-        const msg = error.message || '';
-        if (/column .* does not exist/i.test(msg)) {
+      // Resilient column selection. Optional columns (forwarded, reply_to,
+      // flags, …) don't exist on every deployment of the `dms` table; a
+      // single missing one made the ENTIRE select 400 → every DM thread
+      // came back empty ("data loading sucks"). Instead of hard-failing,
+      // strip the offending column and retry, and REMEMBER the working set
+      // for the rest of the session so we don't 400 on every call.
+      const dmKeys = key === legacyKey ? [key] : [key, legacyKey];
+      let cols = (_dmWorkingCols || _DM_COLS_FULL).slice();
+      let data = null, error = null;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        ({ data, error } = await sb.from('dms')
+          .select(cols.join(','))
+          .in('dm_key', dmKeys)
+          .order('timestamp', { ascending: false })
+          .range(skip, skip + max - 1));
+        if (!error) { _dmWorkingCols = cols; break; }
+        const m = /column\s+(?:[\w"]+\.)?"?(\w+)"?\s+does not exist/i.exec(error.message || '');
+        const bad = m && m[1];
+        if (bad && !_DM_COLS_CORE.includes(bad) && cols.includes(bad)) {
           if (!window._dmSchemaWarned) {
             window._dmSchemaWarned = true;
-            console.warn('[getDMMessages] DM schema mismatch — table missing expected columns:', msg);
+            console.warn('[getDMMessages] `dms` table is missing optional column(s); loading without them. First:', bad);
           }
-        } else {
-          console.error('[getDMMessages] Query error:', msg);
+          cols = cols.filter(c => c !== bad);
+          continue;   // retry with the reduced set
         }
+        break;        // unknown error, or a CORE column is missing — give up
+      }
+
+      if (error) {
+        console.error('[getDMMessages] Query error:', error.message || error);
         return [];
       }
 

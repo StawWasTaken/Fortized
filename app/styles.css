@@ -3739,6 +3739,25 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .danger-section-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(235,69,69,.45);margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(235,69,69,.08);}
 .danger-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(235,69,69,.03);color:rgba(235,69,69,.7);border:1.5px solid rgba(235,69,69,.12);border-radius:14px;padding:11px 22px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);}
 .danger-btn:hover{background:rgba(235,69,69,.08);border-color:rgba(235,69,69,.35);color:var(--red);transform:translateY(-1px);box-shadow:0 4px 14px rgba(235,69,69,.08);}
+/* Account-action cards (Disable / Delete) — same panel language as the
+   Manage Accounts card, warning copy folded INSIDE each card, 3D action
+   button parked on the right. */
+.acct-action-card{display:flex;align-items:flex-start;gap:15px;padding:18px 20px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.02);margin-bottom:14px;}
+.acct-action-card--danger{border-color:rgba(235,69,69,.16);background:rgba(235,69,69,.03);}
+.acct-action-card__icon{width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);font-size:17px;}
+.acct-action-card__icon--danger{background:rgba(235,69,69,.1);color:var(--red);}
+.acct-action-card__body{flex:1;min-width:0;}
+.acct-action-card__title{font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:5px;letter-spacing:-.01em;}
+.acct-action-card__desc{font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.55;margin-bottom:11px;}
+.acct-action-card__warn{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;line-height:1.5;color:rgba(255,255,255,.52);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:9px 12px;}
+.acct-action-card__warn i{margin-top:2px;flex-shrink:0;color:rgba(255,255,255,.4);}
+.acct-action-card__warn--danger{color:rgba(248,113,113,.78);background:rgba(235,69,69,.05);border-color:rgba(235,69,69,.14);}
+.acct-action-card__warn--danger i{color:var(--red);}
+.acct-action-card__btn{flex-shrink:0;align-self:center;white-space:nowrap;}
+@media (max-width:640px){
+  .acct-action-card{flex-wrap:wrap;}
+  .acct-action-card__btn{align-self:stretch;width:100%;justify-content:center;margin-left:59px;}
+}
 /* ── FULL PROFILE VIEW — redesigned ───────────────── */
 .profile-banner-area{width:100%;height:220px;background:linear-gradient(135deg,#0f1830,#1a0f30,#0f2030);position:relative;overflow:hidden;}
 .profile-banner-area img{width:100%;height:100%;object-fit:cover;}

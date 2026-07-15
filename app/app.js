@@ -1797,12 +1797,14 @@ function _purgeDeadLocalKeys() {
 async function _healBlankAvatar() {
   try {
     const p = CU?.pfp;
-    console.info('[AVATAR-DIAG] boot pfp:', typeof p, 'len=' + (p ? p.length : 0),
+    // console.warn so it survives the default DevTools "Info" filter (that
+    // filter is why the earlier console.info diags "showed nothing").
+    let _boB = 'n/a';
+    if (typeof p === 'string' && p.startsWith('data:image')) { try { _boB = await _pfpIsBlank(p); } catch (_) {} }
+    console.warn('[AVATAR-DIAG] boot pfp:', typeof p, 'len=' + (p ? p.length : 0),
       'head=' + (typeof p === 'string' ? p.slice(0, 30) : 'n/a'),
+      'transparent=' + _boB,
       'crop=' + JSON.stringify(CU?.pfpCrop || null));
-    if (!p || typeof p !== 'string' || !p.startsWith('data:image/png')) return;
-    const blank = await _pfpIsBlank(p);
-    console.info('[AVATAR-DIAG] stored PNG blank-probe =', blank, '(no action taken — heal disabled)');
   } catch (e) { console.warn('[AVATAR-DIAG] check failed:', e?.message); }
 }
 
@@ -14635,6 +14637,17 @@ function initFortizedUXResilience() {
   // localStorage snapshot from a previous session.
   try { rememberProfile(CU); } catch(_) {}
 
+  // A temporarily-disabled account reactivates the instant its owner logs
+  // back in (Discord semantics — logging in is the reactivation). Clear the
+  // flag, persist it, and welcome them. Nothing blocks a disabled account
+  // from logging in, so this can never lock anyone out.
+  if (CU && CU.disabled) {
+    delete CU.disabled; delete CU.disabledAt;
+    try { saveLocal(); } catch (_) {}
+    try { await FortizedSocial.saveUserObject(CU, { fields: ['disabled', 'disabledAt'] }); } catch (_) {}
+    setTimeout(() => { try { toast('Welcome back — your account has been reactivated.', 'success'); } catch (_) {} }, 900);
+  }
+
   // Corrupt-avatar healing (the transparent-avatar bug): if the avatar
   // that survived boot + guards decodes to a fully-transparent PNG,
   // clear it here AND in the DB. Deferred so it never blocks first
@@ -22909,11 +22922,35 @@ function _buildProfileView(tab) {
         </div>`;
         })()}
 
-        <div class="danger-section-title" style="margin-top:36px;">DANGER ZONE</div>
-        <div style="background:rgba(248,113,113,.06);border:1.5px solid rgba(248,113,113,.15);border-radius:12px;padding:14px;margin-bottom:12px;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.7);">
-          <strong style="color:rgba(248,113,113,.8);"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true" style="margin-right:6px;"></i>Warning:</strong> Deleting your account is permanent and cannot be undone. Your username, profile picture, banner, and bio will be permanently deleted. Your username will be replaced with a placeholder and reserved so no one else can claim it. Your messages will remain but show as posted by the deleted account.
+        <div class="danger-section-title" style="margin-top:36px;">ACCOUNT ACTIONS</div>
+
+        <!-- Disable (temporary, reversible) -->
+        <div class="acct-action-card">
+          <div class="acct-action-card__icon"><i class="fa-solid fa-circle-pause" aria-hidden="true"></i></div>
+          <div class="acct-action-card__body">
+            <div class="acct-action-card__title">Disable Account</div>
+            <div class="acct-action-card__desc">Temporarily disable your account. You'll be signed out, and everything comes back exactly as you left it the next time you log in.</div>
+            <div class="acct-action-card__warn">
+              <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+              <span>While disabled your profile and presence are hidden and people can't message or friend you. Nothing is deleted — log back in any time to reactivate.</span>
+            </div>
+          </div>
+          <button class="btn-g acct-action-card__btn" onclick="showAccountDisableConfirmation()">Disable Account</button>
         </div>
-        <button class="danger-btn" onclick="showAccountDeleteConfirmation()">Delete Account</button>
+
+        <!-- Delete (permanent) -->
+        <div class="acct-action-card acct-action-card--danger">
+          <div class="acct-action-card__icon acct-action-card__icon--danger"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></div>
+          <div class="acct-action-card__body">
+            <div class="acct-action-card__title">Delete Account</div>
+            <div class="acct-action-card__desc">Permanently close your account. This is irreversible.</div>
+            <div class="acct-action-card__warn acct-action-card__warn--danger">
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              <span>Your username, profile picture, banner and bio are permanently deleted, and your username is reserved so no one can reclaim it. Your messages remain but show as posted by a deleted account.</span>
+            </div>
+          </div>
+          <button class="btn-red acct-action-card__btn" onclick="showAccountDeleteConfirmation()">Delete Account</button>
+        </div>
       </div>`;
   }
 
@@ -25159,6 +25196,56 @@ async function doLogout() {
   try{await FortizedSocial.logout(CU.username);}catch{}
   localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');
   window.location.href='/login';
+}
+
+function showAccountDisableConfirmation() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay open';
+  modal.id = 'disable-account-modal';
+  modal.innerHTML = `
+    <div style="width:100%;max-width:460px;">
+      <div class="modal-content ftz-confirm-card">
+        <div class="ftz-confirm-title">Disable Account?</div>
+        <div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,.6);margin-bottom:18px;">
+          Your account will be temporarily disabled and you'll be signed out. While it's disabled:
+          <ul style="margin-top:8px;margin-left:16px;list-style:disc;color:rgba(255,255,255,.5);font-size:12.5px;">
+            <li>Your profile and presence are hidden</li>
+            <li>People can't message or add you</li>
+            <li>Your messages and data are kept safe</li>
+          </ul>
+          <div style="margin-top:12px;color:rgba(255,255,255,.6);">Log back in any time to reactivate — <strong style="color:rgba(255,255,255,.75);">nothing is deleted</strong>.</div>
+        </div>
+        <div class="ftz-modal-foot">
+          <button class="ftz-modal-foot__back" onclick="document.getElementById('disable-account-modal').remove()">Cancel</button>
+          <div class="ftz-modal-foot__actions">
+            <button class="btn-d" onclick="disableAccountTemporarily()">Disable Account</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
+
+async function disableAccountTemporarily() {
+  if (!CU?.username) { toast('Not logged in', 'error'); return; }
+  const btn = document.querySelector('#disable-account-modal .btn-d');
+  if (btn) { btn.disabled = true; btn.textContent = 'Disabling…'; }
+  try {
+    CU.disabled = true;
+    CU.disabledAt = new Date().toISOString();
+    try { saveLocal(); } catch (_) {}
+    // disabled/disabledAt are raw-resident fields (round-trip via the users
+    // row's raw JSONB) — no schema change, and auto-cleared on next login.
+    await FortizedSocial.saveUserObject(CU, { fields: ['disabled', 'disabledAt'] });
+    document.getElementById('disable-account-modal')?.remove();
+    toast('Account disabled. Signing out…', 'success');
+    setTimeout(() => { doLogout(); }, 1200);
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Disable Account'; }
+    console.error('[disableAccount]', e);
+    toast('Could not disable your account: ' + (e?.message || 'try again in a moment'), 'error');
+  }
 }
 
 function showAccountDeleteConfirmation() {

@@ -12000,6 +12000,37 @@ select:focus-visible {
   margin-left:auto; color:var(--muted-light); flex-shrink:0;
 }
 .fpp-menu__divider{ height:1px; background:var(--border); margin:4px 2px; }
+/* Timed-status row (idle/dnd/invisible) — click applies until turned off;
+   HOVER reveals the compact "Clear after" dropdown (mirrors the custom-
+   status picker's control). */
+.fpp-status-row{ border-radius:6px; transition:background .12s; }
+.fpp-status-row:hover{ background:rgba(255,255,255,.04); }
+.fpp-status-row__head{
+  display:flex; align-items:flex-start; gap:10px;
+  padding:9px 10px; cursor:pointer;
+}
+.fpp-status-row__ic{ flex-shrink:0; display:inline-flex; align-items:center; margin-top:2px; }
+.fpp-status-row__txt{ flex:1; min-width:0; }
+.fpp-status-row__label{ font-size:13px; }
+.fpp-status-row__desc{ font-size:11px; color:var(--muted); margin-top:2px; line-height:1.35; }
+.fpp-status-row__clear{ display:none; padding:0 10px 9px 36px; }
+.fpp-status-row:hover .fpp-status-row__clear,
+.fpp-status-row.is-cur .fpp-status-row__clear{ display:block; }
+.fpp-clear-dd{
+  display:flex; align-items:center; gap:8px; width:100%;
+  padding:7px 11px; border-radius:8px;
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  color:var(--muted-light); font-family:var(--font-ui);
+  font-size:12px; font-weight:600; cursor:pointer;
+  transition:border-color .12s, background .12s;
+}
+.fpp-clear-dd:hover{ border-color:rgba(255,249,62,.35); background:rgba(255,249,62,.04); color:var(--text); }
+.fpp-clear-dd__lbl{ flex:1; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fpp-clear-dd__lbl b{ color:var(--text); font-weight:700; }
+.fpp-clear-dd__sync{ display:none; align-items:center; justify-content:center; width:18px; height:18px; border-radius:5px; color:var(--accent); font-size:9px; background:rgba(255,249,62,.1); }
+.fpp-clear-dd__sync.is-on{ display:flex; }
+.fpp-clear-dd__chev{ font-size:10px; color:var(--accent); flex-shrink:0; }
+.fpp-cleardd-menu{ min-width:210px; }
 .fpp-menu__group-label{
   padding:6px 10px 4px;
   font-family:var(--font-display);

@@ -24429,6 +24429,8 @@ function _openBannerGifPicker() {
 }
 async function setMyStatus(s, durationId) {
   if (!CU?.username) return;
+  // A plain status pick breaks any reverse sync-to-custom-status link.
+  if (CU) CU.statusSyncedToCS = false;
   FtzStatus.set(s, durationId ? { durationId } : undefined);
   // Re-render own profile panel if open
   const own = document.getElementById('own-profile-panel');
@@ -50822,37 +50824,57 @@ function _renderOwnProfilePopover(anchorEl) {
   }, 100);
 }
 
-// Second-level duration chooser for a timed status (idle/dnd/invisible).
-// Durations mirror the custom-status set; "Sync with custom status"
-// clears the status exactly when the custom status expires (the reverse
-// Fortized link).
-function _fppStatusPickDuration(evt, statusId) {
+// Current "Clear after" label for a timed status row's dropdown button —
+// reflects live state (synced / a running expiry / none).
+function _fppStatusClearLabel(statusId) {
+  const cur = CU?.status || 'online';
+  if (cur !== statusId) return 'Until off';
+  if (CU?.statusSyncedToCS) return 'Synced';
+  const exp = CU?.statusExpiresAt ? new Date(CU.statusExpiresAt).getTime() : 0;
+  if (exp > Date.now()) {
+    const mins = Math.round((exp - Date.now()) / 60000);
+    if (mins < 60) return mins + 'm left';
+    const hrs = Math.round(mins / 60);
+    if (hrs < 48) return hrs + 'h left';
+    return Math.round(hrs / 24) + 'd left';
+  }
+  return 'Until off';
+}
+// Duration chooser for a timed status (idle/dnd/invisible), opened from the
+// row's hover-revealed "Clear after" dropdown. Styled to match the
+// custom-status picker dropdown. "Sync with custom status" clears the
+// status exactly when the custom status expires (the reverse Fortized link).
+function _fppStatusOpenDur(evt, statusId) {
   evt.stopPropagation();
-  document.getElementById('fpp-status-dur-menu')?.remove();
+  const already = document.getElementById('fpp-status-dur-menu');
+  if (already) { already.remove(); return; }
   const opts = [
     { id: 'forever', label: 'Until I turn it off' },
-    { id: '1h', label: 'For 1 hour' },
-    { id: '8h', label: 'For 8 hours' },
-    { id: '24h', label: 'For 24 hours' },
-    { id: '3d', label: 'For 3 days' },
+    { id: '1h', label: '1 hour' },
+    { id: '8h', label: '8 hours' },
+    { id: '24h', label: '24 hours' },
+    { id: '3d', label: '3 days' },
   ];
   // Offer the sync option only when a custom status with an expiry exists.
   const csExp = CU?.customStatus?.clearAt ? new Date(CU.customStatus.clearAt).getTime() : 0;
   const menu = document.createElement('div');
   menu.id = 'fpp-status-dur-menu';
-  menu.className = 'fpp-menu';
-  menu.style.minWidth = '210px';
+  menu.className = 'ftz-csp__ddl-menu ftz-csp__ddl-menu--open fpp-cleardd-menu';
+  menu.setAttribute('role', 'listbox');
   menu.innerHTML = opts.map(o =>
-    `<div class="fpp-menu__item" onclick="setMyStatus('${statusId}','${o.id}');_fppClose()">${o.label}</div>`
+    `<button type="button" class="ftz-csp__ddl-item" role="option" onclick="setMyStatus('${statusId}','${o.id}');_fppClose()">${o.label}</button>`
   ).join('')
-    + (csExp > Date.now() ? `<div class="fpp-menu__divider"></div><div class="fpp-menu__item" onclick="_fppSyncStatusToCS('${statusId}');_fppClose()"><i class="fa-solid fa-link" aria-hidden="true" style="font-size:12px;width:14px;text-align:center;"></i> Sync with custom status</div>` : '');
+    + (csExp > Date.now() ? `<div class="ftz-csp__ddl-sep"></div><button type="button" class="ftz-csp__ddl-item" onclick="_fppSyncStatusToCS('${statusId}');_fppClose()"><i class="fa-solid fa-link" aria-hidden="true" style="margin-right:8px;color:var(--accent);"></i>Sync with custom status</button>` : '');
   document.body.appendChild(menu);
   const anchor = evt.currentTarget.getBoundingClientRect();
-  let left = anchor.right + 6, top = anchor.top;
-  if (left + menu.offsetWidth > window.innerWidth - 8) left = anchor.left - menu.offsetWidth - 6;
-  if (top + menu.offsetHeight > window.innerHeight - 8) top = window.innerHeight - menu.offsetHeight - 8;
+  menu.style.position = 'fixed';
+  menu.style.minWidth = Math.max(200, anchor.width) + 'px';
+  menu.style.zIndex = '13000';
+  let left = anchor.left, top = anchor.bottom + 5;
+  if (top + menu.offsetHeight > window.innerHeight - 8) top = Math.max(8, anchor.top - menu.offsetHeight - 5);
+  if (left + menu.offsetWidth > window.innerWidth - 8) left = window.innerWidth - menu.offsetWidth - 8;
   menu.style.left = Math.max(8, left) + 'px';
-  menu.style.top = Math.max(8, top) + 'px';
+  menu.style.top = top + 'px';
   setTimeout(() => {
     const off = e => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', off); } };
     document.addEventListener('mousedown', off);
@@ -50863,6 +50885,7 @@ function _fppSyncStatusToCS(statusId) {
   const csExp = CU?.customStatus?.clearAt ? new Date(CU.customStatus.clearAt).getTime() : 0;
   if (!csExp || csExp <= Date.now()) { setMyStatus(statusId); return; }
   FtzStatus.set(statusId);
+  CU.statusSyncedToCS = true;   // reverse Fortized link — surfaced on the status dropdown
   CU.statusExpiresAt = new Date(csExp).toISOString();
   if (window._ftzStatusSyncTimer) clearTimeout(window._ftzStatusSyncTimer);
   window._ftzStatusSyncTimer = setTimeout(() => { try { FtzStatus.set('online'); } catch (_) {} }, csExp - Date.now());
@@ -50888,19 +50911,39 @@ function _fppShowStatusSubmenu(evt) {
   sub.id = 'fpp-status-submenu';
   sub.className = 'fpp-menu';
   sub.style.minWidth = '270px';
-  // online applies instantly; idle/dnd/invisible are "timed" — clicking
-  // them opens a duration chooser (For how long?) inline.
+  // online applies instantly. idle/dnd/invisible are "timed": clicking the
+  // row applies the status until you turn it off; HOVERING the row reveals
+  // a compact "Clear after" dropdown (same control as the custom-status
+  // picker) to pick an auto-revert duration or sync to the custom status.
+  const check = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fpp-main, var(--accent))" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px;"><polyline points="20 6 9 17 4 12"/></svg>';
   sub.innerHTML = STATUS_OPTS.map(o => {
-    const timed = o.id !== 'online';
-    const onClick = timed ? `_fppStatusPickDuration(event,'${o.id}')` : `setMyStatus('${o.id}');_fppClose()`;
-    return `
-    <div class="fpp-menu__item" style="align-items:flex-start;padding:9px 10px;" onclick="${onClick}">
+    const isCur = cur === o.id;
+    if (o.id === 'online') {
+      return `
+    <div class="fpp-menu__item" style="align-items:flex-start;padding:9px 10px;" onclick="setMyStatus('online');_fppClose()">
       <span style="flex-shrink:0;display:inline-flex;align-items:center;margin-top:2px;">${FtzStatus.dotSvg(o.id, 16)}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:${cur===o.id?'700':'500'};color:${cur===o.id?'var(--text)':'var(--muted-light)'};">${o.label}</div>
-        ${o.desc ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">${o.desc}</div>` : ''}
+      <div style="flex:1;min-width:0;"><div style="font-weight:${isCur?'700':'500'};color:${isCur?'var(--text)':'var(--muted-light)'};">${o.label}</div></div>
+      ${isCur ? check : ''}
+    </div>`;
+    }
+    const syncOn = isCur && !!CU?.statusSyncedToCS;
+    return `
+    <div class="fpp-status-row${isCur ? ' is-cur' : ''}" data-status="${o.id}">
+      <div class="fpp-status-row__head" onclick="setMyStatus('${o.id}');_fppClose()">
+        <span class="fpp-status-row__ic">${FtzStatus.dotSvg(o.id, 16)}</span>
+        <div class="fpp-status-row__txt">
+          <div class="fpp-status-row__label" style="font-weight:${isCur?'700':'500'};color:${isCur?'var(--text)':'var(--muted-light)'};">${o.label}</div>
+          ${o.desc ? `<div class="fpp-status-row__desc">${o.desc}</div>` : ''}
+        </div>
+        ${isCur ? check : ''}
       </div>
-      ${cur===o.id?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fpp-main, var(--accent))" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px;"><polyline points="20 6 9 17 4 12"/></svg>' : (timed ? '<i class="fa-solid fa-chevron-right" style="font-size:10px;color:var(--muted);flex-shrink:0;margin-top:4px;" aria-hidden="true"></i>' : '')}
+      <div class="fpp-status-row__clear">
+        <button type="button" class="fpp-clear-dd" onclick="_fppStatusOpenDur(event,'${o.id}')" aria-haspopup="listbox">
+          <span class="fpp-clear-dd__lbl">Clear after: <b>${_fppStatusClearLabel(o.id)}</b></span>
+          <span class="fpp-clear-dd__sync${syncOn ? ' is-on' : ''}"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
+          <i class="fa-solid fa-chevron-down fpp-clear-dd__chev" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>`;
   }).join('') + `
     <div class="fpp-menu__divider"></div>
@@ -50919,6 +50962,7 @@ function _fppShowStatusSubmenu(evt) {
   setTimeout(() => {
     const offClick = (e) => {
       if (sub.contains(e.target)) return;
+      if (document.getElementById('fpp-status-dur-menu')?.contains(e.target)) return;
       const row = document.getElementById('fpp-own-status-row');
       if (row && row.contains(e.target)) return;
       sub.remove();

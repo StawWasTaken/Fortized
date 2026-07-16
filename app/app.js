@@ -26431,8 +26431,24 @@ async function loadStaffTab(tab) { _loadStaffPage(tab); }
 async function _loadStaffPage(tab, _isAutoRefresh) {
   if (!_isAutoRefresh && _adminAutoRefresh) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; }
   const _origTab = tab;
-  // Live Ops opens the tactical console as a full-screen overlay
-  if (tab === 'live_ops') { try { openStaffOps(); } catch (e) { console.warn('[StaffOps] open failed:', e); } return; }
+  // Global Monitor's poll timer (and any legacy body-level overlay) must be
+  // torn down when navigating to any other staff page.
+  if (tab !== 'live_ops') {
+    if (window._staffOpsTimer) { clearInterval(window._staffOpsTimer); window._staffOpsTimer = null; }
+    document.getElementById('staff-ops-root')?.remove();
+  }
+  // Global Monitor (Live Ops) — render INSIDE the console's main pane rather
+  // than as a separate full-screen overlay, so it lives in the staff console
+  // like every other page.
+  if (tab === 'live_ops') {
+    _renderStaffNav('live_ops'); adminTab = 'live_ops';
+    const gm = document.getElementById('sc-main');
+    if (gm) {
+      try { await openStaffOps(gm); }
+      catch (e) { console.warn('[StaffOps] open failed:', e); gm.innerHTML = '<div style="padding:40px;color:rgba(255,255,255,.4);">Global Monitor failed to load.</div>'; }
+    }
+    return;
+  }
   // Map new nav tab names to legacy tab ids for inline rendering
   const tabMap = {audit:'_audit', staff:'_staff', nsfw_queue:'_nsfw_queue', economy:'_economy', bastions:'_bastions', users:'_users', all_users:'_all_users', support_tickets:'_support_tickets', place_where:'_place_where', onboarding:'_onboarding', statistics:'_statistics'};
   tab = tabMap[tab] || tab;
@@ -26464,23 +26480,26 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
   // ── OVERVIEW (dashboard) ──
   if (tab === 'dashboard') {
     FortizedSocial.adminInvalidateCache();
-    const reps = await FortizedSocial.adminGetReports().catch(()=>[]);
-    const bans = await FortizedSocial.adminGetBans().catch(()=>[]);
-    const staff = await FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]}));
+    // Parallel fetch — these were 7 sequential round-trips, the main reason
+    // the dashboard "takes a lot of time to load" (each waits on a slow
+    // Supabase call in series). Promise.all collapses them into one wait.
+    const [reps, bans, staff, stats, nsfwQueue, auditLog, tickets] = await Promise.all([
+      FortizedSocial.adminGetReports().catch(()=>[]),
+      FortizedSocial.adminGetBans().catch(()=>[]),
+      FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]})),
+      FortizedSocial.adminGetDashboardStats().catch(()=>null),
+      FortizedSocial.adminGetNsfwQueue().catch(()=>[]),
+      FortizedSocial.adminGetAuditLog().catch(()=>[]),
+      FortizedSocial.adminGetSupportTickets().catch(()=>({})),
+    ]);
     const totalStaff = SUPER_ADMINS.length + (staff.admins||[]).length + (staff.moderators||[]).length;
     let totalUsers = '–', onlineCount = 0, radianceCount = 0, awayCount = 0, dndCount = 0, newestUsers = [], topOnyx = [];
-    try {
-      const stats = await FortizedSocial.adminGetDashboardStats();
-      if (stats) {
-        totalUsers = stats.totalUsers; onlineCount = stats.onlineCount; awayCount = stats.awayCount;
-        dndCount = stats.dndCount; radianceCount = stats.radianceCount;
-        newestUsers = stats.newestUsers; topOnyx = stats.topOnyx;
-      }
-    } catch (e) { console.warn('[Admin] stats fetch failed', e); }
+    if (stats) {
+      totalUsers = stats.totalUsers; onlineCount = stats.onlineCount; awayCount = stats.awayCount;
+      dndCount = stats.dndCount; radianceCount = stats.radianceCount;
+      newestUsers = stats.newestUsers; topOnyx = stats.topOnyx;
+    }
     const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
-    const nsfwQueue = await FortizedSocial.adminGetNsfwQueue().catch(()=>[]);
-    const auditLog = await FortizedSocial.adminGetAuditLog().catch(()=>[]);
-    const tickets = await FortizedSocial.adminGetSupportTickets().catch(()=>({}));
     const openTickets = Object.values(tickets).filter(t=>t.status==='open').length;
     const threatScore = pending * 3 + nsfwQueue.length * 2 + bans.length + openTickets;
     const threat = threatScore > 20 ? {level:'CRITICAL',cls:'sc-threat--critical',icon:'<i class="fas fa-circle-exclamation" style="color:#f87171;font-size:10px;"></i>'} : threatScore > 10 ? {level:'HIGH',cls:'sc-threat--high',icon:'<i class="fas fa-circle-exclamation" style="color:#fb923c;font-size:10px;"></i>'} : threatScore > 3 ? {level:'MODERATE',cls:'sc-threat--medium',icon:'<i class="fas fa-circle" style="color:#fbbf24;font-size:10px;"></i>'} : {level:'LOW',cls:'sc-threat--low',icon:'<i class="fas fa-circle-check" style="color:#3ecf6e;font-size:10px;"></i>'};
@@ -42745,18 +42764,17 @@ async function checkFriendTarget(val) {
           let badge = '';
           if (isFriend) badge = '<span class="afr-preview__badge afr-preview__badge--friend">Already friends</span>';
           else if (hasPending) badge = '<span class="afr-preview__badge afr-preview__badge--pending">Request pending</span>';
-          const dot = (typeof FtzStatus !== 'undefined' && u.status && u.status !== 'offline')
-            ? FtzStatus.dotSvg(u.status, 13) : '';
-          const stLabel = (typeof FtzStatus !== 'undefined' && u.status)
-            ? (FtzStatus.publicLabel ? FtzStatus.publicLabel(u.status) : (FtzStatus.label ? FtzStatus.label(u.status) : '')) : '';
           const safe = escapeHTML(u.username);
+          // Status reads as a dot ON the avatar (same as everywhere else),
+          // not a separate text line — keeps the card compact.
+          const statusDot = (typeof FtzStatus !== 'undefined' && u.status)
+            ? '<span class="profile-status-dot afr-preview__dot" data-for="' + safe + '" data-dot-size="15">' + FtzStatus.dotSvg(u.status, 15) + '</span>' : '';
           preview.classList.add('has-user');
           preview.innerHTML =
-              '<div class="afr-preview__av">' + buildAvatarHTML(u.pfp||null, u.displayName||u.username, 52, u.pfpCrop) + '</div>'
+              '<div class="afr-preview__av">' + buildAvatarHTML(u.pfp||null, u.displayName||u.username, 50, u.pfpCrop) + statusDot + '</div>'
             + '<div class="afr-preview__info">'
             +   '<div class="afr-preview__name-row"><span class="afr-preview__name">' + escapeHTML(u.displayName||u.username) + '</span>' + badge + '</div>'
             +   '<div class="afr-preview__handle">@' + safe + '</div>'
-            +   (stLabel ? '<div class="afr-preview__status">' + dot + '<span>' + escapeHTML(stLabel) + '</span></div>' : '')
             + '</div>'
             + '<button class="afr-preview__view" onclick="closeModal(\'modal-add-friend\');viewUserProfile(\'' + safe + '\')" title="View full profile">View profile <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></button>';
         }
@@ -48998,8 +49016,8 @@ function _showDailyQuestPopup() {
           +20 Onyx
         </div>
         <div class="quest-popup-btns">
-          <button class="qp-btn qp-close" onclick="_dismissDailyPopup(false)">Later</button>
-          <button class="qp-btn qp-claim" onclick="_dismissDailyPopup(true)">Claim</button>
+          <button class="qp-btn btn-g" onclick="_dismissDailyPopup(false)">Later</button>
+          <button class="qp-btn btn-a" onclick="_dismissDailyPopup(true)"><i class="fa-solid fa-gift" aria-hidden="true"></i> Claim</button>
         </div>
       </div>
     </div>`;
@@ -58858,19 +58876,25 @@ async function renderStaffWorldMap(mountEl) {
 // world map embed.
 // ════════════════════════════════════════════════════════════════════
 let _staffOpsTimer = null;
-async function openStaffOps() {
+async function openStaffOps(mountEl) {
   if (!hasCap(STAFF_CAPS.CONSOLE_OPEN)) return;
+  // Embed mode: render into a supplied container (the staff console's main
+  // pane). Standalone mode (no arg, e.g. the ⌘K "Live Ops" shortcut): a
+  // full-screen body overlay with its own Close button.
+  const embed = !!mountEl;
   document.getElementById('staff-ops-root')?.remove();
-  const root = document.createElement('div'); root.id = 'staff-ops-root';
-  document.body.appendChild(root);
-  root.innerHTML = `
-    <div class="staff-ops">
+  let host;
+  if (embed) { host = mountEl; host.innerHTML = ''; }
+  else { host = document.createElement('div'); host.id = 'staff-ops-root'; document.body.appendChild(host); }
+  const closeBtn = embed ? '' : '<button class="staff-ops__btn staff-ops__btn--ghost" onclick="document.getElementById(\'staff-ops-root\').remove();clearInterval(window._staffOpsTimer);">Close</button>';
+  host.innerHTML = `
+    <div class="staff-ops${embed ? ' staff-ops--embed' : ''}">
       <div class="staff-ops__head">
         <div class="staff-ops__title">LIVE OPS <span class="staff-ops__pulse"></span></div>
         <div class="staff-ops__sub">Operator @${escapeHTML(CU?.username||'?')} · session ${_STAFF_SESSION_ID.slice(-6)}</div>
         <div style="flex:1;"></div>
         <button class="staff-ops__btn" onclick="openStaffPalette()">⌘K</button>
-        <button class="staff-ops__btn staff-ops__btn--ghost" onclick="document.getElementById('staff-ops-root').remove();clearInterval(window._staffOpsTimer);">Close</button>
+        ${closeBtn}
       </div>
       <div class="staff-ops__grid">
         <div class="staff-ops__counters" id="staff-ops-counters"></div>

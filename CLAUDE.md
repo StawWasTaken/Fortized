@@ -40,6 +40,18 @@ Rules:
   must pass).
 - Never destroy hand-tuned components. Verify end-to-end before claiming done.
 
+## UI conventions
+
+- **Icons: ALWAYS use FontAwesome SVG icons.** Inline the FA solid SVG path
+  (`<svg viewBox="0 0 ... " fill="currentColor">…</svg>`, sized via CSS with
+  `height + width:auto`), not the custom `ftzIcon()` Feather-style set, for new
+  UI. FA is loaded app-wide; `fill:currentColor` inherits the surrounding text
+  colour.
+- Rail/notification count badges are **capsules** (`min-width`+`padding`+
+  `border-radius:100px`), not circles, with a `box-shadow` ring in the LIVE
+  appearance surface colour (`var(--rail)` / `var(--sidebar)` — the appearance
+  system rewrites these) so the badge reads as punched out of the background.
+
 ## Environment notes
 
 - Sandbox CANNOT reach Supabase — data-layer testing is the mock harness

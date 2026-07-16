@@ -127,7 +127,11 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .rail-bastion.unread::after{height:10px;opacity:1;background:#fff;}
 .rail-bastion.unread:hover::after{height:20px;background:#fff;opacity:1;}
 /* Mention badge — red bubble in the corner, 1–9+. */
-.rail-mention-badge{position:absolute;bottom:-3px;right:-4px;width:19px;height:19px;border-radius:50%;background:#eb4545;color:#fff;font-family:var(--font-display);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--rail,#141721);line-height:1;z-index:3;pointer-events:none;}
+/* Capsule (not a circle — pills read better), but as round-ended as
+   possible (border-radius:100px). The ring is the LIVE appearance surface
+   colour (--rail, which the appearance system rewrites per theme) so the
+   badge looks punched out of the rail background rather than outlined. */
+.rail-mention-badge{position:absolute;bottom:-3px;right:-5px;min-width:19px;height:19px;padding:0 6px;border-radius:100px;background:#eb4545;color:#fff;font-family:var(--font-display);font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--rail);line-height:1;z-index:3;pointer-events:none;}
 .rail-bastion.active:hover::before{display:none;}
 .rail-bastion[data-tip]:hover::after{height:20px;opacity:.5;}
 .rail-bastion.active[data-tip]:hover::after{height:36px;opacity:1;}
@@ -139,12 +143,12 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
    speaker sits top-left so it never collides with the bottom-right mention
    circle. */
 .rail-voice-badge{position:absolute;top:-4px;left:-4px;width:18px;height:18px;border-radius:50%;background:#3ecf6e;color:#0b3d1f;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--rail,#141721);z-index:4;cursor:default;}
-.rail-voice-badge svg{width:11px;height:11px;}
+.rail-voice-badge svg{height:11px;width:auto;display:block;}
 .rail-voice-tip{position:fixed;z-index:9999;background:var(--panel2,#1f232b);border:1px solid var(--border,#252b3a);border-radius:11px;padding:9px 11px;min-width:170px;max-width:250px;box-shadow:0 10px 32px rgba(0,0,0,.55);pointer-events:none;}
 .rail-voice-tip .rvt-head{font-size:11px;font-weight:800;color:var(--accent);display:flex;align-items:center;gap:5px;margin-bottom:4px;font-family:var(--font-display);}
-.rail-voice-tip .rvt-head svg{width:11px;height:11px;}
+.rail-voice-tip .rvt-head svg{height:11px;width:auto;}
 .rail-voice-tip .rvt-ch{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:var(--muted-light);margin:7px 0 4px;text-transform:uppercase;letter-spacing:.03em;}
-.rail-voice-tip .rvt-ch svg{width:10px;height:10px;}
+.rail-voice-tip .rvt-ch svg{height:10px;width:auto;}
 .rail-voice-tip .rvt-ch-n{margin-left:auto;color:#3ecf6e;}
 .rail-voice-tip .rvt-user{display:flex;align-items:center;gap:7px;padding:2px 0 2px 3px;font-size:12px;color:#fff;}
 .rail-voice-tip .rvt-user img{flex-shrink:0;border-radius:50%;}
@@ -340,7 +344,7 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .ch-item-2027.unread .ch-hash{color:rgba(255,255,255,.35);}
 .ch-item-2027.unread::after{content:'';position:absolute;left:-2px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 4px rgba(255,255,255,.3);}
 .ch-item-2027 .ch-unread-badge{margin-left:auto;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--accent);color:#000;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ch-item-2027 .ch-mention-badge{margin-left:auto;width:17px;height:17px;border-radius:50%;background:rgba(235,69,69,.9);color:#fff;font-size:8.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ch-item-2027 .ch-mention-badge{margin-left:auto;min-width:17px;height:17px;padding:0 5px;border-radius:100px;background:rgba(235,69,69,.9);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 2px var(--sidebar);}
 /* Muted channel */
 .ch-item-2027.muted{opacity:.3;transition:opacity .12s;}
 .ch-item-2027.muted:hover{opacity:.5;}

@@ -901,6 +901,10 @@ function clearChannelUnread(bIdx, chIdx) {
 // image egress). One lean query per interval, only while the tab is visible;
 // self-disables if the table isn't present. All failures are silent so a
 // voice hiccup can never disturb the rail.
+// FontAwesome (solid) microphone, inline SVG — house rule: icons are
+// FontAwesome SVGs. fill:currentColor so it inherits the badge/tooltip text
+// colour; sized via CSS (height + width:auto keeps the 384:512 aspect).
+const _FA_MIC_SVG = '<svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M192 0C139 0 96 43 96 96l0 128c0 53 43 96 96 96s96-43 96-96l0-128c0-53-43-96-96-96zM48 184c0-13.3-10.7-24-24-24S0 170.7 0 184l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c94.7-11.8 168-92.6 168-190.5l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 79.5-64.5 144-144 144S48 303.5 48 224l0-40z"/></svg>';
 let _voicePresence = new Map();   // bastionId -> Map(channelName -> [usernames])
 let _voicePresencePoll = null;
 function _railBastionId(b) { return b && (b.globalId || b.name); }
@@ -947,7 +951,7 @@ function _updateRailBastionVoice(bIdx) {
     if (!badge) {
       badge = document.createElement('span');
       badge.className = 'rail-voice-badge';
-      badge.innerHTML = ftzIcon('mic', '10');
+      badge.innerHTML = _FA_MIC_SVG;
       badge.addEventListener('mouseenter', () => _showRailVoiceTooltip(badge, bIdx));
       badge.addEventListener('mouseleave', _hideRailVoiceTooltip);
       el.appendChild(badge);
@@ -967,14 +971,14 @@ function _showRailVoiceTooltip(anchor, bIdx) {
   if (!chMap || !chMap.size) return;
   let rows = '';
   for (const [chName, users] of chMap.entries()) {
-    rows += `<div class="rvt-ch"><span class="rvt-ch-ic">${ftzIcon('mic', '11')}</span><span class="rvt-ch-name">${escapeHTML(chName)}</span><span class="rvt-ch-n">${users.length}</span></div>`;
+    rows += `<div class="rvt-ch"><span class="rvt-ch-ic">${_FA_MIC_SVG}</span><span class="rvt-ch-name">${escapeHTML(chName)}</span><span class="rvt-ch-n">${users.length}</span></div>`;
     users.forEach(u => {
       rows += `<div class="rvt-user">${buildAvatarHTML(_pfpCache[u] || '', u, 20)}<span class="rvt-user-name">${escapeHTML(u)}</span></div>`;
     });
   }
   const tip = document.createElement('div');
   tip.className = 'rail-voice-tip';
-  tip.innerHTML = `<div class="rvt-head">${ftzIcon('mic', '11')} In voice — ${escapeHTML(b.name || 'Bastion')}</div>${rows}`;
+  tip.innerHTML = `<div class="rvt-head">${_FA_MIC_SVG} In voice — ${escapeHTML(b.name || 'Bastion')}</div>${rows}`;
   document.body.appendChild(tip);
   const r = anchor.getBoundingClientRect();
   tip.style.left = (r.right + 10) + 'px';

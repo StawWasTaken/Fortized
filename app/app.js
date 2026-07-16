@@ -26757,7 +26757,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           <div class="sc-ptd">total accounts</div>
         </div>
         <div class="sc-ptile">
-          <div class="sc-ptl"><i class="fas fa-crown"></i> Radiance</div>
+          <div class="sc-ptl">${_radianceImg('13')} Radiance</div>
           <div class="sc-ptv">${radianceCount}</div>
           <div class="sc-ptd">active subscribers</div>
         </div>

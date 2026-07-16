@@ -2790,6 +2790,30 @@ const FortizedSocial = (() => {
     }
   }
 
+  // ── Voice presence for the bastion rail (who's in party channels) ─────
+  // Deliberately LEAN (egress): selects only bastion_id/channel_name/username
+  // — NOT the `data` blob, which holds each participant's pfp data URL. The
+  // rail resolves avatars from its own pfp cache, so who + where is enough.
+  // Returns [] on any error / missing table so the caller silently shows no
+  // voice indicator instead of throwing.
+  let _voiceTableBroken = false;
+  async function getVoicePresence(bastionIds) {
+    if (_voiceTableBroken) return [];
+    try {
+      const ids = (bastionIds || []).filter(id => typeof id === 'string' && id);
+      if (!ids.length || !sb?.from) return [];
+      const { data, error } = await sb.from('voice_channels')
+        .select('bastion_id,channel_name,username')
+        .in('bastion_id', ids);
+      if (error) {
+        // Missing table/columns in this project — stop trying for the session.
+        if (/relation .* does not exist|column .* does not exist/i.test(error.message || '')) _voiceTableBroken = true;
+        return [];
+      }
+      return data || [];
+    } catch (_) { return []; }
+  }
+
   // ── Ads API ──────────────────────────────────────────
   // Returns every ad with status='active'. Expiry filtering is done
   // client-side via _isAdLive() so superadmin-owned ads stay in
@@ -3118,7 +3142,7 @@ const FortizedSocial = (() => {
     adminGetDashboardStats,
     getForumThreads, getForumThread, createForumThread, updateForumThread, deleteForumThread,
     getForumPosts, getForumPostsForThreads, createForumPost, updateForumPost, deleteForumPost, searchForumThreads,
-    uploadFile,
+    uploadFile, getVoicePresence,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
     startFriendRequestPolling, stopFriendRequestPolling, startVoiceRoomPolling, stopVoiceRoomPolling,

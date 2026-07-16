@@ -891,6 +891,96 @@ function clearChannelUnread(bIdx, chIdx) {
   _channelUnread.delete(getChannelUnreadKey(bIdx,chIdx));
   try { _updateRailBastionIndicator(bIdx); } catch (_) {}
 }
+
+// ── Bastion rail voice presence (who's in party/voice channels) ────────
+// Polls the voice_channels table (LEAN — names + locations only, never the
+// pfp-carrying `data` blob) for the user's bastions and paints a small green
+// "in voice" badge on each rail entry that has people in a party channel.
+// Hovering the badge shows a Discord-style tooltip of each voice channel and
+// its members (avatars resolved from the local pfp cache, so zero extra
+// image egress). One lean query per interval, only while the tab is visible;
+// self-disables if the table isn't present. All failures are silent so a
+// voice hiccup can never disturb the rail.
+let _voicePresence = new Map();   // bastionId -> Map(channelName -> [usernames])
+let _voicePresencePoll = null;
+function _railBastionId(b) { return b && (b.globalId || b.name); }
+async function _refreshVoicePresence() {
+  try {
+    if (document.hidden) return;
+    const bastions = CU?.bastions || [];
+    const ids = bastions.map(_railBastionId).filter(Boolean);
+    if (!ids.length) { _voicePresence = new Map(); _updateAllRailVoiceIndicators(); return; }
+    const rows = await FortizedSocial.getVoicePresence(ids);
+    const map = new Map();
+    (rows || []).forEach(r => {
+      if (!r || !r.bastion_id || !r.username) return;
+      if (!map.has(r.bastion_id)) map.set(r.bastion_id, new Map());
+      const chMap = map.get(r.bastion_id);
+      const ch = r.channel_name || 'Voice';
+      if (!chMap.has(ch)) chMap.set(ch, []);
+      if (!chMap.get(ch).includes(r.username)) chMap.get(ch).push(r.username);
+    });
+    _voicePresence = map;
+    _updateAllRailVoiceIndicators();
+  } catch (_) {}
+}
+function _startVoicePresencePolling() {
+  if (_voicePresencePoll) return;
+  try { _refreshVoicePresence(); } catch (_) {}
+  _voicePresencePoll = setInterval(() => { _refreshVoicePresence(); }, 20000);
+}
+function _bastionVoiceCount(bIdx) {
+  try {
+    const id = _railBastionId((CU?.bastions || [])[bIdx]);
+    const chMap = id && _voicePresence.get(id);
+    if (!chMap) return 0;
+    let n = 0; for (const arr of chMap.values()) n += arr.length;
+    return n;
+  } catch (_) { return 0; }
+}
+function _updateRailBastionVoice(bIdx) {
+  const el = document.getElementById('rl-b-' + bIdx);
+  if (!el) return;
+  const n = _bastionVoiceCount(bIdx);
+  let badge = el.querySelector('.rail-voice-badge');
+  if (n > 0) {
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'rail-voice-badge';
+      badge.innerHTML = ftzIcon('mic', '10');
+      badge.addEventListener('mouseenter', () => _showRailVoiceTooltip(badge, bIdx));
+      badge.addEventListener('mouseleave', _hideRailVoiceTooltip);
+      el.appendChild(badge);
+    }
+  } else if (badge) { badge.remove(); }
+}
+function _updateAllRailVoiceIndicators() {
+  (CU?.bastions || []).forEach((_, i) => { try { _updateRailBastionVoice(i); } catch (_) {} });
+}
+let _railVoiceTip = null;
+function _hideRailVoiceTooltip() { if (_railVoiceTip) { _railVoiceTip.remove(); _railVoiceTip = null; } }
+function _showRailVoiceTooltip(anchor, bIdx) {
+  _hideRailVoiceTooltip();
+  const b = (CU?.bastions || [])[bIdx];
+  const id = _railBastionId(b);
+  const chMap = id && _voicePresence.get(id);
+  if (!chMap || !chMap.size) return;
+  let rows = '';
+  for (const [chName, users] of chMap.entries()) {
+    rows += `<div class="rvt-ch"><span class="rvt-ch-ic">${ftzIcon('mic', '11')}</span><span class="rvt-ch-name">${escapeHTML(chName)}</span><span class="rvt-ch-n">${users.length}</span></div>`;
+    users.forEach(u => {
+      rows += `<div class="rvt-user">${buildAvatarHTML(_pfpCache[u] || '', u, 20)}<span class="rvt-user-name">${escapeHTML(u)}</span></div>`;
+    });
+  }
+  const tip = document.createElement('div');
+  tip.className = 'rail-voice-tip';
+  tip.innerHTML = `<div class="rvt-head">${ftzIcon('mic', '11')} In voice — ${escapeHTML(b.name || 'Bastion')}</div>${rows}`;
+  document.body.appendChild(tip);
+  const r = anchor.getBoundingClientRect();
+  tip.style.left = (r.right + 10) + 'px';
+  tip.style.top = Math.max(8, Math.min(window.innerHeight - tip.offsetHeight - 8, r.top - 6)) + 'px';
+  _railVoiceTip = tip;
+}
 let voiceConnected = false;
 let _outlineMode = false;
 let voiceChannel = null;
@@ -5382,6 +5472,9 @@ function renderRailBastions() {
   _initRailTooltips();
   _initRailNavTooltips();
   _initGlobalTooltips();
+  // Voice presence: start the poll (idempotent) and repaint the "in voice"
+  // badges onto the freshly-rendered rail entries.
+  try { _startVoicePresencePolling(); _updateAllRailVoiceIndicators(); } catch (_) {}
 }
 
 function _renderRailBastion(b, i) {

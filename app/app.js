@@ -7643,6 +7643,54 @@ function _canDMUser(target) {
   try { if (_chatCacheHas(_chatKey('dm', t))) return true; } catch(_) {}
   return false;
 }
+// Inline style string for a user's styled display name (font + effect +
+// colour) — same recipe the profile popover uses, reused in the DM header.
+function _dmNameStyleAttr(u) {
+  if (!u) return '';
+  return `font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor || '#fff', u.displayColor2 || u.displayColor || '#fff')}`;
+}
+// Enrich the DM header (topbar + welcome card) once the full profile is in:
+// applies the styled name, the topbar avatar+status, the welcome avatar's
+// decoration overlay, and the "bastions in common · mutual friends" line.
+async function _enrichDMHeader(username) {
+  try {
+    const u = await FortizedSocial.getUserByName(String(username).toLowerCase());
+    if (!u || (curDM || '').toLowerCase() !== String(username).toLowerCase()) return;
+    const dn = u.displayName || username;
+    const nameStyle = _dmNameStyleAttr(u);
+    const st = u.status || 'offline';
+    // Topbar: avatar (NO decoration) + status + styled name.
+    const rtName = document.getElementById('dm-rt-name');
+    if (rtName) { rtName.setAttribute('style', nameStyle); rtName.textContent = dn; }
+    const rtAvImg = document.querySelector('#dm-rt-av .dm-rt-av__img');
+    if (rtAvImg) rtAvImg.innerHTML = buildAvatarHTML(u.pfp || null, dn, 26, u.pfpCrop);
+    const rtDot = document.getElementById('dm-rt-dot');
+    if (rtDot) rtDot.innerHTML = FtzStatus.dotSvg(st, 11);
+    // Welcome: big avatar WITH decoration + styled name.
+    const wName = document.getElementById('dm-welcome-name');
+    if (wName) { wName.setAttribute('style', nameStyle); wName.textContent = dn; }
+    const wStrong = document.getElementById('dm-welcome-strong');
+    if (wStrong) wStrong.textContent = dn;
+    const wav = document.getElementById('dm-welcome-av');
+    if (wav) {
+      wav.innerHTML = buildAvatarHTML(u.pfp || null, dn, 76, u.pfpCrop);
+      if (u.activeDecoration && typeof buildDecorationOverlay === 'function') {
+        wav.style.position = 'relative'; wav.style.overflow = 'visible';
+        wav.insertAdjacentHTML('beforeend', buildDecorationOverlay(u.activeDecoration, 'profile-decoration-overlay-lg'));
+      }
+    }
+    // Mutuals.
+    const myB = new Set((CU.bastions || []).map(b => b.globalId || b.name));
+    const mutualB = (u.bastions || []).filter(b => myB.has(b.globalId || b.name)).length;
+    const meLow = (CU.username || '').toLowerCase();
+    const myF = new Set((CU.friends || []).map(f => String(f).toLowerCase()));
+    const mutualF = (u.friends || []).map(f => String(f).toLowerCase()).filter(f => myF.has(f) && f !== meLow).length;
+    const parts = [mutualB > 0 ? `${mutualB} bastion${mutualB > 1 ? 's' : ''} in common` : 'No bastions in common'];
+    if (mutualF > 0) parts.push(`${mutualF} mutual friend${mutualF > 1 ? 's' : ''}`);
+    const mut = document.getElementById('dm-welcome-mutual');
+    if (mut) mut.textContent = parts.join('  ·  ');
+  } catch (_) {}
+}
 function openDMView(username) {
   if (!username) return;
   username = (username||"").trim().toLowerCase();
@@ -7734,11 +7782,24 @@ function openDMView(username) {
             ? 'This channel carries automated safety notices from Fortized. Read them carefully — they affect your access. Replies are reserved for the Fortized team.'
             : 'This channel is reserved for official messages from the Fortized team. We will never ask you for your password or account token.'}</p>
       </div>`
-    : `<div class="chat-welcome">
-        <div class="w-av" id="dm-welcome-av">${(() => { const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {}; return buildAvatarHTML(_cp.pfp || null, _cp.displayName || username, 60); })()}</div>
-        <h3 id="dm-welcome-name">${escapeHTML((typeof cachedProfile === 'function' && cachedProfile(username)?.displayName) || username)}</h3>
-        <p>Beginning of your conversation with <strong>${escapeHTML(username)}</strong>.</p>
+    : (() => {
+        const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {};
+        const _dn = _cp.displayName || username;
+        const _uLow = String(username).toLowerCase();
+        const _isFriend = (CU?.friends || []).map(f => String(f).toLowerCase()).includes(_uLow);
+        const _isBlocked = (CU?.blockedUsers || []).map(f => String(f).toLowerCase()).includes(_uLow);
+        return `<div class="chat-welcome chat-welcome--dm">
+        <div class="w-av" id="dm-welcome-av">${buildAvatarHTML(_cp.pfp || null, _dn, 76, _cp.pfpCrop)}</div>
+        <h3 id="dm-welcome-name" style="${_dmNameStyleAttr(_cp)}">${escapeHTML(_dn)}</h3>
+        <div class="w-handle">@${escapeHTML(username)}</div>
+        <p>This is the beginning of your direct message history with <strong id="dm-welcome-strong">${escapeHTML(_dn)}</strong>.</p>
+        <div class="w-meta">
+          <span class="w-meta-mutual" id="dm-welcome-mutual"></span>
+          ${_isFriend ? `<button class="w-meta-btn" onclick="removeFriend('${escapeHTML(username)}')">Remove Friend</button>` : ''}
+          <button class="w-meta-btn w-meta-btn--danger" onclick="toggleBlockUser('${escapeHTML(username)}')">${_isBlocked ? 'Unblock' : 'Block'}</button>
+        </div>
       </div>`;
+      })();
   const _lockedComposerHTML = `
       <div class="chat-locked-notice" role="note">
         <img class="chat-locked-notice__icon" src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FortizedSecurity%20logo.png" alt="" loading="lazy" draggable="false">
@@ -7750,8 +7811,15 @@ function openDMView(username) {
   wrap.innerHTML = `
     <div class="chat-wrap">
       <div class="room-topbar">
-        <span class="rt-hash"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
-        <span class="rt-name">${escapeHTML(username)}</span>
+        ${(() => {
+          const _cp = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || {};
+          const _dn = _cp.displayName || username;
+          return `<span class="dm-rt-av" id="dm-rt-av">
+            <span class="dm-rt-av__img">${buildAvatarHTML(_cp.pfp || null, _dn, 26, _cp.pfpCrop)}</span>
+            <span class="dm-rt-av__dot profile-status-dot" id="dm-rt-dot" data-for="${escapeHTML(username)}">${(typeof FtzStatus !== 'undefined') ? FtzStatus.dotSvg(_cp.status || 'offline', 11) : ''}</span>
+          </span>
+          <span class="rt-name" id="dm-rt-name" style="${_dmNameStyleAttr(_cp)}">${escapeHTML(_dn)}</span>`;
+        })()}
         ${_isOfficialDM ? fortizedOfficialCapsuleHTML() : ''}
         <span class="rt-actions">
           <button class="rt-act-btn" title="Voice Call" onclick="startVoiceCall('${escapeHTML(username)}')"><i class="fa-solid fa-phone" aria-hidden="true"></i></button>
@@ -7802,6 +7870,7 @@ function openDMView(username) {
     }
   } catch(_) {}
   loadDMMessages(username);
+  if (!_isOfficialDM) { try { _enrichDMHeader(username); } catch(_) {} }
   setTimeout(() => { if (window.innerWidth > 768) showDMUserPanel(username); _initChatScroll(document.getElementById('dm-msgs')); }, 80);
   if (!_lockChat) {
     setupEmojiAutocomplete('dm-input');

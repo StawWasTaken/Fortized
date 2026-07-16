@@ -889,6 +889,27 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .chat-welcome .w-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .chat-welcome h3{font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:4px;}
 .chat-welcome p{font-size:13px;color:var(--muted);line-height:1.5;}
+/* ── DM topbar identity: avatar + status dot + styled display name ── */
+.dm-rt-av{position:relative;width:26px;height:26px;flex-shrink:0;display:inline-flex;}
+.dm-rt-av__img,.dm-rt-av__img>img,.dm-rt-av__img>div,.dm-rt-av__img>span{width:26px;height:26px;border-radius:50%;overflow:hidden;display:block;}
+.dm-rt-av__dot{position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;box-shadow:0 0 0 2.5px var(--channel,#1a1c22);display:flex;line-height:0;}
+.dm-rt-av__dot svg{width:11px;height:11px;display:block;}
+/* ── DM welcome card (Discord-style, left aligned) ── */
+.chat-welcome--dm{padding:26px 26px 20px;}
+.chat-welcome--dm .w-av{width:76px;height:76px;margin-bottom:14px;position:relative;}
+.chat-welcome--dm h3{font-size:26px;font-weight:900;margin-bottom:2px;letter-spacing:-.015em;line-height:1.15;}
+.chat-welcome--dm .w-handle{font-size:15px;color:var(--muted-light);font-weight:600;margin-bottom:14px;}
+.chat-welcome--dm p{font-size:14px;color:var(--muted);margin-bottom:15px;}
+.chat-welcome--dm p strong{color:#fff;font-weight:700;}
+.w-meta{display:flex;align-items:center;gap:11px;flex-wrap:wrap;}
+.w-meta-mutual{font-size:12.5px;color:rgba(255,255,255,.42);font-weight:500;}
+.w-meta-mutual:empty{display:none;}
+.w-meta-btn{padding:6px 14px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:rgba(255,255,255,.8);font-family:var(--font-ui);font-size:12.5px;font-weight:600;cursor:pointer;transition:background .13s,color .13s,border-color .13s;}
+.w-meta-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
+.w-meta-btn--danger:hover{background:rgba(235,69,69,.14);border-color:rgba(235,69,69,.3);color:#f87171;}
+/* Decoration overlay (added later) spills past the avatar circle. */
+.chat-welcome--dm .w-av{overflow:visible;}
+.chat-welcome--dm .w-av .profile-decoration-overlay-lg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:132%;height:132%;border-radius:0;object-fit:contain;pointer-events:none;}
 /* Day separators — elegant centered pill */
 .date-div{display:flex;align-items:center;gap:14px;padding:18px 24px 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.04em;}
 .date-div::before,.date-div::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.06);}

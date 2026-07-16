@@ -122,6 +122,12 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .rail-bastion.active::after{height:36px;opacity:1;background:var(--accent);box-shadow:0 0 8px rgba(255,249,62,.3);}
 .rail-bastion.active::before{display:none;}
 .rail-bastion:hover::before{display:none;}
+/* Unread pill — a small WHITE bar (grows on hover), always smaller than the
+   tall accent pill of the selected bastion. */
+.rail-bastion.unread::after{height:10px;opacity:1;background:#fff;}
+.rail-bastion.unread:hover::after{height:20px;background:#fff;opacity:1;}
+/* Mention badge — red bubble in the corner, 1–9+. */
+.rail-mention-badge{position:absolute;bottom:-3px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#eb4545;color:#fff;font-family:var(--font-display);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--rail,#141721);line-height:1;z-index:3;pointer-events:none;}
 .rail-bastion.active:hover::before{display:none;}
 .rail-bastion[data-tip]:hover::after{height:20px;opacity:.5;}
 .rail-bastion.active[data-tip]:hover::after{height:36px;opacity:1;}
@@ -313,6 +319,10 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .ch-item-2027 .ch-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* Unread channel state */
 .ch-item-2027.unread{color:rgba(255,255,255,.85);font-weight:700;}
+/* Unread channel: a small white pill on the left — same idea as the bastion
+   rail, always shorter than the selected channel's pill. */
+.ch-item-2027.unread:not(.active)::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:3px;height:9px;background:#fff;border-radius:0 2px 2px 0;transition:height .15s;}
+.ch-item-2027.unread:not(.active):hover::before{height:16px;}
 .ch-item-2027.unread .ch-hash{color:rgba(255,255,255,.35);}
 .ch-item-2027.unread::after{content:'';position:absolute;left:-2px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 4px rgba(255,255,255,.3);}
 .ch-item-2027 .ch-unread-badge{margin-left:auto;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--accent);color:#000;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}

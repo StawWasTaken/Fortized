@@ -851,6 +851,30 @@ window.addEventListener('beforeunload', () => {
 const _channelUnread = new Map();
 function getChannelUnreadKey(bIdx, chIdx) { return bIdx+'_'+chIdx; }
 function getChannelUnread(bIdx, chIdx) { return _channelUnread.get(getChannelUnreadKey(bIdx,chIdx)) || {count:0, mentions:0}; }
+// Aggregate unread across every channel of a bastion, for the rail's
+// unread pill (any unread) + red mention badge (@you / @everyone count).
+function getBastionUnread(bIdx) {
+  let count = 0, mentions = 0;
+  try {
+    for (const [k, v] of _channelUnread.entries()) {
+      if (k.startsWith(bIdx + '_')) { count += v.count || 0; mentions += v.mentions || 0; }
+    }
+  } catch (_) {}
+  return { count, mentions };
+}
+// Update just one rail bastion's unread pill + mention badge in place
+// (called when channel unread changes, so we don't re-render the whole rail).
+function _updateRailBastionIndicator(bIdx) {
+  const el = document.getElementById('rl-b-' + bIdx);
+  if (!el) return;
+  const u = getBastionUnread(bIdx);
+  el.classList.toggle('unread', u.count > 0 && curBastion !== bIdx);
+  let badge = el.querySelector('.rail-mention-badge');
+  if (u.mentions > 0) {
+    if (!badge) { badge = document.createElement('span'); badge.className = 'rail-mention-badge'; el.appendChild(badge); }
+    badge.textContent = u.mentions > 9 ? '9+' : String(u.mentions);
+  } else if (badge) { badge.remove(); }
+}
 function markChannelUnread(bIdx, chIdx, mentionMe) {
   const k = getChannelUnreadKey(bIdx,chIdx);
   const cur = _channelUnread.get(k) || {count:0, mentions:0};
@@ -860,9 +884,12 @@ function markChannelUnread(bIdx, chIdx, mentionMe) {
   // Re-render sidebar to show badge
   const scroll = document.querySelector('.sidebar-scroll');
   if (curBastion === bIdx && scroll) renderBastionSidebar(scroll);
+  // Update the rail's unread pill + mention badge for this bastion.
+  try { _updateRailBastionIndicator(bIdx); } catch (_) {}
 }
 function clearChannelUnread(bIdx, chIdx) {
   _channelUnread.delete(getChannelUnreadKey(bIdx,chIdx));
+  try { _updateRailBastionIndicator(bIdx); } catch (_) {}
 }
 let voiceConnected = false;
 let _outlineMode = false;
@@ -5358,7 +5385,11 @@ function renderRailBastions() {
 }
 
 function _renderRailBastion(b, i) {
-  return `<div class="rail-bastion ${curBastion===i?'active':''}" id="rl-b-${i}"
+  const u = getBastionUnread(i);
+  const isUnread = u.count > 0 && curBastion !== i;
+  const mentionBadge = u.mentions > 0
+    ? `<span class="rail-mention-badge">${u.mentions > 9 ? '9+' : u.mentions}</span>` : '';
+  return `<div class="rail-bastion ${curBastion===i?'active':''}${isUnread?' unread':''}" id="rl-b-${i}"
     draggable="true" data-bastion-idx="${i}" data-bastion-id="${escapeHTML(b.globalId||b.name)}"
     onclick="openBastion(${i})"
     oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})"
@@ -5367,6 +5398,7 @@ function _renderRailBastion(b, i) {
     <div class="bastion-icon">${b.icon
       ? (b.icon.toLowerCase().endsWith('.gif') ? `<img src="${b.icon}" class="gif-emblem" onload="_freezeGifEmblem(this)">` : `<img src="${b.icon}">`)
       : `<span style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
+    ${mentionBadge}
   </div>`;
 }
 
@@ -9544,7 +9576,7 @@ function renderBastionSidebar(scroll) {
     const unread = getChannelUnread(curBastion, i);
     const isUnread = unread.count > 0 && curChannel !== i;
     const unreadClass = isUnread ? ' unread' : '';
-    const unreadBadge = unread.mentions > 0 ? `<span class="ch-mention-badge">${unread.mentions}</span>` : '';
+    const unreadBadge = unread.mentions > 0 ? `<span class="ch-mention-badge">${unread.mentions > 9 ? '9+' : unread.mentions}</span>` : '';
     textHTML+=`<div class="ch-item-2027${curChannel===i?' active':''}${unreadClass}" id="ch-sb-${i}" ${blocked?'style="opacity:.35;pointer-events:none;"':''}onclick="selectChannel(${i})" oncontextmenu="showChannelCtxMenu(event,${i})" title="${escapeHTML(ch.name)}">
       <span class="ch-hash">#</span><span class="ch-name">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${unreadBadge}${blocked?'<span title="Age blocked" style="margin-left:auto;opacity:.4;">🔒</span>':''}
     </div>`;

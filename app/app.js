@@ -26986,7 +26986,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         if (target) {
           actBtns.push(`<button class="rep-btn rep-btn--suspend" onclick="resolveReport(${i},'suspended')">Suspend ${escapeHTML(target)}</button>`);
           actBtns.push(`<button class="rep-btn rep-btn--ban" onclick="resolveReport(${i},'banned')">Ban ${escapeHTML(target)}</button>`);
-          actBtns.push(`<button class="rep-btn rep-btn--inspect" onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);">Inspect</button>`);
+          actBtns.push(`<button class="rep-btn rep-btn--inspect" onclick="adminInspectUser('${escapeHTML(target)}');">Inspect</button>`);
         }
         if (isSuperAdmin()) actBtns.push(`<button class="rep-btn rep-btn--delete" onclick="deleteReportForever(${i})">Delete</button>`);
         actionsBlock = `<div class="rep-actions">${actBtns.join('')}</div>`;
@@ -27327,7 +27327,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
               ${target?`<button onclick="reviewNSFW(${i},'suspend')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">⏳ Suspend</button>`:''}
               ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
               <div style="flex:1;"></div>
-              ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:var(--blue);font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
+              ${target?`<button onclick="adminInspectUser('${escapeHTML(target)}');" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:var(--blue);font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
               ${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
             </div>`;
             })()}
@@ -28523,7 +28523,7 @@ async function _loadAdminSuspensions() {
           <div style="font-size:11.5px;color:rgba(255,255,255,.4);">Reason: ${escapeHTML(s.reason||'–')} · Duration: ${escapeHTML(s.duration||'–')}</div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.25);">By ${escapeHTML(s.suspendedBy||'admin')} · Until ${_fmtDateEU(s.until)}</div>
         </div>
-        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(s.username)}';adminSearchUser();}},150);" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:12px;cursor:pointer;">Inspect</button>
+        <button onclick="adminInspectUser('${escapeHTML(s.username)}')" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:12px;cursor:pointer;">Inspect</button>
         ${s.active?`<button onclick="FortizedSocial.adminUnsuspendUser('${escapeHTML(s.username)}').then(()=>{logAudit('unsuspend','${escapeHTML(s.username)}','Lifted by admin');toast('${escapeHTML(s.username)} unsuspended','success');_loadAdminPage('suspensions');});" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:var(--green);font-size:12px;cursor:pointer;">Unsuspend</button>`:''}
       </div>`).join('');
   } catch(e) {
@@ -28595,7 +28595,7 @@ function _renderUnifiedList(filter) {
         <div class="sc-row-t" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span>${escapeHTML(i.username)}</span><span class="sc-badge-sm" style="background:${m.color}15;color:${m.color};font-size:9px;padding:1px 6px;">${m.label}</span></div>
         <div class="sc-row-s">${escapeHTML(reason)} · by ${escapeHTML(by)}${date?' · '+new Date(date).toLocaleDateString():''}</div>
       </div>
-      <button class="sc-btn sc-btn-ghost" style="color:#60a5fa;flex-shrink:0;" onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(i.username)}';adminSearchUser();}},150);"><i class="fas fa-search"></i></button>
+      <button class="sc-btn sc-btn-ghost" style="color:#60a5fa;flex-shrink:0;" onclick="adminInspectUser('${escapeHTML(i.username)}')"><i class="fas fa-search"></i></button>
       ${i.type==='ban'?`<button class="sc-btn sc-btn-ghost" style="color:#3ecf6e;flex-shrink:0;" onclick="adminActionUser('${escapeHTML(i.username)}','unban')"><i class="fas fa-check"></i></button>`:''}
       ${i.type==='suspend'?`<button class="sc-btn sc-btn-ghost" style="color:#3ecf6e;flex-shrink:0;" onclick="FortizedSocial.adminUnsuspendUser('${escapeHTML(i.username)}').then(()=>{logAudit('unsuspend','${escapeHTML(i.username)}','Lifted by admin');toast('${escapeHTML(i.username)} unsuspended','success');_loadUnifiedModerationData();});"><i class="fas fa-check"></i></button>`:''}
     </div>`;
@@ -32051,7 +32051,7 @@ function renderAdminBastionsList(bastions) {
       <div style="width:70px;text-align:center;font-size:12px;">${b.verified?`<span style="color:var(--accent);">Yes</span>`:'<span style="color:rgba(255,255,255,.3);">No</span>'}</div>
       <div style="width:50px;text-align:center;font-size:11px;">${b.public===false?'<span style="color:rgba(255,255,255,.4);">Private</span>':'Public'}</div>
       <div style="width:80px;text-align:center;display:flex;gap:4px;justify-content:center;">
-        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.owner||'')}';adminSearchUser();}},150);" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#60a5fa;" title="Inspect owner"><i class="fas fa-search"></i></button>
+        <button onclick="adminInspectUser('${escapeHTML(b.owner||'')}')" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#60a5fa;" title="Inspect owner"><i class="fas fa-search"></i></button>
         <button onclick="_toggleVerifyBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}',${!!b.verified})" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:${b.verified?'var(--green)':'var(--accent)'};" title="${b.verified?'Unverify':'Verify'}">${b.verified?'<i class="fas fa-check-circle"></i>':'<i class="fas fa-check"></i>'}</button>
         ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#f87171;" title="Delete"><i class="fas fa-trash"></i></button>`:''}
       </div>

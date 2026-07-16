@@ -137,7 +137,15 @@ const FortizedSocial = (() => {
 
   // ── User CRUD ────────────────────────────────────────
   // Lightweight columns for list views (no heavy arrays/JSON)
-  const _USER_LIST_COLS = 'username,display_name,pfp,banner,status,onyx,custom_status,bio,badges,radiance_until,radiance_plus,active_decoration,profile_theme,game_activity,last_seen,created_at,raw';
+  // NOTE (egress): `banner` is deliberately EXCLUDED here. It is the single
+  // heaviest column (a custom banner is a multi-MB data URL, animated-GIF
+  // banners more) and it is NEVER rendered in a list/suggestion/search
+  // context — only on the full profile card, which fetches the complete row
+  // (`getUserByName(name, {noCache:true})`, cols '*') on demand. Pulling it
+  // in every bulk read (getUsers over the WHOLE table, getUsersByNames for
+  // memberlists/DM partners) was a primary driver of the Supabase egress
+  // blowout. Keep large media OUT of bulk column sets.
+  const _USER_LIST_COLS = 'username,display_name,pfp,status,onyx,custom_status,bio,badges,radiance_until,radiance_plus,active_decoration,profile_theme,game_activity,last_seen,created_at,raw';
   // Columns needed for enforcement checks only
   const _USER_ENFORCE_COLS = 'username,banned,ban_reason,suspension,suspended_until,active_warning,raw';
 

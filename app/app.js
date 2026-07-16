@@ -11910,30 +11910,17 @@ function deleteMsg(msgId, context) {
     const author = isSystem ? 'fortized' : rawAuthor;
     const pfp = isSystem ? '/Fortized icon.png'
       : (rawAuthor === CU.username ? CU.pfp : (_pfpCache[rawAuthor] || null));
-    const textEl = row.querySelector('.msg-text');
-    // Get the text content for display
-    const msgText = textEl ? textEl.textContent.trim() : '';
-    // Also grab any images/attachments/embeds from the message
-    let attachHTML = '';
-    const imgs = row.querySelectorAll('.msg-text img:not(.emoji), .ftz-embed-gif img, .msg-attachment img');
-    if (imgs.length) {
-      attachHTML = '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">';
-      imgs.forEach((img, i) => { if (i < 3) attachHTML += `<img src="${escapeHTML(img.src)}" style="max-width:80px;max-height:60px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,.06);">`; });
-      if (imgs.length > 3) attachHTML += `<span style="font-size:10px;color:rgba(255,255,255,.3);align-self:center;">+${imgs.length-3} more</span>`;
-      attachHTML += '</div>';
-    }
-    const timeEl = row.querySelector('.msg-timestamp') || row.querySelector('.msg-time-small');
-    const time = timeEl ? timeEl.textContent : '';
-    previewHTML = `<div style="background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin:12px 0 16px;">
-      <div style="display:flex;gap:10px;align-items:flex-start;">
-        <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;overflow:hidden;">${buildAvatarHTML(pfp,author,34)}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;"><span style="font-weight:700;font-size:13px;color:rgba(255,255,255,.85);">${escapeHTML(author)}</span><span style="font-size:10px;color:rgba(255,255,255,.25);">${escapeHTML(time)}</span></div>
-          ${msgText ? `<div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.4;word-break:break-word;${msgText.length > 300 ? 'max-height:80px;overflow:hidden;' : ''}">${escapeHTML(msgText.slice(0,300))}${msgText.length > 300 ? '...' : ''}</div>` : ''}
-          ${attachHTML}
-        </div>
-      </div>
-    </div>`;
+    // Real preview: clone the actual rendered message so the confirmation
+    // shows EXACTLY what's being deleted — text, embeds, images, files,
+    // GIFs, video/audio players, forwards, replies — not a stripped
+    // reconstruction. Strip only the hover action bar + stray ids so the
+    // snapshot is clean and static.
+    const clone = row.cloneNode(true);
+    clone.querySelectorAll('.msg-acts, .msg-hover-acts, .new-messages-bar').forEach(el => el.remove());
+    clone.removeAttribute('id');
+    clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    clone.querySelectorAll('[contenteditable]').forEach(el => el.setAttribute('contenteditable', 'false'));
+    previewHTML = `<div class="ftz-del-preview">${clone.outerHTML}</div>`;
   }
 
   const overlay = document.createElement('div');
@@ -40671,7 +40658,7 @@ function showPinnedMessages() {
   panel.className = 'pins-panel-v2';
   panel.innerHTML = `
     <div style="padding:20px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;">
-      <span style="color:var(--accent);display:inline-flex;">${_faMsg('pin', 16)}</span>
+      <span style="color:var(--text,#fff);display:inline-flex;">${_faMsg('pin', 16)}</span>
       <div style="font-family:var(--font-display);font-size:17px;font-weight:800;flex:1;color:#fff;">Pinned Messages</div>
       <span style="font-size:10px;color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);padding:2px 10px;border-radius:var(--radius-pill);font-weight:600;">${pins.length}</span>
       <button onclick="_closeEl('pins-panel');_closeEl('pins-panel-overlay')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>

@@ -9580,6 +9580,10 @@ button[style*="background: var(--accent)"]:active {
   justify-content: center;
   animation: fadeIn 0.15s ease;
 }
+/* Real cloned-message preview inside the delete-message confirmation. */
+.ftz-del-preview{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:8px 10px;margin:12px 0 16px;max-height:340px;overflow-y:auto;}
+.ftz-del-preview .msg-acts,.ftz-del-preview .msg-hover-acts{display:none!important;}
+.ftz-del-preview [data-msgid]{background:transparent!important;padding-top:2px;padding-bottom:2px;}
 .ftz-confirm-card {
   background: var(--panel);
   border: 1px solid var(--border);

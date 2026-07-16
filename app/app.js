@@ -26597,12 +26597,17 @@ function _renderStaffNav(active) {
       {id:'audit', svg:'<i class="fas fa-clock-rotate-left"></i>', label:'Audit Log'},
     ]},
   ];
+  // Pending-work counts published by the dashboard load; render as red
+  // pills so staff see what's waiting without opening each page.
+  const counts = window._scNavCounts || {};
   let html = '';
   for (let i = 0; i < navItems.length; i++) {
     const sec = navItems[i];
     html += `<div class="sc-nav-section"><div class="sc-nav-section-label">${sec.section}</div>`;
     for (const item of sec.items) {
-      html += `<button class="sc-nav-item${active===item.id?' active':''}" onclick="_loadStaffPage('${item.id}')">${item.svg}${item.label}</button>`;
+      const c = counts[item.id];
+      const pill = (typeof c === 'number' && c > 0) ? `<span class="sc-nav-count">${c > 99 ? '99+' : c}</span>` : '';
+      html += `<button class="sc-nav-item${active===item.id?' active':''}" onclick="_loadStaffPage('${item.id}')">${item.svg}${item.label}${pill}</button>`;
     }
     html += '</div>';
     if (i < navItems.length - 1) html += '<div class="sc-nav-sep"></div>';
@@ -26689,127 +26694,123 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     const threatScore = pending * 3 + nsfwQueue.length * 2 + bans.length + openTickets;
     const threat = threatScore > 20 ? {level:'CRITICAL',cls:'sc-threat--critical',icon:'<i class="fas fa-circle-exclamation" style="color:#f87171;font-size:10px;"></i>'} : threatScore > 10 ? {level:'HIGH',cls:'sc-threat--high',icon:'<i class="fas fa-circle-exclamation" style="color:#fb923c;font-size:10px;"></i>'} : threatScore > 3 ? {level:'MODERATE',cls:'sc-threat--medium',icon:'<i class="fas fa-circle" style="color:#fbbf24;font-size:10px;"></i>'} : {level:'LOW',cls:'sc-threat--low',icon:'<i class="fas fa-circle-check" style="color:#3ecf6e;font-size:10px;"></i>'};
     const activeNow = onlineCount + awayCount + dndCount;
+    // Oldest still-pending report → the "aging" signal on the queue card.
+    const _pendingReps = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned');
+    const _oldestRep = _pendingReps.reduce((m,r)=> (r.createdAt && (m===null || r.createdAt < m)) ? r.createdAt : m, null);
+    const _oldestTxt = _oldestRep ? ('oldest waiting ' + formatTimeAgo(_oldestRep).replace(' ago','')) : 'nothing waiting';
+    // Publish attention counts so the nav shows pending-work pills, then
+    // repaint the nav (idempotent — small DOM).
+    window._scNavCounts = { reports: pending, nsfw_queue: nsfwQueue.length, feedback: openTickets };
+    try { _renderStaffNav('dashboard'); } catch(_){}
+    const _fUsers = (typeof totalUsers === 'number') ? totalUsers.toLocaleString() : totalUsers;
 
     main.innerHTML = `<div class="sc-page">
-      <div class="sc-dash-head">
+      <div class="sc-cc-head">
         <div>
-          <div class="sc-dash-title"><i class="fas fa-chart-pie" style="color:var(--accent);"></i> Dashboard</div>
-          <div class="sc-dash-meta"><i class="fas fa-user"></i> ${escapeHTML(CU.displayName||CU.username)} <i class="fas fa-circle" style="color:var(--green);font-size:6px;margin:0 6px;"></i> ${new Date().toLocaleString()}</div>
+          <div class="sc-cc-title"><span class="sc-live-dot"></span>Command Center</div>
+          <div class="sc-cc-sub">Everything that needs you, first — ${escapeHTML(CU.displayName||CU.username)} · ${new Date().toLocaleString()}</div>
         </div>
-        <div class="sc-dash-actions">
+        <div class="sc-cc-actions">
           <span class="sc-threat ${threat.cls}">${threat.icon} ${threat.level}</span>
-          <button class="sc-btn" onclick="openStaffPalette()"><i class="fas fa-search"></i> ⌘K</button>
-          <button class="sc-btn" onclick="_syncAdminData().then(()=>{toast('Synced','success');_loadAdminPage('dashboard');})"><i class="fas fa-rotate"></i> Sync</button>
-          <button class="sc-btn" onclick="_loadAdminPage('all_users')"><i class="fas fa-users"></i> Users</button>
+          <button class="sc-btn sc-btn-ghost" onclick="_syncAdminData().then(()=>{toast('Synced','success');_loadAdminPage('dashboard');})"><i class="fas fa-rotate"></i> Sync</button>
+        </div>
+      </div>
+      <button class="sc-cmd" onclick="openStaffPalette()">
+        <i class="fas fa-magnifying-glass"></i>
+        <span class="sc-cmd-ph">Jump to a user, bastion, report, or action…</span>
+        <span class="sc-kbd">⌘K</span>
+      </button>
+
+      <div class="sc-sec-label">Needs attention <span class="sc-ln"></span></div>
+      <div class="sc-queue">
+        <div class="sc-qcard sc-q-red" onclick="_loadAdminPage('reports')">
+          <div class="sc-qglow"></div><div class="sc-qgo">Review →</div>
+          <div class="sc-qic"><i class="fas fa-flag"></i></div>
+          <div class="sc-qn">${pending}</div>
+          <div class="sc-qlb">Reports pending</div>
+          <div class="sc-qmt"><i class="fas fa-clock" style="font-size:10px;"></i> ${_oldestTxt}</div>
+        </div>
+        <div class="sc-qcard sc-q-amber" onclick="_loadAdminPage('nsfw_queue')">
+          <div class="sc-qglow"></div><div class="sc-qgo">Review →</div>
+          <div class="sc-qic"><i class="fas fa-image"></i></div>
+          <div class="sc-qn">${nsfwQueue.length}</div>
+          <div class="sc-qlb">Content in queue</div>
+          <div class="sc-qmt"><i class="fas fa-shield-halved" style="font-size:10px;"></i> ${nsfwQueue.length ? 'awaiting your call' : 'all reviewed'}</div>
+        </div>
+        <div class="sc-qcard sc-q-blue" onclick="_loadAdminPage('feedback')">
+          <div class="sc-qglow"></div><div class="sc-qgo">Open →</div>
+          <div class="sc-qic"><i class="fas fa-comment"></i></div>
+          <div class="sc-qn">${openTickets}</div>
+          <div class="sc-qlb">Open tickets</div>
+          <div class="sc-qmt"><i class="fas fa-inbox" style="font-size:10px;"></i> ${openTickets ? 'need a response' : 'inbox zero'}</div>
         </div>
       </div>
 
-      <div class="sc-dash-stats">
-        <div class="sc-stat" onclick="_loadAdminPage('all_users')" style="--sc-accent:#60a5fa;">
-          <div class="sc-stat-icon"><i class="fas fa-users"></i></div>
-          <div class="sc-stat-val">${totalUsers}</div>
-          <div class="sc-stat-lbl">Total Users</div>
+      <div class="sc-sec-label">Platform pulse <span class="sc-ln"></span></div>
+      <div class="sc-pulse">
+        <div class="sc-ptile" onclick="_loadAdminPage('all_users')" style="cursor:pointer;">
+          <div class="sc-ptl"><i class="fas fa-signal"></i> Active now</div>
+          <div class="sc-ptv">${activeNow.toLocaleString()}</div>
+          <div class="sc-ptd">${onlineCount} online · ${awayCount} idle · ${dndCount} dnd</div>
         </div>
-        <div class="sc-stat" onclick="_loadAdminPage('all_users')" style="--sc-accent:#3ecf6e;">
-          <div class="sc-stat-icon"><i class="fas fa-signal"></i></div>
-          <div class="sc-stat-val">${activeNow}</div>
-          <div class="sc-stat-lbl">Active Now</div>
-          <div class="sc-stat-sub">${onlineCount} online · ${awayCount} idle · ${dndCount} dnd</div>
+        <div class="sc-ptile" onclick="_loadAdminPage('all_users')" style="cursor:pointer;">
+          <div class="sc-ptl"><i class="fas fa-users"></i> Members</div>
+          <div class="sc-ptv">${_fUsers}</div>
+          <div class="sc-ptd">total accounts</div>
         </div>
-        <div class="sc-stat" onclick="_loadAdminPage('reports')" style="--sc-accent:${pending>0?'#f87171':'#3ecf6e'};">
-          <div class="sc-stat-icon"><i class="fas fa-flag"></i></div>
-          <div class="sc-stat-val">${pending}</div>
-          <div class="sc-stat-lbl">Pending Reports</div>
+        <div class="sc-ptile">
+          <div class="sc-ptl"><i class="fas fa-crown"></i> Radiance</div>
+          <div class="sc-ptv">${radianceCount}</div>
+          <div class="sc-ptd">active subscribers</div>
         </div>
-        <div class="sc-stat" onclick="_loadAdminPage('nsfw_queue')" style="--sc-accent:${nsfwQueue.length>0?'#f59e0b':'#3ecf6e'};">
-          <div class="sc-stat-icon"><i class="fas fa-eye-slash"></i></div>
-          <div class="sc-stat-val">${nsfwQueue.length}</div>
-          <div class="sc-stat-lbl">Content Queue</div>
+        <div class="sc-ptile">
+          <div class="sc-ptl"><i class="fas fa-user-shield"></i> Staff</div>
+          <div class="sc-ptv">${totalStaff}</div>
+          <div class="sc-ptd">${bans.length} ban${bans.length===1?'':'s'} on record</div>
         </div>
-        <div class="sc-stat" onclick="_loadAdminPage('bans')" style="--sc-accent:${bans.length>0?'#f87171':'#3ecf6e'};">
-          <div class="sc-stat-icon"><i class="fas fa-gavel"></i></div>
-          <div class="sc-stat-val">${bans.length}</div>
-          <div class="sc-stat-lbl">Banned</div>
-        </div>
-      </div>
-
-      <div class="sc-dash-stats">
-        <div class="sc-stat" style="--sc-accent:#ffd93e;">
-          <div class="sc-stat-icon"><i class="fas fa-crown"></i></div>
-          <div class="sc-stat-val">${radianceCount}</div>
-          <div class="sc-stat-lbl">Radiance</div>
-        </div>
-        <div class="sc-stat" style="--sc-accent:#a78bfa;">
-          <div class="sc-stat-icon"><i class="fas fa-user-shield"></i></div>
-          <div class="sc-stat-val">${totalStaff}</div>
-          <div class="sc-stat-lbl">Staff</div>
-        </div>
-        <div class="sc-stat" style="--sc-accent:#60a5fa;">
-          <div class="sc-stat-icon"><i class="fas fa-list"></i></div>
-          <div class="sc-stat-val">${reps.length}</div>
-          <div class="sc-stat-lbl">Total Reports</div>
-        </div>
-        <div class="sc-stat" onclick="_loadAdminPage('support_tickets')" style="--sc-accent:${openTickets>0?'#38bdf8':'#3ecf6e'};">
-          <div class="sc-stat-icon"><i class="fas fa-ticket"></i></div>
-          <div class="sc-stat-val">${openTickets}</div>
-          <div class="sc-stat-lbl">Open Tickets</div>
-        </div>
-        <div class="sc-stat" style="--sc-accent:#3ecf6e;">
-          <div class="sc-stat-icon"><i class="fas fa-heart-pulse"></i></div>
-          <div class="sc-stat-val">99.9%</div>
-          <div class="sc-stat-lbl">Uptime</div>
+        <div class="sc-ptile sc-pt-ok">
+          <div class="sc-ptl"><i class="fas fa-heart-pulse"></i> System</div>
+          <div class="sc-ptv">Healthy</div>
+          <div class="sc-ptd">99.9% uptime</div>
         </div>
       </div>
 
-      <div class="sc-dash-grid">
+      <div class="sc-sec-label">Now <span class="sc-ln"></span></div>
+      <div class="sc-cols">
         <div class="sc-card">
-          <div class="sc-card-head">
-            <i class="fas fa-flag" style="color:#f87171;"></i><h3>Incoming Reports</h3>
-            <span class="sc-card-badge" style="color:#f87171;">${pending} pending</span>
-          </div>
-          <div class="sc-card-body">
-            ${reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').slice(0,8).map(r=>{const _t=r.username||r.msgFrom||null;return `<div class="sc-row" onclick="_loadAdminPage('reports')">
-              <i class="fas fa-circle" style="color:#f87171;font-size:8px;"></i>
-              <div class="sc-row-c"><div class="sc-row-t">${escapeHTML(r.reason||'No reason')}</div><div class="sc-row-s">${escapeHTML(r.reporter||'?')}${_t?' → '+escapeHTML(_t):''} · ${r.createdAt?formatTimeAgo(r.createdAt):''}</div></div>
-            </div>`;}).join('')||'<div class="sc-empty"><i class="fas fa-circle-check" style="color:var(--green);"></i> All clear</div>'}
-          </div>
-        </div>
-
-        <div class="sc-card">
-          <div class="sc-card-head">
-            <i class="fas fa-bolt" style="color:#3ecf6e;"></i><h3>Activity Feed</h3>
-            <span class="sc-card-badge" style="color:var(--green);"><i class="fas fa-circle" style="font-size:8px;"></i> LIVE</span>
-          </div>
-          <div class="sc-card-body">
-            ${auditLog.slice(0,10).map(e=>{
-              const c = (e.action||'').includes('ban')?'#f87171':(e.action||'').includes('warn')?'#f59e0b':(e.action||'').includes('give')||((e.action||'').includes('grant'))?'#ffd93e':(e.action||'').includes('report')?'#a855f7':'#60a5fa';
-              return `<div class="sc-row">
-                <i class="fas fa-circle" style="color:${c};font-size:7px;"></i>
-                <div class="sc-row-c"><div class="sc-row-t"><span style="color:${c};font-weight:700;">${escapeHTML(e.action||'?')}</span> on ${escapeHTML(e.target||'?')}</div><div class="sc-row-s">${escapeHTML(e.by||'?')} · ${e.at?formatTimeAgo(e.at):''}</div></div>
+          <div class="sc-card-head"><i class="fas fa-bolt" style="color:var(--accent);"></i><h3>Live activity</h3><span class="sc-card-badge" style="color:var(--green);margin-left:auto;"><i class="fas fa-circle" style="font-size:7px;"></i> LIVE</span></div>
+          <div class="sc-feed">
+            ${auditLog.slice(0,12).map(e=>{
+              const a=(e.action||'');
+              const cfg = a.includes('ban')?{c:'#f2555a',bg:'rgba(242,85,90,.12)',i:'fa-gavel'}
+                : a.includes('warn')?{c:'#f5a524',bg:'rgba(245,165,36,.12)',i:'fa-triangle-exclamation'}
+                : (a.includes('give')||a.includes('grant'))?{c:'#ffd93e',bg:'rgba(255,217,62,.12)',i:'fa-gift'}
+                : a.includes('report')?{c:'#a78bfa',bg:'rgba(167,139,250,.12)',i:'fa-flag'}
+                : {c:'#5b9dff',bg:'rgba(91,157,255,.12)',i:'fa-bolt'};
+              return `<div class="sc-fe">
+                <div class="sc-fi" style="background:${cfg.bg};color:${cfg.c};"><i class="fas ${cfg.i}"></i></div>
+                <div class="sc-fx"><div class="sc-ft"><b style="color:${cfg.c};">${escapeHTML(e.action||'?')}</b> on <b>${escapeHTML(e.target||'?')}</b></div><div class="sc-fm">${escapeHTML(e.by||'?')} · ${e.at?formatTimeAgo(e.at):''}</div></div>
               </div>`;
-            }).join('')||'<div class="sc-empty"><i class="fas fa-clock"></i> No activity</div>'}
+            }).join('')||'<div class="sc-empty" style="padding:26px;text-align:center;color:var(--muted);"><i class="fas fa-clock"></i> No recent activity</div>'}
           </div>
         </div>
-
-        <div class="sc-card">
-          <div class="sc-card-head">
-            <i class="fas fa-user-plus" style="color:#60a5fa;"></i><h3>New Arrivals</h3>
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0;">
+          <div class="sc-card">
+            <div class="sc-card-head"><i class="fas fa-bolt" style="color:var(--accent);"></i><h3>Quick actions</h3></div>
+            <div class="sc-qa">
+              <button class="sc-qab" onclick="openStaffPalette()"><div class="sc-qai"><i class="fas fa-magnifying-glass"></i></div><div style="min-width:0;"><div class="sc-qat">Look up a user</div><div class="sc-qad">Inspect · warn · suspend · ban</div></div><i class="fas fa-chevron-right sc-qaar"></i></button>
+              <button class="sc-qab" onclick="_loadAdminPage('broadcasts')"><div class="sc-qai"><i class="fas fa-bullhorn"></i></div><div style="min-width:0;"><div class="sc-qat">Send a broadcast</div><div class="sc-qad">Announce to all members</div></div><i class="fas fa-chevron-right sc-qaar"></i></button>
+              <button class="sc-qab" onclick="_loadAdminPage('nsfw_queue')"><div class="sc-qai"><i class="fas fa-image"></i></div><div style="min-width:0;"><div class="sc-qat">Review content</div><div class="sc-qad">Clear the moderation queue</div></div><i class="fas fa-chevron-right sc-qaar"></i></button>
+            </div>
           </div>
-          <div class="sc-card-body">
-            ${newestUsers.map(u=>`<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
-              <div class="sc-avatar">${buildAvatarHTML(u.pfp,u.display_name||u.username,24)}</div>
-              <div class="sc-row-c"><div class="sc-row-t">@${escapeHTML(u.username)}</div><div class="sc-row-s">${u.createdAt?formatTimeAgo(u.createdAt):''}</div></div>
-            </div>`).join('')||'<div class="sc-empty"><i class="fas fa-user-slash"></i> No data</div>'}
-          </div>
-          <div class="sc-card-head" style="margin-top:8px;">
-            <span class="icon-onyx" style="width:18px;height:18px;"></span><h3>Top Onyx</h3>
-          </div>
-          <div class="sc-card-body">
-            ${topOnyx.map((u,i)=>`<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
-              <div class="sc-rank" style="color:${i===0?'#ffd93e':i===1?'#c0c0c0':i===2?'#cd7f32':'rgba(255,255,255,.3)'};">#${i+1}</div>
-              <div class="sc-row-c"><div class="sc-row-t">@${escapeHTML(u.username)}</div></div>
-              <div class="sc-onyx">${(u.onyx||0).toLocaleString()}</div>
-            </div>`).join('')||'<div class="sc-empty">No data</div>'}
+          <div class="sc-card">
+            <div class="sc-card-head"><i class="fas fa-user-plus" style="color:#5b9dff;"></i><h3>New arrivals</h3></div>
+            <div class="sc-feed" style="max-height:210px;">
+              ${newestUsers.slice(0,6).map(u=>`<div class="sc-fe" style="cursor:pointer;" onclick="adminInspectUser('${escapeHTML(u.username)}')">
+                <div class="sc-fi" style="padding:0;overflow:hidden;">${buildAvatarHTML(u.pfp,u.display_name||u.username,30)}</div>
+                <div class="sc-fx"><div class="sc-ft"><b>@${escapeHTML(u.username)}</b></div><div class="sc-fm">${u.createdAt?formatTimeAgo(u.createdAt):''}</div></div>
+              </div>`).join('')||'<div class="sc-empty" style="padding:22px;text-align:center;color:var(--muted);">No data</div>'}
+            </div>
           </div>
         </div>
       </div>

@@ -49523,13 +49523,27 @@ async function _saveAllSettingsImpl() {
     toast('No changes to save.', 'info');
     return;
   }
-  const saved = await saveUser(true, _fieldsToWrite);
+  // Isolate the banner from everything else. A custom banner is by far the
+  // heaviest field (an animated-GIF banner is a multi-MB data URL), and
+  // bundling it into the same UPDATE as the avatar is the leading suspect
+  // for the "avatar save fails" bug: one oversized request throws a
+  // NetworkError and takes the tiny pfp change down with it. Writing the
+  // avatar + identity fields FIRST, in their own small request, guarantees
+  // the avatar lands even if the banner write later chokes.
+  const _bannerChanged = _fieldsToWrite.includes('banner');
+  const _restFields = _fieldsToWrite.filter(f => f !== 'banner');
+  let saved = true;
+  if (_restFields.length) { if ((await saveUser(true, _restFields)) === false) saved = false; }
+  if (saved && _bannerChanged) { if ((await saveUser(true, ['banner'])) === false) saved = false; }
   if (saved === false) {
     // The DB write failed (both attempts). Telling the user "Settings
     // saved!" here is how avatars silently reverted on the next boot:
     // the UI showed the new image while the row kept the old one. Keep
     // the unsaved-changes bar up, skip the broadcast, tell the truth.
-    toast("Couldn't reach the server — your changes are NOT saved yet. Try again in a moment.", 'error');
+    // Surface the EXACT backend error (payload size, message, code) so a
+    // "still failing" report is one screenshot instead of a DevTools dig.
+    const _err = (typeof window !== 'undefined' && window._ftzLastDbError) ? ('\n' + window._ftzLastDbError) : '';
+    toast("Couldn't save your changes — the server rejected the write." + _err, 'error');
     return;
   }
   // (Removed) The avatar read-back check lived here. It compared the

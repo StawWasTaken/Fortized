@@ -583,11 +583,19 @@ const FortizedSocial = (() => {
       if (Object.keys(changed).length === 0) {
         console.debug('[saveUserObject] no-op — nothing changed for', uname);
       } else {
+        // Surface the exact bytes we're about to send so a "save didn't
+        // stick" report carries the payload size (a multi-MB banner/pfp
+        // riding along is the classic cause of a NetworkError throw).
+        const _cols = Object.keys(changed);
+        let _bytes = 0; try { _bytes = JSON.stringify(changed).length; } catch (_) {}
         const { error } = await sb.from('users').update(changed).eq('username', uname);
         if (error) {
-          console.error('[saveUserObject] UPDATE FAILED:', error.message, error.code);
+          const _msg = '[' + _cols.join(', ') + '] ' + _bytes + 'B — ' + error.message + ' (' + (error.code || 'no-code') + ')';
+          console.error('[saveUserObject] UPDATE FAILED:', _msg);
+          try { if (typeof window !== 'undefined') window._ftzLastDbError = _msg; } catch (_) {}
           throw new Error(`Update failed: ${error.message}`);
         }
+        try { if (typeof window !== 'undefined') window._ftzLastDbError = null; } catch (_) {}
         _lastRowByUser[uname] = { ...base, ...changed };
         // console.info (not .debug) so the write trail is visible in a
         // default DevTools console — this line is the first thing to ask

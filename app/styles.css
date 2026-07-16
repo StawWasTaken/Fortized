@@ -9917,8 +9917,11 @@ button[style*="background: var(--accent)"]:active {
 .afr-head__text{flex:1;min-width:0;}
 .afr-head__title{font-family:var(--font-display);font-size:20px;font-weight:900;color:#fff;letter-spacing:-.01em;line-height:1.1;}
 .afr-head__sub{font-size:12px;color:var(--muted-light);margin-top:3px;line-height:1.4;}
-/* Mascot peeks over the top-right of the username field (Discord-style). */
-.afr-head__mascot{position:absolute;right:74px;bottom:100%;margin-bottom:-16px;width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35));pointer-events:none;z-index:3;}
+/* Mascot sits large in the card's top-right corner, up by the title —
+   inside the modal's overflow:hidden bounds so the hat never clips, and
+   clear of the Send button below. */
+.afr-head{overflow:visible;}
+.afr-head__mascot{position:absolute;right:14px;top:1px;width:122px;height:auto;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35));pointer-events:none;z-index:3;}
 .afr-input-zone{padding:0 24px 14px;position:relative;}
 /* Collapse the empty hint / error / success rows so they don't leave a big
    dead gap between the preview and "Other Places". */

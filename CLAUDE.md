@@ -18,8 +18,14 @@ Rules:
 - Avoid `select('*')` on `users` in hot paths; select only the columns you use.
 - `getUsers()` scans the ENTIRE users table — treat any new caller as a red
   flag and give it the leanest columns possible.
-- The real long-term fix is moving images out of the DB row into object
-  storage / a CDN and storing only a URL. Until then, keep rows lean.
+- The real long-term fix — moving images out of the DB row into Storage and
+  storing only a URL — is now BUILT: `saveUserObject` offloads pfp/banner
+  data-URLs to the `attachments` bucket behind a per-browser flag
+  (`localStorage.ftz_media_storage='1'`), OFF by default, with automatic
+  fallback to the inline data URL. Bulk backfill for existing rows:
+  `tools/migrate-media-to-storage.mjs`. Full rollout steps:
+  `docs/media-storage.md`. Flip `_mediaStorageEnabled()` to `true` once
+  proven on one account, then run the backfill to reclaim egress.
 
 ## Standing dev directives (every commit)
 

@@ -489,6 +489,40 @@ const FortizedSocial = (() => {
     });
   }
 
+  // ── User-media Storage offload (egress) ───────────────────────────────
+  // Rollout gate: OFF by default. A browser opts in with
+  //   localStorage.setItem('ftz_media_storage','1')
+  // so it can be proven end-to-end on one account (upload avatar → Save →
+  // confirm the row's pfp is now an https URL, the image renders, and it
+  // survives a reload) before we flip the default on for everyone.
+  const _MEDIA_BUCKET = 'attachments'; // reuse the already-public bucket uploadFile() uses
+  function _mediaStorageEnabled() {
+    try { return typeof localStorage !== 'undefined' && localStorage.getItem('ftz_media_storage') === '1'; }
+    catch (_) { return false; }
+  }
+  // Upload one image data URL to Storage; return its public URL, or null on
+  // ANY failure (caller then keeps the inline data URL — today's behaviour).
+  async function _uploadUserMedia(username, kind, dataUrl) {
+    try {
+      if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return null;
+      if (!sb?.storage) return null;
+      const blob = await (await fetch(dataUrl)).blob();
+      // Content type + extension straight from the blob (webp for our crops).
+      const ext = ((blob.type || 'image/webp').split('/')[1] || 'webp').split(';')[0];
+      // Content-addressed-ish path: a fresh stamp each save gives an
+      // immutable URL that changes when the image changes — perfect CDN
+      // caching, and no stale-image problem from reusing one filename.
+      const stamp = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const path = 'user-media/' + norm(username) + '/' + kind + '-' + stamp + '.' + ext;
+      const { error } = await sb.storage.from(_MEDIA_BUCKET).upload(path, blob, { upsert: true, contentType: blob.type || 'image/webp' });
+      if (error) { console.warn('[media] ' + kind + ' upload failed, keeping inline data URL:', error.message); return null; }
+      const { data: pub } = sb.storage.from(_MEDIA_BUCKET).getPublicUrl(path);
+      const url = pub && pub.publicUrl;
+      if (url) console.info('[media] ' + kind + ' offloaded to Storage (' + blob.size + 'B → URL) for ' + username);
+      return url || null;
+    } catch (e) { console.warn('[media] ' + kind + ' upload exception, keeping inline data URL:', e?.message); return null; }
+  }
+
   // saveUserObject(user)             — implicit: diff vs baseline, guarded
   // saveUserObject(user, {fields})   — explicit: write exactly these fields,
   //                                    empties included (how clears persist)
@@ -586,6 +620,29 @@ const FortizedSocial = (() => {
           + ' — keeping the previous avatar (' + changed.pfp.length + ' chars). Origin:\n'
           + ((new Error().stack || '').split('\n').slice(2, 7).join('\n')));
         delete changed.pfp;
+      }
+
+      // ── EGRESS: offload heavy image data-URLs to Storage ──────────────
+      // The pfp/banner columns holding multi-KB→multi-MB base64 data URLs
+      // are the root of the egress blowout: every row read drags the bytes.
+      // When enabled, upload the image to the (already-configured, public)
+      // Storage bucket and store only its URL in the row — turning a ~13 KB
+      // pfp / multi-MB banner column into a ~100-byte link. Runs AFTER the
+      // transparency guard so a blank image is never uploaded. Fully
+      // fail-safe: on ANY upload error we keep the inline data URL (today's
+      // behaviour), so a missing bucket / quota hiccup can never block a
+      // save. Opt-in per browser (localStorage ftz_media_storage='1') until
+      // proven end-to-end, then flipped on for everyone. Mutating user.<col>
+      // to the URL keeps the in-memory object, the self-echo, the broadcast
+      // and the next delta-diff all consistent with the row (otherwise every
+      // later save would see the data URL as "changed" and re-upload).
+      if (_mediaStorageEnabled()) {
+        for (const col of ['pfp', 'banner']) {
+          if (typeof changed[col] === 'string' && changed[col].startsWith('data:')) {
+            const _url = await _uploadUserMedia(uname, col, changed[col]);
+            if (_url) { changed[col] = _url; try { user[col] = _url; } catch (_) {} }
+          }
+        }
       }
 
       if (Object.keys(changed).length === 0) {

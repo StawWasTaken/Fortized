@@ -29606,10 +29606,15 @@ function _listenGroupDmUpdates() {
   }).catch(() => {});
 }
 
-async function adminSearchUser() {
-  const raw = document.getElementById('admin-user-search')?.value?.trim().toLowerCase();
+async function adminSearchUser(usernameArg, targetEl) {
+  // Optional args let the same inspection render into the slide-in drawer
+  // (row clicks) as well as the Lookup page's own result pane.
+  const raw = (typeof usernameArg === 'string' && usernameArg)
+    ? usernameArg.trim().toLowerCase()
+    : document.getElementById('admin-user-search')?.value?.trim().toLowerCase();
   if (!raw) return;
-  const result = document.getElementById('admin-user-result');
+  const result = targetEl || document.getElementById('admin-user-result');
+  if (!result) return;
   result.innerHTML = '<div style="color:rgba(248,113,113,.4);font-size:13px;display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;border:2px solid rgba(248,113,113,.3);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite;"></div>Scanning database…</div>';
   let u = null;
   try { u = await FortizedSocial.getUserByName(raw); } catch(e){ console.error(e); }
@@ -31774,9 +31779,44 @@ function renderAllUsersList(users) {
     </div>`}).join('');
 }
 
+// Inspect a subject in a slide-in DRAWER instead of navigating away to the
+// Lookup page — the "data + drawer" archetype: click a row, get the full
+// subject dossier + actions over the table, close, and you're exactly where
+// you left off. Reuses adminSearchUser's rich inspection, retargeted at the
+// drawer body.
+function _openInspectDrawer() {
+  let d = document.getElementById('sc-inspect-drawer');
+  if (!d) {
+    d = document.createElement('div');
+    d.id = 'sc-inspect-drawer';
+    d.className = 'sc-drawer';
+    d.innerHTML = `
+      <div class="sc-drawer__scrim" onclick="_closeInspectDrawer()"></div>
+      <div class="sc-drawer__panel">
+        <div class="sc-drawer__head">
+          <div class="sc-drawer__title"><i class="fas fa-id-badge"></i> Subject dossier</div>
+          <button class="sc-drawer__close" aria-label="Close" onclick="_closeInspectDrawer()"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="sc-drawer__body" id="sc-inspect-body"></div>
+      </div>`;
+    document.body.appendChild(d);
+    // Esc closes the drawer.
+    d._esc = (e) => { if (e.key === 'Escape') _closeInspectDrawer(); };
+    document.addEventListener('keydown', d._esc);
+  }
+  requestAnimationFrame(() => d.classList.add('open'));
+  return d;
+}
+function _closeInspectDrawer() {
+  const d = document.getElementById('sc-inspect-drawer');
+  if (!d) return;
+  d.classList.remove('open');
+  setTimeout(() => { try { document.removeEventListener('keydown', d._esc); } catch(_){} d.remove(); }, 260);
+}
 function adminInspectUser(username) {
-  _loadAdminPage('users');
-  setTimeout(() => { const el = document.getElementById('admin-user-search'); if (el) { el.value = username; adminSearchUser(); } }, 150);
+  const d = _openInspectDrawer();
+  const body = d.querySelector('#sc-inspect-body');
+  try { adminSearchUser(username, body); } catch (e) { if (body) body.innerHTML = '<div style="color:var(--red);font-size:13px;">Inspection failed.</div>'; }
 }
 
 // ════════════════════════════════════════════

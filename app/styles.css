@@ -3243,6 +3243,9 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .sc-cc-title{font-family:var(--font-display);font-size:23px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:11px;color:#fff;}
 .sc-cc-title .sc-live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);flex-shrink:0;}
 .sc-cc-sub{font-size:12.5px;color:var(--muted-light);margin-top:5px;}
+/* Every page header: the icon takes the SAME colour as its title text, so
+   each page reads as one clean icon+label unit above its content. */
+.sc-cc-title i,.sc-cc-title svg,.sc-head-title i,.sc-head-title svg,.sc-dash-title i,.sc-dash-title svg{color:inherit !important;}
 .sc-cc-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .sc-cmd{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--border);cursor:text;transition:border-color .15s,box-shadow .15s;margin:17px 0 4px;width:100%;text-align:left;}
 .sc-cmd:hover{border-color:rgba(255,249,62,.3);box-shadow:0 0 0 3px rgba(255,249,62,.05);}

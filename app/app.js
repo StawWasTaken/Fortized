@@ -26597,20 +26597,18 @@ function _renderStaffNav(active) {
       {id:'audit', svg:'<i class="fas fa-clock-rotate-left"></i>', label:'Audit Log'},
     ]},
   ];
-  // Pending-work counts published by the dashboard load; render as red
-  // pills so staff see what's waiting without opening each page.
-  const counts = window._scNavCounts || {};
+  // The console sidebar is the SETTINGS sidebar — literally the same
+  // component (.profile-nav / .profile-nav-section / .profile-nav-item /
+  // .pni-icon), just with the console's pages as items. No bespoke .sc-nav
+  // styling, so the two consoles read as one system.
   let html = '';
   for (let i = 0; i < navItems.length; i++) {
     const sec = navItems[i];
-    html += `<div class="sc-nav-section"><div class="sc-nav-section-label">${sec.section}</div>`;
+    html += `<div class="profile-nav-section">${sec.section}</div>`;
     for (const item of sec.items) {
-      const c = counts[item.id];
-      const pill = (typeof c === 'number' && c > 0) ? `<span class="sc-nav-count">${c > 99 ? '99+' : c}</span>` : '';
-      html += `<button class="sc-nav-item${active===item.id?' active':''}" onclick="_loadStaffPage('${item.id}')">${item.svg}${item.label}${pill}</button>`;
+      html += `<div class="profile-nav-item${active===item.id?' active':''}" data-tab="${item.id}" onclick="_loadStaffPage('${item.id}')"><span class="pni-icon">${item.svg}</span>${item.label}</div>`;
     }
-    html += '</div>';
-    if (i < navItems.length - 1) html += '<div class="sc-nav-sep"></div>';
+    if (i < navItems.length - 1) html += '<div class="profile-nav-sep"></div>';
   }
   nav.innerHTML = html;
 }
@@ -26707,8 +26705,8 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page">
       <div class="sc-cc-head">
         <div>
-          <div class="sc-cc-title"><span class="sc-live-dot"></span>Command Center</div>
-          <div class="sc-cc-sub">Everything that needs you, first — ${escapeHTML(CU.displayName||CU.username)} · ${new Date().toLocaleString()}</div>
+          <div class="sc-cc-title"><i class="fas fa-gauge-high"></i>Command Center</div>
+          <div class="sc-cc-sub"><span class="sc-live-dot" style="display:inline-block;width:7px;height:7px;margin-right:6px;vertical-align:middle;"></span>Everything that needs you, first — ${escapeHTML(CU.displayName||CU.username)} · ${new Date().toLocaleString()}</div>
         </div>
         <div class="sc-cc-actions">
           <span class="sc-threat ${threat.cls}">${threat.icon} ${threat.level}</span>

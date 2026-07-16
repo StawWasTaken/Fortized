@@ -33656,18 +33656,14 @@ function parseMD(s) {
           }
         } catch(e) { _dbg('[Embed] Strategy 3 failed:', e); }
       }
-      // Strategy 4: Search all users' bastions as last resort
-      if (!b) {
-        try {
-          const allUsers = await FortizedSocial.getUsers();
-          for (const user of allUsers) {
-            for (const ub of (user.bastions||[])) {
-              if ((ub.invites||[]).some(inv=>inv.code===code)) { b = ub; _dbg('[Embed] Found via strategy 4 (user search)'); break; }
-            }
-            if (b) break;
-          }
-        } catch(e) { _dbg('[Embed] Strategy 4 failed:', e); }
-      }
+      // Strategy 4 (REMOVED — egress): this used to getUsers() over the WHOLE
+      // users table and scan each user.bastions for the code. But getUsers()
+      // returns _USER_LIST_COLS, which does NOT include `bastions`, so the
+      // inner loop was ALWAYS empty — a guaranteed no-op that still paid for a
+      // full-table read (every user's pfp) on any invite-embed render a
+      // regular user could trigger. The global-bastions + invites-table
+      // strategies above are the real resolvers; a valid invite is found
+      // there. Dead scan deleted.
       } catch(e) { console.error('[Embed] Unexpected error:', e); }
       // Update embed or show error
       const nameEl = el.querySelector('.bie-name');
@@ -47233,29 +47229,13 @@ async function joinByInvite(code) {
       }
     }
 
-    // Strategy 3: Search all users' bastions for the invite code
-    if (!foundBastion) {
-      const allUsers = await FortizedSocial.getUsers();
-      for (const user of allUsers) {
-        for (const b of (user.bastions||[])) {
-          const found = (b.invites||[]).find(inv => inv.code === code);
-          if (found) {
-            foundBastion = {...b};
-            // Ensure a proper globalId exists
-            if (!foundBastion.globalId && !foundBastion.id) {
-              foundBastion.id = (b.owner || user.username) + '_' + Date.now();
-            } else {
-              foundBastion.id = foundBastion.globalId || foundBastion.id;
-            }
-            inviterName = found.createdBy || b.owner;
-            // Sync this bastion to global so it's discoverable in future
-            try { await FortizedSocial.saveGlobalBastion(foundBastion.id, {...foundBastion, id: foundBastion.id}); } catch(e) { console.warn('[Invite] global bastion sync failed', e); }
-            break;
-          }
-        }
-        if (foundBastion) break;
-      }
-    }
+    // Strategy 3 (REMOVED — egress): this used to getUsers() over the WHOLE
+    // users table and scan each user.bastions for the invite code. But
+    // getUsers() returns _USER_LIST_COLS, which does NOT include `bastions`,
+    // so the inner loop was ALWAYS empty — a guaranteed no-op that still paid
+    // for a full-table read (every user's pfp) on any invite-link resolution.
+    // Strategy 2 (global bastions) is the authoritative resolver. Dead scan
+    // deleted.
 
     if (!foundBastion) { toast('Invite link is invalid or expired', 'error'); return; }
     const gid = foundBastion.id || foundBastion.globalId;

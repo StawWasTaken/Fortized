@@ -59157,10 +59157,10 @@ async function openStaffOps(mountEl) {
   host.innerHTML = `
     <div class="staff-ops${embed ? ' staff-ops--embed' : ''}">
       <div class="staff-ops__head">
-        <div class="staff-ops__title">LIVE OPS <span class="staff-ops__pulse"></span></div>
-        <div class="staff-ops__sub">Operator @${escapeHTML(CU?.username||'?')} · session ${_STAFF_SESSION_ID.slice(-6)}</div>
+        <div class="sc-head-title" style="font-size:18px;"><i class="fas fa-earth-europe"></i> Global Monitor <span class="staff-ops__pulse"></span></div>
+        <div class="staff-ops__sub">Operator @${escapeHTML(CU?.username||'?')} · live · session ${_STAFF_SESSION_ID.slice(-6)}</div>
         <div style="flex:1;"></div>
-        <button class="staff-ops__btn" onclick="openStaffPalette()">⌘K</button>
+        <button class="sc-btn sc-btn-ghost" onclick="openStaffPalette()"><i class="fas fa-magnifying-glass"></i> ⌘K</button>
         ${closeBtn}
       </div>
       <div class="staff-ops__grid">

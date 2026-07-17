@@ -26705,7 +26705,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page">
       <div class="sc-cc-head">
         <div>
-          <div class="sc-cc-title"><i class="fas fa-gauge-high"></i>Command Center</div>
+          <div class="sc-cc-title"><i class="fas fa-chart-pie"></i>Dashboard</div>
           <div class="sc-cc-sub"><span class="sc-live-dot" style="display:inline-block;width:7px;height:7px;margin-right:6px;vertical-align:middle;"></span>Everything that needs you, first — ${escapeHTML(CU.displayName||CU.username)} · ${new Date().toLocaleString()}</div>
         </div>
         <div class="sc-cc-actions">
@@ -26757,7 +26757,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           <div class="sc-ptd">total accounts</div>
         </div>
         <div class="sc-ptile">
-          <div class="sc-ptl"><img src="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png" alt="Radiance" style="height:14px;width:auto;vertical-align:middle;object-fit:contain;" onerror="this.style.display='none'"> Radiance</div>
+          <div class="sc-ptl"><span class="sc-rad-mask" style="width:14px;height:14px;"></span> Radiance</div>
           <div class="sc-ptv">${radianceCount}</div>
           <div class="sc-ptd">active subscribers</div>
         </div>
@@ -27102,7 +27102,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-search" style="color:#60a5fa;"></i> Subject Lookup</div>
+          <div class="sc-head-title"><i class="fas fa-users"></i> Users</div>
           <div class="sc-head-meta">Search and inspect any user in the database</div>
         </div>
       </div>

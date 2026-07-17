@@ -3247,6 +3247,14 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 /* Every page header: the icon takes the SAME colour as its title text, so
    each page reads as one clean icon+label unit above its content. */
 .sc-cc-title i,.sc-cc-title svg,.sc-head-title i,.sc-head-title svg,.sc-dash-title i,.sc-dash-title svg{color:inherit !important;}
+/* The console nav renders FontAwesome webfont <i> inside .pni-icon, while
+   the settings nav uses 15px inline SVGs. Size + weight-match them so the
+   two navbars are visually identical (the earlier difference). */
+.pni-icon i,.pni-icon .fas,.pni-icon .fa-solid{font-size:15px;line-height:1;}
+.pni-icon .icon-onyx,.pni-icon .icon-bastion{width:15px !important;height:15px !important;}
+/* Radiance mark tinted to the current text colour (CSS-masked logo) — used
+   where the icon should read as monochrome, e.g. the pulse tile. */
+.sc-rad-mask{display:inline-block;background:currentColor;-webkit-mask:url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png') center/contain no-repeat;mask:url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png') center/contain no-repeat;vertical-align:middle;flex-shrink:0;}
 .sc-cc-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .sc-cmd{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--border);cursor:text;transition:border-color .15s,box-shadow .15s;margin:17px 0 4px;width:100%;text-align:left;}
 .sc-cmd:hover{border-color:rgba(255,249,62,.3);box-shadow:0 0 0 3px rgba(255,249,62,.05);}

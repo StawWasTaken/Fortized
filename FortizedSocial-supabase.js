@@ -2737,7 +2737,7 @@ const FortizedSocial = (() => {
         sb.from('users').select('*', { count: 'exact', head: true }).eq('status', 'online'),
         sb.from('users').select('*', { count: 'exact', head: true }).in('status', ['away', 'idle']),
         sb.from('users').select('*', { count: 'exact', head: true }).eq('status', 'dnd'),
-        sb.from('users').select('*', { count: 'exact', head: true }).gte('radiance_until', now),
+        sb.from('users').select('*', { count: 'exact', head: true }).gte('radiance_until', Date.now()),
         sb.from('users').select('username,display_name,pfp,onyx').order('onyx', { ascending: false }).limit(5),
         sb.from('users').select('username,display_name,pfp,created_at').order('created_at', { ascending: false }).limit(5),
       ]);

@@ -27,6 +27,59 @@ Rules:
   `docs/media-storage.md`. Flip `_mediaStorageEnabled()` to `true` once
   proven on one account, then run the backfill to reclaim egress.
 
+## Staff console redesign (IN PROGRESS — finish ASAP)
+
+Goal: one cohesive, staff-first console. **Finish it the fastest reasonable
+way** — most pages already sit on the shared component system, so prefer
+uniformizing over from-scratch rebuilds. Cache-bust as of this note:
+`2026fix291`.
+
+Shared design system already built (reuse it, don't reinvent):
+- Shell = the SETTINGS modal. `#sc-nav` is a real `.profile-nav` (identical to
+  settings). Page header = `.sc-head`/`.sc-head-title`; every title icon
+  inherits the text colour (`.sc-head-title i{color:inherit}`). Page title must
+  equal its navbar label.
+- Command Center (dashboard): `.sc-cc-*`, `.sc-cmd` (⌘K → openStaffPalette),
+  `.sc-queue`/`.sc-qcard` attention cards, `.sc-pulse`/`.sc-ptile`,
+  `.sc-feed`/`.sc-fe`, `.sc-qa`/`.sc-qab`.
+- Data pages: `.sc-card`, `.sc-table-header`, `.sc-row`, `.sc-btn` variants,
+  `.sc-input`/`.sc-select`. Inspect opens the slide-in **drawer**
+  (`.sc-drawer`, `adminInspectUser`→`_openInspectDrawer`); all Inspect buttons
+  route through it.
+- Moderation action modals: `_scActionCard({icon|iconHTML,accent,title,fields,
+  confirmLabel,danger,onConfirm})` — used for ban/warn/suspend/give_onyx/
+  radiance. `.sc-act` = colour-coded subject action buttons.
+- Subject dossier Intel = `.sc-dossier-grid` + `.sc-intel-grid`/`.sc-intel`.
+
+DONE: Command Center, sidebar=settings, unified headers, Users table+inspect
+drawer, User Lookup buttons+action cards, Subject Intel, radiance-count bug
+(bigint vs ISO — compare Date.now()), radiance icon (mono via `.sc-rad-mask`),
+Broadcasts→**Ad Emplacements** rename, Global Monitor uniformized.
+
+STILL TODO (in order, fast): Ad Emplacements content, Content Review,
+Feedback, Users list polish, Bastions, **Reports** (wants one-at-a-time
+review-queue archetype), Bans, Suspensions (subtab already exists under
+Moderation), Economy, Statistics, a bit of Audit. These already use `.sc-*`
+components — mostly polish/uniformize, only Reports needs the deeper
+review-queue rebuild. Verify each with a Playwright plainview (FA + Google
+fonts + external images are CDN-blocked in-sandbox → placeholders).
+
+### Global Monitor — world-map rework (explicit request)
+Replace the current map with a **zoomable world map** with details on
+hover/click, showing **people-count per country AND per continent**. Presence
+country lives on the user row (`countryCode`); `_staffOpsRefresh` already
+counts distinct countries. Keep it egress-lean (don't pull heavy columns to
+build the map). Self-contained (no external map tiles if avoidable; an inline
+SVG world map keyed by ISO country code + a client-side zoom/pan is ideal).
+
+## Open items needing the USER (can't be done from the sandbox)
+- **Media→Storage rollout** = the real egress + avatar-transparency + login-
+  quota fix. Enable per browser: `localStorage.ftz_media_storage='1'`, test one
+  account, then flip `_mediaStorageEnabled()`→true and run
+  `tools/migrate-media-to-storage.mjs --commit`. See `docs/media-storage.md`.
+- Confirm the console nav now matches settings live (15px FA icon fix); if not
+  pixel-perfect, convert the nav icons to inline SVGs.
+
 ## Standing dev directives (every commit)
 
 - **Mirror to `main` AND push the session branch.** `main` is the deploy

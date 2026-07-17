@@ -26757,7 +26757,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           <div class="sc-ptd">total accounts</div>
         </div>
         <div class="sc-ptile">
-          <div class="sc-ptl">${_radianceImg('13')} Radiance</div>
+          <div class="sc-ptl"><img src="https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png" alt="Radiance" style="height:14px;width:auto;vertical-align:middle;object-fit:contain;" onerror="this.style.display='none'"> Radiance</div>
           <div class="sc-ptv">${radianceCount}</div>
           <div class="sc-ptd">active subscribers</div>
         </div>
@@ -29692,22 +29692,20 @@ async function adminSearchUser(usernameArg, targetEl) {
         </div>
       </div>
 
-      <!-- Quick Actions Toolbar -->
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-        ${myRole==='moderator'?`
-          ${!isMe?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','warn')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Warn</button>`:''}
-        `:`
-          ${!isMe?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','warn')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Warn</button>`:''}
-          ${!isMe?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','suspend')" style="border-color:rgba(168,85,247,.15);background:rgba(168,85,247,.04);color:rgba(168,85,247,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Suspend</button>`:''}
-          ${!isMe?(isBanned?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','unban')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Unban</button>`:`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','ban')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Ban</button>`):''}
-          ${!isMe && !alreadyFriends?`<button class="sc-btn sc-btn-ghost" onclick="adminForceFriend('${escapeHTML(username)}')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);">Force Friend</button>`:''}
-          <button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Give Onyx</button>
-          <button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Radiance</button>
-          ${isSuperAdmin()?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')" style="border-color:rgba(255,249,62,.18);background:rgba(255,249,62,.05);color:rgba(255,249,62,.7);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff93e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${u.verified?'Unverify':'Verify'}</button>`:''}
-          ${!isMe?`<button class="sc-btn sc-btn-ghost" onclick="adminActionUser('${escapeHTML(username)}','force_logout')" style="border-color:rgba(248,113,113,.12);background:rgba(248,113,113,.03);color:rgba(248,113,113,.5);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Force Logout</button>`:''}
-        `}
-        <button class="sc-btn sc-btn-ghost" onclick="openDMView('${escapeHTML(username)}');_closeStaffConsole();" style="border-color:rgba(96,165,250,.15);background:rgba(96,165,250,.04);color:rgba(96,165,250,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</button>
-        <button class="sc-btn sc-btn-ghost" onclick="viewUserProfile('${escapeHTML(username)}');_closeStaffConsole();" style="border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.02);color:rgba(255,255,255,.4);">View Profile</button>
+      <!-- Actions -->
+      <div class="sc-acts">
+        ${!isMe?`<button class="sc-act sc-act--warn" onclick="adminActionUser('${escapeHTML(username)}','warn')"><i class="fas fa-triangle-exclamation"></i>Warn</button>`:''}
+        ${myRole!=='moderator'?`
+          ${!isMe?`<button class="sc-act sc-act--purple" onclick="adminActionUser('${escapeHTML(username)}','suspend')"><i class="fas fa-clock"></i>Suspend</button>`:''}
+          ${!isMe?(isBanned?`<button class="sc-act sc-act--good" onclick="adminActionUser('${escapeHTML(username)}','unban')"><i class="fas fa-unlock"></i>Unban</button>`:`<button class="sc-act sc-act--danger" onclick="adminActionUser('${escapeHTML(username)}','ban')"><i class="fas fa-ban"></i>Ban</button>`):''}
+          ${!isMe && !alreadyFriends?`<button class="sc-act sc-act--good" onclick="adminForceFriend('${escapeHTML(username)}')"><i class="fas fa-user-plus"></i>Force friend</button>`:''}
+          <button class="sc-act sc-act--grant" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')"><span class="icon-onyx" style="width:14px;height:14px;"></span>Give Onyx</button>
+          <button class="sc-act sc-act--radiance" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')"><img src="${_SC_RADIANCE_URL}" alt="" style="height:14px;width:auto;object-fit:contain;" onerror="this.style.display='none'">Radiance</button>
+          ${isSuperAdmin()?`<button class="sc-act sc-act--grant" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')"><i class="fas fa-circle-check"></i>${u.verified?'Unverify':'Verify'}</button>`:''}
+          ${!isMe?`<button class="sc-act sc-act--danger" onclick="adminActionUser('${escapeHTML(username)}','force_logout')"><i class="fas fa-right-from-bracket"></i>Force logout</button>`:''}
+        `:''}
+        <button class="sc-act sc-act--blue" onclick="openDMView('${escapeHTML(username)}');_closeStaffConsole();"><i class="fas fa-comment"></i>Message</button>
+        <button class="sc-act" onclick="viewUserProfile('${escapeHTML(username)}');_closeStaffConsole();"><i class="fas fa-id-card"></i>Profile</button>
       </div>
 
       <!-- Intel Grid -->
@@ -29799,6 +29797,68 @@ async function adminForceFriend(targetUsername) {
   } catch(e) { console.error('[Admin] Force friend failed:', e); toast('Failed to force friend. Please try again.','error'); }
 }
 
+// Reusable staff ACTION CARD — a proper styled modal for moderation
+// actions (ban / warn / suspend / grant …) instead of a bare text prompt.
+// opts: { icon (fa class) | iconHTML, accent, title, subtitle, fields[],
+//         confirmLabel, danger, onConfirm(values, close) }.
+// Field types: text | textarea | select({options}) | presets({presets,min})
+//              | duration (amount+unit). onConfirm returning false keeps it
+// open (so validation can toast and abort without losing the entered data).
+const _SC_RADIANCE_URL = 'https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/radiance-logo.png';
+function _scActionCard(opts) {
+  const o = opts || {};
+  document.getElementById('sc-action-card')?.remove();
+  const fieldHTML = (o.fields || []).map(f => {
+    const fid = 'scac-' + f.id;
+    const lbl = f.label ? `<label>${escapeHTML(f.label)}</label>` : '';
+    if (f.type === 'textarea') return `<div class="sc-ac-field">${lbl}<textarea id="${fid}" rows="${f.rows||3}" placeholder="${escapeHTML(f.placeholder||'')}">${escapeHTML(f.value||'')}</textarea></div>`;
+    if (f.type === 'select') return `<div class="sc-ac-field">${lbl}<select id="${fid}" class="sc-select">${(f.options||[]).map(op=>`<option value="${escapeHTML(op.value)}"${op.value===f.value?' selected':''}>${escapeHTML(op.label)}</option>`).join('')}</select></div>`;
+    if (f.type === 'presets') return `<div class="sc-ac-field">${lbl}<div class="sc-ac-row"><input id="${fid}" class="sc-input" type="number" min="${f.min||0}" placeholder="${escapeHTML(f.placeholder||'')}" value="${escapeHTML(String(f.value||''))}" style="flex:1;"><div class="sc-ac-presets">${(f.presets||[]).map(p=>`<button type="button" class="sc-ac-preset" onclick="document.getElementById('${fid}').value='${p}'">${p}</button>`).join('')}</div></div></div>`;
+    if (f.type === 'duration') return `<div class="sc-ac-field">${lbl}<div class="sc-ac-row"><input id="${fid}-amt" class="sc-input" type="number" min="1" value="${f.amount||1}" style="flex:1;"><select id="${fid}-unit" class="sc-select" style="flex:1;">${['minutes','hours','days','weeks','months','years'].map(un=>`<option value="${un}"${un===(f.unit||'hours')?' selected':''}>${un[0].toUpperCase()+un.slice(1)}</option>`).join('')}</select></div></div>`;
+    return `<div class="sc-ac-field">${lbl}<input id="${fid}" class="sc-input" type="${f.inputType||'text'}" placeholder="${escapeHTML(f.placeholder||'')}" value="${escapeHTML(f.value||'')}" style="width:100%;"></div>`;
+  }).join('');
+  const wrap = document.createElement('div');
+  wrap.id = 'sc-action-card';
+  wrap.className = 'sc-ac-overlay';
+  wrap.innerHTML = `
+    <div class="sc-ac-scrim"></div>
+    <div class="sc-ac-card" style="--ac:${o.accent||'var(--accent)'};">
+      <div class="sc-ac-head">
+        <div class="sc-ac-ic">${o.iconHTML || `<i class="fas ${o.icon||'fa-bolt'}"></i>`}</div>
+        <div style="min-width:0;"><div class="sc-ac-title">${escapeHTML(o.title||'Action')}</div>${o.subtitle?`<div class="sc-ac-sub">${escapeHTML(o.subtitle)}</div>`:''}</div>
+        <button class="sc-ac-x" aria-label="Close"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="sc-ac-body">${fieldHTML}</div>
+      <div class="sc-ac-foot">
+        <button class="sc-ac-btn sc-ac-btn--ghost" data-act="cancel">Cancel</button>
+        <button class="sc-ac-btn ${o.danger?'sc-ac-btn--danger':'sc-ac-btn--primary'}" data-act="confirm">${escapeHTML(o.confirmLabel||'Confirm')}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  requestAnimationFrame(()=>wrap.classList.add('open'));
+  const close = () => { wrap.classList.remove('open'); setTimeout(()=>wrap.remove(), 200); };
+  const gather = () => {
+    const values = {};
+    (o.fields||[]).forEach(f => {
+      const fid = 'scac-' + f.id;
+      if (f.type === 'duration') values[f.id] = { amount: parseInt(document.getElementById(fid+'-amt')?.value)||0, unit: document.getElementById(fid+'-unit')?.value };
+      else values[f.id] = (document.getElementById(fid)?.value||'').trim();
+    });
+    return values;
+  };
+  wrap.querySelector('.sc-ac-scrim').onclick = close;
+  wrap.querySelector('.sc-ac-x').onclick = close;
+  wrap.querySelector('[data-act="cancel"]').onclick = close;
+  wrap.querySelector('[data-act="confirm"]').onclick = async () => {
+    let keep;
+    try { keep = await o.onConfirm?.(gather(), close); } catch (e) { console.warn('[action card] failed:', e); }
+    if (keep !== false) close();
+  };
+  wrap.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  setTimeout(()=>{ wrap.querySelector('textarea,input,select')?.focus(); }, 80);
+  return wrap;
+}
+
 function adminActionUser(username, action) {
   if (action === 'verify') {
     if (!isSuperAdmin()) { toast('Only superadmins can verify users', 'error'); return; }
@@ -29822,18 +29882,23 @@ function adminActionUser(username, action) {
     return;
   }
   if (action === 'ban') {
-    showCustomInput('Reason for Ban', 'Enter reason (required):', (reason) => {
-      if (!reason?.trim()) { toast('Reason required', 'error'); return; }
-      const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
-      const banObj = { username, reason, bannedBy: CU.username, bannedAt: new Date().toISOString() };
-      bans.push(banObj);
-      localStorage.setItem('ftz_bans', JSON.stringify(bans));
-      _saveBanToFirebase(banObj);
-      // Send notification to banned user
-      FortizedSocial.addNotification(username, { type: 'system', text: 'Your account has been banned. Reason: ' + reason }).catch(()=>{});
-      logAudit('ban', username, reason);
-      toast(`${username} has been banned`, 'success');
-      adminSearchUser();
+    _scActionCard({
+      icon:'fa-ban', accent:'#f2555a', danger:true,
+      title:'Ban '+username, subtitle:'Blocks this account from signing in.',
+      fields:[{type:'textarea',id:'reason',label:'Reason',placeholder:'Why is this account being banned? (recorded in the audit log)'}],
+      confirmLabel:'Ban account',
+      onConfirm:(v)=>{
+        if (!v.reason) { toast('Reason required', 'error'); return false; }
+        const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+        const banObj = { username, reason:v.reason, bannedBy: CU.username, bannedAt: new Date().toISOString() };
+        bans.push(banObj);
+        localStorage.setItem('ftz_bans', JSON.stringify(bans));
+        _saveBanToFirebase(banObj);
+        FortizedSocial.addNotification(username, { type: 'system', text: 'Your account has been banned. Reason: ' + v.reason }).catch(()=>{});
+        logAudit('ban', username, v.reason);
+        toast(`${username} has been banned`, 'success');
+        adminSearchUser();
+      }
     });
   } else if (action === 'unban') {
     const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
@@ -29844,104 +29909,84 @@ function adminActionUser(username, action) {
     toast(`${username} has been unbanned`, 'success');
     adminSearchUser();
   } else if (action === 'warn') {
-    showCustomInput('Warning Message', 'Enter warning reason:', async (reason) => {
-      if (!reason?.trim()) return;
-      await FortizedSocial.adminWarnUser(username, { reason, issuedBy: CU.username, issuedAt: new Date().toISOString() }).catch(()=>{});
-      await FortizedSocial.addNotification(username, { type: 'system', text: 'Admin Warning: ' + reason }).catch(()=>{});
-      logAudit('warn', username, reason);
-      toast(`Warning issued to ${username}`, 'success');
+    _scActionCard({
+      icon:'fa-triangle-exclamation', accent:'#f5a524',
+      title:'Warn '+username, subtitle:'Sends a formal warning the user must acknowledge.',
+      fields:[{type:'textarea',id:'reason',label:'Warning message',placeholder:'What is the user being warned for?'}],
+      confirmLabel:'Issue warning',
+      onConfirm:async(v)=>{
+        if (!v.reason) { toast('Reason required', 'error'); return false; }
+        await FortizedSocial.adminWarnUser(username, { reason:v.reason, issuedBy: CU.username, issuedAt: new Date().toISOString() }).catch(()=>{});
+        await FortizedSocial.addNotification(username, { type: 'system', text: 'Admin Warning: ' + v.reason }).catch(()=>{});
+        logAudit('warn', username, v.reason);
+        toast(`Warning issued to ${username}`, 'success');
+      }
     });
   } else if (action === 'suspend') {
-    // Show suspension dialog with duration unit picker
-    const _suspDialog = document.createElement('div');
-    _suspDialog.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;font-family:inherit;';
-    _suspDialog.innerHTML=`<div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px 32px;max-width:400px;width:90%;">
-      <div style="font-size:18px;font-weight:800;margin-bottom:16px;color:#fff;">Suspend User</div>
-      <div style="margin-bottom:12px;">
-        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Duration</div>
-        <div style="display:flex;gap:8px;">
-          <input id="_susp-amount" class="settings-input" type="number" min="1" value="1" style="flex:1;">
-          <select id="_susp-unit" class="settings-input" style="flex:1;background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px;">
-            <option value="minutes">Minutes</option>
-            <option value="hours" selected>Hours</option>
-            <option value="days">Days</option>
-            <option value="weeks">Weeks</option>
-            <option value="months">Months</option>
-            <option value="years">Years</option>
-          </select>
-        </div>
-      </div>
-      <div style="margin-bottom:12px;">
-        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Reason</div>
-        <input id="_susp-reason" class="settings-input" placeholder="Enter reason for suspension">
-      </div>
-      <div style="margin-bottom:16px;">
-        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Moderator Message (optional)</div>
-        <input id="_susp-msg" class="settings-input" placeholder="Message shown to the user">
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;">
-        <button id="_susp-cancel" style="padding:9px 20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;">Cancel</button>
-        <button id="_susp-confirm" style="padding:9px 20px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);border-radius:9px;color:#a855f7;cursor:pointer;font-weight:700;font-family:inherit;">Suspend</button>
-      </div>
-    </div>`;
-    document.body.appendChild(_suspDialog);
-    _suspDialog.querySelector('#_susp-cancel').onclick=()=>_suspDialog.remove();
-    _suspDialog.querySelector('#_susp-confirm').onclick=async()=>{
-      const amount=parseInt(document.getElementById('_susp-amount').value);
-      const unit=document.getElementById('_susp-unit').value;
-      const reason=document.getElementById('_susp-reason').value.trim();
-      const modMsg=document.getElementById('_susp-msg').value.trim();
-      if(!amount||amount<=0){toast('Enter a valid duration','error');return;}
-      if(!reason){toast('Reason is required','error');return;}
-      const multipliers={minutes:60000,hours:3600000,days:86400000,weeks:604800000,months:2592000000,years:31536000000};
-      const until=new Date(Date.now()+amount*(multipliers[unit]||3600000)).toISOString();
-      const suspObj={until,reason,suspendedBy:CU.username,suspendedAt:new Date().toISOString(),moderatorMessage:modMsg,duration:amount+' '+unit};
-      // Attach offending content data if this suspension came from a report
-      if (_reportSuspendTarget === username && _reportContentData) {
-        suspObj.offendingText = _reportContentData.offendingText || '';
-        suspObj.offendingMedia = _reportContentData.offendingMedia || [];
-        _reportSuspendTarget = null;
-        _reportContentData = null;
+    _scActionCard({
+      icon:'fa-clock', accent:'#a78bfa',
+      title:'Suspend '+username, subtitle:'Temporarily blocks the account until the timer expires.',
+      fields:[
+        {type:'duration',id:'dur',label:'Duration',amount:1,unit:'hours'},
+        {type:'textarea',id:'reason',label:'Reason',rows:2,placeholder:'Reason for suspension (recorded)'},
+        {type:'text',id:'msg',label:'Moderator message (optional)',placeholder:'Shown to the user'},
+      ],
+      confirmLabel:'Suspend account',
+      onConfirm:async(v)=>{
+        const amount=v.dur.amount, unit=v.dur.unit;
+        if(!amount||amount<=0){toast('Enter a valid duration','error');return false;}
+        if(!v.reason){toast('Reason is required','error');return false;}
+        const multipliers={minutes:60000,hours:3600000,days:86400000,weeks:604800000,months:2592000000,years:31536000000};
+        const until=new Date(Date.now()+amount*(multipliers[unit]||3600000)).toISOString();
+        const suspObj={until,reason:v.reason,suspendedBy:CU.username,suspendedAt:new Date().toISOString(),moderatorMessage:v.msg,duration:amount+' '+unit};
+        if (_reportSuspendTarget === username && _reportContentData) {
+          suspObj.offendingText = _reportContentData.offendingText || '';
+          suspObj.offendingMedia = _reportContentData.offendingMedia || [];
+          _reportSuspendTarget = null;
+          _reportContentData = null;
+        }
+        await FortizedSocial.adminSuspendUser(username, suspObj).catch(()=>{});
+        logAudit('suspend',username,`${amount} ${unit} — ${v.reason}`);
+        toast(`${username} suspended for ${amount} ${unit}`,'success');
+        adminSearchUser();
       }
-      await FortizedSocial.adminSuspendUser(username, suspObj).catch(()=>{});
-      logAudit('suspend',username,`${amount} ${unit} — ${reason}`);
-      toast(`${username} suspended for ${amount} ${unit}`,'success');
-      _suspDialog.remove();
-    };
+    });
   } else if (action === 'give_onyx') {
-    showCustomInput('Give Onyx', 'Amount to give:', async (amt) => {
-      const n = parseInt(amt);
-      if (!n || n <= 0) { toast('Enter a valid amount','error'); return; }
-      const u = await FortizedSocial.getUserByName(username).catch(()=>null);
-      if (!u) { toast('User not found','error'); return; }
-      await FortizedSocial.adminUpdateUserField(username, 'onyx', (u.onyx||0)+n);
-      logAudit('give_onyx', username, `+${n} Onyx`);
-      toast(`Gave ${n} Onyx to ${username}`, 'success');
-      if (username===CU.username) await refreshCU();
-      adminSearchUser();
+    _scActionCard({
+      icon:'fa-coins', accent:'#ffd93e',
+      title:'Give Onyx to '+username, subtitle:'Credits the account balance instantly.',
+      fields:[{type:'presets',id:'amount',label:'Amount',min:1,placeholder:'0',presets:[100,500,1000,5000]}],
+      confirmLabel:'Grant Onyx',
+      onConfirm:async(v)=>{
+        const n = parseInt(v.amount);
+        if (!n || n <= 0) { toast('Enter a valid amount','error'); return false; }
+        const u = await FortizedSocial.getUserByName(username).catch(()=>null);
+        if (!u) { toast('User not found','error'); return false; }
+        await FortizedSocial.adminUpdateUserField(username, 'onyx', (u.onyx||0)+n);
+        logAudit('give_onyx', username, `+${n} Onyx`);
+        toast(`Gave ${n} Onyx to ${username}`, 'success');
+        if (username===CU.username) await refreshCU();
+        adminSearchUser();
+      }
     });
-  } else if (action === 'radiance') {
-    showCustomInput('Grant Radiance (days)', 'Days of Radiance:', async (days) => {
-      const n = parseInt(days);
-      if (!n || n <= 0) { toast('Enter valid days','error'); return; }
-      const until = new Date(Date.now() + n*86400000).toISOString();
-      await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
-      logAudit('grant_radiance', username, `${n} days`);
-      toast(`Granted ${n} days Radiance to ${username}`, 'success');
-      if (username===CU.username) await refreshCU();
-      adminSearchUser();
-    });
-  } else if (action === 'radiance_plus') {
-    showCustomInput('Grant Radiance (days)', 'Days of Radiance:', async (days) => {
-      const n = parseInt(days);
-      if (!n || n <= 0) { toast('Enter valid days','error'); return; }
-      const until = new Date(Date.now() + n*86400000).toISOString();
-      await FortizedSocial.adminUpdateUserField(username, 'radiancePlus', until);
-      await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
-      logAudit('grant_radiance', username, `${n} days`);
-      toast(`Granted ${n} days Radiance to ${username}`, 'success');
-      if (username===CU.username) await refreshCU();
-      adminSearchUser();
+  } else if (action === 'radiance' || action === 'radiance_plus') {
+    const plus = action === 'radiance_plus';
+    _scActionCard({
+      iconHTML:`<img src="${_SC_RADIANCE_URL}" alt="Radiance" style="height:22px;width:auto;object-fit:contain;" onerror="this.style.display='none'">`, accent:'#ff77e4',
+      title:'Grant Radiance to '+username, subtitle:'Adds Radiance subscriber time to the account.',
+      fields:[{type:'presets',id:'days',label:'Days',min:1,placeholder:'0',presets:[7,30,90,365]}],
+      confirmLabel:'Grant Radiance',
+      onConfirm:async(v)=>{
+        const n = parseInt(v.days);
+        if (!n || n <= 0) { toast('Enter valid days','error'); return false; }
+        const until = new Date(Date.now() + n*86400000).toISOString();
+        if (plus) await FortizedSocial.adminUpdateUserField(username, 'radiancePlus', until);
+        await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
+        logAudit('grant_radiance', username, `${n} days`);
+        toast(`Granted ${n} days Radiance to ${username}`, 'success');
+        if (username===CU.username) await refreshCU();
+        adminSearchUser();
+      }
     });
   } else if (action === 'force_logout') {
     showCustomConfirm(`Force logout ${username}? They will be logged out on their next page load.`, () => {

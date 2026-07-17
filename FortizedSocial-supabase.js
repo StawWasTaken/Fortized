@@ -653,6 +653,7 @@ const FortizedSocial = (() => {
         // riding along is the classic cause of a NetworkError throw).
         const _cols = Object.keys(changed);
         let _bytes = 0; try { _bytes = JSON.stringify(changed).length; } catch (_) {}
+        try { if (typeof window !== 'undefined' && changed.pfp !== undefined) window._ftzAvatarTrace?.('3-db-write', changed.pfp, { note: 'exact bytes sent to users.update', cols: _cols.join(',') }); } catch (_) {}
         const { error } = await sb.from('users').update(changed).eq('username', uname);
         if (error) {
           const _msg = '[' + _cols.join(', ') + '] ' + _bytes + 'B — ' + error.message + ' (' + (error.code || 'no-code') + ')';
@@ -673,6 +674,7 @@ const FortizedSocial = (() => {
     // is deliberately small; the receiver's onProfileUpdated hook patches
     // visible surfaces (fpp cards, message rows, DM sidebar).
     try {
+      try { if (typeof window !== 'undefined' && user.pfp !== undefined) window._ftzAvatarTrace?.('3b-broadcast', user.pfp, { note: 'pfp value put on the wire to other clients' }); } catch (_) {}
       socketEmit('profile:update', {
         username: user.username,
         displayName: user.displayName,

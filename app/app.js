@@ -5370,6 +5370,64 @@ function _acceptIncomingPfp(pfp, apply) {
   } catch (_) {}
 }
 
+// ── Avatar lifecycle tracer (DIAGNOSTIC) ────────────────────────────
+// The avatar-goes-transparent-after-save bug has dodged us for weeks and
+// we don't know which stage flips it to blank. This records the pfp value
+// at every lifecycle stage — crop output, settings save, DB write, DB
+// read-back, socket echo — each with an async transparency probe (works
+// for png/webp/jpeg alike), so the NEXT live repro shows exactly WHERE it
+// turns transparent. Inspect after a repro with:
+//     window._ftzAvatarLog          (array of stages, newest last)
+//     copy(JSON.stringify(window._ftzAvatarLog, null, 2))
+// or just read the [AVATAR-TRACE] lines in the console (⚠ = transparent).
+window._ftzAvatarLog = window._ftzAvatarLog || [];
+function _ftzAvatarTrace(stage, pfp, extra) {
+  try {
+    const isStr = typeof pfp === 'string';
+    const meta = {
+      t: new Date().toISOString(),
+      stage,
+      empty: !pfp,
+      len: isStr ? pfp.length : null,
+      head: isStr ? pfp.slice(0, 32) : String(pfp),
+      crop: (extra && 'crop' in extra) ? extra.crop : undefined,
+      note: extra && extra.note,
+      transparent: 'probing…',
+    };
+    window._ftzAvatarLog.push(meta);
+    if (window._ftzAvatarLog.length > 200) window._ftzAvatarLog.shift();
+    console.log('[AVATAR-TRACE] ' + stage, meta);
+    if (isStr && pfp.startsWith('data:image/')) {
+      _pfpIsBlank(pfp).then(blank => {
+        meta.transparent = blank;
+        if (blank) console.warn('[AVATAR-TRACE] ⚠⚠ ' + stage + ' — value decodes FULLY TRANSPARENT (' + pfp.length + ' chars). This stage is where the avatar dies.');
+        else console.log('[AVATAR-TRACE] ✓ ' + stage + ' — value is opaque (' + pfp.length + ' chars)');
+      }).catch(() => { meta.transparent = 'probe-failed'; });
+    } else {
+      meta.transparent = isStr && pfp.startsWith('http') ? 'url(not-probed)' : 'n/a';
+    }
+  } catch (_) {}
+}
+window._ftzAvatarTrace = _ftzAvatarTrace;
+
+// ── Emoji-picker open tracer (DIAGNOSTIC) ───────────────────────────
+// The emoji panel "flickers" on open and we don't know why. This logs the
+// open sequence with high-resolution timestamps — build → show → paint →
+// lazy hydrate → scroll-spy — so a repro reveals whether the flash is an
+// empty→filled hydration, a scroll jump, or a re-position. Inspect after a
+// repro with window._ftzEmojiLog, or read the [EMOJI-TRACE] console lines.
+window._ftzEmojiLog = window._ftzEmojiLog || [];
+function _ftzEmojiTrace(stage, extra) {
+  try {
+    const e = { t: +performance.now().toFixed(1), stage };
+    if (extra) Object.assign(e, extra);
+    window._ftzEmojiLog.push(e);
+    if (window._ftzEmojiLog.length > 300) window._ftzEmojiLog.shift();
+    console.log('[EMOJI-TRACE] +' + e.t.toFixed(0) + 'ms ' + stage, extra || '');
+  } catch (_) {}
+}
+window._ftzEmojiTrace = _ftzEmojiTrace;
+
 function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
   cropData = _saneCrop(cropData);
   const s = 'width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0;';
@@ -15464,7 +15522,7 @@ function initFortizedUXResilience() {
           // Gate incoming pfps: an old client's broadcast can carry the
           // blank-avatar corruption; assigning it here + saveLocal was a
           // re-poisoning vector for EVERY account.
-          if (data.pfp) _acceptIncomingPfp(data.pfp, p => { CU.pfp = p; saveLocal(); try { updateUserbar(); } catch(_){} });
+          if (data.pfp) { _ftzAvatarTrace('4-socket-echo(self)', data.pfp, { note: 'incoming profile:updated for own account' }); _acceptIncomingPfp(data.pfp, p => { CU.pfp = p; saveLocal(); try { updateUserbar(); } catch(_){} }); }
           if (data.pfpCrop !== undefined) CU.pfpCrop = data.pfpCrop;
           if (data.displayName) CU.displayName = data.displayName;
           saveLocal();
@@ -21375,7 +21433,9 @@ function toggleEmojiPicker(targetId) {
   const panel = document.getElementById('emoji-picker');
   if (!panel) return;
   if (panel.classList.contains('show')) { panel.classList.remove('show'); return; }
+  _ftzEmojiTrace('toggle:start');
   buildEmojiPicker();
+  _ftzEmojiTrace('built', { gridChildren: document.getElementById('epp-grid')?.children.length });
 
   // Position relative to the input target (works for chat, bio, forum composer, etc.)
   const refEl = document.getElementById(targetId);
@@ -21410,6 +21470,13 @@ function toggleEmojiPicker(targetId) {
     panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;`;
   }
   panel.classList.add('show');
+  _ftzEmojiTrace('shown', { pos: bottom !== null ? 'bottom:' + Math.round(bottom) : 'top:' + Math.round(top), left: Math.round(left) });
+  // Two rAFs later = after the first painted frame(s). If the grid gained
+  // children or scrollTop moved between 'shown' and here, that's the flicker.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const g = document.getElementById('epp-grid');
+    _ftzEmojiTrace('post-paint', { gridChildren: g?.children.length, gridScrollTop: g?.scrollTop, hydratedCells: g?.querySelectorAll('.epp-lazy .emoji-cell').length });
+  }));
   setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
 }
 
@@ -21620,6 +21687,7 @@ function _hydrateEmojiSection(shell) {
   if (!spec) return;
   shell.innerHTML = spec.build();
   shell.classList.remove('epp-lazy');
+  try { window._ftzEmojiTrace?.('hydrate', { section: shell.getAttribute('data-section-id') }); } catch (_) {}
 }
 
 function _wireEmojiLazyHydrator() {
@@ -21763,6 +21831,7 @@ function renderEmojiGrid() {
   grid.innerHTML = html;
   grid._eppSectionSpec = {};
   sections.forEach(s => { grid._eppSectionSpec[s.id] = s; });
+  _ftzEmojiTrace('grid:shells-emitted', { sections: sections.length });
   _wireEmojiLazyHydrator();
 }
 
@@ -24501,6 +24570,7 @@ async function updatePfp(e) {
         _syncSettingsInputsToCU();
         CU.pfp = result.gifData;
         CU.pfpCrop = result.crop;
+        _ftzAvatarTrace('1-crop-output(gif)', CU.pfp, { crop: result.crop });
         _pfpCropCache[CU.username] = result.crop;
         // Cache the avatar's dominant colour as the card accent —
         // see _fppResolveTheme: accent = avatar colour, main = banner.
@@ -24530,6 +24600,7 @@ async function updatePfp(e) {
       showCropModal(fileData, 1, async (cropped) => {
         _syncSettingsInputsToCU();
         CU.pfp = cropped;
+        _ftzAvatarTrace('1-crop-output(static)', cropped);
         try {
           const sampled = await _fppSampleImageColor(cropped);
           if (sampled) {
@@ -38215,7 +38286,7 @@ function openGiphyPicker(inputId) {
         <input id="giphy-search-input" placeholder="Search Klipy" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" oninput="handleGiphySearch(this.value,'${esc}')">
       </div>
     </div>
-    <div id="gif-collection-view" class="gif-collection-grid" style="display:none;">
+    <div id="gif-collection-view" class="gif-collection-grid">
       <div class="gif-collection-card gcc-fav" onclick="_gifCollectionPick('favourites','${esc}')">
         <div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(167,139,250,.08));"></div>
         <div class="gcc-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Favourites</div>
@@ -38229,22 +38300,19 @@ function openGiphyPicker(inputId) {
         <div class="gcc-label">${c.label}</div>
       </div>`).join('')}
     </div>
-    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;"></div>
-    <div id="gif-back-bar" style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;">
+    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;display:none;"></div>
+    <div id="gif-back-bar" style="display:none;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;">
       <button onclick="_gifBackToCollections('${esc}')" class="gif-back-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-        <span id="gif-back-label">Browse categories</span>
+        <span id="gif-back-label">Back to Collections</span>
       </button>
     </div>
   `;
 
   document.body.appendChild(picker);
   document.addEventListener('mousedown', _giphyOutsideClose, {once:true, capture:true});
-  // Open straight onto trending GIFs (reuses the proven category-grid path)
-  // instead of a wall of category cards — so GIFs are visible immediately.
-  // Collection previews are loaded lazily only if the user browses categories,
-  // avoiding a ~24-request Klipy fetch storm on every open.
-  loadGiphyTrending(_giphyInput);
+  // Load preview thumbnails for collection cards
+  _loadCollectionPreviews();
 }
 
 function _gifChip(btn, category, inputId) {
@@ -38293,12 +38361,6 @@ function _gifBackToCollections(inputId) {
   if (grid) grid.style.display = 'none';
   if (backBar) backBar.style.display = 'none';
   if (searchInput) searchInput.value = '';
-  // Lazy-load the collection-card preview thumbnails the first time the user
-  // actually browses categories (not on every picker open).
-  if (collectionView && !collectionView.dataset.previewsLoaded) {
-    collectionView.dataset.previewsLoaded = '1';
-    _loadCollectionPreviews();
-  }
 }
 
 // Load preview GIF thumbnails for collection cards
@@ -38370,11 +38432,10 @@ function handleGiphySearch(q, inputId) {
   window._giphySearchTimer = setTimeout(() => {
     if (!q.trim()) {
       _giphyTab = 'trending';
-      // Return to the trending grid (the picker's default view)
-      if (collectionView) collectionView.style.display = 'none';
-      if (grid) grid.style.display = '';
-      if (backBar) { backBar.style.display = ''; const l = document.getElementById('gif-back-label'); if (l) l.textContent = 'Browse categories'; }
-      loadGiphyTrending(inputId);
+      // Show collections again
+      if (collectionView) collectionView.style.display = '';
+      if (grid) grid.style.display = 'none';
+      if (backBar) backBar.style.display = 'none';
       return;
     }
     // Hide collections, show grid

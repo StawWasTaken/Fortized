@@ -32,7 +32,7 @@ Rules:
 Goal: one cohesive, staff-first console. **Finish it the fastest reasonable
 way** — most pages already sit on the shared component system, so prefer
 uniformizing over from-scratch rebuilds. Cache-bust as of this note:
-`2026fix291`.
+`2026fix293`.
 
 Shared design system already built (reuse it, don't reinvent):
 - Shell = the SETTINGS modal. `#sc-nav` is a real `.profile-nav` (identical to
@@ -64,13 +64,18 @@ components — mostly polish/uniformize, only Reports needs the deeper
 review-queue rebuild. Verify each with a Playwright plainview (FA + Google
 fonts + external images are CDN-blocked in-sandbox → placeholders).
 
-### Global Monitor — world-map rework (explicit request)
-Replace the current map with a **zoomable world map** with details on
-hover/click, showing **people-count per country AND per continent**. Presence
-country lives on the user row (`countryCode`); `_staffOpsRefresh` already
-counts distinct countries. Keep it egress-lean (don't pull heavy columns to
-build the map). Self-contained (no external map tiles if avoidable; an inline
-SVG world map keyed by ISO country code + a client-side zoom/pan is ideal).
+### Global Monitor — world-map rework (DONE)
+Replaced the CDN D3/TopoJSON choropleth with a **self-contained zoomable
+world map** (`renderStaffWorldMap`, app.js). Geometry ships as a same-origin,
+SW-cached asset `app/world-map-data.js` (Natural Earth 1 paths keyed by
+ISO-3166 alpha-2, generated from world-atlas 110m — public domain; regen
+recipe lives in the scratchpad `mapgen/gen.js`). Features: wheel/drag
+zoom-pan (viewBox-space transform on `.scmap__layer`), hover tooltip +
+click-to-pin per country, choropleth via `_scMapFill`, and a continent
+legend with **per-continent totals** whose chips zoom-to-bounds. Egress-lean:
+counts come from `_scCountryCounts`, computed once by `_staffOpsRefresh` from
+the already-fetched user list — the map never scans users itself. No external
+tiles or CDN.
 
 ## Open items needing the USER (can't be done from the sandbox)
 - **Media→Storage rollout** = the real egress + avatar-transparency + login-

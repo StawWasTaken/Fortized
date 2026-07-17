@@ -59087,9 +59087,13 @@ async function staffEconomyOverview() {
 // ════════════════════════════════════════════════════════════════════
 // Phase 6 — Analytics + world map
 // ────────────────────────────────────────────────────────────────────
-// D3 + TopoJSON loaded on-demand from CDN so we don't pay the bytes
-// until a staff opens the map. Choropleth tinted by user-count per
-// country (using each user's countryCode from _ensureUserCountry).
+// SELF-CONTAINED zoomable world map. Geometry ships as a same-origin,
+// SW-cached asset (app/world-map-data.js — Natural Earth 1 paths keyed
+// by ISO-3166 alpha-2) so we never touch an external CDN or map tiles.
+// Choropleth tinted by presence-count per country; hover/click reveals
+// per-country details and the legend carries per-continent totals.
+// Egress-lean: the map consumes counts computed by _staffOpsRefresh from
+// the already-fetched user list — it never scans the users table itself.
 // ════════════════════════════════════════════════════════════════════
 function _staffLoadScript(src) {
   return new Promise((res, rej) => {
@@ -59099,38 +59103,194 @@ function _staffLoadScript(src) {
     document.head.appendChild(s);
   });
 }
-async function renderStaffWorldMap(mountEl) {
+// Reuse the running build's ?v= cache-bust for lazy-loaded assets so the
+// SW's network-first freshness rules apply.
+function _scAssetVer() {
+  try { const s = [...document.scripts].find(s => /\/app\/app\.js\?v=/.test(s.src)); const m = s && s.src.match(/\?v=([^&]+)/); return m ? m[1] : ''; }
+  catch { return ''; }
+}
+// Choropleth ramp: dark base for zero, then a log-scaled climb up the
+// brand accent so busy countries glow. Returns [fill, textColor].
+function _scMapFill(n, maxN) {
+  if (!n) return ['rgba(255,255,255,.05)', 'rgba(255,255,255,.5)'];
+  const t = Math.log(n + 1) / Math.log(maxN + 1);
+  return [`rgba(255,249,62,${(0.18 + t * 0.72).toFixed(3)})`, '#0a0d14'];
+}
+// The country counts most-recently computed by _staffOpsRefresh, so the
+// map and its refreshes share one users read.
+let _scCountryCounts = {};
+async function renderStaffWorldMap(mountEl, counts) {
   if (!mountEl) return;
-  mountEl.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4);font-size:12px;">Loading world map…</div>';
+  counts = counts || _scCountryCounts || {};
+  mountEl.innerHTML = '<div class="scmap__loading">Loading world map…</div>';
   try {
-    await _staffLoadScript('https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js');
-    await _staffLoadScript('https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js');
-    const world = await (await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')).json();
-    const countries = window.topojson.feature(world, world.objects.countries).features;
-    // Per-country user count
-    const users = await FortizedSocial.getAllUsers?.() || {};
-    const counts = {};
-    Object.values(users).forEach(u => { if (u.countryCode) counts[u.countryCode] = (counts[u.countryCode] || 0) + 1; });
-    const maxN = Math.max(1, ...Object.values(counts));
-    mountEl.innerHTML = '';
-    const w = mountEl.clientWidth || 600, h = Math.round(w * 0.55);
-    const svg = window.d3.select(mountEl).append('svg').attr('viewBox', `0 0 ${w} ${h}`).attr('width', '100%').attr('height', '100%');
-    const proj = window.d3.geoMercator().fitSize([w, h - 20], { type: 'Sphere' });
-    const path = window.d3.geoPath(proj);
-    const tip = document.createElement('div'); tip.className = 'staff-map__tip'; mountEl.appendChild(tip);
-    // Numeric ISO codes from world-atlas → ISO-2 mapping for a useful
-    // subset (matches what _TZ_TO_COUNTRY actually produces). Anything
-    // not listed falls back to grey.
-    const NUM_TO_A2 = {'250':'FR','826':'GB','276':'DE','724':'ES','380':'IT','528':'NL','056':'BE','620':'PT','372':'IE','752':'SE','246':'FI','578':'NO','208':'DK','616':'PL','203':'CZ','300':'GR','040':'AT','756':'CH','643':'RU','792':'TR','804':'UA','642':'RO','840':'US','124':'CA','484':'MX','076':'BR','032':'AR','170':'CO','604':'PE','152':'CL','392':'JP','410':'KR','156':'CN','344':'HK','158':'TW','702':'SG','764':'TH','360':'ID','608':'PH','458':'MY','356':'IN','586':'PK','050':'BD','784':'AE','682':'SA','376':'IL','818':'EG','566':'NG','710':'ZA','404':'KE','504':'MA','036':'AU','554':'NZ'};
-    svg.append('g').selectAll('path').data(countries).join('path')
-      .attr('d', path)
-      .attr('fill', d => { const a2 = NUM_TO_A2[String(d.id).padStart(3,'0')]; const n = counts[a2] || 0; if (!n) return '#1a1f2c'; const t = Math.log(n + 1) / Math.log(maxN + 1); return `rgba(255,249,62,${0.15 + t * 0.65})`; })
-      .attr('stroke', '#0a0d14').attr('stroke-width', 0.5)
-      .on('mousemove', (e, d) => { const a2 = NUM_TO_A2[String(d.id).padStart(3,'0')]; tip.textContent = `${d.properties?.name || a2 || '?'} · ${counts[a2] || 0} users`; tip.style.display = 'block'; tip.style.left = (e.offsetX + 14) + 'px'; tip.style.top = (e.offsetY + 14) + 'px'; })
-      .on('mouseleave', () => { tip.style.display = 'none'; });
+    await _staffLoadScript('/app/world-map-data.js' + (_scAssetVer() ? '?v=' + _scAssetVer() : ''));
+    const DATA = window.FTZ_WORLD_MAP;
+    if (!DATA || !Array.isArray(DATA.countries)) throw new Error('map data unavailable');
+    const W = DATA.w, H = DATA.h;
+    const contNames = DATA.continentNames || {};
+    // Per-country + per-continent tallies from the shared counts object.
+    const contMeta = {}; DATA.countries.forEach(c => { contMeta[c.c] = { name: c.n, cont: c.cont }; });
+    const contTotals = {}; let totalUsers = 0, activeCountries = 0;
+    Object.entries(counts).forEach(([iso, n]) => {
+      if (!n) return; totalUsers += n; if (contMeta[iso]) activeCountries++;
+      const cont = contMeta[iso]?.cont || '??'; contTotals[cont] = (contTotals[cont] || 0) + n;
+    });
+    const maxN = Math.max(1, ...Object.values(counts).filter(Boolean), 1);
+
+    mountEl.innerHTML = `
+      <div class="scmap">
+        <div class="scmap__bar">
+          <div class="scmap__title" id="scmap-readout">
+            <i class="fas fa-earth-americas"></i>
+            <span><b>${totalUsers.toLocaleString()}</b> ${totalUsers === 1 ? 'person' : 'people'} · <b>${activeCountries}</b> ${activeCountries === 1 ? 'country' : 'countries'}</span>
+          </div>
+          <div class="scmap__zoom">
+            <button class="scmap__zbtn" data-z="in" title="Zoom in" aria-label="Zoom in"><i class="fas fa-plus"></i></button>
+            <button class="scmap__zbtn" data-z="out" title="Zoom out" aria-label="Zoom out"><i class="fas fa-minus"></i></button>
+            <button class="scmap__zbtn" data-z="reset" title="Reset view" aria-label="Reset view"><i class="fas fa-compress"></i></button>
+          </div>
+        </div>
+        <div class="scmap__canvas" id="scmap-canvas">
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="scmap__svg" role="img" aria-label="World map of presence by country">
+            <rect x="0" y="0" width="${W}" height="${H}" fill="transparent" class="scmap__bg"></rect>
+            <g class="scmap__layer" id="scmap-layer">
+              ${DATA.countries.map(c => {
+                const n = counts[c.c] || 0; const [fill] = _scMapFill(n, maxN);
+                return `<path d="${c.d}" data-c="${c.c}" data-n="${n}" data-cont="${c.cont}" fill="${fill}" class="scmap__country${n ? ' is-active' : ''}"></path>`;
+              }).join('')}
+            </g>
+          </svg>
+          <div class="scmap__tip" id="scmap-tip"></div>
+        </div>
+        <div class="scmap__legend" id="scmap-legend">
+          ${Object.keys(contNames).map(code => {
+            const n = contTotals[code] || 0;
+            return `<button class="scmap__cont${n ? '' : ' is-empty'}" data-cont="${code}" title="Zoom to ${escapeHTML(contNames[code])}"><span class="scmap__cont-name">${escapeHTML(contNames[code])}</span><span class="scmap__cont-n">${n.toLocaleString()}</span></button>`;
+          }).join('')}
+        </div>
+      </div>`;
+
+    const canvas = mountEl.querySelector('#scmap-canvas');
+    const svg = mountEl.querySelector('.scmap__svg');
+    const layer = mountEl.querySelector('#scmap-layer');
+    const tip = mountEl.querySelector('#scmap-tip');
+    const readout = mountEl.querySelector('#scmap-readout');
+    const summaryHTML = readout.innerHTML;
+
+    // ── Pan/zoom state, all in the SVG's viewBox coordinate space ──
+    let k = 1, tx = 0, ty = 0;
+    const MINK = 1, MAXK = 14;
+    const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
+    function apply(animate) {
+      layer.classList.toggle('scmap__layer--anim', !!animate);
+      // Keep the scaled content covering the viewbox (no dragging into the void).
+      tx = clamp(tx, W * (1 - k), 0); ty = clamp(ty, H * (1 - k), 0);
+      layer.setAttribute('transform', `translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${k.toFixed(4)})`);
+    }
+    // Pointer → viewBox coords (accounts for viewBox↔element scaling).
+    function toVB(clientX, clientY) {
+      const pt = svg.createSVGPoint(); pt.x = clientX; pt.y = clientY;
+      const m = svg.getScreenCTM(); if (!m) return { x: 0, y: 0 };
+      const p = pt.matrixTransform(m.inverse()); return { x: p.x, y: p.y };
+    }
+    function zoomAround(vx, vy, factor, animate) {
+      const nk = clamp(k * factor, MINK, MAXK); const f = nk / k;
+      tx = vx - f * (vx - tx); ty = vy - f * (vy - ty); k = nk; apply(animate);
+    }
+    function zoomToBox(box, animate) {
+      if (!box || !box.width || !box.height) return;
+      const pad = 1.12;
+      let nk = clamp(Math.min(W / (box.width * pad), H / (box.height * pad)), MINK, MAXK);
+      k = nk; tx = W / 2 - k * (box.x + box.width / 2); ty = H / 2 - k * (box.y + box.height / 2);
+      apply(animate);
+    }
+
+    // ── Wheel zoom around the cursor ──
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const { x, y } = toVB(e.clientX, e.clientY);
+      zoomAround(x, y, e.deltaY < 0 ? 1.22 : 1 / 1.22, false);
+    }, { passive: false });
+
+    // ── Drag to pan ──
+    let dragging = false, lastVB = null, moved = false;
+    canvas.addEventListener('pointerdown', (e) => {
+      dragging = true; moved = false; lastVB = toVB(e.clientX, e.clientY);
+      canvas.setPointerCapture(e.pointerId); canvas.classList.add('is-grabbing');
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const cur = toVB(e.clientX, e.clientY);
+      const dx = cur.x - lastVB.x, dy = cur.y - lastVB.y;
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) moved = true;
+      tx += dx; ty += dy; apply(false);
+      // Recompute against the new transform so panning stays 1:1.
+      lastVB = toVB(e.clientX, e.clientY);
+    });
+    const endDrag = (e) => { if (!dragging) return; dragging = false; canvas.classList.remove('is-grabbing'); try { canvas.releasePointerCapture(e.pointerId); } catch {} };
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
+
+    // ── Hover tooltip ──
+    layer.addEventListener('pointermove', (e) => {
+      const p = e.target.closest('.scmap__country'); if (!p) { tip.style.display = 'none'; return; }
+      const iso = p.dataset.c, n = +p.dataset.n || 0;
+      const rect = canvas.getBoundingClientRect();
+      tip.innerHTML = `<b>${escapeHTML(contMeta[iso]?.name || iso)}</b><span class="scmap__tip-sub">${escapeHTML(contNames[p.dataset.cont] || '')} · ${n.toLocaleString()} ${n === 1 ? 'person' : 'people'}</span>`;
+      tip.style.display = 'block';
+      let lx = e.clientX - rect.left + 14, ly = e.clientY - rect.top + 14;
+      lx = Math.min(lx, rect.width - tip.offsetWidth - 6); ly = Math.min(ly, rect.height - tip.offsetHeight - 6);
+      tip.style.left = Math.max(4, lx) + 'px'; tip.style.top = Math.max(4, ly) + 'px';
+    });
+    layer.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+
+    // ── Click a country → pin it in the readout + highlight ──
+    layer.addEventListener('click', (e) => {
+      if (moved) return; // was a drag, not a click
+      const p = e.target.closest('.scmap__country'); if (!p) return;
+      layer.querySelectorAll('.scmap__country.is-sel').forEach(el => el.classList.remove('is-sel'));
+      p.classList.add('is-sel');
+      const iso = p.dataset.c, n = +p.dataset.n || 0;
+      readout.innerHTML = `<i class="fas fa-location-dot"></i><span><b>${escapeHTML(contMeta[iso]?.name || iso)}</b> · ${n.toLocaleString()} ${n === 1 ? 'person' : 'people'} · <span class="scmap__readout-cont">${escapeHTML(contNames[p.dataset.cont] || '')}</span> <button class="scmap__clear" data-clear="1" title="Clear selection">✕</button></span>`;
+    });
+    readout.addEventListener('click', (e) => {
+      if (!e.target.closest('[data-clear]')) return;
+      layer.querySelectorAll('.scmap__country.is-sel').forEach(el => el.classList.remove('is-sel'));
+      readout.innerHTML = summaryHTML;
+    });
+    // Click empty ocean clears the pin.
+    mountEl.querySelector('.scmap__bg').addEventListener('click', () => {
+      if (moved) return;
+      layer.querySelectorAll('.scmap__country.is-sel').forEach(el => el.classList.remove('is-sel'));
+      readout.innerHTML = summaryHTML;
+    });
+
+    // ── Zoom buttons ──
+    mountEl.querySelector('.scmap__zoom').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-z]'); if (!b) return;
+      if (b.dataset.z === 'reset') { k = 1; tx = 0; ty = 0; apply(true); return; }
+      zoomAround(W / 2, H / 2, b.dataset.z === 'in' ? 1.5 : 1 / 1.5, true);
+    });
+
+    // ── Continent legend → zoom to that continent's bounds ──
+    mountEl.querySelector('#scmap-legend').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-cont]'); if (!b) return;
+      const code = b.dataset.cont;
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, any = false;
+      layer.querySelectorAll(`.scmap__country[data-cont="${code}"]`).forEach(el => {
+        let bb; try { bb = el.getBBox(); } catch { return; }
+        if (!bb || (!bb.width && !bb.height)) return; any = true;
+        x0 = Math.min(x0, bb.x); y0 = Math.min(y0, bb.y);
+        x1 = Math.max(x1, bb.x + bb.width); y1 = Math.max(y1, bb.y + bb.height);
+      });
+      if (any) zoomToBox({ x: x0, y: y0, width: x1 - x0, height: y1 - y0 }, true);
+    });
+
+    apply(false);
   } catch (e) {
     console.warn('[StaffMap] render failed:', e);
-    mountEl.innerHTML = `<div style="padding:40px;text-align:center;color:#fca5a5;font-size:12px;">Map failed to load (${escapeHTML(e?.message||'unknown')}). Network may be blocking the CDN.</div>`;
+    mountEl.innerHTML = `<div class="scmap__loading scmap__loading--err">Map failed to load (${escapeHTML(e?.message || 'unknown')}).</div>`;
   }
 }
 
@@ -59176,8 +59336,10 @@ async function openStaffOps(mountEl) {
   const refresh = async () => {
     try { await _staffOpsRefresh(); } catch (e) { console.warn('[StaffOps] refresh failed:', e?.message); }
   };
-  refresh();
-  renderStaffWorldMap(document.getElementById('staff-ops-map'));
+  // Await the first refresh so the map can reuse its country counts —
+  // no second users-table scan (egress-lean).
+  await refresh();
+  renderStaffWorldMap(document.getElementById('staff-ops-map'), _scCountryCounts);
   if (_staffOpsTimer) clearInterval(_staffOpsTimer);
   _staffOpsTimer = setInterval(refresh, 5000);
   window._staffOpsTimer = _staffOpsTimer;
@@ -59185,6 +59347,9 @@ async function openStaffOps(mountEl) {
 async function _staffOpsRefresh() {
   const users = await FortizedSocial.getAllUsers?.() || {};
   const list = Object.values(users);
+  // Country tallies shared with the world map so it never re-scans users.
+  _scCountryCounts = {};
+  list.forEach(u => { if (u.countryCode) _scCountryCounts[u.countryCode] = (_scCountryCounts[u.countryCode] || 0) + 1; });
   const onlineCount = list.filter(u => u.status && u.status !== 'offline').length;
   const reports = (() => { try { return JSON.parse(localStorage.getItem('ftz_reports')||'[]'); } catch { return []; } })();
   const pendingReports = reports.filter(r => r && r.status !== 'resolved' && r.status !== 'dismissed').length;

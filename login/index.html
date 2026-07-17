@@ -207,15 +207,26 @@ async function doLogin() {
     }
 
     if (user?.username) {
-      localStorage.setItem('ftz_current', user.username);
-      localStorage.setItem('fortized_current_user', user.username);
-      localStorage.setItem('ftz_user_' + user.username, JSON.stringify(user));
+      // Persist the session. The FULL user object can be large (base64
+      // pfp/banner data URLs), so writing it can throw QuotaExceededError.
+      // That must NEVER abort an already-successful login: the session keys
+      // below are all the app needs to boot (it refetches the row), and the
+      // ftz_user_ blob is just a warm-start cache. Previously an exception
+      // here jumped to the catch, showed a misleading "Connection error" and
+      // left the button stuck on "Waiting for security key…" — yet ftz_current
+      // was already set, so a manual refresh logged you straight in. Each
+      // write is now isolated and the redirect always happens on success.
+      try { localStorage.setItem('ftz_current', user.username); } catch (_) {}
+      try { localStorage.setItem('fortized_current_user', user.username); } catch (_) {}
+      try { localStorage.setItem('ftz_user_' + user.username, JSON.stringify(user)); }
+      catch (e) { console.warn('[login] user cache not stored (storage full) — app will fetch it:', e && e.name); }
     }
     window.location.href = '/app';
   } catch (err) {
     console.error('Login error:', err);
     showError('Connection error. Check your internet and try again.');
     setLoading(false);
+    loginBtn.innerHTML = 'Sign in <svg><use href="#i-arrow-right"/></svg>';
   }
 }
 

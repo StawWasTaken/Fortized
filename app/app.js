@@ -46953,12 +46953,16 @@ async function submitAddAccount() {
       const ok = await _verifySecurityKeyFactor(passkeys);
       if (!ok) throw new Error('Security key verification failed or was cancelled.');
     }
-    // Save current user's full data before switching
+    // Save current user's full data before switching. These full-object
+    // blobs can be large (base64 pfp/banner) and overflow localStorage — a
+    // QuotaExceededError here must NOT abort the switch (the session keys set
+    // below are what matter; blobs are just warm-start cache), same fix as
+    // the login page.
     saveCurrentToAccounts();
     if (CU?.username) {
-      localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(CU));
+      try { localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(CU)); } catch (_) {}
     }
-    localStorage.setItem('ftz_user_'+result.username, JSON.stringify(result));
+    try { localStorage.setItem('ftz_user_'+result.username, JSON.stringify(result)); } catch (_) {}
     const accounts = getSavedAccounts();
     const idx = accounts.findIndex(a=>a.username===result.username);
     const entry = {username:result.username,displayName:result.displayName||result.username,pfp:result.pfp||null};

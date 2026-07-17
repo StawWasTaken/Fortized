@@ -38213,7 +38213,7 @@ function openGiphyPicker(inputId) {
         <input id="giphy-search-input" placeholder="Search Klipy" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" oninput="handleGiphySearch(this.value,'${esc}')">
       </div>
     </div>
-    <div id="gif-collection-view" class="gif-collection-grid">
+    <div id="gif-collection-view" class="gif-collection-grid" style="display:none;">
       <div class="gif-collection-card gcc-fav" onclick="_gifCollectionPick('favourites','${esc}')">
         <div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(167,139,250,.08));"></div>
         <div class="gcc-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Favourites</div>
@@ -38227,19 +38227,22 @@ function openGiphyPicker(inputId) {
         <div class="gcc-label">${c.label}</div>
       </div>`).join('')}
     </div>
-    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;display:none;"></div>
-    <div id="gif-back-bar" style="display:none;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;">
+    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;"></div>
+    <div id="gif-back-bar" style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;">
       <button onclick="_gifBackToCollections('${esc}')" class="gif-back-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-        <span id="gif-back-label">Back to Collections</span>
+        <span id="gif-back-label">Browse categories</span>
       </button>
     </div>
   `;
 
   document.body.appendChild(picker);
   document.addEventListener('mousedown', _giphyOutsideClose, {once:true, capture:true});
-  // Load preview thumbnails for collection cards
-  _loadCollectionPreviews();
+  // Open straight onto trending GIFs (reuses the proven category-grid path)
+  // instead of a wall of category cards — so GIFs are visible immediately.
+  // Collection previews are loaded lazily only if the user browses categories,
+  // avoiding a ~24-request Klipy fetch storm on every open.
+  loadGiphyTrending(_giphyInput);
 }
 
 function _gifChip(btn, category, inputId) {
@@ -38288,6 +38291,12 @@ function _gifBackToCollections(inputId) {
   if (grid) grid.style.display = 'none';
   if (backBar) backBar.style.display = 'none';
   if (searchInput) searchInput.value = '';
+  // Lazy-load the collection-card preview thumbnails the first time the user
+  // actually browses categories (not on every picker open).
+  if (collectionView && !collectionView.dataset.previewsLoaded) {
+    collectionView.dataset.previewsLoaded = '1';
+    _loadCollectionPreviews();
+  }
 }
 
 // Load preview GIF thumbnails for collection cards
@@ -38359,10 +38368,11 @@ function handleGiphySearch(q, inputId) {
   window._giphySearchTimer = setTimeout(() => {
     if (!q.trim()) {
       _giphyTab = 'trending';
-      // Show collections again
-      if (collectionView) collectionView.style.display = '';
-      if (grid) grid.style.display = 'none';
-      if (backBar) backBar.style.display = 'none';
+      // Return to the trending grid (the picker's default view)
+      if (collectionView) collectionView.style.display = 'none';
+      if (grid) grid.style.display = '';
+      if (backBar) { backBar.style.display = ''; const l = document.getElementById('gif-back-label'); if (l) l.textContent = 'Browse categories'; }
+      loadGiphyTrending(inputId);
       return;
     }
     // Hide collections, show grid

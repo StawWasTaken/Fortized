@@ -3313,6 +3313,13 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .sc-drawer__close{margin-left:auto;width:32px;height:32px;border-radius:9px;background:var(--panel2);border:1px solid var(--border);color:var(--muted-light);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;flex-shrink:0;}
 .sc-drawer__close:hover{background:var(--panel3);color:#fff;}
 .sc-drawer__body{flex:1;overflow-y:auto;padding:18px 20px;}
+/* Subject dossier — Intel grid (clean icon tiles, not a cramped table) */
+.sc-dossier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;align-items:start;}
+.sc-intel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;background:rgba(255,255,255,.05);border-radius:0 0 14px 14px;overflow:hidden;}
+.sc-intel{background:var(--panel);padding:13px 15px;min-width:0;}
+.sc-intel-l{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sc-intel-l i,.sc-intel-l .sc-rad-mask{font-size:11px;opacity:.85;flex-shrink:0;}
+.sc-intel-v{font-family:var(--font-display);font-size:16px;font-weight:800;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;}
 /* Subject action buttons (modern, colour-coded by intent) */
 .sc-acts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
 .sc-act{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:11px;font-size:12.5px;font-weight:700;border:1px solid var(--border);background:var(--panel2);color:var(--muted-light);cursor:pointer;font-family:inherit;transition:background .12s,border-color .12s,color .12s;}

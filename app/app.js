@@ -26575,7 +26575,7 @@ function _renderStaffNav(active) {
       {id:'live_ops', svg:'<i class="fas fa-earth-europe"></i>', label:'Global Monitor'},
     ]},
     {section:'User Content', items:[
-      ...(role!=='moderator' ? [{id:'broadcasts', svg:'<i class="fas fa-bullhorn"></i>', label:'Broadcasts'}] : []),
+      ...(role!=='moderator' ? [{id:'broadcasts', svg:'<i class="fas fa-bullhorn"></i>', label:'Ad Emplacements'}] : []),
       {id:'nsfw_queue', svg:'<i class="fas fa-image"></i>', label:'Content Review'},
       {id:'feedback', svg:'<i class="fas fa-comment"></i>', label:'Feedback'},
     ]},
@@ -27618,7 +27618,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-bullhorn" style="color:#3ecf6e;"></i> Broadcasts</div>
+          <div class="sc-head-title"><i class="fas fa-bullhorn" style="color:#3ecf6e;"></i> Ad Emplacements</div>
           <div class="sc-head-meta">Send system-wide announcements and manage platform messaging.</div>
         </div>
       </div>
@@ -29708,58 +29708,54 @@ async function adminSearchUser(usernameArg, targetEl) {
         <button class="sc-act" onclick="viewUserProfile('${escapeHTML(username)}');_closeStaffConsole();"><i class="fas fa-id-card"></i>Profile</button>
       </div>
 
-      <!-- Intel Grid -->
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;">
-        <!-- Left: Data Grid -->
+      <!-- Intel -->
+      <div class="sc-dossier-grid">
         <div class="sc-card">
-          <div class="sc-card-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h3>Subject Intel</h3></div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);">
+          <div class="sc-card-head"><i class="fas fa-fingerprint" style="color:#60a5fa;"></i><h3>Subject Intel</h3></div>
+          <div class="sc-intel-grid">
             ${[
-              ['Onyx Balance', (u.onyx||0).toLocaleString(), '#ffd93e'],
-              ['Friends', (u.friends||[]).length, '#3ecf6e'],
-              ['Bastions', (u.bastions||[]).length, '#60a5fa'],
-              [ageLabel, ageDisplay, '#a78bfa'],
-              ['Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown', '#60a5fa'],
-              ['Radiance', hasRadiancePlus ? 'Active' : hasRadiance ? 'Active' : 'None', (hasRadiancePlus||hasRadiance) ? '#ffd93e' : '#6b7280'],
-              ['Verified', u.verified ? 'Yes' : 'No', u.verified ? '#fff93e' : '#6b7280'],
-              ['Reports Against', reportsAgainst.length, reportsAgainst.length > 0 ? '#f87171' : '#3ecf6e'],
-              ...(canSeeEmail ? [['Email', u.email || 'N/A', '#38bdf8']] : []),
+              ['fa-coins','Onyx', (u.onyx||0).toLocaleString(), '#ffd93e'],
+              ['fa-user-group','Friends', (u.friends||[]).length, '#3ecf6e'],
+              ['fa-chess-rook','Bastions', (u.bastions||[]).length, '#5b9dff'],
+              ['fa-cake-candles', ageLabel, ageDisplay, '#a78bfa'],
+              ['fa-calendar-day','Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown', '#5b9dff'],
+              ['__radiance','Radiance', (hasRadiancePlus||hasRadiance) ? 'Active' : 'None', (hasRadiancePlus||hasRadiance) ? '#ffd93e' : '#6b7280'],
+              ['fa-circle-check','Verified', u.verified ? 'Yes' : 'No', u.verified ? '#fff93e' : '#6b7280'],
+              ['fa-flag','Reports against', reportsAgainst.length, reportsAgainst.length > 0 ? '#f2555a' : '#3ecf6e'],
+              ...(canSeeEmail ? [['fa-envelope','Email', u.email || 'N/A', '#38bdf8']] : []),
               ...(canSeeFullData ? [
-                ['Custom Status', (u.customStatus?.text) || 'None', '#a78bfa'],
-                ['Bio Length', u.bio ? u.bio.length + ' chars' : 'None', '#60a5fa'],
-                ['Reports Filed', reportsBy.length, '#f59e0b'],
-                ...(u.suspension ? [['Suspension', 'Active', '#a855f7']] : []),
-                ...(u.referredBy ? [['Referred By', u.referredBy, '#3ecf6e']] : []),
+                ['fa-comment-dots','Custom status', (u.customStatus?.text) || 'None', '#a78bfa'],
+                ['fa-align-left','Bio', u.bio ? u.bio.length + ' chars' : 'None', '#5b9dff'],
+                ['fa-flag','Reports filed', reportsBy.length, '#f59e0b'],
+                ...(u.suspension ? [['fa-clock','Suspension', 'Active', '#a855f7']] : []),
+                ...(u.referredBy ? [['fa-user-plus','Referred by', u.referredBy, '#3ecf6e']] : []),
               ] : []),
-            ].map(([k,v,c])=>`
-              <div style="padding:12px 16px;border-right:1px solid rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.03);">
-                <div style="font-size:9.5px;color:rgba(255,255,255,.25);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;">${k}</div>
-                <div style="font-size:13px;font-weight:700;color:${c||'rgba(255,255,255,.7)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${typeof v === 'string' ? escapeHTML(v) : v}</div>
+            ].map(([icon,k,v,c])=>`
+              <div class="sc-intel">
+                <div class="sc-intel-l">${icon==='__radiance'?'<span class="sc-rad-mask" style="width:12px;height:12px;"></span>':`<i class="fas ${icon}"></i>`}${escapeHTML(k)}</div>
+                <div class="sc-intel-v" style="color:${c||'#fff'};">${typeof v === 'string' ? escapeHTML(v) : v}</div>
               </div>`).join('')}
           </div>
         </div>
 
-        <!-- Right: Activity Timeline + Ban Info -->
-        <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0;">
           ${isBanned && banInfo ? `<div class="sc-card">
-            <div class="sc-card-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><h3 style="color:var(--red);">Ban Record</h3></div>
-            <div style="padding:12px 16px;">
-              <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;"><strong>Reason:</strong> ${escapeHTML(banInfo.reason||'No reason')}</div>
-              ${banInfo.bannedBy?`<div style="font-size:11px;color:rgba(255,255,255,.3);">Banned by: ${escapeHTML(banInfo.bannedBy)} · ${banInfo.bannedAt?new Date(banInfo.bannedAt).toLocaleDateString():''}</div>`:''}
+            <div class="sc-card-head"><i class="fas fa-ban" style="color:var(--red);"></i><h3 style="color:var(--red);">Ban record</h3></div>
+            <div style="padding:14px 16px;">
+              <div style="font-size:12.5px;color:var(--text);margin-bottom:5px;line-height:1.5;"><strong style="color:#fff;">Reason:</strong> ${escapeHTML(banInfo.reason||'No reason')}</div>
+              ${banInfo.bannedBy?`<div style="font-size:11px;color:var(--muted);">Banned by ${escapeHTML(banInfo.bannedBy)} · ${banInfo.bannedAt?new Date(banInfo.bannedAt).toLocaleDateString():''}</div>`:''}
             </div>
           </div>` : ''}
           <div class="sc-card" style="flex:1;">
-            <div class="sc-card-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><h3>Mod History</h3></div>
-            <div style="max-height:200px;overflow-y:auto;">
-              ${userAudit.length ? userAudit.slice(0,10).map(e=>{
-                const aColor = (e.action||'').includes('ban')?'#f87171':(e.action||'').includes('warn')?'#f59e0b':(e.action||'').includes('suspend')?'#a855f7':'#60a5fa';
-                return `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);">
-                  <div style="width:5px;height:5px;border-radius:50%;background:${aColor};flex-shrink:0;margin-top:5px;"></div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:11px;color:rgba(255,255,255,.5);"><span style="color:${aColor};font-weight:700;">${escapeHTML(e.action||'?')}</span>${e.note?' — '+escapeHTML(e.note):''}</div>
-                    <div style="font-size:9px;color:rgba(255,255,255,.2);">by ${escapeHTML(e.by||'?')} · ${e.at?formatTimeAgo(e.at):''}</div>
-                  </div>
-                </div>`;}).join('') : '<div style="padding:16px;text-align:center;color:rgba(62,207,110,.4);font-size:11px;">Clean record</div>'}
+            <div class="sc-card-head"><i class="fas fa-timeline" style="color:#f59e0b;"></i><h3>Mod history</h3></div>
+            <div class="sc-feed" style="max-height:230px;padding:4px 6px;">
+              ${userAudit.length ? userAudit.slice(0,12).map(e=>{
+                const a=(e.action||'');
+                const cfg = a.includes('ban')?{c:'#f2555a',i:'fa-gavel'}:a.includes('warn')?{c:'#f5a524',i:'fa-triangle-exclamation'}:a.includes('suspend')?{c:'#a78bfa',i:'fa-clock'}:{c:'#5b9dff',i:'fa-bolt'};
+                return `<div class="sc-fe" style="padding:8px 10px;">
+                  <div class="sc-fi" style="width:26px;height:26px;background:${cfg.c}1f;color:${cfg.c};"><i class="fas ${cfg.i}"></i></div>
+                  <div class="sc-fx"><div class="sc-ft"><b style="color:${cfg.c};">${escapeHTML(e.action||'?')}</b>${e.note?' — '+escapeHTML(e.note):''}</div><div class="sc-fm">by ${escapeHTML(e.by||'?')} · ${e.at?formatTimeAgo(e.at):''}</div></div>
+                </div>`;}).join('') : '<div style="padding:22px;text-align:center;color:#3ecf6e;font-size:12px;"><i class="fas fa-circle-check"></i> Clean record</div>'}
             </div>
           </div>
         </div>
@@ -58463,7 +58459,7 @@ registerPaletteProvider((q) => {
     { id: 'members',     label: 'Members' },
     { id: 'bastions',    label: 'Bastions' },
     { id: 'economy',     label: 'Economy' },
-    { id: 'broadcasts',  label: 'Broadcasts' },
+    { id: 'broadcasts',  label: 'Ad Emplacements' },
     { id: 'feedback',    label: 'Feedback' },
     { id: 'system',      label: 'System' },
   ];

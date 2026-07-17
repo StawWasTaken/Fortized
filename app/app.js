@@ -14204,7 +14204,8 @@ function pickCBEmoji(event){
 }
 function setCBVis(v,btn){
   cbVisibility=v;
-  document.querySelectorAll('.vis-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.vis-btn,.vis-opt').forEach(b=>b.classList.remove('active'));
+  const opt=document.getElementById('vis-'+v); if(opt) opt.classList.add('active');
   if(btn)btn.classList.add('active');
 }
 // ── Roblox-style Ban / Suspend / Warning Screens ──
@@ -16102,7 +16103,8 @@ function _renderCBRoleTemplateRow() {
   if (!row) return;
   row.innerHTML = Object.entries(ROLE_TEMPLATES).map(([key,t]) => {
     const sel = _selectedRoleTemplate === key;
-    return `<div onclick="selectCBRoleTemplate('${key}')" style="padding:6px 12px;border:1.5px solid ${sel?'var(--accent-mid)':'var(--border)'};border-radius:10px;cursor:pointer;font-size:11.5px;font-weight:600;color:${sel?'var(--accent)':'rgba(255,255,255,.5)'};background:${sel?'var(--accent-dim)':'transparent'};transition:all .12s;display:flex;align-items:center;gap:5px;">${t.emoji} ${t.name}</div>`;
+    const rtIcon = {gaming:'fa-gamepad',community:'fa-user-group',creative:'fa-palette',business:'fa-briefcase',education:'fa-graduation-cap',minimal:'fa-circle-half-stroke'}[key] || 'fa-user-shield';
+    return `<div onclick="selectCBRoleTemplate('${key}')" style="padding:6px 12px;border:1.5px solid ${sel?'var(--accent-mid)':'var(--border)'};border-radius:10px;cursor:pointer;font-size:11.5px;font-weight:600;color:${sel?'var(--accent)':'rgba(255,255,255,.5)'};background:${sel?'var(--accent-dim)':'transparent'};transition:all .12s;display:flex;align-items:center;gap:6px;"><i class="fa-solid ${rtIcon}" style="font-size:11px;opacity:.85;"></i> ${t.name}</div>`;
   }).join('');
 }
 function selectCBRoleTemplate(key) {
@@ -16114,12 +16116,12 @@ function renderBastionTemplateGrid() {
   const grid = document.getElementById('template-grid');
   if (!grid) return;
   const templates = [
-    {id:'gaming',emoji:'🎮',name:'Game Hall',desc:'Play together'},
-    {id:'fellowship',emoji:'🤝',name:'Fellowship',desc:'Friends & community'},
-    {id:'guild',emoji:'⚔️',name:'Guild',desc:'Team & coordination'},
-    {id:'study',emoji:'📚',name:'Study Circle',desc:'Learn together'},
-    {id:'artisan',emoji:'🎨',name:'Artisans',desc:'Create & showcase'},
-    {id:'academy',emoji:'🎓',name:'Academy',desc:'Teaching & courses'},
+    {id:'gaming',emoji:'🎮',name:'Game Hall',desc:'Play together',icon:'fa-gamepad',color:'#60a5fa'},
+    {id:'fellowship',emoji:'🤝',name:'Fellowship',desc:'Friends & community',icon:'fa-user-group',color:'#3ecf6e'},
+    {id:'guild',emoji:'⚔️',name:'Guild',desc:'Team & coordination',icon:'fa-shield-halved',color:'#f87171'},
+    {id:'study',emoji:'📚',name:'Study Circle',desc:'Learn together',icon:'fa-book-open',color:'#a78bfa'},
+    {id:'artisan',emoji:'🎨',name:'Artisans',desc:'Create & showcase',icon:'fa-palette',color:'#e879f9'},
+    {id:'academy',emoji:'🎓',name:'Academy',desc:'Teaching & courses',icon:'fa-graduation-cap',color:'#fbbf24'},
   ];
   const chIcon={text:'#',voice:ftzIcon('mic','10'),forum:ftzIcon('chat','10'),announcement:ftzIcon('megaphone','10'),poll:ftzIcon('ballot','10')};
   grid.innerHTML = templates.map(t => {
@@ -16127,10 +16129,10 @@ function renderBastionTemplateGrid() {
     const previewChs=(tmpl?.channels||[]).slice(0,5).map(c=>`<div style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--muted-light);padding:2px 0;"><span style="font-size:10px;opacity:.7;">${chIcon[c.type]||'#'}</span>${c.name}</div>`).join('');
     const previewRoles=(tmpl?.roles||[]).slice(0,3).map(r=>`<span style="font-size:9px;padding:1px 6px;border-radius:var(--radius-pill);border:1px solid ${r.color}44;color:${r.color};background:${r.color}11;">${r.name}</span>`).join(' ');
     return `<div class="tmpl-card" id="tmpl-${t.id}" onclick="selectBastionTemplate('${t.id}','${t.emoji}','${t.name}')" style="position:relative;">
-      <div class="tmpl-emoji">${t.emoji}</div>
+      <div class="tmpl-ic" style="--tic:${t.color};"><i class="fa-solid ${t.icon}"></i></div>
       <div class="tmpl-name">${t.name}</div>
       <div class="tmpl-desc">${t.desc}</div>
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);text-align:left;">
         <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px;">Channels</div>
         ${previewChs}
         ${(tmpl?.channels||[]).length>5?`<div style="font-size:10px;color:var(--muted);">+${tmpl.channels.length-5} more</div>`:''}

@@ -4609,8 +4609,25 @@ body.is-desktop-app .notif-panel{top:0;}
 .tmpl-card{padding:14px 8px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s;}
 .tmpl-card:hover,.tmpl-card.sel{border-color:var(--accent-mid);background:var(--accent-dim);}
 .tmpl-emoji{font-size:26px;margin-bottom:5px;}
+.tmpl-ic{width:40px;height:40px;margin:0 auto 8px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--tic,#fff);background:color-mix(in srgb, var(--tic,#fff) 13%, transparent);border:1px solid color-mix(in srgb, var(--tic,#fff) 26%, transparent);}
 .tmpl-name{font-size:12px;font-weight:700;margin-bottom:2px;}
 .tmpl-desc{font-size:10.5px;color:var(--muted);}
+
+/* Create-a-Bastion modal — header + path cards (mirrors the Add-Friend modal) */
+.cb-head{display:flex;align-items:flex-start;gap:13px;padding:2px 0 14px;position:relative;overflow:visible;}
+.cb-head__icon{width:42px;height:42px;border-radius:12px;background:var(--accent-dim,rgba(255,249,62,.09));border:1px solid var(--accent-mid,rgba(255,249,62,.22));display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;}
+.cb-head__icon .fa-solid{font-size:17px;line-height:1;}
+.cb-head__text{flex:1;min-width:0;}
+.cb-head__title{font-family:var(--font-display);font-size:20px;font-weight:900;color:#fff;letter-spacing:-.01em;line-height:1.1;}
+.cb-head__sub{font-size:12px;color:var(--muted-light);margin-top:3px;line-height:1.4;}
+.cb-head__mascot{position:absolute;right:-4px;top:-6px;width:104px;height:auto;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35));pointer-events:none;z-index:3;}
+.cb-path-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.cb-path{padding:18px 14px;border:2px solid var(--ink);border-radius:14px;background:var(--panel);box-shadow:0 3px 0 0 var(--ink);cursor:pointer;text-align:center;transition:transform .12s ease,box-shadow .12s ease,background .15s;}
+.cb-path:hover{transform:translateY(-1px);box-shadow:0 4px 0 0 var(--ink);background:rgba(255,249,62,.04);}
+.cb-path:active{transform:translateY(1px);box-shadow:0 2px 0 0 var(--ink);}
+.cb-path__icon{width:42px;height:42px;margin:0 auto 9px;border-radius:12px;background:var(--accent-dim,rgba(255,249,62,.09));display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:18px;}
+.cb-path__title{font-family:var(--font-display);font-size:14px;font-weight:800;}
+.cb-path__desc{font-size:11.5px;color:var(--muted-light);margin-top:3px;}
 /* ── Template Import Cards ──── */
 .tmpl-import-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;transition:all .15s;background:var(--panel);}
 .tmpl-import-card:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);}

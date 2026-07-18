@@ -38301,6 +38301,7 @@ function openGiphyPicker(inputId) {
     {id:'hug',label:'Hugs',icon:'fa-hands-holding-circle',color:'#fda4af'},
     {id:'facepalm',label:'Facepalm',icon:'fa-face-rolling-eyes',color:'#cbd5e1'},
     {id:'sad',label:'Sad',icon:'fa-face-sad-tear',color:'#7dd3fc'},
+    {id:'cute',label:'Cute',icon:'fa-face-grin-hearts',color:'#f9a8d4'},
   ];
   // Fisher–Yates shuffle so the category order (incl. Fortized) is randomised
   // on every open; Favourites + Trending stay pinned as the first two cards.

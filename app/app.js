@@ -5397,12 +5397,30 @@ function _ftzAvatarTrace(stage, pfp, extra) {
     window._ftzAvatarLog.push(meta);
     if (window._ftzAvatarLog.length > 200) window._ftzAvatarLog.shift();
     console.log('[AVATAR-TRACE] ' + stage, meta);
+    // 500-char-ish avatars are the anomaly from the live logs — a real avatar
+    // is tens of thousands of chars, so flag suspiciously small payloads.
+    if (isStr && pfp.startsWith('data:image/') && pfp.length < 2000) {
+      console.warn('[AVATAR-TRACE] ⚠ ' + stage + ' — SUSPICIOUSLY SMALL avatar (' + pfp.length + ' chars). A real avatar is >10k chars; this is likely truncated/corrupt.');
+    }
     if (isStr && pfp.startsWith('data:image/')) {
-      _pfpIsBlank(pfp).then(blank => {
-        meta.transparent = blank;
-        if (blank) console.warn('[AVATAR-TRACE] ⚠⚠ ' + stage + ' — value decodes FULLY TRANSPARENT (' + pfp.length + ' chars). This stage is where the avatar dies.');
-        else console.log('[AVATAR-TRACE] ✓ ' + stage + ' — value is opaque (' + pfp.length + ' chars)');
-      }).catch(() => { meta.transparent = 'probe-failed'; });
+      const img = new Image();
+      img.onload = () => {
+        meta.decoded = true; meta.dims = img.naturalWidth + 'x' + img.naturalHeight;
+        try {
+          const w = Math.min(img.naturalWidth, 32) || 1, h = Math.min(img.naturalHeight, 32) || 1;
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          const cx = c.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0, w, h);
+          const d = cx.getImageData(0, 0, w, h).data; let opaque = false;
+          for (let i = 3; i < d.length; i += 4) { if (d[i] !== 0) { opaque = true; break; } }
+          meta.transparent = !opaque;
+          console.log('[AVATAR-TRACE] ' + (opaque ? '✓' : '⚠⚠') + ' ' + stage + ' decoded ' + meta.dims + ' — ' + (opaque ? 'opaque' : 'FULLY TRANSPARENT (avatar dies here)') + ' (' + pfp.length + ' chars)');
+        } catch (_) { meta.transparent = 'canvas-fail'; }
+      };
+      img.onerror = () => {
+        meta.decoded = false; meta.transparent = 'decode-FAILED';
+        console.warn('[AVATAR-TRACE] ⚠⚠ ' + stage + ' — image FAILED TO DECODE (' + pfp.length + ' chars) — corrupt/truncated. The avatar dies here.');
+      };
+      img.src = pfp;
     } else {
       meta.transparent = isStr && pfp.startsWith('http') ? 'url(not-probed)' : 'n/a';
     }
@@ -21469,15 +21487,19 @@ function toggleEmojiPicker(targetId) {
   } else {
     panel.style.cssText = `left:${left}px;top:${top}px;bottom:auto;`;
   }
-  panel.classList.add('show');
-  _ftzEmojiTrace('shown', { pos: bottom !== null ? 'bottom:' + Math.round(bottom) : 'top:' + Math.round(top), left: Math.round(left) });
-  // Two rAFs later = after the first painted frame(s). If the grid gained
-  // children or scrollTop moved between 'shown' and here, that's the flicker.
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    const g = document.getElementById('epp-grid');
-    _ftzEmojiTrace('post-paint', { gridChildren: g?.children.length, gridScrollTop: g?.scrollTop, hydratedCells: g?.querySelectorAll('.epp-lazy .emoji-cell').length });
-  }));
-  setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
+  // Defer the reveal one frame: the grid was just built + fully hydrated
+  // synchronously (heavy), so let that layout commit before the fade starts —
+  // otherwise the build stalls the first animation frame and it reads as a
+  // stutter/flicker.
+  requestAnimationFrame(() => {
+    panel.classList.add('show');
+    _ftzEmojiTrace('shown', { pos: bottom !== null ? 'bottom:' + Math.round(bottom) : 'top:' + Math.round(top), left: Math.round(left) });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const g = document.getElementById('epp-grid');
+      _ftzEmojiTrace('post-paint', { gridChildren: g?.children.length, gridScrollTop: g?.scrollTop, hydratedCells: g?.querySelectorAll('.epp-lazy .emoji-cell').length });
+    }));
+  });
+  setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 100);
 }
 
 function _pickerTopTabs(active) {
@@ -38282,7 +38304,7 @@ function openGiphyPicker(inputId) {
     </div>
     <div id="gif-collection-view" class="gif-collection-grid">
       <div class="gif-collection-card gcc-fav" onclick="_gifCollectionPick('favourites','${esc}')">
-        <div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(167,139,250,.08));"></div>
+        <img src="" data-cat-preview="favourites" alt="">
         <div class="gcc-label"><i class="fa-solid fa-star" style="color:var(--accent);font-size:14px;"></i>Favourites</div>
       </div>
       <div class="gif-collection-card" onclick="_gifCollectionPick('trending','${esc}')">
@@ -38294,7 +38316,7 @@ function openGiphyPicker(inputId) {
         <div class="gcc-label"><i class="fa-solid ${c.icon}" style="color:${c.color};font-size:13px;"></i>${c.label}</div>
       </div>`).join('')}
     </div>
-    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;display:none;"></div>
+    <div id="giphy-grid" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 10px;display:none;scrollbar-width:thin;"></div>
     <div id="gif-back-bar" style="display:none;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;">
       <button onclick="_gifBackToCollections('${esc}')" class="gif-back-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
@@ -38359,35 +38381,45 @@ function _gifBackToCollections(inputId) {
 
 // Load preview GIF thumbnails for collection cards
 async function _loadCollectionPreviews() {
-  const previewCards = document.querySelectorAll('[data-cat-preview]');
-  if (!previewCards.length) return;
-  const _pickPreviewUrl = (item) => {
-    if (!item) return '';
-    return _klipyGifUrl(item, 'sm')
-        || _klipyGifUrl(item, 'xs')
-        || _klipyGifUrl(item, 'md')
-        || _klipyGifUrl(item, 'hd');
-  };
-  // ONE trending fetch (the proven-reliable endpoint) whose GIFs are spread
-  // across every collection card, so the panel shows GIFs the instant it
-  // opens. The old code fired ~25 near-simultaneous Klipy requests (one per
-  // category) which Klipy rate-limited — leaving every card blank, which is
-  // exactly the "GIFs don't show on open" bug. Cached for the session so
-  // re-opens are instant and cost nothing.
-  try {
-    let urls = window._klipyPreviewUrls;
-    if (!Array.isArray(urls) || !urls.length) {
-      const cid = CU?.username || 'anon';
-      const res = await fetch(KLIPY_BASE + '/gifs/trending?per_page=40&content_filter=medium&customer_id=' + encodeURIComponent(cid));
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      const items = _klipyExtractItems(data);
-      urls = items.map(_pickPreviewUrl).filter(Boolean);
-      window._klipyPreviewUrls = urls;
+  const cards = [...document.querySelectorAll('[data-cat-preview]')];
+  if (!cards.length) return;
+  const pick = (arr) => (arr && arr.length) ? arr[Math.floor(Math.random() * arr.length)] : null;
+  const pickUrl = (item) => item ? (_klipyGifUrl(item, 'sm') || _klipyGifUrl(item, 'xs') || _klipyGifUrl(item, 'md') || _klipyGifUrl(item, 'hd')) : '';
+  const cid = CU?.username || 'anon';
+  // Per-category URL arrays cached for the session, so each open picks a NEW
+  // random GIF for every card without re-hitting Klipy.
+  window._klipyCatCache = window._klipyCatCache || {};
+  const cache = window._klipyCatCache;
+
+  // Favourites — random pick from the user's saved GIFs (local, no fetch).
+  const favCard = cards.find(c => c.dataset.catPreview === 'favourites');
+  if (favCard) { const f = pick(getFavGifs() || []); if (f && f.url) favCard.src = f.url; }
+
+  // Every other card shows a random GIF drawn from ITS OWN category. Fetches
+  // run 3-at-a-time (a gentle trickle) — NOT the ~25-at-once storm that Klipy
+  // rate-limited to blank cards, which was the "GIFs don't show on open" bug.
+  const queue = cards.filter(c => c.dataset.catPreview && c.dataset.catPreview !== 'favourites');
+  const worker = async () => {
+    while (queue.length) {
+      const card = queue.shift();
+      const cat = card.dataset.catPreview;
+      try {
+        let urls = cache[cat];
+        if (!Array.isArray(urls) || !urls.length) {
+          const path = cat === 'trending'
+            ? '/gifs/trending?per_page=20'
+            : '/gifs/search?q=' + encodeURIComponent(cat) + '&per_page=20';
+          const res = await fetch(KLIPY_BASE + path + '&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          urls = _klipyExtractItems(await res.json()).map(pickUrl).filter(Boolean);
+          cache[cat] = urls;
+        }
+        const u = pick(urls);
+        if (u) card.src = u;
+      } catch (_) { /* leave the card on its fallback background */ }
     }
-    if (!urls.length) return;
-    previewCards.forEach((card, i) => { const u = urls[i % urls.length]; if (u) card.src = u; });
-  } catch (e) { console.warn('[Klipy] collection previews failed:', e?.message); }
+  };
+  await Promise.all([worker(), worker(), worker()]);
 }
 
 function _giphyOutsideClose(e) {

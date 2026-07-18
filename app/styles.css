@@ -1456,7 +1456,11 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .cit-btn:hover{background:rgba(255,249,62,.1);color:var(--accent);transform:scale(1.08);}
 .cit-btn.active{color:var(--accent);background:rgba(255,249,62,.12);box-shadow:0 0 12px rgba(255,249,62,.15);}
 .cit-btn::after,
-.cit-gif::after {
+.cit-gif::after,
+.cit-sticker::after,
+.cit-sticker:hover::after,
+.cit-botcmd::after,
+.cit-botcmd:hover::after {
   display: none !important;
 }
 .cit-sep{width:1px;height:18px;background:rgba(255,255,255,.06);margin:0 2px;flex-shrink:0;}
@@ -1602,6 +1606,12 @@ body.staw-frozen::before{
 .gif-cat-chip .gcc-count{font-size:9px;padding:1px 5px;background:rgba(255,249,62,.15);border-radius:var(--radius-pill);color:var(--accent);font-weight:700;}
 /* GIF collection grid (visual category cards) */
 .gif-collection-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;overflow-y:auto;flex:1;scrollbar-width:thin;}
+/* GIF results = 2-column grid that grows DOWNWARD (was CSS multi-column,
+   which spilled into new columns to the right → horizontal scroll). The
+   show/hide code toggles inline display:''/'none', so 'grid' must be the
+   CSS default for the shown state. */
+#giphy-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-content:start;}
+#giphy-grid .gif-card{margin-bottom:0!important;break-inside:auto!important;}
 .gif-collection-card{position:relative;border-radius:12px;overflow:hidden;cursor:pointer;height:100px;background:var(--panel2,rgba(255,255,255,.03));border:1.5px solid rgba(255,255,255,.06);transition:all .22s cubic-bezier(.22,1,.36,1);}
 .gif-collection-card:hover{border-color:rgba(255,249,62,.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
 .gif-collection-card img{width:100%;height:100%;object-fit:cover;opacity:.55;transition:opacity .22s;}
@@ -4158,7 +4168,13 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
    variants (modal-overlay at 1000, .gdm-overlay at 9999, the unified
    .rpt-modal at 10020). Without this the picker opened BEHIND the
    settings modal when triggered from the About-Me textarea. */
-.emoji-picker-panel{position:fixed;width:448px;max-width:calc(100vw - 16px);max-height:520px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:14px;padding:0;z-index:11000;box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.035);display:none;flex-direction:row;overflow:hidden;font-family:var(--font-ui);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
+.emoji-picker-panel{position:fixed;width:448px;max-width:calc(100vw - 16px);max-height:520px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:14px;padding:0;z-index:11000;box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.035);display:none;flex-direction:row;overflow:hidden;font-family:var(--font-ui);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);}
+/* Opacity-only entrance. The shared pickerSlideIn animates transform+scale,
+   which — on this backdrop-filtered, content-heavy panel — flickered/"stuck"
+   as the blur re-composited mid-transform. A plain fade avoids it. Applied
+   only once the panel is shown so it never runs against a display:none node. */
+.emoji-picker-panel.show{animation:emojiPickerFadeIn .16s ease both;}
+@keyframes emojiPickerFadeIn{from{opacity:0;}to{opacity:1;}}
 .emoji-picker-panel.show{display:flex;}
 /* Icon-only right sidebar — Discord-style, 48px wide. No text labels; the
    button's title attribute provides an on-hover native tooltip. */

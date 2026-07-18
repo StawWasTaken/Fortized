@@ -1,5 +1,53 @@
 # Fortized — working notes for Claude
 
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix307`)
+
+Branch `claude/staff-console-world-map-emxyxn`, mirrored to `main`. Standing
+rules below still apply (egress, mirror-to-main + bump cache-bust every push,
+`node --check` + 42 relationship tests pre-commit).
+
+**Done recently (chat pickers + avatar):**
+- Chat GIF panel: Discord **masonry** (natural aspect ratios via CSS `columns`
+  on an inner `.gif-masonry` wrapper inside the vertical scroll container),
+  category-click = search, 26 cards (24 categories + Trending + **Collection**,
+  the renamed Favourites — you "collect" GIFs), FA icons, previews = 1 random
+  GIF per category (throttled 3-at-a-time, session-cached).
+- Chat GIF embeds show full natural ratio (`.ftz-embed-gif img` →
+  `object-fit:contain`, no square crop).
+- All 4 pickers: robust click-outside-to-close (`_bindPickerOutsideClose`);
+  sticker/botcmd chatbar buttons now use the global `data-tip` tooltip.
+- **Emoji/sticker info card** (click an emoji in chat/bio/forum) redesigned
+  Discord-style (`_showEmojiTooltip`/`_showStickerTooltip`, `.emoji-tooltip`
+  `.et-*` classes): preview tile + `:name:` + type chip + description + "This
+  emoji is from" bastion footer.
+- **Avatar corruption ROOT CAUSE fixed** (`2026fix299`): a 500-char truncated
+  data:image looped between clients (echo → `_acceptIncomingPfp` accepted
+  non-PNG blindly → CU poisoned → re-written). Guards now reject too-small
+  data:image on BOTH incoming (`_acceptIncomingPfp`) and outgoing
+  (`saveUserObject`) sides; `buildAvatarHTML` renders the initial letter for
+  corrupt pfps everywhere; `_healBlankAvatar` backs up the last-good avatar to
+  `localStorage.ftz_good_pfp_<user>` and restores+re-pushes it on boot.
+  **The real cure is still the Media→Storage rollout** (see Open items) — the
+  write keeps getting dropped by egress throttling so the DB row stays corrupt.
+
+**NEXT SESSION — top priorities (user wants these):**
+1. **Tabbed picker redesign — GO LIVE.** Direction is locked + a static mockup
+   is approved (recipe in scratchpad `panelkit.html`, `.pk-*` classes): ONE
+   tabbed popover with **GIFs / Stickers / Emoji / Bots** tabs; emoji uses a
+   **right-side** icon rail (Discord layout, Fortized side) + **Guilded footer**
+   showing the hovered emoji; Fortized dark glass + gold; **solid bg, NO
+   backdrop-filter** (that was the emoji flicker); **FontAwesome** icons
+   throughout. TODO: rebuild `buildEmojiPicker` from scratch on this shell
+   (kills the flicker + "not every emoji loads" — eager-render, no
+   IntersectionObserver race), then re-skin `openGiphyPicker` /
+   `openStickerPicker` / `openBotCommandPanel` into the same shell with tab
+   switching. Preserve emoji features: search, frequently-used, Collection,
+   Fortized Guide, bastion custom emojis, hover preview.
+2. **Avatar still missing in chat / maybe nameplates.** Verify every avatar
+   render path goes through `buildAvatarHTML` (chat msg rows do, line ~11662);
+   find nameplate/other raw `<img src=pfp>` paths that bypass the corrupt guard
+   and route them through it. The permanent fix remains Media→Storage.
+
 ## ⚠️ #1 STANDING RULE: SUPABASE EGRESS
 
 **We are over the Supabase egress quota (5 GB) — recently 635% (~31.7 GB).**

@@ -4519,15 +4519,26 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .ctx-section-label{padding:8px 12px 3px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.15);}
 .ctx-sep{height:1px;background:rgba(255,255,255,.04);margin:3px 10px;}
 /* ── Emoji Tooltip (Discord-style) ─────────────── */
-.emoji-tooltip{position:fixed;z-index:11100;background:var(--glass-heavy);border:1.5px solid var(--glass-border);border-radius:var(--radius-md);padding:var(--space-md);box-shadow:var(--shadow-lg);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);pointer-events:auto;animation:emojiTipIn .15s var(--ease-out);min-width:200px;max-width:260px;}
-@keyframes emojiTipIn{from{opacity:0;transform:translateY(4px) scale(.97);}to{opacity:1;transform:none;}}
-.emoji-tooltip .et-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.emoji-tooltip .et-big{width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.emoji-tooltip .et-big img{width:36px;height:36px;object-fit:contain;}
-.emoji-tooltip .et-name{font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;word-break:break-word;overflow-wrap:anywhere;max-width:200px;line-height:1.25;}
-.emoji-tooltip .et-header > div:last-child{min-width:0;flex:1;}
-.emoji-tooltip .et-code{font-size:11px;color:rgba(255,255,255,.3);font-family:'SF Mono','Cascadia Code',monospace;margin-top:2px;}
-.emoji-tooltip .et-cat{font-size:10.5px;color:rgba(255,249,62,.45);font-weight:600;margin-top:6px;word-break:break-word;overflow-wrap:anywhere;}
+/* Emoji / sticker info card (click an emoji in chat, bio, forums).
+   Discord-inspired: big preview + shortcode + type chip, a friendly
+   one-line description, and a "This emoji is from" bastion footer. Solid
+   background (no backdrop-filter) so it never flickers. */
+.emoji-tooltip{position:fixed;z-index:11100;background:#191c24;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:0;overflow:hidden;box-shadow:0 18px 48px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.3);pointer-events:auto;animation:emojiTipIn .14s cubic-bezier(.22,1,.36,1);min-width:248px;max-width:300px;}
+@keyframes emojiTipIn{from{opacity:0;transform:translateY(5px) scale(.97);}to{opacity:1;transform:none;}}
+.emoji-tooltip .et-top{display:flex;align-items:center;gap:12px;padding:14px 16px 10px;}
+.emoji-tooltip .et-big{width:52px;height:52px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:34px;line-height:1;}
+.emoji-tooltip .et-big img{width:38px;height:38px;object-fit:contain;}
+.emoji-tooltip .et-meta{min-width:0;flex:1;}
+.emoji-tooltip .et-name{font-family:var(--font-display);font-size:15px;font-weight:800;color:#fff;word-break:break-word;overflow-wrap:anywhere;line-height:1.2;}
+.emoji-tooltip .et-chip{display:inline-flex;align-items:center;gap:4px;margin-top:5px;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--c,rgba(255,255,255,.55));background:color-mix(in srgb,var(--c,#fff) 12%,transparent);border:1px solid color-mix(in srgb,var(--c,#fff) 26%,transparent);border-radius:100px;padding:2px 8px;}
+.emoji-tooltip .et-desc{font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;padding:0 16px 14px;}
+.emoji-tooltip .et-from{border-top:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);padding:11px 16px 13px;}
+.emoji-tooltip .et-from-lbl{font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:8px;}
+.emoji-tooltip .et-from-row{display:flex;align-items:center;gap:10px;}
+.emoji-tooltip .et-from-row img,.emoji-tooltip .et-from-fallback{width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;}
+.emoji-tooltip .et-from-fallback{display:flex;align-items:center;justify-content:center;background:var(--accent-dim,rgba(255,249,62,.12));color:var(--accent);font-family:var(--font-display);font-weight:800;font-size:16px;}
+.emoji-tooltip .et-from-name{font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;line-height:1.2;}
+.emoji-tooltip .et-from-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
 .msg-text .msg-emoji,.msg-text .msg-emoji-native,.msg-reply-ref .msg-emoji,.up-left-section-body .msg-emoji,.ann-body .msg-emoji,.forum-detail-content .msg-emoji,.frc-body .msg-emoji{cursor:pointer;transition:transform .1s;border-radius:3px;}
 /* Protect internal Fortized images from right-click save/copy */
 .msg-emoji[data-emoji-type],.ftz-embed img,.ftz-embed video,.ftz-embed-gif img,.epp-emoji-grid img,.epp-custom-emoji img,.invite-avatar img,.invite-right-logo img,.rail-avatar img,.bastion-banner-img,.bastion-icon-img{-webkit-user-drag:none;-webkit-touch-callout:none;user-select:none;pointer-events:auto;}

@@ -21980,67 +21980,67 @@ function _showEmojiTooltip(emoji, el) {
   // Bastion custom emoji — check all bastions
   let bastionCustom = null;
   let bastionName = '';
+  let bastionObj = null;
   if (emojiType === 'bastion' && bastionIdx !== null) {
     const b = CU?.bastions?.[bastionIdx];
     bastionCustom = (b?.customEmojis||[]).find(ce => ce.name === emojiKey);
-    bastionName = b?.name || 'Bastion';
+    bastionName = b?.name || 'Bastion'; bastionObj = b || null;
   } else if (!isFtz && !EMOJI_NAMES[emoji]) {
     // Search all bastions for this emoji
     (CU?.bastions||[]).forEach((b, i) => {
       if (bastionCustom) return;
       const ce = (b?.customEmojis||[]).find(e => e.name === emojiKey);
-      if (ce) { bastionCustom = ce; bastionName = b?.name || 'Bastion'; }
+      if (ce) { bastionCustom = ce; bastionName = b?.name || 'Bastion'; bastionObj = b; }
     });
   }
 
-  let previewHTML, nameStr, originLabel, originColor, detailLine;
+  let previewHTML, nameStr, chipLabel, chipColor, description, fromSection = '';
+  const _big = 'width:38px;height:38px;object-fit:contain;';
 
   if (isFtz) {
-    // Fortized Guide emoji
     const ftzUrl = FORTIZED_EMOJI_MAP[emojiKey];
-    previewHTML = `<img src="${ftzUrl}" onerror="this.outerHTML='<span style=\\'font-size:28px;\\'>${escapeHTML(emojiKey)}</span>'" style="width:32px;height:32px;object-fit:contain;">`;
+    previewHTML = `<img src="${ftzUrl}" onerror="this.outerHTML='<span>${escapeHTML(emojiKey)}</span>'" style="${_big}">`;
     nameStr = ':' + emojiKey + ':';
-    originLabel = 'Fortized Guide Emoji';
-    originColor = 'rgba(255,249,62,.85)';
-    detailLine = 'Official Fortized Guide — available everywhere';
+    chipLabel = 'Fortized Guide'; chipColor = 'var(--accent, #fff93e)';
+    description = 'Part of the Fortized Guide — you can use this emoji everywhere on Fortized.';
   } else if (isExtra) {
     const ftzUrl = FORTIZED_EMOJI_MAP[emojiKey];
-    previewHTML = `<img src="${ftzUrl}" style="width:32px;height:32px;object-fit:contain;">`;
+    previewHTML = `<img src="${ftzUrl}" style="${_big}">`;
     nameStr = ':' + emojiKey + ':';
-    originLabel = 'Custom Emoji';
-    originColor = 'rgba(255,255,255,.55)';
-    detailLine = 'Custom emoji — available everywhere';
+    chipLabel = 'Custom'; chipColor = 'rgba(255,255,255,.55)';
+    description = 'A custom emoji — you can use it everywhere on Fortized.';
   } else if (bastionCustom) {
-    // Bastion custom emoji
-    previewHTML = `<img src="${escapeHTML(bastionCustom.data)}" style="width:32px;height:32px;object-fit:contain;">`;
+    previewHTML = `<img src="${escapeHTML(bastionCustom.data)}" style="${_big}">`;
     nameStr = ':' + emojiKey + ':';
-    originLabel = 'Bastion Emoji';
-    originColor = 'rgba(88,191,255,.85)';
-    detailLine = 'From: ' + escapeHTML(bastionName);
+    chipLabel = 'Bastion Emoji'; chipColor = '#58bfff';
+    description = 'This emoji is from one of your bastions. Type its name in the chat bar to use it.';
+    const emb = bastionObj?.emblem || bastionObj?.icon || '';
+    const embHTML = emb
+      ? `<img src="${escapeHTML(emb)}" onerror="this.outerHTML='<div class=&quot;et-from-fallback&quot;>${escapeHTML((bastionName||'B')[0].toUpperCase())}</div>'">`
+      : `<div class="et-from-fallback">${escapeHTML((bastionName||'B')[0].toUpperCase())}</div>`;
+    const vis = (bastionObj?.visibility === 'private' || bastionObj?.isPrivate) ? 'Invite-Only Bastion' : 'Bastion';
+    fromSection = `<div class="et-from"><div class="et-from-lbl">This emoji is from</div><div class="et-from-row">${embHTML}<div><div class="et-from-name">${escapeHTML(bastionName)}</div><div class="et-from-sub">${vis}</div></div></div></div>`;
   } else {
-    // Default unicode emoji
     const name = EMOJI_NAMES[emoji] || 'emoji';
-    const category = EMOJI_CAT_MAP[emoji] || 'Emoji';
-    const codePoints = [...emoji].map(c => 'U+' + c.codePointAt(0).toString(16).toUpperCase()).join(' ');
     const url = emojiToTwemojiUrl(emoji);
-    previewHTML = `<img src="${url}" onerror="this.outerHTML='<span style=\\'font-size:28px;\\'>${emoji}</span>'" style="width:32px;height:32px;object-fit:contain;">`;
+    previewHTML = `<img src="${url}" onerror="this.outerHTML='<span>${emoji}</span>'" style="${_big}">`;
     nameStr = ':' + name.replace(/\s+/g,'_') + ':';
-    originLabel = 'Default Emoji';
-    originColor = 'rgba(255,255,255,.45)';
-    detailLine = category + ' · ' + codePoints;
+    chipLabel = 'Default'; chipColor = 'rgba(255,255,255,.5)';
+    description = 'A default emoji — you can use it anywhere on Fortized.';
   }
 
   const tip = document.createElement('div');
   tip.className = 'emoji-tooltip';
   tip.innerHTML = `
-    <div class="et-header">
+    <div class="et-top">
       <div class="et-big">${previewHTML}</div>
-      <div>
+      <div class="et-meta">
         <div class="et-name">${escapeHTML(nameStr)}</div>
-        <div class="et-origin" style="font-size:10px;font-weight:600;color:${originColor};margin-top:2px;">${originLabel}</div>
+        <span class="et-chip" style="--c:${chipColor};">${chipLabel}</span>
       </div>
     </div>
-    <div class="et-cat">${detailLine}</div>`;
+    <div class="et-desc">${description}</div>
+    ${fromSection}`;
 
   document.body.appendChild(tip);
 
@@ -22103,23 +22103,34 @@ function _showStickerTooltip(el) {
       return false;
     });
   } catch {}
-  const originLabel = fromBastion ? 'Bastion Sticker' : 'Sticker';
-  const originColor = fromBastion ? 'rgba(88,191,255,.85)' : 'rgba(255,249,62,.85)';
-  const detailLine = fromBastion
-    ? ('From: ' + escapeHTML(fromBastion.name || 'Bastion'))
-    : 'Sticker';
+  const chipLabel = fromBastion ? 'Bastion Sticker' : 'Sticker';
+  const chipColor = fromBastion ? '#58bfff' : 'var(--accent, #fff93e)';
+  const description = fromBastion
+    ? 'This sticker is from one of your bastions. Send it in any chat you share.'
+    : 'A sticker — send it in any chat.';
+  let fromSection = '';
+  if (fromBastion) {
+    const emb = fromBastion.emblem || fromBastion.icon || '';
+    const bn = fromBastion.name || 'Bastion';
+    const embHTML = emb
+      ? `<img src="${escapeHTML(emb)}" onerror="this.outerHTML='<div class=&quot;et-from-fallback&quot;>${escapeHTML(bn[0].toUpperCase())}</div>'">`
+      : `<div class="et-from-fallback">${escapeHTML(bn[0].toUpperCase())}</div>`;
+    const vis = (fromBastion.visibility === 'private' || fromBastion.isPrivate) ? 'Invite-Only Bastion' : 'Bastion';
+    fromSection = `<div class="et-from"><div class="et-from-lbl">This sticker is from</div><div class="et-from-row">${embHTML}<div><div class="et-from-name">${escapeHTML(bn)}</div><div class="et-from-sub">${vis}</div></div></div></div>`;
+  }
 
   const tip = document.createElement('div');
   tip.className = 'emoji-tooltip';
   tip.innerHTML = `
-    <div class="et-header">
-      <div class="et-big" style="width:64px;height:64px;border-radius:14px;"><img src="${escapeHTML(url)}" style="width:56px;height:56px;object-fit:contain;"></div>
-      <div>
+    <div class="et-top">
+      <div class="et-big" style="width:60px;height:60px;"><img src="${escapeHTML(url)}" style="width:46px;height:46px;object-fit:contain;"></div>
+      <div class="et-meta">
         <div class="et-name">${escapeHTML(':' + name + ':')}</div>
-        <div class="et-origin" style="font-size:10px;font-weight:600;color:${originColor};margin-top:2px;">${originLabel}</div>
+        <span class="et-chip" style="--c:${chipColor};">${chipLabel}</span>
       </div>
     </div>
-    <div class="et-cat">${detailLine}</div>`;
+    <div class="et-desc">${description}</div>
+    ${fromSection}`;
 
   document.body.appendChild(tip);
   const rect = el.getBoundingClientRect();

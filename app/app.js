@@ -21512,6 +21512,7 @@ function toggleEmojiPicker(targetId) {
   // stutter/flicker.
   requestAnimationFrame(() => {
     panel.classList.add('show');
+    _bindPickerOutsideClose(panel, () => panel.classList.remove('show'));
     _ftzEmojiTrace('shown', { pos: bottom !== null ? 'bottom:' + Math.round(bottom) : 'top:' + Math.round(top), left: Math.round(left) });
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const g = document.getElementById('epp-grid');
@@ -38346,7 +38347,7 @@ function openGiphyPicker(inputId) {
   `;
 
   document.body.appendChild(picker);
-  document.addEventListener('mousedown', _giphyOutsideClose, {once:true, capture:true});
+  _bindPickerOutsideClose(picker, () => picker.remove());
   // Load preview thumbnails for collection cards
   _loadCollectionPreviews();
 }
@@ -38445,6 +38446,24 @@ async function _loadCollectionPreviews() {
   await Promise.all([worker(), worker(), worker()]);
 }
 
+// One robust outside-click closer for every chat picker. The old per-panel
+// handlers used {once:true} but only re-registered on an INSIDE click — so
+// the FIRST click inside consumed the listener and further outside clicks
+// no longer closed the panel. This persistent capture listener stays until
+// the panel actually closes, ignores clicks on the chat toolbar (those
+// buttons toggle the panels themselves), and works for both removed-element
+// panels (gif/sticker/botcmd) and the class-toggled emoji panel.
+function _bindPickerOutsideClose(el, close) {
+  if (!el) return;
+  const handler = (e) => {
+    const gone = el.id === 'emoji-picker' ? !el.classList.contains('show') : !el.isConnected;
+    if (gone) { document.removeEventListener('mousedown', handler, true); return; }
+    if (e.target.closest && e.target.closest('.chat-input-actions')) return;
+    if (!el.contains(e.target)) { close(); document.removeEventListener('mousedown', handler, true); }
+  };
+  // Defer a tick so the click that opened the panel doesn't instantly close it.
+  setTimeout(() => document.addEventListener('mousedown', handler, true), 0);
+}
 function _giphyOutsideClose(e) {
   const picker = document.getElementById('giphy-picker');
   if (picker && !picker.contains(e.target)) picker.remove();
@@ -38704,7 +38723,7 @@ function openStickerPicker(inputId) {
 
   document.body.appendChild(picker);
   _renderStickers(allStickers);
-  document.addEventListener('mousedown', _stickerOutsideClose, {once:true, capture:true});
+  _bindPickerOutsideClose(picker, () => picker.remove());
 }
 
 window._allStickersCache = [];
@@ -38774,7 +38793,7 @@ function _stickerOutsideClose(e) {
   const picker = document.getElementById('sticker-picker');
   if (!picker) return;
   if (!picker.contains(e.target)) { picker.remove(); return; }
-  document.addEventListener('mousedown', _stickerOutsideClose, {once:true, capture:true});
+  _bindPickerOutsideClose(picker, () => picker.remove());
 }
 
 // ════════════════════════════════════════════
@@ -38844,7 +38863,7 @@ function openBotCommandPanel(inputId, context) {
     `).join('');
   }
 
-  document.addEventListener('mousedown', _botcmdOutsideClose, {once:true, capture:true});
+  _bindPickerOutsideClose(picker, () => picker.remove());
 }
 
 window._botcmdCache = [];
@@ -38868,7 +38887,7 @@ function _botcmdOutsideClose(e) {
   const picker = document.getElementById('botcmd-picker');
   if (!picker) return;
   if (!picker.contains(e.target)) { picker.remove(); return; }
-  document.addEventListener('mousedown', _botcmdOutsideClose, {once:true, capture:true});
+  _bindPickerOutsideClose(picker, () => picker.remove());
 }
 
 

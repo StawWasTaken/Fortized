@@ -1606,12 +1606,17 @@ body.staw-frozen::before{
 .gif-cat-chip .gcc-count{font-size:9px;padding:1px 5px;background:rgba(255,249,62,.15);border-radius:var(--radius-pill);color:var(--accent);font-weight:700;}
 /* GIF collection grid (visual category cards) */
 .gif-collection-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;overflow-y:auto;flex:1;scrollbar-width:thin;}
-/* GIF results = 2-column grid that grows DOWNWARD (was CSS multi-column,
-   which spilled into new columns to the right → horizontal scroll). The
-   show/hide code toggles inline display:''/'none', so 'grid' must be the
-   CSS default for the shown state. */
-#giphy-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-content:start;}
-#giphy-grid .gif-card{margin-bottom:0!important;break-inside:auto!important;}
+/* GIF results = vertical scroll container holding a 2-column MASONRY.
+   The masonry (CSS columns) sits on an inner auto-height wrapper so each
+   GIF keeps its natural aspect ratio (Discord-style) and the columns flow
+   DOWNWARD; the outer #giphy-grid is the vertical scrollbar. Putting the
+   columns on the scroll container itself is what spilled into extra columns
+   to the right (horizontal scroll) — hence the inner wrapper. The show/hide
+   code toggles inline display:''/'none', so 'block' is the shown default. */
+#giphy-grid{display:block;}
+.gif-masonry{columns:2;column-gap:6px;}
+.gif-masonry > .gif-card{break-inside:avoid;-webkit-column-break-inside:avoid;width:100%;margin:0 0 6px;display:inline-block;vertical-align:top;}
+.gif-masonry > .gif-card img{width:100%;height:auto;display:block;}
 .gif-collection-card{position:relative;border-radius:12px;overflow:hidden;cursor:pointer;height:100px;background:var(--panel2,rgba(255,255,255,.03));border:1.5px solid rgba(255,255,255,.06);transition:all .22s cubic-bezier(.22,1,.36,1);}
 .gif-collection-card:hover{border-color:rgba(255,249,62,.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
 .gif-collection-card img{width:100%;height:100%;object-fit:cover;opacity:.55;transition:opacity .22s;}

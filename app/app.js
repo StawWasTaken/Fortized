@@ -38232,14 +38232,14 @@ function renderFavGifs(targetInput) {
       + '<div style="text-align:center;font-size:12.5px;color:var(--muted);">Your collection is empty.<br>Hover a GIF and click the bookmark to collect it.</div></div>';
     return;
   }
-  grid.innerHTML = favs.map(gif => {
+  grid.innerHTML = '<div class="gif-masonry">' + favs.map(gif => {
     const url = gif.url || '';
-    return `<div class="gif-card" data-id="${gif.id}" data-url="${escapeHTML(url)}" data-input="${escapeHTML(targetInput)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
+    return `<div class="gif-card" data-id="${gif.id}" data-url="${escapeHTML(url)}" data-input="${escapeHTML(targetInput)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);transition:all .2s cubic-bezier(.22,1,.36,1);">
       <img src="${escapeHTML(url)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
       <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;"></div>
-      <button onclick="event.stopPropagation();removeFavGif('${gif.id}');renderFavGifs('${escapeHTML(targetInput)}')" title="Remove" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:none;border:1px solid rgba(255,255,255,.1);color:#ff6b6b;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">✕</button>
+      <button onclick="event.stopPropagation();removeFavGif('${gif.id}');renderFavGifs('${escapeHTML(targetInput)}')" title="Remove" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:none;border:1px solid rgba(255,255,255,.1);color:#ff6b6b;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;"><i class="fa-solid fa-xmark"></i></button>
     </div>`;
-  }).join('');
+  }).join('') + '</div>';
   grid.querySelectorAll('.gif-card').forEach(card => {
     const ov = card.querySelector('.gif-hover-overlay');
     const del = card.querySelector('button');
@@ -38301,7 +38301,6 @@ function openGiphyPicker(inputId) {
     {id:'hug',label:'Hugs',icon:'fa-hands-holding-circle',color:'#fda4af'},
     {id:'facepalm',label:'Facepalm',icon:'fa-face-rolling-eyes',color:'#cbd5e1'},
     {id:'sad',label:'Sad',icon:'fa-face-sad-tear',color:'#7dd3fc'},
-    {id:'cute',label:'Cute',icon:'fa-face-grin-hearts',color:'#f9a8d4'},
   ];
   // Fisher–Yates shuffle so the category order (incl. Fortized) is randomised
   // on every open; Favourites + Trending stay pinned as the first two cards.
@@ -38588,7 +38587,7 @@ function renderGiphyResults(gifs, inputId) {
     grid.innerHTML = '<div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:8px;"><div style="font-size:24px;opacity:.4;">🔍</div><div style="font-size:12px;color:rgba(255,255,255,.25);">No GIFs found</div></div>';
     return;
   }
-  grid.innerHTML = gifs.map(g => {
+  grid.innerHTML = '<div class="gif-masonry">' + gifs.map(g => {
     const thumb = _klipyGifUrl(g, 'hd') || _klipyGifUrl(g, 'md') || _klipyGifUrl(g, 'sm') || _klipyGifUrl(g, 'xs');
     const fullUrl = _klipyGifUrl(g, 'hd') || _klipyGifUrl(g, 'md') || thumb;
     const gid = g.slug || g.id || ('klipy-' + Math.random().toString(36).slice(2,8));
@@ -38600,7 +38599,7 @@ function renderGiphyResults(gifs, inputId) {
       </div>
       <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${escapeHTML(fullUrl)}'})" title="Collect" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:none;border:1px solid rgba(255,255,255,.1);color:#ffd93e;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;"><i class="fa-solid fa-bookmark"></i></button>
     </div>`;
-  }).join('');
+  }).join('') + '</div>';
   grid.querySelectorAll('.gif-card').forEach(card => {
     const ov = card.querySelector('.gif-hover-overlay');
     const fav = card.querySelector('.gif-fav-btn');

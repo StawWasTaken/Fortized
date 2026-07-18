@@ -523,6 +523,35 @@ const FortizedSocial = (() => {
     } catch (e) { console.warn('[media] ' + kind + ' upload exception, keeping inline data URL:', e?.message); return null; }
   }
 
+  // A Supabase write that transiently fails at the network layer — a
+  // NetworkError / "Failed to fetch", most often the project throttling us
+  // over the egress quota — used to silently drop the write, which is why
+  // saved avatars intermittently never persisted (confirmed from a live
+  // [saveUserObject] UPDATE FAILED: … NetworkError). Retry those transient
+  // failures a few times with backoff. Real errors (constraint, auth, HTTP
+  // status) carry a code and are NOT retried.
+  function _isTransientWriteErr(error) {
+    if (!error) return false;
+    if (error.code) return false; // Postgres/HTTP error → not a transient network drop
+    const m = (error.message || '').toLowerCase();
+    return m.includes('networkerror') || m.includes('failed to fetch') || m.includes('network request failed') || m.includes('load failed') || m.includes('fetch');
+  }
+  async function _usersWriteRetry(kind, changed, uname, tries) {
+    tries = tries || 3;
+    let last = null;
+    for (let i = 0; i < tries; i++) {
+      let error;
+      if (kind === 'upsert') ({ error } = await sb.from('users').upsert(changed, { onConflict: 'username' }));
+      else ({ error } = await sb.from('users').update(changed).eq('username', uname));
+      if (!error) return { error: null, attempts: i + 1 };
+      last = error;
+      if (!_isTransientWriteErr(error) || i === tries - 1) break;
+      console.warn('[saveUserObject] transient write failure (attempt ' + (i + 1) + '/' + tries + '), retrying:', error.message);
+      await new Promise(r => setTimeout(r, 500 * Math.pow(2, i))); // 0.5s, 1s, 2s
+    }
+    return { error: last, attempts: tries };
+  }
+
   // saveUserObject(user)             — implicit: diff vs baseline, guarded
   // saveUserObject(user, {fields})   — explicit: write exactly these fields,
   //                                    empties included (how clears persist)
@@ -553,7 +582,7 @@ const FortizedSocial = (() => {
         console.warn('[saveUserObject] BLOCKED transparent pfp on INSERT for ' + uname + ' — storing blank instead.');
         desired.pfp = '';
       }
-      const { error } = await sb.from('users').upsert(desired, { onConflict: 'username' });
+      const { error } = await _usersWriteRetry('upsert', desired, uname);
       if (error) {
         console.error('[saveUserObject] INSERT FAILED:', error.message, error.code);
         throw new Error(`Upsert failed: ${error.message}`);
@@ -654,13 +683,14 @@ const FortizedSocial = (() => {
         const _cols = Object.keys(changed);
         let _bytes = 0; try { _bytes = JSON.stringify(changed).length; } catch (_) {}
         try { if (typeof window !== 'undefined' && changed.pfp !== undefined) window._ftzAvatarTrace?.('3-db-write', changed.pfp, { note: 'exact bytes sent to users.update', cols: _cols.join(',') }); } catch (_) {}
-        const { error } = await sb.from('users').update(changed).eq('username', uname);
+        const { error, attempts } = await _usersWriteRetry('update', changed, uname);
         if (error) {
-          const _msg = '[' + _cols.join(', ') + '] ' + _bytes + 'B — ' + error.message + ' (' + (error.code || 'no-code') + ')';
+          const _msg = '[' + _cols.join(', ') + '] ' + _bytes + 'B — ' + error.message + ' (' + (error.code || 'no-code') + ') after ' + attempts + ' attempt(s)';
           console.error('[saveUserObject] UPDATE FAILED:', _msg);
           try { if (typeof window !== 'undefined') window._ftzLastDbError = _msg; } catch (_) {}
           throw new Error(`Update failed: ${error.message}`);
         }
+        if (attempts > 1) console.info('[saveUserObject] write succeeded on attempt ' + attempts + ' for', uname);
         try { if (typeof window !== 'undefined') window._ftzLastDbError = null; } catch (_) {}
         _lastRowByUser[uname] = { ...base, ...changed };
         // console.info (not .debug) so the write trail is visible in a

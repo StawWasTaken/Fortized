@@ -21693,23 +21693,15 @@ function _hydrateEmojiSection(shell) {
 function _wireEmojiLazyHydrator() {
   const grid = document.getElementById('epp-grid');
   if (!grid) return;
-  if (grid._eppLazyObs) { try { grid._eppLazyObs.disconnect(); } catch {} }
-  const shells = Array.from(grid.querySelectorAll('.epp-section-grid.epp-lazy'));
-  if (!shells.length) return;
-  // Hydrate the first 2 shells immediately so the picker isn't blank on open.
-  shells.slice(0, 2).forEach(_hydrateEmojiSection);
-  const remaining = shells.filter(s => s.classList.contains('epp-lazy'));
-  if (!remaining.length) return;
-  const obs = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        _hydrateEmojiSection(e.target);
-        obs.unobserve(e.target);
-      }
-    });
-  }, { root: grid, rootMargin: '400px 0px', threshold: 0 });
-  remaining.forEach(s => obs.observe(s));
-  grid._eppLazyObs = obs;
+  if (grid._eppLazyObs) { try { grid._eppLazyObs.disconnect(); } catch {} grid._eppLazyObs = null; }
+  // Hydrate EVERY section up front. Lazy hydration via IntersectionObserver
+  // raced with the picker's open animation: while the panel was mid-transform
+  // the observer computed the wrong intersection, so some sections never
+  // hydrated ("not every emoji loads") and the sections that filled a frame
+  // after the panel appeared caused the open flicker. The full emoji set is
+  // small enough to build in one synchronous pass, and it happens while the
+  // panel is still display:none — so it slides in fully populated, no flash.
+  grid.querySelectorAll('.epp-section-grid.epp-lazy').forEach(_hydrateEmojiSection);
 }
 
 function renderEmojiGrid() {
@@ -38247,36 +38239,38 @@ function openGiphyPicker(inputId) {
 
   const esc = escapeHTML(_giphyInput);
   const favCount = getFavGifs().length;
-  const categories = [
-    {id:'trending',label:'Trending',emoji:'🔥',color:'#ff6b35'},
-    {id:'reactions',label:'Reactions',emoji:'😂',color:'#ffd93e'},
-    {id:'love',label:'Love',emoji:'❤️',color:'#ff4d6d'},
-    {id:'gaming',label:'Gaming',emoji:'🎮',color:'#3ecf6e'},
-    {id:'laughing',label:'Laughing',emoji:'🤣',color:'#ffe066'},
-    // "Fortized" — search by the brand tag. Klipy uploads tagged
-    // "fortized" / "Fortized" / "Fortized bastion" (incl. uploads
-    // from @staw) surface here. Was an unrelated "castle knight"
-    // query that returned generic medieval results.
-    {id:'fortized',label:'Fortized',emoji:'🏰',color:'#fff93e'},
-    {id:'excited',label:'Excited',emoji:'🎉',color:'#c084fc'},
-    {id:'angry',label:'Angry',emoji:'😡',color:'#f87171'},
-    {id:'dance',label:'Dance',emoji:'💃',color:'#f472b6'},
-    {id:'thumbs up',label:'Approve',emoji:'👍',color:'#34d399'},
-    {id:'thinking',label:'Thinking',emoji:'🤔',color:'#a78bfa'},
-    {id:'anime',label:'Anime',emoji:'🎌',color:'#fb7185'},
-    {id:'animals',label:'Animals',emoji:'🐱',color:'#fdba74'},
-    {id:'sports',label:'Sports',emoji:'⚽',color:'#38bdf8'},
-    {id:'food',label:'Food',emoji:'🍕',color:'#fb923c'},
-    {id:'nature',label:'Nature',emoji:'🌿',color:'#4ade80'},
-    {id:'meme',label:'Memes',emoji:'🗿',color:'#94a3b8'},
-    {id:'celebrities',label:'Celebs',emoji:'🌟',color:'#fbbf24'},
-    {id:'hello',label:'Hello',emoji:'👋',color:'#a3e635'},
-    {id:'yes',label:'Yes',emoji:'✅',color:'#22c55e'},
-    {id:'no',label:'No',emoji:'❌',color:'#ef4444'},
-    {id:'please',label:'Please',emoji:'🥺',color:'#c4b5fd'},
-    {id:'hug',label:'Hugs',emoji:'🤗',color:'#fda4af'},
-    {id:'facepalm',label:'Facepalm',emoji:'🤦',color:'#cbd5e1'},
+  // Category pool. Everything except Favourites + Trending is shuffled on
+  // each open (Fortized rides along in the shuffle). Icons are FontAwesome.
+  const catPool = [
+    {id:'reactions',label:'Reactions',icon:'fa-face-laugh-squint',color:'#ffd93e'},
+    {id:'love',label:'Love',icon:'fa-heart',color:'#ff4d6d'},
+    {id:'gaming',label:'Gaming',icon:'fa-gamepad',color:'#3ecf6e'},
+    {id:'laughing',label:'Laughing',icon:'fa-face-laugh-beam',color:'#ffe066'},
+    // "Fortized" — search by the brand tag (Klipy uploads tagged fortized).
+    {id:'fortized',label:'Fortized',icon:'fa-chess-rook',color:'#fff93e'},
+    {id:'excited',label:'Excited',icon:'fa-face-grin-stars',color:'#c084fc'},
+    {id:'angry',label:'Angry',icon:'fa-face-angry',color:'#f87171'},
+    {id:'dance',label:'Dance',icon:'fa-music',color:'#f472b6'},
+    {id:'thumbs up',label:'Approve',icon:'fa-thumbs-up',color:'#34d399'},
+    {id:'thinking',label:'Thinking',icon:'fa-brain',color:'#a78bfa'},
+    {id:'anime',label:'Anime',icon:'fa-torii-gate',color:'#fb7185'},
+    {id:'animals',label:'Animals',icon:'fa-paw',color:'#fdba74'},
+    {id:'sports',label:'Sports',icon:'fa-futbol',color:'#38bdf8'},
+    {id:'food',label:'Food',icon:'fa-pizza-slice',color:'#fb923c'},
+    {id:'nature',label:'Nature',icon:'fa-leaf',color:'#4ade80'},
+    {id:'meme',label:'Memes',icon:'fa-face-grin-squint-tears',color:'#94a3b8'},
+    {id:'celebrities',label:'Celebs',icon:'fa-star',color:'#fbbf24'},
+    {id:'hello',label:'Hello',icon:'fa-hand',color:'#a3e635'},
+    {id:'yes',label:'Yes',icon:'fa-check',color:'#22c55e'},
+    {id:'no',label:'No',icon:'fa-xmark',color:'#ef4444'},
+    {id:'please',label:'Please',icon:'fa-hands-praying',color:'#c4b5fd'},
+    {id:'hug',label:'Hugs',icon:'fa-hands-holding-circle',color:'#fda4af'},
+    {id:'facepalm',label:'Facepalm',icon:'fa-face-rolling-eyes',color:'#cbd5e1'},
   ];
+  // Fisher–Yates shuffle so the category order (incl. Fortized) is randomised
+  // on every open; Favourites + Trending stay pinned as the first two cards.
+  for (let i = catPool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [catPool[i], catPool[j]] = [catPool[j], catPool[i]]; }
+  const restCats = catPool;
 
   picker.innerHTML = `
     ${_pickerTopTabs('gif')}
@@ -38289,15 +38283,15 @@ function openGiphyPicker(inputId) {
     <div id="gif-collection-view" class="gif-collection-grid">
       <div class="gif-collection-card gcc-fav" onclick="_gifCollectionPick('favourites','${esc}')">
         <div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(167,139,250,.08));"></div>
-        <div class="gcc-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Favourites</div>
+        <div class="gcc-label"><i class="fa-solid fa-star" style="color:var(--accent);font-size:14px;"></i>Favourites</div>
       </div>
       <div class="gif-collection-card" onclick="_gifCollectionPick('trending','${esc}')">
         <img src="" data-cat-preview="trending" alt="">
-        <div class="gcc-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Trending GIFs</div>
+        <div class="gcc-label"><i class="fa-solid fa-arrow-trend-up" style="font-size:13px;"></i>Trending GIFs</div>
       </div>
-      ${categories.filter(c=>c.id!=='trending').map(c => `<div class="gif-collection-card" onclick="_gifCollectionPick('${c.id}','${esc}')">
+      ${restCats.map(c => `<div class="gif-collection-card" onclick="_gifCollectionPick('${c.id}','${esc}')">
         <img src="" data-cat-preview="${c.id}" alt="">
-        <div class="gcc-label">${c.label}</div>
+        <div class="gcc-label"><i class="fa-solid ${c.icon}" style="color:${c.color};font-size:13px;"></i>${c.label}</div>
       </div>`).join('')}
     </div>
     <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;display:none;"></div>
@@ -38366,7 +38360,6 @@ function _gifBackToCollections(inputId) {
 // Load preview GIF thumbnails for collection cards
 async function _loadCollectionPreviews() {
   const previewCards = document.querySelectorAll('[data-cat-preview]');
-  console.info('[Klipy] _loadCollectionPreviews start, cards=', previewCards.length);
   if (!previewCards.length) return;
   const _pickPreviewUrl = (item) => {
     if (!item) return '';
@@ -38375,42 +38368,26 @@ async function _loadCollectionPreviews() {
         || _klipyGifUrl(item, 'md')
         || _klipyGifUrl(item, 'hd');
   };
-  // Load trending preview
+  // ONE trending fetch (the proven-reliable endpoint) whose GIFs are spread
+  // across every collection card, so the panel shows GIFs the instant it
+  // opens. The old code fired ~25 near-simultaneous Klipy requests (one per
+  // category) which Klipy rate-limited — leaving every card blank, which is
+  // exactly the "GIFs don't show on open" bug. Cached for the session so
+  // re-opens are instant and cost nothing.
   try {
-    const cid = CU?.username || 'anon';
-    const res = await fetch(KLIPY_BASE + '/gifs/trending?per_page=6&content_filter=medium&customer_id=' + encodeURIComponent(cid));
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    const items = _klipyExtractItems(data);
-    console.info('[Klipy] trending preview items=', items.length, items[0]);
-    const trendCard = document.querySelector('[data-cat-preview="trending"]');
-    if (trendCard && items[0]) {
-      const url = _pickPreviewUrl(items[0]);
-      console.info('[Klipy] trending preview url=', url);
-      if (url) trendCard.src = url;
+    let urls = window._klipyPreviewUrls;
+    if (!Array.isArray(urls) || !urls.length) {
+      const cid = CU?.username || 'anon';
+      const res = await fetch(KLIPY_BASE + '/gifs/trending?per_page=40&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const items = _klipyExtractItems(data);
+      urls = items.map(_pickPreviewUrl).filter(Boolean);
+      window._klipyPreviewUrls = urls;
     }
-  } catch (e) { console.warn('[Klipy] trending preview fetch failed:', e); }
-  const cats = [...previewCards].filter(c => c.dataset.catPreview !== 'trending');
-  for (let i = 0; i < cats.length; i += 4) {
-    const batch = cats.slice(i, i + 4);
-    await Promise.allSettled(batch.map(async (card) => {
-      const cat = card.dataset.catPreview;
-      try {
-        const cid = CU?.username || 'anon';
-        const res = await fetch(KLIPY_BASE + '/gifs/search?q=' + encodeURIComponent(cat) + '&per_page=1&content_filter=medium&customer_id=' + encodeURIComponent(cid));
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const items = _klipyExtractItems(data);
-        if (items[0]) {
-          const url = _pickPreviewUrl(items[0]);
-          if (url) card.src = url;
-          else console.warn('[Klipy] category "' + cat + '" — no usable URL on item', items[0]);
-        } else {
-          console.warn('[Klipy] category "' + cat + '" — no items, raw=', data);
-        }
-      } catch (e) { console.warn('[Klipy] category "' + cat + '" fetch failed:', e); }
-    }));
-  }
+    if (!urls.length) return;
+    previewCards.forEach((card, i) => { const u = urls[i % urls.length]; if (u) card.src = u; });
+  } catch (e) { console.warn('[Klipy] collection previews failed:', e?.message); }
 }
 
 function _giphyOutsideClose(e) {
@@ -38689,7 +38666,7 @@ function _renderStickers(stickers) {
     return;
   }
   grid.innerHTML = stickers.map(s => `
-    <div class="spp-sticker" onclick="_sendSticker('${escapeHTML(s.url||'')}','${escapeHTML(s.name||'sticker')}')" title="${escapeHTML(s.name||'Sticker')}${s.bastionName?' — '+escapeHTML(s.bastionName):''}">
+    <div class="spp-sticker" onclick="_sendSticker('${escapeHTML(s.url||'')}','${escapeHTML(s.name||'sticker')}')">
       <img src="${escapeHTML(s.url||'')}" alt="${escapeHTML(s.name||'')}" loading="lazy" draggable="false">
     </div>
   `).join('');
@@ -38716,7 +38693,7 @@ function _filterStickerBastion(bastionIdx, event) {
       return;
     }
     grid.innerHTML = filtered.map(s => `
-      <div class="spp-sticker" onclick="_sendSticker('${escapeHTML(s.url||'')}','${escapeHTML(s.name||'sticker')}')" title="${escapeHTML(s.name||'Sticker')}">
+      <div class="spp-sticker" onclick="_sendSticker('${escapeHTML(s.url||'')}','${escapeHTML(s.name||'sticker')}')">
         <img src="${escapeHTML(s.url||'')}" alt="${escapeHTML(s.name||'')}" loading="lazy" draggable="false">
       </div>
     `).join('');

@@ -12507,7 +12507,7 @@ function _openReactionEmojiPicker(x, y, msgId, context, trigger) {
     }
   }
   // Position relative to the trigger button if we have one; otherwise the click point
-  const PW = Math.min(448, window.innerWidth - 16);
+  const PW = Math.min(460, window.innerWidth - 16);
   const PH = 440;
   let left, top;
   if (trigger && trigger.getBoundingClientRect) {
@@ -21515,7 +21515,7 @@ function toggleEmojiPicker(targetId) {
   const refEl = document.getElementById(targetId);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
   // Clamp panel width to viewport so the sidebar is never clipped off-screen.
-  const PW = Math.min(448, window.innerWidth - 16);
+  const PW = Math.min(460, window.innerWidth - 16);
   const PH = 440;
   let left, top = null, bottom = null;
   if (outerEl) {
@@ -21559,22 +21559,36 @@ function toggleEmojiPicker(targetId) {
   setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 100);
 }
 
+// Unified top tab bar shared by all four chat pickers (GIFs / Stickers / Emoji
+// / Bots). FontAwesome icons throughout; the active tab's icon inherits the
+// accent via currentColor. Adding "Bots" here makes the bot-command panel a
+// first-class member of the single tabbed popover.
 function _pickerTopTabs(active) {
-  const _gifSvg = `<svg class="svgrepo-icon" viewBox="0 0 24 24" fill="#212121"><path d="M18.75,3.5C20.54,3.5 22,4.96 22,6.75V17.25C22,19.05 20.54,20.5 18.75,20.5H5.25C3.46,20.5 2,19.05 2,17.25V6.75C2,4.96 3.46,3.5 5.25,3.5H18.75ZM8.01,8.87C6.39,8.87 5.26,10.28 5.26,12C5.26,13.71 6.39,15.12 8.01,15.12C8.9,15.12 9.72,14.69 10.13,13.91L10.2,13.74L10.23,13.67L10.24,13.6L10.25,13.52L10.25,12L10.25,11.9C10.21,11.64 10,11.42 9.73,11.38L9.63,11.37H8.63L8.53,11.38C8.26,11.42 8.05,11.63 8.01,11.89L8,12L8.01,12.09C8.05,12.36 8.26,12.57 8.52,12.61L8.63,12.62H9V13.35L8.99,13.37C8.81,13.69 8.44,13.87 8.01,13.87C7.15,13.87 6.51,13.07 6.51,12C6.51,10.92 7.15,10.12 8.01,10.12C8.44,10.12 8.68,10.17 8.98,10.31C9.29,10.46 9.66,10.33 9.81,10.02C9.96,9.71 9.83,9.33 9.52,9.19C9.03,8.95 8.61,8.87 8.01,8.87ZM12.63,8.99C12.32,8.99 12.06,9.23 12.01,9.53L12,9.62V14.38L12.01,14.47C12.06,14.77 12.32,15.01 12.63,15.01C12.94,15.01 13.2,14.77 13.25,14.47L13.25,14.38V9.62L13.25,9.53C13.2,9.23 12.94,8.99 12.63,8.99ZM17.62,9L15.62,8.99C15.31,8.99 15.05,9.22 15,9.52L15,9.62V14.36L15,14.46C15.04,14.73 15.25,14.94 15.52,14.98L15.62,14.99L15.71,14.98C15.98,14.94 16.2,14.73 16.24,14.47L16.25,14.36V13.25H17.37L17.46,13.24C17.73,13.2 17.94,12.99 17.99,12.73L18,12.63L17.99,12.53C17.95,12.27 17.74,12.05 17.47,12.01L17.37,12L16.25,12V10.24L17.62,10.25L17.71,10.24C18.01,10.2 18.24,9.94 18.25,9.63C18.25,9.31 18.02,9.05 17.71,9.01L17.62,9Z"/></svg>`;
-  const _stickerSvg = `<svg class="svgrepo-icon" viewBox="0 0 24 24" fill="#212121"><path d="M17.75,3C19.54,3 21,4.46 21,6.25V13L16.25,13L16.04,13.01C14.84,13.08 13.82,13.81 13.32,14.84C12.9,14.95 12.46,15.01 12,15.01C10.96,15.01 10.02,14.72 9.18,14.14C8.84,13.9 8.37,13.99 8.13,14.33C7.9,14.67 7.98,15.13 8.32,15.37C9.42,16.13 10.65,16.51 12,16.51C12.23,16.51 12.45,16.5 12.67,16.48L13,16.44L13,21L6.25,21C4.46,21 3,19.54 3,17.75L3,6.25C3,4.46 4.46,3 6.25,3L17.75,3ZM20.34,14.72L14.72,20.34C14.65,20.41 14.58,20.47 14.5,20.53L14.5,16.25L14.51,16.11C14.58,15.26 15.25,14.58 16.1,14.51L16.25,14.5L20.53,14.5C20.47,14.58 20.41,14.65 20.34,14.72ZM9,7.75C8.31,7.75 7.75,8.31 7.75,9C7.75,9.69 8.31,10.25 9,10.25C9.69,10.25 10.25,9.69 10.25,9C10.25,8.31 9.69,7.75 9,7.75ZM15,7.75C14.31,7.75 13.75,8.31 13.75,9C13.75,9.69 14.31,10.25 15,10.25C15.69,10.25 16.25,9.69 16.25,9C16.25,8.31 15.69,7.75 15,7.75Z"/></svg>`;
-  const _emojiSvg = `<svg class="svgrepo-icon" viewBox="0 0 24 24" fill="#212121"><path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2ZM14.49,9.36C14.43,9.77 14.05,10.05 13.64,9.99C13.23,9.93 12.95,9.55 13.01,9.14C13.17,8.05 14.13,7.25 15.25,7.25C16.37,7.25 17.33,8.05 17.49,9.14C17.55,9.55 17.27,9.93 16.86,9.99C16.45,10.05 16.07,9.77 16.01,9.36C15.96,9.04 15.66,8.75 15.25,8.75C14.84,8.75 14.54,9.04 14.49,9.36ZM12,18C8.86,18 6.76,15.64 6.5,12.75H17.5C17.24,15.64 15.14,18 12,18ZM8.75,8.75C8.34,8.75 8.04,9.04 7.99,9.36C7.93,9.77 7.55,10.05 7.14,9.99C6.73,9.93 6.45,9.55 6.51,9.14C6.67,8.05 7.63,7.25 8.75,7.25C9.87,7.25 10.83,8.05 10.99,9.14C11.05,9.55 10.77,9.93 10.36,9.99C9.95,10.05 9.57,9.77 9.51,9.36C9.46,9.04 9.16,8.75 8.75,8.75Z"/></svg>`;
+  const tab = (id, icon, label) =>
+    `<button class="picker-top-tab${active===id?' active':''}" onclick="_switchPickerTab('${id}')"><i class="fa-solid ${icon}"></i>${label}</button>`;
   return `<div class="picker-top-tabs">
-    <button class="picker-top-tab${active==='gif'?' active':''}" onclick="_switchPickerTab('gif')">${_gifSvg}GIFs</button>
-    <button class="picker-top-tab${active==='sticker'?' active':''}" onclick="_switchPickerTab('sticker')">${_stickerSvg}Stickers</button>
-    <button class="picker-top-tab${active==='emoji'?' active':''}" onclick="_switchPickerTab('emoji')">${_emojiSvg}Emoji</button>
+    ${tab('gif','fa-film','GIFs')}
+    ${tab('sticker','fa-note-sticky','Stickers')}
+    ${tab('emoji','fa-face-smile','Emoji')}
+    ${tab('bots','fa-robot','Bots')}
   </div>`;
 }
 function _switchPickerTab(tab) {
-  const target = activeEmojiTarget || _giphyInput || _stickerInput || 'ch-input';
-  if (tab === 'gif') { document.getElementById('emoji-picker')?.classList.remove('show'); document.getElementById('sticker-picker')?.remove(); openGiphyPicker(target); }
-  else if (tab === 'sticker') { document.getElementById('emoji-picker')?.classList.remove('show'); document.getElementById('giphy-picker')?.remove(); openStickerPicker(target); }
+  const target = activeEmojiTarget || _giphyInput || _stickerInput || _botcmdInput || 'ch-input';
+  // Tear down every sibling panel so exactly one lives at a time; the shared
+  // tab bar + consistent anchoring make the swap read as one popover.
+  document.getElementById('emoji-picker')?.classList.remove('show');
+  document.getElementById('giphy-picker')?.remove();
+  document.getElementById('sticker-picker')?.remove();
+  document.getElementById('botcmd-picker')?.remove();
+  if (tab === 'gif') { openGiphyPicker(target); }
+  else if (tab === 'sticker') { openStickerPicker(target); }
+  else if (tab === 'bots') {
+    // Bot commands only exist in a bastion channel; elsewhere the panel shows
+    // its own empty state. Infer the context from the input the picker is on.
+    openBotCommandPanel(target, target === 'ch-input' ? 'ch' : 'other');
+  }
   else {
-    document.getElementById('giphy-picker')?.remove(); document.getElementById('sticker-picker')?.remove();
     // Force-open emoji picker (don't toggle off)
     activeEmojiTarget = target;
     const panel = document.getElementById('emoji-picker');
@@ -21586,23 +21600,27 @@ function buildEmojiPicker() {
   const panel = document.getElementById('emoji-picker');
   if (!panel) return;
 
+  // Column layout: a full-width tab bar on top (spanning the right rail too, so
+  // it reads as one popover), then a row of [main | right icon rail].
   panel.innerHTML = `
-    <div class="epp-main">
-      ${_pickerTopTabs('emoji')}
-      <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;">
-        <div style="position:relative;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="epp-search-inp" placeholder="Search" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12px;padding:8px 12px 8px 32px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" oninput="searchEmojis(this.value)">
+    ${_pickerTopTabs('emoji')}
+    <div class="epp-body">
+      <div class="epp-main">
+        <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;">
+          <div style="position:relative;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="epp-search-inp" placeholder="Search" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12px;padding:8px 12px 8px 32px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" oninput="searchEmojis(this.value)">
+          </div>
+        </div>
+        <div id="epp-grid" style="flex:1;overflow-y:auto;padding:0 8px 8px;max-height:340px;position:relative;"></div>
+        <div class="epp-footer">
+          <span id="epp-hover-label">Select an emoji</span>
+          <button onclick="_showEmojiInfo()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:12px;padding:2px;" title="Emoji Info"><i class="fa-solid fa-circle-info"></i></button>
         </div>
       </div>
-      <div id="epp-grid" style="flex:1;overflow-y:auto;padding:0 8px 8px;max-height:340px;position:relative;"></div>
-      <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);font-size:10px;color:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-        <span id="epp-hover-label">Select an emoji</span>
-        <button onclick="_showEmojiInfo()" style="background:none;border:none;color:rgba(255,255,255,.15);cursor:pointer;font-size:12px;padding:2px;" title="Emoji Info">ℹ</button>
+      <div class="epp-sidebar" id="epp-sidebar">
+        ${buildEmojiSidebar()}
       </div>
-    </div>
-    <div class="epp-sidebar" id="epp-sidebar">
-      ${buildEmojiSidebar()}
     </div>
   `;
   renderEmojiGrid();
@@ -38849,7 +38867,9 @@ function _stickerOutsideClose(e) {
 // ════════════════════════════════════════════
 // BOT COMMAND SHORTCUT PANEL
 // ════════════════════════════════════════════
+let _botcmdInput = 'ch-input';
 function openBotCommandPanel(inputId, context) {
+  _botcmdInput = inputId || 'ch-input';
   document.getElementById('botcmd-picker')?.remove();
   document.getElementById('sticker-picker')?.remove();
   document.getElementById('giphy-picker')?.remove();
@@ -38861,7 +38881,7 @@ function openBotCommandPanel(inputId, context) {
   const picker = document.createElement('div');
   picker.id = 'botcmd-picker';
   picker.className = 'chat-picker-base botcmd-panel';
-  const botLeft = Math.max(8, _getChatInputRight() - 420);
+  const botLeft = Math.max(8, _getChatInputRight() - 460);
   picker.style.cssText = `left:${botLeft}px;bottom:${window.innerHeight-rect.top+6}px;`;
 
   // Gather bot commands from current bastion
@@ -38879,8 +38899,9 @@ function openBotCommandPanel(inputId, context) {
   }
 
   picker.innerHTML = `
+    ${_pickerTopTabs('bots')}
     <div class="bcp-header">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      <i class="fa-solid fa-terminal" style="font-size:13px;"></i>
       Bot Commands
       <span style="font-size:8.5px;color:rgba(96,165,250,.45);letter-spacing:.08em;font-weight:700;text-transform:uppercase;margin-left:auto;background:rgba(96,165,250,.06);padding:3px 9px;border-radius:var(--radius-pill);border:1px solid rgba(96,165,250,.1);">${commands.length} cmd${commands.length!==1?'s':''}</span>
     </div>
@@ -39476,7 +39497,7 @@ function _ftzCspOpenEmoji() {
   window._emojiInsertCallback = window._ftzCspEmojiCallback;
 
   const rect = btn.getBoundingClientRect();
-  const PW = Math.min(448, window.innerWidth - 16);
+  const PW = Math.min(460, window.innerWidth - 16);
   const PH = 440;
   let left = Math.max(8, rect.left - PW + rect.width);
   left = Math.min(left, window.innerWidth - PW - 8);
@@ -50694,7 +50715,7 @@ function _ftzCsrOpenEmoji() {
   window._emojiInsertCallback = window._ftzCsrEmojiCallback;
 
   const rect = btn.getBoundingClientRect();
-  const PW = Math.min(448, window.innerWidth - 16);
+  const PW = Math.min(460, window.innerWidth - 16);
   const PH = 440;
   let left = Math.max(8, rect.left - PW + rect.width);
   left = Math.min(left, window.innerWidth - PW - 8);

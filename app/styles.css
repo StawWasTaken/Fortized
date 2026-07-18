@@ -1580,7 +1580,10 @@ body.staw-frozen::before{
 .cit-botcmd::after{content:'Bot Commands';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%) scale(.9);background:var(--panel2);color:rgba(255,255,255,.7);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;border:1px solid var(--border);}
 .cit-botcmd:hover::after{opacity:1;transform:translateX(-50%) scale(1);}
 /* ── Chat Picker Panel (shared base for stickers, bot cmds, GIF) ── */
-.chat-picker-base{position:fixed;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:16px;z-index:8500;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
+/* Solid background — no backdrop-filter. The blur re-composited mid-open on
+   these content-heavy panels and caused the emoji flicker; a solid Fortized
+   dark surface fixes it and reads as one cohesive popover. */
+.chat-picker-base{position:fixed;background:var(--pk-bg,#171a22);border:1px solid var(--glass-border);border-radius:16px;z-index:8500;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
 @keyframes pickerSlideIn{from{opacity:0;transform:translateY(10px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
 .chat-picker-header{padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px;background:transparent;}
 .chat-picker-header .cph-title{font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:-.02em;}
@@ -1590,9 +1593,12 @@ body.staw-frozen::before{
 .chat-picker-search input:focus{border-color:rgba(255,249,62,.25);background:rgba(255,255,255,.06);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
 .chat-picker-search input::placeholder{color:rgba(255,255,255,.2);}
 .chat-picker-search svg{position:absolute;left:28px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,.2);}
-/* Unified picker top tabs (GIFs | Stickers | Emoji) */
+/* Unified picker top tabs (GIFs | Stickers | Emoji | Bots) — FontAwesome icons
+   inherit the tab colour via currentColor, so the active tab's icon turns gold
+   automatically. */
 .picker-top-tabs{display:flex;gap:0;padding:0;flex-shrink:0;background:var(--panel2,rgba(0,0,0,.18));border-bottom:1px solid var(--border,rgba(255,255,255,.05));}
 .picker-top-tab{flex:1;padding:12px 0;font-family:var(--font-display);font-size:12.5px;font-weight:700;color:rgba(255,255,255,.3);cursor:pointer;text-align:center;border:none;background:transparent;transition:all .16s;border-bottom:2px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:7px;}
+.picker-top-tab i{font-size:14px;line-height:1;}
 .picker-top-tab .svgrepo-icon{width:16px;height:16px;}
 .picker-top-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.03);}
 .picker-top-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.04);}
@@ -4173,7 +4179,14 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
    variants (modal-overlay at 1000, .gdm-overlay at 9999, the unified
    .rpt-modal at 10020). Without this the picker opened BEHIND the
    settings modal when triggered from the About-Me textarea. */
-.emoji-picker-panel{position:fixed;width:448px;max-width:calc(100vw - 16px);max-height:520px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:14px;padding:0;z-index:11000;box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.035);display:none;flex-direction:row;overflow:hidden;font-family:var(--font-ui);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);}
+/* Solid background — no backdrop-filter (see .chat-picker-base note). Width
+   matches the other pickers (460) so switching tabs never resizes the popover. */
+.emoji-picker-panel{position:fixed;width:460px;max-width:calc(100vw - 16px);max-height:520px;background:var(--pk-bg,#171a22);border:1px solid var(--glass-border);border-radius:14px;padding:0;z-index:11000;box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.035);display:none;flex-direction:column;overflow:hidden;font-family:var(--font-ui);}
+/* Row below the full-width tab bar: emoji grid (main) + the right icon rail. */
+.epp-body{display:flex;flex-direction:row;flex:1 1 auto;min-height:0;overflow:hidden;}
+/* Guilded-style hover footer: shows the emoji you're pointing at. */
+.epp-footer{padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);font-size:10px;color:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px;}
+.epp-footer #epp-hover-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* Opacity-only entrance. The shared pickerSlideIn animates transform+scale,
    which — on this backdrop-filtered, content-heavy panel — flickered/"stuck"
    as the blur re-composited mid-transform. A plain fade avoids it. Applied

@@ -1,12 +1,43 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix307`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix309`)
 
-Branch `claude/staff-console-world-map-emxyxn`, mirrored to `main`. Standing
+Branch `claude/staff-console-world-map-bp1xnh`, mirrored to `main`. Standing
 rules below still apply (egress, mirror-to-main + bump cache-bust every push,
 `node --check` + 42 relationship tests pre-commit).
 
-**Done recently (chat pickers + avatar):**
+**Done THIS session (`2026fix309`) — tabbed picker + avatar render paths:**
+- **Tabbed picker redesign shipped.** The four chat pickers now live under ONE
+  shared 4-tab bar — **GIFs / Stickers / Emoji / Bots** (`_pickerTopTabs`,
+  `_switchPickerTab`). Bots is now a first-class tab (`openBotCommandPanel`
+  carries the bar + `_botcmdInput`; context inferred from the input id).
+  - **FontAwesome tab icons** (`fa-film`/`fa-note-sticky`/`fa-face-smile`/
+    `fa-robot`) — `currentColor`, so the active tab's icon turns gold.
+  - **Solid background, NO `backdrop-filter`** on `.chat-picker-base` +
+    `.emoji-picker-panel` (`--pk-bg,#171a22`) — this was the emoji flicker.
+  - **Emoji panel restructured to a column**: full-width tab bar on top, then a
+    `.epp-body` row of `[.epp-main grid | .epp-sidebar right icon rail]`, then a
+    Guilded-style `.epp-footer` (`#epp-hover-label`) showing the hovered emoji.
+  - All four panels unified to **460px** + same chat-input anchoring so
+    switching tabs never resizes/jumps the popover.
+  - NOTE: did NOT rebuild `buildEmojiPicker` from scratch — the grid already
+    eager-renders every section (`_wireEmojiLazyHydrator`), so the flicker +
+    "not every emoji loads" race the old handoff wanted fixed was already gone.
+    Reskinned the working eager-render instead. (The `panelkit.html` mockup was
+    lost with the old scratchpad; rebuilt from the spec in this file.)
+- **Avatar render paths routed through `buildAvatarHTML`** (priority 2). Raw
+  `<img src=pfp>` self/member renders only recovered *truncated* data-URLs (via
+  onerror); valid-but-transparent PNGs loaded clean and showed an invisible
+  circle. Converted: rail userbar self-avatar (`#rail-ub-avatar`, 34), settings
+  ID-tile self (`_navPfp`, 42), display-name preview (`_dnAvHtml`), member-list
+  row (`.gc-ml-av`, 30) + DM/member rows (`.ml-av-wrap`, 34, both crop + plain
+  render branches). LEFT raw (not the reported bug, higher conversion risk):
+  bot avatars (`bot.avatar` — not user pfps), forum author avatars
+  (`author_pfp`, separate DB field), trade/staff-dossier/reseller, and the
+  member-row `existingImg` fast-path (preserves the decoration overlay). The
+  permanent cure is still Media→Storage.
+
+**Done earlier (chat pickers + avatar):**
 - Chat GIF panel: Discord **masonry** (natural aspect ratios via CSS `columns`
   on an inner `.gif-masonry` wrapper inside the vertical scroll container),
   category-click = search, 26 cards (24 categories + Trending + **Collection**,
@@ -30,23 +61,20 @@ rules below still apply (egress, mirror-to-main + bump cache-bust every push,
   **The real cure is still the Media→Storage rollout** (see Open items) — the
   write keeps getting dropped by egress throttling so the DB row stays corrupt.
 
-**NEXT SESSION — top priorities (user wants these):**
-1. **Tabbed picker redesign — GO LIVE.** Direction is locked + a static mockup
-   is approved (recipe in scratchpad `panelkit.html`, `.pk-*` classes): ONE
-   tabbed popover with **GIFs / Stickers / Emoji / Bots** tabs; emoji uses a
-   **right-side** icon rail (Discord layout, Fortized side) + **Guilded footer**
-   showing the hovered emoji; Fortized dark glass + gold; **solid bg, NO
-   backdrop-filter** (that was the emoji flicker); **FontAwesome** icons
-   throughout. TODO: rebuild `buildEmojiPicker` from scratch on this shell
-   (kills the flicker + "not every emoji loads" — eager-render, no
-   IntersectionObserver race), then re-skin `openGiphyPicker` /
-   `openStickerPicker` / `openBotCommandPanel` into the same shell with tab
-   switching. Preserve emoji features: search, frequently-used, Collection,
-   Fortized Guide, bastion custom emojis, hover preview.
-2. **Avatar still missing in chat / maybe nameplates.** Verify every avatar
-   render path goes through `buildAvatarHTML` (chat msg rows do, line ~11662);
-   find nameplate/other raw `<img src=pfp>` paths that bypass the corrupt guard
-   and route them through it. The permanent fix remains Media→Storage.
+**NEXT SESSION — top priorities:**
+1. **Verify the tabbed picker live.** Sandbox can't log in to Supabase, so this
+   session only verified layout via a static Playwright harness. On a live
+   account, click through: Emoji↔Bots tab switch, Bots tab in a non-bastion DM
+   (should show its empty state), and confirm the real FA glyphs render (they're
+   CDN-blocked in-sandbox). If any picker still flickers, check for a lingering
+   `backdrop-filter` on a child element.
+2. **Avatar — remaining raw paths (optional polish).** Self + member-list
+   renders now go through `buildAvatarHTML`. Still raw by choice: forum author
+   avatars (`author_pfp`), trade/staff/reseller tiles, and the member-row
+   `existingImg` fast-path. Route these only if a specific one shows the bug —
+   they're lower-traffic and the real cure is Media→Storage.
+3. **Media→Storage rollout** (still the #1 real fix; see Open items) — needs the
+   USER (can't be done from the sandbox).
 
 ## ⚠️ #1 STANDING RULE: SUPABASE EGRESS
 

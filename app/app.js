@@ -4593,11 +4593,10 @@ function updateUserbar() {
   // Sync rail userbar (full userbar in fortized sidebar)
   const railUbAvatar = document.getElementById('rail-ub-avatar');
   if (railUbAvatar) {
-    const _defPfpRail = _defaultPfpUrl(CU.displayName||CU.username);
-    const railInner = CU.pfp
-      ? `<img src="${CU.pfp}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.src='${_defPfpRail}'">`
-      : `<img src="${_defPfpRail}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-    railUbAvatar.innerHTML = railInner;
+    // Route the always-visible self avatar through buildAvatarHTML so the
+    // corrupt/blank-pfp guard applies here too (a raw <img> only recovers
+    // truncated data-URLs via onerror, not valid-but-transparent PNGs).
+    railUbAvatar.innerHTML = buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 34, CU.pfpCrop);
     const railDot = document.createElement('span');
     railDot.id = 'rail-ub-status-dot'; railDot.className = 'ua-status-dot';
     railDot.dataset.dotSize = '14';
@@ -9139,7 +9138,7 @@ async function showGCMemberPanel(meta) {
             // Preserve existing status dot color instead of hardcoding offline
             const existingDot = avWrap.querySelector('.profile-status-dot');
             const dotStatus = existingDot?.dataset.dotStatus || 'offline';
-            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}'"><span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${dotStatus}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(dotStatus, 10)}</span>`;
+            avWrap.innerHTML = `${buildAvatarHTML(ud.pfp, m, 30, ud.pfpCrop)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${dotStatus}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(dotStatus, 10)}</span>`;
           }
         }
       }).catch(()=>{});
@@ -12991,9 +12990,10 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
           const _uCrop = _saneCrop(ud.pfpCrop || _pfpCropCache[u] || null);
           const _isGifPfp = _uCrop && /\.gif|data:image\/gif/i.test(ud.pfp);
           if (_isGifPfp) {
-            // GIF with crop: use CSS-based cropping to preserve animation
+            // GIF with crop: buildAvatarHTML preserves animation via CSS crop
+            // and carries the corrupt/blank-pfp guard.
             const currentStatus = _liveStatusCache[u] || entry.dataset.status || status;
-            avWrap.innerHTML = `<div style="width:34px;height:34px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;"><img src="${escapeHTML(ud.pfp)}" style="position:absolute;left:${_uCrop.leftPct}%;top:${_uCrop.topPct}%;width:${_uCrop.widthPct}%;height:auto;" onerror="this.src='${_defaultPfpUrl(u)}'"></div><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
+            avWrap.innerHTML = `${buildAvatarHTML(ud.pfp, u, 34, _uCrop)}<span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
           } else {
             const existingImg = avWrap.querySelector('img:not(.profile-status-dot):not(.profile-decoration-overlay-ml)');
             if (existingImg) {
@@ -13001,7 +13001,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
               existingImg.onerror = function() { this.src = _defaultPfpUrl(u); };
             } else {
               const currentStatus = _liveStatusCache[u] || entry.dataset.status || status;
-              avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
+              avWrap.innerHTML = `${buildAvatarHTML(ud.pfp, u, 34, _uCrop)}<span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
             }
           }
         }
@@ -22595,9 +22595,8 @@ function buildProfileNav(scroll, opts) {
     ]},
   ];
 
-  const _navPfp = CU?.pfp
-    ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-    : `<span style="font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--accent);">${escapeHTML((CU?.displayName||CU?.username||'?')[0].toUpperCase())}</span>`;
+  // Guard applies (corrupt/blank pfp → initial letter) via buildAvatarHTML.
+  const _navPfp = buildAvatarHTML(CU?.pfp, CU?.displayName||CU?.username, 42, CU?.pfpCrop);
   // Status dot mirrors the userbar's — same FtzStatus helper so they stay
   // in lockstep visually. Falls back to a plain green dot if the helper
   // isn't loaded yet (very early boot).
@@ -34730,11 +34729,8 @@ function _dnDiceSvg(face) {
 // three previews look like the same person. Falls back to a coloured
 // initial if the user has no pfp set.
 function _dnAvHtml(size) {
-  const dn = CU.displayName || CU.username;
-  const init = (dn || '?')[0].toUpperCase();
-  return CU.pfp
-    ? `<img src="${escapeHTML(CU.pfp)}" alt="" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:50%;display:block;">`
-    : `<div style="width:${size}px;height:${size}px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:#13161d;border-radius:50%;font-size:${Math.round(size*0.42)}px;">${init}</div>`;
+  // buildAvatarHTML carries the corrupt/blank-pfp guard + default fallback.
+  return buildAvatarHTML(CU.pfp, CU.displayName || CU.username, size, CU.pfpCrop);
 }
 
 function _openDisplayNameStyleModal() {

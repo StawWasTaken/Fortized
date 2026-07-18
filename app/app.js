@@ -5356,6 +5356,18 @@ function _probeBlankPfp(pfp) {
 function _acceptIncomingPfp(pfp, apply) {
   try {
     if (!pfp || typeof pfp !== 'string') return;
+    // ── Corrupt/truncated guard (THE avatar-transparency root cause) ──
+    // A real avatar data-URL is many KB. A data:image under ~1.5k chars is a
+    // truncated fragment that FAILS TO DECODE. The old guard only caught
+    // provably-TRANSPARENT PNGs, so a 500-char JPEG/webp (which isn't
+    // "transparent", it's corrupt) sailed through `!_pfpProbeable → apply`,
+    // poisoned CU, and got re-written + re-broadcast on the next save — the
+    // self-sustaining loop behind "avatar goes transparent, comes back on
+    // every account". Reject any too-small data:image regardless of format.
+    if (/^data:image\//i.test(pfp) && pfp.length < 1500) {
+      console.warn('[avatar] rejected corrupt/truncated incoming pfp (' + pfp.length + ' chars, head=' + pfp.slice(0, 24) + ')');
+      return;
+    }
     if (!_pfpProbeable(pfp)) { apply(pfp); return; }
     if (pfp.length < 200) { console.warn('[avatar] rejected implausibly small incoming pfp (' + pfp.length + ' chars)'); return; }
     const fp = _pfpFingerprint(pfp);

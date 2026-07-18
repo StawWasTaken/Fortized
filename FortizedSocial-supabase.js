@@ -650,6 +650,17 @@ const FortizedSocial = (() => {
           + ((new Error().stack || '').split('\n').slice(2, 7).join('\n')));
         delete changed.pfp;
       }
+      // Corrupt/truncated guard: a real avatar data-URL is many KB. A
+      // data:image under ~1.5k chars is a truncated fragment (the 500-char
+      // JPEG/webp from the transparency bug). NEVER write it over the stored
+      // avatar — that's how the corruption persisted in the row and got
+      // re-broadcast. Drop it so the good stored value survives.
+      if (typeof changed.pfp === 'string' && /^data:image\//i.test(changed.pfp) && changed.pfp.length < 1500) {
+        console.warn('[saveUserObject] BLOCKED corrupt/truncated pfp for ' + uname
+          + ' (' + changed.pfp.length + ' chars, head=' + changed.pfp.slice(0, 24) + ') — keeping the previous avatar. Origin:\n'
+          + ((new Error().stack || '').split('\n').slice(2, 6).join('\n')));
+        delete changed.pfp;
+      }
 
       // ── EGRESS: offload heavy image data-URLs to Storage ──────────────
       // The pfp/banner columns holding multi-KB→multi-MB base64 data URLs

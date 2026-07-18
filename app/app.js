@@ -5464,6 +5464,13 @@ function buildAvatarHTML(pfp, name, size, cropData, bgColor) {
   const defaultUrl = _defaultPfpUrl(name);
   const initial = (name||'?')[0].toUpperCase();
   const fs = Math.floor(size/2.2);
+  // Corrupt/truncated avatar (the 500-char data:image residue) — render the
+  // neutral initial letter instead of a broken/transparent <img>, everywhere
+  // at once. Without this the stale corrupt bytes still showed as a
+  // transparent circle across chat/member lists until a fresh DB read.
+  if (typeof pfp === 'string' && /^data:image\//i.test(pfp) && pfp.length < 1500) {
+    return '<span style="display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;">'+initial+'</span>';
+  }
   // Color is ONLY used for the default avatar case (user has no pfp).
   // Users with pfps NEVER get a colored background — not on render,
   // not on error fallback. Transparent pfps stay transparent.

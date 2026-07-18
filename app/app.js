@@ -1915,17 +1915,54 @@ function _purgeDeadLocalKeys() {
 // doesn't". Neutered: it now only LOGS what it sees so we can diagnose
 // from the console, and NEVER modifies CU.pfp or the DB. The render-side
 // fallback already covers genuinely-blank display.
+function _pfpIsCorrupt(p) {
+  // A real avatar data-URL is many KB; a data:image under ~1.5k chars is the
+  // truncated 500-char residue that fails to decode.
+  return typeof p === 'string' && /^data:image\//i.test(p) && p.length < 1500;
+}
+// Stash the last-known-GOOD avatar locally so a reload can restore it even
+// when the DB write is being dropped by egress throttling (which is why
+// "your own avatar disappears on reload in chat" — the row still holds the
+// corrupt 500-char value).
+function _backupGoodPfp(pfp) {
+  try {
+    if (CU?.username && typeof pfp === 'string' && /^data:image\//i.test(pfp) && pfp.length > 1500) {
+      localStorage.setItem('ftz_good_pfp_' + CU.username, pfp);
+    }
+  } catch (_) {}
+}
 async function _healBlankAvatar() {
   try {
     const p = CU?.pfp;
-    // console.warn so it survives the default DevTools "Info" filter (that
-    // filter is why the earlier console.info diags "showed nothing").
     let _boB = 'n/a';
     if (typeof p === 'string' && p.startsWith('data:image')) { try { _boB = await _pfpIsBlank(p); } catch (_) {} }
     console.warn('[AVATAR-DIAG] boot pfp:', typeof p, 'len=' + (p ? p.length : 0),
       'head=' + (typeof p === 'string' ? p.slice(0, 30) : 'n/a'),
       'transparent=' + _boB,
       'crop=' + JSON.stringify(CU?.pfpCrop || null));
+    // ── Self-avatar recovery ──────────────────────────────────────────
+    // If the row loaded a corrupt/missing avatar for US, restore the last
+    // good one from local backup and re-push it — so your own avatar stops
+    // vanishing on reload while the DB copy stays corrupt.
+    if (CU?.username) {
+      if (_pfpIsCorrupt(p) || !p) {
+        let good = null;
+        try { good = localStorage.getItem('ftz_good_pfp_' + CU.username); } catch (_) {}
+        if (good && good.length > 1500 && /^data:image\//i.test(good)) {
+          CU.pfp = good;
+          try { saveLocal(); } catch (_) {}
+          try { updateUserbar(); } catch (_) {}
+          console.warn('[AVATAR] restored last-known-good avatar from local backup (' + good.length + ' chars); DB copy was corrupt/missing. Re-pushing.');
+          // Re-render every surface (chat rows, member lists, DM sidebar) and
+          // re-attempt the DB write (the write guard allows good values; the
+          // retry rides out transient network drops).
+          try { saveUser(true, ['pfp']); } catch (_) {}
+        }
+      } else if (typeof p === 'string' && /^data:image\//i.test(p) && p.length > 1500) {
+        // Current avatar is good — make sure we have a backup of it.
+        _backupGoodPfp(p);
+      }
+    }
   } catch (e) { console.warn('[AVATAR-DIAG] check failed:', e?.message); }
 }
 
@@ -24605,6 +24642,7 @@ async function updatePfp(e) {
         CU.pfp = result.gifData;
         CU.pfpCrop = result.crop;
         _ftzAvatarTrace('1-crop-output(gif)', CU.pfp, { crop: result.crop });
+        _backupGoodPfp(result.gifData);
         _pfpCropCache[CU.username] = result.crop;
         // Cache the avatar's dominant colour as the card accent —
         // see _fppResolveTheme: accent = avatar colour, main = banner.
@@ -24635,6 +24673,7 @@ async function updatePfp(e) {
         _syncSettingsInputsToCU();
         CU.pfp = cropped;
         _ftzAvatarTrace('1-crop-output(static)', cropped);
+        _backupGoodPfp(cropped);
         try {
           const sampled = await _fppSampleImageColor(cropped);
           if (sampled) {

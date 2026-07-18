@@ -1446,6 +1446,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
   -webkit-user-drag:none; user-select:none;
 }
 .svgrepo-icon--20{ width:20px; height:20px; }
+/* Inline filled FA SVG icons for the chatbar buttons + picker tabs. Sized by
+   HEIGHT with width:auto so mixed-width viewBoxes (512/576/640) stay the same
+   visual height and undistorted; fill:currentColor inherits the button colour
+   (accent on hover) — no invert-filter hack. */
+.cit-ico{ height:20px; width:auto; fill:currentColor; display:block; pointer-events:none; -webkit-user-drag:none; user-select:none; flex-shrink:0; }
+.picker-top-tab .pt-ico{ height:15px; width:auto; fill:currentColor; flex-shrink:0; }
 .chat-input-actions button:hover .svgrepo-icon,
 .picker-top-tab.active .svgrepo-icon,
 .picker-top-tab:hover .svgrepo-icon{ filter:invert(100%) opacity(1); }
@@ -1467,27 +1473,23 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .cit-gif{background:transparent;border:none;color:rgba(255,255,255,.32);cursor:pointer;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.22,1,.36,1);flex-shrink:0;position:relative;}
 .cit-gif:hover{background:rgba(255,249,62,.1);color:var(--accent);transform:scale(1.08);}
 .chat-input-row{display:flex;align-items:center;padding:0 12px 0 4px;gap:0;flex:1;min-height:60px;}
-/* "+" attach button — flat icon with a hairline divider after it
-   instead of the old rounded-square button background. */
+/* "+" attach button — now a proper action button, styled like the GIF/emoji
+   buttons (transparent, 34px, accent on hover) with an inline FA plus icon. */
 .chat-input-row .cit-attach{
-  background:transparent !important;
-  border:none !important;
-  color:rgba(255,255,255,.55);
-  width:46px; height:46px;
+  background:transparent;
+  border:none;
+  color:rgba(255,255,255,.32);
+  width:34px; height:34px;
+  margin-right:2px;
   display:flex; align-items:center; justify-content:center;
   cursor:pointer;
   position:relative;
   padding:0;
   flex-shrink:0;
-  border-radius:0 !important;
-  transition:color .12s;
+  border-radius:10px;
+  transition:all .18s cubic-bezier(.22,1,.36,1);
 }
-.chat-input-row .cit-attach::after{
-  content:""; position:absolute; top:12px; bottom:12px; right:0;
-  width:1px; background:rgba(255,255,255,.08);
-}
-.chat-input-row .cit-attach svg{ width:20px; height:20px; }
-.chat-input-row .cit-attach:hover{ color:#fff; background:transparent !important; }
+.chat-input-row .cit-attach:hover{ color:var(--accent); background:rgba(255,249,62,.1); transform:scale(1.08); }
 .chat-input-row .chat-input-rich, .chat-input-row textarea{ padding-left:12px !important; }
 
 /* ── "+" attach menu (Media / Poll / Form) ──────────────────────── */
@@ -1583,7 +1585,7 @@ body.staw-frozen::before{
 /* Solid background — no backdrop-filter. The blur re-composited mid-open on
    these content-heavy panels and caused the emoji flicker; a solid Fortized
    dark surface fixes it and reads as one cohesive popover. */
-.chat-picker-base{position:fixed;background:var(--pk-bg,#171a22);border:1px solid var(--glass-border);border-radius:16px;z-index:8500;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
+.chat-picker-base{position:fixed;background:var(--panel);border:1px solid var(--glass-border);border-radius:16px;z-index:8500;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
 @keyframes pickerSlideIn{from{opacity:0;transform:translateY(10px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
 .chat-picker-header{padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px;background:transparent;}
 .chat-picker-header .cph-title{font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:-.02em;}
@@ -1598,7 +1600,6 @@ body.staw-frozen::before{
    automatically. */
 .picker-top-tabs{display:flex;gap:0;padding:0;flex-shrink:0;background:var(--panel2,rgba(0,0,0,.18));border-bottom:1px solid var(--border,rgba(255,255,255,.05));}
 .picker-top-tab{flex:1;padding:12px 0;font-family:var(--font-display);font-size:12.5px;font-weight:700;color:rgba(255,255,255,.3);cursor:pointer;text-align:center;border:none;background:transparent;transition:all .16s;border-bottom:2px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:7px;}
-.picker-top-tab i{font-size:14px;line-height:1;}
 .picker-top-tab .svgrepo-icon{width:16px;height:16px;}
 .picker-top-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.03);}
 .picker-top-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.04);}
@@ -4181,7 +4182,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
    settings modal when triggered from the About-Me textarea. */
 /* Solid background — no backdrop-filter (see .chat-picker-base note). Width
    matches the other pickers (460) so switching tabs never resizes the popover. */
-.emoji-picker-panel{position:fixed;width:460px;max-width:calc(100vw - 16px);max-height:520px;background:var(--pk-bg,#171a22);border:1px solid var(--glass-border);border-radius:14px;padding:0;z-index:11000;box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.035);display:none;flex-direction:column;overflow:hidden;font-family:var(--font-ui);}
+.emoji-picker-panel{position:fixed;width:460px;max-width:calc(100vw - 16px);max-height:520px;background:var(--panel);border:1px solid var(--glass-border);border-radius:14px;padding:0;z-index:11000;box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.035);display:none;flex-direction:column;overflow:hidden;font-family:var(--font-ui);}
 /* Row below the full-width tab bar: emoji grid (main) + the right icon rail. */
 .epp-body{display:flex;flex-direction:row;flex:1 1 auto;min-height:0;overflow:hidden;}
 /* Guilded-style hover footer: shows the emoji you're pointing at. */

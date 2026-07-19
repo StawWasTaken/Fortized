@@ -5418,6 +5418,27 @@ function _acceptIncomingPfp(pfp, apply) {
   } catch (_) {}
 }
 
+// Synchronous "is this pfp obviously bad?" — a truncated data:image (the
+// documented 500-char corruption) or a KNOWN fully-transparent PNG. Used to
+// gate the direct _pfpCache writes + raw img.src updates in the realtime
+// handlers so a stale/corrupt broadcast can never overwrite a good avatar that
+// is already on screen (the "avatars disappear after some time" bug). Unknown
+// pfps also kick an async blank-probe so the cache LEARNS and later broadcasts
+// of the same bad value are caught synchronously.
+function _pfpLooksCorrupt(pfp) {
+  if (!pfp || typeof pfp !== 'string') return true;
+  if (/^data:image\//i.test(pfp) && pfp.length < 1500) return true;
+  try {
+    if (typeof _pfpProbeable === 'function' && _pfpProbeable(pfp)) {
+      const fp = _pfpFingerprint(pfp);
+      const known = _blankPfpKnown.get(fp);
+      if (known === true) return true;
+      if (known === undefined) { _pfpIsBlank(pfp).then(b => _blankPfpKnown.set(fp, b)).catch(() => {}); }
+    }
+  } catch (_) {}
+  return false;
+}
+
 // ── Avatar lifecycle tracer (DIAGNOSTIC) ────────────────────────────
 // The avatar-goes-transparent-after-save bug has dodged us for weeks and
 // we don't know which stage flips it to blank. This records the pfp value
@@ -12996,7 +13017,12 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
             avWrap.innerHTML = `${buildAvatarHTML(ud.pfp, u, 34, _uCrop)}<span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
           } else {
             const existingImg = avWrap.querySelector('img:not(.profile-status-dot):not(.profile-decoration-overlay-ml)');
-            if (existingImg) {
+            // Don't let a re-hydration with a corrupt/blank pfp blank out the
+            // good avatar already showing; re-render through the guard instead.
+            if (existingImg && _pfpLooksCorrupt(ud.pfp)) {
+              const currentStatus = _liveStatusCache[u] || entry.dataset.status || status;
+              avWrap.innerHTML = `${buildAvatarHTML(ud.pfp, u, 34, _uCrop)}<span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
+            } else if (existingImg) {
               existingImg.src = ud.pfp;
               existingImg.onerror = function() { this.src = _defaultPfpUrl(u); };
             } else {
@@ -15614,7 +15640,9 @@ function initFortizedUXResilience() {
         // _pfpCache write gets the same guard so a stale client's
         // broadcast can't re-poison the persisted cache.
         rememberProfile({ username: data.username, pfp: data.pfp, displayName: data.displayName, status: data.status });
-        if (data.pfp && !(typeof _pfpProbeable === 'function' && _pfpProbeable(data.pfp) && _blankPfpKnown.get(_pfpFingerprint(data.pfp)) === true)) {
+        // Reject truncated/blank broadcasts up front so a corrupt pfp can't
+        // poison _pfpCache or overwrite the good avatars already on screen.
+        if (data.pfp && !_pfpLooksCorrupt(data.pfp)) {
           _pfpCache[data.username] = data.pfp;
           _persistPfpCache();
           const _upCrop = data.pfpCrop || _pfpCropCache[data.username] || null;
@@ -21572,7 +21600,7 @@ function _pickerTopTabs(active) {
   // buttons, so the active tab's icon turns gold automatically.
   const ICONS = {
     gif: '<svg class="pt-ico" viewBox="0 0 512 512" fill="currentColor"><path d="M0 96C0 60.7 28.7 32 64 32l384 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zM48 368l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm368-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zM48 240l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm368-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zM48 112l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16L64 96c-8.8 0-16 7.2-16 16zM416 96c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zM160 96l0 320 192 0 0-320L160 96z"/></svg>',
-    sticker: '<svg class="pt-ico" viewBox="0 0 448 512" fill="currentColor"><path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l197.5 0c17 0 33.3-6.7 45.3-18.7l106.5-106.5c12-12 18.7-28.3 18.7-45.3L432 96c0-35.3-28.7-64-64-64L64 32zM384 320l-1.5 0L288 320c-17.7 0-32 14.3-32 32l0 94.5 0 1.5-192 0c-8.8 0-16-7.2-16-16L48 96c0-8.8 7.2-16 16-16l304 0c8.8 0 16 7.2 16 16l0 224zM304 448l0-80 80 0-80 80z"/></svg>',
+    sticker: '<svg class="pt-ico" viewBox="0 0 448 512" fill="currentColor"><path d="M64 480c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 213.5c0 17-6.7 33.3-18.7 45.3L322.7 461.3c-12 12-28.3 18.7-45.3 18.7L64 480zM389.5 304L296 304c-13.3 0-24 10.7-24 24l0 93.5 117.5-117.5z"/></svg>',
     emoji: '<svg class="pt-ico" viewBox="0 0 512 512" fill="currentColor"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM101.6 314c-3.7-13.7 7.5-26 21.7-26l265.4 0c14.2 0 25.4 12.3 21.7 26-18.5 68-80.6 118-154.4 118S120 382 101.6 314zM176 164c-15.5 0-28 12.5-28 28l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-37.6 30.4-68 68-68s68 30.4 68 68l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-15.5-12.5-28-28-28zm132 28l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-37.6 30.4-68 68-68s68 30.4 68 68l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-15.5-12.5-28-28-28s-28 12.5-28 28z"/></svg>',
     bots: '<svg class="pt-ico" viewBox="0 -40 640 552" fill="currentColor"><path d="M352 0c0-17.7-14.3-32-32-32S288-17.7 288 0l0 64-96 0c-53 0-96 43-96 96l0 224c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-224c0-53-43-96-96-96l-96 0 0-64zM160 368c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zM224 176a48 48 0 1 1 0 96 48 48 0 1 1 0-96zm144 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM64 224c0-17.7-14.3-32-32-32S0 206.3 0 224l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96zm544-32c-17.7 0-32 14.3-32 32l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32z"/></svg>',
   };
@@ -32778,7 +32806,7 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">
             <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" data-tip="GIFs"><svg class="cit-ico" viewBox="0 0 512 512" fill="currentColor"><path d="M0 96C0 60.7 28.7 32 64 32l384 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zM48 368l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm368-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zM48 240l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm368-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zM48 112l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16L64 96c-8.8 0-16 7.2-16 16zM416 96c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zM160 96l0 320 192 0 0-320L160 96z"/></svg></button>
-            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" data-tip="Stickers"><svg class="cit-ico" viewBox="0 0 448 512" fill="currentColor"><path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l197.5 0c17 0 33.3-6.7 45.3-18.7l106.5-106.5c12-12 18.7-28.3 18.7-45.3L432 96c0-35.3-28.7-64-64-64L64 32zM384 320l-1.5 0L288 320c-17.7 0-32 14.3-32 32l0 94.5 0 1.5-192 0c-8.8 0-16-7.2-16-16L48 96c0-8.8 7.2-16 16-16l304 0c8.8 0 16 7.2 16 16l0 224zM304 448l0-80 80 0-80 80z"/></svg></button>
+            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" data-tip="Stickers"><svg class="cit-ico" viewBox="0 0 448 512" fill="currentColor"><path d="M64 480c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 213.5c0 17-6.7 33.3-18.7 45.3L322.7 461.3c-12 12-28.3 18.7-45.3 18.7L64 480zM389.5 304L296 304c-13.3 0-24 10.7-24 24l0 93.5 117.5-117.5z"/></svg></button>
             <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" data-tip="Emoji" onmouseleave="randomizeChatbarEmoji(this)"><svg class="cit-ico" viewBox="0 0 512 512" fill="currentColor"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM101.6 314c-3.7-13.7 7.5-26 21.7-26l265.4 0c14.2 0 25.4 12.3 21.7 26-18.5 68-80.6 118-154.4 118S120 382 101.6 314zM176 164c-15.5 0-28 12.5-28 28l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-37.6 30.4-68 68-68s68 30.4 68 68l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-15.5-12.5-28-28-28zm132 28l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-37.6 30.4-68 68-68s68 30.4 68 68l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-15.5-12.5-28-28-28s-28 12.5-28 28z"/></svg></button>
             <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}" data-tip="Bot commands"><svg class="cit-ico" viewBox="0 -40 640 552" fill="currentColor"><path d="M352 0c0-17.7-14.3-32-32-32S288-17.7 288 0l0 64-96 0c-53 0-96 43-96 96l0 224c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-224c0-53-43-96-96-96l-96 0 0-64zM160 368c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zM224 176a48 48 0 1 1 0 96 48 48 0 1 1 0-96zm144 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM64 224c0-17.7-14.3-32-32-32S0 206.3 0 224l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96zm544-32c-17.7 0-32 14.3-32 32l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32z"/></svg></button>
           </div>

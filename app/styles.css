@@ -1581,6 +1581,10 @@ body.staw-frozen::before{
 .cit-botcmd:hover{background:rgba(96,165,250,.1);color:var(--blue);transform:scale(1.08);}
 .cit-botcmd::after{content:'Bot Commands';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%) scale(.9);background:var(--panel2);color:rgba(255,255,255,.7);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;border:1px solid var(--border);}
 .cit-botcmd:hover::after{opacity:1;transform:translateX(-50%) scale(1);}
+/* Resting colour of the chatbar SVG icons = #b3b2b4 (matches the topbar icons).
+   Placed after the base .cit-* rules so it wins; the :hover rules keep their
+   higher specificity, so hover still tints to the accent/blue. */
+.cit-btn,.cit-gif,.cit-sticker,.cit-botcmd,.chat-input-row .cit-attach{color:#b3b2b4;}
 /* ── Chat Picker Panel (shared base for stickers, bot cmds, GIF) ── */
 /* Solid background — no backdrop-filter. The blur re-composited mid-open on
    these content-heavy panels and caused the emoji flicker; a solid Fortized
@@ -9939,11 +9943,10 @@ button[style*="background: var(--accent)"]:active {
   display: grid;
   gap: 2px;
   padding: 4px 4px 10px;
-  /* Discord-style: skip painting sections that aren't in view, letting the
-     browser lay out slots without actually rendering 1000+ cells at once.
-     Massively reduces first-paint cost for the emoji picker. */
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 240px;
+  /* NO content-visibility here: it made every section repaint from a
+     placeholder height when the panel flips display:none → visible, which read
+     as the open-flicker. Unicode cells are cheap native text, so we eager-paint
+     the whole grid (the spec's requirement) instead. */
 }
 .epp-section-grid-tight {
   gap: 0;

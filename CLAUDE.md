@@ -1,11 +1,35 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix326`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix327`)
 
-Branch `claude/staff-console-world-map-zgvrsa`, mirrored to `main`. Standing
+Branch `claude/staff-console-world-map-vawn5l`, mirrored to `main`. Standing
 rules unchanged (egress; mirror-to-main + cache-bust every push; `node --check`
 app.js + supabase + 42 relationship tests pre-commit; verify UI via Playwright
 plainviews — CDN/Supabase unreachable in-sandbox).
+
+**Shipped `2026fix327` (GIF collections + replies):**
+- **Unified GIF collect control** (`_gifCollectId`/`isGifCollected`/
+  `toggleFavGif`/`_gifBookmarkSVG`/`_gifCollectBtnHTML`/`_gifCollectClick`/
+  `_syncGifCollectBtns`, near `saveFavGif`). One code path across EVERY surface:
+  chat `.ftz-embed-gif` embeds (FTZGIF + giphy/tenor/klipy/generic + the async
+  Tenor/Klipy resolvers), `_attWrap` gif attachments (FortGified + uploaded
+  gifs), the media right-click menu, the media **lightbox** (new collect btn,
+  gated by `_looksLikeGif(src)`), and the GIF-picker search results. Fixes
+  "collect doesn't work on other users'/FortGified gifs" — the button is now
+  present + functional everywhere and **toggles** (collect/uncollect).
+- **Collected state shown**: filled bookmark (accent, always visible) vs outline
+  bookmark (white, hover) + `data-tip` "Collected"/"Collect". Matches by URL
+  first (back-compat with pre-existing slice(-16) ids). Toggling one button
+  live-syncs every visible button for that url (`_syncGifCollectBtns`, and
+  re-renders the Collection tab if open).
+- **Replies always render a full header** (avatar + name + time), even when they
+  would group under the previous message — `if (msg.replyTo) isFirst = true;`
+  in `appendMessage` (Discord-style).
+- **Reply preview attachments** show an image SVG icon + "Attachment" tooltip
+  instead of the media/raw token. Strip regex now tolerates a **truncated**
+  token (missing `]`) — a capped reply snapshot can cut a big sticker/image
+  data-URL mid-token, which was leaking raw `[FTZSTICKER:data:image/…` text
+  into the preview. Icon = fa-image (viewBox 0 0 448 512), sized 13px.
 
 **Shipped `2026fix320`→`326` (rounds 3–5 of user feedback):**
 - **Right-click a message → "Bots"** (in the real ctx menu `handleContextMenu`,

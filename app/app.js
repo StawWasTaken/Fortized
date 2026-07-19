@@ -12001,6 +12001,10 @@ function appendMessage(container, msg, context, prevAuthor) {
       if (gap > 20 * 60 * 1000) isFirst = true;
     }
   }
+  // A reply always renders as a full message header (avatar + name + time), even
+  // when it would otherwise group under the previous message — this is how
+  // Discord does it and it keeps the reply reference legible above the body.
+  if (msg.replyTo) isFirst = true;
   const isOwn=String(msg.from||"").toLowerCase()===String(CU?.username||"").toLowerCase();
   const time=_fmtMsgTime(msg.timestamp, msg.time);
   const fullTime=_fmtMsgFullTime(msg.timestamp);
@@ -12030,11 +12034,16 @@ function appendMessage(container, msg, context, prevAuthor) {
       replyHTML = `<div class="msg-reply-ref msg-reply-ref--status"><span class="mrr-av">${_CHATBAR_EMOJI_SVG}</span><strong class="mrr-name">status reply</strong><span class="mrr-preview">${rStatusText}</span></div>`;
     } else {
       const rRaw = String(msg.replyTo.text || '');
-      const rHasAttach = _FTZ_FILE_TOKEN_RE.test(rRaw);
-      _FTZ_FILE_TOKEN_RE.lastIndex = 0;
-      const rStripped = rRaw.replace(_FTZ_FILE_TOKEN_RE, '').trim();
+      // Strip media tokens out of the reply preview and show only an icon +
+      // tooltip instead. Tolerate a TRUNCATED token (missing closing "]") —
+      // reply snapshots are capped in length, so a big sticker/image data URL
+      // can be cut mid-token; without the "|$" alternative that leftover would
+      // leak into the preview as raw "[FTZSTICKER:data:image/gif;base64,…" text.
+      const rAttachRe = /\[FTZ(?:IMG|VID|AUD|FILE|GIF|STICKER):[^\]]*(?:\]|$)/g;
+      const rHasAttach = rAttachRe.test(rRaw);
+      const rStripped = rRaw.replace(rAttachRe, '').trim();
       const rText = escapeHTML(rStripped.slice(0,80));
-      const rAttachIcon = rHasAttach ? '<span class="mrr-attach-ico" aria-label="attachment"><svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M2 5a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5Zm13.35 8.13 3.5 4.67c.37.5.02 1.2-.6 1.2H5.81a.75.75 0 0 1-.59-1.22l1.86-2.32a1.5 1.5 0 0 1 2.34 0l.5.64 2.23-2.97a2 2 0 0 1 3.2 0ZM10.2 5.98c.23-.91-.88-1.55-1.55-.9a.93.93 0 0 1-1.3 0c-.67-.65-1.78-.01-1.55.9a.93.93 0 0 1-.65 1.12c-.9.26-.9 1.54 0 1.8.48.14.77.63.65 1.12-.23.91.88 1.55 1.55.9a.93.93 0 0 1 1.3 0c.67.65 1.78.01 1.55-.9a.93.93 0 0 1 .65-1.12c.9-.26.9-1.54 0-1.8a.93.93 0 0 1-.65-1.12Z" clip-rule="evenodd"></path></svg></span>' : '';
+      const rAttachIcon = rHasAttach ? '<span class="mrr-attach-ico" data-tip="Attachment" aria-label="Attachment"><svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor"><path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm64 80a48 48 0 1 1 0 96 48 48 0 1 1 0-96zM272 224c8.4 0 16.1 4.4 20.5 11.5l88 144c4.5 7.4 4.7 16.7 .5 24.3S368.7 416 360 416L88 416c-8.9 0-17.2-5-21.3-12.9s-3.5-17.5 1.6-24.8l56-80c4.5-6.4 11.8-10.2 19.7-10.2s15.2 3.8 19.7 10.2l26.4 37.8 61.4-100.5c4.4-7.1 12.1-11.5 20.5-11.5z"/></svg></span>' : '';
       const rAvId = 'rav-' + (msg.id||'').replace(/[^a-z0-9]/gi,'-');
       // Cache-first paint so the avatar shows immediately instead of
       // flashing the default placeholder for the hydration round-trip.
@@ -33607,6 +33616,7 @@ function _openMediaLightbox(src, meta) {
         <button class="mlb-btn" data-act="forward" title="Forward">${ic('<polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/>')}</button>
         <button class="mlb-btn" data-act="save" title="Save">${ic('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>')}</button>
         <button class="mlb-btn" data-act="open" title="Open in browser">${ic('<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>')}</button>
+        ${_looksLikeGif(src) ? `<button class="mlb-btn mlb-collect${isGifCollected(src)?' is-collected':''}" data-act="collect" data-gif-url="${escapeHTML(src)}" title="${isGifCollected(src)?'Collected':'Collect'}" aria-label="${isGifCollected(src)?'Collected':'Collect'}">${_gifBookmarkSVG(isGifCollected(src))}</button>` : ''}
         <div class="mlb-more-wrap">
           <button class="mlb-btn" data-act="more" title="More" aria-haspopup="menu">${ic('<circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/>')}</button>
           <div class="mlb-menu" role="menu" hidden>
@@ -33693,6 +33703,7 @@ function _openMediaLightbox(src, meta) {
       if (act === 'save') return _downloadLightboxImg(src, m.filename);
       if (act === 'open') return window.open(src, '_blank', 'noopener');
       if (act === 'forward') return _lightboxForward(src, m);
+      if (act === 'collect') return void toggleFavGif(src);
       if (act === 'more') { menu.hidden = !menu.hidden; return; }
     });
   });
@@ -33821,8 +33832,9 @@ function _attWrap(inner, opts) {
   const url = escapeHTML(opts.url || '');
   const name = escapeHTML(opts.name || '');
   const type = opts.type || 'file';
+  const isCol = type === 'gif' && isGifCollected(opts.url);
   const collect = type === 'gif'
-    ? `<button class="ftz-att-btn is-collect" title="Collect GIF" onclick="event.stopPropagation();_attCollect(this)"><svg viewBox="0 0 384 512" fill="currentColor"><path d="M0 48C0 21.5 21.5 0 48 0l288 0c26.5 0 48 21.5 48 48l0 431.4c0 17.4-19.9 27.3-33.8 16.9L192 400 33.8 496.3C19.9 506.7 0 496.8 0 479.4L0 48z"/></svg></button>` : '';
+    ? `<button class="ftz-att-btn is-collect${isCol?' is-collected':''}" data-gif-url="${url}" data-tip="${isCol?'Collected':'Collect'}" title="${isCol?'Collected':'Collect'}" onclick="event.stopPropagation();_gifCollectClick(this)">${_gifBookmarkSVG(isCol)}</button>` : '';
   const download = `<button class="ftz-att-btn" title="Download" onclick="event.stopPropagation();_attDownload(this)"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7 288 32zM64 352c-35.3 0-64 28.7-64 64l0 32c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-32c0-35.3-28.7-64-64-64l-101.5 0-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352 64 352zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg></button>`;
   const modify = (type === 'image' || type === 'gif') ? `<button class="ftz-att-btn ftz-att-own" title="Modify Attachment" onclick="event.stopPropagation();_attModify(this)"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/></svg></button>` : '';
   const del = `<button class="ftz-att-btn ftz-att-own is-danger" title="Delete Attachment" onclick="event.stopPropagation();_attDelete(this)"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C313.4 6.8 302.4 0 290.3 0L157.7 0c-12.1 0-23.1 6.8-28.5 17.7zM53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128 32 128 53.2 467z"/></svg></button>`;
@@ -33939,7 +33951,7 @@ document.addEventListener('contextmenu', function _mediaCtxMenu(e) {
       // (it'd paste a dead first frame), which is misleading.
       items.push({ icon: ICO.save, label: 'Save GIF', action: () => _mediaSave(src, _mediaFilename(src, null, 'fortized', 'gif')) });
     }
-    items.push({ icon: ICO.collect, label: 'Collect GIF', action: () => saveFavGif({ id: src.replace(/[^a-zA-Z0-9]/g, '').slice(-16), url: src }) });
+    items.push({ icon: ICO.collect, label: isGifCollected(src) ? 'Remove from Collection' : 'Collect GIF', action: () => toggleFavGif(src) });
     if (!src.startsWith('data:')) items.push({ icon: ICO.link, label: 'Copy Link', action: () => _mediaCopyLink(src) });
   } else if (vp) {
     const vid = vp.querySelector('video');
@@ -34423,7 +34435,7 @@ function parseMD(s) {
   s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
     const gifId = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16) || ('gif-' + Math.random().toString(36).slice(2,8));
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy">${_gifCollectBtnHTML(url)}</div>`;
   });
   // 0a. Sticker token from sticker picker — click shows a tooltip (like emoji),
   //     not the media lightbox. Stickers behave as "big emojis".
@@ -34571,15 +34583,15 @@ function parseMD(s) {
     const cleanId = id.split('-').pop();
     const gifUrl = 'https://media.giphy.com/media/'+cleanId+'/giphy.gif';
     const fid = cleanId.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${gifUrl}')"><img src="${gifUrl}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${gifUrl}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${gifUrl}')"><img src="${gifUrl}" loading="lazy">${_gifCollectBtnHTML(gifUrl)}</div>`;
   });
   // 1a. Tenor GIF links — embed with fav button
   s = s.replace(/(https?:\/\/(?:media\.)?tenor\.com\/[^\s"'<>]+\.(?:gif|mp4))(?=[\s<]|$)/gi, (url) => {
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
     const isVideo = url.endsWith('.mp4');
-    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video>${_gifCollectBtnHTML(url.trim())}</div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy">${_gifCollectBtnHTML(url.trim())}</div>`;
   });
   // 1a2. Tenor PAGE links (tenor.com/view/<slug>-<id>) — resolve to the media
   // URL async (the most common Tenor share format; direct media is handled by
@@ -34594,8 +34606,8 @@ function parseMD(s) {
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
     const isVideo = /\.mp4$/i.test(url);
-    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video>${_gifCollectBtnHTML(url.trim())}</div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy">${_gifCollectBtnHTML(url.trim())}</div>`;
   });
   // 1ac. Klipy page links — resolve klipy.com/gifs/... or klipy.com/stickers/... to inline GIF
   s = s.replace(/https?:\/\/(?:www\.)?klipy\.com\/(?:gifs|stickers|clips)\/([\w-]+)[^\s]*/gi, (url, slug) => {
@@ -34609,7 +34621,7 @@ function parseMD(s) {
     if (/giphy\.com/i.test(url) || /klipy\./i.test(url)) return url;
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy">${_gifCollectBtnHTML(url.trim())}</div>`;
   });
   // 2. YouTube embeds — all routed through _uniformEmbed
   s = s.replace(/https?:\/\/(?:www\.|m\.)?youtube\.com\/shorts\/([\w-]{11})[^\s]*/gi, (url, vid) => _uniformEmbed({
@@ -39018,6 +39030,79 @@ function removeFavGif(id) {
   const favs = getFavGifs().filter(g => g.id !== id);
   localStorage.setItem('ftz_fav_gifs', JSON.stringify(favs));
 }
+
+// ── Unified GIF collect control ──────────────────────────────────────────
+// One code path for collecting a GIF from every surface it can appear on:
+// chat message embeds, sent-attachment corner controls, the media lightbox,
+// and the GIF picker. Each collect button carries the raw url in data-gif-url
+// and reflects a live collected/not-collected state (filled vs. outline
+// bookmark) + a hover tooltip. Toggling in one place syncs every visible
+// button that points at the same url.
+function _gifCollectId(url){ return String(url||'').replace(/[^a-zA-Z0-9]/g,'').slice(-24); }
+// Match on url first (robust across id schemes), then on the derived id so
+// entries collected before this rework (id was slice(-16)) still resolve.
+function isGifCollected(url){
+  if(!url) return false;
+  const id16 = String(url).replace(/[^a-zA-Z0-9]/g,'').slice(-16);
+  const id24 = _gifCollectId(url);
+  return getFavGifs().some(g => g.url === url || g.id === id24 || g.id === id16);
+}
+// Toggle a url in/out of the collection. Returns the new state (true=collected).
+function toggleFavGif(url){
+  if(!url){ return false; }
+  const favs = getFavGifs();
+  const id16 = String(url).replace(/[^a-zA-Z0-9]/g,'').slice(-16);
+  const id24 = _gifCollectId(url);
+  const idx = favs.findIndex(g => g.url === url || g.id === id24 || g.id === id16);
+  if(idx >= 0){
+    favs.splice(idx, 1);
+    localStorage.setItem('ftz_fav_gifs', JSON.stringify(favs));
+    _syncGifCollectBtns(url, false);
+    toast('Removed from collection', 'info');
+    return false;
+  }
+  favs.unshift({ id: id24, url });
+  if(favs.length > 100) favs.pop();
+  localStorage.setItem('ftz_fav_gifs', JSON.stringify(favs));
+  _syncGifCollectBtns(url, true);
+  toast('Added to collection', 'success');
+  return true;
+}
+// The two FontAwesome bookmark states — filled = collected, outline = not.
+function _gifBookmarkSVG(collected){
+  return collected
+    ? '<svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z"/></svg>'
+    : '<svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M0 64C0 28.7 28.7 0 64 0L320 0c35.3 0 64 28.7 64 64l0 417.1c0 25.6-28.5 40.8-49.8 26.6L192 412.8 49.8 507.7C28.5 521.9 0 506.6 0 481.1L0 64zM64 48c-8.8 0-16 7.2-16 16l0 387.2 117.4-78.2c16.1-10.7 37.1-10.7 53.2 0L336 451.2 336 64c0-8.8-7.2-16-16-16L64 48z"/></svg>';
+}
+// Markup for a chat-embed GIF collect button (positioned via .chat-gif-fav-btn).
+function _gifCollectBtnHTML(url, extra){
+  const collected = isGifCollected(url);
+  return `<button class="chat-gif-fav-btn${collected?' is-collected':''}${extra?' '+extra:''}" data-gif-url="${escapeHTML(url||'')}" onclick="event.stopPropagation();_gifCollectClick(this)" data-tip="${collected?'Collected':'Collect'}" title="${collected?'Collected':'Collect'}" aria-label="${collected?'Collected':'Collect'}">${_gifBookmarkSVG(collected)}</button>`;
+}
+function _gifCollectClick(btn){ const u = btn && btn.dataset ? btn.dataset.gifUrl : ''; if(u) toggleFavGif(u); }
+// Live-update every visible collect control that points at `url`.
+function _syncGifCollectBtns(url, collected){
+  document.querySelectorAll('[data-gif-url]').forEach(b => {
+    if(b.dataset.gifUrl !== url) return;
+    b.classList.toggle('is-collected', collected);
+    b.innerHTML = _gifBookmarkSVG(collected);
+    b.setAttribute('data-tip', collected ? 'Collected' : 'Collect');
+    b.setAttribute('title', collected ? 'Collected' : 'Collect');
+    b.setAttribute('aria-label', collected ? 'Collected' : 'Collect');
+  });
+  // The GIF picker's Collection tab, if open, changes membership on toggle.
+  try {
+    const tabOpen = document.getElementById('giphy-picker') && _giphyTab === 'favourites';
+    if(tabOpen) renderFavGifs(_giphyInput);
+  } catch(_){}
+}
+// Does this url look like a GIF (for showing collect UI in generic surfaces
+// like the lightbox that also handle plain images)?
+function _looksLikeGif(u){
+  u = String(u||'');
+  return /\.gif(\?|#|$)/i.test(u) || /^data:image\/gif/i.test(u)
+    || /(?:media\d*\.)?(?:tenor\.com|giphy\.com)\//i.test(u) || /klipy\./i.test(u);
+}
 function renderFavGifs(targetInput) {
   const favs = getFavGifs();
   const grid = document.getElementById('giphy-grid');
@@ -39367,7 +39452,7 @@ async function _resolveKlipySlug(placeholderId, slug) {
       if (gifUrl) {
         const safe = escapeHTML(gifUrl);
         const gid = match.slug || match.id || slug;
-        el.innerHTML = `<img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>`;
+        el.innerHTML = `<img src="${safe}" loading="lazy">${_gifCollectBtnHTML(gifUrl)}`;
         el.style.minHeight = '';
         el.onclick = () => _openMediaLightbox(gifUrl);
         return;
@@ -39402,7 +39487,7 @@ async function _resolveTenorId(placeholderId, id) {
     if (!gifUrl || !document.getElementById(placeholderId)) { if (!gifUrl) fallback(); return; }
     const safe = escapeHTML(gifUrl);
     const fid = String(id).slice(-16);
-    el.outerHTML = `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    el.outerHTML = `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy">${_gifCollectBtnHTML(gifUrl)}</div>`;
   } catch (_) {
     fallback();
   }
@@ -39445,14 +39530,14 @@ function renderGiphyResults(gifs, inputId) {
       <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;">
         <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,.6);max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(g.title||'')}</div>
       </div>
-      <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${escapeHTML(fullUrl)}'})" title="Collect" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:none;border:1px solid rgba(255,255,255,.1);color:#ffd93e;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;"><i class="fa-solid fa-bookmark"></i></button>
+      <button class="gif-fav-btn${isGifCollected(fullUrl)?' is-collected':''}" data-gif-url="${escapeHTML(fullUrl)}" onclick="event.stopPropagation();_gifCollectClick(this)" data-tip="${isGifCollected(fullUrl)?'Collected':'Collect'}" title="${isGifCollected(fullUrl)?'Collected':'Collect'}" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:none;border:1px solid rgba(255,255,255,.1);color:${isGifCollected(fullUrl)?'var(--accent)':'#fff'};border-radius:8px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:${isGifCollected(fullUrl)?'1':'0'};transition:.18s;pointer-events:auto;">${_gifBookmarkSVG(isGifCollected(fullUrl))}</button>
     </div>`;
   }).join('') + '</div>';
   grid.querySelectorAll('.gif-card').forEach(card => {
     const ov = card.querySelector('.gif-hover-overlay');
     const fav = card.querySelector('.gif-fav-btn');
-    card.addEventListener('mouseenter', () => { card.style.transform='scale(1.03) translateY(-2px)'; card.style.boxShadow='0 8px 24px rgba(0,0,0,.35)'; card.style.borderColor='rgba(255,249,62,.12)'; ov.style.opacity='1'; fav.style.opacity='1'; });
-    card.addEventListener('mouseleave', () => { card.style.transform=''; card.style.boxShadow=''; card.style.borderColor='rgba(255,255,255,.05)'; ov.style.opacity='0'; fav.style.opacity='0'; });
+    card.addEventListener('mouseenter', () => { card.style.transform='scale(1.03) translateY(-2px)'; card.style.boxShadow='0 8px 24px rgba(0,0,0,.35)'; card.style.borderColor='rgba(255,249,62,.12)'; ov.style.opacity='1'; if(fav)fav.style.opacity='1'; });
+    card.addEventListener('mouseleave', () => { card.style.transform=''; card.style.boxShadow=''; card.style.borderColor='rgba(255,255,255,.05)'; ov.style.opacity='0'; if(fav)fav.style.opacity=fav.classList.contains('is-collected')?'1':'0'; });
     card.addEventListener('click', () => sendGifDirectly(card.dataset.id, card.dataset.input, card.dataset.url));
   });
 }

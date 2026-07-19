@@ -21612,27 +21612,30 @@ function buildEmojiPicker() {
   const panel = document.getElementById('emoji-picker');
   if (!panel) return;
 
-  // Column layout: a full-width tab bar on top (spanning the right rail too, so
-  // it reads as one popover), then a row of [main | right icon rail].
+  // Mockup layout (docs/picker-redesign-mockup.html, .pk-* spec):
+  //   tabs → full-width rounded search → body[ grid | right icon rail ] →
+  //   full-width Guilded footer (hovered emoji · category).
   panel.innerHTML = `
     ${_pickerTopTabs('emoji')}
+    <div class="epp-search-wrap">
+      <div class="epp-search-box">
+        <svg class="epp-search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="epp-search-inp" class="epp-search-inp" placeholder="Search emoji" oninput="searchEmojis(this.value);this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
+        <button class="epp-search-clr" onclick="_eppClearSearch()" aria-label="Clear search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+    </div>
     <div class="epp-body">
       <div class="epp-main">
-        <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;">
-          <div style="position:relative;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input class="epp-search-inp" placeholder="Search" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12px;padding:8px 12px 8px 32px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" oninput="searchEmojis(this.value)">
-          </div>
-        </div>
-        <div id="epp-grid" style="flex:1;overflow-y:auto;padding:0 8px 8px;max-height:340px;position:relative;"></div>
-        <div class="epp-footer">
-          <span id="epp-hover-label">Select an emoji</span>
-          <button onclick="_showEmojiInfo()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:12px;padding:2px;" title="Emoji Info"><i class="fa-solid fa-circle-info"></i></button>
-        </div>
+        <div id="epp-grid" class="epp-scroll"></div>
       </div>
       <div class="epp-sidebar" id="epp-sidebar">
         ${buildEmojiSidebar()}
       </div>
+    </div>
+    <div class="epp-footer">
+      <div class="epp-foot-emoji" id="epp-foot-preview" aria-hidden="true"></div>
+      <div class="epp-foot-name" id="epp-hover-label"><span class="epp-foot-empty">Pick an emoji</span></div>
+      <button class="epp-foot-info" onclick="_showEmojiInfo()" title="Emoji info"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM216 336l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg></button>
     </div>
   `;
   renderEmojiGrid();
@@ -21686,8 +21689,8 @@ function _wireEmojiGridDelegation() {
       const cache = _emojiShortcodeCache();
       const shortcode = cache[emoji];
       const label = shortcode ? ':' + shortcode + ':' : (EMOJI_NAMES[emoji] || emoji);
-      const el = document.getElementById('epp-hover-label');
-      if (el) el.textContent = label + (_favEmojis.includes(emoji) ? ' ★' : '');
+      const cat = (typeof EMOJI_CAT_MAP !== 'undefined' && EMOJI_CAT_MAP[emoji]) || '';
+      _eppFootSet(escapeHTML(emoji), label + (_favEmojis.includes(emoji) ? ' ★' : ''), cat);
     }
   });
 }
@@ -21745,18 +21748,27 @@ function _wireEmojiScrollSpy() {
   sections.forEach(s => _emojiScrollSpyObserver.observe(s));
 }
 
-// Hover preview — updates the bar at the bottom of the emoji picker with the
-// emoji glyph + shortcode label, Discord-style.
+// Guilded footer setter — fills the hovered-emoji preview + ":name: · Category".
+// previewHTML is trusted-safe HTML (an <img> or an already-escaped glyph).
+function _eppFootSet(previewHTML, name, category) {
+  const prev = document.getElementById('epp-foot-preview');
+  const lbl = document.getElementById('epp-hover-label');
+  if (prev) prev.innerHTML = previewHTML || '';
+  if (lbl) lbl.innerHTML = escapeHTML(name || '') + (category ? ` <small>· ${escapeHTML(category)}</small>` : '');
+}
+// Clear the emoji search box and restore the full grid.
+function _eppClearSearch() {
+  const i = document.getElementById('epp-search-inp');
+  if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); searchEmojis(''); i.focus(); }
+}
+
+// Hover preview — updates the Guilded footer with the emoji glyph/image +
+// shortcode label + category/source.
 function _emojiHover(label, fromBastion, url, isCustom) {
-  const el = document.getElementById('epp-hover-label');
-  if (!el) return;
-  let html = '';
-  if (url) {
-    html = `<img src="${escapeHTML(url)}" style="width:18px;height:18px;vertical-align:-4px;object-fit:contain;margin-right:6px;">`;
-  }
-  html += `<span style="color:rgba(255,255,255,.7);font-weight:600;">${escapeHTML(label)}</span>`;
-  if (fromBastion) html += `<span style="color:rgba(255,255,255,.3);margin-left:6px;">· ${escapeHTML(fromBastion)}</span>`;
-  el.innerHTML = html;
+  const preview = url
+    ? `<img src="${escapeHTML(url)}" style="width:26px;height:26px;object-fit:contain;">`
+    : '';
+  _eppFootSet(preview, label, fromBastion || (isCustom ? 'Custom' : ''));
 }
 
 // Legacy shim — kept for callers (like toggleFavEmoji) that want to refresh

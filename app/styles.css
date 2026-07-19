@@ -1595,14 +1595,16 @@ body.staw-frozen::before{
 .chat-picker-search input:focus{border-color:rgba(255,249,62,.25);background:rgba(255,255,255,.06);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
 .chat-picker-search input::placeholder{color:rgba(255,255,255,.2);}
 .chat-picker-search svg{position:absolute;left:28px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,.2);}
-/* Unified picker top tabs (GIFs | Stickers | Emoji | Bots) — FontAwesome icons
-   inherit the tab colour via currentColor, so the active tab's icon turns gold
-   automatically. */
-.picker-top-tabs{display:flex;gap:0;padding:0;flex-shrink:0;background:var(--panel2,rgba(0,0,0,.18));border-bottom:1px solid var(--border,rgba(255,255,255,.05));}
-.picker-top-tab{flex:1;padding:12px 0;font-family:var(--font-display);font-size:12.5px;font-weight:700;color:rgba(255,255,255,.3);cursor:pointer;text-align:center;border:none;background:transparent;transition:all .16s;border-bottom:2px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:7px;}
+/* Unified picker top tabs (GIFs | Stickers | Emoji | Bots) — .pk-tab mockup:
+   rounded-top tabs, gold glow-underline on active. Inline FA SVGs inherit the
+   tab colour via currentColor, so the active icon turns gold automatically. */
+.picker-top-tabs{display:flex;gap:2px;padding:8px 8px 0;flex-shrink:0;background:transparent;}
+.picker-top-tab{flex:1;padding:10px 8px;font-family:var(--font-display);font-size:12.5px;font-weight:700;color:var(--muted-light);cursor:pointer;text-align:center;border:none;background:transparent;transition:color .14s,background .14s;border-radius:10px 10px 0 0;position:relative;display:inline-flex;align-items:center;justify-content:center;gap:7px;}
+.picker-top-tab .pt-ico{height:15px;width:auto;fill:currentColor;flex-shrink:0;}
 .picker-top-tab .svgrepo-icon{width:16px;height:16px;}
-.picker-top-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.03);}
-.picker-top-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.04);}
+.picker-top-tab:hover{color:var(--text);background:rgba(255,255,255,.03);}
+.picker-top-tab.active{color:var(--accent);background:transparent;}
+.picker-top-tab.active::after{content:'';position:absolute;left:12px;right:12px;bottom:0;height:2.5px;border-radius:3px;background:var(--accent);box-shadow:0 0 12px rgba(255,249,62,.5);}
 /* GIF category chips row */
 .gif-cat-row{display:flex;gap:5px;padding:8px 14px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(0,0,0,.08);}
 .gif-cat-row::-webkit-scrollbar{display:none;}
@@ -4183,11 +4185,34 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 /* Solid background — no backdrop-filter (see .chat-picker-base note). Width
    matches the other pickers (460) so switching tabs never resizes the popover. */
 .emoji-picker-panel{position:fixed;width:460px;max-width:calc(100vw - 16px);max-height:520px;background:var(--panel);border:1px solid var(--glass-border);border-radius:14px;padding:0;z-index:11000;box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.035);display:none;flex-direction:column;overflow:hidden;font-family:var(--font-ui);}
-/* Row below the full-width tab bar: emoji grid (main) + the right icon rail. */
+/* ── Emoji picker — .pk-* mockup (docs/picker-redesign-mockup.html), rebuilt
+   theme-aware: surfaces derive from the live appearance vars. ── */
+/* Full-width rounded search (magnifier + input + clear ✕). */
+.epp-search-wrap{padding:10px 12px 8px;flex-shrink:0;border-bottom:1px solid var(--glass-border);}
+.epp-search-box{position:relative;display:flex;align-items:center;}
+.epp-search-ic{position:absolute;left:12px;width:14px;height:14px;color:var(--muted-light);opacity:.7;pointer-events:none;}
+.epp-search-inp{width:100%;background:var(--bg);border:1px solid var(--glass-border);border-radius:11px;color:var(--text);font-family:var(--font-ui);font-size:13px;padding:10px 34px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;}
+.epp-search-inp:focus{border-color:var(--accent-mid);box-shadow:0 0 0 3px var(--accent-dim);}
+.epp-search-inp::placeholder{color:var(--muted);}
+.epp-search-clr{position:absolute;right:9px;width:22px;height:22px;border:none;background:rgba(255,255,255,.06);color:var(--muted-light);border-radius:6px;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;}
+.epp-search-clr svg{width:11px;height:11px;}
+.epp-search-clr:hover{background:rgba(255,255,255,.12);color:var(--text);}
+.epp-search-box.has-val .epp-search-clr{display:flex;}
+/* Row below the search: emoji grid (main) + the right icon rail. */
 .epp-body{display:flex;flex-direction:row;flex:1 1 auto;min-height:0;overflow:hidden;}
-/* Guilded-style hover footer: shows the emoji you're pointing at. */
-.epp-footer{padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);font-size:10px;color:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px;}
-.epp-footer #epp-hover-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.epp-scroll{flex:1;overflow-y:auto;padding:4px 8px 8px;scrollbar-width:thin;position:relative;}
+.epp-scroll::-webkit-scrollbar{width:8px;}
+.epp-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
+/* Guilded-style hover footer: the emoji you're pointing at + :name: · Category. */
+.epp-footer{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--glass-border);background:var(--bg);flex-shrink:0;min-height:46px;}
+.epp-foot-emoji{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:24px;line-height:1;flex-shrink:0;}
+.epp-foot-emoji img{width:26px;height:26px;object-fit:contain;}
+.epp-foot-name{font-size:13px;font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.epp-foot-name small{color:var(--muted-light);font-weight:500;}
+.epp-foot-empty{color:var(--muted);font-weight:500;font-size:12.5px;}
+.epp-foot-info{width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,255,255,.09);background:var(--panel2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted-light);flex-shrink:0;padding:0;transition:color .12s,background .12s;}
+.epp-foot-info svg{width:13px;height:13px;}
+.epp-foot-info:hover{color:var(--accent);background:var(--accent-dim);}
 /* Opacity-only entrance. The shared pickerSlideIn animates transform+scale,
    which — on this backdrop-filtered, content-heavy panel — flickered/"stuck"
    as the blur re-composited mid-transform. A plain fade avoids it. Applied
@@ -4197,12 +4222,12 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .emoji-picker-panel.show{display:flex;}
 /* Icon-only right sidebar — Discord-style, 48px wide. No text labels; the
    button's title attribute provides an on-hover native tooltip. */
-.epp-sidebar{width:48px;background:rgba(0,0,0,.22);border-left:1px solid rgba(255,255,255,.03);display:flex;flex-direction:column;align-items:center;padding:6px 4px;gap:2px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;flex-shrink:0;}
+.epp-sidebar{width:46px;background:var(--bg);border-left:1px solid var(--glass-border);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:3px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;flex-shrink:0;}
 .epp-sidebar::-webkit-scrollbar{width:0;height:0;}
-.epp-sidebar-btn{position:relative;width:36px;height:36px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:transparent;color:rgba(255,255,255,.48);transition:background .14s ease,color .14s ease,transform .14s ease;flex-shrink:0;padding:0;}
-.epp-sidebar-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.92);}
-.epp-sidebar-btn.active{background:rgba(255,249,62,.12);color:var(--accent);}
-.epp-sidebar-btn.active::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0;}
+.epp-sidebar-btn{position:relative;width:34px;height:34px;border-radius:9px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--muted-light);transition:background .12s ease,color .12s ease;flex-shrink:0;padding:0;}
+.epp-sidebar-btn:hover{background:rgba(255,255,255,.06);color:var(--text);}
+.epp-sidebar-btn.active{background:var(--accent-dim);color:var(--accent);}
+.epp-sidebar-btn.active::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0;}
 .epp-sidebar-emblem{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:inherit;}
 .epp-sidebar-emblem svg{color:inherit;}
 .epp-sidebar-emblem img{width:22px;height:22px;object-fit:contain;}
@@ -9851,7 +9876,7 @@ button[style*="background: var(--accent)"]:active {
   overflow: hidden;
   transition: background .12s ease;
 }
-.emoji-cell:hover { background: rgba(255,255,255,.06); }
+.emoji-cell:hover { background: rgba(255,255,255,.08); }
 .emoji-cell:active { background: rgba(255,255,255,.1); }
 .emoji-cell img {
   width: 26px;
@@ -9892,19 +9917,18 @@ button[style*="background: var(--accent)"]:active {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: rgba(20,20,22,.94);
-  backdrop-filter:none;
-  -webkit-backdrop-filter:none;
-  font-size: 10px;
-  font-weight: 700;
+  /* Theme-aware gradient fade (mockup .pk-sec) — tracks the appearance panel
+     colour so section headers sit on the picker background. */
+  background: linear-gradient(var(--panel), var(--panel) 70%, transparent);
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: .08em;
-  color: rgba(255,255,255,.48);
-  padding: 10px 8px 6px;
+  letter-spacing: .04em;
+  color: var(--muted-light);
+  padding: 12px 6px 6px;
   display: flex;
   align-items: center;
   gap: 6px;
-  border-bottom: 1px solid rgba(255,255,255,.02);
 }
 .epp-section-grid {
   display: grid;

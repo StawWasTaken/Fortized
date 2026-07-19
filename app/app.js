@@ -34327,6 +34327,14 @@ function parseMD(s) {
     if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
+  // 1a2. Tenor PAGE links (tenor.com/view/<slug>-<id>) — resolve to the media
+  // URL async (the most common Tenor share format; direct media is handled by
+  // 1a above). The trailing numeric id is the gif id.
+  s = s.replace(/https?:\/\/(?:www\.)?tenor\.com\/view\/[\w%-]*?-(\d{5,})(?:\?[^\s"'<>]*)?(?=[\s<]|$)/gi, (url, id) => {
+    const pid = 'tenor-ph-' + id + '-' + Math.random().toString(36).slice(2,8);
+    setTimeout(() => _resolveTenorId(pid, id), 0);
+    return `<div id="${pid}" class="ftz-embed-gif" style="min-height:80px;display:flex;align-items:center;justify-content:center;"><div style="font-size:11px;color:rgba(255,255,255,.25);">Loading GIF…</div></div>`;
+  });
   // 1ab. Klipy GIF links — auto-embed any klipy.com URL as inline GIF
   s = s.replace(/(https?:\/\/[^\s"'<>]*klipy\.[^\s"'<>]+\.(?:gif|webp|mp4))(?=[\s<]|$)/gi, (url) => {
     const safe = escapeHTML(url.trim());
@@ -39117,6 +39125,32 @@ async function _resolveKlipySlug(placeholderId, slug) {
   } catch {
     el.innerHTML = `<div style="font-size:11px;color:rgba(255,255,255,.3);cursor:pointer;" onclick="openExternalLink(event,'https://klipy.com/gifs/${escapeHTML(slug)}')">Could not load GIF — click to view on Klipy</div>`;
     el.style.minHeight = '';
+  }
+}
+
+// Resolve a Tenor gif id → media URL, then swap the placeholder for a GIF
+// embed. Uses Tenor's long-standing public demo key (CORS-enabled v1 API); if
+// that ever fails, we degrade to a plain clickable link (no worse than before).
+async function _resolveTenorId(placeholderId, id) {
+  const el = document.getElementById(placeholderId);
+  if (!el) return;
+  const fallback = () => {
+    const link = 'https://tenor.com/view/gif-' + encodeURIComponent(id);
+    el.outerHTML = `<a href="${escapeHTML(link)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">🎞 View GIF on Tenor</a>`;
+  };
+  try {
+    const res = await fetch('https://g.tenor.com/v1/gifs?ids=' + encodeURIComponent(id) + '&key=LIVDSRZULELA&media_filter=minimal&limit=1');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const r = (data.results || [])[0];
+    const m = (r && r.media && r.media[0]) || {};
+    const gifUrl = m.gif?.url || m.mediumgif?.url || m.tinygif?.url || m.nanogif?.url || r?.itemurl || '';
+    if (!gifUrl || !document.getElementById(placeholderId)) { if (!gifUrl) fallback(); return; }
+    const safe = escapeHTML(gifUrl);
+    const fid = String(id).slice(-16);
+    el.outerHTML = `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+  } catch (_) {
+    fallback();
   }
 }
 

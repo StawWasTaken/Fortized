@@ -1,5 +1,59 @@
 # Fortized — working notes for Claude
 
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix326`)
+
+Branch `claude/staff-console-world-map-zgvrsa`, mirrored to `main`. Standing
+rules unchanged (egress; mirror-to-main + cache-bust every push; `node --check`
+app.js + supabase + 42 relationship tests pre-commit; verify UI via Playwright
+plainviews — CDN/Supabase unreachable in-sandbox).
+
+**Shipped `2026fix320`→`326` (rounds 3–5 of user feedback):**
+- **Right-click a message → "Bots"** (in the real ctx menu `handleContextMenu`,
+  NOT the ⋯ More menu) → opens the **Bots flyout** (`_openMsgBotsMenu` /
+  `.ctx-apps-flyout` — search + "Bots" section listing each message-command bot
+  + commands). FortGified → **Convert to GIF**; enabled for images and videos
+  **<15s**, disabled+hinted otherwise. Gate: `ch.botsDisabled`.
+- **FortGified video→GIF** (`_videoToGif` + `_encodeFramesAsGif`: multi-frame
+  animated GIF89a, local palettes + Netscape loop; 320px/~10fps/≤180 frames;
+  VERIFIED decodable in Chromium). Image path = single-frame (`_encodeCanvasAsGif`).
+- **Bare GIF links embed**: added Tenor **page** URLs (`tenor.com/view/…-id` →
+  `_resolveTenorId`, public demo key, link fallback). Direct media + Giphy +
+  Klipy pages already embedded.
+- **Modify Attachment card redesigned** (`_renderModifyAttachmentCard`): thumb +
+  Filename + **Alt Text** + Mark-as-spoiler, FA icons. Alt flows via a 3rd
+  FTZIMG token seg `[FTZIMG:name|url|alt]`; spoiler wraps token in `||…||`.
+- **Sent-attachment corner controls** (`_attWrap` on FTZIMG images/gifs):
+  Download, Collect(gif), Modify+Delete (own-only via `.own`). Delete drops the
+  one token (keeps caption) or deletes the msg; persist via `_persistMessageEdit`.
+  **Ownership checks are now case-insensitive** (history rows lowercase `from` —
+  was why Modify/Delete "didn't work on sent").
+- **Save = native Save-As** (`showSaveFilePicker`, original ext; anchor fallback).
+- **Edit box behaves like the chatbar**: `setupEmojiAutocomplete('edit-ta')`
+  (:emoji: suggestions, emoji select/delete), surface matches `.chat-input-outer`,
+  emoji icon `#b3b2b4`.
+- **Chatbar attachment spoiler**: overlay `pointer-events:none` + action row
+  `z-index:3` (was blocking clicks); added eye "Spoiler Attachment" toggle
+  (`_toggleAttachSpoiler`); card actions now FA SVGs.
+- **"BOT"** label everywhere (never "APP"; Apps = Discord's word).
+
+**STILL OPEN (user queue):**
+- **#21 Chatbar redesign** — pending-attachment preview "sucks", make it
+  Discord-like; make the chatbar grow taller **downward** with text/attachments
+  (not the current janky way). Ref screenshots. NOT started.
+- **#22** — extend corner Modify/Delete to **video/audio/file** (images/gif only
+  today; video/audio players have their own download — wrap carefully).
+- Open Qs for user: remove the **chatbar Bots tab** (the "plus thing" picker)
+  entirely? (kept for now, non-destructive.)
+
+**FUTURE — full Bot system (user spec, #23, build later):**
+1. @fortized built-in bots ALWAYS available in the Bots command button.
+2. Create + add **custom bots** to Bastions AND Group Chats.
+3. Bastion owners can disable bot-command use **per-channel or per-role**, or
+   disable only certain bots. (Groundwork today: FortGified built-in, Bots
+   flyout, `ch.botsDisabled` gate stub — no settings UI yet.)
+
+---
+### Previous handoff (kept for history)
 ## 🔴 SESSION HANDOFF (as of cache-bust `2026fix319`)
 
 **Shipped in `2026fix319` (round 2 of user feedback):**

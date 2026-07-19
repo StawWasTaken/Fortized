@@ -298,8 +298,26 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .msg-title2{font-family:var(--font-display);font-size:16px;font-weight:700;margin:10px 0 4px;line-height:1.35;color:rgba(255,255,255,.9);}
 .msg-subtitle{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin:8px 0 4px;color:rgba(255,255,255,.4);}
 /* ── Improved Spoilers ──── */
-.msg-spoiler{display:inline;padding:0 4px;border-radius:5px;background:rgba(255,255,255,.1);color:transparent;cursor:pointer;transition:color .3s,background .3s;user-select:none;filter:blur(4px);-webkit-filter:blur(4px);}
-.msg-spoiler.revealed{color:rgba(255,255,255,.8);background:rgba(255,255,255,.05);filter:none;-webkit-filter:none;user-select:auto;}
+/* Text spoiler — Discord-style solid block (no blur, which can leak readable
+   text). Click reveals. box-decoration-break keeps the block intact across
+   line-wraps. */
+.msg-spoiler{display:inline;padding:0 3px;border-radius:4px;background:rgba(0,0,0,.62);color:transparent;cursor:pointer;transition:background .15s,color .12s;user-select:none;-webkit-box-decoration-break:clone;box-decoration-break:clone;}
+.msg-spoiler *{visibility:hidden;}
+.msg-spoiler:hover{background:rgba(0,0,0,.78);}
+.msg-spoiler.revealed{color:inherit;background:rgba(255,255,255,.07);cursor:text;user-select:auto;}
+.msg-spoiler.revealed *{visibility:visible;}
+/* Media spoiler — the whole attachment is blurred with a centred SPOILER pill;
+   click (or Enter/Space) reveals it and makes the media interactive again. */
+.ftz-spoiler-media{position:relative;display:inline-block;max-width:100%;border-radius:12px;overflow:hidden;cursor:pointer;vertical-align:top;}
+.ftz-spoiler-media__inner{filter:blur(30px);transform:scale(1.05);pointer-events:none;transition:filter .25s ease;}
+.ftz-spoiler-media::before{content:"";position:absolute;inset:0;background:rgba(8,9,13,.35);z-index:1;transition:opacity .25s;}
+.ftz-spoiler-media__tag{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:100px;background:rgba(8,9,13,.72);color:#fff;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;pointer-events:none;transition:opacity .2s;box-shadow:0 2px 10px rgba(0,0,0,.4);}
+.ftz-spoiler-media__tag svg{width:14px;height:14px;}
+.ftz-spoiler-media.revealed .ftz-spoiler-media__inner{filter:none;transform:none;pointer-events:auto;}
+.ftz-spoiler-media.revealed::before{opacity:0;pointer-events:none;}
+.ftz-spoiler-media.revealed .ftz-spoiler-media__tag{opacity:0;}
+[data-spoiler-mode="always"] .ftz-spoiler-media__inner{filter:none;transform:none;pointer-events:auto;}
+[data-spoiler-mode="always"] .ftz-spoiler-media::before,[data-spoiler-mode="always"] .ftz-spoiler-media__tag{opacity:0;}
 /* ── Smart Suggestion Panel ──── */
 .suggest-panel{position:fixed;background:var(--glass-heavy);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);border:1px solid var(--glass-border);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 40px rgba(0,0,0,.7);min-width:240px;max-width:360px;max-height:300px;overflow-y:auto;animation:ctxIn .12s cubic-bezier(.22,1,.36,1);}
 .suggest-panel .sp-header{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:2px 8px 5px;}
@@ -1359,7 +1377,9 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Reply bar: matches the chat input surface, slightly darker. Sits
    visually attached to the input below (top-rounded only, no bottom
    border). Mirrors Discord's neutral grey reply strip. */
-.chat-reply-bar{display:none;align-items:center;gap:10px;padding:7px 14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-bottom:none;border-radius:10px 10px 0 0;font-size:12.5px;color:rgba(255,255,255,.6);margin:0 -1px;}
+/* Reply bar surface matches the room topbar (same dark-over-channel wash) so the
+   composer's "Replying to…" strip reads as part of the same chrome. */
+.chat-reply-bar{display:none;align-items:center;gap:10px;padding:7px 14px;background:linear-gradient(rgba(0,0,0,.40),rgba(0,0,0,.40)),var(--channel);border:1px solid rgba(255,255,255,.06);border-bottom:none;border-radius:10px 10px 0 0;font-size:12.5px;color:rgba(255,255,255,.6);margin:0 -1px;}
 .chat-reply-bar .crb-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
 .chat-reply-bar .crb-text strong{color:#fff;font-weight:600;}
 .chat-reply-bar .crb-close{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;transition:background .12s,color .12s;flex-shrink:0;}
@@ -1783,10 +1803,10 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 /* A collected GIF shows the filled bookmark in accent at all times, so you can
    tell at a glance it's already in your collection. */
 .chat-gif-fav-btn.is-collected{opacity:1;color:var(--accent);}
-/* When a GIF also carries attWrap corner controls (uploaded/FortGified gifs),
-   the always-on collect button moves to the top-LEFT so it never overlaps the
-   download/modify/delete row that appears top-right on hover. */
-.chat-gif-fav-btn.cgf-left{left:6px;right:auto;}
+/* Uploaded/FortGified gifs keep the always-on collect button at the top-RIGHT
+   (like every other gif). The download/modify/delete hover row shifts left so
+   it never sits under that collect button. */
+.ftz-att-ctrls--offset{right:44px;}
 .chat-gif-fav-btn:hover{transform:scale(1.15);background:rgba(0,0,0,.7);color:var(--accent);}
 /* Drag-drop overlay — scoped to chatbar */
 .drop-overlay{position:absolute;inset:0;background:rgba(255,249,62,.06);border:2px dashed var(--accent);border-radius:12px;z-index:30;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none;}
@@ -11800,6 +11820,20 @@ select:focus-visible {
   box-shadow:0 1px 0 rgba(var(--fpp-main-rgb), .12);
 }
 .fpp__banner > img{ width:100%; height:100%; object-fit:cover; display:block; }
+/* ── FortGified bot profile ── */
+.fpp__banner--bot{ background:radial-gradient(120% 140% at 50% 0%, rgba(255,249,62,.28), rgba(255,249,62,.10) 60%, transparent), var(--accent); display:flex; align-items:center; justify-content:center; }
+.fpp__banner--bot .fpp__banner-bot-icon{ width:auto; height:56%; max-height:64px; object-fit:contain; filter:drop-shadow(0 3px 8px rgba(0,0,0,.28)); }
+.fpp__av-wrap--bot .fpp__bot-badge{ position:absolute; right:-2px; bottom:-2px; width:26px; height:26px; border-radius:50%; background:var(--accent); color:#04050a; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 3px var(--panel,#1b1e25); }
+.fpp__av-wrap--bot .fpp__bot-badge svg{ width:15px; height:15px; }
+.fpp__bot-id{ font-size:12px; color:var(--muted-light,#7d8a9e); font-family:var(--font-ui); letter-spacing:.02em; }
+.fpp__bot-by{ font-size:12px; color:var(--muted-light,#7d8a9e); }
+.fpp__bot-by a{ color:var(--accent); text-decoration:none; }
+.fpp__bot-by a:hover{ text-decoration:underline; }
+.fpp-bot-cmds{ display:flex; flex-direction:column; gap:6px; }
+.fpp-bot-cmd{ display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text); padding:6px 10px; border-radius:8px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.05); }
+.fpp-bot-cmd svg{ width:14px; height:14px; color:var(--accent); flex-shrink:0; }
+.fpp-bot-modal-overlay{ position:fixed; inset:0; z-index:var(--z-modal,5000); background:rgba(4,5,10,.6); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:24px; }
+.fpp--bot-modal{ width:340px; max-width:calc(100vw - 48px); max-height:calc(100vh - 48px); overflow:auto; border-radius:16px; box-shadow:0 24px 64px rgba(0,0,0,.5); }
 .fpp__banner-fallback{
   width:100%; height:100%;
   background:url('/wrapBackground.png') center/cover no-repeat, #0e1117;

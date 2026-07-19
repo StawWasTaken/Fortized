@@ -1032,6 +1032,14 @@ const MANUAL_BOTS = ['fortized', 'joyster', 'fortizedsafety', 'fortgified'];
 const FORTGIFIED_NAME = 'fortgified';
 const FORTGIFIED_DISPLAY = 'FortGified';
 const FORTGIFIED_AVATAR = '/FortGified-PFP.png';
+// Bot-profile metadata (FortGified has no DB row — these are the fixed facts
+// shown on its special bot profile card).
+const FORTGIFIED_BOT_ID = 'FTZ-BOT-0001';
+const FORTGIFIED_CREATED = '2026-06-01T00:00:00.000Z';
+const FORTGIFIED_DESC = 'FortGified turns your uploaded images and short videos (≤15s) into GIFs — right from any message. Right-click a message → Bots → FortGified.';
+const FORTGIFIED_BY = 'fortized';
+// The yellow Fortized brand mark used as the bot banner.
+const FORTGIFIED_BANNER_ICON = '/Fortized icon.png';
 function isFortgified(name) { return String(name || '').toLowerCase() === FORTGIFIED_NAME; }
 // Read the invoking user out of a bot message. FortGified posts messages that
 // open with "**@<user>** used **<command>**" — that prefix is the durable record
@@ -10840,7 +10848,7 @@ function _encodeCanvasAsGif(canvas) {
 // Frames (array of ImageData) → animated GIF89a Blob. Per-frame LOCAL colour
 // tables (better quality than one global palette across a whole video) +
 // Netscape loop + graphic-control extensions with a per-frame delay.
-function _encodeFramesAsGif(frames, w, h, delayCs) {
+async function _encodeFramesAsGif(frames, w, h, delayCs, onProgress) {
   const bytes = [];
   const push16 = (v) => { bytes.push(v & 0xFF, (v >> 8) & 0xFF); };
   for (const c of 'GIF89a') bytes.push(c.charCodeAt(0));
@@ -10849,7 +10857,13 @@ function _encodeFramesAsGif(frames, w, h, delayCs) {
   bytes.push(0x21, 0xFF, 0x0B);      // Netscape 2.0 loop-forever application ext
   for (const c of 'NETSCAPE2.0') bytes.push(c.charCodeAt(0));
   bytes.push(0x03, 0x01, 0, 0, 0);
+  let _fi = 0;
   for (const frame of frames) {
+    // Encoding a frame (median-cut palette + nearest-colour map + LZW) is heavy
+    // and fully synchronous. Yield to the event loop between frames so the whole
+    // UI doesn't freeze ("bugs the entire website") while a clip encodes.
+    await new Promise(r => setTimeout(r, 0));
+    if (onProgress) { try { onProgress(++_fi, frames.length); } catch(_){} }
     const data = frame.data;
     const pal = _gifPalette(data, 256);
     while (pal.length < 256) pal.push([0, 0, 0]);
@@ -10893,13 +10907,15 @@ async function _videoToGif(srcVideo) {
   v.src = srcVideo.src;
   await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = () => rej(new Error('video load failed')); });
   const duration = v.duration || 0;
-  if (!duration || duration > 15.5) throw new Error('Video must be under 15 seconds');
-  const maxDim = 320;
+  if (!duration || duration > 15.5) throw new Error('Video must be 15 seconds or less');
+  // Keep the work bounded so encoding stays responsive: max 240px and ≤50
+  // frames (~8fps). Beyond this the synchronous encode locks up the tab.
+  const maxDim = 240;
   const vw = v.videoWidth || 320, vh = v.videoHeight || 240;
   const scale = Math.min(1, maxDim / Math.max(vw, vh));
   const w = Math.max(1, Math.round(vw * scale)), h = Math.max(1, Math.round(vh * scale));
-  let total = Math.round(duration * 10);
-  total = Math.max(1, Math.min(total, 180));
+  let total = Math.round(duration * 8);
+  total = Math.max(1, Math.min(total, 50));
   const delayCs = Math.max(2, Math.round(100 * duration / total));
   const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -10909,7 +10925,9 @@ async function _videoToGif(srcVideo) {
     ctx.drawImage(v, 0, 0, w, h);
     frames.push(ctx.getImageData(0, 0, w, h)); // throws on a tainted (cross-origin) frame
   }
-  return _encodeFramesAsGif(frames, w, h, delayCs);
+  return _encodeFramesAsGif(frames, w, h, delayCs, (i, n) => {
+    if (i === 1 || i === n || i % 10 === 0) toast(FORTGIFIED_DISPLAY + ' encoding… ' + Math.round(i / n * 100) + '%', 'info');
+  });
 }
 
 // FortGified's two commands — "Image to GIF" (mode='image', a real uploaded
@@ -12441,13 +12459,33 @@ function replyToMsg(msgId, fromName, context) {
   const newBar = document.getElementById(inputId+'-reply-bar');
   const newName = document.getElementById(inputId+'-reply-name');
   if (newBar) { newBar.style.display='flex'; }
-  if (newName) newName.textContent = fromName;
+  if (newName) _applyReplyName(newName, fromName, row);
   const bar = document.getElementById(context+'-reply-bar');
   const nameEl = document.getElementById(context+'-reply-name');
   if (bar && !newBar) bar.classList.add('show');
-  if (nameEl && !newName) nameEl.textContent = fromName;
+  if (nameEl && !newName) _applyReplyName(nameEl, fromName, row);
   const inp = document.getElementById(inputId);
   if (inp) inp.focus();
+}
+// Fill the reply bar's name with the target's DISPLAY NAME styled with their
+// display font/effect/colour (matches how their name renders on messages),
+// rather than the raw @username.
+function _applyReplyName(el, username, row) {
+  if (!el) return;
+  const style = (u) => {
+    el.textContent = (u && u.displayName) || username;
+    if (u) el.style.cssText = `font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor || '#fff', u.displayColor2 || u.displayColor || '#fff')}`;
+  };
+  // Immediate paint from cache (or the already-rendered message author).
+  const cached = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || null;
+  if (cached) style(cached);
+  else {
+    const authorEl = row && row.querySelector && row.querySelector('.msg-author');
+    if (authorEl && authorEl.textContent) { el.textContent = authorEl.textContent; el.style.cssText = authorEl.style.cssText; }
+    else el.textContent = username;
+  }
+  // Refine from the fresh row (display fields may have changed).
+  Promise.resolve().then(() => FortizedSocial.getUserByName(username)).then(u => { if (u) style(u); }).catch(() => {});
 }
 function cancelReply(context) {
   replyingTo = null;
@@ -25686,6 +25724,8 @@ async function viewUserProfile(username, opts) {
   // Optional second arg: a string tab name ('wishlist' / 'activity-detail' /
   // 'mutuals') to deep-link into a specific page on the profile card.
   const tabKey = typeof opts === 'string' ? opts : (opts && opts.tab) || null;
+  // FortGified has no DB row — never fetch a regular profile for it.
+  if (isFortgified((username || '').trim())) { return _openFortgifiedProfileModal(); }
   if (tabKey) window._upPendingTab = tabKey;
   // Surface any silent failure to the user instead of swallowing it. The bug
   // "I can't open my own profile card" was a silent throw inside
@@ -33891,7 +33931,10 @@ function _attWrap(inner, opts) {
   const download = `<button class="ftz-att-btn" title="Download" onclick="event.stopPropagation();_attDownload(this)"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7 288 32zM64 352c-35.3 0-64 28.7-64 64l0 32c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-32c0-35.3-28.7-64-64-64l-101.5 0-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352 64 352zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg></button>`;
   const modify = (type === 'image' || type === 'gif') ? `<button class="ftz-att-btn ftz-att-own" title="Modify Attachment" onclick="event.stopPropagation();_attModify(this)"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/></svg></button>` : '';
   const del = `<button class="ftz-att-btn ftz-att-own is-danger" title="Delete Attachment" onclick="event.stopPropagation();_attDelete(this)"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C313.4 6.8 302.4 0 290.3 0L157.7 0c-12.1 0-23.1 6.8-28.5 17.7zM53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128 32 128 53.2 467z"/></svg></button>`;
-  return `<div class="ftz-att-wrap" data-att-url="${url}" data-att-name="${name}" data-att-type="${type}">${inner}<div class="ftz-att-ctrls">${collect}${download}${modify}${del}</div></div>`;
+  // When the media already carries its own always-on collect button (gifs), the
+  // hover controls shift left so they never sit under the top-right collect btn.
+  const ctrlsCls = opts.noCollect ? 'ftz-att-ctrls ftz-att-ctrls--offset' : 'ftz-att-ctrls';
+  return `<div class="ftz-att-wrap" data-att-url="${url}" data-att-name="${name}" data-att-type="${type}">${inner}<div class="${ctrlsCls}">${collect}${download}${modify}${del}</div></div>`;
 }
 function _attData(el) { const w = el.closest('.ftz-att-wrap'); return w ? { url: w.dataset.attUrl, name: w.dataset.attName, type: w.dataset.attType, wrap: w } : {}; }
 function _attContext() { return curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : 'ch'; }
@@ -34484,6 +34527,18 @@ async function _openBioMention(username) {
 function parseMD(s) {
   if (!s) return '';
   _augmentShortcodes();
+  // 0⁻. Spoilered ATTACHMENTS (||[FTZ…]||). Handle these BEFORE the generic
+  // ||text|| pass: render the media normally, then wrap it in a proper blur +
+  // "SPOILER" overlay. This also fixes the freeze/crash where the generic
+  // spoiler regex tried to wrap an already-expanded media blob (a huge data URL)
+  // in a text span.
+  s = s.replace(/\|\|\s*(\[FTZ(?:IMG|VID|AUD|FILE|GIF|STICKER):[^\]]*\])\s*\|\|/g, (_, token) => {
+    const media = parseMD(token); // recurse once to expand just this token
+    return '<div class="ftz-spoiler-media" onclick="if(!this.classList.contains(\'revealed\')){event.stopPropagation();this.classList.add(\'revealed\');}" role="button" tabindex="0" aria-label="Spoiler attachment - click to reveal" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.classList.add(\'revealed\');}">'
+      + '<div class="ftz-spoiler-media__inner">' + media + '</div>'
+      + '<span class="ftz-spoiler-media__tag"><svg viewBox="0 0 576 512" fill="currentColor" aria-hidden="true"><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0z"/></svg>Spoiler</span>'
+      + '</div>';
+  });
   // 0. GIF token from sendGifDirectly — unified GIF embed
   s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
@@ -34538,7 +34593,7 @@ function parseMD(s) {
       // glanceable everywhere. _attWrap still adds download/modify/delete, but we
       // tell it to skip its own collect (noCollect) to avoid a duplicate.
       const inner = '<div class="ftz-embed-gif" onclick="_openMediaLightbox(\'' + safeSrc + '\')">'
-        + '<img src="' + safeSrc + '" alt="' + safeAlt + '" loading="lazy">' + _gifCollectBtnHTML(data, 'cgf-left') + '</div>';
+        + '<img src="' + safeSrc + '" alt="' + safeAlt + '" loading="lazy">' + _gifCollectBtnHTML(data) + '</div>';
       return _attWrap(inner, { url: data, name, type: 'gif', noCollect: true });
     }
     const inner = '<img src="' + safeSrc + '" class="ftz-chat-img" alt="' + safeAlt + '"' + (safeAlt ? ' title="' + safeAlt + '"' : '') + ' data-media-name="' + escapeHTML(name) + '" style="max-width:550px;max-height:450px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">';
@@ -52302,6 +52357,78 @@ function _fppRenderFullPanel(panel, u, username, isOwn) {
   _fppApplyTheme(panel, u);
 }
 
+// ── FortGified bot profile ────────────────────────────────────────────────
+// FortGified has no DB row, so it gets a dedicated bot card instead of the
+// regular user profile: bot avatar + badge + BOT tag, name, the yellow brand
+// icon as the banner, a bot ID (no @username), a "by @fortized" line, a
+// Description (its About Me), its commands, and "Created On" (not member since).
+function _fppRenderBotPanel(panel) {
+  panel.classList.add('fpp--bot');
+  const created = _fppFormatDate(FORTGIFIED_CREATED) || 'June 2026';
+  const capsule = '<span class="ftz-app-capsule"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>BOT</span>';
+  const botGlyph = '<svg viewBox="0 -40 640 552" fill="currentColor"><path d="M352 0c0-17.7-14.3-32-32-32S288-17.7 288 0l0 64-96 0c-53 0-96 43-96 96l0 224c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-224c0-53-43-96-96-96l-96 0 0-64zM160 368c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zM224 176a48 48 0 1 1 0 96 48 48 0 1 1 0-96zm144 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0z"/></svg>';
+  panel.innerHTML = `
+    <div class="fpp__banner fpp__banner--bot"><img src="${escapeHTML(FORTGIFIED_BANNER_ICON)}" class="fpp__banner-bot-icon" alt="" onerror="this.style.display='none'"></div>
+    <div class="fpp__av-row">
+      <div class="fpp__av-wrap fpp__av-wrap--bot">
+        <div class="fpp__av">${buildAvatarHTML(FORTGIFIED_AVATAR, FORTGIFIED_DISPLAY, 72)}</div>
+        <span class="fpp__bot-badge" data-tip="Bot">${botGlyph}</span>
+      </div>
+    </div>
+    <div class="fpp__identity">
+      <div class="fpp__name-row" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+        <span class="fpp__name">${FORTGIFIED_DISPLAY}</span>${capsule}
+      </div>
+      <div class="fpp__handle-row">
+        <span class="fpp__bot-id" data-tip="Bot ID">${escapeHTML(FORTGIFIED_BOT_ID)}</span>
+        <span class="fpp__handle-sep">·</span>
+        <span class="fpp__bot-by">by <a href="#" onclick="event.preventDefault();_fppClose();viewUserProfile('${FORTGIFIED_BY}')">@${FORTGIFIED_BY}</a></span>
+      </div>
+    </div>
+    <div class="fpp-card fpp-card--about"><div class="fpp-card__title">Description</div><div class="fpp-card__body">${escapeHTML(FORTGIFIED_DESC)}</div></div>
+    <div class="fpp-card"><div class="fpp-card__title">Commands</div><div class="fpp-card__body fpp-bot-cmds">
+      <span class="fpp-bot-cmd"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6l96 0 32 0 208 0c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/></svg>Image to GIF</span>
+      <span class="fpp-bot-cmd"><svg viewBox="0 0 576 512" fill="currentColor"><path d="M0 128C0 92.7 28.7 64 64 64l256 0c35.3 0 64 28.7 64 64l0 256c0 35.3-28.7 64-64 64L64 448c-35.3 0-64-28.7-64-64L0 128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2l0 256c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-96-64L416 337.1l0-17.1 0-128 0-17.1 14.2-9.5 96-64c9.8-6.5 22.4-7.2 32.9-1.6z"/></svg>Video to GIF</span>
+    </div></div>
+    <div class="fpp-card"><div class="fpp-card__title">Created On</div><div class="fpp-card__body fpp-card__body--muted">${escapeHTML(created)}</div></div>`;
+}
+// Anchored popover (avatar/name click in chat).
+function _showFortgifiedProfilePopover(anchorEl) {
+  _fppClose();
+  const panel = document.createElement('div');
+  panel.id = 'fpp-mini';
+  panel.className = 'fpp fpp--mini fpp--bot';
+  panel.setAttribute('data-fpp-user', FORTGIFIED_NAME);
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-label', 'FortGified bot profile');
+  _fppRenderBotPanel(panel);
+  document.body.appendChild(panel);
+  _fppPositionPopover(panel, anchorEl);
+  setTimeout(() => {
+    function _close() { panel.remove(); document.removeEventListener('mousedown', _onMouse); document.removeEventListener('keydown', _onKey); }
+    function _onMouse(e) { if (panel.contains(e.target) || e.target === anchorEl) return; _close(); }
+    function _onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); _close(); } }
+    document.addEventListener('mousedown', _onMouse);
+    document.addEventListener('keydown', _onKey);
+  }, 100);
+}
+// Centred modal (viewUserProfile / "open full profile").
+function _openFortgifiedProfileModal() {
+  document.getElementById('fpp-bot-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'fpp-bot-modal';
+  overlay.className = 'fpp-bot-modal-overlay';
+  const panel = document.createElement('div');
+  panel.className = 'fpp fpp--bot fpp--bot-modal';
+  panel.setAttribute('role', 'dialog');
+  _fppRenderBotPanel(panel);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', function _k(e){ if (e.key === 'Escape') { close(); document.removeEventListener('keydown', _k); } });
+}
+
 // Build skeleton markup that matches the real popover's layout (banner +
 // avatar + identity + about/badges/games cards + action row). The
 // dimensions and gaps mirror the real elements so the swap is jitter-free.
@@ -52328,6 +52455,8 @@ function _fppSkeletonHTML() {
 
 async function showMiniProfilePreview(username, anchorEl) {
   _fppClose();
+  // FortGified (and any built-in bot) gets a dedicated bot profile card.
+  if (isFortgified(username)) { return _showFortgifiedProfilePopover(anchorEl); }
   // Userbar anchor → dedicated own-profile popover (Discord parity).
   const _isUserbarAnchor = !!(anchorEl && (anchorEl.id === 'ua-clickable' || anchorEl.closest?.('#ua-clickable')));
   if (_isUserbarAnchor && username === CU?.username) {

@@ -1,6 +1,32 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix328`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix329`)
+
+**Shipped `2026fix329` (crash fixes + spoiler/bot-profile redesign):**
+- **Video→GIF no longer freezes the tab**: `_encodeFramesAsGif` is now async and
+  `await`s a `setTimeout(0)` between frames (yields to the event loop); sampling
+  capped to 240px / ≤50 frames (~8fps) + a progress toast. `_videoToGif` awaits it.
+- **Spoiler crash fixed + redesigned**: a NEW parseMD pre-pass (before the FTZ
+  token + generic `||text||` passes) matches `||[FTZ…]||`, recurses `parseMD`
+  once to expand just that token, then wraps the media in `.ftz-spoiler-media`
+  (blur + centred SPOILER pill, click/Enter reveals). This stops the generic
+  spoiler regex from wrapping an already-expanded media blob (the crash). Text
+  `.msg-spoiler` redesigned to a solid Discord-style block (no blur leak).
+  `[data-spoiler-mode="always"]` reveals media spoilers too.
+- **Collect button back on the RIGHT for every gif** (incl. uploaded/FortGified):
+  `_attWrap` gifs render the always-on `_gifCollectBtnHTML` top-right and the
+  download/modify/delete hover row shifts left via `.ftz-att-ctrls--offset`
+  (`opts.noCollect`). Removed `cgf-left`.
+- **FortGified special bot profile** (`_fppRenderBotPanel` + `_showFortgifiedProfilePopover`
+  for avatar/name clicks + `_openFortgifiedProfileModal` for `viewUserProfile`):
+  yellow brand-icon banner, bot badge + BOT capsule, name, bot ID
+  (`FORTGIFIED_BOT_ID`, no @username), "by @fortized", Description (`FORTGIFIED_DESC`),
+  Commands (Image/Video to GIF), "Created On" (`FORTGIFIED_CREATED`). Guards in
+  `showMiniProfilePreview` + `viewUserProfile` route FortGified here (it has no DB row).
+- **Reply bar** (`.chat-reply-bar`) surface now matches the room topbar
+  (`linear-gradient(rgba(0,0,0,.4)…),var(--channel)`); the reply name uses the
+  target's DISPLAY NAME + display font/effect/colour via `_applyReplyName`.
+
 
 Branch `claude/staff-console-world-map-vawn5l`, mirrored to `main`. Standing
 rules unchanged (egress; mirror-to-main + cache-bust every push; `node --check`

@@ -1,6 +1,27 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix318`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix319`)
+
+**Shipped in `2026fix319` (round 2 of user feedback):**
+- **Emoji cells → Twemoji** (`renderEmojiCell` now emits `<img loading=lazy>`,
+  glyph onerror fallback) — was OS glyphs ("not twemojis/not loading").
+- **Rail overflow ROOT CAUSE fixed**: emblem `onerror` fallback nested double
+  quotes inside the double-quoted attr, leaking `ST>`/`FO>` text on image
+  failure. Now `_railEmblemFail()` + `.epp-emblem-fallback` + `overflow:hidden`
+  (emoji sidebar, `_stickerRailBtn`, bot rail, `_botAvatarHTML`).
+- **Topbar tabs only in chatbar context** — `buildEmojiPicker` computes
+  `chatbarMode` (insert mode + ch/dm/gc-input + no status override) and only
+  then renders `_pickerTopTabs`; hidden for reactions/edit/status/about/forum.
+- **FortGified always in Bots panel** (`_botGroups` prepends it, all contexts;
+  blue APP tag; `_fortgifiedHint` on click since it's a message command).
+- **Edit box → chatbar style** (`.edit-chatbar`: rounded row, inline emoji
+  button, "escape to cancel • enter to save" hint; no Save/Cancel buttons).
+- **Media menu**: no "Copy Image" for GIFs; Collect uses a bookmark icon in
+  `currentColor` (was yellow star).
+- **DM panel** now `align-self:flex-start` + `height:fit-content` (capped) — a
+  compact floating card, not a full-height sidebar.
+
+
 
 Branch `claude/staff-console-world-map-zgvrsa`, mirrored to `main`. Standing
 rules below still apply (egress, mirror-to-main + bump cache-bust every push,

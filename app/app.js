@@ -11958,7 +11958,7 @@ function appendMessage(container, msg, context, prevAuthor) {
       if (authorEl) {
         authorEl.textContent = FORTGIFIED_DISPLAY;
         if (!authorEl.nextElementSibling?.classList?.contains('ftz-app-capsule')) {
-          authorEl.insertAdjacentHTML('afterend', '<span class="ftz-app-capsule"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>APP</span>');
+          authorEl.insertAdjacentHTML('afterend', '<span class="ftz-app-capsule"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>BOT</span>');
         }
       }
     } else
@@ -33608,21 +33608,40 @@ async function _mediaBlob(src) {
   if (!res.ok) throw new Error('HTTP ' + res.status);
   return await res.blob();
 }
+const _EXT_MIME = { png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg', gif:'image/gif', webp:'image/webp', svg:'image/svg+xml', mp4:'video/mp4', webm:'video/webm', mov:'video/quicktime', mp3:'audio/mpeg', wav:'audio/wav', ogg:'audio/ogg', m4a:'audio/mp4', pdf:'application/pdf' };
 async function _mediaSave(src, filename) {
-  try {
-    const blob = await _mediaBlob(src);
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename || 'media';
-    a.style.display = 'none';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    toast('Saved ' + (filename || 'file'), 'success');
-  } catch (_) {
-    // Cross-origin fetch blocked — plain anchor still downloads same-origin
-    // and data: URLs; for everything else it opens the media directly.
-    _downloadLightboxImg(src, filename);
+  let blob;
+  try { blob = await _mediaBlob(src); }
+  catch (_) { _downloadLightboxImg(src, filename); return; } // CORS-blocked → let the browser open/download it
+  // Native "Save As" dialog (File System Access API) preserving the original
+  // extension, so the OS picker offers the real format (mp4/mp3/gif/png/…).
+  if (window.showSaveFilePicker) {
+    const ext = (String(filename || '').split('.').pop() || '').toLowerCase();
+    const mime = blob.type || _EXT_MIME[ext] || 'application/octet-stream';
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename || 'download',
+        types: ext ? [{ description: ext.toUpperCase() + ' file', accept: { [mime]: ['.' + ext] } }] : undefined,
+      });
+      const w = await handle.createWritable();
+      await w.write(blob);
+      await w.close();
+      toast('Saved ' + filename, 'success');
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return; // user cancelled the dialog — no toast
+      // any other failure → fall through to the anchor download
+    }
   }
+  // Fallback (Firefox/Safari have no picker API — the browser's own "ask where
+  // to save" setting governs whether a dialog appears).
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename || 'media';
+  a.style.display = 'none';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  toast('Saved ' + (filename || 'file'), 'success');
 }
 async function _mediaCopyImage(src) {
   try {
@@ -33650,6 +33669,102 @@ function _mediaCopyLink(src) {
   navigator.clipboard?.writeText(src)
     .then(() => toast('Link copied', 'success'))
     .catch(() => toast('Copy failed', 'error'));
+}
+
+// ── Sent-attachment corner controls ──────────────────────────────────────
+// Wrap a rendered attachment with hover controls. The media URL is stored ONCE
+// on the wrapper (data-att-url) so large data: URLs aren't duplicated per
+// button. Download/Collect work for anyone; Modify/Delete are own-only
+// (revealed by the .msg-own class the message row carries).
+function _attWrap(inner, opts) {
+  const url = escapeHTML(opts.url || '');
+  const name = escapeHTML(opts.name || '');
+  const type = opts.type || 'file';
+  const collect = type === 'gif'
+    ? `<button class="ftz-att-btn is-collect" title="Collect GIF" onclick="event.stopPropagation();_attCollect(this)"><svg viewBox="0 0 384 512" fill="currentColor"><path d="M0 48C0 21.5 21.5 0 48 0l288 0c26.5 0 48 21.5 48 48l0 431.4c0 17.4-19.9 27.3-33.8 16.9L192 400 33.8 496.3C19.9 506.7 0 496.8 0 479.4L0 48z"/></svg></button>` : '';
+  const download = `<button class="ftz-att-btn" title="Download" onclick="event.stopPropagation();_attDownload(this)"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7 288 32zM64 352c-35.3 0-64 28.7-64 64l0 32c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-32c0-35.3-28.7-64-64-64l-101.5 0-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352 64 352zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg></button>`;
+  const modify = (type === 'image' || type === 'gif') ? `<button class="ftz-att-btn ftz-att-own" title="Modify Attachment" onclick="event.stopPropagation();_attModify(this)"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/></svg></button>` : '';
+  const del = `<button class="ftz-att-btn ftz-att-own is-danger" title="Delete Attachment" onclick="event.stopPropagation();_attDelete(this)"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C313.4 6.8 302.4 0 290.3 0L157.7 0c-12.1 0-23.1 6.8-28.5 17.7zM53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128 32 128 53.2 467z"/></svg></button>`;
+  return `<div class="ftz-att-wrap" data-att-url="${url}" data-att-name="${name}" data-att-type="${type}">${inner}<div class="ftz-att-ctrls">${collect}${download}${modify}${del}</div></div>`;
+}
+function _attData(el) { const w = el.closest('.ftz-att-wrap'); return w ? { url: w.dataset.attUrl, name: w.dataset.attName, type: w.dataset.attType, wrap: w } : {}; }
+function _attContext() { return curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : 'ch'; }
+function _attDownload(el) {
+  const d = _attData(el); if (!d.url) return;
+  const ext = d.type === 'gif' ? 'gif' : d.type === 'image' ? 'png' : d.type === 'video' ? 'mp4' : d.type === 'audio' ? 'mp3' : 'bin';
+  _mediaSave(d.url, _mediaFilename(d.url, d.name, 'attachment', ext));
+}
+function _attCollect(el) { const d = _attData(el); if (d.url) saveFavGif({ id: d.url.replace(/[^a-zA-Z0-9]/g, '').slice(-16), url: d.url }); }
+// Persist a message-body edit (used by attachment delete/modify) across DM / GC
+// / bastion, then broadcast — mirrors saveEdit's persistence tail.
+async function _persistMessageEdit(msgId, newText) {
+  try {
+    if (curDM) await FortizedSocial.editMessage('dm', { user1: CU.username, user2: curDM, messageId: msgId, newText });
+    else if (typeof curGC !== 'undefined' && curGC) await FortizedSocial.editMessage('gc', { gcId: curGC, messageId: msgId, newText });
+    else { const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel]; await FortizedSocial.editMessage('bastion', { bastionId: b?.globalId || b?.name, channelId: ch?.name || 'general', messageId: msgId, newText }); }
+  } catch (e) { console.warn('[attach edit] persist', e?.message); }
+  const editType = curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : 'bastion';
+  let id1, id2;
+  if (editType === 'dm') { id1 = CU.username; id2 = curDM; }
+  else if (editType === 'gc') { id1 = curGC; }
+  else { const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel]; id1 = b?.globalId || b?.name; id2 = ch?.name || 'general'; }
+  FortizedSocial.socketEmit('message:edit', { type: editType, id1, id2, messageId: msgId, newText });
+}
+function _attRerender(row, newText) {
+  row.dataset.text = newText;
+  const textEl = row.querySelector('.msg-text');
+  if (textEl) textEl.innerHTML = parseMD(escapeHTML(newText)) + (row.dataset.edited === '1' ? _fmtEditedTag(row.dataset.editedAt) : '');
+}
+async function _attDelete(el) {
+  const d = _attData(el); const row = el.closest('.msg-row[data-msgid]');
+  if (!row || !d.url) return;
+  if (row.dataset.from !== CU?.username) { toast('You can only delete your own attachments', 'error'); return; }
+  const msgId = row.dataset.msgid;
+  const orig = row.dataset.text || '';
+  // Remove the one FTZ media token whose URL matches (plus any ||…|| spoiler wrap).
+  const re = /(\|\|)?\[FTZ(?:IMG|VID|AUD|FILE):[^\]]*\](\|\|)?/g;
+  let removed = false;
+  let next = orig.replace(re, (m) => { if (!removed && m.includes(d.url)) { removed = true; return ''; } return m; });
+  next = next.replace(/[ \t]{2,}/g, ' ').trim();
+  if (!removed) { toast('Attachment not found', 'error'); return; }
+  if (!next) { deleteMsg(msgId, _attContext()); return; } // nothing left → delete the whole message
+  _attRerender(row, next);
+  await _persistMessageEdit(msgId, next);
+  toast('Attachment removed', 'success');
+}
+function _attModify(el) {
+  const d = _attData(el); const row = el.closest('.msg-row[data-msgid]');
+  if (!row || !d.url) return;
+  if (row.dataset.from !== CU?.username) { toast('You can only modify your own attachments', 'error'); return; }
+  const orig = row.dataset.text || '';
+  const re = /(\|\|)?\[FTZIMG:([^\|]+)\|([^\|\]]+)(?:\|([^\]]*))?\](\|\|)?/g;
+  let found = null;
+  orig.replace(re, (m, sp1, name, url, alt, sp2) => { if (!found && url === d.url) found = { name, alt: alt || '', spoiler: !!(sp1 && sp2) }; return m; });
+  if (!found) { toast('Only images can be modified for now', 'info'); return; }
+  window._attModifyTarget = { msgId: row.dataset.msgid, url: d.url };
+  _renderModifyAttachmentCard({ thumb: `<img src="${escapeHTML(d.url)}" alt="">`, isImage: true, name: found.name, alt: found.alt, spoiler: found.spoiler, onSaveExpr: '_applySentAttachmentModify(this)' });
+}
+async function _applySentAttachmentModify(btn) {
+  const tgt = window._attModifyTarget; if (!tgt) return;
+  const row = document.querySelector(`[data-msgid="${CSS.escape(tgt.msgId)}"]`);
+  btn.closest('.ftz-confirm-overlay')?.remove();
+  if (!row) return;
+  const name = (document.getElementById('_mod-att-name')?.value || '').trim() || 'image.png';
+  const alt = (document.getElementById('_mod-att-alt')?.value || '').trim();
+  const spoiler = document.getElementById('_mod-att-spoiler')?.checked || false;
+  const orig = row.dataset.text || '';
+  const re = /(\|\|)?\[FTZIMG:([^\|]+)\|([^\|\]]+)(?:\|([^\]]*))?\](\|\|)?/g;
+  let done = false;
+  const next = orig.replace(re, (m, sp1, n, u, a, sp2) => {
+    if (done || u !== tgt.url) return m;
+    done = true;
+    let t = '[FTZIMG:' + name.replace(/[|\]]/g, ' ') + '|' + u + (alt ? '|' + alt.replace(/[|\]]/g, ' ') : '') + ']';
+    return spoiler ? '||' + t + '||' : t;
+  });
+  if (!done) return;
+  _attRerender(row, next);
+  await _persistMessageEdit(tgt.msgId, next);
+  toast('Attachment updated', 'success');
 }
 // Capture-phase so we win over the video player's inline
 // oncontextmenu="return false" and any bubbling handlers.
@@ -34207,19 +34322,17 @@ function parseMD(s) {
     });
   }
   // 0a. Image attachments (with fav button for GIFs)
-  s = s.replace(/\[FTZIMG:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
+  s = s.replace(/\[FTZIMG:([^\|]+)\|([^\|\]]+)(?:\|([^\]]*))?\]/g, function(_, name, data, alt) {
     const isGif = /\.gif/i.test(name) || /^data:image\/gif/i.test(data);
     const safeSrc = escapeHTML(data);
-    const fid = (name + data).replace(/[^a-zA-Z0-9]/g,'').slice(-16);
+    const safeAlt = escapeHTML(alt || '');
     if (isGif) {
-      return '<div class="ftz-embed-gif" onclick="_openMediaLightbox(\'' + safeSrc + '\')">'
-        + '<img src="' + safeSrc + '" loading="lazy">'
-        + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Add to collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>'
-        + '</div>';
+      const inner = '<div class="ftz-embed-gif" onclick="_openMediaLightbox(\'' + safeSrc + '\')">'
+        + '<img src="' + safeSrc + '" alt="' + safeAlt + '" loading="lazy"></div>';
+      return _attWrap(inner, { url: data, name, type: 'gif' });
     }
-    return '<div style="margin:6px 0 2px 0;display:block;border-radius:10px;padding:0;overflow:hidden;max-width:550px;">'
-      + '<img src="' + safeSrc + '" class="ftz-chat-img" data-media-name="' + escapeHTML(name) + '" style="max-width:550px;max-height:450px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">'
-      + '</div>';
+    const inner = '<img src="' + safeSrc + '" class="ftz-chat-img" alt="' + safeAlt + '"' + (safeAlt ? ' title="' + safeAlt + '"' : '') + ' data-media-name="' + escapeHTML(name) + '" style="max-width:550px;max-height:450px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">';
+    return _attWrap(inner, { url: data, name, type: 'image' });
   });
   // 0a2. Poll + Form tokens — replaced into unified embed shells.
   // The real DOM (vote bars, fill-in modal) hydrates from the
@@ -39510,7 +39623,7 @@ function _renderBotList() {
   if (rail) rail.innerHTML = groups.map(g =>
     `<button class="epp-sidebar-btn" title="${escapeHTML(g.name)}" aria-label="${escapeHTML(g.name)}" onclick="_botRailJump(${g.idx})"><span class="epp-sidebar-emblem bot-rail-av">${_botAvatarHTML(g)}</span></button>`).join('');
   if (list) list.innerHTML = groups.map(g =>
-    `<div class="epp-section bot-sec-head" id="botcmd-sec-${g.idx}"><span class="bot-sec-av">${_botAvatarHTML(g)}</span>${escapeHTML(g.name)}${g.builtin ? '<span class="bot-sec-app">APP</span>' : ''}<span class="bot-sec-count">${g.commands.length}</span></div>`
+    `<div class="epp-section bot-sec-head" id="botcmd-sec-${g.idx}"><span class="bot-sec-av">${_botAvatarHTML(g)}</span>${escapeHTML(g.name)}${g.builtin ? '<span class="bot-sec-app">BOT</span>' : ''}<span class="bot-sec-count">${g.commands.length}</span></div>`
     + g.commands.map(c => _botCmdRow(c, g.name)).join('')).join('');
 }
 function _botRailJump(idx) {
@@ -39674,42 +39787,53 @@ function showAttachmentPreview(name, type, dataUrl, size, context) {
   try { _persistPendingAttachmentChange(ctxKey, inputId); } catch(_) {}
 }
 
-function _showModifyAttachment() {
-  const att = window._pendingAttachment;
-  if (!att) return;
-  const isImage = att.type.startsWith('image/');
+// The Modify Attachment card. Used for a PENDING (pre-send) attachment, and —
+// via _openSentAttachmentModify — for an already-sent one (onSave rewrites the
+// message token). Discord-style: thumbnail, Filename, Description (Alt Text),
+// Mark as spoiler. FontAwesome SVG icons throughout.
+function _renderModifyAttachmentCard({ thumb, isImage, name, alt, spoiler, onSaveExpr }) {
   const overlay = document.createElement('div');
   overlay.className = 'ftz-confirm-overlay';
-  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:400px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div class="ftz-confirm-title" style="margin:0;">Modify Attachment</div>
-      <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:18px;">&times;</button>
+  overlay.innerHTML = `<div class="ftz-confirm-card modify-att-card">
+    <div class="modify-att-head">
+      <div class="modify-att-title"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/></svg>Modify Attachment</div>
+      <button class="modify-att-x" onclick="this.closest('.ftz-confirm-overlay').remove()" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     </div>
-    ${isImage ? `<img src="${escapeHTML(att.data)}" style="width:100%;max-height:200px;object-fit:contain;border-radius:10px;margin-bottom:12px;background:rgba(255,255,255,.03);">` : ''}
-    <div style="margin-bottom:8px;font-size:12px;font-weight:600;color:rgba(255,255,255,.5);">Filename</div>
-    <input id="_mod-att-name" value="${escapeHTML(att.name)}" style="width:100%;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:12px;">
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.6);margin-bottom:16px;">
-      <input type="checkbox" id="_mod-att-spoiler" ${att._spoiler ? 'checked' : ''} style="accent-color:var(--accent);width:16px;height:16px;">
+    ${thumb ? `<div class="modify-att-thumb${isImage?'':' modify-att-thumb--file'}">${thumb}</div>` : ''}
+    <label class="modify-att-label">Filename</label>
+    <input id="_mod-att-name" class="modify-att-input" value="${escapeHTML(name || '')}" spellcheck="false" autocomplete="off">
+    <label class="modify-att-label">Description (Alt Text)</label>
+    <textarea id="_mod-att-alt" class="modify-att-textarea" rows="3" placeholder="Add a description" spellcheck="false">${escapeHTML(alt || '')}</textarea>
+    <label class="modify-att-spoiler">
+      <input type="checkbox" id="_mod-att-spoiler" ${spoiler ? 'checked' : ''}>
+      <span class="modify-att-check"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg></span>
       Mark as spoiler
     </label>
-    <div class="ftz-modal-foot">
-      <div class="ftz-modal-foot__actions" style="width:100%;gap:8px;">
-        <button class="btn-g" style="flex:1;justify-content:center;" onclick="this.closest('.ftz-confirm-overlay').remove()">Cancel</button>
-        <button class="btn-yellow" style="flex:1;justify-content:center;" onclick="_applyModifyAttachment(this)">Save</button>
-      </div>
+    <div class="modify-att-foot">
+      <button class="btn-g modify-att-btn" onclick="this.closest('.ftz-confirm-overlay').remove()">Cancel</button>
+      <button class="btn-yellow modify-att-btn" onclick="${onSaveExpr}">Save</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  return overlay;
+}
+function _showModifyAttachment() {
+  const att = window._pendingAttachment;
+  if (!att) return;
+  const isImage = att.type.startsWith('image/');
+  const thumb = isImage
+    ? `<img src="${escapeHTML(att.data)}" alt="">`
+    : `<svg viewBox="0 0 384 512" fill="currentColor"><path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/></svg>`;
+  _renderModifyAttachmentCard({ thumb, isImage, name: att.name, alt: att.alt || '', spoiler: !!att._spoiler, onSaveExpr: '_applyModifyAttachment(this)' });
 }
 
 function _applyModifyAttachment(btn) {
   const att = window._pendingAttachment;
   if (!att) return;
-  const newName = document.getElementById('_mod-att-name')?.value?.trim() || att.name;
-  const isSpoiler = document.getElementById('_mod-att-spoiler')?.checked || false;
-  att.name = newName;
-  att._spoiler = isSpoiler;
+  att.name = document.getElementById('_mod-att-name')?.value?.trim() || att.name;
+  att.alt = document.getElementById('_mod-att-alt')?.value?.trim() || '';
+  att._spoiler = document.getElementById('_mod-att-spoiler')?.checked || false;
   btn.closest('.ftz-confirm-overlay').remove();
   showAttachmentPreview(att.name, att.type, att.data, att.size, att.context);
 }
@@ -39755,10 +39879,15 @@ async function handleChatSend(context, chIdx) {
       else { _dbg('[Upload] Storage failed, using base64 fallback:', result.error); }
     } catch(e) { _dbg('[Upload] Storage unavailable, using base64:', e.message); }
     let token;
-    if (isImage) token = '[FTZIMG:'+att.name+'|'+fileUrl+']';
+    // Images carry optional alt text as a 3rd token segment ([FTZIMG:name|url|alt]).
+    const altSeg = (isImage && att.alt) ? '|' + String(att.alt).replace(/[|\]]/g, ' ') : '';
+    if (isImage) token = '[FTZIMG:'+att.name+'|'+fileUrl+altSeg+']';
     else if (isVideo) token = '[FTZVID:'+att.name+'|'+fileUrl+']';
     else if (isAudio) token = '[FTZAUD:'+att.name+'|'+fileUrl+']';
     else token = '[FTZFILE:'+att.name+'|'+sizeMB+'|'+fileUrl+']';
+    // Spoiler: wrap the token in ||…|| so parseMD's spoiler pass hides it until
+    // clicked (the media token is rendered first, then wrapped).
+    if (att._spoiler) token = '||' + token + '||';
     const inp = document.getElementById(context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input');
     if (inp) {
       // The chat input is a contenteditable div with a `.value` shim that

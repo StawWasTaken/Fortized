@@ -9893,6 +9893,45 @@ button[style*="background: var(--accent)"]:active {
   gap: 8px;
 }
 
+/* ── Modify Attachment card (pre-send + sent) — Discord-style ── */
+.modify-att-card{max-width:420px;width:100%;text-align:left;}
+.modify-att-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modify-att-title{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;letter-spacing:-.01em;}
+.modify-att-title svg{width:16px;height:16px;color:var(--accent);}
+.modify-att-x{background:none;border:none;color:var(--muted-light);cursor:pointer;width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;transition:color .12s,background .12s;padding:0;}
+.modify-att-x:hover{color:var(--text);background:rgba(255,255,255,.06);}
+.modify-att-x svg{width:14px;height:14px;}
+.modify-att-thumb{width:100%;max-height:200px;border-radius:12px;overflow:hidden;margin-bottom:16px;background:var(--bg);display:flex;align-items:center;justify-content:center;}
+.modify-att-thumb img{max-width:100%;max-height:200px;object-fit:contain;display:block;}
+.modify-att-thumb--file{height:96px;}
+.modify-att-thumb--file svg{width:40px;height:40px;color:var(--muted-light);}
+.modify-att-label{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted-light);margin:0 0 7px;}
+.modify-att-input,.modify-att-textarea{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:var(--font-ui);font-size:13.5px;outline:none;box-sizing:border-box;margin-bottom:16px;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none;}
+.modify-att-input:focus,.modify-att-textarea:focus{border-color:var(--accent-mid);box-shadow:0 0 0 3px var(--accent-dim);}
+.modify-att-textarea{resize:vertical;min-height:64px;line-height:1.5;}
+.modify-att-spoiler{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13.5px;color:var(--text);margin-bottom:20px;user-select:none;}
+.modify-att-spoiler input{position:absolute;opacity:0;width:0;height:0;}
+.modify-att-check{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border);background:var(--bg);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s,border-color .12s;}
+.modify-att-check svg{width:11px;height:11px;color:var(--ink);opacity:0;transition:opacity .12s;}
+.modify-att-spoiler input:checked + .modify-att-check{background:var(--accent);border-color:var(--accent);}
+.modify-att-spoiler input:checked + .modify-att-check svg{opacity:1;}
+.modify-att-spoiler input:focus-visible + .modify-att-check{box-shadow:0 0 0 3px var(--accent-dim);}
+.modify-att-foot{display:flex;gap:8px;}
+.modify-att-btn{flex:1;justify-content:center;}
+
+/* ── Sent-attachment corner controls (hover, Discord-style) ── */
+.ftz-att-wrap{position:relative;display:inline-block;max-width:100%;}
+.ftz-att-ctrls{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transform:translateY(-2px);transition:opacity .14s ease,transform .14s ease;z-index:4;pointer-events:none;}
+.ftz-att-wrap:hover .ftz-att-ctrls,.ftz-att-ctrls:focus-within{opacity:1;transform:none;pointer-events:auto;}
+.ftz-att-btn{width:30px;height:30px;border-radius:8px;background:rgba(15,17,25,.78);border:1px solid rgba(255,255,255,.1);color:#e6e9f0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;backdrop-filter:blur(4px);transition:background .12s,color .12s,border-color .12s;}
+.ftz-att-btn:hover{background:rgba(15,17,25,.95);color:#fff;}
+.ftz-att-btn.is-danger:hover{background:rgba(235,69,69,.9);border-color:rgba(235,69,69,.5);color:#fff;}
+.ftz-att-btn.is-collect:hover{color:var(--accent);}
+.ftz-att-btn svg{width:14px;height:14px;}
+/* Modify/Delete are own-message only (rows from self carry .own). */
+.ftz-att-own{display:none;}
+.msg-row.own .ftz-att-own{display:inline-flex;}
+
 /* ── Close button (modal X buttons) ── */
 .ftz-close-btn {
   background: none;

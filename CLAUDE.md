@@ -1,11 +1,36 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix327`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix328`)
 
 Branch `claude/staff-console-world-map-vawn5l`, mirrored to `main`. Standing
 rules unchanged (egress; mirror-to-main + cache-bust every push; `node --check`
 app.js + supabase + 42 relationship tests pre-commit; verify UI via Playwright
 plainviews — CDN/Supabase unreachable in-sandbox).
+
+**Shipped `2026fix328` (FortGified rework + collect fixes + Tenor embed):**
+- **FortGified = TWO commands** (`_openMsgBotsMenu`): "Image to GIF" and "Video
+  to GIF" (≤15s). Image command uses `_msgFindConvertibleImage` = ONLY
+  `img.ftz-chat-img` (real uploaded JPEG/PNG) — stickers (`.msg-sticker`), GIFs
+  (`.ftz-embed-gif img`) and emojis (`.msg-emoji`) are NO LONGER convertible.
+  `_fortgifiedGifify(msgId,context,mode)` gained the `mode` arg.
+- **Trigger-owner delete**: the user who ran a bot command can delete that bot
+  message. Durable record = the `**@<user>** used **<cmd>**` text prefix, read
+  by `_parseBotTrigger`/`_iTriggeredMsg`; `appendMessage` stamps
+  `row.dataset.triggeredBy`. Threaded a `canDel` flag through `buildMsgActions`/
+  `_buildMsgActsInner`/`_showMsgMoreMenu` + the right-click ctx menu.
+- **Collect on FortGified/uploaded gifs FIXED**: the FTZIMG-gif branch now emits
+  the SAME always-visible `_gifCollectBtnHTML` inside `.ftz-embed-gif` (class
+  `cgf-left` → top-left so it clears the attWrap download/modify/delete row);
+  `_attWrap` skips its own collect via `opts.noCollect`.
+- **GIF-panel Collection tab**: the red "Remove" ✕ is gone — each card shows the
+  filled bookmark (collected); clicking uncollects. Real-time: `toggleFavGif`→
+  `_syncGifCollectBtns` updates every visible button for that url AND re-renders
+  the Collection tab live.
+- **Tenor page URLs embed** (`tenor.com/view/…-<id>`): old v1 API is dead, so we
+  render Tenor's keyless iframe (`_tenorEmbedHTML` → `tenor.com/embed/<id>`,
+  `.ftz-tenor-embed`) immediately; `_resolveTenorId` still tries the API only to
+  UPGRADE the iframe to a collectible inline gif, else leaves the iframe.
+  ⚠️ Needs live verification (network blocked in-sandbox).
 
 **Shipped `2026fix327` (GIF collections + replies):**
 - **Unified GIF collect control** (`_gifCollectId`/`isGifCollected`/

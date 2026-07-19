@@ -1033,6 +1033,21 @@ const FORTGIFIED_NAME = 'fortgified';
 const FORTGIFIED_DISPLAY = 'FortGified';
 const FORTGIFIED_AVATAR = '/FortGified-PFP.png';
 function isFortgified(name) { return String(name || '').toLowerCase() === FORTGIFIED_NAME; }
+// Read the invoking user out of a bot message. FortGified posts messages that
+// open with "**@<user>** used **<command>**" — that prefix is the durable record
+// of who triggered the bot, so the invoker (and only them) can delete it.
+function _parseBotTrigger(msg) {
+  if (msg && msg.triggeredBy) return String(msg.triggeredBy);
+  const text = (msg && typeof msg === 'object') ? (msg.text || '') : String(msg || '');
+  const m = text.match(/^\*\*@([^*\n]+?)\*\*\s+used\s+\*\*/);
+  return m ? m[1].trim() : '';
+}
+// True when the current user triggered this (bot) message and may delete it.
+// Accepts a .msg-row element (reads data-triggered-by) or a message object.
+function _iTriggeredMsg(rowOrMsg) {
+  const by = (rowOrMsg && rowOrMsg.dataset) ? rowOrMsg.dataset.triggeredBy : _parseBotTrigger(rowOrMsg);
+  return !!(by && String(by).toLowerCase() === String(CU?.username || '').toLowerCase());
+}
 // Official Fortized accounts (the team's first-party personas). They carry the
 // OFFICIAL capsule next to their display name everywhere and have a one-way
 // DM lock — only superadmins can message them back.
@@ -10628,6 +10643,21 @@ function _msgFindMedia(row) {
   if (vid && vid.src) return { el: vid, kind: 'video' };
   return null;
 }
+// FortGified's "Image to GIF" command only accepts a real user-uploaded raster
+// image (JPEG/PNG/etc — rendered as .ftz-chat-img). It must NOT act on stickers
+// (.msg-sticker), GIFs (.ftz-embed-gif img), or emojis (.msg-emoji / .emoji) —
+// those already are, or aren't, images and shouldn't be "converted".
+function _msgFindConvertibleImage(row) {
+  if (!row) return null;
+  const img = row.querySelector('img.ftz-chat-img');
+  return (img && img.src) ? img : null;
+}
+// FortGified's "Video to GIF" command accepts a video ≤15s.
+function _msgFindVideoEl(row) {
+  if (!row) return null;
+  const vid = row.querySelector('.ftz-vp video, video.ftz-embed-video, video');
+  return (vid && vid.src) ? vid : null;
+}
 // Second-level ctx menu listing message commands, grouped per bot. FortGified
 // is always shown; its image commands are disabled when the message has no
 // image (with a hint), so "Bots" is always useful/discoverable.
@@ -10638,14 +10668,19 @@ function _msgFindMedia(row) {
 function _openMsgBotsMenu(x, y, msgId, context) {
   document.getElementById('ctx-apps-flyout')?.remove();
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-  const media = _msgFindMedia(row);
-  const gifEnabled = !!(media && (media.kind === 'image' || (media.kind === 'video' && !(media.el.duration > 15.5))));
-  const gifDesc = !media ? 'No image or video in this message'
-    : media.kind === 'video' ? (media.el.duration > 15.5 ? 'Video must be under 15 seconds' : 'Turn this video into a GIF')
-    : 'Turn this image into a GIF';
+  const imgEl = _msgFindConvertibleImage(row);
+  const vidEl = _msgFindVideoEl(row);
+  const vidOk = !!(vidEl && !(vidEl.duration > 15.5));
+  // Two distinct commands: one for uploaded images, one for short videos.
+  const imgDesc = imgEl ? 'Turn this image into a GIF' : 'No uploaded image (JPEG/PNG) here';
+  const vidDesc = !vidEl ? 'No video in this message'
+    : (vidEl.duration > 15.5 ? 'Video must be 15 seconds or less' : 'Turn this video into a GIF');
   window._appsFlyoutBots = [{
     name: FORTGIFIED_DISPLAY, avatar: FORTGIFIED_AVATAR,
-    commands: [{ name: 'Convert to GIF', desc: gifDesc, enabled: gifEnabled, run: () => _fortgifiedGifify(msgId, context) }],
+    commands: [
+      { name: 'Image to GIF', desc: imgDesc, enabled: !!imgEl, run: () => _fortgifiedGifify(msgId, context, 'image') },
+      { name: 'Video to GIF', desc: vidDesc, enabled: vidOk, run: () => _fortgifiedGifify(msgId, context, 'video') },
+    ],
   }];
   const fly = document.createElement('div');
   fly.id = 'ctx-apps-flyout';
@@ -10877,21 +10912,28 @@ async function _videoToGif(srcVideo) {
   return _encodeFramesAsGif(frames, w, h, delayCs);
 }
 
-// The Convert to GIF command itself — image → single-frame gif, short video →
-// animated gif.
-async function _fortgifiedGifify(msgId, context) {
+// FortGified's two commands — "Image to GIF" (mode='image', a real uploaded
+// JPEG/PNG → single-frame gif) and "Video to GIF" (mode='video', a ≤15s clip →
+// animated gif). Stickers, GIFs and emojis are NEVER convertible (they're
+// excluded by the mode-specific detectors).
+async function _fortgifiedGifify(msgId, context, mode) {
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-  const media = _msgFindMedia(row);
-  if (!media) { toast('No media found in that message', 'error'); return; }
+  const el = mode === 'video' ? _msgFindVideoEl(row) : _msgFindConvertibleImage(row);
+  if (!el) {
+    toast(mode === 'video' ? 'No video found in that message'
+      : 'FortGified only converts uploaded images (JPEG/PNG) — not stickers, GIFs or emojis', 'error');
+    return;
+  }
+  const cmdLabel = mode === 'video' ? 'Video to GIF' : 'Image to GIF';
   toast(FORTGIFIED_DISPLAY + ' is working…', 'success');
   try {
     let blob;
-    if (media.kind === 'video') {
-      blob = await _videoToGif(media.el);
+    if (mode === 'video') {
+      blob = await _videoToGif(el);
     } else {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = media.el.src; });
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = el.src; });
       // Bound the frame so the resulting file (and egress) stays small.
       const MAX = 512;
       const scale = Math.min(1, MAX / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
@@ -10917,19 +10959,23 @@ async function _fortgifiedGifify(msgId, context) {
       });
     }
     const replyTo = { id: msgId, from: row?.dataset.from || '', text: (row?.dataset.text || '').slice(0, 200) };
-    const text = `**@${CU.username}** used **Convert to GIF**\n[FTZIMG:${fname}|${fileUrl}]`;
-    await _fortgifiedPost(context, text, replyTo);
+    const text = `**@${CU.username}** used **${cmdLabel}**\n[FTZIMG:${fname}|${fileUrl}]`;
+    // triggeredBy lets the invoking user delete this bot message later.
+    await _fortgifiedPost(context, text, replyTo, CU.username);
   } catch (e) {
     console.warn('[FortGified] convert failed:', e?.message || e);
-    const msg = /15 seconds/.test(e?.message || '') ? 'FortGified can only convert videos under 15 seconds'
+    const msg = /15 seconds/.test(e?.message || '') ? 'FortGified can only convert videos 15 seconds or less'
       : "FortGified couldn't read that media (protected or cross-origin)";
     toast(msg, 'error');
   }
 }
 // Post a persisted, everyone-visible message AS the bot into the current chat.
-async function _fortgifiedPost(context, text, replyTo) {
+// `triggeredBy` is the user who ran the command; it's kept on the in-memory
+// object for immediacy, but the durable source of truth is the "@<user> used"
+// prefix in the text, which _parseBotTrigger() reads back on every render.
+async function _fortgifiedPost(context, text, replyTo, triggeredBy) {
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
-  const base = { id, from: FORTGIFIED_NAME, text, timestamp: new Date().toISOString(), replyTo };
+  const base = { id, from: FORTGIFIED_NAME, text, timestamp: new Date().toISOString(), replyTo, triggeredBy };
   const appendLocal = (containerId, msg) => {
     const el = document.getElementById(containerId);
     if (!el) return;
@@ -12014,6 +12060,8 @@ function appendMessage(container, msg, context, prevAuthor) {
   row.dataset.text=msg.text||'';
   row.dataset.timestamp=msg.timestamp||'';
   row.dataset.from=msg.from||'';
+  // Bot messages carry the invoking user so they can delete their own bot output.
+  if (isFortgified(msg.from)) { const _tb = _parseBotTrigger(msg); if (_tb) row.dataset.triggeredBy = _tb; }
   if (msg.edited) row.dataset.edited='1';
   // Stash forward origin on the row so the lightbox / forwarded-card
   // renderers can read it without re-lookup.
@@ -12282,13 +12330,17 @@ function _refreshVisibleMsgActs() {
 function buildMsgActions(msg, context, id) {
   const isOwn=String(msg.from||"").toLowerCase()===String(CU?.username||"").toLowerCase();
   const isBastionAdmin = (context==='ch' || context==='channel') && hasPerm('manage_messages');
+  // The user who triggered a bot message may delete it, even though it's not
+  // "their" message (from is the bot).
+  const canDel = isOwn || isBastionAdmin || _iTriggeredMsg(msg);
   const safeId=escapeHTML(id);
   const safeFrom=escapeHTML(msg.from||'');
   const safeText=escapeHTML((msg.text||'').replace(/'/g,' ').slice(0,100));
-  return `<div class="msg-acts">${_buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastionAdmin)}</div>`;
+  return `<div class="msg-acts">${_buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastionAdmin, canDel)}</div>`;
 }
 
-function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastionAdmin) {
+function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastionAdmin, canDel) {
+  if (canDel === undefined) canDel = isOwn || isBastionAdmin;
   const inBastion = (context==='ch'||context==='channel');
   const canPin = inBastion ? (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username) : (curDM || curGC);
 
@@ -12309,7 +12361,7 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
       + `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction">${_ADD_REACTION_ICON_HTML}</button>`
       + (isOwn ? `<button onclick="editMsg('${safeId}')" title="Edit">${_faMsg('edit')}</button>` : '')
       + `<button onclick="forwardFromMsgEl(this,'${safeText}')" title="Forward">${_faMsg('forward')}</button>`
-      + ((isOwn||isBastionAdmin) ? `<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(248,113,113,.6);">${_faMsg('trash')}</button>` : '');
+      + (canDel ? `<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(248,113,113,.6);">${_faMsg('trash')}</button>` : '');
   }
 
   // Default mode: Quick reactions (3), Add Reaction, Reply/Edit, Forward, More
@@ -12332,12 +12384,13 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
   // Forward
   html += `<button onclick="forwardFromMsgEl(this,'${safeText}')" title="Forward">${_faMsg('forward')}</button>`;
   // More (dropdown)
-  html += `<button onclick="_showMsgMoreMenu(event,'${safeId}','${safeFrom}','${safeText}','${context}',${isOwn},${isBastionAdmin})" title="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>`;
+  html += `<button onclick="_showMsgMoreMenu(event,'${safeId}','${safeFrom}','${safeText}','${context}',${isOwn},${isBastionAdmin},${canDel})" title="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>`;
   return html;
 }
 
-function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) {
+function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin, canDel) {
   e.stopPropagation();
+  if (canDel === undefined) canDel = isOwn || isBastionAdmin;
   const inBastion = (context==='ch'||context==='channel');
   const canPin = inBastion ? (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username) : (curDM || curGC);
   // Failed-send mode — short-circuit to Retry + Delete only.
@@ -12357,7 +12410,7 @@ function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) 
   if (inBastion) items.push({ icon: _faMsg('thread', 15), label: 'Create Thread', action: () => openThread(msgId, text, from) });
   items.push({ icon: _faMsg('translate', 15), label: 'Translate', action: () => { const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`); if (row) _translateMessage(row, row.dataset.text||''); } });
   items.push({ icon: _faMsg('report', 15), label: 'Report', action: () => reportMessage(msgId, text, from) });
-  if (isOwn || isBastionAdmin) items.push({ icon: _faMsg('trash', 15), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
+  if (canDel) items.push({ icon: _faMsg('trash', 15), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
   showCtxMenu(e.clientX, e.clientY, [{ items }]);
 }
 
@@ -26483,7 +26536,7 @@ function handleContextMenu(e) {
     }
     moderationGroup.items.push({ icon: _faMsg('report', 15), label: 'Report Message', action: () => reportMessage(msgId, text, msgRow.dataset.from) });
     const isBastionAdminCtx = inBastion && hasPerm('manage_messages');
-    if (isOwn || isBastionAdminCtx) {
+    if (isOwn || isBastionAdminCtx || _iTriggeredMsg(msgRow)) {
       moderationGroup.items.push({ icon: _faMsg('trash', 15), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
     }
 
@@ -33832,8 +33885,8 @@ function _attWrap(inner, opts) {
   const url = escapeHTML(opts.url || '');
   const name = escapeHTML(opts.name || '');
   const type = opts.type || 'file';
-  const isCol = type === 'gif' && isGifCollected(opts.url);
-  const collect = type === 'gif'
+  const isCol = type === 'gif' && !opts.noCollect && isGifCollected(opts.url);
+  const collect = (type === 'gif' && !opts.noCollect)
     ? `<button class="ftz-att-btn is-collect${isCol?' is-collected':''}" data-gif-url="${url}" data-tip="${isCol?'Collected':'Collect'}" title="${isCol?'Collected':'Collect'}" onclick="event.stopPropagation();_gifCollectClick(this)">${_gifBookmarkSVG(isCol)}</button>` : '';
   const download = `<button class="ftz-att-btn" title="Download" onclick="event.stopPropagation();_attDownload(this)"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7 288 32zM64 352c-35.3 0-64 28.7-64 64l0 32c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-32c0-35.3-28.7-64-64-64l-101.5 0-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352 64 352zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg></button>`;
   const modify = (type === 'image' || type === 'gif') ? `<button class="ftz-att-btn ftz-att-own" title="Modify Attachment" onclick="event.stopPropagation();_attModify(this)"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/></svg></button>` : '';
@@ -34480,9 +34533,13 @@ function parseMD(s) {
     const safeSrc = escapeHTML(data);
     const safeAlt = escapeHTML(alt || '');
     if (isGif) {
+      // Use the SAME always-visible collect button as every other GIF embed
+      // (uploaded gifs + FortGified output included), so collecting works and is
+      // glanceable everywhere. _attWrap still adds download/modify/delete, but we
+      // tell it to skip its own collect (noCollect) to avoid a duplicate.
       const inner = '<div class="ftz-embed-gif" onclick="_openMediaLightbox(\'' + safeSrc + '\')">'
-        + '<img src="' + safeSrc + '" alt="' + safeAlt + '" loading="lazy"></div>';
-      return _attWrap(inner, { url: data, name, type: 'gif' });
+        + '<img src="' + safeSrc + '" alt="' + safeAlt + '" loading="lazy">' + _gifCollectBtnHTML(data, 'cgf-left') + '</div>';
+      return _attWrap(inner, { url: data, name, type: 'gif', noCollect: true });
     }
     const inner = '<img src="' + safeSrc + '" class="ftz-chat-img" alt="' + safeAlt + '"' + (safeAlt ? ' title="' + safeAlt + '"' : '') + ' data-media-name="' + escapeHTML(name) + '" style="max-width:550px;max-height:450px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">';
     return _attWrap(inner, { url: data, name, type: 'image' });
@@ -34593,13 +34650,16 @@ function parseMD(s) {
     if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video>${_gifCollectBtnHTML(url.trim())}</div>`;
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy">${_gifCollectBtnHTML(url.trim())}</div>`;
   });
-  // 1a2. Tenor PAGE links (tenor.com/view/<slug>-<id>) — resolve to the media
-  // URL async (the most common Tenor share format; direct media is handled by
-  // 1a above). The trailing numeric id is the gif id.
+  // 1a2. Tenor PAGE links (tenor.com/view/<slug>-<id>) — the most common Tenor
+  // share format. Tenor's old v1 API (used before) is dead, so we embed via
+  // Tenor's official keyless iframe (tenor.com/embed/<id>) immediately, and
+  // still fire the API resolver which — if it ever returns a media URL —
+  // upgrades the iframe to a real inline (collectible) GIF. The trailing
+  // numeric run is the post id.
   s = s.replace(/https?:\/\/(?:www\.)?tenor\.com\/view\/[\w%-]*?-(\d{5,})(?:\?[^\s"'<>]*)?(?=[\s<]|$)/gi, (url, id) => {
     const pid = 'tenor-ph-' + id + '-' + Math.random().toString(36).slice(2,8);
     setTimeout(() => _resolveTenorId(pid, id), 0);
-    return `<div id="${pid}" class="ftz-embed-gif" style="min-height:80px;display:flex;align-items:center;justify-content:center;"><div style="font-size:11px;color:rgba(255,255,255,.25);">Loading GIF…</div></div>`;
+    return _tenorEmbedHTML(pid, id);
   });
   // 1ab. Klipy GIF links — auto-embed any klipy.com URL as inline GIF
   s = s.replace(/(https?:\/\/[^\s"'<>]*klipy\.[^\s"'<>]+\.(?:gif|webp|mp4))(?=[\s<]|$)/gi, (url) => {
@@ -39121,14 +39181,13 @@ function renderFavGifs(targetInput) {
     return `<div class="gif-card" data-id="${gif.id}" data-url="${escapeHTML(url)}" data-input="${escapeHTML(targetInput)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);transition:all .2s cubic-bezier(.22,1,.36,1);">
       <img src="${escapeHTML(url)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
       <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;"></div>
-      <button onclick="event.stopPropagation();removeFavGif('${gif.id}');renderFavGifs('${escapeHTML(targetInput)}')" title="Remove" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:none;border:1px solid rgba(255,255,255,.1);color:#ff6b6b;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;"><i class="fa-solid fa-xmark"></i></button>
+      ${_gifCollectBtnHTML(url)}
     </div>`;
   }).join('') + '</div>';
   grid.querySelectorAll('.gif-card').forEach(card => {
     const ov = card.querySelector('.gif-hover-overlay');
-    const del = card.querySelector('button');
-    card.addEventListener('mouseenter', () => { card.style.transform='scale(1.03) translateY(-2px)'; card.style.boxShadow='0 8px 24px rgba(0,0,0,.35)'; card.style.borderColor='rgba(255,249,62,.12)'; if(ov)ov.style.opacity='1'; if(del)del.style.opacity='1'; });
-    card.addEventListener('mouseleave', () => { card.style.transform=''; card.style.boxShadow=''; card.style.borderColor='rgba(255,255,255,.05)'; if(ov)ov.style.opacity='0'; if(del)del.style.opacity='0'; });
+    card.addEventListener('mouseenter', () => { card.style.transform='scale(1.03) translateY(-2px)'; card.style.boxShadow='0 8px 24px rgba(0,0,0,.35)'; card.style.borderColor='rgba(255,249,62,.12)'; if(ov)ov.style.opacity='1'; });
+    card.addEventListener('mouseleave', () => { card.style.transform=''; card.style.boxShadow=''; card.style.borderColor='rgba(255,255,255,.05)'; if(ov)ov.style.opacity='0'; });
     card.addEventListener('click', () => sendGifDirectly(card.dataset.id, card.dataset.input, card.dataset.url));
   });
 }
@@ -39470,27 +39529,32 @@ async function _resolveKlipySlug(placeholderId, slug) {
 // Resolve a Tenor gif id → media URL, then swap the placeholder for a GIF
 // embed. Uses Tenor's long-standing public demo key (CORS-enabled v1 API); if
 // that ever fails, we degrade to a plain clickable link (no worse than before).
+// Tenor's official keyless embed — an iframe pointing at tenor.com/embed/<id>.
+// This is exactly what Tenor's embed.js widget produces, so it renders the GIF
+// without an API key or an external script (important for a chat where messages
+// mount continuously and a global re-scan isn't available).
+function _tenorEmbedHTML(pid, id) {
+  const sid = encodeURIComponent(String(id));
+  return `<div id="${pid}" class="ftz-embed-gif ftz-tenor-embed">`
+    + `<iframe src="https://tenor.com/embed/${sid}" width="100%" height="280" frameborder="0" scrolling="no" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" style="border:0;display:block;border-radius:10px;background:#0e0f13;"></iframe>`
+    + `</div>`;
+}
 async function _resolveTenorId(placeholderId, id) {
-  const el = document.getElementById(placeholderId);
-  if (!el) return;
-  const fallback = () => {
-    const link = 'https://tenor.com/view/gif-' + encodeURIComponent(id);
-    el.outerHTML = `<a href="${escapeHTML(link)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">🎞 View GIF on Tenor</a>`;
-  };
+  // The iframe embed is already showing. Try the API purely to UPGRADE it to a
+  // real inline GIF (which supports collect/lightbox); if it fails, leave the
+  // iframe in place — it renders the GIF fine on its own.
   try {
     const res = await fetch('https://g.tenor.com/v1/gifs?ids=' + encodeURIComponent(id) + '&key=LIVDSRZULELA&media_filter=minimal&limit=1');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) return;
     const data = await res.json();
     const r = (data.results || [])[0];
     const m = (r && r.media && r.media[0]) || {};
-    const gifUrl = m.gif?.url || m.mediumgif?.url || m.tinygif?.url || m.nanogif?.url || r?.itemurl || '';
-    if (!gifUrl || !document.getElementById(placeholderId)) { if (!gifUrl) fallback(); return; }
+    const gifUrl = m.gif?.url || m.mediumgif?.url || m.tinygif?.url || m.nanogif?.url || '';
+    const el = document.getElementById(placeholderId);
+    if (!gifUrl || !el) return;
     const safe = escapeHTML(gifUrl);
-    const fid = String(id).slice(-16);
     el.outerHTML = `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy">${_gifCollectBtnHTML(gifUrl)}</div>`;
-  } catch (_) {
-    fallback();
-  }
+  } catch (_) { /* keep the iframe embed */ }
 }
 
 function _klipyGifUrl(item, size) {

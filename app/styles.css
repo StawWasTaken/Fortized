@@ -1640,6 +1640,38 @@ body.staw-frozen::before{
 .gif-collection-card::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.45) 100%);pointer-events:none;}
 .gif-collection-card.gcc-fav{border-color:rgba(255,249,62,.12);}
 .gif-collection-card.gcc-fav::after{background:linear-gradient(135deg,rgba(255,249,62,.08) 0%,rgba(0,0,0,.4) 100%);}
+
+/* ── Shared collection-grid pattern for the sticker + bot pickers ──────────
+   Mirrors the GIF panel's language: a landing grid of large preview cards →
+   click to drill into content → a "Back to …" bar. Theme-aware (var(--panel2)
+   surfaces, accent hover) so applyAppearance re-tints them with everything else. */
+.pk-coll{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 12px 12px;overflow-y:auto;flex:1;min-height:0;scrollbar-width:thin;align-content:start;}
+.pk-coll::-webkit-scrollbar{width:8px;}
+.pk-coll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
+.pk-card{position:relative;border-radius:12px;overflow:hidden;cursor:pointer;height:96px;background:var(--panel2);border:1.5px solid rgba(255,255,255,.06);transition:transform .2s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s;}
+.pk-card:hover{border-color:var(--accent-mid);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.pk-card .pk-card-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;transition:opacity .22s;}
+.pk-card:hover .pk-card-bg{opacity:.72;}
+.pk-card-bg.pk-glyph{display:flex;align-items:center;justify-content:center;font-size:46px;line-height:1;opacity:.26;}
+.pk-card::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12) 0%,rgba(0,0,0,.5) 100%);pointer-events:none;}
+.pk-card .pk-card-lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.8);z-index:1;text-align:center;padding:0 10px;overflow:hidden;}
+.pk-card .pk-card-lbl > span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pk-card .pk-card-glyph{font-size:22px;line-height:1;margin-bottom:1px;}
+.pk-card .pk-card-meta{font-family:var(--font-ui);font-size:9.5px;font-weight:600;color:rgba(255,255,255,.62);text-transform:uppercase;letter-spacing:.06em;text-shadow:0 1px 4px rgba(0,0,0,.8);}
+/* Bot variant: avatar chip pinned top-left, label anchored bottom-left. */
+.pk-card.pk-card-bot .pk-card-lbl{align-items:flex-start;justify-content:flex-end;padding:12px;text-align:left;}
+.pk-card .pk-card-av{position:absolute;top:12px;left:12px;width:34px;height:34px;border-radius:9px;overflow:hidden;z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;background:var(--panel3);}
+.pk-card .pk-card-av img{width:100%;height:100%;object-fit:cover;}
+.pk-card .pk-card-av svg{width:18px;height:18px;color:var(--blue);}
+/* Back bar — mirrors .gif-back-bar/.gif-back-btn. */
+.pk-back-bar{display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;}
+.pk-back-btn{display:inline-flex;align-items:center;gap:7px;background:transparent;border:none;color:var(--muted-light);font-family:var(--font-display);font-weight:700;font-size:12.5px;cursor:pointer;padding:5px 9px;border-radius:8px;transition:color .12s,background .12s;max-width:75%;}
+.pk-back-btn:hover{color:var(--text);background:rgba(255,255,255,.06);}
+.pk-back-btn svg{width:14px;height:14px;flex-shrink:0;}
+.pk-back-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pk-back-count{margin-left:auto;font-size:8.5px;color:rgba(255,249,62,.55);letter-spacing:.09em;font-weight:700;text-transform:uppercase;background:rgba(255,249,62,.06);padding:4px 10px;border-radius:var(--radius-pill);border:1px solid rgba(255,249,62,.1);flex-shrink:0;}
+.pk-back-count.pk-blue{color:rgba(96,165,250,.6);background:rgba(96,165,250,.06);border-color:rgba(96,165,250,.12);}
+
 /* Sticker picker panel */
 .sticker-picker-panel{width:460px;max-height:560px;}
 .sticker-picker-panel .spp-header{padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);}

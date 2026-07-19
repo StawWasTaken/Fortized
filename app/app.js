@@ -38822,24 +38822,9 @@ function openStickerPicker(inputId) {
   const stickerBottom = Math.max(60, window.innerHeight - (rect.top || window.innerHeight - 80) + 6);
   picker.style.cssText = `left:${stickerLeft}px;bottom:${stickerBottom}px;`;
 
-  // Gather stickers from all bastions the user is in
-  const allStickers = [];
-  const bastionNames = {};
-
-  if (CU?.bastions) {
-    Object.entries(CU.bastions).forEach(([idx, b]) => {
-      const stickers = b.stickers || b.customStickers || [];
-      stickers.forEach(s => {
-        allStickers.push({...s, bastionName: b.name || 'Unknown', bastionIdx: idx});
-      });
-      if (stickers.length) bastionNames[idx] = b.name || 'Unknown';
-    });
-  }
-
-  // Mirrors the emoji panel: full-width search → body[ sectioned grid | right
-  // rail of bastions ] → hover footer. (allStickers/bastionNames computed above
-  // are recomputed as grouped sections in _buildStickerContent.)
-  void allStickers; void bastionNames;
+  // GIF-panel language: a landing grid of per-bastion pack cards → click to
+  // drill into that pack's sticker grid → a "Back to packs" bar. Search
+  // flattens across every pack (hides the cards, shows a flat filtered grid).
   picker.innerHTML = `
     ${_pickerTopTabs('sticker')}
     <div class="epp-search-wrap"><div class="epp-search-box">
@@ -38847,18 +38832,20 @@ function openStickerPicker(inputId) {
       <input id="sticker-search-input" class="epp-search-inp" placeholder="Search stickers" oninput="_searchStickers(this.value);this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
       <button class="epp-search-clr" onclick="_stickerClearSearch()" aria-label="Clear search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div></div>
-    <div class="epp-body">
-      <div class="epp-main"><div class="epp-scroll" id="sticker-grid"></div></div>
-      <div class="epp-sidebar" id="sticker-rail"></div>
+    <div class="pk-back-bar" id="sticker-back-bar" style="display:none;">
+      <button class="pk-back-btn" onclick="_stickerBackToPacks()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg><span id="sticker-back-label">Packs</span></button>
+      <span class="pk-back-count" id="sticker-back-count"></span>
     </div>
+    <div class="pk-coll" id="sticker-collection-view"></div>
+    <div class="epp-scroll" id="sticker-grid" style="display:none;"></div>
     <div class="epp-footer">
       <div class="epp-foot-emoji" id="sticker-foot-preview" aria-hidden="true"></div>
-      <div class="epp-foot-name" id="sticker-foot-label"><span class="epp-foot-empty">Pick a sticker</span></div>
+      <div class="epp-foot-name" id="sticker-foot-label"><span class="epp-foot-empty">Pick a sticker pack</span></div>
     </div>
   `;
 
   document.body.appendChild(picker);
-  _buildStickerContent();
+  _renderStickerPacks();
   _wireStickerHover();
   _bindPickerOutsideClose(picker, () => picker.remove());
 }
@@ -38882,69 +38869,103 @@ function _stickerCell(s) {
   return `<div class="spp-sticker" data-sticker-url="${url}" data-sticker-name="${name}" onclick="_sendSticker('${url}','${name}')">`
     + `<img src="${url}" alt="${name}" loading="lazy" draggable="false"></div>`;
 }
-function _stickerRailBtn(g) {
-  const b = g.bastion || {};
-  const name = escapeHTML(g.name);
-  const initials = escapeHTML((g.name || 'B').slice(0,2).toUpperCase());
-  const fallback = `<span style="font-size:11px;font-weight:700;letter-spacing:.5px;">${initials}</span>`;
-  let emblem;
-  if (b.icon) emblem = `<img src="${escapeHTML(b.icon)}" alt="${name}" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
-  else if (b.emblem && !/^https?:|^data:/.test(b.emblem)) emblem = `<span style="font-size:17px;line-height:1;">${escapeHTML(b.emblem)}</span>`;
-  else if (b.emblem) emblem = `<img src="${escapeHTML(b.emblem)}" alt="${name}" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
-  else emblem = fallback;
-  return `<button class="epp-sidebar-btn" title="${name}" aria-label="${name}" onclick="_stickerRailJump(${g.idx})"><span class="epp-sidebar-emblem">${emblem}</span></button>`;
-}
-function _stickerSection(g) {
-  return `<div class="epp-section" id="sticker-sec-${g.idx}" data-sticker-sec="${g.idx}">${escapeHTML(g.name)}</div>`
-    + `<div class="spp-sec-grid">${g.stickers.map(_stickerCell).join('')}</div>`;
-}
-// Build the grouped (default) view: rail + per-bastion sections.
-function _buildStickerContent() {
+window._stickerPackCache = [];
+// Landing view — one preview card per bastion pack (mirrors the GIF collection
+// cards: a faded preview sticker behind the pack name + count).
+function _renderStickerPacks() {
   const groups = _stickerGroups();
+  window._stickerPackCache = groups;
   const flat = [];
   groups.forEach(g => g.stickers.forEach(s => flat.push({ ...s, bastionName: g.name, bastionIdx: g.idx })));
   window._allStickersCache = flat;
+
+  const coll = document.getElementById('sticker-collection-view');
   const grid = document.getElementById('sticker-grid');
-  const rail = document.getElementById('sticker-rail');
-  document.getElementById('sticker-picker')?.classList.remove('spp-searching');
+  const back = document.getElementById('sticker-back-bar');
+  if (grid) grid.style.display = 'none';
+  if (back) back.style.display = 'none';
+  _stickerFootReset('Pick a sticker pack');
+  if (!coll) return;
+  coll.style.display = '';
   if (!groups.length) {
-    if (rail) rail.innerHTML = '';
-    if (grid) grid.innerHTML = `<div class="spp-empty">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:.4;"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21 12a9 9 0 0 0-9-9v9h9z"/></svg>
-      No stickers available yet.<br>
-      <span style="font-size:11px;color:rgba(255,255,255,.2);">Bastion owners can upload stickers in Bastion Settings.</span>
-    </div>`;
+    coll.style.display = 'none';
+    if (grid) {
+      grid.style.display = '';
+      grid.innerHTML = `<div class="spp-empty">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:.4;"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21 12a9 9 0 0 0-9-9v9h9z"/></svg>
+        No stickers available yet.<br>
+        <span style="font-size:11px;color:rgba(255,255,255,.2);">Bastion owners can upload stickers in Bastion Settings.</span>
+      </div>`;
+    }
     return;
   }
-  if (rail) rail.innerHTML = groups.map(_stickerRailBtn).join('');
-  if (grid) grid.innerHTML = groups.map(_stickerSection).join('');
+  coll.innerHTML = groups.map(_stickerPackCard).join('');
 }
-// Flat filtered grid for search (no sections, rail hidden).
-function _renderStickers(stickers) {
+function _stickerPackCard(g) {
+  const preview = escapeHTML(g.stickers[0]?.url || '');
+  const name = escapeHTML(g.name);
+  const n = g.stickers.length;
+  const bg = preview
+    ? `<img class="pk-card-bg" src="${preview}" alt="" loading="lazy" onerror="this.remove()">`
+    : `<div class="pk-card-bg pk-glyph">🗂️</div>`;
+  return `<div class="pk-card" onclick="_stickerOpenPack(${g.idx})">
+    ${bg}
+    <div class="pk-card-lbl"><span>${name}</span><span class="pk-card-meta">Bastion · ${n}</span></div>
+  </div>`;
+}
+// Drill into one pack — show its stickers in a flat grid + a back bar.
+function _stickerOpenPack(idx) {
+  const g = (window._stickerPackCache || []).find(x => x.idx === idx);
+  if (!g) return;
+  const coll = document.getElementById('sticker-collection-view');
   const grid = document.getElementById('sticker-grid');
-  if (!grid) return;
-  if (!stickers.length) { grid.innerHTML = '<div class="spp-empty">No stickers match that search.</div>'; return; }
-  grid.innerHTML = `<div class="spp-sec-grid">${stickers.map(_stickerCell).join('')}</div>`;
+  const back = document.getElementById('sticker-back-bar');
+  const lbl = document.getElementById('sticker-back-label');
+  const cnt = document.getElementById('sticker-back-count');
+  if (coll) coll.style.display = 'none';
+  if (back) back.style.display = '';
+  if (lbl) lbl.textContent = g.name;
+  if (cnt) cnt.textContent = g.stickers.length + ' sticker' + (g.stickers.length !== 1 ? 's' : '');
+  if (grid) { grid.style.display = ''; grid.innerHTML = `<div class="spp-sec-grid">${g.stickers.map(_stickerCell).join('')}</div>`; grid.scrollTop = 0; }
+  _stickerFootReset('Pick a sticker');
 }
+function _stickerBackToPacks() {
+  const i = document.getElementById('sticker-search-input');
+  if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); }
+  _renderStickerPacks();
+}
+// Flat filtered grid for search — hides the pack cards, shows a "Search: q" bar.
 function _searchStickers(q) {
-  const picker = document.getElementById('sticker-picker');
-  if (q.trim()) {
-    picker?.classList.add('spp-searching');
-    _renderStickers(window._allStickersCache.filter(s => (s.name || '').toLowerCase().includes(q.toLowerCase())));
-  } else {
-    _buildStickerContent();
+  if (!q.trim()) { _renderStickerPacks(); return; }
+  const coll = document.getElementById('sticker-collection-view');
+  const grid = document.getElementById('sticker-grid');
+  const back = document.getElementById('sticker-back-bar');
+  const lbl = document.getElementById('sticker-back-label');
+  const cnt = document.getElementById('sticker-back-count');
+  const matches = (window._allStickersCache || []).filter(s => (s.name || '').toLowerCase().includes(q.toLowerCase()));
+  if (coll) coll.style.display = 'none';
+  if (back) back.style.display = '';
+  if (lbl) lbl.textContent = 'Search: ' + q;
+  if (cnt) cnt.textContent = matches.length + ' result' + (matches.length !== 1 ? 's' : '');
+  if (grid) {
+    grid.style.display = '';
+    grid.innerHTML = matches.length
+      ? `<div class="spp-sec-grid">${matches.map(_stickerCell).join('')}</div>`
+      : '<div class="spp-empty">No stickers match that search.</div>';
+    grid.scrollTop = 0;
   }
 }
 function _stickerClearSearch() {
   const i = document.getElementById('sticker-search-input');
   if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); }
-  _buildStickerContent();
+  _renderStickerPacks();
   i?.focus();
 }
-function _stickerRailJump(idx) {
-  const grid = document.getElementById('sticker-grid');
-  const hdr = document.getElementById('sticker-sec-' + idx);
-  if (grid && hdr) grid.scrollTo({ top: hdr.offsetTop - 2, behavior: 'smooth' });
+function _stickerFootReset(text) {
+  const prev = document.getElementById('sticker-foot-preview');
+  const lbl = document.getElementById('sticker-foot-label');
+  if (prev) prev.innerHTML = '';
+  if (lbl) lbl.innerHTML = `<span class="epp-foot-empty">${escapeHTML(text || 'Pick a sticker')}</span>`;
 }
 // Delegated hover — fills the footer with the pointed-at sticker.
 function _wireStickerHover() {
@@ -38987,8 +39008,10 @@ function _stickerOutsideClose(e) {
 // BOT COMMAND SHORTCUT PANEL
 // ════════════════════════════════════════════
 let _botcmdInput = 'ch-input';
+let _botcmdContext = 'ch';
 function openBotCommandPanel(inputId, context) {
   _botcmdInput = inputId || 'ch-input';
+  _botcmdContext = context || 'other';
   document.getElementById('botcmd-picker')?.remove();
   document.getElementById('sticker-picker')?.remove();
   document.getElementById('giphy-picker')?.remove();
@@ -39003,66 +39026,168 @@ function openBotCommandPanel(inputId, context) {
   const botLeft = Math.max(8, _getChatInputRight() - 460);
   picker.style.cssText = `left:${botLeft}px;bottom:${window.innerHeight-rect.top+6}px;`;
 
-  // Gather bot commands from current bastion
-  let commands = [];
-  if (context === 'ch' && curBastion !== null) {
-    const b = CU?.bastions?.[curBastion];
-    const deployedBots = b?.deployedBots || [];
-    deployedBots.forEach(bot => {
-      if (bot.enabled === false) return;
-      const cmds = bot.commands || [];
-      cmds.forEach(cmd => {
-        commands.push({name: cmd.name, desc: cmd.desc || cmd.description || 'No description', botName: bot.name || 'Bot'});
-      });
-    });
-  }
+  // GIF-panel language: a landing grid of bot cards (avatar + name + command
+  // count) → click to drill into that bot's command list → a "Back to bots"
+  // bar. Search flattens across every bot's commands.
+  const groups = _botGroups(context);
+  window._botGroupsCache = groups;
 
   picker.innerHTML = `
     ${_pickerTopTabs('bots')}
-    <div class="bcp-header">
-      <i class="fa-solid fa-terminal" style="font-size:13px;"></i>
-      Bot Commands
-      <span style="font-size:8.5px;color:rgba(96,165,250,.45);letter-spacing:.08em;font-weight:700;text-transform:uppercase;margin-left:auto;background:rgba(96,165,250,.06);padding:3px 9px;border-radius:var(--radius-pill);border:1px solid rgba(96,165,250,.1);">${commands.length} cmd${commands.length!==1?'s':''}</span>
+    <div class="epp-search-wrap"><div class="epp-search-box">
+      <svg class="epp-search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="botcmd-search-input" class="epp-search-inp" placeholder="Search commands" oninput="_searchBotCmds(this.value);this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
+      <button class="epp-search-clr" onclick="_botcmdClearSearch()" aria-label="Clear search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div></div>
+    <div class="pk-back-bar" id="botcmd-back-bar" style="display:none;">
+      <button class="pk-back-btn" onclick="_botBackToBots()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg><span id="botcmd-back-label">Bots</span></button>
+      <span class="pk-back-count pk-blue" id="botcmd-back-count"></span>
     </div>
-    <div style="padding:10px 14px 0;flex-shrink:0;">
-      <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input placeholder="Search commands…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" oninput="_filterBotCmds(this.value,'${escapeHTML(inputId)}')">
-      </div>
+    <div class="pk-coll" id="botcmd-collection-view"></div>
+    <div class="botcmd-list" id="botcmd-list" style="display:none;"></div>
+    <div class="epp-footer">
+      <div class="epp-foot-emoji" id="botcmd-foot-preview" aria-hidden="true"></div>
+      <div class="epp-foot-name" id="botcmd-foot-label"><span class="epp-foot-empty">${groups.length ? 'Pick a bot' : 'No bots here'}</span></div>
     </div>
-    <div class="botcmd-list" id="botcmd-list"></div>
   `;
 
   document.body.appendChild(picker);
-  window._botcmdCache = commands;
-
-  const list = document.getElementById('botcmd-list');
-  if (!commands.length) {
-    list.innerHTML = `<div class="botcmd-empty">
-      <div style="margin-bottom:6px;opacity:.3;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"></div>
-      No bot commands available${context !== 'ch' ? '<br><span style="font-size:11px;color:rgba(255,255,255,.2);">Bot commands are only available in bastion channels.</span>' : ' in this bastion.'}
-    </div>`;
-  } else {
-    list.innerHTML = commands.map(cmd => `
-      <div class="botcmd-item" onclick="_insertBotCmd('${escapeHTML(cmd.name)}','${escapeHTML(inputId)}')">
-        <span class="bci-prefix">!</span>
-        <span class="bci-name">${escapeHTML(cmd.name)}</span>
-        <span class="bci-desc">${escapeHTML(cmd.desc)}</span>
-        <span class="bci-bot">${escapeHTML(cmd.botName)}</span>
-      </div>
-    `).join('');
-  }
-
+  _renderBotCards();
+  _wireBotcmdHover();
   _bindPickerOutsideClose(picker, () => picker.remove());
 }
 
-window._botcmdCache = [];
-function _filterBotCmds(q, inputId) {
+window._botGroupsCache = [];
+// Group enabled, command-bearing deployed bots for the current bastion channel.
+function _botGroups(context) {
+  const groups = [];
+  if (context === 'ch' && curBastion !== null) {
+    const b = CU?.bastions?.[curBastion];
+    (b?.deployedBots || []).forEach((bot, i) => {
+      if (bot.enabled === false) return;
+      const commands = (bot.commands || []).map(cmd => ({ name: cmd.name, desc: cmd.desc || cmd.description || 'No description' }));
+      if (!commands.length) return;
+      groups.push({ idx: i, name: bot.name || 'Bot', avatar: bot.avatar || '', emblem: bot.emblem || '', commands });
+    });
+  }
+  return groups;
+}
+function _botAvatarHTML(g) {
+  if (g.avatar) return `<img src="${escapeHTML(g.avatar)}" alt="" onerror="this.outerHTML='&lt;img src=\\'/Fortized Bot.png\\'&gt;'">`;
+  if (g.emblem && !/^https?:|^data:/.test(g.emblem)) return `<span style="font-size:18px;line-height:1;">${escapeHTML(g.emblem)}</span>`;
+  if (g.emblem) return `<img src="${escapeHTML(g.emblem)}" alt="">`;
+  return `<img src="/Fortized Bot.png" alt="">`;
+}
+// Landing view — one card per bot.
+function _renderBotCards() {
+  const coll = document.getElementById('botcmd-collection-view');
   const list = document.getElementById('botcmd-list');
-  if (!list) return;
-  const filtered = q.trim() ? window._botcmdCache.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.desc.toLowerCase().includes(q.toLowerCase())) : window._botcmdCache;
-  if (!filtered.length) { list.innerHTML = '<div class="botcmd-empty">No matching commands.</div>'; return; }
-  list.innerHTML = filtered.map(cmd => `<div class="botcmd-item" onclick="_insertBotCmd('${escapeHTML(cmd.name)}','${escapeHTML(inputId)}')"><span class="bci-prefix">!</span><span class="bci-name">${escapeHTML(cmd.name)}</span><span class="bci-desc">${escapeHTML(cmd.desc)}</span><span class="bci-bot">${escapeHTML(cmd.botName)}</span></div>`).join('');
+  const back = document.getElementById('botcmd-back-bar');
+  const groups = window._botGroupsCache || [];
+  if (list) list.style.display = 'none';
+  if (back) back.style.display = 'none';
+  _botcmdFootReset(groups.length ? 'Pick a bot' : 'No bots here');
+  if (!coll) return;
+  coll.style.display = '';
+  if (!groups.length) {
+    coll.style.display = 'none';
+    if (list) {
+      list.style.display = '';
+      list.innerHTML = `<div class="botcmd-empty">
+        <div style="margin-bottom:6px;opacity:.3;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"></div>
+        No bot commands available${_botcmdContext !== 'ch' ? '<br><span style="font-size:11px;color:rgba(255,255,255,.2);">Bot commands are only available in bastion channels.</span>' : ' in this bastion.'}
+      </div>`;
+    }
+    return;
+  }
+  coll.innerHTML = groups.map(_botCard).join('');
+}
+function _botCard(g) {
+  const n = g.commands.length;
+  return `<div class="pk-card pk-card-bot" onclick="_botOpenBot(${g.idx})">
+    <div class="pk-card-av">${_botAvatarHTML(g)}</div>
+    <div class="pk-card-lbl"><span>${escapeHTML(g.name)}</span><span class="pk-card-meta">${n} command${n !== 1 ? 's' : ''}</span></div>
+  </div>`;
+}
+// Drill into one bot — show its command list + a back bar.
+function _botOpenBot(idx) {
+  const g = (window._botGroupsCache || []).find(x => x.idx === idx);
+  if (!g) return;
+  const coll = document.getElementById('botcmd-collection-view');
+  const list = document.getElementById('botcmd-list');
+  const back = document.getElementById('botcmd-back-bar');
+  const lbl = document.getElementById('botcmd-back-label');
+  const cnt = document.getElementById('botcmd-back-count');
+  if (coll) coll.style.display = 'none';
+  if (back) back.style.display = '';
+  if (lbl) lbl.textContent = g.name;
+  if (cnt) cnt.textContent = g.commands.length + ' command' + (g.commands.length !== 1 ? 's' : '');
+  if (list) { list.style.display = ''; list.innerHTML = g.commands.map(c => _botCmdRow(c, g.name)).join(''); list.scrollTop = 0; }
+  _botcmdFootReset('Pick a command');
+}
+function _botCmdRow(cmd, botName) {
+  return `<div class="botcmd-item" data-cmd="${escapeHTML(cmd.name)}" data-bot="${escapeHTML(botName)}" onclick="_insertBotCmd('${escapeHTML(cmd.name)}','${escapeHTML(_botcmdInput)}')">
+    <span class="bci-prefix">!</span>
+    <span class="bci-name">${escapeHTML(cmd.name)}</span>
+    <span class="bci-desc">${escapeHTML(cmd.desc)}</span>
+    <span class="bci-bot">${escapeHTML(botName)}</span>
+  </div>`;
+}
+function _botBackToBots() {
+  const i = document.getElementById('botcmd-search-input');
+  if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); }
+  _renderBotCards();
+}
+// Flat filtered list for search — hides the bot cards, shows a "Search: q" bar.
+function _searchBotCmds(q) {
+  if (!q.trim()) { _renderBotCards(); return; }
+  const coll = document.getElementById('botcmd-collection-view');
+  const list = document.getElementById('botcmd-list');
+  const back = document.getElementById('botcmd-back-bar');
+  const lbl = document.getElementById('botcmd-back-label');
+  const cnt = document.getElementById('botcmd-back-count');
+  const ql = q.toLowerCase();
+  const matches = [];
+  (window._botGroupsCache || []).forEach(g => g.commands.forEach(c => {
+    if (c.name.toLowerCase().includes(ql) || c.desc.toLowerCase().includes(ql)) matches.push({ c, bot: g.name });
+  }));
+  if (coll) coll.style.display = 'none';
+  if (back) back.style.display = '';
+  if (lbl) lbl.textContent = 'Search: ' + q;
+  if (cnt) cnt.textContent = matches.length + ' result' + (matches.length !== 1 ? 's' : '');
+  if (list) {
+    list.style.display = '';
+    list.innerHTML = matches.length
+      ? matches.map(m => _botCmdRow(m.c, m.bot)).join('')
+      : '<div class="botcmd-empty">No matching commands.</div>';
+    list.scrollTop = 0;
+  }
+}
+function _botcmdClearSearch() {
+  const i = document.getElementById('botcmd-search-input');
+  if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); }
+  _renderBotCards();
+  i?.focus();
+}
+function _botcmdFootReset(text) {
+  const prev = document.getElementById('botcmd-foot-preview');
+  const lbl = document.getElementById('botcmd-foot-label');
+  if (prev) prev.innerHTML = '';
+  if (lbl) lbl.innerHTML = `<span class="epp-foot-empty">${escapeHTML(text || 'Pick a bot')}</span>`;
+}
+// Delegated hover — fills the footer with the pointed-at command.
+function _wireBotcmdHover() {
+  const list = document.getElementById('botcmd-list');
+  if (!list || list._bcHover) return;
+  list._bcHover = true;
+  list.addEventListener('mouseover', (e) => {
+    const row = e.target.closest('.botcmd-item');
+    if (!row || !row.dataset.cmd) return;
+    const prev = document.getElementById('botcmd-foot-preview');
+    const lbl = document.getElementById('botcmd-foot-label');
+    if (prev) prev.innerHTML = '<span style="font-size:17px;color:var(--blue);font-family:var(--font-display);font-weight:800;line-height:1;">!</span>';
+    if (lbl) lbl.innerHTML = '!' + escapeHTML(row.dataset.cmd || '') + ' <small>· ' + escapeHTML(row.dataset.bot || '') + '</small>';
+  });
 }
 function _insertBotCmd(cmdName, inputId) {
   document.getElementById('botcmd-picker')?.remove();

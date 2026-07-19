@@ -1451,6 +1451,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    visual height and undistorted; fill:currentColor inherits the button colour
    (accent on hover) — no invert-filter hack. */
 .cit-ico{ height:20px; width:auto; fill:currentColor; display:block; pointer-events:none; -webkit-user-drag:none; user-select:none; flex-shrink:0; }
+/* GIF icon = the supplied GIFSVG.png used as a currentColor mask (monochrome
+   silhouette with the letters punched out), so it tints exactly like the FA
+   SVGs — grey at rest, gold when the tab/button is active. */
+.gif-mask-ico{ display:inline-block; background-color:currentColor; aspect-ratio:160/122; -webkit-mask:url(/GIFSVG.png) center/contain no-repeat; mask:url(/GIFSVG.png) center/contain no-repeat; flex-shrink:0; pointer-events:none; }
+.picker-top-tab .gif-mask-ico{ height:15px; }
+.cit-gif .gif-mask-ico{ height:16px; }
 .picker-top-tab .pt-ico{ height:15px; width:auto; fill:currentColor; flex-shrink:0; }
 .chat-input-actions button:hover .svgrepo-icon,
 .picker-top-tab.active .svgrepo-icon,

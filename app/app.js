@@ -12293,13 +12293,15 @@ function editMsg(msgId) {
     ? `<div style="font-size:11px;color:var(--muted-light);margin-top:4px;opacity:.7;display:flex;align-items:center;gap:5px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg> ${tokens.length} attached file${tokens.length>1?'s':''} preserved</div>`
     : '';
   const ph = tokens.length ? 'Add a caption…' : 'Edit message…';
-  textEl.innerHTML=`<div class="edit-rich-input" id="edit-ta" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="${ph}" style="width:100%;min-height:32px;background:rgba(255,255,255,.05);border:1px solid var(--accent-mid);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:6px 10px;outline:none;box-sizing:border-box;white-space:pre-wrap;word-break:break-word;"></div>
+  // Chatbar-style edit box (Discord): a rounded input with the emoji button
+  // INSIDE it on the right, and an "escape to cancel • enter to save" hint —
+  // no separate Save/Cancel buttons.
+  textEl.innerHTML=`<div class="edit-chatbar">
+      <div class="edit-rich-input" id="edit-ta" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="${ph}"></div>
+      <button type="button" class="edit-emoji-btn" title="Emoji" aria-label="Insert emoji" onclick="toggleEmojiPicker('edit-ta')"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM101.6 314c-3.7-13.7 7.5-26 21.7-26l265.4 0c14.2 0 25.4 12.3 21.7 26-18.5 68-80.6 118-154.4 118S120 382 101.6 314zM176 164c-15.5 0-28 12.5-28 28l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-37.6 30.4-68 68-68s68 30.4 68 68l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-15.5-12.5-28-28-28zm132 28l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-37.6 30.4-68 68-68s68 30.4 68 68l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-15.5-12.5-28-28-28s-28 12.5-28 28z"/></svg></button>
+    </div>
     ${hint}
-    <div style="display:flex;gap:6px;margin-top:4px;font-size:12px;align-items:center;">
-      <button class="btn-a" style="padding:4px 12px;font-size:12px;" onclick="saveEdit('${escapeHTML(msgId)}')">Save</button>
-      <button class="btn-g" style="padding:4px 12px;font-size:12px;" onclick="cancelEdit('${escapeHTML(msgId)}')">Cancel</button>
-      <button type="button" title="Emoji" aria-label="Insert emoji" onclick="toggleEmojiPicker('edit-ta')" style="margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);cursor:pointer;padding:0;transition:color .12s,background .12s;" onmouseover="this.style.color='rgba(255,255,255,.95)';this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.color='rgba(255,255,255,.55)';this.style.background='rgba(255,255,255,.05)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
-    </div>${gifPreview}`;
+    <div class="edit-hint">escape to <span onclick="cancelEdit('${escapeHTML(msgId)}')">cancel</span> • enter to <span onclick="saveEdit('${escapeHTML(msgId)}')">save</span></div>${gifPreview}`;
   const ta = document.getElementById('edit-ta');
   if (ta) {
     _initRichInput(ta);
@@ -21704,6 +21706,17 @@ const _EMOJI_CATEGORY_SVGS = {
   flags:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
 };
 
+// Rail/emblem image that 404s → replace with its two-letter initials. The old
+// inline `onerror="this.outerHTML='<span style=\"…\">XX</span>'"` nested double
+// quotes inside the double-quoted attribute, so a failed emblem leaked its
+// initials + a stray '>' as visible text next to the rail (the overflow bug).
+function _railEmblemFail(img) {
+  if (!img) return;
+  const s = document.createElement('span');
+  s.className = 'epp-emblem-fallback';
+  s.textContent = img.getAttribute('data-initials') || (img.getAttribute('alt') || 'B').slice(0, 2).toUpperCase();
+  img.replaceWith(s);
+}
 function buildEmojiSidebar() {
   // Icon-only sidebar (Discord-style). Labels are shown as browser tooltips
   // on hover; the emblem itself is all that's rendered. Order:
@@ -21726,14 +21739,14 @@ function buildEmojiSidebar() {
       const active = _emojiPickerTab === 'bastion-' + i;
       const name = b.name || 'Bastion';
       const initials = escapeHTML(name.slice(0,2).toUpperCase());
-      const fallback = `<span style="font-size:11px;font-weight:700;letter-spacing:.5px;">${initials}</span>`;
+      const fallback = `<span class="epp-emblem-fallback">${initials}</span>`;
       let emblem;
       if (b.icon) {
-        emblem = `<img src="${escapeHTML(b.icon)}" alt="${escapeHTML(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+        emblem = `<img src="${escapeHTML(b.icon)}" alt="${escapeHTML(name)}" data-initials="${initials}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="_railEmblemFail(this)">`;
       } else if (b.emblem && !/^https?:|^data:/.test(b.emblem)) {
         emblem = `<span style="font-size:18px;line-height:1;">${escapeHTML(b.emblem)}</span>`;
       } else if (b.emblem) {
-        emblem = `<img src="${escapeHTML(b.emblem)}" alt="${escapeHTML(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+        emblem = `<img src="${escapeHTML(b.emblem)}" alt="${escapeHTML(name)}" data-initials="${initials}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="_railEmblemFail(this)">`;
       } else {
         emblem = fallback;
       }
@@ -21890,11 +21903,16 @@ function buildEmojiPicker() {
   const panel = document.getElementById('emoji-picker');
   if (!panel) return;
 
-  // Mockup layout (docs/picker-redesign-mockup.html, .pk-* spec):
-  //   tabs → full-width rounded search → body[ grid | right icon rail ] →
-  //   full-width Guilded footer (hovered emoji · category).
+  // The GIF/Sticker/Emoji/Bots topbar only makes sense when the picker is
+  // opened from the chatbar (where you can switch to those). For reactions,
+  // message-editing, custom status, about-me, the forum composer, etc. we
+  // drop the tabs entirely — there's nothing to switch to.
+  const chatbarMode = _emojiPickerMode === 'insert'
+    && ['ch-input', 'dm-input', 'gc-input'].includes(activeEmojiTarget)
+    && !window._statusEmojiInsertOverride;
+  panel.classList.toggle('epp-chatbar', chatbarMode);
   panel.innerHTML = `
-    ${_pickerTopTabs('emoji')}
+    ${chatbarMode ? _pickerTopTabs('emoji') : ''}
     <div class="epp-search-wrap">
       <div class="epp-search-box">
         <svg class="epp-search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -22488,24 +22506,26 @@ function _emojiShortcodeCache() {
   return _EMOJI_TO_SHORTCODE;
 }
 
+// Swap a Twemoji <img> that 404'd for the OS glyph (alt holds the char).
+function _emojiImgFail(img) {
+  if (!img) return;
+  const s = document.createElement('span');
+  s.className = 'emoji-cell-glyph';
+  s.textContent = img.getAttribute('alt') || '';
+  img.replaceWith(s);
+}
 function renderEmojiCell(emoji) {
   const safe = escapeHTML(emoji);
   const isFav = _favEmojis.includes(emoji);
-  // Fortized-branded overrides (money_bag, money_mouth, money_with_wings)
-  // must render as their custom PNG even in the picker — native system
-  // fonts don't know about them. Everything else stays native text.
+  // Render every unicode emoji as a Twemoji image (matches reactions, status,
+  // etc. everywhere else in the app — OS glyphs render inconsistently and were
+  // the "not usable / not twemojis" complaint). loading="lazy" means only the
+  // cells actually scrolled into view fetch; the rest cost nothing. Fortized
+  // money overrides resolve through emojiToTwemojiUrl too.
   const override = (typeof EMOJI_URL_OVERRIDES !== 'undefined') ? EMOJI_URL_OVERRIDES[emoji] : null;
-  if (override) {
-    return `<div class="emoji-cell emoji-cell-unicode${isFav?' is-fav':''}" data-ue="${safe}">`
-      + `<img src="${escapeHTML(override)}" alt="${safe}" loading="lazy" decoding="async" style="width:26px;height:26px;object-fit:contain;pointer-events:none;">`
-      + (isFav ? '<span class="emoji-fav-star">★</span>' : '')
-      + `</div>`;
-  }
-  // Native text glyph — no <img>, no network request. The whole picker renders
-  // 1400+ cells without pulling a single Twemoji SVG, which is what made
-  // opening the panel lag. Modern OS emoji fonts handle rendering.
+  const url = override || (typeof emojiToTwemojiUrl === 'function' ? emojiToTwemojiUrl(emoji) : '');
   return `<div class="emoji-cell emoji-cell-unicode${isFav?' is-fav':''}" data-ue="${safe}">`
-    + `<span class="emoji-cell-glyph">${safe}</span>`
+    + `<img src="${escapeHTML(url)}" alt="${safe}" loading="lazy" decoding="async" draggable="false" onerror="_emojiImgFail(this)">`
     + (isFav ? '<span class="emoji-fav-star">★</span>' : '')
     + `</div>`;
 }
@@ -33633,7 +33653,7 @@ document.addEventListener('contextmenu', function _mediaCtxMenu(e) {
     copy: _faMsg('copy', 15),
     save: '<svg width="15" height="15" viewBox="0 0 512 512" fill="currentColor"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7 288 32zM64 352c-35.3 0-64 28.7-64 64l0 32c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-32c0-35.3-28.7-64-64-64l-101.5 0-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352 64 352zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg>',
     link: '<svg width="14" height="14" viewBox="0 0 640 512" fill="currentColor"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg>',
-    star: '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>',
+    collect: '<svg width="14" height="14" viewBox="0 0 384 512" fill="currentColor"><path d="M0 48C0 21.5 21.5 0 48 0l288 0c26.5 0 48 21.5 48 48l0 431.4c0 17.4-19.9 27.3-33.8 16.9L192 400 33.8 496.3C19.9 506.7 0 496.8 0 479.4L0 48z"/></svg>',
   };
   const items = [];
   const gifWrap = t.closest('.ftz-embed-gif');
@@ -33651,10 +33671,11 @@ document.addEventListener('contextmenu', function _mediaCtxMenu(e) {
     if (vid) {
       items.push({ icon: ICO.save, label: 'Save Video', action: () => _mediaSave(src, _mediaFilename(src, null, 'fortized', 'mp4')) });
     } else {
-      items.push({ icon: ICO.copy, label: 'Copy Image', action: () => _mediaCopyImage(src) });
+      // No "Copy Image" for GIFs — the clipboard can't hold an animated GIF
+      // (it'd paste a dead first frame), which is misleading.
       items.push({ icon: ICO.save, label: 'Save GIF', action: () => _mediaSave(src, _mediaFilename(src, null, 'fortized', 'gif')) });
     }
-    items.push({ icon: ICO.star, label: 'Collect GIF', action: () => saveFavGif({ id: src.replace(/[^a-zA-Z0-9]/g, '').slice(-16), url: src }) });
+    items.push({ icon: ICO.collect, label: 'Collect GIF', action: () => saveFavGif({ id: src.replace(/[^a-zA-Z0-9]/g, '').slice(-16), url: src }) });
     if (!src.startsWith('data:')) items.push({ icon: ICO.link, label: 'Copy Link', action: () => _mediaCopyLink(src) });
   } else if (vp) {
     const vid = vp.querySelector('video');
@@ -39245,11 +39266,11 @@ function _stickerRailBtn(g) {
   const b = g.bastion || {};
   const name = escapeHTML(g.name);
   const initials = escapeHTML((g.name || 'B').slice(0,2).toUpperCase());
-  const fallback = `<span style="font-size:11px;font-weight:700;letter-spacing:.5px;">${initials}</span>`;
+  const fallback = `<span class="epp-emblem-fallback">${initials}</span>`;
   let emblem;
-  if (b.icon) emblem = `<img src="${escapeHTML(b.icon)}" alt="${name}" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+  if (b.icon) emblem = `<img src="${escapeHTML(b.icon)}" alt="${name}" data-initials="${initials}" onerror="_railEmblemFail(this)">`;
   else if (b.emblem && !/^https?:|^data:/.test(b.emblem)) emblem = `<span style="font-size:17px;line-height:1;">${escapeHTML(b.emblem)}</span>`;
-  else if (b.emblem) emblem = `<img src="${escapeHTML(b.emblem)}" alt="${name}" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+  else if (b.emblem) emblem = `<img src="${escapeHTML(b.emblem)}" alt="${name}" data-initials="${initials}" onerror="_railEmblemFail(this)">`;
   else emblem = fallback;
   return `<button class="epp-sidebar-btn" title="${name}" aria-label="${name}" onclick="_stickerRailJump(${g.idx})"><span class="epp-sidebar-emblem">${emblem}</span></button>`;
 }
@@ -39403,9 +39424,14 @@ function openBotCommandPanel(inputId, context) {
 }
 
 window._botGroupsCache = [];
-// Group enabled, command-bearing deployed bots for the current bastion channel.
+// Group command-bearing bots for the picker. FortGified (built-in @fortized
+// bot) is ALWAYS first, in every context; then this bastion's deployed bots.
 function _botGroups(context) {
   const groups = [];
+  groups.push({
+    idx: -1, name: FORTGIFIED_DISPLAY, avatar: FORTGIFIED_AVATAR, emblem: '', builtin: true,
+    commands: [{ name: 'Convert to GIF', desc: 'Right-click an image message → Bots', builtin: true }],
+  });
   if (context === 'ch' && curBastion !== null) {
     const b = CU?.bastions?.[curBastion];
     (b?.deployedBots || []).forEach((bot, i) => {
@@ -39418,7 +39444,7 @@ function _botGroups(context) {
   return groups;
 }
 function _botAvatarHTML(g) {
-  if (g.avatar) return `<img src="${escapeHTML(g.avatar)}" alt="" onerror="this.outerHTML='&lt;img src=\\'/Fortized Bot.png\\'&gt;'">`;
+  if (g.avatar) return `<img src="${escapeHTML(g.avatar)}" alt="" onerror="this.onerror=null;this.src='/Fortized Bot.png'">`;
   if (g.emblem && !/^https?:|^data:/.test(g.emblem)) return `<span style="font-size:18px;line-height:1;">${escapeHTML(g.emblem)}</span>`;
   if (g.emblem) return `<img src="${escapeHTML(g.emblem)}" alt="">`;
   return `<img src="/Fortized Bot.png" alt="">`;
@@ -39442,7 +39468,7 @@ function _renderBotList() {
   if (rail) rail.innerHTML = groups.map(g =>
     `<button class="epp-sidebar-btn" title="${escapeHTML(g.name)}" aria-label="${escapeHTML(g.name)}" onclick="_botRailJump(${g.idx})"><span class="epp-sidebar-emblem bot-rail-av">${_botAvatarHTML(g)}</span></button>`).join('');
   if (list) list.innerHTML = groups.map(g =>
-    `<div class="epp-section bot-sec-head" id="botcmd-sec-${g.idx}"><span class="bot-sec-av">${_botAvatarHTML(g)}</span>${escapeHTML(g.name)}<span class="bot-sec-count">${g.commands.length}</span></div>`
+    `<div class="epp-section bot-sec-head" id="botcmd-sec-${g.idx}"><span class="bot-sec-av">${_botAvatarHTML(g)}</span>${escapeHTML(g.name)}${g.builtin ? '<span class="bot-sec-app">APP</span>' : ''}<span class="bot-sec-count">${g.commands.length}</span></div>`
     + g.commands.map(c => _botCmdRow(c, g.name)).join('')).join('');
 }
 function _botRailJump(idx) {
@@ -39451,12 +39477,26 @@ function _botRailJump(idx) {
   if (list && hdr) list.scrollTo({ top: hdr.offsetTop - 2, behavior: 'smooth' });
 }
 function _botCmdRow(cmd, botName) {
+  // Built-in FortGified commands are message-context actions, not chat "!"
+  // commands — clicking just explains where to find them.
+  if (cmd.builtin) {
+    return `<div class="botcmd-item" data-cmd="${escapeHTML(cmd.name)}" data-bot="${escapeHTML(botName)}" onclick="_fortgifiedHint()">
+      <span class="bci-prefix bci-app"><svg viewBox="0 0 448 512" fill="currentColor" style="width:11px;height:11px;"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg></span>
+      <span class="bci-name">${escapeHTML(cmd.name)}</span>
+      <span class="bci-desc">${escapeHTML(cmd.desc)}</span>
+      <span class="bci-bot">${escapeHTML(botName)}</span>
+    </div>`;
+  }
   return `<div class="botcmd-item" data-cmd="${escapeHTML(cmd.name)}" data-bot="${escapeHTML(botName)}" onclick="_insertBotCmd('${escapeHTML(cmd.name)}','${escapeHTML(_botcmdInput)}')">
     <span class="bci-prefix">!</span>
     <span class="bci-name">${escapeHTML(cmd.name)}</span>
     <span class="bci-desc">${escapeHTML(cmd.desc)}</span>
     <span class="bci-bot">${escapeHTML(botName)}</span>
   </div>`;
+}
+function _fortgifiedHint() {
+  document.getElementById('botcmd-picker')?.remove();
+  toast('Right-click any image message → Bots → Convert to GIF', 'info');
 }
 // Filtered flat list for search — no section headers, rail hidden.
 function _searchBotCmds(q) {

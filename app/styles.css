@@ -1683,6 +1683,8 @@ body.staw-frozen::before{
 .bot-sec-count{margin-left:auto;font-size:9px;font-weight:700;color:rgba(96,165,250,.55);background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.12);border-radius:var(--radius-pill);padding:2px 8px;letter-spacing:.05em;}
 .bot-rail-av,.bot-rail-av img{border-radius:7px;overflow:hidden;}
 .bot-rail-av img{width:22px;height:22px;object-fit:cover;}
+.bot-sec-app{font-size:8px;font-weight:700;letter-spacing:.06em;color:#fff;background:var(--blue);border-radius:4px;padding:2px 5px;line-height:1;margin-left:6px;text-transform:uppercase;}
+.botcmd-item .bci-prefix.bci-app{color:var(--blue);display:inline-flex;align-items:center;justify-content:center;}
 #sticker-picker .epp-foot-emoji img{width:26px;height:26px;object-fit:contain;}
 .spp-sticker{border-radius:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;padding:12px;aspect-ratio:1;}
 .spp-sticker:hover{background:rgba(255,249,62,.06);border-color:rgba(255,249,62,.15);transform:scale(1.06) translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.35),0 0 0 1px rgba(255,249,62,.05);}
@@ -4265,9 +4267,12 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .epp-sidebar-btn:hover{background:rgba(255,255,255,.06);color:var(--text);}
 .epp-sidebar-btn.active{background:var(--accent-dim);color:var(--accent);}
 .epp-sidebar-btn.active::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0;}
-.epp-sidebar-emblem{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:inherit;}
-.epp-sidebar-emblem svg{color:inherit;}
-.epp-sidebar-emblem img{width:22px;height:22px;object-fit:contain;}
+.epp-sidebar-emblem{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:inherit;overflow:hidden;border-radius:7px;}
+.epp-sidebar-emblem svg{color:inherit;width:20px;height:20px;}
+.epp-sidebar-emblem img{width:22px;height:22px;object-fit:contain;max-width:100%;max-height:100%;}
+.epp-sidebar-btn{overflow:hidden;}
+/* Two-letter fallback when an emblem image 404s (never leaks as stray text). */
+.epp-emblem-fallback{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:11px;font-weight:700;letter-spacing:.5px;line-height:1;color:inherit;}
 /* Fortized logo: never round. The PNG already has its own silhouette. */
 .epp-sidebar-btn .epp-ftz-icon,
 .epp-sidebar-btn.is-ftz .epp-sidebar-emblem,
@@ -8749,9 +8754,10 @@ select:focus-visible,
   z-index: 10;
   position: relative;
 }
-/* DM user panel: stretch from topbar to chatbar */
+/* DM user panel: top-aligned so the profile card floats as a compact card
+   (fit-content) rather than a full-height sidebar column. */
 #dm-user-panel {
-  align-self: stretch;
+  align-self: flex-start;
 }
 
 /* Sidebar scrollbars (thin) */
@@ -9923,6 +9929,16 @@ button[style*="background: var(--accent)"]:active {
   transition: transform .12s ease;
 }
 .emoji-cell:hover img { transform: scale(1.12); }
+/* Chatbar-style message edit box (Discord): rounded row, inline emoji button. */
+.edit-chatbar{display:flex;align-items:flex-end;gap:4px;background:var(--panel2,rgba(255,255,255,.05));border:1px solid var(--border);border-radius:12px;padding:5px 6px 5px 12px;transition:border-color .15s;}
+.edit-chatbar:focus-within{border-color:var(--accent-mid);}
+.edit-chatbar .edit-rich-input{flex:1;min-width:0;min-height:24px;max-height:220px;overflow-y:auto;background:transparent;border:none;border-radius:0;color:var(--text);font-family:var(--font-ui);font-size:14px;line-height:1.5;padding:3px 0;outline:none;white-space:pre-wrap;word-break:break-word;}
+.edit-emoji-btn{flex-shrink:0;background:transparent;border:none;color:var(--muted-light);cursor:pointer;width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;transition:color .12s,background .12s;padding:0;}
+.edit-emoji-btn:hover{color:var(--text);background:rgba(255,255,255,.08);}
+.edit-emoji-btn svg{width:19px;height:19px;}
+.edit-hint{font-size:11px;color:var(--muted-light);margin-top:5px;padding-left:3px;}
+.edit-hint span{color:var(--accent);cursor:pointer;font-weight:600;}
+.edit-hint span:hover{text-decoration:underline;}
 /* Rich contenteditable edit input — renders emojis inline, Discord-style. */
 .edit-rich-input:empty::before{content:attr(data-placeholder);color:rgba(255,255,255,.3);pointer-events:none;}
 .edit-rich-input .rci-emoji{width:1.3em;height:1.3em;object-fit:contain;vertical-align:-0.25em;display:inline-block;}
@@ -12456,7 +12472,9 @@ select:focus-visible {
   padding:0;
   border:1px solid var(--border);
   margin-top:0;
-  max-height:100%;
+  /* Compact floating card — height follows its content, capped so a very tall
+     profile still scrolls inside the card instead of the page. */
+  max-height:calc(100vh - 92px);
   box-shadow:0 8px 32px rgba(0,0,0,.45);
 }
 .fpp--dm .fpp__banner{

@@ -1,10 +1,47 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix314`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix318`)
 
-Branch `claude/staff-console-world-map-bp1xnh`, mirrored to `main`. Standing
+Branch `claude/staff-console-world-map-zgvrsa`, mirrored to `main`. Standing
 rules below still apply (egress, mirror-to-main + bump cache-bust every push,
 `node --check` + 42 relationship tests pre-commit).
+
+**Shipped THIS session (`2026fix315`–`318`):**
+- **Pickers redesigned to Discord style** (user's explicit direction, NOT the
+  GIF-panel collection cards — those were built in 315 then replaced in 317):
+  sticker panel = LEFT rail of bastion emblems + collapsible per-pack sections
+  (`_stickerToggleSection`) + "name from <bastion>" footer; emoji rail moved
+  LEFT (`.epp-sidebar--left`); bots = flat list, per-bot section headers
+  (avatar + count pill) + left avatar rail (`_renderBotList`/`_botRailJump`).
+- **GIF tab/chatbar icon** = supplied `GIFSVG.png` as a currentColor CSS mask
+  (`.gif-mask-ico`) — tints like the FA icons. Asset at web root.
+- **Search bars unified**: GIF panel uses `.epp-search-*`; all picker search
+  inputs have autocomplete/appearance/autofill guards ("blocky" fix — was
+  likely native autofill repaint; unconfirmed by user).
+- **DM user panel** = floating rounded card (18px radius, detached all edges;
+  container padding in index.html + `.fpp--dm` CSS).
+- **Media right-click menu** (capture-phase, `_mediaCtxMenu`): Copy Image /
+  Save Image / Save GIF / Save Video / Save Audio / Save Sticker / Copy Link /
+  Collect GIF, on chat images (`.ftz-chat-img`), `.ftz-embed-gif`, stickers,
+  `.ftz-vp` video, `.ftz-ap` audio, lightbox.
+- **FortGified built-in bot**: right-click image message → Bots → Convert to
+  GIF. Real single-frame GIF89a encoder in-app (`_encodeCanvasAsGif`:
+  median-cut palette + LZW; VERIFIED decodable in Chromium, avg err 1.24/255).
+  Posts persisted everyone-visible reply as `fortgified` in DM/GC/channel
+  (`_fortgifiedPost`; `sendDMMessage` gained `opts.senderName`). Renders with
+  `/FortGified-PFP.png`, display name FortGified, blue `.ftz-app-capsule`,
+  zero DB lookups; in `MANUAL_BOTS`. Gate: `ch.botsDisabled` (setting itself
+  not yet built — bot-system redesign later).
+- `docs/dms-optional-columns.md` — SQL the USER must run for the dms table
+  warning (forwarded/reply_to/flags cols) + notes on cookie/avatar/embed noise.
+
+**Still open (user's queue, in order):** ① console-errors cleanup remainder
+(user runs the dms SQL; __cf_bm cookie + invalid-invite warn = no-op by
+design); ② bare GIF links auto-embed in parseMD (Tenor/Klipy/Giphy page-URL →
+media resolve; then simplify the editMsg/saveEdit FTZGIF unwrap path);
+③ attachment corner hover controls (modify/download/collect/delete-one-token,
+ties into `_splitFileTokens`). User feedback pending on: picker redesign look,
+DM floating card, FortGified avatar rendering live.
 
 **Shipped later this session (`2026fix312`–`314`):**
 - **Emoji flicker FIXED** — removed `content-visibility:auto` from

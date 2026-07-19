@@ -10619,20 +10619,38 @@ function _msgFindImage(row) {
   const img = row.querySelector('img.ftz-chat-img, .ftz-embed-gif img, img.msg-sticker');
   return (img && img.src) ? img : null;
 }
+// First convertible media (image OR video) in a row, for FortGified.
+function _msgFindMedia(row) {
+  if (!row) return null;
+  const img = _msgFindImage(row);
+  if (img) return { el: img, kind: 'image' };
+  const vid = row.querySelector('.ftz-vp video, video.ftz-embed-video, video');
+  if (vid && vid.src) return { el: vid, kind: 'video' };
+  return null;
+}
 // Second-level ctx menu listing message commands, grouped per bot. FortGified
 // is always shown; its image commands are disabled when the message has no
 // image (with a hint), so "Bots" is always useful/discoverable.
 function _openMsgBotsMenu(x, y, msgId, context) {
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-  const hasImage = !!_msgFindImage(row);
+  const media = _msgFindMedia(row);
+  let enabled = false, hint = 'no media';
+  if (media) {
+    if (media.kind === 'image') { enabled = true; hint = ''; }
+    else { // video — only under 30s (unknown duration is allowed; validated on run)
+      const dur = media.el.duration;
+      if (dur && dur > 30.5) { enabled = false; hint = 'video >30s'; }
+      else { enabled = true; hint = ''; }
+    }
+  }
   showCtxMenu(x, y, [{
     label: FORTGIFIED_DISPLAY,
     items: [{
       icon: `<img src="${FORTGIFIED_AVATAR}" style="width:15px;height:15px;border-radius:4px;display:block;" alt="">`,
       label: 'Convert to GIF',
-      disabled: !hasImage,
-      hint: hasImage ? '' : 'no image',
-      action: hasImage ? () => _fortgifiedGifify(msgId, context) : null,
+      disabled: !enabled,
+      hint,
+      action: enabled ? () => _fortgifiedGifify(msgId, context) : null,
     }],
   }]);
 }
@@ -10742,26 +10760,106 @@ function _encodeCanvasAsGif(canvas) {
   bytes.push(0, 0x3B);
   return new Blob([new Uint8Array(bytes)], { type: 'image/gif' });
 }
+// Frames (array of ImageData) → animated GIF89a Blob. Per-frame LOCAL colour
+// tables (better quality than one global palette across a whole video) +
+// Netscape loop + graphic-control extensions with a per-frame delay.
+function _encodeFramesAsGif(frames, w, h, delayCs) {
+  const bytes = [];
+  const push16 = (v) => { bytes.push(v & 0xFF, (v >> 8) & 0xFF); };
+  for (const c of 'GIF89a') bytes.push(c.charCodeAt(0));
+  push16(w); push16(h);
+  bytes.push(0x70, 0, 0);            // no global colour table
+  bytes.push(0x21, 0xFF, 0x0B);      // Netscape 2.0 loop-forever application ext
+  for (const c of 'NETSCAPE2.0') bytes.push(c.charCodeAt(0));
+  bytes.push(0x03, 0x01, 0, 0, 0);
+  for (const frame of frames) {
+    const data = frame.data;
+    const pal = _gifPalette(data, 256);
+    while (pal.length < 256) pal.push([0, 0, 0]);
+    const cache = new Map();
+    const nearest = (r, g, b) => {
+      const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+      let v = cache.get(key);
+      if (v !== undefined) return v;
+      let bi = 0, bd = Infinity;
+      for (let i = 0; i < pal.length; i++) { const p = pal[i]; const d = (p[0]-r)*(p[0]-r)+(p[1]-g)*(p[1]-g)+(p[2]-b)*(p[2]-b); if (d < bd) { bd = d; bi = i; } }
+      cache.set(key, bi); return bi;
+    };
+    const idx = new Uint8Array(w * h);
+    for (let i = 0, px = 0; i < data.length; i += 4, px++) idx[px] = nearest(data[i], data[i+1], data[i+2]);
+    bytes.push(0x21, 0xF9, 0x04, 0x04); push16(delayCs); bytes.push(0, 0); // GCE (disposal 1)
+    bytes.push(0x2C); push16(0); push16(0); push16(w); push16(h); bytes.push(0x87); // image desc + LCT flag, size 256
+    for (const p of pal) bytes.push(p[0], p[1], p[2]);
+    bytes.push(8);
+    const lzw = _gifLzw(8, idx);
+    for (let i = 0; i < lzw.length; i += 255) { const chunk = lzw.slice(i, i + 255); bytes.push(chunk.length, ...chunk); }
+    bytes.push(0);
+  }
+  bytes.push(0x3B);
+  return new Blob([new Uint8Array(bytes)], { type: 'image/gif' });
+}
+// Seek a detached <video> and resolve once the frame is ready (2s safety cap).
+function _seekVideoTo(v, t) {
+  return new Promise((res) => {
+    let done = false;
+    const on = () => { if (done) return; done = true; v.removeEventListener('seeked', on); res(); };
+    v.addEventListener('seeked', on);
+    try { v.currentTime = Math.min(t, Math.max(0, (v.duration || t) - 0.001)); } catch (_) { on(); }
+    setTimeout(on, 2000);
+  });
+}
+// Sample a <30s video into an animated GIF (bounded 320px, ~10fps, ≤180 frames
+// to keep the file — and egress — reasonable).
+async function _videoToGif(srcVideo) {
+  const v = document.createElement('video');
+  v.crossOrigin = 'anonymous'; v.muted = true; v.playsInline = true; v.preload = 'auto';
+  v.src = srcVideo.src;
+  await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = () => rej(new Error('video load failed')); });
+  const duration = v.duration || 0;
+  if (!duration || duration > 30.5) throw new Error('Video must be under 30 seconds');
+  const maxDim = 320;
+  const vw = v.videoWidth || 320, vh = v.videoHeight || 240;
+  const scale = Math.min(1, maxDim / Math.max(vw, vh));
+  const w = Math.max(1, Math.round(vw * scale)), h = Math.max(1, Math.round(vh * scale));
+  let total = Math.round(duration * 10);
+  total = Math.max(1, Math.min(total, 180));
+  const delayCs = Math.max(2, Math.round(100 * duration / total));
+  const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const frames = [];
+  for (let i = 0; i < total; i++) {
+    await _seekVideoTo(v, (i / total) * duration);
+    ctx.drawImage(v, 0, 0, w, h);
+    frames.push(ctx.getImageData(0, 0, w, h)); // throws on a tainted (cross-origin) frame
+  }
+  return _encodeFramesAsGif(frames, w, h, delayCs);
+}
 
-// The Convert to GIF command itself.
+// The Convert to GIF command itself — image → single-frame gif, short video →
+// animated gif.
 async function _fortgifiedGifify(msgId, context) {
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-  const srcImg = _msgFindImage(row);
-  if (!srcImg) { toast('No image found in that message', 'error'); return; }
+  const media = _msgFindMedia(row);
+  if (!media) { toast('No media found in that message', 'error'); return; }
   toast(FORTGIFIED_DISPLAY + ' is working…', 'success');
   try {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = srcImg.src; });
-    // Bound the frame so the resulting file (and egress) stays small.
-    const MAX = 512;
-    const scale = Math.min(1, MAX / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
-    const w = Math.max(1, Math.round((img.naturalWidth || 1) * scale));
-    const h = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    const blob = _encodeCanvasAsGif(canvas); // throws on tainted canvas
+    let blob;
+    if (media.kind === 'video') {
+      blob = await _videoToGif(media.el);
+    } else {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = media.el.src; });
+      // Bound the frame so the resulting file (and egress) stays small.
+      const MAX = 512;
+      const scale = Math.min(1, MAX / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+      const w = Math.max(1, Math.round((img.naturalWidth || 1) * scale));
+      const h = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      blob = _encodeCanvasAsGif(canvas); // throws on tainted canvas
+    }
     const fname = 'fortgified-' + Date.now().toString(36) + '.gif';
     // Prefer Storage (small message text); fall back to an inline data URL.
     let fileUrl = null;
@@ -10781,7 +10879,9 @@ async function _fortgifiedGifify(msgId, context) {
     await _fortgifiedPost(context, text, replyTo);
   } catch (e) {
     console.warn('[FortGified] convert failed:', e?.message || e);
-    toast("FortGified couldn't read that image (protected or cross-origin)", 'error');
+    const msg = /30 seconds/.test(e?.message || '') ? 'FortGified can only convert videos under 30 seconds'
+      : "FortGified couldn't read that media (protected or cross-origin)";
+    toast(msg, 'error');
   }
 }
 // Post a persisted, everyone-visible message AS the bot into the current chat.

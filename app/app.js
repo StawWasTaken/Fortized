@@ -21666,16 +21666,16 @@ function buildEmojiPicker() {
     <div class="epp-search-wrap">
       <div class="epp-search-box">
         <svg class="epp-search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="epp-search-inp" class="epp-search-inp" placeholder="Search emoji" oninput="searchEmojis(this.value);this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
+        <input id="epp-search-inp" class="epp-search-inp" placeholder="Search emoji" autocomplete="off" autocorrect="off" spellcheck="false" oninput="searchEmojis(this.value);this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
         <button class="epp-search-clr" onclick="_eppClearSearch()" aria-label="Clear search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
     </div>
     <div class="epp-body">
+      <div class="epp-sidebar epp-sidebar--left" id="epp-sidebar">
+        ${buildEmojiSidebar()}
+      </div>
       <div class="epp-main">
         <div id="epp-grid" class="epp-scroll"></div>
-      </div>
-      <div class="epp-sidebar" id="epp-sidebar">
-        ${buildEmojiSidebar()}
       </div>
     </div>
     <div class="epp-footer">
@@ -38451,12 +38451,11 @@ function openGiphyPicker(inputId) {
 
   picker.innerHTML = `
     ${_pickerTopTabs('gif')}
-    <div style="padding:10px 14px 0;flex-shrink:0;">
-      <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="giphy-search-input" placeholder="Search Klipy" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" oninput="handleGiphySearch(this.value,'${esc}')">
-      </div>
-    </div>
+    <div class="epp-search-wrap"><div class="epp-search-box">
+      <svg class="epp-search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="giphy-search-input" class="epp-search-inp" placeholder="Search Klipy" autocomplete="off" autocorrect="off" spellcheck="false" oninput="handleGiphySearch(this.value,'${esc}');this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
+      <button class="epp-search-clr" onclick="_giphyClearSearch('${esc}')" aria-label="Clear search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div></div>
     <div id="gif-collection-view" class="gif-collection-grid">
       <div class="gif-collection-card gcc-fav" onclick="_gifCollectionPick('favourites','${esc}')">
         <img src="" data-cat-preview="favourites" alt="">
@@ -38609,6 +38608,12 @@ function switchGiphyTab(tab, inputId) {
   else if (tab === 'trending') loadGiphyTrending(inputId);
 }
 
+function _giphyClearSearch(inputId) {
+  const i = document.getElementById('giphy-search-input');
+  if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); }
+  _gifBackToCollections(inputId);
+  i?.focus();
+}
 function handleGiphySearch(q, inputId) {
   const grid = document.getElementById('giphy-grid');
   const collectionView = document.getElementById('gif-collection-view');
@@ -38822,30 +38827,29 @@ function openStickerPicker(inputId) {
   const stickerBottom = Math.max(60, window.innerHeight - (rect.top || window.innerHeight - 80) + 6);
   picker.style.cssText = `left:${stickerLeft}px;bottom:${stickerBottom}px;`;
 
-  // GIF-panel language: a landing grid of per-bastion pack cards → click to
-  // drill into that pack's sticker grid → a "Back to packs" bar. Search
-  // flattens across every pack (hides the cards, shows a flat filtered grid).
+  // Discord-style: a LEFT rail of bastion pack icons, one scrolling list of
+  // per-pack sections with collapsible headers, and a hover footer showing
+  // the pointed-at sticker + which bastion it's from. Search flattens across
+  // every pack (rail hides via .spp-searching).
   picker.innerHTML = `
     ${_pickerTopTabs('sticker')}
     <div class="epp-search-wrap"><div class="epp-search-box">
       <svg class="epp-search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="sticker-search-input" class="epp-search-inp" placeholder="Search stickers" oninput="_searchStickers(this.value);this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
+      <input id="sticker-search-input" class="epp-search-inp" placeholder="Search stickers" autocomplete="off" autocorrect="off" spellcheck="false" oninput="_searchStickers(this.value);this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
       <button class="epp-search-clr" onclick="_stickerClearSearch()" aria-label="Clear search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div></div>
-    <div class="pk-back-bar" id="sticker-back-bar" style="display:none;">
-      <button class="pk-back-btn" onclick="_stickerBackToPacks()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg><span id="sticker-back-label">Packs</span></button>
-      <span class="pk-back-count" id="sticker-back-count"></span>
+    <div class="epp-body">
+      <div class="epp-sidebar epp-sidebar--left" id="sticker-rail"></div>
+      <div class="epp-main"><div class="epp-scroll" id="sticker-grid"></div></div>
     </div>
-    <div class="pk-coll" id="sticker-collection-view"></div>
-    <div class="epp-scroll" id="sticker-grid" style="display:none;"></div>
     <div class="epp-footer">
       <div class="epp-foot-emoji" id="sticker-foot-preview" aria-hidden="true"></div>
-      <div class="epp-foot-name" id="sticker-foot-label"><span class="epp-foot-empty">Pick a sticker pack</span></div>
+      <div class="epp-foot-name" id="sticker-foot-label"><span class="epp-foot-empty">Pick a sticker</span></div>
     </div>
   `;
 
   document.body.appendChild(picker);
-  _renderStickerPacks();
+  _buildStickerContent();
   _wireStickerHover();
   _bindPickerOutsideClose(picker, () => picker.remove());
 }
@@ -38866,89 +38870,65 @@ function _stickerGroups() {
 function _stickerCell(s) {
   const url = escapeHTML(s.url || '');
   const name = escapeHTML(s.name || 'sticker');
-  return `<div class="spp-sticker" data-sticker-url="${url}" data-sticker-name="${name}" onclick="_sendSticker('${url}','${name}')">`
+  const from = escapeHTML(s.bastionName || '');
+  return `<div class="spp-sticker" data-sticker-url="${url}" data-sticker-name="${name}" data-sticker-from="${from}" onclick="_sendSticker('${url}','${name}')">`
     + `<img src="${url}" alt="${name}" loading="lazy" draggable="false"></div>`;
 }
-window._stickerPackCache = [];
-// Landing view — one preview card per bastion pack (mirrors the GIF collection
-// cards: a faded preview sticker behind the pack name + count).
-function _renderStickerPacks() {
+// Rail button — the bastion's emblem/icon; clicking scrolls to its section.
+function _stickerRailBtn(g) {
+  const b = g.bastion || {};
+  const name = escapeHTML(g.name);
+  const initials = escapeHTML((g.name || 'B').slice(0,2).toUpperCase());
+  const fallback = `<span style="font-size:11px;font-weight:700;letter-spacing:.5px;">${initials}</span>`;
+  let emblem;
+  if (b.icon) emblem = `<img src="${escapeHTML(b.icon)}" alt="${name}" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+  else if (b.emblem && !/^https?:|^data:/.test(b.emblem)) emblem = `<span style="font-size:17px;line-height:1;">${escapeHTML(b.emblem)}</span>`;
+  else if (b.emblem) emblem = `<img src="${escapeHTML(b.emblem)}" alt="${name}" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+  else emblem = fallback;
+  return `<button class="epp-sidebar-btn" title="${name}" aria-label="${name}" onclick="_stickerRailJump(${g.idx})"><span class="epp-sidebar-emblem">${emblem}</span></button>`;
+}
+// Section = collapsible Discord-style header + that pack's sticker grid.
+function _stickerSection(g) {
+  return `<div class="epp-section stk-sec-head" id="sticker-sec-${g.idx}" data-sticker-sec="${g.idx}" onclick="_stickerToggleSection(${g.idx})" role="button" aria-expanded="true">${escapeHTML(g.name)}<svg class="stk-sec-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></div>`
+    + `<div class="spp-sec-grid" id="sticker-sec-grid-${g.idx}">${g.stickers.map(s => _stickerCell({ ...s, bastionName: g.name })).join('')}</div>`;
+}
+function _stickerToggleSection(idx) {
+  const hdr = document.getElementById('sticker-sec-' + idx);
+  const grid = document.getElementById('sticker-sec-grid-' + idx);
+  if (!hdr || !grid) return;
+  const collapsed = grid.classList.toggle('is-collapsed');
+  hdr.classList.toggle('is-collapsed', collapsed);
+  hdr.setAttribute('aria-expanded', String(!collapsed));
+}
+// Build the grouped (default) view: left rail + per-bastion sections.
+function _buildStickerContent() {
   const groups = _stickerGroups();
-  window._stickerPackCache = groups;
   const flat = [];
   groups.forEach(g => g.stickers.forEach(s => flat.push({ ...s, bastionName: g.name, bastionIdx: g.idx })));
   window._allStickersCache = flat;
-
-  const coll = document.getElementById('sticker-collection-view');
   const grid = document.getElementById('sticker-grid');
-  const back = document.getElementById('sticker-back-bar');
-  if (grid) grid.style.display = 'none';
-  if (back) back.style.display = 'none';
-  _stickerFootReset('Pick a sticker pack');
-  if (!coll) return;
-  coll.style.display = '';
+  const rail = document.getElementById('sticker-rail');
+  document.getElementById('sticker-picker')?.classList.remove('spp-searching');
   if (!groups.length) {
-    coll.style.display = 'none';
-    if (grid) {
-      grid.style.display = '';
-      grid.innerHTML = `<div class="spp-empty">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:.4;"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21 12a9 9 0 0 0-9-9v9h9z"/></svg>
-        No stickers available yet.<br>
-        <span style="font-size:11px;color:rgba(255,255,255,.2);">Bastion owners can upload stickers in Bastion Settings.</span>
-      </div>`;
-    }
+    if (rail) rail.innerHTML = '';
+    if (grid) grid.innerHTML = `<div class="spp-empty">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:.4;"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21 12a9 9 0 0 0-9-9v9h9z"/></svg>
+      No stickers available yet.<br>
+      <span style="font-size:11px;color:rgba(255,255,255,.2);">Bastion owners can upload stickers in Bastion Settings.</span>
+    </div>`;
     return;
   }
-  coll.innerHTML = groups.map(_stickerPackCard).join('');
+  if (rail) rail.innerHTML = groups.map(_stickerRailBtn).join('');
+  if (grid) grid.innerHTML = groups.map(_stickerSection).join('');
 }
-function _stickerPackCard(g) {
-  const preview = escapeHTML(g.stickers[0]?.url || '');
-  const name = escapeHTML(g.name);
-  const n = g.stickers.length;
-  const bg = preview
-    ? `<img class="pk-card-bg" src="${preview}" alt="" loading="lazy" onerror="this.remove()">`
-    : `<div class="pk-card-bg pk-glyph">🗂️</div>`;
-  return `<div class="pk-card" onclick="_stickerOpenPack(${g.idx})">
-    ${bg}
-    <div class="pk-card-lbl"><span>${name}</span><span class="pk-card-meta">Bastion · ${n}</span></div>
-  </div>`;
-}
-// Drill into one pack — show its stickers in a flat grid + a back bar.
-function _stickerOpenPack(idx) {
-  const g = (window._stickerPackCache || []).find(x => x.idx === idx);
-  if (!g) return;
-  const coll = document.getElementById('sticker-collection-view');
-  const grid = document.getElementById('sticker-grid');
-  const back = document.getElementById('sticker-back-bar');
-  const lbl = document.getElementById('sticker-back-label');
-  const cnt = document.getElementById('sticker-back-count');
-  if (coll) coll.style.display = 'none';
-  if (back) back.style.display = '';
-  if (lbl) lbl.textContent = g.name;
-  if (cnt) cnt.textContent = g.stickers.length + ' sticker' + (g.stickers.length !== 1 ? 's' : '');
-  if (grid) { grid.style.display = ''; grid.innerHTML = `<div class="spp-sec-grid">${g.stickers.map(_stickerCell).join('')}</div>`; grid.scrollTop = 0; }
-  _stickerFootReset('Pick a sticker');
-}
-function _stickerBackToPacks() {
-  const i = document.getElementById('sticker-search-input');
-  if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); }
-  _renderStickerPacks();
-}
-// Flat filtered grid for search — hides the pack cards, shows a "Search: q" bar.
+// Flat filtered grid for search (no sections, rail hidden via .spp-searching).
 function _searchStickers(q) {
-  if (!q.trim()) { _renderStickerPacks(); return; }
-  const coll = document.getElementById('sticker-collection-view');
+  const picker = document.getElementById('sticker-picker');
+  if (!q.trim()) { _buildStickerContent(); return; }
+  picker?.classList.add('spp-searching');
   const grid = document.getElementById('sticker-grid');
-  const back = document.getElementById('sticker-back-bar');
-  const lbl = document.getElementById('sticker-back-label');
-  const cnt = document.getElementById('sticker-back-count');
   const matches = (window._allStickersCache || []).filter(s => (s.name || '').toLowerCase().includes(q.toLowerCase()));
-  if (coll) coll.style.display = 'none';
-  if (back) back.style.display = '';
-  if (lbl) lbl.textContent = 'Search: ' + q;
-  if (cnt) cnt.textContent = matches.length + ' result' + (matches.length !== 1 ? 's' : '');
   if (grid) {
-    grid.style.display = '';
     grid.innerHTML = matches.length
       ? `<div class="spp-sec-grid">${matches.map(_stickerCell).join('')}</div>`
       : '<div class="spp-empty">No stickers match that search.</div>';
@@ -38958,14 +38938,13 @@ function _searchStickers(q) {
 function _stickerClearSearch() {
   const i = document.getElementById('sticker-search-input');
   if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); }
-  _renderStickerPacks();
+  _buildStickerContent();
   i?.focus();
 }
-function _stickerFootReset(text) {
-  const prev = document.getElementById('sticker-foot-preview');
-  const lbl = document.getElementById('sticker-foot-label');
-  if (prev) prev.innerHTML = '';
-  if (lbl) lbl.innerHTML = `<span class="epp-foot-empty">${escapeHTML(text || 'Pick a sticker')}</span>`;
+function _stickerRailJump(idx) {
+  const grid = document.getElementById('sticker-grid');
+  const hdr = document.getElementById('sticker-sec-' + idx);
+  if (grid && hdr) grid.scrollTo({ top: hdr.offsetTop - 2, behavior: 'smooth' });
 }
 // Delegated hover — fills the footer with the pointed-at sticker.
 function _wireStickerHover() {
@@ -38978,7 +38957,8 @@ function _wireStickerHover() {
     const prev = document.getElementById('sticker-foot-preview');
     const lbl = document.getElementById('sticker-foot-label');
     if (prev) prev.innerHTML = `<img src="${escapeHTML(cell.dataset.stickerUrl || '')}" style="width:26px;height:26px;object-fit:contain;">`;
-    if (lbl) lbl.textContent = cell.dataset.stickerName || 'sticker';
+    if (lbl) lbl.innerHTML = escapeHTML(cell.dataset.stickerName || 'sticker')
+      + (cell.dataset.stickerFrom ? ` <small>from ${escapeHTML(cell.dataset.stickerFrom)}</small>` : '');
   });
 }
 
@@ -39026,9 +39006,10 @@ function openBotCommandPanel(inputId, context) {
   const botLeft = Math.max(8, _getChatInputRight() - 460);
   picker.style.cssText = `left:${botLeft}px;bottom:${window.innerHeight-rect.top+6}px;`;
 
-  // GIF-panel language: a landing grid of bot cards (avatar + name + command
-  // count) → click to drill into that bot's command list → a "Back to bots"
-  // bar. Search flattens across every bot's commands.
+  // Discord-style: one flat scrolling list of every bot in the bastion with
+  // its commands under a per-bot section header (avatar + name), plus a LEFT
+  // rail of bot avatars that jumps to each section. Search flattens across
+  // all commands (rail hides via .spp-searching).
   const groups = _botGroups(context);
   window._botGroupsCache = groups;
 
@@ -39036,23 +39017,21 @@ function openBotCommandPanel(inputId, context) {
     ${_pickerTopTabs('bots')}
     <div class="epp-search-wrap"><div class="epp-search-box">
       <svg class="epp-search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="botcmd-search-input" class="epp-search-inp" placeholder="Search commands" oninput="_searchBotCmds(this.value);this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
+      <input id="botcmd-search-input" class="epp-search-inp" placeholder="Search commands" autocomplete="off" autocorrect="off" spellcheck="false" oninput="_searchBotCmds(this.value);this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
       <button class="epp-search-clr" onclick="_botcmdClearSearch()" aria-label="Clear search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div></div>
-    <div class="pk-back-bar" id="botcmd-back-bar" style="display:none;">
-      <button class="pk-back-btn" onclick="_botBackToBots()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg><span id="botcmd-back-label">Bots</span></button>
-      <span class="pk-back-count pk-blue" id="botcmd-back-count"></span>
+    <div class="epp-body">
+      <div class="epp-sidebar epp-sidebar--left" id="botcmd-rail"></div>
+      <div class="epp-main"><div class="epp-scroll botcmd-list" id="botcmd-list"></div></div>
     </div>
-    <div class="pk-coll" id="botcmd-collection-view"></div>
-    <div class="botcmd-list" id="botcmd-list" style="display:none;"></div>
     <div class="epp-footer">
       <div class="epp-foot-emoji" id="botcmd-foot-preview" aria-hidden="true"></div>
-      <div class="epp-foot-name" id="botcmd-foot-label"><span class="epp-foot-empty">${groups.length ? 'Pick a bot' : 'No bots here'}</span></div>
+      <div class="epp-foot-name" id="botcmd-foot-label"><span class="epp-foot-empty">${groups.length ? 'Pick a command' : 'No bots here'}</span></div>
     </div>
   `;
 
   document.body.appendChild(picker);
-  _renderBotCards();
+  _renderBotList();
   _wireBotcmdHover();
   _bindPickerOutsideClose(picker, () => picker.remove());
 }
@@ -39078,52 +39057,32 @@ function _botAvatarHTML(g) {
   if (g.emblem) return `<img src="${escapeHTML(g.emblem)}" alt="">`;
   return `<img src="/Fortized Bot.png" alt="">`;
 }
-// Landing view — one card per bot.
-function _renderBotCards() {
-  const coll = document.getElementById('botcmd-collection-view');
+// Flat Discord-style list — every bot's commands under a per-bot section
+// header, with a left rail button per bot that jumps to its section.
+function _renderBotList() {
   const list = document.getElementById('botcmd-list');
-  const back = document.getElementById('botcmd-back-bar');
+  const rail = document.getElementById('botcmd-rail');
   const groups = window._botGroupsCache || [];
-  if (list) list.style.display = 'none';
-  if (back) back.style.display = 'none';
-  _botcmdFootReset(groups.length ? 'Pick a bot' : 'No bots here');
-  if (!coll) return;
-  coll.style.display = '';
+  document.getElementById('botcmd-picker')?.classList.remove('spp-searching');
+  _botcmdFootReset(groups.length ? 'Pick a command' : 'No bots here');
   if (!groups.length) {
-    coll.style.display = 'none';
-    if (list) {
-      list.style.display = '';
-      list.innerHTML = `<div class="botcmd-empty">
-        <div style="margin-bottom:6px;opacity:.3;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"></div>
-        No bot commands available${_botcmdContext !== 'ch' ? '<br><span style="font-size:11px;color:rgba(255,255,255,.2);">Bot commands are only available in bastion channels.</span>' : ' in this bastion.'}
-      </div>`;
-    }
+    if (rail) rail.innerHTML = '';
+    if (list) list.innerHTML = `<div class="botcmd-empty">
+      <div style="margin-bottom:6px;opacity:.3;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"></div>
+      No bot commands available${_botcmdContext !== 'ch' ? '<br><span style="font-size:11px;color:rgba(255,255,255,.2);">Bot commands are only available in bastion channels.</span>' : ' in this bastion.'}
+    </div>`;
     return;
   }
-  coll.innerHTML = groups.map(_botCard).join('');
+  if (rail) rail.innerHTML = groups.map(g =>
+    `<button class="epp-sidebar-btn" title="${escapeHTML(g.name)}" aria-label="${escapeHTML(g.name)}" onclick="_botRailJump(${g.idx})"><span class="epp-sidebar-emblem bot-rail-av">${_botAvatarHTML(g)}</span></button>`).join('');
+  if (list) list.innerHTML = groups.map(g =>
+    `<div class="epp-section bot-sec-head" id="botcmd-sec-${g.idx}"><span class="bot-sec-av">${_botAvatarHTML(g)}</span>${escapeHTML(g.name)}<span class="bot-sec-count">${g.commands.length}</span></div>`
+    + g.commands.map(c => _botCmdRow(c, g.name)).join('')).join('');
 }
-function _botCard(g) {
-  const n = g.commands.length;
-  return `<div class="pk-card pk-card-bot" onclick="_botOpenBot(${g.idx})">
-    <div class="pk-card-av">${_botAvatarHTML(g)}</div>
-    <div class="pk-card-lbl"><span>${escapeHTML(g.name)}</span><span class="pk-card-meta">${n} command${n !== 1 ? 's' : ''}</span></div>
-  </div>`;
-}
-// Drill into one bot — show its command list + a back bar.
-function _botOpenBot(idx) {
-  const g = (window._botGroupsCache || []).find(x => x.idx === idx);
-  if (!g) return;
-  const coll = document.getElementById('botcmd-collection-view');
+function _botRailJump(idx) {
   const list = document.getElementById('botcmd-list');
-  const back = document.getElementById('botcmd-back-bar');
-  const lbl = document.getElementById('botcmd-back-label');
-  const cnt = document.getElementById('botcmd-back-count');
-  if (coll) coll.style.display = 'none';
-  if (back) back.style.display = '';
-  if (lbl) lbl.textContent = g.name;
-  if (cnt) cnt.textContent = g.commands.length + ' command' + (g.commands.length !== 1 ? 's' : '');
-  if (list) { list.style.display = ''; list.innerHTML = g.commands.map(c => _botCmdRow(c, g.name)).join(''); list.scrollTop = 0; }
-  _botcmdFootReset('Pick a command');
+  const hdr = document.getElementById('botcmd-sec-' + idx);
+  if (list && hdr) list.scrollTo({ top: hdr.offsetTop - 2, behavior: 'smooth' });
 }
 function _botCmdRow(cmd, botName) {
   return `<div class="botcmd-item" data-cmd="${escapeHTML(cmd.name)}" data-bot="${escapeHTML(botName)}" onclick="_insertBotCmd('${escapeHTML(cmd.name)}','${escapeHTML(_botcmdInput)}')">
@@ -39133,30 +39092,18 @@ function _botCmdRow(cmd, botName) {
     <span class="bci-bot">${escapeHTML(botName)}</span>
   </div>`;
 }
-function _botBackToBots() {
-  const i = document.getElementById('botcmd-search-input');
-  if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); }
-  _renderBotCards();
-}
-// Flat filtered list for search — hides the bot cards, shows a "Search: q" bar.
+// Filtered flat list for search — no section headers, rail hidden.
 function _searchBotCmds(q) {
-  if (!q.trim()) { _renderBotCards(); return; }
-  const coll = document.getElementById('botcmd-collection-view');
+  const picker = document.getElementById('botcmd-picker');
+  if (!q.trim()) { _renderBotList(); return; }
+  picker?.classList.add('spp-searching');
   const list = document.getElementById('botcmd-list');
-  const back = document.getElementById('botcmd-back-bar');
-  const lbl = document.getElementById('botcmd-back-label');
-  const cnt = document.getElementById('botcmd-back-count');
   const ql = q.toLowerCase();
   const matches = [];
   (window._botGroupsCache || []).forEach(g => g.commands.forEach(c => {
     if (c.name.toLowerCase().includes(ql) || c.desc.toLowerCase().includes(ql)) matches.push({ c, bot: g.name });
   }));
-  if (coll) coll.style.display = 'none';
-  if (back) back.style.display = '';
-  if (lbl) lbl.textContent = 'Search: ' + q;
-  if (cnt) cnt.textContent = matches.length + ' result' + (matches.length !== 1 ? 's' : '');
   if (list) {
-    list.style.display = '';
     list.innerHTML = matches.length
       ? matches.map(m => _botCmdRow(m.c, m.bot)).join('')
       : '<div class="botcmd-empty">No matching commands.</div>';
@@ -39166,7 +39113,7 @@ function _searchBotCmds(q) {
 function _botcmdClearSearch() {
   const i = document.getElementById('botcmd-search-input');
   if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); }
-  _renderBotCards();
+  _renderBotList();
   i?.focus();
 }
 function _botcmdFootReset(text) {

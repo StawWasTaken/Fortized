@@ -12313,6 +12313,9 @@ function editMsg(msgId) {
   const ta = document.getElementById('edit-ta');
   if (ta) {
     _initRichInput(ta);
+    // Same rich behaviour as the chatbar: :emoji: autocomplete suggestions,
+    // inline emoji rendering, and emoji select/backspace-delete.
+    try { setupEmojiAutocomplete('edit-ta'); } catch (_) {}
     ta.innerHTML = _richTextToHTML(stripped);
     ta.focus();
     try {

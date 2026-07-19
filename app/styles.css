@@ -9969,10 +9969,12 @@ button[style*="background: var(--accent)"]:active {
 }
 .emoji-cell:hover img { transform: scale(1.12); }
 /* Chatbar-style message edit box (Discord): rounded row, inline emoji button. */
-.edit-chatbar{display:flex;align-items:flex-end;gap:4px;background:var(--panel2,rgba(255,255,255,.05));border:1px solid var(--border);border-radius:12px;padding:5px 6px 5px 12px;transition:border-color .15s;}
-.edit-chatbar:focus-within{border-color:var(--accent-mid);}
+/* Match the real chat input container (.chat-input-outer): same surface,
+   border and radius so the edit box reads as a chatbar. */
+.edit-chatbar{display:flex;align-items:flex-end;gap:4px;background:var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:5px 6px 5px 12px;transition:border-color .15s,background .15s;}
+.edit-chatbar:focus-within{border-color:rgba(255,255,255,.12);}
 .edit-chatbar .edit-rich-input{flex:1;min-width:0;min-height:24px;max-height:220px;overflow-y:auto;background:transparent;border:none;border-radius:0;color:var(--text);font-family:var(--font-ui);font-size:14px;line-height:1.5;padding:3px 0;outline:none;white-space:pre-wrap;word-break:break-word;}
-.edit-emoji-btn{flex-shrink:0;background:transparent;border:none;color:var(--muted-light);cursor:pointer;width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;transition:color .12s,background .12s;padding:0;}
+.edit-emoji-btn{flex-shrink:0;background:transparent;border:none;color:#b3b2b4;cursor:pointer;width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;transition:color .12s,background .12s;padding:0;}
 .edit-emoji-btn:hover{color:var(--text);background:rgba(255,255,255,.08);}
 .edit-emoji-btn svg{width:19px;height:19px;}
 .edit-hint{font-size:11px;color:var(--muted-light);margin-top:5px;padding-left:3px;}

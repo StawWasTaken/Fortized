@@ -1,10 +1,28 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix311`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix314`)
 
 Branch `claude/staff-console-world-map-bp1xnh`, mirrored to `main`. Standing
 rules below still apply (egress, mirror-to-main + bump cache-bust every push,
 `node --check` + 42 relationship tests pre-commit).
+
+**Shipped later this session (`2026fix312`–`314`):**
+- **Emoji flicker FIXED** — removed `content-visibility:auto` from
+  `.epp-section-grid`; it repainted every section from a placeholder height when
+  the panel flipped `display:none`→visible (the open-flicker). Now eager-paints.
+- **Avatars "disappear after some time" FIXED** — the cross-user realtime handler
+  wrote `_pfpCache[user]=data.pfp` + `img.src` raw, guarded only vs KNOWN-blank;
+  it missed the truncated 500-char corruption, so a stale broadcast poisoned the
+  cache + blanked good avatars. New `_pfpLooksCorrupt()` (truncated OR known-blank
+  + kicks an async probe) now gates that write and the member `existingImg`
+  fast-path. Real cure still Media→Storage.
+- **GIF link on edit (Discord-style)** — editing a linked GIF (`[FTZGIF:url]`)
+  shows the bare URL + a live preview (`editMsg`/`saveEdit` unwrap→re-wrap);
+  uploaded GIFs (`[FTZIMG:…]`) stay hidden. Superseded by NEXT-SESSION #2.
+- **Chatbar icons** — sticker now the provided folded-corner SVG (chatbar + tab);
+  ALL chatbar icons rest at **#b3b2b4** (topbar grey). The colour needed
+  `.chat-input-actions .cit-*` specificity to beat `.chat-input-actions
+  button{color:var(--muted)}` (verified computed fill = rgb(179,178,180)).
 
 **Done THIS session (`2026fix311`) — full picker redesign to the locked spec:**
 - **Built to the older session's locked spec + mockup** (`docs/picker-redesign.md`
@@ -88,20 +106,39 @@ rules below still apply (egress, mirror-to-main + bump cache-bust every push,
   **The real cure is still the Media→Storage rollout** (see Open items) — the
   write keeps getting dropped by egress throttling so the DB row stays corrupt.
 
-**NEXT SESSION — top priorities:**
-1. **Verify the tabbed picker live.** Sandbox can't log in to Supabase, so this
-   session only verified layout via a static Playwright harness. On a live
-   account, click through: Emoji↔Bots tab switch, Bots tab in a non-bastion DM
-   (should show its empty state), and confirm the real FA glyphs render (they're
-   CDN-blocked in-sandbox). If any picker still flickers, check for a lingering
-   `backdrop-filter` on a child element.
-2. **Avatar — remaining raw paths (optional polish).** Self + member-list
-   renders now go through `buildAvatarHTML`. Still raw by choice: forum author
-   avatars (`author_pfp`), trade/staff/reseller tiles, and the member-row
-   `existingImg` fast-path. Route these only if a specific one shows the bug —
-   they're lower-traffic and the real cure is Media→Storage.
-3. **Media→Storage rollout** (still the #1 real fix; see Open items) — needs the
-   USER (can't be done from the sandbox).
+**NEXT SESSION — LOCKED priorities (user, verbatim intent):**
+1. **Completely rework & REDESIGN the Stickers, Bot-commands, and Emoji tabs.**
+   The user wants a full redesign — the current `.pk-*` pass (this session) is
+   NOT what they want; treat it as a starting point, not the target. Ask them
+   for the reference/mockup up front (they may provide one, like the emoji
+   `docs/picker-redesign-mockup.html`). Current code to replace/evolve:
+   `buildEmojiPicker` (+ `renderEmojiGrid`/`buildEmojiSidebar`/`_eppFootSet`),
+   `openStickerPicker` (+ `_stickerGroups`/`_stickerSection`/`_stickerRailBtn`/
+   `_wireStickerHover`), `openBotCommandPanel` (least-designed — still the flat
+   `.botcmd-*` list; needs the most work). All share `_pickerTopTabs` /
+   `_switchPickerTab`. Keep egress rules + eager render.
+2. **All GIF LINKS must embed** (Tenor, Klipy, giphy, others). Today ONLY the
+   Klipy-picker token `[FTZGIF:url]` embeds (`parseMD` ~app.js:33726); a bare
+   gif/tenor/klipy link pasted as text just auto-links, it does NOT embed. Add a
+   bare-URL → GIF-embed detector in `parseMD` (tenor.com/view/…, klipy.com/gifs/
+   …, giphy.com/gifs/…, direct `.gif`/`.mp4`). Tenor/Klipy *page* URLs need
+   resolving to the media URL (Tenor API/oembed; Klipy client already exists —
+   see `_klipyGifUrl`/`KLIPY_BASE`). NOTE: this session added Discord-style
+   "show the link when editing a linked GIF" (`editMsg`/`saveEdit`, re-wraps
+   `[FTZGIF:]`) — once bare links auto-embed, that edit path can be simplified.
+3. **Attachment/file corner controls** (hover actions in the corner of each
+   file/attachment): modify attachment, download (video/audio/file), collect GIF
+   (the star/`saveFavGif` already exists on `.ftz-embed-gif` via
+   `.chat-gif-fav-btn` — extend the pattern), and DELETE just the attachment when
+   it's sent alongside text (remove the one token, keep the caption — ties into
+   `_splitFileTokens` + `editMsg`/`saveEdit`). Render sites in `parseMD`:
+   `[FTZIMG:name|url]` (~33797), `[FTZVID:…]` (~33817), `[FTZAUD:…]`,
+   `[FTZFILE:name|size|url]` (~33890), and the `.ftz-embed-gif` blocks.
+
+**Also still open (lower priority):** Media→Storage rollout (the real avatar +
+egress cure, USER-side — `localStorage.ftz_media_storage='1'` → flip
+`_mediaStorageEnabled()` → run `tools/migrate-media-to-storage.mjs --commit`);
+remaining raw avatar paths (forum `author_pfp`, trade/staff/reseller tiles).
 
 ## ⚠️ #1 STANDING RULE: SUPABASE EGRESS
 

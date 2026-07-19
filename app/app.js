@@ -10619,14 +10619,20 @@ function _msgFindImage(row) {
   const img = row.querySelector('img.ftz-chat-img, .ftz-embed-gif img, img.msg-sticker');
   return (img && img.src) ? img : null;
 }
-// Second-level ctx menu listing message commands, grouped per bot.
+// Second-level ctx menu listing message commands, grouped per bot. FortGified
+// is always shown; its image commands are disabled when the message has no
+// image (with a hint), so "Bots" is always useful/discoverable.
 function _openMsgBotsMenu(x, y, msgId, context) {
+  const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  const hasImage = !!_msgFindImage(row);
   showCtxMenu(x, y, [{
     label: FORTGIFIED_DISPLAY,
     items: [{
       icon: `<img src="${FORTGIFIED_AVATAR}" style="width:15px;height:15px;border-radius:4px;display:block;" alt="">`,
       label: 'Convert to GIF',
-      action: () => _fortgifiedGifify(msgId, context),
+      disabled: !hasImage,
+      hint: hasImage ? '' : 'no image',
+      action: hasImage ? () => _fortgifiedGifify(msgId, context) : null,
     }],
   }]);
 }
@@ -12203,11 +12209,13 @@ function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) 
   // only where bot commands aren't disabled for the channel. Deferred a tick
   // so the reopened ctx menu isn't killed by this menu's own close.
   {
-    const botRow = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+    // "Bots" is ALWAYS present (unless bot commands are disabled for the
+    // channel); FortGified's image commands only become clickable when the
+    // message actually contains an image.
     const chBotsOff = inBastion && CU?.bastions?.[curBastion]?.channels?.[curChannel]?.botsDisabled;
-    if (botRow && !chBotsOff && _msgFindImage(botRow)) {
+    if (!chBotsOff) {
       const bx = e.clientX, by = e.clientY;
-      items.push({ icon: '<svg width="15" height="15" viewBox="0 -40 640 552" fill="currentColor"><path d="M352 0c0-17.7-14.3-32-32-32S288-17.7 288 0l0 64-96 0c-53 0-96 43-96 96l0 224c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-224c0-53-43-96-96-96l-96 0 0-64zM160 368c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zM224 176a48 48 0 1 1 0 96 48 48 0 1 1 0-96zm144 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0z"/></svg>', label: 'Bots', action: () => setTimeout(() => _openMsgBotsMenu(bx, by, msgId, context), 0) });
+      items.push({ icon: '<svg width="15" height="15" viewBox="0 -40 640 552" fill="currentColor"><path d="M352 0c0-17.7-14.3-32-32-32S288-17.7 288 0l0 64-96 0c-53 0-96 43-96 96l0 224c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-224c0-53-43-96-96-96l-96 0 0-64zM160 368c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zM224 176a48 48 0 1 1 0 96 48 48 0 1 1 0-96zm144 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0z"/></svg>', label: 'Bots', hint: '›', action: () => setTimeout(() => _openMsgBotsMenu(bx, by, msgId, context), 0) });
     }
   }
   items.push({ icon: _faMsg('report', 15), label: 'Report', action: () => reportMessage(msgId, text, from) });

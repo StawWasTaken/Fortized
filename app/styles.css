@@ -2157,13 +2157,17 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .chatbar-file-card:hover{border-color:rgba(255,249,62,.15);}
 .chatbar-file-card img,.chatbar-file-card video{width:100%;max-height:160px;object-fit:cover;display:block;}
 .chatbar-file-card .cfp-name{padding:6px 8px;font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.chatbar-file-card .cfp-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:opacity .15s;}
-.chatbar-file-card:hover .cfp-actions{opacity:1;}
-.chatbar-file-card .cfp-btn{width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,.6);backdrop-filter:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
-.chatbar-file-card .cfp-btn:hover{background:rgba(0,0,0,.8);color:#fff;}
-.chatbar-file-card .cfp-btn.cfp-remove{color:rgba(235,69,69,.8);}
+/* z-index:3 keeps the action row ABOVE the spoiler overlay (which is
+   pointer-events:none) so the buttons stay clickable while spoilered. */
+.chatbar-file-card .cfp-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:opacity .15s;z-index:3;}
+.chatbar-file-card:hover .cfp-actions,.chatbar-file-card.is-spoiler .cfp-actions{opacity:1;}
+.chatbar-file-card .cfp-btn{width:28px;height:28px;border-radius:7px;background:rgba(10,12,17,.72);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.08);color:#e6e9f0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;padding:0;}
+.chatbar-file-card .cfp-btn svg{width:13px;height:13px;}
+.chatbar-file-card .cfp-btn:hover{background:rgba(10,12,17,.95);color:#fff;}
+.chatbar-file-card .cfp-btn.active{color:var(--accent);border-color:var(--accent-mid);}
+.chatbar-file-card .cfp-btn.cfp-remove{color:rgba(235,69,69,.85);}
 .chatbar-file-card .cfp-btn.cfp-remove:hover{background:rgba(235,69,69,.2);color:#EB4545;}
-.chatbar-file-card .cfp-spoiler-overlay{position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:none;display:flex;align-items:center;justify-content:center;z-index:1;}
+.chatbar-file-card .cfp-spoiler-overlay{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
 .chatbar-file-card .cfp-spoiler-tag{padding:6px 14px;border-radius:20px;background:rgba(0,0,0,.5);color:rgba(255,255,255,.7);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
 .ci-preview{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;font-family:var(--font-ui);font-size:13.5px;line-height:1.55;padding:2px 0;color:var(--text);white-space:pre-wrap;word-wrap:break-word;overflow:hidden;z-index:1;}
 .ci-preview .ci-bold{font-weight:700;}

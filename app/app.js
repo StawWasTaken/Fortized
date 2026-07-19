@@ -10631,28 +10631,70 @@ function _msgFindMedia(row) {
 // Second-level ctx menu listing message commands, grouped per bot. FortGified
 // is always shown; its image commands are disabled when the message has no
 // image (with a hint), so "Bots" is always useful/discoverable.
+// Discord-style "Apps" flyout: a floating panel with a search bar and an Apps
+// section listing every message-command bot and its commands (so you can SEE
+// all available bot commands, not a bare one-item submenu). FortGified is
+// built-in; more message-command bots slot in here later.
 function _openMsgBotsMenu(x, y, msgId, context) {
+  document.getElementById('ctx-apps-flyout')?.remove();
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
   const media = _msgFindMedia(row);
-  let enabled = false, hint = 'no media';
-  if (media) {
-    if (media.kind === 'image') { enabled = true; hint = ''; }
-    else { // video — only under 30s (unknown duration is allowed; validated on run)
-      const dur = media.el.duration;
-      if (dur && dur > 30.5) { enabled = false; hint = 'video >30s'; }
-      else { enabled = true; hint = ''; }
-    }
-  }
-  showCtxMenu(x, y, [{
-    label: FORTGIFIED_DISPLAY,
-    items: [{
-      icon: `<img src="${FORTGIFIED_AVATAR}" style="width:15px;height:15px;border-radius:4px;display:block;" alt="">`,
-      label: 'Convert to GIF',
-      disabled: !enabled,
-      hint,
-      action: enabled ? () => _fortgifiedGifify(msgId, context) : null,
-    }],
-  }]);
+  const gifEnabled = !!(media && (media.kind === 'image' || (media.kind === 'video' && !(media.el.duration > 15.5))));
+  const gifDesc = !media ? 'No image or video in this message'
+    : media.kind === 'video' ? (media.el.duration > 15.5 ? 'Video must be under 15 seconds' : 'Turn this video into a GIF')
+    : 'Turn this image into a GIF';
+  window._appsFlyoutBots = [{
+    name: FORTGIFIED_DISPLAY, avatar: FORTGIFIED_AVATAR,
+    commands: [{ name: 'Convert to GIF', desc: gifDesc, enabled: gifEnabled, run: () => _fortgifiedGifify(msgId, context) }],
+  }];
+  const fly = document.createElement('div');
+  fly.id = 'ctx-apps-flyout';
+  fly.className = 'ctx-apps-flyout';
+  fly.innerHTML = `
+    <div class="caf-search-wrap"><div class="caf-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="caf-search-inp" placeholder="Search commands" autocomplete="off" spellcheck="false" oninput="_renderAppsFlyout(this.value)">
+    </div></div>
+    <div class="caf-body" id="caf-body"></div>`;
+  document.body.appendChild(fly);
+  const PW = 288, PH = Math.min(380, fly.scrollHeight || 300);
+  fly.style.left = Math.max(8, Math.min(x, window.innerWidth - PW - 8)) + 'px';
+  fly.style.top = Math.max(8, Math.min(y, window.innerHeight - PH - 8)) + 'px';
+  _renderAppsFlyout('');
+  setTimeout(() => {
+    const h = (e) => {
+      if (!fly.isConnected) { document.removeEventListener('mousedown', h, true); return; }
+      if (!fly.contains(e.target)) { fly.remove(); document.removeEventListener('mousedown', h, true); }
+    };
+    document.addEventListener('mousedown', h, true);
+    document.getElementById('caf-search-inp')?.focus();
+  }, 0);
+}
+function _renderAppsFlyout(q) {
+  const body = document.getElementById('caf-body');
+  if (!body) return;
+  const ql = (q || '').trim().toLowerCase();
+  const bots = window._appsFlyoutBots || [];
+  let html = '<div class="caf-sec">Apps</div>', any = false;
+  bots.forEach((b, bi) => {
+    const cmds = b.commands.filter(c => !ql || c.name.toLowerCase().includes(ql) || c.desc.toLowerCase().includes(ql));
+    if (!cmds.length) return;
+    any = true;
+    html += `<div class="caf-bot"><img class="caf-bot-av" src="${escapeHTML(b.avatar)}" alt="" onerror="this.onerror=null;this.src='/Fortized Bot.png'"><span class="caf-bot-name">${escapeHTML(b.name)}</span><span class="bot-sec-app">BOT</span></div>`;
+    cmds.forEach((c, ci) => {
+      html += `<div class="caf-cmd${c.enabled ? '' : ' is-disabled'}"${c.enabled ? ` onclick="_runAppFlyoutCmd(${bi},${ci})"` : ''}>
+        <div class="caf-cmd-main"><span class="caf-cmd-name">${escapeHTML(c.name)}</span><span class="caf-cmd-desc">${escapeHTML(c.desc)}</span></div>
+        <svg class="caf-cmd-go" viewBox="0 0 448 512" fill="currentColor"><path d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.7 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></svg>
+      </div>`;
+    });
+  });
+  if (!any) html += '<div class="caf-empty">No matching commands</div>';
+  body.innerHTML = html;
+}
+function _runAppFlyoutCmd(bi, ci) {
+  const c = window._appsFlyoutBots?.[bi]?.commands?.[ci];
+  document.getElementById('ctx-apps-flyout')?.remove();
+  if (c && c.enabled && c.run) c.run();
 }
 
 // ── Single-frame GIF89a encoder (palette via median cut + LZW) ──────────
@@ -10808,7 +10850,7 @@ function _seekVideoTo(v, t) {
     setTimeout(on, 2000);
   });
 }
-// Sample a <30s video into an animated GIF (bounded 320px, ~10fps, ≤180 frames
+// Sample a <15s video into an animated GIF (bounded 320px, ~10fps, ≤180 frames
 // to keep the file — and egress — reasonable).
 async function _videoToGif(srcVideo) {
   const v = document.createElement('video');
@@ -10816,7 +10858,7 @@ async function _videoToGif(srcVideo) {
   v.src = srcVideo.src;
   await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = () => rej(new Error('video load failed')); });
   const duration = v.duration || 0;
-  if (!duration || duration > 30.5) throw new Error('Video must be under 30 seconds');
+  if (!duration || duration > 15.5) throw new Error('Video must be under 15 seconds');
   const maxDim = 320;
   const vw = v.videoWidth || 320, vh = v.videoHeight || 240;
   const scale = Math.min(1, maxDim / Math.max(vw, vh));
@@ -10879,7 +10921,7 @@ async function _fortgifiedGifify(msgId, context) {
     await _fortgifiedPost(context, text, replyTo);
   } catch (e) {
     console.warn('[FortGified] convert failed:', e?.message || e);
-    const msg = /30 seconds/.test(e?.message || '') ? 'FortGified can only convert videos under 30 seconds'
+    const msg = /15 seconds/.test(e?.message || '') ? 'FortGified can only convert videos under 15 seconds'
       : "FortGified couldn't read that media (protected or cross-origin)";
     toast(msg, 'error');
   }

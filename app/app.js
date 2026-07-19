@@ -1025,7 +1025,14 @@ const FORTIZED_SAFETY_ACCOUNT = 'fortizedsafety';
 // User accounts the team operates as system/bot personalities. Each one gets
 // the Bot badge in getUserBadges() in addition to anyone with `isBot: true`
 // on their user record.
-const MANUAL_BOTS = ['fortized', 'joyster', 'fortizedsafety'];
+const MANUAL_BOTS = ['fortized', 'joyster', 'fortizedsafety', 'fortgified'];
+// FortGified — the built-in message-command bot (Discord "Apps"-style). It has
+// no DB user row and never appears in member lists; its messages render with a
+// local avatar + APP capsule (special-cased in appendMessage, zero egress).
+const FORTGIFIED_NAME = 'fortgified';
+const FORTGIFIED_DISPLAY = 'FortGified';
+const FORTGIFIED_AVATAR = '/FortGified-PFP.png';
+function isFortgified(name) { return String(name || '').toLowerCase() === FORTGIFIED_NAME; }
 // Official Fortized accounts (the team's first-party personas). They carry the
 // OFFICIAL capsule next to their display name everywhere and have a one-way
 // DM lock — only superadmins can message them back.
@@ -10601,6 +10608,209 @@ function _executeBotScript(script, ctx) {
 }
 
 // ════════════════════════════════════════════
+// FORTGIFIED — built-in message-command bot (Discord "Apps"-style).
+// Right-click a message with an image → Bots → Convert to GIF. The bot
+// re-encodes the image as a real single-frame .gif and posts a persisted,
+// everyone-visible reply in the same chat.
+// ════════════════════════════════════════════
+// First image inside a message row (chat image, GIF embed frame, or sticker).
+function _msgFindImage(row) {
+  if (!row) return null;
+  const img = row.querySelector('img.ftz-chat-img, .ftz-embed-gif img, img.msg-sticker');
+  return (img && img.src) ? img : null;
+}
+// Second-level ctx menu listing message commands, grouped per bot.
+function _openMsgBotsMenu(x, y, msgId, context) {
+  showCtxMenu(x, y, [{
+    label: FORTGIFIED_DISPLAY,
+    items: [{
+      icon: `<img src="${FORTGIFIED_AVATAR}" style="width:15px;height:15px;border-radius:4px;display:block;" alt="">`,
+      label: 'Convert to GIF',
+      action: () => _fortgifiedGifify(msgId, context),
+    }],
+  }]);
+}
+
+// ── Single-frame GIF89a encoder (palette via median cut + LZW) ──────────
+function _gifPalette(data, maxColors) {
+  // Sample up to ~4096 pixels, median-cut into up to maxColors boxes.
+  const step = Math.max(1, Math.floor(data.length / 4 / 4096)) * 4;
+  const pts = [];
+  for (let i = 0; i < data.length; i += step) pts.push([data[i], data[i + 1], data[i + 2]]);
+  const range = (box) => {
+    const mn = [255, 255, 255], mx = [0, 0, 0];
+    for (const p of box) for (let c = 0; c < 3; c++) { if (p[c] < mn[c]) mn[c] = p[c]; if (p[c] > mx[c]) mx[c] = p[c]; }
+    let ch = 0, r = -1;
+    for (let c = 0; c < 3; c++) { const d = mx[c] - mn[c]; if (d > r) { r = d; ch = c; } }
+    return { ch, r };
+  };
+  let boxes = [pts];
+  while (boxes.length < maxColors) {
+    let bi = -1, bs = -1;
+    boxes.forEach((b, i) => { if (b.length < 2) return; const s = range(b).r * b.length; if (s > bs) { bs = s; bi = i; } });
+    if (bi < 0 || bs <= 0) break;
+    const b = boxes[bi], ch = range(b).ch;
+    b.sort((p, q) => p[ch] - q[ch]);
+    const mid = b.length >> 1;
+    boxes.splice(bi, 1, b.slice(0, mid), b.slice(mid));
+  }
+  return boxes.map(b => {
+    let r = 0, g = 0, bl = 0;
+    for (const p of b) { r += p[0]; g += p[1]; bl += p[2]; }
+    const n = b.length || 1;
+    return [Math.round(r / n), Math.round(g / n), Math.round(bl / n)];
+  });
+}
+// GIF-flavoured LZW (canonical omggif ordering: emit, then grow/clear).
+function _gifLzw(minCodeSize, indexes) {
+  const out = [];
+  let curByte = 0, curBits = 0, codeSize = minCodeSize + 1;
+  const CLEAR = 1 << minCodeSize, EOI = CLEAR + 1;
+  const emit = (code) => {
+    curByte |= code << curBits;
+    curBits += codeSize;
+    while (curBits >= 8) { out.push(curByte & 0xFF); curByte >>= 8; curBits -= 8; }
+  };
+  let dict = new Map(), nextCode = EOI + 1;
+  emit(CLEAR);
+  let prev = indexes[0];
+  for (let i = 1; i < indexes.length; i++) {
+    const k = indexes[i];
+    const key = prev * 256 + k;
+    const found = dict.get(key);
+    if (found !== undefined) { prev = found; continue; }
+    emit(prev);
+    if (nextCode === 4096) {
+      emit(CLEAR);
+      dict = new Map(); codeSize = minCodeSize + 1; nextCode = EOI + 1;
+    } else {
+      if (nextCode >= (1 << codeSize)) codeSize++;
+      dict.set(key, nextCode++);
+    }
+    prev = k;
+  }
+  emit(prev);
+  emit(EOI);
+  if (curBits > 0) out.push(curByte & 0xFF);
+  return out;
+}
+// Canvas → single-frame GIF Blob. Static image, no animation — just a real
+// .gif file (per spec). 256-colour global table, no transparency.
+function _encodeCanvasAsGif(canvas) {
+  const w = canvas.width, h = canvas.height;
+  const data = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+  const pal = _gifPalette(data, 256);
+  while (pal.length < 256) pal.push([0, 0, 0]);
+  // Nearest-palette lookup, cached on a 5-bit/channel key.
+  const cache = new Map();
+  const nearest = (r, g, b) => {
+    const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+    let v = cache.get(key);
+    if (v !== undefined) return v;
+    let bi = 0, bd = Infinity;
+    for (let i = 0; i < pal.length; i++) {
+      const p = pal[i];
+      const d = (p[0] - r) * (p[0] - r) + (p[1] - g) * (p[1] - g) + (p[2] - b) * (p[2] - b);
+      if (d < bd) { bd = d; bi = i; }
+    }
+    cache.set(key, bi);
+    return bi;
+  };
+  const indexes = new Uint8Array(w * h);
+  for (let i = 0, px = 0; i < data.length; i += 4, px++) indexes[px] = nearest(data[i], data[i + 1], data[i + 2]);
+  const bytes = [];
+  const push16 = (v) => { bytes.push(v & 0xFF, (v >> 8) & 0xFF); };
+  // Header + logical screen descriptor + global colour table (256 × 8-bit)
+  for (const c of 'GIF89a') bytes.push(c.charCodeAt(0));
+  push16(w); push16(h);
+  bytes.push(0xF7, 0, 0);
+  for (const p of pal) bytes.push(p[0], p[1], p[2]);
+  // Image descriptor + LZW image data in ≤255-byte sub-blocks
+  bytes.push(0x2C); push16(0); push16(0); push16(w); push16(h); bytes.push(0);
+  bytes.push(8);
+  const lzw = _gifLzw(8, indexes);
+  for (let i = 0; i < lzw.length; i += 255) {
+    const chunk = lzw.slice(i, i + 255);
+    bytes.push(chunk.length, ...chunk);
+  }
+  bytes.push(0, 0x3B);
+  return new Blob([new Uint8Array(bytes)], { type: 'image/gif' });
+}
+
+// The Convert to GIF command itself.
+async function _fortgifiedGifify(msgId, context) {
+  const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  const srcImg = _msgFindImage(row);
+  if (!srcImg) { toast('No image found in that message', 'error'); return; }
+  toast(FORTGIFIED_DISPLAY + ' is working…', 'success');
+  try {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = srcImg.src; });
+    // Bound the frame so the resulting file (and egress) stays small.
+    const MAX = 512;
+    const scale = Math.min(1, MAX / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+    const w = Math.max(1, Math.round((img.naturalWidth || 1) * scale));
+    const h = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const blob = _encodeCanvasAsGif(canvas); // throws on tainted canvas
+    const fname = 'fortgified-' + Date.now().toString(36) + '.gif';
+    // Prefer Storage (small message text); fall back to an inline data URL.
+    let fileUrl = null;
+    try {
+      const result = await FortizedSocial.uploadFile(fname, blob);
+      if (result?.url) fileUrl = result.url;
+    } catch (_) {}
+    if (!fileUrl) {
+      fileUrl = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result); r.onerror = rej;
+        r.readAsDataURL(blob);
+      });
+    }
+    const replyTo = { id: msgId, from: row?.dataset.from || '', text: (row?.dataset.text || '').slice(0, 200) };
+    const text = `**@${CU.username}** used **Convert to GIF**\n[FTZIMG:${fname}|${fileUrl}]`;
+    await _fortgifiedPost(context, text, replyTo);
+  } catch (e) {
+    console.warn('[FortGified] convert failed:', e?.message || e);
+    toast("FortGified couldn't read that image (protected or cross-origin)", 'error');
+  }
+}
+// Post a persisted, everyone-visible message AS the bot into the current chat.
+async function _fortgifiedPost(context, text, replyTo) {
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  const base = { id, from: FORTGIFIED_NAME, text, timestamp: new Date().toISOString(), replyTo };
+  const appendLocal = (containerId, msg) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    appendMessage(el, msg, context === 'gc' ? 'gc' : context === 'dm' ? 'dm' : 'ch', null);
+    scrollBottom(containerId, true);
+  };
+  if (context === 'dm' && curDM) {
+    const saved = await FortizedSocial.sendDMMessage(CU.username, curDM, text, { id, replyTo, senderName: FORTGIFIED_NAME });
+    const msg = saved || base;
+    FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: msg });
+    appendLocal('dm-msgs', msg);
+  } else if (context === 'gc' && curGC) {
+    const ref = firebase.database().ref('groupChats/' + curGC + '/messages').push();
+    const msg = { ...base, id: ref.key };
+    await ref.set(msg);
+    FortizedSocial.socketEmit('message:send', { type: 'gc', id1: curGC, message: msg });
+    appendLocal('gc-msgs', msg);
+  } else {
+    const b = CU?.bastions?.[curBastion];
+    const ch = b?.channels?.[curChannel];
+    if (!b || !ch) { toast('Could not find the current channel', 'error'); return; }
+    const saved = await FortizedSocial.sendBastionChannelMessage(b.globalId || b.name, ch.name, FORTGIFIED_NAME, text, { id, replyTo });
+    const msg = saved || base;
+    FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId || b.name, id2: ch.name, message: msg });
+    appendLocal('ch-msgs-' + curChannel, msg);
+  }
+}
+
+// ════════════════════════════════════════════
 // MESSAGE RENDERING
 // ════════════════════════════════════════════
 // Safe date helpers — `new Date(badValue).toLocaleString()` silently returns
@@ -11714,7 +11924,8 @@ function appendMessage(container, msg, context, prevAuthor) {
     // the real image instead of flashing the default fallback for ~half a
     // second before hydration. Falls back to null (default avatar) only if
     // we've never seen this author before.
-    const _msgPfp = (msg.from === CU?.username) ? (CU?.pfp || null) : (typeof _pfpCache !== 'undefined' ? (_pfpCache[msg.from] || null) : null);
+    const _msgPfp = isFortgified(msg.from) ? FORTGIFIED_AVATAR
+      : (msg.from === CU?.username) ? (CU?.pfp || null) : (typeof _pfpCache !== 'undefined' ? (_pfpCache[msg.from] || null) : null);
     row.innerHTML=`${stripeHTML}${replyHTML}
       <div class="msg-av-wrap"><div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(_msgPfp,msg.from,42)}</div></div>
       <div class="msg-content-col ${outlineWrap}">
@@ -11735,6 +11946,16 @@ function appendMessage(container, msg, context, prevAuthor) {
       const _tbid = _tb?.globalId||_tb?.name; const _tchName = _tch?.name||'general';
       if (_tbid) _loadThreadBadge(_tbid, _tchName, id, safeId, msg.text||'', msg.from||'');
     }
+    if (isFortgified(msg.from)) {
+      // Built-in bot: display name + APP capsule, no DB lookup (egress-free).
+      const authorEl = row.querySelector('.msg-author[data-author="'+CSS.escape(msg.from)+'"]');
+      if (authorEl) {
+        authorEl.textContent = FORTGIFIED_DISPLAY;
+        if (!authorEl.nextElementSibling?.classList?.contains('ftz-app-capsule')) {
+          authorEl.insertAdjacentHTML('afterend', '<span class="ftz-app-capsule"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>APP</span>');
+        }
+      }
+    } else
     FortizedSocial.getUserByName(msg.from).then(u=>{
       if (!u) return;
       _verifiedCache[msg.from] = !!u.verified;
@@ -11978,6 +12199,17 @@ function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) 
   if (canPin) items.push({ icon: _faMsg('pin', 15), label: 'Pin Message', action: () => pinMessage(msgId, text) });
   if (inBastion) items.push({ icon: _faMsg('thread', 15), label: 'Create Thread', action: () => openThread(msgId, text, from) });
   items.push({ icon: _faMsg('translate', 15), label: 'Translate', action: () => { const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`); if (row) _translateMessage(row, row.dataset.text||''); } });
+  // Bots (Discord "Apps"-style): only on messages that contain an image, and
+  // only where bot commands aren't disabled for the channel. Deferred a tick
+  // so the reopened ctx menu isn't killed by this menu's own close.
+  {
+    const botRow = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+    const chBotsOff = inBastion && CU?.bastions?.[curBastion]?.channels?.[curChannel]?.botsDisabled;
+    if (botRow && !chBotsOff && _msgFindImage(botRow)) {
+      const bx = e.clientX, by = e.clientY;
+      items.push({ icon: '<svg width="15" height="15" viewBox="0 -40 640 552" fill="currentColor"><path d="M352 0c0-17.7-14.3-32-32-32S288-17.7 288 0l0 64-96 0c-53 0-96 43-96 96l0 224c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-224c0-53-43-96-96-96l-96 0 0-64zM160 368c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zM224 176a48 48 0 1 1 0 96 48 48 0 1 1 0-96zm144 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0z"/></svg>', label: 'Bots', action: () => setTimeout(() => _openMsgBotsMenu(bx, by, msgId, context), 0) });
+    }
+  }
   items.push({ icon: _faMsg('report', 15), label: 'Report', action: () => reportMessage(msgId, text, from) });
   if (isOwn || isBastionAdmin) items.push({ icon: _faMsg('trash', 15), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
   showCtxMenu(e.clientX, e.clientY, [{ items }]);
@@ -33326,6 +33558,140 @@ function _downloadLightboxImg(src, filename) {
   a.style.display = 'none';
   document.body.appendChild(a); a.click(); a.remove();
 }
+
+// ════════════════════════════════════════════
+// MEDIA RIGHT-CLICK MENU — Discord-style Copy/Save actions on chat media
+// (images, GIF embeds, stickers, video and audio players, lightbox).
+// ════════════════════════════════════════════
+function _mediaFilename(src, nameHint, fallbackBase, ext) {
+  if (nameHint) return nameHint;
+  if (src && !src.startsWith('data:')) {
+    const last = src.split('/').pop()?.split('?')[0] || '';
+    if (last && /\.[a-z0-9]{2,5}$/i.test(last)) { try { return decodeURIComponent(last); } catch(_) { return last; } }
+  }
+  if (src && src.startsWith('data:')) {
+    const m = src.match(/^data:[a-z]+\/([a-z0-9.+-]+)/i);
+    if (m) ext = m[1] === 'jpeg' ? 'jpg' : (m[1].replace(/[^a-z0-9]/gi, '') || ext);
+  }
+  return (fallbackBase || 'fortized') + '.' + (ext || 'bin');
+}
+async function _mediaBlob(src) {
+  const res = await fetch(src, src.startsWith('data:') ? undefined : { mode: 'cors' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.blob();
+}
+async function _mediaSave(src, filename) {
+  try {
+    const blob = await _mediaBlob(src);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename || 'media';
+    a.style.display = 'none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast('Saved ' + (filename || 'file'), 'success');
+  } catch (_) {
+    // Cross-origin fetch blocked — plain anchor still downloads same-origin
+    // and data: URLs; for everything else it opens the media directly.
+    _downloadLightboxImg(src, filename);
+  }
+}
+async function _mediaCopyImage(src) {
+  try {
+    const blob = await _mediaBlob(src);
+    if (navigator.clipboard && window.ClipboardItem) {
+      let png = blob;
+      if (blob.type !== 'image/png') {
+        // Clipboard images must be PNG in Chromium — transcode via canvas.
+        const bmp = await createImageBitmap(blob);
+        const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
+        c.getContext('2d').drawImage(bmp, 0, 0);
+        png = await new Promise(r => c.toBlob(r, 'image/png'));
+      }
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
+      toast('Image copied', 'success');
+      return;
+    }
+    throw new Error('no clipboard');
+  } catch (_) {
+    try { await navigator.clipboard.writeText(src); toast('Image link copied', 'success'); }
+    catch (_) { toast('Copy failed', 'error'); }
+  }
+}
+function _mediaCopyLink(src) {
+  navigator.clipboard?.writeText(src)
+    .then(() => toast('Link copied', 'success'))
+    .catch(() => toast('Copy failed', 'error'));
+}
+// Capture-phase so we win over the video player's inline
+// oncontextmenu="return false" and any bubbling handlers.
+document.addEventListener('contextmenu', function _mediaCtxMenu(e) {
+  const t = e.target;
+  if (!t || !t.closest) return;
+  if (t.closest('input, textarea, [contenteditable="true"]')) return;
+  const ICO = {
+    copy: _faMsg('copy', 15),
+    save: '<svg width="15" height="15" viewBox="0 0 512 512" fill="currentColor"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7 288 32zM64 352c-35.3 0-64 28.7-64 64l0 32c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-32c0-35.3-28.7-64-64-64l-101.5 0-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352 64 352zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg>',
+    link: '<svg width="14" height="14" viewBox="0 0 640 512" fill="currentColor"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg>',
+    star: '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>',
+  };
+  const items = [];
+  const gifWrap = t.closest('.ftz-embed-gif');
+  const vp = t.closest('.ftz-vp');
+  const ap = t.closest('.ftz-ap');
+  const sticker = t.closest('img.msg-sticker');
+  const chatImg = t.closest('img.ftz-chat-img') ||
+    (t.closest('.media-lightbox') && t.tagName === 'IMG' && !t.classList.contains('mlb-pfp') ? t : null);
+
+  if (gifWrap) {
+    const vid = gifWrap.querySelector('video');
+    const img = gifWrap.querySelector('img');
+    const src = (vid && vid.src) || (img && img.src) || '';
+    if (!src) return;
+    if (vid) {
+      items.push({ icon: ICO.save, label: 'Save Video', action: () => _mediaSave(src, _mediaFilename(src, null, 'fortized', 'mp4')) });
+    } else {
+      items.push({ icon: ICO.copy, label: 'Copy Image', action: () => _mediaCopyImage(src) });
+      items.push({ icon: ICO.save, label: 'Save GIF', action: () => _mediaSave(src, _mediaFilename(src, null, 'fortized', 'gif')) });
+    }
+    items.push({ icon: ICO.star, label: 'Collect GIF', action: () => saveFavGif({ id: src.replace(/[^a-zA-Z0-9]/g, '').slice(-16), url: src }) });
+    if (!src.startsWith('data:')) items.push({ icon: ICO.link, label: 'Copy Link', action: () => _mediaCopyLink(src) });
+  } else if (vp) {
+    const vid = vp.querySelector('video');
+    const src = vid?.src || '';
+    if (!src) return;
+    const nameHint = t.closest('.ftz-embed')?.querySelector('.ftz-vp-fname')?.textContent?.trim() || null;
+    items.push({ icon: ICO.save, label: 'Save Video', action: () => _mediaSave(src, _mediaFilename(src, nameHint, 'fortized', 'mp4')) });
+    if (!src.startsWith('data:')) items.push({ icon: ICO.link, label: 'Copy Link', action: () => _mediaCopyLink(src) });
+  } else if (ap) {
+    const aud = ap.querySelector('audio');
+    const src = aud?.src || '';
+    if (!src) return;
+    const nameHint = ap.querySelector('.ftz-ap-name')?.textContent?.trim() || null;
+    items.push({ icon: ICO.save, label: 'Save Audio', action: () => _mediaSave(src, _mediaFilename(src, nameHint, 'fortized', 'mp3')) });
+    if (!src.startsWith('data:')) items.push({ icon: ICO.link, label: 'Copy Link', action: () => _mediaCopyLink(src) });
+  } else if (sticker) {
+    const src = sticker.src || '';
+    if (!src) return;
+    items.push({ icon: ICO.copy, label: 'Copy Image', action: () => _mediaCopyImage(src) });
+    items.push({ icon: ICO.save, label: 'Save Sticker', action: () => _mediaSave(src, _mediaFilename(src, null, 'sticker', 'png')) });
+    if (!src.startsWith('data:')) items.push({ icon: ICO.link, label: 'Copy Link', action: () => _mediaCopyLink(src) });
+  } else if (chatImg) {
+    const src = chatImg.src || '';
+    if (!src) return;
+    const isGif = /\.gif($|\?)/i.test(src) || /^data:image\/gif/i.test(src);
+    const nameHint = chatImg.dataset?.mediaName || null;
+    items.push({ icon: ICO.copy, label: 'Copy Image', action: () => _mediaCopyImage(src) });
+    items.push({ icon: ICO.save, label: isGif ? 'Save GIF' : 'Save Image', action: () => _mediaSave(src, _mediaFilename(src, nameHint, 'image', isGif ? 'gif' : 'png')) });
+    if (!src.startsWith('data:')) items.push({ icon: ICO.link, label: 'Copy Link', action: () => _mediaCopyLink(src) });
+  } else {
+    return;
+  }
+  if (!items.length) return;
+  e.preventDefault();
+  e.stopPropagation();
+  showCtxMenu(e.clientX, e.clientY, [{ items }]);
+}, true);
 async function _lightboxCopy(src) {
   try {
     const res = await fetch(src, { mode: 'cors' });
@@ -33823,7 +34189,7 @@ function parseMD(s) {
         + '</div>';
     }
     return '<div style="margin:6px 0 2px 0;display:block;border-radius:10px;padding:0;overflow:hidden;max-width:550px;">'
-      + '<img src="' + safeSrc + '" style="max-width:550px;max-height:450px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">'
+      + '<img src="' + safeSrc + '" class="ftz-chat-img" data-media-name="' + escapeHTML(name) + '" style="max-width:550px;max-height:450px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openLightboxFromImg(this)">'
       + '</div>';
   });
   // 0a2. Poll + Form tokens — replaced into unified embed shells.

@@ -14220,6 +14220,25 @@ select:focus,select:focus-visible,
   user-select:none;
 }
 .msg-author + .ftz-official-capsule{margin-left:2px;}
+/* APP capsule — Discord-style blue chip on built-in bot messages (FortGified). */
+.ftz-app-capsule{
+  display:inline-flex;align-items:center;gap:3px;
+  font-family:var(--font-display,inherit);
+  font-size:9.5px;font-weight:700;
+  letter-spacing:.06em;
+  color:#fff;
+  background:var(--blue);
+  padding:2px 6px 2px 5px;
+  border-radius:4px;
+  text-transform:uppercase;
+  line-height:1;
+  margin-left:4px;
+  vertical-align:middle;
+  flex-shrink:0;
+  user-select:none;
+}
+.ftz-app-capsule svg{width:9px;height:9px;flex-shrink:0;}
+.msg-author + .ftz-app-capsule{margin-left:2px;}
 
 /* ── Chat-locked notice (no chatbar for @fortized/@fortizedsafety DMs) ──
    Sits where the chat input usually goes. Same width / padding as the

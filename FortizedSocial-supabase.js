@@ -1468,9 +1468,13 @@ const FortizedSocial = (() => {
     // receivers see the message instantly instead of waiting for the
     // Supabase round-trip (root cause of the 10s delivery delay).
     const msgId = (opts && opts.id) || (Date.now().toString(36) + Math.random().toString(36).slice(2));
+    // senderName lets a built-in bot (e.g. FortGified) post INTO the
+    // fromUsername↔toUsername thread while the row's `from` shows the bot.
+    // The dm_key above is always derived from the two human participants.
+    const senderName = (opts && opts.senderName) ? norm(opts.senderName) : fromUsername;
     const msg = {
       id:        msgId,
-      from:      fromUsername,
+      from:      senderName,
       text,
       time:      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       timestamp: now.toISOString()

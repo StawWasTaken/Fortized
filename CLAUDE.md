@@ -32,7 +32,7 @@ rules below still apply (egress, mirror-to-main + bump cache-bust every push,
 
 **NEXT SESSION — top priorities (user wants these):**
 1. **Tabbed picker redesign — GO LIVE.** Direction is locked + a static mockup
-   is approved (recipe in scratchpad `panelkit.html`, `.pk-*` classes): ONE
+   is approved (recipe in `docs/picker-redesign.md` (+ mockup `docs/picker-redesign-mockup.html`), `.pk-*` classes): ONE
    tabbed popover with **GIFs / Stickers / Emoji / Bots** tabs; emoji uses a
    **right-side** icon rail (Discord layout, Fortized side) + **Guilded footer**
    showing the hovered emoji; Fortized dark glass + gold; **solid bg, NO

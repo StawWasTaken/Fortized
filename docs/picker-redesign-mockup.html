@@ -1,0 +1,157 @@
+<!doctype html><html><head><meta charset="utf8">
+<style>
+:root{
+  --pk-bg:#15171f; --pk-bg2:#1b1e28; --pk-panel:#12141b;
+  --pk-line:rgba(255,255,255,.06); --pk-line2:rgba(255,255,255,.09);
+  --pk-txt:#e9ecf3; --pk-mut:rgba(233,236,243,.45); --pk-mut2:rgba(233,236,243,.28);
+  --pk-accent:#fff93e; --pk-accent-dim:rgba(255,249,62,.12); --pk-accent-mid:rgba(255,249,62,.28);
+  --pk-radius:16px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:#0a0d14;padding:26px;font-family:'Segoe UI',system-ui,sans-serif;display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;}
+
+/* ── Shell ── */
+.pk{width:432px;height:520px;background:var(--pk-bg);border:1px solid var(--pk-line2);border-radius:var(--pk-radius);
+  box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03);display:flex;flex-direction:column;overflow:hidden;color:var(--pk-txt);}
+
+/* Tabs */
+.pk-tabs{display:flex;gap:2px;padding:8px 8px 0;flex-shrink:0;}
+.pk-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 8px;border:none;background:transparent;
+  color:var(--pk-mut);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;border-radius:10px 10px 0 0;position:relative;transition:color .14s,background .14s;}
+.pk-tab svg{width:16px;height:16px;}
+.pk-tab:hover{color:var(--pk-txt);background:rgba(255,255,255,.03);}
+.pk-tab.on{color:var(--pk-accent);}
+.pk-tab.on::after{content:'';position:absolute;left:12px;right:12px;bottom:0;height:2.5px;border-radius:3px;background:var(--pk-accent);box-shadow:0 0 12px rgba(255,249,62,.5);}
+
+/* Search */
+.pk-search{padding:10px 12px 8px;flex-shrink:0;border-bottom:1px solid var(--pk-line);}
+.pk-search-box{position:relative;display:flex;align-items:center;}
+.pk-search-box .ic{position:absolute;left:12px;width:14px;height:14px;color:var(--pk-mut2);pointer-events:none;}
+.pk-search input{width:100%;background:var(--pk-panel);border:1px solid var(--pk-line);border-radius:11px;color:var(--pk-txt);
+  font:inherit;font-size:13px;padding:10px 34px 10px 34px;outline:none;transition:border-color .15s,box-shadow .15s;}
+.pk-search input:focus{border-color:var(--pk-accent-mid);box-shadow:0 0 0 3px var(--pk-accent-dim);}
+.pk-search .clr{position:absolute;right:9px;width:22px;height:22px;border:none;background:rgba(255,255,255,.06);color:var(--pk-mut);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.pk-search .clr svg{width:11px;height:11px;}
+
+/* Body row: main + right rail */
+.pk-body{flex:1;display:flex;min-height:0;}
+.pk-main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;}
+.pk-scroll{flex:1;overflow-y:auto;padding:4px 8px 8px;scrollbar-width:thin;}
+.pk-scroll::-webkit-scrollbar{width:8px;}.pk-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
+
+/* Right rail (emoji categories) */
+.pk-rail{width:46px;background:var(--pk-panel);border-left:1px solid var(--pk-line);display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;overflow-y:auto;scrollbar-width:none;flex-shrink:0;}
+.pk-rail::-webkit-scrollbar{display:none;}
+.pk-rb{width:34px;height:34px;border-radius:9px;border:none;background:transparent;color:var(--pk-mut);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;transition:background .12s,color .12s;}
+.pk-rb svg{width:18px;height:18px;}
+.pk-rb img{width:20px;height:20px;border-radius:5px;object-fit:cover;}
+.pk-rb:hover{background:rgba(255,255,255,.06);color:var(--pk-txt);}
+.pk-rb.on{background:var(--pk-accent-dim);color:var(--pk-accent);}
+.pk-rb.on::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:0 3px 3px 0;background:var(--pk-accent);}
+.pk-rsep{width:22px;height:1px;background:var(--pk-line2);margin:5px 0;}
+
+/* Emoji sections + grid */
+.pk-sec{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--pk-mut);text-transform:uppercase;padding:12px 6px 6px;position:sticky;top:0;background:linear-gradient(var(--pk-bg),var(--pk-bg) 70%,transparent);z-index:1;}
+.pk-sec svg{width:12px;height:12px;}
+.pk-egrid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;}
+.pk-cell{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;transition:background .1s,transform .1s;line-height:1;}
+.pk-cell:hover{background:rgba(255,255,255,.08);transform:scale(1.12);}
+.pk-cell img{width:24px;height:24px;object-fit:contain;}
+
+/* Footer (Guilded) */
+.pk-foot{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--pk-line);background:var(--pk-panel);flex-shrink:0;min-height:46px;}
+.pk-foot-emoji{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:24px;line-height:1;flex-shrink:0;}
+.pk-foot-name{font-size:13px;font-weight:700;color:var(--pk-txt);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pk-foot-name small{color:var(--pk-mut);font-weight:500;}
+.pk-foot-tone{width:26px;height:26px;border-radius:7px;border:1px solid var(--pk-line2);background:var(--pk-bg2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--pk-mut);}
+.pk-foot-tone svg{width:12px;height:12px;}
+.pk-foot-empty{color:var(--pk-mut2);font-size:12.5px;}
+
+/* GIF/masonry variant preview */
+.pk-masonry{columns:2;column-gap:6px;padding:8px;}
+.pk-gcard{break-inside:avoid;margin:0 0 6px;border-radius:10px;overflow:hidden;background:#242836;display:block;position:relative;}
+.pk-gcard .lbl{position:absolute;left:8px;bottom:8px;color:#fff;font-size:11px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.7);}
+.caption{color:#8a94a6;font-size:12px;margin:10px 2px 0;max-width:432px;font-family:system-ui;}
+b.k{color:#fff93e;}
+</style></head>
+<body>
+
+<!-- ============ EMOJI TAB ============ -->
+<div>
+<div class="pk">
+  <div class="pk-tabs">
+    <button class="pk-tab"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.75 3.5A3.25 3.25 0 0 1 22 6.75v10.5a3.25 3.25 0 0 1-3.25 3.25H5.25A3.25 3.25 0 0 1 2 17.25V6.75A3.25 3.25 0 0 1 5.25 3.5h13.5Zm-10.74 5.37c-1.62 0-2.75 1.41-2.75 3.13s1.13 3.12 2.75 3.12c.89 0 1.71-.43 2.12-1.21l.05-.18v-1.6c0-.26-.21-.48-.48-.52h-1.1c-.27.04-.48.25-.52.51l.01.09c.04.27.25.48.51.52H9v.73c-.18.32-.55.5-.99.5-.86 0-1.5-.8-1.5-1.87s.64-1.88 1.5-1.88c.43 0 .67.05.97.19.31.15.68.02.83-.29.15-.31.02-.69-.29-.83-.49-.24-.91-.32-1.51-.32Zm4.62.12c-.31 0-.57.24-.62.54v4.76c.05.3.31.54.62.54.31 0 .57-.24.62-.54V9.53a.628.628 0 0 0-.62-.54Zm4.99.01-2-.01c-.31 0-.57.23-.62.53v4.84c.04.27.25.48.52.52h.09c.27-.04.48-.25.52-.51V13.25h1.12c.27-.04.48-.25.52-.51l-.01-.1a.633.633 0 0 0-.52-.52H16.25V10.24l1.37.01c.3-.04.53-.3.53-.61 0-.32-.23-.58-.53-.62Z"/></svg>GIFs</button>
+    <button class="pk-tab"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.75 3A3.25 3.25 0 0 1 21 6.25V13h-4.75l-.21.01A3.25 3.25 0 0 0 13 16.25V21H6.25A3.25 3.25 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3h11.5Zm2.59 11.72-5.62 5.62c-.07.07-.14.13-.22.19V16.25l.01-.14A1.63 1.63 0 0 1 16.1 14.5h4.28c-.06.08-.12.15-.19.22ZM9 7.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm6 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z"/></svg>Stickers</button>
+    <button class="pk-tab on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.25 5.25a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5Zm-6.5 0a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5ZM12 17.5c-2.55 0-4.72-1.64-5.5-3.94a.75.75 0 0 1 .71-.98h9.58a.75.75 0 0 1 .71.98c-.78 2.3-2.95 3.94-5.5 3.94Z"/></svg>Emoji</button>
+    <button class="pk-tab"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.75 14A2.25 2.25 0 0 1 20 16.25v.91c0 1.09-.47 2.13-1.3 2.84C17.13 21.34 14.89 22 12 22s-5.13-.66-6.7-2c-.82-.71-1.3-1.75-1.3-2.84v-.91A2.25 2.25 0 0 1 6.25 14h11.5ZM11.9 2c.38 0 .7.28.74.65l.01.1v.75h3.6A2.25 2.25 0 0 1 18.5 5.75v4.5a2.25 2.25 0 0 1-2.25 2.25h-8.5A2.25 2.25 0 0 1 5.5 10.25v-4.5A2.25 2.25 0 0 1 7.75 3.5h3.5v-.75c0-.41.34-.75.75-.75ZM9.75 6.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm4.5 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z"/></svg>Bots</button>
+  </div>
+  <div class="pk-search"><div class="pk-search-box">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input placeholder="Search emoji" value="">
+  </div></div>
+  <div class="pk-body">
+    <div class="pk-main"><div class="pk-scroll">
+      <div class="pk-sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Frequently used</div>
+      <div class="pk-egrid">
+        <div class="pk-cell">❤️</div><div class="pk-cell">🔥</div><div class="pk-cell">😂</div><div class="pk-cell">😭</div><div class="pk-cell">👍</div><div class="pk-cell">🥺</div><div class="pk-cell">✨</div><div class="pk-cell">😎</div>
+        <div class="pk-cell">💀</div><div class="pk-cell">🎉</div><div class="pk-cell">🙏</div><div class="pk-cell">👀</div><div class="pk-cell">😍</div><div class="pk-cell">🤔</div><div class="pk-cell">😅</div><div class="pk-cell">🤝</div>
+      </div>
+      <div class="pk-sec"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z"/></svg>Collection</div>
+      <div class="pk-egrid">
+        <div class="pk-cell">🐈</div><div class="pk-cell">🗿</div><div class="pk-cell">🤡</div><div class="pk-cell">💅</div><div class="pk-cell">🫡</div><div class="pk-cell">🥲</div>
+      </div>
+      <div class="pk-sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l3-3h12l3 3M3 6v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6M3 6h18"/></svg>Smileys &amp; Expressions</div>
+      <div class="pk-egrid">
+        <div class="pk-cell">😀</div><div class="pk-cell">😃</div><div class="pk-cell">😄</div><div class="pk-cell">😁</div><div class="pk-cell">😆</div><div class="pk-cell">😅</div><div class="pk-cell">🤣</div><div class="pk-cell">😂</div>
+        <div class="pk-cell">🙂</div><div class="pk-cell">🙃</div><div class="pk-cell">😉</div><div class="pk-cell">😊</div><div class="pk-cell">😇</div><div class="pk-cell">🥰</div><div class="pk-cell">😍</div><div class="pk-cell">🤩</div>
+        <div class="pk-cell">😘</div><div class="pk-cell">😗</div><div class="pk-cell">😚</div><div class="pk-cell">😙</div><div class="pk-cell">🥲</div><div class="pk-cell">😋</div><div class="pk-cell">😛</div><div class="pk-cell">😜</div>
+      </div>
+    </div></div>
+    <div class="pk-rail">
+      <button class="pk-rb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>
+      <button class="pk-rb"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z"/></svg></button>
+      <button class="pk-rb"><img src="" alt="" style="background:linear-gradient(135deg,#fff93e,#a78bfa);"></button>
+      <div class="pk-rsep"></div>
+      <button class="pk-rb on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.25 5.25a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5Zm-6.5 0a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5ZM12 17.5c-2.55 0-4.72-1.64-5.5-3.94a.75.75 0 0 1 .71-.98h9.58a.75.75 0 0 1 .71.98c-.78 2.3-2.95 3.94-5.5 3.94Z"/></svg></button>
+      <button class="pk-rb"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.35-9.5-8.5C.9 9.5 2.4 6 5.5 6c1.9 0 3.2 1.1 4 2.2C10.3 7.1 11.6 6 13.5 6c3.1 0 4.6 3.5 3 6.5C18 16.65 12 21 12 21Z"/></svg></button>
+      <button class="pk-rb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+      <button class="pk-rb"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></button>
+      <button class="pk-rb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
+    </div>
+  </div>
+  <div class="pk-foot">
+    <div class="pk-foot-emoji">😍</div>
+    <div class="pk-foot-name">:heart_eyes: <small>· Smileys</small></div>
+    <button class="pk-foot-tone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+  </div>
+</div>
+<div class="caption"><b class="k">Emoji tab</b> — Discord layout, right rail (Fortized side), Guilded footer showing the hovered emoji. Tabs up top, rounded search, sticky section headers.</div>
+</div>
+
+<!-- ============ GIF TAB ============ -->
+<div>
+<div class="pk">
+  <div class="pk-tabs">
+    <button class="pk-tab on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.75 3.5A3.25 3.25 0 0 1 22 6.75v10.5a3.25 3.25 0 0 1-3.25 3.25H5.25A3.25 3.25 0 0 1 2 17.25V6.75A3.25 3.25 0 0 1 5.25 3.5h13.5Zm-10.74 5.37c-1.62 0-2.75 1.41-2.75 3.13s1.13 3.12 2.75 3.12c.89 0 1.71-.43 2.12-1.21l.05-.18v-1.6c0-.26-.21-.48-.48-.52h-1.1c-.27.04-.48.25-.52.51l.01.09c.04.27.25.48.51.52H9v.73c-.18.32-.55.5-.99.5-.86 0-1.5-.8-1.5-1.87s.64-1.88 1.5-1.88c.43 0 .67.05.97.19.31.15.68.02.83-.29.15-.31.02-.69-.29-.83-.49-.24-.91-.32-1.51-.32Zm4.62.12c-.31 0-.57.24-.62.54v4.76c.05.3.31.54.62.54.31 0 .57-.24.62-.54V9.53a.628.628 0 0 0-.62-.54Zm4.99.01-2-.01c-.31 0-.57.23-.62.53v4.84c.04.27.25.48.52.52h.09c.27-.04.48-.25.52-.51V13.25h1.12c.27-.04.48-.25.52-.51l-.01-.1a.633.633 0 0 0-.52-.52H16.25V10.24l1.37.01c.3-.04.53-.3.53-.61 0-.32-.23-.58-.53-.62Z"/></svg>GIFs</button>
+    <button class="pk-tab"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.75 3A3.25 3.25 0 0 1 21 6.25V13h-4.75l-.21.01A3.25 3.25 0 0 0 13 16.25V21H6.25A3.25 3.25 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3h11.5Zm2.59 11.72-5.62 5.62c-.07.07-.14.13-.22.19V16.25l.01-.14A1.63 1.63 0 0 1 16.1 14.5h4.28c-.06.08-.12.15-.19.22ZM9 7.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm6 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z"/></svg>Stickers</button>
+    <button class="pk-tab"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.25 5.25a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5Zm-6.5 0a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5ZM12 17.5c-2.55 0-4.72-1.64-5.5-3.94a.75.75 0 0 1 .71-.98h9.58a.75.75 0 0 1 .71.98c-.78 2.3-2.95 3.94-5.5 3.94Z"/></svg>Emoji</button>
+    <button class="pk-tab"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.75 14A2.25 2.25 0 0 1 20 16.25v.91c0 1.09-.47 2.13-1.3 2.84C17.13 21.34 14.89 22 12 22s-5.13-.66-6.7-2c-.82-.71-1.3-1.75-1.3-2.84v-.91A2.25 2.25 0 0 1 6.25 14h11.5ZM11.9 2c.38 0 .7.28.74.65l.01.1v.75h3.6A2.25 2.25 0 0 1 18.5 5.75v4.5a2.25 2.25 0 0 1-2.25 2.25h-8.5A2.25 2.25 0 0 1 5.5 10.25v-4.5A2.25 2.25 0 0 1 7.75 3.5h3.5v-.75c0-.41.34-.75.75-.75ZM9.75 6.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm4.5 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z"/></svg>Bots</button>
+  </div>
+  <div class="pk-search"><div class="pk-search-box">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input placeholder="Search GIFs" value="gaming">
+    <button class="clr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div></div>
+  <div class="pk-body"><div class="pk-main"><div class="pk-scroll" style="padding:0;">
+    <div class="pk-masonry" id="mas"></div>
+  </div></div></div>
+</div>
+<div class="caption"><b class="k">GIF tab</b> — same shell, no rail. Discord masonry (natural ratios), rounded search with clear button, category chips would sit in a "Browse" back-bar.</div>
+</div>
+
+<script>
+// build masonry mock
+const ar=[[220,130],[220,220],[220,150],[220,300],[220,124],[220,180],[220,140],[220,240],[220,160],[220,200]];
+document.getElementById('mas').innerHTML=ar.map((d,i)=>{const c=document.createElement('canvas');c.width=d[0];c.height=d[1];const x=c.getContext('2d');const g=x.createLinearGradient(0,0,d[0],d[1]);g.addColorStop(0,`hsl(${i*36},45%,42%)`);g.addColorStop(1,`hsl(${i*36+40},45%,28%)`);x.fillStyle=g;x.fillRect(0,0,d[0],d[1]);return `<div class="pk-gcard"><img src="${c.toDataURL()}" style="width:100%;display:block"><span class="lbl">gif ${i+1}</span></div>`;}).join('');
+</script>
+</body></html>

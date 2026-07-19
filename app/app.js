@@ -12042,12 +12042,21 @@ function editMsg(msgId) {
   const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
   if (!row) return;
   const original=row.dataset.text||'';
-  const { stripped, tokens } = _splitFileTokens(original);
-  // Stash full original + tokens so save/cancel can restore them.
+  // Discord-style: a GIF sent from a LINK ([FTZGIF:url]) is shown as its bare
+  // URL in the edit box (editable + previewed below), while UPLOADED GIFs/files
+  // ([FTZIMG|VID|AUD|FILE|STICKER]) stay hidden + preserved (no shareable link).
+  const gifUrls = [];
+  const preGif = original.replace(/\[FTZGIF:([^\]]+)\]/g, (_m, u) => { gifUrls.push(u); return u; });
+  const { stripped, tokens } = _splitFileTokens(preGif);
+  // Stash full original + tokens + gif urls so save/cancel can restore them.
   row.dataset.editOriginal = original;
   row.dataset.editTokens = JSON.stringify(tokens);
+  row.dataset.editGifUrls = JSON.stringify(gifUrls);
   const textEl=row.querySelector('.msg-text');
   if (!textEl) return;
+  const gifPreview = gifUrls.length
+    ? `<div class="edit-gif-preview" style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">${gifUrls.map(u => `<div class="ftz-embed-gif" style="pointer-events:none;max-width:220px;"><img src="${escapeHTML(u)}" loading="lazy" style="width:100%;border-radius:10px;display:block;"></div>`).join('')}</div>`
+    : '';
   const hint = tokens.length
     ? `<div style="font-size:11px;color:var(--muted-light);margin-top:4px;opacity:.7;display:flex;align-items:center;gap:5px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg> ${tokens.length} attached file${tokens.length>1?'s':''} preserved</div>`
     : '';
@@ -12058,7 +12067,7 @@ function editMsg(msgId) {
       <button class="btn-a" style="padding:4px 12px;font-size:12px;" onclick="saveEdit('${escapeHTML(msgId)}')">Save</button>
       <button class="btn-g" style="padding:4px 12px;font-size:12px;" onclick="cancelEdit('${escapeHTML(msgId)}')">Cancel</button>
       <button type="button" title="Emoji" aria-label="Insert emoji" onclick="toggleEmojiPicker('edit-ta')" style="margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);cursor:pointer;padding:0;transition:color .12s,background .12s;" onmouseover="this.style.color='rgba(255,255,255,.95)';this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.color='rgba(255,255,255,.55)';this.style.background='rgba(255,255,255,.05)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
-    </div>`;
+    </div>${gifPreview}`;
   const ta = document.getElementById('edit-ta');
   if (ta) {
     _initRichInput(ta);
@@ -12087,6 +12096,7 @@ function cancelEdit(msgId) {
   if (textEl) textEl.innerHTML = parseMD(escapeHTML(original)) + edited;
   delete row.dataset.editOriginal;
   delete row.dataset.editTokens;
+  delete row.dataset.editGifUrls;
 }
 async function saveEdit(msgId) {
   const ta=document.getElementById('edit-ta');
@@ -12099,8 +12109,16 @@ async function saveEdit(msgId) {
   const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
   let tokens=[];
   try { tokens = JSON.parse(row?.dataset.editTokens || '[]'); } catch(_){}
+  let gifUrls=[];
+  try { gifUrls = JSON.parse(row?.dataset.editGifUrls || '[]'); } catch(_){}
+  // Re-wrap any bare GIF url the user kept back into a [FTZGIF:] token so it
+  // re-embeds. Placeholder swap avoids matching a url that sits inside another.
+  let body = caption || '';
+  const _uniqGifs = [...new Set(gifUrls)];
+  _uniqGifs.forEach((u, i) => { body = body.split(u).join('@@FTZG' + i + '@@'); });
+  _uniqGifs.forEach((u, i) => { body = body.split('@@FTZG' + i + '@@').join('[FTZGIF:' + u + ']'); });
   // Re-append preserved file tokens so the message body keeps its attachments.
-  const newText = (caption ? caption : '') + (tokens.length ? (caption ? ' ' : '') + tokens.join(' ') : '');
+  const newText = (body ? body : '') + (tokens.length ? (body ? ' ' : '') + tokens.join(' ') : '');
   if (!newText) {
     if (row) { cancelEdit(msgId); }
     deleteMsg(msgId);

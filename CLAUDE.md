@@ -1,12 +1,39 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix309`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix311`)
 
 Branch `claude/staff-console-world-map-bp1xnh`, mirrored to `main`. Standing
 rules below still apply (egress, mirror-to-main + bump cache-bust every push,
 `node --check` + 42 relationship tests pre-commit).
 
-**Done THIS session (`2026fix309`) — tabbed picker + avatar render paths:**
+**Done THIS session (`2026fix311`) — full picker redesign to the locked spec:**
+- **Built to the older session's locked spec + mockup** (`docs/picker-redesign.md`
+  + `docs/picker-redesign-mockup.html` on branch `…-emxyxn`, `.pk-*` classes).
+- **Emoji panel REBUILT** to the mockup shell (theme-aware): full-width rounded
+  search (magnifier + clear ✕), `.epp-body` row [scroll grid | right rail], and a
+  **Guilded footer** (`_eppFootSet`: hovered emoji preview + `:name: · Category`).
+  Section headers → theme gradient fade; tabs → gold glow-underline; rail →
+  accent-dim active + edge bar. Eager render preserved (no hydration race).
+- **Sticker panel REBUILT to mirror emoji** (`openStickerPicker` +
+  `_stickerGroups`/`_stickerSection`/`_stickerRailBtn`/`_wireStickerHover`): per-
+  bastion **sections** in `.epp-scroll`, a **right rail** of bastions
+  (`_stickerRailJump`), search (flat filtered + rail hidden via `.spp-searching`),
+  hover footer. Cells `.spp-sec-grid` (4-col).
+- **Chatbar buttons** rebuilt as inline filled FA SVGs (`.cit-ico`,
+  `fill:currentColor`, sized by height): `+`=fa-plus (now a real button like the
+  others), GIF=fa-film (same as panel tab), sticker=fa-note-sticky, emoji=the
+  provided fa-face-smile, bots=the provided fa-robot (viewBox `0 -40 640 552` so
+  the antenna isn't clipped). `randomizeChatbarEmoji` hover-swap normalised
+  (consistent height / width:auto / currentColor — fixes the old size/squareness
+  bug). Picker tabs use the identical inline SVGs (`.pt-ico`).
+- **Pickers follow the appearance theme:** `.chat-picker-base` +
+  `.emoji-picker-panel` bg = `var(--panel)`; search/rail/footer surfaces use
+  `var(--bg)`/`var(--panel2)`; all rewritten live by `applyAppearance`.
+- **Avatars:** self + member-list + DM-topbar render paths confirmed routed
+  through `buildAvatarHTML` (message rows, replies, `.gc-ml-av`/`.ml-av-wrap`,
+  `#rail-ub-avatar`, `_navPfp`, `_dnAvHtml`, DM `#dm-rt-av` initial+enrich).
+
+**Done earlier this session (superseded pieces kept for history):**
 - **Tabbed picker redesign shipped.** The four chat pickers now live under ONE
   shared 4-tab bar — **GIFs / Stickers / Emoji / Bots** (`_pickerTopTabs`,
   `_switchPickerTab`). Bots is now a first-class tab (`openBotCommandPanel`

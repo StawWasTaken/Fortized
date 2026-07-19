@@ -38790,76 +38790,129 @@ function openStickerPicker(inputId) {
     });
   }
 
-  const bastionTabsHTML = Object.entries(bastionNames).map(([idx, name]) =>
-    `<button class="spp-tab" onclick="_filterStickerBastion('${idx}', event)">${escapeHTML(name)}</button>`
-  ).join('');
-
+  // Mirrors the emoji panel: full-width search → body[ sectioned grid | right
+  // rail of bastions ] → hover footer. (allStickers/bastionNames computed above
+  // are recomputed as grouped sections in _buildStickerContent.)
+  void allStickers; void bastionNames;
   picker.innerHTML = `
     ${_pickerTopTabs('sticker')}
-    <div style="padding:10px 14px 0;flex-shrink:0;">
-      <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="sticker-search-input" placeholder="Search stickers…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" oninput="_searchStickers(this.value)">
-      </div>
+    <div class="epp-search-wrap"><div class="epp-search-box">
+      <svg class="epp-search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="sticker-search-input" class="epp-search-inp" placeholder="Search stickers" oninput="_searchStickers(this.value);this.closest('.epp-search-box').classList.toggle('has-val',!!this.value)">
+      <button class="epp-search-clr" onclick="_stickerClearSearch()" aria-label="Clear search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div></div>
+    <div class="epp-body">
+      <div class="epp-main"><div class="epp-scroll" id="sticker-grid"></div></div>
+      <div class="epp-sidebar" id="sticker-rail"></div>
     </div>
-    ${bastionTabsHTML ? `<div class="spp-tabs"><button class="spp-tab active" onclick="_filterStickerBastion('all', event)">All</button>${bastionTabsHTML}</div>` : ''}
-    <div class="spp-grid" id="sticker-grid"></div>
-    <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);display:flex;justify-content:center;align-items:center;flex-shrink:0;">
-      <span style="font-size:10px;color:rgba(255,255,255,.25);">Stickers come from bastions you're in.</span>
+    <div class="epp-footer">
+      <div class="epp-foot-emoji" id="sticker-foot-preview" aria-hidden="true"></div>
+      <div class="epp-foot-name" id="sticker-foot-label"><span class="epp-foot-empty">Pick a sticker</span></div>
     </div>
   `;
 
   document.body.appendChild(picker);
-  _renderStickers(allStickers);
+  _buildStickerContent();
+  _wireStickerHover();
   _bindPickerOutsideClose(picker, () => picker.remove());
 }
 
 window._allStickersCache = [];
-function _renderStickers(stickers) {
-  window._allStickersCache = stickers;
+// Group the user's bastion stickers into { idx, name, bastion, stickers } — one
+// section + rail button per bastion that actually has stickers.
+function _stickerGroups() {
+  const groups = [];
+  const bastions = CU?.bastions || [];
+  bastions.forEach((b, idx) => {
+    const stickers = (b?.stickers || b?.customStickers || []).filter(s => s && s.url);
+    if (!stickers.length) return;
+    groups.push({ idx, name: b.name || 'Bastion', bastion: b, stickers });
+  });
+  return groups;
+}
+function _stickerCell(s) {
+  const url = escapeHTML(s.url || '');
+  const name = escapeHTML(s.name || 'sticker');
+  return `<div class="spp-sticker" data-sticker-url="${url}" data-sticker-name="${name}" onclick="_sendSticker('${url}','${name}')">`
+    + `<img src="${url}" alt="${name}" loading="lazy" draggable="false"></div>`;
+}
+function _stickerRailBtn(g) {
+  const b = g.bastion || {};
+  const name = escapeHTML(g.name);
+  const initials = escapeHTML((g.name || 'B').slice(0,2).toUpperCase());
+  const fallback = `<span style="font-size:11px;font-weight:700;letter-spacing:.5px;">${initials}</span>`;
+  let emblem;
+  if (b.icon) emblem = `<img src="${escapeHTML(b.icon)}" alt="${name}" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+  else if (b.emblem && !/^https?:|^data:/.test(b.emblem)) emblem = `<span style="font-size:17px;line-height:1;">${escapeHTML(b.emblem)}</span>`;
+  else if (b.emblem) emblem = `<img src="${escapeHTML(b.emblem)}" alt="${name}" onerror="this.outerHTML='${fallback.replace(/'/g,"\\'")}'">`;
+  else emblem = fallback;
+  return `<button class="epp-sidebar-btn" title="${name}" aria-label="${name}" onclick="_stickerRailJump(${g.idx})"><span class="epp-sidebar-emblem">${emblem}</span></button>`;
+}
+function _stickerSection(g) {
+  return `<div class="epp-section" id="sticker-sec-${g.idx}" data-sticker-sec="${g.idx}">${escapeHTML(g.name)}</div>`
+    + `<div class="spp-sec-grid">${g.stickers.map(_stickerCell).join('')}</div>`;
+}
+// Build the grouped (default) view: rail + per-bastion sections.
+function _buildStickerContent() {
+  const groups = _stickerGroups();
+  const flat = [];
+  groups.forEach(g => g.stickers.forEach(s => flat.push({ ...s, bastionName: g.name, bastionIdx: g.idx })));
+  window._allStickersCache = flat;
   const grid = document.getElementById('sticker-grid');
-  if (!grid) return;
-  if (!stickers.length) {
-    grid.innerHTML = `<div class="spp-empty">
+  const rail = document.getElementById('sticker-rail');
+  document.getElementById('sticker-picker')?.classList.remove('spp-searching');
+  if (!groups.length) {
+    if (rail) rail.innerHTML = '';
+    if (grid) grid.innerHTML = `<div class="spp-empty">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:.4;"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21 12a9 9 0 0 0-9-9v9h9z"/></svg>
       No stickers available yet.<br>
       <span style="font-size:11px;color:rgba(255,255,255,.2);">Bastion owners can upload stickers in Bastion Settings.</span>
     </div>`;
     return;
   }
-  grid.innerHTML = stickers.map(s => `
-    <div class="spp-sticker" onclick="_sendSticker('${escapeHTML(s.url||'')}','${escapeHTML(s.name||'sticker')}')">
-      <img src="${escapeHTML(s.url||'')}" alt="${escapeHTML(s.name||'')}" loading="lazy" draggable="false">
-    </div>
-  `).join('');
+  if (rail) rail.innerHTML = groups.map(_stickerRailBtn).join('');
+  if (grid) grid.innerHTML = groups.map(_stickerSection).join('');
 }
-
+// Flat filtered grid for search (no sections, rail hidden).
+function _renderStickers(stickers) {
+  const grid = document.getElementById('sticker-grid');
+  if (!grid) return;
+  if (!stickers.length) { grid.innerHTML = '<div class="spp-empty">No stickers match that search.</div>'; return; }
+  grid.innerHTML = `<div class="spp-sec-grid">${stickers.map(_stickerCell).join('')}</div>`;
+}
 function _searchStickers(q) {
-  const filtered = q.trim()
-    ? window._allStickersCache.filter(s => (s.name||'').toLowerCase().includes(q.toLowerCase()))
-    : window._allStickersCache;
-  _renderStickers(filtered);
-}
-
-function _filterStickerBastion(bastionIdx, event) {
-  document.querySelectorAll('.spp-tab').forEach(t => t.classList.remove('active'));
-  if (event && event.target) event.target.classList.add('active');
-  if (bastionIdx === 'all') {
-    _renderStickers(window._allStickersCache);
+  const picker = document.getElementById('sticker-picker');
+  if (q.trim()) {
+    picker?.classList.add('spp-searching');
+    _renderStickers(window._allStickersCache.filter(s => (s.name || '').toLowerCase().includes(q.toLowerCase())));
   } else {
-    const filtered = window._allStickersCache.filter(s => String(s.bastionIdx) === String(bastionIdx));
-    const grid = document.getElementById('sticker-grid');
-    if (!grid) return;
-    if (!filtered.length) {
-      grid.innerHTML = '<div class="spp-empty">No stickers from this bastion.</div>';
-      return;
-    }
-    grid.innerHTML = filtered.map(s => `
-      <div class="spp-sticker" onclick="_sendSticker('${escapeHTML(s.url||'')}','${escapeHTML(s.name||'sticker')}')">
-        <img src="${escapeHTML(s.url||'')}" alt="${escapeHTML(s.name||'')}" loading="lazy" draggable="false">
-      </div>
-    `).join('');
+    _buildStickerContent();
   }
+}
+function _stickerClearSearch() {
+  const i = document.getElementById('sticker-search-input');
+  if (i) { i.value = ''; i.closest('.epp-search-box')?.classList.remove('has-val'); }
+  _buildStickerContent();
+  i?.focus();
+}
+function _stickerRailJump(idx) {
+  const grid = document.getElementById('sticker-grid');
+  const hdr = document.getElementById('sticker-sec-' + idx);
+  if (grid && hdr) grid.scrollTo({ top: hdr.offsetTop - 2, behavior: 'smooth' });
+}
+// Delegated hover — fills the footer with the pointed-at sticker.
+function _wireStickerHover() {
+  const grid = document.getElementById('sticker-grid');
+  if (!grid || grid._sppHover) return;
+  grid._sppHover = true;
+  grid.addEventListener('mouseover', (e) => {
+    const cell = e.target.closest('.spp-sticker');
+    if (!cell) return;
+    const prev = document.getElementById('sticker-foot-preview');
+    const lbl = document.getElementById('sticker-foot-label');
+    if (prev) prev.innerHTML = `<img src="${escapeHTML(cell.dataset.stickerUrl || '')}" style="width:26px;height:26px;object-fit:contain;">`;
+    if (lbl) lbl.textContent = cell.dataset.stickerName || 'sticker';
+  });
 }
 
 function _sendSticker(url, name) {

@@ -1,6 +1,22 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix331`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix332`)
+
+**Shipped `2026fix332` (media grid + upload UI + frozen-DM fix):**
+- **Message media now renders BELOW the caption in a grid** (`_layoutMsgMedia`
+  lifts `.ftz-att-wrap`/`.ftz-embed-gif`/`.ftz-spoiler-media` out of the inline
+  text into `.msg-media-grid`): fixes "text left / image right"; multiples tile
+  as even square cells (2 cols ≤4, 3 cols ≥5) via CSS grid + object-fit cover.
+- **"Too many uploads" modal** (`_showUploadLimitCard`, `.ftz-uplimit-card`)
+  replaces the 10-cap toast.
+- **Upload-progress card** while a message's attachments upload
+  (`_showUploadProgress` → `.ftz-upload-card`: file glyph + "Uploading N Files —
+  size" + accent bar that fills per file + ✕). Wired into `handleChatSend`.
+- **Frozen-DM fix**: a big base64 attachment stuck in a localStorage DRAFT froze
+  the chat on every re-open. Drafts now only keep attachments ≤1.5 MB
+  (`_draftSafeAtts`, `_DRAFT_ATT_MAX_LEN`); restore filters the same, so an
+  existing oversized draft is skipped and the DM opens again.
+
 
 **Shipped `2026fix331` (multi-attachment + collect/bot polish + mentions):**
 - **Up to 10 attachments per message**: `window._pendingAttachments` array (back-

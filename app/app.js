@@ -8453,11 +8453,21 @@ function _restoreDraftFor(context, inputId) {
     else inp.textContent = draft.text;
     try { autoResize(inp); } catch(_) {}
   }
-  const draftAtts = Array.isArray(draft.attachments) ? draft.attachments : (draft.attachment ? [draft.attachment] : []);
+  const draftAtts = _draftSafeAtts(Array.isArray(draft.attachments) ? draft.attachments : (draft.attachment ? [draft.attachment] : []));
   if (draftAtts.length) {
     window._pendingAttachments = draftAtts.slice(0, _ATT_MAX);
     try { showAttachmentPreview(null, null, null, null, context); } catch(_) {}
   }
+}
+// Drafts persist to localStorage; a big base64 attachment (a 30MB video, say)
+// stored there can freeze the client every time that chat re-opens and restores
+// it — that's how a "frozen" DM becomes permanently unopenable. Only small
+// attachments ride along in a draft; anything larger is dropped from the draft
+// (it's still sendable in the live tray, just not remembered across reloads).
+const _DRAFT_ATT_MAX_LEN = 1500000; // ~1.5 MB of base64 per attachment
+function _draftSafeAtts(atts) {
+  try { return (atts || []).filter(a => a && typeof a.data === 'string' && a.data.length <= _DRAFT_ATT_MAX_LEN).slice(0, _ATT_MAX); }
+  catch (_) { return []; }
 }
 
 // Single safe oninput handler for chat inputs. Wraps the moving parts in
@@ -8481,7 +8491,7 @@ function onChatInput(el, context, inputId) {
       if (!stripped) el.innerHTML = '';
     }
     const key = _draftKeyFor(context, inputId);
-    _saveDraft(key, { text: text, attachments: _pendAtts().slice() });
+    _saveDraft(key, { text: text, attachments: _draftSafeAtts(_pendAtts()) });
   } catch(e) { console.warn('[Input] draft save failed', e?.message); }
   // Typing broadcast — never let this throw, never let it block the rest.
   try {
@@ -8617,7 +8627,7 @@ function _persistPendingAttachmentChange(context, inputId) {
     const inp = inputId ? document.getElementById(inputId) : null;
     const key = _draftKeyFor(context, inputId || (context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input'));
     const text = inp ? (typeof inp.value === 'string' ? inp.value : (inp.textContent || '')) : '';
-    _saveDraft(key, { text: text, attachments: _pendAtts().slice() });
+    _saveDraft(key, { text: text, attachments: _draftSafeAtts(_pendAtts()) });
   } catch(_) {}
 }
 
@@ -12282,17 +12292,9 @@ function appendMessage(container, msg, context, prevAuthor) {
       if (_tbid2) _loadThreadBadge(_tbid2, _tchName2, id, safeId, msg.text||'', msg.from||'');
     }
   }
-  // When a message carries several media attachments, tile them into a tidy
-  // wrapping grid instead of a full-width vertical stack.
-  try {
-    const _mt = row.querySelector('.msg-text');
-    if (_mt) {
-      const _imgs = _mt.querySelectorAll('.ftz-att-wrap').length;
-      const _gifs = [..._mt.querySelectorAll('.ftz-embed-gif')].filter(g => !g.closest('.ftz-att-wrap')).length;
-      const _spoil = _mt.querySelectorAll('.ftz-spoiler-media').length;
-      if (_imgs + _gifs + _spoil > 1) _mt.classList.add('msg-multi-media');
-    }
-  } catch (_) {}
+  // Lift media out of the inline text flow into a grid BELOW the caption, so the
+  // text always sits on top (not beside the image) and multiples tile cleanly.
+  try { _layoutMsgMedia(row.querySelector('.msg-text')); } catch (_) {}
   container.appendChild(row);
   // Super reactions are NOT auto-replayed any more. The previous build
   // fired triggerSuperReaction() for every reaction on every render AND
@@ -12389,6 +12391,22 @@ function _refreshVisibleMsgActs() {
     const isBastionAdmin = (context==='ch' || context==='channel') && hasPerm('manage_messages');
     el.innerHTML = _buildMsgActsInner(msgId, from, text, context, isOwn, isBastionAdmin);
   });
+}
+
+// Lift media attachments (images / gifs / spoilered media) out of the inline
+// text flow into a grid appended BELOW the caption. This guarantees the text
+// sits on its own line on top (not beside a floating image) and that multiple
+// images tile as an even grid (2 cols ≤4, 3 cols ≥5) instead of a ragged stack.
+function _layoutMsgMedia(mt) {
+  if (!mt) return;
+  const sel = '.ftz-att-wrap, .ftz-embed-gif, .ftz-spoiler-media';
+  const media = [...mt.children].filter(el => el.matches && el.matches(sel));
+  if (!media.length) return;
+  const grid = document.createElement('div');
+  grid.className = 'msg-media-grid';
+  if (media.length > 1) { grid.classList.add('is-multi'); if (media.length >= 5) grid.classList.add('cols3'); }
+  media.forEach(el => grid.appendChild(el));
+  mt.appendChild(grid);
 }
 
 function buildMsgActions(msg, context, id) {
@@ -40126,12 +40144,59 @@ try {
     set(v) { const a = _pendAtts(); if (v == null) { a.length = 0; } else if (a.length) { a[0] = v; } else { a.push(v); } },
   });
 } catch (_) {}
+// Discord-style "too many uploads" modal (replaces a plain toast so the 10-file
+// cap is unmissable).
+function _showUploadLimitCard() {
+  if (document.getElementById('ftz-upload-limit')) return;
+  const ov = document.createElement('div');
+  ov.id = 'ftz-upload-limit';
+  ov.className = 'ftz-confirm-overlay';
+  ov.innerHTML = `<div class="ftz-confirm-card ftz-uplimit-card">
+    <div class="ftz-uplimit-head">
+      <div class="ftz-confirm-title" style="margin:0;">Too many uploads!</div>
+      <button class="ftz-close-btn" onclick="this.closest('.ftz-confirm-overlay').remove()" aria-label="Close">&times;</button>
+    </div>
+    <div class="ftz-uplimit-body">You can only upload ${_ATT_MAX} files at a time.</div>
+    <button class="btn-yellow ftz-uplimit-btn" onclick="this.closest('.ftz-confirm-overlay').remove()">Got it</button>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+}
+function _fmtUploadSize(bytes) {
+  bytes = bytes || 0;
+  if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+  return (bytes / 1024).toFixed(2) + ' KB';
+}
+// A live "Uploading N Files — size" card shown in the chat while a message's
+// attachments upload. Discord-inspired but our own: file glyph, title, an
+// accent progress bar that fills per completed file, and a dismiss ✕. Returns
+// { step(done), done() }.
+function _showUploadProgress(containerId, count, totalBytes) {
+  const cont = document.getElementById(containerId);
+  if (!cont) return null;
+  const el = document.createElement('div');
+  el.className = 'ftz-upload-card';
+  el.innerHTML = `
+    <div class="fuc-icon"><svg viewBox="0 0 384 512" fill="currentColor"><path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/></svg></div>
+    <div class="fuc-body">
+      <div class="fuc-title">Uploading ${count} File${count > 1 ? 's' : ''} <span class="fuc-size">— ${_fmtUploadSize(totalBytes)}</span></div>
+      <div class="fuc-bar"><div class="fuc-bar-fill" style="width:8%"></div></div>
+    </div>
+    <button class="fuc-x" onclick="this.closest('.ftz-upload-card')?.remove()" aria-label="Cancel">&times;</button>`;
+  cont.appendChild(el);
+  try { scrollBottom(containerId, true); } catch (_) {}
+  const fill = el.querySelector('.fuc-bar-fill');
+  return {
+    step(done) { if (fill) fill.style.width = Math.max(8, Math.round((done / count) * 100)) + '%'; },
+    done() { if (fill) fill.style.width = '100%'; setTimeout(() => el.remove(), 180); },
+  };
+}
 // Add a file to the pending tray (respecting the 10-file cap + size limit).
 function _addPendingAttachment(file, context, onDone) {
   const hasRadiance = _hasRadiance(CU);
   const maxMB = hasRadiance ? 45 : 30;
   const atts = _pendAtts();
-  if (atts.length >= _ATT_MAX) { toast('You can attach up to ' + _ATT_MAX + ' files', 'error'); onDone && onDone(false); return; }
+  if (atts.length >= _ATT_MAX) { _showUploadLimitCard(); onDone && onDone(false); return; }
   if (file.size > maxMB * 1024 * 1024) { toast(file.name + ' is too large (max ' + maxMB + 'MB)', 'error'); onDone && onDone(false); return; }
   const reader = new FileReader();
   reader.onload = ev => { atts.push({ name: file.name, type: file.type, data: ev.target.result, size: file.size, context }); onDone && onDone(true); };
@@ -40292,7 +40357,11 @@ async function handleChatSend(context, chIdx) {
   }
   const _atts = _pendAtts().slice(); // snapshot (up to 10)
   if (_atts.length) {
+    // Live upload-progress card in the chat while the files go up.
+    const _upContainerId = context==='dm'?'dm-msgs':context==='gc'?'gc-msgs':('ch-msgs-'+curChannel);
+    const _upCard = _showUploadProgress(_upContainerId, _atts.length, _atts.reduce((s,a)=>s+(a.size||0),0));
     const tokens = [];
+    let _upDone = 0;
     for (const att of _atts) {
       const isImage = att.type.startsWith('image/');
       const isVideo = att.type.startsWith('video/');
@@ -40317,7 +40386,9 @@ async function handleChatSend(context, chIdx) {
       // clicked (the media token is rendered first, then wrapped).
       if (att._spoiler) token = '||' + token + '||';
       tokens.push(token);
+      if (_upCard) _upCard.step(++_upDone);
     }
+    if (_upCard) _upCard.done();
     const token = tokens.join(' ');
     const inp = document.getElementById(context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input');
     if (inp) {
@@ -49470,7 +49541,7 @@ function processUploadedFile(file, inputId) {
   if (!file) return;
   const hasRadiance = _hasRadiance(CU);
   const maxMB = hasRadiance ? 45 : 30;
-  if (_pendAtts().length >= _ATT_MAX) { toast('You can attach up to ' + _ATT_MAX + ' files', 'error'); return; }
+  if (_pendAtts().length >= _ATT_MAX) { _showUploadLimitCard(); return; }
   if (file.size > maxMB * 1024 * 1024) { toast(`Max ${maxMB}MB`, 'error'); return; }
   const reader = new FileReader();
   reader.onload = async ev => {

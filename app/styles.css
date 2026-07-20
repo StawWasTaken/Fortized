@@ -2197,11 +2197,32 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .chatbar-file-card .cfp-btn.active{color:var(--accent);border-color:var(--accent-mid);}
 .chatbar-file-card .cfp-btn.cfp-remove{color:rgba(235,69,69,.85);}
 .chatbar-file-card .cfp-btn.cfp-remove:hover{background:rgba(235,69,69,.2);color:#EB4545;}
-/* Multiple attachments in one message tile into a wrapping grid of ~236px
-   thumbnails instead of a full-width vertical stack. */
-.msg-multi-media .ftz-att-wrap,.msg-multi-media .ftz-embed-gif,.msg-multi-media .ftz-spoiler-media{display:inline-block;vertical-align:top;max-width:236px;margin:2px 4px 2px 0;}
-.msg-multi-media .ftz-chat-img{max-width:236px!important;max-height:236px;}
-.msg-multi-media .ftz-att-wrap img,.msg-multi-media .ftz-embed-gif img,.msg-multi-media .ftz-att-wrap video{max-height:236px;}
+/* Message media grid — attachments render BELOW the caption text. A single
+   item keeps its natural size; multiples tile into an even grid of square cells
+   (2 columns for 2–4, 3 columns for 5+), Discord-style. */
+.msg-media-grid{margin-top:6px;}
+.msg-media-grid:not(.is-multi){display:block;}
+.msg-media-grid.is-multi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;max-width:440px;}
+.msg-media-grid.is-multi.cols3{grid-template-columns:repeat(3,minmax(0,1fr));max-width:504px;}
+.msg-media-grid.is-multi > *{position:relative;margin:0!important;width:100%;max-width:none!important;aspect-ratio:1/1;overflow:hidden;border-radius:8px;}
+.msg-media-grid.is-multi .ftz-att-wrap,.msg-media-grid.is-multi .ftz-embed-gif{width:100%;height:100%;border-radius:0;}
+.msg-media-grid.is-multi img,.msg-media-grid.is-multi video,.msg-media-grid.is-multi .ftz-chat-img{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;display:block;border-radius:0!important;}
+/* Upload-in-progress card (shown in the chat while attachments upload). */
+.ftz-upload-card{display:flex;align-items:center;gap:12px;max-width:440px;margin:6px 0;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;}
+.ftz-upload-card .fuc-icon{width:34px;height:34px;flex-shrink:0;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;color:var(--muted-light);}
+.ftz-upload-card .fuc-icon svg{width:16px;height:16px;}
+.ftz-upload-card .fuc-body{flex:1;min-width:0;}
+.ftz-upload-card .fuc-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ftz-upload-card .fuc-size{color:var(--muted-light);font-weight:500;}
+.ftz-upload-card .fuc-bar{height:6px;border-radius:100px;background:rgba(255,255,255,.08);overflow:hidden;}
+.ftz-upload-card .fuc-bar-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--accent-2,var(--accent)),var(--accent));transition:width .3s ease;box-shadow:0 0 8px var(--accent-mid);}
+.ftz-upload-card .fuc-x{background:none;border:none;color:var(--muted-light);font-size:20px;line-height:1;cursor:pointer;flex-shrink:0;padding:0 2px;}
+.ftz-upload-card .fuc-x:hover{color:var(--text);}
+/* "Too many uploads" modal. */
+.ftz-uplimit-card{max-width:400px;}
+.ftz-uplimit-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.ftz-uplimit-body{font-size:13.5px;color:var(--muted-light);margin:8px 0 18px;line-height:1.5;}
+.ftz-uplimit-btn{width:100%;justify-content:center;}
 .chatbar-file-card .cfp-spoiler-overlay{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
 .chatbar-file-card .cfp-spoiler-tag{padding:6px 14px;border-radius:20px;background:rgba(0,0,0,.5);color:rgba(255,255,255,.7);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
 .ci-preview{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;font-family:var(--font-ui);font-size:13.5px;line-height:1.55;padding:2px 0;color:var(--text);white-space:pre-wrap;word-wrap:break-word;overflow:hidden;z-index:1;}

@@ -1794,6 +1794,15 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .mlb-details-row a{color:var(--accent,#fff93e);text-decoration:none;}
 .mlb-details-row a:hover{text-decoration:underline;}
 .media-lightbox-close{position:absolute;top:18px;right:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:50%;width:36px;height:36px;color:rgba(255,255,255,.65);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .14s,color .14s;z-index:4;}
+/* Lightbox gallery nav — prev/next arrows + counter when a message has several
+   media. */
+.mlb-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .14s,transform .12s;}
+.mlb-nav:hover{background:rgba(255,255,255,.18);}
+.mlb-nav:active{transform:translateY(-50%) scale(.94);}
+.mlb-nav svg{width:24px;height:24px;}
+.mlb-nav-prev{left:22px;} .mlb-nav-next{right:22px;}
+.mlb-counter{position:absolute;top:22px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(0,0,0,.5);color:rgba(255,255,255,.85);font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:100px;}
+@media (max-width:640px){.mlb-nav{width:40px;height:40px;} .mlb-nav-prev{left:8px;} .mlb-nav-next{right:8px;}}
 .media-lightbox-close:hover{background:rgba(255,255,255,.12);color:#fff;}
 .media-lightbox-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 /* GIF favourite button in chat messages */
@@ -2207,6 +2216,9 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .msg-media-grid.is-multi > *{position:relative;margin:0!important;width:100%;max-width:none!important;aspect-ratio:1/1;overflow:hidden;border-radius:8px;}
 .msg-media-grid.is-multi .ftz-att-wrap,.msg-media-grid.is-multi .ftz-embed-gif{width:100%;height:100%;border-radius:0;}
 .msg-media-grid.is-multi img,.msg-media-grid.is-multi video,.msg-media-grid.is-multi .ftz-chat-img{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;display:block;border-radius:0!important;}
+/* Placeholder for an oversized inline attachment that would freeze the render. */
+.ftz-big-att{display:inline-flex;align-items:center;gap:9px;max-width:340px;margin:6px 0;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;color:var(--muted-light);font-size:12.5px;}
+.ftz-big-att svg{width:18px;height:18px;flex-shrink:0;opacity:.7;}
 /* Upload-in-progress card (shown in the chat while attachments upload). */
 .ftz-upload-card{display:flex;align-items:center;gap:12px;max-width:440px;margin:6px 0;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;}
 .ftz-upload-card .fuc-icon{width:34px;height:34px;flex-shrink:0;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;color:var(--muted-light);}
@@ -12625,32 +12637,31 @@ body.ftz-picking-msg .msg-row[data-msgid]:hover{ background:var(--accent-dim); b
 
 /* ── DM right profile card — Discord-style floating rounded panel that is
    detached from every edge (the #dm-user-panel column supplies the gap). ── */
-/* DM profile sidebar — a clean, flush full-height panel (Discord-style): no drop
-   shadow, no floating rounded card, banner flush to the top. Only a subtle left
-   divider separates it from the chat. */
+/* DM profile sidebar — a clean rounded panel (Discord-style): rounded corners,
+   banner flush to the top INSIDE the rounded frame, NO drop shadow and NO brand
+   yellow top-accent line (that was the "bug"). Fills the column with a small
+   inset so the rounded corners read against the view behind it. */
 .fpp--dm{
-  width:100%;
-  height:100%;
+  width:auto;
+  height:auto;
   max-height:none;
-  border-radius:0;
+  border-radius:16px;
+  overflow:hidden;
   background:var(--channel);
-  overflow-y:auto;
   display:flex; flex-direction:column;
   gap:0;
   padding:0;
-  border:none;
-  border-left:1px solid rgba(255,255,255,.05);
-  margin-top:0;
-  box-shadow:none;
+  border:1px solid var(--border);
+  margin:8px;
+  box-shadow:none !important;
 }
 .fpp--dm .fpp__banner{
-  border-radius:0; overflow:hidden;
+  border-radius:16px 16px 0 0; overflow:hidden;
   margin:0;
 }
-/* Kill the brand top-accent line + any base card shadow on the DM sidebar so it
-   reads as a clean flush panel, not a floating popover. */
+/* Kill the brand top-accent line so the DM sidebar reads as a clean panel. */
 .fpp--dm::before{ display:none; }
-.fpp--dm{ box-shadow:none !important; }
+.fpp--dm .fpp-card:last-child{ margin-bottom:14px; }
 .fpp--dm .fpp__av-row{
   margin-top:-52px;
   padding:0 14px;

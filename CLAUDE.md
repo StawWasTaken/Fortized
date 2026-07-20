@@ -1,6 +1,25 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix333`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix334`)
+
+**Shipped `2026fix334` (frozen-DM cure + delete fix + lightbox arrows + polish):**
+- **Frozen DM that freezes ON OPEN**: a posted message carrying a 20–30 MB inline
+  base64 data URL froze the render (40 regex passes over tens of MB + decoding a
+  giant data URL). `_defuseHugeMedia` (top of `parseMD`) swaps any FTZ token
+  >1.5 MB for a light `[FTZBIG:…]` placeholder → `.ftz-big-att` "too big to
+  display" card. The DM opens; the user can then delete that message.
+- **Delete button fix**: FortGified pick-mode left a capture-phase click handler
+  armed that hijacked ALL message clicks (incl. Delete). Now it cancels on any
+  click of a control/button/outside a message, and disarms after firing.
+- **Upload-progress is now a real message row** (avatar + name + time + caption,
+  then the "Uploading N Files" bar as the body) — `_showUploadProgress` takes a
+  caption; `handleChatSend` passes the input text.
+- **DM sidebar is now ROUNDED like Discord** (`border-radius:16px`, `margin:8px`,
+  banner rounded top) — kept the no-shadow / no-yellow-line fixes.
+- **Lightbox gallery arrows**: opening media in a multi-media message shows ‹ ›
+  arrows + an "n / N" counter (`_openLightboxFromImg` gathers the `.msg-media-grid`
+  siblings → `meta.gallery`; `_galGo` swaps `curSrc`, arrows + ←/→ keys).
+
 
 **Shipped `2026fix333` (DM profile sidebar cleanup):**
 - **DM profile sidebar (`.fpp--dm`) is now a clean flush panel** (Discord-style):

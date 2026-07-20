@@ -11019,10 +11019,16 @@ function _fortgifiedRunFromPanel(mode) {
   const handler = (e) => {
     if (e.target.closest && e.target.closest('#fortgified-pick-hint')) return;
     const row = e.target.closest && e.target.closest('.msg-row[data-msgid]');
-    if (!row) return;
+    // Clicking a control (button/link/menu/input) or anywhere outside a message
+    // CANCELS pick-mode and lets the click through — so it never hijacks the
+    // delete button, action bar, etc., or gets stuck armed.
+    if (!row || (e.target.closest && e.target.closest('button, a, input, textarea, .msg-acts, .ctx-menu, .ctx-apps-flyout, [contenteditable]'))) {
+      _fortgifiedDisarm();
+      return;
+    }
     e.preventDefault(); e.stopPropagation();
     const el = mode === 'video' ? _msgFindVideoEl(row) : _msgFindConvertibleImage(row);
-    if (!el) { toast(mode === 'video' ? 'No video in that message' : 'No uploaded image (JPEG/PNG) in that message', 'error'); return; }
+    if (!el) { toast(mode === 'video' ? 'No video in that message' : 'No uploaded image (JPEG/PNG) in that message', 'error'); _fortgifiedDisarm(); return; }
     _fortgifiedDisarm();
     _fortgifiedGifify(row.dataset.msgid, context, mode);
   };
@@ -33729,7 +33735,21 @@ function _currentForwardContext() {
 }
 window._openLightboxFromImg = function(imgEl) {
   if (!imgEl) return;
-  _openMediaLightbox(imgEl.src || imgEl.getAttribute('src') || '', _lightboxMetaFromEl(imgEl));
+  const src = imgEl.src || imgEl.getAttribute('src') || '';
+  const meta = _lightboxMetaFromEl(imgEl);
+  // If the clicked media is part of a multi-media message, gather its siblings
+  // so the lightbox can show ‹ › arrows to page through them.
+  try {
+    const scope = imgEl.closest('.msg-media-grid') || imgEl.closest('.msg-text');
+    if (scope) {
+      const srcs = [];
+      scope.querySelectorAll('img.ftz-chat-img, .ftz-embed-gif img, video').forEach(n => {
+        const s = n.src || n.getAttribute('src'); if (s && srcs.indexOf(s) < 0) srcs.push(s);
+      });
+      if (srcs.length > 1) { meta.gallery = srcs; meta.galleryIndex = Math.max(0, srcs.indexOf(src)); }
+    }
+  } catch (_) {}
+  _openMediaLightbox(src, meta);
 };
 function _mlbFmtBytes(n) {
   if (!n || n < 0) return '';
@@ -33758,9 +33778,14 @@ function _openMediaLightbox(src, meta) {
     : '';
 
   const ic = (path, fill) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="${fill||'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+  const _gal = (Array.isArray(m.gallery) && m.gallery.length > 1) ? m.gallery.slice() : null;
+  let _galIdx = _gal ? Math.max(0, Math.min(m.galleryIndex || 0, _gal.length - 1)) : 0;
 
   lb.innerHTML = `
     <button class="media-lightbox-close" title="Close (Esc)" aria-label="Close">${ic('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>')}</button>
+    ${_gal ? `<button class="mlb-nav mlb-nav-prev" title="Previous" aria-label="Previous">${ic('<polyline points="15 18 9 12 15 6"/>')}</button>
+    <button class="mlb-nav mlb-nav-next" title="Next" aria-label="Next">${ic('<polyline points="9 18 15 12 9 6"/>')}</button>
+    <div class="mlb-counter">${_galIdx + 1} / ${_gal.length}</div>` : ''}
     <div class="mlb-stage">
       ${headerHTML}
       <div class="mlb-image-wrap">
@@ -33795,6 +33820,28 @@ function _openMediaLightbox(src, meta) {
   const moreBtn = lb.querySelector('[data-act="more"]');
   const menu = lb.querySelector('.mlb-menu');
   const details = lb.querySelector('.mlb-details');
+  // Mutable current source so gallery navigation updates what the toolbar acts on.
+  let curSrc = src;
+  function _galGo(delta) {
+    if (!_gal) return;
+    _galIdx = (_galIdx + delta + _gal.length) % _gal.length;
+    curSrc = _gal[_galIdx];
+    img.src = curSrc;
+    zoom = 1; tx = 0; ty = 0; applyTransform();
+    const c = lb.querySelector('.mlb-counter'); if (c) c.textContent = (_galIdx + 1) + ' / ' + _gal.length;
+    const cb = lb.querySelector('.mlb-collect');
+    if (cb) { const col = isGifCollected(curSrc); cb.classList.toggle('is-collected', col); cb.dataset.gifUrl = curSrc; cb.innerHTML = _gifBookmarkSVG(col); }
+  }
+  if (_gal) {
+    lb.querySelector('.mlb-nav-prev')?.addEventListener('click', e => { e.stopPropagation(); _galGo(-1); });
+    lb.querySelector('.mlb-nav-next')?.addEventListener('click', e => { e.stopPropagation(); _galGo(1); });
+    const _galKey = (e) => {
+      if (!lb.isConnected) { document.removeEventListener('keydown', _galKey); return; }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); _galGo(-1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); _galGo(1); }
+    };
+    document.addEventListener('keydown', _galKey);
+  }
 
   let zoom = 1, tx = 0, ty = 0;
   let isPanning = false, panX = 0, panY = 0, startX = 0, startY = 0;
@@ -33857,10 +33904,10 @@ function _openMediaLightbox(src, meta) {
       const act = btn.dataset.act;
       if (act === 'zin') return setZoom(zoom * 1.25);
       if (act === 'zout') return setZoom(zoom / 1.25);
-      if (act === 'save') return _downloadLightboxImg(src, m.filename);
-      if (act === 'open') return window.open(src, '_blank', 'noopener');
-      if (act === 'forward') return _lightboxForward(src, m);
-      if (act === 'collect') return void toggleFavGif(src);
+      if (act === 'save') return _downloadLightboxImg(curSrc, m.filename);
+      if (act === 'open') return window.open(curSrc, '_blank', 'noopener');
+      if (act === 'forward') return _lightboxForward(curSrc, m);
+      if (act === 'collect') return void toggleFavGif(curSrc);
       if (act === 'more') { menu.hidden = !menu.hidden; return; }
     });
   });
@@ -33869,8 +33916,8 @@ function _openMediaLightbox(src, meta) {
       e.stopPropagation();
       menu.hidden = true;
       const act = item.dataset.act;
-      if (act === 'copy') return _lightboxCopy(src);
-      if (act === 'details') return _lightboxToggleDetails(details, img, src, m);
+      if (act === 'copy') return _lightboxCopy(curSrc);
+      if (act === 'details') return _lightboxToggleDetails(details, img, curSrc, m);
     });
   });
   document.addEventListener('click', function _outside(e){
@@ -34587,9 +34634,32 @@ async function _openBioMention(username) {
   setTimeout(() => { try { viewUserProfile(username); } catch (_) {} }, 30);
 }
 
+// A message that embeds a very large base64 data: URL (a 20–30 MB video/image
+// that failed to upload to Storage and fell back to inlining) will freeze the
+// whole client every time it renders — running ~40 regex passes over tens of
+// megabytes AND asking the browser to decode a giant data URL. That's how a DM
+// becomes permanently unopenable. Swap such tokens for a light [FTZBIG:…]
+// placeholder BEFORE the expensive passes. Normal messages hit the fast path.
+function _defuseHugeMedia(s) {
+  if (!s || s.length < 400000) return s;
+  return s.replace(/\[FTZ(IMG|VID|AUD|FILE|STICKER):[^\]]*\]/gi, (tok, kind) => {
+    if (tok.length > 1500000 && /data:[^;,]+;base64,/i.test(tok)) {
+      return '[FTZBIG:' + kind.toUpperCase() + '|' + (tok.length / 1024 / 1024).toFixed(1) + ']';
+    }
+    return tok;
+  });
+}
 function parseMD(s) {
   if (!s) return '';
+  s = _defuseHugeMedia(s);
   _augmentShortcodes();
+  // 0⁻⁻. A FTZ token that carried a very large base64 data: URL was swapped for
+  // a light [FTZBIG:…] placeholder by _defuseHugeMedia so it can't freeze the
+  // render — show a small "too big to display" card instead of the media.
+  s = s.replace(/\[FTZBIG:(IMG|VID|AUD|FILE|STICKER)\|([\d.]+)\]/g, (_, kind, mb) => {
+    const label = kind === 'VID' ? 'video' : kind === 'AUD' ? 'audio' : kind === 'FILE' ? 'file' : kind === 'STICKER' ? 'sticker' : 'image';
+    return '<div class="ftz-big-att"><svg viewBox="0 0 384 512" fill="currentColor"><path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/></svg><span>Large ' + label + ' (' + escapeHTML(mb) + ' MB) — too big to display</span></div>';
+  });
   // 0⁻. Spoilered ATTACHMENTS (||[FTZ…]||). Handle these BEFORE the generic
   // ||text|| pass: render the media normally, then wrap it in a proper blur +
   // "SPOILER" overlay. This also fixes the freeze/crash where the generic
@@ -40167,28 +40237,37 @@ function _fmtUploadSize(bytes) {
   if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(2) + ' MB';
   return (bytes / 1024).toFixed(2) + ' KB';
 }
-// A live "Uploading N Files — size" card shown in the chat while a message's
-// attachments upload. Discord-inspired but our own: file glyph, title, an
-// accent progress bar that fills per completed file, and a dismiss ✕. Returns
-// { step(done), done() }.
-function _showUploadProgress(containerId, count, totalBytes) {
+// A live upload indicator shown in the chat while a message's attachments
+// upload. Rendered as a real message row from the current user (avatar + name +
+// time + the caption), with the "Uploading N Files — size" card + accent
+// progress bar as the body. Discord-inspired but our own. Returns { step, done }.
+function _showUploadProgress(containerId, count, totalBytes, caption) {
   const cont = document.getElementById(containerId);
   if (!cont) return null;
-  const el = document.createElement('div');
-  el.className = 'ftz-upload-card';
-  el.innerHTML = `
-    <div class="fuc-icon"><svg viewBox="0 0 384 512" fill="currentColor"><path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/></svg></div>
-    <div class="fuc-body">
-      <div class="fuc-title">Uploading ${count} File${count > 1 ? 's' : ''} <span class="fuc-size">— ${_fmtUploadSize(totalBytes)}</span></div>
-      <div class="fuc-bar"><div class="fuc-bar-fill" style="width:8%"></div></div>
-    </div>
-    <button class="fuc-x" onclick="this.closest('.ftz-upload-card')?.remove()" aria-label="Cancel">&times;</button>`;
-  cont.appendChild(el);
+  const row = document.createElement('div');
+  row.className = 'msg-row msg-first ftz-upload-row';
+  const time = _fmtMsgTime(new Date().toISOString());
+  const av = buildAvatarHTML(CU?.pfp || null, CU?.displayName || CU?.username, 42);
+  const capHTML = (caption && caption.trim()) ? `<div class="msg-text">${parseMD(escapeHTML(caption.trim()))}</div>` : '';
+  row.innerHTML = `
+    <div class="msg-av-wrap"><div class="msg-av-inner">${av}</div></div>
+    <div class="msg-content-col">
+      <div class="msg-header"><span class="msg-author">${escapeHTML(CU?.displayName || CU?.username || 'You')}</span><span class="msg-timestamp">·  ${escapeHTML(time)}</span></div>
+      ${capHTML}
+      <div class="ftz-upload-card">
+        <div class="fuc-icon"><svg viewBox="0 0 384 512" fill="currentColor"><path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/></svg></div>
+        <div class="fuc-body">
+          <div class="fuc-title">Uploading ${count} File${count > 1 ? 's' : ''} <span class="fuc-size">— ${_fmtUploadSize(totalBytes)}</span></div>
+          <div class="fuc-bar"><div class="fuc-bar-fill" style="width:8%"></div></div>
+        </div>
+      </div>
+    </div>`;
+  cont.appendChild(row);
   try { scrollBottom(containerId, true); } catch (_) {}
-  const fill = el.querySelector('.fuc-bar-fill');
+  const fill = row.querySelector('.fuc-bar-fill');
   return {
     step(done) { if (fill) fill.style.width = Math.max(8, Math.round((done / count) * 100)) + '%'; },
-    done() { if (fill) fill.style.width = '100%'; setTimeout(() => el.remove(), 180); },
+    done() { if (fill) fill.style.width = '100%'; setTimeout(() => row.remove(), 180); },
   };
 }
 // Add a file to the pending tray (respecting the 10-file cap + size limit).
@@ -40359,7 +40438,10 @@ async function handleChatSend(context, chIdx) {
   if (_atts.length) {
     // Live upload-progress card in the chat while the files go up.
     const _upContainerId = context==='dm'?'dm-msgs':context==='gc'?'gc-msgs':('ch-msgs-'+curChannel);
-    const _upCard = _showUploadProgress(_upContainerId, _atts.length, _atts.reduce((s,a)=>s+(a.size||0),0));
+    const _upInputId = context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input';
+    const _upInpEl = document.getElementById(_upInputId);
+    const _upCaption = _upInpEl ? ((typeof _upInpEl.value === 'string' ? _upInpEl.value : (_upInpEl.textContent||''))).trim() : '';
+    const _upCard = _showUploadProgress(_upContainerId, _atts.length, _atts.reduce((s,a)=>s+(a.size||0),0), _upCaption);
     const tokens = [];
     let _upDone = 0;
     for (const att of _atts) {

@@ -16908,6 +16908,8 @@ function initFortizedUXResilience() {
   setTimeout(_ensureJoysterAccount, 4000);
   setTimeout(_ensureFortizedAccount, 4500);
   setTimeout(_ensureFortizedSafetyAccount, 5200);
+  // New accounts get the @fortized welcome DM once (needsWelcome flag).
+  setTimeout(() => { _maybeSendWelcome(); }, 6500);
   // Sync ignore list from Firebase
   setTimeout(_syncIgnoreListFromFirebase, 2000);
   // NSFW scanning disabled — no model preload needed
@@ -58115,6 +58117,42 @@ async function _ensureFortizedAccount() {
       if (needsUpdate) await FortizedSocial.saveUserObject(fortizedUser);
     }
   } catch(e) { console.warn('[System] Fortized account init failed', e); }
+}
+
+// ── Welcome DM from @fortized (auto-sent to every new user, once) ──
+const FORTIZED_WELCOME_TEXT = `Hey Fortizian! 👋
+Welcome to Fortized! You're officially one of us now.
+Helmet on, shield up. We got grass-touchers to fight! ⚔️
+If you need anything, the [Support Center](https://www.fortized.com/support/) has your back.
+
+Good luck out there!
+
+-Team Fortized`;
+// The WelcomeCard.png asset must live at the repo root (/WelcomeCard.png).
+async function sendFortizedWelcome(targetUsername) {
+  if (!targetUsername) return;
+  const msg = `[FTZIMG:WelcomeCard|/WelcomeCard.png]\n${FORTIZED_WELCOME_TEXT}`;
+  await FortizedSocial.sendDMMessage(FORTIZED_ACCOUNT, String(targetUsername).toLowerCase(), msg);
+}
+// Boot hook: brand-new accounts carry needsWelcome (set in register()). Send the
+// welcome DM once, then clear the flag so it never repeats. Existing users don't
+// have the flag, so they're never spammed.
+async function _maybeSendWelcome() {
+  if (!CU?.username || !CU.needsWelcome) return;
+  CU.needsWelcome = false; // clear up front so a fast re-boot can't double-send
+  try {
+    await _ensureFortizedAccount();
+    await sendFortizedWelcome(CU.username);
+    CU.welcomeSent = true;
+    await saveUser(true);
+  } catch(e) { console.warn('[Welcome] send failed', e?.message); CU.needsWelcome = true; }
+}
+// Console/debug: force-send the welcome DM to anyone. e.g. ftzSendWelcome("staw")
+async function ftzSendWelcome(username) {
+  if (!username) { console.error('[Welcome] Usage: ftzSendWelcome("username")'); return; }
+  const u = String(username).replace(/^@/, '').trim();
+  try { await _ensureFortizedAccount(); await sendFortizedWelcome(u); console.log('[Welcome] sent to @' + u); }
+  catch(e) { console.error('[Welcome] send failed', e?.message); }
 }
 
 // ── Fortized Safety Account (automod automation persona) ──

@@ -790,6 +790,7 @@ const FortizedSocial = (() => {
       notifications: [],
       radianceUntil: null,
       lastDaily: null,
+      needsWelcome: true, // triggers the @fortized welcome DM on first boot
       createdAt: new Date().toISOString()
     };
     const row = _userToRow(user);

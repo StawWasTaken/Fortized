@@ -12552,8 +12552,12 @@ body.ftz-picking-msg .msg-row[data-msgid]:hover{ background:var(--accent-dim); b
   cursor:pointer; transition:background .12s, color .12s;
 }
 .fpp-menu__item:hover{ background:rgba(255,255,255,.06); }
-.fpp-menu__item svg{ flex-shrink:0; fill:currentColor; color:var(--muted-light); opacity:.72; transition:opacity .12s; }
-.fpp-menu__item:hover svg{ opacity:1; }
+/* Menu-action glyphs tint with the row text — but NOT the status dots
+   (.ftz-sdot), whose green/idle/red/grey fill is baked in as an inline
+   attribute and must be preserved (was being greyed out by currentColor). */
+.fpp-menu__item svg:not(.ftz-sdot){ flex-shrink:0; fill:currentColor; color:var(--muted-light); opacity:.72; transition:opacity .12s; }
+.fpp-menu__item:hover svg:not(.ftz-sdot){ opacity:1; }
+.fpp-menu__item .ftz-sdot{ flex-shrink:0; }
 .fpp-menu__item--danger{ color:var(--red); }
 .fpp-menu__item--danger:hover{ background:rgba(235,69,69,.12); }
 .fpp-menu__item--danger svg{ color:var(--red); opacity:.85; }
@@ -12657,7 +12661,9 @@ body.ftz-picking-msg .msg-row[data-msgid]:hover{ background:var(--accent-dim); b
   display:flex; flex-direction:column;
   gap:0;
   padding:0;
-  border:none;
+  /* Subtle stroke around the card so it reads as a distinct panel against
+     the chat surface (requested — Discord/Guilded-style outlined sidebar). */
+  border:1px solid rgba(255,255,255,.10);
   /* Flush on the LEFT (no dark gap/"shadow" strip against the chat), small
      inset on top/right/bottom so the rounded card reads against the view. */
   margin:8px 8px 8px 0;
@@ -12694,6 +12700,11 @@ body.ftz-picking-msg .msg-row[data-msgid]:hover{ background:var(--accent-dim); b
 .fpp--dm .fpp__msg-input{ margin-top:auto; }
 .fpp--dm > *:last-child{ margin-bottom:0; }
 .fpp--dm.fpp--stroked{ box-shadow:none; }
+
+/* TEMPORARY: cursor feature disabled (native cursor only). <html> is tagged
+   .ftz-cursors-off by the boot IIFE while _CURSOR_FEATURE_DISABLED is true;
+   flipping the flag off removes the tag and this rule goes inert. */
+html.ftz-cursors-off .ftz-cursor-section-pc-only{ display:none !important; }
 
 /* ── Settings preview stack (three small stacked previews) ────────── */
 .fpp-settings-stack{

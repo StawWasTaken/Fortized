@@ -1155,9 +1155,9 @@ const FtzStatus = (() => {
     // All statuses: dark circle bg + colored icon centered
     const inner = Math.round(n * 0.65);
     const off = Math.round((n - inner) / 2);
-    return '<svg width="'+n+'" height="'+n+'" viewBox="0 0 '+n+' '+n+'" xmlns="http://www.w3.org/2000/svg">'
+    return '<svg class="ftz-sdot" width="'+n+'" height="'+n+'" viewBox="0 0 '+n+' '+n+'" xmlns="http://www.w3.org/2000/svg">'
       + '<circle cx="'+half+'" cy="'+half+'" r="'+half+'" fill="'+aroundColor+'"/>'
-      + '<svg x="'+off+'" y="'+off+'" width="'+inner+'" height="'+inner+'" viewBox="'+i.vb+'" fill="'+c+'">'+i.path+'</svg>'
+      + '<svg class="ftz-sdot" x="'+off+'" y="'+off+'" width="'+inner+'" height="'+inner+'" viewBox="'+i.vb+'" fill="'+c+'">'+i.path+'</svg>'
       + '</svg>';
   }
 
@@ -53128,6 +53128,13 @@ function _appearanceKey() {
 // pointer devices get the device default (the @media block in
 // styles.css gates the cursor rules so phones / tablets aren't
 // affected). PNG URLs live in _FTZ_CURSORS for the picker preview.
+// ⚠ TEMPORARY: the custom-cursor feature is disabled by request — the app
+// uses the device's native cursor only (no Fortized default cursors, no
+// user-uploaded custom cursors). This is a single-switch kill: while true,
+// the appliers clear any cursor styling and no-op, the boot IIFE tags <html>
+// so the picker section hides, and _applyFortizedCursor persists nothing.
+// Flip to false to fully restore the feature (no other change needed).
+const _CURSOR_FEATURE_DISABLED = true;
 const _FTZ_CURSORS = {
   knight:    {
     normal:    'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FTZCursors/FTZKnightCursor1.png',
@@ -53142,6 +53149,7 @@ const _FTZ_CURSORS = {
 // document to the user's uploaded image. We need a runtime style block
 // because the dataUrls are per-user — they can't live in styles.css.
 function _applyCustomCursorStyle(cursor) {
+  if (_CURSOR_FEATURE_DISABLED) cursor = null; // force native cursor
   let style = document.getElementById('ftz-custom-cursor-style');
   if (!cursor) { if (style) style.remove(); return; }
   if (!style) {
@@ -53168,6 +53176,10 @@ function _applyFortizedCursor(id, opts) {
   opts = opts || {};
   const html = document.documentElement;
   Object.keys(_FTZ_CURSORS).forEach(k => html.classList.remove('ftz-cursor-' + k));
+  // Feature temporarily disabled — clear any cursor styling and bail so the
+  // native cursor is used everywhere. Persists nothing (keeps CU.cursor as-is
+  // so the choice returns intact when the feature is switched back on).
+  if (_CURSOR_FEATURE_DISABLED) { _applyCustomCursorStyle(null); return; }
   // Custom cursor — look it up on CU.customCursors and inject style.
   if (typeof id === 'string' && id.startsWith('custom_')) {
     const customId = id.slice(7);
@@ -53502,12 +53514,14 @@ function _applyReducedMotion(on) {
 // the user object), so they re-apply once via the deferred call below.
 (() => {
   try {
+    if (_CURSOR_FEATURE_DISABLED) { document.documentElement.classList.add('ftz-cursors-off'); return; }
     const saved = localStorage.getItem('ftz_cursor') || 'knight';
     if (_FTZ_CURSORS[saved]) document.documentElement.classList.add('ftz-cursor-' + saved);
   } catch (_) {}
 })();
 setTimeout(() => {
   try {
+    if (_CURSOR_FEATURE_DISABLED) return;
     const saved = localStorage.getItem('ftz_cursor') || '';
     if (saved.startsWith('custom_')) _applyFortizedCursor(saved, { _skipPersist:true });
   } catch (_) {}

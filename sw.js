@@ -1,7 +1,7 @@
 // Fortized Service Worker
 // Handles push notifications + ensures fresh HTML is always served
 
-const SW_VERSION = '2026fix336';
+const SW_VERSION = '2026fix337';
 const CACHE_NAME = 'ftz-shell-' + SW_VERSION;
 
 // ── Install: skip waiting + wipe ALL caches so a stale versioned asset
@@ -50,25 +50,40 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Versioned assets (?v=...): NETWORK-FIRST with no-store. Cache-first
-  // was returning stale bytes on soft refresh whenever an upstream CDN
-  // briefly served the old payload for a new ?v= URL — once that landed
-  // in the SW cache, every subsequent soft reload kept getting the stale
-  // copy until a hard refresh. With { cache: 'no-store' } the browser's
-  // HTTP cache is bypassed too, so we always go to origin. SW cache is
-  // still written on every successful fetch so offline reloads keep
-  // working, but it's only ever read as a network fallback.
+  // Versioned assets (?v=...): CACHE-FIRST with background revalidation
+  // (stale-while-revalidate). These URLs are content-addressed by the ?v=
+  // cache-bust — a new deploy bumps ?v=, changing the URL, so a cached
+  // entry can NEVER be cross-version stale: a new version is always a cache
+  // miss and fetched fresh. This is the fix for the slow-load complaint —
+  // the old network-first { cache:'no-store' } path re-downloaded every
+  // asset (incl. the ~3.6 MB app.js) from origin on EVERY load, bypassing
+  // even the browser HTTP cache, so a cold-ish connection could hang long
+  // enough that the page never appeared.
+  //
+  // The old comment's worry — an upstream CDN briefly serving stale bytes
+  // for a NEW ?v= URL, then that poisoning the SW cache until a hard
+  // refresh — is handled here by the background revalidate: we serve the
+  // cached copy instantly, but ALWAYS re-fetch in the background and
+  // overwrite the cache, so any bad entry self-heals on the very next load
+  // instead of sticking. (The install handler also wipes all caches on
+  // every SW version bump, so nothing survives a deploy to begin with.)
   if (url.searchParams.has('v')) {
     event.respondWith(
-      fetch(req, { cache: 'no-store' })
-        .then(resp => {
-          if (resp && resp.ok) {
-            const clone = resp.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(req, clone)).catch(() => {});
-          }
-          return resp;
-        })
-        .catch(() => caches.match(req).then(c => c || Response.error()))
+      caches.match(req).then(cached => {
+        const network = fetch(req)
+          .then(resp => {
+            if (resp && resp.ok) {
+              const clone = resp.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(req, clone)).catch(() => {});
+            }
+            return resp;
+          })
+          .catch(() => cached || Response.error());
+        // Keep the background revalidation alive past the response so the
+        // cache is refreshed even when we answered from cache.
+        if (cached) event.waitUntil(network.catch(() => {}));
+        return cached || network;
+      })
     );
     return;
   }

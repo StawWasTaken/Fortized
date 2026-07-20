@@ -6960,14 +6960,23 @@ if (typeof document !== 'undefined') {
 function _buildJoysterUserContext() {
   const cs = CU?.customStatus;
   const csText = cs?.text || (typeof cs === 'string' ? cs : '');
+  // What the user is doing RIGHT NOW — the screen they're on, the bastion
+  // they're in, and any game they're playing — so Joyster's line is about the
+  // actual moment, not generic.
+  const _viewLabels = { home:'the home screen', dms:'their DMs', friends:'the friends list', discover:'browsing Discover', atelier:'the Atelier shop', bastion:'inside a bastion', admin:'the staff console' };
+  const _bName = (typeof curBastion !== 'undefined' && curBastion !== null && CU?.bastions?.[curBastion]?.name) ? CU.bastions[curBastion].name : null;
   return {
     username: CU?.username || null,
+    displayName: CU?.displayName || null,
     onyx: CU?.onyx ?? 0,
     radiance: !!(CU?.vip || CU?.radiance),
     status: CU?.status || 'unknown',
     customStatus: csText || null,
     friendCount: (CU?.friends || []).length,
     bastionCount: (CU?.bastions || []).length,
+    currentScreen: _viewLabels[_currentView] || _currentView || null,
+    inBastion: _bName,
+    playing: CU?.gameActivity?.name || null,
     recentHoverButton: _joysterHoverLabel,
     recentEvents: _joysterEvents.slice(-5).map(e => e.event),
     localTimeHour: new Date().getHours(),
@@ -15156,10 +15165,10 @@ function _renderViolationNotice(v, mode) {
     <span style="color:#5a6478;font-size:13px;flex-shrink:0;">${label}</span>
     <span style="color:#c8d0dc;font-size:13px;font-weight:600;text-align:right;word-break:break-word;">${val}</span></div>`;
   const lead = v.type === 'ban'
-      ? `Your account has been banned for violating the Fortized <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a>.`
+      ? `Your account has been banned for violating the Fortized <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap;">Terms of Use</a>.`
     : v.type === 'suspension'
-      ? `Your account has been temporarily suspended for violating the Fortized <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a>.`
-      : `You've received a warning for activity that goes against the Fortized <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a>.`;
+      ? `Your account has been temporarily suspended for violating the Fortized <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap;">Terms of Use</a>.`
+      : `You've received a warning for activity that goes against the Fortized <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap;">Terms of Use</a>.`;
   const appealBtn = `<button onclick="openAppealsPage('${v.id}')" style="padding:11px 22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#e6ebf2;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Appeals &amp; Violations</button>`;
   const logoutBtn = `<button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:11px 22px;background:${v.type==='ban'?'var(--red)':v.type==='suspension'?'#f59e0b':'rgba(255,255,255,.05)'};border:1px solid ${v.type==='warning'?'rgba(255,255,255,.12)':'transparent'};border-radius:10px;color:${v.type==='warning'?'#e6ebf2':v.type==='suspension'?'var(--rail)':'#fff'};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Log out</button>`;
   const closeBtn = isBlocking ? '' : `<button onclick="_ftzCloseViolationOverlay()" class="warning-ack-btn">Acknowledge</button>`;
@@ -15178,7 +15187,7 @@ function _renderViolationNotice(v, mode) {
       ${row('Reviewed by', escapeHTML(reviewer))}
     </div>
     <div style="font-size:12px;color:#5a6478;margin-bottom:22px;line-height:1.6;">
-      Review the <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a> and <a href="${FTZ_TOS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Service</a>.
+      Review the <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap;">Terms of Use</a> and <a href="${FTZ_TOS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap;">Terms of Service</a>.
     </div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
       ${appealBtn}

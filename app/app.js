@@ -15348,8 +15348,11 @@ function _ftzRefreshAppeals(focusId) { const o = document.getElementById('ftz-ap
 function _ftzAppealsPageHTML(focusId) {
   const list = _ftzMyViolations();
   const head = `<div style="max-width:820px;margin:0 auto;padding:34px 20px 10px;">
-    <button onclick="_ftzCloseAppeals()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#c8d0dc;font-size:13px;font-weight:600;padding:7px 14px;cursor:pointer;margin-bottom:20px;display:inline-flex;align-items:center;gap:7px;">
-      <svg width="13" height="13" viewBox="0 0 320 512" fill="currentColor"><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg>Back</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;">
+      <button onclick="_ftzCloseAppeals()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#c8d0dc;font-size:13px;font-weight:600;padding:7px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;">
+        <svg width="13" height="13" viewBox="0 0 320 512" fill="currentColor"><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg>Back</button>
+      <a href="/support/appeals${focusId ? '#' + encodeURIComponent(focusId) : ''}" target="_blank" rel="noopener noreferrer" style="color:var(--accent,#fff93e);text-decoration:none;font-size:12.5px;font-weight:600;white-space:nowrap;">Open on the web ↗</a>
+    </div>
     <div style="font-size:30px;font-weight:800;color:#fff;letter-spacing:-.5px;">Appeals &amp; Violations</div>
     <div style="font-size:14px;color:#8b95a8;margin-top:6px;line-height:1.6;max-width:640px;">Every moderation action on your account lives here permanently — even after a warning is acknowledged, a suspension ends, or a ban is lifted. You can appeal each one up to ${FTZ_MAX_APPEALS} times, and a real member of the Fortized staff reviews every appeal.</div>
   </div>`;

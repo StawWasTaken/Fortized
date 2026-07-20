@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appeals & Violations - Fortized</title>
+<meta name="description" content="View your Fortized moderation history and appeal any action.">
+<meta name="theme-color" content="#fff93e">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="/Fortized icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/fortized-2026.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/FortizedSocial-supabase.js?v=2026fix344"></script>
+<script src="/firebase-compat-shim.js?v=2026fix344"></script>
+<style>
+.page-top { position: relative; overflow: hidden; }
+.page-top::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(160deg, rgba(8,10,15,.96) 0%, rgba(8,10,15,.8) 50%, rgba(8,10,15,.96) 100%),
+    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner.png') center/cover;
+  z-index: -1;
+}
+.av-wrap { max-width: 820px; margin: 0 auto; padding: 0 20px 80px; }
+.av-intro { font-size: 14.5px; color: #9aa5b4; line-height: 1.65; max-width: 640px; margin: 10px 0 30px; }
+.av-card {
+  background: #13161d; border: 1px solid #252b3a; border-radius: 16px;
+  padding: 20px 22px; margin-bottom: 16px;
+}
+.av-card.focused { border-color: rgba(255,249,62,.4); box-shadow: 0 0 0 1px rgba(255,249,62,.22); }
+.av-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.av-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.av-title-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.av-title { font-size: 16px; font-weight: 800; color: #fff; font-family: 'Syne', sans-serif; }
+.av-chip { font-size: 11px; font-weight: 700; border-radius: 100px; padding: 3px 10px; }
+.av-sub { font-size: 12px; color: #5a6478; margin-top: 2px; }
+.av-field { font-size: 13.5px; color: #c8d0dc; line-height: 1.55; margin-bottom: 10px; }
+.av-field .lbl { color: #5a6478; }
+.av-id { font-family: ui-monospace, monospace; font-size: 11px; color: #5a6478; }
+.av-appeal { background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 11px 13px; margin-top: 8px; }
+.av-appeal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; }
+.av-box { margin-top: 12px; border-radius: 10px; padding: 11px 13px; font-size: 12.5px; line-height: 1.55; }
+.av-ta {
+  width: 100%; min-height: 84px; resize: vertical; background: #0e1117;
+  border: 1px solid #252b3a; border-radius: 10px; color: #e6ebf2;
+  font-size: 13px; line-height: 1.55; padding: 11px 13px; font-family: inherit; box-sizing: border-box;
+}
+.av-submit {
+  padding: 9px 18px; background: #fff93e; border: none; border-radius: 9px;
+  color: #0b0d12; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.av-submit:disabled { opacity: .5; cursor: default; }
+.av-state { text-align: center; padding: 44px 24px; color: #8b95a8; }
+.av-link { color: var(--accent, #fff93e); text-decoration: none; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<section class="page-top">
+  <div class="container">
+    <a href="/support" class="back-link"><svg><use href="#i-arrow-left"/></svg> Back to Support</a>
+    <div class="eyebrow blue">Account</div>
+    <h1>Appeals &amp; <span class="pop">Violations</span>.</h1>
+    <p class="lede">Your full moderation history — kept permanently, even after an action ends.</p>
+  </div>
+</section>
+
+<div class="av-wrap">
+  <p class="av-intro">Every warning, suspension, or ban on your account lives here for transparency — even after a warning is acknowledged, a suspension ends, or a ban is lifted. You can appeal each one up to 3 times, and a real member of the Fortized staff reviews every appeal.</p>
+  <div id="appeals-root"><div class="av-state">Loading your record…</div></div>
+</div>
+
+<script src="/css/fortized-2026.js"></script>
+<script>
+const MAX_APPEALS = 3;
+const TERMS_URL = 'https://www.fortized.com/legal/terms-of-use';
+const SUPPORT_URL = 'https://www.fortized.com/support/contact';
+const VIO_META = {
+  warning:    { color: '#f59e0b', label: 'Warning',           icon: '<svg viewBox="0 0 512 512" fill="#f59e0b" width="19" height="19"><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.4 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.6-34.7-20.1s-7-27.7 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg>' },
+  suspension: { color: '#f59e0b', label: 'Account Suspended', icon: '<svg viewBox="0 0 512 512" fill="#f59e0b" width="19" height="19"><path d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></svg>' },
+  ban:        { color: '#f87171', label: 'Account Banned',    icon: '<svg viewBox="0 0 512 512" fill="#f87171" width="19" height="19"><path d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z"/></svg>' },
+};
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+function fmtDate(d) { if (!d) return 'Unknown'; const dt = new Date(d); if (isNaN(dt)) return 'Unknown'; const p = n => String(n).padStart(2,'0'); return `${p(dt.getDate())}/${p(dt.getMonth()+1)}/${dt.getFullYear()} — ${p(dt.getHours())}:${p(dt.getMinutes())}`; }
+function reviewerLabel(r) {
+  if (!r) return 'a member of the Fortized staff';
+  if (r.type === 'automated' || r.automated) return 'an automated safety system';
+  if (r.role === 'superadmin') return 'a member of the Fortized staff';
+  return r.name || r.displayName || 'a member of the Fortized staff';
+}
+function statusChip(v) {
+  let label, color;
+  if (v.type === 'ban') { const lifted = v.active === false; label = lifted ? 'Lifted' : 'Active'; color = lifted ? '#3ecf6e' : '#f87171'; }
+  else if (v.type === 'suspension') { const ended = (v.until && new Date(v.until) <= new Date()) || v.active === false; label = ended ? 'Ended' : 'Active'; color = ended ? '#8b95a8' : '#f59e0b'; }
+  else { label = 'On record'; color = '#8b95a8'; }
+  return `<span class="av-chip" style="color:${color};background:${color}1a;border:1px solid ${color}33;">${label}</span>`;
+}
+function appealStatusMeta(s) { return s === 'accepted' ? { label:'Accepted', color:'#3ecf6e' } : s === 'declined' ? { label:'Declined', color:'#f87171' } : { label:'Under review', color:'#f59e0b' }; }
+
+let USER = null, USER_OBJ = null;
+
+async function boot() {
+  const root = document.getElementById('appeals-root');
+  for (let i = 0; i < 50 && !(window.FortizedSocial && FortizedSocial.getCurrentUsername); i++) await new Promise(r => setTimeout(r, 100));
+  if (!window.FortizedSocial || !FortizedSocial.getCurrentUsername) { root.innerHTML = `<div class="av-state">Couldn’t connect to Fortized. Please refresh.</div>`; return; }
+  try { USER = await FortizedSocial.getCurrentUsername(); } catch (_) {}
+  if (!USER) {
+    root.innerHTML = `<div class="av-card"><div class="av-state" style="padding:34px 20px;">You need to be signed in to view your record.<br><br><a class="av-link" href="/login">Log in</a> to continue.</div></div>`;
+    return;
+  }
+  await renderAll();
+}
+
+function collect(u) {
+  const out = [];
+  const arr = (u && (Array.isArray(u.violations) ? u.violations : (u.raw && Array.isArray(u.raw.violations) ? u.raw.violations : []))) || [];
+  arr.forEach(v => out.push(v));
+  const d = (u && (u.disciplinary || (u.raw && u.raw.disciplinary))) || {};
+  (d.suspensions || []).forEach((s, i) => out.push({ id: 'legacy-s-' + i, type: 'suspension', reason: s.reason || 'a suspension', at: s.issuedAt || s.suspendedAt || s.at || null, until: s.until || null, active: !(s.until && s.until <= Date.now()), reviewer: { type: 'staff' }, appeals: Array.isArray(s.appeals) ? s.appeals : [], legacy: true }));
+  (d.warnings || []).forEach((w, i) => out.push({ id: 'legacy-w-' + i, type: 'warning', reason: w.reason || 'a violation', at: w.issuedAt || w.at || null, until: w.expiresAt || null, active: !(w.expiresAt && w.expiresAt <= Date.now()), reviewer: { type: 'staff' }, appeals: Array.isArray(w.appeals) ? w.appeals : [], legacy: true }));
+  return out.sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0));
+}
+
+function card(v) {
+  const m = VIO_META[v.type] || VIO_META.warning;
+  const appeals = v.appeals || [];
+  const remaining = Math.max(0, MAX_APPEALS - appeals.length);
+  const anyAccepted = appeals.some(a => a.status === 'accepted');
+  const pending = appeals.some(a => a.status === 'pending');
+  const thread = appeals.map((a, i) => {
+    const sm = appealStatusMeta(a.status);
+    return `<div class="av-appeal">
+      <div class="av-appeal-head"><span style="font-size:12px;font-weight:700;color:#c8d0dc;">Appeal ${i + 1} of ${MAX_APPEALS}</span><span style="font-size:11px;font-weight:700;color:${sm.color};">${sm.label}</span></div>
+      <div style="font-size:12.5px;color:#9aa5b4;line-height:1.55;white-space:pre-wrap;word-break:break-word;">${esc(a.text)}</div>
+      <div style="font-size:11px;color:#5a6478;margin-top:6px;">Submitted ${fmtDate(a.at)}${a.decidedAt ? ' · Decided ' + fmtDate(a.decidedAt) + ' by a member of the Fortized staff' : ''}</div>
+      ${a.note ? `<div style="font-size:12px;color:#c8d0dc;margin-top:6px;border-top:1px solid rgba(255,255,255,.06);padding-top:6px;"><span style="color:#5a6478;">Staff response:</span> ${esc(a.note)}</div>` : ''}
+    </div>`;
+  }).join('');
+  let box = '';
+  if (v.legacy) box = `<div class="av-box" style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);color:#8b95a8;">This is a historical record kept for transparency. If you believe it's in error, <a class="av-link" href="${SUPPORT_URL}" target="_blank" rel="noopener">contact Support</a>.</div>`;
+  else if (anyAccepted) box = `<div class="av-box" style="background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;">This appeal was accepted. No further action is needed.</div>`;
+  else if (pending) box = `<div class="av-box" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#f59e0b;">An appeal is under review. Please wait for a staff decision before submitting another.</div>`;
+  else if (remaining > 0) box = `<div style="margin-top:12px;">
+      <textarea class="av-ta" id="ta-${esc(v.id)}" maxlength="1000" placeholder="Explain why this action should be reconsidered. Be honest and specific — a real person reads this."></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:11.5px;color:#5a6478;">${remaining} of ${MAX_APPEALS} appeals remaining</span>
+        <button class="av-submit" onclick="submitAppeal('${esc(v.id)}')">Submit appeal</button>
+      </div></div>`;
+  else box = `<div class="av-box" style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.16);color:#8b95a8;">You've used all ${MAX_APPEALS} appeals for this violation and each was declined. If you truly can't move forward, you may <a class="av-link" href="${SUPPORT_URL}" target="_blank" rel="noopener">contact Support</a> — though tickets about closed appeals are only accepted in rare cases. Otherwise, the decision stands.</div>`;
+
+  return `<div class="av-card" data-vio="${esc(v.id)}" id="${esc(v.id)}">
+    <div class="av-head">
+      <div class="av-icon" style="background:${m.color}14;border:1px solid ${m.color}2e;">${m.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="av-title-row"><span class="av-title">${m.label}</span>${statusChip(v)}</div>
+        <div class="av-sub">${fmtDate(v.at)} · Reviewed by ${esc(reviewerLabel(v.reviewer))} · <span class="av-id">${esc(v.id)}</span></div>
+      </div>
+    </div>
+    <div class="av-field"><span class="lbl">Reason:</span> ${esc(v.reason || 'Not specified')}</div>
+    ${v.note ? `<div class="av-field"><span class="lbl">Moderator note:</span> ${esc(v.note)}</div>` : ''}
+    ${v.until ? `<div class="av-field"><span class="lbl">${v.type === 'suspension' ? 'Access restored' : 'On record until'}:</span> ${fmtDate(v.until)}</div>` : ''}
+    ${thread}
+    ${box}
+  </div>`;
+}
+
+async function renderAll() {
+  const root = document.getElementById('appeals-root');
+  try { USER_OBJ = await FortizedSocial.getUserByName(USER, { noCache: true, columns: '*' }); } catch (_) { USER_OBJ = null; }
+  const list = collect(USER_OBJ);
+  if (!list.length) {
+    root.innerHTML = `<div class="av-card"><div class="av-state" style="padding:40px 20px;">
+      <div style="width:52px;height:52px;border-radius:15px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;"><svg width="24" height="24" viewBox="0 0 512 512" fill="#3ecf6e"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg></div>
+      <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;font-family:'Syne',sans-serif;">Your record is clean</div>
+      You have no warnings, suspensions, or bans.</div></div>`;
+    return;
+  }
+  root.innerHTML = list.map(card).join('');
+  const id = decodeURIComponent(location.hash.slice(1));
+  if (id) { const el = document.querySelector('[data-vio="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]'); if (el) { el.classList.add('focused'); setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 80); } }
+}
+
+async function submitAppeal(vioId) {
+  const ta = document.getElementById('ta-' + vioId);
+  const text = (ta && ta.value || '').trim();
+  if (!text) { alert('Please write your appeal first.'); return; }
+  const arr = (USER_OBJ && (Array.isArray(USER_OBJ.violations) ? USER_OBJ.violations : (USER_OBJ.raw && USER_OBJ.raw.violations))) || [];
+  const v = arr.find(x => x.id === vioId);
+  if (!v) { alert('This violation is no longer on your record.'); return; }
+  if ((v.appeals || []).length >= MAX_APPEALS) { alert('You have used all 3 appeals for this violation.'); return; }
+  if ((v.appeals || []).some(a => a.status === 'pending')) { alert('An appeal is already under review.'); return; }
+  const btn = ta.parentElement.querySelector('.av-submit'); if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+  v.appeals = v.appeals || [];
+  const appeal = { id: 'AP-' + Date.now().toString(36).toUpperCase(), text: text.slice(0, 1000), at: new Date().toISOString(), status: 'pending', decidedBy: null, decidedAt: null, note: '' };
+  v.appeals.push(appeal);
+  // Ensure the array we mutated is the one on the user object we save.
+  if (USER_OBJ && !Array.isArray(USER_OBJ.violations) && USER_OBJ.raw && Array.isArray(USER_OBJ.raw.violations)) USER_OBJ.violations = USER_OBJ.raw.violations;
+  try {
+    await FortizedSocial.saveUserObject(USER_OBJ);
+    if (FortizedSocial.adminGetAppealsQueue && FortizedSocial.adminSaveAppealsQueue) {
+      const q = (await FortizedSocial.adminGetAppealsQueue()) || [];
+      q.push({ username: USER, vioId: v.id, appealId: appeal.id, type: v.type, reason: v.reason, text: appeal.text.slice(0, 400), attempt: v.appeals.length, at: appeal.at, status: 'pending' });
+      await FortizedSocial.adminSaveAppealsQueue(q);
+    }
+  } catch (e) { alert('Could not submit your appeal. Please try again in a moment.'); if (btn) { btn.disabled = false; btn.textContent = 'Submit appeal'; } return; }
+  await renderAll();
+}
+
+boot();
+</script>
+</body>
+</html>

@@ -33501,71 +33501,88 @@ const _AUTOMOD_REPHRASES = [
   "I declared my love for a mailbox and it rejected me 📮",
 ];
 
-// Real threat patterns (must be lenient - only severe credible threats)
+// Real threat patterns. DELIBERATELY NARROW: only credible, first-person,
+// person-directed threats of lethal or sexual violence (and doxx/swat). This
+// is NOT content moderation — normal, edgy, or angry messages must never match.
+// Every pattern requires "I will …" intent aimed at "you/them", so ordinary
+// speech scores 0 and is left completely alone.
 const _AUTOMOD_THREAT_PATTERNS = [
-  { pattern: /i[' ]?(?:will|m going to|ma?m)\s+(?:doxx?|expose)\s+you/i, weight: 0.9 },
-  { pattern: /i[' ]?(?:will|m going to)\s+(?:come\s+to\s+your\s+(?:house|home|place)|kill\s+you|end\s+your\s+(?:life|bloodline|family))/i, weight: 0.95 },
-  { pattern: /(?:i[' ]?ll|going to)\s+(?:kill|murder|attack|assault)\s+you\s+(?:later|tomorrow|soon|at\s+school)/i, weight: 0.85 },
-  { pattern: /your\s+(?:address|phone|email|dox)\s+(?:is|belongs)\s+to\s+me/i, weight: 0.8 },
-  { pattern: /(?:i|we)[' ]?(?:have|know)\s+your\s+(?:address|real\s+name|location)\b/i, weight: 0.75 },
-  { pattern: /swatting\s+you/i, weight: 0.95 },
-  { pattern: /(?:i[' ]?m|going to)\s+(?:snitch|drop\s+dime)\s+on\s+you/i, weight: 0.5 },
+  // Direct threats to kill / sexually assault a person — the only things that
+  // can act on a single message (topWeight >= 0.95).
+  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|mma?|['’ ]?a|\s+gonna|\s+finna)\s+(?:kill|murder|behead|stab|shoot|strangle|slaughter)\s+(?:you|u|him|her|them|y['’]?all|your\s+\w+)\b/i, weight: 0.95 },
+  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|mma?|['’ ]?a|\s+gonna|\s+finna)\s+rape\s+(?:you|u|him|her|them|y['’]?all)\b/i, weight: 0.95 },
+  // Scheduled / located violence — credible but usually needs a little context.
+  { pattern: /(?:i['’ ]?ll|i['’ ]?m going to|going to|gonna|finna)\s+(?:kill|murder|attack|assault|hurt|beat)\s+(?:you|u)\s+(?:later|tomorrow|soon|tonight|after\s+\w+|at\s+(?:school|work|home))/i, weight: 0.9 },
+  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|\s+gonna|\s+finna)\s+(?:come\s+to\s+your\s+(?:house|home|place|address)|end\s+your\s+(?:life|bloodline|family))/i, weight: 0.9 },
+  // Doxxing / swatting a person.
+  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|\s+gonna|\s+finna)\s+(?:doxx?|swat)\s+(?:you|u|him|her|them)\b/i, weight: 0.85 },
+  { pattern: /\bswatting\s+(?:you|u|him|her|them)\b/i, weight: 0.85 },
 ];
 
-// Check if text matches any rephrase trigger
-function _checkAutomodRephrase(text) {
-  if (!text) return null;
-  for (const trigger of _AUTOMOD_REPHRASE_TRIGGERS) {
-    if (trigger.test(text)) {
-      const randomRephrase = _AUTOMOD_REPHRASES[Math.floor(Math.random() * _AUTOMOD_REPHRASES.length)];
-      return randomRephrase;
-    }
-  }
-  return null;
-}
+// Content rephrasing / auto-moderation of what people say has been REMOVED —
+// Fortized no longer rewrites, replaces, or silently alters message content.
+// Kept as a no-op that always returns null so existing callers stay valid;
+// the automod now acts ONLY on genuinely severe, credible threats via
+// _checkAutomodThreat below. (_AUTOMOD_REPHRASE_TRIGGERS / _AUTOMOD_REPHRASES
+// above are now unused dead data.)
+function _checkAutomodRephrase() { return null; }
 
 // Check if text is a severe real threat (analyze context)
 function _checkAutomodThreat(text, contextMessages = []) {
   if (!text) return { isThreat: false, reason: null, context: [] };
   const lowerText = text.toLowerCase();
   let totalWeight = 0;
+  let topWeight = 0;
   let matchedPatterns = [];
-  
+
   // Check patterns
   for (const { pattern, weight } of _AUTOMOD_THREAT_PATTERNS) {
     if (pattern.test(text)) {
       totalWeight += weight;
+      if (weight > topWeight) topWeight = weight;
       matchedPatterns.push(pattern.source);
     }
   }
-  
+
+  // No credible threat pattern matched → the message is left entirely alone.
+  // (This is the common case for essentially every normal message.)
+  if (!matchedPatterns.length) {
+    return { isThreat: false, reason: null, context: [], score: 0 };
+  }
+
   // Context analysis: look at previous messages for escalation
   const recentMessages = contextMessages.slice(-20);
   let escalationCount = 0;
   let threatLanguageCount = 0;
-  
+
   for (const msg of recentMessages) {
     const msgText = (msg.text || '').toLowerCase();
-    if (/threat|kill|die|attack|harm|doxx/i.test(msgText)) {
+    if (/\b(?:kill|murder|rape|die|stab|shoot|dox|swat)\b/i.test(msgText)) {
       threatLanguageCount++;
       if (msgText.includes(text.toLowerCase())) {
         escalationCount++;
       }
     }
   }
-  
-  // Only trigger on high combined score (severe content + context)
+
   const finalScore = totalWeight + (escalationCount * 0.1) + (threatLanguageCount * 0.05);
-  
-  if (finalScore >= 0.8) {
+
+  // Act ONLY when a genuinely severe threat is present. Two ways to qualify:
+  //   • a top-tier direct threat (kill/rape "you") on its own, or
+  //   • a lesser credible threat that is corroborated by context (score ≥ 1.0).
+  // Everything else — including a single borderline match with no context —
+  // is ignored. Context matters, exactly as intended.
+  const act = topWeight >= 0.95 || finalScore >= 1.0;
+  if (act) {
     return {
       isThreat: true,
-      reason: matchedPatterns.join(', '),
+      reason: 'a credible threat of violence',
+      patterns: matchedPatterns,
       context: recentMessages.map(m => m.text || ''),
       score: finalScore
     };
   }
-  
+
   return { isThreat: false, reason: null, context: [], score: finalScore };
 }
 
@@ -33580,17 +33597,9 @@ function runAutomod(text, contextMessages = []) {
     logged: false
   };
   
-  // Check for severe content that needs rephrasing
-  const rephrase = _checkAutomodRephrase(text);
-  if (rephrase) {
-    result.rephrased = rephrase;
-    result.isRephrased = true;
-    // Log for admin review
-    _logAutomodAction('rephrase', text, rephrase, null);
-    result.logged = true;
-    return result;
-  }
-  
+  // Rephrasing removed — no message content is ever altered. Only genuinely
+  // severe, credible threats are acted on (context-aware) below.
+
   // Check for real threats (context-aware)
   const threatCheck = _checkAutomodThreat(text, contextMessages);
   if (threatCheck.isThreat) {
@@ -33604,14 +33613,19 @@ function runAutomod(text, contextMessages = []) {
     // scaled by score). Wrapped in try/catch so an automod send failure
     // can never block the original message path.
     try {
-      const _suspendMinutes = threatCheck.score >= 1.2 ? 60
-                            : threatCheck.score >= 1.0 ? 30
-                            : threatCheck.score >= 0.9 ? 15
+      // Automod may WARN or SUSPEND — it can NEVER ban. A suspension is
+      // reserved for clearly escalated cases (a high score built from a
+      // credible threat plus corroborating context); a lone credible threat
+      // gets a warning notice only.
+      const _reason = threatCheck.reason || 'a credible threat of violence';
+      const _suspendMinutes = threatCheck.score >= 1.4 ? 60
+                            : threatCheck.score >= 1.2 ? 30
+                            : threatCheck.score >= 1.15 ? 15
                             : 0;
       if (_suspendMinutes && CU?.username) {
-        applyFortizedSafetyChatSuspension(CU.username, _suspendMinutes, 'Automated safety check').catch(()=>{});
+        applyFortizedSafetyChatSuspension(CU.username, _suspendMinutes, _reason).catch(()=>{});
       } else if (CU?.username) {
-        sendFortizedSafetyNotice(CU.username, { reason: 'Automated safety check' }).catch(()=>{});
+        sendFortizedSafetyNotice(CU.username, { reason: _reason, action: 'warning' }).catch(()=>{});
       }
     } catch (_) {}
   }
@@ -34733,6 +34747,14 @@ function parseMD(s) {
       if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="bastion" data-bastion-idx="${bi}" draggable="false" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
     }
     return match; // keep original if unknown
+  });
+  // 0ab. Markdown links [label](https://url) → a real inline anchor. Runs
+  // before the bare-URL / embed passes so an explicit label wins over
+  // auto-embedding; the later URL passes skip the href because their
+  // negative lookbehind excludes a URL sitting right after a double-quote.
+  s = s.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, (_m, label, url) => {
+    const safe = url.replace(/"/g, '&quot;');
+    return '<a href="' + safe + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">' + label + '</a>';
   });
   // 0ab. Emoticon conversion (if enabled)
   if (!_globalSettings?.disableEmoticonConversion) {
@@ -57674,23 +57696,27 @@ async function _ensureFortizedSafetyAccount() {
 // ── Automod helpers — send notices + suspend chat from @fortizedsafety ──
 // Sends a templated message to a user from the Fortized Safety automation
 // account. Used by the automod when a rule fires.
-async function sendFortizedSafetyNotice(targetUsername, { reason, until, articleId } = {}) {
+async function sendFortizedSafetyNotice(targetUsername, { reason, until, articleId, action } = {}) {
   if (!targetUsername) return;
+  // Real destinations (these pages exist). The dedicated Appeals & Violations
+  // page is coming — until then the appeal link points at Support.
+  const RULES_URL   = 'https://www.fortized.com/legal/terms-of-use';
+  const APPEAL_URL  = 'https://www.fortized.com/support/contact';
+  const reasonBit = reason ? ` for ${reason}` : '';
+  // Tight, human, single-spaced (no blank lines between sentences). Links are
+  // real markdown links parseMD renders inline.
   const lines = [];
-  lines.push('Hello,');
-  lines.push('');
   if (until) {
     const _t = new Date(until).toLocaleString();
-    lines.push(`Fortized has limited your access to some features until ${_t}.${reason ? ' Reason: ' + reason + '.' : ''} You may click here to learn more (/help/safety${articleId ? '#'+articleId : ''}).`);
-  } else if (reason) {
-    lines.push(`Fortized has flagged your recent activity. Reason: ${reason}. You may click here to learn more (/help/safety${articleId ? '#'+articleId : ''}).`);
+    lines.push(`Hey — this is the Fortized Safety team.`);
+    lines.push(`We've paused some of your chat features${reasonBit}. You'll be back to normal on ${_t}.`);
   } else {
-    lines.push('Fortized has flagged your recent activity. You may click here to learn more (/help/safety).');
+    lines.push(`Hey — this is the Fortized Safety team.`);
+    lines.push(`We flagged one of your recent messages${reasonBit}. Consider this a heads-up${action === 'warning' ? ' (a warning, nothing more for now)' : ''} — no need to panic.`);
   }
-  lines.push('');
-  lines.push('If you would like to appeal this decision, you may do so here (/help/appeals).');
-  lines.push('');
-  lines.push('Fortized Safety');
+  lines.push(`Here's what our rules say: [Fortized Terms of Use](${RULES_URL}).`);
+  lines.push(`Think we got this wrong? [Appeal it here](${APPEAL_URL}) — a real person on our team reads every appeal.`);
+  lines.push(`— Fortized Safety`);
   const text = lines.join('\n');
   try {
     await FortizedSocial.sendDMMessage(FORTIZED_SAFETY_ACCOUNT, targetUsername, text);
@@ -57745,6 +57771,36 @@ async function testFortizedSafetyMessage(targetUsername, messageText) {
   } catch(e) {
     console.error('[Test] Failed to send test message:', e?.message);
   }
+}
+
+// ── Test helpers: run the REAL automod against yourself + unpunish ──
+// Console usage:
+//   ftzSimulateAutomod("i'm going to kill you tomorrow at school")  → triggers
+//   ftzSimulateAutomod("hey how's it going")                        → no action
+//   ftzClearMyAutomod()                                             → un-suspend self
+async function ftzSimulateAutomod(text) {
+  if (!text) { console.error('[Test] Usage: ftzSimulateAutomod("message text")'); return; }
+  await _ensureFortizedSafetyAccount().catch(()=>{});
+  const r = runAutomod(String(text), []);
+  const t = r.threat;
+  if (t?.isThreat) {
+    const suspend = t.score >= 1.15;
+    console.log(`[Test] FLAGGED — ${suspend ? 'SUSPEND' : 'WARN'} (score ${t.score?.toFixed(2)}, ${t.reason}). @fortizedsafety notice sent to your DMs.`);
+  } else {
+    console.log('[Test] Not flagged — no action. This is the expected result for normal messages.');
+  }
+  return r;
+}
+async function ftzClearMyAutomod() {
+  if (!CU?.username) { console.error('[Test] Not signed in.'); return; }
+  CU.chatSuspendedUntil = null;
+  CU.chatSuspendedReason = null;
+  try {
+    const u = await FortizedSocial.getUserByName(CU.username);
+    if (u) { u.chatSuspendedUntil = null; u.chatSuspendedReason = null; await FortizedSocial.saveUserObject(u); }
+  } catch (e) { console.warn('[Test] DB clear failed', e?.message); }
+  try { saveLocal(); } catch(_){}
+  console.log('[Test] Your automod chat-suspension has been cleared (local + DB). Re-send a message to confirm.');
 }
 
 // ── Greeting action button — appears in new DM conversations ──

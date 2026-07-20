@@ -2692,6 +2692,19 @@ const FortizedSocial = (() => {
   }
   async function adminUnsuspendUser(username) {
     await sb.from('users').update({ suspension: null, suspended_until: null }).eq('username', norm(username));
+    // Also lift any AUTOMOD chat-suspension. chatSuspendedUntil rides on the
+    // user object (raw JSONB), separate from the formal suspension columns, so
+    // the column-level update above won't clear it. Round-trip the user object
+    // the same way applyFortizedSafetyChatSuspension set it so staff "Unsuspend"
+    // (and the console unpunish path) fully frees the account.
+    try {
+      const u = await getUserByName(username);
+      if (u && (u.chatSuspendedUntil || u.chatSuspendedReason)) {
+        u.chatSuspendedUntil = null;
+        u.chatSuspendedReason = null;
+        await saveUserObject(u);
+      }
+    } catch (_) {}
   }
 
   // -- Warnings (stored on user row) --

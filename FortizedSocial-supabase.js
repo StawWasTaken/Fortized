@@ -2731,6 +2731,15 @@ const FortizedSocial = (() => {
     await _adminKVSet('nsfw_queue', queue);
   }
 
+  // -- Appeals Queue (lightweight pointers to pending appeals; no user scans) --
+  async function adminGetAppealsQueue() {
+    _cacheDel('akv:appeals_queue');
+    return (await _adminKVGet('appeals_queue')) || [];
+  }
+  async function adminSaveAppealsQueue(queue) {
+    await _adminKVSet('appeals_queue', Array.isArray(queue) ? queue.slice(-500) : []);
+  }
+
   // -- Staff --
   async function adminGetStaff() {
     return (await _adminKVGet('staff')) || { admins: [], moderators: [] };
@@ -3305,6 +3314,7 @@ const FortizedSocial = (() => {
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
     startGCPolling, stopGCPolling,
+    adminGetAppealsQueue, adminSaveAppealsQueue,
     startFriendRequestPolling, stopFriendRequestPolling, startVoiceRoomPolling, stopVoiceRoomPolling,
     initSocket, getSocket, isSocketReady, isConnected, socketEmit,
     joinRoom, leaveRoom, queryPresence, disconnectSocket,

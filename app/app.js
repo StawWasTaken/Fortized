@@ -14975,100 +14975,234 @@ function _renderOffendingContent(data) {
   return html;
 }
 
-function _showBanScreen(ban) {
-  if (!ban || typeof ban !== 'object') ban = {};
-  const bannedAt = ban.bannedAt || ban.at || ban.date || null;
-  const reason = ban.reason || ban.note || '';
-  const category = ban.category || 'Account behavior';
-  const bannedBy = ban.bannedBy || ban.by || 'Fortized Moderation';
-  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:var(--rail);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);">
-    <div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
-      <div style="width:68px;height:68px;border-radius:18px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="11" stroke="#f87171" stroke-width="2" fill="none"/>
-          <path d="M8 8l8 8M16 8l-8 8" stroke="#f87171" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+// ═══════════════════════════════════════════════════════════════════════════
+// VIOLATIONS & APPEALS  —  one model, one card, one history page.
+// A "violation" is any moderation action taken on a user (warning / suspension /
+// ban), whether by a staff member or the automod. It is the single source of
+// truth behind: the blocking/dismissible CARD the user sees, the DM the
+// @fortizedsafety account posts for automod actions, and the gated
+// "Appeals & Violations" page that keeps the FULL history forever (even after
+// a warning is acknowledged, a suspension ends, or a ban is lifted).
+// Stored as an array on the user object (rides the `raw` JSONB column).
+// ═══════════════════════════════════════════════════════════════════════════
+const FTZ_TERMS_URL   = 'https://www.fortized.com/legal/terms-of-use';
+const FTZ_TOS_URL     = 'https://www.fortized.com/legal/terms-of-service';
+const FTZ_SUPPORT_URL = 'https://www.fortized.com/support/contact';
+const FTZ_MAX_APPEALS = 3;
+
+// FontAwesome solid SVG glyphs, per violation type.
+const _VIO_ICONS = {
+  warning:    { color:'#f59e0b', vb:'0 0 512 512', path:'M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.4 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.6-34.7-20.1s-7-27.7 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z' },
+  suspension: { color:'#f59e0b', vb:'0 0 512 512', path:'M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z' },
+  ban:        { color:'#f87171', vb:'0 0 512 512', path:'M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z' },
+};
+const _VIO_TITLES = { warning:'Warning', suspension:'Account Suspended', ban:'Account Banned' };
+
+function _ftzNewVioId() { return 'VIO-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2,5).toUpperCase(); }
+
+// How a reviewer is credited on the card. Superadmins are NEVER named — the card
+// only says "a member of the Fortized staff". Mods/admins are shown by their
+// Fortized DISPLAY NAME. The automod is "an automated safety system".
+function _ftzReviewerLabel(rev) {
+  if (!rev) return 'a member of the Fortized staff';
+  if (rev.type === 'automated' || rev.automated) return 'an automated safety system';
+  const uname = String(rev.username || '').toLowerCase();
+  if (rev.role === 'superadmin' || (typeof SUPER_ADMINS !== 'undefined' && SUPER_ADMINS.includes(uname))) {
+    return 'a member of the Fortized staff';
+  }
+  return rev.name || rev.displayName || 'a member of the Fortized staff';
+}
+
+// Build a reviewer descriptor from an actioner username (staff path) — resolves
+// the display name and anonymises superadmins.
+function _ftzReviewerFromActioner(username) {
+  if (!username || username === 'automated') return { type:'automated' };
+  const uname = String(username).toLowerCase();
+  const isSuper = (typeof SUPER_ADMINS !== 'undefined' && SUPER_ADMINS.includes(uname));
+  let name = username;
+  try { name = _profileCache?.[uname]?.displayName || _fullProfileCache?.[uname]?.displayName || username; } catch(_) {}
+  return { type:'staff', username: uname, role: isSuper ? 'superadmin' : 'staff', name: isSuper ? null : name };
+}
+
+// Record a violation onto a user object (mutates + returns the record). Does NOT
+// persist — caller saves the user object.
+function _ftzRecordViolation(userObj, { type, reason, note, evidence, reviewer, source, until }) {
+  if (!userObj) return null;
+  if (!Array.isArray(userObj.violations)) userObj.violations = [];
+  const v = {
+    id: _ftzNewVioId(),
+    type: (type === 'ban' || type === 'suspension') ? type : 'warning',
+    reason: reason || '',
+    note: note || '',
+    evidence: evidence || null,
+    reviewer: reviewer || { type:'automated' },
+    source: source || (reviewer?.type === 'automated' ? 'automod' : 'staff'),
+    at: new Date().toISOString(),
+    until: until || null,
+    active: true,
+    liftedAt: null,
+    appeals: [],
+  };
+  userObj.violations.push(v);
+  // Cap history so the row can't grow unbounded.
+  if (userObj.violations.length > 100) userObj.violations = userObj.violations.slice(-100);
+  return v;
+}
+
+function _ftzMyViolations() {
+  const list = (CU && Array.isArray(CU.violations)) ? CU.violations.slice() : [];
+  // Fold in legacy records (u.disciplinary + the single activeWarning) as
+  // read-only history so the page shows EVERYTHING, even pre-system actions.
+  try {
+    const d = CU?.disciplinary || {};
+    (d.suspensions || []).forEach((s, i) => list.push({
+      id: 'legacy-s-' + i, type: 'suspension', reason: s.reason || 'a suspension',
+      note: s.note || '', evidence: null, reviewer: { type: 'staff' }, source: 'staff', legacy: true,
+      at: s.issuedAt || s.suspendedAt || s.at || null, until: s.until || null,
+      active: !(s.until && s.until <= Date.now()), appeals: Array.isArray(s.appeals) ? s.appeals : [],
+    }));
+    (d.warnings || []).forEach((w, i) => list.push({
+      id: 'legacy-w-' + i, type: 'warning', reason: w.reason || 'a violation',
+      note: w.note || '', evidence: null, reviewer: { type: 'staff' }, source: 'staff', legacy: true,
+      at: w.issuedAt || w.at || null, until: w.expiresAt || null,
+      active: !(w.expiresAt && w.expiresAt <= Date.now()), appeals: Array.isArray(w.appeals) ? w.appeals : [],
+    }));
+  } catch (_) {}
+  return list.sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0));
+}
+function _ftzFindViolation(id) { return (CU?.violations || []).find(v => v.id === id) || null; }
+
+// ── The redesigned card ────────────────────────────────────────────────────
+// One renderer for all three types. `mode`:
+//   'blocking'    → full-screen takeover (active ban / active suspension)
+//   'overlay'     → dismissible modal (a warning, or re-viewing any past record)
+function _renderViolationEvidence(evidence) {
+  if (!evidence) return '';
+  // Reuse the offending-content renderer (text + media), then add context.
+  let html = _renderOffendingContent({
+    offendingText: evidence.text || '',
+    offendingMedia: evidence.media || [],
+  });
+  if (Array.isArray(evidence.context) && evidence.context.length) {
+    const ctx = evidence.context.filter(Boolean).slice(-6);
+    if (ctx.length) html += `<div style="padding:10px 0;display:flex;flex-direction:column;gap:6px;">
+      <span style="color:#5a6478;font-size:13px;">Surrounding context</span>
+      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:4px;">
+        ${ctx.map(c => `<div style="color:#8b95a8;font-size:12px;line-height:1.5;word-break:break-word;">${escapeHTML(String(c).slice(0,160))}</div>`).join('')}
       </div>
-      <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;">Account Banned</div>
-      <div style="font-size:14px;color:#8b95a8;margin-bottom:28px;line-height:1.7;">Our content monitors have determined that your behavior at Fortized has been in violation of our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a>.</div>
-      <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;">
-        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="color:#5a6478;font-size:13px;">Reviewed</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${_fmtDateEU(bannedAt)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="color:#5a6478;font-size:13px;">Moderator Note</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${reason ? escapeHTML(reason) : 'No reason provided'}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="color:#5a6478;font-size:13px;">Category</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(category)}</span>
-        </div>
-        ${_renderOffendingContent(ban)}
-        <div style="display:flex;justify-content:space-between;padding:10px 0;">
-          <span style="color:#5a6478;font-size:13px;">Actioned by</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(bannedBy)}</span>
-        </div>
-      </div>
-      <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">If you wish to appeal, please visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Fortized Support</a></div>
-      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:var(--red);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;">Log Out</button>
+    </div>`;
+  }
+  return html;
+}
+
+function _renderViolationNotice(v, mode) {
+  const ic = _VIO_ICONS[v.type] || _VIO_ICONS.warning;
+  const title = _VIO_TITLES[v.type] || 'Notice';
+  const reviewer = _ftzReviewerLabel(v.reviewer);
+  const isBlocking = mode === 'blocking';
+  const row = (label, val) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+    <span style="color:#5a6478;font-size:13px;flex-shrink:0;">${label}</span>
+    <span style="color:#c8d0dc;font-size:13px;font-weight:600;text-align:right;word-break:break-word;">${val}</span></div>`;
+  const lead = v.type === 'ban'
+      ? `Your account has been banned for violating the Fortized <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a>.`
+    : v.type === 'suspension'
+      ? `Your account has been temporarily suspended for violating the Fortized <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a>.`
+      : `You've received a warning for activity that goes against the Fortized <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a>.`;
+  const appealBtn = `<button onclick="openAppealsPage('${v.id}')" style="padding:11px 22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#e6ebf2;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Appeals &amp; Violations</button>`;
+  const logoutBtn = `<button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:11px 22px;background:${v.type==='ban'?'var(--red)':v.type==='suspension'?'#f59e0b':'rgba(255,255,255,.05)'};border:1px solid ${v.type==='warning'?'rgba(255,255,255,.12)':'transparent'};border-radius:10px;color:${v.type==='warning'?'#e6ebf2':v.type==='suspension'?'var(--rail)':'#fff'};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Log out</button>`;
+  const closeBtn = isBlocking ? '' : `<button onclick="_ftzCloseViolationOverlay()" class="warning-ack-btn">Acknowledge</button>`;
+  return `<div style="background:rgba(19,22,29,.97);border:1px solid #252b3a;width:100%;max-width:560px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);max-height:92vh;overflow:auto;">
+    <div style="width:66px;height:66px;border-radius:18px;background:${ic.color}14;border:1px solid ${ic.color}2e;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+      <svg width="30" height="30" viewBox="${ic.vb}" fill="${ic.color}"><path d="${ic.path}"/></svg>
+    </div>
+    <div style="font-size:25px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.4px;">${title}</div>
+    <div style="font-size:14px;color:#8b95a8;margin-bottom:24px;line-height:1.65;">${lead}</div>
+    <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:16px 22px;text-align:left;margin-bottom:20px;">
+      ${row('Reviewed', _fmtDateEU(v.at))}
+      ${row('Reason', escapeHTML(v.reason || 'Not specified'))}
+      ${v.note ? row('Moderator note', escapeHTML(v.note)) : ''}
+      ${v.type === 'suspension' && v.until ? row('Access restored', _fmtDateEU(v.until)) : ''}
+      ${_renderViolationEvidence(v.evidence)}
+      ${row('Reviewed by', escapeHTML(reviewer))}
+    </div>
+    <div style="font-size:12px;color:#5a6478;margin-bottom:22px;line-height:1.6;">
+      Review the <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a> and <a href="${FTZ_TOS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Service</a>.
+      To appeal, open <strong style="color:#c8d0dc;">Appeals &amp; Violations</strong> — a real person reviews every appeal.
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      ${appealBtn}
+      ${isBlocking ? logoutBtn : closeBtn}
     </div>
   </div>`;
+}
+
+function _ftzCloseViolationOverlay() { document.getElementById('ftz-violation-overlay')?.remove(); }
+function _showViolationOverlay(v, mode) {
+  if (!v) return;
+  if (mode === 'blocking') {
+    // Hard takeover — replace the whole app so an active ban / suspension
+    // can't be bypassed by deleting a floating layer. The Appeal button opens
+    // the appeals page on top (z-10000); closing it returns to this screen.
+    document.body.innerHTML = `<div id="ftz-violation-block" style="position:fixed;inset:0;z-index:9999;background:var(--rail,#070a0e);display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Syne',system-ui,-apple-system,sans-serif;">${_renderViolationNotice(v, 'blocking')}</div>`;
+    return;
+  }
+  _ftzCloseViolationOverlay();
+  const overlay = document.createElement('div');
+  overlay.id = 'ftz-violation-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,10,15,.94);display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .28s ease;';
+  overlay.innerHTML = _renderViolationNotice(v, 'overlay');
+  overlay.addEventListener('click', e => { if (e.target === overlay) _ftzCloseViolationOverlay(); });
+  document.body.appendChild(overlay);
+}
+// Re-open a stored violation's card (used by the @fortizedsafety DM button and
+// the Appeals page). Always dismissible when re-viewed.
+function _reopenViolation(id) {
+  const v = _ftzFindViolation(id);
+  if (v) _showViolationOverlay(v, 'overlay');
+  else openAppealsPage(id);
+}
+
+function _showBanScreen(ban) {
+  if (!ban || typeof ban !== 'object') ban = {};
+  // Prefer a recorded violation (full detail + reviewer credit); fall back to
+  // the legacy ban payload for accounts banned before the violations system.
+  let v = (CU?.violations || []).filter(x => x.type === 'ban').sort((a,b) => new Date(b.at) - new Date(a.at))[0];
+  if (!v) {
+    v = {
+      id: 'legacy-ban', type: 'ban',
+      reason: ban.reason || ban.note || 'Not specified',
+      note: (ban.note && ban.note !== ban.reason) ? ban.note : '',
+      evidence: { text: ban.offendingText || ban.msgText || '', media: ban.offendingMedia || ban.media || [] },
+      reviewer: _ftzReviewerFromActioner(ban.bannedBy || ban.by),
+      at: ban.bannedAt || ban.at || ban.date || new Date().toISOString(),
+      until: null, active: true, appeals: [],
+    };
+  }
+  _showViolationOverlay(v, 'blocking');
 }
 
 function _showSuspendScreen(data) {
   if (!data || typeof data !== 'object') data = {};
   const until = data.until ? new Date(data.until) : null;
-  const reason = data.reason || data.note || 'No reason provided';
-  const moderator = data.suspendedBy || data.by || 'Fortized Moderation';
-  const modMessage = data.moderatorMessage || data.message || '';
-  const suspendedAt = data.suspendedAt || data.at || data.date || null;
-  const durationText = _fmtDateEU(data.until);
-  // Auto-refresh when suspension expires
+  // Auto-refresh when the suspension expires so the user is let back in.
   if (until && until > new Date()) {
     const msLeft = until.getTime() - Date.now();
-    if (msLeft > 0 && msLeft < 86400000 * 30) { // only set timer if <30 days
-      setTimeout(() => { location.reload(); }, msLeft + 1000);
-    }
+    if (msLeft > 0 && msLeft < 86400000 * 30) setTimeout(() => { location.reload(); }, msLeft + 1000);
   }
-  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:var(--rail);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);">
-    <div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
-      <div style="width:68px;height:68px;border-radius:18px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="11" stroke="#f59e0b" stroke-width="2" fill="none"/>
-          <rect x="11" y="6" width="2" height="7" rx="1" fill="#f59e0b"/>
-          <circle cx="12" cy="16.5" r="1.2" fill="#f59e0b"/>
-        </svg>
-      </div>
-      <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;">Account Suspended</div>
-      <div style="font-size:14px;color:#8b95a8;margin-bottom:28px;line-height:1.7;">Our content monitors have determined that your behavior at Fortized has been in violation of our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a>. As a result, your account has been temporarily suspended.</div>
-      <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;">
-        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="color:#5a6478;font-size:13px;">Reviewed</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${_fmtDateEU(suspendedAt)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="color:#5a6478;font-size:13px;">Reason</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(reason)}</span>
-        </div>
-        ${modMessage ? `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="color:#5a6478;font-size:13px;">Moderator Message</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(modMessage)}</span>
-        </div>` : ''}
-        ${_renderOffendingContent(data)}
-        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="color:#5a6478;font-size:13px;">Reactivation</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${durationText}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:10px 0;">
-          <span style="color:#5a6478;font-size:13px;">Actioned by</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(moderator)}</span>
-        </div>
-      </div>
-      <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">Your account will be reactivated on <span style="color:var(--accent);font-weight:600;">${durationText}</span>. To appeal, visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Fortized Support</a></div>
-      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:10px;color:var(--rail);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;">Log Out</button>
-    </div>
-  </div>`;
+  let v = (CU?.violations || []).filter(x => x.type === 'suspension').sort((a,b) => new Date(b.at) - new Date(a.at))[0];
+  // Only reuse a recorded suspension if it matches the active window.
+  if (!v || (data.until && v.until && Math.abs(new Date(v.until) - new Date(data.until)) > 60000)) {
+    v = {
+      id: 'legacy-suspension', type: 'suspension',
+      reason: data.reason || data.note || 'Not specified',
+      note: data.moderatorMessage || data.message || '',
+      evidence: { text: data.offendingText || data.msgText || '', media: data.offendingMedia || data.media || [] },
+      reviewer: _ftzReviewerFromActioner(data.suspendedBy || data.by),
+      at: data.suspendedAt || data.at || data.date || new Date().toISOString(),
+      until: data.until || null, active: true, appeals: [],
+    };
+  }
+  _showViolationOverlay(v, 'blocking');
 }
 
 // Recipient-side automod threat card. Fires when an inbound message
@@ -15116,41 +15250,152 @@ function _checkIncomingThreatFlag(msg) {
 }
 
 function _showWarningOverlay(reason, issuedBy, contentData) {
-  if (document.getElementById('ftz-warning-overlay')) return;
-  const safeReason = (reason && typeof reason === 'string') ? reason : 'Violation of Terms of Use';
-  const safeMod = (issuedBy && typeof issuedBy === 'string') ? issuedBy : 'Fortized Moderation';
+  const v = {
+    id: 'legacy-warning', type: 'warning',
+    reason: (reason && typeof reason === 'string') ? reason : 'Violation of the Terms of Use',
+    note: '',
+    evidence: (contentData && typeof contentData === 'object')
+      ? { text: contentData.offendingText || contentData.msgText || '', media: contentData.offendingMedia || contentData.media || [] }
+      : null,
+    reviewer: _ftzReviewerFromActioner(issuedBy),
+    at: new Date().toISOString(), until: null, active: true, appeals: [],
+  };
+  _showViolationOverlay(v, 'overlay');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// APPEALS & VIOLATIONS PAGE  —  gated to the signed-in user's OWN record.
+// Keeps the FULL history forever (warnings, suspensions, bans-then-lifted),
+// each with its appeal thread + decisions. Not a public route.
+// ═══════════════════════════════════════════════════════════════════════════
+function _ftzVioStatusChip(v) {
+  let label, color;
+  if (v.type === 'ban') { label = v.active === false ? 'Lifted' : 'Active'; color = v.active === false ? '#3ecf6e' : '#f87171'; }
+  else if (v.type === 'suspension') { const ended = (v.until && new Date(v.until) <= new Date()) || v.active === false; label = ended ? 'Ended' : 'Active'; color = ended ? '#8b95a8' : '#f59e0b'; }
+  else { label = 'On record'; color = '#8b95a8'; }
+  return `<span style="font-size:11px;font-weight:700;color:${color};background:${color}1a;border:1px solid ${color}33;border-radius:100px;padding:3px 10px;">${label}</span>`;
+}
+function _ftzAppealsRemaining(v) { return Math.max(0, FTZ_MAX_APPEALS - ((v.appeals || []).length)); }
+function _ftzAppealStatusMeta(s) {
+  return s === 'accepted' ? { label:'Accepted', color:'#3ecf6e' }
+       : s === 'declined' ? { label:'Declined', color:'#f87171' }
+       : { label:'Under review', color:'#f59e0b' };
+}
+
+function openAppealsPage(focusId) {
+  if (!CU?.username) { toast('Sign in to view this page', 'error'); return; }
+  _ftzCloseViolationOverlay();
+  document.getElementById('ftz-appeals-page')?.remove();
   const overlay = document.createElement('div');
-  overlay.id = 'ftz-warning-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,10,15,.92);backdrop-filter:none;display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .3s ease;';
-  overlay.innerHTML = `<div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;width:100%;max-width:520px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);">
-    <div style="width:60px;height:60px;border-radius:16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-        <path d="M12 2L1 21h22L12 2z" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linejoin="round"/>
-        <rect x="11" y="9" width="2" height="5" rx="1" fill="#f59e0b"/>
-        <circle cx="12" cy="17" r="1.2" fill="#f59e0b"/>
-      </svg>
-    </div>
-    <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.3px;">Warning</div>
-    <div style="font-size:14px;color:#8b95a8;margin-bottom:24px;line-height:1.7;">You have been issued a warning by a Fortized moderator.</div>
-    <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:18px 22px;text-align:left;margin-bottom:24px;">
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-        <span style="color:#5a6478;font-size:13px;">Issued</span>
-        <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${_fmtDateEU(new Date())}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-        <span style="color:#5a6478;font-size:13px;">Reason</span>
-        <span style="color:#c8d0dc;font-size:13px;font-weight:600;max-width:260px;text-align:right;">${escapeHTML(safeReason)}</span>
-      </div>
-      ${contentData && typeof contentData === 'object' ? _renderOffendingContent(contentData) : ''}
-      <div style="display:flex;justify-content:space-between;padding:10px 0;">
-        <span style="color:#5a6478;font-size:13px;">Actioned by</span>
-        <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(safeMod)}</span>
-      </div>
-    </div>
-    <div style="font-size:12px;color:#5a6478;margin-bottom:20px;">Please review our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a> to avoid further action on your account.</div>
-    <button onclick="document.getElementById('ftz-warning-overlay').remove()" class="warning-ack-btn">Acknowledge</button>
-  </div>`;
+  overlay.id = 'ftz-appeals-page';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:var(--bg,#0a0d12);overflow:auto;font-family:var(--font-body),system-ui,sans-serif;';
+  overlay.innerHTML = _ftzAppealsPageHTML(focusId);
   document.body.appendChild(overlay);
+  if (focusId) { const el = overlay.querySelector('[data-vio="'+focusId+'"]'); if (el) setTimeout(()=>el.scrollIntoView({ block:'center', behavior:'smooth' }), 60); }
+}
+function _ftzCloseAppeals() { document.getElementById('ftz-appeals-page')?.remove(); }
+function _ftzRefreshAppeals(focusId) { const o = document.getElementById('ftz-appeals-page'); if (o) o.innerHTML = _ftzAppealsPageHTML(focusId); }
+
+function _ftzAppealsPageHTML(focusId) {
+  const list = _ftzMyViolations();
+  const head = `<div style="max-width:820px;margin:0 auto;padding:34px 20px 10px;">
+    <button onclick="_ftzCloseAppeals()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#c8d0dc;font-size:13px;font-weight:600;padding:7px 14px;cursor:pointer;margin-bottom:20px;display:inline-flex;align-items:center;gap:7px;">
+      <svg width="13" height="13" viewBox="0 0 320 512" fill="currentColor"><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg>Back</button>
+    <div style="font-size:30px;font-weight:800;color:#fff;letter-spacing:-.5px;">Appeals &amp; Violations</div>
+    <div style="font-size:14px;color:#8b95a8;margin-top:6px;line-height:1.6;max-width:640px;">Every moderation action on your account lives here permanently — even after a warning is acknowledged, a suspension ends, or a ban is lifted. You can appeal each one up to ${FTZ_MAX_APPEALS} times, and a real member of the Fortized staff reviews every appeal.</div>
+  </div>`;
+  if (!list.length) {
+    return head + `<div style="max-width:820px;margin:0 auto;padding:30px 20px 60px;">
+      <div style="background:#13161d;border:1px solid #252b3a;border-radius:16px;padding:44px 24px;text-align:center;">
+        <div style="width:56px;height:56px;border-radius:16px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+          <svg width="26" height="26" viewBox="0 0 512 512" fill="#3ecf6e"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>
+        </div>
+        <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;">Your record is clean</div>
+        <div style="font-size:13.5px;color:#8b95a8;line-height:1.6;">You have no warnings, suspensions, or bans. Keep it that way and this page stays empty.</div>
+      </div></div>`;
+  }
+  return head + `<div style="max-width:820px;margin:0 auto;padding:20px 20px 70px;display:flex;flex-direction:column;gap:16px;">${list.map(v => _ftzVioHistoryCard(v, v.id === focusId)).join('')}</div>`;
+}
+
+function _ftzVioHistoryCard(v, focused) {
+  const ic = _VIO_ICONS[v.type] || _VIO_ICONS.warning;
+  const title = _VIO_TITLES[v.type] || 'Notice';
+  const remaining = _ftzAppealsRemaining(v);
+  const appeals = v.appeals || [];
+  const anyAccepted = appeals.some(a => a.status === 'accepted');
+  const pending = appeals.some(a => a.status === 'pending');
+  const appealThread = appeals.length ? `<div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
+    ${appeals.map((a, i) => { const m = _ftzAppealStatusMeta(a.status); return `<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:11px 13px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:5px;">
+        <span style="font-size:12px;font-weight:700;color:#c8d0dc;">Appeal ${i+1} of ${FTZ_MAX_APPEALS}</span>
+        <span style="font-size:11px;font-weight:700;color:${m.color};">${m.label}</span>
+      </div>
+      <div style="font-size:12.5px;color:#9aa5b4;line-height:1.55;white-space:pre-wrap;word-break:break-word;">${escapeHTML(a.text||'')}</div>
+      <div style="font-size:11px;color:#5a6478;margin-top:6px;">Submitted ${_fmtDateEU(a.at)}${a.decidedAt ? ' · Decided ' + _fmtDateEU(a.decidedAt) + ' by a member of the Fortized staff' : ''}</div>
+      ${a.note ? `<div style="font-size:12px;color:#c8d0dc;margin-top:6px;border-top:1px solid rgba(255,255,255,.06);padding-top:6px;"><span style="color:#5a6478;">Staff response:</span> ${escapeHTML(a.note)}</div>` : ''}
+    </div>`; }).join('')}
+  </div>` : '';
+
+  let appealBox = '';
+  if (v.legacy) {
+    appealBox = `<div style="margin-top:12px;font-size:12.5px;color:#8b95a8;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:11px 13px;line-height:1.55;">This is a historical record kept for transparency. If you believe it's in error, <a href="${FTZ_SUPPORT_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">contact Support</a>.</div>`;
+  } else if (anyAccepted) {
+    appealBox = `<div style="margin-top:12px;font-size:12.5px;color:#3ecf6e;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:10px;padding:11px 13px;">This appeal was accepted. No further action is needed.</div>`;
+  } else if (pending) {
+    appealBox = `<div style="margin-top:12px;font-size:12.5px;color:#f59e0b;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:11px 13px;">An appeal is under review. Please wait for a staff decision before submitting another.</div>`;
+  } else if (remaining > 0) {
+    appealBox = `<div style="margin-top:12px;">
+      <textarea id="ftz-appeal-input-${v.id}" placeholder="Explain why this action should be reconsidered. Be honest and specific — a real person reads this." maxlength="1000" style="width:100%;min-height:84px;resize:vertical;background:#0e1117;border:1px solid #252b3a;border-radius:10px;color:#e6ebf2;font-size:13px;line-height:1.55;padding:11px 13px;font-family:inherit;box-sizing:border-box;"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:11.5px;color:#5a6478;">${remaining} of ${FTZ_MAX_APPEALS} appeals remaining</span>
+        <button onclick="submitAppeal('${v.id}')" style="padding:9px 18px;background:var(--accent,#fff93e);border:none;border-radius:9px;color:#0b0d12;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">Submit appeal</button>
+      </div>
+    </div>`;
+  } else {
+    appealBox = `<div style="margin-top:12px;font-size:12.5px;color:#8b95a8;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.16);border-radius:10px;padding:11px 13px;line-height:1.55;">You've used all ${FTZ_MAX_APPEALS} appeals for this violation and each was declined. If you truly can't move forward, you may <a href="${FTZ_SUPPORT_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">contact Support</a> — though tickets about closed appeals are only accepted in rare cases. Otherwise, the decision stands.</div>`;
+  }
+
+  const ev = _renderViolationEvidence(v.evidence);
+  return `<div data-vio="${v.id}" style="background:#13161d;border:1px solid ${focused ? ic.color+'66' : '#252b3a'};border-radius:16px;padding:20px 22px;${focused ? 'box-shadow:0 0 0 1px '+ic.color+'33;' : ''}">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div style="width:40px;height:40px;border-radius:11px;background:${ic.color}14;border:1px solid ${ic.color}2e;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="19" height="19" viewBox="${ic.vb}" fill="${ic.color}"><path d="${ic.path}"/></svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;"><span style="font-size:16px;font-weight:800;color:#fff;">${title}</span>${_ftzVioStatusChip(v)}</div>
+        <div style="font-size:12px;color:#5a6478;margin-top:2px;">${_fmtDateEU(v.at)} · Reviewed by ${escapeHTML(_ftzReviewerLabel(v.reviewer))}</div>
+      </div>
+    </div>
+    <div style="font-size:13.5px;color:#c8d0dc;line-height:1.55;margin-bottom:${v.note||ev?'10px':'0'};"><span style="color:#5a6478;">Reason:</span> ${escapeHTML(v.reason || 'Not specified')}</div>
+    ${v.note ? `<div style="font-size:13px;color:#9aa5b4;line-height:1.55;margin-bottom:${ev?'10px':'0'};"><span style="color:#5a6478;">Moderator note:</span> ${escapeHTML(v.note)}</div>` : ''}
+    ${ev ? `<div style="border-top:1px solid rgba(255,255,255,.06);margin-top:4px;">${ev}</div>` : ''}
+    ${appealThread}
+    ${appealBox}
+  </div>`;
+}
+
+async function submitAppeal(vioId) {
+  const ta = document.getElementById('ftz-appeal-input-' + vioId);
+  const text = (ta?.value || '').trim();
+  if (!text) { toast('Write your appeal first', 'error'); return; }
+  const v = _ftzFindViolation(vioId);
+  if (!v) { toast('This violation is no longer on your record', 'error'); return; }
+  if (_ftzAppealsRemaining(v) <= 0) { toast('You have used all 3 appeals for this violation', 'error'); return; }
+  if ((v.appeals || []).some(a => a.status === 'pending')) { toast('An appeal is already under review', 'error'); return; }
+  v.appeals = v.appeals || [];
+  const appeal = { id: 'AP-' + Date.now().toString(36).toUpperCase(), text: text.slice(0, 1000), at: new Date().toISOString(), status: 'pending', decidedBy: null, decidedAt: null, note: '' };
+  v.appeals.push(appeal);
+  try { await saveUser(true); } catch (e) { console.warn('[Appeals] save failed', e?.message); }
+  // Add a lightweight pointer to the staff review queue (egress-lean: no user scan).
+  try {
+    if (FortizedSocial.adminGetAppealsQueue && FortizedSocial.adminSaveAppealsQueue) {
+      const q = (await FortizedSocial.adminGetAppealsQueue()) || [];
+      q.push({ username: CU.username, vioId: v.id, appealId: appeal.id, type: v.type, reason: v.reason, at: appeal.at });
+      await FortizedSocial.adminSaveAppealsQueue(q);
+    }
+  } catch (_) {}
+  toast('Appeal submitted — a staff member will review it', 'success');
+  _ftzRefreshAppeals(vioId);
 }
 
 function banUser(username,permanent=true){
@@ -23937,6 +24182,10 @@ function _buildProfileView(tab) {
           <div class="std-track">${_track}</div>
           ${_drawer('Active violations', 'These affect your account status until they expire.', _activeViol, false, _activeViol.length > 0)}
           ${_drawer('Expired violations', 'These no longer affect your account status.', _expiredViol, true, false)}
+          <button type="button" onclick="openAppealsPage()" style="margin-top:14px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#e6ebf2;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">
+            <svg width="14" height="14" viewBox="0 0 512 512" fill="currentColor"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg>
+            Appeals &amp; Violations — full history &amp; appeals
+          </button>
         </div>`;
         })()}
 
@@ -33618,14 +33867,15 @@ function runAutomod(text, contextMessages = []) {
       // credible threat plus corroborating context); a lone credible threat
       // gets a warning notice only.
       const _reason = threatCheck.reason || 'a credible threat of violence';
+      const _evidence = { text: String(text || '').slice(0, 600), context: (threatCheck.context || []).slice(-6) };
       const _suspendMinutes = threatCheck.score >= 1.4 ? 60
                             : threatCheck.score >= 1.2 ? 30
                             : threatCheck.score >= 1.15 ? 15
                             : 0;
       if (_suspendMinutes && CU?.username) {
-        applyFortizedSafetyChatSuspension(CU.username, _suspendMinutes, _reason).catch(()=>{});
+        applyFortizedSafetyChatSuspension(CU.username, _suspendMinutes, _reason, _evidence).catch(()=>{});
       } else if (CU?.username) {
-        sendFortizedSafetyNotice(CU.username, { reason: _reason, action: 'warning' }).catch(()=>{});
+        _automodWarnSelf(_reason, _evidence).catch(()=>{});
       }
     } catch (_) {}
   }
@@ -34692,6 +34942,13 @@ function parseMD(s) {
   if (!s) return '';
   s = _defuseHugeMedia(s);
   _augmentShortcodes();
+  // Safety-notice action buttons from @fortizedsafety: reopen the exact
+  // violation card, or open the Appeals & Violations page. Rendered before any
+  // other pass so the tokens can't be mangled.
+  s = s.replace(/\[\[VCARD:([A-Za-z0-9\-]+)\|([^\]|]+)\]\]/g, (_m, id, label) =>
+    `<button type="button" class="ftz-safety-btn" onclick="event.stopPropagation();_reopenViolation('${id.replace(/[^A-Za-z0-9\-]/g,'')}')">${escapeHTML(label)}</button>`);
+  s = s.replace(/\[\[APPEALS\|([^\]|]+)\]\]/g, (_m, label) =>
+    `<button type="button" class="ftz-safety-btn" onclick="event.stopPropagation();openAppealsPage()">${escapeHTML(label)}</button>`);
   // 0⁻⁻. A FTZ token that carried a very large base64 data: URL was swapped for
   // a light [FTZBIG:…] placeholder by _defuseHugeMedia so it can't freeze the
   // render — show a small "too big to display" card instead of the media.
@@ -57696,26 +57953,24 @@ async function _ensureFortizedSafetyAccount() {
 // ── Automod helpers — send notices + suspend chat from @fortizedsafety ──
 // Sends a templated message to a user from the Fortized Safety automation
 // account. Used by the automod when a rule fires.
-async function sendFortizedSafetyNotice(targetUsername, { reason, until, articleId, action } = {}) {
+async function sendFortizedSafetyNotice(targetUsername, { reason, until, articleId, action, violationId } = {}) {
   if (!targetUsername) return;
-  // Real destinations (these pages exist). The dedicated Appeals & Violations
-  // page is coming — until then the appeal link points at Support.
-  const RULES_URL   = 'https://www.fortized.com/legal/terms-of-use';
-  const APPEAL_URL  = 'https://www.fortized.com/support/contact';
+  const RULES_URL = 'https://www.fortized.com/legal/terms-of-use';
   const reasonBit = reason ? ` for ${reason}` : '';
-  // Tight, human, single-spaced (no blank lines between sentences). Links are
-  // real markdown links parseMD renders inline.
+  // Tight, human, single-spaced (no blank lines). Ends with in-app buttons:
+  // reopen the exact notice card, and open Appeals & Violations to appeal.
   const lines = [];
   if (until) {
     const _t = new Date(until).toLocaleString();
     lines.push(`Hey — this is the Fortized Safety team.`);
-    lines.push(`We've paused some of your chat features${reasonBit}. You'll be back to normal on ${_t}.`);
+    lines.push(`We've paused some of your chat features${reasonBit}. You'll be able to chat again on ${_t}.`);
   } else {
     lines.push(`Hey — this is the Fortized Safety team.`);
-    lines.push(`We flagged one of your recent messages${reasonBit}. Consider this a heads-up${action === 'warning' ? ' (a warning, nothing more for now)' : ''} — no need to panic.`);
+    lines.push(`We flagged one of your recent messages${reasonBit}. This is a warning — nothing more for now.`);
   }
-  lines.push(`Here's what our rules say: [Fortized Terms of Use](${RULES_URL}).`);
-  lines.push(`Think we got this wrong? [Appeal it here](${APPEAL_URL}) — a real person on our team reads every appeal.`);
+  lines.push(`Here's exactly what our rules say: [Fortized Terms of Use](${RULES_URL}).`);
+  lines.push(violationId ? `[[VCARD:${violationId}|View the full notice]] [[APPEALS|Appeal this]]` : `[[APPEALS|Appeal this]]`);
+  lines.push(`We read every appeal — a real person on our team, not a bot.`);
   lines.push(`— Fortized Safety`);
   const text = lines.join('\n');
   try {
@@ -57726,29 +57981,85 @@ async function sendFortizedSafetyNotice(targetUsername, { reason, until, article
 // Suspend the user's chat ability for `minutes` (clamped 5–60). Stored on
 // CU so reloads pick it up; also written to the user row so the suspension
 // follows them across devices. Other devices reconcile on next load.
-async function applyFortizedSafetyChatSuspension(targetUsername, minutes, reason) {
+async function applyFortizedSafetyChatSuspension(targetUsername, minutes, reason, evidence) {
   if (!targetUsername) return;
   const ms = Math.max(5, Math.min(60, +minutes || 5)) * 60_000;
   const until = Date.now() + ms;
-  try {
-    const u = await FortizedSocial.getUserByName(targetUsername);
-    if (u) {
-      u.chatSuspendedUntil = until;
-      u.chatSuspendedReason = reason || 'Suspicious activity';
-      await FortizedSocial.saveUserObject(u);
-    }
-  } catch(e) { console.warn('[Safety] suspend write failed', e?.message); }
-  // Mirror to the current viewer's CU so the lock takes effect immediately.
-  if (typeof CU !== 'undefined' && CU && String(CU.username).toLowerCase() === String(targetUsername).toLowerCase()) {
+  const isSelf = typeof CU !== 'undefined' && CU && String(CU.username).toLowerCase() === String(targetUsername).toLowerCase();
+  let vioId = null;
+  if (isSelf) {
+    // Operate on CU directly — the only path the automod ever takes. Record the
+    // violation, set the chat lock, persist, and pop the (dismissible) card.
     CU.chatSuspendedUntil = until;
-    CU.chatSuspendedReason = reason || 'Suspicious activity';
+    CU.chatSuspendedReason = reason || 'a safety issue';
+    const v = _ftzRecordViolation(CU, {
+      type: 'suspension', reason: reason || 'a safety issue', source: 'automod',
+      reviewer: { type: 'automated' }, evidence: evidence || null,
+      until: new Date(until).toISOString(),
+    });
+    vioId = v?.id;
+    try { await saveUser(true); } catch(_) {}
+    try { if (v) _showViolationOverlay(v, 'overlay'); } catch(_) {}
+  } else {
+    try {
+      const u = await FortizedSocial.getUserByName(targetUsername);
+      if (u) {
+        u.chatSuspendedUntil = until;
+        u.chatSuspendedReason = reason || 'a safety issue';
+        const v = _ftzRecordViolation(u, {
+          type: 'suspension', reason: reason || 'a safety issue', source: 'automod',
+          reviewer: { type: 'automated' }, evidence: evidence || null,
+          until: new Date(until).toISOString(),
+        });
+        vioId = v?.id;
+        await FortizedSocial.saveUserObject(u);
+      }
+    } catch(e) { console.warn('[Safety] suspend write failed', e?.message); }
   }
-  // Send the standard notice DM alongside the suspension.
-  await sendFortizedSafetyNotice(targetUsername, {
-    reason: reason || 'Suspicious activity',
-    until,
-    articleId: 'chat-suspension',
+  await sendFortizedSafetyNotice(targetUsername, { reason: reason || 'a safety issue', until, action: 'suspension', violationId: vioId });
+}
+
+// Automod WARNING on the current user: record the violation, pop the card, DM.
+async function _automodWarnSelf(reason, evidence) {
+  if (!CU?.username) return;
+  const v = _ftzRecordViolation(CU, {
+    type: 'warning', reason: reason || 'a safety issue', source: 'automod',
+    reviewer: { type: 'automated' }, evidence: evidence || null,
   });
+  try { await saveUser(true); } catch(_) {}
+  try { if (v) _showViolationOverlay(v, 'overlay'); } catch(_) {}
+  await sendFortizedSafetyNotice(CU.username, { reason: reason || 'a safety issue', action: 'warning', violationId: v?.id });
+}
+
+// ── Staff appeal review (console v1; a staff-console page is a later phase) ──
+async function ftzListAppeals() {
+  const q = (await FortizedSocial.adminGetAppealsQueue?.()) || [];
+  const pending = q.filter(a => a.status !== 'accepted' && a.status !== 'declined');
+  if (!pending.length) { console.log('[Appeals] No pending appeals.'); return pending; }
+  console.table(pending.map(a => ({ user: a.username, type: a.type, reason: a.reason, vioId: a.vioId, appealId: a.appealId, at: a.at })));
+  console.log('Decide: ftzDecideAppeal("username","vioId","appealId","accept"|"decline","note")');
+  return pending;
+}
+async function ftzDecideAppeal(username, vioId, appealId, decision, note) {
+  if (!['accept','decline'].includes(decision)) { console.error('[Appeals] decision must be "accept" or "decline"'); return; }
+  const status = decision === 'accept' ? 'accepted' : 'declined';
+  try {
+    const u = await FortizedSocial.getUserByName(username);
+    const v = (u?.violations || []).find(x => x.id === vioId);
+    const ap = (v?.appeals || []).find(a => a.id === appealId);
+    if (!ap) { console.error('[Appeals] appeal not found'); return; }
+    ap.status = status; ap.decidedAt = new Date().toISOString(); ap.decidedBy = CU?.username || 'staff'; ap.note = note || '';
+    if (status === 'accepted') {
+      v.active = false; v.liftedAt = new Date().toISOString();
+      if (v.type === 'suspension') { u.chatSuspendedUntil = null; u.chatSuspendedReason = null; }
+      if (v.type === 'ban') { u.banned = false; u.banReason = null; }
+    }
+    await FortizedSocial.saveUserObject(u);
+    const q = (await FortizedSocial.adminGetAppealsQueue()) || [];
+    const qi = q.find(x => x.appealId === appealId); if (qi) qi.status = status;
+    await FortizedSocial.adminSaveAppealsQueue(q);
+    console.log(`[Appeals] ${status} appeal ${appealId} for @${username}${status==='accepted'?' (violation lifted)':''}`);
+  } catch(e) { console.error('[Appeals] decide failed', e?.message); }
 }
 
 // True if the current user is currently chat-suspended by the automod.

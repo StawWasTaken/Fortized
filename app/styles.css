@@ -14213,7 +14213,7 @@ select:focus,select:focus-visible,
 .std-viol-card--new{border-color:var(--accent,#6979ff);background:rgba(105,121,255,.06);box-shadow:0 0 0 1px var(--accent,#6979ff) inset;}
 .std-viol-card--expired{opacity:.62;}
 .std-viol-card__badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 9px;border-radius:var(--radius-pill,999px);margin-bottom:9px;}
-.std-viol-card__badge--new{background:var(--accent,#6979ff);color:#fff;text-transform:uppercase;}
+.std-viol-card__badge--new{background:var(--accent,#6979ff);color:#13161d;text-transform:uppercase;}
 .std-viol-card__badge--age{background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);}
 .std-viol-card__text{font-size:15px;color:#fff;line-height:1.4;}
 .std-viol-card__text strong{font-weight:800;}

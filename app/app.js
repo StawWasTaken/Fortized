@@ -12148,6 +12148,9 @@ function appendMessage(container, msg, context, prevAuthor) {
   // when it would otherwise group under the previous message — this is how
   // Discord does it and it keeps the reply reference legible above the body.
   if (msg.replyTo) isFirst = true;
+  // @fortizedsafety notices always render as a fresh message (full header) so
+  // consecutive safety cards don't stack into one ugly grouped blob.
+  if (isFortizedOfficialAccount(msg.from) && String(msg.from).toLowerCase() === FORTIZED_SAFETY_ACCOUNT) isFirst = true;
   const isOwn=String(msg.from||"").toLowerCase()===String(CU?.username||"").toLowerCase();
   const time=_fmtMsgTime(msg.timestamp, msg.time);
   const fullTime=_fmtMsgFullTime(msg.timestamp);
@@ -15176,7 +15179,6 @@ function _renderViolationNotice(v, mode) {
     </div>
     <div style="font-size:12px;color:#5a6478;margin-bottom:22px;line-height:1.6;">
       Review the <a href="${FTZ_TERMS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a> and <a href="${FTZ_TOS_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Service</a>.
-      To appeal, open <strong style="color:#c8d0dc;">Appeals &amp; Violations</strong> — a real person reviews every appeal.
     </div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
       ${appealBtn}
@@ -15331,16 +15333,12 @@ function _ftzAppealStatusMeta(s) {
        : { label:'Under review', color:'#f59e0b' };
 }
 
+// Appeals & Violations now lives at the standalone web page /support/appeals
+// (with the full site chrome). Every in-app entry point opens THAT, not a modal.
 function openAppealsPage(focusId) {
-  if (!CU?.username) { toast('Sign in to view this page', 'error'); return; }
   _ftzCloseViolationOverlay();
-  document.getElementById('ftz-appeals-page')?.remove();
-  const overlay = document.createElement('div');
-  overlay.id = 'ftz-appeals-page';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:var(--bg,#0a0d12);overflow:auto;font-family:var(--font-body),system-ui,sans-serif;';
-  overlay.innerHTML = _ftzAppealsPageHTML(focusId);
-  document.body.appendChild(overlay);
-  if (focusId) { const el = overlay.querySelector('[data-vio="'+focusId+'"]'); if (el) setTimeout(()=>el.scrollIntoView({ block:'center', behavior:'smooth' }), 60); }
+  const url = '/support/appeals' + (focusId && !String(focusId).startsWith('legacy') ? '#' + encodeURIComponent(focusId) : '');
+  try { window.open(url, '_blank', 'noopener'); } catch (_) { window.location.href = url; }
 }
 function _ftzCloseAppeals() { document.getElementById('ftz-appeals-page')?.remove(); }
 function _ftzRefreshAppeals(focusId) { const o = document.getElementById('ftz-appeals-page'); if (o) o.innerHTML = _ftzAppealsPageHTML(focusId); }
@@ -61618,15 +61616,7 @@ async function openStaffOps(mountEl) {
         <button class="sc-btn sc-btn-ghost" onclick="openStaffPalette()"><i class="fas fa-magnifying-glass"></i> ⌘K</button>
         ${closeBtn}
       </div>
-      <div class="staff-ops__grid">
-        <div class="staff-ops__counters" id="staff-ops-counters"></div>
-        <div class="staff-ops__map" id="staff-ops-map"></div>
-        <div class="staff-ops__stream"><div class="staff-ops__sect-title">EVENTS · LIVE</div><div id="staff-ops-stream-body"></div></div>
-        <div class="staff-ops__side">
-          <div class="staff-ops__sect-title">WATCHLIST</div><div id="staff-ops-watch"></div>
-          <div class="staff-ops__sect-title" style="margin-top:14px;">INCIDENTS</div><div id="staff-ops-inc"></div>
-        </div>
-      </div>
+      <div class="staff-ops__map" id="staff-ops-map" style="flex:1;min-height:460px;height:calc(100vh - 190px);width:100%;margin-top:14px;"></div>
     </div>`;
   const refresh = async () => {
     try { await _staffOpsRefresh(); } catch (e) { console.warn('[StaffOps] refresh failed:', e?.message); }

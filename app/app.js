@@ -58120,7 +58120,12 @@ async function _ensureFortizedAccount() {
 }
 
 // ── Welcome DM from @fortized (auto-sent to every new user, once) ──
-const FORTIZED_WELCOME_TEXT = `Hey Fortizian! 👋
+// Personalised by the recipient's DISPLAY NAME. The WelcomeCard.png asset lives
+// at the repo root (/WelcomeCard.png) and is appended LAST so the text is the
+// caption (no leading blank line).
+function _fortizedWelcomeText(name) {
+  const who = (name && String(name).trim()) || 'Fortizian';
+  return `Hey ${who}! 👋
 Welcome to Fortized! You're officially one of us now.
 Helmet on, shield up. We got grass-touchers to fight! ⚔️
 If you need anything, the [Support Center](https://www.fortized.com/support/) has your back.
@@ -58128,10 +58133,15 @@ If you need anything, the [Support Center](https://www.fortized.com/support/) ha
 Good luck out there!
 
 -Team Fortized`;
-// The WelcomeCard.png asset must live at the repo root (/WelcomeCard.png).
-async function sendFortizedWelcome(targetUsername) {
+}
+async function sendFortizedWelcome(targetUsername, displayName) {
   if (!targetUsername) return;
-  const msg = `[FTZIMG:WelcomeCard|/WelcomeCard.png]\n${FORTIZED_WELCOME_TEXT}`;
+  let dn = displayName;
+  if (!dn) {
+    if (CU && String(CU.username).toLowerCase() === String(targetUsername).toLowerCase()) dn = CU.displayName;
+    else { try { const u = await FortizedSocial.getUserByName(targetUsername); dn = u?.displayName; } catch (_) {} }
+  }
+  const msg = `${_fortizedWelcomeText(dn)}\n[FTZIMG:WelcomeCard|/WelcomeCard.png]`;
   await FortizedSocial.sendDMMessage(FORTIZED_ACCOUNT, String(targetUsername).toLowerCase(), msg);
 }
 // Boot hook: brand-new accounts carry needsWelcome (set in register()). Send the
@@ -58142,7 +58152,7 @@ async function _maybeSendWelcome() {
   CU.needsWelcome = false; // clear up front so a fast re-boot can't double-send
   try {
     await _ensureFortizedAccount();
-    await sendFortizedWelcome(CU.username);
+    await sendFortizedWelcome(CU.username, CU.displayName);
     CU.welcomeSent = true;
     await saveUser(true);
   } catch(e) { console.warn('[Welcome] send failed', e?.message); CU.needsWelcome = true; }

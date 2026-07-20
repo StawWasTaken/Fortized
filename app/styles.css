@@ -9142,15 +9142,15 @@ textarea:focus {
 }
 
 /* ── Consistent link styling ── */
-.msg-text a {
-  color: var(--blue);
+.msg-text a:not(.mention) {
+  color: var(--accent, #fff93e);
   text-decoration: none;
   transition: color 0.12s ease;
 }
 
-.msg-text a:hover {
+.msg-text a:not(.mention):hover {
   text-decoration: underline;
-  color: #93bbfd;
+  color: #fff9a0;
 }
 
 /* ── Profile card section transitions ── */

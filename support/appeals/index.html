@@ -11,8 +11,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/fortized-2026.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="/FortizedSocial-supabase.js?v=2026fix346"></script>
-<script src="/firebase-compat-shim.js?v=2026fix346"></script>
+<script src="/FortizedSocial-supabase.js?v=2026fix347"></script>
+<script src="/firebase-compat-shim.js?v=2026fix347"></script>
 <style>
 .page-top { position: relative; overflow: hidden; }
 .page-top::before {
@@ -122,28 +122,29 @@ function statusChip(v) {
 }
 function appealStatusMeta(s) { return s === 'accepted' ? { label:'Accepted', color:'#3ecf6e' } : s === 'declined' ? { label:'Declined', color:'#f87171' } : { label:'Under review', color:'#f59e0b' }; }
 
-let USER = null, RAW = null;
-const sb = () => (window.FortizedSocial && FortizedSocial._sb) || null;
+let USER = null, UOBJ = null;
 
-async function fetchRaw(username) {
-  const c = sb(); if (!c) return null;
-  const { data } = await c.from('users').select('raw').eq('username', String(username).toLowerCase()).maybeSingle();
-  return (data && data.raw) || {};
+// Read the signed-in user's OWN record via the public API (same one the other
+// support pages use). A user can only ever load their own username, so no one
+// can view or appeal anyone else's violations.
+async function fetchUser(username) {
+  try { return await FortizedSocial.getUserByName(username, { noCache: true, columns: '*' }); }
+  catch (_) { return null; }
 }
 
 async function boot() {
   const root = document.getElementById('appeals-root');
-  for (let i = 0; i < 60 && !(window.FortizedSocial && FortizedSocial.getCurrentUsername && FortizedSocial._sb); i++) await new Promise(r => setTimeout(r, 100));
-  if (!window.FortizedSocial || !FortizedSocial._sb) { root.innerHTML = `<div class="av-card"><div class="av-state">Couldn’t connect to Fortized. Please refresh the page.</div></div>`; return; }
+  for (let i = 0; i < 70 && !(window.FortizedSocial && FortizedSocial.getCurrentUsername && FortizedSocial.getUserByName); i++) await new Promise(r => setTimeout(r, 100));
+  if (!window.FortizedSocial || !FortizedSocial.getUserByName) { root.innerHTML = `<div class="av-card"><div class="av-state">Couldn’t connect to Fortized. Please refresh the page.</div></div>`; return; }
   try { USER = await FortizedSocial.getCurrentUsername(); } catch (_) {}
   if (!USER) { root.innerHTML = `<div class="av-card"><div class="av-state" style="padding:34px 20px;">You need to be signed in to view your record.<br><br><a class="av-link" href="/login">Log in</a> to continue.</div></div>`; return; }
   await renderAll();
 }
 
-function collect(raw) {
+function collect(u) {
   const out = [];
-  (Array.isArray(raw && raw.violations) ? raw.violations : []).forEach(v => out.push(v));
-  const d = (raw && raw.disciplinary) || {};
+  (Array.isArray(u && u.violations) ? u.violations : []).forEach(v => out.push(v));
+  const d = (u && u.disciplinary) || {};
   (d.suspensions || []).forEach((s, i) => out.push({ id: 'legacy-s-' + i, type: 'suspension', reason: s.reason || 'a suspension', at: s.issuedAt || s.suspendedAt || s.at || null, until: s.until || null, active: !(s.until && s.until <= Date.now()), reviewer: { type: 'staff' }, appeals: Array.isArray(s.appeals) ? s.appeals : [], legacy: true }));
   (d.warnings || []).forEach((w, i) => out.push({ id: 'legacy-w-' + i, type: 'warning', reason: w.reason || 'a violation', at: w.issuedAt || w.at || null, until: w.expiresAt || null, active: !(w.expiresAt && w.expiresAt <= Date.now()), reviewer: { type: 'staff' }, appeals: Array.isArray(w.appeals) ? w.appeals : [], legacy: true }));
   return out.sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0));
@@ -194,8 +195,8 @@ function card(v) {
 
 async function renderAll() {
   const root = document.getElementById('appeals-root');
-  try { RAW = await fetchRaw(USER); } catch (_) { RAW = {}; }
-  const list = collect(RAW);
+  UOBJ = await fetchUser(USER);
+  const list = collect(UOBJ);
   if (!list.length) {
     root.innerHTML = `<div class="av-card"><div class="av-state" style="padding:40px 20px;">
       <div style="width:52px;height:52px;border-radius:15px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;"><svg width="24" height="24" viewBox="0 0 512 512" fill="#3ecf6e"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg></div>
@@ -214,9 +215,9 @@ async function submitAppeal(vioId) {
   if (!text) { alert('Please write your appeal first.'); return; }
   const btn = ta.parentElement.querySelector('.av-submit'); if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
   try {
-    // Re-read fresh raw to avoid clobbering a concurrent write.
-    const raw = await fetchRaw(USER) || {};
-    const arr = Array.isArray(raw.violations) ? raw.violations : [];
+    // Re-read fresh (own record only) to avoid clobbering a concurrent write.
+    const u = await fetchUser(USER) || {};
+    const arr = Array.isArray(u.violations) ? u.violations : [];
     const v = arr.find(x => x.id === vioId);
     if (!v) { alert('This violation is no longer on your record.'); if (btn) { btn.disabled = false; btn.textContent = 'Submit appeal'; } return; }
     if ((v.appeals || []).length >= MAX_APPEALS) { alert('You have used all 3 appeals for this violation.'); return; }
@@ -224,8 +225,8 @@ async function submitAppeal(vioId) {
     v.appeals = v.appeals || [];
     const appeal = { id: 'AP-' + Date.now().toString(36).toUpperCase(), text: text.slice(0, 1000), at: new Date().toISOString(), status: 'pending', decidedBy: null, decidedAt: null, note: '' };
     v.appeals.push(appeal);
-    raw.violations = arr;
-    await sb().from('users').update({ raw }).eq('username', String(USER).toLowerCase());
+    u.violations = arr;
+    await FortizedSocial.saveUserObject(u);
     if (FortizedSocial.adminGetAppealsQueue && FortizedSocial.adminSaveAppealsQueue) {
       const q = (await FortizedSocial.adminGetAppealsQueue()) || [];
       q.push({ username: USER, vioId: v.id, appealId: appeal.id, type: v.type, reason: v.reason, text: appeal.text.slice(0, 400), attempt: v.appeals.length, at: appeal.at, status: 'pending' });

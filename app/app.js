@@ -35157,9 +35157,9 @@ function parseMD(s) {
   // violation card, or open the Appeals & Violations page. Rendered before any
   // other pass so the tokens can't be mangled.
   s = s.replace(/\[\[VCARD:([A-Za-z0-9\-]+)\|([^\]|]+)\]\]/g, (_m, id, label) =>
-    `<button type="button" class="ftz-safety-btn" onclick="event.stopPropagation();_reopenViolation('${id.replace(/[^A-Za-z0-9\-]/g,'')}')">${escapeHTML(label)}</button>`);
-  s = s.replace(/\[\[APPEALS\|([^\]|]+)\]\]/g, (_m, label) =>
-    `<button type="button" class="ftz-safety-btn" onclick="event.stopPropagation();openAppealsPage()">${escapeHTML(label)}</button>`);
+    `<button type="button" class="ftz-safety-btn" onclick="event.stopPropagation();openAppealsPage('${id.replace(/[^A-Za-z0-9\-]/g,'')}')">${escapeHTML(label)}</button>`);
+  s = s.replace(/\[\[APPEALS(?::([A-Za-z0-9\-]+))?\|([^\]|]+)\]\]/g, (_m, id, label) =>
+    `<button type="button" class="ftz-safety-btn" onclick="event.stopPropagation();openAppealsPage('${(id||'').replace(/[^A-Za-z0-9\-]/g,'')}')">${escapeHTML(label)}</button>`);
   // 0⁻⁻. A FTZ token that carried a very large base64 data: URL was swapped for
   // a light [FTZBIG:…] placeholder by _defuseHugeMedia so it can't freeze the
   // render — show a small "too big to display" card instead of the media.
@@ -58229,7 +58229,7 @@ async function sendFortizedSafetyNotice(targetUsername, { reason, until, article
     lines.push(`We flagged one of your recent messages${reasonBit}. This is a warning — nothing more for now.`);
   }
   lines.push(`Here's exactly what our rules say: [Fortized Terms of Use](${RULES_URL}).`);
-  lines.push(violationId ? `[[VCARD:${violationId}|View the full notice]] [[APPEALS|Appeal this]]` : `[[APPEALS|Appeal this]]`);
+  lines.push(violationId ? `[[VCARD:${violationId}|View the full notice]] [[APPEALS:${violationId}|Appeal this]]` : `[[APPEALS|Appeal this]]`);
   lines.push(`We read every appeal — a real person on our team, not a bot.`);
   lines.push(`— Fortized Safety`);
   const text = lines.join('\n');

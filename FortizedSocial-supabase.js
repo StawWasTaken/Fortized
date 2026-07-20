@@ -2015,9 +2015,23 @@ const FortizedSocial = (() => {
   // Client-side rate limiting for Socket.IO events
   var _emitLastTime = {};
   var _emitCooldowns = { 'status:set': 2000, 'typing:start': 1000, 'typing:stop': 1000, 'activity:set': 3000, 'activity:update': 3000, 'profile:update': 500, 'bastion:update': 500 };
+  // Events whose id1/id2 are ROOM ids. Room JOINs are always lowercased
+  // (server roomKey does no case folding), so these must match — otherwise a
+  // bastion channel with an uppercase name (or any mixed-case id) is
+  // broadcast to a room nobody joined and the message is silently dropped
+  // for every recipient (only the 2s poller saves it). Normalise here, in one
+  // place, so every call site is covered.
+  var _roomEvents = { 'message:send': 1, 'message:edit': 1, 'message:delete': 1, 'reaction:toggle': 1, 'typing:start': 1, 'typing:stop': 1 };
   function socketEmit(event, data) {
     try {
       if (!_socket || !_socketReady) return false;
+      if (_roomEvents[event] && data && typeof data === 'object') {
+        var _d = {};
+        for (var k in data) _d[k] = data[k];
+        if (typeof _d.id1 === 'string') _d.id1 = _d.id1.toLowerCase();
+        if (typeof _d.id2 === 'string') _d.id2 = _d.id2.toLowerCase();
+        data = _d;
+      }
       var cooldown = _emitCooldowns[event];
       if (cooldown) {
         var now = Date.now();
@@ -2205,6 +2219,83 @@ const FortizedSocial = (() => {
       _channelPollingIntervals.delete(channelKey);
       _lastChannelTimestamp.delete(channelKey);
       console.log('[ChannelPolling] Stopped polling for:', channelKey);
+    }
+  }
+
+  // ── Group-chat polling (safety net for group chats) ──
+  // Group chats were the ONLY open-chat surface with no polling fallback:
+  // DMs (startDMPolling) and bastion channels (startChannelPolling) each
+  // poll every 2s, but GCs relied entirely on Socket.IO push + the
+  // firebase-compat shim's postgres_changes subscription. When the socket
+  // hiccups (or Supabase Realtime is disabled for the project) GC messages
+  // never appeared until a manual refresh. This mirrors the DM poller.
+  // GC rows differ from dms/bastion_msgs: the full message payload lives in
+  // the `data` JSON blob (reactions/replyTo/flags/attachments), with flat
+  // id/from/text/time/timestamp/edited columns alongside for cheap diffing.
+  let _gcPollingIntervals = new Map(); // gcId -> interval
+  let _lastGCTimestamp = new Map();    // gcId -> newest seen timestamp (ms)
+
+  async function startGCPolling(gcId) {
+    if (!gcId || _gcPollingIntervals.has(gcId)) return;
+
+    const pollInterval = setInterval(async () => {
+      if (_tabHidden()) return;
+      try {
+        const { data, error } = await sb.from('group_chat_messages')
+          .select('id,from,text,time,timestamp,edited,data')
+          .eq('gc_id', gcId)
+          .order('timestamp', { ascending: false })
+          .limit(50);
+
+        if (error || !data) return;
+
+        const room = 'gc:' + gcId;
+        const cb = _socketCallbacks.onMessage || _callbacks.onMessage;
+        const editCb = _socketCallbacks.onMessageEdited;
+        const deleteCb = _socketCallbacks.onMessageDeleted;
+        for (const row of data.reverse()) {
+          // Prefer the full stored payload; fall back to flat columns.
+          const full = (row.data && typeof row.data === 'object') ? { ...row.data } : {};
+          full.id = full.id || row.id;
+          full.from = full.from || row.from;
+          full.timestamp = full.timestamp || row.timestamp;
+          full.time = full.time || row.time;
+          if (full.text === undefined) full.text = row.text;
+          if (full.edited === undefined) full.edited = row.edited;
+
+          const msgTime = new Date(row.timestamp).getTime();
+          const lastTime = _lastGCTimestamp.get(gcId) || 0;
+          if (msgTime > lastTime) {
+            // onMessage de-dupes against the DOM, so re-seeing rendered
+            // history on the first poll is harmless.
+            if (cb) cb(room, full);
+          }
+          const prevText = _lastMsgTexts.get(row.id);
+          if (prevText !== undefined && prevText !== (row.text || '') && editCb) {
+            editCb({ messageId: row.id, newText: row.text, editedBy: row.from });
+          }
+          _lastMsgTexts.set(row.id, row.text || '');
+        }
+        const currentIds = new Set(data.map(r => r.id));
+        const prevIds = _lastPollIds.get('gc:' + gcId);
+        if (prevIds && deleteCb) {
+          prevIds.forEach(id => { if (!currentIds.has(id)) deleteCb({ messageId: id, deletedBy: '' }); });
+        }
+        _lastPollIds.set('gc:' + gcId, currentIds);
+        if (data.length > 0) _lastGCTimestamp.set(gcId, new Date(data[data.length - 1].timestamp).getTime());
+      } catch (e) { /* silently skip */ }
+    }, 2000); // Poll every 2s for quicker real-time feel (matches DM/channel)
+
+    _gcPollingIntervals.set(gcId, pollInterval);
+  }
+
+  function stopGCPolling(gcId) {
+    const interval = _gcPollingIntervals.get(gcId);
+    if (interval) {
+      clearInterval(interval);
+      _gcPollingIntervals.delete(gcId);
+      _lastGCTimestamp.delete(gcId);
+      console.log('[GCPolling] Stopped polling for:', gcId);
     }
   }
 
@@ -2425,6 +2516,9 @@ const FortizedSocial = (() => {
     _channelPollingIntervals.forEach((interval) => { try { clearInterval(interval); } catch(_){} });
     _channelPollingIntervals.clear();
     _lastChannelTimestamp.clear();
+    _gcPollingIntervals.forEach((interval) => { try { clearInterval(interval); } catch(_){} });
+    _gcPollingIntervals.clear();
+    _lastGCTimestamp.clear();
     console.log('[Fortized] Supabase real-time subscriptions stopped');
   }
 
@@ -3197,6 +3291,7 @@ const FortizedSocial = (() => {
     uploadFile, getVoicePresence,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
+    startGCPolling, stopGCPolling,
     startFriendRequestPolling, stopFriendRequestPolling, startVoiceRoomPolling, stopVoiceRoomPolling,
     initSocket, getSocket, isSocketReady, isConnected, socketEmit,
     joinRoom, leaveRoom, queryPresence, disconnectSocket,

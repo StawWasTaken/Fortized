@@ -7898,7 +7898,7 @@ function showDMFriendsHome() {
 // switch between DMs / GCs / channels / views. Every opener routes through
 // the _leaveActive* helpers before registering its own subscriptions so we
 // never leak a second room or polling timer for the same surface.
-window._activeSubs = window._activeSubs || { dmKey: null, dmRoom: null, gcRoom: null, chKey: null, chRoom: null };
+window._activeSubs = window._activeSubs || { dmKey: null, dmRoom: null, gcRoom: null, gcKey: null, chKey: null, chRoom: null };
 function _leaveActiveDM() {
   const s = window._activeSubs;
   if (s.dmKey) { try { FortizedSocial.stopDMPolling && FortizedSocial.stopDMPolling(s.dmKey); } catch(_){} s.dmKey = null; }
@@ -7908,6 +7908,7 @@ function _leaveActiveDM() {
 }
 function _leaveActiveGC() {
   const s = window._activeSubs;
+  if (s.gcKey) { try { FortizedSocial.stopGCPolling && FortizedSocial.stopGCPolling(s.gcKey); } catch(_){} s.gcKey = null; }
   if (s.gcRoom) { try { FortizedSocial.leaveRoom && FortizedSocial.leaveRoom('gc', s.gcRoom); } catch(_){} s.gcRoom = null; }
 }
 function _leaveActiveChannel() {
@@ -9279,6 +9280,10 @@ async function loadGCMessages(gcId) {
   // Join Socket.io room for GC real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('gc', String(gcId).toLowerCase());
   window._activeSubs.gcRoom = gcId;
+  // Polling safety net (like DMs + bastion channels) so GC messages still
+  // land within ~2s if the socket / Supabase Realtime path is unavailable.
+  if (FortizedSocial.startGCPolling) FortizedSocial.startGCPolling(gcId);
+  window._activeSubs.gcKey = gcId;
   // Persistent cache: paint from cache first if we already have this GC.
   const cacheKey = _chatKey('gc', gcId);
   const cached = _chatCacheGet(cacheKey);
@@ -15980,7 +15985,7 @@ function initFortizedUXResilience() {
         // Handle DM messages
         if (room.startsWith('dm:') && curDM) {
           const expectedRoom = 'dm:' + [CU.username, curDM].sort().join('__');
-          if (room === expectedRoom) {
+          if (room.toLowerCase() === expectedRoom.toLowerCase()) {
             const msgsEl = document.getElementById('dm-msgs');
             if (msgsEl) {
               // Check if message already rendered (echo from own send)
@@ -16000,7 +16005,7 @@ function initFortizedUXResilience() {
         // Handle GC (Group Chat) messages
         if (room.startsWith('gc:') && curGC) {
           const expectedRoom = 'gc:' + curGC;
-          if (room === expectedRoom) {
+          if (room.toLowerCase() === expectedRoom.toLowerCase()) {
             const msgsEl = document.getElementById('gc-msgs');
             if (msgsEl) {
               const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
@@ -16021,7 +16026,7 @@ function initFortizedUXResilience() {
           const ch = b?.channels?.[curChannel];
           if (b && ch) {
             const expectedRoom = 'bastion:' + (b.globalId || b.name) + ':' + ch.name;
-            if (room === expectedRoom) {
+            if (room.toLowerCase() === expectedRoom.toLowerCase()) {
               const msgsEl = document.getElementById('ch-msgs-' + curChannel);
               if (msgsEl) {
                 const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);

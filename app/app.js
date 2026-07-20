@@ -190,15 +190,30 @@ const _STANDING_META = [
   { id:3, label:'At risk',      color:'#ef4444', tint:'rgba(239,68,68,.12)',   border:'rgba(239,68,68,.38)',  msg:"Your account is at risk. Any further infraction may suspend you." },
   { id:4, label:'Suspended',    color:'#b91c1c', tint:'rgba(239,68,68,.14)',   border:'rgba(127,29,29,.55)',  msg:"Your account is suspended. Access is limited until the suspension ends." },
 ];
+// New-model violations (u.violations) mapped into the legacy standing shape so
+// the Account Standing track counts staff + automod actions in one place.
+// `warning` maps to a warning; only STAFF account suspensions count toward
+// standing (transient automod chat-mutes are enforced separately and shouldn't
+// jump the account to "Suspended").
+function _vioWarningsAsStanding(u) {
+  return (Array.isArray(u?.violations) ? u.violations : [])
+    .filter(v => v.type === 'warning')
+    .map(v => ({ reason: v.reason, issuedAt: v.at, at: v.at, expiresAt: v.until ? new Date(v.until).getTime() : null }));
+}
+function _vioSuspensionsAsStanding(u) {
+  return (Array.isArray(u?.violations) ? u.violations : [])
+    .filter(v => v.type === 'suspension' && v.source === 'staff')
+    .map(v => ({ reason: v.reason, suspendedAt: v.at, at: v.at, until: v.until ? new Date(v.until).getTime() : null }));
+}
 function _activeWarnings(u) {
   const now = Date.now();
-  return (u && u.disciplinary && Array.isArray(u.disciplinary.warnings) ? u.disciplinary.warnings : [])
-    .filter(w => !w.expiresAt || w.expiresAt > now);
+  const legacy = (u && u.disciplinary && Array.isArray(u.disciplinary.warnings) ? u.disciplinary.warnings : []);
+  return legacy.concat(_vioWarningsAsStanding(u)).filter(w => !w.expiresAt || w.expiresAt > now);
 }
 function _activeSuspensions(u) {
   const now = Date.now();
-  return (u && u.disciplinary && Array.isArray(u.disciplinary.suspensions) ? u.disciplinary.suspensions : [])
-    .filter(s => !s.until || s.until > now);
+  const legacy = (u && u.disciplinary && Array.isArray(u.disciplinary.suspensions) ? u.disciplinary.suspensions : []);
+  return legacy.concat(_vioSuspensionsAsStanding(u)).filter(s => !s.until || s.until > now);
 }
 function _standingLevel(u) {
   if (_activeSuspensions(u).length > 0) return 4;
@@ -227,13 +242,13 @@ const _SUSPENSION_DURATION_MS = 365 * 86400000;
 // the "Expired violations" drawer.
 function _expiredWarnings(u) {
   const now = Date.now();
-  return (u && u.disciplinary && Array.isArray(u.disciplinary.warnings) ? u.disciplinary.warnings : [])
-    .filter(w => w.expiresAt && w.expiresAt <= now);
+  const legacy = (u && u.disciplinary && Array.isArray(u.disciplinary.warnings) ? u.disciplinary.warnings : []);
+  return legacy.concat(_vioWarningsAsStanding(u)).filter(w => w.expiresAt && w.expiresAt <= now);
 }
 function _expiredSuspensions(u) {
   const now = Date.now();
-  return (u && u.disciplinary && Array.isArray(u.disciplinary.suspensions) ? u.disciplinary.suspensions : [])
-    .filter(s => s.until && s.until <= now);
+  const legacy = (u && u.disciplinary && Array.isArray(u.disciplinary.suspensions) ? u.disciplinary.suspensions : []);
+  return legacy.concat(_vioSuspensionsAsStanding(u)).filter(s => s.until && s.until <= now);
 }
 // Fold warnings + suspensions into one violation shape the standing card
 // renders (newest first). `at` is the issue date, `until` the expiry.
@@ -15072,6 +15087,29 @@ function _ftzMyViolations() {
 }
 function _ftzFindViolation(id) { return (CU?.violations || []).find(v => v.id === id) || null; }
 
+// Record a STAFF-issued violation onto a target user (so it shows on their
+// redesigned card + is appealable on their Appeals & Violations page). Reviewer
+// is the acting staff member (superadmins stay anonymous). Fire-and-forget-safe.
+async function _ftzStaffRecordViolation(targetUsername, { type, reason, note, until, evidence } = {}) {
+  if (!targetUsername) return null;
+  try {
+    const u = await FortizedSocial.getUserByName(targetUsername);
+    if (!u) return null;
+    const v = _ftzRecordViolation(u, {
+      type, reason: reason || 'Not specified', note: note || '',
+      until: until || null, evidence: evidence || null,
+      reviewer: _ftzReviewerFromActioner(CU?.username), source: 'staff',
+    });
+    await FortizedSocial.saveUserObject(u);
+    // If the staff member actioned THEMSELVES (testing), mirror to CU.
+    if (CU && String(CU.username).toLowerCase() === String(targetUsername).toLowerCase()) {
+      if (!Array.isArray(CU.violations)) CU.violations = [];
+      CU.violations.push(v);
+    }
+    return v;
+  } catch (e) { console.warn('[Violations] staff record failed', e?.message); return null; }
+}
+
 // ── The redesigned card ────────────────────────────────────────────────────
 // One renderer for all three types. `mode`:
 //   'blocking'    → full-screen takeover (active ban / active suspension)
@@ -15390,7 +15428,7 @@ async function submitAppeal(vioId) {
   try {
     if (FortizedSocial.adminGetAppealsQueue && FortizedSocial.adminSaveAppealsQueue) {
       const q = (await FortizedSocial.adminGetAppealsQueue()) || [];
-      q.push({ username: CU.username, vioId: v.id, appealId: appeal.id, type: v.type, reason: v.reason, at: appeal.at });
+      q.push({ username: CU.username, vioId: v.id, appealId: appeal.id, type: v.type, reason: v.reason, text: appeal.text.slice(0, 400), attempt: v.appeals.length, at: appeal.at, status: 'pending' });
       await FortizedSocial.adminSaveAppealsQueue(q);
     }
   } catch (_) {}
@@ -27906,7 +27944,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     </div>`;
   }
   // ── Old tab IDs redirect to new consolidated tabs ──
-  else if (tab === 'reports' || tab === '_reports' || tab === 'bans' || tab === '_bans' || tab === 'suspensions' || tab === '_suspensions' || tab === 'nsfw_queue' || tab === '_nsfw_queue') { await _loadAdminModeration(main, tab.replace(/^_/,'')); return; }
+  else if (tab === 'reports' || tab === '_reports' || tab === 'bans' || tab === '_bans' || tab === 'suspensions' || tab === '_suspensions' || tab === 'nsfw_queue' || tab === '_nsfw_queue' || tab === 'appeals' || tab === '_appeals') { await _loadAdminModeration(main, tab.replace(/^_/,'')); return; }
   else if (tab === 'users' || tab === '_users' || tab === 'all_users' || tab === '_all_users') { await _loadAdminMembers(main, tab.replace(/^_/,'')); return; }
   // Legacy sub-tab ids (deep links from outside the console) — route to the
   // domain that now owns them via the _SC_SUB_TO_DOMAIN map.
@@ -28188,6 +28226,20 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       <div id="admin-suspensions-list" style="color:rgba(255,255,255,.3);text-align:center;padding:40px;">Loading suspensions...</div>
     </div>`;
     _loadAdminSuspensions();
+  }
+  else if (tab === '_appeals') {
+    main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
+      <div class="sc-head">
+        <div>
+          <div class="sc-head-title"><i class="fas fa-scale-balanced" style="color:#5ecbff;"></i> Appeals</div>
+        </div>
+        <div class="sc-head-actions">
+          <button class="sc-btn sc-btn-ghost" style="color:#5ecbff;" onclick="_loadAdminAppeals()"><i class="fas fa-rotate"></i> Refresh</button>
+        </div>
+      </div>
+      <div id="admin-appeals-list" style="color:rgba(255,255,255,.3);text-align:center;padding:40px;">Loading appeals…</div>
+    </div>`;
+    _loadAdminAppeals();
   }
   else if (tab === '_users') {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
@@ -29005,9 +29057,12 @@ async function _loadAdminModeration(main, subTab) {
   const reports = await FortizedSocial.adminGetReports().catch(()=>[]);
   const pending = reports.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
   const nsfwQueue = await FortizedSocial.adminGetNsfwQueue().catch(()=>[]);
+  const appealsQueue = await FortizedSocial.adminGetAppealsQueue?.().catch(()=>[]) || [];
+  const pendingAppeals = appealsQueue.filter(a => a.status !== 'accepted' && a.status !== 'declined').length;
   const tabs = [
     {id:'reports', label:'Reports', badge:pending},
     {id:'nsfw_queue', label:'Content Review', badge:nsfwQueue.length},
+    {id:'appeals', label:'Appeals', badge:pendingAppeals},
     ...(role!=='moderator'?[{id:'bans', label:'Bans'},{id:'suspensions', label:'Suspensions'}]:[]),
   ];
   // Store data in localStorage for legacy renderers to read
@@ -29590,6 +29645,43 @@ async function _deleteAndReplaceReportedMessage(report) {
 }
 let _reportSuspendTarget = null;
 let _reportContentData = null;
+
+async function _loadAdminAppeals() {
+  const el = document.getElementById('admin-appeals-list');
+  if (!el) return;
+  const q = (await FortizedSocial.adminGetAppealsQueue?.().catch(()=>[])) || [];
+  const pending = q.filter(a => a.status !== 'accepted' && a.status !== 'declined').sort((a,b) => new Date(b.at) - new Date(a.at));
+  const decided = q.filter(a => a.status === 'accepted' || a.status === 'declined').sort((a,b) => new Date(b.at) - new Date(a.at)).slice(0, 30);
+  const typeColor = t => t === 'ban' ? '#f2555a' : t === 'suspension' ? '#a855f7' : '#f5a524';
+  const card = (a, isPending) => `<div class="sc-card" style="padding:16px 18px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+      <span style="font-weight:700;color:#fff;">@${escapeHTML(a.username)}</span>
+      <span style="font-size:11px;font-weight:700;color:${typeColor(a.type)};background:${typeColor(a.type)}1a;border:1px solid ${typeColor(a.type)}33;border-radius:100px;padding:2px 9px;text-transform:capitalize;">${escapeHTML(a.type || 'violation')}</span>
+      <span style="font-size:12px;color:var(--muted);">Appeal ${a.attempt || 1} of 3 · ${_fmtDateEU(a.at)}</span>
+      ${!isPending ? `<span style="margin-left:auto;font-size:12px;font-weight:700;color:${a.status === 'accepted' ? '#3ecf6e' : '#f87171'};">${a.status === 'accepted' ? 'Accepted' : 'Declined'}</span>` : ''}
+    </div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">Original reason: ${escapeHTML(a.reason || '—')}</div>
+    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:11px 13px;font-size:13px;color:#c8d0dc;line-height:1.55;white-space:pre-wrap;word-break:break-word;">${escapeHTML(a.text || '(no text)')}</div>
+    ${isPending ? `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <button class="sc-btn" style="background:rgba(62,207,110,.12);border:1px solid rgba(62,207,110,.25);color:#3ecf6e;" onclick="_scDecideAppeal('${escapeHTML(a.username)}','${escapeHTML(a.vioId)}','${escapeHTML(a.appealId)}','accept')"><i class="fas fa-check"></i> Accept &amp; lift</button>
+      <button class="sc-btn" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;" onclick="_scDecideAppeal('${escapeHTML(a.username)}','${escapeHTML(a.vioId)}','${escapeHTML(a.appealId)}','decline')"><i class="fas fa-xmark"></i> Decline</button>
+    </div>` : ''}
+  </div>`;
+  el.style.cssText = '';
+  el.innerHTML = `
+    ${pending.length ? `<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:4px 2px 10px;">Pending — ${pending.length}</div>${pending.map(a => card(a, true)).join('')}`
+      : '<div class="sc-card" style="text-align:center;padding:26px;color:var(--muted);margin-bottom:16px;">No pending appeals. All caught up.</div>'}
+    ${decided.length ? `<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:22px 2px 10px;">Recently decided</div>${decided.map(a => card(a, false)).join('')}` : ''}
+  `;
+}
+async function _scDecideAppeal(username, vioId, appealId, decision) {
+  const note = prompt(decision === 'accept'
+    ? 'Optional note to the user (why the appeal was accepted):'
+    : 'Optional note to the user (why the appeal was declined):') || '';
+  await ftzDecideAppeal(username, vioId, appealId, decision, note);
+  toast(`Appeal ${decision === 'accept' ? 'accepted — action lifted' : 'declined'}`, 'success');
+  _loadAdminAppeals();
+}
 
 async function _loadAdminSuspensions() {
   const el = document.getElementById('admin-suspensions-list');
@@ -30981,6 +31073,7 @@ function adminActionUser(username, action) {
         bans.push(banObj);
         localStorage.setItem('ftz_bans', JSON.stringify(bans));
         _saveBanToFirebase(banObj);
+        _ftzStaffRecordViolation(username, { type:'ban', reason:v.reason });
         FortizedSocial.addNotification(username, { type: 'system', text: 'Your account has been banned. Reason: ' + v.reason }).catch(()=>{});
         logAudit('ban', username, v.reason);
         toast(`${username} has been banned`, 'success');
@@ -31004,6 +31097,7 @@ function adminActionUser(username, action) {
       onConfirm:async(v)=>{
         if (!v.reason) { toast('Reason required', 'error'); return false; }
         await FortizedSocial.adminWarnUser(username, { reason:v.reason, issuedBy: CU.username, issuedAt: new Date().toISOString() }).catch(()=>{});
+        await _ftzStaffRecordViolation(username, { type:'warning', reason:v.reason });
         await FortizedSocial.addNotification(username, { type: 'system', text: 'Admin Warning: ' + v.reason }).catch(()=>{});
         logAudit('warn', username, v.reason);
         toast(`Warning issued to ${username}`, 'success');
@@ -31033,6 +31127,10 @@ function adminActionUser(username, action) {
           _reportContentData = null;
         }
         await FortizedSocial.adminSuspendUser(username, suspObj).catch(()=>{});
+        await _ftzStaffRecordViolation(username, {
+          type:'suspension', reason:v.reason, note:v.msg, until,
+          evidence: (suspObj.offendingText || (suspObj.offendingMedia && suspObj.offendingMedia.length)) ? { text: suspObj.offendingText || '', media: suspObj.offendingMedia || [] } : null,
+        });
         logAudit('suspend',username,`${amount} ${unit} — ${v.reason}`);
         toast(`${username} suspended for ${amount} ${unit}`,'success');
         adminSearchUser();

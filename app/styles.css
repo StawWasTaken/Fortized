@@ -12552,15 +12552,15 @@ body.ftz-picking-msg .msg-row[data-msgid]:hover{ background:var(--accent-dim); b
   cursor:pointer; transition:background .12s, color .12s;
 }
 .fpp-menu__item:hover{ background:rgba(255,255,255,.06); }
-/* Menu-action glyphs tint with the row text — but NOT the status dots
-   (.ftz-sdot), whose green/idle/red/grey fill is baked in as an inline
-   attribute and must be preserved (was being greyed out by currentColor). */
-.fpp-menu__item svg:not(.ftz-sdot){ flex-shrink:0; fill:currentColor; color:var(--muted-light); opacity:.72; transition:opacity .12s; }
-.fpp-menu__item:hover svg:not(.ftz-sdot){ opacity:1; }
+/* Menu-action glyphs match the row's TEXT colour exactly (icon inherits the
+   item's colour, fill:currentColor) — a normal row's icon is the text colour,
+   a danger row's icon is red. NOT the status dots (.ftz-sdot), whose
+   green/idle/red/grey fill is baked in as an inline attribute. */
+.fpp-menu__item svg:not(.ftz-sdot){ flex-shrink:0; fill:currentColor; color:inherit; opacity:1; }
 .fpp-menu__item .ftz-sdot{ flex-shrink:0; }
 .fpp-menu__item--danger{ color:var(--red); }
 .fpp-menu__item--danger:hover{ background:rgba(235,69,69,.12); }
-.fpp-menu__item--danger svg{ color:var(--red); opacity:.85; }
+.fpp-menu__item--danger svg:not(.ftz-sdot){ color:var(--red); }
 .fpp-menu__item--has-sub{ justify-content:space-between; }
 .fpp-menu__item--has-sub .fpp-menu__chev{
   margin-left:auto; color:var(--muted); flex-shrink:0; opacity:.7;

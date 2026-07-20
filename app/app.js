@@ -27602,39 +27602,50 @@ async function submitReport(payload) {
 // the human queue; in 'autonomous' it acts, records an (appealable) violation
 // credited to the automated system, deletes the message, and resolves the report.
 async function _aiTriageReport(report, mode) {
-  const check = _checkAutomodThreat(report.msgText || '', []);
-  const clearCut = !!(check.isThreat && (check.score >= 0.95));
+  // Prefer the real AI (judges intent from the message); fall back to the local
+  // regex when the AI is unconfigured / unreachable.
+  const verdict = await _aiModerate(report.msgText || '', []).catch(() => null);
+  let clearCut, reason, score;
+  if (verdict) {
+    clearCut = !!verdict.flagged;
+    reason = verdict.reason || 'a reported message that violated the rules';
+    score = (typeof verdict.confidence === 'number') ? +verdict.confidence.toFixed(2) : null;
+  } else {
+    const check = _checkAutomodThreat(report.msgText || '', []);
+    clearCut = !!(check.isThreat && (check.score >= 0.95));
+    reason = check.reason || 'a reported message that violated the rules';
+    score = +(check.score || 0).toFixed(2);
+  }
+  const engine = verdict ? 'ai' : 'regex';
   if (mode === 'assist') {
-    report.aiTriage = { mode, recommendation: clearCut ? 'warn_and_delete' : 'needs_human_review', reason: check.reason || null, score: +(check.score || 0).toFixed(2), at: new Date().toISOString() };
+    report.aiTriage = { mode, engine, recommendation: clearCut ? 'warn_and_delete' : 'needs_human_review', reason: clearCut ? reason : null, score, at: new Date().toISOString() };
     try { await FortizedSocial.adminSaveReport(report); } catch (_) {}
     return;
   }
-  // Autonomous
+  // Autonomous — warn + delete only (suspensions / bans still route to a human).
   if (!clearCut) {
-    report.aiTriage = { mode, action: 'escalated_to_human', reason: 'not clear-cut', score: +(check.score || 0).toFixed(2), at: new Date().toISOString() };
+    report.aiTriage = { mode, engine, action: 'escalated_to_human', reason: 'not clear-cut', score, at: new Date().toISOString() };
     try { await FortizedSocial.adminSaveReport(report); } catch (_) {}
     return;
   }
-  // Record an automated warning on the target + notify + delete the message.
   try {
     const u = await FortizedSocial.getUserByName(report.msgFrom);
     if (u) {
       _ftzRecordViolation(u, {
-        type: 'warning', reason: 'a reported message that violated the rules',
-        source: 'automod', reviewer: { type: 'automated' },
+        type: 'warning', reason, source: 'automod', reviewer: { type: 'automated' },
         evidence: { text: String(report.msgText || '').slice(0, 600), context: [] },
       });
       await FortizedSocial.saveUserObject(u);
     }
   } catch (_) {}
-  try { await sendFortizedSafetyNotice(report.msgFrom, { reason: 'a reported message that violated the rules', action: 'warning' }); } catch (_) {}
+  try { await sendFortizedSafetyNotice(report.msgFrom, { reason, action: 'warning' }); } catch (_) {}
   let deleted = false;
   try { deleted = await FortizedSocial.adminDeleteMessage?.(report.msgId); } catch (_) {}
   report.status = 'resolved';
   report.resolution = 'ai_warn_delete';
-  report.aiTriage = { mode, action: 'warned_and_deleted', deleted: !!deleted, reason: check.reason || null, score: +(check.score || 0).toFixed(2), at: new Date().toISOString() };
+  report.aiTriage = { mode, engine, action: 'warned_and_deleted', deleted: !!deleted, reason, score, at: new Date().toISOString() };
   try { await FortizedSocial.adminSaveReport(report); } catch (_) {}
-  try { logAudit('ai_report_action', report.msgFrom, `AI warned @${report.msgFrom} + ${deleted ? 'deleted' : 'attempted delete of'} a reported message`); } catch (_) {}
+  try { logAudit('ai_report_action', report.msgFrom, `AI (${engine}) warned @${report.msgFrom} + ${deleted ? 'deleted' : 'attempted delete of'} a reported message`); } catch (_) {}
 }
 
 
@@ -33993,8 +34004,8 @@ const _AUTOMOD_THREAT_PATTERNS = [
   { pattern: /\b(?:tr[a@]nn(?:y|ie)|k[i1]ke|wetback)s?\b/i, weight: 0.92, reason: 'using a slur' },
 
   // ── Doxxing / swatting a person ──
-  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|\s+gonna|\s+finna)\s+(?:doxx?|swat)\s+(?:you|u|him|her|them)\b/i, weight: 0.85, reason: 'threatening to dox or swat someone' },
-  { pattern: /\bswatting\s+(?:you|u|him|her|them)\b/i, weight: 0.85, reason: 'threatening to dox or swat someone' },
+  { pattern: /i(?:['’ ]?m\s+(?:going to|gonna|finna)|['’ ]?ll|['’ ]? ?will|mma?|\s+gonna|\s+finna)\s+(?:doxx?|swat|leak)\s+(?:you|u|him|her|them|your)\b/i, weight: 0.95, reason: 'threatening to dox or swat someone' },
+  { pattern: /\bswatting\s+(?:you|u|him|her|them)\b/i, weight: 0.95, reason: 'threatening to dox or swat someone' },
 ];
 
 // Content rephrasing / auto-moderation of what people say has been REMOVED —
@@ -34065,6 +34076,47 @@ function _checkAutomodThreat(text, contextMessages = []) {
   return { isThreat: false, reason: null, context: [], score: finalScore };
 }
 
+// ── AI moderation (server-proxied /api/moderate; graceful local fallback) ──
+// A cheap pre-screen keeps free-tier API usage sane: only messages carrying SOME
+// potentially-concerning token are sent to the model; everything else is left
+// alone locally. Returns the model verdict, or null when the AI is unconfigured
+// / unreachable (the local regex checks then stand on their own).
+const _AI_MOD_PRESCREEN = /\b(kill|kys|kms|die|dead|death|suicide|hang|neck|rope|rape|molest|dox|swat|leak|address|hurt|beat|stab|shoot|threat|hate|nigg|fagg|tranny|kike|retard|bitch|whore|slut|worthless|loser|freak|ugly|nobody|everyone\s+hates)\b/i;
+let _aiModAvailable = null; // null=unknown, false=confirmed unconfigured
+async function _aiModerate(message, contextMessages) {
+  if (_aiModAvailable === false) return null;
+  try {
+    const ctx = (contextMessages || []).slice(-14).map(m => ((m.from || '?') + ': ' + (m.text || '')).slice(0, 300));
+    const r = await fetch('/api/moderate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: String(message || '').slice(0, 2000), context: ctx }) });
+    if (!r.ok) return null;
+    const j = await r.json();
+    _aiModAvailable = j.available !== false;
+    return j.available === false ? null : j;
+  } catch (_) { return null; }
+}
+// Async, context-aware AI pass on a just-sent message. Acts only if the local
+// regex didn't already, only when a superadmin set AI moderation to "autonomous"
+// in the Control Room, and only for pre-screened messages. Never blocks sending;
+// can WARN or SUSPEND (never ban).
+function _aiModerateLive(text, contextMessages, alreadyActed) {
+  if (alreadyActed || !CU?.username) return;
+  if (!_AI_MOD_PRESCREEN.test(text || '')) return;
+  let gs = _globalSettings; if (!gs) { try { gs = JSON.parse(localStorage.getItem('ftz_global_settings') || '{}'); } catch (_) { gs = {}; } }
+  if ((gs.aiModerationMode || 'off') !== 'autonomous') return;
+  _aiModerate(text, contextMessages).then(v => {
+    if (!v || !v.flagged || (v.action !== 'warn' && v.action !== 'suspend')) return;
+    const _reason = v.reason || 'a safety violation';
+    const _evidence = { text: String(text || '').slice(0, 600), context: (contextMessages || []).map(m => m.text || '').slice(-6) };
+    try { _logAutomodAction('ai_threat', text, null, v); } catch (_) {}
+    if (v.action === 'suspend') {
+      const mins = v.severity === 'high' ? 60 : 30;
+      applyFortizedSafetyChatSuspension(CU.username, mins, _reason, _evidence).catch(() => {});
+    } else {
+      _automodWarnSelf(_reason, _evidence).catch(() => {});
+    }
+  }).catch(() => {});
+}
+
 // Run automod on message (returns { original, rephrased, threat, warning })
 function runAutomod(text, contextMessages = []) {
   const result = {
@@ -34109,6 +34161,11 @@ function runAutomod(text, contextMessages = []) {
       }
     } catch (_) {}
   }
+
+  // Smarter, context-aware AI pass (server-proxied, async, non-blocking).
+  // Catches what the fast local patterns can't judge — intent, psychological
+  // abuse, cyberbullying — by reading the recent chat, not just this message.
+  try { _aiModerateLive(text, contextMessages, !!(threatCheck && threatCheck.isThreat)); } catch (_) {}
 
   return result;
 }
@@ -35176,7 +35233,7 @@ function parseMD(s) {
   // violation card, or open the Appeals & Violations page. Rendered before any
   // other pass so the tokens can't be mangled.
   s = s.replace(/\[\[VCARD:([A-Za-z0-9\-]+)\|([^\]|]+)\]\]/g, (_m, id, label) =>
-    `<button type="button" class="ftz-safety-btn" onclick="event.stopPropagation();openAppealsPage('${id.replace(/[^A-Za-z0-9\-]/g,'')}')">${escapeHTML(label)}</button>`);
+    `<button type="button" class="ftz-safety-btn" onclick="event.stopPropagation();_reopenViolation('${id.replace(/[^A-Za-z0-9\-]/g,'')}')">${escapeHTML(label)}</button>`);
   s = s.replace(/\[\[APPEALS(?::([A-Za-z0-9\-]+))?\|([^\]|]+)\]\]/g, (_m, id, label) =>
     `<button type="button" class="ftz-safety-btn" onclick="event.stopPropagation();openAppealsPage('${(id||'').replace(/[^A-Za-z0-9\-]/g,'')}')">${escapeHTML(label)}</button>`);
   // 0⁻⁻. A FTZ token that carried a very large base64 data: URL was swapped for

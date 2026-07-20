@@ -289,6 +289,68 @@ app.post('/api/presence/offline', async (req, res) => {
   res.status(204).end();
 });
 
+// ── AI content moderation (server-proxied; key never touches the client) ──
+// Free + provider-agnostic (OpenAI-compatible). Enable by setting AI_MOD_KEY in
+// the environment. Optional overrides: AI_MOD_URL (default Groq's free API) and
+// AI_MOD_MODEL (default a Llama model). Returns {available:false} when no key is
+// set, so the client silently falls back to its local regex checks.
+app.post('/api/moderate', async (req, res) => {
+  const key = process.env.AI_MOD_KEY || process.env.GROQ_API_KEY;
+  if (!key) return res.json({ available: false });
+  const message = (req.body && typeof req.body.message === 'string') ? req.body.message.slice(0, 2000) : '';
+  if (!message.trim()) return res.json({ available: true, flagged: false });
+  const context = Array.isArray(req.body && req.body.context)
+    ? req.body.context.slice(-14).map(s => String(s).slice(0, 300)) : [];
+  const url = process.env.AI_MOD_URL || 'https://api.groq.com/openai/v1/chat/completions';
+  const model = process.env.AI_MOD_MODEL || 'llama-3.3-70b-versatile';
+  const sys = [
+    "You are Fortized's automated safety moderator for a gaming chat app. Judge the MESSAGE TO REVIEW using the chat context to read intent.",
+    'Flag ONLY genuinely harmful content in these categories:',
+    '- physical_threat: a credible threat of real-world violence toward a person',
+    '- sexual_threat: a threat of sexual violence',
+    '- self_harm: encouraging or pressuring another person to kill or harm themselves (e.g. "kill yourself", "kys", "go die")',
+    '- doxxing: threatening to expose someone\'s private info/address or to swat them',
+    '- hate: slurs or dehumanizing hate toward a protected group',
+    '- harassment: targeted, sustained cyberbullying or harassment of a person',
+    'Do NOT flag: ordinary profanity, edgy jokes, gaming trash-talk ("I\'ll kill you" about a game), venting, or someone expressing their OWN distress ("I want to kill myself" is a person who may need help, NOT a violation).',
+    'Pick action: "none", "warn" (most violations), or "suspend" (severe or repeated: credible threats, sexual threats, telling someone to self-harm, slurs, or sustained harassment).',
+    'Respond ONLY with compact JSON: {"flagged":bool,"category":str,"severity":"none"|"low"|"medium"|"high","action":"none"|"warn"|"suspend","reason":"short human phrase e.g. threatening violence against someone","confidence":0..1}',
+  ].join('\n');
+  const userMsg = 'CHAT CONTEXT (oldest to newest):\n' + (context.join('\n') || '(none)') + '\n\nMESSAGE TO REVIEW:\n' + message;
+  try {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model, temperature: 0, max_tokens: 300,
+        response_format: { type: 'json_object' },
+        messages: [{ role: 'system', content: sys }, { role: 'user', content: userMsg }],
+      }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(to);
+    if (!r.ok) return res.json({ available: true, flagged: false, error: 'upstream ' + r.status });
+    const j = await r.json();
+    let out = {};
+    try { out = JSON.parse((j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '{}'); } catch (_) {}
+    const sev = ['none', 'low', 'medium', 'high'].includes(out.severity) ? out.severity : 'none';
+    const act = ['none', 'warn', 'suspend'].includes(out.action) ? out.action : (out.flagged ? 'warn' : 'none');
+    return res.json({
+      available: true,
+      flagged: !!out.flagged,
+      category: String(out.category || '').slice(0, 40),
+      severity: sev,
+      action: act,
+      reason: String(out.reason || 'a safety violation').slice(0, 120),
+      confidence: (typeof out.confidence === 'number') ? out.confidence : null,
+    });
+  } catch (e) {
+    return res.json({ available: true, flagged: false, error: String((e && e.message) || e) });
+  }
+});
+
 // ── Spotify OAuth (server-side exchange) ──────────
 // The server holds the PKCE verifier and does the full token exchange
 // so the app and callback don't need to share localStorage.

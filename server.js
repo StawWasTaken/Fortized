@@ -496,26 +496,51 @@ app.post('/api/spotify/refresh', async (req, res) => {
 
 // ── Bastion Invite API ────────────────────────────
 // Returns bastion info for an invite code (used by invite landing page + chat embeds)
-// ── Joyster AI proxy — keeps the Gemini key on the server, not the client ──
-// Client POSTs { body: <gemini-request-body> } and we forward to Gemini with our key.
+// ── Joyster AI proxy — keeps the key on the server, not the client ──
+// Client POSTs { body: <gemini-request-body> }. If GEMINI_API_KEY is set we
+// forward straight to Gemini. Otherwise we reuse the SAME key as the moderation
+// AI (AI_MOD_KEY, OpenAI-compatible) so you only ever configure one key — we
+// translate the Gemini request in and the Gemini response shape back out, so the
+// client needs no changes.
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL   = process.env.GEMINI_MODEL   || 'gemini-2.5-flash';
 app.post('/api/joyster', async (req, res) => {
-  if (!GEMINI_API_KEY) return res.status(503).json({ error: 'AI not configured' });
   const body = req.body?.body;
   if (!body || typeof body !== 'object') return res.status(400).json({ error: 'Missing body' });
+
+  // Preferred path: a dedicated Gemini key.
+  if (GEMINI_API_KEY) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${GEMINI_API_KEY}`;
+      const upstream = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const text = await upstream.text();
+      return res.status(upstream.status).type('application/json').send(text);
+    } catch (e) { return res.status(502).json({ error: 'Upstream failed' }); }
+  }
+
+  // Fallback: reuse the moderation key (OpenAI-compatible, e.g. Groq).
+  const key = process.env.AI_MOD_KEY || process.env.GROQ_API_KEY;
+  if (!key) return res.status(503).json({ error: 'AI not configured' });
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${GEMINI_API_KEY}`;
+    const url = process.env.AI_MOD_URL || 'https://api.groq.com/openai/v1/chat/completions';
+    const model = process.env.AI_MOD_MODEL || 'llama-3.3-70b-versatile';
+    const sysText = (body.systemInstruction?.parts || []).map(p => p && p.text).filter(Boolean).join('\n');
+    const userText = (body.contents || []).map(c => (c.parts || []).map(p => p && p.text).filter(Boolean).join('\n')).filter(Boolean).join('\n');
+    const messages = [];
+    if (sysText) messages.push({ role: 'system', content: sysText });
+    messages.push({ role: 'user', content: userText || 'Say something in character.' });
+    const gc = body.generationConfig || {};
     const upstream = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, temperature: (typeof gc.temperature === 'number') ? gc.temperature : 1.0, max_tokens: gc.maxOutputTokens || 150, messages }),
     });
-    const text = await upstream.text();
-    res.status(upstream.status).type('application/json').send(text);
-  } catch (e) {
-    res.status(502).json({ error: 'Upstream failed' });
-  }
+    if (!upstream.ok) return res.status(upstream.status).json({ error: 'upstream ' + upstream.status });
+    const j = await upstream.json();
+    const out = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '';
+    // Return the Gemini response shape the client already parses.
+    return res.json({ candidates: [{ content: { parts: [{ text: out }] } }] });
+  } catch (e) { return res.status(502).json({ error: 'Upstream failed' }); }
 });
 
 // ─── Public API: Fortized API Keys ──────────────────────────────────

@@ -38,6 +38,11 @@ OpenAI-compatible chat endpoint works.
    verdict; with **no key set** it returns `{available:false}` and the client
    silently falls back to the local regex.
 
+**One key powers everything.** `AI_MOD_KEY` is also the fallback for **Joyster**
+(`/api/joyster`): if you don't set a separate `GEMINI_API_KEY`, Joyster uses the
+same `AI_MOD_KEY` (the server translates the request/response formats). So a
+single free key runs both the automod AND Joyster's live comments.
+
 ## How it decides
 
 The endpoint asks the model to return JSON:

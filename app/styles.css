@@ -12625,25 +12625,32 @@ body.ftz-picking-msg .msg-row[data-msgid]:hover{ background:var(--accent-dim); b
 
 /* ── DM right profile card — Discord-style floating rounded panel that is
    detached from every edge (the #dm-user-panel column supplies the gap). ── */
+/* DM profile sidebar — a clean, flush full-height panel (Discord-style): no drop
+   shadow, no floating rounded card, banner flush to the top. Only a subtle left
+   divider separates it from the chat. */
 .fpp--dm{
   width:100%;
-  border-radius:18px;
+  height:100%;
+  max-height:none;
+  border-radius:0;
   background:var(--channel);
   overflow-y:auto;
   display:flex; flex-direction:column;
   gap:0;
   padding:0;
-  border:1px solid var(--border);
+  border:none;
+  border-left:1px solid rgba(255,255,255,.05);
   margin-top:0;
-  /* Compact floating card — height follows its content, capped so a very tall
-     profile still scrolls inside the card instead of the page. */
-  max-height:calc(100vh - 92px);
-  box-shadow:0 8px 32px rgba(0,0,0,.45);
+  box-shadow:none;
 }
 .fpp--dm .fpp__banner{
-  border-radius:17px 17px 0 0; overflow:hidden;
+  border-radius:0; overflow:hidden;
   margin:0;
 }
+/* Kill the brand top-accent line + any base card shadow on the DM sidebar so it
+   reads as a clean flush panel, not a floating popover. */
+.fpp--dm::before{ display:none; }
+.fpp--dm{ box-shadow:none !important; }
 .fpp--dm .fpp__av-row{
   margin-top:-52px;
   padding:0 14px;

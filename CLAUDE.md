@@ -1,6 +1,15 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix332`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix333`)
+
+**Shipped `2026fix333` (DM profile sidebar cleanup):**
+- **DM profile sidebar (`.fpp--dm`) is now a clean flush panel** (Discord-style):
+  removed the drop shadow, the floating 18px rounded-card look, the border, and
+  the brand **yellow top-accent line** (`.fpp--dm::before{display:none}` — that
+  was the "bug" at the top). Full-height, banner flush to the top, only a subtle
+  left divider. Also removed the container's `background:transparent` + padding
+  in `index.html` (that gap was showing the page through the rounded corner).
+
 
 **Shipped `2026fix332` (media grid + upload UI + frozen-DM fix):**
 - **Message media now renders BELOW the caption in a grid** (`_layoutMsgMedia`

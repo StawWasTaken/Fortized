@@ -1,6 +1,21 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix329`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix330`)
+
+**Shipped `2026fix330` (collect overlap + bot-profile polish + panel commands):**
+- **Collect button no longer sits under the download/modify/delete row**: the
+  offset rule lost the cascade (`.ftz-att-ctrls{right:8px}` came later). Fixed to
+  `.ftz-att-ctrls.ftz-att-ctrls--offset{right:44px}` (higher specificity).
+- **Bot description shortened** to "Turns your images and short clips into GIFs."
+  (`FORTGIFIED_DESC`).
+- **Bot profile now matches user profiles**: Description + **Created On** share ONE
+  `.fpp-card--about` card (separator between, like About Me + Joined); added the
+  real **bot badge** (`.ftz-badge.badge-bot`, `/badges/bot.png`) in a badges card.
+- **Bot command panel + profile commands are runnable**: both "Image to GIF" and
+  "Video to GIF" now appear in the chatbar bots panel AND the profile, and clicking
+  one opens a file picker → converts → posts (`_fortgifiedRunFromPanel(mode)` +
+  `_botRunBuiltin`). Message right-click path unchanged.
+
 
 **Shipped `2026fix329` (crash fixes + spoiler/bot-profile redesign):**
 - **Video→GIF no longer freezes the tab**: `_encodeFramesAsGif` is now async and

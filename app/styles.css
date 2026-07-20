@@ -1806,7 +1806,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 /* Uploaded/FortGified gifs keep the always-on collect button at the top-RIGHT
    (like every other gif). The download/modify/delete hover row shifts left so
    it never sits under that collect button. */
-.ftz-att-ctrls--offset{right:44px;}
+.ftz-att-ctrls.ftz-att-ctrls--offset{right:44px;}
 .chat-gif-fav-btn:hover{transform:scale(1.15);background:rgba(0,0,0,.7);color:var(--accent);}
 /* Drag-drop overlay — scoped to chatbar */
 .drop-overlay{position:absolute;inset:0;background:rgba(255,249,62,.06);border:2px dashed var(--accent);border-radius:12px;z-index:30;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none;}
@@ -11830,7 +11830,8 @@ select:focus-visible {
 .fpp__bot-by a{ color:var(--accent); text-decoration:none; }
 .fpp__bot-by a:hover{ text-decoration:underline; }
 .fpp-bot-cmds{ display:flex; flex-direction:column; gap:6px; }
-.fpp-bot-cmd{ display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text); padding:6px 10px; border-radius:8px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.05); }
+.fpp-bot-cmd{ display:flex; align-items:center; gap:8px; width:100%; font-size:12.5px; font-family:inherit; text-align:left; color:var(--text); padding:8px 10px; border-radius:8px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.05); cursor:pointer; transition:background .12s,border-color .12s; }
+.fpp-bot-cmd:hover{ background:var(--accent-dim); border-color:var(--accent-mid); }
 .fpp-bot-cmd svg{ width:14px; height:14px; color:var(--accent); flex-shrink:0; }
 .fpp-bot-modal-overlay{ position:fixed; inset:0; z-index:var(--z-modal,5000); background:rgba(4,5,10,.6); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:24px; }
 .fpp--bot-modal{ width:340px; max-width:calc(100vw - 48px); max-height:calc(100vh - 48px); overflow:auto; border-radius:16px; box-shadow:0 24px 64px rgba(0,0,0,.5); }

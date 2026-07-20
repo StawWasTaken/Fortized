@@ -1036,7 +1036,7 @@ const FORTGIFIED_AVATAR = '/FortGified-PFP.png';
 // shown on its special bot profile card).
 const FORTGIFIED_BOT_ID = 'FTZ-BOT-0001';
 const FORTGIFIED_CREATED = '2026-06-01T00:00:00.000Z';
-const FORTGIFIED_DESC = 'FortGified turns your uploaded images and short videos (≤15s) into GIFs — right from any message. Right-click a message → Bots → FortGified.';
+const FORTGIFIED_DESC = 'Turns your images and short clips into GIFs.';
 const FORTGIFIED_BY = 'fortized';
 // The yellow Fortized brand mark used as the bot banner.
 const FORTGIFIED_BANNER_ICON = '/Fortized icon.png';
@@ -10986,6 +10986,54 @@ async function _fortgifiedGifify(msgId, context, mode) {
       : "FortGified couldn't read that media (protected or cross-origin)";
     toast(msg, 'error');
   }
+}
+// Run a FortGified command straight from a picker (bot command panel / profile):
+// prompt for a file, convert it, and post the GIF into the current chat. This is
+// the panel counterpart to the right-click message command.
+function _botRunBuiltin(mode) { document.getElementById('botcmd-picker')?.remove(); _fortgifiedRunFromPanel(mode); }
+async function _fortgifiedRunFromPanel(mode) {
+  const context = curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : 'ch';
+  if (context === 'ch' && (curBastion === null || curChannel === null)) { toast('Open a chat first', 'error'); return; }
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = mode === 'video' ? 'video/*' : 'image/*'; inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.onchange = async () => {
+    const file = inp.files && inp.files[0]; inp.remove();
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    toast(FORTGIFIED_DISPLAY + ' is working…', 'success');
+    try {
+      let blob;
+      if (mode === 'video') {
+        const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
+        await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = () => rej(new Error('video load failed')); });
+        if (!v.duration || v.duration > 15.5) { URL.revokeObjectURL(url); toast('FortGified can only convert videos 15 seconds or less', 'error'); return; }
+        blob = await _videoToGif(v);
+      } else {
+        const img = new Image(); img.src = url;
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+        const MAX = 512;
+        const scale = Math.min(1, MAX / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+        const w = Math.max(1, Math.round((img.naturalWidth || 1) * scale)), h = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
+        const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        blob = _encodeCanvasAsGif(canvas);
+      }
+      URL.revokeObjectURL(url);
+      const fname = 'fortgified-' + Date.now().toString(36) + '.gif';
+      let fileUrl = null;
+      try { const r = await FortizedSocial.uploadFile(fname, blob); if (r && r.url) fileUrl = r.url; } catch (_) {}
+      if (!fileUrl) fileUrl = await new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res(rd.result); rd.onerror = rej; rd.readAsDataURL(blob); });
+      const cmdLabel = mode === 'video' ? 'Video to GIF' : 'Image to GIF';
+      const text = `**@${CU.username}** used **${cmdLabel}**\n[FTZIMG:${fname}|${fileUrl}]`;
+      await _fortgifiedPost(context, text, null, CU.username);
+    } catch (e) {
+      try { URL.revokeObjectURL(url); } catch (_) {}
+      console.warn('[FortGified] panel convert failed:', e?.message || e);
+      toast(/15 seconds/.test(e?.message || '') ? 'FortGified can only convert videos 15 seconds or less' : "FortGified couldn't process that file", 'error');
+    }
+  };
+  inp.click();
 }
 // Post a persisted, everyone-visible message AS the bot into the current chat.
 // `triggeredBy` is the user who ran the command; it's kept on the in-memory
@@ -39930,7 +39978,10 @@ function _botGroups(context) {
   const groups = [];
   groups.push({
     idx: -1, name: FORTGIFIED_DISPLAY, avatar: FORTGIFIED_AVATAR, emblem: '', builtin: true,
-    commands: [{ name: 'Convert to GIF', desc: 'Right-click an image message → Bots', builtin: true }],
+    commands: [
+      { name: 'Image to GIF', desc: 'Pick an image to turn into a GIF', builtin: true, mode: 'image' },
+      { name: 'Video to GIF', desc: 'Pick a video (≤15s) to turn into a GIF', builtin: true, mode: 'video' },
+    ],
   });
   if (context === 'ch' && curBastion !== null) {
     const b = CU?.bastions?.[curBastion];
@@ -39980,7 +40031,7 @@ function _botCmdRow(cmd, botName) {
   // Built-in FortGified commands are message-context actions, not chat "!"
   // commands — clicking just explains where to find them.
   if (cmd.builtin) {
-    return `<div class="botcmd-item" data-cmd="${escapeHTML(cmd.name)}" data-bot="${escapeHTML(botName)}" onclick="_fortgifiedHint()">
+    return `<div class="botcmd-item" data-cmd="${escapeHTML(cmd.name)}" data-bot="${escapeHTML(botName)}" onclick="_botRunBuiltin('${escapeHTML(cmd.mode || 'image')}')">
       <span class="bci-prefix bci-app"><svg viewBox="0 0 448 512" fill="currentColor" style="width:11px;height:11px;"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg></span>
       <span class="bci-name">${escapeHTML(cmd.name)}</span>
       <span class="bci-desc">${escapeHTML(cmd.desc)}</span>
@@ -52385,12 +52436,18 @@ function _fppRenderBotPanel(panel) {
         <span class="fpp__bot-by">by <a href="#" onclick="event.preventDefault();_fppClose();viewUserProfile('${FORTGIFIED_BY}')">@${FORTGIFIED_BY}</a></span>
       </div>
     </div>
-    <div class="fpp-card fpp-card--about"><div class="fpp-card__title">Description</div><div class="fpp-card__body">${escapeHTML(FORTGIFIED_DESC)}</div></div>
+    <div class="fpp-card fpp-card--about">
+      <div class="fpp-card__title">Description</div>
+      <div class="fpp-card__body">${escapeHTML(FORTGIFIED_DESC)}</div>
+      <div class="fpp-card__sep"></div>
+      <div class="fpp-card__title" style="margin-top:10px;">Created On</div>
+      <div class="fpp-card__body fpp-card__body--muted"><span class="fpp-since">${_FTZ_LOGO_ICON} ${escapeHTML(created)}</span></div>
+    </div>
+    <div class="fpp-card fpp-card--badges"><div class="fpp-card__body"><span class="ftz-badge badge-bot"><img src="/badges/bot.png" alt="bot"><span class="badge-tooltip">Bot — automated account by @fortized</span></span></div></div>
     <div class="fpp-card"><div class="fpp-card__title">Commands</div><div class="fpp-card__body fpp-bot-cmds">
-      <span class="fpp-bot-cmd"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6l96 0 32 0 208 0c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/></svg>Image to GIF</span>
-      <span class="fpp-bot-cmd"><svg viewBox="0 0 576 512" fill="currentColor"><path d="M0 128C0 92.7 28.7 64 64 64l256 0c35.3 0 64 28.7 64 64l0 256c0 35.3-28.7 64-64 64L64 448c-35.3 0-64-28.7-64-64L0 128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2l0 256c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-96-64L416 337.1l0-17.1 0-128 0-17.1 14.2-9.5 96-64c9.8-6.5 22.4-7.2 32.9-1.6z"/></svg>Video to GIF</span>
-    </div></div>
-    <div class="fpp-card"><div class="fpp-card__title">Created On</div><div class="fpp-card__body fpp-card__body--muted">${escapeHTML(created)}</div></div>`;
+      <button type="button" class="fpp-bot-cmd" onclick="document.getElementById('fpp-bot-modal')?.remove();_fppClose();_fortgifiedRunFromPanel('image')"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6l96 0 32 0 208 0c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/></svg>Image to GIF</button>
+      <button type="button" class="fpp-bot-cmd" onclick="document.getElementById('fpp-bot-modal')?.remove();_fppClose();_fortgifiedRunFromPanel('video')"><svg viewBox="0 0 576 512" fill="currentColor"><path d="M0 128C0 92.7 28.7 64 64 64l256 0c35.3 0 64 28.7 64 64l0 256c0 35.3-28.7 64-64 64L64 448c-35.3 0-64-28.7-64-64L0 128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2l0 256c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-96-64L416 337.1l0-17.1 0-128 0-17.1 14.2-9.5 96-64c9.8-6.5 22.4-7.2 32.9-1.6z"/></svg>Video to GIF</button>
+    </div></div>`;
 }
 // Anchored popover (avatar/name click in chat).
 function _showFortgifiedProfilePopover(anchorEl) {

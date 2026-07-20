@@ -33967,22 +33967,34 @@ const _AUTOMOD_REPHRASES = [
   "I declared my love for a mailbox and it rejected me 📮",
 ];
 
-// Real threat patterns. DELIBERATELY NARROW: only credible, first-person,
-// person-directed threats of lethal or sexual violence (and doxx/swat). This
-// is NOT content moderation — normal, edgy, or angry messages must never match.
-// Every pattern requires "I will …" intent aimed at "you/them", so ordinary
-// speech scores 0 and is left completely alone.
+// Severe-harm patterns. Still NOT general content moderation — normal, edgy, or
+// angry messages must never match. Each pattern targets a specific, unambiguous
+// category of serious harm and carries the reason shown to the user. Patterns at
+// weight >= 0.95 act on a single message (a warning); lower ones need context.
 const _AUTOMOD_THREAT_PATTERNS = [
-  // Direct threats to kill / sexually assault a person — the only things that
-  // can act on a single message (topWeight >= 0.95).
-  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|mma?|['’ ]?a|\s+gonna|\s+finna)\s+(?:kill|murder|behead|stab|shoot|strangle|slaughter)\s+(?:you|u|him|her|them|y['’]?all|your\s+\w+)\b/i, weight: 0.95 },
-  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|mma?|['’ ]?a|\s+gonna|\s+finna)\s+rape\s+(?:you|u|him|her|them|y['’]?all)\b/i, weight: 0.95 },
-  // Scheduled / located violence — credible but usually needs a little context.
-  { pattern: /(?:i['’ ]?ll|i['’ ]?m going to|going to|gonna|finna)\s+(?:kill|murder|attack|assault|hurt|beat)\s+(?:you|u)\s+(?:later|tomorrow|soon|tonight|after\s+\w+|at\s+(?:school|work|home))/i, weight: 0.9 },
-  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|\s+gonna|\s+finna)\s+(?:come\s+to\s+your\s+(?:house|home|place|address)|end\s+your\s+(?:life|bloodline|family))/i, weight: 0.9 },
-  // Doxxing / swatting a person.
-  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|\s+gonna|\s+finna)\s+(?:doxx?|swat)\s+(?:you|u|him|her|them)\b/i, weight: 0.85 },
-  { pattern: /\bswatting\s+(?:you|u|him|her|them)\b/i, weight: 0.85 },
+  // ── Threats of lethal violence toward a person ──
+  { pattern: /i(?:['’ ]?m\s+(?:going to|gonna|finna)|['’ ]?ll|['’ ]? ?will|mma?|['’ ]?a|\s+gonna|\s+finna)\s+(?:kill|murder|behead|stab|shoot|strangle|slaughter)\s+(?:you|u|him|her|them|y['’]?all|your\s+\w+)\b/i, weight: 0.96, reason: 'threatening violence against someone' },
+  { pattern: /(?:i['’ ]?ll|i['’ ]?m going to|going to|gonna|finna)\s+(?:kill|murder|attack|assault|hurt|beat)\s+(?:you|u)\s+(?:later|tomorrow|soon|tonight|after\s+\w+|at\s+(?:school|work|home))/i, weight: 0.92, reason: 'threatening violence against someone' },
+  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|\s+gonna|\s+finna)\s+(?:come\s+to\s+your\s+(?:house|home|place|address)|end\s+your\s+(?:life|bloodline|family))/i, weight: 0.92, reason: 'threatening violence against someone' },
+
+  // ── Encouraging suicide or self-harm (directed at another person) ──
+  { pattern: /\b(?:go\s+)?(?:kill\s+(?:your\s?self|urself)|neck\s+(?:your\s?self|urself)|hang\s+(?:your\s?self|urself)|off\s+(?:your\s?self|urself)|end\s+your\s+life|slit\s+your\s+(?:wrist|throat)s?|go\s+(?:die|suicide)|drink\s+bleach)\b/i, weight: 0.96, reason: 'telling someone to kill or harm themselves' },
+  { pattern: /\bk+\s*y+\s*s+\b/i, weight: 0.95, reason: 'telling someone to kill or harm themselves' },
+  { pattern: /\byou\s+should\s+(?:kill\s+(?:your\s?self|urself)|die|neck\s+(?:your\s?self|urself))\b/i, weight: 0.95, reason: 'telling someone to kill or harm themselves' },
+
+  // ── Threats of sexual violence ──
+  { pattern: /i(?:['’ ]?m\s+(?:going to|gonna|finna)|['’ ]?ll|['’ ]? ?will|mma?|['’ ]?a|\s+gonna|\s+finna)\s+(?:rape|molest)\s+(?:you|u|him|her|them|y['’]?all)\b/i, weight: 0.96, reason: 'threatening sexual violence' },
+  { pattern: /\bf+u+c+k+\s+(?:you|u|her|him|them)\s+to\s+death\b/i, weight: 0.95, reason: 'threatening sexual violence' },
+  { pattern: /\brap(?:e|ing)\s+(?:you|u|her|him|them)\b/i, weight: 0.95, reason: 'threatening sexual violence' },
+
+  // ── Severe hate speech / slurs (unambiguous variants only) ──
+  { pattern: /\bn+[i1!*|]+g+[e3]+r+s?\b/i, weight: 0.96, reason: 'using a racial slur' },
+  { pattern: /\bf+[a@4]+gg+(?:ot|it)s?\b/i, weight: 0.95, reason: 'using a homophobic slur' },
+  { pattern: /\b(?:tr[a@]nn(?:y|ie)|k[i1]ke|wetback)s?\b/i, weight: 0.92, reason: 'using a slur' },
+
+  // ── Doxxing / swatting a person ──
+  { pattern: /i(?:['’ ]?m going to|['’ ]?ll|['’ ]? ?will|\s+gonna|\s+finna)\s+(?:doxx?|swat)\s+(?:you|u|him|her|them)\b/i, weight: 0.85, reason: 'threatening to dox or swat someone' },
+  { pattern: /\bswatting\s+(?:you|u|him|her|them)\b/i, weight: 0.85, reason: 'threatening to dox or swat someone' },
 ];
 
 // Content rephrasing / auto-moderation of what people say has been REMOVED —
@@ -33999,13 +34011,14 @@ function _checkAutomodThreat(text, contextMessages = []) {
   const lowerText = text.toLowerCase();
   let totalWeight = 0;
   let topWeight = 0;
+  let topReason = 'a serious safety violation';
   let matchedPatterns = [];
 
   // Check patterns
-  for (const { pattern, weight } of _AUTOMOD_THREAT_PATTERNS) {
+  for (const { pattern, weight, reason } of _AUTOMOD_THREAT_PATTERNS) {
     if (pattern.test(text)) {
       totalWeight += weight;
-      if (weight > topWeight) topWeight = weight;
+      if (weight > topWeight) { topWeight = weight; topReason = reason || topReason; }
       matchedPatterns.push(pattern.source);
     }
   }
@@ -34023,7 +34036,7 @@ function _checkAutomodThreat(text, contextMessages = []) {
 
   for (const msg of recentMessages) {
     const msgText = (msg.text || '').toLowerCase();
-    if (/\b(?:kill|murder|rape|die|stab|shoot|dox|swat)\b/i.test(msgText)) {
+    if (/\b(?:kill|murder|rape|die|stab|shoot|dox|swat|kys|suicide|slur)\b/i.test(msgText)) {
       threatLanguageCount++;
       if (msgText.includes(text.toLowerCase())) {
         escalationCount++;
@@ -34042,7 +34055,7 @@ function _checkAutomodThreat(text, contextMessages = []) {
   if (act) {
     return {
       isThreat: true,
-      reason: 'a credible threat of violence',
+      reason: topReason,
       patterns: matchedPatterns,
       context: recentMessages.map(m => m.text || ''),
       score: finalScore
@@ -58223,21 +58236,21 @@ async function sendFortizedSafetyNotice(targetUsername, { reason, until, article
   if (!targetUsername) return;
   const RULES_URL = 'https://www.fortized.com/legal/terms-of-use';
   const reasonBit = reason ? ` for ${reason}` : '';
-  // Tight, human, single-spaced (no blank lines). Ends with in-app buttons:
-  // reopen the exact notice card, and open Appeals & Violations to appeal.
+  // Human, casual, single-spaced (no blank lines, no em-dashes). Ends with the
+  // in-app buttons: reopen the exact notice card + open Appeals & Violations.
   const lines = [];
   if (until) {
     const _t = new Date(until).toLocaleString();
-    lines.push(`Hey — this is the Fortized Safety team.`);
-    lines.push(`We've paused some of your chat features${reasonBit}. You'll be able to chat again on ${_t}.`);
+    lines.push(`Hey, it's the Fortized Safety team.`);
+    lines.push(`We put a short pause on some of your chat features${reasonBit}. You'll be able to chat again on ${_t}.`);
   } else {
-    lines.push(`Hey — this is the Fortized Safety team.`);
-    lines.push(`We flagged one of your recent messages${reasonBit}. This is a warning — nothing more for now.`);
+    lines.push(`Hey, it's the Fortized Safety team.`);
+    lines.push(`We flagged one of your recent messages${reasonBit}. Just a heads up for now, so please keep it friendly.`);
   }
-  lines.push(`Here's exactly what our rules say: [Fortized Terms of Use](${RULES_URL}).`);
+  lines.push(`Here's what our rules say: [Fortized Terms of Use](${RULES_URL}).`);
   lines.push(violationId ? `[[VCARD:${violationId}|View the full notice]] [[APPEALS:${violationId}|Appeal this]]` : `[[APPEALS|Appeal this]]`);
-  lines.push(`We read every appeal — a real person on our team, not a bot.`);
-  lines.push(`— Fortized Safety`);
+  lines.push(`Think we got it wrong? Appeal it and a real person on our team will take a look.`);
+  lines.push(`Fortized Safety`);
   const text = lines.join('\n');
   try {
     await FortizedSocial.sendDMMessage(FORTIZED_SAFETY_ACCOUNT, targetUsername, text);

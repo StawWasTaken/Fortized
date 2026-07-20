@@ -8453,11 +8453,10 @@ function _restoreDraftFor(context, inputId) {
     else inp.textContent = draft.text;
     try { autoResize(inp); } catch(_) {}
   }
-  if (draft.attachment) {
-    window._pendingAttachment = draft.attachment;
-    try {
-      showAttachmentPreview(draft.attachment.name, draft.attachment.type, draft.attachment.data, draft.attachment.size, context);
-    } catch(_) {}
+  const draftAtts = Array.isArray(draft.attachments) ? draft.attachments : (draft.attachment ? [draft.attachment] : []);
+  if (draftAtts.length) {
+    window._pendingAttachments = draftAtts.slice(0, _ATT_MAX);
+    try { showAttachmentPreview(null, null, null, null, context); } catch(_) {}
   }
 }
 
@@ -8482,8 +8481,7 @@ function onChatInput(el, context, inputId) {
       if (!stripped) el.innerHTML = '';
     }
     const key = _draftKeyFor(context, inputId);
-    const att = window._pendingAttachment || null;
-    _saveDraft(key, { text: text, attachment: att });
+    _saveDraft(key, { text: text, attachments: _pendAtts().slice() });
   } catch(e) { console.warn('[Input] draft save failed', e?.message); }
   // Typing broadcast — never let this throw, never let it block the rest.
   try {
@@ -8619,8 +8617,7 @@ function _persistPendingAttachmentChange(context, inputId) {
     const inp = inputId ? document.getElementById(inputId) : null;
     const key = _draftKeyFor(context, inputId || (context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input'));
     const text = inp ? (typeof inp.value === 'string' ? inp.value : (inp.textContent || '')) : '';
-    const att = window._pendingAttachment || null;
-    _saveDraft(key, { text: text, attachment: att });
+    _saveDraft(key, { text: text, attachments: _pendAtts().slice() });
   } catch(_) {}
 }
 
@@ -10987,53 +10984,43 @@ async function _fortgifiedGifify(msgId, context, mode) {
     toast(msg, 'error');
   }
 }
-// Run a FortGified command straight from a picker (bot command panel / profile):
-// prompt for a file, convert it, and post the GIF into the current chat. This is
-// the panel counterpart to the right-click message command.
+// Run a FortGified command from a picker (bot command panel / profile): arm a
+// "pick a message" mode, then convert the media in whichever message the user
+// clicks (the first convertible attachment if there are several). This is the
+// panel counterpart to the right-click-a-message command.
 function _botRunBuiltin(mode) { document.getElementById('botcmd-picker')?.remove(); _fortgifiedRunFromPanel(mode); }
-async function _fortgifiedRunFromPanel(mode) {
+function _fortgifiedDisarm() {
+  const p = window._fortgifiedPick;
+  if (p) { document.removeEventListener('click', p.handler, true); document.removeEventListener('keydown', p.key, true); window._fortgifiedPick = null; }
+  document.getElementById('fortgified-pick-hint')?.remove();
+  document.body.classList.remove('ftz-picking-msg');
+}
+function _fortgifiedRunFromPanel(mode) {
   const context = curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : 'ch';
   if (context === 'ch' && (curBastion === null || curChannel === null)) { toast('Open a chat first', 'error'); return; }
-  const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = mode === 'video' ? 'video/*' : 'image/*'; inp.style.display = 'none';
-  document.body.appendChild(inp);
-  inp.onchange = async () => {
-    const file = inp.files && inp.files[0]; inp.remove();
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    toast(FORTGIFIED_DISPLAY + ' is working…', 'success');
-    try {
-      let blob;
-      if (mode === 'video') {
-        const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
-        await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = () => rej(new Error('video load failed')); });
-        if (!v.duration || v.duration > 15.5) { URL.revokeObjectURL(url); toast('FortGified can only convert videos 15 seconds or less', 'error'); return; }
-        blob = await _videoToGif(v);
-      } else {
-        const img = new Image(); img.src = url;
-        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
-        const MAX = 512;
-        const scale = Math.min(1, MAX / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
-        const w = Math.max(1, Math.round((img.naturalWidth || 1) * scale)), h = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
-        const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        blob = _encodeCanvasAsGif(canvas);
-      }
-      URL.revokeObjectURL(url);
-      const fname = 'fortgified-' + Date.now().toString(36) + '.gif';
-      let fileUrl = null;
-      try { const r = await FortizedSocial.uploadFile(fname, blob); if (r && r.url) fileUrl = r.url; } catch (_) {}
-      if (!fileUrl) fileUrl = await new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res(rd.result); rd.onerror = rej; rd.readAsDataURL(blob); });
-      const cmdLabel = mode === 'video' ? 'Video to GIF' : 'Image to GIF';
-      const text = `**@${CU.username}** used **${cmdLabel}**\n[FTZIMG:${fname}|${fileUrl}]`;
-      await _fortgifiedPost(context, text, null, CU.username);
-    } catch (e) {
-      try { URL.revokeObjectURL(url); } catch (_) {}
-      console.warn('[FortGified] panel convert failed:', e?.message || e);
-      toast(/15 seconds/.test(e?.message || '') ? 'FortGified can only convert videos 15 seconds or less' : "FortGified couldn't process that file", 'error');
-    }
+  _fortgifiedDisarm();
+  const label = mode === 'video' ? 'a video' : 'an image';
+  const hint = document.createElement('div');
+  hint.id = 'fortgified-pick-hint';
+  hint.className = 'ftz-pick-hint';
+  hint.innerHTML = `<img src="${escapeHTML(FORTGIFIED_AVATAR)}" alt="" onerror="this.style.display='none'"><span>Click a message with ${label} to turn it into a GIF</span><button type="button" onclick="_fortgifiedDisarm()">Cancel</button>`;
+  document.body.appendChild(hint);
+  document.body.classList.add('ftz-picking-msg');
+  const handler = (e) => {
+    if (e.target.closest && e.target.closest('#fortgified-pick-hint')) return;
+    const row = e.target.closest && e.target.closest('.msg-row[data-msgid]');
+    if (!row) return;
+    e.preventDefault(); e.stopPropagation();
+    const el = mode === 'video' ? _msgFindVideoEl(row) : _msgFindConvertibleImage(row);
+    if (!el) { toast(mode === 'video' ? 'No video in that message' : 'No uploaded image (JPEG/PNG) in that message', 'error'); return; }
+    _fortgifiedDisarm();
+    _fortgifiedGifify(row.dataset.msgid, context, mode);
   };
-  inp.click();
+  const key = (e) => { if (e.key === 'Escape') _fortgifiedDisarm(); };
+  window._fortgifiedPick = { handler, key };
+  // Capture phase so we intercept the message click before its own handlers.
+  document.addEventListener('click', handler, true);
+  document.addEventListener('keydown', key, true);
 }
 // Post a persisted, everyone-visible message AS the bot into the current chat.
 // `triggeredBy` is the user who ran the command; it's kept on the in-memory
@@ -12295,6 +12282,17 @@ function appendMessage(container, msg, context, prevAuthor) {
       if (_tbid2) _loadThreadBadge(_tbid2, _tchName2, id, safeId, msg.text||'', msg.from||'');
     }
   }
+  // When a message carries several media attachments, tile them into a tidy
+  // wrapping grid instead of a full-width vertical stack.
+  try {
+    const _mt = row.querySelector('.msg-text');
+    if (_mt) {
+      const _imgs = _mt.querySelectorAll('.ftz-att-wrap').length;
+      const _gifs = [..._mt.querySelectorAll('.ftz-embed-gif')].filter(g => !g.closest('.ftz-att-wrap')).length;
+      const _spoil = _mt.querySelectorAll('.ftz-spoiler-media').length;
+      if (_imgs + _gifs + _spoil > 1) _mt.classList.add('msg-multi-media');
+    }
+  } catch (_) {}
   container.appendChild(row);
   // Super reactions are NOT auto-replayed any more. The previous build
   // fired triggerSuperReaction() for every reaction on every render AND
@@ -33979,10 +33977,9 @@ function _attWrap(inner, opts) {
   const download = `<button class="ftz-att-btn" title="Download" onclick="event.stopPropagation();_attDownload(this)"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7 288 32zM64 352c-35.3 0-64 28.7-64 64l0 32c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-32c0-35.3-28.7-64-64-64l-101.5 0-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352 64 352zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg></button>`;
   const modify = (type === 'image' || type === 'gif') ? `<button class="ftz-att-btn ftz-att-own" title="Modify Attachment" onclick="event.stopPropagation();_attModify(this)"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/></svg></button>` : '';
   const del = `<button class="ftz-att-btn ftz-att-own is-danger" title="Delete Attachment" onclick="event.stopPropagation();_attDelete(this)"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C313.4 6.8 302.4 0 290.3 0L157.7 0c-12.1 0-23.1 6.8-28.5 17.7zM53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128 32 128 53.2 467z"/></svg></button>`;
-  // When the media already carries its own always-on collect button (gifs), the
-  // hover controls shift left so they never sit under the top-right collect btn.
-  const ctrlsCls = opts.noCollect ? 'ftz-att-ctrls ftz-att-ctrls--offset' : 'ftz-att-ctrls';
-  return `<div class="ftz-att-wrap" data-att-url="${url}" data-att-name="${name}" data-att-type="${type}">${inner}<div class="${ctrlsCls}">${collect}${download}${modify}${del}</div></div>`;
+  // Gifs carry their own always-on collect button top-LEFT (via .ftz-embed-gif);
+  // the download/modify/delete row stays top-right, so the two never overlap.
+  return `<div class="ftz-att-wrap" data-att-url="${url}" data-att-name="${name}" data-att-type="${type}">${inner}<div class="ftz-att-ctrls">${collect}${download}${modify}${del}</div></div>`;
 }
 function _attData(el) { const w = el.closest('.ftz-att-wrap'); return w ? { url: w.dataset.attUrl, name: w.dataset.attName, type: w.dataset.attType, wrap: w } : {}; }
 function _attContext() { return curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : 'ch'; }
@@ -35178,6 +35175,9 @@ function _isMentionableHere(name) {
   const n = String(name).toLowerCase();
   const me = String(CU?.username || '').toLowerCase();
   if (n === me) return true;
+  // Built-in bots (FortGified, etc.) are always mentionable — @fortgified
+  // resolves anywhere. Groundwork for the future custom-bot mention feature.
+  if (MANUAL_BOTS.includes(n)) return true;
   if (curBastion !== null) {
     const b = CU?.bastions?.[curBastion];
     if (!b) return true;
@@ -40113,28 +40113,48 @@ function _botcmdOutsideClose(e) {
 // ════════════════════════════════════════════
 // FILE UPLOAD (30MB / 45MB for Radiance)
 // ════════════════════════════════════════════
-function openFileUpload(context) {
+// Up to this many attachments can ride on one message.
+const _ATT_MAX = 10;
+function _pendAtts() { if (!Array.isArray(window._pendingAttachments)) window._pendingAttachments = []; return window._pendingAttachments; }
+// Back-compat: legacy call sites read/write the singular window._pendingAttachment.
+// Mirror it onto the first element of the array (get→first, set→replace-first /
+// null-clears) so the send guards and any stray reads keep working unchanged.
+try {
+  Object.defineProperty(window, '_pendingAttachment', {
+    configurable: true,
+    get() { const a = _pendAtts(); return a.length ? a[0] : null; },
+    set(v) { const a = _pendAtts(); if (v == null) { a.length = 0; } else if (a.length) { a[0] = v; } else { a.push(v); } },
+  });
+} catch (_) {}
+// Add a file to the pending tray (respecting the 10-file cap + size limit).
+function _addPendingAttachment(file, context, onDone) {
   const hasRadiance = _hasRadiance(CU);
   const maxMB = hasRadiance ? 45 : 30;
+  const atts = _pendAtts();
+  if (atts.length >= _ATT_MAX) { toast('You can attach up to ' + _ATT_MAX + ' files', 'error'); onDone && onDone(false); return; }
+  if (file.size > maxMB * 1024 * 1024) { toast(file.name + ' is too large (max ' + maxMB + 'MB)', 'error'); onDone && onDone(false); return; }
+  const reader = new FileReader();
+  reader.onload = ev => { atts.push({ name: file.name, type: file.type, data: ev.target.result, size: file.size, context }); onDone && onDone(true); };
+  reader.onerror = () => { onDone && onDone(false); };
+  reader.readAsDataURL(file);
+}
+function openFileUpload(context) {
   document.getElementById('ftz-file-input')?.remove();
   const fileInp = document.createElement('input');
-  fileInp.type='file'; fileInp.id='ftz-file-input';
-  fileInp.accept='*/*'; fileInp.style.display='none';
+  fileInp.type = 'file'; fileInp.id = 'ftz-file-input';
+  fileInp.accept = '*/*'; fileInp.multiple = true; fileInp.style.display = 'none';
   document.body.appendChild(fileInp);
   fileInp.click();
   fileInp.onchange = () => {
-    const file = fileInp.files[0]; if (!file) { fileInp.remove(); return; }
-    if (file.size > maxMB * 1024 * 1024) {
-      toast('File too large. Max ' + maxMB + 'MB', 'error'); fileInp.remove(); return;
-    }
-    const reader = new FileReader();
-    reader.onload = async ev => {
-      const fileData = ev.target.result;
-      window._pendingAttachment = { name: file.name, type: file.type, data: fileData, size: file.size, context };
-      showAttachmentPreview(file.name, file.type, fileData, file.size, context);
+    const files = Array.from(fileInp.files || []); fileInp.remove();
+    if (!files.length) return;
+    // Read sequentially so the tray preserves the pick order.
+    let added = 0;
+    const step = (i) => {
+      if (i >= files.length) { if (added) showAttachmentPreview(null, null, null, null, context); return; }
+      _addPendingAttachment(files[i], context, () => { added++; step(i + 1); });
     };
-    reader.readAsDataURL(file);
-    fileInp.remove();
+    step(0);
   };
 }
 
@@ -40142,47 +40162,48 @@ function openFileUpload(context) {
 function _closeEl(id){const e=document.getElementById(id);if(e)e.remove();}
 function _closeWTPlayer(){_closeEl('wt-player-overlay');if(_vc)_vc.watchingTogether=false;}
 
-function showAttachmentPreview(name, type, dataUrl, size, context) {
-  document.getElementById('attach-preview-bar')?.remove();
+// One preview card for a pending attachment. `i` is its index in the tray.
+function _attCardHTML(att, i) {
+  const type = att.type || '';
   const isImage = type.startsWith('image/');
   const isVideo = type.startsWith('video/');
   const isAudio = type.startsWith('audio/');
-  const sizeMB = (size/1024/1024).toFixed(2);
-
-  const bar = document.createElement('div');
-  bar.id = 'attach-preview-bar';
-  bar.className = 'chatbar-file-preview';
-
-  let previewHTML = '';
-  if (isImage) {
-    previewHTML = `<img src="${escapeHTML(dataUrl)}" id="cfp-img-preview">`;
-  } else if (isVideo) {
-    previewHTML = `<video src="${escapeHTML(dataUrl)}" style="width:100%;max-height:160px;display:block;" muted></video>`;
-  } else if (isAudio) {
-    previewHTML = `<div style="width:100%;height:60px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.03);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
-  } else {
-    previewHTML = `<div style="width:100%;height:60px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.03);font-size:28px;">📎</div>`;
-  }
-
-  const isSpoiler = !!window._pendingAttachment?._spoiler;
-  bar.innerHTML = `<div class="chatbar-file-card${isSpoiler ? ' is-spoiler' : ''}" id="cfp-card">
+  const sizeMB = (att.size / 1024 / 1024).toFixed(2);
+  let previewHTML;
+  if (isImage) previewHTML = `<img src="${escapeHTML(att.data)}">`;
+  else if (isVideo) previewHTML = `<video src="${escapeHTML(att.data)}" muted></video>`;
+  else if (isAudio) previewHTML = `<div class="cfp-file-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
+  else previewHTML = `<div class="cfp-file-ico"><svg width="24" height="24" viewBox="0 0 384 512" fill="currentColor" style="color:var(--muted-light);"><path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/></svg></div>`;
+  const sp = !!att._spoiler;
+  return `<div class="chatbar-file-card${sp ? ' is-spoiler' : ''}" data-att-idx="${i}">
     <div class="cfp-actions">
-      <button class="cfp-btn${isSpoiler ? ' active' : ''}" onclick="_toggleAttachSpoiler()" data-tip="Spoiler Attachment" title="Spoiler Attachment"><svg viewBox="0 0 576 512" fill="currentColor"><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z"/></svg></button>
-      <button class="cfp-btn" onclick="_showModifyAttachment()" data-tip="Modify Attachment" title="Modify Attachment"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/></svg></button>
-      <button class="cfp-btn cfp-remove" onclick="_clearAttachment()" data-tip="Remove" title="Remove"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C313.4 6.8 302.4 0 290.3 0L157.7 0c-12.1 0-23.1 6.8-28.5 17.7zM53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128 32 128 53.2 467z"/></svg></button>
+      <button class="cfp-btn${sp ? ' active' : ''}" onclick="_toggleAttachSpoiler(${i})" data-tip="Spoiler Attachment" title="Spoiler Attachment"><svg viewBox="0 0 576 512" fill="currentColor"><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z"/></svg></button>
+      <button class="cfp-btn" onclick="_showModifyAttachment(${i})" data-tip="Modify Attachment" title="Modify Attachment"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/></svg></button>
+      <button class="cfp-btn cfp-remove" onclick="_clearAttachment(${i})" data-tip="Remove" title="Remove"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C313.4 6.8 302.4 0 290.3 0L157.7 0c-12.1 0-23.1 6.8-28.5 17.7zM53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128 32 128 53.2 467z"/></svg></button>
     </div>
-    ${isSpoiler ? '<div class="cfp-spoiler-overlay"><span class="cfp-spoiler-tag"><svg viewBox="0 0 640 512" fill="currentColor" style="width:12px;height:12px;vertical-align:-2px;margin-right:5px;"><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c8.4-19.3 10.6-41.4 4.8-63.3c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zM373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5L373 389.9z"/></svg>Spoiler</span></div>' : ''}
-    ${previewHTML}
-    <div class="cfp-name">${escapeHTML(name)} · ${sizeMB} MB</div>
+    ${sp ? '<div class="cfp-spoiler-overlay"><span class="cfp-spoiler-tag">Spoiler</span></div>' : ''}
+    <div class="cfp-media">${previewHTML}</div>
+    <div class="cfp-name" title="${escapeHTML(att.name)}">${escapeHTML(att.name)} · ${sizeMB} MB</div>
   </div>`;
-
-  // context may be 'dm', 'gc', 'ch' OR 'dm-input', 'gc-input', 'ch-input'
-  const inputId = context.endsWith('-input') ? context : (context==='dm' ? 'dm-input' : context==='gc' ? 'gc-input' : 'ch-input');
+}
+// Render the whole pending-attachment tray (0..10 cards). Kept named
+// showAttachmentPreview for back-compat; args are ignored — it always rebuilds
+// from window._pendingAttachments.
+function showAttachmentPreview(_name, _type, _dataUrl, _size, context) {
+  document.getElementById('attach-preview-bar')?.remove();
+  const atts = _pendAtts();
+  const inputId = (context && context.endsWith && context.endsWith('-input')) ? context
+    : (context === 'dm' ? 'dm-input' : context === 'gc' ? 'gc-input' : 'ch-input');
   const ctxKey = inputId === 'dm-input' ? 'dm' : inputId === 'gc-input' ? 'gc' : 'ch';
-  const outerWrap = document.getElementById(inputId)?.closest('.chat-input-outer');
-  if (outerWrap) outerWrap.insertBefore(bar, outerWrap.firstChild);
-  // Persist the attachment as part of the chat draft so it survives refresh.
-  try { _persistPendingAttachmentChange(ctxKey, inputId); } catch(_) {}
+  if (atts.length) {
+    const bar = document.createElement('div');
+    bar.id = 'attach-preview-bar';
+    bar.className = 'chatbar-file-preview';
+    bar.innerHTML = atts.map((att, i) => _attCardHTML(att, i)).join('');
+    const outerWrap = document.getElementById(inputId)?.closest('.chat-input-outer');
+    if (outerWrap) outerWrap.insertBefore(bar, outerWrap.firstChild);
+  }
+  try { _persistPendingAttachmentChange(ctxKey, inputId); } catch (_) {}
 }
 
 // The Modify Attachment card. Used for a PENDING (pre-send) attachment, and —
@@ -40216,40 +40237,41 @@ function _renderModifyAttachmentCard({ thumb, isImage, name, alt, spoiler, onSav
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   return overlay;
 }
-function _toggleAttachSpoiler() {
-  const att = window._pendingAttachment;
+function _toggleAttachSpoiler(idx) {
+  const att = _pendAtts()[idx || 0];
   if (!att) return;
   att._spoiler = !att._spoiler;
-  showAttachmentPreview(att.name, att.type, att.data, att.size, att.context);
+  showAttachmentPreview(null, null, null, null, att.context);
 }
-function _showModifyAttachment() {
-  const att = window._pendingAttachment;
+function _showModifyAttachment(idx) {
+  idx = idx || 0;
+  const att = _pendAtts()[idx];
   if (!att) return;
   const isImage = att.type.startsWith('image/');
   const thumb = isImage
     ? `<img src="${escapeHTML(att.data)}" alt="">`
     : `<svg viewBox="0 0 384 512" fill="currentColor"><path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/></svg>`;
-  _renderModifyAttachmentCard({ thumb, isImage, name: att.name, alt: att.alt || '', spoiler: !!att._spoiler, onSaveExpr: '_applyModifyAttachment(this)' });
+  _renderModifyAttachmentCard({ thumb, isImage, name: att.name, alt: att.alt || '', spoiler: !!att._spoiler, onSaveExpr: '_applyModifyAttachment(this,' + idx + ')' });
 }
 
-function _applyModifyAttachment(btn) {
-  const att = window._pendingAttachment;
+function _applyModifyAttachment(btn, idx) {
+  const att = _pendAtts()[idx || 0];
   if (!att) return;
   att.name = document.getElementById('_mod-att-name')?.value?.trim() || att.name;
   att.alt = document.getElementById('_mod-att-alt')?.value?.trim() || '';
   att._spoiler = document.getElementById('_mod-att-spoiler')?.checked || false;
   btn.closest('.ftz-confirm-overlay').remove();
-  showAttachmentPreview(att.name, att.type, att.data, att.size, att.context);
+  showAttachmentPreview(null, null, null, null, att.context);
 }
 
-function _clearAttachment(){
-  document.getElementById("attach-preview-bar")?.remove();
-  window._pendingAttachment=null;
-  // Update persisted draft so the cleared file isn't restored next open.
-  try {
-    const ctx = (curBastion!==null && curChannel!==null) ? 'ch' : (curGC ? 'gc' : (curDM ? 'dm' : null));
-    if (ctx) _persistPendingAttachmentChange(ctx, ctx==='dm'?'dm-input':ctx==='gc'?'gc-input':'ch-input');
-  } catch(_) {}
+// Remove one attachment (by index) or, with no index, clear the whole tray.
+function _clearAttachment(idx){
+  const atts = _pendAtts();
+  const ctx0 = atts[0]?.context;
+  if (typeof idx === 'number' && idx >= 0 && idx < atts.length) atts.splice(idx, 1);
+  else atts.length = 0;
+  const ctx = ctx0 || ((curBastion!==null && curChannel!==null) ? 'ch' : (curGC ? 'gc' : (curDM ? 'dm' : 'ch')));
+  showAttachmentPreview(null, null, null, null, ctx);
 }
 
 // ════════════════════════════════════════════
@@ -40268,30 +40290,35 @@ async function handleChatSend(context, chIdx) {
     toast('Your chat is suspended for safety reasons. Try again in ' + _left + ' min.', 'error');
     return;
   }
-  const att = window._pendingAttachment;
-  if (att) {
-    const isImage = att.type.startsWith('image/');
-    const isVideo = att.type.startsWith('video/');
-    const isAudio = att.type.startsWith('audio/');
-    const sizeMB = (att.size/1024/1024).toFixed(2)+' MB';
-    let fileUrl = att.data; // fallback to base64
-    // Try uploading to Supabase Storage CDN (much smaller message text)
-    try {
-      const blob = await fetch(att.data).then(r => r.blob());
-      const result = await FortizedSocial.uploadFile(att.name, blob);
-      if (result.url) { fileUrl = result.url; }
-      else { _dbg('[Upload] Storage failed, using base64 fallback:', result.error); }
-    } catch(e) { _dbg('[Upload] Storage unavailable, using base64:', e.message); }
-    let token;
-    // Images carry optional alt text as a 3rd token segment ([FTZIMG:name|url|alt]).
-    const altSeg = (isImage && att.alt) ? '|' + String(att.alt).replace(/[|\]]/g, ' ') : '';
-    if (isImage) token = '[FTZIMG:'+att.name+'|'+fileUrl+altSeg+']';
-    else if (isVideo) token = '[FTZVID:'+att.name+'|'+fileUrl+']';
-    else if (isAudio) token = '[FTZAUD:'+att.name+'|'+fileUrl+']';
-    else token = '[FTZFILE:'+att.name+'|'+sizeMB+'|'+fileUrl+']';
-    // Spoiler: wrap the token in ||…|| so parseMD's spoiler pass hides it until
-    // clicked (the media token is rendered first, then wrapped).
-    if (att._spoiler) token = '||' + token + '||';
+  const _atts = _pendAtts().slice(); // snapshot (up to 10)
+  if (_atts.length) {
+    const tokens = [];
+    for (const att of _atts) {
+      const isImage = att.type.startsWith('image/');
+      const isVideo = att.type.startsWith('video/');
+      const isAudio = att.type.startsWith('audio/');
+      const sizeMB = (att.size/1024/1024).toFixed(2)+' MB';
+      let fileUrl = att.data; // fallback to base64
+      // Try uploading to Supabase Storage CDN (much smaller message text)
+      try {
+        const blob = await fetch(att.data).then(r => r.blob());
+        const result = await FortizedSocial.uploadFile(att.name, blob);
+        if (result.url) { fileUrl = result.url; }
+        else { _dbg('[Upload] Storage failed, using base64 fallback:', result.error); }
+      } catch(e) { _dbg('[Upload] Storage unavailable, using base64:', e.message); }
+      let token;
+      // Images carry optional alt text as a 3rd token segment ([FTZIMG:name|url|alt]).
+      const altSeg = (isImage && att.alt) ? '|' + String(att.alt).replace(/[|\]]/g, ' ') : '';
+      if (isImage) token = '[FTZIMG:'+att.name+'|'+fileUrl+altSeg+']';
+      else if (isVideo) token = '[FTZVID:'+att.name+'|'+fileUrl+']';
+      else if (isAudio) token = '[FTZAUD:'+att.name+'|'+fileUrl+']';
+      else token = '[FTZFILE:'+att.name+'|'+sizeMB+'|'+fileUrl+']';
+      // Spoiler: wrap the token in ||…|| so parseMD's spoiler pass hides it until
+      // clicked (the media token is rendered first, then wrapped).
+      if (att._spoiler) token = '||' + token + '||';
+      tokens.push(token);
+    }
+    const token = tokens.join(' ');
     const inp = document.getElementById(context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input');
     if (inp) {
       // The chat input is a contenteditable div with a `.value` shim that
@@ -49428,22 +49455,22 @@ function handleDropOnInput(e, inputId) {
   if (outer) { const ov = outer.querySelector('.drop-overlay'); if (ov) ov.classList.remove('active'); }
   const files = [...e.dataTransfer.files];
   if (!files.length) return;
-  processUploadedFile(files[0], inputId);
+  files.forEach(f => processUploadedFile(f, inputId)); // up to 10, capped inside
 }
 
 function handlePaste(e, inputId) {
   const items = [...(e.clipboardData?.items || [])];
-  const imageItem = items.find(i => i.type.startsWith('image/'));
-  if (!imageItem) return; // let normal paste proceed
+  const imageItems = items.filter(i => i.type.startsWith('image/'));
+  if (!imageItems.length) return; // let normal paste proceed
   e.preventDefault();
-  const file = imageItem.getAsFile();
-  if (file) processUploadedFile(file, inputId);
+  imageItems.forEach(it => { const file = it.getAsFile(); if (file) processUploadedFile(file, inputId); });
 }
 
 function processUploadedFile(file, inputId) {
   if (!file) return;
   const hasRadiance = _hasRadiance(CU);
   const maxMB = hasRadiance ? 45 : 30;
+  if (_pendAtts().length >= _ATT_MAX) { toast('You can attach up to ' + _ATT_MAX + ' files', 'error'); return; }
   if (file.size > maxMB * 1024 * 1024) { toast(`Max ${maxMB}MB`, 'error'); return; }
   const reader = new FileReader();
   reader.onload = async ev => {
@@ -49461,9 +49488,9 @@ function processUploadedFile(file, inputId) {
         _flagNsfwContent(fileData, file.name, CU?.username, file.type, 'PENDING_REVIEW', '0', hash);
       } catch(e) { console.warn('NSFW queue error:', e); }
     }
-    window._pendingAttachment = { name: file.name, type: file.type, data: fileData, size: file.size, context: inputId };
+    _pendAtts().push({ name: file.name, type: file.type, data: fileData, size: file.size, context: inputId });
     const ctx = inputId==='dm-input'?'dm':inputId==='gc-input'?'gc':'ch';
-    showAttachmentPreview(file.name, file.type, fileData, file.size, ctx);
+    showAttachmentPreview(null, null, null, null, ctx);
   };
   reader.readAsDataURL(file);
   toast('📎 ' + file.name + ' attached', 'info');
@@ -52428,7 +52455,7 @@ function _fppRenderBotPanel(panel) {
     </div>
     <div class="fpp__identity">
       <div class="fpp__name-row" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-        <span class="fpp__name">${FORTGIFIED_DISPLAY}</span>${capsule}
+        <span class="fpp__name fpp__name--plain">${FORTGIFIED_DISPLAY}</span>${capsule}
       </div>
       <div class="fpp__handle-row">
         <span class="fpp__bot-id" data-tip="Bot ID">${escapeHTML(FORTGIFIED_BOT_ID)}</span>
@@ -52443,7 +52470,6 @@ function _fppRenderBotPanel(panel) {
       <div class="fpp-card__title" style="margin-top:10px;">Created On</div>
       <div class="fpp-card__body fpp-card__body--muted"><span class="fpp-since">${_FTZ_LOGO_ICON} ${escapeHTML(created)}</span></div>
     </div>
-    <div class="fpp-card fpp-card--badges"><div class="fpp-card__body"><span class="ftz-badge badge-bot"><img src="/badges/bot.png" alt="bot"><span class="badge-tooltip">Bot — automated account by @fortized</span></span></div></div>
     <div class="fpp-card"><div class="fpp-card__title">Commands</div><div class="fpp-card__body fpp-bot-cmds">
       <button type="button" class="fpp-bot-cmd" onclick="document.getElementById('fpp-bot-modal')?.remove();_fppClose();_fortgifiedRunFromPanel('image')"><svg viewBox="0 0 448 512" fill="currentColor"><path d="M0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6l96 0 32 0 208 0c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/></svg>Image to GIF</button>
       <button type="button" class="fpp-bot-cmd" onclick="document.getElementById('fpp-bot-modal')?.remove();_fppClose();_fortgifiedRunFromPanel('video')"><svg viewBox="0 0 576 512" fill="currentColor"><path d="M0 128C0 92.7 28.7 64 64 64l256 0c35.3 0 64 28.7 64 64l0 256c0 35.3-28.7 64-64 64L64 448c-35.3 0-64-28.7-64-64L0 128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2l0 256c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-96-64L416 337.1l0-17.1 0-128 0-17.1 14.2-9.5 96-64c9.8-6.5 22.4-7.2 32.9-1.6z"/></svg>Video to GIF</button>

@@ -734,9 +734,14 @@ const FortizedSocial = (() => {
 
   // ── Auth ─────────────────────────────────────────────
   const PROTECTED_NAMES = ['staw', 'fortized', 'joyster'];
+  // Built-in bot accounts — reserved so no human can register a bot's name.
+  // Keep in sync with MANUAL_BOTS in app.js. (Custom user-created bots will be
+  // checked against their own registry once that ships.)
+  const BOT_NAMES = ['fortized', 'joyster', 'fortizedsafety', 'fortgified'];
 
   function isProtectedUsername(name) {
     const clean = name.replace(/[^a-z]/g, '');
+    if (BOT_NAMES.includes(clean)) return true;
     for (const base of PROTECTED_NAMES) {
       if (clean === base) return true;
       if (clean.length > base.length && clean.startsWith(base)) return true;

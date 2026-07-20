@@ -1797,17 +1797,16 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .media-lightbox-close:hover{background:rgba(255,255,255,.12);color:#fff;}
 .media-lightbox-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 /* GIF favourite button in chat messages */
-.chat-gif-fav-btn{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:none;border:1px solid rgba(255,255,255,.1);border-radius:8px;width:28px;height:28px;font-size:12px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s,transform .15s,color .12s;z-index:2;line-height:1;}
+/* Collect button — uniform with the .ftz-att-btn corner controls (same size,
+   surface, radius) and pinned to the top-LEFT for EVERY gif, aligned with the
+   download/modify/delete row that sits top-right. */
+.chat-gif-fav-btn{position:absolute;top:8px;left:8px;right:auto;background:rgba(15,17,25,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1);border-radius:8px;width:30px;height:30px;color:#e6e9f0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;opacity:0;transition:opacity .14s,background .12s,color .12s,border-color .12s;z-index:5;}
 .chat-gif-fav-btn svg{width:14px;height:14px;display:block;fill:currentColor;}
 .chat-gif-wrap:hover .chat-gif-fav-btn,.ftz-embed-gif:hover .chat-gif-fav-btn{opacity:1;}
 /* A collected GIF shows the filled bookmark in accent at all times, so you can
    tell at a glance it's already in your collection. */
 .chat-gif-fav-btn.is-collected{opacity:1;color:var(--accent);}
-/* Uploaded/FortGified gifs keep the always-on collect button at the top-RIGHT
-   (like every other gif). The download/modify/delete hover row shifts left so
-   it never sits under that collect button. */
-.ftz-att-ctrls.ftz-att-ctrls--offset{right:44px;}
-.chat-gif-fav-btn:hover{transform:scale(1.15);background:rgba(0,0,0,.7);color:var(--accent);}
+.chat-gif-fav-btn:hover{background:rgba(15,17,25,.95);color:var(--accent);}
 /* Drag-drop overlay — scoped to chatbar */
 .drop-overlay{position:absolute;inset:0;background:rgba(255,249,62,.06);border:2px dashed var(--accent);border-radius:12px;z-index:30;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none;}
 .drop-overlay.active{display:flex;}
@@ -2180,11 +2179,14 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 /* ── Live Formatting Preview Overlay ─────────────── */
 .chat-input-row .ci-preview-wrap{position:relative;flex:1;min-width:0;}
 /* Chatbar file preview */
-.chatbar-file-preview{padding:12px 12px 0;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.06);}
-.chatbar-file-card{position:relative;width:180px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);overflow:hidden;transition:border-color .15s;}
-.chatbar-file-card:hover{border-color:rgba(255,249,62,.15);}
-.chatbar-file-card img,.chatbar-file-card video{width:100%;max-height:160px;object-fit:cover;display:block;}
-.chatbar-file-card .cfp-name{padding:6px 8px;font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Pending-attachment tray — a wrapping row of uniform Discord-style cards
+   (up to 10). Scrolls internally once it gets tall so the chatbar stays put. */
+.chatbar-file-preview{padding:12px 12px 10px;display:flex;gap:8px;flex-wrap:wrap;max-height:230px;overflow-y:auto;border-bottom:1px solid rgba(255,255,255,.06);}
+.chatbar-file-card{position:relative;width:112px;flex:0 0 auto;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);overflow:hidden;transition:border-color .15s;}
+.chatbar-file-card:hover{border-color:rgba(255,249,62,.2);}
+.chatbar-file-card .cfp-media{width:100%;height:86px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.22);overflow:hidden;}
+.chatbar-file-card .cfp-media img,.chatbar-file-card .cfp-media video{width:100%;height:100%;object-fit:cover;display:block;}
+.chatbar-file-card .cfp-name{padding:5px 8px;font-size:9.5px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* z-index:3 keeps the action row ABOVE the spoiler overlay (which is
    pointer-events:none) so the buttons stay clickable while spoilered. */
 .chatbar-file-card .cfp-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:opacity .15s;z-index:3;}
@@ -2195,6 +2197,11 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .chatbar-file-card .cfp-btn.active{color:var(--accent);border-color:var(--accent-mid);}
 .chatbar-file-card .cfp-btn.cfp-remove{color:rgba(235,69,69,.85);}
 .chatbar-file-card .cfp-btn.cfp-remove:hover{background:rgba(235,69,69,.2);color:#EB4545;}
+/* Multiple attachments in one message tile into a wrapping grid of ~236px
+   thumbnails instead of a full-width vertical stack. */
+.msg-multi-media .ftz-att-wrap,.msg-multi-media .ftz-embed-gif,.msg-multi-media .ftz-spoiler-media{display:inline-block;vertical-align:top;max-width:236px;margin:2px 4px 2px 0;}
+.msg-multi-media .ftz-chat-img{max-width:236px!important;max-height:236px;}
+.msg-multi-media .ftz-att-wrap img,.msg-multi-media .ftz-embed-gif img,.msg-multi-media .ftz-att-wrap video{max-height:236px;}
 .chatbar-file-card .cfp-spoiler-overlay{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
 .chatbar-file-card .cfp-spoiler-tag{padding:6px 14px;border-radius:20px;background:rgba(0,0,0,.5);color:rgba(255,255,255,.7);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
 .ci-preview{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;font-family:var(--font-ui);font-size:13.5px;line-height:1.55;padding:2px 0;color:var(--text);white-space:pre-wrap;word-wrap:break-word;overflow:hidden;z-index:1;}
@@ -5127,7 +5134,7 @@ body.is-desktop-app .notif-panel{top:0;}
    400×420 box), never square-cropped. object-fit:cover was slicing tall/wide
    GIFs into a squared thumbnail. */
 .ftz-embed-gif img{max-width:100%;max-height:420px;width:auto;height:auto;object-fit:contain;display:block;image-rendering:auto;-webkit-image-smoothing:high;background:transparent;}
-.ftz-embed-gif .chat-gif-fav-btn{position:absolute;top:6px;right:6px;}
+.ftz-embed-gif .chat-gif-fav-btn{position:absolute;top:8px;left:8px;right:auto;}
 /* Tenor keyless iframe embed — fixed-size card (Tenor's embed page centers the
    GIF inside it). No collect button (it's Tenor-hosted, not our <img>). */
 .ftz-tenor-embed{max-width:340px;width:100%;overflow:hidden;}
@@ -11829,10 +11836,23 @@ select:focus-visible {
 .fpp__bot-by{ font-size:12px; color:var(--muted-light,#7d8a9e); }
 .fpp__bot-by a{ color:var(--accent); text-decoration:none; }
 .fpp__bot-by a:hover{ text-decoration:underline; }
-.fpp-bot-cmds{ display:flex; flex-direction:column; gap:6px; }
-.fpp-bot-cmd{ display:flex; align-items:center; gap:8px; width:100%; font-size:12.5px; font-family:inherit; text-align:left; color:var(--text); padding:8px 10px; border-radius:8px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.05); cursor:pointer; transition:background .12s,border-color .12s; }
-.fpp-bot-cmd:hover{ background:var(--accent-dim); border-color:var(--accent-mid); }
-.fpp-bot-cmd svg{ width:14px; height:14px; color:var(--accent); flex-shrink:0; }
+/* FortGified's name on its profile uses the plain in-chat display style (font-ui,
+   regular weight) rather than the big display-font 800 of normal profile names. */
+.fpp__name--plain{ font-family:var(--font-ui); font-weight:700; font-size:16px; letter-spacing:0; }
+/* Command rows: clean, borderless list items with a hover wash so they don't
+   read as boxes crammed against the card edge. */
+.fpp-bot-cmds{ display:flex; flex-direction:column; gap:2px; margin:2px -6px 0; }
+.fpp-bot-cmd{ display:flex; align-items:center; gap:9px; width:100%; font-size:13px; font-family:inherit; text-align:left; color:var(--text); padding:8px 10px; border-radius:8px; background:transparent; border:none; cursor:pointer; transition:background .12s; }
+.fpp-bot-cmd:hover{ background:rgba(255,255,255,.06); }
+.fpp-bot-cmd svg{ width:15px; height:15px; color:var(--accent); flex-shrink:0; }
+/* FortGified "pick a message" mode — floating hint bar + a highlight on the
+   message the cursor is over. */
+.ftz-pick-hint{ position:fixed; bottom:96px; left:50%; transform:translateX(-50%); z-index:var(--z-tooltip,6000); display:flex; align-items:center; gap:10px; padding:9px 12px 9px 10px; border-radius:100px; background:rgba(15,17,25,.96); border:1px solid var(--accent-mid); box-shadow:0 10px 34px rgba(0,0,0,.5); color:var(--text); font-size:13px; }
+.ftz-pick-hint img{ width:24px; height:24px; border-radius:50%; object-fit:cover; }
+.ftz-pick-hint button{ background:rgba(255,255,255,.08); border:none; color:var(--text); font-size:12px; font-family:inherit; padding:5px 12px; border-radius:100px; cursor:pointer; }
+.ftz-pick-hint button:hover{ background:rgba(255,255,255,.16); }
+body.ftz-picking-msg .msg-row[data-msgid]{ cursor:pointer; }
+body.ftz-picking-msg .msg-row[data-msgid]:hover{ background:var(--accent-dim); box-shadow:inset 2px 0 0 var(--accent); }
 .fpp-bot-modal-overlay{ position:fixed; inset:0; z-index:var(--z-modal,5000); background:rgba(4,5,10,.6); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:24px; }
 .fpp--bot-modal{ width:340px; max-width:calc(100vw - 48px); max-height:calc(100vh - 48px); overflow:auto; border-radius:16px; box-shadow:0 24px 64px rgba(0,0,0,.5); }
 .fpp__banner-fallback{

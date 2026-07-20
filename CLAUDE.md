@@ -1,6 +1,27 @@
 # Fortized — working notes for Claude
 
-## 🔴 SESSION HANDOFF (as of cache-bust `2026fix330`)
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix331`)
+
+**Shipped `2026fix331` (multi-attachment + collect/bot polish + mentions):**
+- **Up to 10 attachments per message**: `window._pendingAttachments` array (back-
+  compat `_pendingAttachment` accessor → first item). `openFileUpload` (multiple),
+  drop, paste all push (cap `_ATT_MAX`=10). Preview = a wrapping tray of uniform
+  Discord-style cards (`_attCardHTML`; per-card spoiler/modify/remove by index).
+  `handleChatSend` loops all → joins tokens. Drafts store `attachments[]`.
+- **Multiple media in a sent message tile** (`.msg-multi-media`, tagged in
+  appendMessage when >1 img/gif) instead of a full-width vertical stack.
+- **Collect button restyled to match `.ftz-att-btn`** and moved TOP-LEFT for every
+  gif (aligned with the top-right download/modify/delete row; `--offset` removed).
+- **Bot profile**: removed the badge card; name uses the plain in-chat style
+  (`.fpp__name--plain`); Description + Created On combined in one about card;
+  command rows are clean borderless list items.
+- **Panel/profile commands pick a MESSAGE** now (`_fortgifiedRunFromPanel` arms a
+  message-pick mode → click a message w/ media → converts first attachment;
+  `_fortgifiedDisarm`, `.ftz-pick-hint`), not a file picker.
+- **Signup rejects bot names** (`BOT_NAMES` in `isProtectedUsername`, supabase).
+- **Bots are mentionable** (`_isMentionableHere` → MANUAL_BOTS); groundwork for
+  future custom-bot mentions.
+
 
 **Shipped `2026fix330` (collect overlap + bot-profile polish + panel commands):**
 - **Collect button no longer sits under the download/modify/delete row**: the

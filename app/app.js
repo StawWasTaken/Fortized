@@ -12166,7 +12166,7 @@ function appendMessage(container, msg, context, prevAuthor) {
       // flashing the default placeholder for the hydration round-trip.
       const cachedReplyPfp = (rFrom === CU?.username) ? (CU?.pfp || null) : (_pfpCache[rFrom] || null);
       const rBody = rText || (rHasAttach ? '<em style="opacity:.5">attachment</em>' : '<em style="opacity:.4">click to view</em>');
-      replyHTML = `<div class="msg-reply-ref" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><span class="mrr-av" id="${rAvId}">${buildAvatarHTML(cachedReplyPfp, rFrom, 18)}</span><strong class="mrr-name"><span class="mrr-at">@</span>${rSafe}</strong><span class="mrr-preview">${rBody}</span>${rAttachIcon}</div>`;
+      replyHTML = `<div class="msg-reply-ref" data-reply-to="${escapeHTML(msg.replyTo.id||'')}" onclick="scrollToMsg('${escapeHTML(msg.replyTo.id||'')}')"><span class="mrr-av" id="${rAvId}">${buildAvatarHTML(cachedReplyPfp, rFrom, 18)}</span><strong class="mrr-name"><span class="mrr-at">@</span>${rSafe}</strong><span class="mrr-preview">${rBody}</span>${rAttachIcon}</div>`;
       // Hydrate only if we didn't already have a cached pfp.
       if (rFrom && !cachedReplyPfp) {
         Promise.resolve().then(() => FortizedSocial.getUserByName(rFrom)).then(u => {
@@ -12415,6 +12415,20 @@ function _layoutMsgMedia(mt) {
   mt.appendChild(grid);
 }
 
+// When a message is deleted, any reply pointing at it swaps its preview for a
+// Discord-style "Original message was deleted" line with the Fortized brand icon.
+function _markRepliesDeleted(msgId) {
+  if (!msgId) return;
+  const id = String(msgId);
+  document.querySelectorAll('.msg-reply-ref[data-reply-to]').forEach(ref => {
+    if (ref.dataset.replyTo !== id || ref.classList.contains('msg-reply-ref--deleted')) return;
+    ref.classList.add('msg-reply-ref--deleted');
+    ref.removeAttribute('onclick');
+    ref.style.cursor = 'default';
+    ref.innerHTML = '<span class="mrr-av mrr-av--del"><img src="https://www.fortized.com/Fortized%20icon.png" alt="" onerror="this.style.display=\'none\'"></span><span class="mrr-preview mrr-preview--del"><em>Original message was deleted</em></span>';
+  });
+}
+
 function buildMsgActions(msg, context, id) {
   const isOwn=String(msg.from||"").toLowerCase()===String(CU?.username||"").toLowerCase();
   const isBastionAdmin = (context==='ch' || context==='channel') && hasPerm('manage_messages');
@@ -12637,7 +12651,7 @@ function cancelEdit(msgId) {
   const original = row.dataset.editOriginal || row.dataset.text || '';
   const textEl = row.querySelector('.msg-text');
   const edited = row.dataset.edited === '1' ? _fmtEditedTag(row.dataset.editedAt) : '';
-  if (textEl) textEl.innerHTML = parseMD(escapeHTML(original)) + edited;
+  if (textEl) { textEl.innerHTML = parseMD(escapeHTML(original)) + edited; _layoutMsgMedia(textEl); }
   delete row.dataset.editOriginal;
   delete row.dataset.editTokens;
   delete row.dataset.editGifUrls;
@@ -12677,7 +12691,7 @@ async function saveEdit(msgId) {
   const textEl=row?.querySelector('.msg-text');
   const _editTs = new Date().toISOString();
   if (row) { row.dataset.edited = '1'; row.dataset.editedAt = _editTs; }
-  if (textEl) textEl.innerHTML=parseMD(escapeHTML(newText))+_fmtEditedTag(_editTs);
+  if (textEl) { textEl.innerHTML=parseMD(escapeHTML(newText))+_fmtEditedTag(_editTs); _layoutMsgMedia(textEl); }
   // Persist edit to Supabase
   try {
     if (curDM) {
@@ -12814,6 +12828,8 @@ async function _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _c
         else { const _db = CU.bastions?.[_curBastion]; const _dch = _db?.channels?.[_curChannel]; _dType = 'bastion'; _dId1 = _db?.globalId||_db?.name; _dId2 = _dch?.name||'general'; }
         FortizedSocial.socketEmit('message:delete', { type: _dType, id1: _dId1, id2: _dId2, messageId: msgId });
       }
+      // Replies to this message now read "Original message was deleted".
+      _markRepliesDeleted(msgId);
 
       // UI removal after successful deletion
       if (row) {
@@ -16081,10 +16097,14 @@ function initFortizedUXResilience() {
           const _eAt = data.editedAt || new Date().toISOString();
           row.dataset.editedAt = _eAt;
           textEl.innerHTML = parseMD(escapeHTML(data.newText)) + _fmtEditedTag(_eAt);
+          _layoutMsgMedia(textEl);
         }
       },
       onMessageDeleted: function(data) {
         if (!data || !data.messageId) return;
+        // Any message replying to the deleted one now shows "Original message
+        // was deleted" (both here and in the local delete path).
+        _markRepliesDeleted(data.messageId);
         // Skip if we're the deleter (already removed locally in deleteMsg)
         if (data.deletedBy === CU.username) return;
         const row = document.querySelector('[data-msgid="'+CSS.escape(data.messageId)+'"]');
@@ -34072,7 +34092,7 @@ async function _persistMessageEdit(msgId, newText) {
 function _attRerender(row, newText) {
   row.dataset.text = newText;
   const textEl = row.querySelector('.msg-text');
-  if (textEl) textEl.innerHTML = parseMD(escapeHTML(newText)) + (row.dataset.edited === '1' ? _fmtEditedTag(row.dataset.editedAt) : '');
+  if (textEl) { textEl.innerHTML = parseMD(escapeHTML(newText)) + (row.dataset.edited === '1' ? _fmtEditedTag(row.dataset.editedAt) : ''); _layoutMsgMedia(textEl); }
 }
 async function _attDelete(el) {
   const d = _attData(el); const row = el.closest('.msg-row[data-msgid]');
@@ -44497,6 +44517,7 @@ function _liveUpdateMessage(snap, context) {
     if (msg.edited) html += _fmtEditedTag(msg.editedAt);
     if (msg.forwarded) html = '<div style="display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.04);border-left:2px solid rgba(255,255,255,.2);border-radius:4px;margin-bottom:5px;font-size:12px;color:var(--muted);"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polyline points=\"15,17 20,12 15,7\"/><path d=\"M4 18v-2a4 4 0 014-4h12\"/></svg><span style=\"font-weight:600;\">Forwarded</span></div>' + html;
     textEl.innerHTML = html;
+    _layoutMsgMedia(textEl);
     row.dataset.text = msg.text;
   }
 }

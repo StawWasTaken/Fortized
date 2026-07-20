@@ -1092,6 +1092,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .msg-translation-close:hover{color:#fff;background:rgba(255,255,255,.06);}
 .msg-translation-body{font-size:13px;color:rgba(255,255,255,.82);line-height:1.5;word-break:break-word;}
 .msg-reply-ref{flex-basis:100%;width:100%;display:flex;align-items:center;gap:6px;padding:0 0 2px 62px;margin:2px 0 0 0;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;line-height:1.35;position:relative;min-width:0;transition:color .12s;}
+/* Reply pointing at a now-deleted message. */
+.msg-reply-ref--deleted{cursor:default;color:rgba(255,255,255,.4);}
+.msg-reply-ref--deleted:hover{color:rgba(255,255,255,.4);}
+.msg-reply-ref .mrr-av--del{background:transparent;overflow:visible;}
+.msg-reply-ref .mrr-av--del img{width:18px;height:18px;border-radius:50%;object-fit:cover;display:block;}
+.msg-reply-ref .mrr-preview--del{font-style:italic;opacity:.85;}
 /* L-connector — smaller/higher curve so it doesn't dominate the row.
    Originated at top:50%, then 32%; user wanted a shorter arc still. */
 .msg-reply-ref::before{content:"";position:absolute;left:31px;top:60%;bottom:-8px;width:24px;border-left:1.5px solid rgba(255,255,255,.22);border-top:1.5px solid rgba(255,255,255,.22);border-top-left-radius:7px;pointer-events:none;}
@@ -12651,8 +12657,10 @@ body.ftz-picking-msg .msg-row[data-msgid]:hover{ background:var(--accent-dim); b
   display:flex; flex-direction:column;
   gap:0;
   padding:0;
-  border:1px solid var(--border);
-  margin:8px;
+  border:none;
+  /* Flush on the LEFT (no dark gap/"shadow" strip against the chat), small
+     inset on top/right/bottom so the rounded card reads against the view. */
+  margin:8px 8px 8px 0;
   box-shadow:none !important;
 }
 .fpp--dm .fpp__banner{

@@ -1,5 +1,85 @@
 # Fortized — working notes for Claude
 
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix335`)
+
+Branch `claude/staff-console-world-map-vawn5l`, mirrored to `main`. Standing
+rules unchanged (egress; mirror-to-main + cache-bust every push; `node --check`
+app.js + supabase + 42 relationship tests pre-commit; verify UI via Playwright
+plainviews — CDN/Supabase unreachable in-sandbox).
+
+### ✅ Shipped this session (`2026fix327`→`335`) — big picture
+- **GIF collections, unified**: one collect control everywhere (chat embeds,
+  sent-attachment corner controls, media lightbox, GIF picker). Filled=collected
+  (accent, always shown) vs outline; toggles; live-syncs every visible copy +
+  the Collection tab. Collect button is TOP-LEFT on gifs (att-btn styled),
+  controls top-right. `_gifCollectId`/`isGifCollected`/`toggleFavGif`/
+  `_gifCollectBtnHTML`/`_syncGifCollectBtns` near `saveFavGif`.
+- **FortGified bot**: TWO commands — Image to GIF (real uploaded images only, via
+  `_msgFindConvertibleImage`) + Video to GIF (≤15s). Runnable 3 ways: right-click
+  message, chatbar Bots panel, and the bot profile — the panel/profile ones arm
+  a "pick a message" mode (`_fortgifiedRunFromPanel`/`_fortgifiedDisarm`). The
+  invoking user can DELETE the bot's message (`_parseBotTrigger`/`_iTriggeredMsg`
+  + `canDel` threaded through the action bar/more-menu/ctx-menu). Video encoder
+  is async + bounded (240px/≤50 frames, yields between frames) so it no longer
+  freezes. Special **bot profile** (`_fppRenderBotPanel`): brand-icon banner, bot
+  badge, BOT tag, bot ID, "by @fortized", Description + Created On in one about
+  card, runnable Commands. Bots are signup-reserved (`BOT_NAMES`) + mentionable.
+- **Multi-attachment (up to 10)**: `window._pendingAttachments` array (+ legacy
+  `_pendingAttachment` accessor). Preview = wrapping tray of uniform cards, per-
+  card spoiler/modify/remove. "Too many uploads" modal at the cap. Upload shows
+  a real message-row progress card (avatar+name+time+caption + bar).
+- **Message media grid**: `_layoutMsgMedia` lifts media OUT of the inline text
+  into `.msg-media-grid` BELOW the caption (fixes "text left / image right");
+  multiples tile 2-col (≤4) / 3-col (5+) square cells. NOW ALSO re-applied on
+  every edit/rerender path (saveEdit, edit-broadcast, `_attRerender`,
+  `_liveUpdateMessage`) — editing used to drop the grid.
+- **Lightbox gallery arrows**: ‹ › + "n/N" counter for multi-media messages
+  (`_openLightboxFromImg` gathers `.msg-media-grid` siblings; `_galGo`, ←/→ keys).
+- **Spoilers redesigned + un-frozen**: media spoilers render blur + SPOILER pill
+  first-class (parseMD pre-pass); text spoiler = solid Discord block.
+- **Tenor page URLs embed** via keyless iframe (`_tenorEmbedHTML`; v1 API dead).
+- **Frozen-DM cure (two layers)**: (1) drafts only keep attachments ≤1.5 MB
+  (`_draftSafeAtts`); (2) `_defuseHugeMedia` at the top of `parseMD` swaps a FTZ
+  token carrying a >1.5 MB base64 data URL for a light `[FTZBIG:…]` "too big to
+  display" card — a stuck 20-30 MB inline attachment no longer freezes the DM on
+  open. User can then delete the offending message.
+- **Delete button fix**: the FortGified pick-mode capture handler could stay
+  armed and hijack every message click (incl. Delete) — now cancels on any
+  control/outside click.
+- **Reply polish**: replies always show a full header; reply preview shows an
+  attachment icon (not the raw token, truncation-tolerant); reply bar matches the
+  topbar colour + shows the target's display name/effect; a reply to a DELETED
+  message now shows "Original message was deleted" + the Fortized brand icon
+  (`_markRepliesDeleted`, `data-reply-to`).
+- **DM profile sidebar**: clean rounded panel (16px), banner flush inside the
+  round, NO shadow, NO brand yellow top-line (`.fpp--dm::before{display:none}`),
+  flush-left (no dark gap "shadow"), small top/right/bottom inset.
+
+### 🔧 LEFT TO DO / OPEN
+- **Room topbar full-width (DEFERRED, needs care)**: user wants
+  `#dm-chat-wrap .room-topbar` to extend RIGHT, *under* the DM sidebar, to the
+  screen edge (full-width top bar with the sidebar on top of its right end).
+  The topbar lives inside `#dm-chat-wrap` (flex:1, `overflow:hidden`) so it can't
+  just be widened — needs a real layout change (lift the topbar to span
+  `#view-dms`, or a full-width top strip + offset the sidebar/messages). Left
+  undone to avoid breaking the delicate DM layout — confirm exact intent first.
+- **Multiple VIDEO/AUDIO attachments don't tile** — only images/gifs go in the
+  media grid (tiling a video player to a thumbnail makes it unusable). Fine for
+  now; revisit if asked.
+- **Live-verify (sandbox can't reach CDN/Supabase)**: the Tenor iframe embed, the
+  upload-progress row, the "too many uploads" modal, the deleted-reply Fortized
+  icon, and the rounded DM sidebar all render from app context the plainview
+  harness can't fully reproduce — eyeball them once `335` deploys.
+- **Undo-delete edge case**: undoing a delete does NOT restore reply-refs from
+  the "Original message was deleted" state until a full re-render (minor).
+
+### 📋 Locked behaviours to preserve
+- Bots = our word (never "Apps"). FortGified: hidden from member lists, renders
+  with `/FortGified-PFP.png` + blue BOT capsule, zero DB lookups, `ch.botsDisabled`
+  gate. Collect state matches by URL first (back-compat w/ old slice(-16) ids).
+
+---
+### Older handoff (kept for history)
 ## 🔴 SESSION HANDOFF (as of cache-bust `2026fix334`)
 
 **Shipped `2026fix334` (frozen-DM cure + delete fix + lightbox arrows + polish):**

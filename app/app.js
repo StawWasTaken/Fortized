@@ -31129,7 +31129,7 @@ function _scActionCard(opts) {
   const fieldHTML = (o.fields || []).map(f => {
     const fid = 'scac-' + f.id;
     const lbl = f.label ? `<label>${escapeHTML(f.label)}</label>` : '';
-    if (f.type === 'textarea') return `<div class="sc-ac-field">${lbl}<textarea id="${fid}" rows="${f.rows||3}" placeholder="${escapeHTML(f.placeholder||'')}">${escapeHTML(f.value||'')}</textarea></div>`;
+    if (f.type === 'textarea') return `<div class="sc-ac-field">${lbl}${Array.isArray(f.presets) && f.presets.length ? `<div class="sc-ac-presets" style="flex-wrap:wrap;margin-bottom:8px;">${f.presets.map(p=>`<button type="button" class="sc-ac-preset" onclick="document.getElementById('${fid}').value=this.textContent;">${escapeHTML(p)}</button>`).join('')}</div>` : ''}<textarea id="${fid}" rows="${f.rows||3}" placeholder="${escapeHTML(f.placeholder||'')}">${escapeHTML(f.value||'')}</textarea></div>`;
     if (f.type === 'select') return `<div class="sc-ac-field">${lbl}<select id="${fid}" class="sc-select">${(f.options||[]).map(op=>`<option value="${escapeHTML(op.value)}"${op.value===f.value?' selected':''}>${escapeHTML(op.label)}</option>`).join('')}</select></div>`;
     if (f.type === 'presets') return `<div class="sc-ac-field">${lbl}<div class="sc-ac-row"><input id="${fid}" class="sc-input" type="number" min="${f.min||0}" placeholder="${escapeHTML(f.placeholder||'')}" value="${escapeHTML(String(f.value||''))}" style="flex:1;"><div class="sc-ac-presets">${(f.presets||[]).map(p=>`<button type="button" class="sc-ac-preset" onclick="document.getElementById('${fid}').value='${p}'">${p}</button>`).join('')}</div></div></div>`;
     if (f.type === 'duration') return `<div class="sc-ac-field">${lbl}<div class="sc-ac-row"><input id="${fid}-amt" class="sc-input" type="number" min="1" value="${f.amount||1}" style="flex:1;"><select id="${fid}-unit" class="sc-select" style="flex:1;">${['minutes','hours','days','weeks','months','years'].map(un=>`<option value="${un}"${un===(f.unit||'hours')?' selected':''}>${un[0].toUpperCase()+un.slice(1)}</option>`).join('')}</select></div></div>`;
@@ -31177,6 +31177,9 @@ function _scActionCard(opts) {
   return wrap;
 }
 
+// Quick-pick reasons for staff moderation actions (they can still type their
+// own). The AUTOMOD, by contrast, generates its reason with the AI.
+const _MOD_REASON_PRESETS = ['Harassment or bullying', 'Hate speech or slurs', 'Threats or violence', 'Encouraging self-harm', 'Sexual harassment', 'Doxxing / sharing private info', 'Spam or scams', 'NSFW or inappropriate content', 'Impersonation', 'Ban evasion', 'Violating the Terms of Use'];
 function adminActionUser(username, action) {
   if (action === 'verify') {
     if (!isSuperAdmin()) { toast('Only superadmins can verify users', 'error'); return; }
@@ -31203,7 +31206,7 @@ function adminActionUser(username, action) {
     _scActionCard({
       icon:'fa-ban', accent:'#f2555a', danger:true,
       title:'Ban '+username, subtitle:'Blocks this account from signing in.',
-      fields:[{type:'textarea',id:'reason',label:'Reason',placeholder:'Why is this account being banned? (recorded in the audit log)'}],
+      fields:[{type:'textarea',id:'reason',label:'Reason',placeholder:'Why is this account being banned? (recorded in the audit log)',presets:_MOD_REASON_PRESETS}],
       confirmLabel:'Ban account',
       onConfirm:(v)=>{
         if (!v.reason) { toast('Reason required', 'error'); return false; }
@@ -31231,7 +31234,7 @@ function adminActionUser(username, action) {
     _scActionCard({
       icon:'fa-triangle-exclamation', accent:'#f5a524',
       title:'Warn '+username, subtitle:'Sends a formal warning the user must acknowledge.',
-      fields:[{type:'textarea',id:'reason',label:'Warning message',placeholder:'What is the user being warned for?'}],
+      fields:[{type:'textarea',id:'reason',label:'Warning message',placeholder:'What is the user being warned for?',presets:_MOD_REASON_PRESETS}],
       confirmLabel:'Issue warning',
       onConfirm:async(v)=>{
         if (!v.reason) { toast('Reason required', 'error'); return false; }
@@ -31248,7 +31251,7 @@ function adminActionUser(username, action) {
       title:'Suspend '+username, subtitle:'Temporarily blocks the account until the timer expires.',
       fields:[
         {type:'duration',id:'dur',label:'Duration',amount:1,unit:'hours'},
-        {type:'textarea',id:'reason',label:'Reason',rows:2,placeholder:'Reason for suspension (recorded)'},
+        {type:'textarea',id:'reason',label:'Reason',rows:2,placeholder:'Reason for suspension (recorded)',presets:_MOD_REASON_PRESETS},
         {type:'text',id:'msg',label:'Moderator message (optional)',placeholder:'Shown to the user'},
       ],
       confirmLabel:'Suspend account',

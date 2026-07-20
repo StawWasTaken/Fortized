@@ -1079,6 +1079,13 @@ function isFortizedOfficialAccount(username) {
   if (!username) return false;
   return FORTIZED_OFFICIAL_ACCOUNTS.includes(String(username).toLowerCase());
 }
+// Regular users cannot interact with the official system accounts (@fortized,
+// @fortizedsafety) — no reporting, reacting, replying, bots, block/ignore, etc.
+// Superadmins are exempt (they need to manage these accounts). Returns true when
+// the interaction should be BLOCKED. Callers toast + bail when true.
+function _officialInteractionBlocked(username) {
+  return isFortizedOfficialAccount(username) && !isSuperAdmin();
+}
 function fortizedOfficialCapsuleHTML() {
   return '<span class="ftz-official-capsule" aria-label="Official Fortized account">OFFICIAL</span>';
 }
@@ -10703,6 +10710,7 @@ function _msgFindVideoEl(row) {
 function _openMsgBotsMenu(x, y, msgId, context) {
   document.getElementById('ctx-apps-flyout')?.remove();
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  if (row && _officialInteractionBlocked(row.dataset.from)) { toast('You can’t use bots on official Fortized messages.', 'info'); return; }
   const imgEl = _msgFindConvertibleImage(row);
   const vidEl = _msgFindVideoEl(row);
   const vidOk = !!(vidEl && !(vidEl.duration > 15.5));
@@ -12554,6 +12562,7 @@ function _getCurrentChatKey() {
 }
 function replyToMsg(msgId, fromName, context) {
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  if (_officialInteractionBlocked(fromName || row?.dataset.from)) { toast('You can’t reply to official Fortized messages.', 'info'); return; }
   replyingTo = {id:msgId, from:fromName, text:row?.dataset.text||'', chatKey: _getCurrentChatKey()};
   // Highlight the message we're replying to — drop any prior highlight
   // first so only ever one row carries the cue.
@@ -13182,6 +13191,8 @@ function _filterReactionEmojis(query) {
 }
 async function toggleReaction(msgId, emoji, context, isSuper) {
   if (!CU?.username) return;
+  const _rrow = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  if (_rrow && _officialInteractionBlocked(_rrow.dataset.from)) { toast('You can’t react to official Fortized messages.', 'info'); return; }
   _trackReactionEmoji(emoji);
   const me = CU.username.toLowerCase();
 
@@ -27446,6 +27457,7 @@ function showReport(opts) {
 }
 
 function reportMessage(msgId, msgText, msgFrom) {
+  if (_officialInteractionBlocked(msgFrom)) { toast('You can’t report messages from official Fortized accounts.', 'info'); return; }
   activeReportData = { type: 'message', msgId, msgText, msgFrom: msgFrom || null, reportedAt: new Date().toISOString() };
   showReport({
     type: 'message',
@@ -27462,6 +27474,7 @@ function reportMessage(msgId, msgText, msgFrom) {
 }
 
 function reportUser(username) {
+  if (_officialInteractionBlocked(username)) { toast('You can’t report official Fortized accounts.', 'info'); return; }
   activeReportData = { type: 'user', username, reportedAt: new Date().toISOString() };
   showReport({
     type: 'user',
@@ -27570,6 +27583,55 @@ async function submitReport(payload) {
   activeReportData = null;
   toast('Report submitted. Thank you for keeping Fortized safe.', 'success');
   try { showFeedbackToast?.('submitting a report', 'report_submit'); } catch (_) {}
+  // AI report triage (Control Room → AI report triage). Message reports only.
+  try {
+    if (report.type === 'message' && report.msgFrom && report.msgText) {
+      const gs = _globalSettings || JSON.parse(localStorage.getItem('ftz_global_settings') || '{}');
+      const mode = gs.aiModerationMode || 'off';
+      if (mode !== 'off') await _aiTriageReport(report, mode);
+    }
+  } catch (e) { console.warn('[AI Triage] failed', e?.message); }
+}
+
+// The automated safety system evaluating a fresh report. It can only ever WARN
+// + DELETE (never suspend/ban) and only acts on clear-cut severe content — the
+// exact bar the automod uses. In 'assist' it just records a recommendation for
+// the human queue; in 'autonomous' it acts, records an (appealable) violation
+// credited to the automated system, deletes the message, and resolves the report.
+async function _aiTriageReport(report, mode) {
+  const check = _checkAutomodThreat(report.msgText || '', []);
+  const clearCut = !!(check.isThreat && (check.score >= 0.95));
+  if (mode === 'assist') {
+    report.aiTriage = { mode, recommendation: clearCut ? 'warn_and_delete' : 'needs_human_review', reason: check.reason || null, score: +(check.score || 0).toFixed(2), at: new Date().toISOString() };
+    try { await FortizedSocial.adminSaveReport(report); } catch (_) {}
+    return;
+  }
+  // Autonomous
+  if (!clearCut) {
+    report.aiTriage = { mode, action: 'escalated_to_human', reason: 'not clear-cut', score: +(check.score || 0).toFixed(2), at: new Date().toISOString() };
+    try { await FortizedSocial.adminSaveReport(report); } catch (_) {}
+    return;
+  }
+  // Record an automated warning on the target + notify + delete the message.
+  try {
+    const u = await FortizedSocial.getUserByName(report.msgFrom);
+    if (u) {
+      _ftzRecordViolation(u, {
+        type: 'warning', reason: 'a reported message that violated the rules',
+        source: 'automod', reviewer: { type: 'automated' },
+        evidence: { text: String(report.msgText || '').slice(0, 600), context: [] },
+      });
+      await FortizedSocial.saveUserObject(u);
+    }
+  } catch (_) {}
+  try { await sendFortizedSafetyNotice(report.msgFrom, { reason: 'a reported message that violated the rules', action: 'warning' }); } catch (_) {}
+  let deleted = false;
+  try { deleted = await FortizedSocial.adminDeleteMessage?.(report.msgId); } catch (_) {}
+  report.status = 'resolved';
+  report.resolution = 'ai_warn_delete';
+  report.aiTriage = { mode, action: 'warned_and_deleted', deleted: !!deleted, reason: check.reason || null, score: +(check.score || 0).toFixed(2), at: new Date().toISOString() };
+  try { await FortizedSocial.adminSaveReport(report); } catch (_) {}
+  try { logAudit('ai_report_action', report.msgFrom, `AI warned @${report.msgFrom} + ${deleted ? 'deleted' : 'attempted delete of'} a reported message`); } catch (_) {}
 }
 
 
@@ -27718,6 +27780,7 @@ function _renderStaffNav(active) {
     ]},
     {section:'Administration', items:[
       ...(role!=='moderator' ? [{id:'staff', svg:'<i class="fas fa-user-tie"></i>', label:'Staff'}] : []),
+      ...(isSuperAdmin() ? [{id:'control_room', svg:'<i class="fas fa-shield-halved"></i>', label:'Control Room'}] : []),
       ...(role!=='moderator' ? [{id:'system', svg:'<i class="fas fa-gear"></i>', label:'System'}] : []),
       ...(role!=='moderator' ? [{id:'economy', svg:'<span class="icon-onyx" style="width:16px;height:16px;"></span>', label:'Economy'}] : []),
     ]},
@@ -27787,6 +27850,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
   }
 
   // ── Top-level domain routing (one tab per domain) ──
+  if (tab === 'control_room') { await _loadAdminControlRoom(main); return; }
   if (tab === 'users' || tab === 'members') { await _loadAdminMembers(main); return; }
   if (tab === 'bastions' || tab === '_bastions' || tab === '_economy') { await _loadAdminDomain(main, tab === '_economy' ? 'economy' : 'bastions', tab); return; }
   if (tab === 'broadcasts'){ await _loadAdminDomain(main, 'broadcasts'); return; }
@@ -29646,6 +29710,47 @@ async function _deleteAndReplaceReportedMessage(report) {
 let _reportSuspendTarget = null;
 let _reportContentData = null;
 
+// ── Control Room (superadmin-only) ─────────────────────────────────────────
+async function _loadAdminControlRoom(main) {
+  if (!isSuperAdmin()) { main.innerHTML = '<div class="sc-page" style="padding:40px;color:var(--muted);text-align:center;">Control Room is available to superadmins only.</div>'; return; }
+  const gs = (await FortizedSocial.adminGetGlobalSettings().catch(()=>({}))) || {};
+  const aiMode = gs.aiModerationMode || 'off';
+  const sw = (key, on, label, desc, danger) => `<label class="sc-card" style="display:flex;align-items:center;gap:14px;padding:16px 18px;margin-bottom:12px;cursor:pointer;${danger&&on?'border-color:rgba(242,85,90,.4);':''}">
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:14px;font-weight:700;color:#fff;${danger&&on?'color:#f2555a;':''}">${label}</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.5;">${desc}</div>
+    </div>
+    <span class="ftz-switch" style="flex-shrink:0;"><input type="checkbox" ${on?'checked':''} onchange="_updateGlobalSetting('${key}',this.checked)"><span class="ftz-switch__slider"></span></span>
+  </label>`;
+  const aiOpt = (val, label, desc) => `<label class="sc-card" style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;${aiMode===val?'border-color:rgba(94,203,255,.45);box-shadow:0 0 0 1px rgba(94,203,255,.25);':''}">
+    <span style="width:18px;height:18px;border-radius:50%;border:2px solid ${aiMode===val?'#5ecbff':'rgba(255,255,255,.25)'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">${aiMode===val?'<span style="width:8px;height:8px;border-radius:50%;background:#5ecbff;"></span>':''}</span>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:13.5px;font-weight:700;color:#fff;">${label}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5;">${desc}</div>
+    </div>
+    <input type="radio" name="ai-mode" value="${val}" ${aiMode===val?'checked':''} onchange="_updateGlobalSetting('aiModerationMode','${val}')" style="position:absolute;opacity:0;pointer-events:none;">
+  </label>`;
+  main.innerHTML = `<div class="sc-page" style="padding:28px 32px;max-width:820px;">
+    <div class="sc-head">
+      <div>
+        <div class="sc-head-title"><i class="fas fa-shield-halved" style="color:#5ecbff;"></i> Control Room</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;">Superadmin-only. These switches affect the entire platform.</div>
+      </div>
+    </div>
+
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:22px 2px 12px;">Platform</div>
+    ${sw('maintenanceMode', !!gs.maintenanceMode, 'Maintenance mode', 'Everyone except staff sees a maintenance screen. Use during deploys or incidents.', true)}
+    ${sw('disableRegistration', !!gs.disableRegistration, 'Freeze new registrations', 'The signup page is blocked. Existing accounts are unaffected.')}
+    ${sw('disableBastionCreation', !!gs.disableBastionCreation, 'Freeze bastion creation', 'Users can’t create new bastions until re-enabled.')}
+
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:26px 2px 12px;">AI report triage</div>
+    <div style="font-size:12.5px;color:var(--muted);margin:0 2px 12px;line-height:1.55;">When a message is reported, the automated safety system can help clear the queue. It can only ever <strong style="color:#c8d0dc;">warn and delete</strong> — suspensions and bans always go to a human.</div>
+    ${aiOpt('off', 'Off', 'Humans review every report. Nothing is automated.')}
+    ${aiOpt('assist', 'Assist', 'The AI triages each report and pre-fills a recommended action + reason. A human still confirms.')}
+    ${aiOpt('autonomous', 'Autonomous', 'For clear-cut cases the AI issues the warning and deletes the offending message itself, then logs it (appealable). Anything it isn’t sure about, and every suspension/ban, still routes to a human.')}
+  </div>`;
+}
+
 async function _loadAdminAppeals() {
   const el = document.getElementById('admin-appeals-list');
   if (!el) return;
@@ -30313,6 +30418,11 @@ function _updateGlobalSetting(key, value) {
       logAudit('registration_enabled', 'system', 'New registrations enabled by ' + CU.username);
       toast('New registrations ENABLED — signups are open.', 'success');
     }
+  } else if (key === 'aiModerationMode') {
+    logAudit('ai_moderation_mode', 'system', 'AI report triage set to "' + value + '" by ' + CU.username);
+    toast(value === 'off' ? 'AI triage OFF — humans review every report.'
+        : value === 'assist' ? 'AI triage: ASSIST — it recommends, a human confirms.'
+        : 'AI triage: AUTONOMOUS — it can warn + delete; suspensions & bans still go to a human.', 'success');
   } else if (key === 'disableBastionCreation') {
     logAudit('setting_changed', 'system', key + ' set to ' + value + ' by ' + CU.username);
     toast('Bastion creation ' + (value ? 'DISABLED' : 'ENABLED'), value ? 'info' : 'success');
@@ -52805,13 +52915,16 @@ function _fppShowMoreMenu(evt, username) {
         <svg viewBox="0 0 512 512" fill="currentColor" width="15" height="15"><path d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z"/></svg>
         ${isBlocked ? 'Unblock' : 'Block'}
       </div>`;
-    const menuHTML = `
-      ${inviteItems}
-      ${safetyItemsHTML}
+    // Report is hidden for the official system accounts (regular users can't
+    // report them); superadmins keep every action.
+    const reportItemHTML = (isOfficial && !isSuperAdmin()) ? '' : `
       <div class="fpp-menu__item fpp-menu__item--danger" onclick="reportUser('${safeUser}');_fppClose()">
         <svg viewBox="0 0 448 512" fill="currentColor" width="15" height="15"><path d="M48 24C48 10.7 37.3 0 24 0S0 10.7 0 24V64 350.5 400v88c0 13.3 10.7 24 24 24s24-10.7 24-24V388l80.3-20.1c41.1-10.3 84.6-5.5 122.5 13.4c44.2 22.1 95.5 24.8 141.7 7.4l34.7-13c12.5-4.7 20.8-16.6 20.8-30V66.1c0-23-24.2-38-44.8-27.7l-9.6 4.8c-46.3 23.2-100.8 23.2-147.1 0c-35.1-17.6-75.4-22-113.5-12.5L48 52V24z"/></svg>
         Report
       </div>`;
+    const menuHTML = (inviteItems || safetyItemsHTML || reportItemHTML)
+      ? `${inviteItems}${safetyItemsHTML}${reportItemHTML}`
+      : `<div class="fpp-menu__item" style="opacity:.5;pointer-events:none;">No actions available</div>`;
     const menu = document.createElement('div');
     menu.id = 'fpp-menu';
     menu.className = 'fpp-menu';

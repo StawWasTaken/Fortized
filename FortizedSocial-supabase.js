@@ -2731,6 +2731,20 @@ const FortizedSocial = (() => {
     await _adminKVSet('nsfw_queue', queue);
   }
 
+  // -- Delete a message by id across the message tables (best-effort; used by
+  //    the AI report triage when it removes an offending message). --
+  async function adminDeleteMessage(msgId) {
+    if (!msgId) return false;
+    let ok = false;
+    for (const t of ['bastion_msgs', 'dms', 'group_chat_messages']) {
+      try {
+        const { error, count } = await sb.from(t).delete({ count: 'exact' }).eq('id', msgId);
+        if (!error && count) ok = true;
+      } catch (_) {}
+    }
+    return ok;
+  }
+
   // -- Appeals Queue (lightweight pointers to pending appeals; no user scans) --
   async function adminGetAppealsQueue() {
     _cacheDel('akv:appeals_queue');
@@ -3314,7 +3328,7 @@ const FortizedSocial = (() => {
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
     startGCPolling, stopGCPolling,
-    adminGetAppealsQueue, adminSaveAppealsQueue,
+    adminGetAppealsQueue, adminSaveAppealsQueue, adminDeleteMessage,
     startFriendRequestPolling, stopFriendRequestPolling, startVoiceRoomPolling, stopVoiceRoomPolling,
     initSocket, getSocket, isSocketReady, isConnected, socketEmit,
     joinRoom, leaveRoom, queryPresence, disconnectSocket,

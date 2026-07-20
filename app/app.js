@@ -29102,6 +29102,11 @@ const _ADM_SUB_SVGS = {
   network_monitor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
 };
 
+// Standard page header (FA icon + title) shown on top of every domain page,
+// above its sub-nav — so the console reads as one uniform system.
+function _scDomHead(icon, color, title) {
+  return '<div class="sc-head-title" style="font-size:20px;margin:2px 4px 14px;display:flex;align-items:center;gap:10px;"><i class="fas ' + icon + '" style="color:' + color + ';"></i>' + escapeHTML(title) + '</div>';
+}
 function _adminSubNav(tabs, activeId, parentTab) {
   const parts = tabs.map(t => {
     if (t._divider) {
@@ -29137,7 +29142,7 @@ async function _loadAdminModeration(main, subTab) {
   localStorage.setItem('ftz_nsfw_queue', JSON.stringify(nsfwQueue));
   const bans = await FortizedSocial.adminGetBans().catch(()=>[]);
   localStorage.setItem('ftz_bans', JSON.stringify(bans));
-  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'moderation') + '<div id="adm-sub-content"></div></div>';
+  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _scDomHead('fa-gavel', '#f5a524', 'Moderation') + _adminSubNav(tabs, active, 'moderation') + '<div id="adm-sub-content"></div></div>';
   const sub = document.getElementById('adm-sub-content');
   if (sub) { const prev = main; main = sub; }
   // Delegate to legacy tab renderer
@@ -29155,7 +29160,7 @@ async function _loadAdminMembers(main, subTab) {
   const valid = tabs.map(t => t.id);
   let active = subTab && valid.includes(subTab) ? subTab : (_adminSubTab.members && valid.includes(_adminSubTab.members) ? _adminSubTab.members : tabs[0].id);
   _adminSubTab.members = active;
-  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'members') + '<div id="adm-sub-content"></div></div>';
+  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _scDomHead('fa-users', '#60a5fa', 'Community') + _adminSubNav(tabs, active, 'members') + '<div id="adm-sub-content"></div></div>';
   await _loadAdminPage('_' + active);
 }
 
@@ -29224,7 +29229,8 @@ async function _loadAdminDomain(main, domainKey, subTab) {
     try { const staff = await FortizedSocial.adminGetStaff(); if (staff) localStorage.setItem('ftz_staff', JSON.stringify(staff)); } catch(_){}
   }
 
-  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, domainKey) + '<div id="adm-sub-content"></div></div>';
+  const _dh = ({ bastions:['fa-shield-halved','#a78bfa','Bastions'], economy:['fa-coins','#ffd93e','Economy'], broadcasts:['fa-bullhorn','#fff93e','Broadcasts'] })[domainKey] || ['fa-folder','#60a5fa', domainKey.charAt(0).toUpperCase()+domainKey.slice(1)];
+  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _scDomHead(_dh[0], _dh[1], _dh[2]) + _adminSubNav(tabs, active, domainKey) + '<div id="adm-sub-content"></div></div>';
   await _loadAdminPage('_' + active);
 }
 
@@ -29273,7 +29279,7 @@ async function _renderAdminAds(main, silent) {
     <div class="adm-ads-wrap">
       <div class="adm-ads-header">
         <div>
-          <h2 class="adm-ads-title">Ad Emplacements</h2>
+          <h2 class="adm-ads-title sc-head-title" style="display:flex;align-items:center;gap:10px;"><i class="fas fa-bullhorn" style="color:#fff93e;"></i> Ad Emplacements</h2>
           <p class="adm-ads-sub">Live view of every ad in rotation. Priority weight determines how often an ad shows within its format.</p>
         </div>
         <div class="adm-ads-stats">
@@ -29421,7 +29427,7 @@ async function _loadAdminFeedback(main, subTab) {
     {id:'place_where', label:'"A place where…"', badge:openPlace},
     {id:'onboarding', label:'Personalize Stats'},
   ];
-  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'feedback') + '<div id="adm-sub-content"></div></div>';
+  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _scDomHead('fa-comment-dots', '#5eead4', 'Feedback') + _adminSubNav(tabs, active, 'feedback') + '<div id="adm-sub-content"></div></div>';
   await _loadAdminPage('_' + active);
 }
 

@@ -8663,6 +8663,23 @@ function _persistPendingAttachmentChange(context, inputId) {
   } catch(_) {}
 }
 
+// Collect ONLY the tail of a chat's message rows for automod context. The
+// safety checks never look further back than ~20 messages (runAutomod →
+// _checkAutomodThreat slice(-20); _aiModerate slice(-14)), so scanning and
+// allocating the whole message DOM on every send is wasted work that scales
+// with conversation length. Walk the rows from the end and read .dataset.text
+// for just the last `limit` text-bearing rows.
+function _recentAutomodContext(containerEl, limit = 20) {
+  const out = [];
+  if (!containerEl) return out;
+  const rows = containerEl.querySelectorAll('.msg-row');
+  for (let i = rows.length - 1; i >= 0 && out.length < limit; i--) {
+    const t = rows[i].dataset.text;
+    if (t) out.unshift({ text: t });
+  }
+  return out;
+}
+
 async function sendDM() {
   _stopTypingBroadcast();
   const inp=document.getElementById('dm-input');
@@ -8696,18 +8713,10 @@ async function sendDM() {
   let text=preprocessMessageText(_readChatInput(inp));
   if (!text && !window._pendingAttachment) return;
   
-  // Get recent messages for context
+  // Get recent messages for context (tail only — see _recentAutomodContext)
   const dmMsgsEl = document.getElementById('dm-msgs');
-  const recentMsgs = [];
-  if (dmMsgsEl) {
-    const rows = dmMsgsEl.querySelectorAll('.msg-row');
-    for (const row of rows) {
-      if (row.dataset.text) {
-        try { recentMsgs.push({ text: row.dataset.text }); } catch(e) {}
-      }
-    }
-  }
-  
+  const recentMsgs = _recentAutomodContext(dmMsgsEl);
+
   // Run automod check
   const automod = runAutomod(text, recentMsgs);
   if (automod.isRephrased) {
@@ -9418,16 +9427,10 @@ async function sendGCMessage() {
   let text = preprocessMessageText(_readChatInput(inp));
   if (!text && !window._pendingAttachment) return;
   
-  // Get context for automod
+  // Get context for automod (tail only — see _recentAutomodContext)
   const gcMsgsEl = document.getElementById('gc-msgs');
-  const recentMsgs = [];
-  if (gcMsgsEl) {
-    const rows = gcMsgsEl.querySelectorAll('.msg-row');
-    for (const row of rows) {
-      if (row.dataset.text) { try { recentMsgs.push({ text: row.dataset.text }); } catch(e) {} }
-    }
-  }
-  
+  const recentMsgs = _recentAutomodContext(gcMsgsEl);
+
   // Spam rate-limit — hard block on the sender's side BEFORE we
   // pay the cost of sending. Same Discord-style modal as DMs.
   {

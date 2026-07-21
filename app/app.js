@@ -6916,6 +6916,62 @@ let _joysterClickCount = 0;
 let _joysterLastTip = -1;
 const _JOYSTER_DAILY_LIMIT = 5;
 
+// ── Joyster reactive-AI + Onyx economy tuning ──
+// Joyster can hand out or swipe Onyx when he reacts to what you're doing, but
+// the swing per reaction is bounded (-4..+5) AND the NET per user per day is
+// capped so nobody can farm Onyx by poking him. Relation is a persistent, per-
+// user score that colours whether he's generous or petty. Everything except the
+// Onyx balance itself lives in localStorage, so this adds ZERO Supabase egress.
+const _JOYSTER_ONYX_MIN = -4;            // most he can take in one reaction
+const _JOYSTER_ONYX_MAX = 5;             // most he can give in one reaction
+const _JOYSTER_ONYX_DAILY_NET_CAP = 15;  // |net Onyx from Joyster / user / day|
+const _JOYSTER_REACT_MIN_INTERVAL_MS = 12 * 1000; // throttle AI reactions
+let _joysterReactLastTs = 0;
+
+function _joysterRelKey() { return 'joyster_rel_' + (CU?.username || '_anon'); }
+function _joysterRelation() {
+  try { return parseInt(localStorage.getItem(_joysterRelKey()) || '0', 10) || 0; } catch { return 0; }
+}
+function _nudgeJoysterRelation(delta) {
+  try {
+    const v = Math.max(-100, Math.min(100, _joysterRelation() + (delta | 0)));
+    localStorage.setItem(_joysterRelKey(), String(v));
+    return v;
+  } catch { return 0; }
+}
+// Net Onyx Joyster has moved for this user TODAY (per browser, resets daily).
+function _joysterOnyxNetToday() {
+  try {
+    const s = JSON.parse(localStorage.getItem('joyster_onyx_net') || '{}');
+    return s.date === new Date().toISOString().slice(0, 10) ? (s.net || 0) : 0;
+  } catch { return 0; }
+}
+function _joysterBumpOnyxNet(delta) {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    localStorage.setItem('joyster_onyx_net', JSON.stringify({ date: today, net: _joysterOnyxNetToday() + delta }));
+  } catch {}
+}
+// Apply an Onyx swing from Joyster, clamped by: per-reaction bounds, the daily
+// net cap (so it can't be farmed), and never dropping the user below 0. Returns
+// the Onyx actually applied (may be 0).
+function _joysterApplyOnyx(rawDelta) {
+  if (!CU) return 0;
+  let d = Math.round(Number(rawDelta) || 0);
+  if (!d) return 0;
+  d = Math.max(_JOYSTER_ONYX_MIN, Math.min(_JOYSTER_ONYX_MAX, d));
+  const net = _joysterOnyxNetToday();
+  if (d > 0) d = Math.min(d, Math.max(0, _JOYSTER_ONYX_DAILY_NET_CAP - net));
+  else       d = Math.max(d, Math.min(0, -_JOYSTER_ONYX_DAILY_NET_CAP - net));
+  if (d < 0) d = Math.max(d, -(CU.onyx || 0)); // never go negative
+  if (!d) return 0;
+  CU.onyx = (CU.onyx || 0) + d;
+  _joysterBumpOnyxNet(d);
+  try { saveUser(); } catch {}
+  try { updateOnyxDisplay(); } catch {}
+  return d;
+}
+
 // Joyster AI — talks to our /api/joyster proxy so the Gemini key stays server-side
 const JOYSTER_SYSTEM_PROMPT = `You are Joyster the Jester, the official mischievous mascot of Fortized - a gaming/social platform. You're a witty, cocky jester from King Staw's royal court who lives for chaos, pranks, and making people laugh. Personality: playful, arrogant, cheeky, spontaneous, constantly laughing (BAHAHA! Ahahaha! Hehehehe~), terrible puns, teases lovingly, unpredictable, bold, irreverent.
 
@@ -6935,6 +6991,23 @@ Example voice (note how they reference a specific thing and sometimes sign off w
 "Hehehe~ New friend? Finally! Your friend count went from tragic to merely sad~"
 "Ahahaha! 3 Onyx?! I've seen beggars with fuller pockets. Go touch grass and rethink your life choices!"
 "PSST! Changed your status to 'away'? We ALL know you're just watching cat videos~"`;
+// Reactive mode: Joyster also controls a tiny Onyx reward and his RELATIONSHIP
+// with the user. He must answer with strict JSON so the client can act on it.
+const JOYSTER_REACT_SYSTEM = JOYSTER_SYSTEM_PROMPT + `
+
+ADDRESSING THE USER: address them by their displayName from user_context when it fits, e.g. "Hello, ` + "`" + `<displayName>` + "`" + `😈" or "Nice one, <displayName>!". Never use their @username.
+
+You ALSO control two things and MUST return them:
+1. onyx: a whole number from -4 to 5. This changes the user's Onyx balance.
+   - Mostly 0. Only move Onyx when the moment genuinely calls for it.
+   - Give Onyx (1..5) when they do something you like or you're feeling fond/generous.
+   - Remove Onyx (-1..-4) when they annoy you, waste your time, or you're feeling petty.
+   - Bigger swings need a bigger reason.
+2. relation: a whole number from -3 to 3 — how THIS moment changes how you feel about them.
+Your current relation score is in user_context.joysterRelation (high = you adore them and are generous; negative = you're stingy and mean). Let it colour your onyx choice and tone.
+
+Respond with STRICT JSON ONLY — no markdown, no prose, no code fences:
+{"line":"<your 1-2 sentence in-character quip>","onyx":<int -4..5>,"relation":<int -3..3>}`;
 let _joysterAICache = [];
 let _joysterContexts = []; // Track shown contexts to avoid repetition
 
@@ -6986,7 +7059,7 @@ function _buildJoysterUserContext() {
 // Quota safety: keep AI usage well under the Gemini free tier.
 // - Daily cap (per browser, persisted) so a long session can't burn the day
 // - Min interval so a quick navigate-spree can't fire 10 calls in a minute
-const _JOYSTER_AI_DAILY_CAP = 30;
+const _JOYSTER_AI_DAILY_CAP = 150;
 const _JOYSTER_AI_MIN_INTERVAL_MS = 90 * 1000;
 let _joysterAIDisabledUntil = 0;
 let _joysterAILastCallTs = 0;
@@ -7072,6 +7145,105 @@ Pick ONE specific detail from user_context and make it the core of your comment.
     return text ? text.trim().replace(/^["']|["']$/g, '').slice(0, 260) : null;
   } catch { return null; }
 }
+
+// ── Reactive Joyster: an AI line + an Onyx swing + a relation nudge ──
+// Sends what the user just did (plus their live context, displayName and the
+// persistent relation score) to the model and expects strict JSON back. Shares
+// the daily AI cap with _getJoysterAIResponse and has its own short throttle.
+function _parseJoysterReact(text) {
+  if (!text) return null;
+  let obj = null;
+  const m = text.match(/\{[\s\S]*\}/);
+  if (m) { try { obj = JSON.parse(m[0]); } catch {} }
+  if (!obj) {
+    const line = String(text).trim().replace(/^["']|["']$/g, '').slice(0, 260);
+    return line ? { line, onyx: 0, relation: 0 } : null;
+  }
+  const line = String(obj.line || '').trim().replace(/^["']|["']$/g, '').slice(0, 260);
+  if (!line) return null;
+  return { line, onyx: parseInt(obj.onyx, 10) || 0, relation: parseInt(obj.relation, 10) || 0 };
+}
+async function _joysterAIReact(directive) {
+  if (Date.now() < _joysterAIDisabledUntil) return null;
+  if (Date.now() - _joysterReactLastTs < _JOYSTER_REACT_MIN_INTERVAL_MS) return null;
+  if (_joysterAIDailyCount() >= _JOYSTER_AI_DAILY_CAP) return null;
+  _joysterReactLastTs = Date.now();
+  _joysterAILastCallTs = Date.now();
+  _joysterAIIncDaily();
+  try {
+    const userCtx = _buildJoysterUserContext();
+    userCtx.joysterRelation = _joysterRelation();
+    userCtx.onyxFromJoysterToday = _joysterOnyxNetToday();
+    const promptText = `user_context = ${JSON.stringify(userCtx)}
+
+The user just did this: ${directive || 'is hanging around the home screen'}
+
+React in character. Address them by displayName. Return STRICT JSON only.`;
+    let res = await _joysterFetch({
+      systemInstruction: { parts: [{ text: JOYSTER_REACT_SYSTEM }] },
+      contents: [{ role: 'user', parts: [{ text: promptText }] }],
+      generationConfig: { maxOutputTokens: 200, temperature: 1.0 },
+    });
+    if (res.status === 400) {
+      res = await _joysterFetch({
+        contents: [{ role: 'user', parts: [{ text: JOYSTER_REACT_SYSTEM + '\n\n' + promptText }] }],
+        generationConfig: { maxOutputTokens: 200, temperature: 1.0 },
+      });
+    }
+    if (!res.ok) {
+      if (res.status === 429) { _joysterAIDisabledUntil = Date.now() + 24 * 60 * 60 * 1000; }
+      else if (res.status >= 400 && res.status < 500) { _joysterAIDisabledUntil = Date.now() + 15 * 60 * 1000; }
+      return null;
+    }
+    const data = await res.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    return _parseJoysterReact(text);
+  } catch { return null; }
+}
+// Take a parsed reaction, apply the relation nudge + Onyx swing, show the line
+// (bubble on home, toast otherwise) and a small Onyx flourish. Returns true if
+// the reaction produced a visible line.
+function _applyJoysterReaction(r) {
+  if (!r || !r.line) return false;
+  if (r.relation) _nudgeJoysterRelation(Math.max(-3, Math.min(3, r.relation)));
+  const applied = r.onyx ? _joysterApplyOnyx(r.onyx) : 0;
+  if (document.getElementById('joyster-bubble')) _renderJoysterBubble(r.line);
+  else _joysterSay(r.line, 6000);
+  if (applied > 0) toast('+' + applied + ' Onyx from Joyster! 😈', 'success');
+  else if (applied < 0) toast(applied + ' Onyx — Joyster swiped it! 🤡', 'info');
+  return true;
+}
+// Public entry: react to a described user action. Falls back to a canned quip
+// (when asked) if the AI is throttled/unavailable so the beat isn't dropped.
+async function _joysterReactTo(directive, opts = {}) {
+  const r = await _joysterAIReact(directive);
+  if (r) return _applyJoysterReaction(r);
+  if (opts.fallback && document.getElementById('joyster-bubble')) _renderJoysterBubble(_pickJoysterFallback());
+  return false;
+}
+// Throttled click reactor: when the user clicks a real control while Joyster is
+// on screen, he may pipe up about it. The Onyx daily-net cap makes click-farming
+// pointless; this just governs how chatty/expensive he is.
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    // Joyster only lives on the home screen — the bubble div is static in
+    // index.html so we can't gate on its existence; gate on the active view.
+    if (!CU || (typeof _currentView !== 'undefined' && _currentView !== 'home')) return;
+    if (Date.now() - _joysterReactLastTs < _JOYSTER_REACT_MIN_INTERVAL_MS) return;
+    const el = e.target instanceof Element
+      ? e.target.closest('button, .btn, [role="button"], .sidebar-btn, .nav-item, a.btn')
+      : null;
+    if (!el) return;
+    if (el.closest('#joyster-hero') || el.id === 'joyster-main') return; // poking him is handled separately
+    const raw = el.getAttribute('aria-label') || el.title || el.textContent || '';
+    const label = raw.replace(/\s+/g, ' ').trim().slice(0, 50);
+    if (!label) return;
+    _joysterReactTo('clicked the "' + label + '" button');
+  }, { passive: true, capture: true });
+}
+// Debug helpers.
+window.ftzJoysterRelation = () => _joysterRelation();
+window.ftzJoysterReact = (d) => _joysterReactTo(d || 'is testing Joyster', { fallback: true });
 
 // Pre-fetch a few AI responses so bubbles feel instant
 async function _prefetchJoysterAI() {
@@ -7239,12 +7411,13 @@ async function _showJoysterBubble() {
   const bubble = document.getElementById('joyster-bubble');
   if (!bubble) return;
 
-  // Try AI on ~25% of bubbles. The actual call is gated by daily cap +
-  // min interval inside _getJoysterAIResponse, so even at 100% roll the
-  // free tier stays safe. Cache + hardcoded quips fill the rest.
-  if (Math.random() < 0.25 && Date.now() >= _joysterAIDisabledUntil) {
-    const fresh = await _getJoysterAIResponse('Roast the user using ONE specific detail from user_context. Keep Joyster energy.');
-    if (fresh) { _renderJoysterBubble(fresh); return; }
+  // Prefer a fresh reactive-AI line (references what the user's been doing, can
+  // swing Onyx, coloured by relation). The call self-throttles + respects the
+  // daily cap inside _joysterAIReact, so this is safe to attempt every bubble;
+  // when it's throttled/unavailable we fall back to the cache then canned quips.
+  if (Date.now() >= _joysterAIDisabledUntil) {
+    const r = await _joysterAIReact('idle on the home screen — reference one specific detail about them');
+    if (r && _applyJoysterReaction(r)) return;
   }
   if (_joysterAICache.length > 0) {
     _renderJoysterBubble(_joysterAICache.shift());
@@ -7312,21 +7485,14 @@ function _joysterEasterEgg() {
     }, 180);
   }
 
-  if (_joysterClickCount === 2) {
-    _joysterSay("Ahahaha! Stop it! ...or don't!~", 3500);
-  } else if (_joysterClickCount === 4) {
-    _joysterSay("OKAY you've convinced me... here comes ONYX!~", 4000);
-  } else if (_joysterClickCount === 5) {
-    if (_getJoysterDailyCount() >= _JOYSTER_DAILY_LIMIT) {
-      _joysterSay("HEHEHEHE! You're out of luck! Come back tomorrow!~", 6000);
-      toast('Joyster daily limit reached (5/day)', 'info');
-    } else {
-      _joysterSay("BAHAHA! Here's your Onyx! You earned it!~", 5000);
-      toast('+1 Onyx from Joyster! Keep clicking tomorrow!', 'success');
-      if (CU) { CU.onyx = (CU.onyx || 0) + 1; saveUser(); updateOnyxDisplay(); }
-      _incJoysterDailyCount();
-    }
-    _joysterClickCount = 0;
+  // Poking Joyster now gets a real, in-character AI reaction that can give OR
+  // swipe Onyx depending on his mood/relation (bounded + daily-net-capped, so
+  // no farming). Every 3rd poke tries the AI; the throttle inside _joysterAIReact
+  // keeps it cheap and the other pokes get a snappy canned quip so it stays fun.
+  if (_joysterClickCount % 3 === 0) {
+    _joysterReactTo('keeps poking you (clicked you ' + _joysterClickCount + ' times)').then(shown => {
+      if (!shown) _joysterSay(_JOYSTER_CLICK_QUIPS[Math.floor(Math.random() * _JOYSTER_CLICK_QUIPS.length)], 4000);
+    });
   } else {
     const quip = _JOYSTER_CLICK_QUIPS[Math.floor(Math.random() * _JOYSTER_CLICK_QUIPS.length)];
     _joysterSay(quip, 4000);

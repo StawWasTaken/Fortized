@@ -566,7 +566,7 @@ app.post('/api/joyster', async (req, res) => {
   }
 
   // Fallback: reuse the moderation key (OpenAI-compatible, e.g. Groq).
-  const key = process.env.AI_MOD_KEY || process.env.GROQ_API_KEY;
+  const key = (process.env.AI_MOD_KEY || process.env.GROQ_API_KEY || '').trim();
   if (!key) return res.status(503).json({ error: 'AI not configured' });
   try {
     const url = process.env.AI_MOD_URL || 'https://api.groq.com/openai/v1/chat/completions';

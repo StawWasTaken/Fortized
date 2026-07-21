@@ -295,7 +295,9 @@ app.post('/api/presence/offline', async (req, res) => {
 // AI_MOD_MODEL (default a Llama model). Returns {available:false} when no key is
 // set, so the client silently falls back to its local regex checks.
 app.post('/api/moderate', async (req, res) => {
-  const key = process.env.AI_MOD_KEY || process.env.GROQ_API_KEY;
+  // Trim: a trailing newline/space in the pasted env var value is the most
+  // common "my key doesn't work" cause — it corrupts the Bearer header.
+  const key = (process.env.AI_MOD_KEY || process.env.GROQ_API_KEY || '').trim();
   if (!key) return res.json({ available: false });
   const message = (req.body && typeof req.body.message === 'string') ? req.body.message.slice(0, 2000) : '';
   if (!message.trim()) return res.json({ available: true, flagged: false });
@@ -331,7 +333,14 @@ app.post('/api/moderate', async (req, res) => {
       signal: ctrl.signal,
     });
     clearTimeout(to);
-    if (!r.ok) return res.json({ available: true, flagged: false, error: 'upstream ' + r.status });
+    if (!r.ok) {
+      // Surface the real upstream error (decommissioned model, bad key, rate
+      // limit, …) instead of a bare status, and log it so it shows in Render.
+      let body = '';
+      try { body = (await r.text()).slice(0, 500); } catch (_) {}
+      console.warn('[moderate] upstream ' + r.status + ' from ' + url + ' (model=' + model + '): ' + body);
+      return res.json({ available: true, flagged: false, error: 'upstream ' + r.status, detail: body });
+    }
     const j = await r.json();
     let out = {};
     try { out = JSON.parse((j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '{}'); } catch (_) {}
@@ -348,6 +357,44 @@ app.post('/api/moderate', async (req, res) => {
     });
   } catch (e) {
     return res.json({ available: true, flagged: false, error: String((e && e.message) || e) });
+  }
+});
+
+// Diagnostic: hit this in a browser (GET /api/moderate/health) to see EXACTLY
+// why moderation isn't working. It does a tiny real call to the provider and
+// reports the key presence, the model, and the upstream status + error body.
+// Never returns the key itself. Use it to debug AI_MOD_KEY setup on Render.
+app.get('/api/moderate/health', async (req, res) => {
+  const rawKey = process.env.AI_MOD_KEY || process.env.GROQ_API_KEY || '';
+  const key = rawKey.trim();
+  const url = process.env.AI_MOD_URL || 'https://api.groq.com/openai/v1/chat/completions';
+  const model = process.env.AI_MOD_MODEL || 'llama-3.3-70b-versatile';
+  const info = {
+    keyPresent: !!key,
+    keyLength: key.length,
+    keyHadWhitespace: rawKey !== key,
+    keyPrefix: key ? key.slice(0, 4) : null, // e.g. "gsk_" for a Groq key
+    url, model,
+  };
+  if (!key) return res.status(503).json({ ok: false, reason: 'no_key', ...info });
+  try {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model, temperature: 0, max_tokens: 5,
+        messages: [{ role: 'user', content: 'Reply with the single word OK.' }],
+      }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(to);
+    const body = (await r.text()).slice(0, 800);
+    if (!r.ok) return res.status(200).json({ ok: false, reason: 'upstream_error', status: r.status, detail: body, ...info });
+    return res.json({ ok: true, status: r.status, ...info });
+  } catch (e) {
+    return res.status(200).json({ ok: false, reason: 'fetch_failed', error: String((e && e.message) || e), ...info });
   }
 });
 

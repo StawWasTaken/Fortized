@@ -6925,7 +6925,7 @@ const _JOYSTER_DAILY_LIMIT = 5;
 const _JOYSTER_ONYX_MIN = -4;            // most he can take in one reaction
 const _JOYSTER_ONYX_MAX = 5;             // most he can give in one reaction
 const _JOYSTER_ONYX_DAILY_NET_CAP = 15;  // |net Onyx from Joyster / user / day|
-const _JOYSTER_REACT_MIN_INTERVAL_MS = 12 * 1000; // throttle AI reactions
+const _JOYSTER_REACT_MIN_INTERVAL_MS = 8 * 1000; // throttle AI reactions
 let _joysterReactLastTs = 0;
 
 function _joysterRelKey() { return 'joyster_rel_' + (CU?.username || '_anon'); }
@@ -6991,23 +6991,40 @@ Example voice (note how they reference a specific thing and sometimes sign off w
 "Hehehe~ New friend? Finally! Your friend count went from tragic to merely sad~"
 "Ahahaha! 3 Onyx?! I've seen beggars with fuller pockets. Go touch grass and rethink your life choices!"
 "PSST! Changed your status to 'away'? We ALL know you're just watching cat videos~"`;
-// Reactive mode: Joyster also controls a tiny Onyx reward and his RELATIONSHIP
-// with the user. He must answer with strict JSON so the client can act on it.
+// Reactive mode: Joyster reacts to the user's ACTUAL action + context, and also
+// controls a tiny Onyx reward and his relationship with the user.
+//
+// FORMAT: the spoken line comes first as plain text (so it can never be
+// truncated away or leak as raw JSON), then an optional control tag on its own
+// line. This degrades gracefully — if the tag is missing/garbled we still show a
+// clean sentence and just move 0 Onyx.
 const JOYSTER_REACT_SYSTEM = JOYSTER_SYSTEM_PROMPT + `
 
-ADDRESSING THE USER: address them by their displayName from user_context when it fits, e.g. "Hello, ` + "`" + `<displayName>` + "`" + `😈" or "Nice one, <displayName>!". Never use their @username.
+=== REACTIVE MODE (override the generic examples above) ===
 
-You ALSO control two things and MUST return them:
-1. onyx: a whole number from -4 to 5. This changes the user's Onyx balance.
-   - Mostly 0. Only move Onyx when the moment genuinely calls for it.
-   - Give Onyx (1..5) when they do something you like or you're feeling fond/generous.
-   - Remove Onyx (-1..-4) when they annoy you, waste your time, or you're feeling petty.
-   - Bigger swings need a bigger reason.
-2. relation: a whole number from -3 to 3 — how THIS moment changes how you feel about them.
-Your current relation score is in user_context.joysterRelation (high = you adore them and are generous; negative = you're stingy and mean). Let it colour your onyx choice and tone.
+Every reply MUST be built around ONE specific, concrete detail from user_context or the action they just took — the exact button they clicked, their real Onyx number, their status, a friend they added, the screen they're on, the game they're playing. Make it obvious you're WATCHING them, react like a person who just saw them do the thing.
 
-Respond with STRICT JSON ONLY — no markdown, no prose, no code fences:
-{"line":"<your 1-2 sentence in-character quip>","onyx":<int -4..5>,"relation":<int -3..3>}`;
+Address them by their displayName from user_context, e.g. "Well well, <displayName>..." or "Hello, <displayName> 😈". Never use their @username.
+
+HARD RULES on the line:
+- Write a real, customized sentence. NEVER reply with just a laugh or generic filler like "BAHAHA!", "uh", "um", "hmm", "..." — those are banned as a whole response. A laugh is optional seasoning, never the point.
+- 1-2 sentences, conversational and specific. Vary how you open every time (do NOT start with a laugh every time).
+- Do NOT use em-dashes. Use commas, periods, or start a new sentence.
+- Stay in character: cheeky, cocky court jester. Your catchphrase "go touch grass!" should land in roughly 1 of every 3 lines as a closer.
+- No markdown, no emoji spam (one is plenty), no meta-commentary about being an AI.
+
+ONYX + RELATION (you control these):
+- onyx: a whole number from -4 to 5. Mostly 0. Give 1..5 when they do something you like or you feel generous; remove -1..-4 when they annoy or bore you or you feel petty. Bigger swings need a bigger reason.
+- relation: a whole number from -3 to 3 — how THIS moment changes how you feel about them.
+- user_context.joysterRelation is your current standing with them (high = you adore them, be generous; negative = stingy and mean). Let it colour your tone and your onyx choice.
+
+OUTPUT FORMAT (exactly this — spoken line first, then the tag on a new line):
+<your spoken line here>
+[[onyx=<int -4..5> relation=<int -3..3>]]
+
+Example:
+Back poking me already, <displayName>? Your 12 Onyx says you can't afford a real hobby, so here, take a pity coin and go touch grass!
+[[onyx=1 relation=1]]`;
 let _joysterAICache = [];
 let _joysterContexts = []; // Track shown contexts to avoid repetition
 
@@ -7152,16 +7169,33 @@ Pick ONE specific detail from user_context and make it the core of your comment.
 // the daily AI cap with _getJoysterAIResponse and has its own short throttle.
 function _parseJoysterReact(text) {
   if (!text) return null;
-  let obj = null;
-  const m = text.match(/\{[\s\S]*\}/);
-  if (m) { try { obj = JSON.parse(m[0]); } catch {} }
-  if (!obj) {
-    const line = String(text).trim().replace(/^["']|["']$/g, '').slice(0, 260);
-    return line ? { line, onyx: 0, relation: 0 } : null;
+  let raw = String(text);
+  let onyx = 0, relation = 0;
+  // Primary format: plain line, then a [[onyx=N relation=M]] control tag.
+  const tag = raw.match(/\[\[\s*onyx\s*=\s*(-?\d+)[\s,]+rel(?:ation)?\s*=\s*(-?\d+)\s*\]\]/i);
+  if (tag) { onyx = parseInt(tag[1], 10) || 0; relation = parseInt(tag[2], 10) || 0; }
+  let line = raw.replace(/\[\[[^\]]*\]\]/g, ' ');           // drop the control tag
+  // Salvage net: if the model ignored the format and emitted JSON, pull the
+  // "line" field out so we NEVER show raw {"line":...} in the bubble.
+  if (/[{[]\s*"?line"?\s*:/i.test(line) || line.trim().startsWith('{')) {
+    const jm = line.match(/"line"\s*:\s*"((?:[^"\\]|\\.)*)"/i);
+    if (jm) { try { line = JSON.parse('"' + jm[1] + '"'); } catch { line = jm[1]; } }
+    if (!tag) {
+      const om = raw.match(/"onyx"\s*:\s*(-?\d+)/i); if (om) onyx = parseInt(om[1], 10) || 0;
+      const rm = raw.match(/"relation"\s*:\s*(-?\d+)/i); if (rm) relation = parseInt(rm[1], 10) || 0;
+    }
   }
-  const line = String(obj.line || '').trim().replace(/^["']|["']$/g, '').slice(0, 260);
-  if (!line) return null;
-  return { line, onyx: parseInt(obj.onyx, 10) || 0, relation: parseInt(obj.relation, 10) || 0 };
+  line = line
+    .replace(/```[a-z]*|```/gi, ' ')     // stray code fences
+    .replace(/[{}]/g, ' ')               // any leftover JSON braces
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^["']+|["']+$/g, '')
+    .slice(0, 280)
+    .trim();
+  // Last-ditch guard: anything still looking like JSON scaffolding is unusable.
+  if (!line || /^"?line"?\s*:/i.test(line) || line === '{' || line === '}') return null;
+  return { line, onyx: Math.max(-9, Math.min(9, onyx)), relation: Math.max(-9, Math.min(9, relation)) };
 }
 async function _joysterAIReact(directive) {
   if (Date.now() < _joysterAIDisabledUntil) return null;
@@ -7182,12 +7216,12 @@ React in character. Address them by displayName. Return STRICT JSON only.`;
     let res = await _joysterFetch({
       systemInstruction: { parts: [{ text: JOYSTER_REACT_SYSTEM }] },
       contents: [{ role: 'user', parts: [{ text: promptText }] }],
-      generationConfig: { maxOutputTokens: 200, temperature: 1.0 },
+      generationConfig: { maxOutputTokens: 256, temperature: 1.05 },
     });
     if (res.status === 400) {
       res = await _joysterFetch({
         contents: [{ role: 'user', parts: [{ text: JOYSTER_REACT_SYSTEM + '\n\n' + promptText }] }],
-        generationConfig: { maxOutputTokens: 200, temperature: 1.0 },
+        generationConfig: { maxOutputTokens: 256, temperature: 1.05 },
       });
     }
     if (!res.ok) {

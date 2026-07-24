@@ -384,12 +384,7 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .sidebar-ctx{width:380px;min-width:380px;background:linear-gradient(rgba(0,0,0,.20),rgba(0,0,0,.20)),var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid var(--glass-border);padding-bottom:0;}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
-.topbar{height:44px;background:var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;align-items:center;padding:0 191px 0 12px;gap:10px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;position:relative;z-index:5;transition:background .2s var(--ease-out);}
-/* Home / messages cluster (Friends, DMs, Radiance/Fortshop/Quests/Creator):
-   a lighter, "whiter" global top bar. A translucent white wash over the live
-   --channel colour so it stays theme-aware when the appearance system rewrites
-   the surface tokens. */
-body.home-topbar .topbar{background:linear-gradient(rgba(255,255,255,.06),rgba(255,255,255,.06)),var(--channel);}
+.topbar{height:44px;background:var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;align-items:center;padding:0 191px 0 12px;gap:10px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;position:relative;z-index:5;}
 .topbar button,.topbar input,.topbar .tb-actions,.topbar .tb-onyx-pill,.topbar .tb-search,.topbar .tb-notif-btn,.topbar .tb-win-controls,.topbar .tb-nav-controls{-webkit-app-region:no-drag;}
 /* Navigation controls (back / forward / refresh) — sits above sidebar rail */
 .tb-nav-controls{display:flex;align-items:center;justify-content:center;gap:2px;flex-shrink:0;padding:10px 0 4px;width:100%;}
@@ -14631,15 +14626,15 @@ select:focus,select:focus-visible,
    overlay, see _FTZ_SB_SEL in app.js). A normal, slim, rounded full-capsule
    thumb, no track, tinted to the same theme colour (--muted-light) as the chat
    overlay so the two read as one family. No thick bars. */
-html,body,*{scrollbar-width:thin!important;scrollbar-color:var(--muted-light,#5a6a7e) transparent!important;}
+html,body,*{scrollbar-width:thin!important;scrollbar-color:var(--muted,#3a4458) transparent!important;}
 *::-webkit-scrollbar{width:10px!important;height:10px!important;background:transparent!important;}
 *::-webkit-scrollbar-track{background:transparent!important;border:none!important;}
 *::-webkit-scrollbar-track-piece{background:transparent!important;}
 *::-webkit-scrollbar-thumb{
-  background:color-mix(in srgb, var(--muted-light,#5a6a7e) 82%, transparent)!important;border-radius:9999px!important;min-height:40px!important;
+  background:color-mix(in srgb, var(--muted,#3a4458) 94%, transparent)!important;border-radius:9999px!important;min-height:40px!important;
   border:3px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
 *::-webkit-scrollbar-thumb:hover{background:var(--muted-light,#5a6a7e)!important;}
-*::-webkit-scrollbar-thumb:active{background:color-mix(in srgb, var(--muted-light,#5a6a7e), #fff 22%)!important;}
+*::-webkit-scrollbar-thumb:active{background:var(--muted-light,#5a6a7e)!important;}
 /* Kill every arrow-button variant (Chromium). */
 *::-webkit-scrollbar-button,
 *::-webkit-scrollbar-button:start,*::-webkit-scrollbar-button:end,
@@ -14707,9 +14702,13 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   transition:background .14s var(--ease-out),color .14s,transform .12s var(--ease-out);}
 .dm-nav-btn:hover{background:rgba(255,255,255,.05);color:#fff;}
 .dm-nav-btn:active{transform:scale(.98);}
+/* Selected launcher (you're on that page) — a "whiter" highlighted bar, the
+   same white-forward treatment as the active DM row in the list below. */
+.dm-nav-btn.active{background:rgba(255,255,255,.11);color:#fff;}
 .dm-nav-ico{width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.05);display:flex;align-items:center;
   justify-content:center;color:rgba(255,255,255,.72);flex-shrink:0;transition:background .14s,transform .14s var(--ease-out),color .14s;}
 .dm-nav-btn:hover .dm-nav-ico{background:rgba(255,255,255,.1);color:#fff;transform:scale(1.05);}
+.dm-nav-btn.active .dm-nav-ico{background:rgba(255,255,255,.16);color:#fff;}
 /* Image-as-icon (e.g. Radiance logo) rendered as a colour-overlaid mask so it
    tints to the icon text colour like the inline SVGs. */
 .dm-nav-mask{width:18px;height:18px;background-color:currentColor;-webkit-mask:center/contain no-repeat;mask:center/contain no-repeat;-webkit-mask-size:contain;mask-size:contain;}
@@ -14879,10 +14878,10 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .ftz-sb-track{position:absolute;width:12px;border-radius:9999px;background:rgba(255,255,255,.06);
   z-index:20;transition:opacity .2s;pointer-events:auto;}
 .ftz-sb-thumb{position:absolute;left:2px;width:8px;border-radius:9999px;
-  background:color-mix(in srgb, var(--muted-light,#5a6a7e) 82%, transparent);
+  background:color-mix(in srgb, var(--muted,#3a4458) 94%, transparent);
   cursor:grab;transition:background .15s;}
 .ftz-sb-thumb:hover{background:var(--muted-light,#5a6a7e);}
-.ftz-sb-thumb:active{cursor:grabbing;background:color-mix(in srgb, var(--muted-light,#5a6a7e), #fff 22%);}
+.ftz-sb-thumb:active{cursor:grabbing;background:var(--muted-light,#5a6a7e);}
 /* Chat: reserve a right gutter so message rows / their hover hitboxes stop
    BEFORE the overlay scrollbar (Discord-style), instead of running under it.
    Scoped to .chat-msgs so other panels' layouts are untouched. */

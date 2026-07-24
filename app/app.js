@@ -4404,14 +4404,8 @@ function showView(v, _skipPush) {
   if (_mtb) _mtb.style.display = '';
   // Stop admin polling when leaving admin view
   if (v !== 'admin' && _reportPollInterval) { clearInterval(_reportPollInterval); _reportPollInterval = null; }
-  // Leave chat subscriptions when navigating away from their views. Also drop
-  // the open-conversation pointers so the DM sidebar (shared by Friends /
-  // Radiance / Fortshop / Quests / Creator) stops highlighting a DM you're no
-  // longer in — you can't be "in a DM" while on another page.
-  if (v !== 'dms') {
-    _leaveActiveDM(); _leaveActiveGC();
-    curDM = null; curGC = null; _currentGCMeta = null;
-  }
+  // Leave chat subscriptions when navigating away from their views.
+  if (v !== 'dms') { _leaveActiveDM(); _leaveActiveGC(); }
   if (v !== 'bastion') { _leaveActiveChannel(); }
   // Stop Joyster bubbles when leaving the Friends page — Joyster lives there now
   if (v !== 'friends' && typeof _stopJoysterBubbles === 'function') _stopJoysterBubbles();
@@ -4473,9 +4467,6 @@ function showView(v, _skipPush) {
   const _homeCluster = ['friends', 'dms', 'radiance', 'fortshop', 'quests', 'creator'];
   const homeBtn = document.getElementById('rb-home');
   if (homeBtn) homeBtn.classList.toggle('active', _homeCluster.includes(v));
-  // Give the home/messages cluster a lighter ("whiter") global top bar so
-  // Friends, DMs and the DM-sidebar pages read as one bright surface.
-  document.body.classList.toggle('home-topbar', _homeCluster.includes(v));
 
   // Post-show callbacks
   if (_atelierRoute) {
@@ -7710,9 +7701,14 @@ function _dmApplyActive(scroll) {
       el.classList.remove('active');
       const nm = el.querySelector('.dmn-name'); if (nm && nm.dataset.effectOn && !el.matches(':hover')) _dmNameEffect(nm, false);
     });
+    // Only show the "selected DM" highlight while you're actually on the DMs
+    // view. The DM sidebar is shared by Friends / Radiance / Fortshop / Quests /
+    // Creator, and on those pages you're not in a DM — so no row is selected.
     let row = null;
-    if (curDM) row = scroll.querySelector('#dm-fi-' + CSS.escape(curDM));
-    else if (curGC) row = scroll.querySelector('#gc-fi-' + CSS.escape(curGC));
+    if (_currentView === 'dms') {
+      if (curDM) row = scroll.querySelector('#dm-fi-' + CSS.escape(curDM));
+      else if (curGC) row = scroll.querySelector('#gc-fi-' + CSS.escape(curGC));
+    }
     if (row) { row.classList.add('active'); const nm = row.querySelector('.dmn-name'); if (nm) _dmNameEffect(nm, true); }
   } catch (_) {}
 }
@@ -8014,20 +8010,23 @@ async function renderDMSidebar(scroll, force) {
   </div>`;
 
   // ── Friends home button ──────────────────
-  html += `<div class="dm-nav-btn" onclick="showView('friends')">
+  // The launcher for whichever page you're currently on gets the "active"
+  // (whiter) highlight, the same way the open DM row is highlighted below.
+  const _navActive = (view) => (_currentView === view ? ' active' : '');
+  html += `<div class="dm-nav-btn${_navActive('friends')}" onclick="showView('friends')">
     <span class="dm-nav-ico"><svg viewBox="0 0 640 512" width="16" height="16" fill="currentColor"><path d="M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192l42.7 0c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96c-.2 0-.4 0-.7 0L21.3 320C9.6 320 0 310.4 0 298.7zM405.3 320c-.2 0-.4 0-.7 0c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7l42.7 0C592.2 192 640 239.8 640 298.7c0 11.8-9.6 21.3-21.3 21.3l-213.3 0zM224 224a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zM128 485.3C128 411.7 187.7 352 261.3 352l117.3 0C452.3 352 512 411.7 512 485.3c0 14.7-11.9 26.7-26.7 26.7l-330.7 0c-14.7 0-26.7-11.9-26.7-26.7z"/></svg></span>
     <span class="dm-nav-label">Friends</span></div>`;
   // Radiance / Fortshop / Quests / Creator Hub launchers (open their own pages)
-  html += `<div class="dm-nav-btn" onclick="showView('radiance')">
+  html += `<div class="dm-nav-btn${_navActive('radiance')}" onclick="showView('radiance')">
     <span class="dm-nav-ico"><span class="dm-nav-mask" style="-webkit-mask-image:url('/radiance-logo.png');mask-image:url('/radiance-logo.png');"></span></span>
     <span class="dm-nav-label">Radiance</span></div>`;
-  html += `<div class="dm-nav-btn" onclick="showView('fortshop')">
+  html += `<div class="dm-nav-btn${_navActive('fortshop')}" onclick="showView('fortshop')">
     <span class="dm-nav-ico"><svg viewBox="0 0 512 512" width="17" height="17" fill="currentColor"><path d="M30.7 72.3C37.6 48.4 59.5 32 84.4 32l344 0c24.9 0 46.8 16.4 53.8 40.3l23.4 80.2c12.8 43.7-20.1 87.5-65.6 87.5-26.3 0-49.4-14.9-60.8-37.1-11.6 21.9-34.6 37.1-61.4 37.1-26.6 0-49.7-15-61.3-37-11.6 22-34.7 37-61.3 37-26.8 0-49.8-15.1-61.4-37.1-11.4 22.1-34.5 37.1-60.8 37.1-45.6 0-78.4-43.7-65.6-87.5L30.7 72.3zM96.4 352l320 0 0-66.4c7.6 1.6 15.5 2.4 23.5 2.4 14.3 0 28-2.6 40.5-7.2l0 151.2c0 26.5-21.5 48-48 48l-352 0c-26.5 0-48-21.5-48-48l0-151.2c12.5 4.6 26.1 7.2 40.5 7.2 8.1 0 15.9-.8 23.5-2.4l0 66.4z"/></svg></span>
     <span class="dm-nav-label">Fortshop</span></div>`;
-  html += `<div class="dm-nav-btn" onclick="showView('quests')">
+  html += `<div class="dm-nav-btn${_navActive('quests')}" onclick="showView('quests')">
     <span class="dm-nav-ico"><svg viewBox="0 0 576 512" width="17" height="17" fill="currentColor"><path d="M0 112C0 70.5 31.6 36.4 72 32.4l0-.4 280 0c53 0 96 43 96 96l0 176-176 0c-39.8 0-72 32.2-72 72l0 60c0 24.3-19.7 44-44 44s-44-19.7-44-44l0-228-64 0c-26.5 0-48-21.5-48-48l0-48zM236.8 480c7.1-13.1 11.2-28.1 11.2-44l0-60c0-13.3 10.7-24 24-24l248 0c13.3 0 24 10.7 24 24l0 24c0 44.2-35.8 80-80 80l-227.2 0zM80 80c-17.7 0-32 14.3-32 32l0 48 64 0 0-48c0-17.7-14.3-32-32-32z"/></svg></span>
     <span class="dm-nav-label">Quests</span></div>`;
-  html += `<div class="dm-nav-btn" onclick="showView('creator')">
+  html += `<div class="dm-nav-btn${_navActive('creator')}" onclick="showView('creator')">
     <span class="dm-nav-ico"><svg viewBox="0 0 384 512" width="16" height="16" fill="currentColor"><path d="M162.4 6c-1.5-3.6-5-6-8.9-6l-19 0c-3.9 0-7.5 2.4-8.9 6L104.9 57.7c-3.2 8-14.6 8-17.8 0L66.4 6c-1.5-3.6-5-6-8.9-6L48 0C21.5 0 0 21.5 0 48l0 208 384 0 0-208c0-26.5-21.5-48-48-48L230.5 0c-3.9 0-7.5 2.4-8.9 6L200.9 57.7c-3.2 8-14.6 8-17.8 0L162.4 6zM0 304l0 16c0 35.3 28.7 64 64 64l64 0 0 64c0 35.3 28.7 64 64 64s64-28.7 64-64l0-64 64 0c35.3 0 64-28.7 64-64l0-16-384 0zM192 464c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16z"/></svg></span>
     <span class="dm-nav-label">Creator Hub</span></div>`;
 

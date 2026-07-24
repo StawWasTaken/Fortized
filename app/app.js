@@ -7848,7 +7848,7 @@ function _qsGather() {
   (CU?.friends || []).forEach(f => {
     const cp = cachedProfile(f) || {};
     items.push({ kind: 'dm', id: 'dm_' + f, name: cp.displayName || f, sub: '@' + f, pfp: cp.pfp || null,
-      font: (cp.displayFont && cp.displayFont !== 'default') ? cp.displayFont : null,
+      nameStyle: _frNameStyle(cp),
       hidden: hidden.includes('dm_' + f), sort: oidx('dm_' + f),
       jump: () => { unhideDMConversation('dm_' + f); openDMView(f); } });
   });
@@ -7875,7 +7875,7 @@ function _qsRowHTML(it) {
   else icon = `<span class="qs-hash">#</span>`;
   const from = it.from ? `<span class="qs-from">${escapeHTML(it.from)}</span>` : '';
   const sub = (it.kind === 'dm' || it.kind === 'gc') ? `<span class="qs-sub">${escapeHTML(it.sub)}</span>` : '';
-  const fontStyle = it.font ? ` style="font-family:${_getDisplayFontCSS(it.font)};font-weight:${_getDisplayFontWeight(it.font)};"` : '';
+  const fontStyle = it.nameStyle ? ` style="${it.nameStyle}"` : '';
   return `<div class="qs-row" data-qs="${escapeHTML(it.id)}">${icon}<span class="qs-name"${fontStyle}>${escapeHTML(it.name)}</span>${sub}${from}</div>`;
 }
 function _renderQuickSwitcher(query) {
@@ -9401,9 +9401,9 @@ function renderNewMsgPicker(query) {
     const cp = cachedProfile(f) || {};
     const dn = cp.displayName || f;
     const on = _newMsgSel.has(f);
-    // Font applies (per the display-name rule); colour/effects do not here.
-    const fontStyle = (cp.displayFont && cp.displayFont !== 'default')
-      ? ` style="font-family:${_getDisplayFontCSS(cp.displayFont)};font-weight:${_getDisplayFontWeight(cp.displayFont)};"` : '';
+    // Full display-name style (font + colour + effect) so styled names load here.
+    const _ns = _frNameStyle(cp);
+    const fontStyle = _ns ? ` style="${_ns}"` : '';
     return `<div class="nm-row${on ? ' sel' : ''}" onclick="_toggleNewMsgMember('${escapeHTML(f)}')">
       <div class="nm-av">${buildAvatarHTML(cp.pfp || null, dn, 36)}</div>
       <div class="nm-info"><div class="nm-name"${fontStyle}>${escapeHTML(dn)}</div><div class="nm-user">@${escapeHTML(f)}</div></div>
@@ -58518,18 +58518,21 @@ function _showSlowModeSettings(bastionId, chName) {
 // ════════════════════════════════════════════
 let _friendSortMode = 'online';
 // ════════════════════════════════════════════
+// ════════════════════════════════════════════
 // FRIENDS PAGE (Discord-style: tab subnav + list + Active Now)
 // ════════════════════════════════════════════
 let _friendsTab = 'online';
 
-// Switch the Friends subnav tab. 'add' opens the existing Add-Friend card.
+// The one message icon used across the Friends UI (FontAwesome v7 comment).
+const _MSG_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 544" fill="currentColor"><path d="M0 352L0 128C0 75 43 32 96 32l320 0c53 0 96 43 96 96l0 224c0 53-43 96-96 96l-120 0c-5.2 0-10.2 1.7-14.4 4.8L166.4 539.2c-4.2 3.1-9.2 4.8-14.4 4.8-13.3 0-24-10.7-24-24l0-72-32 0c-53 0-96-43-96-96z"/></svg>';
+const _FR_GAME_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>';
+
+// Switch the Friends subnav tab. 'add' renders the Add-Friend subpage inline.
 function setFriendsTab(tab, btn) {
-  if (tab === 'add') { openModal('modal-add-friend'); return; }
-  if (!['online', 'all', 'pending', 'blocked'].includes(tab)) tab = 'online';
+  if (!['online', 'all', 'pending', 'blocked', 'add'].includes(tab)) tab = 'online';
   _friendsTab = tab;
   document.querySelectorAll('#friends-subnav .disc-subnav-btn').forEach(b => b.classList.remove('active'));
-  const active = btn || document.getElementById('ftab-' + tab);
-  if (active) active.classList.add('active');
+  if (tab !== 'add') { const active = btn || document.getElementById('ftab-' + tab); if (active) active.classList.add('active'); }
   const searchWrap = document.getElementById('fr-search-wrap');
   if (searchWrap) searchWrap.style.display = (tab === 'online' || tab === 'all') ? '' : 'none';
   renderFriendsView(tab);
@@ -58559,7 +58562,7 @@ function _frRowMenu(ev, username) {
   const isBlocked = (CU?.blockedUsers || []).map(s => String(s).toLowerCase()).includes(String(username).toLowerCase());
   showCtxMenu(ev.clientX, ev.clientY, [
     { label: username, items: [
-      { icon: _ctxSvg('message'), label: 'Message', action: () => openDMView(username) },
+      { icon: _MSG_ICON, label: 'Message', action: () => openDMView(username) },
       { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(username) },
     ]},
     { items: [
@@ -58589,8 +58592,6 @@ function _frEmpty(title, body, cta) {
   </div>`;
 }
 
-const _FR_GAME_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>';
-
 // Row subline: game activity → custom status → status label.
 function _frSubline(u) {
   if (u.gameActivity) return _FR_GAME_SVG + ' ' + escapeHTML(u.gameActivity);
@@ -58598,14 +58599,27 @@ function _frSubline(u) {
   return escapeHTML(FtzStatus.publicLabel(u.status));
 }
 
-function _frRowHTML(u) {
+// Full display-name style (font + colour + effect) — applied at rest on the
+// Friends page (it's a full page, not the compact DM sidebar).
+function _frNameStyle(u) {
+  if (!u) return '';
+  let s = '';
+  if (u.displayFont && u.displayFont !== 'default') s += `font-family:${_getDisplayFontCSS(u.displayFont)};font-weight:${_getDisplayFontWeight(u.displayFont)};`;
+  if (u.displayColor || (u.displayEffect && u.displayEffect !== 'solid')) {
+    s += _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor || '#fff', u.displayColor2 || u.displayColor || '#fff');
+  }
+  return s;
+}
+
+function _frRowHTML(u, prof) {
   const dn = u.displayName || u.username;
   const un = escapeHTML(u.username);
+  const ns = _frNameStyle(prof || u._u);
   return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}" onclick="openDMView('${un}')" oncontextmenu="_frRowMenu(event,'${un}')">
     <div class="fr-av"><div class="fa">${buildAvatarHTML(u.pfp || null, dn, 40)}</div><span class="fr-dot">${FtzStatus.dotSvg(u.status, 15)}</span></div>
-    <div class="fr-meta"><span class="fr-name">${escapeHTML(dn)}</span><span class="fr-sub">${_frSubline(u)}</span></div>
+    <div class="fr-meta"><span class="fr-name"${ns ? ` style="${ns}"` : ''}>${escapeHTML(dn)}</span><span class="fr-sub">${_frSubline(u)}</span></div>
     <div class="fr-actions">
-      <button class="fr-act" title="Message" onclick="event.stopPropagation();openDMView('${un}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+      <button class="fr-act" title="Message" onclick="event.stopPropagation();openDMView('${un}')">${_MSG_ICON}</button>
       <button class="fr-act" title="More" onclick="_frRowMenu(event,'${un}')"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
     </div>
   </div>`;
@@ -58619,17 +58633,18 @@ function _frUpdatePendingBadge() {
   else badge.style.display = 'none';
 }
 
-// Apply the display-name font at rest + stash the effect for hover reveal.
-function _frWireNameEffect(row, u) {
-  const nm = row && row.querySelector('.fr-name');
-  if (!nm || !u) return;
-  let fontCss = '';
-  if (u.displayFont) fontCss = 'font-family:' + _getDisplayFontCSS(u.displayFont) + ';font-weight:' + _getDisplayFontWeight(u.displayFont) + ';';
-  nm.dataset.fontCss = fontCss;
-  if (u.displayColor || (u.displayEffect && u.displayEffect !== 'solid')) {
-    nm.dataset.effectCss = _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor || '#fff', u.displayColor2 || u.displayColor || '#fff');
-  } else { delete nm.dataset.effectCss; }
-  if (fontCss) _dmNameEffect(nm, false);
+// Batch-fetch profiles for a set of usernames → { name: profile } (both cases).
+async function _frEnrich(names) {
+  const map = {};
+  const uniq = [...new Set((names || []).map(n => String(n)))];
+  if (!uniq.length) return map;
+  try {
+    const profiles = await (FortizedSocial.getUsersByNames
+      ? FortizedSocial.getUsersByNames(uniq)
+      : Promise.all(uniq.map(f => FortizedSocial.getUserByName(f).catch(() => null))));
+    (profiles || []).forEach(u => { if (u) { map[u.username] = u; map[String(u.username).toLowerCase()] = u; rememberProfile(u); if (u.pfp) _pfpCache[u.username] = u.pfp; } });
+  } catch (e) { console.warn('[Friends] enrich failed:', e?.message); }
+  return map;
 }
 
 // Main dispatcher — paints the active tab into #fr-list.
@@ -58638,13 +58653,14 @@ async function renderFriendsView(tab) {
   const list = document.getElementById('fr-list');
   if (!list) return;
   _frUpdatePendingBadge();
+  if (tab === 'add') return _frRenderAdd(list);
   if (tab === 'blocked') return _frRenderBlocked(list);
   if (tab === 'pending') return _frRenderPending(list);
 
   const friends = CU?.friends || [];
   if (!friends.length) {
     list.innerHTML = _frEmpty('No friends yet', "Add someone by their username and start a conversation — Joyster's rooting for you.",
-      `<button class="fr-add-btn" onclick="openModal('modal-add-friend')" style="margin:0 auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add Friend</span></button>`);
+      `<button class="btn-a fr-add-btn" onclick="setFriendsTab('add')" style="margin:0 auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add Friend</span></button>`);
     return;
   }
 
@@ -58653,13 +58669,8 @@ async function renderFriendsView(tab) {
   const slice = friends.slice(0, 200);
   let presence = null;
   try { presence = await FortizedSocial.queryPresence(slice); } catch (e) { console.warn('[Friends] presence query failed:', e?.message); }
-  const profileMap = {};
-  try {
-    const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(slice) : Promise.all(slice.map(f => FortizedSocial.getUserByName(f))));
-    (profiles || []).forEach(u => { if (u) { profileMap[u.username] = u; rememberProfile(u); } });
-  } catch (e) { console.warn('[Friends] profile fetch failed:', e?.message); }
+  const profileMap = await _frEnrich(slice);
 
-  // Bail if the user navigated away / switched tabs while awaiting.
   if (_currentView !== 'friends' || _friendsTab !== tab) return;
 
   const rows = slice.map(f => {
@@ -58681,11 +58692,10 @@ async function renderFriendsView(tab) {
   }
 
   shown.sort((a, b) => (FtzStatus.isPresent(b.status) ? 1 : 0) - (FtzStatus.isPresent(a.status) ? 1 : 0) || String(a.displayName || '').localeCompare(String(b.displayName || '')));
-  list.innerHTML = `<div class="fr-sec">${tab === 'online' ? 'Online' : 'All friends'} — ${shown.length}</div>` + shown.map(_frRowHTML).join('');
+  list.innerHTML = `<div class="fr-sec">${tab === 'online' ? 'Online' : 'All friends'} — ${shown.length}</div>` + shown.map(r => _frRowHTML(r, r._u)).join('');
 
   const sv = document.getElementById('fr-search');
   if (sv && sv.value) _frFilter(sv.value);
-  shown.forEach(r => _frWireNameEffect(list.querySelector(`.fr-row[data-username="${CSS.escape(r.username)}"]`), r._u));
 }
 
 async function _frRenderPending(list) {
@@ -58695,48 +58705,118 @@ async function _frRenderPending(list) {
     list.innerHTML = _frEmpty('No pending requests', "When someone sends you a friend request, it'll show up here.", '');
     return;
   }
+  list.innerHTML = `<div class="fr-sec">Pending — …</div>` + _frSkeletons(Math.min(incoming.length + outgoing.length, 6));
+  const map = await _frEnrich([...incoming, ...outgoing]);
+  if (_currentView !== 'friends' || _friendsTab !== 'pending') return;
+
+  const rowFor = (f, kind) => {
+    const u = map[f] || map[String(f).toLowerCase()] || cachedProfile(f) || {};
+    const dn = u.displayName || f; const un = escapeHTML(f);
+    const ns = _frNameStyle(u);
+    const actions = kind === 'in'
+      ? `<button class="fr-act fr-act--accept" title="Accept" onclick="event.stopPropagation();acceptFriend('${un}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button><button class="fr-act fr-act--danger" title="Ignore" onclick="event.stopPropagation();ignoreFriendRequest('${un}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
+      : `<button class="fr-reqbtn fr-reqbtn--ghost" onclick="event.stopPropagation();cancelFriendRequestTo('${un}')">Cancel</button>`;
+    return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}" onclick="viewUserProfile('${un}')">
+      <div class="fr-av"><div class="fa">${buildAvatarHTML(u.pfp || null, dn, 40)}</div></div>
+      <div class="fr-meta"><span class="fr-name"${ns ? ` style="${ns}"` : ''}>${escapeHTML(dn)}</span><span class="fr-sub">${kind === 'in' ? 'Incoming friend request' : 'Outgoing friend request'}</span></div>
+      <div class="fr-actions">${actions}</div></div>`;
+  };
+
   let html = '';
-  if (incoming.length) {
-    html += `<div class="fr-sec">Incoming — ${incoming.length}</div>`;
-    html += incoming.map(f => {
-      const cp = cachedProfile(f) || {}; const dn = cp.displayName || f; const un = escapeHTML(f);
-      return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}" onclick="viewUserProfile('${un}')">
-        <div class="fr-av"><div class="fa">${buildAvatarHTML(cp.pfp || null, dn, 40)}</div></div>
-        <div class="fr-meta"><span class="fr-name">${escapeHTML(dn)}</span><span class="fr-sub">Incoming friend request</span></div>
-        <div class="fr-actions">
-          <button class="fr-act fr-act--accept" title="Accept" onclick="event.stopPropagation();acceptFriend('${un}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
-          <button class="fr-act fr-act--danger" title="Ignore" onclick="event.stopPropagation();ignoreFriendRequest('${un}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        </div></div>`;
-    }).join('');
-  }
-  if (outgoing.length) {
-    html += `<div class="fr-sec">Outgoing — ${outgoing.length}</div>`;
-    html += outgoing.map(f => {
-      const cp = cachedProfile(f) || {}; const dn = cp.displayName || f; const un = escapeHTML(f);
-      return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}" onclick="viewUserProfile('${un}')">
-        <div class="fr-av"><div class="fa">${buildAvatarHTML(cp.pfp || null, dn, 40)}</div></div>
-        <div class="fr-meta"><span class="fr-name">${escapeHTML(dn)}</span><span class="fr-sub">Outgoing friend request</span></div>
-        <div class="fr-actions"><button class="fr-reqbtn fr-reqbtn--ghost" onclick="event.stopPropagation();cancelFriendRequestTo('${un}')">Cancel</button></div></div>`;
-    }).join('');
-  }
+  if (incoming.length) html += `<div class="fr-sec">Incoming — ${incoming.length}</div>` + incoming.map(f => rowFor(f, 'in')).join('');
+  if (outgoing.length) html += `<div class="fr-sec">Outgoing — ${outgoing.length}</div>` + outgoing.map(f => rowFor(f, 'out')).join('');
   list.innerHTML = html;
 }
 
-function _frRenderBlocked(list) {
+async function _frRenderBlocked(list) {
   const blocked = CU?.blockedUsers || [];
   if (!blocked.length) {
     list.innerHTML = _frEmpty('No blocked users', "You haven't blocked anyone. Blocked users can't message or friend you.", '');
     return;
   }
+  list.innerHTML = `<div class="fr-sec">Blocked — …</div>` + _frSkeletons(Math.min(blocked.length, 6));
+  const map = await _frEnrich(blocked);
+  if (_currentView !== 'friends' || _friendsTab !== 'blocked') return;
   let html = `<div class="fr-sec">Blocked — ${blocked.length}</div>`;
   html += blocked.map(f => {
-    const cp = cachedProfile(f) || {}; const dn = cp.displayName || f; const un = escapeHTML(f);
+    const u = map[f] || map[String(f).toLowerCase()] || cachedProfile(f) || {};
+    const dn = u.displayName || f; const un = escapeHTML(f);
+    const ns = _frNameStyle(u);
     return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}">
-      <div class="fr-av"><div class="fa">${buildAvatarHTML(cp.pfp || null, dn, 40)}</div></div>
-      <div class="fr-meta"><span class="fr-name">${escapeHTML(dn)}</span><span class="fr-sub">Blocked</span></div>
+      <div class="fr-av"><div class="fa">${buildAvatarHTML(u.pfp || null, dn, 40)}</div></div>
+      <div class="fr-meta"><span class="fr-name"${ns ? ` style="${ns}"` : ''}>${escapeHTML(dn)}</span><span class="fr-sub">Blocked</span></div>
       <div class="fr-actions"><button class="fr-reqbtn fr-reqbtn--ghost" onclick="toggleBlockUser('${un}')">Unblock</button></div></div>`;
   }).join('');
   list.innerHTML = html;
+}
+
+// ── Add Friend subpage (the card, rendered inline like the other tabs) ──
+function _frRenderAdd(list) {
+  list.innerHTML = `<div class="fr-add-page">
+    <div class="afr-head">
+      <div class="afr-head__icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></div>
+      <div class="afr-head__text">
+        <div class="afr-head__title">Add Friend</div>
+        <div class="afr-head__sub">You can add friends with their Fortized usernames.</div>
+      </div>
+      <img class="afr-head__mascot" src="/JoysterPoint.png" onerror="this.style.display='none'" alt="">
+    </div>
+    <div class="afr-input-zone">
+      <div class="afr-input-row">
+        <i class="fa-solid fa-at afr-input-at" aria-hidden="true"></i>
+        <input id="fr-add-input" placeholder="Enter a username..." autocomplete="off" spellcheck="false" oninput="_frAddCheck(this.value)" onkeydown="if(event.key==='Enter')_frAddSubmit()">
+        <button class="btn-a afr-send-btn" id="fr-add-send" onclick="_frAddSubmit()"><svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;" aria-hidden="true"><path d="M536.4-26.3c9.8-3.5 20.6-1 28 6.3s9.8 18.2 6.3 28l-178 496.9c-5 13.9-18.1 23.1-32.8 23.1-14.2 0-27-8.6-32.3-21.7l-64.2-158c-4.5-11-2.5-23.6 5.2-32.6l94.5-112.4c5.1-6.1 4.7-15-.9-20.6s-14.6-6-20.6-.9L229.2 276.1c-9.1 7.6-21.6 9.6-32.6 5.2L38.1 216.8c-13.1-5.3-21.7-18.1-21.7-32.3 0-14.7 9.2-27.8 23.1-32.8l496.9-178z"/></svg><span>Send Friend Request</span></button>
+      </div>
+      <div id="fr-add-hint" style="font-size:11.5px;min-height:15px;margin-top:9px;transition:color .15s;"></div>
+    </div>
+    <div class="afr-places">
+      <div class="afr-places__title">Other Places to Make Friends</div>
+      <div class="afr-places__sub">Meet people in public bastions — plenty of ways to find your crew.</div>
+      <div class="afr-places__grid">
+        <div class="afr-place" onclick="showView('discover')">
+          <div class="afr-place__icon"><svg viewBox="0 0 512 512" fill="currentColor" style="width:1em;height:1em;" aria-hidden="true"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm50.7-186.9L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg></div>
+          <div class="afr-place__body">
+            <div class="afr-place__name">Discover</div>
+            <div class="afr-place__desc">Browse public bastions</div>
+          </div>
+          <i class="fa-solid fa-chevron-right afr-place__go" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(() => { try { document.getElementById('fr-add-input')?.focus(); } catch (_) {} }, 30);
+}
+
+function _frAddCheck(val) {
+  const hint = document.getElementById('fr-add-hint');
+  if (!hint) return;
+  const v = (val || '').trim();
+  if (!v) { hint.textContent = ''; return; }
+  hint.style.color = 'var(--muted)';
+  hint.textContent = 'Press Enter or Send to add @' + v.toLowerCase();
+}
+
+async function _frAddSubmit() {
+  const inp = document.getElementById('fr-add-input');
+  const hint = document.getElementById('fr-add-hint');
+  const btn = document.getElementById('fr-add-send');
+  if (!inp) return;
+  const username = inp.value.trim().toLowerCase();
+  const fail = (m) => { if (hint) { hint.style.color = 'var(--red)'; hint.textContent = m; } };
+  if (!username) return fail('Enter a username');
+  if (username === String(CU.username).toLowerCase()) return fail("You can't add yourself.");
+  if (typeof isUserBlocked === 'function' && isUserBlocked(username)) return fail("You've blocked this user — unblock them first.");
+  if (btn) { btn.disabled = true; btn.classList.add('btn-loading'); }
+  try {
+    const r = await FortizedSocial.sendFriendRequest(CU.username, username);
+    if (r && r.ok) {
+      if (hint) { hint.style.color = 'var(--accent)'; hint.textContent = '⏳ ' + (r.msg || 'Friend request sent!'); }
+      inp.value = '';
+      await refreshCU();
+      _frUpdatePendingBadge();
+    } else fail((r && r.msg) || 'Failed to send request.');
+  } catch (e) { fail('Connection error.'); }
+  finally { if (btn) { btn.disabled = false; btn.classList.remove('btn-loading'); } }
 }
 
 // ════════════════════════════════════════════

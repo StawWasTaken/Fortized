@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix384';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix385';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix384';
+    s4.src = '/firebase-compat-shim.js?v=2026fix385';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix384">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix385">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix384', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix385', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix384"></script>
+<script src="/app/utils.js?v=2026fix385"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -419,9 +419,9 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
           <button class="disc-subnav-btn" id="ftab-all" onclick="setFriendsTab('all',this)" data-i18n="friends.tab.all">All</button>
           <button class="disc-subnav-btn" id="ftab-pending" onclick="setFriendsTab('pending',this)"><span data-i18n="friends.tab.pending">Pending</span><span class="fr-tab-badge" id="fr-pending-badge" style="display:none;">0</span></button>
           <button class="disc-subnav-btn" id="ftab-blocked" onclick="setFriendsTab('blocked',this)">Blocked</button>
+          <button class="btn-a fr-add-btn" id="ftab-add" onclick="setFriendsTab('add',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span data-i18n="friends.add">Add Friend</span></button>
         </div>
         <div class="fr-subnav-actions">
-          <button class="fr-add-btn" onclick="openModal('modal-add-friend')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span data-i18n="friends.add">Add Friend</span></button>
           <button class="fr-anow-toggle" id="fr-anow-toggle" onclick="toggleFriendsActiveNow()" title="Active Now" aria-label="Toggle Active Now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
         </div>
       </div>
@@ -1131,10 +1131,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix384"></script>
-<script src="/app/app.js?v=2026fix384"></script>
-<script src="/app/joy-system.js?v=2026fix384"></script>
-<script src="/app/chronicle-games.js?v=2026fix384"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix385"></script>
+<script src="/app/app.js?v=2026fix385"></script>
+<script src="/app/joy-system.js?v=2026fix385"></script>
+<script src="/app/chronicle-games.js?v=2026fix385"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

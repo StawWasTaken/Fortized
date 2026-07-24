@@ -650,14 +650,15 @@ body.is-desktop-app .topbar{padding-right:0;}
 .fr-subnav-brand svg{width:15px;height:15px;color:rgba(255,255,255,.5);flex-shrink:0;}
 .fr-subnav-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;padding-left:12px;}
 .fr-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 5px;border-radius:100px;background:var(--red);color:#fff;font-size:10px;font-weight:800;font-family:var(--font-display);}
-/* Add Friend — filled Swiftaw-yellow pill with 3D depth + press. */
-.fr-add-btn{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 15px;border:none;border-radius:var(--radius-pill);cursor:pointer;
-  font-family:var(--font-display);font-weight:700;font-size:13px;color:#13161d;background:var(--accent);
-  box-shadow:0 2px 0 rgba(0,0,0,.28),0 4px 12px rgba(255,249,62,.20),inset 0 1px 0 rgba(255,255,255,.5);
-  transition:transform .12s var(--ease-out),box-shadow .16s var(--ease-out),background .15s;}
-.fr-add-btn svg{width:13px;height:13px;}
-.fr-add-btn:hover{transform:translateY(-1px);background:var(--accent-2,#fff700);box-shadow:0 3px 0 rgba(0,0,0,.28),0 8px 20px rgba(255,249,62,.3),inset 0 1px 0 rgba(255,255,255,.55);}
-.fr-add-btn:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.28),0 2px 6px rgba(255,249,62,.18),inset 0 1px 0 rgba(255,255,255,.4);}
+/* Add Friend uses the app's native 3D .btn-yellow, sized to sit in the tab row. */
+.fr-add-btn{margin-left:10px;flex-shrink:0;}
+.fr-subnav .fr-add-btn.btn-a{height:30px;padding:0 15px;font-size:12.5px;box-shadow:0 3px 0 0 var(--ink);}
+.fr-subnav .fr-add-btn.btn-a svg{width:12px;height:12px;}
+.fr-subnav .fr-add-btn.btn-a:hover{box-shadow:0 4px 0 0 var(--ink),0 6px 14px var(--accent-mid);}
+.fr-subnav .fr-add-btn.btn-a:active{box-shadow:0 1px 0 0 var(--ink);}
+/* Add Friend subpage — reuses the .afr-* card styles, rendered inline. */
+.fr-add-page{max-width:640px;padding:20px 24px 28px;}
+.fr-add-page .afr-send-btn{white-space:nowrap;}
 /* Active Now toggle (narrow windows only) */
 .fr-anow-toggle{display:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted-light);cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
 .fr-anow-toggle svg{width:16px;height:16px;}

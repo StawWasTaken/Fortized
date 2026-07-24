@@ -58529,7 +58529,7 @@ const _FR_GAME_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none
 
 // Switch the Friends subnav tab. 'add' renders the Add-Friend subpage inline.
 function setFriendsTab(tab, btn) {
-  if (!['online', 'all', 'pending', 'blocked', 'add'].includes(tab)) tab = 'online';
+  if (!['online', 'all', 'pending', 'add'].includes(tab)) tab = 'online';
   _friendsTab = tab;
   document.querySelectorAll('#friends-subnav .disc-subnav-btn').forEach(b => b.classList.remove('active'));
   if (tab !== 'add') { const active = btn || document.getElementById('ftab-' + tab); if (active) active.classList.add('active'); }
@@ -58652,9 +58652,9 @@ async function renderFriendsView(tab) {
   tab = tab || _friendsTab || 'online';
   const list = document.getElementById('fr-list');
   if (!list) return;
+  list.classList.toggle('fr-list--add', tab === 'add');
   _frUpdatePendingBadge();
   if (tab === 'add') return _frRenderAdd(list);
-  if (tab === 'blocked') return _frRenderBlocked(list);
   if (tab === 'pending') return _frRenderPending(list);
 
   const friends = CU?.friends || [];
@@ -58725,28 +58725,6 @@ async function _frRenderPending(list) {
   let html = '';
   if (incoming.length) html += `<div class="fr-sec">Incoming — ${incoming.length}</div>` + incoming.map(f => rowFor(f, 'in')).join('');
   if (outgoing.length) html += `<div class="fr-sec">Outgoing — ${outgoing.length}</div>` + outgoing.map(f => rowFor(f, 'out')).join('');
-  list.innerHTML = html;
-}
-
-async function _frRenderBlocked(list) {
-  const blocked = CU?.blockedUsers || [];
-  if (!blocked.length) {
-    list.innerHTML = _frEmpty('No blocked users', "You haven't blocked anyone. Blocked users can't message or friend you.", '');
-    return;
-  }
-  list.innerHTML = `<div class="fr-sec">Blocked — …</div>` + _frSkeletons(Math.min(blocked.length, 6));
-  const map = await _frEnrich(blocked);
-  if (_currentView !== 'friends' || _friendsTab !== 'blocked') return;
-  let html = `<div class="fr-sec">Blocked — ${blocked.length}</div>`;
-  html += blocked.map(f => {
-    const u = map[f] || map[String(f).toLowerCase()] || cachedProfile(f) || {};
-    const dn = u.displayName || f; const un = escapeHTML(f);
-    const ns = _frNameStyle(u);
-    return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}">
-      <div class="fr-av"><div class="fa">${buildAvatarHTML(u.pfp || null, dn, 40)}</div></div>
-      <div class="fr-meta"><span class="fr-name"${ns ? ` style="${ns}"` : ''}>${escapeHTML(dn)}</span><span class="fr-sub">Blocked</span></div>
-      <div class="fr-actions"><button class="fr-reqbtn fr-reqbtn--ghost" onclick="toggleBlockUser('${un}')">Unblock</button></div></div>`;
-  }).join('');
   list.innerHTML = html;
 }
 

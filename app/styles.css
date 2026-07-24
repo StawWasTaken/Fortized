@@ -650,15 +650,19 @@ body.is-desktop-app .topbar{padding-right:0;}
 .fr-subnav-brand svg{width:15px;height:15px;color:rgba(255,255,255,.5);flex-shrink:0;}
 .fr-subnav-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;padding-left:12px;}
 .fr-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 5px;border-radius:100px;background:var(--red);color:#fff;font-size:10px;font-weight:800;font-family:var(--font-display);}
-/* Add Friend uses the app's native 3D .btn-yellow, sized to sit in the tab row. */
+/* Add Friend uses the app's native 3D .btn-a, sized to sit in the tab row.
+   No accent glow — only the flat 3D ink edge. */
 .fr-add-btn{margin-left:10px;flex-shrink:0;}
 .fr-subnav .fr-add-btn.btn-a{height:30px;padding:0 15px;font-size:12.5px;box-shadow:0 3px 0 0 var(--ink);}
 .fr-subnav .fr-add-btn.btn-a svg{width:12px;height:12px;}
-.fr-subnav .fr-add-btn.btn-a:hover{box-shadow:0 4px 0 0 var(--ink),0 6px 14px var(--accent-mid);}
+.fr-subnav .fr-add-btn.btn-a:hover{box-shadow:0 4px 0 0 var(--ink);}
 .fr-subnav .fr-add-btn.btn-a:active{box-shadow:0 1px 0 0 var(--ink);}
-/* Add Friend subpage — reuses the .afr-* card styles, rendered inline. */
-.fr-add-page{max-width:640px;padding:20px 24px 28px;}
+/* Add Friend subpage — centered card that fills the space, no button glow. */
+.fr-list.fr-list--add{display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:56px;}
+.fr-add-page{width:100%;max-width:720px;padding:36px 42px;}
+.fr-add-page .afr-head__title{font-size:24px;}
 .fr-add-page .afr-send-btn{white-space:nowrap;}
+.fr-add-page .afr-send-btn.btn-a:hover{box-shadow:0 5px 0 0 var(--ink);}
 /* Active Now toggle (narrow windows only) */
 .fr-anow-toggle{display:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted-light);cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
 .fr-anow-toggle svg{width:16px;height:16px;}

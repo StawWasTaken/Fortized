@@ -11812,17 +11812,9 @@ function _dateDividerParts(ts) {
   }
   return { key, label, kind };
 }
-// Tiny hand-made crest per kind — a fortress battlement (Fortized personality),
-// or a sparkle for New Year. Kept very light; accent colour comes from CSS.
-function _dateDividerCrest(kind) {
-  if (kind === 'newyear')
-    return `<svg class="dd-crest" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.7 6.6L20 10l-6.3 1.4L12 18l-1.7-6.6L4 10l6.3-1.4z"/></svg>`;
-  // battlement: three merlons on a short wall
-  return `<svg class="dd-crest" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20V9h4v4h3V9h4v4h3V9h4v11z"/></svg>`;
-}
 function _dateDividerInner(p) {
   return `<span class="dd-line" aria-hidden="true"></span>`
-    + `<span class="dd-pill" tabindex="-1">${_dateDividerCrest(p.kind)}<span class="dd-label">${escapeHTML(p.label)}</span></span>`
+    + `<span class="dd-pill" tabindex="-1"><span class="dd-label">${escapeHTML(p.label)}</span></span>`
     + `<span class="dd-line" aria-hidden="true"></span>`;
 }
 // Single source of truth for building a divider element (used by both the
@@ -11846,14 +11838,13 @@ function _makeGapDivider(ts) {
   const d = _safeDate(ts);
   if (!d) return null;
   const hm = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  const clock = `<svg class="dd-crest" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm1-13h-2v6l5 3 1-1.7-4-2.3z"/></svg>`;
   const div = document.createElement('div');
   div.className = 'date-div date-div--gap';
   div.dataset.datekey = _fmtMsgDateDivider(ts); // still tracks the day for state
   div.dataset.ts = ts || '';
   div.dataset.gap = '1';
   div.innerHTML = `<span class="dd-line" aria-hidden="true"></span>`
-    + `<span class="dd-pill" tabindex="-1">${clock}<span class="dd-label">${escapeHTML(hm)}</span></span>`
+    + `<span class="dd-pill" tabindex="-1"><span class="dd-label">${escapeHTML(hm)}</span></span>`
     + `<span class="dd-line" aria-hidden="true"></span>`;
   return div;
 }

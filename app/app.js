@@ -4473,6 +4473,9 @@ function showView(v, _skipPush) {
   const _homeCluster = ['friends', 'dms', 'radiance', 'fortshop', 'quests', 'creator'];
   const homeBtn = document.getElementById('rb-home');
   if (homeBtn) homeBtn.classList.toggle('active', _homeCluster.includes(v));
+  // Give the home/messages cluster a lighter ("whiter") global top bar so
+  // Friends, DMs and the DM-sidebar pages read as one bright surface.
+  document.body.classList.toggle('home-topbar', _homeCluster.includes(v));
 
   // Post-show callbacks
   if (_atelierRoute) {

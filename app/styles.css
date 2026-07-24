@@ -384,7 +384,12 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .sidebar-ctx{width:380px;min-width:380px;background:linear-gradient(rgba(0,0,0,.20),rgba(0,0,0,.20)),var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid var(--glass-border);padding-bottom:0;}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
-.topbar{height:44px;background:var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;align-items:center;padding:0 191px 0 12px;gap:10px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;position:relative;z-index:5;}
+.topbar{height:44px;background:var(--channel);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);display:flex;align-items:center;padding:0 191px 0 12px;gap:10px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;position:relative;z-index:5;transition:background .2s var(--ease-out);}
+/* Home / messages cluster (Friends, DMs, Radiance/Fortshop/Quests/Creator):
+   a lighter, "whiter" global top bar. A translucent white wash over the live
+   --channel colour so it stays theme-aware when the appearance system rewrites
+   the surface tokens. */
+body.home-topbar .topbar{background:linear-gradient(rgba(255,255,255,.06),rgba(255,255,255,.06)),var(--channel);}
 .topbar button,.topbar input,.topbar .tb-actions,.topbar .tb-onyx-pill,.topbar .tb-search,.topbar .tb-notif-btn,.topbar .tb-win-controls,.topbar .tb-nav-controls{-webkit-app-region:no-drag;}
 /* Navigation controls (back / forward / refresh) — sits above sidebar rail */
 .tb-nav-controls{display:flex;align-items:center;justify-content:center;gap:2px;flex-shrink:0;padding:10px 0 4px;width:100%;}

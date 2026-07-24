@@ -14777,3 +14777,22 @@ input::-webkit-scrollbar{width:10px!important;height:10px!important;}
   content:'';position:absolute;inset:0;transform:translateX(-100%);
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);animation:dmnShimmer 1.3s infinite;}
 @keyframes dmnShimmer{100%{transform:translateX(100%);}}
+
+/* ════════════════════════════════════════════════════════════════════
+   NAVBAR (rail) REDESIGN — less yellow, white-forward, tactile. Active is a
+   neutral surface + white icon + the accent LEFT bar only (no full yellow
+   fill), so yellow reads as a highlight, not the base. Create keeps its green.
+   ════════════════════════════════════════════════════════════════════ */
+#rail .rail-btn{color:rgba(255,255,255,.62)!important;
+  transition:background .16s var(--ease-out),color .16s,transform .14s var(--ease-out),border-radius .18s!important;}
+#rail .rail-btn svg{width:auto!important;height:25px!important;}
+#rail .rail-btn:hover{background:rgba(255,255,255,.08)!important;color:#fff!important;transform:translateY(-1px) scale(1.06);border-radius:16px!important;}
+#rail .rail-btn:hover svg{filter:brightness(1.12);}
+#rail .rail-btn:active{transform:scale(.93);}
+#rail .rail-btn.active{background:rgba(255,255,255,.1)!important;color:#fff!important;box-shadow:none!important;border-radius:16px!important;}
+#rail .rail-btn.active::after{background:var(--accent)!important;box-shadow:0 0 8px rgba(255,249,62,.4);}
+/* Brand logo tile: white-forward too. */
+.rail-home-logo{background-color:rgba(255,255,255,.62)!important;}
+.rail-home-btn.active .rail-home-logo{background-color:#fff!important;}
+/* Create Bastion (+) keeps green identity, add the tactile press/lift. */
+#rail .rail-btn[onclick*="modal-create-bastion"]:hover{transform:translateY(-1px) scale(1.06);filter:brightness(1.1);}

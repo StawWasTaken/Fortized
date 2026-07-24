@@ -957,9 +957,50 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .chat-welcome--dm .w-av{overflow:visible;}
 .chat-welcome--dm .w-av .profile-decoration-overlay-lg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:132%;height:132%;border-radius:0;object-fit:contain;pointer-events:none;}
 /* Day separators — elegant centered pill */
-.date-div{display:flex;align-items:center;gap:14px;padding:18px 24px 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.04em;}
-.date-div::before,.date-div::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.06);}
-.date-div span{background:transparent;border:none;border-radius:0;padding:2px 4px;white-space:nowrap;font-size:11px;color:rgba(255,255,255,.55);}
+/* ── Chat date / time separators (redesigned) ──────────────────────────────
+   A tactile centred PILL (Syne, subtle 3D depth, rounded) flanked by two lines
+   that fade toward the edges. "Today" gets a light yellow accent + faint side
+   glow; New Year gets a gold sparkle + slow shine; same-day long pauses show a
+   quiet clock-time "breathing point". Brand yellow stays a spice. */
+.date-div{display:flex;align-items:center;gap:14px;padding:20px 22px 12px;user-select:none;}
+.date-div .dd-line{flex:1;height:2px;border-radius:2px;background:rgba(255,255,255,.07);}
+.date-div .dd-line:first-child{background:linear-gradient(90deg,transparent,rgba(255,255,255,.09) 92%);}
+.date-div .dd-line:last-child{background:linear-gradient(90deg,rgba(255,255,255,.09) 8%,transparent);}
+.date-div .dd-pill{position:relative;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+  padding:6px 15px;border-radius:var(--radius-pill,100px);
+  font-family:var(--font-display,'Syne',sans-serif);font-weight:600;font-size:11.5px;letter-spacing:.02em;
+  color:var(--muted-light,#7d8a9e);
+  background:linear-gradient(180deg,var(--panel3,#23272f),var(--panel2,#1f232b));
+  border:1px solid var(--border,#252b3a);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 2px 5px rgba(0,0,0,.30),0 1px 1px rgba(0,0,0,.18);
+  transition:transform .16s var(--ease-out,cubic-bezier(.22,1,.36,1)),filter .16s,box-shadow .16s,color .16s;
+  cursor:default;outline:none;}
+.date-div .dd-crest{width:12px;height:12px;flex-shrink:0;fill:currentColor;opacity:.55;margin-top:-1px;}
+.date-div .dd-label{line-height:1;}
+@media (hover:hover){
+  .date-div .dd-pill:hover{transform:translateY(-1px) scale(1.02);filter:brightness(1.12);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 5px 14px rgba(0,0,0,.34),0 1px 1px rgba(0,0,0,.2);}
+}
+/* Today — light yellow accent + faint side glow (the only strong colour use) */
+.date-div--today .dd-pill{color:#f2eecb;border-color:color-mix(in srgb,var(--accent,#fff93e) 30%,var(--border,#252b3a));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 6px rgba(0,0,0,.30),0 0 0 1px rgba(255,249,62,.05),0 3px 14px rgba(255,249,62,.10);}
+.date-div--today .dd-crest{color:var(--accent,#fff93e);opacity:.95;}
+.date-div--today .dd-line:first-child{background:linear-gradient(90deg,transparent,rgba(255,249,62,.16) 96%);}
+.date-div--today .dd-line:last-child{background:linear-gradient(90deg,rgba(255,249,62,.16) 4%,transparent);}
+/* New Year — gold sparkle + a slow one-shot shine sweep across the pill */
+.date-div--newyear .dd-pill{color:#f0e7c6;border-color:color-mix(in srgb,var(--gold,#fbbf24) 34%,var(--border,#252b3a));overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 6px rgba(0,0,0,.30),0 3px 16px rgba(251,191,36,.14);}
+.date-div--newyear .dd-crest{color:var(--gold,#fbbf24);opacity:1;}
+.date-div--newyear .dd-pill::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.18) 48%,transparent 66%);
+  transform:translateX(-120%);animation:ddShine 5.5s ease-in-out infinite;}
+@keyframes ddShine{0%,72%{transform:translateX(-120%);}88%,100%{transform:translateX(120%);}}
+/* Same-day "breathing point" — quieter, smaller, no accent */
+.date-div--gap{padding-top:14px;padding-bottom:10px;}
+.date-div--gap .dd-pill{padding:5px 12px;font-size:11px;color:var(--muted,#4e5a6f);
+  background:linear-gradient(180deg,var(--panel2,#1f232b),var(--panel,#1b1e25));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 3px rgba(0,0,0,.24);}
+.date-div--gap .dd-crest{opacity:.45;width:11px;height:11px;}
 /* Message rows — more breathing room */
 /* No transition on the bg — Discord/Guilded don't transition row hover
    either; the cost is one repaint per row that the :hover state crosses

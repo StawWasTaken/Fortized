@@ -11789,6 +11789,74 @@ function _fmtMsgDateDivider(ts) {
   if (!d) return null;
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
+// ── Chat date separators (redesigned) ─────────────────────────────────────
+// The divider's IDENTITY is always the full date (_fmtMsgDateDivider) so the
+// day/month/year-change detection + de-dup stays rock-solid and never inserts
+// phantom "Today" bars when the local day flips. The DISPLAY is prettier:
+// Today / Yesterday get special treatment, New Year's Day feels special, and
+// everything else reads "20 July 2026". `kind` drives the styling accent.
+function _dateDividerParts(ts) {
+  const d = _safeDate(ts);
+  if (!d) return null;
+  const key = _fmtMsgDateDivider(ts);            // stable comparison key
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dayDiff = Math.round((today - msgDay) / 86400000);
+  let label, kind;
+  if (dayDiff <= 0) { label = 'Today'; kind = 'today'; }
+  else if (dayDiff === 1) { label = 'Yesterday'; kind = 'yesterday'; }
+  else {
+    label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    kind = (d.getDate() === 1 && d.getMonth() === 0) ? 'newyear' : 'normal'; // 1 January = new year
+  }
+  return { key, label, kind };
+}
+// Tiny hand-made crest per kind — a fortress battlement (Fortized personality),
+// or a sparkle for New Year. Kept very light; accent colour comes from CSS.
+function _dateDividerCrest(kind) {
+  if (kind === 'newyear')
+    return `<svg class="dd-crest" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.7 6.6L20 10l-6.3 1.4L12 18l-1.7-6.6L4 10l6.3-1.4z"/></svg>`;
+  // battlement: three merlons on a short wall
+  return `<svg class="dd-crest" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20V9h4v4h3V9h4v4h3V9h4v11z"/></svg>`;
+}
+function _dateDividerInner(p) {
+  return `<span class="dd-line" aria-hidden="true"></span>`
+    + `<span class="dd-pill" tabindex="-1">${_dateDividerCrest(p.kind)}<span class="dd-label">${escapeHTML(p.label)}</span></span>`
+    + `<span class="dd-line" aria-hidden="true"></span>`;
+}
+// Single source of truth for building a divider element (used by both the
+// history render and the live-append path).
+function _makeDateDivider(ts) {
+  const p = _dateDividerParts(ts);
+  if (!p) return null;
+  const div = document.createElement('div');
+  div.className = 'date-div date-div--' + p.kind;
+  div.dataset.datekey = p.key;
+  div.dataset.ts = ts || '';
+  div.innerHTML = _dateDividerInner(p);
+  return div;
+}
+// A SAME-DAY "breathing point" separator: after a long pause in the
+// conversation (but the calendar day hasn't changed, so a full date bar would
+// be redundant), show the resume time — "14:35" — as a quiet marker. It reads
+// as a natural break, not a date. Threshold keeps it from spamming.
+const _DATE_SEP_GAP_MS = 4 * 60 * 60 * 1000; // 4h
+function _makeGapDivider(ts) {
+  const d = _safeDate(ts);
+  if (!d) return null;
+  const hm = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const clock = `<svg class="dd-crest" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm1-13h-2v6l5 3 1-1.7-4-2.3z"/></svg>`;
+  const div = document.createElement('div');
+  div.className = 'date-div date-div--gap';
+  div.dataset.datekey = _fmtMsgDateDivider(ts); // still tracks the day for state
+  div.dataset.ts = ts || '';
+  div.dataset.gap = '1';
+  div.innerHTML = `<span class="dd-line" aria-hidden="true"></span>`
+    + `<span class="dd-pill" tabindex="-1">${clock}<span class="dd-label">${escapeHTML(hm)}</span></span>`
+    + `<span class="dd-line" aria-hidden="true"></span>`;
+  return div;
+}
 // Rich label for a message time. Today's very-recent messages get a live
 // relative phase that ticks forward on its own:
 //   just now (0-10s, brand yellow) → a few moments ago (10-60s) → 14:35
@@ -11847,6 +11915,20 @@ function _tickMsgTimes() {
       el.classList.toggle('msg-ts-now', !!p.justNow);
     }
     if (!p.live) el.classList.remove('msg-ts-live');
+  });
+  // Keep date separators fresh past midnight: a "Today" bar becomes "Yesterday"
+  // etc. Gap markers (fixed clock time) never change, so skip them. Identity
+  // (data-datekey = full date) is stable, so no duplicate bars appear.
+  document.querySelectorAll('.date-div:not(.date-div--gap)[data-ts]').forEach(el => {
+    const parts = _dateDividerParts(el.dataset.ts);
+    if (!parts) return;
+    const cur = el.querySelector('.dd-label');
+    if (cur && cur.textContent !== parts.label) {
+      el.classList.remove('date-div--today', 'date-div--yesterday', 'date-div--newyear', 'date-div--normal');
+      el.classList.add('date-div--' + parts.kind);
+      el.dataset.datekey = parts.key;
+      el.innerHTML = _dateDividerInner(parts);
+    }
   });
 }
 if (typeof window !== 'undefined' && !window._msgTimeTicker) {
@@ -11930,16 +12012,22 @@ function _renderMsgBatch(container, msgs, context, state) {
     }
     const dateDivs = container.querySelectorAll('.date-div');
     const lastDateDiv = dateDivs[dateDivs.length - 1];
-    if (lastDateDiv) state.lastDate = lastDateDiv.textContent?.trim() || null;
+    if (lastDateDiv) state.lastDate = lastDateDiv.dataset.datekey || lastDateDiv.textContent?.trim() || null;
   }
   for (const msg of msgs) {
     const d = _fmtMsgDateDivider(msg.timestamp);
+    let sep = null;
     if (d && d !== state.lastDate) {
-      const div = document.createElement('div');
-      div.className = 'date-div';
-      div.innerHTML = '<span>' + escapeHTML(d) + '</span>';
-      container.appendChild(div);
+      // Calendar day/month/year changed → full date bar.
+      sep = _makeDateDivider(msg.timestamp);
       state.lastDate = d;
+    } else if (d && state.lastTimestamp && msg.timestamp) {
+      // Same day but a long pause → quiet "breathing point" time marker.
+      const gap = _safeDate(msg.timestamp) - _safeDate(state.lastTimestamp);
+      if (gap >= _DATE_SEP_GAP_MS) sep = _makeGapDivider(msg.timestamp);
+    }
+    if (sep) {
+      container.appendChild(sep);
       state.lastAuthor = null;
       state.lastTimestamp = null;
     }
@@ -12711,21 +12799,25 @@ function _appendLiveMessage(container, msg, context) {
     const thisLabel = _fmtMsgDateDivider(msg.timestamp);
     const lastLabel = _fmtMsgDateDivider(lastRow.dataset.timestamp);
     if (thisLabel && lastLabel && thisLabel !== lastLabel) {
-      const div = document.createElement('div');
-      div.className = 'date-div';
-      div.innerHTML = '<span>' + escapeHTML(thisLabel) + '</span>';
-      container.appendChild(div);
+      // New calendar day → full date bar.
+      const div = _makeDateDivider(msg.timestamp);
+      if (div) container.appendChild(div);
+    } else if (thisLabel && lastLabel && thisLabel === lastLabel) {
+      // Same day → quiet time marker only if the pause was long enough.
+      const gap = _safeDate(msg.timestamp) - _safeDate(lastRow.dataset.timestamp);
+      if (gap >= _DATE_SEP_GAP_MS) {
+        const div = _makeGapDivider(msg.timestamp);
+        if (div) container.appendChild(div);
+      }
     } else if (thisLabel && !lastLabel) {
       // Last in-DOM row had no parseable timestamp — fall back to the
-      // active divider in the container. Avoids "Today" appearing
-      // mid-conversation when a single null-ts row poisoned the compare.
+      // active divider's key. Avoids "Today" appearing mid-conversation
+      // when a single null-ts row poisoned the compare.
       const dateDivs = container.querySelectorAll('.date-div');
-      const lastDateText = dateDivs[dateDivs.length - 1]?.textContent?.trim();
-      if (lastDateText && lastDateText !== thisLabel) {
-        const div = document.createElement('div');
-        div.className = 'date-div';
-        div.innerHTML = '<span>' + escapeHTML(thisLabel) + '</span>';
-        container.appendChild(div);
+      const lastKey = dateDivs[dateDivs.length - 1]?.dataset.datekey || dateDivs[dateDivs.length - 1]?.textContent?.trim();
+      if (lastKey && lastKey !== thisLabel) {
+        const div = _makeDateDivider(msg.timestamp);
+        if (div) container.appendChild(div);
       }
     }
   }

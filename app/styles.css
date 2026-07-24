@@ -80,27 +80,22 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .sidebar-logo-icon img{display:none;}
 .sidebar-logo-text{display:none;}
 .sidebar-logo.active .sidebar-logo-icon{}
-/* ── Left rail (redesigned) — cleaner, smaller, rounder icons; a WHITE active
-   selector (no glow); brand yellow reserved for the one Create CTA. ── */
-.sidebar-nav{padding:10px 0 6px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;align-items:center;width:100%;}
-.rail-sep{height:2px;width:26px;background:rgba(255,255,255,.07);margin:6px auto;flex-shrink:0;border-radius:2px;}
-.rail-btn{width:42px;height:42px;border-radius:14px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s var(--ease-out),color .18s,transform .12s var(--ease-out);position:relative;flex-shrink:0;font-size:0;font-weight:600;color:rgba(255,255,255,.55);}
+/* ── Left rail (redesigned) — uniform buttons. Unselected: translucent-white
+   fill, icon in the text colour. Selected: solid brand yellow (no gradient,
+   no glow), icon #13161d. Same rules apply to bastion emblems. ── */
+.sidebar-nav{padding:10px 0 6px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:center;width:100%;}
+.rail-sep{height:2px;width:26px;background:rgba(255,255,255,.07);margin:5px auto;flex-shrink:0;border-radius:2px;}
+.rail-btn{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .16s var(--ease-out),color .16s,transform .12s var(--ease-out);position:relative;flex-shrink:0;font-size:0;font-weight:600;color:rgba(255,255,255,.66);}
 .rail-btn span{display:none;}
-.rail-btn svg{width:22px;height:22px;flex-shrink:0;transition:transform .16s var(--ease-out);}
-/* Brand logo (top) — real colour logo, leads to Friends/DMs */
-.rail-brand{width:44px;height:44px;}
-.rail-brand-img{width:28px;height:28px;object-fit:contain;transition:transform .16s var(--ease-out);}
-.rail-brand:hover .rail-brand-img{transform:scale(1.06);}
-/* Secondary items (Radiance/Fortshop/Quests/Creator) — smaller + rounder */
-.rail-btn--sm{width:37px;height:37px;border-radius:12px;}
-.rail-btn--sm svg{width:19px;height:19px;}
-.rail-ico-img{width:20px;height:20px;object-fit:contain;opacity:.6;transition:opacity .18s,transform .16s var(--ease-out);}
-.rail-btn--sm:hover .rail-ico-img{opacity:.95;transform:scale(1.05);}
-.rail-btn--sm.active .rail-ico-img{opacity:1;}
-/* Create Bastion — the one prominent, accent CTA */
-.rail-create{width:44px;height:44px;background:var(--accent);color:var(--ink);box-shadow:0 2px 9px rgba(255,249,62,.22);margin-top:2px;}
-.rail-create svg{color:var(--ink);}
-.rail-create::after{display:none;}
+.rail-btn svg{width:22px;height:22px;flex-shrink:0;color:currentColor;transition:transform .16s var(--ease-out);}
+/* Brand logo (top) — the Fortized logo as a colour-overlaid mask, so its
+   colour tracks the button (text colour idle, #13161d when active). */
+.rail-brand-ico{display:block!important;width:25px;height:25px;background-color:rgba(255,255,255,.66);
+  -webkit-mask-image:url('/fortized-logo.png');mask-image:url('/fortized-logo.png');
+  -webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  -webkit-mask-size:contain;mask-size:contain;transition:transform .16s var(--ease-out),background-color .16s;}
+.rail-brand:hover .rail-brand-ico{transform:scale(1.05);background-color:#fff;}
+.rail-brand.active .rail-brand-ico{background-color:#13161d;}
 /* ── Radiance Dwelling Icon (using image mask like home button) ── */
 .radiance-icon{width:18px;height:18px;-webkit-mask:url('/radiance-logo.png') center/contain no-repeat;mask:url('/radiance-logo.png') center/contain no-repeat;background-color:rgba(255,255,255,.5);transition:background-color .2s;}
 .atel-top-nav-btn:hover .radiance-icon{background-color:rgba(255,255,255,.8);}
@@ -108,51 +103,42 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .atel-top-nav-btn .tab-icon-img{opacity:.5;transition:opacity .2s;}
 .atel-top-nav-btn:hover .tab-icon-img{opacity:.8;}
 .atel-top-nav-btn.active .tab-icon-img{opacity:1;}
-.rail-btn:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.95);}
+.rail-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
 .rail-btn:hover svg{transform:scale(1.05);}
-/* Active = clean WHITE fill, dark icon, NO glow */
-.rail-btn.active{background:#fff;color:var(--rail);box-shadow:none;}
-.rail-btn.active svg{color:var(--rail);}
-.rail-btn:focus-visible{outline:2px solid #fff;outline-offset:2px;}
-.rail-btn.active::before,.rail-btn:hover::before{display:none;}
-/* Create CTA keeps its accent even on hover (slight lift), never the white active fill */
-.rail-create:hover{background:var(--accent-2);color:var(--ink);transform:translateY(-1px);}
-.rail-create:hover svg{transform:scale(1.06);}
-/* Selected indicator pill on the left — WHITE, no glow */
-.rail-btn::after{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:0;background:#fff;border-radius:0 3px 3px 0;transition:height .2s var(--ease-out),opacity .2s;opacity:0;}
-.rail-btn:hover::after{height:15px;opacity:.4;}
-.rail-btn.active::after{height:22px;opacity:1;background:#fff;box-shadow:none;}
+/* ── Radiance Dwelling Icon (using image mask like home button) ── */
+.radiance-icon{width:18px;height:18px;-webkit-mask:url('/radiance-logo.png') center/contain no-repeat;mask:url('/radiance-logo.png') center/contain no-repeat;background-color:rgba(255,255,255,.5);transition:background-color .2s;}
+.atel-top-nav-btn:hover .radiance-icon{background-color:rgba(255,255,255,.8);}
+.atel-top-nav-btn.active .radiance-icon{background-color:var(--accent);}
+.atel-top-nav-btn .tab-icon-img{opacity:.5;transition:opacity .2s;}
+.atel-top-nav-btn:hover .tab-icon-img{opacity:.8;}
+.atel-top-nav-btn.active .tab-icon-img{opacity:1;}
+/* Active = solid brand yellow, dark icon (#13161d), NO gradient / NO glow */
+.rail-btn.active{background:var(--accent);color:#13161d;box-shadow:none;}
+.rail-btn.active svg{color:#13161d;}
+.rail-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.rail-btn.active::before,.rail-btn:hover::before,.rail-btn::after{display:none;}
 .nav-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--sidebar);box-shadow:0 2px 8px rgba(235,69,69,.5);animation:notifBadgePulse 2s ease-in-out infinite;}
 .rail-btn[data-tip]:hover::after{display:none;}
 /* Bastion items - draggable */
-.rail-bastion{width:48px;height:48px;border-radius:15px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0;font-weight:600;color:rgba(255,255,255,.5);transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;overflow:visible;flex-shrink:0;user-select:none;}
-.rail-bastion:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border-radius:15px;}
-.rail-bastion.active{background:rgba(255,249,62,.1);color:var(--accent);border-radius:17px;}
+.rail-bastion{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0;font-weight:600;color:rgba(255,255,255,.66);transition:background .16s var(--ease-out),color .16s,transform .12s var(--ease-out);position:relative;overflow:visible;flex-shrink:0;user-select:none;}
+.rail-bastion:hover{background:rgba(255,255,255,.12);color:#fff;}
+/* Active = solid brand yellow (matching the other rail buttons). The emblem
+   insets slightly so the yellow reads as the selector. No gradient, no glow. */
+.rail-bastion.active{background:var(--accent);}
+.rail-bastion.active .bastion-icon{transform:scale(.80);border-radius:10px;}
 /* Freeze GIF emblems until hover */
 .rail-bastion .bastion-icon canvas.gif-still{display:block;border-radius:inherit;}
 .rail-bastion .bastion-icon img.gif-emblem{display:none;}
 .rail-bastion:hover .bastion-icon canvas.gif-still{display:none;}
 .rail-bastion:hover .bastion-icon img.gif-emblem{display:block;}
-/* Selected indicator pill on left side (Discord-style) */
-.rail-bastion::after{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:4px;height:0;background:#fff;border-radius:0 4px 4px 0;transition:height .2s cubic-bezier(.22,1,.36,1);opacity:0;}
-.rail-bastion:hover::after{height:20px;opacity:.5;}
-.rail-bastion.active::after{height:36px;opacity:1;background:var(--accent);box-shadow:0 0 8px rgba(255,249,62,.3);}
-.rail-bastion.active::before{display:none;}
-.rail-bastion:hover::before{display:none;}
-/* Unread pill — a small WHITE bar (grows on hover), always smaller than the
-   tall accent pill of the selected bastion. */
-.rail-bastion.unread::after{height:10px;opacity:1;background:#fff;}
-.rail-bastion.unread:hover::after{height:20px;background:#fff;opacity:1;}
-/* Mention badge — red bubble in the corner, 1–9+. */
-/* Capsule (not a circle — pills read better), but as round-ended as
-   possible (border-radius:100px). The ring is the LIVE appearance surface
-   colour (--rail, which the appearance system rewrites per theme) so the
-   badge looks punched out of the rail background rather than outlined. */
+/* Unread — a small white dot to the left; hidden when active. */
+.rail-bastion::after{content:'';position:absolute;left:-9px;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;background:#fff;opacity:0;transition:opacity .18s;}
+.rail-bastion.unread::after{opacity:1;}
+.rail-bastion.active::after{opacity:0;}
+.rail-bastion::before{display:none;}
+/* Mention badge — red bubble in the corner, punched out of the rail colour. */
 .rail-mention-badge{position:absolute;bottom:-3px;right:-5px;min-width:19px;height:19px;padding:0 6px;border-radius:100px;background:#eb4545;color:#fff;font-family:var(--font-display);font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--rail);line-height:1;z-index:3;pointer-events:none;}
-.rail-bastion.active:hover::before{display:none;}
-.rail-bastion[data-tip]:hover::after{height:20px;opacity:.5;}
-.rail-bastion.active[data-tip]:hover::after{height:36px;opacity:1;}
-.rail-bastion .bastion-icon{width:48px;height:48px;border-radius:inherit;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:20px;background:transparent;transition:transform .16s cubic-bezier(.22,1,.36,1);}
+.rail-bastion .bastion-icon{width:44px;height:44px;border-radius:inherit;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:20px;background:transparent;transition:transform .16s var(--ease-out);}
 .rail-bastion:hover .bastion-icon{transform:scale(1.05);}
 .rail-bastion .bastion-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
 .rail-notif-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 3px;z-index:2;box-shadow:0 2px 8px rgba(235,69,69,.5);animation:notifBadgePulse 2s ease-in-out infinite;}
@@ -14721,6 +14707,9 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .dm-nav-ico{width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.05);display:flex;align-items:center;
   justify-content:center;color:rgba(255,255,255,.72);flex-shrink:0;transition:background .14s,transform .14s var(--ease-out),color .14s;}
 .dm-nav-btn:hover .dm-nav-ico{background:rgba(255,255,255,.1);color:#fff;transform:scale(1.05);}
+/* Image-as-icon (e.g. Radiance logo) rendered as a colour-overlaid mask so it
+   tints to the icon text colour like the inline SVGs. */
+.dm-nav-mask{width:18px;height:18px;background-color:currentColor;-webkit-mask:center/contain no-repeat;mask:center/contain no-repeat;-webkit-mask-size:contain;mask-size:contain;}
 
 /* Section header */
 .dm-sec-head{display:flex;align-items:center;justify-content:space-between;padding:14px 12px 6px 14px;}

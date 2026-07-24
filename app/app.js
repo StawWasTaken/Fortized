@@ -12027,7 +12027,7 @@ function _renderMsgBatch(container, msgs, context, state) {
       const gap = Math.abs(new Date(msg.timestamp) - new Date(state.lastTimestamp));
       if (gap >= 20 * 60 * 1000) effectivePrevAuthor = null;
     }
-    appendMessage(container, msg, context, effectivePrevAuthor);
+    appendMessage(container, msg, context, effectivePrevAuthor, true); // trickle manages its own separators
     state.lastAuthor = msg.from;
     state.lastTimestamp = msg.timestamp;
   }
@@ -12374,7 +12374,7 @@ async function _loadOlderMessages(barOrBtn) {
       // bug. Bail unless lastChild actually changed.
       older.forEach(msg => {
         const beforeLast = container.lastChild;
-        appendMessage(container, msg, context, null);
+        appendMessage(container, msg, context, null, true); // pagination: separators handled by full render
         const appended = container.lastChild;
         if (appended && appended !== beforeLast && appended !== anchor) {
           container.insertBefore(appended, anchor);
@@ -12777,45 +12777,56 @@ function _renderForwardedCard(msg) {
 // and then delegates to appendMessage. Used by the DM / GC / channel
 // real-time listeners so dividers stay correct without duplicating the
 // trickle-render path's logic.
-function _appendLiveMessage(container, msg, context) {
+// Insert a date/gap separator before `msg` if the bottom of `container`
+// warrants one — so separators appear INSTANTLY on any append (live receive,
+// optimistic send, bot post), never only after a refresh. Idempotent: if a
+// divider already sits at the bottom, or none is warranted, it does nothing.
+function _insertSeparatorIfNeeded(container, msg) {
   if (!container || !msg) return;
-  _normalizeMsg(msg);
-  // Find the most recent .msg-row (any kind) to compare date labels with.
   let lastRow = null;
   for (let n = container.lastElementChild; n; n = n.previousElementSibling) {
     if (n.classList?.contains('msg-row')) { lastRow = n; break; }
-    if (n.classList?.contains('date-div')) break; // already a divider at the bottom — don't add another
+    if (n.classList?.contains('date-div')) return; // divider already at the bottom
   }
-  if (lastRow) {
-    const thisLabel = _fmtMsgDateDivider(msg.timestamp);
-    const lastLabel = _fmtMsgDateDivider(lastRow.dataset.timestamp);
-    if (thisLabel && lastLabel && thisLabel !== lastLabel) {
-      // New calendar day → full date bar.
+  if (!lastRow) return;
+  const thisLabel = _fmtMsgDateDivider(msg.timestamp);
+  const lastLabel = _fmtMsgDateDivider(lastRow.dataset.timestamp);
+  if (thisLabel && lastLabel && thisLabel !== lastLabel) {
+    // New calendar day → full date bar.
+    const div = _makeDateDivider(msg.timestamp);
+    if (div) container.appendChild(div);
+  } else if (thisLabel && lastLabel && thisLabel === lastLabel) {
+    // Same day → quiet time marker only if the pause was long enough.
+    const gap = _safeDate(msg.timestamp) - _safeDate(lastRow.dataset.timestamp);
+    if (gap >= _DATE_SEP_GAP_MS) {
+      const div = _makeGapDivider(msg.timestamp);
+      if (div) container.appendChild(div);
+    }
+  } else if (thisLabel && !lastLabel) {
+    // Last in-DOM row had no parseable timestamp — fall back to the active
+    // divider's key. Avoids "Today" appearing mid-conversation when a single
+    // null-ts row poisoned the compare.
+    const dateDivs = container.querySelectorAll('.date-div');
+    const lastKey = dateDivs[dateDivs.length - 1]?.dataset.datekey || dateDivs[dateDivs.length - 1]?.textContent?.trim();
+    if (lastKey && lastKey !== thisLabel) {
       const div = _makeDateDivider(msg.timestamp);
       if (div) container.appendChild(div);
-    } else if (thisLabel && lastLabel && thisLabel === lastLabel) {
-      // Same day → quiet time marker only if the pause was long enough.
-      const gap = _safeDate(msg.timestamp) - _safeDate(lastRow.dataset.timestamp);
-      if (gap >= _DATE_SEP_GAP_MS) {
-        const div = _makeGapDivider(msg.timestamp);
-        if (div) container.appendChild(div);
-      }
-    } else if (thisLabel && !lastLabel) {
-      // Last in-DOM row had no parseable timestamp — fall back to the
-      // active divider's key. Avoids "Today" appearing mid-conversation
-      // when a single null-ts row poisoned the compare.
-      const dateDivs = container.querySelectorAll('.date-div');
-      const lastKey = dateDivs[dateDivs.length - 1]?.dataset.datekey || dateDivs[dateDivs.length - 1]?.textContent?.trim();
-      if (lastKey && lastKey !== thisLabel) {
-        const div = _makeDateDivider(msg.timestamp);
-        if (div) container.appendChild(div);
-      }
     }
   }
+}
+function _appendLiveMessage(container, msg, context) {
+  if (!container || !msg) return;
+  _normalizeMsg(msg);
+  // Separator insertion now lives inside appendMessage (runs for every live
+  // append path), so this just delegates.
   appendMessage(container, msg, context, null);
 }
 
-function appendMessage(container, msg, context, prevAuthor) {
+// `skipSep`: pass true from callers that manage their own separators (the
+// trickle-render loop and the older-message pagination path). Every other
+// caller — optimistic sends, socket receives, bot posts — gets a date/gap
+// separator inserted automatically so it appears INSTANTLY, no refresh needed.
+function appendMessage(container, msg, context, prevAuthor, skipSep) {
   // If prevAuthor not provided, infer from last message in container
   if (prevAuthor === null && container) prevAuthor = _getLastAuthor(container);
   if (!msg || !container) return;
@@ -12831,6 +12842,9 @@ function appendMessage(container, msg, context, prevAuthor) {
   if (container._seenIds.has(id)) return;
   if (document.querySelector(`[data-msgid="${CSS.escape(id)}"]`)) { container._seenIds.add(id); return; }
   container._seenIds.add(id);
+  // Insert a date/gap separator if the bottom of the list warrants one, unless
+  // the caller manages its own (idempotent — safe even if it also pre-inserted).
+  if (!skipSep) { try { _insertSeparatorIfNeeded(container, msg); } catch (_) {} }
   // System messages (join, bot deploy, etc.)
   if (msg.from === '__system__') {
     const time=_fmtMsgTime(msg.timestamp, msg.time);

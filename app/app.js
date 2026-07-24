@@ -7718,6 +7718,53 @@ const FtzScroll = (function () {
   function auto(root) { (root || document).querySelectorAll('[data-ftz-scroll]:not(.ftz-sb-host)').forEach(attach); }
   return { attach, auto };
 })();
+try { window.FtzScroll = FtzScroll; } catch (_) {}
+
+// ── FtzScroll rollout: give the whole app the rounded-capsule overlay
+// scrollbar (the user's template) instead of the native bar. We attach it to a
+// curated list of VERTICAL scroll containers (never horizontal rows, never the
+// hot/anchored .chat-msgs, never tiny textareas). Attach is idempotent, so we
+// can re-scan freely as views (re)render. Overlays are cosmetic-only, so a
+// mispositioned one can never break functionality. */
+const _FTZ_SB_SEL = [
+  '#sidebar-scroll', '.member-list', '.modal-body',
+  '.sc-main', '.sc-nav', '.sc-feed', '.admin-main', '.admin-nav',
+  '.profile-main', '.epp-scroll', '.spp-grid', '.gif-collection-grid',
+  '.nm-picker', '.discover-scroll', '.home-feed', '.active-now-list',
+  '.bsettings-main', '.bsettings-nav-scroll', '.bsettings-preview',
+  '.caf-body', '.atelier-scroll', '.bastion-hub-main', '.thread-replies',
+  '.np-list', '.npv-list', '.pwm-list', '.up-left', '.up-right-content',
+  '.chronicle-scroll-list', '.chronicle-detail', '.botcmd-list',
+  '.suggest-panel', '.adv-search-results', '.ann-feed', '.overview-room',
+  '.rpv-grid', '.soundboard-grid', '.staff-inspector__body', '.staff-palette__list'
+];
+function _ftzScrollScan(root) {
+  const scope = root && root.querySelectorAll ? root : document;
+  try {
+    scope.querySelectorAll(_FTZ_SB_SEL.join(',')).forEach(el => {
+      if (el.classList && el.classList.contains('ftz-sb-host')) return;
+      try { FtzScroll.attach(el); } catch (_) {}
+    });
+  } catch (_) {}
+}
+let _ftzSbDebounce = null, _ftzSbInstalled = false;
+function _ftzScrollRollout() {
+  _ftzScrollScan(document);
+  if (_ftzSbInstalled) return; // observer installed once
+  _ftzSbInstalled = true;
+  try {
+    const mo = new MutationObserver(() => {
+      clearTimeout(_ftzSbDebounce);
+      _ftzSbDebounce = setTimeout(() => _ftzScrollScan(document), 120);
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    window._ftzSbObserver = mo; // keep a live ref
+  } catch (_) {}
+}
+try { window.ftzRescrollbar = () => _ftzScrollScan(document); } catch (_) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(_ftzScrollRollout, 300));
+} else { setTimeout(_ftzScrollRollout, 300); }
 
 // ═══════════════════ QUICK SWITCHER (jump-to) ═══════════════════
 // A Fortized-original take on Discord's Ctrl+K card. Opened from the DM

@@ -14582,23 +14582,21 @@ select:focus,select:focus-visible,
    white (not accent). NO arrow buttons. On Firefox `scrollbar-width:thin` is
    what removes the native up/down arrows (auto keeps them — the green-arrows
    bug) and gives the slim look. */
-html,body,*{scrollbar-width:thin!important;scrollbar-color:rgba(255,255,255,.40) rgba(255,255,255,.07)!important;}
-*::-webkit-scrollbar{width:9px!important;height:9px!important;background:transparent!important;}
-/* Track = a subtle rounded pill (like the template's grey track). A 2.5px
-   transparent border + padding-box clip floats a super-slim ~4px capsule with
-   a gap on each side. */
-*::-webkit-scrollbar-track{
-  background:rgba(255,255,255,.07)!important;border-radius:9999px!important;
-  border:2.5px solid transparent!important;background-clip:padding-box!important;margin:4px 0!important;}
-*::-webkit-scrollbar-track:horizontal{margin:0 4px!important;}
+/* NATIVE FALLBACK ONLY. The real app scrollbar is the FtzScroll JS overlay
+   (rounded track + thumb capsule, matching the user's template) attached to
+   scroll containers app-wide — see FtzScroll + _ftzScrollRollout in app.js.
+   Native ::-webkit-scrollbar can NOT round its track ends, so here we DON'T
+   paint a track at all (no ugly square stripe) — just a quiet rounded thumb
+   for any container FtzScroll hasn't taken over yet. */
+html,body,*{scrollbar-width:thin!important;scrollbar-color:rgba(255,255,255,.28) transparent!important;}
+*::-webkit-scrollbar{width:10px!important;height:10px!important;background:transparent!important;}
+*::-webkit-scrollbar-track{background:transparent!important;border:none!important;}
 *::-webkit-scrollbar-track-piece{background:transparent!important;}
-/* Thumb = a brighter, fully pill-shaped capsule riding inside the track. Same
-   2.5px transparent border keeps it perfectly rounded and super slim (~4px). */
 *::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,.40)!important;border-radius:9999px!important;min-height:44px!important;
-  border:2.5px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
-*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.55)!important;}
-*::-webkit-scrollbar-thumb:active{background:rgba(255,255,255,.68)!important;}
+  background:rgba(255,255,255,.28)!important;border-radius:9999px!important;min-height:44px!important;
+  border:3px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.42)!important;}
+*::-webkit-scrollbar-thumb:active{background:rgba(255,255,255,.55)!important;}
 /* Kill every arrow-button variant (Chromium). */
 *::-webkit-scrollbar-button,
 *::-webkit-scrollbar-button:start,*::-webkit-scrollbar-button:end,
@@ -14829,9 +14827,9 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* ── FtzScroll: JS overlay scrollbar (host + track + thumb) ── */
 .ftz-sb-host{scrollbar-width:none!important;-ms-overflow-style:none!important;}
 .ftz-sb-host::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;}
-.ftz-sb-track{position:absolute;width:10px;border-radius:100px;background:rgba(255,255,255,.09);
-  z-index:6;transition:opacity .2s;pointer-events:auto;}
-.ftz-sb-thumb{position:absolute;left:0;width:10px;border-radius:100px;background:rgba(255,255,255,.4);
-  cursor:grab;transition:background .15s;}
-.ftz-sb-thumb:hover{background:rgba(255,255,255,.58);}
-.ftz-sb-thumb:active{cursor:grabbing;background:rgba(255,255,255,.7);}
+.ftz-sb-track{position:absolute;width:12px;border-radius:9999px;background:rgba(255,255,255,.10);
+  z-index:20;transition:opacity .2s;pointer-events:auto;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);}
+.ftz-sb-thumb{position:absolute;left:2px;width:8px;border-radius:9999px;background:rgba(255,255,255,.45);
+  cursor:grab;transition:background .15s;box-shadow:0 1px 2px rgba(0,0,0,.25);}
+.ftz-sb-thumb:hover{background:rgba(255,255,255,.62);}
+.ftz-sb-thumb:active{cursor:grabbing;background:rgba(255,255,255,.75);}

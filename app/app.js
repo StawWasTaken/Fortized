@@ -4375,6 +4375,12 @@ function showView(v, _skipPush) {
   closeModal('modal-bsettings');
   clearSettingsDirty();
 
+  // Retired routes → replacements: Home + Forum were removed (Friends is the
+  // new home); the single Atelier page was split into Radiance/Fortshop/Quests/
+  // Creator (default to Radiance for a bare atelier call).
+  if (v === 'home' || v === 'forum') v = 'friends';
+  else if (v === 'atelier') v = 'radiance';
+
   _currentView = v;
   // Update URL (skip for bastion — openBastion handles that)
   if (!_skipPush && v !== 'bastion' && typeof _ftzRouter !== 'undefined') {
@@ -4396,8 +4402,8 @@ function showView(v, _skipPush) {
   // Leave chat subscriptions when navigating away from their views
   if (v !== 'dms') { _leaveActiveDM(); _leaveActiveGC(); }
   if (v !== 'bastion') { _leaveActiveChannel(); }
-  // Stop Joyster bubbles when leaving home — Joyster only lives on the homepage
-  if (v !== 'home' && typeof _stopJoysterBubbles === 'function') _stopJoysterBubbles();
+  // Stop Joyster bubbles when leaving the Friends page — Joyster lives there now
+  if (v !== 'friends' && typeof _stopJoysterBubbles === 'function') _stopJoysterBubbles();
   // Clean up GC panel when leaving DMs view
   if (v !== 'dms') document.getElementById('gc-member-panel')?.remove();
 
@@ -4405,8 +4411,9 @@ function showView(v, _skipPush) {
   const _sb = document.querySelector('.sidebar');
   if (_sb) _sb.style.display = '';
 
-  // Radiance / Fortshop / Quests / Creator are their own routes but currently
-  // share the Atelier render surface (each page is redesigned separately later).
+  // Radiance / Fortshop / Quests / Creator are each their own view. They share
+  // one render host (#atelier-host) that we move into the active page — full
+  // independence lands when each page gets its manual redesign.
   const _atelierRoute = { radiance: 'radiance', fortshop: 'shop', quests: 'quests', creator: 'creator' }[v];
   if (_atelierRoute) window._atelierPendingTab = _atelierRoute;
 
@@ -4416,8 +4423,19 @@ function showView(v, _skipPush) {
     el.classList.remove('active');
   });
 
-  // Show only the target view (relocated pages render into the shared surface)
-  const vEl = document.getElementById('view-' + (_atelierRoute ? 'atelier' : v));
+  // Move the shared creator-suite render host into the active page (or hide it).
+  const _atHost = document.getElementById('atelier-host');
+  if (_atHost) {
+    if (_atelierRoute) {
+      const pageEl = document.getElementById('view-' + v);
+      if (pageEl) { pageEl.appendChild(_atHost); _atHost.style.display = 'flex'; }
+    } else {
+      _atHost.style.display = 'none';
+    }
+  }
+
+  // Show only the target view
+  const vEl = document.getElementById('view-' + v);
   if (vEl) {
     vEl.style.display = 'flex';
     vEl.classList.add('active');
@@ -4440,7 +4458,7 @@ function showView(v, _skipPush) {
   if (rBtn) rBtn.classList.add('active');
 
   // Post-show callbacks
-  if (v === 'atelier' || _atelierRoute) {
+  if (_atelierRoute) {
     const target = window._atelierPendingTab || _atelierRoute || 'radiance';
     window._atelierPendingTab = null;
     _atelierTab = target;
@@ -4450,14 +4468,25 @@ function showView(v, _skipPush) {
       refreshCU().then(_go).catch(_go);
     }, 0);
   }
-  if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'discover') setTimeout(() => loadDiscover(), 0);
-  if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
-  if (v === 'forum') setTimeout(() => _forumInit(), 0);
+  if (v === 'friends') setTimeout(() => {
+    try { renderFriendsList('all'); } catch (_) {}
+    try { _startJoysterBubbles(); } catch (_) {}
+    try {
+      const dykEl = document.getElementById('home-dyk-strip');
+      if (dykEl && typeof getDYKHtml === 'function') {
+        dykEl.innerHTML = getDYKHtml();
+        if (!window._dykRotateTimer) window._dykRotateTimer = setInterval(() => {
+          const el = document.getElementById('home-dyk-strip');
+          if (el && el.offsetParent) { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => { el.innerHTML = getDYKHtml(); el.style.opacity = '1'; }, 300); }
+        }, 10000);
+      }
+    } catch (_) {}
+  }, 0);
   if (v === 'dms' && !curDM && !curGC) setTimeout(() => { showDMFriendsHome(); }, 50);
 
-  updateTopbar(_atelierRoute ? 'atelier' : v);
-  updateSidebar(_atelierRoute ? 'atelier' : v);
+  updateTopbar(v);
+  updateSidebar(v);
 }
 
 // Open an Atelier tab from the rail (Radiance / Fortshop / Quests / Creator Hub)
@@ -4481,7 +4510,7 @@ function updateTopbar(v) {
   if (sep) sep.style.display = 'none';
   if (desc) desc.textContent = '';
   if (acts) acts.innerHTML = '';
-  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview',forum:'Forum'};
+  const labels = {dms:'Direct Messages',friends:'Friends',discover:'Discover',radiance:'Radiance Dwelling',fortshop:'Fortshop',quests:'Quests',creator:'Creator Hub',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview'};
   if (v === 'bastion') {
     const b = CU?.bastions?.[curBastion];
     title.textContent = b?.name || 'Bastion';
@@ -4543,21 +4572,14 @@ function updateSidebar(v) {
   if (hdrActs) hdrActs.innerHTML = '';
   scroll.innerHTML = '';
 
-  // Views that use the secondary sidebar
-  const ctxViews = ['home','dms','friends','discover','atelier','bastion','forum'];
+  // Views that use the secondary sidebar (the DM sidebar with its launchers)
+  const ctxViews = ['dms','friends','discover','radiance','fortshop','quests','creator','bastion'];
   const ctxVisible = ctxViews.includes(v);
   if (ctx) ctx.style.display = ctxVisible ? 'flex' : 'none';
   updateUserbarWidth();
   if (typeof _updateMobileBackBtn === 'function') _updateMobileBackBtn();
 
-  if (v==='home') {
-    // The redesigned DM sidebar renders its OWN search + Friends + section
-    // header inside the scroll, so the old #sidebar-header (title + buttons)
-    // is redundant — hide it (removes the duplicate "Direct Messages" + the
-    // old header action buttons).
-    if (hdr) hdr.style.display = 'none';
-    renderDMSidebar(scroll);
-  } else if (v==='dms' || v==='friends') {
+  if (v==='dms' || v==='friends') {
     if (hdr) hdr.style.display = 'none';
     renderDMSidebar(scroll);
     if (v==='friends') { setTimeout(() => renderFriendsList('all'), 0); }
@@ -4565,12 +4587,8 @@ function updateSidebar(v) {
     if (hdr) hdr.style.display = 'none';
     renderDMSidebar(scroll);
     loadDiscover();
-  } else if (v==='atelier') {
-    if (hdr) hdr.style.display = '';
-    if (hdrTitle) hdrTitle.textContent = 'Atelier';
-    if (hdrActs) hdrActs.innerHTML = '';
-    renderAtelierSidebar(scroll);
-  } else if (v==='forum') {
+  } else if (v==='radiance' || v==='fortshop' || v==='quests' || v==='creator') {
+    // Creator-suite pages keep the DM sidebar (with the launcher buttons).
     if (hdr) hdr.style.display = 'none';
     renderDMSidebar(scroll);
   } else if (v==='bastion') {
@@ -7991,7 +8009,7 @@ async function renderDMSidebar(scroll, force) {
   </div>`;
 
   // ── Friends home button ──────────────────
-  html += `<div class="dm-nav-btn" onclick="showDMFriendsHome()">
+  html += `<div class="dm-nav-btn" onclick="showView('friends')">
     <span class="dm-nav-ico"><svg viewBox="0 0 640 512" width="16" height="16" fill="currentColor"><path d="M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192l42.7 0c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96c-.2 0-.4 0-.7 0L21.3 320C9.6 320 0 310.4 0 298.7zM405.3 320c-.2 0-.4 0-.7 0c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7l42.7 0C592.2 192 640 239.8 640 298.7c0 11.8-9.6 21.3-21.3 21.3l-213.3 0zM224 224a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zM128 485.3C128 411.7 187.7 352 261.3 352l117.3 0C452.3 352 512 411.7 512 485.3c0 14.7-11.9 26.7-26.7 26.7l-330.7 0c-14.7 0-26.7-11.9-26.7-26.7z"/></svg></span>
     <span class="dm-nav-label">Friends</span></div>`;
   // Radiance / Fortshop / Quests / Creator Hub launchers (open their own pages)
@@ -46134,23 +46152,20 @@ function _listenTyping(_partner) {
 let _atelierTab = 'overview';
 
 function switchAtelierTab(tab, el) {
+  // Each creator-suite tab is now its own page. If we're not already on the
+  // matching page, navigate there (showView re-invokes this once it's active).
+  const pageForTab = { shop: 'fortshop', radiance: 'radiance', quests: 'quests', creator: 'creator' }[tab];
+  if (pageForTab && _currentView !== pageForTab) { showView(pageForTab); return; }
   _atelierTab = tab;
   // Update topbar title
   const names = {shop:'Fortshop',radiance:'Radiance Dwelling',quests:'Quests',creator:'Creator'};
   const tt = document.getElementById('topbar-title');
   if (tt) tt.textContent = names[tab] || 'Atelier';
 
-  // Update Atelier top navigation
+  // Render the tab's content into the shared host (now inside the active page).
   renderAtelierTopNav();
   updateAtelierSidebar();
   renderAtelierTab(tab);
-  // Keep the rail's secondary item in sync when tabs change from inside Atelier.
-  try {
-    const m = { radiance: 'rb-radiance', shop: 'rb-fortshop', quests: 'rb-quests', creator: 'rb-creator' };
-    document.querySelectorAll('.rail-btn').forEach(el2 => el2.classList.remove('active'));
-    const b = m[tab] && document.getElementById(m[tab]);
-    if (b) b.classList.add('active');
-  } catch (_) {}
 }
 
 function renderAtelierTopNav() {

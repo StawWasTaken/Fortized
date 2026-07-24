@@ -14570,3 +14570,49 @@ select:focus,select:focus-visible,
 #_ua-duration-wrap{display:flex;flex-direction:column;}
 [data-uav].sc-btn-primary{font-weight:700;}
 
+
+/* ════════════════════════════════════════════════════════════════════
+   TACTILE PASS 1 — "juicy" direction (append-only; layers over the base).
+   Goal: physical, responsive, premium native-app feel. See CLAUDE.md →
+   "Design language". Kept append-only so it never disturbs hand-tuned rules.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 1 ─ Bigger, visible, yellow-accented scrollbars (was thin 6px white).
+   Inputs stay slimmer so text fields don't feel chunky. */
+html,body,*{scrollbar-width:auto!important;scrollbar-color:rgba(255,249,62,.34) transparent!important;}
+*::-webkit-scrollbar{width:11px!important;height:11px!important;background:transparent!important;}
+*::-webkit-scrollbar-thumb{
+  background:rgba(255,249,62,.28)!important;border-radius:100px!important;
+  border:3px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,249,62,.55)!important;}
+*::-webkit-scrollbar-thumb:active{background:rgba(255,249,62,.72)!important;}
+textarea::-webkit-scrollbar,[contenteditable]::-webkit-scrollbar,select::-webkit-scrollbar,
+input::-webkit-scrollbar{width:8px!important;height:8px!important;}
+textarea,[contenteditable],select,input{scrollbar-width:thin!important;}
+
+/* 2 ─ Tactile press + depth on the primary interactive controls. A real
+   press-down + a soft hover-lift makes buttons feel physical, not webby. */
+.btn-a,.btn-primary,.w-meta-btn,.sc-btn,.sc-btn-primary,.rt-act-btn,.rail-btn,
+.rail-bastion,.hdr-actions button,.bd-action,.chat-send-btn,.modal-btn,.pill-btn{
+  transition:transform .12s cubic-bezier(.22,1,.36,1),box-shadow .16s cubic-bezier(.22,1,.36,1),
+             background .15s,color .15s,border-color .15s!important;
+  will-change:transform;}
+.btn-a:active,.btn-primary:active,.w-meta-btn:active,.sc-btn:active,.sc-btn-primary:active,
+.rt-act-btn:active,.rail-btn:active,.hdr-actions button:active,.bd-action:active,
+.chat-send-btn:active,.modal-btn:active,.pill-btn:active{
+  transform:translateY(1px) scale(.975)!important;}
+@media (hover:hover){
+  .btn-a:hover,.btn-primary:hover,.sc-btn-primary:hover,.chat-send-btn:hover,.modal-btn:hover{
+    transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.28);}
+  .rt-act-btn:hover,.hdr-actions button:hover{transform:translateY(-1px);}
+}
+/* Primary accent buttons get subtle 3D depth (raised edge + drop shadow). */
+.btn-primary,.sc-btn-primary,.chat-send-btn{
+  box-shadow:0 2px 0 rgba(0,0,0,.22),0 4px 14px rgba(255,249,62,.10);}
+.btn-primary:active,.sc-btn-primary:active,.chat-send-btn:active{
+  box-shadow:0 1px 0 rgba(0,0,0,.22)!important;}
+
+/* 3 ─ Usernames / display names are labels, not selectable text. */
+.msg-author,.rt-name,.rvt-user-name,.bd-name,.w-name,.ml-name,.gc-ml-name,
+.member-name,.dm-name,.fpp__name,.mini-profile-name,.profile-name{
+  -webkit-user-select:none!important;user-select:none!important;}

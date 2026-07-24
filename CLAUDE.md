@@ -585,6 +585,51 @@ tiles or CDN.
   must pass).
 - Never destroy hand-tuned components. Verify end-to-end before claiming done.
 
+## Design language — TACTILE / "juicy" (standing direction, applies to ALL UI)
+
+Fortized must feel like a **premium native app** (modern Discord + Guilded +
+the Roblox Player desktop app), NOT a website. Every new/changed UI is built to
+this. "Tactile / juicy" = physical, responsive, satisfying: big clickable
+areas, pleasing hover states, smooth-but-restrained motion, subtle depth
+(3D/shadows), friendly filled icons. The opposite of flat, thin, sterile, webby.
+
+Rules:
+- **No webby feel**: avoid tiny elements, thin 1px hairlines, generic flat web
+  UI. Elements should feel substantial.
+- **Icons**: big, friendly, FILLED SVGs (FA6 solid or our custom set),
+  substantial but not oversized. (See the FontAwesome rule below.)
+- **Corners**: rounded everywhere, moderate-to-high radius — use the `--radius-*`
+  tokens (8/12/16/22/pill).
+- **Font**: Syne (`--font-display`) for titled/headline UI, **medium-to-bold
+  weights (500–700). AVOID extrabold (800/900)** — the codebase is full of
+  legacy `font-weight:800`; dial new work to ≤700 and reduce 800s when you
+  touch a component.
+- **Micro-interactions**: subtle, satisfying press + hover states on everything
+  interactive. Buttons press DOWN on `:active` (translateY) and lift slightly on
+  hover; important/primary buttons carry subtle 3D depth (raised edge + soft
+  shadow). Motion is smooth but never over-the-top; reuse `--ease-out`.
+- **Scrollbars**: big + visible + yellow accent (`--accent`), not thin/grey.
+  (Base is set in styles.css "TACTILE PASS 1".)
+- **Non-selectable** usernames/display names (they're labels, not copy targets).
+  Real content (message text, bios) stays selectable.
+- **Accent yellow (`--accent`, #fff93e / Swiftaw brand) is a SPICE**, not a
+  base: use it on key interactive states and links ONLY, not large fills.
+- **Dynamic touches** are welcome (e.g. the chatbar emoji button that cycles
+  icons on hover) — used tastefully.
+- Must read as "made by a big company": consistent, human, high-polish. No
+  generic AI-looking output. Build features FULLY (real DB + logic, both sides),
+  with proper empty/loading/hover/error states, and update related surfaces
+  (homepage, docs, legal) to match. Analyze the existing design system first.
+
+Implementation notes:
+- Shared tactile base lives at the END of `app/styles.css` under
+  "TACTILE PASS 1" (append-only so it can't disturb hand-tuned rules): yellow
+  scrollbars, button press/hover/depth, non-selectable names. Extend it in
+  further passes rather than scattering one-off styles.
+- STILL TODO on the tactile rollout: retire legacy `font-weight:800`→700 across
+  components; audit thin borders → softer/thicker; bigger hit areas on small
+  controls; friendlier filled icons where Feather-style `ftzIcon()` remains.
+
 ## UI conventions
 
 - **Icons: ALWAYS use FontAwesome SVG icons.** Inline the FA solid SVG path

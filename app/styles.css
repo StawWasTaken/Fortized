@@ -14710,3 +14710,16 @@ textarea,[contenteditable],select,input{scrollbar-width:thin!important;}
   justify-content:center;transition:opacity .14s,background .14s,color .14s;}
 .friend-item.dmn:hover .dmn-close{opacity:1;}
 .dmn-close:hover{background:rgba(235,69,69,.16);color:#eb4545;}
+
+/* Right DM profile panel (#dm-user-panel): user reported a 'shadow' over it.
+   The panel already nulls box-shadow, but guarantee a completely flat, overlay-
+   free surface here — no drop/inset shadow, no filter, no scrim pseudo-elements,
+   and a banner with no shadow — so nothing reads as a shadow band over it. */
+#dm-user-panel.fpp--dm,
+#dm-user-panel.fpp{
+  box-shadow:none !important;
+  filter:none !important;
+  background:var(--channel) !important;
+}
+#dm-user-panel .fpp__banner{ box-shadow:none !important; }
+#dm-user-panel::after{ content:none !important; display:none !important; }

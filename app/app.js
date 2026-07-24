@@ -4189,23 +4189,30 @@ let _currentView = 'home';
 const _ftzRouter = {
   // Path → view name mapping
   routes: {
-    '/app':          'home',
-    '/app/':         'home',
+    '/app':          'friends',
+    '/app/':         'friends',
+    '/app/friends':  'friends',
     '/app/messages': 'dms',
     '/app/discover': 'discover',
-    '/app/atelier':  'atelier',
+    '/app/radiance': 'radiance',
+    '/app/fortshop': 'fortshop',
+    '/app/quests':   'quests',
+    '/app/creator':  'creator',
     '/app/bastion':  'bastion',
-    '/app/forum':    'forum',
+    // Legacy redirects (pages removed)
+    '/app/atelier':  'radiance',
+    '/app/forum':    'friends',
   },
   // View → path mapping (reverse)
   paths: {
-    'home':     '/app/',
+    'friends':  '/app/friends',
     'dms':      '/app/messages',
-    'friends':  '/app/messages',
     'discover': '/app/discover',
-    'atelier':  '/app/atelier',
+    'radiance': '/app/radiance',
+    'fortshop': '/app/fortshop',
+    'quests':   '/app/quests',
+    'creator':  '/app/creator',
     'bastion':  '/app/bastion',
-    'forum':    '/app/forum',
   },
   // Parse current URL to determine view + params
   parseRoute: function() {
@@ -4216,7 +4223,7 @@ const _ftzRouter = {
     if (vanityMatch) {
       return { view: 'bastion', vanity: vanityMatch[1], bastionId: null, roomId: null };
     }
-    const view = this.routes[path] || this.routes[path + '/'] || 'home';
+    const view = this.routes[path] || this.routes[path + '/'] || 'friends';
     let bastionId = null, roomId = null, dmTarget = null;
     if (view === 'bastion' && search) {
       // Format: /app/bastion?[bastionGlobalId]/[roomIdx]
@@ -4272,10 +4279,10 @@ const _ftzRouter = {
         const match = (all || []).find(b => (b.vanity || '').toLowerCase() === vanity.toLowerCase());
         if (match) bastionId = match.globalId;
       } catch(_){}
-      if (!bastionId) { showView('home'); return; }
+      if (!bastionId) { showView('friends'); return; }
     }
     // Use _initialView from the subpage HTML if the URL is just /app/ or /app
-    const view = (urlView === 'home' && window._initialView && window._initialView !== 'home') ? window._initialView : urlView;
+    const view = ((urlView === 'friends' || urlView === 'home') && window._initialView && window._initialView !== 'home' && window._initialView !== 'friends') ? window._initialView : urlView;
     if (view === 'bastion' && bastionId) {
       // Find bastion by globalId and open it
       const idx = (CU.bastions || []).findIndex(b => b.globalId === bastionId);
@@ -4293,13 +4300,11 @@ const _ftzRouter = {
       }
       // Bastion not found — fall through to home
     }
-    if (view === 'dms' || view === 'friends') {
+    if (view === 'dms') {
       // If the URL carries a ?u=<ftz-u...> public ID (or a legacy username),
-      // open that DM instead of the friends home. Resolve to username internally so the
-      // showView() that runs inside openDMView doesn't strip the ?u= from
-      // the URL as it re-does its pushState/replaceState. Call openDMView
-      // directly — it handles the view switch internally.
-      if (dmTarget && view === 'dms') {
+      // open that DM. Resolve to username internally so the showView() inside
+      // openDMView doesn't strip the ?u= as it re-does its push/replaceState.
+      if (dmTarget) {
         try {
           const resolvedDM = await FortizedSocial.resolveUsername(dmTarget) || dmTarget;
           curDM = resolvedDM;
@@ -4310,11 +4315,11 @@ const _ftzRouter = {
       showView('dms');
       return;
     }
-    if (view === 'discover' || view === 'atelier' || view === 'forum') {
+    if (view === 'friends' || view === 'discover' || view === 'radiance' || view === 'fortshop' || view === 'quests' || view === 'creator') {
       showView(view);
       return;
     }
-    showView('home');
+    showView('friends');
   }
 };
 
@@ -7789,21 +7794,9 @@ try { window.FtzScroll = FtzScroll; } catch (_) {}
 // hot/anchored .chat-msgs, never tiny textareas). Attach is idempotent, so we
 // can re-scan freely as views (re)render. Overlays are cosmetic-only, so a
 // mispositioned one can never break functionality. */
-const _FTZ_SB_SEL = [
-  '#sidebar-scroll', '.sidebar-scroll', '.member-list', '.modal-body', '.chat-msgs',
-  '.sc-main', '.sc-nav', '.sc-feed', '.sc-drawer__body', '.staff-ops__side',
-  '.staff-inspector__body', '.staff-palette__list', '.admin-main', '.admin-nav',
-  '.profile-main', '.profile-nav', '.epp-scroll', '.spp-grid', '.gif-collection-grid',
-  '.nm-picker', '.discover-scroll', '.home-feed', '.active-now-list',
-  '.bsettings-main', '.bsettings-main-wrap', '.bsettings-nav-scroll', '.bsettings-preview',
-  '.caf-body', '.atelier-scroll', '.bastion-hub-main', '.thread-replies',
-  '.np-list', '.npv-list', '.pwm-list', '.up-left', '.up-right-content',
-  '.chronicle-scroll-list', '.chronicle-detail', '.botcmd-list',
-  '.suggest-panel', '.adv-search-results', '.ann-feed', '.overview-room',
-  '.rpv-grid', '.soundboard-grid', '.dns-modal__pane', '.dns-modal__preview',
-  '.dnsv4__left', '.fpp--bot-modal', '.ftz-compose__body', '.ftz-del-preview',
-  '.ev-form-card', '.kbd-card', '.rpt-modal__body'
-];
+// The custom overlay scrollbar (FtzScroll) is used for CHAT ONLY. Every other
+// scroll area uses the normal (slim, rounded-capsule) native scrollbar.
+const _FTZ_SB_SEL = ['.chat-msgs'];
 function _ftzScrollScan(root) {
   const scope = root && root.querySelectorAll ? root : document;
   try {

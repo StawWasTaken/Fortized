@@ -792,93 +792,16 @@ async function loadAdminAnnouncements() {
   } catch(e) { console.warn('[Newsroom] admin announcements load failed:', e); return 0; }
 }
 
-// ── Convert forum-flavoured markdown to article HTML ──
-function forumBodyToHtml(text) {
-  if (!text) return '';
-  // Drop any embedded image markdown (we surface the first image as the banner)
-  let s = String(text).replace(/!\[[^\]]*\]\([^)\s]+\)/g, '');
-  // Escape HTML so user content is safe
-  s = s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  // Forum inline formatting: **bold**, //italic//, ==highlight==, ''quote''
-  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/\/\/([^/\n][^\n/]*?)\/\//g, '<em>$1</em>');
-  s = s.replace(/==([^=\n]+)==/g, '<span class="hl">$1</span>');
-  s = s.replace(/&#39;&#39;([^\n]+?)&#39;&#39;/g, '<q>$1</q>');
-  // Linkify bare URLs
-  s = s.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?])/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-  // Build paragraphs / bulleted lists
-  const lines = s.split(/\n+/);
-  let html = '';
-  let inUl = false;
-  let firstPara = true;
-  for (const raw of lines) {
-    const trimmed = raw.trim();
-    if (!trimmed) continue;
-    if (/^[•\-]\s+/.test(trimmed)) {
-      if (!inUl) { html += '<ul>'; inUl = true; }
-      html += '<li>' + trimmed.replace(/^[•\-]\s+/, '') + '</li>';
-    } else {
-      if (inUl) { html += '</ul>'; inUl = false; }
-      if (firstPara) { html += '<p class="lead">' + trimmed + '</p>'; firstPara = false; }
-      else html += '<p>' + trimmed + '</p>';
-    }
-  }
-  if (inUl) html += '</ul>';
-  return html;
-}
-
-// ── Auto-import announcement-category forum threads (the Forum app, not bastions) ──
-async function loadForumAnnouncementPosts() {
-  try {
-    const r = await fetch(`${SB_URL}/rest/v1/forum_threads?category=eq.announcements&select=id,title,author,content,image,created_at,updated_at,pinned,locked&order=created_at.desc&limit=500`, { headers: SB_HEADERS });
-    if (!r.ok) return 0;
-    const threads = await r.json();
-    if (!Array.isArray(threads) || !threads.length) return 0;
-    let added = 0;
-    for (const t of threads) {
-      if (!t || !t.id || !t.title) continue;
-      const author = t.author || 'Fortized';
-      if (HIDDEN_AUTHORS.has(String(author).toLowerCase().trim())) continue;
-      const slug = 'forum_thread_' + slugifyUsername(t.id);
-      if (ARTICLES[slug]) continue;
-      const ts = Number.isFinite(+t.created_at) ? +t.created_at : Date.now();
-      const dateStr = new Date(ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-      const banner = t.image || extractImageFromText(t.content || '') || FALLBACK_BANNER;
-      const content = forumBodyToHtml(t.content || '');
-      ARTICLES[slug] = {
-        category: 'Announcement',
-        date: dateStr,
-        createdAt: ts,
-        readTime: Math.max(1, Math.ceil(String(t.content||'').split(/\s+/).length / 200)) + ' min read',
-        authorInitial: (author || 'F').charAt(0).toUpperCase(),
-        authorPillLabel: 'Fortized Forum',
-        title: t.title,
-        bylineName: author,
-        authorUsername: author,
-        bylineRole: 'Forum announcement',
-        tagClass: 'tag-announce',
-        tagLabel: 'Announcement',
-        banner,
-        fromAnnouncement: true,
-        fromBastion: 'Forum',
-        content
-      };
-      added++;
-    }
-    return added;
-  } catch (e) {
-    console.warn('[Newsroom] forum_threads announcements load failed:', e);
-    return 0;
-  }
-}
+// (Forum → article translator removed — the newsroom is hand-curated;
+// only staff announcements are still auto-imported.)
 
 // ── Bootstrap ──
 renderCategories();
 renderGrid();
 
 (async () => {
-  const [a, b] = await Promise.all([loadAdminAnnouncements(), loadForumAnnouncementPosts()]);
-  if (a + b > 0) { renderCategories(); renderGrid(); }
+  const a = await loadAdminAnnouncements();
+  if (a > 0) { renderCategories(); renderGrid(); }
   // Open article from URL after load (may target dynamic slug)
   const params = new URLSearchParams(window.location.search);
   const id = params.get('article');

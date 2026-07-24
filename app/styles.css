@@ -14622,21 +14622,19 @@ select:focus,select:focus-visible,
    white (not accent). NO arrow buttons. On Firefox `scrollbar-width:thin` is
    what removes the native up/down arrows (auto keeps them — the green-arrows
    bug) and gives the slim look. */
-/* NATIVE FALLBACK ONLY. The real app scrollbar is the FtzScroll JS overlay
-   (rounded track + thumb capsule, matching the user's template) attached to
-   scroll containers app-wide — see FtzScroll + _ftzScrollRollout in app.js.
-   Native ::-webkit-scrollbar can NOT round its track ends, so here we DON'T
-   paint a track at all (no ugly square stripe) — just a quiet rounded thumb
-   for any container FtzScroll hasn't taken over yet. */
-html,body,*{scrollbar-width:thin!important;scrollbar-color:rgba(255,255,255,.28) transparent!important;}
+/* DEFAULT SCROLLBAR — used everywhere EXCEPT chat (chat gets the FtzScroll JS
+   overlay, see _FTZ_SB_SEL in app.js). A normal, slim, rounded full-capsule
+   thumb, no track, tinted to the same theme colour (--muted-light) as the chat
+   overlay so the two read as one family. No thick bars. */
+html,body,*{scrollbar-width:thin!important;scrollbar-color:var(--muted-light,#5a6a7e) transparent!important;}
 *::-webkit-scrollbar{width:10px!important;height:10px!important;background:transparent!important;}
 *::-webkit-scrollbar-track{background:transparent!important;border:none!important;}
 *::-webkit-scrollbar-track-piece{background:transparent!important;}
 *::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,.28)!important;border-radius:9999px!important;min-height:44px!important;
+  background:color-mix(in srgb, var(--muted-light,#5a6a7e) 82%, transparent)!important;border-radius:9999px!important;min-height:40px!important;
   border:3px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
-*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.42)!important;}
-*::-webkit-scrollbar-thumb:active{background:rgba(255,255,255,.55)!important;}
+*::-webkit-scrollbar-thumb:hover{background:var(--muted-light,#5a6a7e)!important;}
+*::-webkit-scrollbar-thumb:active{background:color-mix(in srgb, var(--muted-light,#5a6a7e), #fff 22%)!important;}
 /* Kill every arrow-button variant (Chromium). */
 *::-webkit-scrollbar-button,
 *::-webkit-scrollbar-button:start,*::-webkit-scrollbar-button:end,

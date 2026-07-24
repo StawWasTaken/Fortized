@@ -1,5 +1,103 @@
 # Fortized — working notes for Claude
 
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix379`)
+
+Branch **`claude/safety-system-perf-wnedxw`**, mirrored to `main`. Standing rules
+unchanged (egress-aware; mirror-to-`main` + bump cache-bust every push;
+pre-commit `node --check app/app.js && node --check FortizedSocial-supabase.js
+&& node tests/test-relationship.js` (42 pass); **the sandbox can NOT reach
+Supabase, so the whole logged-in app can't be runtime-tested here** — structure
++ Playwright plainviews only; everything below needs a LIVE eyeball on deploy).
+
+### ✅ Shipped this session (`368`→`379`) — big picture
+
+- **Scrollbars, final state**: the custom **FtzScroll** JS overlay (rounded
+  track + thumb capsule) is now **CHAT ONLY** (`_FTZ_SB_SEL = ['.chat-msgs']`).
+  Everywhere else = the **native** scrollbar: slim, rounded full-capsule thumb,
+  no track, tinted to `--muted-light` (same family as the chat overlay), not
+  thick. Web pages (marketing/login/legal/etc.) use the browser DEFAULT
+  scrollbar (removed the custom rule from `css/fortized-2026.css`). FtzScroll
+  gained: adaptive thickness, ratio edge-gap (~10px), a `.chat-msgs` right
+  gutter so message hitboxes stop before the bar, wheel-forwarding + track
+  click-to-jump.
+- **Chat date/time separators redesigned** (`_dateDividerParts` /
+  `_dateDividerInner` / `_makeDateDivider` / `_makeGapDivider`,
+  `_insertSeparatorIfNeeded`): tactile centred Syne PILL (depth, rounded, fading
+  side-lines), Today/Yesterday/New-Year treatments (Today = faint yellow accent;
+  brand yellow stays a spice), **same-day "breathing point" gap markers** after
+  a ≥4h pause (`_DATE_SEP_GAP_MS`), midnight self-refresh via the 5s ticker.
+  Inserted from EVERY live append path (send/receive/bot) so they appear
+  instantly — the check lives inside `appendMessage` (after dedup) with a
+  `skipSep` opt-out for the trickle-render + pagination callers. **No SVG icons**
+  (user removed them) — text-only pills.
+- **Left rail (navbar) REDESIGNED** (structure + `styles.css` ~83-166): top→bot
+  = **Home (Fortized logo, colour-overlaid MASK)** → divider → bastions →
+  **Discover** → **Create Bastion** (Discover+Create pinned under bastions).
+  DMs/Radiance/Fortshop/Quests/Creator buttons REMOVED from the rail. Uniform
+  44px buttons: idle = translucent-white fill + icon in text colour; **active =
+  SOLID brand yellow, no gradient/glow, icon `#13161d`**. No left indicator bar.
+  Bastion emblems uniformized (active = solid-yellow frame via inset emblem;
+  unread = small white dot). Gotcha: the logo mask needs a **no-space filename**
+  (`/fortized-logo.png`, added) AND `display:block!important` (the
+  `.rail-btn span{display:none}` label rule was hiding it).
+- **DM sidebar launchers**: after Friends, in order **Friends · Radiance ·
+  Fortshop · Quests · Creator Hub** (`renderDMSidebar`). Radiance = its logo as a
+  `.dm-nav-mask` colour-overlay; others inline SVG. Friends button →
+  `showView('friends')`.
+- **Pages restructured (deep)**: **deleted `#view-home`, `#view-forum`,
+  `#view-atelier`**. Radiance/Fortshop/Quests/Creator are now their **own
+  `#view-*` routes**, sharing ONE render host `#atelier-host` that showView
+  **moves into the active page** (they still call `renderAtelierTab`/
+  `switchAtelierTab` → `#atelier-content`; full per-page independence comes with
+  each manual redesign). **Friends = the new home**, its own page separate from
+  DMs; Fortized logo + DM-sidebar Friends button both open it. **Joyster + the
+  "Did You Know" tips strip migrated** from home into `#view-friends`
+  (`#home-dyk-strip` + Joyster mount; Joyster start/stop now keyed to `friends`).
+- **Real URLs** (`_ftzRouter`): `/app/friends`, `/app/radiance`, `/app/fortshop`,
+  `/app/quests`, `/app/creator` (+ `/app/messages`, `/app/discover`, `/app/bastion`).
+  Default `/app` → friends; legacy `/app/atelier`→radiance, `/app/forum`→friends.
+  `applyInitialRoute` loads the right view on refresh. `server.js` catch-all
+  `/app/{*rest}` already serves all of them; added explicit no-cache routes too.
+  `window._initialView='friends'`. `showView` aliases retired routes
+  (home/forum→friends, atelier→radiance); `switchAtelierTab(tab)` navigates to
+  the matching page if not already there.
+- **Newsroom**: hand-curated to 4 — Grand Fortshop Updates, May Safety Report
+  (real banner `/may-safety-report.png`), The Fortress Comes to Your Desktop
+  (Launch), How We Handle Your Private Messages (Security) — all rewritten in a
+  plain, human, NON-AI voice. **Removed the forum→article translator**
+  (`forumBodyToHtml` + `loadForumAnnouncementPosts`) that was duplicating
+  articles as "FROM ANNOUNCEMENT · FORUM"; only staff `loadAdminAnnouncements`
+  remains as a dynamic source. Assets added: `fortized-logo.png`,
+  `may-safety-report.png`.
+
+### 🔧 LEFT TO DO / OPEN (next session)
+1. **LIVE-VERIFY the whole restructure** (couldn't runtime-test — no Supabase in
+   sandbox). Priority: the **Fortshop/Radiance/Quests/Creator pages render +
+   the SHOP still lets you buy** (highest risk); the **Friends page** (Joyster +
+   tips + friends list); nav between all pages + bastions; **real URLs refresh
+   correctly** (`/app/radiance`, `/app/friends`, …); scrollbars (chat overlay vs
+   native elsewhere).
+2. **Manually redesign each page** (the user will pair): Friends (currently a
+   placeholder: Joyster + tips + friends list), Radiance, Fortshop, Quests,
+   Creator Hub. Once redesigned, give each its OWN content instead of the shared
+   `#atelier-host` (remove the reparenting hack in `showView`).
+3. **Remove the redundant DMs empty-state** `showDMFriendsHome` fallback once the
+   separate Friends page is confirmed (it still renders a friends-home inside
+   `#view-dms` when no DM is open).
+4. Consider whether staff `loadAdminAnnouncements` should stay in the newsroom.
+
+### 🧭 Key anchors (this session)
+`showView` + `_ftzRouter` (routes/paths/applyInitialRoute) + `_currentView`;
+`#atelier-host` reparenting in showView; `switchAtelierTab` (nav guard);
+`renderDMSidebar` (launcher buttons); `updateSidebar`/`updateTopbar` (new
+routes); `_startJoysterBubbles`/`getDYKHtml` (friends post-callback);
+`_dateDividerParts`/`_makeGapDivider`/`_insertSeparatorIfNeeded`/`appendMessage`
+(separators); `FtzScroll`/`_FTZ_SB_SEL`/`_ftzScrollRollout`; rail CSS
+`styles.css` ~83-166 (`.rail-btn`/`.rail-brand-ico`/`.rail-bastion`), native
+scrollbar block ~14625. Newsroom `ARTICLES` (4) + `loadAdminAnnouncements`.
+
+---
+
 ## 🔴 SESSION HANDOFF (as of cache-bust `2026fix367`)
 
 Branch `claude/safety-system-perf-pa19i0`, mirrored to `main`. Standing rules

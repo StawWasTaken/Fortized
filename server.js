@@ -860,12 +860,17 @@ function sendHtmlNoCache(res, filePath) {
   res.set('Expires', '0');
   res.sendFile(filePath, { cacheControl: false });
 }
+// Explicit no-cache app routes (all other /app/* paths are covered by the
+// /app/{*rest} SPA fallback below, incl. /app/friends, /app/radiance,
+// /app/fortshop, /app/quests, /app/creator).
 app.get('/app/messages', (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
+app.get('/app/friends',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
 app.get('/app/discover', (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
-app.get('/app/atelier',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
+app.get('/app/radiance', (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
+app.get('/app/fortshop', (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
+app.get('/app/quests',   (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
+app.get('/app/creator',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
 app.get('/app/bastion',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
-app.get('/app/forum',    (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
-app.get('/app/forum/{*rest}', (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
 // Backwards-compat: /blog -> /newsroom (folder was renamed)
 app.get('/blog', (_req, res) => res.redirect(301, '/newsroom'));
 app.get('/blog/{*rest}', (req, res) => res.redirect(301, '/newsroom'));

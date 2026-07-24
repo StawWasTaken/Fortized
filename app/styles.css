@@ -4667,7 +4667,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .ctx-item:active{transform:scale(.97);background:rgba(255,249,62,.1);}
 .ctx-item .ctx-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.5;transition:opacity .1s;}
 .ctx-item:hover .ctx-icon{opacity:.85;}
-.ctx-item .ctx-icon svg{width:15px;height:15px;}
+.ctx-item .ctx-icon svg{height:15px;width:auto;max-width:17px;}
 .ctx-item .ctx-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ctx-item .ctx-hint{font-size:10px;font-weight:600;color:rgba(255,255,255,.14);margin-left:auto;padding-left:12px;flex-shrink:0;font-family:'SF Mono','Cascadia Code',monospace;background:rgba(255,255,255,.04);padding:2px 6px;border-radius:4px;}
 .ctx-item.danger{color:rgba(235,69,69,.8);}
@@ -14764,3 +14764,16 @@ input::-webkit-scrollbar{width:10px!important;height:10px!important;}
 @keyframes ftzCheckPop{0%{transform:scale(0);opacity:0;}55%{transform:scale(1.28);opacity:1;}100%{transform:scale(1);}}
 .nm-empty{padding:28px 14px;text-align:center;font-size:13px;color:rgba(255,255,255,.4);}
 .nm-gc-name{margin-bottom:4px;}
+
+/* DM nameplate loading skeleton (cold load, before profiles arrive) */
+.friend-item.dmn--loading{pointer-events:none;}
+.friend-item.dmn--loading .dmn-av{background:rgba(255,255,255,.06)!important;}
+.friend-item.dmn--loading .dmn-av img,.friend-item.dmn--loading .dmn-dot{visibility:hidden;}
+.friend-item.dmn--loading .dmn-name,.friend-item.dmn--loading .dmn-cs{color:transparent!important;border-radius:7px;overflow:hidden;position:relative;}
+.friend-item.dmn--loading .dmn-name{width:58%;height:12px;background:rgba(255,255,255,.08);}
+.friend-item.dmn--loading .dmn-cs{width:36%;height:9px;background:rgba(255,255,255,.05);margin-top:5px;display:block!important;}
+.friend-item.dmn--loading .dmn-av,.friend-item.dmn--loading .dmn-name,.friend-item.dmn--loading .dmn-cs{overflow:hidden;}
+.friend-item.dmn--loading .dmn-av::after,.friend-item.dmn--loading .dmn-name::after,.friend-item.dmn--loading .dmn-cs::after{
+  content:'';position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);animation:dmnShimmer 1.3s infinite;}
+@keyframes dmnShimmer{100%{transform:translateX(100%);}}

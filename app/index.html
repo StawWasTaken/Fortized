@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix363';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix364';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix363';
+    s4.src = '/firebase-compat-shim.js?v=2026fix364';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix363">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix364">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix363', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix364', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix363"></script>
+<script src="/app/utils.js?v=2026fix364"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -933,7 +933,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   <div class="modal" style="max-width:480px;width:100%;">
     <div class="modal-bar"></div>
     <div class="modal-body">
-      <div class="modal-title" style="display:flex;align-items:center;gap:8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <span data-i18n="modal.new_dm.title">New Message</span></div>
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px;"><svg width="18" height="18" viewBox="0 0 512 512" fill="currentColor"><path d="M123.6 391.3c12.9-9.4 29.6-11.8 44.6-6.4 26.5 9.6 56.2 15.1 87.8 15.1 124.7 0 208-80.5 208-160s-83.3-160-208-160S48 200.5 48 240c0 32 12.4 62.8 35.7 89.2 8.6 9.7 12.8 22.5 11.8 35.5-1.4 18.1-5.7 34.7-11.3 49.4 17-7.9 31.1-16.7 39.4-22.7zM21.2 431.9c1.8-2.7 3.5-5.4 5.1-8.1 10-16.6 19.5-38.4 21.4-62.9C17.7 326.8 0 285.1 0 240 0 125.1 114.6 32 256 32s256 93.1 256 208-114.6 208-256 208c-37.1 0-72.3-6.4-104.1-17.9-11.9 8.7-31.3 20.6-54.3 30.6-15.1 6.6-32.3 12.6-50.1 16.1-.8 .2-1.6 .3-2.4 .5-4.4 .8-8.7 1.5-13.2 1.9-.2 0-.5 .1-.7 .1-5.1 .5-10.2 .8-15.3 .8-6.5 0-12.3-3.9-14.8-9.9-2.5-6-1.1-12.8 3.4-17.4 4.1-4.2 7.8-8.7 11.3-13.5z"/></svg> <span>New Message</span></div>
       <div class="modal-sub">Pick one friend for a DM, or up to 10 for a group chat.</div>
       <!-- Unified picker: select 1 → opens your DM · select 2+ → creates a group chat -->
       <div class="nm-search">
@@ -1249,10 +1249,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix363"></script>
-<script src="/app/app.js?v=2026fix363"></script>
-<script src="/app/joy-system.js?v=2026fix363"></script>
-<script src="/app/chronicle-games.js?v=2026fix363"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix364"></script>
+<script src="/app/app.js?v=2026fix364"></script>
+<script src="/app/joy-system.js?v=2026fix364"></script>
+<script src="/app/chronicle-games.js?v=2026fix364"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

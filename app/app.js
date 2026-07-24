@@ -4404,8 +4404,14 @@ function showView(v, _skipPush) {
   if (_mtb) _mtb.style.display = '';
   // Stop admin polling when leaving admin view
   if (v !== 'admin' && _reportPollInterval) { clearInterval(_reportPollInterval); _reportPollInterval = null; }
-  // Leave chat subscriptions when navigating away from their views
-  if (v !== 'dms') { _leaveActiveDM(); _leaveActiveGC(); }
+  // Leave chat subscriptions when navigating away from their views. Also drop
+  // the open-conversation pointers so the DM sidebar (shared by Friends /
+  // Radiance / Fortshop / Quests / Creator) stops highlighting a DM you're no
+  // longer in — you can't be "in a DM" while on another page.
+  if (v !== 'dms') {
+    _leaveActiveDM(); _leaveActiveGC();
+    curDM = null; curGC = null; _currentGCMeta = null;
+  }
   if (v !== 'bastion') { _leaveActiveChannel(); }
   // Stop Joyster bubbles when leaving the Friends page — Joyster lives there now
   if (v !== 'friends' && typeof _stopJoysterBubbles === 'function') _stopJoysterBubbles();
@@ -4458,9 +4464,15 @@ function showView(v, _skipPush) {
   // Nav active state
   document.querySelectorAll('.rail-btn').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.rail-bastion').forEach(el => el.classList.remove('active'));
-  // (home btn is now a rail-btn, handled by the loop above)
   const rBtn = document.getElementById('rb-' + v);
   if (rBtn) rBtn.classList.add('active');
+  // The Home (brand) button lights solid brand-yellow (black logo) for the
+  // whole "home / messages" cluster — Friends, DMs (incl. an open DM) and the
+  // DM-sidebar pages — since they all live under it. Discover and bastions
+  // carry their own rail buttons, so they're excluded.
+  const _homeCluster = ['friends', 'dms', 'radiance', 'fortshop', 'quests', 'creator'];
+  const homeBtn = document.getElementById('rb-home');
+  if (homeBtn) homeBtn.classList.toggle('active', _homeCluster.includes(v));
 
   // Post-show callbacks
   if (_atelierRoute) {
@@ -26450,9 +26462,7 @@ async function buyRadiancePlus(days, cost) {
   showCustomConfirm(msg, async () => {
     if ((CU.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
     CU.onyx -= cost;
-    // Extend from the later of the two so basic + plus expirations stay aligned.
-    const base = _stackFromExpiry(CU.radiancePlus || CU.radianceUntil, days);
-    CU.radiancePlus = base;
+    const base = _stackFromExpiry(CU.radianceUntil, days);
     CU.radianceUntil = base;
     await saveUser();
     refreshAtelierBalance();
@@ -31625,7 +31635,7 @@ async function adminSearchUser(usernameArg, targetEl) {
           ${!isMe?(isBanned?`<button class="sc-act sc-act--good" onclick="adminActionUser('${escapeHTML(username)}','unban')"><i class="fas fa-unlock"></i>Unban</button>`:`<button class="sc-act sc-act--danger" onclick="adminActionUser('${escapeHTML(username)}','ban')"><i class="fas fa-ban"></i>Ban</button>`):''}
           ${!isMe && !alreadyFriends?`<button class="sc-act sc-act--good" onclick="adminForceFriend('${escapeHTML(username)}')"><i class="fas fa-user-plus"></i>Force friend</button>`:''}
           <button class="sc-act sc-act--grant" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')"><span class="icon-onyx" style="width:14px;height:14px;"></span>Give Onyx</button>
-          <button class="sc-act sc-act--radiance" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')"><img src="${_SC_RADIANCE_URL}" alt="" style="height:14px;width:auto;object-fit:contain;" onerror="this.style.display='none'">Radiance</button>
+          <button class="sc-act sc-act--radiance" onclick="adminActionUser('${escapeHTML(username)}','radiance')"><img src="${_SC_RADIANCE_URL}" alt="" style="height:14px;width:auto;object-fit:contain;" onerror="this.style.display='none'">Radiance</button>
           ${isSuperAdmin()?`<button class="sc-act sc-act--grant" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')"><i class="fas fa-circle-check"></i>${u.verified?'Unverify':'Verify'}</button>`:''}
           ${!isMe?`<button class="sc-act sc-act--danger" onclick="adminActionUser('${escapeHTML(username)}','force_logout')"><i class="fas fa-right-from-bracket"></i>Force logout</button>`:''}
         `:''}
@@ -31900,7 +31910,6 @@ function adminActionUser(username, action) {
       }
     });
   } else if (action === 'radiance' || action === 'radiance_plus') {
-    const plus = action === 'radiance_plus';
     _scActionCard({
       iconHTML:`<img src="${_SC_RADIANCE_URL}" alt="Radiance" style="height:22px;width:auto;object-fit:contain;" onerror="this.style.display='none'">`, accent:'#ff77e4',
       title:'Grant Radiance to '+username, subtitle:'Adds Radiance subscriber time to the account.',
@@ -31910,7 +31919,6 @@ function adminActionUser(username, action) {
         const n = parseInt(v.days);
         if (!n || n <= 0) { toast('Enter valid days','error'); return false; }
         const until = new Date(Date.now() + n*86400000).toISOString();
-        if (plus) await FortizedSocial.adminUpdateUserField(username, 'radiancePlus', until);
         await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
         logAudit('grant_radiance', username, `${n} days`);
         toast(`Granted ${n} days Radiance to ${username}`, 'success');
@@ -51646,7 +51654,7 @@ async function purchaseRadiance(isPlus, days, cost) {
     document.body.appendChild(ov);
     return;
   }
-  const existingExpiry = (isPlus ? CU.radiancePlus : CU.radianceUntil) || CU.radianceUntil;
+  const existingExpiry = CU.radianceUntil;
   const stacking = existingExpiry && new Date(existingExpiry) > new Date();
   const confirmMsg = stacking
     ? `Extend Radiance by ${days} days for ${cost} Onyx?`
@@ -51656,7 +51664,6 @@ async function purchaseRadiance(isPlus, days, cost) {
     async () => {
       CU.onyx = (CU.onyx || 0) - cost;
       const until = _stackFromExpiry(existingExpiry, days);
-      if (isPlus) CU.radiancePlus = until;
       CU.radianceUntil = until;
       await saveUser();
       updateOnyxDisplay();

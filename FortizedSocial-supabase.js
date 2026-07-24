@@ -145,7 +145,7 @@ const FortizedSocial = (() => {
   // in every bulk read (getUsers over the WHOLE table, getUsersByNames for
   // memberlists/DM partners) was a primary driver of the Supabase egress
   // blowout. Keep large media OUT of bulk column sets.
-  const _USER_LIST_COLS = 'username,display_name,pfp,status,onyx,custom_status,bio,badges,radiance_until,radiance_plus,active_decoration,profile_theme,game_activity,last_seen,created_at,raw';
+  const _USER_LIST_COLS = 'username,display_name,pfp,status,onyx,custom_status,bio,badges,radiance_until,active_decoration,profile_theme,game_activity,last_seen,created_at,raw';
   // Columns needed for enforcement checks only
   const _USER_ENFORCE_COLS = 'username,banned,ban_reason,suspension,suspended_until,active_warning,raw';
 
@@ -312,7 +312,9 @@ const FortizedSocial = (() => {
       bastions: r.bastions || [],
       notifications: [],
       radianceUntil: _bigintToISO(r.radiance_until) || (rawSrc.radianceUntil || null),
-      radiancePlus: _bigintToISO(r.radiance_plus) || (rawSrc.radiancePlus || null),
+      // radiance_plus column was dropped (Radiance Plus merged into Radiance).
+      // Kept as a legacy field read from raw only, for old accounts.
+      radiancePlus: rawSrc.radiancePlus || null,
       lastDaily: r.last_daily || null,
       blockedUsers: r.blocked_users || [],
       ignoredUsers: r.ignored_users || {},
@@ -340,7 +342,7 @@ const FortizedSocial = (() => {
     const known = new Set([
       'username','password','email','displayName','pfp','banner','onyx','status',
       'customStatus','friends','friendRequestsSent','friendRequestsReceived',
-      'bastions','notifications','radianceUntil','radiancePlus','lastDaily',
+      'bastions','notifications','radianceUntil','lastDaily',
       'blockedUsers','ignoredUsers','groupChats','suspension','suspendedUntil',
       'activeWarning','gameActivity','lastSeen','profileTheme','activeDecoration',
       'bio','badges','connections','banned','banReason','createdAt',
@@ -363,7 +365,6 @@ const FortizedSocial = (() => {
       friend_requests_received: u.friendRequestsReceived || [],
       bastions: u.bastions || [],
       radiance_until: _isoToBigint(u.radianceUntil),
-      radiance_plus: _isoToBigint(u.radiancePlus),
       last_daily: _isoToBigint(u.lastDaily),
       blocked_users: u.blockedUsers || [],
       ignored_users: u.ignoredUsers || {},
@@ -434,7 +435,7 @@ const FortizedSocial = (() => {
     onyx: 'onyx', status: 'status', customStatus: 'custom_status',
     friends: 'friends', friendRequestsSent: 'friend_requests_sent',
     friendRequestsReceived: 'friend_requests_received', bastions: 'bastions',
-    radianceUntil: 'radiance_until', radiancePlus: 'radiance_plus',
+    radianceUntil: 'radiance_until',
     lastDaily: 'last_daily', blockedUsers: 'blocked_users',
     ignoredUsers: 'ignored_users', groupChats: 'group_chats',
     suspension: 'suspension', suspendedUntil: 'suspended_until',

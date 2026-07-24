@@ -14783,7 +14783,7 @@ input::-webkit-scrollbar{width:10px!important;height:10px!important;}
 
 /* ════════════════════ QUICK SWITCHER (jump-to card) ════════════════════ */
 .qs-overlay{position:fixed;inset:0;z-index:8800;display:flex;align-items:flex-start;justify-content:center;
-  padding-top:14vh;background:rgba(4,5,10,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  padding-top:14vh;background:rgba(0,0,0,.6);backdrop-filter:none;-webkit-backdrop-filter:none;
   opacity:0;transition:opacity .16s var(--ease-out);}
 .qs-overlay.open{opacity:1;}
 .qs-wrap{position:relative;width:min(560px,92vw);}
@@ -14812,11 +14812,24 @@ input::-webkit-scrollbar{width:10px!important;height:10px!important;}
 .qs-empty{padding:26px 12px;text-align:center;font-size:13px;color:rgba(255,255,255,.4);}
 .qs-tip{margin-top:12px;font-size:11.5px;color:rgba(255,255,255,.34);border-top:1px solid rgba(255,255,255,.05);padding-top:12px;}
 .qs-tip b{color:var(--accent);font-weight:700;letter-spacing:.04em;}
-/* Signature hand-drawn arrows framing the card. */
-.qs-arrows{position:absolute;inset:-58px -70px;pointer-events:none;color:rgba(255,255,255,.5);z-index:1;}
-.qs-arrow{position:absolute;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));}
-.qs-arrow--tl{top:-6px;left:-40px;width:96px;height:96px;transform:rotate(-6deg);}
-.qs-arrow--tr{top:-6px;right:-40px;width:96px;height:96px;transform:rotate(6deg);}
-.qs-arrow--l{top:44%;left:-96px;width:104px;height:60px;}
-.qs-arrow--r{top:52%;right:-96px;width:104px;height:60px;}
+/* Signature hand-drawn arrows framing the card — thin, opaque, gently bobbing.
+   `translate` is animated independently of `transform` so each arrow keeps its
+   rotation while it drifts. */
+.qs-arrows{position:absolute;inset:-58px -70px;pointer-events:none;color:#eef0f6;z-index:1;}
+.qs-arrow{position:absolute;animation:qsArrowBob 2.8s ease-in-out infinite;}
+.qs-arrow--tl{top:-6px;left:-40px;width:92px;height:92px;transform:rotate(-6deg);animation-delay:0s;}
+.qs-arrow--tr{top:-6px;right:-40px;width:92px;height:92px;transform:rotate(6deg);animation-delay:.5s;}
+.qs-arrow--l{top:44%;left:-96px;width:100px;height:58px;animation-delay:.9s;}
+.qs-arrow--r{top:52%;right:-96px;width:100px;height:58px;animation-delay:1.3s;}
+@keyframes qsArrowBob{0%,100%{translate:0 0;}50%{translate:0 -6px;}}
 @media (max-width:720px){.qs-arrow--l,.qs-arrow--r{display:none;}.qs-arrows{inset:-50px -10px;}}
+
+/* ── FtzScroll: JS overlay scrollbar (host + track + thumb) ── */
+.ftz-sb-host{scrollbar-width:none!important;-ms-overflow-style:none!important;}
+.ftz-sb-host::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;}
+.ftz-sb-track{position:absolute;width:10px;border-radius:100px;background:rgba(255,255,255,.09);
+  z-index:6;transition:opacity .2s;pointer-events:auto;}
+.ftz-sb-thumb{position:absolute;left:0;width:10px;border-radius:100px;background:rgba(255,255,255,.4);
+  cursor:grab;transition:background .15s;}
+.ftz-sb-thumb:hover{background:rgba(255,255,255,.58);}
+.ftz-sb-thumb:active{cursor:grabbing;background:rgba(255,255,255,.7);}

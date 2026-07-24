@@ -7674,6 +7674,51 @@ function _filterDMSidebar(q) {
   });
 }
 
+// ── FtzScroll: JS overlay scrollbar (built from the user's template) ──
+// A rounded track + thumb overlay synced to a scroll container: hides the host's
+// native scrollbar, sizes the thumb to the visible ratio, follows scrollTop, and
+// is draggable. Attach with FtzScroll.attach(el) or auto() for [data-ftz-scroll].
+// Colours are the dark-theme reading of the template (light track, brighter thumb).
+const FtzScroll = (function () {
+  function attach(host) {
+    if (!host || host._ftzsb) return;
+    const parent = host.parentElement; if (!parent) return;
+    if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+    host.classList.add('ftz-sb-host');
+    const track = document.createElement('div'); track.className = 'ftz-sb-track';
+    const thumb = document.createElement('div'); thumb.className = 'ftz-sb-thumb';
+    track.appendChild(thumb); parent.appendChild(track);
+    host._ftzsb = { track, thumb };
+    const place = () => {
+      track.style.top = (host.offsetTop + 4) + 'px';
+      track.style.height = Math.max(0, host.clientHeight - 8) + 'px';
+      track.style.left = (host.offsetLeft + host.clientWidth - 12) + 'px';
+    };
+    const update = () => {
+      const ratio = host.clientHeight / (host.scrollHeight || 1);
+      if (!(ratio < 0.999)) { track.style.opacity = '0'; return; }
+      track.style.opacity = '';
+      const th = Math.max(40, track.clientHeight * ratio);
+      thumb.style.height = th + 'px';
+      const maxT = track.clientHeight - th, maxS = host.scrollHeight - host.clientHeight;
+      thumb.style.top = (maxS ? (host.scrollTop / maxS) * maxT : 0) + 'px';
+    };
+    const sync = () => { place(); update(); };
+    host.addEventListener('scroll', update, { passive: true });
+    try { const ro = new ResizeObserver(sync); ro.observe(host); host._ftzsbRO = ro; } catch (_) {}
+    try { const mo = new MutationObserver(update); mo.observe(host, { childList: true, subtree: true, characterData: true }); host._ftzsbMO = mo; } catch (_) {}
+    window.addEventListener('resize', sync);
+    let drag = false, sy = 0, st = 0;
+    thumb.addEventListener('mousedown', e => { drag = true; sy = e.clientY; st = parseFloat(thumb.style.top) || 0; document.body.style.userSelect = 'none'; e.preventDefault(); });
+    window.addEventListener('mousemove', e => { if (!drag) return; const t = thumb.offsetHeight, maxT = track.clientHeight - t; const top = Math.max(0, Math.min(maxT, st + (e.clientY - sy))); thumb.style.top = top + 'px'; const maxS = host.scrollHeight - host.clientHeight; host.scrollTop = maxT ? (top / maxT) * maxS : 0; });
+    window.addEventListener('mouseup', () => { if (drag) { drag = false; document.body.style.userSelect = ''; } });
+    sync();
+    setTimeout(sync, 60);
+  }
+  function auto(root) { (root || document).querySelectorAll('[data-ftz-scroll]:not(.ftz-sb-host)').forEach(attach); }
+  return { attach, auto };
+})();
+
 // ═══════════════════ QUICK SWITCHER (jump-to) ═══════════════════
 // A Fortized-original take on Discord's Ctrl+K card. Opened from the DM
 // sidebar search ("Find or start a conversation") or Ctrl/Cmd+K. Searches
@@ -7683,7 +7728,7 @@ function _filterDMSidebar(q) {
 let _qsHandlers = null;
 function _qsArrowsHTML() {
   // Loose, hand-drawn-looking arrows pointing in at the card from around it.
-  const A = 'stroke="currentColor" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"';
+  const A = 'stroke="currentColor" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"';
   return `
     <svg class="qs-arrow qs-arrow--tl" viewBox="0 0 120 120"><path ${A} d="M12 14c22 6 44 16 60 34 6 7 11 15 14 24"/><path ${A} d="M83 48c4 8 6 16 7 24M90 72c-8-1-16-1-24 1"/></svg>
     <svg class="qs-arrow qs-arrow--tr" viewBox="0 0 120 120"><path ${A} d="M108 14c-22 6-44 16-60 34-6 7-11 15-14 24"/><path ${A} d="M37 48c-4 8-6 16-7 24M30 72c8-1 16-1 24 1"/></svg>
@@ -7698,6 +7743,7 @@ function _qsGather() {
   (CU?.friends || []).forEach(f => {
     const cp = cachedProfile(f) || {};
     items.push({ kind: 'dm', id: 'dm_' + f, name: cp.displayName || f, sub: '@' + f, pfp: cp.pfp || null,
+      font: (cp.displayFont && cp.displayFont !== 'default') ? cp.displayFont : null,
       hidden: hidden.includes('dm_' + f), sort: oidx('dm_' + f),
       jump: () => { unhideDMConversation('dm_' + f); openDMView(f); } });
   });
@@ -7724,7 +7770,8 @@ function _qsRowHTML(it) {
   else icon = `<span class="qs-hash">#</span>`;
   const from = it.from ? `<span class="qs-from">${escapeHTML(it.from)}</span>` : '';
   const sub = (it.kind === 'dm' || it.kind === 'gc') ? `<span class="qs-sub">${escapeHTML(it.sub)}</span>` : '';
-  return `<div class="qs-row" data-qs="${escapeHTML(it.id)}">${icon}<span class="qs-name">${escapeHTML(it.name)}</span>${sub}${from}</div>`;
+  const fontStyle = it.font ? ` style="font-family:${_getDisplayFontCSS(it.font)};font-weight:${_getDisplayFontWeight(it.font)};"` : '';
+  return `<div class="qs-row" data-qs="${escapeHTML(it.id)}">${icon}<span class="qs-name"${fontStyle}>${escapeHTML(it.name)}</span>${sub}${from}</div>`;
 }
 function _renderQuickSwitcher(query) {
   const box = document.getElementById('qs-results'); if (!box) return;
@@ -7770,9 +7817,23 @@ function _openQuickSwitcher() {
   inp.addEventListener('input', () => _renderQuickSwitcher(inp.value));
   requestAnimationFrame(() => el.classList.add('open'));
   _renderQuickSwitcher('');
+  try { FtzScroll.attach(el.querySelector('#qs-results')); } catch (_) {}
   setTimeout(() => inp.focus(), 60);
   _qsHandlers = (e) => { if (e.key === 'Escape') _closeQuickSwitcher(); };
   document.addEventListener('keydown', _qsHandlers);
+  // Batch-fetch friend profiles so avatars + display names + fonts populate for
+  // anyone not yet cached, then repaint the results.
+  (async () => {
+    try {
+      const friends = CU?.friends || [];
+      if (!friends.length) return;
+      const profiles = await (FortizedSocial.getUsersByNames
+        ? FortizedSocial.getUsersByNames(friends)
+        : Promise.all(friends.map(f => FortizedSocial.getUserByName(f).catch(() => null))));
+      (profiles || []).forEach(u => { if (u) { rememberProfile(u); if (u.pfp) _pfpCache[u.username] = u.pfp; } });
+      const q = document.getElementById('qs-input'); if (q) _renderQuickSwitcher(q.value || '');
+    } catch (_) {}
+  })();
 }
 function _closeQuickSwitcher() {
   const el = document.getElementById('quick-switcher'); if (!el) return;

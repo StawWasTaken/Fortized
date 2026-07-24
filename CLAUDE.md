@@ -1,5 +1,110 @@
 # Fortized — working notes for Claude
 
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix367`)
+
+Branch `claude/safety-system-perf-pa19i0`, mirrored to `main`. Standing rules
+unchanged (egress-aware; mirror-to-`main` + bump cache-bust every push;
+pre-commit `node --check app/app.js && node --check FortizedSocial-supabase.js
+&& node tests/test-relationship.js` (42 pass); verify UI via Playwright
+plainviews — CDN/Supabase unreachable in-sandbox, so DM-sidebar/quick-switcher/
+scrollbar visuals need a LIVE eyeball on deploy).
+
+### ✅ Shipped this session (`353`→`367`) — big picture
+- **Safety-system perf**: `runAutomod` context scan now caps to the last 20
+  message rows (`_recentAutomodContext`) instead of scanning the whole DOM on
+  every send.
+- **AI moderation key FIXED + diagnosable**: `AI_MOD_KEY` (Groq) works; server
+  trims the key + surfaces the real upstream error; **`GET /api/moderate/health`**
+  does a live test call (never leaks the key). One key powers automod + Joyster.
+- **Reactive Joyster** (homepage): real AI lines tied to what the user does
+  (idle bubbles, button clicks, poking him), addresses by displayName, keeps
+  "go touch grass!". Controls a bounded Onyx swing (**-4..+5** per reaction,
+  **±15 net/user/day cap**, localStorage) + a persistent **relation** score
+  (`joyster_rel_<user>`). Line-first `[[onyx=N relation=M]]` format (never
+  leaks JSON). Debug: `ftzJoysterRelation()`, `ftzJoysterReact(d)`.
+- **DM topbar avatar "disappearing" FIXED**: `_enrichDMHeader` no longer paints
+  a throttled/empty profile read over a good cached pfp.
+- **TACTILE PASS 1** (`styles.css` end, append-only): button press/hover/depth,
+  non-selectable usernames, + the design-language section in CLAUDE.md.
+- **Live relative timestamps**: today's recent messages tick "just now" (brand
+  yellow) → "a few moments ago" → `14:35`; Yesterday `14:35`; older
+  `20/07/2026 14:35`. `_fmtMsgTimeLabel` + 5s ticker `_tickMsgTimes`
+  (only touches `.msg-ts-live`).
+- **"Original message was deleted" now PERSISTS** across re-renders
+  (`_deletedMsgIds` localStorage; undo un-records).
+- **DM / FRIENDS SIDEBAR REDESIGN** (the big one — `.dmn` nameplates):
+  search ("Find or start a conversation") + Friends button + section header
+  (FA icons); 38px avatar + status dot; **subline = CUSTOM STATUS only** (blank
+  if none, official accounts blank) — NEVER last message, NEVER a timestamp;
+  display-name **colour/effects reveal only on hover or when you're in that DM**
+  (font always) via `_dmNameEffect`; unread = **yellow dot** only; loading
+  **skeletons** on cold load; less yellow overall (active rail/nav/search =
+  white).
+- **STATIC-FEEL cache** (`_dmScrollCache`, 30s TTL): navigating back restores a
+  fully-hydrated HTML snapshot instantly — no reload flash, no reshuffle; an
+  already-visible sidebar refreshes IN PLACE. Sort by last activity; a row
+  bumps to top **only on a genuinely newer message, never on open**
+  (`_updateDMSidebarForNewMessage` guards `ts > prev`). Invalidate with
+  `_invalidateDmSidebarCache()`.
+- **Unified New Message picker** (no tabs): tick 1 → DM, tick 2+ → group chat
+  (auto-named, ≤10). `createGroupChat(members, name)`.
+- **Context-menu icons → FontAwesome 6 SOLID** (`_ctxIcons`, whole ctx system).
+- **Quick Switcher** (`_openQuickSwitcher`, Ctrl/Cmd+K or the sidebar search):
+  Fortized-original jump card — searches DMs, GCs, bastion channels (tagged with
+  where they're from) + a Hidden section to reopen; **signature hand-drawn
+  arrows** (thin, opaque, gentle bob) MUST stay. Solid overlay (not blur).
+- **`FtzScroll`** — a JS overlay scrollbar module built from the user's template
+  (rounded light track + brighter thumb, draggable). Currently attached ONLY to
+  the quick-switcher results. Native slim scrollbar (white, no arrows,
+  `scrollbar-width:thin`) is the app-wide default.
+
+### 🔧 TO-DO / OPEN (next session, in priority)
+1. **NAVBAR (rail) REDESIGN — user will guide MANUALLY.** They rejected the
+   auto reskin (it was reverted). Spec: much less yellow (only active/notif/
+   Create), FA6 solid icons, tactile hover (scale+brightness), Syne. Structure:
+   Friends/DMs as **default landing**; **remove Homepage top-level** and migrate
+   its components (Joyster tips, ad/banner card, "Did You Know" strip) into the
+   new home or Discover; **Atelier → a full Creator-Hub section** (Radiance
+   Dwelling, Quests, Fortshop, Creator tools); keep the big + Create Bastion.
+   Don't do it blind — pair with the user.
+2. **Roll `FtzScroll` out app-wide.** `FtzScroll.attach(el)` or add
+   `data-ftz-scroll` + call `FtzScroll.auto()`. Target `#sidebar-scroll`,
+   `.nm-picker`, member lists, modal bodies — NOT `.chat-msgs` (hot/anchored,
+   risky) without care. Each attach is layout-sensitive (overlay positioned to
+   the host's box within a `position:relative` parent) → verify each LIVE.
+3. **New-message sidebar freshness**: 30s cache TTL means a background convo may
+   lag up to 30s; invalidation already fires on send/receive. Tighten if needed.
+4. **Live-verify everything** (sandbox blind): DM sidebar redesign, static feel
+   (home↔bastion↔back = no reload/reshuffle), skeletons, ctx FA icons, quick
+   switcher data + arrows, scrollbars.
+
+### 📋 Locked behaviours to respect
+- **Design language = TACTILE/juicy** (see the dedicated section below): FA
+  solid filled icons, **minimal yellow** (accent is a SPICE — active states,
+  notifs, Create, unread dot ONLY), white-forward everywhere else, Syne
+  medium-bold (not extrabold), rounded, satisfying press/hover.
+- **DM nameplate subline = custom status ONLY** (blank if none; official
+  accounts blank). No last message. No "2 days ago" timestamps in the list.
+- **Display-name colour/effects** never show at rest in the DM list — only on
+  hover or in the open DM. **Font always applies.**
+- **DM order** = last activity; opening a DM must NOT bump it; new-message bump
+  only when `ts > prev`. Keep the static `_dmScrollCache`.
+- **Quick switcher**: keep the hand-drawn arrows; opens from sidebar search +
+  Ctrl/Cmd+K; solid (non-blur) overlay like other modals.
+- **Scrollbars**: slim, WHITE (not accent), no arrows. `FtzScroll` = the JS
+  option (their template); native = the fallback.
+
+### 🧭 Key anchors (app.js)
+`renderDMSidebar` / `_dmScrollCache` / `_dmApplyActive` / `_invalidateDmSidebarCache`;
+`_customStatusText` / `_dmLastRead` / `_setDmLastRead` / `_dmNameEffect`;
+`_updateDMSidebarForNewMessage` / `_updateGCSidebarForNewMessage`;
+`_fmtMsgTimeLabel` / `_tickMsgTimes`; `_deletedMsgIds` / `_markRepliesDeleted`;
+`_ctxIcons` (FA); `FtzScroll`; `_openQuickSwitcher` / `_qsGather` / `_qsArrowsHTML`;
+Joyster: `JOYSTER_REACT_SYSTEM` / `_joysterAIReact` / `_joysterApplyOnyx` /
+`_joysterRelation`. Server: `/api/moderate` (+ `/health`), `/api/joyster`.
+
+---
+
 ## 🔴 SESSION HANDOFF (as of cache-bust `2026fix335`)
 
 Branch `claude/staff-console-world-map-vawn5l`, mirrored to `main`. Standing

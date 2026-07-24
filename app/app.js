@@ -7689,15 +7689,18 @@ const FtzScroll = (function () {
     const thumb = document.createElement('div'); thumb.className = 'ftz-sb-thumb';
     track.appendChild(thumb); parent.appendChild(track);
     host._ftzsb = { track, thumb };
+    // TRACK_W = capsule width; EDGE_GAP floats the whole bar off the UI's edge
+    // (so it never hugs the screen/panel side). TOP_GAP insets top & bottom.
+    const TRACK_W = 12, EDGE_GAP = 4, TOP_GAP = 4;
     const place = () => {
-      track.style.top = (host.offsetTop + 4) + 'px';
-      track.style.height = Math.max(0, host.clientHeight - 8) + 'px';
-      track.style.left = (host.offsetLeft + host.clientWidth - 12) + 'px';
+      track.style.top = (host.offsetTop + TOP_GAP) + 'px';
+      track.style.height = Math.max(0, host.clientHeight - TOP_GAP * 2) + 'px';
+      track.style.left = (host.offsetLeft + host.clientWidth - TRACK_W - EDGE_GAP) + 'px';
     };
     const update = () => {
       const ratio = host.clientHeight / (host.scrollHeight || 1);
-      if (!(ratio < 0.999)) { track.style.opacity = '0'; return; }
-      track.style.opacity = '';
+      if (!(ratio < 0.999)) { track.style.opacity = '0'; track.style.pointerEvents = 'none'; return; }
+      track.style.opacity = ''; track.style.pointerEvents = 'auto';
       const th = Math.max(40, track.clientHeight * ratio);
       thumb.style.height = th + 'px';
       const maxT = track.clientHeight - th, maxS = host.scrollHeight - host.clientHeight;
@@ -7708,8 +7711,24 @@ const FtzScroll = (function () {
     try { const ro = new ResizeObserver(sync); ro.observe(host); host._ftzsbRO = ro; } catch (_) {}
     try { const mo = new MutationObserver(update); mo.observe(host, { childList: true, subtree: true, characterData: true }); host._ftzsbMO = mo; } catch (_) {}
     window.addEventListener('resize', sync);
+    // Mouse-wheel while hovering the overlay must still scroll the host — the
+    // overlay sits on top of the content, so forward wheel deltas through.
+    track.addEventListener('wheel', e => { host.scrollTop += e.deltaY; e.preventDefault(); }, { passive: false });
     let drag = false, sy = 0, st = 0;
-    thumb.addEventListener('mousedown', e => { drag = true; sy = e.clientY; st = parseFloat(thumb.style.top) || 0; document.body.style.userSelect = 'none'; e.preventDefault(); });
+    const startDrag = (clientY) => { drag = true; sy = clientY; st = parseFloat(thumb.style.top) || 0; document.body.style.userSelect = 'none'; };
+    thumb.addEventListener('mousedown', e => { startDrag(e.clientY); e.preventDefault(); e.stopPropagation(); });
+    // Click anywhere on the track (not the thumb) → jump the thumb centre to the
+    // pointer, then continue as a drag so you can keep dragging from there.
+    track.addEventListener('mousedown', e => {
+      if (e.target === thumb) return;
+      const rect = track.getBoundingClientRect();
+      const th = thumb.offsetHeight, maxT = track.clientHeight - th;
+      let top = Math.max(0, Math.min(maxT, (e.clientY - rect.top) - th / 2));
+      thumb.style.top = top + 'px';
+      const maxS = host.scrollHeight - host.clientHeight;
+      host.scrollTop = maxT ? (top / maxT) * maxS : 0;
+      startDrag(e.clientY); e.preventDefault();
+    });
     window.addEventListener('mousemove', e => { if (!drag) return; const t = thumb.offsetHeight, maxT = track.clientHeight - t; const top = Math.max(0, Math.min(maxT, st + (e.clientY - sy))); thumb.style.top = top + 'px'; const maxS = host.scrollHeight - host.clientHeight; host.scrollTop = maxT ? (top / maxT) * maxS : 0; });
     window.addEventListener('mouseup', () => { if (drag) { drag = false; document.body.style.userSelect = ''; } });
     sync();
@@ -7727,16 +7746,19 @@ try { window.FtzScroll = FtzScroll; } catch (_) {}
 // can re-scan freely as views (re)render. Overlays are cosmetic-only, so a
 // mispositioned one can never break functionality. */
 const _FTZ_SB_SEL = [
-  '#sidebar-scroll', '.member-list', '.modal-body',
-  '.sc-main', '.sc-nav', '.sc-feed', '.admin-main', '.admin-nav',
-  '.profile-main', '.epp-scroll', '.spp-grid', '.gif-collection-grid',
+  '#sidebar-scroll', '.sidebar-scroll', '.member-list', '.modal-body', '.chat-msgs',
+  '.sc-main', '.sc-nav', '.sc-feed', '.sc-drawer__body', '.staff-ops__side',
+  '.staff-inspector__body', '.staff-palette__list', '.admin-main', '.admin-nav',
+  '.profile-main', '.profile-nav', '.epp-scroll', '.spp-grid', '.gif-collection-grid',
   '.nm-picker', '.discover-scroll', '.home-feed', '.active-now-list',
-  '.bsettings-main', '.bsettings-nav-scroll', '.bsettings-preview',
+  '.bsettings-main', '.bsettings-main-wrap', '.bsettings-nav-scroll', '.bsettings-preview',
   '.caf-body', '.atelier-scroll', '.bastion-hub-main', '.thread-replies',
   '.np-list', '.npv-list', '.pwm-list', '.up-left', '.up-right-content',
   '.chronicle-scroll-list', '.chronicle-detail', '.botcmd-list',
   '.suggest-panel', '.adv-search-results', '.ann-feed', '.overview-room',
-  '.rpv-grid', '.soundboard-grid', '.staff-inspector__body', '.staff-palette__list'
+  '.rpv-grid', '.soundboard-grid', '.dns-modal__pane', '.dns-modal__preview',
+  '.dnsv4__left', '.fpp--bot-modal', '.ftz-compose__body', '.ftz-del-preview',
+  '.ev-form-card', '.kbd-card', '.rpt-modal__body'
 ];
 function _ftzScrollScan(root) {
   const scope = root && root.querySelectorAll ? root : document;

@@ -14827,9 +14827,13 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* ── FtzScroll: JS overlay scrollbar (host + track + thumb) ── */
 .ftz-sb-host{scrollbar-width:none!important;-ms-overflow-style:none!important;}
 .ftz-sb-host::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;}
-.ftz-sb-track{position:absolute;width:12px;border-radius:9999px;background:rgba(255,255,255,.10);
-  z-index:20;transition:opacity .2s;pointer-events:auto;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);}
-.ftz-sb-thumb{position:absolute;left:2px;width:8px;border-radius:9999px;background:rgba(255,255,255,.45);
-  cursor:grab;transition:background .15s;box-shadow:0 1px 2px rgba(0,0,0,.25);}
-.ftz-sb-thumb:hover{background:rgba(255,255,255,.62);}
-.ftz-sb-thumb:active{cursor:grabbing;background:rgba(255,255,255,.75);}
+/* Track + thumb both fully pill-shaped. Colours tie to the live appearance
+   theme (--muted-light is rewritten per theme) so the thumb reads as a SOFT,
+   userbar-like tone rather than stark white. */
+.ftz-sb-track{position:absolute;width:12px;border-radius:9999px;background:rgba(255,255,255,.06);
+  z-index:20;transition:opacity .2s;pointer-events:auto;}
+.ftz-sb-thumb{position:absolute;left:2px;width:8px;border-radius:9999px;
+  background:color-mix(in srgb, var(--muted-light,#5a6a7e) 82%, transparent);
+  cursor:grab;transition:background .15s;}
+.ftz-sb-thumb:hover{background:var(--muted-light,#5a6a7e);}
+.ftz-sb-thumb:active{cursor:grabbing;background:color-mix(in srgb, var(--muted-light,#5a6a7e), #fff 22%);}

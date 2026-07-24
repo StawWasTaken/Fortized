@@ -14577,17 +14577,25 @@ select:focus,select:focus-visible,
    "Design language". Kept append-only so it never disturbs hand-tuned rules.
    ════════════════════════════════════════════════════════════════════ */
 
-/* 1 ─ Bigger, visible, yellow-accented scrollbars (was thin 6px white).
-   Inputs stay slimmer so text fields don't feel chunky. */
-html,body,*{scrollbar-width:auto!important;scrollbar-color:rgba(255,249,62,.34) transparent!important;}
-*::-webkit-scrollbar{width:11px!important;height:11px!important;background:transparent!important;}
+/* 1 ─ Bigger, rounded, yellow-accented scrollbars with a VISIBLE track (the
+   full groove behind the thumb shows how far there is to scroll), NO arrow
+   buttons. Inputs stay slimmer so text fields don't feel chunky. */
+html,body,*{scrollbar-width:auto!important;scrollbar-color:rgba(255,249,62,.38) rgba(255,255,255,.05)!important;}
+*::-webkit-scrollbar{width:12px!important;height:12px!important;background:transparent!important;}
+/* The always-visible track groove — rounded, inset from the edges. */
+*::-webkit-scrollbar-track,*::-webkit-scrollbar-track-piece{
+  background:rgba(255,255,255,.05)!important;border-radius:100px!important;
+  border:3px solid transparent!important;background-clip:padding-box!important;margin:2px!important;}
 *::-webkit-scrollbar-thumb{
-  background:rgba(255,249,62,.28)!important;border-radius:100px!important;
+  background:rgba(255,249,62,.32)!important;border-radius:100px!important;min-height:32px!important;
   border:3px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
-*::-webkit-scrollbar-thumb:hover{background:rgba(255,249,62,.55)!important;}
-*::-webkit-scrollbar-thumb:active{background:rgba(255,249,62,.72)!important;}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,249,62,.58)!important;}
+*::-webkit-scrollbar-thumb:active{background:rgba(255,249,62,.75)!important;}
+/* No up/down arrow buttons — clean rounded rail only. */
+*::-webkit-scrollbar-button{display:none!important;width:0!important;height:0!important;}
+*::-webkit-scrollbar-corner{background:transparent!important;}
 textarea::-webkit-scrollbar,[contenteditable]::-webkit-scrollbar,select::-webkit-scrollbar,
-input::-webkit-scrollbar{width:8px!important;height:8px!important;}
+input::-webkit-scrollbar{width:9px!important;height:9px!important;}
 textarea,[contenteditable],select,input{scrollbar-width:thin!important;}
 
 /* 2 ─ Tactile press + depth on the primary interactive controls. A real
@@ -14616,3 +14624,9 @@ textarea,[contenteditable],select,input{scrollbar-width:thin!important;}
 .msg-author,.rt-name,.rvt-user-name,.bd-name,.w-name,.ml-name,.gc-ml-name,
 .member-name,.dm-name,.fpp__name,.mini-profile-name,.profile-name{
   -webkit-user-select:none!important;user-select:none!important;}
+
+/* 4 ─ Live message timestamps: "just now" (brand yellow) → "a few moments ago"
+   → 14:35, with a smooth fade-swap as each phase advances (see _tickMsgTimes). */
+.msg-timestamp,.msg-time-small{transition:color .35s var(--ease-out),opacity .18s ease;}
+.msg-ts-fade{opacity:0;}
+.msg-ts-now{color:var(--accent)!important;}

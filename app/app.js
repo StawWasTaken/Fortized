@@ -11402,21 +11402,68 @@ function _fmtMsgDateDivider(ts) {
   if (!d) return null;
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
-function _fmtMsgTime(ts, fallback) {
-  const d = _safeDate(ts);
-  if (!d) return (fallback && fallback !== 'Invalid Date') ? fallback : '';
+// Rich label for a message time. Today's very-recent messages get a live
+// relative phase that ticks forward on its own:
+//   just now (0-10s, brand yellow) → a few moments ago (10-60s) → 14:35
+// Yesterday → "Yesterday 14:35"; older → "20/07/2026 14:35".
+// `live` = still changing (the ticker keeps updating it); `justNow` = the
+// yellow phase. Callers that only need the string use _fmtMsgTime below.
+function _fmtMsgTimeLabel(d) {
   const hm = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const dayDiff = Math.round((today - msgDay) / 86400000);
-  if (dayDiff <= 0) return hm;
-  if (dayDiff === 1) return 'Yesterday at ' + hm;
-  // Older: dd/mm/yyyy hh:mm
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mm = String(d.getMonth()+1).padStart(2,'0');
+  if (dayDiff <= 0) {
+    const age = Math.max(0, now.getTime() - d.getTime());
+    if (age < 10000) return { label: 'just now', live: true, justNow: true };
+    if (age < 60000) return { label: 'a few moments ago', live: true, justNow: false };
+    return { label: hm, live: false, justNow: false };
+  }
+  if (dayDiff === 1) return { label: 'Yesterday ' + hm, live: false, justNow: false };
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
   const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy} ${hm}`;
+  return { label: `${dd}/${mm}/${yyyy} ${hm}`, live: false, justNow: false };
+}
+function _fmtMsgTime(ts, fallback) {
+  const d = _safeDate(ts);
+  if (!d) return (fallback && fallback !== 'Invalid Date') ? fallback : '';
+  return _fmtMsgTimeLabel(d).label;
+}
+// Extra classes for a timestamp span (so the live ticker finds + recolours it).
+function _msgTimeLiveClass(ts) {
+  const d = _safeDate(ts);
+  if (!d) return '';
+  const p = _fmtMsgTimeLabel(d);
+  return (p.live ? ' msg-ts-live' : '') + (p.justNow ? ' msg-ts-now' : '');
+}
+// The live ticker: every few seconds, advance any still-changing message time
+// with a smooth fade-swap. Cheap — only touches the handful of .msg-ts-live
+// spans (recent messages); each drops the class once it settles to a clock time.
+function _tickMsgTimes() {
+  const els = document.querySelectorAll('.msg-ts-live[data-ts]');
+  els.forEach(el => {
+    const d = _safeDate(el.getAttribute('data-ts'));
+    if (!d) { el.classList.remove('msg-ts-live', 'msg-ts-now'); return; }
+    const p = _fmtMsgTimeLabel(d);
+    const hasDot = el.classList.contains('msg-timestamp'); // first-row shows "·  "
+    const curLabel = el.textContent.replace(/^·\s*/, '').trim();
+    if (curLabel !== p.label) {
+      el.classList.add('msg-ts-fade');
+      setTimeout(() => {
+        el.textContent = (hasDot ? '·  ' : '') + p.label;
+        el.classList.toggle('msg-ts-now', !!p.justNow);
+        el.classList.remove('msg-ts-fade');
+      }, 150);
+    } else {
+      el.classList.toggle('msg-ts-now', !!p.justNow);
+    }
+    if (!p.live) el.classList.remove('msg-ts-live');
+  });
+}
+if (typeof window !== 'undefined' && !window._msgTimeTicker) {
+  window._msgTimeTicker = setInterval(_tickMsgTimes, 5000);
 }
 function _fmtMsgFullTime(ts) {
   const d = _safeDate(ts);
@@ -12404,6 +12451,10 @@ function appendMessage(container, msg, context, prevAuthor) {
       // Custom status reply — show a special indicator
       const rStatusText = escapeHTML(String(msg.replyTo.text || 'custom status').slice(0,80));
       replyHTML = `<div class="msg-reply-ref msg-reply-ref--status"><span class="mrr-av">${_CHATBAR_EMOJI_SVG}</span><strong class="mrr-name">status reply</strong><span class="mrr-preview">${rStatusText}</span></div>`;
+    } else if (_isMsgDeleted(msg.replyTo.id)) {
+      // Target was deleted earlier — render the persistent "deleted" state so it
+      // survives re-renders instead of resurrecting the stale reply preview.
+      replyHTML = `<div class="msg-reply-ref msg-reply-ref--deleted" data-reply-to="${escapeHTML(msg.replyTo.id||'')}" style="cursor:default;">${_deletedReplyRefInnerHTML()}</div>`;
     } else {
       const rRaw = String(msg.replyTo.text || '');
       // Strip media tokens out of the reply preview and show only an icon +
@@ -12462,7 +12513,7 @@ function appendMessage(container, msg, context, prevAuthor) {
         <div class="msg-header">
           <span class="msg-author" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;${roleColor?'color:'+roleColor+';':''}" data-author="${safeFrom}">${safeFrom}</span>
           ${getMsgRoleTag(msg.from, context)}
-          <span class="msg-timestamp" data-tip="${escapeHTML(fullTime)}">·  ${time}</span>
+          <span class="msg-timestamp${_msgTimeLiveClass(msg.timestamp)}" data-ts="${escapeHTML(String(msg.timestamp||''))}" data-tip="${escapeHTML(fullTime)}">·  ${time}</span>
         </div>
         <div class="msg-text" id="mt-${avId}">${parseMD(escapeHTML(msg.text||''))}${rephrasedTag}${editTag}</div>
         ${reactHTML?`<div class="msg-reactions">${reactHTML}</div>`:''}
@@ -12538,7 +12589,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     const textId='mt-c-'+id.replace(/[^a-z0-9]/gi,'-');
     const stripeHTML2=roleColor?`<div class="msg-role-stripe" style="background:${roleColor};"></div>`:'';
     row.innerHTML=`${stripeHTML2}${replyHTML}
-      <div class="msg-av-wrap"><span class="msg-time-small" data-tip="${escapeHTML(fullTime)}">${time}</span></div>
+      <div class="msg-av-wrap"><span class="msg-time-small${_msgTimeLiveClass(msg.timestamp)}" data-ts="${escapeHTML(String(msg.timestamp||''))}" data-tip="${escapeHTML(fullTime)}">${time}</span></div>
       <div class="msg-content-col">
         ${fwdHTML}
         <div class="msg-text" id="${textId}">${parseMD(escapeHTML(msg.text||''))}${rephrasedTag}${editTag}</div>
@@ -12671,16 +12722,40 @@ function _layoutMsgMedia(mt) {
 }
 
 // When a message is deleted, any reply pointing at it swaps its preview for a
+// Persist which messages have been deleted so a reply pointing at one keeps
+// reading "Original message was deleted" across re-renders / reopening the chat
+// (the in-place DOM edit alone was lost the moment appendMessage rebuilt the
+// reply from its snapshot). Capped, per-browser.
+const _DELETED_MSGS_KEY = 'ftz_deleted_msgs_v1';
+let _deletedMsgIds = (() => { try { return new Set(JSON.parse(localStorage.getItem(_DELETED_MSGS_KEY) || '[]')); } catch { return new Set(); } })();
+function _recordDeletedMsg(id) {
+  if (!id) return;
+  id = String(id);
+  if (_deletedMsgIds.has(id)) return;
+  _deletedMsgIds.add(id);
+  try {
+    let arr = Array.from(_deletedMsgIds);
+    if (arr.length > 800) { arr = arr.slice(-800); _deletedMsgIds = new Set(arr); }
+    localStorage.setItem(_DELETED_MSGS_KEY, JSON.stringify(arr));
+  } catch {}
+}
+function _isMsgDeleted(id) { return !!id && _deletedMsgIds.has(String(id)); }
+// The inner markup for a "deleted original" reply ref (shared by the live
+// mark + the render-from-scratch path so they look identical).
+function _deletedReplyRefInnerHTML() {
+  return '<span class="mrr-av mrr-av--del"><img src="https://www.fortized.com/Fortized%20icon.png" alt="" onerror="this.style.display=\'none\'"></span><span class="mrr-preview mrr-preview--del"><em>Original message was deleted</em></span>';
+}
 // Discord-style "Original message was deleted" line with the Fortized brand icon.
 function _markRepliesDeleted(msgId) {
   if (!msgId) return;
   const id = String(msgId);
+  _recordDeletedMsg(id);
   document.querySelectorAll('.msg-reply-ref[data-reply-to]').forEach(ref => {
     if (ref.dataset.replyTo !== id || ref.classList.contains('msg-reply-ref--deleted')) return;
     ref.classList.add('msg-reply-ref--deleted');
     ref.removeAttribute('onclick');
     ref.style.cursor = 'default';
-    ref.innerHTML = '<span class="mrr-av mrr-av--del"><img src="https://www.fortized.com/Fortized%20icon.png" alt="" onerror="this.style.display=\'none\'"></span><span class="mrr-preview mrr-preview--del"><em>Original message was deleted</em></span>';
+    ref.innerHTML = _deletedReplyRefInnerHTML();
   });
 }
 
@@ -13152,6 +13227,9 @@ function _undoDelete() {
   _undoDeleteQueue = [];
   if (entry.ref && entry.msgSnapshot) {
     entry.ref.set(entry.msgSnapshot).then(() => {
+      // Un-record the deletion so replies to it stop showing the "deleted"
+      // state once the view re-renders below.
+      try { _deletedMsgIds.delete(String(entry.msgId)); localStorage.setItem(_DELETED_MSGS_KEY, JSON.stringify(Array.from(_deletedMsgIds))); } catch (_) {}
       toast('Message restored!','success');
       // Refresh the current view
       if (curDM) { loadDMMessages(curDM); }

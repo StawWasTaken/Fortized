@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix374';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix375';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix374';
+    s4.src = '/firebase-compat-shim.js?v=2026fix375';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix374">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix375">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix374', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix375', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix374"></script>
+<script src="/app/utils.js?v=2026fix375"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -235,34 +235,45 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
   <!-- Navigation -->
   <div class="sidebar-nav" id="rail">
-    <div class="rail-btn rail-home-btn" id="rb-home" onclick="showView('home')" data-href="/app/" data-nav-tip="Home" data-i18n-nav-tip="rail.home" aria-label="Home">
-      <div class="rail-home-logo"></div>
+    <!-- Brand logo → Friends + Direct Messages (the new default home) -->
+    <div class="rail-btn rail-brand" id="rb-home" onclick="showView('dms')" data-href="/app/messages" data-nav-tip="Home" data-i18n-nav-tip="rail.home" aria-label="Home">
+      <img class="rail-brand-img" src="/Fortized logo.png" alt="Fortized">
     </div>
-    <div class="rail-sep" style="margin:6px 10px;"></div>
+    <!-- Discover -->
+    <div class="rail-btn" id="rb-discover" onclick="showView('discover')" data-href="/app/discover" data-nav-tip="Discover" data-i18n-nav-tip="rail.discover" data-nav-ctx="Browse bastions,Trending" aria-label="Discover" oncontextmenu="_railNavCtxMenu(event,'discover')">
+      <svg viewBox="0 0 512 512" fill="currentColor" stroke="none"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm50.7-186.9L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg>
+      <span data-i18n="rail.discover">Discover</span>
+    </div>
+    <!-- Create Bastion — the prominent CTA -->
+    <div class="rail-btn rail-create" onclick="openModal('modal-create-bastion')" data-nav-tip="Create Bastion" data-i18n-nav-tip="rail.create_bastion" aria-label="Create Bastion">
+      <svg viewBox="0 0 512 512" fill="currentColor" stroke="none"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM232 344l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"/></svg>
+    </div>
+    <div class="rail-sep"></div>
+    <!-- Direct Messages / Friends -->
     <div class="rail-btn" id="rb-dms" onclick="showView('dms')" data-href="/app/messages" data-nav-tip="Direct Messages" data-i18n-nav-tip="rail.dms" data-nav-ctx="Mark all read,Open DM list" aria-label="Direct Messages" oncontextmenu="_railNavCtxMenu(event,'dms')">
       <svg viewBox="0 0 512 512" fill="currentColor" stroke="none"><path d="M268.191,0C133.754,0,24.381,109.373,24.381,243.81c0,34.621,7.07,67.95,21.016,99.206L1.17,480.134c-2.999,9.338-0.122,19.578,7.339,25.99c4.51,3.852,10.167,5.876,15.872,5.876c3.706,0,7.461-0.853,10.898-2.56l98.865-49.445c0.439,0.244,0.853,0.463,1.292,0.707c33.451,16.628,94.964,26.917,132.754,26.917c134.437,0,243.81-109.373,243.81-243.81S402.627,0,268.191,0z"/></svg>
       <span data-i18n="rail.dms">Direct Messages</span>
       <span id="notif-badge" class="nav-badge" style="display:none;">0</span>
     </div>
-    <div class="rail-btn" id="rb-discover" onclick="showView('discover')" data-href="/app/discover" data-nav-tip="Discover" data-i18n-nav-tip="rail.discover" data-nav-ctx="Browse bastions,Trending" aria-label="Discover" oncontextmenu="_railNavCtxMenu(event,'discover')">
-      <svg viewBox="0 0 16 16" fill="currentColor" stroke="none"><path d="M8 9C8.55229 9 9 8.55229 9 8C9 7.44772 8.55229 7 8 7C7.44772 7 7 7.44772 7 8C7 8.55229 7.44772 9 8 9Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8ZM6 6L4 11L5 12L10 10L12 5L11 4L6 6Z"/></svg>
-      <span data-i18n="rail.discover">Discover</span>
+    <!-- Radiance -->
+    <div class="rail-btn rail-btn--sm" id="rb-radiance" onclick="_railGoAtelier('radiance','rb-radiance')" data-nav-tip="Radiance" aria-label="Radiance">
+      <img class="rail-ico-img" src="/radiance-logo.png" alt="Radiance">
     </div>
-    <div class="rail-btn" id="rb-forum" onclick="showView('forum')" data-href="/app/forum" data-nav-tip="Forum" data-i18n-nav-tip="rail.forum" aria-label="Forum">
-      <svg viewBox="-0.5 0 19 19" fill="currentColor" stroke="none"><path d="M5.57 7.532v3.356l-2.248 1.403c-.222.138-.403.038-.403-.223V10.68H1.852a.476.476 0 0 1-.475-.475V3.643a.476.476 0 0 1 .475-.475h9.39a.476.476 0 0 1 .475.475v2.305H7.154A1.585 1.585 0 0 0 5.57 7.532zm11.449 0v6.563a.476.476 0 0 1-.475.475h-1.049v1.436c0 .261-.18.362-.403.224l-2.605-1.626a.54.54 0 0 1-.048-.034H7.154a.476.476 0 0 1-.475-.475V7.532a.477.477 0 0 1 .475-.475h9.39a.476.476 0 0 1 .475.475z"/></svg>
-      <span>Forum</span>
+    <!-- Fortshop -->
+    <div class="rail-btn rail-btn--sm" id="rb-fortshop" onclick="_railGoAtelier('shop','rb-fortshop')" data-nav-tip="Fortshop" aria-label="Fortshop">
+      <svg viewBox="0 0 512 512" fill="currentColor" stroke="none"><path d="M30.7 72.3C37.6 48.4 59.5 32 84.4 32l344 0c24.9 0 46.8 16.4 53.8 40.3l23.4 80.2c12.8 43.7-20.1 87.5-65.6 87.5-26.3 0-49.4-14.9-60.8-37.1-11.6 21.9-34.6 37.1-61.4 37.1-26.6 0-49.7-15-61.3-37-11.6 22-34.7 37-61.3 37-26.8 0-49.8-15.1-61.4-37.1-11.4 22.1-34.5 37.1-60.8 37.1-45.6 0-78.4-43.7-65.6-87.5L30.7 72.3zM96.4 352l320 0 0-66.4c7.6 1.6 15.5 2.4 23.5 2.4 14.3 0 28-2.6 40.5-7.2l0 151.2c0 26.5-21.5 48-48 48l-352 0c-26.5 0-48-21.5-48-48l0-151.2c12.5 4.6 26.1 7.2 40.5 7.2 8.1 0 15.9-.8 23.5-2.4l0 66.4z"/></svg>
     </div>
-    <div class="rail-btn" id="rb-atelier" onclick="showView('atelier')" data-href="/app/atelier" data-nav-tip="Atelier" data-nav-ctx="Shop,My items" aria-label="Atelier" oncontextmenu="_railNavCtxMenu(event,'atelier')">
-      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M3.77791 3.65484C3.59687 4.01573 3.50783 4.46093 3.32975 5.35133L2.73183 8.34093C2.35324 10.2339 3.8011 12 5.73155 12C7.30318 12 8.61911 10.8091 8.77549 9.24527L8.8445 8.55515C8.68141 10.4038 10.1385 12 11.9998 12C13.8737 12 15.338 10.382 15.1515 8.51737L15.2245 9.24527C15.3809 10.8091 16.6968 12 18.2685 12C20.1989 12 21.6468 10.2339 21.2682 8.34093L20.6703 5.35133C20.4922 4.46095 20.4031 4.01573 20.2221 3.65484C19.8406 2.89439 19.1542 2.33168 18.3337 2.10675C17.9443 2 17.4903 2 16.5823 2H14.4998H7.41771C6.50969 2 6.05567 2 5.66628 2.10675C4.84579 2.33168 4.15938 2.89439 3.77791 3.65484Z"/><path d="M18.2685 13.5C19.0856 13.5 19.8448 13.2876 20.5 12.9189V14C20.5 17.7712 20.5 19.6568 19.3284 20.8284C18.3853 21.7715 16.9796 21.9554 14.5 21.9913V18.5C14.5 17.5654 14.5 17.0981 14.299 16.75C14.1674 16.522 13.978 16.3326 13.75 16.201C13.4019 16 12.9346 16 12 16C11.0654 16 10.5981 16 10.25 16.201C10.022 16.3326 9.83261 16.522 9.70096 16.75C9.5 17.0981 9.5 17.5654 9.5 18.5V21.9913C7.02043 21.9554 5.61466 21.7715 4.67157 20.8284C3.5 19.6568 3.5 17.7712 3.5 14V12.9189C4.15524 13.2876 4.91439 13.5 5.73157 13.5C6.92864 13.5 8.02617 13.0364 8.84435 12.2719C9.67168 13.0321 10.7765 13.5 11.9998 13.5C13.2232 13.5 14.3281 13.032 15.1555 12.2717C15.9737 13.0363 17.0713 13.5 18.2685 13.5Z"/></svg>
-      <span>Atelier</span>
+    <!-- Quests -->
+    <div class="rail-btn rail-btn--sm" id="rb-quests" onclick="_railGoAtelier('quests','rb-quests')" data-nav-tip="Quests" aria-label="Quests">
+      <svg viewBox="0 0 576 512" fill="currentColor" stroke="none"><path d="M0 112C0 70.5 31.6 36.4 72 32.4l0-.4 280 0c53 0 96 43 96 96l0 176-176 0c-39.8 0-72 32.2-72 72l0 60c0 24.3-19.7 44-44 44s-44-19.7-44-44l0-228-64 0c-26.5 0-48-21.5-48-48l0-48zM236.8 480c7.1-13.1 11.2-28.1 11.2-44l0-60c0-13.3 10.7-24 24-24l248 0c13.3 0 24 10.7 24 24l0 24c0 44.2-35.8 80-80 80l-227.2 0zM80 80c-17.7 0-32 14.3-32 32l0 48 64 0 0-48c0-17.7-14.3-32-32-32z"/></svg>
     </div>
-    <div class="rail-sep" style="margin:8px 10px;"></div>
+    <!-- Creator Hub -->
+    <div class="rail-btn rail-btn--sm" id="rb-creator" onclick="_railGoAtelier('creator','rb-creator')" data-nav-tip="Creator Hub" aria-label="Creator Hub">
+      <svg viewBox="0 0 384 512" fill="currentColor" stroke="none"><path d="M162.4 6c-1.5-3.6-5-6-8.9-6l-19 0c-3.9 0-7.5 2.4-8.9 6L104.9 57.7c-3.2 8-14.6 8-17.8 0L66.4 6c-1.5-3.6-5-6-8.9-6L48 0C21.5 0 0 21.5 0 48l0 208 384 0 0-208c0-26.5-21.5-48-48-48L230.5 0c-3.9 0-7.5 2.4-8.9 6L200.9 57.7c-3.2 8-14.6 8-17.8 0L162.4 6zM0 304l0 16c0 35.3 28.7 64 64 64l64 0 0 64c0 35.3 28.7 64 64 64s64-28.7 64-64l0-64 64 0c35.3 0 64-28.7 64-64l0-16-384 0zM192 464c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16z"/></svg>
+    </div>
+    <div class="rail-sep"></div>
     <!-- Bastions -->
-    <div style="display:none;"></div>
     <div id="rail-bastions"></div>
-    <div class="rail-btn" onclick="openModal('modal-create-bastion')" style="margin-top:4px;background:rgba(62,207,110,.08);color:var(--green);" data-nav-tip="Create Bastion" data-i18n-nav-tip="rail.create_bastion">
-      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12ZM12.5 5.5C13.0523 5.5 13.5 5.94772 13.5 6.5V10.5H17.5C18.0523 10.5 18.5 10.9477 18.5 11.5V12.5C18.5 13.0523 18.0523 13.5 17.5 13.5H13.5V17.5C13.5 18.0523 13.0523 18.5 12.5 18.5H11.5C10.9477 18.5 10.5 18.0523 10.5 17.5V13.5H6.5C5.94772 13.5 5.5 13.0523 5.5 12.5V11.5C5.5 10.9477 5.94772 10.5 6.5 10.5H10.5V6.5C10.5 5.94772 10.9477 5.5 11.5 5.5H12.5Z"/></svg>
-    </div>
   </div>
   <div style="flex:1;"></div>
   <!-- Rail Userbar (full version matching secondary sidebar userbar) -->
@@ -1249,10 +1260,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix374"></script>
-<script src="/app/app.js?v=2026fix374"></script>
-<script src="/app/joy-system.js?v=2026fix374"></script>
-<script src="/app/chronicle-games.js?v=2026fix374"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix375"></script>
+<script src="/app/app.js?v=2026fix375"></script>
+<script src="/app/joy-system.js?v=2026fix375"></script>
+<script src="/app/chronicle-games.js?v=2026fix375"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

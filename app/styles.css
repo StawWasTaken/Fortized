@@ -80,14 +80,27 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .sidebar-logo-icon img{display:none;}
 .sidebar-logo-text{display:none;}
 .sidebar-logo.active .sidebar-logo-icon{}
-.sidebar-nav{padding:6px 0;display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-items:center;width:100%;padding-top:12px;}
-.rail-sep{height:2px;width:32px;background:rgba(255,255,255,.06);margin:6px auto;flex-shrink:0;border-radius:1px;}
-.rail-btn{width:48px;height:48px;border-radius:15px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;flex-shrink:0;font-size:0;font-weight:600;color:rgba(255,255,255,.45);}
+/* ── Left rail (redesigned) — cleaner, smaller, rounder icons; a WHITE active
+   selector (no glow); brand yellow reserved for the one Create CTA. ── */
+.sidebar-nav{padding:10px 0 6px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;align-items:center;width:100%;}
+.rail-sep{height:2px;width:26px;background:rgba(255,255,255,.07);margin:6px auto;flex-shrink:0;border-radius:2px;}
+.rail-btn{width:42px;height:42px;border-radius:14px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s var(--ease-out),color .18s,transform .12s var(--ease-out);position:relative;flex-shrink:0;font-size:0;font-weight:600;color:rgba(255,255,255,.55);}
 .rail-btn span{display:none;}
-.rail-btn svg{width:26px;height:26px;flex-shrink:0;transition:transform .16s cubic-bezier(.22,1,.36,1);}
-.rail-home-logo{width:26px;height:26px;-webkit-mask:url('/Fortized logo.png') center/contain no-repeat;mask:url('/Fortized logo.png') center/contain no-repeat;background-color:rgba(255,255,255,.45);transition:transform .16s cubic-bezier(.22,1,.36,1),background-color .2s;}
-.rail-home-btn:hover .rail-home-logo{background-color:rgba(255,255,255,.9);transform:scale(1.06);}
-.rail-home-btn.active .rail-home-logo{background-color:var(--bg);}
+.rail-btn svg{width:22px;height:22px;flex-shrink:0;transition:transform .16s var(--ease-out);}
+/* Brand logo (top) — real colour logo, leads to Friends/DMs */
+.rail-brand{width:44px;height:44px;}
+.rail-brand-img{width:28px;height:28px;object-fit:contain;transition:transform .16s var(--ease-out);}
+.rail-brand:hover .rail-brand-img{transform:scale(1.06);}
+/* Secondary items (Radiance/Fortshop/Quests/Creator) — smaller + rounder */
+.rail-btn--sm{width:37px;height:37px;border-radius:12px;}
+.rail-btn--sm svg{width:19px;height:19px;}
+.rail-ico-img{width:20px;height:20px;object-fit:contain;opacity:.6;transition:opacity .18s,transform .16s var(--ease-out);}
+.rail-btn--sm:hover .rail-ico-img{opacity:.95;transform:scale(1.05);}
+.rail-btn--sm.active .rail-ico-img{opacity:1;}
+/* Create Bastion — the one prominent, accent CTA */
+.rail-create{width:44px;height:44px;background:var(--accent);color:var(--ink);box-shadow:0 2px 9px rgba(255,249,62,.22);margin-top:2px;}
+.rail-create svg{color:var(--ink);}
+.rail-create::after{display:none;}
 /* ── Radiance Dwelling Icon (using image mask like home button) ── */
 .radiance-icon{width:18px;height:18px;-webkit-mask:url('/radiance-logo.png') center/contain no-repeat;mask:url('/radiance-logo.png') center/contain no-repeat;background-color:rgba(255,255,255,.5);transition:background-color .2s;}
 .atel-top-nav-btn:hover .radiance-icon{background-color:rgba(255,255,255,.8);}
@@ -95,16 +108,20 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 .atel-top-nav-btn .tab-icon-img{opacity:.5;transition:opacity .2s;}
 .atel-top-nav-btn:hover .tab-icon-img{opacity:.8;}
 .atel-top-nav-btn.active .tab-icon-img{opacity:1;}
-.rail-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border-radius:15px;}
-.rail-btn:hover svg{transform:scale(1.06);}
-.rail-btn.active{background:var(--accent);color:var(--bg);box-shadow:0 2px 12px rgba(255,249,62,.18);border-radius:var(--radius-lg);}
-.rail-btn.active svg{color:var(--bg);}
-.rail-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.rail-btn:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.95);}
+.rail-btn:hover svg{transform:scale(1.05);}
+/* Active = clean WHITE fill, dark icon, NO glow */
+.rail-btn.active{background:#fff;color:var(--rail);box-shadow:none;}
+.rail-btn.active svg{color:var(--rail);}
+.rail-btn:focus-visible{outline:2px solid #fff;outline-offset:2px;}
 .rail-btn.active::before,.rail-btn:hover::before{display:none;}
-/* Selected indicator pill on left side */
-.rail-btn::after{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:4px;height:0;background:#fff;border-radius:0 4px 4px 0;transition:height .2s cubic-bezier(.22,1,.36,1);opacity:0;}
-.rail-btn:hover::after{height:20px;opacity:.5;}
-.rail-btn.active::after{height:36px;opacity:1;background:var(--accent);box-shadow:0 0 8px rgba(255,249,62,.3);}
+/* Create CTA keeps its accent even on hover (slight lift), never the white active fill */
+.rail-create:hover{background:var(--accent-2);color:var(--ink);transform:translateY(-1px);}
+.rail-create:hover svg{transform:scale(1.06);}
+/* Selected indicator pill on the left — WHITE, no glow */
+.rail-btn::after{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:0;background:#fff;border-radius:0 3px 3px 0;transition:height .2s var(--ease-out),opacity .2s;opacity:0;}
+.rail-btn:hover::after{height:15px;opacity:.4;}
+.rail-btn.active::after{height:22px;opacity:1;background:#fff;box-shadow:none;}
 .nav-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--sidebar);box-shadow:0 2px 8px rgba(235,69,69,.5);animation:notifBadgePulse 2s ease-in-out infinite;}
 .rail-btn[data-tip]:hover::after{display:none;}
 /* Bastion items - draggable */

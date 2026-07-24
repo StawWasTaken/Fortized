@@ -4433,6 +4433,14 @@ function showView(v, _skipPush) {
   // (home btn is now a rail-btn, handled by the loop above)
   const rBtn = document.getElementById('rb-' + v);
   if (rBtn) rBtn.classList.add('active');
+  // Atelier no longer has a single rail button — Radiance/Fortshop/Quests/
+  // Creator each open a tab. Highlight the matching secondary rail item.
+  if (v === 'atelier') {
+    const m = { radiance: 'rb-radiance', shop: 'rb-fortshop', quests: 'rb-quests', creator: 'rb-creator' };
+    const id = m[window._atelierPendingTab || (typeof _atelierTab !== 'undefined' ? _atelierTab : null) || 'radiance'];
+    const eb = id && document.getElementById(id);
+    if (eb) eb.classList.add('active');
+  }
 
   // Post-show callbacks
   if (v === 'atelier') {
@@ -4453,6 +4461,18 @@ function showView(v, _skipPush) {
 
   updateTopbar(v);
   updateSidebar(v);
+}
+
+// Open an Atelier tab from the rail (Radiance / Fortshop / Quests / Creator Hub)
+// and mark the matching secondary rail item active.
+function _railGoAtelier(tab, btnId) {
+  window._atelierPendingTab = tab;
+  showView('atelier');
+  try {
+    document.querySelectorAll('.rail-btn').forEach(el => el.classList.remove('active'));
+    const b = document.getElementById(btnId);
+    if (b) b.classList.add('active');
+  } catch (_) {}
 }
 
 function updateTopbar(v) {
@@ -46114,6 +46134,13 @@ function switchAtelierTab(tab, el) {
   renderAtelierTopNav();
   updateAtelierSidebar();
   renderAtelierTab(tab);
+  // Keep the rail's secondary item in sync when tabs change from inside Atelier.
+  try {
+    const m = { radiance: 'rb-radiance', shop: 'rb-fortshop', quests: 'rb-quests', creator: 'rb-creator' };
+    document.querySelectorAll('.rail-btn').forEach(el2 => el2.classList.remove('active'));
+    const b = m[tab] && document.getElementById(m[tab]);
+    if (b) b.classList.add('active');
+  } catch (_) {}
 }
 
 function renderAtelierTopNav() {

@@ -14577,20 +14577,23 @@ select:focus,select:focus-visible,
    "Design language". Kept append-only so it never disturbs hand-tuned rules.
    ════════════════════════════════════════════════════════════════════ */
 
-/* 1 ─ Slim, subtle, floating scrollbars (Discord-style): a thin rounded grey
-   thumb on a transparent track, NO arrow buttons, NO yellow. On Firefox
-   `scrollbar-width:thin` is what removes the native up/down arrows (auto keeps
-   them — that was the green-arrows bug) and gives the slim look. */
-html,body,*{scrollbar-width:thin!important;scrollbar-color:rgba(255,255,255,.18) transparent!important;}
-*::-webkit-scrollbar{width:12px!important;height:12px!important;background:transparent!important;}
-*::-webkit-scrollbar-track,*::-webkit-scrollbar-track-piece{background:transparent!important;border:none!important;}
-/* Thumb: 3px transparent border + padding-box clip → a ~6px rounded pill that
-   floats with a gap on both sides, like Discord. Neutral white, not accent. */
+/* 1 ─ Slim scrollbars — a rounded TRACK capsule (subtle white pill) with a
+   brighter rounded THUMB capsule riding inside it, both fully pill-shaped, in
+   white (not accent). NO arrow buttons. On Firefox `scrollbar-width:thin` is
+   what removes the native up/down arrows (auto keeps them — the green-arrows
+   bug) and gives the slim look. */
+html,body,*{scrollbar-width:thin!important;scrollbar-color:rgba(255,255,255,.3) rgba(255,255,255,.07)!important;}
+*::-webkit-scrollbar{width:10px!important;height:10px!important;background:transparent!important;}
+/* Track: 3px transparent border + padding-box clip → a slim rounded pill. */
+*::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.06)!important;border-radius:100px!important;
+  border:3px solid transparent!important;background-clip:padding-box!important;}
+*::-webkit-scrollbar-track-piece{background:transparent!important;}
 *::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,.16)!important;border-radius:100px!important;min-height:40px!important;
+  background:rgba(255,255,255,.28)!important;border-radius:100px!important;min-height:30px!important;
   border:3px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
-*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.28)!important;}
-*::-webkit-scrollbar-thumb:active{background:rgba(255,255,255,.38)!important;}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.42)!important;}
+*::-webkit-scrollbar-thumb:active{background:rgba(255,255,255,.52)!important;}
 /* Kill every arrow-button variant (Chromium). */
 *::-webkit-scrollbar-button,
 *::-webkit-scrollbar-button:start,*::-webkit-scrollbar-button:end,
@@ -14723,7 +14726,9 @@ input::-webkit-scrollbar{width:10px!important;height:10px!important;}
    own search + Friends + section header), so round the sidebar's top-left corner
    so it doesn't square-bleed into the topbar, and give the search top breathing
    room. Unread stays yellow — the one meaningful accent — everything else white. */
-#sidebar-ctx{ border-top-left-radius:16px; }
+/* Let .main's rounded top-left + overflow:hidden clip the sidebar corner (adding
+   a radius on #sidebar-ctx itself made a competing inset corner). Just give the
+   search a little top breathing room now the old header is gone. */
 #sidebar-ctx .dm-search-wrap{ padding-top:14px; }
 
 /* ── New Message picker (unified: 1 → DM, 2+ → group chat) ── */
@@ -14754,5 +14759,8 @@ input::-webkit-scrollbar{width:10px!important;height:10px!important;}
   justify-content:center;flex-shrink:0;color:#13161d;transition:background .14s var(--ease-out),border-color .14s;}
 .nm-row:hover .nm-check{border-color:rgba(255,255,255,.35);}
 .nm-row.sel .nm-check{background:var(--accent);border-color:var(--accent);}
+/* The tick pops in from the centre then settles — a small premium touch. */
+.nm-row.sel .nm-check svg{animation:ftzCheckPop .26s var(--ease-out) both;}
+@keyframes ftzCheckPop{0%{transform:scale(0);opacity:0;}55%{transform:scale(1.28);opacity:1;}100%{transform:scale(1);}}
 .nm-empty{padding:28px 14px;text-align:center;font-size:13px;color:rgba(255,255,255,.4);}
 .nm-gc-name{margin-bottom:4px;}

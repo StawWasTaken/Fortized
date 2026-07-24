@@ -7644,6 +7644,26 @@ if (typeof document !== 'undefined' && !window._dmNameHoverBound) {
     if (nm && nm.dataset.effectOn) _dmNameEffect(nm, false);
   });
 }
+// Fully-hydrated DM sidebar snapshot (shell + enriched rows). Restored verbatim
+// when navigating back to a DM page so the list appears instantly, already
+// populated and in the same order — no reload flash, no reshuffle. Keyed by the
+// conversation-set signature; a quiet in-place refresh runs at most every 30s.
+let _dmScrollCache = { sig: null, html: null, ts: 0 };
+// Apply the "active" highlight + name effect for the current DM/GC on a freshly
+// (re)painted sidebar.
+function _dmApplyActive(scroll) {
+  if (!scroll) return;
+  try {
+    scroll.querySelectorAll('.friend-item.active').forEach(el => {
+      el.classList.remove('active');
+      const nm = el.querySelector('.dmn-name'); if (nm && nm.dataset.effectOn && !el.matches(':hover')) _dmNameEffect(nm, false);
+    });
+    let row = null;
+    if (curDM) row = scroll.querySelector('#dm-fi-' + CSS.escape(curDM));
+    else if (curGC) row = scroll.querySelector('#gc-fi-' + CSS.escape(curGC));
+    if (row) { row.classList.add('active'); const nm = row.querySelector('.dmn-name'); if (nm) _dmNameEffect(nm, true); }
+  } catch (_) {}
+}
 // Live filter for the DM sidebar search box — hides rows whose name doesn't
 // match. Empty query restores everything.
 function _filterDMSidebar(q) {
@@ -7658,29 +7678,36 @@ async function renderDMSidebar(scroll, force) {
   const gcs = CU?.groupChats||[];
   const hidden = getHiddenDMs();
 
-  // Stability guard: Discord's sidebar doesn't wipe-and-rebuild every time
-  // you click a different DM. If the visible conversation set hasn't
-  // changed since our last render AND the sidebar is already populated,
-  // we bail. Existing rows retain their sort order, and the "highlight
-  // active" toggle happens at the openDMView call site — no reshuffle.
   const sig = _dmSidebarSignature();
-  if (!force && scroll && scroll._dmSidebarSig === sig && scroll.querySelector('#dm-sorted-list')) {
-    // Still refresh the "active" outline in case the caller expects it.
-    try {
-      scroll.querySelectorAll('.friend-item.active').forEach(el => {
-        el.classList.remove('active');
-        const nm = el.querySelector('.dmn-name'); if (nm && nm.dataset.effectOn && !el.matches(':hover')) _dmNameEffect(nm, false);
-      });
-      let _activeRow = null;
-      if (curDM) _activeRow = scroll.querySelector('#dm-fi-' + CSS.escape(curDM));
-      else if (curGC) _activeRow = scroll.querySelector('#gc-fi-' + CSS.escape(curGC));
-      if (_activeRow) { _activeRow.classList.add('active'); const nm = _activeRow.querySelector('.dmn-name'); if (nm) _dmNameEffect(nm, true); }
-    } catch(_) {}
-    return;
+
+  // ── STATIC-FEEL fast path ──────────────────────────────────────────
+  // The whole point: switching pages must NOT reload/reshuffle the list.
+  // Two cases never wipe-and-rebuild:
+  //   (a) the sidebar is still on screen with the same set → in-place refresh
+  //       only (quiet, gated to 30s so it isn't a network hog), never a wipe;
+  //   (b) we navigated back and it was torn down → restore the last fully-
+  //       hydrated snapshot instantly (real avatars/names/status, right order).
+  // Either way we only hit the network past the 30s TTL (or on force), and the
+  // refresh below updates rows IN PLACE, so there is no flash and no reshuffle.
+  let _fastPath = false;
+  const _populated = scroll && scroll.querySelector('#dm-sorted-list') && scroll._dmSidebarSig === sig;
+  if (!force && _populated) {
+    _dmApplyActive(scroll);
+    if (Date.now() - (scroll._dmHydrateTs || 0) < 30000) return;
+    _fastPath = true;
+  } else if (!force && scroll && _dmScrollCache.sig === sig && _dmScrollCache.html) {
+    scroll.innerHTML = _dmScrollCache.html;
+    try { _renderTypingBubbles(); } catch (_) {}
+    try { _subscribeToAllConversationRooms(); } catch (_) {}
+    scroll._dmSidebarSig = sig;
+    _dmApplyActive(scroll);
+    if (Date.now() - (_dmScrollCache.ts || 0) < 30000) return;
+    _fastPath = true;
   }
-  if (scroll) scroll._dmSidebarSig = sig;
+  if (scroll) { scroll._dmSidebarSig = sig; scroll._dmHydrateTs = Date.now(); }
 
   let html = '';
+  if (!_fastPath) {
 
   // ── Search: find or start a conversation (filters the list live) ──
   html += `<div class="dm-search-wrap">
@@ -7767,26 +7794,18 @@ async function renderDMSidebar(scroll, force) {
     html += '</div>';
   }
 
-  scroll.innerHTML = html;
-  // Newly-rendered DM sidebar — re-apply typing capsules so anyone
-  // currently typing in a DM to me shows up immediately instead of
-  // waiting for the next typing broadcast tick.
-  try { _renderTypingBubbles(); } catch(_) {}
-  // Subscribe to every visible DM + GC room so the sidebar receives
-  // message:new for older convos too — not just the one currently open.
-  try { _subscribeToAllConversationRooms(); } catch(_) {}
-  // Hydrate the persistent chat cache from IndexedDB so returning to a
-  // chat you had open in a previous session still feels "already loaded".
-  try { _chatDBHydrate(); } catch(_) {}
-
-  // "Static feel" throttle: the rows above are already painted from the profile
-  // cache (avatar, name, custom status, status dot) and ordered by the persisted
-  // activity order. If we refetched everything on every single page switch the
-  // list would visibly reload + reshuffle — exactly what we don't want. So when
-  // the data was fetched recently, skip the network pass entirely; realtime
-  // events keep rows live, and a full refresh happens past the TTL (or on force).
-  if (!force && (Date.now() - (scroll._dmFetchTs || 0) < 45000)) return;
-  scroll._dmFetchTs = Date.now();
+    scroll.innerHTML = html;
+    // Newly-rendered DM sidebar — re-apply typing capsules so anyone
+    // currently typing in a DM to me shows up immediately instead of
+    // waiting for the next typing broadcast tick.
+    try { _renderTypingBubbles(); } catch(_) {}
+    // Subscribe to every visible DM + GC room so the sidebar receives
+    // message:new for older convos too — not just the one currently open.
+    try { _subscribeToAllConversationRooms(); } catch(_) {}
+    // Hydrate the persistent chat cache from IndexedDB so returning to a
+    // chat you had open in a previous session still feels "already loaded".
+    try { _chatDBHydrate(); } catch(_) {}
+  } // end if (!_fastPath)
 
   // ── Async: fetch last message timestamps, PFPs, display names, status, then sort ─────────
   // Load all friends and GCs in parallel (no staggered delays)
@@ -7898,8 +7917,17 @@ async function renderDMSidebar(scroll, force) {
     if (newOrder.join(',') !== curOrder.join(',')) items.forEach(item => listEl.appendChild(item));
     _dmOrder = newOrder;
     try { localStorage.setItem('ftz_dm_order_' + (CU?.username || ''), JSON.stringify(newOrder)); } catch {}
+    // Snapshot the now fully-hydrated sidebar so the next navigation restores it
+    // instantly (static feel). Clear any typed search first so the cache is neutral.
+    try {
+      const sInp = scroll.querySelector('#dm-sidebar-search'); if (sInp) sInp.value = '';
+      _dmScrollCache = { sig, html: scroll.innerHTML, ts: Date.now() };
+    } catch (_) {}
   });
 }
+// Invalidate the static-feel cache so the next render does a full refresh
+// (call after a new message reorders things, a friend is added/removed, etc.).
+function _invalidateDmSidebarCache() { _dmScrollCache = { sig: null, html: null, ts: 0 }; }
 
 // ── DM Friends Home (shown when no DM selected) ──
 let _dmFriendsFilter = 'online';
@@ -9239,13 +9267,24 @@ function _debouncedGCMemberResort() {
 // switchNewDMTab so existing call sites (which pass 'dm'/'gc') just reset+open.
 let _newMsgSel = new Set();
 const _NM_MAX = 10;
-function switchNewDMTab() {
+async function switchNewDMTab() {
   _newMsgSel = new Set();
   const s = document.getElementById('nm-search'); if (s) s.value = '';
   const n = document.getElementById('nm-gc-name'); if (n) { n.style.display = 'none'; n.value = ''; }
   const e = document.getElementById('nm-error'); if (e) e.textContent = '';
   _renderNewMsgSelected();
-  renderNewMsgPicker('');
+  renderNewMsgPicker('');            // paint instantly from the profile cache
+  // Then batch-fetch fresh profiles so avatars + display names populate for
+  // friends we haven't cached yet, and repaint.
+  try {
+    const friends = CU?.friends || [];
+    if (!friends.length) return;
+    const profiles = await (FortizedSocial.getUsersByNames
+      ? FortizedSocial.getUsersByNames(friends)
+      : Promise.all(friends.map(f => FortizedSocial.getUserByName(f).catch(() => null))));
+    (profiles || []).forEach(u => { if (u) { rememberProfile(u); if (u.pfp) _pfpCache[u.username] = u.pfp; } });
+    if (document.getElementById('nm-picker')) renderNewMsgPicker(document.getElementById('nm-search')?.value || '');
+  } catch (_) {}
 }
 function renderNewMsgPicker(query) {
   const picker = document.getElementById('nm-picker');
@@ -9266,9 +9305,12 @@ function renderNewMsgPicker(query) {
     const cp = cachedProfile(f) || {};
     const dn = cp.displayName || f;
     const on = _newMsgSel.has(f);
+    // Font applies (per the display-name rule); colour/effects do not here.
+    const fontStyle = (cp.displayFont && cp.displayFont !== 'default')
+      ? ` style="font-family:${_getDisplayFontCSS(cp.displayFont)};font-weight:${_getDisplayFontWeight(cp.displayFont)};"` : '';
     return `<div class="nm-row${on ? ' sel' : ''}" onclick="_toggleNewMsgMember('${escapeHTML(f)}')">
       <div class="nm-av">${buildAvatarHTML(cp.pfp || null, dn, 36)}</div>
-      <div class="nm-info"><div class="nm-name">${escapeHTML(dn)}</div><div class="nm-user">@${escapeHTML(f)}</div></div>
+      <div class="nm-info"><div class="nm-name"${fontStyle}>${escapeHTML(dn)}</div><div class="nm-user">@${escapeHTML(f)}</div></div>
       <span class="nm-check" aria-hidden="true">${on ? '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>' : ''}</span>
     </div>`;
   }).join('');
@@ -32852,22 +32894,40 @@ function animateOnyxGain(amount) {
 // RIGHT-CLICK RAIL BASTION CONTEXT MENU
 // ════════════════════════════════════════════
 // ── DM Right-Click Context Menu ──
+// Mark one/all DM conversations read — clears the sidebar unread state for real
+// (updates the per-DM last-read marker + the row's .unread class + cache).
+function _markDMRead(username) {
+  _setDmLastRead(username);
+  document.getElementById('dm-fi-' + username)?.classList.remove('unread');
+  _invalidateDmSidebarCache();
+}
+function _markAllDMsRead() {
+  (CU?.friends || []).forEach(f => _setDmLastRead(f));
+  document.querySelectorAll('.friend-item.dmn.unread').forEach(r => r.classList.remove('unread'));
+  _invalidateDmSidebarCache();
+  try { markAllRead(); } catch (_) {}
+  toast('All conversations marked as read.', 'success');
+}
 function showDMCtxMenu(e, username) {
   e.preventDefault(); e.stopPropagation();
+  const isFriend = (CU?.friends || []).map(f => String(f).toLowerCase()).includes(String(username).toLowerCase());
+  const blocked = isUserBlocked(username);
   const groups = [
     { label: username, items: [
       { icon: _ctxSvg('message'), label: 'Open Chat', action: () => openDMView(username) },
       { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(username) },
-      { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => toast('Marked as read!', 'success') },
-      { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { document.querySelectorAll('.friend-item').forEach(fi => { fi.style.fontWeight=''; fi.classList.remove('dm-unread'); const badge = fi.querySelector('.dm-unread-badge'); if(badge) badge.remove(); }); markAllRead(); toast('All conversations marked as read!', 'success'); } },
+      { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => _markDMRead(username) },
     ]},
     { items: [
       { icon: _ctxSvg('mute'), label: isConvoMuted('dm', username) ? 'Unmute Conversation' : 'Mute Conversation', action: () => toggleMuteConvo('dm', username) },
       { icon: _ctxSvg('copy'), label: 'Copy Username', action: () => navigator.clipboard.writeText(username), copyFeedback: true },
     ]},
+    { label: 'Safety', items: [
+      { icon: '🚫', label: blocked ? 'Unblock' : 'Block', danger: !blocked, action: () => toggleBlockUser(username) },
+    ]},
     { items: [
       { icon: _ctxSvg('leave'), label: 'Close DM', action: () => { hideDMConversation('dm_' + username); toast('Conversation hidden — find them in Friends', 'info'); } },
-      { icon: _ctxSvg('kick'), label: 'Remove Friend', danger: true, action: () => showCustomConfirm('Remove ' + username + ' from friends?', () => { removeFriend(username); }) },
+      ...(isFriend ? [{ icon: _ctxSvg('kick'), label: 'Remove Friend', danger: true, action: () => showCustomConfirm('Remove ' + username + ' from friends?', () => { removeFriend(username); }) }] : []),
     ]},
   ];
   showCtxMenu(e.clientX, e.clientY, groups);
@@ -32875,12 +32935,9 @@ function showDMCtxMenu(e, username) {
 
 function showDMSectionCtxMenu(e) {
   e.preventDefault(); e.stopPropagation();
-  const groups = [
-    { items: [
-      { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { document.querySelectorAll('.friend-item').forEach(fi => { fi.style.fontWeight=''; fi.classList.remove('dm-unread'); const badge = fi.querySelector('.dm-unread-badge'); if(badge) badge.remove(); }); markAllRead(); toast('All conversations marked as read!', 'success'); } },
-    ]},
-  ];
-  showCtxMenu(e.clientX, e.clientY, groups);
+  showCtxMenu(e.clientX, e.clientY, [
+    { items: [ { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: _markAllDMsRead } ] },
+  ]);
 }
 
 function showRailBastionCtx(e, idx) {

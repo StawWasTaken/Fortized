@@ -7608,6 +7608,32 @@ function _dmSidebarSignature() {
   const hidden = (typeof getHiddenDMs === 'function' ? getHiddenDMs() : []).slice().sort();
   return 'v1|' + friends.join(',') + '|' + gcIds.join(',') + '|' + hidden.join(',');
 }
+// Freeform custom-status text for a user record/cache entry → "emoji text".
+// Returns '' when there's no custom status (the subline then stays blank).
+function _customStatusText(cs) {
+  if (!cs) return '';
+  if (typeof cs === 'string') return cs.trim();
+  const emoji = cs.emoji ? (cs.emoji + ' ') : '';
+  return (emoji + (cs.text || '')).trim();
+}
+// Per-DM "last opened" marker (localStorage, egress-free) → drives the unread dot.
+function _dmLastRead(f) {
+  try { return parseInt(localStorage.getItem('ftz_dm_lastread_' + (CU?.username || '') + '_' + f) || '0', 10) || 0; } catch { return 0; }
+}
+function _setDmLastRead(f) {
+  try { localStorage.setItem('ftz_dm_lastread_' + (CU?.username || '') + '_' + f, String(Date.now())); } catch {}
+  const row = document.getElementById('dm-fi-' + f);
+  if (row) row.classList.remove('unread');
+}
+// Live filter for the DM sidebar search box — hides rows whose name doesn't
+// match. Empty query restores everything.
+function _filterDMSidebar(q) {
+  q = (q || '').trim().toLowerCase();
+  document.querySelectorAll('#dm-sorted-list .dmn').forEach(row => {
+    const name = row.dataset.name || '';
+    row.style.display = (!q || name.includes(q)) ? '' : 'none';
+  });
+}
 async function renderDMSidebar(scroll, force) {
   const friends = CU?.friends||[];
   const gcs = CU?.groupChats||[];
@@ -7632,13 +7658,24 @@ async function renderDMSidebar(scroll, force) {
 
   let html = '';
 
-  // ── Friends quick link (always at top) ──────────────────
-  html += `<div class="ch-item dm-friends-link" style="margin:4px 8px;border-radius:10px;display:flex;align-items:center;gap:10px;font-weight:700;" onclick="showDMFriendsHome()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;opacity:.7;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    Friends</div>`;
+  // ── Search: find or start a conversation (filters the list live) ──
+  html += `<div class="dm-search-wrap">
+    <div class="dm-search">
+      <span class="dm-search-ico"><svg viewBox="0 0 512 512" width="14" height="14" fill="currentColor"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg></span>
+      <input type="text" id="dm-sidebar-search" placeholder="Find or start a conversation" spellcheck="false" autocomplete="off" oninput="_filterDMSidebar(this.value)">
+    </div>
+  </div>`;
 
-  // ── Section label: Direct Messages ──────────────────
-  html += '<div class="sec-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;" oncontextmenu="event.preventDefault();showDMSectionCtxMenu(event)">Direct Messages <button onclick="openModal(\'modal-new-dm\');switchNewDMTab(\'dm\')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;" title="New DM">✏️</button></div>';
+  // ── Friends home button ──────────────────
+  html += `<div class="dm-nav-btn" onclick="showDMFriendsHome()">
+    <span class="dm-nav-ico"><svg viewBox="0 0 640 512" width="16" height="16" fill="currentColor"><path d="M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192l42.7 0c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96c-.2 0-.4 0-.7 0L21.3 320C9.6 320 0 310.4 0 298.7zM405.3 320c-.2 0-.4 0-.7 0c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7l42.7 0C592.2 192 640 239.8 640 298.7c0 11.8-9.6 21.3-21.3 21.3l-213.3 0zM224 224a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zM128 485.3C128 411.7 187.7 352 261.3 352l117.3 0C452.3 352 512 411.7 512 485.3c0 14.7-11.9 26.7-26.7 26.7l-330.7 0c-14.7 0-26.7-11.9-26.7-26.7z"/></svg></span>
+    <span class="dm-nav-label">Friends</span></div>`;
+
+  // ── Section header: Direct Messages ──────────────────
+  html += `<div class="dm-sec-head" oncontextmenu="event.preventDefault();showDMSectionCtxMenu(event)">
+    <span class="dm-sec-title">Direct Messages</span>
+    <button class="dm-sec-add" onclick="openModal('modal-new-dm');switchNewDMTab('dm')" title="New DM" aria-label="New DM"><svg viewBox="0 0 448 512" width="13" height="13" fill="currentColor"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"/></svg></button>
+  </div>`;
 
   // Build a unified list of all conversations (DMs + GCs), will be sorted chronologically
   const _dmEntries = [];
@@ -7657,42 +7694,46 @@ async function renderDMSidebar(scroll, force) {
 
   // Render entries immediately (will be sorted async after fetching timestamps)
   if (_dmEntries.length === 0) {
-    html += '<div class="ftz-empty" style="padding:14px;"><div class="ftz-empty-icon">💬</div><div class="ftz-empty-title">No conversations yet</div><div class="ftz-empty-text">Start chatting with friends!</div></div>';
+    html += '<div class="ftz-empty" style="padding:24px 14px;"><div class="ftz-empty-icon">💬</div><div class="ftz-empty-title">No conversations yet</div><div class="ftz-empty-text">Start chatting with friends!</div></div>';
   } else {
     html += '<div id="dm-sorted-list">';
     _dmEntries.forEach(entry => {
       if (entry.type === 'dm') {
         const f = entry.username;
         // Stale-while-revalidate: paint with cached profile (pfp + display
-        // name + last-known status) so the row looks alive on first frame.
+        // name + last-known status + custom status) so the row looks alive
+        // on first frame.
         const _cp = cachedProfile(f) || {};
         const _initStatus = _cp.status || 'offline';
         const _initName = _cp.displayName || f;
+        const _initCS = escapeHTML(_customStatusText(_cp.customStatus));
         html += `
-      <div class="friend-item dm-sortable" id="dm-fi-${escapeHTML(f)}" data-dm-id="dm_${escapeHTML(f)}" data-last-time="0" onclick="openDMView('${escapeHTML(f)}')" oncontextmenu="event.preventDefault();showDMCtxMenu(event,'${escapeHTML(f)}')">
-        <div style="position:relative;flex-shrink:0;">
-          <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(_cp.pfp||null,_initName,34)}</div>
-          <span class="profile-status-dot" data-for="${escapeHTML(f)}" data-dot-size="12" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;">${FtzStatus.dotSvg(_initStatus, 12)}</span>
+      <div class="friend-item dm-sortable dmn" id="dm-fi-${escapeHTML(f)}" data-dm-id="dm_${escapeHTML(f)}" data-name="${escapeHTML((_initName||'').toLowerCase())}" data-last-time="0" onclick="openDMView('${escapeHTML(f)}')" oncontextmenu="event.preventDefault();showDMCtxMenu(event,'${escapeHTML(f)}')">
+        <div class="dmn-av-wrap">
+          <div class="fa dmn-av" id="dm-av-${escapeHTML(f)}">${buildAvatarHTML(_cp.pfp||null,_initName,38)}</div>
+          <span class="profile-status-dot dmn-dot" data-for="${escapeHTML(f)}" data-dot-size="13">${FtzStatus.dotSvg(_initStatus, 13)}</span>
         </div>
-        <div class="fi-info" style="min-width:0;flex:1;">
-          <div class="fi-name" id="dm-dn-${escapeHTML(f)}" style="font-weight:600;">${escapeHTML(_initName)}</div>
-          <div id="dm-preview-${escapeHTML(f)}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:120px;"></div>
+        <div class="dmn-body">
+          <div class="dmn-name" id="dm-dn-${escapeHTML(f)}">${escapeHTML(_initName)}</div>
+          <div class="dmn-cs" id="dm-preview-${escapeHTML(f)}">${_initCS}</div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
-          <div id="dm-time-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.15);white-space:nowrap;"></div>
-          <button class="dm-close-btn" onclick="event.stopPropagation();hideDMConversation('dm_${escapeHTML(f)}')" title="Hide conversation">×</button>
+        <div class="dmn-meta">
+          <span class="dmn-time" id="dm-time-${escapeHTML(f)}"></span>
+          <span class="dmn-unread" id="dm-unread-${escapeHTML(f)}" aria-hidden="true"></span>
         </div>
+        <button class="dmn-close" onclick="event.stopPropagation();hideDMConversation('dm_${escapeHTML(f)}')" title="Hide conversation" aria-label="Hide conversation"><svg viewBox="0 0 384 512" width="11" height="11" fill="currentColor"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>`;
       } else {
         const gc = entry.gc;
         html += `
-      <div class="friend-item dm-sortable" id="gc-fi-${escapeHTML(gc.id)}" data-dm-id="gc_${escapeHTML(gc.id)}" data-last-time="0" onclick="openGroupChatView('${escapeHTML(gc.id)}')">
-        <div style="width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,${gc.color||'#7c5cbf'},${gc.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${gc.emoji||'👥'}</div>
-        <div class="fi-info" style="min-width:0;flex:1;">
-          <div class="fi-name" style="font-weight:600;">${escapeHTML(gc.name)}</div>
-          <div id="gc-preview-${escapeHTML(gc.id)}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:120px;">${(gc.members||[]).length} members</div>
+      <div class="friend-item dm-sortable dmn dmn--gc" id="gc-fi-${escapeHTML(gc.id)}" data-dm-id="gc_${escapeHTML(gc.id)}" data-name="${escapeHTML((gc.name||'').toLowerCase())}" data-last-time="0" onclick="openGroupChatView('${escapeHTML(gc.id)}')">
+        <div class="dmn-av-wrap"><div class="dmn-av dmn-gc-av" style="background:linear-gradient(135deg,${gc.color||'#7c5cbf'},${gc.color2||'#3ecf6e'});">${gc.emoji||'👥'}</div></div>
+        <div class="dmn-body">
+          <div class="dmn-name">${escapeHTML(gc.name)}</div>
+          <div class="dmn-cs" id="gc-preview-${escapeHTML(gc.id)}">${(gc.members||[]).length} members</div>
         </div>
-        <button class="dm-close-btn" onclick="event.stopPropagation();hideDMConversation('gc_${escapeHTML(gc.id)}')" title="Hide conversation">×</button>
+        <div class="dmn-meta"><span class="dmn-time" id="gc-time-${escapeHTML(gc.id)}"></span></div>
+        <button class="dmn-close" onclick="event.stopPropagation();hideDMConversation('gc_${escapeHTML(gc.id)}')" title="Hide conversation" aria-label="Hide conversation"><svg viewBox="0 0 384 512" width="11" height="11" fill="currentColor"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>`;
       }
     });
@@ -7738,13 +7779,18 @@ async function renderDMSidebar(scroll, force) {
         // Cache the pfp so the next render paints it immediately (no flash).
         if (u.pfp) { _pfpCache[f] = u.pfp; _persistPfpCache(); }
         const avEl = document.getElementById('dm-av-'+f);
-        if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
+        if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 38);
         const dnEl = document.getElementById('dm-dn-'+f);
         if (dnEl) {
           dnEl.textContent = u.displayName || f;
           if (u.displayFont && u.displayFont !== 'default') { dnEl.style.fontFamily = _getDisplayFontCSS(u.displayFont); dnEl.style.fontWeight = _getDisplayFontWeight(u.displayFont); }
           if (u.displayColor && u.displayColor !== '#fff') dnEl.style.cssText += _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor, u.displayColor2 || u.displayColor);
         }
+        // Nameplate subline = the user's CUSTOM status (freeform text), or empty
+        // if they have none — never the last message. (The status DOT below
+        // conveys online/idle/dnd separately.)
+        const csEl = document.getElementById('dm-preview-'+f);
+        if (csEl) csEl.textContent = _customStatusText(u.customStatus);
         // Use live Socket.IO presence — if query failed (null), trust DB as initial display
         const liveSt = _dmPresenceMap?.[f]?.status;
         const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (_dmPresenceMap === null ? (u?.status || 'offline') : 'offline'));
@@ -7761,12 +7807,8 @@ async function renderDMSidebar(scroll, force) {
           const rawTs = last.timestamp || last.time || 0;
           if (typeof rawTs === 'number') lastTime = rawTs;
           else { const p = Date.parse(rawTs || ''); lastTime = Number.isFinite(p) ? p : 0; }
-          const el = document.getElementById('dm-preview-'+f);
-          if (el) {
-            const preview = (last.from===CU.username?'You: ':'') + (last.text||'').replace(/\[FTZ[A-Z]+:[^\]]+\]/g,'📎 File').slice(0,40);
-            el.textContent = preview;
-          }
-          // Show relative timestamp
+          // Show relative timestamp of last activity (kept — the subline shows
+          // custom status now, not the message, so time still tells you recency)
           const timeEl = document.getElementById('dm-time-'+f);
           if (timeEl && lastTime) {
             // Defensive parse — bad/empty timestamps used to render literal
@@ -7774,6 +7816,10 @@ async function renderDMSidebar(scroll, force) {
             const d = _safeDate(typeof lastTime === 'number' ? lastTime : Date.parse(lastTime));
             timeEl.textContent = d ? _formatRelativeTime(d) : '';
           }
+          // Unread: last activity newer than the last time we opened this DM
+          // (and it isn't the DM currently open). Egress-free, per-browser.
+          const row2 = document.getElementById('dm-fi-'+f);
+          if (row2) row2.classList.toggle('unread', !!(lastTime && lastTime > _dmLastRead(f) && f !== curDM));
         }
       }
       const row = document.getElementById('dm-fi-'+f);
@@ -8274,6 +8320,8 @@ function openDMView(username) {
     showView('dms');
     return;
   }
+  // Opening a DM clears its unread state (sidebar dot + bold name).
+  try { _setDmLastRead(username); } catch(_) {}
   // Persistent DOM: stash the OUTGOING chat's .chat-msgs BEFORE any state
   // variable is overwritten — otherwise the stash would be keyed by the
   // incoming target, mixing DM histories together on subsequent revives.

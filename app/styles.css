@@ -14577,25 +14577,34 @@ select:focus,select:focus-visible,
    "Design language". Kept append-only so it never disturbs hand-tuned rules.
    ════════════════════════════════════════════════════════════════════ */
 
-/* 1 ─ Bigger, rounded, yellow-accented scrollbars with a VISIBLE track (the
-   full groove behind the thumb shows how far there is to scroll), NO arrow
-   buttons. Inputs stay slimmer so text fields don't feel chunky. */
-html,body,*{scrollbar-width:auto!important;scrollbar-color:rgba(255,249,62,.38) rgba(255,255,255,.05)!important;}
-*::-webkit-scrollbar{width:12px!important;height:12px!important;background:transparent!important;}
-/* The always-visible track groove — rounded, inset from the edges. */
-*::-webkit-scrollbar-track,*::-webkit-scrollbar-track-piece{
-  background:rgba(255,255,255,.05)!important;border-radius:100px!important;
-  border:3px solid transparent!important;background-clip:padding-box!important;margin:2px!important;}
+/* 1 ─ Capsule scrollbars: a full-height rounded TRACK groove (a real floating
+   pill, inset from the edges so it reads as an object, not a block) with a
+   yellow capsule thumb riding inside it, and absolutely NO arrow buttons. */
+html,body,*{scrollbar-width:auto!important;scrollbar-color:rgba(255,249,62,.4) rgba(255,255,255,.06)!important;}
+*::-webkit-scrollbar{width:14px!important;height:14px!important;background:transparent!important;}
+/* Track = the floating capsule groove. 5px transparent border narrows the
+   visible pill to ~4px and the top/bottom margin lifts its rounded ends off
+   the edges so it looks like a real capsule, never a boxy strip. */
+*::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.06)!important;border-radius:100px!important;
+  border:5px solid transparent!important;background-clip:padding-box!important;margin:6px 0!important;}
+*::-webkit-scrollbar-track:horizontal{margin:0 6px!important;}
+*::-webkit-scrollbar-track-piece{background:transparent!important;}
 *::-webkit-scrollbar-thumb{
-  background:rgba(255,249,62,.32)!important;border-radius:100px!important;min-height:32px!important;
-  border:3px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
-*::-webkit-scrollbar-thumb:hover{background:rgba(255,249,62,.58)!important;}
-*::-webkit-scrollbar-thumb:active{background:rgba(255,249,62,.75)!important;}
-/* No up/down arrow buttons — clean rounded rail only. */
-*::-webkit-scrollbar-button{display:none!important;width:0!important;height:0!important;}
+  background:rgba(255,249,62,.42)!important;border-radius:100px!important;min-height:36px!important;
+  border:5px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,249,62,.62)!important;}
+*::-webkit-scrollbar-thumb:active{background:rgba(255,249,62,.8)!important;}
+/* Kill every arrow-button variant — clean rounded rail only. */
+*::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button:start,*::-webkit-scrollbar-button:end,
+*::-webkit-scrollbar-button:single-button,*::-webkit-scrollbar-button:double-button,
+*::-webkit-scrollbar-button:vertical:increment,*::-webkit-scrollbar-button:vertical:decrement,
+*::-webkit-scrollbar-button:horizontal:increment,*::-webkit-scrollbar-button:horizontal:decrement{
+  display:none!important;width:0!important;height:0!important;background:transparent!important;}
 *::-webkit-scrollbar-corner{background:transparent!important;}
 textarea::-webkit-scrollbar,[contenteditable]::-webkit-scrollbar,select::-webkit-scrollbar,
-input::-webkit-scrollbar{width:9px!important;height:9px!important;}
+input::-webkit-scrollbar{width:10px!important;height:10px!important;}
 textarea,[contenteditable],select,input{scrollbar-width:thin!important;}
 
 /* 2 ─ Tactile press + depth on the primary interactive controls. A real
@@ -14630,3 +14639,74 @@ textarea,[contenteditable],select,input{scrollbar-width:thin!important;}
 .msg-timestamp,.msg-time-small{transition:color .35s var(--ease-out),opacity .18s ease;}
 .msg-ts-fade{opacity:0;}
 .msg-ts-now{color:var(--accent)!important;}
+
+/* ════════════════════════════════════════════════════════════════════
+   DM / FRIENDS SIDEBAR REDESIGN (tactile, custom-status nameplates).
+   Scoped to .dmn / .dm-* so it can't disturb member lists (.ml-entry) or
+   other .friend-item users. See renderDMSidebar().
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Search — "Find or start a conversation" */
+.dm-search-wrap{padding:10px 10px 6px;flex-shrink:0;}
+.dm-search{position:relative;}
+.dm-search input{width:100%;box-sizing:border-box;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.05);
+  border-radius:12px;color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:500;padding:10px 12px 10px 36px;
+  outline:none;transition:border-color .18s var(--ease-out),background .18s,box-shadow .18s;}
+.dm-search input::placeholder{color:rgba(255,255,255,.28);}
+.dm-search input:focus{border-color:rgba(255,249,62,.32);background:rgba(0,0,0,.32);box-shadow:0 0 0 3px rgba(255,249,62,.07);}
+.dm-search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.3);display:flex;pointer-events:none;transition:color .18s;}
+.dm-search input:focus~.dm-search-ico{color:var(--accent);}
+
+/* Friends home button */
+.dm-nav-btn{display:flex;align-items:center;gap:11px;margin:3px 8px;padding:8px 10px;border-radius:13px;cursor:pointer;
+  font-family:var(--font-display);font-weight:600;font-size:14px;color:rgba(255,255,255,.62);
+  transition:background .14s var(--ease-out),color .14s,transform .12s var(--ease-out);}
+.dm-nav-btn:hover{background:rgba(255,255,255,.05);color:#fff;}
+.dm-nav-btn:active{transform:scale(.98);}
+.dm-nav-ico{width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.05);display:flex;align-items:center;
+  justify-content:center;color:var(--accent);flex-shrink:0;transition:background .14s,transform .14s var(--ease-out);}
+.dm-nav-btn:hover .dm-nav-ico{background:rgba(255,249,62,.12);transform:scale(1.05);}
+
+/* Section header */
+.dm-sec-head{display:flex;align-items:center;justify-content:space-between;padding:14px 12px 6px 14px;}
+.dm-sec-title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.32);}
+.dm-sec-add{width:24px;height:24px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.45);border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .14s var(--ease-out);}
+.dm-sec-add:hover{background:rgba(255,249,62,.14);color:var(--accent);transform:scale(1.08);}
+.dm-sec-add:active{transform:scale(.94);}
+
+/* Nameplate row */
+.friend-item.dmn{gap:11px;padding:8px 10px;margin:2px 8px;border-radius:14px;position:relative;
+  transition:background .16s var(--ease-out),transform .12s var(--ease-out);}
+.friend-item.dmn:hover{background:rgba(255,255,255,.05);}
+.friend-item.dmn:active{transform:scale(.985);}
+.friend-item.dmn.active{background:linear-gradient(90deg,rgba(255,249,62,.11),rgba(255,249,62,.02));}
+.friend-item.dmn.active::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:4px;height:56%;
+  background:var(--accent);border-radius:0 4px 4px 0;box-shadow:0 0 10px rgba(255,249,62,.4);}
+.dmn-av-wrap{position:relative;flex-shrink:0;}
+.friend-item.dmn .dmn-av{width:38px!important;height:38px!important;border-radius:50%;overflow:hidden;display:flex;
+  align-items:center;justify-content:center;font-size:17px;transition:transform .16s var(--ease-out),filter .16s;}
+.friend-item.dmn:hover .dmn-av{transform:scale(1.06);filter:brightness(1.07);}
+.dmn-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.dmn-dot{position:absolute!important;bottom:-2px;right:-2px;width:13px;height:13px;border-radius:50%;
+  box-shadow:0 0 0 3px var(--channel);display:flex;align-items:center;justify-content:center;z-index:2;}
+.dmn-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+.dmn-name{font-family:var(--font-display);font-size:14px;font-weight:600;color:rgba(255,255,255,.62);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .14s;line-height:1.2;user-select:none;}
+.friend-item.dmn:hover .dmn-name,.friend-item.dmn.active .dmn-name{color:#fff;}
+.friend-item.dmn.unread .dmn-name{color:#fff;font-weight:700;}
+.dmn-cs{font-size:11.5px;color:rgba(255,255,255,.33);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color .14s;line-height:1.25;}
+.dmn-cs:empty{display:none;}
+.friend-item.dmn:hover .dmn-cs{color:rgba(255,255,255,.5);}
+.dmn-meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.dmn-time{font-size:10px;font-weight:500;color:rgba(255,255,255,.22);white-space:nowrap;}
+.friend-item.dmn.unread .dmn-time{color:var(--accent);}
+.dmn-unread{display:none;}
+.friend-item.dmn.unread .dmn-unread{display:block;width:9px;height:9px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 8px rgba(255,249,62,.55);}
+.dmn-close{position:absolute;top:50%;right:10px;transform:translateY(-50%);opacity:0;width:22px;height:22px;border:none;
+  background:var(--channel);color:rgba(255,255,255,.35);border-radius:8px;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;transition:opacity .14s,background .14s,color .14s;}
+.friend-item.dmn:hover .dmn-close{opacity:1;}
+.dmn-close:hover{background:rgba(235,69,69,.16);color:#eb4545;}

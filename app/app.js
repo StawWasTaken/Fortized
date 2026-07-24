@@ -8205,8 +8205,20 @@ async function _enrichDMHeader(username) {
     // Topbar: avatar (NO decoration) + status + styled name.
     const rtName = document.getElementById('dm-rt-name');
     if (rtName) { rtName.setAttribute('style', nameStyle); rtName.textContent = dn; }
+    // Guard against the "avatar disappears" bug: under egress throttling the
+    // full-profile read can come back with pfp dropped/corrupt. Painting that
+    // over the good avatar we already showed is what blanks the topbar circle.
+    // Keep the best available pfp (fresh-if-valid, else the cached one) and only
+    // carry the crop that belongs to the pfp we actually render.
+    const _lc = String(username).toLowerCase();
+    const _cachedProf = cachedProfile(username) || {};
+    const _cachedPfp = _cachedProf.pfp || _pfpCache[_lc] || _pfpCache[username] || null;
+    const _freshOk = u.pfp && !_pfpLooksCorrupt(u.pfp);
+    const _bestPfp = _freshOk ? u.pfp : ((_cachedPfp && !_pfpLooksCorrupt(_cachedPfp)) ? _cachedPfp : null);
+    const _bestCrop = _freshOk ? u.pfpCrop : (_bestPfp === _cachedPfp ? _cachedProf.pfpCrop : null);
+    if (_freshOk) { _pfpCache[_lc] = u.pfp; try { _persistPfpCache(); } catch (_) {} }
     const rtAvImg = document.querySelector('#dm-rt-av .dm-rt-av__img');
-    if (rtAvImg) rtAvImg.innerHTML = buildAvatarHTML(u.pfp || null, dn, 26, u.pfpCrop);
+    if (rtAvImg) rtAvImg.innerHTML = buildAvatarHTML(_bestPfp, dn, 26, _bestCrop);
     const rtDot = document.getElementById('dm-rt-dot');
     if (rtDot) rtDot.innerHTML = FtzStatus.dotSvg(st, 11);
     // Welcome: big avatar WITH decoration + styled name.
@@ -8216,7 +8228,7 @@ async function _enrichDMHeader(username) {
     if (wStrong) wStrong.textContent = dn;
     const wav = document.getElementById('dm-welcome-av');
     if (wav) {
-      wav.innerHTML = buildAvatarHTML(u.pfp || null, dn, 76, u.pfpCrop);
+      wav.innerHTML = buildAvatarHTML(_bestPfp, dn, 76, _bestCrop);
       if (u.activeDecoration && typeof buildDecorationOverlay === 'function') {
         wav.style.position = 'relative'; wav.style.overflow = 'visible';
         wav.insertAdjacentHTML('beforeend', buildDecorationOverlay(u.activeDecoration, 'profile-decoration-overlay-lg'));

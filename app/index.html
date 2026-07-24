@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix383';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix384';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix383';
+    s4.src = '/firebase-compat-shim.js?v=2026fix384';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix383">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix384">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix383', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix384', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix383"></script>
+<script src="/app/utils.js?v=2026fix384"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -405,31 +405,41 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
       <div id="dm-user-panel" style="display:none;width:341px;min-width:341px;max-width:341px;overflow:hidden;flex-shrink:0;align-self:stretch;"></div>
     </div>
 
-    <!-- FRIENDS VIEW — the new default home (truly separate from the DMs page).
-         Joyster + the Did-You-Know tips strip were migrated here from the old
-         homepage; the layout is a placeholder pending a manual redesign. -->
-    <div class="view" id="view-friends">
-      <div style="flex:1;overflow-y:auto;padding:28px;">
-        <div style="max-width:700px;">
-          <!-- Joyster (migrated from home; design to be reviewed) -->
-          <div id="hero-joyster-wrap" class="hero-joyster-wrap" style="position:relative;margin-bottom:20px;">
-            <img src="/Joyster.png" id="joyster-main" class="hero-joyster-img" alt="Joyster" onerror="this.src='/Fortized Knight.png'" onclick="_joysterEasterEgg()">
-            <div class="joyster-bubble" id="joyster-bubble"></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
-            <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;" data-i18n="friends.title">Friends</h2>
-            <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:7px 14px;border-radius:8px;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span data-i18n="friends.add">Add Friend</span></button>
-          </div>
-          <div id="friends-tabs" style="display:flex;gap:5px;margin-bottom:20px;">
-            <button class="disc-tab active" onclick="filterFriends('all',this)" data-i18n="friends.tab.all">All</button>
-            <button class="disc-tab" onclick="filterFriends('online',this)" data-i18n="friends.tab.online">Online</button>
-            <button class="disc-tab" onclick="filterFriends('pending',this)" data-i18n="friends.tab.pending">Pending</button>
-          </div>
-          <div id="friends-list"></div>
-          <!-- Did-you-know / lore / tips strip (migrated from home) -->
-          <div class="realm-section" style="margin-top:24px;margin-bottom:8px;"><div id="home-dyk-strip"></div></div>
+    <!-- FRIENDS VIEW — Discord-style. Tab topbar reuses the .disc-subnav
+         styling; a searchable list with hover actions; the Active Now rail
+         collapses into a slide-over on narrow windows. Joyster now appears
+         only inside empty states. -->
+    <div class="view" id="view-friends" style="flex-direction:column;">
+      <!-- Topbar (reuses the Discover subnav look) -->
+      <div class="disc-subnav fr-subnav" id="friends-subnav">
+        <div class="fr-subnav-tabs">
+          <span class="fr-subnav-brand"><svg viewBox="0 0 640 512" fill="currentColor"><path d="M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192l42.7 0c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96c-.2 0-.4 0-.7 0L21.3 320C9.6 320 0 310.4 0 298.7zM405.3 320c-.2 0-.4 0-.7 0c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7l42.7 0C592.2 192 640 239.8 640 298.7c0 11.8-9.6 21.3-21.3 21.3l-213.3 0zM224 224a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zM128 485.3C128 411.7 187.7 352 261.3 352l117.3 0C452.3 352 512 411.7 512 485.3c0 14.7-11.9 26.7-26.7 26.7l-330.7 0c-14.7 0-26.7-11.9-26.7-26.7z"/></svg><span data-i18n="friends.title">Friends</span></span>
+          <span class="disc-subnav-sep"></span>
+          <button class="disc-subnav-btn active" id="ftab-online" onclick="setFriendsTab('online',this)" data-i18n="friends.tab.online">Online</button>
+          <button class="disc-subnav-btn" id="ftab-all" onclick="setFriendsTab('all',this)" data-i18n="friends.tab.all">All</button>
+          <button class="disc-subnav-btn" id="ftab-pending" onclick="setFriendsTab('pending',this)"><span data-i18n="friends.tab.pending">Pending</span><span class="fr-tab-badge" id="fr-pending-badge" style="display:none;">0</span></button>
+          <button class="disc-subnav-btn" id="ftab-blocked" onclick="setFriendsTab('blocked',this)">Blocked</button>
+        </div>
+        <div class="fr-subnav-actions">
+          <button class="fr-add-btn" onclick="openModal('modal-add-friend')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span data-i18n="friends.add">Add Friend</span></button>
+          <button class="fr-anow-toggle" id="fr-anow-toggle" onclick="toggleFriendsActiveNow()" title="Active Now" aria-label="Toggle Active Now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
         </div>
       </div>
+      <!-- Body: friends list + Active Now rail -->
+      <div class="fr-body" id="fr-body">
+        <div class="fr-main" id="fr-main">
+          <div class="fr-search" id="fr-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="fr-search" placeholder="Search" spellcheck="false" autocomplete="off" oninput="_frFilter(this.value)">
+          </div>
+          <div class="fr-list" id="fr-list"></div>
+        </div>
+        <aside class="active-now-sidebar fr-anow" id="friends-active-now">
+          <div class="active-now-header" data-i18n="home.active_now">Active Now</div>
+          <div class="active-now-list" id="friends-active-now-list"></div>
+        </aside>
+      </div>
+      <div class="fr-anow-scrim" id="fr-anow-scrim" onclick="toggleFriendsActiveNow()"></div>
     </div>
 
     <!-- BASTION VIEW -->
@@ -868,18 +878,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
         <div class="afr-places__sub">Meet people in public bastions or jump into community threads — plenty of ways to find your crew.</div>
         <div class="afr-places__grid">
           <div class="afr-place" onclick="closeModal('modal-add-friend');showView('discover')">
-            <div class="afr-place__icon"><i class="fa-solid fa-compass" aria-hidden="true"></i></div>
+            <div class="afr-place__icon"><svg viewBox="0 0 512 512" fill="currentColor" style="width:1em;height:1em;" aria-hidden="true"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm50.7-186.9L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg></div>
             <div class="afr-place__body">
               <div class="afr-place__name">Discover</div>
               <div class="afr-place__desc">Browse public bastions</div>
-            </div>
-            <i class="fa-solid fa-chevron-right afr-place__go" aria-hidden="true"></i>
-          </div>
-          <div class="afr-place" onclick="closeModal('modal-add-friend');showView('forum')">
-            <div class="afr-place__icon"><i class="fa-solid fa-comments" aria-hidden="true"></i></div>
-            <div class="afr-place__body">
-              <div class="afr-place__name">Forum</div>
-              <div class="afr-place__desc">Join the conversation</div>
             </div>
             <i class="fa-solid fa-chevron-right afr-place__go" aria-hidden="true"></i>
           </div>
@@ -1129,10 +1131,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix383"></script>
-<script src="/app/app.js?v=2026fix383"></script>
-<script src="/app/joy-system.js?v=2026fix383"></script>
-<script src="/app/chronicle-games.js?v=2026fix383"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix384"></script>
+<script src="/app/app.js?v=2026fix384"></script>
+<script src="/app/joy-system.js?v=2026fix384"></script>
+<script src="/app/chronicle-games.js?v=2026fix384"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

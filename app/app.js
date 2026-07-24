@@ -4481,18 +4481,8 @@ function showView(v, _skipPush) {
   }
   if (v === 'discover') setTimeout(() => loadDiscover(), 0);
   if (v === 'friends') setTimeout(() => {
-    try { renderFriendsList('all'); } catch (_) {}
-    try { _startJoysterBubbles(); } catch (_) {}
-    try {
-      const dykEl = document.getElementById('home-dyk-strip');
-      if (dykEl && typeof getDYKHtml === 'function') {
-        dykEl.innerHTML = getDYKHtml();
-        if (!window._dykRotateTimer) window._dykRotateTimer = setInterval(() => {
-          const el = document.getElementById('home-dyk-strip');
-          if (el && el.offsetParent) { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => { el.innerHTML = getDYKHtml(); el.style.opacity = '1'; }, 300); }
-        }, 10000);
-      }
-    } catch (_) {}
+    try { renderFriendsView(_friendsTab || 'online'); } catch (_) {}
+    try { renderActiveNowSidebar('friends-active-now-list'); } catch (_) {}
   }, 0);
   if (v === 'dms' && !curDM && !curGC) setTimeout(() => { showDMFriendsHome(); }, 50);
 
@@ -4593,7 +4583,8 @@ function updateSidebar(v) {
   if (v==='dms' || v==='friends') {
     if (hdr) hdr.style.display = 'none';
     renderDMSidebar(scroll);
-    if (v==='friends') { setTimeout(() => renderFriendsList('all'), 0); }
+    // The Friends page itself is painted by the showView('friends') callback
+    // (renderFriendsView) — this branch only handles the shared left rail.
   } else if (v==='discover') {
     if (hdr) hdr.style.display = 'none';
     renderDMSidebar(scroll);
@@ -7674,16 +7665,16 @@ function _dmNameEffect(el, on) {
 if (typeof document !== 'undefined' && !window._dmNameHoverBound) {
   window._dmNameHoverBound = true;
   document.addEventListener('mouseover', e => {
-    const row = e.target.closest && e.target.closest('.friend-item.dmn');
+    const row = e.target.closest && e.target.closest('.friend-item.dmn, .fr-row');
     if (!row) return;
-    const nm = row.querySelector('.dmn-name');
+    const nm = row.querySelector('.dmn-name, .fr-name');
     if (nm && nm.dataset.effectCss && !nm.dataset.effectOn) _dmNameEffect(nm, true);
   });
   document.addEventListener('mouseout', e => {
-    const row = e.target.closest && e.target.closest('.friend-item.dmn');
+    const row = e.target.closest && e.target.closest('.friend-item.dmn, .fr-row');
     if (!row || (e.relatedTarget && row.contains(e.relatedTarget))) return; // still inside
     if (row.classList.contains('active')) return; // keep for the open DM
-    const nm = row.querySelector('.dmn-name');
+    const nm = row.querySelector('.dmn-name, .fr-name');
     if (nm && nm.dataset.effectOn) _dmNameEffect(nm, false);
   });
 }
@@ -8251,22 +8242,37 @@ function _invalidateDmSidebarCache() { _dmScrollCache = { sig: null, html: null,
 // and the _dmFriendsFilter state were removed with it.
 
 // ── Active Now Sidebar ──────────────────────────────
+// One individual (not-in-a-game) Active Now entry.
+function _anItemHTML(u) {
+  const activityText = u.gameActivity
+    ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.6;flex-shrink:0;"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Playing: ${escapeHTML(u.gameActivity)}`
+    : u.customStatus ? escapeHTML(u.customStatus) : escapeHTML(FtzStatus.label(u.status));
+  return `<div class="active-now-item" onclick="viewUserProfile('${escapeHTML(u.username)}')">
+    <div class="an-avatar" style="pointer-events:none;">
+      <div class="fa" style="width:36px;height:36px;border-radius:50%;overflow:hidden;font-size:13px;">${buildAvatarHTML(u.pfp, u.displayName, 36)}</div>
+      <span class="an-status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="16">${FtzStatus.dotSvg(u.status, 16)}</span>
+    </div>
+    <div class="an-info" style="pointer-events:none;">
+      <div class="an-name">${escapeHTML(u.displayName)}</div>
+      <div class="an-activity">${activityText}</div>
+    </div>
+  </div>`;
+}
+
 async function renderActiveNowSidebar(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const friends = CU?.friends || [];
-  if (!friends.length) {
-    container.innerHTML = `<div class="active-now-empty">
+  const emptyHTML = `<div class="active-now-empty">
       <div class="an-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
       <div class="an-empty-text">It's quiet for now...<br>When friends come online, they'll appear here.</div>
     </div>`;
-    return;
-  }
+  if (!friends.length) { container.innerHTML = emptyHTML; return; }
 
   container.innerHTML = '<div style="padding:12px;text-align:center;"><div class="pl-spinner" style="width:16px;height:16px;border-width:2px;margin:0 auto;"></div></div>';
 
   // Bulk-fetch live presence via Socket.IO FIRST (fast, real-time accurate)
-  const friendsSlice = friends.slice(0, 30);
+  const friendsSlice = friends.slice(0, 40);
   let _anPresence = null;
   try {
     _anPresence = await FortizedSocial.queryPresence(friendsSlice);
@@ -8285,32 +8291,34 @@ async function renderActiveNowSidebar(containerId) {
   }));
 
   const online = results.filter(r => FtzStatus.isPresent(r.status));
+  if (!online.length) { container.innerHTML = emptyHTML; return; }
 
-  if (!online.length) {
-    container.innerHTML = `<div class="active-now-empty">
-      <div class="an-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
-      <div class="an-empty-text">It's quiet for now...<br>When friends come online, they'll appear here.</div>
+  // Discord-style: group everyone playing the same game into a "Game — N
+  // people" card; everyone else lists individually under "Online".
+  const games = new Map();
+  const idle = [];
+  online.forEach(u => {
+    if (u.gameActivity) {
+      if (!games.has(u.gameActivity)) games.set(u.gameActivity, []);
+      games.get(u.gameActivity).push(u);
+    } else idle.push(u);
+  });
+
+  const gameSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>';
+  let html = '';
+  games.forEach((players, game) => {
+    const faces = players.slice(0, 3).map(p => `<div class="fa">${buildAvatarHTML(p.pfp, p.displayName, 26)}</div>`).join('');
+    html += `<div class="an-group" onclick="viewUserProfile('${escapeHTML(players[0].username)}')">
+      <div class="an-group-ico">${gameSvg}</div>
+      <div class="an-group-info"><div class="an-group-name">${escapeHTML(game)}</div><div class="an-group-count">${players.length} ${players.length === 1 ? 'person' : 'people'}</div></div>
+      <div class="an-group-faces">${faces}</div>
     </div>`;
-    return;
+  });
+  if (idle.length) {
+    if (games.size) html += `<div class="an-sub-label">Online</div>`;
+    html += idle.map(_anItemHTML).join('');
   }
-
-  container.innerHTML = online.map(u => {
-    const activityText = u.gameActivity
-      ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.6;flex-shrink:0;"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Playing: ${escapeHTML(u.gameActivity)}`
-      : u.customStatus
-        ? escapeHTML(u.customStatus)
-        : FtzStatus.label(u.status);
-    return `<div class="active-now-item" onclick="viewUserProfile('${escapeHTML(u.username)}')">
-      <div class="an-avatar" style="pointer-events:none;">
-        <div class="fa" style="width:36px;height:36px;border-radius:50%;overflow:hidden;font-size:13px;">${buildAvatarHTML(u.pfp, u.displayName, 36)}</div>
-        <span class="an-status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="16">${FtzStatus.dotSvg(u.status, 16)}</span>
-      </div>
-      <div class="an-info" style="pointer-events:none;">
-        <div class="an-name">${escapeHTML(u.displayName)}</div>
-        <div class="an-activity">${activityText}</div>
-      </div>
-    </div>`;
-  }).join('');
+  container.innerHTML = html;
 }
 let _activeNowRefreshTimer = null;
 function _debouncedActiveNowRefresh() {
@@ -8319,8 +8327,10 @@ function _debouncedActiveNowRefresh() {
     _activeNowRefreshTimer = null;
     const h = document.getElementById('home-active-now-list');
     const d = document.getElementById('dm-active-now-list');
+    const f = document.getElementById('friends-active-now-list');
     if (h) renderActiveNowSidebar('home-active-now-list');
     if (d) renderActiveNowSidebar('dm-active-now-list');
+    if (f && _currentView === 'friends') renderActiveNowSidebar('friends-active-now-list');
   }, 600);
 }
 
@@ -14685,15 +14695,13 @@ function _uaOutsideClose(ev) {
 // ════════════════════════════════════════════
 // FRIENDS
 // ════════════════════════════════════════════
-async function renderFriendsList(filter='all') {
-  // Use the enhanced sorted friends list
-  return renderFriendsSorted(_friendSortMode || 'online');
+// Re-render the Friends page. Callers across the app fire this after a
+// relationship change (accept/remove/block/…); it simply re-paints whatever
+// Friends tab is currently active (see renderFriendsView / setFriendsTab).
+async function renderFriendsList(_filter) {
+  return renderFriendsView(_friendsTab || 'online');
 }
-function filterFriends(filter,btn){
-  document.querySelectorAll('#friends-tabs .disc-tab').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-  renderFriendsList(filter);
-}
+function filterFriends(filter,btn){ setFriendsTab(filter, btn); }
 async function sendFriendRequest(){
   const inp=document.getElementById('friend-target');
   const err=document.getElementById('friend-error');
@@ -58509,74 +58517,226 @@ function _showSlowModeSettings(bastionId, chName) {
 // FRIEND LIST SORTING
 // ════════════════════════════════════════════
 let _friendSortMode = 'online';
-async function renderFriendsSorted(mode) {
-  _friendSortMode = mode || _friendSortMode;
-  const list = document.getElementById('friends-list');
-  if (!list) return;
-  const friends = CU?.friends || [];
-  const pending = CU?.friendRequestsReceived || [];
-  const outgoing = CU?.friendRequestsSent || [];
-  let html = '';
-  // Incoming requests first — Accept, or Ignore (silent, returns the
-  // relation to 'none' without notifying the sender)
-  if (pending.length) {
-    html += `<div style="font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Incoming — ${pending.length}</div>`;
-    pending.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong> sent you a friend request</p></div><div style="display:flex;gap:6px;"><button class="rn-accept" title="Accept" onclick="acceptFriend('${escapeHTML(f)}')"><i class="fa-solid fa-user-check" aria-hidden="true"></i></button><button class="rn-decline" title="Ignore — they won't be notified" onclick="ignoreFriendRequest('${escapeHTML(f)}')"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div></div>`; });
-  }
-  // Outgoing requests — cancelable
-  if (outgoing.length) {
-    html += `<div style="font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:${pending.length?'12px':'0'} 0 8px;">Sent — ${outgoing.length}</div>`;
-    outgoing.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong></p><div style="font-size:10.5px;color:var(--muted);">Outgoing friend request</div></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;" onclick="cancelFriendRequestTo('${escapeHTML(f)}')"><i class="fa-solid fa-user-clock" aria-hidden="true"></i> Cancel</button></div></div>`; });
-  }
-  if (!friends.length) { list.innerHTML = html || `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('users','48')}</div><h3>No friends yet</h3><p>Add friends by username!</p><button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button></div>`; return; }
-  // Fetch statuses
-  let statuses = {};
-  try { const snap = await firebase.database().ref('statuses').get(); if (snap.exists()) statuses = snap.val(); } catch(e) { _dbg('[Friends] status fetch failed', e); }
-  let sorted = [...friends];
-  if (_friendSortMode === 'online') sorted.sort((a,b) => { const sa = statuses[a]==='online'?2:statuses[a]==='away'?1:0; const sb = statuses[b]==='online'?2:statuses[b]==='away'?1:0; return sb-sa; });
-  else if (_friendSortMode === 'alpha') sorted.sort((a,b) => a.localeCompare(b));
-  else if (_friendSortMode === 'recent') sorted.reverse();
-  html += `<div style="display:flex;align-items:center;gap:6px;margin:10px 0 8px;">
-    <span style="font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Friends — ${friends.length}</span>
-    <span style="margin-left:auto;display:flex;gap:4px;">
-      <button class="asf-chip ${_friendSortMode==='online'?'active':''}" onclick="renderFriendsSorted('online')" style="font-size:10px;padding:2px 8px;">Online</button>
-      <button class="asf-chip ${_friendSortMode==='alpha'?'active':''}" onclick="renderFriendsSorted('alpha')" style="font-size:10px;padding:2px 8px;">A-Z</button>
-      <button class="asf-chip ${_friendSortMode==='recent'?'active':''}" onclick="renderFriendsSorted('recent')" style="font-size:10px;padding:2px 8px;">Recent</button>
-    </span>
-  </div>`;
-  sorted.forEach(f => {
-    const st = statuses[f] || 'offline';
-    const stColor = st==='online'?'#3ecf6e':st==='away'?'#f59e0b':st==='dnd'?'#f87171':'#4a4a5a';
-    html += `<div class="activity-item" id="friend-sorted-${escapeHTML(f)}"><div class="act-icon" style="position:relative;">${buildAvatarHTML(null,f,40)}<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${stColor};border:2px solid var(--panel);"></div></div><div class="act-text"><p style="font-weight:600;">${escapeHTML(f)}</p><div><span style="font-size:10px;color:${stColor};">${st}</span><span id="friend-sorted-act-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.2);margin-left:6px;"></span></div></div><div style="display:flex;gap:6px;"><button class="btn-g" title="Message" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;" onclick="openDMView('${escapeHTML(f)}')"><i class="fa-solid fa-message" aria-hidden="true"></i></button><button class="btn-d" title="Remove friend" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;" onclick="removeFriend('${escapeHTML(f)}')"><i class="fa-solid fa-user-minus" aria-hidden="true"></i> Remove</button></div></div>`;
+// ════════════════════════════════════════════
+// FRIENDS PAGE (Discord-style: tab subnav + list + Active Now)
+// ════════════════════════════════════════════
+let _friendsTab = 'online';
+
+// Switch the Friends subnav tab. 'add' opens the existing Add-Friend card.
+function setFriendsTab(tab, btn) {
+  if (tab === 'add') { openModal('modal-add-friend'); return; }
+  if (!['online', 'all', 'pending', 'blocked'].includes(tab)) tab = 'online';
+  _friendsTab = tab;
+  document.querySelectorAll('#friends-subnav .disc-subnav-btn').forEach(b => b.classList.remove('active'));
+  const active = btn || document.getElementById('ftab-' + tab);
+  if (active) active.classList.add('active');
+  const searchWrap = document.getElementById('fr-search-wrap');
+  if (searchWrap) searchWrap.style.display = (tab === 'online' || tab === 'all') ? '' : 'none';
+  renderFriendsView(tab);
+}
+
+// Live-filter the visible friend rows by display name / username.
+function _frFilter(q) {
+  q = (q || '').trim().toLowerCase();
+  document.querySelectorAll('#fr-list .fr-row').forEach(row => {
+    const hay = (row.dataset.name || '') + ' ' + (row.dataset.username || '');
+    row.style.display = (!q || hay.includes(q)) ? '' : 'none';
   });
-  list.innerHTML = html;
+}
 
-  // Async: fetch user data to show activities
+// Toggle the Active Now slide-over (narrow windows only).
+function toggleFriendsActiveNow() {
+  const view = document.getElementById('view-friends');
+  if (!view) return;
+  const open = view.classList.toggle('fr-anow-open');
+  const btn = document.getElementById('fr-anow-toggle');
+  if (btn) btn.classList.toggle('active', open);
+}
+
+// ⋮ / right-click menu for a friend row.
+function _frRowMenu(ev, username) {
+  try { ev.preventDefault(); ev.stopPropagation(); } catch (_) {}
+  const isBlocked = (CU?.blockedUsers || []).map(s => String(s).toLowerCase()).includes(String(username).toLowerCase());
+  showCtxMenu(ev.clientX, ev.clientY, [
+    { label: username, items: [
+      { icon: _ctxSvg('message'), label: 'Message', action: () => openDMView(username) },
+      { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(username) },
+    ]},
+    { items: [
+      { icon: _ctxSvg('copy'), label: 'Copy Username', action: () => navigator.clipboard.writeText(username), copyFeedback: true },
+    ]},
+    { items: [
+      { icon: _ctxSvg('kick'), label: 'Remove Friend', danger: true, action: () => showCustomConfirm('Remove ' + username + ' from friends?', () => removeFriend(username)) },
+      { icon: _ctxSvg('block') || _ctxSvg('kick'), label: isBlocked ? 'Unblock' : 'Block', danger: !isBlocked, action: () => toggleBlockUser(username) },
+    ]},
+  ]);
+}
+
+// Loading skeleton rows.
+function _frSkeletons(n) {
+  let h = '';
+  for (let i = 0; i < n; i++) h += `<div class="fr-skel-row"><div class="skeleton fr-skel-av"></div><div style="flex:1;"><div class="skeleton" style="width:38%;height:12px;margin-bottom:7px;"></div><div class="skeleton" style="width:24%;height:9px;"></div></div></div>`;
+  return h;
+}
+
+// Joyster-flavoured empty state (Joyster now lives only in empty states).
+function _frEmpty(title, body, cta) {
+  return `<div class="fr-empty">
+    <img src="/Joyster.png" onerror="this.onerror=null;this.src='/JoysterPoint.png';" alt="">
+    <h3>${escapeHTML(title)}</h3>
+    <p>${escapeHTML(body)}</p>
+    ${cta || ''}
+  </div>`;
+}
+
+const _FR_GAME_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>';
+
+// Row subline: game activity → custom status → status label.
+function _frSubline(u) {
+  if (u.gameActivity) return _FR_GAME_SVG + ' ' + escapeHTML(u.gameActivity);
+  if (u.customStatus) return escapeHTML(u.customStatus);
+  return escapeHTML(FtzStatus.publicLabel(u.status));
+}
+
+function _frRowHTML(u) {
+  const dn = u.displayName || u.username;
+  const un = escapeHTML(u.username);
+  return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}" onclick="openDMView('${un}')" oncontextmenu="_frRowMenu(event,'${un}')">
+    <div class="fr-av"><div class="fa">${buildAvatarHTML(u.pfp || null, dn, 40)}</div><span class="fr-dot">${FtzStatus.dotSvg(u.status, 15)}</span></div>
+    <div class="fr-meta"><span class="fr-name">${escapeHTML(dn)}</span><span class="fr-sub">${_frSubline(u)}</span></div>
+    <div class="fr-actions">
+      <button class="fr-act" title="Message" onclick="event.stopPropagation();openDMView('${un}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+      <button class="fr-act" title="More" onclick="_frRowMenu(event,'${un}')"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+    </div>
+  </div>`;
+}
+
+function _frUpdatePendingBadge() {
+  const badge = document.getElementById('fr-pending-badge');
+  if (!badge) return;
+  const n = (CU?.friendRequestsReceived || []).length;
+  if (n > 0) { badge.textContent = n; badge.style.display = ''; }
+  else badge.style.display = 'none';
+}
+
+// Apply the display-name font at rest + stash the effect for hover reveal.
+function _frWireNameEffect(row, u) {
+  const nm = row && row.querySelector('.fr-name');
+  if (!nm || !u) return;
+  let fontCss = '';
+  if (u.displayFont) fontCss = 'font-family:' + _getDisplayFontCSS(u.displayFont) + ';font-weight:' + _getDisplayFontWeight(u.displayFont) + ';';
+  nm.dataset.fontCss = fontCss;
+  if (u.displayColor || (u.displayEffect && u.displayEffect !== 'solid')) {
+    nm.dataset.effectCss = _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor || '#fff', u.displayColor2 || u.displayColor || '#fff');
+  } else { delete nm.dataset.effectCss; }
+  if (fontCss) _dmNameEffect(nm, false);
+}
+
+// Main dispatcher — paints the active tab into #fr-list.
+async function renderFriendsView(tab) {
+  tab = tab || _friendsTab || 'online';
+  const list = document.getElementById('fr-list');
+  if (!list) return;
+  _frUpdatePendingBadge();
+  if (tab === 'blocked') return _frRenderBlocked(list);
+  if (tab === 'pending') return _frRenderPending(list);
+
+  const friends = CU?.friends || [];
+  if (!friends.length) {
+    list.innerHTML = _frEmpty('No friends yet', "Add someone by their username and start a conversation — Joyster's rooting for you.",
+      `<button class="fr-add-btn" onclick="openModal('modal-add-friend')" style="margin:0 auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add Friend</span></button>`);
+    return;
+  }
+
+  list.innerHTML = `<div class="fr-sec">${tab === 'online' ? 'Online' : 'All friends'} — …</div>` + _frSkeletons(Math.min(friends.length, 8));
+
+  const slice = friends.slice(0, 200);
+  let presence = null;
+  try { presence = await FortizedSocial.queryPresence(slice); } catch (e) { console.warn('[Friends] presence query failed:', e?.message); }
+  const profileMap = {};
   try {
-    const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(sorted) : Promise.all(sorted.map(f => FortizedSocial.getUserByName(f))));
-    const profileMap = {};
-    (profiles || []).forEach(u => { if (u) profileMap[u.username] = u; });
+    const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(slice) : Promise.all(slice.map(f => FortizedSocial.getUserByName(f))));
+    (profiles || []).forEach(u => { if (u) { profileMap[u.username] = u; rememberProfile(u); } });
+  } catch (e) { console.warn('[Friends] profile fetch failed:', e?.message); }
 
-    sorted.forEach(f => {
-      const u = profileMap[f];
-      if (!u) return;
+  // Bail if the user navigated away / switched tabs while awaiting.
+  if (_currentView !== 'friends' || _friendsTab !== tab) return;
 
-      let activityText = '';
-      if (u.activityState?.activities?.length) {
-        const primaryActivity = u.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2))[0];
-        if (primaryActivity) activityText = formatActivityDisplay(primaryActivity);
-      } else if (u.gameActivity?.name) {
-        activityText = formatActivityDisplay({
-          id: u.gameActivity._spotify ? 'spotify' : 'game',
-          type: u.gameActivity._spotify ? 'listening' : 'playing',
-          name: u.gameActivity.name,
-          metadata: { genre: u.gameActivity.genre }
-        });
-      }
-      const actEl = document.getElementById('friend-sorted-act-'+f);
-      if (actEl && activityText) actEl.textContent = '🎮 ' + activityText;
-    });
-  } catch(e) { _dbg('[Friends] activity fetch failed', e); }
+  const rows = slice.map(f => {
+    const u = profileMap[f] || profileMap[String(f).toLowerCase()] || cachedProfile(f) || {};
+    const liveSt = presence?.[f]?.status;
+    const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (presence === null ? (u.status || 'offline') : 'offline'));
+    const liveGA = presence?.[f]?.gameActivity;
+    const ga = liveGA?.name || u.gameActivity?.name || '';
+    const cs = u.customStatus?.text || (typeof u.customStatus === 'string' ? u.customStatus : '');
+    return { username: f, displayName: u.displayName || f, pfp: u.pfp || null, status: st, gameActivity: ga, customStatus: cs, _u: u };
+  });
+
+  const shown = tab === 'online' ? rows.filter(r => FtzStatus.isPresent(r.status)) : rows;
+  if (!shown.length) {
+    list.innerHTML = _frEmpty(tab === 'online' ? "No one's online" : 'No friends yet',
+      tab === 'online' ? "None of your friends are around right now. Joyster says: go touch grass, then come back!" : 'Add someone by their username to get started.',
+      tab === 'online' ? `<button class="fr-reqbtn fr-reqbtn--ghost" onclick="setFriendsTab('all',document.getElementById('ftab-all'))">View all friends</button>` : '');
+    return;
+  }
+
+  shown.sort((a, b) => (FtzStatus.isPresent(b.status) ? 1 : 0) - (FtzStatus.isPresent(a.status) ? 1 : 0) || String(a.displayName || '').localeCompare(String(b.displayName || '')));
+  list.innerHTML = `<div class="fr-sec">${tab === 'online' ? 'Online' : 'All friends'} — ${shown.length}</div>` + shown.map(_frRowHTML).join('');
+
+  const sv = document.getElementById('fr-search');
+  if (sv && sv.value) _frFilter(sv.value);
+  shown.forEach(r => _frWireNameEffect(list.querySelector(`.fr-row[data-username="${CSS.escape(r.username)}"]`), r._u));
+}
+
+async function _frRenderPending(list) {
+  const incoming = CU?.friendRequestsReceived || [];
+  const outgoing = CU?.friendRequestsSent || [];
+  if (!incoming.length && !outgoing.length) {
+    list.innerHTML = _frEmpty('No pending requests', "When someone sends you a friend request, it'll show up here.", '');
+    return;
+  }
+  let html = '';
+  if (incoming.length) {
+    html += `<div class="fr-sec">Incoming — ${incoming.length}</div>`;
+    html += incoming.map(f => {
+      const cp = cachedProfile(f) || {}; const dn = cp.displayName || f; const un = escapeHTML(f);
+      return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}" onclick="viewUserProfile('${un}')">
+        <div class="fr-av"><div class="fa">${buildAvatarHTML(cp.pfp || null, dn, 40)}</div></div>
+        <div class="fr-meta"><span class="fr-name">${escapeHTML(dn)}</span><span class="fr-sub">Incoming friend request</span></div>
+        <div class="fr-actions">
+          <button class="fr-act fr-act--accept" title="Accept" onclick="event.stopPropagation();acceptFriend('${un}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="fr-act fr-act--danger" title="Ignore" onclick="event.stopPropagation();ignoreFriendRequest('${un}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div></div>`;
+    }).join('');
+  }
+  if (outgoing.length) {
+    html += `<div class="fr-sec">Outgoing — ${outgoing.length}</div>`;
+    html += outgoing.map(f => {
+      const cp = cachedProfile(f) || {}; const dn = cp.displayName || f; const un = escapeHTML(f);
+      return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}" onclick="viewUserProfile('${un}')">
+        <div class="fr-av"><div class="fa">${buildAvatarHTML(cp.pfp || null, dn, 40)}</div></div>
+        <div class="fr-meta"><span class="fr-name">${escapeHTML(dn)}</span><span class="fr-sub">Outgoing friend request</span></div>
+        <div class="fr-actions"><button class="fr-reqbtn fr-reqbtn--ghost" onclick="event.stopPropagation();cancelFriendRequestTo('${un}')">Cancel</button></div></div>`;
+    }).join('');
+  }
+  list.innerHTML = html;
+}
+
+function _frRenderBlocked(list) {
+  const blocked = CU?.blockedUsers || [];
+  if (!blocked.length) {
+    list.innerHTML = _frEmpty('No blocked users', "You haven't blocked anyone. Blocked users can't message or friend you.", '');
+    return;
+  }
+  let html = `<div class="fr-sec">Blocked — ${blocked.length}</div>`;
+  html += blocked.map(f => {
+    const cp = cachedProfile(f) || {}; const dn = cp.displayName || f; const un = escapeHTML(f);
+    return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}">
+      <div class="fr-av"><div class="fa">${buildAvatarHTML(cp.pfp || null, dn, 40)}</div></div>
+      <div class="fr-meta"><span class="fr-name">${escapeHTML(dn)}</span><span class="fr-sub">Blocked</span></div>
+      <div class="fr-actions"><button class="fr-reqbtn fr-reqbtn--ghost" onclick="toggleBlockUser('${un}')">Unblock</button></div></div>`;
+  }).join('');
+  list.innerHTML = html;
 }
 
 // ════════════════════════════════════════════

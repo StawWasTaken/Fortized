@@ -792,8 +792,12 @@ async function loadAdminAnnouncements() {
   } catch(e) { console.warn('[Newsroom] admin announcements load failed:', e); return 0; }
 }
 
-// (Forum → article translator removed — the newsroom is hand-curated;
-// only staff announcements are still auto-imported.)
+// DECISION (kept): staff announcements stay auto-imported. Unlike the removed
+// forum→article translator (which duplicated curated pieces as "FROM
+// ANNOUNCEMENT · FORUM"), this source is egress-light (one admin_kv key, not a
+// table scan), dedupes by an `ann_*` slug so it can't collide with the
+// hand-curated ARTICLES, and is the only way for staff to publish straight to
+// the newsroom. The newsroom = 4 curated articles + published staff posts.
 
 // ── Bootstrap ──
 renderCategories();

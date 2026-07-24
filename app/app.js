@@ -6676,13 +6676,10 @@ function _adClickAction(ad) {
         window._atelierPendingTab = allowed.includes(tab) ? tab : 'radiance';
         try { showView('atelier'); return; } catch(e) {}
       }
-      // Friends sub-view inside DMs
+      // Legacy Friends link (?friends=1 on the messages route) → the dedicated
+      // Friends page, which is now its own view rather than a DMs sub-view.
       if (path === '/app/messages' && /friends=1/.test(query)) {
-        try {
-          showView('dms');
-          setTimeout(() => { try { showDMFriendsHome(); } catch(_){} }, 80);
-          return;
-        } catch(e) {}
+        try { showView('friends'); return; } catch(e) {}
       }
       const viewMap = {
         '/app': 'home',
@@ -8233,190 +8230,11 @@ async function renderDMSidebar(scroll, force) {
 function _invalidateDmSidebarCache() { _dmScrollCache = { sig: null, html: null, ts: 0 }; }
 
 // ── DM Friends Home (shown when no DM selected) ──
-let _dmFriendsFilter = 'online';
-async function renderDMFriendsHome() {
-  const list = document.getElementById('dm-friends-list');
-  if (!list) return;
-  const friends = CU?.friends || [];
-  const filter = _dmFriendsFilter;
-
-  if (!friends.length) {
-    list.innerHTML = `<div style="text-align:center;padding:48px 20px;">
-      <div style="margin-bottom:14px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
-      <div style="font-family:var(--font-display);font-size:16px;font-weight:800;margin-bottom:8px;color:rgba(255,255,255,.7);">No Friends Yet</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.3);margin-bottom:18px;line-height:1.5;">Add friends by their username to start chatting</div>
-      <button class="btn-a" onclick="openModal('modal-add-friend')" style="padding:9px 20px;border-radius:12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Friend</button>
-    </div>`;
-    return;
-  }
-
-  // Show skeleton loading state while data loads
-  list.innerHTML = friends.slice(0, 6).map(() => `<div style="display:flex;align-items:center;gap:14px;padding:10px 16px;"><div class="skeleton skeleton-avatar" style="width:42px;height:42px;flex-shrink:0;"></div><div style="flex:1;"><div class="skeleton skeleton-text" style="width:60%;"></div><div class="skeleton skeleton-text" style="width:40%;height:8px;"></div></div></div>`).join('');
-
-  // Build friend cards with async status lookup
-  let html = '';
-  const pending = CU?.friendRequestsReceived || [];
-  if (filter === 'all' && pending.length) {
-    html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">PENDING — ${pending.length}</div>`;
-    pending.forEach(f => {
-      // Get activity for pending user (will be updated when friend data loads)
-      let activityHTML = '';
-      html += `<div id="dm-home-pending-${escapeHTML(f)}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;transition:background .12s;">
-        <div style="position:relative;flex-shrink:0;"><div class="fa" id="dm-home-pav-${escapeHTML(f)}" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(_pfpCache[f]||null,f,40)}</div></div>
-        <div style="flex:1;min-width:0;"><div id="dm-home-pdn-${escapeHTML(f)}" style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div><div style="font-size:11.5px;color:var(--muted);">Incoming friend request</div><div id="dm-home-pact-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;"></div></div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn-a" style="padding:6px 14px;font-size:12px;display:inline-flex;align-items:center;gap:6px;" onclick="acceptFriend('${escapeHTML(f)}')"><i class="fa-solid fa-user-check" aria-hidden="true"></i> Accept</button>
-          <button class="btn-g" style="padding:6px 14px;font-size:12px;display:inline-flex;align-items:center;gap:6px;" onclick="declineFriend('${escapeHTML(f)}')"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Ignore</button>
-        </div>
-      </div>`;
-    });
-    html += '<div style="height:12px;"></div>';
-  }
-
-  // Online count is resolved async below once presence lands; for the 'online'
-  // filter, show a placeholder until then so we don't lie with the total count.
-  const initialCount = filter === 'online' ? '…' : friends.length;
-  html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">${filter==='online'?'ONLINE':'ALL FRIENDS'} — <span id="dm-friends-header-count">${initialCount}</span></div>`;
-
-  friends.forEach(f => {
-    // Stale-while-revalidate from local profile cache.
-    const _cp = cachedProfile(f) || {};
-    const _initStatus = _cp.status || 'offline';
-    const _initName = _cp.displayName || f;
-    const _initStatusColor = FtzStatus.color(_initStatus);
-    html += `<div class="dm-friend-row" data-user="${escapeHTML(f)}" style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-radius:12px;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;border:1px solid transparent;background:transparent;" onclick="openDMView('${escapeHTML(f)}')">
-      <div style="position:relative;flex-shrink:0;">
-        <div class="fa" id="dm-home-av-${escapeHTML(f)}" style="width:42px;height:42px;font-size:15px;border:2px solid rgba(255,255,255,.06);">${buildAvatarHTML(_cp.pfp||null,_initName,42)}</div>
-        <span class="dm-home-status" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;background:${_initStatusColor};border:2.5px solid var(--bg);"></span>
-      </div>
-      <div style="flex:1;min-width:0;">
-        <div id="dm-home-dn-${escapeHTML(f)}" style="font-weight:700;font-size:13.5px;font-family:var(--font-display);">${escapeHTML(_initName)}</div>
-        <div style="display:flex;flex-direction:column;gap:1px;margin-top:2px;">
-          <div class="dm-home-status-text" data-for="${escapeHTML(f)}" style="font-size:11px;color:rgba(255,255,255,.25);">${escapeHTML(FtzStatus.publicLabel(_initStatus))}</div>
-          <div id="dm-home-activity-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.2);"></div>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button class="friend-msg-btn" onclick="event.stopPropagation();openDMView('${escapeHTML(f)}')">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>
-      </div>
-    </div>`;
-  });
-
-  list.innerHTML = html;
-
-  // Update stat bar
-  const statOnline = document.getElementById('dm-stat-online');
-  const statTotal = document.getElementById('dm-stat-total');
-  const statBastions = document.getElementById('dm-stat-bastions');
-  if (statTotal) statTotal.textContent = friends.length;
-  if (statBastions) statBastions.textContent = (CU?.bastions||[]).length;
-
-  // Async: fetch real PFPs, display names, and statuses
-  // First, bulk-fetch live presence via Socket.IO for ALL friends at once
-  let _friendPresenceMap = null; // null = query failed
-  const allUsers = [...new Set([...friends, ...pending])];
-  try {
-    _friendPresenceMap = await FortizedSocial.queryPresence(allUsers);
-  } catch(e) { console.warn('[Presence] Home query failed:', e?.message); }
-
-  // Batch-fetch all friend/pending profiles in ONE query instead of N separate queries
-  let _homeProfileMap = {};
-  try {
-    const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(allUsers) : Promise.all(allUsers.map(f => FortizedSocial.getUserByName(f))));
-    (profiles || []).forEach(u => { if (u) { _homeProfileMap[u.username] = u; rememberProfile(u); } });
-  } catch(e) { console.warn('[Friends] Home profile fetch failed:', e?.message); }
-
-  let _onlineCount = 0;
-  await Promise.all(allUsers.map(async f => {
-    try {
-      const u = _homeProfileMap[f] || _homeProfileMap[f.toLowerCase()] || null;
-      if (!u) return;
-      // Warm the persistent pfp cache so the next render paints instantly.
-      if (u.pfp) { _pfpCache[f] = u.pfp; _persistPfpCache(); }
-
-      // Update friend row avatar + display name
-      const avEl = document.getElementById('dm-home-av-'+f);
-      if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 42);
-      const dnEl = document.getElementById('dm-home-dn-'+f);
-      if (dnEl) dnEl.textContent = u.displayName || f;
-
-      // Update pending row avatar + display name
-      const pavEl = document.getElementById('dm-home-pav-'+f);
-      if (pavEl) pavEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 40);
-      const pdnEl = document.getElementById('dm-home-pdn-'+f);
-      if (pdnEl) pdnEl.textContent = u.displayName || f;
-
-      // Use LIVE Socket.IO presence — if query failed, trust DB as initial display
-      const liveSt = _friendPresenceMap?.[f]?.status;
-      const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (_friendPresenceMap === null ? (u?.status || 'offline') : 'offline'));
-      const dot = document.querySelector(`.dm-home-status[data-for="${CSS.escape(f)}"]`);
-      if (dot) { dot.style.background = FtzStatus.color(st); dot.style.boxShadow = '0 0 8px '+FtzStatus.color(st)+'55'; }
-      const stText = document.querySelector(`.dm-home-status-text[data-for="${CSS.escape(f)}"]`);
-      if (stText) {
-        const csText = u.customStatus?.text || u.customStatus;
-        stText.textContent = csText || FtzStatus.publicLabel(st);
-      }
-
-      // Update activity display
-      let activityText = '';
-      if (u.activityState?.activities?.length) {
-        const primaryActivity = u.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2))[0];
-        if (primaryActivity) activityText = formatActivityDisplay(primaryActivity);
-      } else if (u.gameActivity?.name) {
-        activityText = formatActivityDisplay({
-          id: u.gameActivity._spotify ? 'spotify' : 'game',
-          type: u.gameActivity._spotify ? 'listening' : 'playing',
-          name: u.gameActivity.name,
-          metadata: { genre: u.gameActivity.genre }
-        });
-      }
-      const actEl = document.getElementById('dm-home-activity-'+f);
-      if (actEl) actEl.textContent = activityText ? '🎮 ' + activityText : '';
-
-      // Update pending activity display
-      const pendActEl = document.getElementById('dm-home-pact-'+f);
-      if (pendActEl) pendActEl.textContent = activityText ? '🎮 ' + activityText : '';
-      // Track online count
-      if (FtzStatus.isPresent(st)) {
-        _onlineCount++;
-        const sob = document.getElementById('dm-stat-online');
-        if (sob) sob.textContent = _onlineCount;
-      }
-      // Keep the section header count in sync with what's actually visible.
-      const hdr = document.getElementById('dm-friends-header-count');
-      if (hdr) {
-        hdr.textContent = filter === 'online' ? _onlineCount : friends.length;
-      }
-      // If filtering online and user is offline, hide row
-      if (filter === 'online' && !FtzStatus.isPresent(st)) {
-        const row = document.querySelector(`.dm-friend-row[data-user="${CSS.escape(f)}"]`);
-        if (row) row.style.display = 'none';
-      }
-    } catch (e) { _dbg('[DM] friend status update failed', e); }
-  }));
-  // After all presence resolutions settle, ensure the header reflects reality
-  // even if some friends returned null and short-circuited inside the loop.
-  const finalHdr = document.getElementById('dm-friends-header-count');
-  if (finalHdr) finalHdr.textContent = filter === 'online' ? _onlineCount : friends.length;
-}
-
-function dmFriendsFilter(filter, btn) {
-  _dmFriendsFilter = filter;
-  document.querySelectorAll('#dm-friends-tabs .disc-tab').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  renderDMFriendsHome();
-}
-
-function filterDMFriendsList(query) {
-  const q = (query||'').toLowerCase().trim();
-  document.querySelectorAll('.dm-friend-row').forEach(row => {
-    const user = (row.getAttribute('data-user')||'').toLowerCase();
-    const nameEl = row.querySelector('[id^="dm-home-dn-"]');
-    const name = nameEl ? nameEl.textContent.toLowerCase() : '';
-    row.style.display = (user.includes(q) || name.includes(q)) ? '' : 'none';
-  });
-}
+// NOTE: the standalone friends list that used to render inside the DMs pane was
+// retired when Friends became its own page (#view-friends). showDMFriendsHome()
+// (below) now renders a lightweight "pick a conversation" empty state instead;
+// the old renderDMFriendsHome / dmFriendsFilter / filterDMFriendsList helpers
+// and the _dmFriendsFilter state were removed with it.
 
 // ── Active Now Sidebar ──────────────────────────────
 async function renderActiveNowSidebar(containerId) {
@@ -8507,42 +8325,22 @@ function showDMFriendsHome() {
   } catch(_) {}
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
-  // Hide user panel when returning to friends home
+  // Hide user panel when no conversation is open
   const dmPanel = document.getElementById('dm-user-panel');
   if (dmPanel) dmPanel.style.display = 'none';
   // Show Active Now sidebar
   const anSidebar = document.getElementById('dm-active-now');
   if (anSidebar) anSidebar.style.display = '';
+  // Lightweight empty state — the full friends list now lives on its own
+  // dedicated Friends page (#view-friends), so the DMs pane just shows a
+  // "pick a conversation" prompt instead of duplicating it here.
   wrap.innerHTML = `
-    <div id="dm-friends-home" style="flex:1;overflow-y:auto;">
-      <div class="disc-hero" style="height:140px;">
-        <img src="/Fortized banner.png?v=2" class="disc-hero-bg" alt="" onerror="this.style.display='none'">
-        <div class="disc-hero-fade"></div>
-        <div class="disc-hero-content">
-          <h1 style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin:0 0 3px;text-shadow:0 2px 12px rgba(0,0,0,.5);">${_t('friends.title')}</h1>
-          <p style="font-size:11.5px;color:rgba(255,255,255,.4);margin:0;">${_t('dms.friends_subtitle')}</p>
-        </div>
-      </div>
-      <div style="padding:16px 28px 28px;max-width:900px;">
-        <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:14px;">
-          <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> ${_t('friends.add')}</button>
-        </div>
-        <!-- Search bar -->
-        <div style="margin-bottom:20px;position:relative;">
-          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          </span>
-          <input type="text" id="dm-friends-search" placeholder="${_t('dms.search_friends')}" oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;">
-        </div>
-        <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
-          <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">${_t('friends.tab.online')}</button>
-          <button class="disc-tab" onclick="dmFriendsFilter('all',this)">${_t('friends.tab.all')}</button>
-          <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">${_t('friends.tab.pending')}</button>
-        </div>
-        <div id="dm-friends-list"></div>
-      </div>
+    <div id="dm-empty-state" class="empty-state" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;">
+      <div style="color:rgba(255,255,255,.15);margin-bottom:6px;"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+      <h3 style="font-family:var(--font-display);font-weight:700;margin:0 0 6px;">${_t('dms.empty.title')}</h3>
+      <p style="font-size:12.5px;color:rgba(255,255,255,.3);max-width:320px;line-height:1.5;margin:0 0 20px;">${_t('dms.empty.body')}</p>
+      <button class="btn-a" onclick="showView('friends')" style="font-size:12px;padding:9px 18px;border-radius:12px;display:inline-flex;align-items:center;gap:7px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> ${_t('dms.empty.cta')}</button>
     </div>`;
-  renderDMFriendsHome();
   renderActiveNowSidebar('dm-active-now-list');
 }
 
@@ -16968,23 +16766,8 @@ function initFortizedUXResilience() {
           }
         }
 
-        // ── DM FRIENDS HOME: update row visibility for "online" filter ──
+        // Refresh the Active Now sidebar when a friend's status changes.
         if ((CU?.friends||[]).includes(data.username)) {
-          const friendRow = document.querySelector('.dm-friend-row[data-user="'+data.username+'"]');
-          if (friendRow && _dmFriendsFilter === 'online') {
-            friendRow.style.display = isOnline ? '' : 'none';
-          }
-          // Update the online count in DM stats
-          try {
-            const sob = document.getElementById('dm-stat-online');
-            if (sob) {
-              const allRows = document.querySelectorAll('.dm-friend-row');
-              let onCount = 0;
-              allRows.forEach(r => { if (r.style.display !== 'none') onCount++; });
-              sob.textContent = _dmFriendsFilter === 'online' ? onCount : sob.textContent;
-            }
-          } catch (e) { _dbg('[DM] online count update failed', e); }
-          // Refresh Active Now sidebar when a friend's status changes
           _debouncedActiveNowRefresh();
         }
       },
@@ -57308,6 +57091,7 @@ const _LANG_PACK = {
     'toast.saved':'Saved', 'toast.copied':'Copied', 'toast.deleted':'Deleted', 'toast.failed':'Something went wrong', 'toast.sent':'Sent',
     'notif.inbox':'Inbox', 'notif.mark_all':'Mark all read', 'notif.tab.all':'All', 'notif.tab.unread':'Unread', 'notif.tab.mentions':'Mentions', 'notif.tab.friends':'Friends', 'notif.empty.title':'All caught up!', 'notif.empty.body':'No new notifications',
     'dms.friends_subtitle':'Your conversations & friends', 'dms.search_friends':'Search friends…',
+    'dms.empty.title':'No conversation open', 'dms.empty.body':'Pick a conversation from the sidebar, or head to Friends to start a new one.', 'dms.empty.cta':'Go to Friends',
     'ub.loading':'Loading…', 'ub.playing':'Playing', 'ub.status.online':'Online',
     'ub.tip.mute':'Mute / Unmute', 'ub.tip.deafen':'Deafen / Undeafen', 'ub.tip.input':'Input options', 'ub.tip.output':'Output options', 'ub.tip.settings':'Settings',
     'modal.add_friend.desc':'You can add friends with their Fortized usernames.', 'modal.add_friend.placeholder':'Enter a username…', 'modal.add_friend.send':'Send Friend Request',

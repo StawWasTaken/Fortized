@@ -7673,6 +7673,123 @@ function _filterDMSidebar(q) {
     row.style.display = (!q || name.includes(q)) ? '' : 'none';
   });
 }
+
+// ═══════════════════ QUICK SWITCHER (jump-to) ═══════════════════
+// A Fortized-original take on Discord's Ctrl+K card. Opened from the DM
+// sidebar search ("Find or start a conversation") or Ctrl/Cmd+K. Searches
+// EVERYTHING you can jump to — DMs, group chats, and bastion channels (each
+// tagged with where it's from) — plus a Hidden section to reopen convos you
+// tucked away. The card is framed by our signature hand-drawn arrows.
+let _qsHandlers = null;
+function _qsArrowsHTML() {
+  // Loose, hand-drawn-looking arrows pointing in at the card from around it.
+  const A = 'stroke="currentColor" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"';
+  return `
+    <svg class="qs-arrow qs-arrow--tl" viewBox="0 0 120 120"><path ${A} d="M12 14c22 6 44 16 60 34 6 7 11 15 14 24"/><path ${A} d="M83 48c4 8 6 16 7 24M90 72c-8-1-16-1-24 1"/></svg>
+    <svg class="qs-arrow qs-arrow--tr" viewBox="0 0 120 120"><path ${A} d="M108 14c-22 6-44 16-60 34-6 7-11 15-14 24"/><path ${A} d="M37 48c-4 8-6 16-7 24M30 72c8-1 16-1 24 1"/></svg>
+    <svg class="qs-arrow qs-arrow--r" viewBox="0 0 140 80"><path ${A} d="M128 40c-30 0-70 0-104 0"/><path ${A} d="M42 18c-10 8-18 16-24 22M18 40c6 6 14 14 24 22"/></svg>
+    <svg class="qs-arrow qs-arrow--l" viewBox="0 0 140 80"><path ${A} d="M12 40c30 0 70 0 104 0"/><path ${A} d="M98 18c10 8 18 16 24 22M122 40c-6 6-14 14-24 22"/></svg>`;
+}
+function _qsGather() {
+  const items = [];
+  const hidden = getHiddenDMs();
+  const order = _dmOrder || [];
+  const oidx = id => { const i = order.indexOf(id); return i < 0 ? 900 : i; };
+  (CU?.friends || []).forEach(f => {
+    const cp = cachedProfile(f) || {};
+    items.push({ kind: 'dm', id: 'dm_' + f, name: cp.displayName || f, sub: '@' + f, pfp: cp.pfp || null,
+      hidden: hidden.includes('dm_' + f), sort: oidx('dm_' + f),
+      jump: () => { unhideDMConversation('dm_' + f); openDMView(f); } });
+  });
+  (CU?.groupChats || []).forEach(gc => {
+    items.push({ kind: 'gc', id: 'gc_' + gc.id, name: gc.name, sub: (gc.members || []).length + ' members',
+      emoji: gc.emoji || '👥', color: gc.color || '#7c5cbf', color2: gc.color2 || '#3ecf6e',
+      hidden: hidden.includes('gc_' + gc.id), sort: oidx('gc_' + gc.id),
+      jump: () => { unhideDMConversation('gc_' + gc.id); openGroupChatView(gc.id); } });
+  });
+  (CU?.bastions || []).forEach((b, bi) => {
+    (b.channels || []).forEach((ch, ci) => {
+      if (ch.type && ch.type !== 'text') return; // jump to text channels only
+      items.push({ kind: 'channel', id: 'ch_' + bi + '_' + ci, name: ch.name, sub: b.name, from: b.name,
+        hidden: false, sort: 800,
+        jump: () => { openBastion(bi); setTimeout(() => { try { selectChannel(ci); } catch (_) {} }, 160); } });
+    });
+  });
+  return items;
+}
+function _qsRowHTML(it) {
+  let icon;
+  if (it.kind === 'dm') icon = `<span class="qs-av">${buildAvatarHTML(it.pfp, it.name, 30)}</span>`;
+  else if (it.kind === 'gc') icon = `<span class="qs-gc" style="background:linear-gradient(135deg,${it.color},${it.color2});">${it.emoji}</span>`;
+  else icon = `<span class="qs-hash">#</span>`;
+  const from = it.from ? `<span class="qs-from">${escapeHTML(it.from)}</span>` : '';
+  const sub = (it.kind === 'dm' || it.kind === 'gc') ? `<span class="qs-sub">${escapeHTML(it.sub)}</span>` : '';
+  return `<div class="qs-row" data-qs="${escapeHTML(it.id)}">${icon}<span class="qs-name">${escapeHTML(it.name)}</span>${sub}${from}</div>`;
+}
+function _renderQuickSwitcher(query) {
+  const box = document.getElementById('qs-results'); if (!box) return;
+  const q = (query || '').trim().toLowerCase();
+  let items = _qsGather();
+  if (q) items = items.filter(it => it.name.toLowerCase().includes(q) || (it.sub || '').toLowerCase().includes(q));
+  items.sort((a, b) => (a.hidden ? 1 : 0) - (b.hidden ? 1 : 0) || a.sort - b.sort);
+  const shown = items.filter(i => !i.hidden).slice(0, q ? 20 : 8);
+  const hiddenItems = items.filter(i => i.hidden).slice(0, q ? 10 : 4);
+  _qsItemMap = {};
+  [...shown, ...hiddenItems].forEach(it => { _qsItemMap[it.id] = it; });
+  let html = '';
+  if (shown.length) html += `<div class="qs-sec">${q ? 'Results' : 'Recent'}</div>` + shown.map(_qsRowHTML).join('');
+  if (hiddenItems.length) html += `<div class="qs-sec">Hidden — click to reopen</div>` + hiddenItems.map(_qsRowHTML).join('');
+  if (!shown.length && !hiddenItems.length) html = `<div class="qs-empty">Nothing matches “${escapeHTML(query)}”.</div>`;
+  box.innerHTML = html;
+}
+let _qsItemMap = {};
+function _openQuickSwitcher() {
+  if (document.getElementById('quick-switcher')) return;
+  const el = document.createElement('div');
+  el.id = 'quick-switcher';
+  el.className = 'qs-overlay';
+  el.innerHTML = `
+    <div class="qs-wrap">
+      <div class="qs-arrows" aria-hidden="true">${_qsArrowsHTML()}</div>
+      <div class="qs-card">
+        <div class="qs-head">Search for bastions, channels or DMs</div>
+        <input id="qs-input" class="qs-input" placeholder="Where would you like to go?" spellcheck="false" autocomplete="off">
+        <div id="qs-results" class="qs-results"></div>
+        <div class="qs-tip"><b>PROTIP:</b> pick a person for a DM, a channel to jump in, or a hidden chat to reopen it.</div>
+      </div>
+    </div>`;
+  el.addEventListener('click', (e) => { if (e.target === el) _closeQuickSwitcher(); });
+  el.querySelector('#qs-results').addEventListener('click', (e) => {
+    const row = e.target.closest('.qs-row'); if (!row) return;
+    const it = _qsItemMap[row.dataset.qs]; if (!it) return;
+    _closeQuickSwitcher();
+    try { it.jump(); } catch (_) {}
+  });
+  document.body.appendChild(el);
+  const inp = el.querySelector('#qs-input');
+  inp.addEventListener('input', () => _renderQuickSwitcher(inp.value));
+  requestAnimationFrame(() => el.classList.add('open'));
+  _renderQuickSwitcher('');
+  setTimeout(() => inp.focus(), 60);
+  _qsHandlers = (e) => { if (e.key === 'Escape') _closeQuickSwitcher(); };
+  document.addEventListener('keydown', _qsHandlers);
+}
+function _closeQuickSwitcher() {
+  const el = document.getElementById('quick-switcher'); if (!el) return;
+  el.classList.remove('open');
+  setTimeout(() => el.remove(), 160);
+  if (_qsHandlers) { document.removeEventListener('keydown', _qsHandlers); _qsHandlers = null; }
+}
+// Global Ctrl/Cmd+K opens the switcher (Discord-style).
+if (typeof document !== 'undefined' && !window._qsBound) {
+  window._qsBound = true;
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      if (document.getElementById('quick-switcher')) _closeQuickSwitcher(); else _openQuickSwitcher();
+    }
+  });
+}
 async function renderDMSidebar(scroll, force) {
   const friends = CU?.friends||[];
   const gcs = CU?.groupChats||[];
@@ -7713,7 +7830,7 @@ async function renderDMSidebar(scroll, force) {
   html += `<div class="dm-search-wrap">
     <div class="dm-search">
       <span class="dm-search-ico"><svg viewBox="0 0 512 512" width="14" height="14" fill="currentColor"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg></span>
-      <input type="text" id="dm-sidebar-search" placeholder="Find or start a conversation" spellcheck="false" autocomplete="off" oninput="_filterDMSidebar(this.value)">
+      <input type="text" id="dm-sidebar-search" placeholder="Find or start a conversation" spellcheck="false" autocomplete="off" readonly onclick="_openQuickSwitcher()" onfocus="_openQuickSwitcher();this.blur()">
     </div>
   </div>`;
 

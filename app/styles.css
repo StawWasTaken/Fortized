@@ -14582,18 +14582,21 @@ select:focus,select:focus-visible,
    white (not accent). NO arrow buttons. On Firefox `scrollbar-width:thin` is
    what removes the native up/down arrows (auto keeps them — the green-arrows
    bug) and gives the slim look. */
-html,body,*{scrollbar-width:thin!important;scrollbar-color:rgba(255,255,255,.3) rgba(255,255,255,.07)!important;}
-*::-webkit-scrollbar{width:10px!important;height:10px!important;background:transparent!important;}
-/* Track: 3px transparent border + padding-box clip → a slim rounded pill. */
+html,body,*{scrollbar-width:thin!important;scrollbar-color:rgba(255,255,255,.42) rgba(255,255,255,.09)!important;}
+*::-webkit-scrollbar{width:14px!important;height:14px!important;background:transparent!important;}
+/* Track = a visible light rounded pill (like the template's grey track). 4px
+   transparent border + padding-box clip floats it with a gap on each side. */
 *::-webkit-scrollbar-track{
-  background:rgba(255,255,255,.06)!important;border-radius:100px!important;
-  border:3px solid transparent!important;background-clip:padding-box!important;}
+  background:rgba(255,255,255,.09)!important;border-radius:100px!important;
+  border:4px solid transparent!important;background-clip:padding-box!important;margin:4px 0!important;}
+*::-webkit-scrollbar-track:horizontal{margin:0 4px!important;}
 *::-webkit-scrollbar-track-piece{background:transparent!important;}
+/* Thumb = a brighter rounded pill riding inside the track, same width. */
 *::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,.28)!important;border-radius:100px!important;min-height:30px!important;
-  border:3px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
-*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.42)!important;}
-*::-webkit-scrollbar-thumb:active{background:rgba(255,255,255,.52)!important;}
+  background:rgba(255,255,255,.4)!important;border-radius:100px!important;min-height:48px!important;
+  border:4px solid transparent!important;background-clip:padding-box!important;transition:background .15s;}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.56)!important;}
+*::-webkit-scrollbar-thumb:active{background:rgba(255,255,255,.68)!important;}
 /* Kill every arrow-button variant (Chromium). */
 *::-webkit-scrollbar-button,
 *::-webkit-scrollbar-button:start,*::-webkit-scrollbar-button:end,
@@ -14778,21 +14781,42 @@ input::-webkit-scrollbar{width:10px!important;height:10px!important;}
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);animation:dmnShimmer 1.3s infinite;}
 @keyframes dmnShimmer{100%{transform:translateX(100%);}}
 
-/* ════════════════════════════════════════════════════════════════════
-   NAVBAR (rail) REDESIGN — less yellow, white-forward, tactile. Active is a
-   neutral surface + white icon + the accent LEFT bar only (no full yellow
-   fill), so yellow reads as a highlight, not the base. Create keeps its green.
-   ════════════════════════════════════════════════════════════════════ */
-#rail .rail-btn{color:rgba(255,255,255,.62)!important;
-  transition:background .16s var(--ease-out),color .16s,transform .14s var(--ease-out),border-radius .18s!important;}
-#rail .rail-btn svg{width:auto!important;height:25px!important;}
-#rail .rail-btn:hover{background:rgba(255,255,255,.08)!important;color:#fff!important;transform:translateY(-1px) scale(1.06);border-radius:16px!important;}
-#rail .rail-btn:hover svg{filter:brightness(1.12);}
-#rail .rail-btn:active{transform:scale(.93);}
-#rail .rail-btn.active{background:rgba(255,255,255,.1)!important;color:#fff!important;box-shadow:none!important;border-radius:16px!important;}
-#rail .rail-btn.active::after{background:var(--accent)!important;box-shadow:0 0 8px rgba(255,249,62,.4);}
-/* Brand logo tile: white-forward too. */
-.rail-home-logo{background-color:rgba(255,255,255,.62)!important;}
-.rail-home-btn.active .rail-home-logo{background-color:#fff!important;}
-/* Create Bastion (+) keeps green identity, add the tactile press/lift. */
-#rail .rail-btn[onclick*="modal-create-bastion"]:hover{transform:translateY(-1px) scale(1.06);filter:brightness(1.1);}
+/* ════════════════════ QUICK SWITCHER (jump-to card) ════════════════════ */
+.qs-overlay{position:fixed;inset:0;z-index:8800;display:flex;align-items:flex-start;justify-content:center;
+  padding-top:14vh;background:rgba(4,5,10,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  opacity:0;transition:opacity .16s var(--ease-out);}
+.qs-overlay.open{opacity:1;}
+.qs-wrap{position:relative;width:min(560px,92vw);}
+.qs-overlay.open .qs-card{transform:translateY(0) scale(1);}
+.qs-card{position:relative;background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.08);border-radius:20px;
+  padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.6);transform:translateY(-8px) scale(.98);
+  transition:transform .18s var(--ease-out);z-index:2;}
+.qs-head{text-align:center;font-family:var(--font-display);font-weight:700;font-size:14px;color:#fff;margin-bottom:14px;letter-spacing:.01em;}
+.qs-input{width:100%;box-sizing:border-box;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:14px;
+  color:#fff;font-family:var(--font-display);font-weight:600;font-size:20px;padding:16px 18px;outline:none;
+  transition:border-color .16s,background .16s;}
+.qs-input::placeholder{color:rgba(255,255,255,.32);}
+.qs-input:focus{border-color:rgba(255,255,255,.22);background:rgba(0,0,0,.38);}
+.qs-results{margin-top:14px;max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
+.qs-sec{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.34);padding:12px 6px 6px;}
+.qs-row{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:12px;cursor:pointer;transition:background .12s,transform .1s var(--ease-out);}
+.qs-row:hover{background:rgba(255,255,255,.06);}
+.qs-row:active{transform:scale(.99);}
+.qs-av{width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;}
+.qs-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.qs-gc{width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.qs-hash{width:30px;text-align:center;flex-shrink:0;font-size:22px;font-weight:600;color:rgba(255,255,255,.3);line-height:1;}
+.qs-name{font-family:var(--font-display);font-weight:600;font-size:14.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qs-sub{font-size:12px;color:rgba(255,255,255,.34);white-space:nowrap;}
+.qs-from{margin-left:auto;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.4);white-space:nowrap;flex-shrink:0;}
+.qs-empty{padding:26px 12px;text-align:center;font-size:13px;color:rgba(255,255,255,.4);}
+.qs-tip{margin-top:12px;font-size:11.5px;color:rgba(255,255,255,.34);border-top:1px solid rgba(255,255,255,.05);padding-top:12px;}
+.qs-tip b{color:var(--accent);font-weight:700;letter-spacing:.04em;}
+/* Signature hand-drawn arrows framing the card. */
+.qs-arrows{position:absolute;inset:-58px -70px;pointer-events:none;color:rgba(255,255,255,.5);z-index:1;}
+.qs-arrow{position:absolute;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));}
+.qs-arrow--tl{top:-6px;left:-40px;width:96px;height:96px;transform:rotate(-6deg);}
+.qs-arrow--tr{top:-6px;right:-40px;width:96px;height:96px;transform:rotate(6deg);}
+.qs-arrow--l{top:44%;left:-96px;width:104px;height:60px;}
+.qs-arrow--r{top:52%;right:-96px;width:104px;height:60px;}
+@media (max-width:720px){.qs-arrow--l,.qs-arrow--r{display:none;}.qs-arrows{inset:-50px -10px;}}

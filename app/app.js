@@ -7689,13 +7689,22 @@ const FtzScroll = (function () {
     const thumb = document.createElement('div'); thumb.className = 'ftz-sb-thumb';
     track.appendChild(thumb); parent.appendChild(track);
     host._ftzsb = { track, thumb };
-    // TRACK_W = capsule width; EDGE_GAP floats the whole bar off the UI's edge
-    // (so it never hugs the screen/panel side). TOP_GAP insets top & bottom.
-    const TRACK_W = 12, EDGE_GAP = 4, TOP_GAP = 4;
+    // Sizing is computed PER-CONTAINER (recomputed on resize) so a tight panel
+    // (e.g. the settings sidebar) gets a thinner bar than a wide one like chat.
+    // The edge gap is a RATIO of the bar thickness (~0.85) so it scales too and
+    // lands near ~10px on wide surfaces. TOP_GAP insets the ends.
+    const TOP_GAP = 4;
     const place = () => {
+      const cw = host.clientWidth;
+      const TRACK_W = Math.max(7, Math.min(12, Math.round(cw / 30)));   // thinner where space is tight
+      const THUMB_W = Math.max(4, TRACK_W - 4);
+      const EDGE_GAP = Math.round(TRACK_W * 0.85);                       // ratio, ~10px at full width
+      track.style.width = TRACK_W + 'px';
+      thumb.style.width = THUMB_W + 'px';
+      thumb.style.left = ((TRACK_W - THUMB_W) / 2) + 'px';
       track.style.top = (host.offsetTop + TOP_GAP) + 'px';
       track.style.height = Math.max(0, host.clientHeight - TOP_GAP * 2) + 'px';
-      track.style.left = (host.offsetLeft + host.clientWidth - TRACK_W - EDGE_GAP) + 'px';
+      track.style.left = (host.offsetLeft + cw - TRACK_W - EDGE_GAP) + 'px';
     };
     const update = () => {
       const ratio = host.clientHeight / (host.scrollHeight || 1);

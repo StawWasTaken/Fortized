@@ -14837,3 +14837,7 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   cursor:grab;transition:background .15s;}
 .ftz-sb-thumb:hover{background:var(--muted-light,#5a6a7e);}
 .ftz-sb-thumb:active{cursor:grabbing;background:color-mix(in srgb, var(--muted-light,#5a6a7e), #fff 22%);}
+/* Chat: reserve a right gutter so message rows / their hover hitboxes stop
+   BEFORE the overlay scrollbar (Discord-style), instead of running under it.
+   Scoped to .chat-msgs so other panels' layouts are untouched. */
+.chat-msgs.ftz-sb-host{padding-right:26px!important;}

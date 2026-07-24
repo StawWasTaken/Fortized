@@ -4534,27 +4534,18 @@ function updateSidebar(v) {
   if (typeof _updateMobileBackBtn === 'function') _updateMobileBackBtn();
 
   if (v==='home') {
-    if (hdr) hdr.style.display = '';
-    if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
-    if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" class="sidebar-hdr-btn" title="New DM"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-      <button onclick="openModal('modal-add-friend')" class="sidebar-hdr-btn" title="Add Friend"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
+    // The redesigned DM sidebar renders its OWN search + Friends + section
+    // header inside the scroll, so the old #sidebar-header (title + buttons)
+    // is redundant — hide it (removes the duplicate "Direct Messages" + the
+    // old header action buttons).
+    if (hdr) hdr.style.display = 'none';
     renderDMSidebar(scroll);
   } else if (v==='dms' || v==='friends') {
-    if (hdr) hdr.style.display = '';
-    if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
-    if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" class="sidebar-hdr-btn" title="New DM"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('gc')" class="sidebar-hdr-btn" title="New Group Chat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
-      <button onclick="openModal('modal-add-friend')" class="sidebar-hdr-btn" title="Add Friend"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
+    if (hdr) hdr.style.display = 'none';
     renderDMSidebar(scroll);
     if (v==='friends') { setTimeout(() => renderFriendsList('all'), 0); }
   } else if (v==='discover') {
-    if (hdr) hdr.style.display = '';
-    if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
-    if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" class="sidebar-hdr-btn" title="New DM">${ftzIcon('pencil','14')}</button>
-      <button onclick="openModal('modal-add-friend')" class="sidebar-hdr-btn" title="Add Friend">${ftzIcon('addUser','14')}</button>`;
+    if (hdr) hdr.style.display = 'none';
     renderDMSidebar(scroll);
     loadDiscover();
   } else if (v==='atelier') {
@@ -4563,11 +4554,7 @@ function updateSidebar(v) {
     if (hdrActs) hdrActs.innerHTML = '';
     renderAtelierSidebar(scroll);
   } else if (v==='forum') {
-    if (hdr) hdr.style.display = '';
-    if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
-    if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" class="sidebar-hdr-btn" title="New DM">${ftzIcon('pencil','14')}</button>
-      <button onclick="openModal('modal-add-friend')" class="sidebar-hdr-btn" title="Add Friend">${ftzIcon('addUser','14')}</button>`;
+    if (hdr) hdr.style.display = 'none';
     renderDMSidebar(scroll);
   } else if (v==='bastion') {
     // Header hidden — bastion sidebar renders its own hero banner
@@ -7625,6 +7612,38 @@ function _setDmLastRead(f) {
   const row = document.getElementById('dm-fi-' + f);
   if (row) row.classList.remove('unread');
 }
+// Last-known sorted order of DM/GC ids (by last activity), persisted so the
+// sidebar paints in the SAME order on every page instead of reshuffling while
+// data re-fetches. Updated only when activity actually changes the order.
+let _dmOrder = (() => { try { return JSON.parse(localStorage.getItem('ftz_dm_order_' + (CU?.username || '') || '[]') || '[]') || []; } catch { return []; } })();
+// Toggle a DM nameplate's display COLOUR/EFFECT (font is left on permanently).
+// cssText is rebuilt from scratch each call so turning the effect off cleanly
+// strips the gradient/fill without leaving residue.
+function _dmNameEffect(el, on) {
+  if (!el) return;
+  const font = el.dataset.fontCss || '';
+  const eff = el.dataset.effectCss || '';
+  if (on && eff) { el.style.cssText = font + eff; el.dataset.effectOn = '1'; }
+  else { el.style.cssText = font; el.dataset.effectOn = ''; }
+}
+// Reveal the effect on hover of a nameplate; hide again on leave unless that
+// row is the active DM. Bound once, delegated.
+if (typeof document !== 'undefined' && !window._dmNameHoverBound) {
+  window._dmNameHoverBound = true;
+  document.addEventListener('mouseover', e => {
+    const row = e.target.closest && e.target.closest('.friend-item.dmn');
+    if (!row) return;
+    const nm = row.querySelector('.dmn-name');
+    if (nm && nm.dataset.effectCss && !nm.dataset.effectOn) _dmNameEffect(nm, true);
+  });
+  document.addEventListener('mouseout', e => {
+    const row = e.target.closest && e.target.closest('.friend-item.dmn');
+    if (!row || (e.relatedTarget && row.contains(e.relatedTarget))) return; // still inside
+    if (row.classList.contains('active')) return; // keep for the open DM
+    const nm = row.querySelector('.dmn-name');
+    if (nm && nm.dataset.effectOn) _dmNameEffect(nm, false);
+  });
+}
 // Live filter for the DM sidebar search box — hides rows whose name doesn't
 // match. Empty query restores everything.
 function _filterDMSidebar(q) {
@@ -7648,9 +7667,14 @@ async function renderDMSidebar(scroll, force) {
   if (!force && scroll && scroll._dmSidebarSig === sig && scroll.querySelector('#dm-sorted-list')) {
     // Still refresh the "active" outline in case the caller expects it.
     try {
-      scroll.querySelectorAll('.friend-item.active').forEach(el => el.classList.remove('active'));
-      if (curDM) scroll.querySelector('#dm-fi-' + CSS.escape(curDM))?.classList.add('active');
-      else if (curGC) scroll.querySelector('#gc-fi-' + CSS.escape(curGC))?.classList.add('active');
+      scroll.querySelectorAll('.friend-item.active').forEach(el => {
+        el.classList.remove('active');
+        const nm = el.querySelector('.dmn-name'); if (nm && nm.dataset.effectOn && !el.matches(':hover')) _dmNameEffect(nm, false);
+      });
+      let _activeRow = null;
+      if (curDM) _activeRow = scroll.querySelector('#dm-fi-' + CSS.escape(curDM));
+      else if (curGC) _activeRow = scroll.querySelector('#gc-fi-' + CSS.escape(curGC));
+      if (_activeRow) { _activeRow.classList.add('active'); const nm = _activeRow.querySelector('.dmn-name'); if (nm) _dmNameEffect(nm, true); }
     } catch(_) {}
     return;
   }
@@ -7692,6 +7716,13 @@ async function renderDMSidebar(scroll, force) {
     _dmEntries.push({ type: 'gc', id: 'gc_' + gc.id, gc, lastTime: 0 });
   });
 
+  // Paint in the last-known activity order right away so switching pages never
+  // reshuffles the list; the async pass below only reorders if it truly changed.
+  if (_dmOrder && _dmOrder.length) {
+    const _oidx = id => { const i = _dmOrder.indexOf(id); return i < 0 ? 1e9 : i; };
+    _dmEntries.sort((a, b) => _oidx(a.id) - _oidx(b.id));
+  }
+
   // Render entries immediately (will be sorted async after fetching timestamps)
   if (_dmEntries.length === 0) {
     html += '<div class="ftz-empty" style="padding:24px 14px;"><div class="ftz-empty-icon">💬</div><div class="ftz-empty-title">No conversations yet</div><div class="ftz-empty-text">Start chatting with friends!</div></div>';
@@ -7717,10 +7748,7 @@ async function renderDMSidebar(scroll, force) {
           <div class="dmn-name" id="dm-dn-${escapeHTML(f)}">${escapeHTML(_initName)}</div>
           <div class="dmn-cs" id="dm-preview-${escapeHTML(f)}">${_initCS}</div>
         </div>
-        <div class="dmn-meta">
-          <span class="dmn-time" id="dm-time-${escapeHTML(f)}"></span>
-          <span class="dmn-unread" id="dm-unread-${escapeHTML(f)}" aria-hidden="true"></span>
-        </div>
+        <span class="dmn-unread" id="dm-unread-${escapeHTML(f)}" aria-hidden="true"></span>
         <button class="dmn-close" onclick="event.stopPropagation();hideDMConversation('dm_${escapeHTML(f)}')" title="Hide conversation" aria-label="Hide conversation"><svg viewBox="0 0 384 512" width="11" height="11" fill="currentColor"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>`;
       } else {
@@ -7732,7 +7760,6 @@ async function renderDMSidebar(scroll, force) {
           <div class="dmn-name">${escapeHTML(gc.name)}</div>
           <div class="dmn-cs" id="gc-preview-${escapeHTML(gc.id)}">${(gc.members||[]).length} members</div>
         </div>
-        <div class="dmn-meta"><span class="dmn-time" id="gc-time-${escapeHTML(gc.id)}"></span></div>
         <button class="dmn-close" onclick="event.stopPropagation();hideDMConversation('gc_${escapeHTML(gc.id)}')" title="Hide conversation" aria-label="Hide conversation"><svg viewBox="0 0 384 512" width="11" height="11" fill="currentColor"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>`;
       }
@@ -7751,6 +7778,15 @@ async function renderDMSidebar(scroll, force) {
   // Hydrate the persistent chat cache from IndexedDB so returning to a
   // chat you had open in a previous session still feels "already loaded".
   try { _chatDBHydrate(); } catch(_) {}
+
+  // "Static feel" throttle: the rows above are already painted from the profile
+  // cache (avatar, name, custom status, status dot) and ordered by the persisted
+  // activity order. If we refetched everything on every single page switch the
+  // list would visibly reload + reshuffle — exactly what we don't want. So when
+  // the data was fetched recently, skip the network pass entirely; realtime
+  // events keep rows live, and a full refresh happens past the TTL (or on force).
+  if (!force && (Date.now() - (scroll._dmFetchTs || 0) < 45000)) return;
+  scroll._dmFetchTs = Date.now();
 
   // ── Async: fetch last message timestamps, PFPs, display names, status, then sort ─────────
   // Load all friends and GCs in parallel (no staggered delays)
@@ -7783,8 +7819,20 @@ async function renderDMSidebar(scroll, force) {
         const dnEl = document.getElementById('dm-dn-'+f);
         if (dnEl) {
           dnEl.textContent = u.displayName || f;
-          if (u.displayFont && u.displayFont !== 'default') { dnEl.style.fontFamily = _getDisplayFontCSS(u.displayFont); dnEl.style.fontWeight = _getDisplayFontWeight(u.displayFont); }
-          if (u.displayColor && u.displayColor !== '#fff') dnEl.style.cssText += _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor, u.displayColor2 || u.displayColor);
+          // FONT always applies. COLOUR + EFFECTS are held back (Discord-style):
+          // they only reveal on hover of the nameplate, or when this is the DM
+          // you're currently in. Stash the font + effect CSS; _dmNameEffect
+          // toggles the effect on/off, always keeping the font.
+          let _fontCss = '';
+          if (u.displayFont && u.displayFont !== 'default') {
+            _fontCss = 'font-family:' + _getDisplayFontCSS(u.displayFont) + ';font-weight:' + _getDisplayFontWeight(u.displayFont) + ';';
+          }
+          dnEl.dataset.fontCss = _fontCss;
+          if (u.displayColor && u.displayColor !== '#fff') {
+            dnEl.dataset.effectCss = _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor, u.displayColor2 || u.displayColor);
+          } else { delete dnEl.dataset.effectCss; }
+          const _activeDM = (typeof curDM === 'string') && curDM.toLowerCase() === f.toLowerCase();
+          _dmNameEffect(dnEl, _activeDM);
         }
         // Nameplate subline = the user's CUSTOM status (freeform text), or empty
         // if they have none — never the last message. (The status DOT below
@@ -7807,15 +7855,8 @@ async function renderDMSidebar(scroll, force) {
           const rawTs = last.timestamp || last.time || 0;
           if (typeof rawTs === 'number') lastTime = rawTs;
           else { const p = Date.parse(rawTs || ''); lastTime = Number.isFinite(p) ? p : 0; }
-          // Show relative timestamp of last activity (kept — the subline shows
-          // custom status now, not the message, so time still tells you recency)
-          const timeEl = document.getElementById('dm-time-'+f);
-          if (timeEl && lastTime) {
-            // Defensive parse — bad/empty timestamps used to render literal
-            // "Invalid Date" in the DM sidebar; now we just hide the field.
-            const d = _safeDate(typeof lastTime === 'number' ? lastTime : Date.parse(lastTime));
-            timeEl.textContent = d ? _formatRelativeTime(d) : '';
-          }
+          // No timestamp in the list (Discord-style) — lastTime is used only for
+          // sort order + unread; it is never shown as "2 days ago" text.
           // Unread: last activity newer than the last time we opened this DM
           // (and it isn't the DM currently open). Egress-free, per-browser.
           const row2 = document.getElementById('dm-fi-'+f);
@@ -7836,23 +7877,27 @@ async function renderDMSidebar(scroll, force) {
         const rawTs = last.timestamp || last.time || 0;
         if (typeof rawTs === 'number') lastTime = rawTs;
         else { const p = Date.parse(rawTs || ''); lastTime = Number.isFinite(p) ? p : 0; }
-        const el = document.getElementById('gc-preview-'+gc.id);
-        if (el && last) {
-          el.textContent = (last.from===CU.username?'You: ':last.from+': ') + (last.text||'').slice(0,35);
-        }
+        // GC subline stays "N members" — never the last message.
       }
     } catch(e) { _dbg('[GC] Preview update:', e?.message); }
     const row = document.getElementById('gc-fi-'+gc.id);
     if (row) row.dataset.lastTime = lastTime;
   });
 
-  // After all fetches complete, sort the list by lastTime descending
+  // After all fetches complete, sort by last activity (most recent on top,
+  // Discord-style) — but ONLY re-append when the order actually changed, so
+  // navigating between pages never reshuffles a list that hasn't moved. Persist
+  // the order so the next paint lands in the same place with no flash.
   Promise.allSettled([...friendPromises, ...gcPromises]).then(() => {
     const listEl = document.getElementById('dm-sorted-list');
     if (!listEl) return;
     const items = Array.from(listEl.querySelectorAll('.dm-sortable'));
     items.sort((a, b) => (parseInt(b.dataset.lastTime)||0) - (parseInt(a.dataset.lastTime)||0));
-    items.forEach(item => listEl.appendChild(item));
+    const newOrder = items.map(el => el.dataset.dmId);
+    const curOrder = Array.from(listEl.children).map(el => el.dataset.dmId);
+    if (newOrder.join(',') !== curOrder.join(',')) items.forEach(item => listEl.appendChild(item));
+    _dmOrder = newOrder;
+    try { localStorage.setItem('ftz_dm_order_' + (CU?.username || ''), JSON.stringify(newOrder)); } catch {}
   });
 }
 
@@ -9188,69 +9233,96 @@ function _debouncedGCMemberResort() {
 }
 
 // ── Modal tab switching ─────────────────────────────
-function switchNewDMTab(tab) {
-  const dmBtn  = document.getElementById('ndm-tab-dm');
-  const gcBtn  = document.getElementById('ndm-tab-gc');
-  const dmPane = document.getElementById('ndm-pane-dm');
-  const gcPane = document.getElementById('ndm-pane-gc');
-  if (!dmBtn||!gcBtn||!dmPane||!gcPane) return;
-  const accentStyle = 'background:var(--accent);color:var(--rail);font-weight:700;';
-  const inactiveStyle = 'background:transparent;color:var(--muted-light);font-weight:600;';
-  if (tab === 'dm') {
-    dmBtn.style.cssText += accentStyle; gcBtn.style.cssText += inactiveStyle;
-    dmPane.style.display=''; gcPane.style.display='none';
-  } else {
-    gcBtn.style.cssText += accentStyle; dmBtn.style.cssText += inactiveStyle;
-    gcPane.style.display=''; dmPane.style.display='none';
-    renderGCFriendPicker();
-  }
+// ── Unified "New Message" picker ──────────────────────────────────
+// One list: tick a single friend → opens your DM with them; tick 2+ → creates
+// a group chat (called a GC/group chat on Fortized). Kept the name
+// switchNewDMTab so existing call sites (which pass 'dm'/'gc') just reset+open.
+let _newMsgSel = new Set();
+const _NM_MAX = 10;
+function switchNewDMTab() {
+  _newMsgSel = new Set();
+  const s = document.getElementById('nm-search'); if (s) s.value = '';
+  const n = document.getElementById('nm-gc-name'); if (n) { n.style.display = 'none'; n.value = ''; }
+  const e = document.getElementById('nm-error'); if (e) e.textContent = '';
+  _renderNewMsgSelected();
+  renderNewMsgPicker('');
 }
-
-function renderGCFriendPicker() {
-  const picker = document.getElementById('gc-friend-picker');
+function renderNewMsgPicker(query) {
+  const picker = document.getElementById('nm-picker');
   if (!picker) return;
-  const friends = CU?.friends||[];
+  const q = (query || '').trim().toLowerCase();
+  const friends = CU?.friends || [];
   if (!friends.length) {
-    picker.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0;">You need friends to create a group chat.</div>';
+    picker.innerHTML = '<div class="nm-empty">You need friends before you can start a conversation.</div>';
     return;
   }
-  // Use checkboxes
-  picker.innerHTML = friends.map(f => `
-    <label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;cursor:pointer;transition:background .1s;">
-      <input type="checkbox" class="gc-member-cb" value="${escapeHTML(f)}" onchange="updateGCSelectedPreview()" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;">
-      <div style="width:28px;height:28px;overflow:hidden;border-radius:50%;flex-shrink:0;">${buildAvatarHTML(null,f,28)}</div>
-      <span style="font-size:13.5px;font-weight:600;">${escapeHTML(f)}</span>
-    </label>`).join('');
+  const rows = friends.filter(f => {
+    if (!q) return true;
+    const cp = cachedProfile(f) || {};
+    return f.toLowerCase().includes(q) || String(cp.displayName || '').toLowerCase().includes(q);
+  });
+  if (!rows.length) { picker.innerHTML = '<div class="nm-empty">No one matches “' + escapeHTML(query) + '”.</div>'; return; }
+  picker.innerHTML = rows.map(f => {
+    const cp = cachedProfile(f) || {};
+    const dn = cp.displayName || f;
+    const on = _newMsgSel.has(f);
+    return `<div class="nm-row${on ? ' sel' : ''}" onclick="_toggleNewMsgMember('${escapeHTML(f)}')">
+      <div class="nm-av">${buildAvatarHTML(cp.pfp || null, dn, 36)}</div>
+      <div class="nm-info"><div class="nm-name">${escapeHTML(dn)}</div><div class="nm-user">@${escapeHTML(f)}</div></div>
+      <span class="nm-check" aria-hidden="true">${on ? '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>' : ''}</span>
+    </div>`;
+  }).join('');
+}
+function _toggleNewMsgMember(f) {
+  if (_newMsgSel.has(f)) _newMsgSel.delete(f);
+  else {
+    if (_newMsgSel.size >= _NM_MAX) { toast('Group chats can have up to ' + _NM_MAX + ' members.', 'info'); return; }
+    _newMsgSel.add(f);
+  }
+  _renderNewMsgSelected();
+  renderNewMsgPicker(document.getElementById('nm-search')?.value || '');
+}
+function _renderNewMsgSelected() {
+  const sel = document.getElementById('nm-selected');
+  const btn = document.getElementById('nm-submit-btn');
+  const gcName = document.getElementById('nm-gc-name');
+  const arr = [..._newMsgSel];
+  if (sel) {
+    sel.style.display = arr.length ? 'flex' : 'none';
+    sel.innerHTML = arr.map(u => {
+      const dn = (cachedProfile(u) || {}).displayName || u;
+      return `<span class="nm-chip">${escapeHTML(dn)}<button onclick="event.stopPropagation();_toggleNewMsgMember('${escapeHTML(u)}')" aria-label="Remove">✕</button></span>`;
+    }).join('');
+  }
+  if (gcName) gcName.style.display = arr.length >= 2 ? 'block' : 'none';
+  if (btn) {
+    if (arr.length === 0) { btn.disabled = true; btn.textContent = 'Select someone'; }
+    else if (arr.length === 1) { btn.disabled = false; btn.textContent = 'Open DM'; }
+    else { btn.disabled = false; btn.textContent = 'Create Group Chat'; }
+  }
+}
+function _submitNewMsg() {
+  const arr = [..._newMsgSel];
+  if (arr.length === 0) return;
+  if (arr.length === 1) { closeModal('modal-new-dm'); openDMChat(String(arr[0]).toLowerCase()); return; }
+  createGroupChat(arr, (document.getElementById('nm-gc-name')?.value || '').trim());
 }
 
-function updateGCSelectedPreview() {
-  const selected = [...document.querySelectorAll('.gc-member-cb:checked')].map(cb=>cb.value);
-  const preview = document.getElementById('gc-selected-preview');
-  if (!preview) return;
-  if (!selected.length) { preview.innerHTML=''; return; }
-  preview.innerHTML = selected.map(u=>`
-    <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:var(--radius-pill);padding:3px 8px;font-size:12px;">
-      ${escapeHTML(u)}
-      <button onclick="uncheckGCMember('${escapeHTML(u)}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;line-height:1;padding:0 0 0 2px;">✕</button>
-    </span>`).join('');
-}
-
-function uncheckGCMember(username) {
-  const cb = document.querySelector(`.gc-member-cb[value="${CSS.escape(username)}"]`);
-  if (cb) { cb.checked = false; updateGCSelectedPreview(); }
-}
-
-async function createGroupChat() {
-  const nameInp = document.getElementById('gc-name-input');
-  const err = document.getElementById('gc-error');
-  const btn = document.getElementById('gc-create-btn');
-  if (!nameInp) return;
-  const name = nameInp.value.trim();
-  if (!name) { if(err)err.textContent='Enter a group name'; return; }
-  const members = [...document.querySelectorAll('.gc-member-cb:checked')].map(cb=>cb.value);
-  if (members.length < 1) { if(err)err.textContent='Select at least 1 friend'; return; }
+async function createGroupChat(membersArg, nameArg) {
+  const err = document.getElementById('nm-error') || document.getElementById('gc-error');
+  const btn = document.getElementById('nm-submit-btn') || document.getElementById('gc-create-btn');
+  const members = Array.isArray(membersArg) ? membersArg.slice()
+    : [...document.querySelectorAll('.gc-member-cb:checked')].map(cb => cb.value);
+  if (members.length < 2) { if (err) err.textContent = 'Pick at least 2 people for a group chat.'; return; }
+  // Auto-name from members when left blank (Discord-style "You, A, B").
+  let name = (typeof nameArg === 'string' ? nameArg : (document.getElementById('gc-name-input')?.value || '')).trim();
+  if (!name) {
+    const dns = members.map(m => (cachedProfile(m) || {}).displayName || m);
+    const parts = [CU.displayName || CU.username, ...dns];
+    name = parts.slice(0, 3).join(', ') + (parts.length > 3 ? ' +' + (parts.length - 3) : '');
+  }
   if (err) err.textContent = '';
-  btn.disabled = true; btn.textContent = 'Creating…';
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating…'; }
 
   const COLORS = ['#7c5cbf','#3ecf6e','#60a5fa','#f59e0b','#f87171','#e879f9','#fb923c','#22d3ee'];
   const EMOJIS = ['👥','🎮','🔥','⚡','🌙','🎵','🏆','💫','🌈','🚀'];
@@ -9282,14 +9354,14 @@ async function createGroupChat() {
     }
     await refreshCU();
     closeModal('modal-new-dm');
-    renderDMSidebar(document.getElementById('sidebar-scroll'));
-    toast('Group "'+name+'" created!', 'success');
+    renderDMSidebar(document.getElementById('sidebar-scroll'), true);
+    toast('Group chat "'+name+'" created!', 'success');
     showFeedbackToast('creating a group chat', 'group_create');
     openGroupChatView(gcId);
   } catch(e) {
     console.error(e);
-    if(err) err.textContent = 'Failed to create group';
-    btn.disabled=false; btn.textContent='Create Group';
+    if(err) err.textContent = 'Failed to create group chat';
+    if(btn){ btn.disabled=false; btn.textContent='Create Group Chat'; }
   }
 }
 

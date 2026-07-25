@@ -46226,9 +46226,9 @@ function renderAtelierTab(tab) {
     // Feature-showcase perks: the three headliners use real brand art.
     const _CDN = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
     const FEATURED = [
-      { img: _CDN + '500mb%20upload.png', ic: 'fa-cloud-arrow-up',  name: '500 MB Uploads',           desc: 'Share big clips, art and files — up to 500 MB each. Everyone gets 350 MB; Radiance lifts you to 500.' },
-      { img: _CDN + 'badge.png',          ic: 'fa-certificate',     name: 'Radiance Badge',           desc: 'A glowing badge on your profile that says you shine.' },
-      { img: _CDN + 'emojis.png',         ic: 'fa-face-grin-stars', name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s custom emojis in every message and reaction.' },
+      { img: _CDN + '500mb%20upload.png', ic: 'fa-cloud-arrow-up',  name: '500 MB Uploads',           desc: 'Upload files up to 500 MB each.' },
+      { img: _CDN + 'badge.png',          ic: 'fa-certificate',     name: 'Radiance Badge',           desc: 'Wear the Radiance badge on your profile.' },
+      { img: _CDN + 'emojis.png',         ic: 'fa-face-grin-stars', name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s emojis anywhere you chat.' },
     ];
     const MORE = [
       { ic: 'fa-panorama',            name: 'Animated Profile Banner', desc: 'An animated banner on your profile.' },

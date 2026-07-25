@@ -15327,3 +15327,10 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* Stronger title; uniform 2-line descriptions so all three match height */
 .rad-feature-name{font-size:17px;font-weight:800;}
 .rad-feature-desc{min-height:2.9em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+/* ═══ RADIANCE v7 — feature hover: just grow, NO outer glow ═══ */
+.rad-feature{transform-origin:center;transition:transform .26s cubic-bezier(.22,1,.36,1),box-shadow .26s,border-color .26s;}
+.rad-feature:hover{transform:scale(1.06);border-color:rgba(239,95,176,.6);box-shadow:0 16px 32px rgba(0,0,0,.4);z-index:2;}
+.rad-feature:active{transform:scale(1.03);}
+/* no separate background zoom — the whole card scales */
+.rad-feature:hover .rad-feature-bg{transform:none;}

@@ -217,9 +217,9 @@ function _celebrateRadianceMilestone() {
   } catch (_) {}
   try {
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;background:rgba(12,10,16,.9);z-index:9200;display:flex;align-items:center;justify-content:center;padding:20px;';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(12,10,16,.82);z-index:9200;display:flex;align-items:center;justify-content:center;padding:20px;animation:radMilestoneFade .45s ease forwards;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);';
     ov.innerHTML = `
-      <div style="background:linear-gradient(170deg,#21131e 0%,#2a1826 100%);border:1px solid rgba(239,95,176,.28);border-radius:22px;padding:34px 30px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.6);">
+      <div style="background:linear-gradient(170deg,#21131e 0%,#2a1826 100%);border:1px solid rgba(239,95,176,.2);border-radius:22px;padding:34px 30px;max-width:400px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:radMilestonePop .62s cubic-bezier(.22,1,.36,1) forwards;">
         <div style="width:132px;height:82px;margin:0 auto 20px;border-radius:14px;background:linear-gradient(135deg,#21131e 0%,#2a1826 60%,#361f30 100%);border:1.5px solid rgba(239,95,176,.3);box-shadow:0 12px 30px rgba(0,0,0,.5);position:relative;overflow:hidden;">
           <div style="position:absolute;left:10px;top:12px;width:22px;height:58px;border-radius:6px;background:rgba(0,0,0,.35);"></div>
           <div style="position:absolute;left:40px;top:16px;width:70px;height:8px;border-radius:4px;background:rgba(255,255,255,.16);"></div>
@@ -46393,10 +46393,6 @@ function renderAtelierTab(tab) {
       { img: _CDN + 'emojis.png',         name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s custom emojis in every message and reaction.' },
       { img: _CDN + 'banners.png',        name: 'Profile Banners',          desc: 'Set an image or GIF banner on your profile — Radiance only.' },
       { img: _CDN + 'earlyacess.png',     name: 'Early Access',             desc: 'Try new Fortized features before anyone else does.' },
-      // Radiance Plum — the milestone reward theme (no CDN art → plum gradient).
-      { grad: 'linear-gradient(140deg,#21131e 0%,#2a1826 52%,#3a2234 100%)', ic: 'fa-palette',      name: 'Radiance Plum Theme', desc: 'An exclusive deep-plum app theme. Keep 14+ days on your Radiance and it’s yours forever.' },
-      // Animated avatars — a classic premium flourish (gradient art).
-      { grad: 'linear-gradient(140deg,#ef5fb0 0%,#b25cc9 55%,#fff93e 130%)',  ic: 'fa-circle-user',  name: 'Animated Avatar',     desc: 'Bring your profile picture to life with an animated GIF avatar.' },
     ];
     // Smaller perks — consistent one-line descriptions (no truncation needed).
     const MORE = [
@@ -46406,6 +46402,8 @@ function renderAtelierTab(tab) {
       { ic: 'fa-bolt',          name: '3 Free Bastion Boosts', desc: 'Boost your favourite communities — three on us.' },
       { ic: 'fa-tags',          name: '10% Fortshop Discount', desc: 'Save 10% on every Fortshop order.' },
       { ic: 'fa-box-open',      name: 'Starter Drops',         desc: 'Claim exclusive Radiance drops.' },
+      { ic: 'fa-palette',       name: 'Radiance Plum Theme',   desc: 'A deep-plum app theme, kept forever at 14+ days.' },
+      { ic: 'fa-circle-user',   name: 'Animated Avatar',       desc: 'Animate your profile picture with a GIF.' },
     ];
 
     const expDate  = hasRad ? new Date(radExp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
@@ -46463,19 +46461,14 @@ function renderAtelierTab(tab) {
 
         <div class="rad-carousel" id="rad-carousel">
           <div class="rad-ctrack" id="rad-ctrack">
-            ${FEATURED.map((p, i) => {
-              const bg = p.img
-                ? `<img class="rad-cslide-bg" src="${p.img}" alt="" loading="lazy" onerror="this.style.display='none'">`
-                : `<div class="rad-cslide-bg rad-cslide-bg--grad" style="background:${p.grad || 'linear-gradient(135deg,#2a1826,#1a0f18)'};"><i class="fa-solid ${p.ic || 'fa-star'}"></i></div>`;
-              return `
+            ${FEATURED.map((p, i) => `
               <div class="rad-cslide" data-idx="${i}" onclick="_radCarouselGo(${i})">
-                ${bg}
+                <img class="rad-cslide-bg" src="${p.img}" alt="" loading="lazy" onerror="this.style.display='none'">
                 <div class="rad-cslide-cap">
                   <div class="rad-cslide-name">${p.name}<i class="rad-cslide-badge ${hasRad ? 'fa-solid fa-circle-check' : 'rad-cslide-badge--lock fa-solid fa-lock'}"></i></div>
                   <div class="rad-cslide-desc">${p.desc}</div>
                 </div>
-              </div>`;
-            }).join('')}
+              </div>`).join('')}
           </div>
           <button class="rad-carr rad-carr--prev" onclick="event.stopPropagation();_radCarouselPrev()" aria-label="Previous">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>

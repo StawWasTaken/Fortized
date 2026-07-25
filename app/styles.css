@@ -15365,6 +15365,10 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* Smaller perks: consistent one-line descriptions, no ellipsis */
 .rad-prow-desc{white-space:normal;overflow:visible;text-overflow:clip;}
 
+/* Radiance Plum milestone modal — soft, gentle entrance (not a hard pop). */
+@keyframes radMilestoneFade{from{opacity:0;}to{opacity:1;}}
+@keyframes radMilestonePop{from{opacity:0;transform:scale(.95) translateY(18px);}to{opacity:1;transform:scale(1) translateY(0);}}
+
 /* ═══ RADIANCE v11 — flat 3-up carousel · bigger centre · no scrim ═══
    Three perks the same base size, edges aligned, tight 18px gaps. The active
    (centre) card scales up ~1.22× so it reads as the focus and slightly overlaps
@@ -15374,13 +15378,13 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .rad-ctrack{position:relative;width:100%;height:100%;}
 .rad-cslide{position:absolute;top:50%;left:50%;width:calc((100% - 36px) / 3);height:200px;border-radius:18px;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,#2a1826,#1a0f18);border:2px solid rgba(239,95,176,.22);box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .5s,border-color .3s,border-width .18s;will-change:transform,opacity;}
 .rad-cslide-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
-.rad-cslide-bg--grad{display:flex;align-items:center;justify-content:center;padding-bottom:52px;}
-.rad-cslide-bg--grad i{font-size:50px;color:rgba(255,255,255,.92);filter:drop-shadow(0 4px 16px rgba(0,0,0,.45));}
-.rad-cslide-cap{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:14px 16px 15px;}
-.rad-cslide-name{font-family:var(--font-display);font-size:15.5px;font-weight:700;color:#fff;line-height:1.18;display:flex;align-items:center;gap:6px;text-shadow:0 1px 2px rgba(0,0,0,.95),0 2px 7px rgba(0,0,0,.85),0 0 20px rgba(0,0,0,.7);}
-.rad-cslide-badge{font-size:12.5px;color:#5fe08a;flex-shrink:0;filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));}
+/* Caption legibility = a SOFT shadow that rises from the bottom and feathers
+   fully to transparent (no hard scrim box, no per-glyph text-shadows). */
+.rad-cslide-cap{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:44px 16px 15px;background:linear-gradient(to top,rgba(9,6,11,.9) 0%,rgba(9,6,11,.72) 22%,rgba(9,6,11,.4) 48%,rgba(9,6,11,.14) 72%,rgba(9,6,11,0) 100%);}
+.rad-cslide-name{font-family:var(--font-display);font-size:15.5px;font-weight:700;color:#fff;line-height:1.18;display:flex;align-items:center;gap:6px;}
+.rad-cslide-badge{font-size:12.5px;color:#5fe08a;flex-shrink:0;}
 .rad-cslide-badge--lock{color:rgba(255,255,255,.7);}
-.rad-cslide-desc{font-size:12px;color:rgba(255,255,255,.9);margin-top:3px;line-height:1.38;text-shadow:0 1px 2px rgba(0,0,0,.95),0 1px 8px rgba(0,0,0,.8);}
+.rad-cslide-desc{font-size:12px;color:rgba(255,255,255,.88);margin-top:3px;line-height:1.38;}
 /* flat positions — neighbours keep size + placement; centre grows ~1.22× */
 .rad-cslide.is-center{transform:translate(-50%,-50%) scale(1.22);opacity:1;z-index:3;border-color:rgba(239,95,176,.82);box-shadow:0 18px 46px rgba(0,0,0,.5);}
 .rad-cslide.is-left{transform:translate(calc(-150% - 18px),-50%) scale(1);opacity:1;z-index:2;border-color:rgba(239,95,176,.2);}

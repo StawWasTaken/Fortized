@@ -173,43 +173,45 @@ function _radiancePlusImg(size){return _radianceImg(size);}
 function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
 
 // ══════════════════════════════════════════════════════════
-// RADIANCE MILESTONE — 14 cumulative days → the free "Radiance
-// Plum" theme, kept FOREVER (it survives Radiance lapsing). Plans
-// ADD days rather than replace them (two 7-day buys = 14), so we
-// track a running lifetime counter separate from the expiry window.
-// #21131e is the deep plum used across the Radiance showcases.
+// RADIANCE MILESTONE — the free "Radiance Plum" theme, kept FOREVER
+// (it survives Radiance lapsing). You earn it by holding a healthy
+// subscription: after one of YOUR OWN purchases, if your active
+// Radiance has at least 14 days remaining, the theme is yours.
+// Gifted Radiance does not trigger it (only the purchase paths call
+// the check). #21131e is the deep plum of the Radiance showcases.
 // ══════════════════════════════════════════════════════════
 const RADIANCE_MILESTONE_DAYS  = 14;
 const RADIANCE_MILESTONE_THEME = 'radiance_plum';
 
-// Add `days` to the user's lifetime Radiance-days counter. If this push
-// crosses the 14-day milestone for the first time, permanently unlock the
-// Radiance Plum appearance and celebrate. Mutates CU in place — the CALLER
-// is responsible for the saveUser() that persists it (radianceDaysBought +
-// unlockedAppearances both round-trip via the raw JSONB column, no schema
-// change needed).
-function _accrueRadianceDays(days) {
-  if (!CU || !(days > 0)) return;
-  const before = +CU.radianceDaysBought || 0;
-  const after  = before + days;
-  CU.radianceDaysBought = after;
-  if (before < RADIANCE_MILESTONE_DAYS && after >= RADIANCE_MILESTONE_DAYS) {
-    const owned = Array.isArray(CU.unlockedAppearances) ? CU.unlockedAppearances : [];
-    if (!owned.includes(RADIANCE_MILESTONE_THEME)) {
-      CU.unlockedAppearances = [...owned, RADIANCE_MILESTONE_THEME];
-      try { _celebrateRadianceMilestone(); } catch (_) {}
-    }
-  }
+// Days currently remaining on the active Radiance window (0 if lapsed).
+// Uses the TRUE expiry (max of radianceUntil + legacy radiancePlus).
+function _radianceDaysLeft(u) {
+  u = u || CU;
+  const exp = _radianceExpiry(u);
+  return exp > Date.now() ? (exp - Date.now()) / 86400000 : 0;
+}
+
+// Grant the Radiance Plum theme if the active subscription now has ≥14 days
+// left. Called from the OWN-purchase paths only (after CU.radianceUntil is
+// set). Mutates CU in place — the CALLER's saveUser() persists it
+// (unlockedAppearances round-trips via the raw JSONB column, no schema change).
+function _checkRadianceMilestone() {
+  if (!CU) return;
+  if (_radianceDaysLeft(CU) < RADIANCE_MILESTONE_DAYS) return;
+  const owned = Array.isArray(CU.unlockedAppearances) ? CU.unlockedAppearances : [];
+  if (owned.includes(RADIANCE_MILESTONE_THEME)) return;
+  CU.unlockedAppearances = [...owned, RADIANCE_MILESTONE_THEME];
+  try { _celebrateRadianceMilestone(); } catch (_) {}
 }
 
 // Celebratory unlock modal + a keepsake notification. Fire-and-forget: the
-// CU mutation already happened in _accrueRadianceDays, this is the flourish.
+// CU mutation already happened in _checkRadianceMilestone, this is the flourish.
 function _celebrateRadianceMilestone() {
   try {
     FortizedSocial.addNotification(CU.username, {
       type: 'reward',
       from: 'Radiance',
-      msg: 'You reached 14 days of Radiance — the Radiance Plum theme is yours forever! ✨',
+      msg: 'With 14+ days of Radiance on your subscription, the Radiance Plum theme is yours forever! ✨',
       time: new Date().toISOString(),
     });
   } catch (_) {}
@@ -226,7 +228,7 @@ function _celebrateRadianceMilestone() {
         </div>
         <div style="font-family:var(--font-display);font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#ef5fb0;margin-bottom:9px;">Radiance Milestone</div>
         <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:#fff;margin-bottom:11px;">Radiance Plum unlocked</div>
-        <div style="font-size:13.5px;color:rgba(255,255,255,.72);line-height:1.6;margin-bottom:24px;">You've spent <strong style="color:#fff;">14 days</strong> in the Radiance. This deep-plum theme is now <strong style="color:#fff;">yours forever</strong> — it stays even if your Radiance lapses.</div>
+        <div style="font-size:13.5px;color:rgba(255,255,255,.72);line-height:1.6;margin-bottom:24px;">Your Radiance has <strong style="color:#fff;">14+ days</strong> left. This deep-plum theme is now <strong style="color:#fff;">yours forever</strong> — it stays even if your Radiance lapses.</div>
         <div style="display:flex;gap:10px;">
           <button onclick="this.closest('[style*=fixed]').remove();applyAppearance('${RADIANCE_MILESTONE_THEME}')" class="btn-a" style="flex:1;padding:12px;justify-content:center;">Apply theme</button>
           <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:12px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1);border-radius:12px;cursor:pointer;font-family:var(--font-display);font-weight:600;">Later</button>
@@ -236,14 +238,19 @@ function _celebrateRadianceMilestone() {
   } catch (_) {}
 }
 
-// Clicking the still-locked Radiance Plum swatch explains how it's earned
-// (it's a milestone reward, not a purchasable theme) and shows progress.
+// Clicking the still-locked Radiance Plum swatch explains how it's earned —
+// it's a Radiance reward, NOT a Fortshop purchase. Hold ≥14 days of Radiance.
 function _radianceRewardLockedHint() {
-  const have = +((CU && CU.radianceDaysBought) || 0);
-  const left = Math.max(0, RADIANCE_MILESTONE_DAYS - have);
-  const msg = left > 0
-    ? `Radiance Plum is a milestone reward — spend ${left} more day${left === 1 ? '' : 's'} in the Radiance to keep it forever.`
-    : `Radiance Plum is a milestone reward for 14 days of Radiance.`;
+  const left = _radianceDaysLeft(CU);
+  let msg;
+  if (left <= 0) {
+    msg = 'Radiance Plum is a Radiance reward — get Radiance with 14+ days left to earn it forever.';
+  } else if (left < RADIANCE_MILESTONE_DAYS) {
+    const need = Math.ceil(RADIANCE_MILESTONE_DAYS - left);
+    msg = `Radiance Plum is a Radiance reward — extend your subscription by ${need} more day${need === 1 ? '' : 's'} (to 14+ days left) to earn it forever.`;
+  } else {
+    msg = 'You qualify for Radiance Plum! Make a Radiance purchase to claim it forever.';
+  }
   try { toast(msg, 'info'); } catch (_) {}
 }
 
@@ -25249,11 +25256,14 @@ function _buildProfileView(tab) {
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
       {id:'green_leaves',     name:'Green Leaves',     desc:'Calm forest greens. A quieter place to talk.', bg:'#0a1410', sidebar:'#091310', channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:'', cost:130, locked:!unlocked.includes('green_leaves')},
-      {id:'radiance_plum',    name:'Radiance Plum',    desc:'The deep plum of the Radiance. Earned by spending 14 days in the Radiance — yours forever.', bg:'#21131e', sidebar:'#1b0f19', channel:'#241522', panel:'#2a1826', accent:'#fef83d', border:'#3a2234', muted:'#6e4a62', bodyGrad:'linear-gradient(170deg,#21131e 0%,#2a1826 100%)', reward:true, locked:!unlocked.includes('radiance_plum')},
+      {id:'radiance_plum',    name:'Radiance Plum',    desc:'The deep plum of the Radiance. Earned by keeping 14+ days on your Radiance — yours forever.', bg:'#21131e', sidebar:'#1b0f19', channel:'#241522', panel:'#2a1826', accent:'#fef83d', border:'#3a2234', muted:'#6e4a62', bodyGrad:'linear-gradient(170deg,#21131e 0%,#2a1826 100%)', reward:true, locked:!unlocked.includes('radiance_plum')},
     ];
     const defaultThemes = allThemes.filter(t => t.free);
-    const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
-    const lockedThemes = allThemes.filter(t => t.locked);
+    // Reward themes (earned, never sold) get their own category — keep them
+    // OUT of the collection + Fortshop buckets so we never imply you can buy them.
+    const rewardThemes = allThemes.filter(t => t.reward);
+    const ownedThemes = allThemes.filter(t => !t.free && !t.locked && !t.reward);
+    const lockedThemes = allThemes.filter(t => t.locked && !t.reward);
     const hasOwnedThemes = ownedThemes.length > 0;
 
     // Selected theme for preview (start with current)
@@ -25448,9 +25458,25 @@ function _buildProfileView(tab) {
           <div class="settings-temp-empty" style="padding:24px 18px;margin-top:6px;">
             <div class="settings-temp-empty__icon" style="width:48px;height:48px;margin-bottom:10px;">${_faIcon('palette', 26)}</div>
             <div class="settings-temp-empty__title" style="font-size:15px;">No themes collected yet</div>
-            <div class="settings-temp-empty__msg">Browse the Fortshop to unlock seasonal and Radiance-only themes with Onyx.</div>
+            <div class="settings-temp-empty__msg">Unlock themes in the Fortshop with Onyx, or earn Radiance rewards below.</div>
           </div>
         `}
+
+        ${rewardThemes.length > 0 ? `
+          <div class="apr-subtitle apr-subtitle--reward" style="margin-top:18px;display:flex;align-items:center;gap:8px;">
+            <span>Radiance rewards</span>
+            <span class="apr-reward-tag">Earned, never sold</span>
+          </div>
+          <div class="apr-reward-note">${(() => {
+            const left = _radianceDaysLeft(CU);
+            const owns = (CU?.unlockedAppearances || []).includes('radiance_plum');
+            if (owns) return 'Earned &amp; yours forever — it stays even if your Radiance lapses.';
+            if (left >= RADIANCE_MILESTONE_DAYS) return 'You qualify! Make any Radiance purchase to claim Radiance Plum forever.';
+            if (left > 0) { const need = Math.ceil(RADIANCE_MILESTONE_DAYS - left); return `Keep <strong>14+ days</strong> on your Radiance to earn these. You're ${need} day${need===1?'':'s'} away.`; }
+            return 'Hold <strong>14+ days</strong> of Radiance at once to earn these, forever. Not sold in the Fortshop.';
+          })()}</div>
+          <div class="apr-theme-grid">${rewardThemes.map(t => buildAppearanceCard(t)).join('')}</div>
+        ` : ''}
 
         ${lockedThemes.length > 0 ? `
           <div class="apr-subtitle" style="margin-top:18px;">Available in the Fortshop</div>
@@ -26533,10 +26559,15 @@ async function claimDaily() {
 
 // Stacks from the later of (now, existing expiry) so repeat purchases extend
 // the subscription instead of overwriting it.
+// Radiance stacks: buying/extending ADDS days on top of whatever's left.
+// Capped so the active window never exceeds 365 days out from now.
+const RADIANCE_MAX_DAYS = 365;
 function _stackFromExpiry(existingIso, days) {
   const existing = existingIso ? new Date(existingIso).getTime() : 0;
   const base = Math.max(Date.now(), existing || 0);
-  return new Date(base + days * 86400000).toISOString();
+  const target = base + days * 86400000;
+  const cap = Date.now() + RADIANCE_MAX_DAYS * 86400000;
+  return new Date(Math.min(target, cap)).toISOString();
 }
 
 async function buyRadiance(days, cost) {
@@ -26547,8 +26578,8 @@ async function buyRadiance(days, cost) {
     : `Buy ${days}-day Radiance for ${cost} Onyx?`;
   showCustomConfirm(msg, async ()=>{
     CU.onyx=(CU.onyx||0)-cost;
-    CU.radianceUntil = _stackFromExpiry(CU.radianceUntil, days);
-    _accrueRadianceDays(days);
+    CU.radianceUntil = _stackFromExpiry(_radianceExpiry(CU) || null, days);
+    _checkRadianceMilestone();
     await saveUser(); updateOnyxDisplay();
     distributeOnyxRevenue(cost);
     const untilStr = new Date(CU.radianceUntil).toLocaleDateString();
@@ -26564,9 +26595,9 @@ async function buyRadiancePlus(days, cost) {
   showCustomConfirm(msg, async () => {
     if ((CU.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
     CU.onyx -= cost;
-    const base = _stackFromExpiry(CU.radianceUntil, days);
+    const base = _stackFromExpiry(_radianceExpiry(CU) || null, days);
     CU.radianceUntil = base;
-    _accrueRadianceDays(days);
+    _checkRadianceMilestone();
     await saveUser();
     refreshAtelierBalance();
     distributeOnyxRevenue(cost);
@@ -46362,6 +46393,10 @@ function renderAtelierTab(tab) {
       { img: _CDN + 'emojis.png',         name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s custom emojis in every message and reaction.' },
       { img: _CDN + 'banners.png',        name: 'Profile Banners',          desc: 'Set an image or GIF banner on your profile — Radiance only.' },
       { img: _CDN + 'earlyacess.png',     name: 'Early Access',             desc: 'Try new Fortized features before anyone else does.' },
+      // Radiance Plum — the milestone reward theme (no CDN art → plum gradient).
+      { grad: 'linear-gradient(140deg,#21131e 0%,#2a1826 52%,#3a2234 100%)', ic: 'fa-palette',      name: 'Radiance Plum Theme', desc: 'An exclusive deep-plum app theme. Keep 14+ days on your Radiance and it’s yours forever.' },
+      // Animated avatars — a classic premium flourish (gradient art).
+      { grad: 'linear-gradient(140deg,#ef5fb0 0%,#b25cc9 55%,#fff93e 130%)',  ic: 'fa-circle-user',  name: 'Animated Avatar',     desc: 'Bring your profile picture to life with an animated GIF avatar.' },
     ];
     // Smaller perks — consistent one-line descriptions (no truncation needed).
     const MORE = [
@@ -46426,15 +46461,19 @@ function renderAtelierTab(tab) {
 
         <div class="rad-carousel" id="rad-carousel">
           <div class="rad-ctrack" id="rad-ctrack">
-            ${FEATURED.map((p, i) => `
+            ${FEATURED.map((p, i) => {
+              const bg = p.img
+                ? `<img class="rad-cslide-bg" src="${p.img}" alt="" loading="lazy" onerror="this.style.display='none'">`
+                : `<div class="rad-cslide-bg rad-cslide-bg--grad" style="background:${p.grad || 'linear-gradient(135deg,#2a1826,#1a0f18)'};"><i class="fa-solid ${p.ic || 'fa-star'}"></i></div>`;
+              return `
               <div class="rad-cslide" data-idx="${i}" onclick="_radCarouselGo(${i})">
-                <img class="rad-cslide-bg" src="${p.img}" alt="" loading="lazy" onerror="this.style.display='none'">
-                <div class="rad-cslide-scrim"></div>
+                ${bg}
                 <div class="rad-cslide-cap">
                   <div class="rad-cslide-name">${p.name}<i class="rad-cslide-badge ${hasRad ? 'fa-solid fa-circle-check' : 'rad-cslide-badge--lock fa-solid fa-lock'}"></i></div>
                   <div class="rad-cslide-desc">${p.desc}</div>
                 </div>
-              </div>`).join('')}
+              </div>`;
+            }).join('')}
           </div>
           <button class="rad-carr rad-carr--prev" onclick="event.stopPropagation();_radCarouselPrev()" aria-label="Previous">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -51963,7 +52002,11 @@ async function purchaseRadiance(isPlus, days, cost) {
     document.body.appendChild(ov);
     return;
   }
-  const existingExpiry = CU.radianceUntil;
+  // Stack from the TRUE current expiry (max of radianceUntil + legacy
+  // radiancePlus) so extending always adds days on top of whatever's actually
+  // left — otherwise a higher legacy radiancePlus made purchases look like
+  // they "didn't add up" (the display reads the max, not radianceUntil alone).
+  const existingExpiry = _radianceExpiry(CU) || null;
   const stacking = existingExpiry && new Date(existingExpiry) > new Date();
   const confirmMsg = stacking
     ? `Extend Radiance by ${days} days for ${cost} Onyx?`
@@ -51974,7 +52017,7 @@ async function purchaseRadiance(isPlus, days, cost) {
       CU.onyx = (CU.onyx || 0) - cost;
       const until = _stackFromExpiry(existingExpiry, days);
       CU.radianceUntil = until;
-      _accrueRadianceDays(days);
+      _checkRadianceMilestone();
       await saveUser();
       updateOnyxDisplay();
       distributeOnyxRevenue(cost);

@@ -14409,6 +14409,10 @@ select:focus,select:focus-visible,
    the responsive theme card grid, and the radio-style selector
    row reused by Density / Spoiler mode / Cursor. */
 .apr-subtitle{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.5);margin:0 0 10px;}
+.apr-subtitle--reward{color:#ef5fb0;}
+.apr-reward-tag{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#ef5fb0;background:rgba(239,95,176,.12);border:1px solid rgba(239,95,176,.28);padding:2px 8px;border-radius:100px;}
+.apr-reward-note{font-size:11.5px;color:rgba(255,255,255,.5);line-height:1.5;margin:-2px 0 10px;}
+.apr-reward-note strong{color:#f6a6d3;font-weight:700;}
 .apr-hint{font-size:11.5px;color:rgba(255,255,255,.4);line-height:1.5;}
 .apr-theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
 .apr-radio-row{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1.5px solid rgba(255,255,255,.04);border-radius:12px;background:rgba(255,255,255,.015);cursor:pointer;transition:all .15s;margin-bottom:8px;}
@@ -15361,29 +15365,28 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* Smaller perks: consistent one-line descriptions, no ellipsis */
 .rad-prow-desc{white-space:normal;overflow:visible;text-overflow:clip;}
 
-/* ═══ RADIANCE v10 — flat 3-up carousel · equal adjacent cards ═══
-   All three perks the SAME size, edges aligned, sitting tight together like
-   the old Vault grid — the active card is marked only by a stronger pink
-   stroke, not by scaling (scaling broke the edge alignment). Three cards fill
-   the row edge-to-edge: width = (100% − 2 gaps)/3. Caption overlays the art
-   (bottom scrim) with the old styling: normal Syne, drop shadow, an owned/
-   locked state badge, and the description. */
-.rad-carousel{position:relative;height:222px;margin-bottom:6px;overflow:hidden;}
+/* ═══ RADIANCE v11 — flat 3-up carousel · bigger centre · no scrim ═══
+   Three perks the same base size, edges aligned, tight 18px gaps. The active
+   (centre) card scales up ~1.22× so it reads as the focus and slightly overlaps
+   the two neighbours (which keep their size and placement). No dark scrim box —
+   the caption sits straight on the art, made legible by a strong text shadow. */
+.rad-carousel{position:relative;height:270px;margin-bottom:6px;overflow:visible;}
 .rad-ctrack{position:relative;width:100%;height:100%;}
-.rad-cslide{position:absolute;top:50%;left:50%;width:calc((100% - 36px) / 3);height:206px;border-radius:18px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:2px solid rgba(239,95,176,.22);transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .5s,border-color .3s,border-width .18s;will-change:transform,opacity;}
+.rad-cslide{position:absolute;top:50%;left:50%;width:calc((100% - 36px) / 3);height:200px;border-radius:18px;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,#2a1826,#1a0f18);border:2px solid rgba(239,95,176,.22);box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .5s,border-color .3s,border-width .18s;will-change:transform,opacity;}
 .rad-cslide-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
-.rad-cslide-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,13,19,0) 36%,rgba(11,13,19,.55) 62%,rgba(11,13,19,.95) 100%);pointer-events:none;}
+.rad-cslide-bg--grad{display:flex;align-items:center;justify-content:center;padding-bottom:52px;}
+.rad-cslide-bg--grad i{font-size:50px;color:rgba(255,255,255,.92);filter:drop-shadow(0 4px 16px rgba(0,0,0,.45));}
 .rad-cslide-cap{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:14px 16px 15px;}
-.rad-cslide-name{font-family:var(--font-display);font-size:15.5px;font-weight:700;color:#fff;line-height:1.18;display:flex;align-items:center;gap:6px;text-shadow:0 1px 3px rgba(0,0,0,.65),0 2px 12px rgba(0,0,0,.45);}
-.rad-cslide-badge{font-size:12.5px;color:#3ecf6e;flex-shrink:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));}
-.rad-cslide-badge--lock{color:rgba(255,255,255,.55);}
-.rad-cslide-desc{font-size:12px;color:rgba(255,255,255,.82);margin-top:3px;line-height:1.38;text-shadow:0 1px 3px rgba(0,0,0,.6);}
-/* flat positions — equal size, adjacent, edges aligned; gap = 18px */
-.rad-cslide.is-center{transform:translate(-50%,-50%) scale(1);opacity:1;z-index:3;border-color:rgba(239,95,176,.8);}
+.rad-cslide-name{font-family:var(--font-display);font-size:15.5px;font-weight:700;color:#fff;line-height:1.18;display:flex;align-items:center;gap:6px;text-shadow:0 1px 2px rgba(0,0,0,.95),0 2px 7px rgba(0,0,0,.85),0 0 20px rgba(0,0,0,.7);}
+.rad-cslide-badge{font-size:12.5px;color:#5fe08a;flex-shrink:0;filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));}
+.rad-cslide-badge--lock{color:rgba(255,255,255,.7);}
+.rad-cslide-desc{font-size:12px;color:rgba(255,255,255,.9);margin-top:3px;line-height:1.38;text-shadow:0 1px 2px rgba(0,0,0,.95),0 1px 8px rgba(0,0,0,.8);}
+/* flat positions — neighbours keep size + placement; centre grows ~1.22× */
+.rad-cslide.is-center{transform:translate(-50%,-50%) scale(1.22);opacity:1;z-index:3;border-color:rgba(239,95,176,.82);box-shadow:0 18px 46px rgba(0,0,0,.5);}
 .rad-cslide.is-left{transform:translate(calc(-150% - 18px),-50%) scale(1);opacity:1;z-index:2;border-color:rgba(239,95,176,.2);}
 .rad-cslide.is-right{transform:translate(calc(50% + 18px),-50%) scale(1);opacity:1;z-index:2;border-color:rgba(239,95,176,.2);}
 .rad-cslide.is-far{transform:translate(-50%,-50%) scale(.9);opacity:0;z-index:1;pointer-events:none;}
-.rad-cslide.is-center:hover{transform:translate(-50%,-50%) scale(1.035);border-color:rgba(239,95,176,.95);border-width:3px;z-index:4;}
+.rad-cslide.is-center:hover{transform:translate(-50%,-50%) scale(1.27);border-color:rgba(239,95,176,.95);border-width:3px;z-index:4;}
 /* arrow bubbles — reveal on carousel hover */
 .rad-carr{position:absolute;top:50%;transform:translateY(-50%) scale(.85);width:44px;height:44px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(20,14,22,.72);border:1.5px solid rgba(239,95,176,.38);color:#ffb3de;cursor:pointer;z-index:6;opacity:0;transition:opacity .22s,transform .22s,background .18s,border-color .18s,color .18s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
 .rad-carr svg{width:20px;height:20px;}

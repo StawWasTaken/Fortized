@@ -46126,6 +46126,43 @@ function _radBindScrollSpy() {
   scroller.addEventListener('scroll', spy, { passive: true });
 }
 
+// ── Radiance Vault carousel (coverflow) ────────────────────────────────────
+// Slow auto-advancing showcase: the centre slide is large, the two neighbours
+// peek out on either side (almost hidden), the rest are off. Pauses on hover.
+let _radCarTimer = null, _radCarIdx = 0;
+function _radCarLayout() {
+  const car = document.getElementById('rad-carousel');
+  if (!car) { if (_radCarTimer) { clearInterval(_radCarTimer); _radCarTimer = null; } return; }
+  const slides = [...car.querySelectorAll('.rad-cslide')];
+  const n = slides.length;
+  if (!n) return;
+  slides.forEach((s, i) => {
+    let d = i - _radCarIdx;
+    if (d >  n / 2) d -= n;
+    if (d < -n / 2) d += n;
+    s.classList.remove('is-center', 'is-left', 'is-right', 'is-far');
+    s.classList.add(d === 0 ? 'is-center' : d === -1 ? 'is-left' : d === 1 ? 'is-right' : 'is-far');
+  });
+}
+function _radCarouselGo(i) { _radCarIdx = i; _radCarLayout(); }
+function _radCarouselInit() {
+  const car = document.getElementById('rad-carousel');
+  if (!car) return;
+  _radCarIdx = 0;
+  _radCarLayout();
+  if (_radCarTimer) clearInterval(_radCarTimer);
+  _radCarTimer = setInterval(() => {
+    const c = document.getElementById('rad-carousel');
+    if (!c) { clearInterval(_radCarTimer); _radCarTimer = null; return; }
+    if (c._paused) return;
+    const n = c.querySelectorAll('.rad-cslide').length || 1;
+    _radCarIdx = (_radCarIdx + 1) % n;
+    _radCarLayout();
+  }, 4200);
+  car.onmouseenter = () => { car._paused = true; };
+  car.onmouseleave = () => { car._paused = false; };
+}
+
 function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
   if (type === 'appearance') {
     const owned = ownedApps.includes(item.id);
@@ -46223,20 +46260,21 @@ function renderAtelierTab(tab) {
       { days: 30, onyx: 400 },
       { days: 90, onyx: 1000 },
     ];
-    // Feature-showcase perks: the three headliners use real brand art.
+    // Highlighted perks — a coverflow carousel of real brand art.
     const _CDN = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
     const FEATURED = [
-      { img: _CDN + '500mb%20upload.png', ic: 'fa-cloud-arrow-up',  name: '500 MB Uploads',           desc: 'Upload files up to 500 MB each.' },
-      { img: _CDN + 'badge.png',          ic: 'fa-certificate',     name: 'Radiance Badge',           desc: 'Wear the Radiance badge on your profile.' },
-      { img: _CDN + 'emojis.png',         ic: 'fa-face-grin-stars', name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s emojis anywhere you chat.' },
+      { img: _CDN + '500mb%20upload.png', name: '500 MB Uploads',           desc: 'Upload files up to 500 MB each.' },
+      { img: _CDN + 'badge.png',          name: 'Radiance Badge',           desc: 'Wear the Radiance badge on your profile.' },
+      { img: _CDN + 'emojis.png',         name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s emojis anywhere you chat.' },
+      { img: _CDN + 'banners.png',        name: 'Profile Banners',          desc: 'Set an image or GIF banner on your profile.' },
+      { img: _CDN + 'earlyacess.png',     name: 'Early Access',             desc: 'Try new Fortized features before anyone else.' },
     ];
+    // Smaller perks — consistent one-line descriptions (no truncation needed).
     const MORE = [
-      { ic: 'fa-panorama',            name: 'Animated Profile Banner', desc: 'An animated banner on your profile.' },
-      { ic: 'fa-wand-magic-sparkles', name: 'Name Effects & Colours',  desc: 'Gradient names, glows and effects.' },
-      { ic: 'fa-sliders',             name: 'Soundboard',              desc: 'Sound effects in voice and chat.' },
-      { ic: 'fa-arrow-pointer',       name: 'Custom Cursors',          desc: 'A custom in-app cursor.' },
-      { ic: 'fa-tags',                name: '10% Fortshop Discount',   desc: 'Every Fortshop purchase, 10% off.' },
-      { ic: 'fa-box-open',            name: 'Starter Drops',           desc: 'Radiance-only drops and cosmetics.' },
+      { ic: 'fa-sliders',       name: 'Soundboard',            desc: 'Play sound effects in voice and chat.' },
+      { ic: 'fa-arrow-pointer', name: 'Custom Cursors',        desc: 'Set a custom in-app cursor.' },
+      { ic: 'fa-tags',          name: '10% Fortshop Discount', desc: 'Save 10% on every Fortshop order.' },
+      { ic: 'fa-box-open',      name: 'Starter Drops',         desc: 'Claim exclusive Radiance drops.' },
     ];
 
     const expDate  = hasRad ? new Date(radExp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
@@ -46292,13 +46330,13 @@ function renderAtelierTab(tab) {
           <div class="rad-sec-sub">${hasRad ? 'Everything you’ve unlocked.' : 'Everything Radiance unlocks.'}</div>
         </div>
 
-        <div class="rad-features">
-          ${FEATURED.map(p => `
-            <div class="rad-feature ${hasRad ? 'is-active' : 'is-locked'}">
-              ${p.img ? `<img class="rad-feature-bg" src="${p.img}" alt="" loading="lazy" onerror="this.remove()">` : `<div class="rad-feature-art"><i class="fa-solid ${p.ic}"></i></div>`}
-              <div class="rad-feature-body">
-                <div class="rad-feature-name">${p.name}${hasRad ? '<i class="fa-solid fa-circle-check rad-feature-on" title="Active"></i>' : ''}</div>
-                <div class="rad-feature-desc">${p.desc}</div>
+        <div class="rad-carousel" id="rad-carousel">
+          ${FEATURED.map((p, i) => `
+            <div class="rad-cslide" data-idx="${i}" onclick="_radCarouselGo(${i})">
+              <div class="rad-cslide-art"><img src="${p.img}" alt="" loading="lazy" onerror="this.style.display='none'"></div>
+              <div class="rad-cslide-cap">
+                <div class="rad-cslide-name">${p.name}</div>
+                <div class="rad-cslide-desc">${p.desc}</div>
               </div>
             </div>`).join('')}
         </div>
@@ -46349,6 +46387,7 @@ function renderAtelierTab(tab) {
     </div>`;
 
     _radBindScrollSpy();
+    _radCarouselInit();
   }
 
   // ── QUESTS ────────────────────────────────────────────────

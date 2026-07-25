@@ -15334,3 +15334,29 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .rad-feature:active{transform:scale(1.03);}
 /* no separate background zoom — the whole card scales */
 .rad-feature:hover .rad-feature-bg{transform:none;}
+
+/* ═══ RADIANCE v8 — Vault coverflow carousel ═══════════════════════════════
+   Slow auto-advancing showcase: big centre slide, neighbours peek out on
+   either side (almost hidden), rest off. Caption sits BELOW the art so text
+   never covers the centred icon. */
+.rad-carousel{position:relative;height:400px;margin-bottom:4px;overflow:hidden;}
+.rad-cslide{position:absolute;top:50%;left:50%;width:440px;max-width:82%;border-radius:20px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:2px solid rgba(239,95,176,.28);cursor:pointer;transition:transform .6s cubic-bezier(.22,1,.36,1),opacity .55s ease,border-color .28s,border-width .18s;will-change:transform,opacity;}
+.rad-cslide-art{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;}
+.rad-cslide-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.rad-cslide-cap{padding:14px 18px 16px;background:rgba(11,13,19,.72);}
+.rad-cslide-name{font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--rad-ink);}
+.rad-cslide-desc{font-size:12.5px;color:var(--rad-muted);margin-top:3px;}
+/* coverflow positions */
+.rad-cslide.is-center{transform:translate(-50%,-50%) scale(1);opacity:1;z-index:3;border-color:rgba(239,95,176,.55);}
+.rad-cslide.is-left{transform:translate(calc(-50% - 175px),-50%) scale(.58);opacity:.38;z-index:2;}
+.rad-cslide.is-right{transform:translate(calc(-50% + 175px),-50%) scale(.58);opacity:.38;z-index:2;}
+.rad-cslide.is-far{transform:translate(-50%,-50%) scale(.5);opacity:0;z-index:1;pointer-events:none;}
+/* centre hover: grow BIG + thicker pink stroke (no glow) */
+.rad-cslide.is-center:hover{transform:translate(-50%,-50%) scale(1.14);border-color:rgba(239,95,176,.95);border-width:4px;z-index:5;}
+@media (max-width:760px){
+  .rad-cslide{width:82%;}
+  .rad-cslide.is-left,.rad-cslide.is-right{opacity:0;pointer-events:none;}
+}
+
+/* Smaller perks: consistent one-line descriptions, no ellipsis */
+.rad-prow-desc{white-space:normal;overflow:visible;text-overflow:clip;}

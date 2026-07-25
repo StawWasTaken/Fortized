@@ -46240,8 +46240,12 @@ function renderAtelierTab(tab) {
     const expDate  = hasRad ? new Date(radExp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     const stateCls = hasRad ? 'rad-page--member' : 'rad-page--guest';
     const greet = _radGreeting();
-    const who = escapeHTML(CU?.displayName || CU?.username || 'there');
-    const avHTML = buildAvatarHTML(CU?.pfp || null, CU?.displayName || CU?.username || 'U', 46, CU?.pfpCrop);
+    const _dn = CU?.displayName || CU?.username || 'there';
+    const who = escapeHTML(_dn);
+    const avHTML = buildAvatarHTML(CU?.pfp || null, _dn, 104, CU?.pfpCrop);
+    const nameStyle = (typeof _dmNameStyleAttr === 'function') ? _dmNameStyleAttr(CU) : '';
+    const _decoSrc = (CU?.activeDecoration && typeof getDecorationSrc === 'function') ? getDecorationSrc(CU.activeDecoration) : '';
+    const decoHTML = _decoSrc ? `<img class="rad-head-deco" src="${_decoSrc}" alt="" draggable="false" onerror="this.remove()">` : '';
 
     const stateLine = hasRad ? `
       <div class="rad-status">
@@ -46263,12 +46267,16 @@ function renderAtelierTab(tab) {
 
     el.innerHTML = `<div class="atelier-content-inner rad-page ${stateCls}">
 
-      <section class="rad-sec" id="rad-sec-overview">
-        <div class="rad-eyebrow">Radiance</div>
-        <h1 class="rad-greet">${greet},</h1>
-        <div class="rad-greet-row">
-          <span class="rad-greet-av">${avHTML}</span>
-          <span class="rad-greet-name">${who}</span>
+      <section class="rad-sec rad-sec--head" id="rad-sec-overview">
+        <div class="rad-head">
+          <div class="rad-head-av">
+            <div class="rad-head-av-inner">${avHTML}</div>
+            ${decoHTML}
+          </div>
+          <div class="rad-head-text">
+            <div class="rad-head-greet">${greet},</div>
+            <div class="rad-head-name" style="${nameStyle}">${who}</div>
+          </div>
         </div>
         ${stateLine}
       </section>

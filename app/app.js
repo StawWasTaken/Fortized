@@ -46295,7 +46295,7 @@ function renderAtelierTab(tab) {
         <div class="rad-features">
           ${FEATURED.map(p => `
             <div class="rad-feature ${hasRad ? 'is-active' : 'is-locked'}">
-              <div class="rad-feature-art">${p.img ? `<img src="${p.img}" alt="" loading="lazy" onerror="this.outerHTML='<i class=\\'fa-solid ${p.ic}\\'></i>'">` : `<i class="fa-solid ${p.ic}"></i>`}</div>
+              ${p.img ? `<img class="rad-feature-bg" src="${p.img}" alt="" loading="lazy" onerror="this.remove()">` : `<div class="rad-feature-art"><i class="fa-solid ${p.ic}"></i></div>`}
               <div class="rad-feature-body">
                 <div class="rad-feature-name">${p.name}${hasRad ? '<i class="fa-solid fa-circle-check rad-feature-on" title="Active"></i>' : ''}</div>
                 <div class="rad-feature-desc">${p.desc}</div>
@@ -46339,7 +46339,7 @@ function renderAtelierTab(tab) {
 
         <div class="rad-giftbanner">
           <div class="rad-giftbanner-text">
-            <div class="rad-giftbanner-title">Gift Radiance</div>
+            <div class="rad-giftbanner-title">Gift <img class="rad-giftbanner-word" src="${_CDN}radianceText.png" alt="Radiance" onerror="this.replaceWith(document.createTextNode('Radiance'))"></div>
             <p class="rad-giftbanner-desc">Gift someone Radiance to give them access to profile customisation, custom emojis and bigger uploads.</p>
             <button class="rad-cta rad-cta--primary rad-giftbanner-btn" onclick="openRadianceGiftModal()"><i class="fa-solid fa-gift"></i> Gift Radiance</button>
           </div>

@@ -46126,16 +46126,19 @@ function _radBindScrollSpy() {
   scroller.addEventListener('scroll', spy, { passive: true });
 }
 
-// ── Radiance Vault carousel (coverflow) ────────────────────────────────────
-// Slow auto-advancing showcase: the centre slide is large, the two neighbours
-// peek out on either side (almost hidden), the rest are off. Pauses on hover.
+// ── Radiance Vault carousel (flat 3-up strip) ──────────────────────────────
+// A flat filmstrip: the active slide is centred + enlarged, its two neighbours
+// sit fully visible on either side. Advancing slides the strip smoothly. Hover
+// reveals the arrow bubbles and pauses the slow autoplay; slides are clickable.
 let _radCarTimer = null, _radCarIdx = 0;
 function _radCarLayout() {
-  const car = document.getElementById('rad-carousel');
-  if (!car) { if (_radCarTimer) { clearInterval(_radCarTimer); _radCarTimer = null; } return; }
-  const slides = [...car.querySelectorAll('.rad-cslide')];
+  const track = document.getElementById('rad-ctrack');
+  if (!track) { if (_radCarTimer) { clearInterval(_radCarTimer); _radCarTimer = null; } return; }
+  const slides = [...track.children];
   const n = slides.length;
   if (!n) return;
+  _radCarIdx = ((_radCarIdx % n) + n) % n;
+  // Flat 3-up: active centred + big, the two neighbours fully visible beside it.
   slides.forEach((s, i) => {
     let d = i - _radCarIdx;
     if (d >  n / 2) d -= n;
@@ -46145,11 +46148,19 @@ function _radCarLayout() {
   });
 }
 function _radCarouselGo(i) { _radCarIdx = i; _radCarLayout(); }
+function _radCarouselPrev() {
+  const n = document.querySelectorAll('#rad-ctrack .rad-cslide').length || 1;
+  _radCarIdx = (_radCarIdx - 1 + n) % n; _radCarLayout();
+}
+function _radCarouselNext() {
+  const n = document.querySelectorAll('#rad-ctrack .rad-cslide').length || 1;
+  _radCarIdx = (_radCarIdx + 1) % n; _radCarLayout();
+}
 function _radCarouselInit() {
   const car = document.getElementById('rad-carousel');
   if (!car) return;
   _radCarIdx = 0;
-  _radCarLayout();
+  requestAnimationFrame(_radCarLayout); // ensure clientWidth is settled
   if (_radCarTimer) clearInterval(_radCarTimer);
   _radCarTimer = setInterval(() => {
     const c = document.getElementById('rad-carousel');
@@ -46158,9 +46169,10 @@ function _radCarouselInit() {
     const n = c.querySelectorAll('.rad-cslide').length || 1;
     _radCarIdx = (_radCarIdx + 1) % n;
     _radCarLayout();
-  }, 4200);
+  }, 6500);
   car.onmouseenter = () => { car._paused = true; };
   car.onmouseleave = () => { car._paused = false; };
+  if (!window._radCarResize) { window._radCarResize = () => _radCarLayout(); window.addEventListener('resize', window._radCarResize); }
 }
 
 function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
@@ -46331,14 +46343,23 @@ function renderAtelierTab(tab) {
         </div>
 
         <div class="rad-carousel" id="rad-carousel">
-          ${FEATURED.map((p, i) => `
-            <div class="rad-cslide" data-idx="${i}" onclick="_radCarouselGo(${i})">
-              <div class="rad-cslide-art"><img src="${p.img}" alt="" loading="lazy" onerror="this.style.display='none'"></div>
-              <div class="rad-cslide-cap">
-                <div class="rad-cslide-name">${p.name}</div>
-                <div class="rad-cslide-desc">${p.desc}</div>
-              </div>
-            </div>`).join('')}
+          <div class="rad-ctrack" id="rad-ctrack">
+            ${FEATURED.map((p, i) => `
+              <div class="rad-cslide" data-idx="${i}" onclick="_radCarouselGo(${i})">
+                <img class="rad-cslide-bg" src="${p.img}" alt="" loading="lazy" onerror="this.style.display='none'">
+                <div class="rad-cslide-scrim"></div>
+                <div class="rad-cslide-cap">
+                  <div class="rad-cslide-name">${p.name}</div>
+                  <div class="rad-cslide-desc">${p.desc}</div>
+                </div>
+              </div>`).join('')}
+          </div>
+          <button class="rad-carr rad-carr--prev" onclick="event.stopPropagation();_radCarouselPrev()" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="rad-carr rad-carr--next" onclick="event.stopPropagation();_radCarouselNext()" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
 
         <div class="rad-perklist">

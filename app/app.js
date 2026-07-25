@@ -41564,12 +41564,25 @@ function _showUploadProgress(containerId, count, totalBytes, caption) {
 // Add a file to the pending tray (respecting the 10-file cap + size limit).
 function _addPendingAttachment(file, context, onDone) {
   const hasRadiance = _hasRadiance(CU);
-  const maxMB = hasRadiance ? 45 : 30;
+  // Free users get 350 MB per file; Radiance lifts to 500 MB. Big files are
+  // uploaded to Supabase Storage at send time (handleChatSend) — NOT inlined.
+  const maxMB = hasRadiance ? 500 : 350;
   const atts = _pendAtts();
   if (atts.length >= _ATT_MAX) { _showUploadLimitCard(); onDone && onDone(false); return; }
   if (file.size > maxMB * 1024 * 1024) { toast(file.name + ' is too large (max ' + maxMB + 'MB)', 'error'); onDone && onDone(false); return; }
+  // Large files must NOT be base64-encoded — a 500 MB file becomes ~666 MB of
+  // base64 in memory and freezes the tab. Keep the Blob for a direct Storage
+  // upload and an object URL for the preview. Small files stay inline so tiny
+  // images still work even if Storage is briefly unavailable.
+  const INLINE_MAX = 4 * 1024 * 1024; // 4 MB
+  if (file.size > INLINE_MAX) {
+    const previewUrl = (file.type.startsWith('image/') || file.type.startsWith('video/')) ? URL.createObjectURL(file) : '';
+    atts.push({ name: file.name, type: file.type, data: null, previewUrl, file, size: file.size, context });
+    onDone && onDone(true);
+    return;
+  }
   const reader = new FileReader();
-  reader.onload = ev => { atts.push({ name: file.name, type: file.type, data: ev.target.result, size: file.size, context }); onDone && onDone(true); };
+  reader.onload = ev => { atts.push({ name: file.name, type: file.type, data: ev.target.result, file, size: file.size, context }); onDone && onDone(true); };
   reader.onerror = () => { onDone && onDone(false); };
   reader.readAsDataURL(file);
 }
@@ -41605,8 +41618,8 @@ function _attCardHTML(att, i) {
   const isAudio = type.startsWith('audio/');
   const sizeMB = (att.size / 1024 / 1024).toFixed(2);
   let previewHTML;
-  if (isImage) previewHTML = `<img src="${escapeHTML(att.data)}">`;
-  else if (isVideo) previewHTML = `<video src="${escapeHTML(att.data)}" muted></video>`;
+  if (isImage) previewHTML = `<img src="${escapeHTML(att.data || att.previewUrl || '')}">`;
+  else if (isVideo) previewHTML = `<video src="${escapeHTML(att.data || att.previewUrl || '')}" muted></video>`;
   else if (isAudio) previewHTML = `<div class="cfp-file-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
   else previewHTML = `<div class="cfp-file-ico"><svg width="24" height="24" viewBox="0 0 384 512" fill="currentColor" style="color:var(--muted-light);"><path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/></svg></div>`;
   const sp = !!att._spoiler;
@@ -41740,14 +41753,21 @@ async function handleChatSend(context, chIdx) {
       const isVideo = att.type.startsWith('video/');
       const isAudio = att.type.startsWith('audio/');
       const sizeMB = (att.size/1024/1024).toFixed(2)+' MB';
-      let fileUrl = att.data; // fallback to base64
-      // Try uploading to Supabase Storage CDN (much smaller message text)
+      let fileUrl = att.data || null; // base64 fallback (null for large files)
+      // Upload to Supabase Storage. Prefer the raw Blob (large files carry it
+      // directly and were never base64-encoded); fall back to re-blobbing the
+      // inline data URL for small files.
       try {
-        const blob = await fetch(att.data).then(r => r.blob());
-        const result = await FortizedSocial.uploadFile(att.name, blob);
-        if (result.url) { fileUrl = result.url; }
-        else { _dbg('[Upload] Storage failed, using base64 fallback:', result.error); }
-      } catch(e) { _dbg('[Upload] Storage unavailable, using base64:', e.message); }
+        const blob = att.file || (att.data ? await fetch(att.data).then(r => r.blob()) : null);
+        if (blob) {
+          const result = await FortizedSocial.uploadFile(att.name, blob);
+          if (result.url) { fileUrl = result.url; }
+          else { _dbg('[Upload] Storage failed:', result.error); }
+        }
+      } catch(e) { _dbg('[Upload] Storage unavailable:', e.message); }
+      if (att.previewUrl) { try { URL.revokeObjectURL(att.previewUrl); } catch(_){} }
+      // A large file whose Storage upload failed has no inline fallback — skip it.
+      if (!fileUrl) { toast('Upload failed for ' + att.name + ' — please try again.', 'error'); if (_upCard) _upCard.step(++_upDone); continue; }
       let token;
       // Images carry optional alt text as a 3rd token segment ([FTZIMG:name|url|alt]).
       const altSeg = (isImage && att.alt) ? '|' + String(att.alt).replace(/[|\]]/g, ' ') : '';

@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix386';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix387';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix386';
+    s4.src = '/firebase-compat-shim.js?v=2026fix387';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix386">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix387">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix386', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix387', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix386"></script>
+<script src="/app/utils.js?v=2026fix387"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -871,21 +871,6 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
         <div class="modal-error" id="friend-error"></div>
         <div class="modal-success" id="friend-success"></div>
       </div>
-      <!-- Other Places -->
-      <div class="afr-places">
-        <div class="afr-places__title">Other Places to Make Friends</div>
-        <div class="afr-places__sub">Meet people in public bastions or jump into community threads — plenty of ways to find your crew.</div>
-        <div class="afr-places__grid">
-          <div class="afr-place" onclick="closeModal('modal-add-friend');showView('discover')">
-            <div class="afr-place__icon"><svg viewBox="0 0 512 512" fill="currentColor" style="width:1em;height:1em;" aria-hidden="true"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm50.7-186.9L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg></div>
-            <div class="afr-place__body">
-              <div class="afr-place__name">Discover</div>
-              <div class="afr-place__desc">Browse public bastions</div>
-            </div>
-            <i class="fa-solid fa-chevron-right afr-place__go" aria-hidden="true"></i>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -1130,10 +1115,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix386"></script>
-<script src="/app/app.js?v=2026fix386"></script>
-<script src="/app/joy-system.js?v=2026fix386"></script>
-<script src="/app/chronicle-games.js?v=2026fix386"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix387"></script>
+<script src="/app/app.js?v=2026fix387"></script>
+<script src="/app/joy-system.js?v=2026fix387"></script>
+<script src="/app/chronicle-games.js?v=2026fix387"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

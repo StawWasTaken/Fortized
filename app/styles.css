@@ -657,12 +657,6 @@ body.is-desktop-app .topbar{padding-right:0;}
 .fr-subnav .fr-add-btn.btn-a svg{width:12px;height:12px;}
 .fr-subnav .fr-add-btn.btn-a:hover{box-shadow:0 4px 0 0 var(--ink);}
 .fr-subnav .fr-add-btn.btn-a:active{box-shadow:0 1px 0 0 var(--ink);}
-/* Add Friend subpage — centered card that fills the space, no button glow. */
-.fr-list.fr-list--add{display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:56px;}
-.fr-add-page{width:100%;max-width:720px;padding:36px 42px;}
-.fr-add-page .afr-head__title{font-size:24px;}
-.fr-add-page .afr-send-btn{white-space:nowrap;}
-.fr-add-page .afr-send-btn.btn-a:hover{box-shadow:0 5px 0 0 var(--ink);}
 /* Active Now toggle (narrow windows only) */
 .fr-anow-toggle{display:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted-light);cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
 .fr-anow-toggle svg{width:16px;height:16px;}

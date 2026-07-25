@@ -58529,10 +58529,12 @@ const _FR_GAME_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none
 
 // Switch the Friends subnav tab. 'add' renders the Add-Friend subpage inline.
 function setFriendsTab(tab, btn) {
-  if (!['online', 'all', 'pending', 'add'].includes(tab)) tab = 'online';
+  if (tab === 'add') { openModal('modal-add-friend'); return; }
+  if (!['online', 'all', 'pending'].includes(tab)) tab = 'online';
   _friendsTab = tab;
   document.querySelectorAll('#friends-subnav .disc-subnav-btn').forEach(b => b.classList.remove('active'));
-  if (tab !== 'add') { const active = btn || document.getElementById('ftab-' + tab); if (active) active.classList.add('active'); }
+  const active = btn || document.getElementById('ftab-' + tab);
+  if (active) active.classList.add('active');
   const searchWrap = document.getElementById('fr-search-wrap');
   if (searchWrap) searchWrap.style.display = (tab === 'online' || tab === 'all') ? '' : 'none';
   renderFriendsView(tab);
@@ -58652,9 +58654,7 @@ async function renderFriendsView(tab) {
   tab = tab || _friendsTab || 'online';
   const list = document.getElementById('fr-list');
   if (!list) return;
-  list.classList.toggle('fr-list--add', tab === 'add');
   _frUpdatePendingBadge();
-  if (tab === 'add') return _frRenderAdd(list);
   if (tab === 'pending') return _frRenderPending(list);
 
   const friends = CU?.friends || [];
@@ -58726,75 +58726,6 @@ async function _frRenderPending(list) {
   if (incoming.length) html += `<div class="fr-sec">Incoming — ${incoming.length}</div>` + incoming.map(f => rowFor(f, 'in')).join('');
   if (outgoing.length) html += `<div class="fr-sec">Outgoing — ${outgoing.length}</div>` + outgoing.map(f => rowFor(f, 'out')).join('');
   list.innerHTML = html;
-}
-
-// ── Add Friend subpage (the card, rendered inline like the other tabs) ──
-function _frRenderAdd(list) {
-  list.innerHTML = `<div class="fr-add-page">
-    <div class="afr-head">
-      <div class="afr-head__icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></div>
-      <div class="afr-head__text">
-        <div class="afr-head__title">Add Friend</div>
-        <div class="afr-head__sub">You can add friends with their Fortized usernames.</div>
-      </div>
-      <img class="afr-head__mascot" src="/JoysterPoint.png" onerror="this.style.display='none'" alt="">
-    </div>
-    <div class="afr-input-zone">
-      <div class="afr-input-row">
-        <i class="fa-solid fa-at afr-input-at" aria-hidden="true"></i>
-        <input id="fr-add-input" placeholder="Enter a username..." autocomplete="off" spellcheck="false" oninput="_frAddCheck(this.value)" onkeydown="if(event.key==='Enter')_frAddSubmit()">
-        <button class="btn-a afr-send-btn" id="fr-add-send" onclick="_frAddSubmit()"><svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;" aria-hidden="true"><path d="M536.4-26.3c9.8-3.5 20.6-1 28 6.3s9.8 18.2 6.3 28l-178 496.9c-5 13.9-18.1 23.1-32.8 23.1-14.2 0-27-8.6-32.3-21.7l-64.2-158c-4.5-11-2.5-23.6 5.2-32.6l94.5-112.4c5.1-6.1 4.7-15-.9-20.6s-14.6-6-20.6-.9L229.2 276.1c-9.1 7.6-21.6 9.6-32.6 5.2L38.1 216.8c-13.1-5.3-21.7-18.1-21.7-32.3 0-14.7 9.2-27.8 23.1-32.8l496.9-178z"/></svg><span>Send Friend Request</span></button>
-      </div>
-      <div id="fr-add-hint" style="font-size:11.5px;min-height:15px;margin-top:9px;transition:color .15s;"></div>
-    </div>
-    <div class="afr-places">
-      <div class="afr-places__title">Other Places to Make Friends</div>
-      <div class="afr-places__sub">Meet people in public bastions — plenty of ways to find your crew.</div>
-      <div class="afr-places__grid">
-        <div class="afr-place" onclick="showView('discover')">
-          <div class="afr-place__icon"><svg viewBox="0 0 512 512" fill="currentColor" style="width:1em;height:1em;" aria-hidden="true"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm50.7-186.9L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg></div>
-          <div class="afr-place__body">
-            <div class="afr-place__name">Discover</div>
-            <div class="afr-place__desc">Browse public bastions</div>
-          </div>
-          <i class="fa-solid fa-chevron-right afr-place__go" aria-hidden="true"></i>
-        </div>
-      </div>
-    </div>
-  </div>`;
-  setTimeout(() => { try { document.getElementById('fr-add-input')?.focus(); } catch (_) {} }, 30);
-}
-
-function _frAddCheck(val) {
-  const hint = document.getElementById('fr-add-hint');
-  if (!hint) return;
-  const v = (val || '').trim();
-  if (!v) { hint.textContent = ''; return; }
-  hint.style.color = 'var(--muted)';
-  hint.textContent = 'Press Enter or Send to add @' + v.toLowerCase();
-}
-
-async function _frAddSubmit() {
-  const inp = document.getElementById('fr-add-input');
-  const hint = document.getElementById('fr-add-hint');
-  const btn = document.getElementById('fr-add-send');
-  if (!inp) return;
-  const username = inp.value.trim().toLowerCase();
-  const fail = (m) => { if (hint) { hint.style.color = 'var(--red)'; hint.textContent = m; } };
-  if (!username) return fail('Enter a username');
-  if (username === String(CU.username).toLowerCase()) return fail("You can't add yourself.");
-  if (typeof isUserBlocked === 'function' && isUserBlocked(username)) return fail("You've blocked this user — unblock them first.");
-  if (btn) { btn.disabled = true; btn.classList.add('btn-loading'); }
-  try {
-    const r = await FortizedSocial.sendFriendRequest(CU.username, username);
-    if (r && r.ok) {
-      if (hint) { hint.style.color = 'var(--accent)'; hint.textContent = '⏳ ' + (r.msg || 'Friend request sent!'); }
-      inp.value = '';
-      await refreshCU();
-      _frUpdatePendingBadge();
-    } else fail((r && r.msg) || 'Failed to send request.');
-  } catch (e) { fail('Connection error.'); }
-  finally { if (btn) { btn.disabled = false; btn.classList.remove('btn-loading'); } }
 }
 
 // ════════════════════════════════════════════

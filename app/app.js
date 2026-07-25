@@ -45991,6 +45991,50 @@ function renderAtelierTopNav() {
   }).join('');
 }
 
+// ── Radiance page: in-page section tabs (its .disc-subnav topbar) ──────────
+// The Radiance page reuses the .disc-subnav component (like Friends). Its tabs
+// jump-scroll the shared atelier scroller to each section; a light scroll-spy
+// keeps the active tab in sync. Reduced-motion users get an instant jump.
+function _radSetActiveTab(id) {
+  ['overview', 'perks', 'plans'].forEach(s => {
+    const b = document.getElementById('radtab-' + s);
+    if (b) b.classList.toggle('active', s === id);
+  });
+}
+function _radGoSection(id) {
+  const scroller = document.getElementById('atelier-scroll-outer');
+  const target = document.getElementById('rad-sec-' + id);
+  if (scroller && target) {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const top = scroller.scrollTop + target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 8;
+    scroller.scrollTo({ top: Math.max(0, top), behavior: reduce ? 'auto' : 'smooth' });
+  }
+  _radSetActiveTab(id);
+}
+function _radBindScrollSpy() {
+  const scroller = document.getElementById('atelier-scroll-outer');
+  if (!scroller) return;
+  if (scroller._radSpy) scroller.removeEventListener('scroll', scroller._radSpy);
+  let raf = 0;
+  const spy = () => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      if (_currentView !== 'radiance') return;
+      const scTop = scroller.getBoundingClientRect().top;
+      const mark = scTop + scroller.clientHeight * 0.32;
+      let cur = 'overview';
+      ['overview', 'perks', 'plans'].forEach(s => {
+        const elS = document.getElementById('rad-sec-' + s);
+        if (elS && elS.getBoundingClientRect().top <= mark) cur = s;
+      });
+      _radSetActiveTab(cur);
+    });
+  };
+  scroller._radSpy = spy;
+  scroller.addEventListener('scroll', spy, { passive: true });
+}
+
 function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
   if (type === 'appearance') {
     const owned = ownedApps.includes(item.id);
@@ -46078,120 +46122,143 @@ function renderAtelierTab(tab) {
 
 
   // ── RADIANCE DWELLING ─────────────────────────────────────
+  // "The Radiance Prism" — the logo treated as a living crystal that charges
+  // with your membership. Topbar = the .disc-subnav in #view-radiance. Motion
+  // is subtle/slow and fully gated behind prefers-reduced-motion in CSS.
   if (tab === 'radiance') {
-    const PRICES = [{days:7,onyx:150},{days:30,onyx:400},{days:90,onyx:1000}];
-    const PERK_CARDS = [
-      {img:'/AtelierCustomEmoji.png?v=20260519a',title:'Custom Emojis Everywhere',desc:'Use exclusive custom emojis across all your messages and reactions.',color:'#ff77e4',colorRgb:'255,119,228'},
-      {img:'/Atelier100MbUploads.png?v=20260519a',title:'100MB Uploads',desc:'Upload files up to 100MB for seamless sharing and media management.',color:'#ffd93e',colorRgb:'255,217,62'},
-      {img:'/AtelierBadge.png?v=20260519a',title:'Radiance Badge',desc:'Display your exclusive Radiance badge on your profile.',color:'#fff93e',colorRgb:'255,249,62'},
-      {img:'/AtelierGift.png?v=20260519a',title:'Gift Radiance',desc:'Send Radiance subscriptions to your friends as a gift.',color:'#f472b6',colorRgb:'244,114,182'},
+    const PRICES = [
+      { days: 7,  onyx: 150 },
+      { days: 30, onyx: 400 },
+      { days: 90, onyx: 1000 },
+    ];
+    // Real Radiance perks — every one is gated behind _hasRadiance elsewhere.
+    const PERKS = [
+      { ic: 'fa-certificate',         name: 'Radiance Badge',           desc: 'A glowing badge on your profile that says you shine.' },
+      { ic: 'fa-face-grin-stars',     name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s custom emojis in every message and reaction.' },
+      { ic: 'fa-cloud-arrow-up',      name: '100 MB Uploads',           desc: 'Share big clips, art and files — up to 100 MB each.' },
+      { ic: 'fa-panorama',            name: 'Animated Profile Banner',  desc: 'Bring your profile to life with an animated banner.' },
+      { ic: 'fa-arrow-pointer',       name: 'Custom Cursors',           desc: 'Swap your in-app cursor for something with personality.' },
+      { ic: 'fa-sliders',             name: 'Soundboard',               desc: 'Drop sound effects into voice and chat for the whole room.' },
+      { ic: 'fa-wand-magic-sparkles', name: 'Name Effects & Colors',    desc: 'Gradient names, glows and effects that stand out.' },
+      { ic: 'fa-box-open',            name: 'Starter Drops',            desc: 'Claim exclusive Radiance-only drops and cosmetics.' },
+      { ic: 'fa-tags',                name: '10% Fortshop Discount',    desc: 'Every Fortshop purchase is 10% off, automatically.' },
+      { ic: 'fa-gift',                name: 'Gift Radiance',            desc: 'Send Radiance to friends and shine together.' },
     ];
 
-    el.innerHTML = `<div class="atelier-content-inner" style="position:relative;">
-      <!-- ═══ VIDEO BACKGROUND LAYER - TOP ═══ -->
-      <div style="position:absolute;top:0;left:0;right:0;height:480px;z-index:0;overflow:hidden;pointer-events:none;mix-blend-mode:overlay;">
-        <video style="width:100%;height:100%;object-fit:cover;opacity:0.4;" autoplay muted loop playsinline>
-          <source src="/AtelierWorld.webm" type="video/webm">
-        </video>
-      </div>
+    const charge   = hasRad ? Math.max(0.04, Math.min(1, daysRad / 90)) : 0;
+    const expDate  = hasRad ? new Date(radExp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    const stateCls = hasRad ? 'rad-page--member' : 'rad-page--guest';
+    const ONYX_IC  = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png';
 
-      <!-- ═══ HERO BANNER ═══ -->
-      <div style="position:relative;z-index:1;border-radius:12px;overflow:hidden;margin-bottom:40px;background:linear-gradient(135deg,rgba(255,119,228,.25) 0%,rgba(255,249,62,.15) 50%,rgba(255,119,228,.12) 100%);padding:48px 40px;">
-        <!-- Wrap background overlay -->
-        <div style="position:absolute;inset:0;background:url('/wrapBackground.png');background-size:cover;background-position:center;opacity:.6;pointer-events:none;"></div>
-        <div style="position:relative;z-index:1;display:flex;align-items:center;gap:24px;">
-          <img src="/radiance-logo.png" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));"/>
-          <div>
-            <h1 style="font-family:var(--font-display);font-size:36px;font-weight:900;color:#fff;margin:0;letter-spacing:-.03em;text-shadow:0 2px 16px rgba(0,0,0,.4);">Welcome to your Radiance Dwelling</h1>
-            <p style="font-size:14px;color:rgba(255,255,255,.7);margin:8px 0 0 0;">Your premium membership is active. Enjoy all your exclusive perks.</p>
+    // The living crystal. --charge scales the ring fill + bloom intensity.
+    const crystalHTML = `
+      <div class="rad-crystal" style="--charge:${charge};">
+        <div class="rad-crystal-ring" aria-hidden="true"></div>
+        <div class="rad-crystal-bloom" aria-hidden="true"></div>
+        <div class="rad-crystal-core">
+          <img src="/radiance-logo.png" alt="Radiance" draggable="false"/>
+          <div class="rad-crystal-sweep" aria-hidden="true"></div>
+        </div>
+        <div class="rad-crystal-motes" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        ${hasRad ? '' : '<div class="rad-crystal-dormant">Dormant</div>'}
+      </div>`;
+
+    // Right-side HUD: member status ring vs guest pitch.
+    const hudHTML = hasRad ? `
+      <div class="rad-hud">
+        <div class="rad-hud-ring" style="--charge:${charge};">
+          <div class="rad-hud-ring-in">
+            <span class="rad-hud-days">${daysRad}</span>
+            <span class="rad-hud-days-lbl">day${daysRad === 1 ? '' : 's'} left</span>
           </div>
         </div>
-        ${hasRad||hasPlus?`
-        <div style="position:relative;z-index:1;margin-top:20px;display:flex;align-items:center;gap:12px;">
-          <span style="font-size:12px;color:rgba(255,255,255,.6);">${(hasPlus?daysPlus:daysRad)} days remaining · Auto-renews monthly</span>
-          <button onclick="cancelRadiance()" style="padding:6px 14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:rgba(255,255,255,.7);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;backdrop-filter:none;" onmouseover="this.style.background='rgba(0,0,0,.5)'" onmouseout="this.style.background='rgba(0,0,0,.3)'">Cancel Subscription</button>
+        <div class="rad-hud-meta">
+          <div class="rad-hud-stat"><i class="fa-solid fa-calendar-day"></i><div><span class="rad-hud-k">Active until</span><span class="rad-hud-v">${expDate}</span></div></div>
+          <div class="rad-hud-stat"><img src="${ONYX_IC}" class="rad-onyx-ic" alt=""/><div><span class="rad-hud-k">Your balance</span><span class="rad-hud-v">${bal.toLocaleString()} Onyx</span></div></div>
+          <button class="rad-hud-cancel" onclick="cancelRadiance()">Cancel subscription</button>
         </div>
-        `:''}
-      </div>
+      </div>` : `
+      <div class="rad-hud rad-hud--guest">
+        <div class="rad-hud-pitchrow">
+          <span class="rad-hud-badge"><i class="fa-solid fa-lock"></i> Not radiant yet</span>
+          <span class="rad-hud-unlock">${PERKS.length} premium perks waiting</span>
+        </div>
+        <button class="rad-cta rad-cta--primary" onclick="_radGoSection('plans')">Ascend to Radiance</button>
+        <div class="rad-hud-note">From ${PRICES[0].onyx} Onyx · cancel anytime</div>
+      </div>`;
 
-      <!-- ═══ SHARE WITH FRIENDS CARD ═══ -->
-      <div style="position:relative;z-index:1;background:linear-gradient(135deg,rgba(255,119,228,.12),rgba(255,119,228,.05));border:1.5px solid rgba(255,119,228,.2);border-radius:14px;padding:40px 32px;margin-bottom:40px;text-align:center;transition:all .3s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.background='linear-gradient(135deg,rgba(255,119,228,.18),rgba(255,119,228,.08))';this.style.borderColor='rgba(255,119,228,.35)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(255,119,228,.15)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,119,228,.12),rgba(255,119,228,.05))';this.style.borderColor='rgba(255,119,228,.2)';this.style.transform='';this.style.boxShadow=''">
-        <!-- Decorative background glow -->
-        <div style="position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,119,228,.1),transparent 70%);pointer-events:none;"></div>
+    el.innerHTML = `<div class="atelier-content-inner rad-page ${stateCls}">
+      <div class="rad-aurora" aria-hidden="true"><span></span><span></span><span></span></div>
 
-        <div style="position:relative;z-index:1;">
-          <div style="margin-bottom:16px;">
-            <img src="/radiance-logo.png" style="width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(255,119,228,.25));"/>
+      <section class="rad-sec" id="rad-sec-overview">
+        <div class="rad-hero">
+          <div class="rad-hero-crystal">${crystalHTML}</div>
+          <div class="rad-hero-copy">
+            <div class="rad-eyebrow">Fortized · Premium</div>
+            <h1 class="rad-hero-title">${hasRad ? 'Your Radiance is shining' : 'Rise into Radiance'}</h1>
+            <p class="rad-hero-sub">${hasRad
+              ? 'Every premium perk is active. Your crystal is charged and glowing — here’s where it all lives.'
+              : 'Fortized’s premium membership — exclusive perks, cosmetics and a profile that shines. Charge your crystal and stand out from the realm.'}</p>
+            ${hudHTML}
           </div>
-          <div style="font-family:var(--font-display);font-size:20px;font-weight:900;background:linear-gradient(90deg,#ff77e4,#fff93e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;letter-spacing:-.01em;">Share Radiance</div>
-          <p style="font-size:13px;color:rgba(255,255,255,.6);margin:0 0 24px 0;line-height:1.6;">Gift your friends a Radiance subscription and let them enjoy all the premium perks together.</p>
-          <button onclick="openRadianceGiftModal()" style="padding:12px 32px;background:linear-gradient(135deg,#ff77e4,rgba(255,119,228,.8));border:none;border-radius:8px;color:#0f1119;font-family:var(--font-display);font-size:14px;font-weight:900;cursor:pointer;transition:all .2s;letter-spacing:-.01em;box-shadow:0 6px 20px rgba(255,119,228,.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(255,119,228,.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(255,119,228,.3)'">Send Gifts</button>
         </div>
-      </div>
+      </section>
 
-      <!-- ═══ EXPLORE YOUR PERKS — Card Grid (Discord "Explore What's New" style) ═══ -->
-      <div style="position:relative;z-index:1;margin-bottom:40px;">
-        <div style="font-family:var(--font-display);font-size:13px;font-weight:900;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px;">Explore Your Perks</div>
-
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;">
-          ${PERK_CARDS.map(c=>`
-            <div style="background:linear-gradient(180deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.015) 100%);border:1.5px solid rgba(255,255,255,.09);border-radius:16px;overflow:hidden;transition:all .28s cubic-bezier(.34,.1,.68,1);cursor:default;display:flex;flex-direction:column;position:relative;height:100%;backdrop-filter:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);" onmouseover="this.style.borderColor='rgba(${c.colorRgb},.35)';this.style.background='linear-gradient(180deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,.03) 100%)';this.style.transform='translateY(-6px)';this.style.boxShadow='inset 0 1px 0 rgba(255,255,255,.08), 0 16px 40px rgba(0,0,0,.4)';this.style.borderColor='rgba(${c.colorRgb},.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.09)';this.style.background='linear-gradient(180deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.015) 100%)';this.style.transform='';this.style.boxShadow='inset 0 1px 0 rgba(255,255,255,.08)'">
-              <!-- Badge -->
-              <div style="position:absolute;top:14px;left:14px;padding:5px 11px;background:rgba(${c.colorRgb},.25);border:1px solid rgba(${c.colorRgb},.5);border-radius:7px;font-size:8px;font-weight:900;color:${c.color};text-transform:uppercase;letter-spacing:.1em;z-index:2;backdrop-filter:none;box-shadow:0 4px 12px rgba(${c.colorRgb},.15);">Perk</div>
-
-              <!-- Image Area -->
-              <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:28px 18px;background:linear-gradient(135deg,rgba(${c.colorRgb},.12) 0%,rgba(${c.colorRgb},.04) 100%),linear-gradient(180deg,rgba(255,255,255,.04) 0%,transparent 100%);min-height:150px;border-bottom:1px solid rgba(255,255,255,.05);">
-                <img src="${c.img}" style="max-width:90%;max-height:130px;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,.4));transition:transform .28s cubic-bezier(.34,.1,.68,1);" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'"/>
-              </div>
-
-              <!-- Text Area -->
-              <div style="padding:20px;">
-                <div style="font-family:var(--font-display);font-size:14px;font-weight:900;color:#fff;margin-bottom:8px;line-height:1.3;letter-spacing:-.02em;">${c.title}</div>
-                <div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.5;font-weight:500;">${c.desc}</div>
-              </div>
-            </div>
-          `).join('')}
+      <section class="rad-sec" id="rad-sec-perks">
+        <div class="rad-sec-head">
+          <div class="rad-sec-title">The Vault</div>
+          <div class="rad-sec-sub">${hasRad ? 'Everything you’ve unlocked.' : 'Everything Radiance unlocks.'}</div>
         </div>
-      </div>
+        <div class="rad-vault">
+          ${PERKS.map(p => `
+            <div class="rad-perk ${hasRad ? 'is-active' : 'is-locked'}">
+              <div class="rad-perk-ic"><i class="fa-solid ${p.ic}"></i></div>
+              <div class="rad-perk-body">
+                <div class="rad-perk-name">${p.name}</div>
+                <div class="rad-perk-desc">${p.desc}</div>
+              </div>
+              <div class="rad-perk-state">${hasRad
+                ? '<i class="fa-solid fa-circle-check" title="Active"></i>'
+                : '<i class="fa-solid fa-lock" title="Locked"></i>'}</div>
+            </div>`).join('')}
+        </div>
+      </section>
 
-      <!-- ═══ PRICING SECTION ═══ -->
-      <div style="position:relative;z-index:1;margin-bottom:40px;">
-        <div style="font-family:var(--font-display);font-size:13px;font-weight:900;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px;">${hasRad||hasPlus?'Extend Your Plan':'Choose Your Plan'}</div>
-
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          ${PRICES.map((pl,i)=>{
-            const isPopular = i === 1;
-            const costPerDay = (pl.onyx / pl.days).toFixed(1);
+      <section class="rad-sec" id="rad-sec-plans">
+        <div class="rad-sec-head">
+          <div class="rad-sec-title">${hasRad ? 'Extend your Radiance' : 'Choose your plan'}</div>
+          <div class="rad-sec-sub">Powered by Onyx · stacks onto your current time · cancel anytime.</div>
+        </div>
+        <div class="rad-plans">
+          ${PRICES.map((pl, i) => {
+            const best = i === 1;
+            const perDay = (pl.onyx / pl.days).toFixed(1);
+            const afford = bal >= pl.onyx;
             return `
-            <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="padding:18px 24px;background:${isPopular?'rgba(255,119,228,.12)':'rgba(255,255,255,.03)'};border:1px solid ${isPopular?'rgba(255,119,228,.3)':'rgba(255,255,255,.08)'};border-radius:10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;font-family:var(--font-display);" onmouseover="this.style.background='${isPopular?'rgba(255,119,228,.2)':'rgba(255,255,255,.06)'}';this.style.borderColor='${isPopular?'rgba(255,119,228,.45)':'rgba(255,255,255,.15)'}';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='${isPopular?'rgba(255,119,228,.12)':'rgba(255,255,255,.03)'}';this.style.borderColor='${isPopular?'rgba(255,119,228,.3)':'rgba(255,255,255,.08)'}';this.style.transform=''">
-              <div style="display:flex;align-items:center;gap:14px;">
-                <span style="font-size:18px;color:${isPopular?'#fff93e':'rgba(255,255,255,.35)'};">◆</span>
-                <div style="text-align:left;">
-                  <div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:-.01em;">${pl.days} Days</div>
-                  <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;font-weight:500;">${costPerDay} Onyx/day</div>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style="text-align:right;">
-                  <div style="font-size:20px;font-weight:900;${isPopular?'background:linear-gradient(90deg,#ff77e4,#fff93e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;':'color:rgba(255,255,255,.8);'}">${pl.onyx}</div>
-                  ${isPopular?'<div style="font-size:9px;font-weight:900;color:#fff93e;margin-top:1px;">BEST VALUE</div>':''}
-                </div>
-                <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:22px;height:22px;object-fit:contain;"/>
-              </div>
-            </button>`;
+            <div class="rad-plan ${best ? 'is-best' : ''}">
+              ${best ? '<div class="rad-plan-flag">Best value</div>' : ''}
+              <div class="rad-plan-days">${pl.days}<span>days</span></div>
+              <div class="rad-plan-perday">${perDay} Onyx / day</div>
+              <button class="rad-plan-buy ${afford ? '' : 'is-broke'}" onclick="purchaseRadiance(true,${pl.days},${pl.onyx})">
+                <img src="${ONYX_IC}" class="rad-onyx-ic" alt=""/>
+                <span>${pl.onyx.toLocaleString()}</span>
+              </button>
+            </div>`;
           }).join('')}
         </div>
-        <div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:14px;">Auto-renews monthly · Cancel anytime</div>
-      </div>
 
-      <!-- ═══ VIDEO BACKGROUND LAYER - BOTTOM (INVERTED) ═══ -->
-      <div style="position:relative;margin-top:-440px;height:380px;z-index:0;overflow:hidden;pointer-events:none;mix-blend-mode:overlay;transform:scaleY(-1);">
-        <video style="width:100%;height:100%;object-fit:cover;opacity:0.4;" autoplay muted loop playsinline>
-          <source src="/AtelierWorld.webm" type="video/webm">
-        </video>
-      </div>
-
+        <div class="rad-gift">
+          <div class="rad-gift-ic"><i class="fa-solid fa-gift"></i></div>
+          <div class="rad-gift-body">
+            <div class="rad-gift-title">Gift Radiance</div>
+            <div class="rad-gift-desc">Send a friend the glow — 30 days of Radiance, straight to their profile.</div>
+          </div>
+          <button class="rad-gift-btn" onclick="openRadianceGiftModal()">Send a gift</button>
+        </div>
+      </section>
     </div>`;
+
+    _radBindScrollSpy();
   }
 
   // ── QUESTS ────────────────────────────────────────────────

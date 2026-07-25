@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix387';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix388';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix387';
+    s4.src = '/firebase-compat-shim.js?v=2026fix388';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix387">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix388">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix387', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix388', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix387"></script>
+<script src="/app/utils.js?v=2026fix388"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -566,11 +566,24 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
     <!-- Creator-suite pages — each its own view. The shared render host below is
          moved into whichever page is active (full independence comes with each
          page's manual redesign). The old single "Atelier" page is gone. -->
-    <div class="view" id="view-radiance"></div>
+    <!-- Radiance page — its own .disc-subnav topbar (consistent with Friends);
+         the shared #atelier-host scroll area is appended below it by showView. -->
+    <div class="view" id="view-radiance" style="flex-direction:column;">
+      <div class="disc-subnav rad-subnav" id="radiance-subnav">
+        <div class="disc-subnav-normal">
+          <span class="disc-subnav-act-icon rad-subnav-ico" aria-hidden="true"></span>
+          <span class="disc-subnav-title">Radiance</span>
+          <span class="disc-subnav-sep"></span>
+          <button class="disc-subnav-btn active" id="radtab-overview" onclick="_radGoSection('overview',this)">Overview</button>
+          <button class="disc-subnav-btn" id="radtab-perks" onclick="_radGoSection('perks',this)">Perks</button>
+          <button class="disc-subnav-btn" id="radtab-plans" onclick="_radGoSection('plans',this)">Plans</button>
+        </div>
+      </div>
+    </div>
     <div class="view" id="view-fortshop"></div>
     <div class="view" id="view-quests"></div>
     <div class="view" id="view-creator"></div>
-    <div id="atelier-host" style="display:none;flex:1;min-width:0;flex-direction:column;">
+    <div id="atelier-host" style="display:none;flex:1;min-width:0;min-height:0;flex-direction:column;">
       <div class="atelier-wrap">
         <div class="atelier-scroll" id="atelier-scroll-outer">
           <div id="atelier-content"></div>
@@ -1115,10 +1128,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix387"></script>
-<script src="/app/app.js?v=2026fix387"></script>
-<script src="/app/joy-system.js?v=2026fix387"></script>
-<script src="/app/chronicle-games.js?v=2026fix387"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix388"></script>
+<script src="/app/app.js?v=2026fix388"></script>
+<script src="/app/joy-system.js?v=2026fix388"></script>
+<script src="/app/chronicle-games.js?v=2026fix388"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

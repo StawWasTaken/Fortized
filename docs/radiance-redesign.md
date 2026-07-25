@@ -39,6 +39,20 @@ non-member the crystal is **dormant/dimmed** and activating it *is* the sell.
   `mix-blend-mode:overlay`, egress/perf) → replace with a self-contained CSS
   aurora/particle field.
 
+## Locked refinements (user, this session)
+
+- **Topbar:** the Radiance page uses the existing **`.disc-subnav`** component as
+  its topbar, **same as the Friends page** — consistency across pages. Left =
+  Radiance identity (masked logo + title); right = in-page section tabs
+  (Overview · Perks · Plans) that jump-scroll `#atelier-scroll-outer`, with a
+  scroll-spy active state. Lives statically in `#view-radiance` (outside the
+  reparented `#atelier-host` scroll area).
+- **Crystal motion:** keep the living/charging concept but make it **very subtle
+  and slow** — premium and calm, never flashy. Ship a **static / reduced-motion
+  version**: all animation gated behind
+  `@media (prefers-reduced-motion: no-preference)` so reduced-motion users get
+  the still crystal automatically.
+
 ## Page structure
 
 1. **Prism Hero** — living crystal on the left. Right side:

@@ -7,7 +7,9 @@ const _wrn = FTZ_DEBUG ? console.warn.bind(console) : () => {};
 // ══════════════════════════════════════════════════════════
 // SVG ICON SYSTEM  (replaces emoji icons throughout the UI)
 // ══════════════════════════════════════════════════════════
-const _CHATBAR_EMOJI_SVG = '<svg class="svgrepo-icon svgrepo-icon--20" viewBox="0 0 24 24" fill="#212121"><path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2ZM14.49,9.36C14.43,9.77 14.05,10.05 13.64,9.99C13.23,9.93 12.95,9.55 13.01,9.14C13.17,8.05 14.13,7.25 15.25,7.25C16.37,7.25 17.33,8.05 17.49,9.14C17.55,9.55 17.27,9.93 16.86,9.99C16.45,10.05 16.07,9.77 16.01,9.36C15.96,9.04 15.66,8.75 15.25,8.75C14.84,8.75 14.54,9.04 14.49,9.36ZM12,18C8.86,18 6.76,15.64 6.5,12.75H17.5C17.24,15.64 15.14,18 12,18ZM8.75,8.75C8.34,8.75 8.04,9.04 7.99,9.36C7.93,9.77 7.55,10.05 7.14,9.99C6.73,9.93 6.45,9.55 6.51,9.14C6.67,8.05 7.63,7.25 8.75,7.25C9.87,7.25 10.83,8.05 10.99,9.14C11.05,9.55 10.77,9.93 10.36,9.99C9.95,10.05 9.57,9.77 9.51,9.36C9.46,9.04 9.16,8.75 8.75,8.75Z"/></svg>';
+// Default emoji icon = the brand EmojiSVG.png, rendered as a currentColor mask
+// so it tints exactly like the sibling icons around it.
+const _CHATBAR_EMOJI_SVG = '<span class="ftz-emoji-ico" aria-hidden="true"></span>';
 const _svgIcons = {
 
   castle:     `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l3-4 3 4v14"/><path d="M13 21V7l3-4 3 4v14"/><rect x="9" y="17" width="2" height="4"/><rect x="4" y="10" width="2" height="3"/><rect x="14" y="10" width="2" height="3"/></svg>`,
@@ -23053,7 +23055,7 @@ function _getChatInputRight() {
 
 function randomizeChatbarEmoji(btn) {
   if (!btn || !_EMOJI_PACK_SVGS || _EMOJI_PACK_SVGS.length === 0) return;
-  const cur = btn.querySelector('svg, img');
+  const cur = btn.querySelector('svg, img, .ftz-emoji-ico');
   if (!cur) return;
   const [vb, d] = _EMOJI_PACK_SVGS[Math.floor(Math.random() * _EMOJI_PACK_SVGS.length)];
   // Size by HEIGHT with width:auto (the pack mixes 512/576/640-wide viewBoxes,
@@ -27344,7 +27346,7 @@ function _faMsg(name, size = 14) {
   return raw.replace('<svg ', `<svg width="${size}" height="${size}" `);
 }
 // Add-Reaction icon mirrors the chatbar emoji-picker opener (svgrepo emoji-laugh).
-const _ADD_REACTION_ICON_HTML = '<svg class="svgrepo-icon" viewBox="0 0 24 24" fill="#212121" style="width:16px;height:16px;"><path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2ZM14.49,9.36C14.43,9.77 14.05,10.05 13.64,9.99C13.23,9.93 12.95,9.55 13.01,9.14C13.17,8.05 14.13,7.25 15.25,7.25C16.37,7.25 17.33,8.05 17.49,9.14C17.55,9.55 17.27,9.93 16.86,9.99C16.45,10.05 16.07,9.77 16.01,9.36C15.96,9.04 15.66,8.75 15.25,8.75C14.84,8.75 14.54,9.04 14.49,9.36ZM12,18C8.86,18 6.76,15.64 6.5,12.75H17.5C17.24,15.64 15.14,18 12,18ZM8.75,8.75C8.34,8.75 8.04,9.04 7.99,9.36C7.93,9.77 7.55,10.05 7.14,9.99C6.73,9.93 6.45,9.55 6.51,9.14C6.67,8.05 7.63,7.25 8.75,7.25C9.87,7.25 10.83,8.05 10.99,9.14C11.05,9.55 10.77,9.93 10.36,9.99C9.95,10.05 9.57,9.77 9.51,9.36C9.46,9.04 9.16,8.75 8.75,8.75Z"/></svg>';
+const _ADD_REACTION_ICON_HTML = '<span class="ftz-emoji-ico ftz-emoji-ico--sm" aria-hidden="true"></span>';
 
 // ── Translate message using browser built-in or fallback ──
 async function _translateMessage(msgRow, text) {
@@ -34561,7 +34563,7 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           <div class="chat-input-actions">
             <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" data-tip="GIFs"><span class="cit-ico gif-mask-ico"></span></button>
             <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" data-tip="Stickers"><svg class="cit-ico" viewBox="0 0 448 512" fill="currentColor"><path d="M64 480c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 213.5c0 17-6.7 33.3-18.7 45.3L322.7 461.3c-12 12-28.3 18.7-45.3 18.7L64 480zM389.5 304L296 304c-13.3 0-24 10.7-24 24l0 93.5 117.5-117.5z"/></svg></button>
-            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" data-tip="Emoji" onmouseleave="randomizeChatbarEmoji(this)"><svg class="cit-ico" viewBox="0 0 512 512" fill="currentColor"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM101.6 314c-3.7-13.7 7.5-26 21.7-26l265.4 0c14.2 0 25.4 12.3 21.7 26-18.5 68-80.6 118-154.4 118S120 382 101.6 314zM176 164c-15.5 0-28 12.5-28 28l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-37.6 30.4-68 68-68s68 30.4 68 68l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-15.5-12.5-28-28-28zm132 28l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-37.6 30.4-68 68-68s68 30.4 68 68l0 8c0 11-9 20-20 20s-20-9-20-20l0-8c0-15.5-12.5-28-28-28s-28 12.5-28 28z"/></svg></button>
+            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" data-tip="Emoji" onmouseleave="randomizeChatbarEmoji(this)"><span class="cit-ico ftz-emoji-ico" aria-hidden="true"></span></button>
             <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}" data-tip="Bot commands"><svg class="cit-ico" viewBox="0 -40 640 552" fill="currentColor"><path d="M352 0c0-17.7-14.3-32-32-32S288-17.7 288 0l0 64-96 0c-53 0-96 43-96 96l0 224c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-224c0-53-43-96-96-96l-96 0 0-64zM160 368c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zm120 0c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0c-13.3 0-24-10.7-24-24zM224 176a48 48 0 1 1 0 96 48 48 0 1 1 0-96zm144 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM64 224c0-17.7-14.3-32-32-32S0 206.3 0 224l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96zm544-32c-17.7 0-32 14.3-32 32l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32z"/></svg></button>
           </div>
         </div>
@@ -46221,12 +46223,12 @@ function renderAtelierTab(tab) {
       { days: 30, onyx: 400 },
       { days: 90, onyx: 1000 },
     ];
-    // Feature-showcase perks: a few headliners + a tight supporting list.
-    // Icons are swappable stand-ins for real art later.
+    // Feature-showcase perks: the three headliners use real brand art.
+    const _CDN = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
     const FEATURED = [
-      { ic: 'fa-cloud-arrow-up',  name: '500 MB Uploads',           desc: 'Share big clips, art and files — up to 500 MB each. Everyone gets 350 MB; Radiance lifts you to 500.' },
-      { ic: 'fa-certificate',     name: 'Radiance Badge',           desc: 'A glowing badge on your profile that says you shine.' },
-      { ic: 'fa-face-grin-stars', name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s custom emojis in every message and reaction.' },
+      { img: _CDN + '500mb%20upload.png', ic: 'fa-cloud-arrow-up',  name: '500 MB Uploads',           desc: 'Share big clips, art and files — up to 500 MB each. Everyone gets 350 MB; Radiance lifts you to 500.' },
+      { img: _CDN + 'badge.png',          ic: 'fa-certificate',     name: 'Radiance Badge',           desc: 'A glowing badge on your profile that says you shine.' },
+      { img: _CDN + 'emojis.png',         ic: 'fa-face-grin-stars', name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s custom emojis in every message and reaction.' },
     ];
     const MORE = [
       { ic: 'fa-panorama',            name: 'Animated Profile Banner', desc: 'An animated banner on your profile.' },
@@ -46250,12 +46252,15 @@ function renderAtelierTab(tab) {
     const stateLine = hasRad ? `
       <div class="rad-status">
         <span class="rad-status-pill"><i class="fa-solid fa-bolt"></i> Radiance active</span>
-        <span class="rad-status-item"><strong>${daysRad}</strong> day${daysRad === 1 ? '' : 's'} left</span>
-        <span class="rad-status-sep">·</span>
-        <span class="rad-status-item">Until ${expDate}</span>
-        <span class="rad-status-sep">·</span>
-        <span class="rad-status-item"><span class="rad-onyx-ic"></span> ${bal.toLocaleString()}</span>
-        <button class="rad-hud-cancel" onclick="cancelRadiance()">Cancel</button>
+        <div class="rad-stat">
+          <span class="rad-stat-v">${daysRad} day${daysRad === 1 ? '' : 's'} left</span>
+          <span class="rad-stat-k">Renews ${expDate}</span>
+        </div>
+        <div class="rad-stat">
+          <span class="rad-stat-v"><span class="rad-onyx-ic"></span> ${bal.toLocaleString()}</span>
+          <span class="rad-stat-k">Onyx balance</span>
+        </div>
+        <button class="rad-hud-cancel" onclick="cancelRadiance()">Cancel subscription</button>
       </div>` : `
       <div class="rad-status rad-status--guest">
         <p class="rad-pitch">Fortized’s premium membership — bigger uploads, exclusive perks and a profile that shines.</p>
@@ -46290,7 +46295,7 @@ function renderAtelierTab(tab) {
         <div class="rad-features">
           ${FEATURED.map(p => `
             <div class="rad-feature ${hasRad ? 'is-active' : 'is-locked'}">
-              <div class="rad-feature-art"><i class="fa-solid ${p.ic}"></i></div>
+              <div class="rad-feature-art">${p.img ? `<img src="${p.img}" alt="" loading="lazy" onerror="this.outerHTML='<i class=\\'fa-solid ${p.ic}\\'></i>'">` : `<i class="fa-solid ${p.ic}"></i>`}</div>
               <div class="rad-feature-body">
                 <div class="rad-feature-name">${p.name}${hasRad ? '<i class="fa-solid fa-circle-check rad-feature-on" title="Active"></i>' : ''}</div>
                 <div class="rad-feature-desc">${p.desc}</div>
@@ -46332,13 +46337,13 @@ function renderAtelierTab(tab) {
           }).join('')}
         </div>
 
-        <div class="rad-gift">
-          <div class="rad-gift-ic"><i class="fa-solid fa-gift"></i></div>
-          <div class="rad-gift-body">
-            <div class="rad-gift-title">Gift Radiance</div>
-            <div class="rad-gift-desc">Send a friend the glow — 30 days of Radiance, straight to their profile.</div>
+        <div class="rad-giftbanner">
+          <div class="rad-giftbanner-text">
+            <div class="rad-giftbanner-title">Gift Radiance</div>
+            <p class="rad-giftbanner-desc">Gift someone Radiance to give them access to profile customisation, custom emojis and bigger uploads.</p>
+            <button class="rad-cta rad-cta--primary rad-giftbanner-btn" onclick="openRadianceGiftModal()"><i class="fa-solid fa-gift"></i> Gift Radiance</button>
           </div>
-          <button class="rad-gift-btn" onclick="openRadianceGiftModal()">Send a gift</button>
+          <img class="rad-giftbanner-art" src="${_CDN}RadianceShare.png" alt="" draggable="false" onerror="this.style.display='none'">
         </div>
       </section>
     </div>`;

@@ -15257,3 +15257,49 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   .rad-head{gap:20px;}
   .rad-head-av{width:84px;height:84px;}
 }
+
+/* Default emoji icon — brand EmojiSVG.png as a currentColor mask (tints like
+   sibling icons). Chatbar hover still swaps to a random pack glyph. */
+.ftz-emoji-ico{display:inline-block;width:20px;height:20px;flex-shrink:0;pointer-events:none;vertical-align:middle;background-color:currentColor;-webkit-mask:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/EmojiSVG.png') center/contain no-repeat;mask:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/EmojiSVG.png') center/contain no-repeat;}
+.ftz-emoji-ico--sm{width:16px;height:16px;}
+
+/* ═══ RADIANCE v4 — pink-primary identity · real perk art · gift banner ═══ */
+.rad-page{
+  --rad-pink:#ef5fb0;
+  --rad-grad:linear-gradient(115deg,#ef5fb0 0%,#f7a3cf 45%,#fff03e 100%);
+}
+/* Iconic pink as the main accent (gradient reserved for buttons) */
+.rad-status-pill{color:#ffa8d8;background:rgba(239,95,176,.12);border-color:rgba(239,95,176,.24);}
+.rad-feature-art{color:#ff92cf;background:linear-gradient(150deg,rgba(239,95,176,.15),rgba(239,95,176,.04));}
+.rad-feature.is-active .rad-feature-art{color:#ff92cf;}
+.rad-feature:hover{border-color:rgba(239,95,176,.3);}
+.rad-prow-ic{color:#ff92cf;}
+.rad-prow:hover{border-color:rgba(239,95,176,.22);}
+.rad-plan.is-best{background:linear-gradient(180deg,rgba(239,95,176,.08),rgba(239,95,176,.02));border-color:rgba(239,95,176,.26);}
+.rad-gift-ic{color:#ff92cf;background:rgba(239,95,176,.13);border-color:rgba(239,95,176,.2);}
+
+/* Real brand art in the three feature tiles */
+.rad-feature-art img{max-height:84px;max-width:74%;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.35));}
+
+/* Redesigned status strip — value/label segments, calmer */
+.rad-status{gap:10px 24px;}
+.rad-stat{display:flex;flex-direction:column;line-height:1.15;}
+.rad-stat-v{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--rad-ink);display:inline-flex;align-items:center;gap:6px;}
+.rad-stat-k{font-size:11px;color:var(--rad-faint);margin-top:3px;}
+.rad-stat .rad-onyx-ic{color:var(--rad-ink);width:15px;height:15px;}
+.rad-status .rad-hud-cancel{margin-left:auto;}
+
+/* Gift banner — Discord-style: text left, brand art right */
+.rad-giftbanner{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:24px;border-radius:22px;padding:34px 40px;min-height:184px;border:1px solid rgba(239,95,176,.14);background:radial-gradient(130% 150% at 100% 50%,rgba(239,95,176,.14),transparent 62%),linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));}
+.rad-giftbanner-text{position:relative;z-index:1;max-width:54%;}
+.rad-giftbanner-title{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--rad-ink);margin-bottom:10px;letter-spacing:-.01em;}
+.rad-giftbanner-desc{font-size:14px;line-height:1.6;color:var(--rad-muted);margin:0 0 22px;max-width:420px;}
+.rad-giftbanner-btn{display:inline-flex;align-items:center;gap:9px;}
+.rad-giftbanner-art{max-height:200px;max-width:44%;object-fit:contain;flex-shrink:0;pointer-events:none;}
+@media (max-width:760px){
+  .rad-giftbanner{flex-direction:column;text-align:center;padding:28px 22px;}
+  .rad-giftbanner-text{max-width:100%;}
+  .rad-giftbanner-desc{margin-left:auto;margin-right:auto;}
+  .rad-giftbanner-art{max-width:72%;max-height:160px;}
+  .rad-status .rad-hud-cancel{margin-left:0;}
+}

@@ -46402,6 +46402,8 @@ function renderAtelierTab(tab) {
     const MORE = [
       { ic: 'fa-sliders',       name: 'Soundboard',            desc: 'Play sound effects in voice and chat.' },
       { ic: 'fa-arrow-pointer', name: 'Custom Cursors',        desc: 'Set a custom in-app cursor.' },
+      { ic: 'fa-note-sticky',   name: 'Custom Stickers Everywhere', desc: 'Use any bastion’s stickers in every chat.' },
+      { ic: 'fa-bolt',          name: '3 Free Bastion Boosts', desc: 'Boost your favourite communities — three on us.' },
       { ic: 'fa-tags',          name: '10% Fortshop Discount', desc: 'Save 10% on every Fortshop order.' },
       { ic: 'fa-box-open',      name: 'Starter Drops',         desc: 'Claim exclusive Radiance drops.' },
     ];

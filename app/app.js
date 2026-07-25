@@ -32657,18 +32657,13 @@ async function openRadianceGiftModal() {
       <input type="text" id="gift-friend-search" placeholder="Search friends..." style="width:100%;padding:8px 14px 8px 34px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:12.5px;outline:none;transition:border-color .2s;" oninput="filterGiftFriends(this.value)" onfocus="this.style.borderColor='rgba(255,119,228,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'">
     </div>
 
-    <!-- Friends List -->
-    <div id="gift-friends-list" style="flex:1;overflow-y:auto;max-height:280px;padding-right:4px;margin-bottom:12px;">
+    <!-- Friends List (New-Message-style rows with filling checkmarks) -->
+    <div id="gift-friends-list" class="nm-picker" style="max-height:280px;margin:0 0 12px;">
       ${friends.map((f, i) => `
-        <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;transition:background .12s;cursor:pointer;margin-bottom:2px;" onclick="toggleFriendSelection(${i},this)">
-          <input type="checkbox" data-friend-idx="${i}" style="width:18px;height:18px;cursor:pointer;accent-color:#ff77e4;" onchange="updateGiftCost()">
-          <div style="flex-shrink:0;">
-            <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:${_getUserAvatarColor(f.username)};">${f.pfp ? `<img src="${escapeHTML(f.pfp)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(f.username)}';this.style.objectFit='contain';"/>` : buildAvatarHTML(null, f.displayName||f.username, 32)}</div>
-          </div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.displayName)}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);">@${escapeHTML(f.username)}</div>
-          </div>
+        <div class="nm-row" data-gift-idx="${i}" onclick="toggleFriendSelection(${i})">
+          <div class="nm-av">${f.pfp ? `<img src="${escapeHTML(f.pfp)}" onerror="this.src='${_defaultPfpUrl(f.username)}';this.style.objectFit='contain';"/>` : buildAvatarHTML(null, f.displayName||f.username, 36)}</div>
+          <div class="nm-info"><div class="nm-name">${escapeHTML(f.displayName)}</div><div class="nm-user">@${escapeHTML(f.username)}</div></div>
+          <span class="nm-check" aria-hidden="true"></span>
         </div>
       `).join('')}
     </div>
@@ -32709,23 +32704,32 @@ async function openRadianceGiftModal() {
   window._radianceGiftFriends = friends;
 }
 
-function toggleFriendSelection(idx, el) {
-  const cb = el.querySelector('input[type="checkbox"]');
-  const selected = window._radianceGiftSelected || new Set();
-  if (cb.checked) selected.add(idx);
-  else selected.delete(idx);
-  if (selected.size > 5) { selected.delete(idx); cb.checked = false; toast('Max 5 friends', 'warn'); }
+const _GIFT_CHECK_SVG = '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+function toggleFriendSelection(idx) {
+  const selected = window._radianceGiftSelected || (window._radianceGiftSelected = new Set());
+  if (selected.has(idx)) selected.delete(idx);
+  else {
+    if (selected.size >= 5) { toast('You can gift up to 5 friends at once.', 'info'); return; }
+    selected.add(idx);
+  }
+  const row = document.querySelector('#gift-friends-list [data-gift-idx="' + idx + '"]');
+  if (row) {
+    const on = selected.has(idx);
+    row.classList.toggle('sel', on);
+    const chk = row.querySelector('.nm-check');
+    if (chk) chk.innerHTML = on ? _GIFT_CHECK_SVG : '';
+  }
   updateGiftCost();
 }
 
 function filterGiftFriends(query) {
   const q = (query || '').toLowerCase().trim();
   const list = document.getElementById('gift-friends-list');
-  const rows = list?.querySelectorAll('[onclick*="toggleFriendSelection"]') || [];
+  const rows = list?.querySelectorAll('[data-gift-idx]') || [];
   const friends = window._radianceGiftFriends || [];
-  rows.forEach((row, i) => {
-    const f = friends[i];
-    const matches = !q || f.displayName.toLowerCase().includes(q) || f.username.toLowerCase().includes(q);
+  rows.forEach((row) => {
+    const f = friends[+row.dataset.giftIdx];
+    const matches = !q || (f && (f.displayName.toLowerCase().includes(q) || f.username.toLowerCase().includes(q)));
     row.style.display = matches ? '' : 'none';
   });
 }

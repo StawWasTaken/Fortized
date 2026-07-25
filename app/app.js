@@ -4591,7 +4591,7 @@ function updateTopbar(v) {
   if (sep) sep.style.display = 'none';
   if (desc) desc.textContent = '';
   if (acts) acts.innerHTML = '';
-  const labels = {dms:'Direct Messages',friends:'Friends',discover:'Discover',radiance:'Radiance Dwelling',fortshop:'Fortshop',quests:'Quests',creator:'Creator Hub',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview'};
+  const labels = {dms:'Direct Messages',friends:'Friends',discover:'Discover',radiance:'Radiance',fortshop:'Fortshop',quests:'Quests',creator:'Creator Hub',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview'};
   if (v === 'bastion') {
     const b = CU?.bastions?.[curBastion];
     title.textContent = b?.name || 'Bastion';
@@ -46112,7 +46112,7 @@ function switchAtelierTab(tab, el) {
   if (pageForTab && _currentView !== pageForTab) { showView(pageForTab); return; }
   _atelierTab = tab;
   // Update topbar title
-  const names = {shop:'Fortshop',radiance:'Radiance Dwelling',quests:'Quests',creator:'Creator'};
+  const names = {shop:'Fortshop',radiance:'Radiance',quests:'Quests',creator:'Creator Hub'};
   const tt = document.getElementById('topbar-title');
   if (tt) tt.textContent = names[tab] || 'Atelier';
 
@@ -52128,7 +52128,8 @@ async function claimGift(giftCode) {
     if (gift.type === 'radiance') {
       const until = new Date(Date.now() + (gift.days||30) * 86400000).toISOString();
       CU.radianceUntil = until;
-      _accrueRadianceDays(gift.days || 30);
+      // NOTE: gifted Radiance does NOT count toward the 14-day milestone —
+      // only the user's OWN purchases accrue radianceDaysBought.
       await saveUser();
       toast('You received 30 days of Radiance! Enjoy your perks.', 'success');
     } else if (gift.type === 'item') {

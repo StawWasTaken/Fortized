@@ -1,5 +1,114 @@
 # Fortized — working notes for Claude
 
+## 🔴 SESSION HANDOFF (as of cache-bust `2026fix402`)
+
+Branch **`claude/safety-system-perf-gjrtso`**, mirrored to `main` (standing rule:
+**mirror to `main` AND push the session branch every push**; bump cache-bust
+`2026fixNNN` in `app/index.html` (9 refs) + `SW_VERSION` in `sw.js`; pre-commit
+`node --check app/app.js && node --check FortizedSocial-supabase.js && node
+tests/test-relationship.js` (42 pass)). **Sandbox can't reach Supabase OR the
+GitHub CDN**, so perk art / wordmarks / the emoji icon / avatar-decoration /
+styled names / the whole logged-in app need a LIVE eyeball on deploy — verified
+here via Playwright with placeholder art only.
+
+### ✅ Shipped this session (`388`→`402`) — big picture
+
+- **RADIANCE PAGE — heavily iterated redesign** (the bulk of the session). Final
+  state: NO crystal / no ambient FX (felt "AI"). **Avatar-forward header**: big
+  avatar (104px, renders `CU.activeDecoration` overlay) + small secondary
+  greeting + BIG styled display name (`_dmNameStyleAttr(CU)`). Greeting is
+  time-based `_radGreeting()` (6–12 morning · 12–13 "Yum yum yum…" · 13–17
+  afternoon · 17–21 evening · 21–03 night · 03–06 "Night owl…"). **Calm/premium/
+  aerated**, centered `max-width`, off-white text. **Pink-primary identity**:
+  `--rad-pink:#ef5fb0`; `--rad-grad` = pink→brand-yellow (buttons/best-value/
+  gift/CTA). **All buttons = app 3D recipe** (`.btn-a`/`.btn-g` hard edge, press
+  on `:active`), **NO outer glow** (user hates glows). **Status strip**
+  redesigned into value/label segments (days-left · renews / balance · Cancel).
+- **The Vault = flat 3-up carousel** (`.rad-carousel`/`.rad-ctrack`/`.rad-cslide`;
+  JS `_radCarLayout`/`_radCarouselInit`/`_radCarouselPrev`/`Next`/`Go`,
+  `_radCarTimer`). All THREE perks fully visible (flat, no coverflow overlap):
+  active centred + big w/ pink stroke, both neighbours full beside it. Autoplay
+  6.5s (pauses on hover). **Text OVERLAYS the art** (bottom scrim), clear of the
+  centred icon. **Hover arrow bubbles** (`.rad-carr`, fade in on carousel hover)
+  + slides clickable. Hover on centre grows it + thickens the pink stroke.
+  5 highlighted perks use REAL CDN art (`_CDN` = SwiftawCDN/): `500mb%20upload
+  .png`, `badge.png`, `emojis.png`, `banners.png` (image/GIF banners = Radiance-
+  only), `earlyacess.png` (Early Access). Dropped "Name Effects & Colours"
+  (Display Name Styles are FREE). Smaller list (`MORE`): Soundboard / Custom
+  Cursors / 10% Discount / Starter Drops, consistent 1-line copy, no ellipsis.
+- **Gift Radiance**: (1) the popup redesigned to the New-Message card style
+  (`.nm-row`/`.nm-check` filling checkmarks; `toggleFriendSelection(i)` toggles a
+  Set + row state; `openRadianceGiftModal`). (2) a Discord-style **banner**
+  (`.rad-giftbanner`) with inspired title/copy, the `radianceText.png` wordmark
+  in the title, and `RadianceShare.png` art on the right; extra top margin.
+- **Topbars uniformized** (Friends + Radiance): 22px icon on both, smaller
+  wordmark so the icon reads bigger. Friends = `FRIENDS` (Syne extrabold caps);
+  Radiance = `radianceText.png` wordmark + logo tinted to text colour
+  (currentColor mask). CSS `.rad-subnav-ico`/`.rad-subnav-word`/`.fr-subnav-brand`.
+- **Default emoji icon → `EmojiSVG.png`** as a currentColor mask (`.ftz-emoji-ico`)
+  everywhere: `_CHATBAR_EMOJI_SVG` (line ~10), `_ADD_REACTION_ICON_HTML`, the
+  chatbar button. Chatbar hover still cycles pack glyphs (`randomizeChatbarEmoji`
+  now also matches `.ftz-emoji-ico`).
+- **GIF collections → per-account** (`fav_gifs` JSONB column — USER RAN THE SQL).
+  Isolated `loadFavGifs`/`saveFavGifs` in supabase.js (excluded from
+  `_USER_LIST_COLS`; http(s) URLs only, data: URLs stay local — egress).
+  app.js: `_favGifs`/`_hydrateFavGifs`/`_persistFavGifs`, hydrated once in
+  `refreshCU`.
+- **Leafen = platform account like Joyster**: added to `SUPER_ADMINS`,
+  `MANUAL_BOTS` (Bot badge + mentionable), `PROTECTED_NAMES`/`BOT_NAMES` (both
+  data layers).
+- **Uploads: 350 MB free / 500 MB Radiance** via Supabase Storage.
+  `_addPendingAttachment` no longer base64-encodes files >4 MB (keeps the Blob +
+  object-URL preview); `handleChatSend` uploads the Blob via
+  `FortizedSocial.uploadFile` → `attachments` bucket, stores the URL. Small files
+  stay inline. ⚠️ **USER ACTION: raise the `attachments` bucket file-size limit
+  to 500 MB in Supabase** or uploads >50 MB (bucket default) fail.
+- Earlier this session (still relevant): avatar transparent-in-DM-panel bug fix
+  (`_pfpLooksCorrupt` guard on the realtime `.fpp__av` repaint); DM friends-home
+  cleanup; home-rail yellow; greeting; etc.
+
+### 🔧 LEFT TO DO / OPEN (next session)
+1. **NEXT TASK — "14-day Radiance milestone reward" (spec complete):** when a
+   user reaches **≥14 cumulative Radiance days purchased** (plans ADD days, they
+   don't replace — e.g. two 7-day buys = 14), grant them a **FREE theme
+   appearance they keep FOREVER** (even after Radiance lapses). The theme is a
+   **soft pink** (Radiance-flavoured, but soft). TODO: (a) track cumulative days
+   bought — add a counter (e.g. `CU.radianceDaysBought += days`) in
+   `purchaseRadiance`/`buyRadiance`/gift-claim paths (NOT just the expiry); (b)
+   on crossing 14, permanently add the theme to the user's owned/unlocked
+   appearances (`unlockedAppearances`/owned list) + notify; (c) build the
+   soft-pink appearance in the appearance/theme system (see the Fortshop
+   appearance items + `applyAppearance`). Keep egress-aware.
+2. **LIVE-VERIFY the whole Radiance page on deploy** (sandbox is Supabase+CDN
+   blind): perk PNGs + `RadianceShare.png` + `radianceText.png` wordmark render;
+   `EmojiSVG.png` chatbar/reaction icons; avatar decoration + styled display name
+   in the header; carousel (flat 3-up, autoplay, hover arrows, click); gift popup
+   + banner; GIF collection syncing across browsers; Leafen's Bot badge/perms;
+   uploads once the bucket limit is raised.
+3. **Deferred: Discord-style chat auto-scroll** — full pass NOT done (user only
+   greenlit uploads). Gaps: short chats bottom-anchored (flex `margin-top:auto`
+   on `.chat-msgs`) + a scroll-position "Jump to Present" pill across DM/GC/
+   channel. Hot path — needs live verification.
+
+### 🧭 Key anchors (this session)
+Radiance render: `renderAtelierTab` `if (tab==='radiance')` block (`app/app.js`
+~46213). Helpers just above `_renderShopItemCard`: `_radGreeting`,
+`_radGoSection`/`_radSetActiveTab`/`_radBindScrollSpy`, carousel
+`_radCarLayout`/`_radCarouselInit`/`Prev`/`Next`/`Go`. `FEATURED`/`MORE` arrays
++ `_CDN` inside the block. CSS: appended `RADIANCE …` blocks v1→v9 at the END of
+`app/styles.css` (v9 = flat carousel + arrows; earlier `.rad-feature*` rules are
+dead). Topbar markup: `#view-radiance` in `app/index.html` (`.rad-subnav` +
+`.rad-subnav-word` img). Emoji: `_CHATBAR_EMOJI_SVG`/`_ADD_REACTION_ICON_HTML`/
+`randomizeChatbarEmoji` + `.ftz-emoji-ico` CSS. Gift: `openRadianceGiftModal`/
+`toggleFriendSelection`/`filterGiftFriends`/`updateGiftCost`. Data: `loadFavGifs`/
+`saveFavGifs` (`FortizedSocial-supabase.js`, exposed ~line 3355); `_favGifs`/
+`_hydrateFavGifs`/`_persistFavGifs` (app.js ~40511). Accounts: `SUPER_ADMINS`/
+`MANUAL_BOTS` (app.js ~1035), `PROTECTED_NAMES`/`BOT_NAMES` (supabase ~737,
+firebase ~82). Uploads: `_addPendingAttachment`/`handleChatSend` (app.js ~41513),
+`uploadFile` (supabase ~2959). Plan doc: `docs/radiance-redesign.md`.
+
+---
+
 ## 🔴 SESSION HANDOFF (as of cache-bust `2026fix379`)
 
 Branch **`claude/safety-system-perf-wnedxw`**, mirrored to `main`. Standing rules

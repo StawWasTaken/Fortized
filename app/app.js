@@ -46043,6 +46043,19 @@ function renderAtelierTopNav() {
   }).join('');
 }
 
+// Time-of-day greeting for the Radiance header (local time). Ranges per spec:
+// 6–12 morning · 12–13 lunch · 13–17 afternoon · 17–21 evening ·
+// 21–3 night · 3–6 night owl.
+function _radGreeting() {
+  const h = new Date().getHours();
+  if (h >= 6 && h < 12)  return 'Good morning';
+  if (h >= 12 && h < 13) return 'Yum yum yum…';
+  if (h >= 13 && h < 17) return 'Good afternoon';
+  if (h >= 17 && h < 21) return 'Good evening';
+  if (h >= 3 && h < 6)   return 'Night owl…';
+  return 'Good night'; // 21:00–03:00
+}
+
 // ── Radiance page: in-page section tabs (its .disc-subnav topbar) ──────────
 // The Radiance page reuses the .disc-subnav component (like Friends). Its tabs
 // jump-scroll the shared atelier scroller to each section; a light scroll-spy
@@ -46201,8 +46214,7 @@ function renderAtelierTab(tab) {
     const ONYX_IC  = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png';
 
     // Time-of-day greeting (Discord-style).
-    const _h = new Date().getHours();
-    const greet = _h < 5 ? 'Good night' : _h < 12 ? 'Good morning' : _h < 17 ? 'Good afternoon' : _h < 22 ? 'Good evening' : 'Good night';
+    const greet = _radGreeting();
     const who = escapeHTML(CU?.displayName || CU?.username || 'there');
 
     // The living crystal. --charge scales the ring fill + bloom intensity.

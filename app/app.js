@@ -17317,7 +17317,13 @@ function initFortizedUXResilience() {
             // Pfp: re-render every .fpp__av in this card. Use the actual
             // rendered avatar size so the crop wrapper math stays correct
             // across variants (mini 80, own/dm 72, profile-card 96).
-            if (data.pfp !== undefined) {
+            // Only repaint when the incoming pfp is actually good. A poisoned
+            // or truncated broadcast (data.pfp corrupt/blank) must NOT overwrite
+            // the good avatar already showing — that's the "DM panel / topbar
+            // avatar turns transparent after a while" bug. Same guard the DM
+            // topbar (_enrichDMHeader) already uses. A genuine removal (empty
+            // pfp) is skipped here and picked up on the next organic re-render.
+            if (data.pfp !== undefined && !_pfpLooksCorrupt(data.pfp)) {
               const _avCrop = data.pfpCrop !== undefined
                 ? data.pfpCrop
                 : (_pfpCropCache[data.username] || null);

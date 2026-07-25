@@ -71,8 +71,10 @@ here via Playwright with placeholder art only.
 1. **NEXT TASK — "14-day Radiance milestone reward" (spec complete):** when a
    user reaches **≥14 cumulative Radiance days purchased** (plans ADD days, they
    don't replace — e.g. two 7-day buys = 14), grant them a **FREE theme
-   appearance they keep FOREVER** (even after Radiance lapses). The theme is a
-   **soft pink** (Radiance-flavoured, but soft). TODO: (a) track cumulative days
+   appearance they keep FOREVER** (even after Radiance lapses). The theme's
+   colour is **`#21131e`** (the deep plum used throughout the Radiance
+   showcases — significant to the brand), NOT the earlier "soft pink" idea.
+   TODO: (a) track cumulative days
    bought — add a counter (e.g. `CU.radianceDaysBought += days`) in
    `purchaseRadiance`/`buyRadiance`/gift-claim paths (NOT just the expiry); (b)
    on crossing 14, permanently add the theme to the user's owned/unlocked

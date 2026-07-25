@@ -173,6 +173,81 @@ function _radiancePlusImg(size){return _radianceImg(size);}
 function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
 
 // ══════════════════════════════════════════════════════════
+// RADIANCE MILESTONE — 14 cumulative days → the free "Radiance
+// Plum" theme, kept FOREVER (it survives Radiance lapsing). Plans
+// ADD days rather than replace them (two 7-day buys = 14), so we
+// track a running lifetime counter separate from the expiry window.
+// #21131e is the deep plum used across the Radiance showcases.
+// ══════════════════════════════════════════════════════════
+const RADIANCE_MILESTONE_DAYS  = 14;
+const RADIANCE_MILESTONE_THEME = 'radiance_plum';
+
+// Add `days` to the user's lifetime Radiance-days counter. If this push
+// crosses the 14-day milestone for the first time, permanently unlock the
+// Radiance Plum appearance and celebrate. Mutates CU in place — the CALLER
+// is responsible for the saveUser() that persists it (radianceDaysBought +
+// unlockedAppearances both round-trip via the raw JSONB column, no schema
+// change needed).
+function _accrueRadianceDays(days) {
+  if (!CU || !(days > 0)) return;
+  const before = +CU.radianceDaysBought || 0;
+  const after  = before + days;
+  CU.radianceDaysBought = after;
+  if (before < RADIANCE_MILESTONE_DAYS && after >= RADIANCE_MILESTONE_DAYS) {
+    const owned = Array.isArray(CU.unlockedAppearances) ? CU.unlockedAppearances : [];
+    if (!owned.includes(RADIANCE_MILESTONE_THEME)) {
+      CU.unlockedAppearances = [...owned, RADIANCE_MILESTONE_THEME];
+      try { _celebrateRadianceMilestone(); } catch (_) {}
+    }
+  }
+}
+
+// Celebratory unlock modal + a keepsake notification. Fire-and-forget: the
+// CU mutation already happened in _accrueRadianceDays, this is the flourish.
+function _celebrateRadianceMilestone() {
+  try {
+    FortizedSocial.addNotification(CU.username, {
+      type: 'reward',
+      from: 'Radiance',
+      msg: 'You reached 14 days of Radiance — the Radiance Plum theme is yours forever! ✨',
+      time: new Date().toISOString(),
+    });
+  } catch (_) {}
+  try {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(12,10,16,.9);z-index:9200;display:flex;align-items:center;justify-content:center;padding:20px;';
+    ov.innerHTML = `
+      <div style="background:linear-gradient(170deg,#21131e 0%,#2a1826 100%);border:1px solid rgba(239,95,176,.28);border-radius:22px;padding:34px 30px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.6);">
+        <div style="width:132px;height:82px;margin:0 auto 20px;border-radius:14px;background:linear-gradient(135deg,#21131e 0%,#2a1826 60%,#361f30 100%);border:1.5px solid rgba(239,95,176,.3);box-shadow:0 12px 30px rgba(0,0,0,.5);position:relative;overflow:hidden;">
+          <div style="position:absolute;left:10px;top:12px;width:22px;height:58px;border-radius:6px;background:rgba(0,0,0,.35);"></div>
+          <div style="position:absolute;left:40px;top:16px;width:70px;height:8px;border-radius:4px;background:rgba(255,255,255,.16);"></div>
+          <div style="position:absolute;left:40px;top:32px;width:52px;height:6px;border-radius:3px;background:rgba(255,255,255,.1);"></div>
+          <div style="position:absolute;left:40px;top:46px;width:60px;height:6px;border-radius:3px;background:rgba(239,95,176,.35);"></div>
+        </div>
+        <div style="font-family:var(--font-display);font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#ef5fb0;margin-bottom:9px;">Radiance Milestone</div>
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:#fff;margin-bottom:11px;">Radiance Plum unlocked</div>
+        <div style="font-size:13.5px;color:rgba(255,255,255,.72);line-height:1.6;margin-bottom:24px;">You've spent <strong style="color:#fff;">14 days</strong> in the Radiance. This deep-plum theme is now <strong style="color:#fff;">yours forever</strong> — it stays even if your Radiance lapses.</div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="this.closest('[style*=fixed]').remove();applyAppearance('${RADIANCE_MILESTONE_THEME}')" class="btn-a" style="flex:1;padding:12px;justify-content:center;">Apply theme</button>
+          <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:12px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1);border-radius:12px;cursor:pointer;font-family:var(--font-display);font-weight:600;">Later</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+  } catch (_) {}
+}
+
+// Clicking the still-locked Radiance Plum swatch explains how it's earned
+// (it's a milestone reward, not a purchasable theme) and shows progress.
+function _radianceRewardLockedHint() {
+  const have = +((CU && CU.radianceDaysBought) || 0);
+  const left = Math.max(0, RADIANCE_MILESTONE_DAYS - have);
+  const msg = left > 0
+    ? `Radiance Plum is a milestone reward — spend ${left} more day${left === 1 ? '' : 's'} in the Radiance to keep it forever.`
+    : `Radiance Plum is a milestone reward for 14 days of Radiance.`;
+  try { toast(msg, 'info'); } catch (_) {}
+}
+
+// ══════════════════════════════════════════════════════════
 // ACCOUNT STANDING  (warnings + suspensions → 5-level meter)
 // ══════════════════════════════════════════════════════════
 // Each warning carries its own expiry (set when the moderator issues
@@ -25174,6 +25249,7 @@ function _buildProfileView(tab) {
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
       {id:'green_leaves',     name:'Green Leaves',     desc:'Calm forest greens. A quieter place to talk.', bg:'#0a1410', sidebar:'#091310', channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:'', cost:130, locked:!unlocked.includes('green_leaves')},
+      {id:'radiance_plum',    name:'Radiance Plum',    desc:'The deep plum of the Radiance. Earned by spending 14 days in the Radiance — yours forever.', bg:'#21131e', sidebar:'#1b0f19', channel:'#241522', panel:'#2a1826', accent:'#fef83d', border:'#3a2234', muted:'#6e4a62', bodyGrad:'linear-gradient(170deg,#21131e 0%,#2a1826 100%)', reward:true, locked:!unlocked.includes('radiance_plum')},
     ];
     const defaultThemes = allThemes.filter(t => t.free);
     const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
@@ -25289,16 +25365,20 @@ function _buildProfileView(tab) {
     function buildAppearanceCard(t) {
       const isActive = currentTheme === t.id;
       const isLocked = t.locked;
-      const clickAction = isLocked ? "buyAppearance('" + t.id + "'," + t.cost + ")" : "selectAppearancePreview('" + t.id + "')";
+      const clickAction = isLocked
+        ? (t.reward ? "_radianceRewardLockedHint()" : "buyAppearance('" + t.id + "'," + t.cost + ")")
+        : "selectAppearancePreview('" + t.id + "')";
       const grad = t.bodyGrad
         ? t.bodyGrad
         : `linear-gradient(135deg, ${t.sidebar} 0%, ${t.bg} 55%, ${t.panel} 100%)`;
-      const tip = isLocked ? (t.name + ' · ' + t.cost + ' Onyx') : t.name;
+      const tip = isLocked
+        ? (t.reward ? (t.name + ' · Radiance milestone reward') : (t.name + ' · ' + t.cost + ' Onyx'))
+        : t.name;
       return `
       <button onclick="${clickAction}" class="apr-theme-sq${isActive?' is-active':''}${isLocked?' is-locked':''}" data-tip="${escapeHTML(tip)}" type="button">
         <div class="apr-theme-sq__swatch" style="background:${grad};">
           ${isActive ? '<div class="apr-theme-sq__check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f1119" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' : ''}
-          ${isLocked ? '<div class="apr-theme-sq__lock">🔒</div>' : ''}
+          ${isLocked ? '<div class="apr-theme-sq__lock">'+(t.reward?'✨':'🔒')+'</div>' : ''}
         </div>
         <div class="apr-theme-sq__name">${escapeHTML(t.name)}</div>
       </button>`;
@@ -26468,6 +26548,7 @@ async function buyRadiance(days, cost) {
   showCustomConfirm(msg, async ()=>{
     CU.onyx=(CU.onyx||0)-cost;
     CU.radianceUntil = _stackFromExpiry(CU.radianceUntil, days);
+    _accrueRadianceDays(days);
     await saveUser(); updateOnyxDisplay();
     distributeOnyxRevenue(cost);
     const untilStr = new Date(CU.radianceUntil).toLocaleDateString();
@@ -26485,6 +26566,7 @@ async function buyRadiancePlus(days, cost) {
     CU.onyx -= cost;
     const base = _stackFromExpiry(CU.radianceUntil, days);
     CU.radianceUntil = base;
+    _accrueRadianceDays(days);
     await saveUser();
     refreshAtelierBalance();
     distributeOnyxRevenue(cost);
@@ -46275,11 +46357,11 @@ function renderAtelierTab(tab) {
     // Highlighted perks — a coverflow carousel of real brand art.
     const _CDN = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
     const FEATURED = [
-      { img: _CDN + '500mb%20upload.png', name: '500 MB Uploads',           desc: 'Upload files up to 500 MB each.' },
-      { img: _CDN + 'badge.png',          name: 'Radiance Badge',           desc: 'Wear the Radiance badge on your profile.' },
-      { img: _CDN + 'emojis.png',         name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s emojis anywhere you chat.' },
-      { img: _CDN + 'banners.png',        name: 'Profile Banners',          desc: 'Set an image or GIF banner on your profile.' },
-      { img: _CDN + 'earlyacess.png',     name: 'Early Access',             desc: 'Try new Fortized features before anyone else.' },
+      { img: _CDN + '500mb%20upload.png', name: '500 MB Uploads',           desc: 'Share big clips, art and files — up to 500 MB each. Everyone gets 350 MB; Radiance lifts you to 500.' },
+      { img: _CDN + 'badge.png',          name: 'Radiance Badge',           desc: 'A glowing badge on your profile that says you shine.' },
+      { img: _CDN + 'emojis.png',         name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s custom emojis in every message and reaction.' },
+      { img: _CDN + 'banners.png',        name: 'Profile Banners',          desc: 'Set an image or GIF banner on your profile — Radiance only.' },
+      { img: _CDN + 'earlyacess.png',     name: 'Early Access',             desc: 'Try new Fortized features before anyone else does.' },
     ];
     // Smaller perks — consistent one-line descriptions (no truncation needed).
     const MORE = [
@@ -46349,7 +46431,7 @@ function renderAtelierTab(tab) {
                 <img class="rad-cslide-bg" src="${p.img}" alt="" loading="lazy" onerror="this.style.display='none'">
                 <div class="rad-cslide-scrim"></div>
                 <div class="rad-cslide-cap">
-                  <div class="rad-cslide-name">${p.name}</div>
+                  <div class="rad-cslide-name">${p.name}<i class="rad-cslide-badge ${hasRad ? 'fa-solid fa-circle-check' : 'rad-cslide-badge--lock fa-solid fa-lock'}"></i></div>
                   <div class="rad-cslide-desc">${p.desc}</div>
                 </div>
               </div>`).join('')}
@@ -51892,6 +51974,7 @@ async function purchaseRadiance(isPlus, days, cost) {
       CU.onyx = (CU.onyx || 0) - cost;
       const until = _stackFromExpiry(existingExpiry, days);
       CU.radianceUntil = until;
+      _accrueRadianceDays(days);
       await saveUser();
       updateOnyxDisplay();
       distributeOnyxRevenue(cost);
@@ -52045,6 +52128,7 @@ async function claimGift(giftCode) {
     if (gift.type === 'radiance') {
       const until = new Date(Date.now() + (gift.days||30) * 86400000).toISOString();
       CU.radianceUntil = until;
+      _accrueRadianceDays(gift.days || 30);
       await saveUser();
       toast('You received 30 days of Radiance! Enjoy your perks.', 'success');
     } else if (gift.type === 'item') {
@@ -55064,6 +55148,22 @@ function applyAppearance(themeId, _opts) {
     document.documentElement.style.setProperty('--border',     '#1a3524');
     document.documentElement.style.setProperty('--muted',      '#3a5848');
     document.documentElement.style.setProperty('--muted-light','#6aa782');
+  } else if (themeId === 'radiance_plum') {
+    // Radiance Plum — the deep plum (#21131e) of the Radiance showcases.
+    // A 14-day Radiance milestone reward, kept forever.
+    canvasColor = 'linear-gradient(170deg, #21131e 0%, #2a1826 100%)';
+    sidebarColor = '#1b0f19';
+    glassHeavy = 'rgba(27,15,25,.94)'; glassMid = 'rgba(27,15,25,.88)'; glassLight = 'rgba(27,15,25,.82)';
+    document.documentElement.style.setProperty('--bg',         '#21131e');
+    document.documentElement.style.setProperty('--rail',       '#180d16');
+    document.documentElement.style.setProperty('--sidebar',    sidebarColor);
+    document.documentElement.style.setProperty('--channel',    '#241522');
+    document.documentElement.style.setProperty('--panel',      '#2a1826');
+    document.documentElement.style.setProperty('--panel2',     '#301c2c');
+    document.documentElement.style.setProperty('--panel3',     '#382133');
+    document.documentElement.style.setProperty('--border',     '#3a2234');
+    document.documentElement.style.setProperty('--muted',      '#6e4a62');
+    document.documentElement.style.setProperty('--muted-light','#9a6f8a');
   } else {
     // Classic Fortized (default)
     canvasColor = '#16191f';
@@ -55107,7 +55207,7 @@ function applyAppearance(themeId, _opts) {
   const chatInputOuter = document.querySelector('.chat-input-outer');
   if (userbarEl) userbarEl.style.background = '';
   if (chatInputOuter) chatInputOuter.style.background = '';
-  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', green_leaves:'🍃 Green Leaves', fortized_classic:'⚡ Classic Fortized', fortized_slate:'🪨 Fortized Slate'};
+  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', green_leaves:'🍃 Green Leaves', radiance_plum:'✨ Radiance Plum', fortized_classic:'⚡ Classic Fortized', fortized_slate:'🪨 Fortized Slate'};
   toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
 }
 
@@ -55120,6 +55220,7 @@ const _appearanceThemeData = {
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
   green_leaves:     {id:'green_leaves',     name:'Green Leaves',     bg:'#0a1410', sidebar:'#091310', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:''},
+  radiance_plum:    {id:'radiance_plum',    name:'Radiance Plum',    bg:'#21131e', sidebar:'#1b0f19', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#241522', panel:'#2a1826', accent:'#fef83d', border:'#3a2234', muted:'#6e4a62', bodyGrad:'linear-gradient(170deg,#21131e 0%,#2a1826 100%)'},
 };
 
 function _buildPreviewMockup(t, label) {

@@ -15139,3 +15139,49 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   .rad-plans{grid-template-columns:1fr;}
   .rad-gift{flex-direction:column;text-align:center;}
 }
+
+/* ═══ RADIANCE HEADER v2 + FEATURE SHOWCASE (no crystal / no ambient FX) ═══ */
+.rad-eyebrow{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.32);margin-bottom:12px;background:none;-webkit-text-fill-color:currentColor;}
+.rad-greet{font-family:var(--font-display);font-weight:800;text-transform:uppercase;font-size:clamp(30px,4vw,44px);line-height:1;letter-spacing:-.01em;color:#fff;margin:0;}
+.rad-greet-row{display:flex;align-items:center;gap:13px;margin-top:12px;}
+.rad-greet-av{width:46px;height:46px;border-radius:50%;overflow:hidden;flex-shrink:0;display:block;}
+.rad-greet-av img,.rad-greet-av>div{width:100%!important;height:100%!important;object-fit:cover;border-radius:50%;}
+.rad-greet-name{font-family:var(--font-display);font-weight:800;text-transform:uppercase;font-size:clamp(24px,3vw,34px);line-height:1;letter-spacing:-.01em;color:#fff;}
+.rad-status{display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;margin-top:22px;font-size:13px;color:rgba(255,255,255,.6);}
+.rad-status-pill{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-display);font-weight:700;font-size:12px;color:#ffd23e;background:rgba(255,210,62,.1);border:1px solid rgba(255,210,62,.2);padding:5px 12px;border-radius:100px;}
+.rad-status-item{color:rgba(255,255,255,.7);display:inline-flex;align-items:center;gap:6px;}
+.rad-status-item strong{color:#fff;font-weight:700;}
+.rad-status-sep{color:rgba(255,255,255,.2);}
+.rad-status .rad-hud-cancel{margin-left:6px;}
+.rad-status .rad-onyx-ic{color:rgba(255,255,255,.7);}
+.rad-status--guest{flex-direction:column;align-items:flex-start;gap:16px;}
+.rad-pitch{margin:0;font-size:14px;line-height:1.6;color:rgba(255,255,255,.6);max-width:560px;}
+.rad-pitch-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.rad-status-sub{font-size:12px;color:rgba(255,255,255,.35);}
+
+/* Feature showcase — a few headline perks */
+.rad-features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+.rad-feature{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.08);transition:transform .18s ease,border-color .18s;}
+.rad-feature:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.16);}
+.rad-feature-art{height:100px;display:flex;align-items:center;justify-content:center;font-size:40px;color:#ffcf7a;background:linear-gradient(135deg,rgba(255,63,184,.12),rgba(255,210,62,.08));border-bottom:1px solid rgba(255,255,255,.06);}
+.rad-feature.is-locked .rad-feature-art{color:rgba(255,255,255,.4);filter:saturate(.5);}
+.rad-feature-body{padding:16px 18px 18px;}
+.rad-feature-name{font-family:var(--font-display);font-size:15px;font-weight:700;color:#fff;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.rad-feature-on{color:var(--green,#3ecf6e);font-size:13px;}
+.rad-feature-desc{font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.5;}
+
+/* Supporting perk list */
+.rad-perklist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.rad-prow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);}
+.rad-prow-ic{width:34px;height:34px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#ffcf7a;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);}
+.rad-prow.is-locked .rad-prow-ic{color:rgba(255,255,255,.4);}
+.rad-prow-name{font-family:var(--font-display);font-size:13.5px;font-weight:600;color:#fff;flex-shrink:0;}
+.rad-prow-desc{font-size:12px;color:rgba(255,255,255,.4);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rad-prow-state{flex-shrink:0;font-size:14px;}
+.rad-prow.is-active .rad-prow-state{color:var(--green,#3ecf6e);}
+.rad-prow.is-locked .rad-prow-state{color:rgba(255,255,255,.25);}
+
+@media (max-width:900px){
+  .rad-features{grid-template-columns:1fr;}
+  .rad-perklist{grid-template-columns:1fr;}
+}

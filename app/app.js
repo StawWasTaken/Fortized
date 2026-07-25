@@ -46187,87 +46187,66 @@ function renderAtelierTab(tab) {
 
 
   // ── RADIANCE DWELLING ─────────────────────────────────────
-  // "The Radiance Prism" — the logo as a living crystal that charges with your
-  // membership. Topbar = the .disc-subnav in #view-radiance. Calm + premium:
-  // colour is a spice, motion is subtle/slow and gated behind
-  // prefers-reduced-motion (reduced-motion users get the static crystal).
+  // Clean, typography-forward header (no crystal / no ambient effects — those
+  // read as "AI"). Big Syne-extrabold caps greeting (Discord-style), a compact
+  // status line, a feature-showcase Vault (a few hero perks + a tight list),
+  // and the plan selector. Topbar = the .disc-subnav in #view-radiance.
   if (tab === 'radiance') {
     const PRICES = [
       { days: 7,  onyx: 150 },
       { days: 30, onyx: 400 },
       { days: 90, onyx: 1000 },
     ];
-    // A tighter, bigger set of headline perks. Icons are stand-ins for now —
-    // swappable for real art later (each lives in a .rad-perk-ic slot).
-    const PERKS = [
-      { ic: 'fa-certificate',         name: 'Radiance Badge',           desc: 'A glowing badge on your profile that says you shine.' },
-      { ic: 'fa-face-grin-stars',     name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s custom emojis in every message.' },
-      { ic: 'fa-cloud-arrow-up',      name: '500 MB Uploads',           desc: 'Share big clips, art and files — up to 500 MB each.' },
-      { ic: 'fa-panorama',            name: 'Animated Profile Banner',  desc: 'Bring your profile to life with an animated banner.' },
-      { ic: 'fa-wand-magic-sparkles', name: 'Name Effects & Colours',   desc: 'Gradient names, glows and effects that stand out.' },
-      { ic: 'fa-sliders',             name: 'Soundboard',               desc: 'Drop sound effects into voice and chat for the room.' },
+    // Feature-showcase perks: a few headliners + a tight supporting list.
+    // Icons are swappable stand-ins for real art later.
+    const FEATURED = [
+      { ic: 'fa-cloud-arrow-up',  name: '500 MB Uploads',           desc: 'Share big clips, art and files — up to 500 MB each. Everyone gets 350 MB; Radiance lifts you to 500.' },
+      { ic: 'fa-certificate',     name: 'Radiance Badge',           desc: 'A glowing badge on your profile that says you shine.' },
+      { ic: 'fa-face-grin-stars', name: 'Custom Emojis Everywhere', desc: 'Use any bastion’s custom emojis in every message and reaction.' },
+    ];
+    const MORE = [
+      { ic: 'fa-panorama',            name: 'Animated Profile Banner', desc: 'An animated banner on your profile.' },
+      { ic: 'fa-wand-magic-sparkles', name: 'Name Effects & Colours',  desc: 'Gradient names, glows and effects.' },
+      { ic: 'fa-sliders',             name: 'Soundboard',              desc: 'Sound effects in voice and chat.' },
+      { ic: 'fa-arrow-pointer',       name: 'Custom Cursors',          desc: 'A custom in-app cursor.' },
+      { ic: 'fa-tags',                name: '10% Fortshop Discount',   desc: 'Every Fortshop purchase, 10% off.' },
+      { ic: 'fa-box-open',            name: 'Starter Drops',           desc: 'Radiance-only drops and cosmetics.' },
     ];
 
-    const charge   = hasRad ? Math.max(0.04, Math.min(1, daysRad / 90)) : 0;
     const expDate  = hasRad ? new Date(radExp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     const stateCls = hasRad ? 'rad-page--member' : 'rad-page--guest';
-    const ONYX_IC  = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png';
-
-    // Time-of-day greeting (Discord-style).
     const greet = _radGreeting();
     const who = escapeHTML(CU?.displayName || CU?.username || 'there');
+    const avHTML = buildAvatarHTML(CU?.pfp || null, CU?.displayName || CU?.username || 'U', 46, CU?.pfpCrop);
 
-    // The living crystal. --charge scales the ring fill + bloom intensity.
-    const crystalHTML = `
-      <div class="rad-crystal" style="--charge:${charge};">
-        <div class="rad-crystal-ring" aria-hidden="true"></div>
-        <div class="rad-crystal-bloom" aria-hidden="true"></div>
-        <div class="rad-crystal-core">
-          <img src="/radiance-logo.png" alt="Radiance" draggable="false"/>
-        </div>
-        <div class="rad-crystal-motes" aria-hidden="true"><span></span><span></span><span></span></div>
-        ${hasRad ? '' : '<div class="rad-crystal-dormant">Dormant</div>'}
-      </div>`;
-
-    // Right-side HUD: member status ring vs guest pitch.
-    const hudHTML = hasRad ? `
-      <div class="rad-hud">
-        <div class="rad-hud-ring" style="--charge:${charge};">
-          <div class="rad-hud-ring-in">
-            <span class="rad-hud-days">${daysRad}</span>
-            <span class="rad-hud-days-lbl">day${daysRad === 1 ? '' : 's'} left</span>
-          </div>
-        </div>
-        <div class="rad-hud-meta">
-          <div class="rad-hud-stat"><i class="fa-solid fa-calendar-day"></i><div><span class="rad-hud-k">Active until</span><span class="rad-hud-v">${expDate}</span></div></div>
-          <div class="rad-hud-stat"><span class="rad-onyx-ic" aria-hidden="true"></span><div><span class="rad-hud-k">Your balance</span><span class="rad-hud-v">${bal.toLocaleString()} Onyx</span></div></div>
-          <button class="rad-hud-cancel" onclick="cancelRadiance()">Cancel subscription</button>
-        </div>
+    const stateLine = hasRad ? `
+      <div class="rad-status">
+        <span class="rad-status-pill"><i class="fa-solid fa-bolt"></i> Radiance active</span>
+        <span class="rad-status-item"><strong>${daysRad}</strong> day${daysRad === 1 ? '' : 's'} left</span>
+        <span class="rad-status-sep">·</span>
+        <span class="rad-status-item">Until ${expDate}</span>
+        <span class="rad-status-sep">·</span>
+        <span class="rad-status-item"><span class="rad-onyx-ic"></span> ${bal.toLocaleString()}</span>
+        <button class="rad-hud-cancel" onclick="cancelRadiance()">Cancel</button>
       </div>` : `
-      <div class="rad-hud rad-hud--guest">
-        <div class="rad-hud-pitchrow">
-          <span class="rad-hud-badge"><i class="fa-solid fa-lock"></i> Not radiant yet</span>
-          <span class="rad-hud-unlock">${PERKS.length}+ premium perks waiting</span>
+      <div class="rad-status rad-status--guest">
+        <p class="rad-pitch">Fortized’s premium membership — bigger uploads, exclusive perks and a profile that shines.</p>
+        <div class="rad-pitch-row">
+          <button class="rad-cta rad-cta--primary" onclick="_radGoSection('plans')">Ascend to Radiance</button>
+          <span class="rad-status-sub">From ${PRICES[0].onyx} Onyx · cancel anytime</span>
         </div>
-        <button class="rad-cta rad-cta--primary" onclick="_radGoSection('plans')">Ascend to Radiance</button>
-        <div class="rad-hud-note">From ${PRICES[0].onyx} Onyx · cancel anytime</div>
       </div>`;
 
     el.innerHTML = `<div class="atelier-content-inner rad-page ${stateCls}">
-      <div class="rad-aurora" aria-hidden="true"><span></span><span></span></div>
 
       <section class="rad-sec" id="rad-sec-overview">
-        <div class="rad-hero">
-          <div class="rad-hero-crystal">${crystalHTML}</div>
-          <div class="rad-hero-copy">
-            <div class="rad-eyebrow">Fortized · Radiance</div>
-            <h1 class="rad-hero-title">${greet}, ${who}</h1>
-            <p class="rad-hero-sub">${hasRad
-              ? 'Your crystal is charged and every premium perk is active — here’s where it all lives.'
-              : 'Fortized’s premium membership. Charge your crystal to unlock exclusive perks, bigger uploads and a profile that shines.'}</p>
-            ${hudHTML}
-          </div>
+        <div class="rad-eyebrow">Radiance</div>
+        <h1 class="rad-greet">${greet},</h1>
+        <div class="rad-greet-row">
+          <span class="rad-greet-av">${avHTML}</span>
+          <span class="rad-greet-name">${who}</span>
         </div>
+        ${stateLine}
       </section>
 
       <section class="rad-sec" id="rad-sec-perks">
@@ -46275,17 +46254,25 @@ function renderAtelierTab(tab) {
           <div class="rad-sec-title">The Vault</div>
           <div class="rad-sec-sub">${hasRad ? 'Everything you’ve unlocked.' : 'Everything Radiance unlocks.'}</div>
         </div>
-        <div class="rad-vault">
-          ${PERKS.map(p => `
-            <div class="rad-perk ${hasRad ? 'is-active' : 'is-locked'}">
-              <div class="rad-perk-ic"><i class="fa-solid ${p.ic}"></i></div>
-              <div class="rad-perk-body">
-                <div class="rad-perk-name">${p.name}</div>
-                <div class="rad-perk-desc">${p.desc}</div>
+
+        <div class="rad-features">
+          ${FEATURED.map(p => `
+            <div class="rad-feature ${hasRad ? 'is-active' : 'is-locked'}">
+              <div class="rad-feature-art"><i class="fa-solid ${p.ic}"></i></div>
+              <div class="rad-feature-body">
+                <div class="rad-feature-name">${p.name}${hasRad ? '<i class="fa-solid fa-circle-check rad-feature-on" title="Active"></i>' : ''}</div>
+                <div class="rad-feature-desc">${p.desc}</div>
               </div>
-              <div class="rad-perk-state">${hasRad
-                ? '<i class="fa-solid fa-circle-check" title="Active"></i>'
-                : '<i class="fa-solid fa-lock" title="Locked"></i>'}</div>
+            </div>`).join('')}
+        </div>
+
+        <div class="rad-perklist">
+          ${MORE.map(p => `
+            <div class="rad-prow ${hasRad ? 'is-active' : 'is-locked'}">
+              <span class="rad-prow-ic"><i class="fa-solid ${p.ic}"></i></span>
+              <span class="rad-prow-name">${p.name}</span>
+              <span class="rad-prow-desc">${p.desc}</span>
+              <span class="rad-prow-state"><i class="fa-solid ${hasRad ? 'fa-circle-check' : 'fa-lock'}"></i></span>
             </div>`).join('')}
         </div>
       </section>
@@ -46306,7 +46293,7 @@ function renderAtelierTab(tab) {
               <div class="rad-plan-days">${pl.days}<span>days</span></div>
               <div class="rad-plan-perday">${perDay} Onyx / day</div>
               <button class="rad-plan-buy ${afford ? '' : 'is-broke'}" onclick="purchaseRadiance(true,${pl.days},${pl.onyx})">
-                <span class="rad-onyx-ic" aria-hidden="true"></span>
+                <span class="rad-onyx-ic"></span>
                 <span>${pl.onyx.toLocaleString()}</span>
               </button>
             </div>`;

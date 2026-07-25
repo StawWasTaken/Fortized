@@ -46396,14 +46396,12 @@ function renderAtelierTab(tab) {
     ];
     // Smaller perks — consistent one-line descriptions (no truncation needed).
     const MORE = [
-      { ic: 'fa-sliders',       name: 'Soundboard',            desc: 'Play sound effects in voice and chat.' },
       { ic: 'fa-arrow-pointer', name: 'Custom Cursors',        desc: 'Set a custom in-app cursor.' },
       { ic: 'fa-note-sticky',   name: 'Custom Stickers Everywhere', desc: 'Use any bastion’s stickers in every chat.' },
       { ic: 'fa-bolt',          name: '3 Free Bastion Boosts', desc: 'Boost your favourite communities — three on us.' },
       { ic: 'fa-tags',          name: '10% Fortshop Discount', desc: 'Save 10% on every Fortshop order.' },
       { ic: 'fa-box-open',      name: 'Starter Drops',         desc: 'Claim exclusive Radiance drops.' },
       { ic: 'fa-palette',       name: 'Radiance Plum Theme',   desc: 'A deep-plum app theme, kept forever at 14+ days.' },
-      { ic: 'fa-circle-user',   name: 'Animated Avatar',       desc: 'Animate your profile picture with a GIF.' },
     ];
 
     const expDate  = hasRad ? new Date(radExp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';

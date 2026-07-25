@@ -1032,7 +1032,7 @@ let quizIdx = 0;
 let quizCorrect = 0;
 let quizAnswers = [];
 let activeReportData = null;
-const SUPER_ADMINS = ['staw', 'fortized', 'joyster', 'fortizedsafety'];
+const SUPER_ADMINS = ['staw', 'fortized', 'joyster', 'fortizedsafety', 'leafen'];
 const SUPER_ADMIN = 'staw'; // legacy compat
 const JOYSTER_ACCOUNT = 'joyster';
 const FORTIZED_ACCOUNT = 'fortized';
@@ -1040,7 +1040,9 @@ const FORTIZED_SAFETY_ACCOUNT = 'fortizedsafety';
 // User accounts the team operates as system/bot personalities. Each one gets
 // the Bot badge in getUserBadges() in addition to anyone with `isBot: true`
 // on their user record.
-const MANUAL_BOTS = ['fortized', 'joyster', 'fortizedsafety', 'fortgified'];
+// 'leafen' — a platform-operated account (like joyster): admin-controlled,
+// used for testing/showcase. Same badge + reserved-name + permission treatment.
+const MANUAL_BOTS = ['fortized', 'joyster', 'fortizedsafety', 'fortgified', 'leafen'];
 // FortGified — the built-in message-command bot (Discord "Apps"-style). It has
 // no DB user row and never appears in member lists; its messages render with a
 // local avatar + APP capsule (special-cased in appendMessage, zero egress).
@@ -2269,6 +2271,7 @@ async function _syncBastionFromGlobal(bastionIdx) {
 }
 async function refreshCU() {
   if (!CU?.username) return;
+  _hydrateFavGifs(); // once per session: pull the account GIF collection
   try {
     const prevRad = CU.radianceUntil, prevPlus = CU.radiancePlus;
     const prevBastions = CU.bastions;
@@ -40506,25 +40509,68 @@ async function updateBastionBanner(e) {
 }
 
 // ════════════════════════════════════════════
-// FAVOURITE GIFS
+// FAVOURITE GIFS  (per-account, localStorage-cached)
 // ════════════════════════════════════════════
+// Collections now live on the account (fav_gifs column) so they follow you
+// across browsers. localStorage is a fast local cache. Only http(s) URLs sync
+// to the account — data: URL collects (uploaded gifs) stay local so we never
+// bloat egress. Hydrated once on boot via _hydrateFavGifs().
+let _favGifs = null;             // in-memory source of truth once loaded
+let _favGifsHydrated = false;
+let _favGifsSaveT = 0;
 function getFavGifs() {
-  return JSON.parse(localStorage.getItem('ftz_fav_gifs') || '[]');
+  if (_favGifs) return _favGifs;
+  try { _favGifs = JSON.parse(localStorage.getItem('ftz_fav_gifs') || '[]'); } catch (_) { _favGifs = []; }
+  if (!Array.isArray(_favGifs)) _favGifs = [];
+  return _favGifs;
+}
+function _persistFavGifs() {
+  try { localStorage.setItem('ftz_fav_gifs', JSON.stringify(_favGifs || [])); } catch (_) {}
+  if (CU && CU.username && typeof FortizedSocial !== 'undefined' && FortizedSocial.saveFavGifs) {
+    clearTimeout(_favGifsSaveT);
+    _favGifsSaveT = setTimeout(() => {
+      // URLs only — data: URLs stay local (egress).
+      const acct = (_favGifs || []).filter(g => g && typeof g.url === 'string' && /^https?:/i.test(g.url));
+      FortizedSocial.saveFavGifs(CU.username, acct).catch(() => {});
+    }, 800);
+  }
+}
+async function _hydrateFavGifs() {
+  if (_favGifsHydrated) return;
+  if (!CU || !CU.username || typeof FortizedSocial === 'undefined' || !FortizedSocial.loadFavGifs) return;
+  _favGifsHydrated = true;
+  try {
+    const remote = await FortizedSocial.loadFavGifs(CU.username);
+    const local = getFavGifs();
+    const seen = new Set();
+    const merged = [];
+    for (const g of [...(remote || []), ...local]) {
+      if (!g || !g.url || seen.has(g.url)) continue;
+      seen.add(g.url);
+      merged.push({ id: g.id || _gifCollectId(g.url), url: g.url });
+    }
+    if (merged.length > 100) merged.length = 100;
+    _favGifs = merged;
+    try { localStorage.setItem('ftz_fav_gifs', JSON.stringify(_favGifs)); } catch (_) {}
+    _persistFavGifs(); // push any local-only http gifs the account didn't have
+    // Reflect on any collect buttons already on screen.
+    try { document.querySelectorAll('[data-gif-url]').forEach(b => b.classList.toggle('is-collected', isGifCollected(b.dataset.gifUrl))); } catch (_) {}
+  } catch (_) {}
 }
 function saveFavGif(gif) {
   const favs = getFavGifs();
-  if (!favs.find(g => g.id === gif.id)) {
+  if (!favs.find(g => g.id === gif.id || g.url === gif.url)) {
     favs.unshift(gif);
-    if (favs.length > 50) favs.pop(); // cap at 50
-    localStorage.setItem('ftz_fav_gifs', JSON.stringify(favs));
-    toast('GIF saved to favourites!', 'success');
+    if (favs.length > 100) favs.pop();
+    _persistFavGifs();
+    toast('GIF saved to collection!', 'success');
   } else {
-    toast('Already in favourites', 'info');
+    toast('Already in collection', 'info');
   }
 }
 function removeFavGif(id) {
-  const favs = getFavGifs().filter(g => g.id !== id);
-  localStorage.setItem('ftz_fav_gifs', JSON.stringify(favs));
+  _favGifs = getFavGifs().filter(g => g.id !== id);
+  _persistFavGifs();
 }
 
 // ── Unified GIF collect control ──────────────────────────────────────────
@@ -40552,14 +40598,14 @@ function toggleFavGif(url){
   const idx = favs.findIndex(g => g.url === url || g.id === id24 || g.id === id16);
   if(idx >= 0){
     favs.splice(idx, 1);
-    localStorage.setItem('ftz_fav_gifs', JSON.stringify(favs));
+    _persistFavGifs();
     _syncGifCollectBtns(url, false);
     toast('Removed from collection', 'info');
     return false;
   }
   favs.unshift({ id: id24, url });
   if(favs.length > 100) favs.pop();
-  localStorage.setItem('ftz_fav_gifs', JSON.stringify(favs));
+  _persistFavGifs();
   _syncGifCollectBtns(url, true);
   toast('Added to collection', 'success');
   return true;

@@ -79,7 +79,7 @@ const FortizedSocial = (() => {
   // ── Auth ───────────────────────────────────────────────────
   // Protected names — usernames containing these bases (with optional
   // repeated trailing characters) are blocked to prevent impersonation.
-  const PROTECTED_NAMES = ['staw', 'fortized', 'joyster'];
+  const PROTECTED_NAMES = ['staw', 'fortized', 'joyster', 'leafen'];
 
   function isProtectedUsername(name) {
     const clean = name.replace(/[^a-z]/g, '');

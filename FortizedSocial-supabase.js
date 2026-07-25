@@ -734,11 +734,11 @@ const FortizedSocial = (() => {
   }
 
   // ── Auth ─────────────────────────────────────────────
-  const PROTECTED_NAMES = ['staw', 'fortized', 'joyster'];
+  const PROTECTED_NAMES = ['staw', 'fortized', 'joyster', 'leafen'];
   // Built-in bot accounts — reserved so no human can register a bot's name.
   // Keep in sync with MANUAL_BOTS in app.js. (Custom user-created bots will be
   // checked against their own registry once that ships.)
-  const BOT_NAMES = ['fortized', 'joyster', 'fortizedsafety', 'fortgified'];
+  const BOT_NAMES = ['fortized', 'joyster', 'fortizedsafety', 'fortgified', 'leafen'];
 
   function isProtectedUsername(name) {
     const clean = name.replace(/[^a-z]/g, '');
@@ -2974,6 +2974,29 @@ const FortizedSocial = (() => {
     }
   }
 
+  // ── GIF collections (per-account) ───────────────────────
+  // Kept OFF the shared user read/write path on purpose: the delta-write
+  // boundary is fragile, and fav_gifs is excluded from _USER_LIST_COLS so it
+  // never bloats bulk/table-scan reads (egress). These two isolated helpers
+  // read/write ONLY the fav_gifs column for the current user. Payload is
+  // http(s) URLs only (the caller strips data: URLs), so it stays tiny.
+  async function loadFavGifs(username) {
+    if (!username) return [];
+    try {
+      const { data, error } = await sb.from('users').select('fav_gifs').eq('username', norm(username)).maybeSingle();
+      if (error) { console.warn('[FavGifs] load failed:', error.message); return []; }
+      return Array.isArray(data?.fav_gifs) ? data.fav_gifs : [];
+    } catch (e) { console.warn('[FavGifs] load exception:', e.message); return []; }
+  }
+  async function saveFavGifs(username, arr) {
+    if (!username) return { error: 'no username' };
+    try {
+      const { error } = await sb.from('users').update({ fav_gifs: Array.isArray(arr) ? arr : [] }).eq('username', norm(username));
+      if (error) { console.warn('[FavGifs] save failed:', error.message); return { error: error.message }; }
+      return { ok: true };
+    } catch (e) { console.warn('[FavGifs] save exception:', e.message); return { error: e.message }; }
+  }
+
   // ── Voice presence for the bastion rail (who's in party channels) ─────
   // Deliberately LEAN (egress): selects only bastion_id/channel_name/username
   // — NOT the `data` blob, which holds each participant's pfp data URL. The
@@ -3326,7 +3349,7 @@ const FortizedSocial = (() => {
     adminGetDashboardStats,
     getForumThreads, getForumThread, createForumThread, updateForumThread, deleteForumThread,
     getForumPosts, getForumPostsForThreads, createForumPost, updateForumPost, deleteForumPost, searchForumThreads,
-    uploadFile, getVoicePresence,
+    uploadFile, loadFavGifs, saveFavGifs, getVoicePresence,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
     startGCPolling, stopGCPolling,

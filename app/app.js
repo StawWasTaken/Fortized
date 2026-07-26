@@ -46370,22 +46370,26 @@ function _questCatalogue() {
   const friends = (cu.friends || []).length;
   const bastions = (cu.bastions || []).length;
   const wb = _questWeekBucket();
+  // Rewards are deliberately LEAN. Always-available quests (daily) pay the
+  // least; weekly a bit more; one-time milestones more again. Rare / expiring
+  // quests (future, sponsored/official events) pay the most. 100 Onyx = 1€, and
+  // Onyx will eventually be sold — so free income stays modest by design.
   return [
-    // ── DAILY (reset midnight) ──
-    { id:'daily_claim', tier:'daily', ic:'fa-gift',        title:'Daily Claim',     desc:'Claim your free Onyx. Resets at midnight.',   reward:20, unit:'Onyx',        done:isDailyQuestDone('daily_claim'), action:'claimDailyQuest()',      cta:'Claim' },
-    { id:'send_msg',    tier:'daily', ic:'fa-comment-dots', title:'Send a Message',  desc:'Chat with someone today. Stay connected.',    reward:10, unit:'Onyx',        done:isDailyQuestDone('send_msg'),    action:"showView('dms')",         cta:'Open chats' },
-    { id:'invite',      tier:'daily', ic:'fa-user-plus',   title:'Invite a Friend', desc:'+9 Onyx for every friend who joins.',         reward:9,  unit:'Onyx/friend', done:dailyLog.invite === today,       action:'_showInviteFriendsPanel()', cta:'Invite' },
-    // ── WEEKLY (reset Monday) ──
-    { id:'w_loyal',  tier:'weekly', ic:'fa-calendar-check', title:'Loyal Return', desc:'Claim your daily reward on 5 days this week.',   reward:60, unit:'Onyx', goal:{ cur:Math.min(wb.claimDays.length, 5), target:5 }, done:isWeeklyQuestDone('w_loyal'),  action:"claimWeeklyQuest('w_loyal',60)",  cta:'Claim' },
-    { id:'w_social', tier:'weekly', ic:'fa-comments',      title:'Realm Voice',  desc:'Send messages on 3 different days this week.',  reward:45, unit:'Onyx', goal:{ cur:Math.min(wb.msgDays.length, 3),  target:3 }, done:isWeeklyQuestDone('w_social'), action:"claimWeeklyQuest('w_social',45)", cta:'Claim' },
-    // ── JOURNEY (one-time milestones — the campaign path) ──
-    { id:'set_pfp',        tier:'journey', ic:'fa-image',        title:'Show Your Face',   desc:'Upload a profile picture to stand out.',   reward:20, unit:'Onyx', done:completed.includes('set_pfp') || !!cu.pfp,              action:"showView('profile')",             cta:'Set avatar' },
+    // ── DAILY (reset midnight) — smallest rewards ──
+    { id:'daily_claim', tier:'daily', ic:'fa-gift',        title:'Daily Claim',     desc:'Claim your free Onyx. Resets at midnight.',   reward:5,  unit:'Onyx',        done:isDailyQuestDone('daily_claim'), action:'claimDailyQuest()',      cta:'Claim' },
+    { id:'send_msg',    tier:'daily', ic:'fa-comment-dots', title:'Send a Message',  desc:'Chat with someone today. Stay connected.',    reward:3,  unit:'Onyx',        done:isDailyQuestDone('send_msg'),    action:"showView('dms')",         cta:'Open chats' },
+    { id:'invite',      tier:'daily', ic:'fa-user-plus',   title:'Invite a Friend', desc:'+10 Onyx for every friend who joins.',        reward:10, unit:'Onyx/friend', done:dailyLog.invite === today,       action:'_showInviteFriendsPanel()', cta:'Invite' },
+    // ── WEEKLY (reset Monday) — modest ──
+    { id:'w_loyal',  tier:'weekly', ic:'fa-calendar-check', title:'Loyal Return', desc:'Claim your daily reward on 5 days this week.',   reward:25, unit:'Onyx', goal:{ cur:Math.min(wb.claimDays.length, 5), target:5 }, done:isWeeklyQuestDone('w_loyal'),  action:"claimWeeklyQuest('w_loyal',25)",  cta:'Claim' },
+    { id:'w_social', tier:'weekly', ic:'fa-comments',      title:'Realm Voice',  desc:'Send messages on 3 different days this week.',  reward:20, unit:'Onyx', goal:{ cur:Math.min(wb.msgDays.length, 3),  target:3 }, done:isWeeklyQuestDone('w_social'), action:"claimWeeklyQuest('w_social',20)", cta:'Claim' },
+    // ── MILESTONES (one-time) — one-off, so a bit more ──
+    { id:'set_pfp',        tier:'journey', ic:'fa-image',        title:'Show Your Face',   desc:'Upload a profile picture to stand out.',   reward:15, unit:'Onyx', done:completed.includes('set_pfp') || !!cu.pfp,              action:"showView('profile')",             cta:'Set avatar' },
     { id:'set_bio',        tier:'journey', ic:'fa-feather',      title:'Tell Your Tale',   desc:'Write a custom bio for your profile.',     reward:15, unit:'Onyx', done:completed.includes('set_bio') || !!cu.bio,              action:"showView('profile')",             cta:'Write bio' },
     { id:'add_friend',     tier:'journey', ic:'fa-user-group',   title:'First Ally',       desc:'Send your first friend request.',          reward:15, unit:'Onyx', done:completed.includes('add_friend') || friends > 0,        action:"openModal('modal-add-friend')",    cta:'Add friend' },
-    { id:'join_bastion',   tier:'journey', ic:'fa-dungeon',      title:'Enter a Bastion',  desc:'Find and join any public Bastion.',        reward:25, unit:'Onyx', done:completed.includes('join_bastion') || bastions > 0,     action:"showView('discover')",             cta:'Discover' },
+    { id:'join_bastion',   tier:'journey', ic:'fa-dungeon',      title:'Enter a Bastion',  desc:'Find and join any public Bastion.',        reward:20, unit:'Onyx', done:completed.includes('join_bastion') || bastions > 0,     action:"showView('discover')",             cta:'Discover' },
     { id:'send_gif',       tier:'journey', ic:'fa-film',         title:'Say It With a GIF',desc:'Send your first GIF in a conversation.',   reward:10, unit:'Onyx', done:completed.includes('send_gif'),                         action:"showView('dms')",                  cta:'Open chats' },
-    { id:'five_friends',   tier:'journey', ic:'fa-people-group', title:'Rally the Banners',desc:'Grow your circle to 5 friends.',           reward:40, unit:'Onyx', goal:{ cur:Math.min(friends, 5), target:5 }, done:completed.includes('five_friends') || friends >= 5, action:"openModal('modal-add-friend')", cta:'Add friends' },
-    { id:'create_bastion', tier:'journey', ic:'fa-chess-rook',   title:'Raise a Fortress', desc:'Create your own Bastion community.',        reward:50, unit:'Onyx', done:completed.includes('create_bastion'),                   action:"openModal('modal-create-bastion')", cta:'Create' },
+    { id:'five_friends',   tier:'journey', ic:'fa-people-group', title:'Rally the Banners',desc:'Grow your circle to 5 friends.',           reward:30, unit:'Onyx', goal:{ cur:Math.min(friends, 5), target:5 }, done:completed.includes('five_friends') || friends >= 5, action:"openModal('modal-add-friend')", cta:'Add friends' },
+    { id:'create_bastion', tier:'journey', ic:'fa-chess-rook',   title:'Raise a Fortress', desc:'Create your own Bastion community.',        reward:40, unit:'Onyx', done:completed.includes('create_bastion'),                   action:"openModal('modal-create-bastion')", cta:'Create' },
   ];
 }
 
@@ -46419,11 +46423,12 @@ function _msUntilMonday() { const n = new Date(); const t = new Date(n); const a
 function _qstStartTimers() {
   if (window._qstTimer) { clearInterval(window._qstTimer); window._qstTimer = null; }
   const tick = () => {
-    const d = document.getElementById('qst-daily-timer');
-    const w = document.getElementById('qst-weekly-timer');
-    if (!d && !w) { clearInterval(window._qstTimer); window._qstTimer = null; return; }
-    if (d) d.textContent = 'Resets in ' + _qstFmtCountdown(_msUntilMidnight());
-    if (w) w.textContent = 'Resets in ' + _qstFmtCountdown(_msUntilMonday());
+    const els = document.querySelectorAll('.qst-reset[data-reset]');
+    if (!els.length) { clearInterval(window._qstTimer); window._qstTimer = null; return; }
+    els.forEach(e => {
+      const ms = e.getAttribute('data-reset') === 'monday' ? _msUntilMonday() : _msUntilMidnight();
+      e.textContent = _qstFmtCountdown(ms);
+    });
   };
   tick();
   window._qstTimer = setInterval(tick, 1000);
@@ -46521,10 +46526,12 @@ function renderAtelierTab(tab) {
   // status line, a feature-showcase Vault (a few hero perks + a tight list),
   // and the plan selector. Topbar = the .disc-subnav in #view-radiance.
   if (tab === 'radiance') {
+    // Radiance pricing — 100 Onyx = 1€. Premium but fair: ~2€ / ~6€ / ~15€.
+    // The 30-day tier matches the gift cost (600) so gifting stays consistent.
     const PRICES = [
-      { days: 7,  onyx: 150 },
-      { days: 30, onyx: 400 },
-      { days: 90, onyx: 1000 },
+      { days: 7,  onyx: 200 },
+      { days: 30, onyx: 600 },
+      { days: 90, onyx: 1500 },
     ];
     // Highlighted perks — a coverflow carousel of real brand art.
     const _CDN = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
@@ -46672,39 +46679,60 @@ function renderAtelierTab(tab) {
     _checkAndAwardPendingQuests().catch(()=>{});
 
     const qtab = window._qstTab || 'available';
-    const ONYX = '<img class="qst-onyx" src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="Onyx">';
+    const _QCDN = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
+    const ONYX_IMG   = '/Onyx image.png';                  // the real Onyx image (not the flat SVG)
+    const DEF_LOGO   = '/fortized-logo.png';               // @fortized quest logo
+    const DEF_BANNER = _QCDN + 'Usualbackground.png';      // default banner for official quests
     const cat = _questCatalogue();
     const rank = _realmRank(CU);
     const completedCount = (CU?.completedQuests || []).length;
     const estOnyx = cat.filter(q => q.tier === 'journey' && q.done).reduce((s,q) => s + q.reward, 0);
     const onyxEarned = Math.max(+CU?.questOnyxEarned || 0, estOnyx);
 
-    // One restrained quest card — neutral surface, yellow only as a spice.
+    // Discord-style quest card — banner + logo + attribution + time limit +
+    // Onyx reward (real image) + Accept button. Tactile like the Radiance perks.
     const qCard = (q) => {
       const met = !q.goal || q.goal.cur >= q.goal.target;
       const pct = q.goal ? Math.round(q.goal.cur / q.goal.target * 100) : 0;
       const isClaim = q.id === 'daily_claim' || q.tier === 'weekly';
+      const by = (q.by || 'Fortized').replace(/^@/, '');
+      const banner = q.banner || DEF_BANNER;
+      // Sponsor/official quests can pass a full-colour logo image (fills the
+      // chip). The default @fortized mark is our dark shield, so it sits padded
+      // on the light chip (class qlogo-brand) so it reads clearly.
+      const logoInner = q.logo
+        ? `<img src="${q.logo}" alt="" onerror="this.style.display='none'">`
+        : `<img class="qlogo-brand" src="${DEF_LOGO}" alt="" onerror="this.style.display='none'">`;
+      const resetKind = q.tier === 'daily' ? 'midnight' : q.tier === 'weekly' ? 'monday' : '';
+      const timePill = resetKind
+        ? `<span class="qst-qtime"><i class="fa-solid fa-clock"></i> <span class="qst-reset" data-reset="${resetKind}"></span></span>`
+        : `<span class="qst-qtime qst-qtime--perm"><i class="fa-solid fa-infinity"></i> No time limit</span>`;
+      const perFriend = q.unit && q.unit.indexOf('/') !== -1;
       const btn = q.done
-        ? '<span class="qst-done-lbl"><i class="fa-solid fa-circle-check"></i> Claimed</span>'
+        ? '<button class="qst-qbtn is-done" disabled><i class="fa-solid fa-circle-check"></i> Completed</button>'
         : met
-          ? `<button class="qst-cta${isClaim ? ' qst-cta--claim' : ''}" onclick="${q.action}">${escapeHTML(q.cta)}</button>`
-          : '<span class="qst-wait-lbl">In progress</span>';
-      return `<div class="qst-card${q.done ? ' is-done' : ''}">
-        <div class="qst-card-ic"><i class="fa-solid ${q.done ? 'fa-circle-check' : q.ic}"></i></div>
-        <div class="qst-card-main">
-          <div class="qst-card-title">${escapeHTML(q.title)}</div>
-          <div class="qst-card-desc">${escapeHTML(q.desc)}</div>
-          ${q.goal && !q.done ? `<div class="qst-prog"><div class="qst-prog-bar"><span style="width:${pct}%;"></span></div><span class="qst-prog-txt">${q.goal.cur}/${q.goal.target}</span></div>` : ''}
+          ? `<button class="qst-qbtn${isClaim ? ' is-claim' : ''}" onclick="${q.action}">${isClaim ? 'Claim reward' : 'Accept Quest'}</button>`
+          : '<button class="qst-qbtn is-wait" disabled>In progress</button>';
+      return `<div class="qst-qcard${q.done ? ' is-done' : ''}">
+        <div class="qst-qcard-banner" style="background-image:url('${banner}');">
+          ${timePill}
+          <span class="qst-qcard-logo">${logoInner}</span>
         </div>
-        <div class="qst-card-side">
-          <div class="qst-reward">${ONYX}<b>+${q.reward}</b></div>
-          ${btn}
+        <div class="qst-qcard-body">
+          <div class="qst-qcard-by">by <b>@${escapeHTML(by)}</b></div>
+          <div class="qst-qcard-title">${escapeHTML(q.title)}</div>
+          <div class="qst-qcard-desc">${escapeHTML(q.desc)}</div>
+          ${q.goal && !q.done ? `<div class="qst-prog"><div class="qst-prog-bar"><span style="width:${pct}%;"></span></div><span class="qst-prog-txt">${q.goal.cur}/${q.goal.target}</span></div>` : ''}
+          <div class="qst-qcard-foot">
+            <div class="qst-qcard-reward"><img class="qst-onyx-img" src="${ONYX_IMG}" alt="Onyx"><b>${q.reward}</b>${perFriend ? '<span>/ friend</span>' : ''}</div>
+            ${btn}
+          </div>
         </div>
       </div>`;
     };
 
-    // Subtle group label (no colour) with an optional live reset timer.
-    const groupLabel = (title, timerId) => `<div class="qst-group"><span class="qst-group-t">${title}</span>${timerId ? `<span class="qst-group-note" id="${timerId}"></span>` : ''}</div>`;
+    // Subtle group label (no colour, no timer — cards carry their own time).
+    const groupLabel = (title) => `<div class="qst-group"><span class="qst-group-t">${title}</span></div>`;
 
     // ── Header banner = the redesigned, premium Realm Rank ──
     const rankLadder = REALM_RANKS.map((r, i) => {
@@ -46739,7 +46767,7 @@ function renderAtelierTab(tab) {
     if (qtab === 'claimed') {
       const done = cat.filter(q => q.done);
       body = done.length
-        ? `<div class="qst-grid">${done.map(qCard).join('')}</div>`
+        ? `<div class="qst-qgrid">${done.map(qCard).join('')}</div>`
         : `<div class="qst-empty"><i class="fa-solid fa-scroll"></i><div class="qst-empty-t">Nothing claimed yet</div><div class="qst-empty-s">Complete quests in the Available tab and they’ll appear here.</div></div>`;
     } else if (qtab === 'bounties') {
       body = `<div class="qst-bounty">
@@ -46758,9 +46786,9 @@ function renderAtelierTab(tab) {
         body = `<div class="qst-empty"><i class="fa-solid fa-feather-pointed"></i><div class="qst-empty-t">All caught up</div><div class="qst-empty-s">You’ve claimed every quest available. New ones arrive with each reset.</div></div>`;
       } else {
         body =
-          (aDaily.length   ? `${groupLabel('Daily', 'qst-daily-timer')}<div class="qst-grid">${aDaily.map(qCard).join('')}</div>` : '') +
-          (aWeekly.length  ? `${groupLabel('Weekly', 'qst-weekly-timer')}<div class="qst-grid">${aWeekly.map(qCard).join('')}</div>` : '') +
-          (aJourney.length ? `${groupLabel('Milestones', '')}<div class="qst-grid">${aJourney.map(qCard).join('')}</div>` : '');
+          (aDaily.length   ? `${groupLabel('Daily')}<div class="qst-qgrid">${aDaily.map(qCard).join('')}</div>` : '') +
+          (aWeekly.length  ? `${groupLabel('Weekly')}<div class="qst-qgrid">${aWeekly.map(qCard).join('')}</div>` : '') +
+          (aJourney.length ? `${groupLabel('Milestones')}<div class="qst-qgrid">${aJourney.map(qCard).join('')}</div>` : '');
       }
     }
 
@@ -50471,13 +50499,13 @@ async function _checkAndAwardPendingQuests() {
   if (!CU.completedQuests) CU.completedQuests = [];
   if (!CU.questsRewarded) CU.questsRewarded = [];
   const QUEST_REWARDS = [
-    {id:'join_bastion', reward:25, check:()=>(CU?.bastions||[]).length>0},
+    {id:'join_bastion', reward:20, check:()=>(CU?.bastions||[]).length>0},
     {id:'add_friend', reward:15, check:()=>(CU?.friends||[]).length>0},
-    {id:'set_pfp', reward:20, check:()=>!!CU?.pfp},
+    {id:'set_pfp', reward:15, check:()=>!!CU?.pfp},
     {id:'set_bio', reward:15, check:()=>!!CU?.bio},
-    {id:'five_friends', reward:40, check:()=>(CU?.friends||[]).length>=5},
+    {id:'five_friends', reward:30, check:()=>(CU?.friends||[]).length>=5},
     {id:'send_gif', reward:10, check:()=>CU.completedQuests.includes('send_gif')},
-    {id:'create_bastion', reward:50, check:()=>CU.completedQuests.includes('create_bastion')},
+    {id:'create_bastion', reward:40, check:()=>CU.completedQuests.includes('create_bastion')},
   ];
   let totalGained = 0;
   let newlyCompleted = [];
@@ -50645,7 +50673,7 @@ function refreshDailyBtn() {
     btn.innerHTML = '<span>✓ Claimed!</span><strong>Come back tomorrow</strong>';
   } else {
     btn.classList.remove('claimed');
-    btn.innerHTML = '<span>Claim Now</span><strong>+20 Onyx</strong>';
+    btn.innerHTML = '<span>Claim Now</span><strong>+5 Onyx</strong>';
   }
 }
 
@@ -52406,8 +52434,9 @@ async function claimDailyQuest() {
 
   // Flat daily reward — the streak counter is a separate, motivational
   // metric (and feeds the Dedicated Flame badge). It does NOT inflate
-  // the daily payout. Card + quest are the same claim, worth 20 Onyx.
-  const totalReward = 20;
+  // the daily payout. Kept lean (5 Onyx) — dailies are the most frequent
+  // quest, so they pay the least (see the quest economy in _questCatalogue).
+  const totalReward = 5;
   CU.onyx = (CU.onyx || 0) + totalReward;
   CU.lastDailyReward = today;
   CU.lastDaily = today;
@@ -52444,13 +52473,13 @@ async function _trackSendMsgQuest() {
   if (!CU.questsDailyLog) CU.questsDailyLog = {};
   if (CU.questsDailyLog.send_msg === today) return; // already done today
   CU.questsDailyLog.send_msg = today;
-  CU.onyx = (CU.onyx || 0) + 10;
+  CU.onyx = (CU.onyx || 0) + 3;
   try { _questWeekTick('msg'); } catch {}
-  try { _addQuestOnyx(10); } catch {}
+  try { _addQuestOnyx(3); } catch {}
   updateOnyxDisplay();
   await saveUser(true);
-  if (typeof animateOnyxGain === 'function') animateOnyxGain(10);
-  toast('💬 Quest complete: Send a Message — +10 Onyx!', 'success');
+  if (typeof animateOnyxGain === 'function') animateOnyxGain(3);
+  toast('💬 Quest complete: Send a Message — +3 Onyx!', 'success');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -52476,10 +52505,10 @@ function _showDailyQuestPopup() {
       <div class="quest-popup-body">
         <div class="quest-popup-label">Daily Quest</div>
         <div class="quest-popup-title">Hearken, Hearken!</div>
-        <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">20 Onyx</strong>. Resets at midnight.</div>
+        <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">5 Onyx</strong>. Resets at midnight.</div>
         <div class="quest-popup-reward">
-          <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:12px;height:12px;object-fit:contain;">
-          +20 Onyx
+          <img src="/Onyx image.png" style="width:16px;height:16px;object-fit:contain;">
+          +5 Onyx
         </div>
         <div class="quest-popup-btns">
           <button class="qp-btn btn-g" onclick="_dismissDailyPopup(false)">Later</button>

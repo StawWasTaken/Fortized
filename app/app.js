@@ -2385,6 +2385,7 @@ async function refreshCU() {
         'profileWidgets','displayFont','displayEffect','displayColor','displayColor2','wantToPlay','gameCollection',
         'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
         'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
+        'questsWeekly','questOnyxEarned',
         'createdAt','customStatus','verified','appearance','wishlist','wishlistPrivate',
         // Cross-device cosmetics — same protection pattern as
         // appearance so a background refresh doesn't clobber a
@@ -16516,6 +16517,7 @@ function initFortizedUXResilience() {
               'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
               'createdAt','customStatus','verified','appearance','badges',
               'completedQuests','questsRewarded','questsDailyLog','dailyStreak','streakDate',
+              'questsWeekly','questOnyxEarned',
               'lastDailyReward','lastDaily',
               // Cross-device cosmetics — see protectFields explainer above.
               'cursor','density','scale'
@@ -46288,6 +46290,184 @@ function _radCarouselInit() {
   if (!window._radCarResize) { window._radCarResize = () => _radCarLayout(); window.addEventListener('resize', window._radCarResize); }
 }
 
+// ══════════════════════════════════════════════════════════
+// QUESTS — "The Realm's Path" (Fortized 3.3 redesign)
+// Realm-Rank progression, scroll-spy tabs (like Radiance), a weekly
+// bucket, and a structured/extensible quest catalogue. Rewards stay
+// Onyx; all new state (questsWeekly, questOnyxEarned) round-trips via
+// the raw JSONB column — no schema change.
+// ══════════════════════════════════════════════════════════
+const REALM_RANKS = [
+  { name:'Squire',   min:0,  ic:'fa-chess-pawn' },
+  { name:'Knight',   min:3,  ic:'fa-chess-knight' },
+  { name:'Warden',   min:7,  ic:'fa-shield-halved' },
+  { name:'Champion', min:12, ic:'fa-crown' },
+];
+// Rank derived from how many one-time quests the user has completed.
+function _realmRank(cu) {
+  cu = cu || (typeof CU !== 'undefined' ? CU : null) || {};
+  const done = (cu.completedQuests || []).length;
+  let idx = 0;
+  for (let i = 0; i < REALM_RANKS.length; i++) if (done >= REALM_RANKS[i].min) idx = i;
+  const cur = REALM_RANKS[idx], next = REALM_RANKS[idx + 1] || null;
+  const span = next ? (next.min - cur.min) : 1;
+  const into = next ? (done - cur.min) : 1;
+  return {
+    name: cur.name, ic: cur.ic, index: idx,
+    next: next ? next.name : null,
+    toNext: next ? Math.max(0, next.min - done) : 0,
+    progress: next ? Math.max(0, Math.min(1, into / span)) : 1,
+    done,
+  };
+}
+
+// ── Scroll-spy tabs (mirrors the Radiance topbar behaviour) ──
+const _QST_SECTIONS = ['journey', 'daily', 'weekly', 'bounties'];
+function _qstSetActiveTab(id) {
+  _QST_SECTIONS.forEach(s => { const b = document.getElementById('qtab-' + s); if (b) b.classList.toggle('active', s === id); });
+}
+function _qstGoSection(id) {
+  const scroller = document.getElementById('atelier-scroll-outer');
+  const target = document.getElementById('qst-sec-' + id);
+  if (scroller && target) {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const top = scroller.scrollTop + target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 8;
+    scroller.scrollTo({ top: Math.max(0, top), behavior: reduce ? 'auto' : 'smooth' });
+  }
+  _qstSetActiveTab(id);
+}
+function _qstBindScrollSpy() {
+  const scroller = document.getElementById('atelier-scroll-outer');
+  if (!scroller) return;
+  if (scroller._qstSpy) scroller.removeEventListener('scroll', scroller._qstSpy);
+  let raf = 0;
+  const spy = () => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      if (_currentView !== 'quests') return;
+      const mark = scroller.getBoundingClientRect().top + scroller.clientHeight * 0.32;
+      let cur = _QST_SECTIONS[0];
+      _QST_SECTIONS.forEach(s => { const e = document.getElementById('qst-sec-' + s); if (e && e.getBoundingClientRect().top <= mark) cur = s; });
+      _qstSetActiveTab(cur);
+    });
+  };
+  scroller._qstSpy = spy;
+  scroller.addEventListener('scroll', spy, { passive: true });
+}
+
+// ── Weekly bucket (resets Monday) ──
+function _weekKey(d) {
+  d = d ? new Date(d) : new Date();
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((dt - yearStart) / 86400000) + 1) / 7);
+  return dt.getUTCFullYear() + '-W' + String(weekNo).padStart(2, '0');
+}
+function _questWeekBucket() {
+  if (typeof CU === 'undefined' || !CU) return { week: _weekKey(), claimDays: [], msgDays: [], claimed: [] };
+  const wk = _weekKey();
+  let b = CU.questsWeekly;
+  if (!b || b.week !== wk) { b = { week: wk, claimDays: [], msgDays: [], claimed: [] }; CU.questsWeekly = b; }
+  b.claimDays = b.claimDays || []; b.msgDays = b.msgDays || []; b.claimed = b.claimed || [];
+  return b;
+}
+function isWeeklyQuestDone(id) { return (_questWeekBucket().claimed || []).includes(id); }
+// Record a day for a weekly counter (called from the claim / send-msg paths).
+function _questWeekTick(kind) {
+  const b = _questWeekBucket();
+  const today = new Date().toDateString();
+  const arr = kind === 'msg' ? b.msgDays : b.claimDays;
+  if (!arr.includes(today)) arr.push(today);
+}
+// Lifetime Onyx earned from quests (a hero stat).
+function _addQuestOnyx(n) { if (typeof CU !== 'undefined' && CU) CU.questOnyxEarned = (+CU.questOnyxEarned || 0) + (+n || 0); }
+
+// ── The quest catalogue (data, not markup — add new quests here) ──
+function _questCatalogue() {
+  const cu = (typeof CU !== 'undefined' && CU) ? CU : {};
+  const completed = cu.completedQuests || [];
+  const today = new Date().toDateString();
+  const dailyLog = cu.questsDailyLog || {};
+  const friends = (cu.friends || []).length;
+  const bastions = (cu.bastions || []).length;
+  const wb = _questWeekBucket();
+  return [
+    // ── DAILY (reset midnight) ──
+    { id:'daily_claim', tier:'daily', ic:'fa-gift',        title:'Daily Claim',     desc:'Claim your free Onyx. Resets at midnight.',   reward:20, unit:'Onyx',        done:isDailyQuestDone('daily_claim'), action:'claimDailyQuest()',      cta:'Claim' },
+    { id:'send_msg',    tier:'daily', ic:'fa-comment-dots', title:'Send a Message',  desc:'Chat with someone today. Stay connected.',    reward:10, unit:'Onyx',        done:isDailyQuestDone('send_msg'),    action:"showView('dms')",         cta:'Open chats' },
+    { id:'invite',      tier:'daily', ic:'fa-user-plus',   title:'Invite a Friend', desc:'+9 Onyx for every friend who joins.',         reward:9,  unit:'Onyx/friend', done:dailyLog.invite === today,       action:'_showInviteFriendsPanel()', cta:'Invite' },
+    // ── WEEKLY (reset Monday) ──
+    { id:'w_loyal',  tier:'weekly', ic:'fa-calendar-check', title:'Loyal Return', desc:'Claim your daily reward on 5 days this week.',   reward:60, unit:'Onyx', goal:{ cur:Math.min(wb.claimDays.length, 5), target:5 }, done:isWeeklyQuestDone('w_loyal'),  action:"claimWeeklyQuest('w_loyal',60)",  cta:'Claim' },
+    { id:'w_social', tier:'weekly', ic:'fa-comments',      title:'Realm Voice',  desc:'Send messages on 3 different days this week.',  reward:45, unit:'Onyx', goal:{ cur:Math.min(wb.msgDays.length, 3),  target:3 }, done:isWeeklyQuestDone('w_social'), action:"claimWeeklyQuest('w_social',45)", cta:'Claim' },
+    // ── JOURNEY (one-time milestones — the campaign path) ──
+    { id:'set_pfp',        tier:'journey', ic:'fa-image',        title:'Show Your Face',   desc:'Upload a profile picture to stand out.',   reward:20, unit:'Onyx', done:completed.includes('set_pfp') || !!cu.pfp,              action:"showView('profile')",             cta:'Set avatar' },
+    { id:'set_bio',        tier:'journey', ic:'fa-feather',      title:'Tell Your Tale',   desc:'Write a custom bio for your profile.',     reward:15, unit:'Onyx', done:completed.includes('set_bio') || !!cu.bio,              action:"showView('profile')",             cta:'Write bio' },
+    { id:'add_friend',     tier:'journey', ic:'fa-user-group',   title:'First Ally',       desc:'Send your first friend request.',          reward:15, unit:'Onyx', done:completed.includes('add_friend') || friends > 0,        action:"openModal('modal-add-friend')",    cta:'Add friend' },
+    { id:'join_bastion',   tier:'journey', ic:'fa-dungeon',      title:'Enter a Bastion',  desc:'Find and join any public Bastion.',        reward:25, unit:'Onyx', done:completed.includes('join_bastion') || bastions > 0,     action:"showView('discover')",             cta:'Discover' },
+    { id:'send_gif',       tier:'journey', ic:'fa-film',         title:'Say It With a GIF',desc:'Send your first GIF in a conversation.',   reward:10, unit:'Onyx', done:completed.includes('send_gif'),                         action:"showView('dms')",                  cta:'Open chats' },
+    { id:'five_friends',   tier:'journey', ic:'fa-people-group', title:'Rally the Banners',desc:'Grow your circle to 5 friends.',           reward:40, unit:'Onyx', goal:{ cur:Math.min(friends, 5), target:5 }, done:completed.includes('five_friends') || friends >= 5, action:"openModal('modal-add-friend')", cta:'Add friends' },
+    { id:'create_bastion', tier:'journey', ic:'fa-chess-rook',   title:'Raise a Fortress', desc:'Create your own Bastion community.',        reward:50, unit:'Onyx', done:completed.includes('create_bastion'),                   action:"openModal('modal-create-bastion')", cta:'Create' },
+  ];
+}
+
+// Claim a weekly quest once its goal is met.
+async function claimWeeklyQuest(id, reward) {
+  const b = _questWeekBucket();
+  if (b.claimed.includes(id)) { toast('Already claimed this week!', 'info'); return; }
+  const q = _questCatalogue().find(x => x.id === id);
+  if (!q || !q.goal || q.goal.cur < q.goal.target) { toast('Finish the goal first!', 'info'); return; }
+  b.claimed.push(id);
+  CU.onyx = (CU.onyx || 0) + reward;
+  _addQuestOnyx(reward);
+  updateOnyxDisplay();
+  await saveUser(true);
+  if (typeof animateOnyxGain === 'function') animateOnyxGain(reward);
+  toast(`Weekly quest complete — +${reward} Onyx!`, 'success');
+  try { renderAtelierTab('quests'); } catch {}
+}
+
+// Countdown formatting + the shared reset timers.
+function _qstFmtCountdown(ms) {
+  if (ms <= 0) return 'now';
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m ${s % 60}s`;
+}
+function _msUntilMidnight() { const n = new Date(); const t = new Date(n); t.setHours(24, 0, 0, 0); return t - n; }
+function _msUntilMonday() { const n = new Date(); const t = new Date(n); const add = ((8 - (n.getDay() || 7)) % 7) || 7; t.setDate(n.getDate() + add); t.setHours(0, 0, 0, 0); return t - n; }
+function _qstStartTimers() {
+  if (window._qstTimer) { clearInterval(window._qstTimer); window._qstTimer = null; }
+  const tick = () => {
+    const d = document.getElementById('qst-daily-timer');
+    const w = document.getElementById('qst-weekly-timer');
+    if (!d && !w) { clearInterval(window._qstTimer); window._qstTimer = null; return; }
+    if (d) d.textContent = 'Resets in ' + _qstFmtCountdown(_msUntilMidnight());
+    if (w) w.textContent = 'Resets in ' + _qstFmtCountdown(_msUntilMonday());
+  };
+  tick();
+  window._qstTimer = setInterval(tick, 1000);
+}
+
+// Fills the topbar right-side actions (streak flame + Onyx balance).
+function _qstFillSubnavActions() {
+  const host = document.getElementById('qst-subnav-actions');
+  if (!host) return;
+  const streak = (typeof CU !== 'undefined' && CU) ? (+CU.dailyStreak || 0) : 0;
+  const bal = (typeof CU !== 'undefined' && CU) ? (+CU.onyx || 0) : 0;
+  host.innerHTML = `
+    <div class="qst-nav-streak${streak > 0 ? ' on' : ''}" title="${streak} day streak">
+      ${_streakFlameSvg(16)}<span>${streak}</span>
+    </div>
+    <div class="qst-nav-onyx" title="Onyx balance">
+      <span class="rad-onyx-ic"></span><span>${bal.toLocaleString()}</span>
+    </div>`;
+}
+
 function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
   if (type === 'appearance') {
     const owned = ownedApps.includes(item.id);
@@ -46529,156 +46709,139 @@ function renderAtelierTab(tab) {
   else if (tab === 'quests') {
     // Award any pending one-time quest rewards first
     _checkAndAwardPendingQuests().catch(()=>{});
-    const completed = CU?.completedQuests || [];
-    const today = new Date().toDateString();
-    const dailyLog = CU?.questsDailyLog || {};
 
-    const dailyClaimDone = isDailyQuestDone('daily_claim');
-    const inviteDone = dailyLog.invite === today;
+    const ONYX = '<img class="qst-onyx" src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="Onyx">';
+    const ACC = {
+      daily:   { c:'#60a5fa', rgb:'96,165,250' },
+      weekly:  { c:'#fb923c', rgb:'251,146,60' },
+      journey: { c:'#a78bfa', rgb:'167,139,250' },
+    };
+    const cat     = _questCatalogue();
+    const daily   = cat.filter(q => q.tier === 'daily');
+    const weekly  = cat.filter(q => q.tier === 'weekly');
+    const journey = cat.filter(q => q.tier === 'journey');
+    const rank    = _realmRank(CU);
+    const streak  = +CU?.dailyStreak || 0;
+    const protectedStreak = (typeof _isStreakProtected === 'function') && _isStreakProtected();
+    const completedCount = (CU?.completedQuests || []).length;
+    const estOnyx = journey.filter(q => q.done).reduce((s,q) => s + q.reward, 0);
+    const onyxEarned = Math.max(+CU?.questOnyxEarned || 0, estOnyx);
+    const currentJourneyId = (journey.find(q => !q.done) || {}).id;
+    const journeyDone = journey.filter(q => q.done).length;
 
-    // Streak tracking
-    const streak = CU?.dailyStreak || 0;
-    const streakBonus = streak >= 7 ? 25 : streak >= 3 ? 10 : 0;
-
-    const QUESTS_DEF = [
-      { id:'daily_claim', icon:'🎁', title:'Daily Claim', category:'Daily', daily:true, desc:`Claim your free 20 Onyx. Resets at midnight.`, reward:20, unit:'Onyx', done: dailyClaimDone, action:`claimDailyQuest()` },
-      { id:'send_msg', icon:'💬', title:'Send a Message', category:'Daily', daily:true, desc:'Chat with someone today. Stay connected!', reward:10, unit:'Onyx', done: isDailyQuestDone('send_msg'), action:`showView('dms')` },
-      { id:'invite', icon:'🔗', title:'Invite a Friend', category:'Daily', daily:true, desc:'+9 Onyx per friend who joins. Copy your invite link!', reward:9, unit:'Onyx/friend', done: inviteDone, action:`_showInviteFriendsPanel()` },
-      { id:'join_bastion', icon:'🏰', title:'Join a Bastion', category:'Beginner', daily:false, desc:'Find and join any public Bastion community.', reward:25, unit:'Onyx', done: completed.includes('join_bastion') || (CU?.bastions||[]).length > 0, action:`showView('discover')` },
-      { id:'add_friend', icon:'👥', title:'Add Your First Friend', category:'Beginner', daily:false, desc:'Send a friend request to someone.', reward:15, unit:'Onyx', done: completed.includes('add_friend') || (CU?.friends||[]).length > 0, action:`openModal('modal-add-friend')` },
-      { id:'set_pfp', icon:'🖼️', title:'Set Your Avatar', category:'Beginner', daily:false, desc:'Upload a profile picture to stand out.', reward:20, unit:'Onyx', done: completed.includes('set_pfp') || !!CU?.pfp, action:`showView('profile')` },
-      { id:'set_bio', icon:'📝', title:'Write Your Bio', category:'Beginner', daily:false, desc:'Tell the world about yourself. Set a custom bio.', reward:15, unit:'Onyx', done: completed.includes('set_bio') || !!(CU?.bio), action:`showView('profile')` },
-      { id:'five_friends', icon:'🤝', title:'Social Butterfly', category:'Explorer', daily:false, desc:'Add 5 friends. Build your network!', reward:40, unit:'Onyx', done: completed.includes('five_friends') || (CU?.friends||[]).length >= 5, action:`openModal('modal-add-friend')` },
-      { id:'send_gif', icon:'🎞️', title:'GIF Master', category:'Explorer', daily:false, desc:'Send your first GIF in a conversation.', reward:10, unit:'Onyx', done: completed.includes('send_gif'), action:`showView('dms')` },
-      { id:'create_bastion', icon:'⚔️', title:'Fortress Builder', category:'Explorer', daily:false, desc:'Create your own Bastion community.', reward:50, unit:'Onyx', done: completed.includes('create_bastion'), action:`openModal('modal-create-bastion')` },
-    ];
-
-    const dailyQ = QUESTS_DEF.filter(q => q.daily);
-    const beginnerQ = QUESTS_DEF.filter(q => !q.daily);
-    const activeQ = QUESTS_DEF.filter(q => !q.done);
-    const doneQ = QUESTS_DEF.filter(q => q.done);
-    const qTab = el._questTab || 'available';
-    const dailyDone = dailyQ.filter(q => q.done).length;
-    const dailyTotal = dailyQ.length;
-    const totalOnyx = doneQ.reduce((s,q) => s + q.reward, 0);
-
-    const questCardHTML = (q) => {
-      const catColor = q.daily ? '#60a5fa' : q.category==='Explorer' ? '#fb923c' : '#a78bfa';
-      const catRgb = q.daily ? '96,165,250' : q.category==='Explorer' ? '251,146,60' : '167,139,250';
-      const bgColor = q.done ? 'rgba(62,207,110,.08)' : 'rgba(255,255,255,.03)';
-      const borderColor = q.done ? 'rgba(62,207,110,.15)' : 'rgba(255,255,255,.08)';
-      const iconBorderRadius = q.done ? '50%' : '14px';
-      const iconBorder = q.done ? '3px solid var(--green)' : `2.5px solid rgba(${catRgb},.4)`;
-
-      return `<div style="background:${bgColor};border:1.5px solid ${borderColor};border-radius:16px;overflow:hidden;transition:all .24s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;position:relative;" ${!q.done?`onmouseover="this.style.borderColor='rgba(${catRgb},.25)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='${borderColor}';this.style.transform='';this.style.boxShadow='none'"`:''}>
-
-        <!-- Top Section: Icon and Title -->
-        <div style="padding:20px;display:flex;align-items:flex-start;gap:16px;">
-          <!-- Icon Container - Square for incomplete, Circular for completed -->
-          <div style="width:${q.done?'80px':'72px'};height:${q.done?'80px':'72px'};border-radius:${iconBorderRadius};background:rgba(255,255,255,.05);border:${iconBorder};display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;transition:all .3s cubic-bezier(.22,1,.36,1);box-shadow:${q.done?'0 0 20px rgba(62,207,110,.3),inset 0 0 20px rgba(62,207,110,.1)':'0 0 16px rgba('+catRgb+',.15),inset 0 0 12px rgba('+catRgb+',.08)'};">
-            <img src="/Onyx image.png" style="width:${q.done?'88%':'90%'};height:${q.done?'88%':'90%'};object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));border-radius:${q.done?'50%':'10px'};padding:${q.done?'0':'2px'};">
-          </div>
-
-          <div style="flex:1;min-width:0;margin-top:${q.done?'4px':'6px'};">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
-              <span style="font-family:var(--font-display);font-size:15px;font-weight:800;color:${q.done?'rgba(255,255,255,.6)':'#fff'};letter-spacing:-.01em;">${q.title.toUpperCase()}</span>
-              <span style="font-size:8px;font-weight:800;padding:3px 10px;border-radius:6px;background:${catColor}15;color:${catColor};border:1px solid ${catColor}25;letter-spacing:.05em;text-transform:uppercase;">${q.daily?'Daily':q.category}</span>
-              ${q.done?'<span style="font-size:8px;font-weight:800;padding:3px 10px;border-radius:6px;background:rgba(62,207,110,.15);color:var(--green);border:1px solid rgba(62,207,110,.25);letter-spacing:.05em;text-transform:uppercase;">✓ Done</span>':''}
-            </div>
-            <div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.5;">${q.desc}</div>
-          </div>
+    // Reusable daily/weekly quest card.
+    const qCard = (q) => {
+      const a = ACC[q.tier] || ACC.daily;
+      const met = !q.goal || q.goal.cur >= q.goal.target;
+      const pct = q.goal ? Math.round(q.goal.cur / q.goal.target * 100) : 0;
+      return `<div class="qst-card${q.done ? ' is-done' : ''}" style="--qc:${a.c};--qc-rgb:${a.rgb};">
+        <div class="qst-card-ic"><i class="fa-solid ${q.done ? 'fa-circle-check' : q.ic}"></i></div>
+        <div class="qst-card-main">
+          <div class="qst-card-title">${escapeHTML(q.title)}</div>
+          <div class="qst-card-desc">${escapeHTML(q.desc)}</div>
+          ${q.goal ? `<div class="qst-prog"><div class="qst-prog-bar"><span style="width:${pct}%;"></span></div><span class="qst-prog-txt">${q.goal.cur}/${q.goal.target}</span></div>` : ''}
         </div>
-
-        <!-- Bottom Section: Reward and Action -->
-        <div style="padding:0 20px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid ${borderColor};margin:0 0 0 0;padding-top:16px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(255,249,62,.2));">
-            <span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--accent);">+${q.reward}</span>
-            <span style="font-size:11px;color:rgba(255,255,255,.35);font-weight:600;">${q.unit}</span>
-          </div>
-
-          ${!q.done
-            ? `<button onclick="${q.action}" style="padding:10px 22px;border-radius:10px;background:linear-gradient(135deg,${catColor},${catColor}dd);color:#fff;border:none;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);letter-spacing:.01em;flex-shrink:0;box-shadow:0 4px 16px rgba(${catRgb},.25);" onmouseover="this.style.filter='brightness(1.12)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 24px rgba(${catRgb},.35)'" onmouseout="this.style.filter='brightness(1)';this.style.transform='';this.style.boxShadow='0 4px 16px rgba(${catRgb},.25)'">Accept Quest</button>`
-            : `<span style="font-size:11px;color:var(--green);font-weight:700;">Completed</span>`}
+        <div class="qst-card-side">
+          <div class="qst-reward">${ONYX}<b>+${q.reward}</b><span>${escapeHTML(q.unit || 'Onyx')}</span></div>
+          ${q.done
+            ? '<span class="qst-done-lbl"><i class="fa-solid fa-circle-check"></i> Done</span>'
+            : `<button class="qst-cta${met ? '' : ' is-wait'}" ${met ? `onclick="${q.action}"` : 'disabled'}>${met ? escapeHTML(q.cta) : 'In progress'}</button>`}
         </div>
       </div>`;
     };
 
-    const allDailyDone = dailyDone === dailyTotal;
-
-    el.innerHTML = `<div class="atelier-content-inner">
-
-      <!-- Top row: tabs + streak chip -->
-      <div class="quests-top-row">
-        <div class="quests-tab-row">
-          <button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available <span class="quest-tab-count">${activeQ.length}</span></button>
-          <button class="quest-tab-chip ${qTab==='completed'?'active':''}" onclick="setQuestTab('completed')" id="qtab-completed">Completed <span class="quest-tab-count">${doneQ.length}</span></button>
-          ${dailyTotal ? `<div class="quest-daily-pill" title="${dailyDone}/${dailyTotal} daily quests done">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>${dailyDone}/${dailyTotal} today</span>
-          </div>` : ''}
-        </div>
-        <div class="quest-streak-chip${streak>0?' on':''}" oncontextmenu="onStreakCtxMenu(event);return false;" title="Right-click for streak options">
-          <span class="quest-streak-flame">${_streakFlameSvg(18)}${_isStreakProtected() ? '<span class="quest-streak-shield" title="Protected"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></span>' : ''}</span>
-          <span class="quest-streak-num">${streak}</span>
-          <span class="quest-streak-lbl">${streak === 1 ? 'day' : 'days'}</span>
-        </div>
-      </div>
-
-      ${qTab === 'available' ? `
-          <!-- Daily Quests Section -->
-          ${activeQ.filter(q=>q.daily).length ? `
-            <div class="ch-section-head" style="--ch-accent:#60a5fa;">
-              <div class="ch-section-head-text">
-                <div class="ch-section-title">Daily Quests</div>
-                <div class="ch-section-sub">Reset every midnight. Claim them before they're gone.</div>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px;">
-              ${activeQ.filter(q=>q.daily).map(q=>questCardHTML(q)).join('')}
-            </div>` : ''}
-
-          <!-- Beginner Quests -->
-          ${activeQ.filter(q=>!q.daily && q.category==='Beginner').length ? `
-            <div class="ch-section-head" style="--ch-accent:#a78bfa;">
-              <div class="ch-section-head-text">
-                <div class="ch-section-title">Beginner Quests</div>
-                <div class="ch-section-sub">Find your footing. One-time rewards for getting started in the realm.</div>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px;">
-              ${activeQ.filter(q=>!q.daily && q.category==='Beginner').map(q=>questCardHTML(q)).join('')}
-            </div>` : ''}
-
-          <!-- Explorer Quests -->
-          ${activeQ.filter(q=>!q.daily && q.category==='Explorer').length ? `
-            <div class="ch-section-head" style="--ch-accent:#fb923c;">
-              <div class="ch-section-head-text">
-                <div class="ch-section-title">Explorer Quests</div>
-                <div class="ch-section-sub">Push further. Bigger goals, bigger rewards.</div>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px;">
-              ${activeQ.filter(q=>!q.daily && q.category==='Explorer').map(q=>questCardHTML(q)).join('')}
-            </div>` : ''}
-
-          ${!activeQ.length ? `<div style="text-align:center;padding:48px 24px;background:rgba(255,255,255,.015);border-radius:18px;border:1px solid rgba(255,255,255,.04);">
-            <div style="font-size:40px;margin-bottom:12px;">🎉</div>
-            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:rgba(255,255,255,.5);margin-bottom:6px;">All Done!</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.25);">Come back tomorrow for new daily quests.</div>
-          </div>` : ''}
-        ` : `
-          <!-- Completed quests list -->
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            ${doneQ.map(q=>questCardHTML(q)).join('') || `<div style="text-align:center;padding:48px 24px;background:rgba(255,255,255,.015);border-radius:18px;border:1px solid rgba(255,255,255,.04);">
-              <div style="font-size:40px;margin-bottom:12px;">📋</div>
-              <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.3);">No completed quests yet.</div>
-            </div>`}
+    // Journey milestone node (vertical campaign path).
+    const jNode = (q) => {
+      const isCurrent = q.id === currentJourneyId;
+      const met = !q.goal || q.goal.cur >= q.goal.target;
+      const pct = q.goal ? Math.round(q.goal.cur / q.goal.target * 100) : 0;
+      const state = q.done ? 'is-done' : isCurrent ? 'is-current' : 'is-upcoming';
+      return `<div class="qst-node ${state}">
+        <div class="qst-node-rail"><span class="qst-node-dot"><i class="fa-solid ${q.done ? 'fa-check' : q.ic}"></i></span></div>
+        <div class="qst-node-card">
+          <div class="qst-node-top">
+            <span class="qst-node-title">${escapeHTML(q.title)}</span>
+            ${q.done ? '<span class="qst-node-tag is-done">Completed</span>' : isCurrent ? '<span class="qst-node-tag">Next up</span>' : ''}
           </div>
-        `}
+          <div class="qst-node-desc">${escapeHTML(q.desc)}</div>
+          ${(q.goal && !q.done) ? `<div class="qst-prog"><div class="qst-prog-bar"><span style="width:${pct}%;"></span></div><span class="qst-prog-txt">${q.goal.cur}/${q.goal.target}</span></div>` : ''}
+          <div class="qst-node-foot">
+            <div class="qst-reward">${ONYX}<b>+${q.reward}</b><span>Onyx</span></div>
+            ${q.done
+              ? '<span class="qst-done-lbl"><i class="fa-solid fa-circle-check"></i> Claimed</span>'
+              : `<button class="qst-cta"${met ? ` onclick="${q.action}"` : ' disabled'}>${met ? escapeHTML(q.cta) : 'In progress'}</button>`}
+          </div>
+        </div>
+      </div>`;
+    };
+
+    const secHead = (accent, title, sub, timerId) => `
+      <div class="qst-sec-head" style="--qc:${accent};">
+        <div class="qst-sec-headtext">
+          <div class="qst-sec-title">${title}</div>
+          <div class="qst-sec-sub">${sub}</div>
+        </div>
+        ${timerId ? `<div class="qst-sec-timer" id="${timerId}"></div>` : ''}
       </div>`;
 
-    el._questTab = qTab;
+    el.innerHTML = `<div class="atelier-content-inner qst-page">
+
+      <!-- HERO -->
+      <section class="qst-hero" id="qst-sec-top">
+        <div class="qst-hero-rank">
+          <div class="qst-rank-medal"><i class="fa-solid ${rank.ic}"></i></div>
+          <div class="qst-rank-info">
+            <div class="qst-rank-eyebrow">Realm Rank</div>
+            <div class="qst-rank-title">${rank.name}</div>
+            <div class="qst-rank-bar"><span style="width:${Math.round(rank.progress * 100)}%;"></span></div>
+            <div class="qst-rank-next">${rank.next ? `${rank.toNext} quest${rank.toNext === 1 ? '' : 's'} to <b>${rank.next}</b>` : 'Highest rank reached — a true Champion.'}</div>
+          </div>
+        </div>
+        <div class="qst-hero-stats">
+          <div class="qst-stat"><span class="qst-stat-v">${completedCount}</span><span class="qst-stat-k">Quests completed</span></div>
+          <div class="qst-stat"><span class="qst-stat-v"><span class="rad-onyx-ic"></span> ${onyxEarned.toLocaleString()}</span><span class="qst-stat-k">Onyx from quests</span></div>
+          <div class="qst-stat qst-stat--streak${streak > 0 ? ' on' : ''}" oncontextmenu="onStreakCtxMenu(event);return false;" title="Right-click for streak options">
+            <span class="qst-stat-v">${_streakFlameSvg(16)} ${streak}${protectedStreak ? ' <i class="fa-solid fa-shield-halved qst-streak-shield"></i>' : ''}</span>
+            <span class="qst-stat-k">Day streak</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- THE JOURNEY -->
+      <section class="qst-sec" id="qst-sec-journey">
+        ${secHead(ACC.journey.c, 'The Journey', `Your path through the realm — ${journeyDone}/${journey.length} milestones claimed.`, '')}
+        <div class="qst-journey">${journey.map(jNode).join('')}</div>
+      </section>
+
+      <!-- DAILY -->
+      <section class="qst-sec" id="qst-sec-daily">
+        ${secHead(ACC.daily.c, 'Daily Quests', 'Small wins, every day. Reset at midnight.', 'qst-daily-timer')}
+        <div class="qst-grid">${daily.map(qCard).join('')}</div>
+      </section>
+
+      <!-- WEEKLY -->
+      <section class="qst-sec" id="qst-sec-weekly">
+        ${secHead(ACC.weekly.c, 'Weekly Quests', 'Bigger goals, bigger rewards. Reset every Monday.', 'qst-weekly-timer')}
+        <div class="qst-grid">${weekly.map(qCard).join('')}</div>
+      </section>
+
+      <!-- BOUNTIES -->
+      <section class="qst-sec" id="qst-sec-bounties">
+        ${secHead('#f6c453', 'Bounties', 'A new way to earn — arriving in a future update.', '')}
+        <div class="qst-bounty">
+          <div class="qst-bounty-ic"><i class="fa-solid fa-sack-dollar"></i></div>
+          <div class="qst-bounty-main">
+            <div class="qst-bounty-title">Bounties <span class="qst-soon-tag">Coming soon</span></div>
+            <div class="qst-bounty-desc">High-stakes, rotating challenges with standout rewards — built the Fortized way, not borrowed from anyone. We'll share exactly how they work soon.</div>
+            <a class="qst-bounty-btn" href="/newsroom/#bounties" target="_blank" rel="noopener">Learn more</a>
+          </div>
+        </div>
+      </section>
+    </div>`;
+
+    try { _qstFillSubnavActions(); } catch {}
+    try { _qstSetActiveTab('journey'); } catch {}
+    requestAnimationFrame(() => { try { _qstBindScrollSpy(); } catch {} try { _qstStartTimers(); } catch {} });
   }
 
   // ── SHOP ─────────────────────────────────────────────────
@@ -49307,10 +49470,9 @@ const BADGE_DEFS = {
   verified:  { img:null,                                cls:'badge-verified',  order:2, tooltip:'Verified - Identity confirmed by Fortized staff.' },
   creator:   { img:'/badges/creator.png',               cls:'badge-creator',   order:3, tooltip:'Creator' },
   radiance:  { img:'/badges/radiance.png',              cls:'badge-radiance',  order:4, tooltip:'Radiance - Active Radiance subscriber.' },
-  onyx:      { img:'/badges/onyx.png',                  cls:'badge-onyx',      order:5, tooltip:'Onyx' },
   flame:     { img:'/badges/dedicated%20flame.png',     cls:'badge-flame',     order:6, tooltip:'Dedicated Flame' },
   beta:      { img:'/badges/beta%20user.png',           cls:'badge-beta',      order:7, tooltip:'Beta User - Early supporter of Fortized (account created before 25 August 2026).' },
-  quest:     { img:'/badges/quest.png',                 cls:'badge-quest',     order:8, tooltip:'Completed a Quest' },
+  quest:     { img:'/badges/quest.png',                 cls:'badge-quest',     order:8, tooltip:'Quest Progression' },
 };
 
 // Onyx badge tier ladder. Each tier is unlocked by reaching its cumulative
@@ -49735,17 +49897,6 @@ function getUserBadges(user) {
   const hasRadiance = _hasRadiance(user);
   if (hasRadiance) badges.push({ id:'radiance', ...BADGE_DEFS.radiance });
 
-  // 5. Onyx — purchased, level = current tier name
-  if (user.onyxBadge) {
-    const spent = +user.onyxBadgeSpent || 0;
-    const tier = _getOnyxTier(spent);
-    badges.push({
-      id:'onyx', ...BADGE_DEFS.onyx,
-      level: tier.name,
-      tooltip: `Onyx · ${tier.name} · ${spent.toLocaleString()} Onyx invested`
-    });
-  }
-
   // 6. Dedicated Flame — awarded once max-ever streak hits 5; level = max-ever
   const streakBest = Math.max(+user.streakBest || 0, +user.dailyStreak || 0);
   if (streakBest >= 5) {
@@ -49767,9 +49918,10 @@ function getUserBadges(user) {
     badges.push({ id:'beta', ...BADGE_DEFS.beta });
   }
 
-  // 8. Quest — completed at least one quest
+  // 8. Quest Progression — completed at least one quest; level = Realm Rank.
   if (user.questsBadge || (user.completedQuests && user.completedQuests.length > 0)) {
-    badges.push({ id:'quest', ...BADGE_DEFS.quest });
+    const rank = (typeof _realmRank === 'function') ? _realmRank(user) : { name: 'Squire' };
+    badges.push({ id:'quest', ...BADGE_DEFS.quest, level: rank.name, tooltip: 'Quest Progression' });
   }
 
   badges.sort((a,b) => (a.order||99) - (b.order||99));
@@ -49790,7 +49942,10 @@ function renderBadgesHTML(user) {
       : (b.img ? `<img src="${b.img}" alt="${b.id}" onerror="this.parentNode.style.display='none'">` : '');
     const name = escapeHTML((b.tooltip || '').split(' · ')[0] || b.id);
     const sub  = b.level ? `<span class="badge-tooltip-sub">${escapeHTML(b.level)}</span>` : '';
-    return `<span class="ftz-badge ${b.cls}${b.level?' has-level':''}">${icon}<span class="badge-tooltip"><span class="badge-tooltip-name">${name}</span>${sub}</span></span>`;
+    const tipImg = b.img
+      ? `<img class="badge-tooltip-img" src="${b.img}" alt="" onerror="this.style.display='none'">`
+      : (b.id === 'verified' ? `<span class="badge-tooltip-img" style="display:flex;align-items:center;justify-content:center;">${_verifiedBadge(28)}</span>` : '');
+    return `<span class="ftz-badge ${b.cls}${b.level?' has-level':''}">${icon}<span class="badge-tooltip">${tipImg}<span class="badge-tooltip-name">${name}</span>${sub}</span></span>`;
   }).join('');
   return '<span class="ftz-badge-row">' + badgesHTML + '</span>';
 }
@@ -50409,6 +50564,7 @@ async function _checkAndAwardPendingQuests() {
     }
   });
   if (totalGained > 0) {
+    try { _addQuestOnyx(totalGained); } catch {}
     updateOnyxDisplay();
     await saveUser(true);
     if (typeof animateOnyxGain === 'function') animateOnyxGain(totalGained);
@@ -52328,6 +52484,8 @@ async function claimDailyQuest() {
   CU.lastDaily = today;
   if (!CU.questsDailyLog) CU.questsDailyLog = {};
   CU.questsDailyLog.daily_claim = today;
+  try { _questWeekTick('claim'); } catch {}
+  try { _addQuestOnyx(totalReward); } catch {}
   updateOnyxDisplay();
   await saveUser(true);
   if (typeof animateOnyxGain === 'function') animateOnyxGain(totalReward);
@@ -52358,6 +52516,8 @@ async function _trackSendMsgQuest() {
   if (CU.questsDailyLog.send_msg === today) return; // already done today
   CU.questsDailyLog.send_msg = today;
   CU.onyx = (CU.onyx || 0) + 10;
+  try { _questWeekTick('msg'); } catch {}
+  try { _addQuestOnyx(10); } catch {}
   updateOnyxDisplay();
   await saveUser(true);
   if (typeof animateOnyxGain === 'function') animateOnyxGain(10);
@@ -56441,25 +56601,16 @@ function _onyxBadgeCooldownLeft() {
   return left > 0 ? left : 0;
 }
 
+// The Onyx Badge has been RETIRED (Fortized 3.3) — the quest badge became the
+// progression badge instead. These stay as guarded no-ops so any lingering
+// reference can't grant a badge that no longer renders.
 async function buyOnyxBadge() {
-  const cost = ONYX_BADGE_BASE_COST;
-  const bal = CU?.onyx||0;
-  if (CU?.onyxBadge) { toast('You already own the Onyx Badge — invest more to climb tiers.', 'info'); return; }
-  if (bal < cost) { toast('Not enough Onyx! Need '+cost+' Onyx','error'); return; }
-  showCustomConfirm('Buy the Onyx Badge for '+cost+' Onyx?', async () => {
-    CU.onyx = bal - cost;
-    CU.onyxBadge = true;
-    CU.onyxBadgeSpent = cost;
-    CU.onyxBadgeLastUpgrade = Date.now();
-    await saveUser(true); updateOnyxDisplay();
-    distributeOnyxRevenue(cost);
-    const tier = _getOnyxTier(cost);
-    toast('Onyx Badge unlocked! You are now an Onyx '+tier.name+'.','success');
-    renderAtelierTab('shop');
-  });
+  toast('The Onyx Badge has been retired.', 'info');
 }
 
 async function upgradeOnyxBadge(amount) {
+  toast('The Onyx Badge has been retired.', 'info');
+  if (true) return;
   if (!CU?.onyxBadge) { toast('Buy the Onyx Badge first.', 'error'); return; }
   const cooldown = _onyxBadgeCooldownLeft();
   if (cooldown > 0) {
@@ -61140,7 +61291,7 @@ const _FORTSHOP_BUNDLES = {
     id: 'onyx_signature',
     name: 'Onyx Signature',
     kicker: 'Pure darkness',
-    desc: 'The darkest appearance Fortized offers, paired with the signature Onyx Badge evolution line.',
+    desc: 'The darkest appearance Fortized offers — pure, immersive darkness for your whole app.',
     items: [
       { id: 'onyx_pure', kind: 'appearance' },
     ],

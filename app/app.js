@@ -12576,7 +12576,7 @@ async function _drainOfflineQueue() {
       // Flip the optimistic row (if still visible) out of sending state.
       try {
         const rowSel = '[data-msgid="'+CSS.escape(String(entry.id))+'"]';
-        document.querySelectorAll(rowSel).forEach(r => { r.classList.remove('msg-row--sending','msg-row--sending-slow','msg-row--failed'); });
+        document.querySelectorAll(rowSel).forEach(r => _flashSent(r));
       } catch (_) {}
     } catch (e) {
       console.warn('[Offline queue] drain failed for', entry.id, e?.message);
@@ -12646,6 +12646,20 @@ function _registerPendingSend(domain, from, text, row, msgId) {
   });
 }
 
+// Flip an optimistic row out of the sending lifecycle. If the message had
+// actually surfaced the "Sending" status (i.e. the send outlasted a beat and
+// went slow), briefly pop a green "sent" check in its place as a
+// Fortized-original confirmation; quick sends resolve silently so posting
+// still feels instant.
+function _flashSent(row) {
+  if (!row || !row.isConnected) return;
+  const wasSlow = row.classList.contains('msg-row--sending-slow');
+  row.classList.remove('msg-row--sending', 'msg-row--sending-slow', 'msg-row--failed');
+  if (!wasSlow) return;
+  row.classList.add('msg-row--sent');
+  setTimeout(() => { try { row.classList.remove('msg-row--sent'); } catch(_) {} }, 1400);
+}
+
 function _confirmOptimisticSend(domain, msg) {
   // If the socket echo is delayed or the current tab is the only room member,
   // still clear the Discord-style pending translucency once persistence has
@@ -12657,9 +12671,7 @@ function _confirmOptimisticSend(domain, msg) {
   try {
     const id = msg?.id != null ? String(msg.id) : '';
     if (!id) return;
-    document.querySelectorAll('[data-msgid="'+CSS.escape(id)+'"]').forEach(row => {
-      row.classList.remove('msg-row--sending', 'msg-row--sending-slow', 'msg-row--failed');
-    });
+    document.querySelectorAll('[data-msgid="'+CSS.escape(id)+'"]').forEach(row => _flashSent(row));
   } catch (_) {}
 }
 function _reconcilePendingSend(domain, incoming) {
@@ -12680,8 +12692,9 @@ function _reconcilePendingSend(domain, incoming) {
     if (!idMatch && !textMatch) continue;
     if (!e.row || !e.row.isConnected) { window._pendingSends.splice(i, 1); return false; }
     if (incomingId) e.row.dataset.msgid = incomingId;
-    // Reconciled — flip out of the sending state so the visual matches.
-    e.row.classList.remove('msg-row--sending', 'msg-row--sending-slow');
+    // Reconciled — flip out of the sending state so the visual matches
+    // (and briefly confirm with the "sent" check if it had gone slow).
+    _flashSent(e.row);
     try { clearTimeout(e.slowTimer); } catch(_) {}
     window._pendingSends.splice(i, 1);
     return true;

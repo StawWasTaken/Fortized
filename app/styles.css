@@ -11595,31 +11595,66 @@ select:focus-visible {
   color:#e88a8a;font-weight:600;
 }
 .msg-row--failed .msg-reactions{display:none;}
-/* ── Optimistic-send visual state ─────────────────────────
-   Freshly-sent rows are marked .msg-row--sending until the server
-   echo arrives (or a timeout flips them into the failed state).
-   Discord fades the text slightly and shows a tiny clock only if
-   the send hangs beyond a beat; anything faster than that is silent
-   so happy-path sends still feel instant. */
+/* ── Optimistic-send visual state (Fortized-original) ─────
+   Freshly-sent rows are marked .msg-row--sending until persistence
+   acknowledges the canonical message (or a timeout flips them into
+   the failed state). The sender's own text softens immediately so the
+   in-flight state reads at a glance. Happy-path sends resolve in well
+   under a beat and stay silent (no chrome) so posting feels instant —
+   only once a send outlasts ~900ms do we surface the "Sending" status.
+   That status is a right-anchored spinning ring + label pinned to the
+   row's right edge, so it reads as a status column and works identically
+   for first AND continuation rows (the old build decorated .msg-timestamp,
+   which continuation rows don't have — so bursts showed no indicator). */
 .msg-row--sending .msg-text,
 .msg-row--sending .msg-text *{
-  opacity:.72;
+  opacity:.6;
   transition:opacity .18s ease;
 }
-.msg-row--sending.msg-row--sending-slow .msg-timestamp::after{
-  content:' · sending';
-  color:rgba(255,255,255,.35);font-weight:500;font-size:.85em;
-  margin-left:4px;
-}
-.msg-row--sending.msg-row--sending-slow .msg-timestamp::before{
+/* Right-anchored spinner (slow sends only). */
+.msg-row--sending-slow::before{
   content:'';
-  display:inline-block;width:8px;height:8px;margin-right:4px;
-  border-radius:50%;border:1.5px solid rgba(255,255,255,.25);
-  border-top-color:rgba(255,255,255,.6);
-  animation:msgSendSpin .8s linear infinite;
-  vertical-align:-1px;
+  position:absolute;
+  right:20px; top:calc(50% - 7px);
+  width:14px;height:14px;box-sizing:border-box;
+  border-radius:50%;
+  border:1.7px solid rgba(255,255,255,.16);
+  border-top-color:rgba(255,255,255,.62);
+  animation:msgSendSpin .7s linear infinite;
+  pointer-events:none;z-index:2;
+}
+/* "Sending" label, right-anchored just left of the spinner (grows leftward). */
+.msg-row--sending-slow::after{
+  content:'Sending';
+  position:absolute;
+  right:42px; top:calc(50% - 6px);
+  font-family:var(--font-display,inherit);
+  font-weight:600;font-size:10.5px;line-height:12px;letter-spacing:.03em;
+  color:rgba(255,255,255,.4);
+  pointer-events:none;z-index:2;
+  animation:mssStatusIn .2s var(--ease-out,ease) both;
 }
 @keyframes msgSendSpin{ to { transform:rotate(360deg); } }
+@keyframes mssStatusIn{ from{ opacity:0; transform:translateX(4px); } to{ opacity:1; transform:none; } }
+/* "Sent" confirmation — a green check pops in the spinner's place then
+   fades. Added by _flashSent() ONLY when the row had actually shown the
+   Sending state, so quick sends never flash it. */
+.msg-row--sent::after{
+  content:'';
+  position:absolute;
+  right:19px; top:calc(50% - 8px);
+  width:16px;height:16px;
+  background:no-repeat center/13px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%233ecf6e' d='M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:2;
+  animation:mssSentPop 1.35s var(--ease-out,ease) forwards;
+}
+@keyframes mssSentPop{
+  0%{ opacity:0; transform:scale(.35); }
+  20%{ opacity:1; transform:scale(1.08); }
+  36%{ transform:scale(1); }
+  72%{ opacity:1; transform:scale(1); }
+  100%{ opacity:0; transform:scale(1); }
+}
 /* ── Jump-to-message highlight flash ─────────────────────
    Discord flashes the target row when you scroll to it via reply,
    search result, or a mention. A soft accent wash that fades over

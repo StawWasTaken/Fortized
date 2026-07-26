@@ -4678,6 +4678,10 @@ function updateSidebar(v) {
   if (ctx) ctx.style.display = ctxVisible ? 'flex' : 'none';
   updateUserbarWidth();
   if (typeof _updateMobileBackBtn === 'function') _updateMobileBackBtn();
+  // Keep the active-quest widget + Quests-tab badge in sync whenever the
+  // secondary sidebar (which hosts them) becomes visible.
+  if (ctxVisible) setTimeout(() => { try { _refreshQuestUI(); } catch {} }, 60);
+  else { try { renderQuestWidget(); } catch {} }
 
   if (v==='dms' || v==='friends') {
     if (hdr) hdr.style.display = 'none';
@@ -8115,7 +8119,7 @@ async function renderDMSidebar(scroll, force) {
     <span class="dm-nav-label">Fortshop</span></div>`;
   html += `<div class="dm-nav-btn${_navActive('quests')}" onclick="showView('quests')">
     <span class="dm-nav-ico"><svg viewBox="0 0 576 512" width="17" height="17" fill="currentColor"><path d="M0 112C0 70.5 31.6 36.4 72 32.4l0-.4 280 0c53 0 96 43 96 96l0 176-176 0c-39.8 0-72 32.2-72 72l0 60c0 24.3-19.7 44-44 44s-44-19.7-44-44l0-228-64 0c-26.5 0-48-21.5-48-48l0-48zM236.8 480c7.1-13.1 11.2-28.1 11.2-44l0-60c0-13.3 10.7-24 24-24l248 0c13.3 0 24 10.7 24 24l0 24c0 44.2-35.8 80-80 80l-227.2 0zM80 80c-17.7 0-32 14.3-32 32l0 48 64 0 0-48c0-17.7-14.3-32-32-32z"/></svg></span>
-    <span class="dm-nav-label">Quests</span></div>`;
+    <span class="dm-nav-label">Quests</span><span class="dm-nav-qbadge" id="dm-quest-badge" style="display:none;"></span></div>`;
   html += `<div class="dm-nav-btn${_navActive('creator')}" onclick="showView('creator')">
     <span class="dm-nav-ico"><svg viewBox="0 0 384 512" width="16" height="16" fill="currentColor"><path d="M162.4 6c-1.5-3.6-5-6-8.9-6l-19 0c-3.9 0-7.5 2.4-8.9 6L104.9 57.7c-3.2 8-14.6 8-17.8 0L66.4 6c-1.5-3.6-5-6-8.9-6L48 0C21.5 0 0 21.5 0 48l0 208 384 0 0-208c0-26.5-21.5-48-48-48L230.5 0c-3.9 0-7.5 2.4-8.9 6L200.9 57.7c-3.2 8-14.6 8-17.8 0L162.4 6zM0 304l0 16c0 35.3 28.7 64 64 64l64 0 0 64c0 35.3 28.7 64 64 64s64-28.7 64-64l0-64 64 0c35.3 0 64-28.7 64-64l0-16-384 0zM192 464c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16z"/></svg></span>
     <span class="dm-nav-label">Creator Hub</span></div>`;
@@ -16528,7 +16532,7 @@ function initFortizedUXResilience() {
               'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
               'createdAt','customStatus','verified','appearance','badges',
               'completedQuests','questsRewarded','questsDailyLog','dailyStreak','streakDate',
-              'questsWeekly','questOnyxEarned',
+              'questsWeekly','questOnyxEarned','questsAccepted',
               'lastDailyReward','lastDaily',
               // Cross-device cosmetics — see protectFields explainer above.
               'cursor','density','scale'
@@ -46381,27 +46385,37 @@ function _questCatalogue() {
   const friends = (cu.friends || []).length;
   const bastions = (cu.bastions || []).length;
   const wb = _questWeekBucket();
+  const rewarded = cu.questsRewarded || [];
+  const accepted = cu.questsAccepted || [];
+  const sendMsgMet = dailyLog.send_msg === today || dailyLog.send_msg_met === today;
   // Rewards are deliberately LEAN. Always-available quests (daily) pay the
   // least; weekly a bit more; one-time milestones more again. Rare / expiring
   // quests (future, sponsored/official events) pay the most. 100 Onyx = 1€, and
   // Onyx will eventually be sold — so free income stays modest by design.
-  return [
+  //
+  // NEW claim model (Fortized 3.3): `met` = the goal/condition is satisfied,
+  // `done` = the reward has actually been CLAIMED. A quest is `claimable` when
+  // met but not yet done — the user must come to the Quests tab (or the active-
+  // quest widget) to claim it; nothing auto-pays anymore. `accepted` = the user
+  // pinned it to the active-quest widget above their userbar.
+  const raw = [
     // ── DAILY (reset midnight) — smallest rewards ──
-    { id:'daily_claim', tier:'daily', ic:'fa-gift',        title:'Daily Claim',     desc:'Claim your free Onyx. Resets at midnight.',   reward:5,  unit:'Onyx',        done:isDailyQuestDone('daily_claim'), action:'claimDailyQuest()',      cta:'Claim' },
-    { id:'send_msg',    tier:'daily', ic:'fa-comment-dots', title:'Send a Message',  desc:'Chat with someone today. Stay connected.',    reward:3,  unit:'Onyx',        done:isDailyQuestDone('send_msg'),    action:"showView('dms')",         cta:'Open chats' },
-    { id:'invite',      tier:'daily', ic:'fa-user-plus',   title:'Invite a Friend', desc:'+10 Onyx for every friend who joins.',        reward:10, unit:'Onyx/friend', done:dailyLog.invite === today,       action:'_showInviteFriendsPanel()', cta:'Invite' },
+    { id:'daily_claim', tier:'daily', ic:'fa-gift',        title:'Daily Claim',     desc:'Claim your free Onyx. Resets at midnight.',   reward:5,  unit:'Onyx',        met:true,                                    done:isDailyQuestDone('daily_claim'), action:'claimDailyQuest()',       cta:'Claim',      instant:true },
+    { id:'send_msg',    tier:'daily', ic:'fa-comment-dots', title:'Send a Message',  desc:'Chat with someone today. Stay connected.',    reward:3,  unit:'Onyx',        met:sendMsgMet,                              done:isDailyQuestDone('send_msg'),    action:"showView('dms')",         cta:'Open chats' },
+    { id:'invite',      tier:'daily', ic:'fa-user-plus',   title:'Invite a Friend', desc:'+10 Onyx for every friend who joins.',        reward:10, unit:'Onyx/friend', met:false,                                   done:dailyLog.invite === today,       action:'_showInviteFriendsPanel()', cta:'Invite',   special:true },
     // ── WEEKLY (reset Monday) — modest ──
-    { id:'w_loyal',  tier:'weekly', ic:'fa-calendar-check', title:'Loyal Return', desc:'Claim your daily reward on 5 days this week.',   reward:25, unit:'Onyx', goal:{ cur:Math.min(wb.claimDays.length, 5), target:5 }, done:isWeeklyQuestDone('w_loyal'),  action:"claimWeeklyQuest('w_loyal',25)",  cta:'Claim' },
-    { id:'w_social', tier:'weekly', ic:'fa-comments',      title:'Realm Voice',  desc:'Send messages on 3 different days this week.',  reward:20, unit:'Onyx', goal:{ cur:Math.min(wb.msgDays.length, 3),  target:3 }, done:isWeeklyQuestDone('w_social'), action:"claimWeeklyQuest('w_social',20)", cta:'Claim' },
+    { id:'w_loyal',  tier:'weekly', ic:'fa-calendar-check', title:'Loyal Return', desc:'Claim your daily reward on 5 days this week.',   reward:25, unit:'Onyx', goal:{ cur:Math.min(wb.claimDays.length, 5), target:5 }, met:wb.claimDays.length>=5, done:isWeeklyQuestDone('w_loyal'),  action:"showView('quests')",  cta:'Track' },
+    { id:'w_social', tier:'weekly', ic:'fa-comments',      title:'Realm Voice',  desc:'Send messages on 3 different days this week.',  reward:20, unit:'Onyx', goal:{ cur:Math.min(wb.msgDays.length, 3),  target:3 }, met:wb.msgDays.length>=3,  done:isWeeklyQuestDone('w_social'), action:"showView('quests')", cta:'Track' },
     // ── MILESTONES (one-time) — one-off, so a bit more ──
-    { id:'set_pfp',        tier:'journey', ic:'fa-image',        title:'Show Your Face',   desc:'Upload a profile picture to stand out.',   reward:15, unit:'Onyx', done:completed.includes('set_pfp') || !!cu.pfp,              action:"showView('profile')",             cta:'Set avatar' },
-    { id:'set_bio',        tier:'journey', ic:'fa-feather',      title:'Tell Your Tale',   desc:'Write a custom bio for your profile.',     reward:15, unit:'Onyx', done:completed.includes('set_bio') || !!cu.bio,              action:"showView('profile')",             cta:'Write bio' },
-    { id:'add_friend',     tier:'journey', ic:'fa-user-group',   title:'First Ally',       desc:'Send your first friend request.',          reward:15, unit:'Onyx', done:completed.includes('add_friend') || friends > 0,        action:"openModal('modal-add-friend')",    cta:'Add friend' },
-    { id:'join_bastion',   tier:'journey', ic:'fa-dungeon',      title:'Enter a Bastion',  desc:'Find and join any public Bastion.',        reward:20, unit:'Onyx', done:completed.includes('join_bastion') || bastions > 0,     action:"showView('discover')",             cta:'Discover' },
-    { id:'send_gif',       tier:'journey', ic:'fa-film',         title:'Say It With a GIF',desc:'Send your first GIF in a conversation.',   reward:10, unit:'Onyx', done:completed.includes('send_gif'),                         action:"showView('dms')",                  cta:'Open chats' },
-    { id:'five_friends',   tier:'journey', ic:'fa-people-group', title:'Rally the Banners',desc:'Grow your circle to 5 friends.',           reward:30, unit:'Onyx', goal:{ cur:Math.min(friends, 5), target:5 }, done:completed.includes('five_friends') || friends >= 5, action:"openModal('modal-add-friend')", cta:'Add friends' },
-    { id:'create_bastion', tier:'journey', ic:'fa-chess-rook',   title:'Raise a Fortress', desc:'Create your own Bastion community.',        reward:40, unit:'Onyx', done:completed.includes('create_bastion'),                   action:"openModal('modal-create-bastion')", cta:'Create' },
+    { id:'set_pfp',        tier:'journey', ic:'fa-image',        title:'Show Your Face',   desc:'Upload a profile picture to stand out.',   reward:15, unit:'Onyx', met:(completed.includes('set_pfp') || !!cu.pfp),         done:rewarded.includes('set_pfp'),        action:"showView('profile')",             cta:'Set avatar' },
+    { id:'set_bio',        tier:'journey', ic:'fa-feather',      title:'Tell Your Tale',   desc:'Write a custom bio for your profile.',     reward:15, unit:'Onyx', met:(completed.includes('set_bio') || !!cu.bio),         done:rewarded.includes('set_bio'),        action:"showView('profile')",             cta:'Write bio' },
+    { id:'add_friend',     tier:'journey', ic:'fa-user-group',   title:'First Ally',       desc:'Send your first friend request.',          reward:15, unit:'Onyx', met:(completed.includes('add_friend') || friends > 0),   done:rewarded.includes('add_friend'),     action:"openModal('modal-add-friend')",    cta:'Add friend' },
+    { id:'join_bastion',   tier:'journey', ic:'fa-dungeon',      title:'Enter a Bastion',  desc:'Find and join any public Bastion.',        reward:20, unit:'Onyx', met:(completed.includes('join_bastion') || bastions > 0),done:rewarded.includes('join_bastion'),   action:"showView('discover')",             cta:'Discover' },
+    { id:'send_gif',       tier:'journey', ic:'fa-film',         title:'Say It With a GIF',desc:'Send your first GIF in a conversation.',   reward:10, unit:'Onyx', met:completed.includes('send_gif'),                      done:rewarded.includes('send_gif'),       action:"showView('dms')",                  cta:'Open chats' },
+    { id:'five_friends',   tier:'journey', ic:'fa-people-group', title:'Rally the Banners',desc:'Grow your circle to 5 friends.',           reward:30, unit:'Onyx', goal:{ cur:Math.min(friends, 5), target:5 }, met:(friends>=5), done:rewarded.includes('five_friends'), action:"openModal('modal-add-friend')", cta:'Add friends' },
+    { id:'create_bastion', tier:'journey', ic:'fa-chess-rook',   title:'Raise a Fortress', desc:'Create your own Bastion community.',        reward:40, unit:'Onyx', met:completed.includes('create_bastion'),                done:rewarded.includes('create_bastion'), action:"openModal('modal-create-bastion')", cta:'Create' },
   ];
+  return raw.map(q => ({ ...q, claimable: !!q.met && !q.done, accepted: accepted.includes(q.id) }));
 }
 
 // Claim a weekly quest once its goal is met.
@@ -46413,11 +46427,161 @@ async function claimWeeklyQuest(id, reward) {
   b.claimed.push(id);
   CU.onyx = (CU.onyx || 0) + reward;
   _addQuestOnyx(reward);
+  _unacceptQuest(id);
   updateOnyxDisplay();
   await saveUser(true);
   if (typeof animateOnyxGain === 'function') animateOnyxGain(reward);
-  toast(`Weekly quest complete — +${reward} Onyx!`, 'success');
+  _showQuestClaimPopup(reward, q.title);
   try { renderAtelierTab('quests'); } catch {}
+  _refreshQuestUI();
+}
+
+// ════════════════════════════════════════════════════════════
+// QUEST CLAIM MODEL (Fortized 3.3) — accept → track → claim.
+// Nothing auto-pays; a met quest becomes *claimable* and the user comes to the
+// Quests tab (or the active-quest widget above the userbar) to collect it.
+// ════════════════════════════════════════════════════════════
+function _unacceptQuest(id) {
+  if (!CU || !Array.isArray(CU.questsAccepted)) return;
+  const i = CU.questsAccepted.indexOf(id);
+  if (i >= 0) CU.questsAccepted.splice(i, 1);
+}
+// Count of quests ready to claim right now (drives the tab badge).
+function _claimableQuestCount() {
+  try { return _questCatalogue().filter(q => q.claimable).length; } catch { return 0; }
+}
+// Pin a quest to the active-quest widget above the userbar.
+async function acceptQuest(id) {
+  if (!CU) return;
+  const q = _questCatalogue().find(x => x.id === id);
+  if (!q) return;
+  if (q.claimable) return claimQuest(id);           // already done — just claim
+  if (!Array.isArray(CU.questsAccepted)) CU.questsAccepted = [];
+  if (!CU.questsAccepted.includes(id)) CU.questsAccepted.push(id);
+  try { await saveUser(true); } catch {}
+  toast('Quest accepted — track it above your profile.', 'success');
+  try { renderAtelierTab('quests'); } catch {}
+  _refreshQuestUI();
+}
+// Drop a quest from the widget (does not lose progress).
+async function cancelQuest(id) {
+  if (!CU) return;
+  _unacceptQuest(id);
+  try { await saveUser(true); } catch {}
+  try { renderAtelierTab('quests'); } catch {}
+  _refreshQuestUI();
+}
+// Collect a claimable quest's reward + celebrate.
+async function claimQuest(id) {
+  if (!CU) return;
+  const q = _questCatalogue().find(x => x.id === id);
+  if (!q) return;
+  if (!q.claimable) { toast(q.done ? 'Already claimed.' : 'Finish the quest first!', 'info'); return; }
+  if (id === 'daily_claim') { return claimDailyQuest(); }       // has streak logic + popup
+  if (q.tier === 'weekly')  { return claimWeeklyQuest(id, q.reward); }
+  // send_msg (daily) + one-time journey milestones.
+  if (id === 'send_msg') {
+    if (!CU.questsDailyLog) CU.questsDailyLog = {};
+    CU.questsDailyLog.send_msg = new Date().toDateString();     // mark claimed today
+    try { _questWeekTick('msg'); } catch {}
+  } else {
+    if (!CU.questsRewarded) CU.questsRewarded = [];
+    if (!CU.questsRewarded.includes(id)) CU.questsRewarded.push(id);
+    if (!CU.completedQuests) CU.completedQuests = [];
+    if (!CU.completedQuests.includes(id)) CU.completedQuests.push(id);
+  }
+  CU.onyx = (CU.onyx || 0) + q.reward;
+  _addQuestOnyx(q.reward);
+  _unacceptQuest(id);
+  updateOnyxDisplay();
+  try { await saveUser(true); } catch {}
+  if (typeof animateOnyxGain === 'function') animateOnyxGain(q.reward);
+  _showQuestClaimPopup(q.reward, q.title);
+  try { renderAtelierTab('quests'); } catch {}
+  _refreshQuestUI();
+}
+
+// Refresh the quest-tab badge + the active-quest widget together.
+function _refreshQuestUI() {
+  try { updateQuestBadge(); } catch {}
+  try { renderQuestWidget(); } catch {}
+}
+
+// The little count badge on the Quests launcher (1 … 9+).
+function updateQuestBadge() {
+  const el = document.getElementById('dm-quest-badge');
+  if (!el) return;
+  const n = _claimableQuestCount();
+  if (n <= 0) { el.style.display = 'none'; return; }
+  el.textContent = n > 9 ? '9+' : String(n);
+  el.style.display = '';
+}
+
+// ── The claim popup: "You've earned N Onyx from the <quest> quest." ──
+function _showQuestClaimPopup(reward, questTitle) {
+  const old = document.getElementById('quest-claim-popup');
+  if (old) old.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'quest-claim-popup';
+  overlay.className = 'qclaim-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) _dismissQuestClaimPopup(); };
+  overlay.innerHTML = `
+    <div class="qclaim-card">
+      <div class="qclaim-burst"><i class="fa-solid fa-gift"></i></div>
+      <div class="qclaim-amt"><span class="rad-onyx-ic"></span> +${reward} Onyx</div>
+      <div class="qclaim-sub">You’ve earned it from the<br><b>${escapeHTML(questTitle || 'quest')}</b> quest.</div>
+      <button class="qp-btn btn-a qclaim-ok" onclick="_dismissQuestClaimPopup()">Nice!</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('visible')));
+  setTimeout(() => _dismissQuestClaimPopup(), 6000);
+}
+function _dismissQuestClaimPopup() {
+  const o = document.getElementById('quest-claim-popup');
+  if (!o) return;
+  o.classList.remove('visible');
+  setTimeout(() => o.remove(), 350);
+}
+
+// ── The active-quest widget (above the userbar) ──
+function renderQuestWidget() {
+  const host = document.getElementById('quest-widget-host');
+  if (!host || !CU) return;
+  const cat = _questCatalogue();
+  // The widget tracks the quests the user ACCEPTED (pinned). A claimable one
+  // among them shows a Claim button right here; the rest show live progress.
+  // Passive completions the user never pinned surface via the tab badge instead.
+  const items = cat.filter(q => q.accepted && !q.done);
+  if (!items.length) { host.style.display = 'none'; host.innerHTML = ''; return; }
+  const collapsed = localStorage.getItem('ftz_quest_widget_collapsed') === '1';
+  const rows = items.map(q => {
+    const pct = q.goal ? Math.round(q.goal.cur / q.goal.target * 100) : (q.claimable ? 100 : 0);
+    const progTxt = q.goal ? `${q.goal.cur}/${q.goal.target}` : (q.claimable ? 'Ready' : 'In progress');
+    const cta = q.claimable
+      ? `<button class="qw-claim" onclick="claimQuest('${q.id}')"><i class="fa-solid fa-gift"></i> Claim ${q.reward}</button>`
+      : `<button class="qw-go" onclick="${q.action}">Go</button>`;
+    return `<div class="qw-row${q.claimable ? ' is-ready' : ''}">
+      <div class="qw-ic"><i class="fa-solid ${q.ic || 'fa-scroll'}"></i></div>
+      <div class="qw-main">
+        <div class="qw-top"><span class="qw-name">${escapeHTML(q.title)}</span><span class="qw-rew"><span class="rad-onyx-ic"></span>${q.reward}</span></div>
+        <div class="qw-bar"><span style="width:${pct}%;"></span></div>
+        <div class="qw-meta">${progTxt}</div>
+      </div>
+      <div class="qw-act">${cta}<button class="qw-x" onclick="cancelQuest('${q.id}')" title="Remove"><i class="fa-solid fa-xmark"></i></button></div>
+    </div>`;
+  }).join('');
+  host.innerHTML = `
+    <div class="qw-head">
+      <span class="qw-title"><i class="fa-solid fa-scroll"></i> Active Quests <span class="qw-count">${items.length}</span></span>
+      <button class="qw-collapse" onclick="_toggleQuestWidget()" title="${collapsed ? 'Expand' : 'Hide'}"><i class="fa-solid ${collapsed ? 'fa-chevron-up' : 'fa-chevron-down'}"></i></button>
+    </div>
+    <div class="qw-body"${collapsed ? ' style="display:none;"' : ''}>${rows}</div>`;
+  host.style.display = '';
+}
+function _toggleQuestWidget() {
+  const collapsed = localStorage.getItem('ftz_quest_widget_collapsed') === '1';
+  localStorage.setItem('ftz_quest_widget_collapsed', collapsed ? '0' : '1');
+  renderQuestWidget();
 }
 
 // Countdown formatting + the shared reset timers.
@@ -46691,7 +46855,6 @@ function renderAtelierTab(tab) {
 
     const qtab = window._qstTab || 'available';
     const _QCDN = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
-    const ONYX_IMG   = _QCDN + 'OnyxSVG.png';              // flat Onyx glyph (SVG-style, not the image)
     const DEF_LOGO   = '/Fortized logo2026.png?v=2026';    // @fortized quest wordmark (white)
     const DEF_BANNER = _QCDN + 'Usualbackground.png';      // default banner for official quests
     const cat = _questCatalogue();
@@ -46703,9 +46866,7 @@ function renderAtelierTab(tab) {
     // Discord-style quest card — banner + logo + attribution + time limit +
     // Onyx reward (real image) + Accept button. Tactile like the Radiance perks.
     const qCard = (q) => {
-      const met = !q.goal || q.goal.cur >= q.goal.target;
       const pct = q.goal ? Math.round(q.goal.cur / q.goal.target * 100) : 0;
-      const isClaim = q.id === 'daily_claim' || q.tier === 'weekly';
       const by = (q.by || 'Fortized').replace(/^@/, '');
       const banner = q.banner || DEF_BANNER;
       // Logo sits directly over the banner (Discord-style, no chip). Sponsors
@@ -46719,11 +46880,18 @@ function renderAtelierTab(tab) {
         ? `<span class="qst-qtime"><i class="fa-solid fa-clock"></i> <span class="qst-reset" data-reset="${resetKind}"></span></span>`
         : `<span class="qst-qtime qst-qtime--perm"><i class="fa-solid fa-infinity"></i> No time limit</span>`;
       const perFriend = q.unit && q.unit.indexOf('/') !== -1;
-      const btn = q.done
-        ? '<span class="qst-qdone"><i class="fa-solid fa-circle-check"></i> Completed</span>'
-        : met
-          ? `<button class="btn-a qst-qbtn" onclick="${q.action}">${isClaim ? 'Claim reward' : 'Accept Quest'}</button>`
-          : '<span class="qst-qwait">In progress</span>';
+      // Claim model: claimable → Claim (glows); done → Completed; special
+      // (invite) keeps its direct action; accepted-but-not-met → In progress
+      // (with a Cancel); everything else → Accept Quest (pins to the widget).
+      const btn = q.claimable
+        ? `<button class="btn-a qst-qbtn qst-qbtn--claim" onclick="claimQuest('${q.id}')"><i class="fa-solid fa-gift"></i> Claim reward</button>`
+        : q.done
+          ? '<span class="qst-qdone"><i class="fa-solid fa-circle-check"></i> Completed</span>'
+          : q.special
+            ? `<button class="btn-a qst-qbtn" onclick="${q.action}">${escapeHTML(q.cta || 'Go')}</button>`
+            : q.accepted
+              ? `<span class="qst-qwait"><i class="fa-solid fa-hourglass-half"></i> In progress</span><button class="qst-qcancel" onclick="cancelQuest('${q.id}')" title="Cancel quest"><i class="fa-solid fa-xmark"></i></button>`
+              : `<button class="btn-a qst-qbtn qst-qbtn--accept" onclick="acceptQuest('${q.id}')">Accept Quest</button>`;
       return `<div class="qst-qcard${q.done ? ' is-done' : ''}">
         <div class="qst-qcard-banner" style="background-image:url('${banner}');">
           ${timePill}
@@ -46735,7 +46903,7 @@ function renderAtelierTab(tab) {
           <div class="qst-qcard-desc">${escapeHTML(q.desc)}</div>
           ${q.goal && !q.done ? `<div class="qst-prog"><div class="qst-prog-bar"><span style="width:${pct}%;"></span></div><span class="qst-prog-txt">${q.goal.cur}/${q.goal.target}</span></div>` : ''}
           <div class="qst-qcard-foot">
-            <div class="qst-qcard-reward"><img class="qst-onyx-img" src="${ONYX_IMG}" alt="Onyx"><b>${q.reward}</b>${perFriend ? '<span>/ friend</span>' : ''}</div>
+            <div class="qst-qcard-reward"><span class="rad-onyx-ic"></span><b>${q.reward}</b>${perFriend ? '<span>/ friend</span>' : ''}</div>
             ${btn}
           </div>
         </div>
@@ -50507,40 +50675,17 @@ async function awardQuestBadge(questName='invite') {
   }
 }
 
-// Check and award one-time quest rewards that were met but not yet rewarded
+// NEW claim model: milestones no longer auto-pay. This used to grant Onyx the
+// moment a one-time quest's condition was met; now those quests simply become
+// *claimable* (see `_questCatalogue`) and the user collects them in the Quests
+// tab / active-quest widget. Kept as the shared "refresh quest surfaces" hook
+// (its two callers — the Quests-tab render + post-init — just want the badge /
+// widget in sync).
 async function _checkAndAwardPendingQuests() {
   if (!CU) return;
   if (!CU.completedQuests) CU.completedQuests = [];
   if (!CU.questsRewarded) CU.questsRewarded = [];
-  const QUEST_REWARDS = [
-    {id:'join_bastion', reward:20, check:()=>(CU?.bastions||[]).length>0},
-    {id:'add_friend', reward:15, check:()=>(CU?.friends||[]).length>0},
-    {id:'set_pfp', reward:15, check:()=>!!CU?.pfp},
-    {id:'set_bio', reward:15, check:()=>!!CU?.bio},
-    {id:'five_friends', reward:30, check:()=>(CU?.friends||[]).length>=5},
-    {id:'send_gif', reward:10, check:()=>CU.completedQuests.includes('send_gif')},
-    {id:'create_bastion', reward:40, check:()=>CU.completedQuests.includes('create_bastion')},
-  ];
-  let totalGained = 0;
-  let newlyCompleted = [];
-  QUEST_REWARDS.forEach(q => {
-    if (CU.questsRewarded.includes(q.id)) return;
-    const isDone = CU.completedQuests.includes(q.id) || q.check();
-    if (isDone) {
-      CU.onyx = (CU.onyx || 0) + q.reward;
-      if (!CU.completedQuests.includes(q.id)) CU.completedQuests.push(q.id);
-      CU.questsRewarded.push(q.id);
-      totalGained += q.reward;
-      newlyCompleted.push(q.id);
-    }
-  });
-  if (totalGained > 0) {
-    try { _addQuestOnyx(totalGained); } catch {}
-    updateOnyxDisplay();
-    await saveUser(true);
-    if (typeof animateOnyxGain === 'function') animateOnyxGain(totalGained);
-    toast(`🏆 Quest${newlyCompleted.length>1?'s':''} completed! +${totalGained} Onyx`, 'success');
-  }
+  _refreshQuestUI();
 }
 
 // ════════════════════════════════════════════════════
@@ -52458,13 +52603,15 @@ async function claimDailyQuest() {
   CU.questsDailyLog.daily_claim = today;
   try { _questWeekTick('claim'); } catch {}
   try { _addQuestOnyx(totalReward); } catch {}
+  _unacceptQuest('daily_claim');
   updateOnyxDisplay();
   await saveUser(true);
   if (typeof animateOnyxGain === 'function') animateOnyxGain(totalReward);
-  toast(`🎁 +${totalReward} Onyx claimed!`, 'success');
+  _showQuestClaimPopup(totalReward, 'Daily Claim');
   // Refresh dependent UI (atelier quests tab + the legacy daily button)
   try { renderAtelierTab('quests'); } catch {}
   try { refreshDailyBtn(); } catch {}
+  _refreshQuestUI();
 }
 
 // Check if a daily-renewing quest is done today
@@ -52480,20 +52627,19 @@ function isDailyQuestDone(questId) {
   return false;
 }
 
-// Track send_msg daily quest — called from sendDM / sendGCMessage / sendChannelMsg
+// Track send_msg daily quest — called from sendDM / sendGCMessage / sendChannelMsg.
+// NEW model: sending a message MEETS the quest but no longer auto-pays — it
+// becomes claimable and the user collects it in the Quests tab / widget.
 async function _trackSendMsgQuest() {
   if (!CU) return;
   const today = new Date().toDateString();
   if (!CU.questsDailyLog) CU.questsDailyLog = {};
-  if (CU.questsDailyLog.send_msg === today) return; // already done today
-  CU.questsDailyLog.send_msg = today;
-  CU.onyx = (CU.onyx || 0) + 3;
-  try { _questWeekTick('msg'); } catch {}
-  try { _addQuestOnyx(3); } catch {}
-  updateOnyxDisplay();
-  await saveUser(true);
-  if (typeof animateOnyxGain === 'function') animateOnyxGain(3);
-  toast('💬 Quest complete: Send a Message — +3 Onyx!', 'success');
+  // Already met (or already claimed) today → nothing to do.
+  if (CU.questsDailyLog.send_msg === today || CU.questsDailyLog.send_msg_met === today) return;
+  CU.questsDailyLog.send_msg_met = today;
+  try { _questWeekTick('msg'); } catch {}   // weekly progress still accrues
+  try { await saveUser(true); } catch {}
+  _refreshQuestUI();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -52521,7 +52667,7 @@ function _showDailyQuestPopup() {
         <div class="quest-popup-title">Hearken, Hearken!</div>
         <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">5 Onyx</strong>. Resets at midnight.</div>
         <div class="quest-popup-reward">
-          <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:16px;height:16px;object-fit:contain;">
+          <span class="rad-onyx-ic" style="width:14px;height:14px;"></span>
           +5 Onyx
         </div>
         <div class="quest-popup-btns">

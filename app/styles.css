@@ -14994,9 +14994,11 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 
 /* Radiance subnav (reuses .disc-subnav) */
 .rad-subnav .disc-subnav-normal{gap:0;align-items:center;}
-/* On the Radiance page the active-tab highlight is Radiance pink, not yellow. */
-.rad-subnav .disc-subnav-btn.active{border-bottom-color:#ef5fb0;}
-.rad-subnav .disc-subnav-btn.active svg{stroke:#ef5fb0;}
+/* Radiance topbar keeps the app's yellow active highlight (like every other
+   page). The Radiance-pink accent lives in the text-selection highlight below. */
+.rad-page ::selection{background:#ef5fb0;color:#fff;}
+.rad-page ::-moz-selection{background:#ef5fb0;color:#fff;}
+.rad-page{caret-color:#ef5fb0;}
 /* Logo tinted to the text colour (currentColor mask), not its gradient.
    22px to match the Friends brand icon; wordmark kept smaller so the icon
    reads bigger/taller. */
@@ -15492,7 +15494,7 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .qst-qcard-reward{display:inline-flex;align-items:center;gap:8px;padding:5px 14px 5px 6px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid var(--border,rgba(255,255,255,.1));font-family:var(--font-display);font-weight:700;color:var(--text,#fff);white-space:nowrap;}
 .qst-qcard-reward b{font-size:16px;font-weight:800;}
 .qst-qcard-reward span{font-size:10.5px;color:var(--muted,rgba(255,255,255,.5));font-weight:600;}
-.qst-onyx-img{width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,.45));}
+.qst-qcard-reward .rad-onyx-ic{width:18px;height:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));}
 /* Accept / Claim button uses the app's 3D .btn-a; sized for the card */
 .qst-qbtn.btn-a{padding:9px 22px;font-size:12.5px;border-radius:12px;}
 .qst-qdone{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-weight:700;font-size:12.5px;color:var(--muted-light,rgba(255,255,255,.55));}
@@ -15531,3 +15533,95 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 
 /* Badge tooltip — shows the badge image above the name (expert spec) */
 .badge-tooltip-img{display:block;width:34px;height:34px;object-fit:contain;margin:0 auto 6px;}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   QUEST CLAIM SYSTEM (Fortized 3.3) — launcher badge · active-quest widget ·
+   claim popup · quest-card claim/accept buttons. Accept → track → claim; the
+   accent yellow is the "spice" reserved for the claimable state.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Quests launcher count badge (claimable quests, 1…9+) ── */
+.dm-nav-btn{position:relative;}
+.dm-nav-qbadge{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  min-width:18px;height:18px;padding:0 5px;border-radius:100px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-size:11px;font-weight:800;line-height:1;
+  color:#13161d;background:var(--accent,#fff93e);
+  box-shadow:0 0 0 2px var(--sidebar,#1a1d25);}
+
+/* ── Active-quest widget (above the userbar) ── */
+.qw-host{margin:0 8px 8px;border-radius:14px;overflow:hidden;
+  background:var(--panel,#20232c);border:1px solid var(--border,rgba(255,255,255,.08));
+  box-shadow:0 6px 18px rgba(0,0,0,.28);}
+.qw-head{display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px;background:rgba(255,255,255,.03);}
+.qw-title{display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--font-display);font-weight:700;font-size:12px;
+  letter-spacing:.02em;color:var(--text,#fff);}
+.qw-title i{font-size:11px;color:var(--muted-light,rgba(255,255,255,.6));}
+.qw-count{min-width:16px;height:16px;padding:0 5px;border-radius:100px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:800;color:#13161d;background:var(--accent,#fff93e);}
+.qw-collapse{width:22px;height:22px;border-radius:7px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;color:var(--muted,rgba(255,255,255,.5));transition:background .15s,color .15s;}
+.qw-collapse:hover{background:rgba(255,255,255,.07);color:var(--text,#fff);}
+.qw-body{display:flex;flex-direction:column;}
+.qw-row{display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-top:1px solid rgba(255,255,255,.05);}
+.qw-row.is-ready{background:linear-gradient(90deg,rgba(255,249,62,.08),transparent);}
+.qw-ic{width:30px;height:30px;flex-shrink:0;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  color:var(--text,#fff);background:rgba(255,255,255,.06);}
+.qw-row.is-ready .qw-ic{color:var(--accent,#fff93e);background:rgba(255,249,62,.12);}
+.qw-main{flex:1;min-width:0;}
+.qw-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.qw-name{font-family:var(--font-display);font-weight:700;font-size:12px;color:var(--text,#fff);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qw-rew{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;
+  font-family:var(--font-display);font-weight:800;font-size:11px;color:var(--muted-light,rgba(255,255,255,.7));}
+.qw-rew .rad-onyx-ic{width:12px;height:12px;}
+.qw-bar{height:5px;border-radius:100px;background:rgba(255,255,255,.08);overflow:hidden;margin:5px 0 3px;}
+.qw-bar>span{display:block;height:100%;border-radius:100px;background:var(--accent,#fff93e);transition:width .4s var(--ease-out,ease);}
+.qw-meta{font-size:10px;font-weight:600;color:var(--muted,rgba(255,255,255,.45));}
+.qw-act{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.qw-claim{border:none;cursor:pointer;padding:6px 11px;border-radius:9px;
+  font-family:var(--font-display);font-weight:800;font-size:11px;color:#13161d;
+  background:var(--accent,#fff93e);display:inline-flex;align-items:center;gap:5px;
+  box-shadow:0 2px 0 rgba(0,0,0,.25);transition:transform .12s,filter .15s;}
+.qw-claim:hover{filter:brightness(1.06);}
+.qw-claim:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.25);}
+.qw-go{border:1px solid var(--border,rgba(255,255,255,.14));cursor:pointer;
+  padding:6px 11px;border-radius:9px;background:rgba(255,255,255,.05);
+  font-family:var(--font-display);font-weight:700;font-size:11px;color:var(--text,#fff);transition:background .15s;}
+.qw-go:hover{background:rgba(255,255,255,.1);}
+.qw-x{width:24px;height:24px;border-radius:8px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+  background:transparent;color:var(--muted,rgba(255,255,255,.4));transition:background .15s,color .15s;}
+.qw-x:hover{background:rgba(255,80,80,.14);color:#ff6b6b;}
+
+/* ── Claim popup: "You've earned N Onyx from the <quest> quest." ── */
+.qclaim-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
+  background:rgba(8,6,12,.55);backdrop-filter:blur(3px);opacity:0;transition:opacity .3s var(--ease-out,ease);}
+.qclaim-overlay.visible{opacity:1;}
+.qclaim-card{width:min(340px,90vw);padding:30px 28px 24px;border-radius:22px;text-align:center;
+  background:var(--panel,#20232c);border:1px solid var(--border,rgba(255,255,255,.1));
+  box-shadow:0 24px 70px rgba(0,0,0,.5);transform:scale(.9) translateY(10px);transition:transform .35s var(--ease-out,cubic-bezier(.2,.9,.3,1.2));}
+.qclaim-overlay.visible .qclaim-card{transform:scale(1) translateY(0);}
+.qclaim-burst{width:66px;height:66px;margin:0 auto 16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:26px;color:#13161d;
+  background:var(--accent,#fff93e);box-shadow:0 0 0 8px rgba(255,249,62,.14),0 8px 22px rgba(255,249,62,.3);}
+.qclaim-amt{display:inline-flex;align-items:center;gap:7px;justify-content:center;
+  font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--text,#fff);margin-bottom:6px;}
+.qclaim-amt .rad-onyx-ic{width:22px;height:22px;color:var(--accent,#fff93e);}
+.qclaim-sub{font-size:13px;line-height:1.55;color:var(--muted-light,rgba(255,255,255,.6));margin-bottom:20px;}
+.qclaim-sub b{color:var(--text,#fff);font-weight:700;}
+.qclaim-ok.btn-a{width:100%;padding:11px;font-size:13.5px;border-radius:12px;}
+
+/* ── Quest-card buttons: claimable state + accept + cancel ── */
+.qst-qbtn--claim.btn-a{box-shadow:0 3px 0 rgba(0,0,0,.28),0 0 18px rgba(255,249,62,.28);}
+.qst-qbtn--claim i{margin-right:5px;}
+.qst-qcancel{margin-left:8px;width:28px;height:28px;border-radius:9px;border:1px solid var(--border,rgba(255,255,255,.12));
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;
+  background:transparent;color:var(--muted,rgba(255,255,255,.45));transition:background .15s,color .15s;vertical-align:middle;}
+.qst-qcancel:hover{background:rgba(255,80,80,.14);color:#ff6b6b;}

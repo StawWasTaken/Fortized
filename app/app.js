@@ -46691,8 +46691,8 @@ function renderAtelierTab(tab) {
 
     const qtab = window._qstTab || 'available';
     const _QCDN = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
-    const ONYX_IMG   = '/Onyx image.png';                  // the real Onyx image (not the flat SVG)
-    const DEF_LOGO   = '/fortized-logo.png';               // @fortized quest logo
+    const ONYX_IMG   = _QCDN + 'OnyxSVG.png';              // flat Onyx glyph (SVG-style, not the image)
+    const DEF_LOGO   = '/Fortized logo2026.png?v=2026';    // @fortized quest wordmark (white)
     const DEF_BANNER = _QCDN + 'Usualbackground.png';      // default banner for official quests
     const cat = _questCatalogue();
     const rank = _realmRank(CU);
@@ -46709,11 +46709,11 @@ function renderAtelierTab(tab) {
       const by = (q.by || 'Fortized').replace(/^@/, '');
       const banner = q.banner || DEF_BANNER;
       // Logo sits directly over the banner (Discord-style, no chip). Sponsors
-      // pass a full-colour image; the default @fortized shield is dark, so we
-      // render it as a white currentColor mask so it reads on the art.
+      // pass a full-colour square image; the default @fortized mark is the
+      // white 2026 wordmark, which reads cleanly on the darkened art as-is.
       const logoInner = q.logo
         ? `<img class="qst-qlogo-img" src="${q.logo}" alt="" onerror="this.style.display='none'">`
-        : `<span class="qst-qlogo-mask" style="-webkit-mask:url('${DEF_LOGO}') center/contain no-repeat;mask:url('${DEF_LOGO}') center/contain no-repeat;"></span>`;
+        : `<img class="qst-qlogo-img qst-qlogo-word" src="${DEF_LOGO}" alt="Fortized">`;
       const resetKind = q.tier === 'daily' ? 'midnight' : q.tier === 'weekly' ? 'monday' : '';
       const timePill = resetKind
         ? `<span class="qst-qtime"><i class="fa-solid fa-clock"></i> <span class="qst-reset" data-reset="${resetKind}"></span></span>`
@@ -46727,7 +46727,7 @@ function renderAtelierTab(tab) {
       return `<div class="qst-qcard${q.done ? ' is-done' : ''}">
         <div class="qst-qcard-banner" style="background-image:url('${banner}');">
           ${timePill}
-          <span class="qst-qcard-logo">${logoInner}</span>
+          <span class="qst-qcard-logo${q.logo ? '' : ' qst-qcard-logo--word'}">${logoInner}</span>
         </div>
         <div class="qst-qcard-body">
           <div class="qst-qcard-by">by <b>@${escapeHTML(by)}</b></div>
@@ -46782,10 +46782,11 @@ function renderAtelierTab(tab) {
         : `<div class="qst-empty"><i class="fa-solid fa-scroll"></i><div class="qst-empty-t">Nothing claimed yet</div><div class="qst-empty-s">Complete quests in the Available tab and they’ll appear here.</div></div>`;
     } else if (qtab === 'bounties') {
       // Discord-style "Bounties incoming" row: icon + title + inline Learn More.
-      // TODO(user): swap _BOUNTY_ICON for the custom Bounties icon once provided.
-      const _BOUNTY_ICON = _QCDN + 'BountiesIcon.png';
+      // Bounties glyph rendered as a colour overlay (CSS mask tinted to the
+      // section's lavender via currentColor), not a flat img.
+      const _BOUNTY_ICON = _QCDN + 'BountiesSVG.png';
       body = `<div class="qst-bounty">
-        <div class="qst-bounty-ic"><img src="${_BOUNTY_ICON}" alt="" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-scroll\\'></i>'"></div>
+        <div class="qst-bounty-ic"><span class="qst-bounty-mask" style="-webkit-mask:url('${_BOUNTY_ICON}') center/contain no-repeat;mask:url('${_BOUNTY_ICON}') center/contain no-repeat;"></span></div>
         <div class="qst-bounty-main">
           <div class="qst-bounty-title">Bounties incoming</div>
           <div class="qst-bounty-desc">Check back later for new Bounties! <a href="https://www.fortized.com/newsroom/?article=bounties" target="_blank" rel="noopener">Learn More.</a></div>
@@ -52520,7 +52521,7 @@ function _showDailyQuestPopup() {
         <div class="quest-popup-title">Hearken, Hearken!</div>
         <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">5 Onyx</strong>. Resets at midnight.</div>
         <div class="quest-popup-reward">
-          <img src="/Onyx image.png" style="width:16px;height:16px;object-fit:contain;">
+          <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:16px;height:16px;object-fit:contain;">
           +5 Onyx
         </div>
         <div class="quest-popup-btns">

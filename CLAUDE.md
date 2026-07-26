@@ -10,18 +10,19 @@ badge → "Quest Progression" w/ rank, Onyx badge removed, page-switch infinite-
 (nav-seq token in showView), subnav uniformized (height:100%), Radiance page active
 highlight = pink.
 **Still to do — NEXT SESSION (user-provided assets/decisions):**
-1. **Bounties icon** → use `https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/BountiesSVG.png`
-   as a **colour overlay (CSS mask)**, NOT a plain img. Replace `_BOUNTY_ICON`
-   (currently `_QCDN+'BountiesIcon.png'`, 404 → fa-scroll) in the bounties-tab
-   render + `.qst-bounty-ic` CSS (mask-image + background-color = a colour).
-2. **Onyx glyph in quests → use the Onyx SVG, NOT the "Onyx image.png"** (user
-   dislikes the image). Swap `ONYX_IMG = '/Onyx image.png'` back to the OnyxSVG
-   (`_QCDN+'OnyxSVG.png'` or `/OnyxSVG.png`) in `_questCatalogue` render (`qCard`)
-   + the daily-popup. Keep the rounded chip; drop `border-radius:50%` on the glyph
-   if it's the flat SVG. (NOTE: this reverses the earlier "restore the image" ask.)
-3. **Fortized @fortized quest logo** → `https://www.fortized.com/Fortized%20logo2026.png?v=2026`
-   (set `DEF_LOGO` to this). Confirm whether it's colour (use `.qst-qlogo-img`) or
-   a dark mark needing the white-mask path.
+~~1. Bounties icon → BountiesSVG.png colour overlay~~ ✅ DONE (`2026fix414`):
+   `_BOUNTY_ICON = _QCDN+'BountiesSVG.png'`, rendered as a masked `<span
+   class="qst-bounty-mask">` tinted via `currentColor` (parent `.qst-bounty-ic`
+   `color:#b39ddb` lavender). Old `.qst-bounty-ic img` rule → `.qst-bounty-mask`.
+~~2. Onyx glyph → OnyxSVG.png~~ ✅ DONE (`2026fix414`): `ONYX_IMG =
+   _QCDN+'OnyxSVG.png'` in `qCard`; daily-popup img → OnyxSVG URL.
+   `.qst-onyx-img` now `object-fit:contain`, no `border-radius:50%` (flat glyph).
+~~3. @fortized quest logo → logo2026~~ ✅ DONE (`2026fix414`): `DEF_LOGO =
+   '/Fortized logo2026.png?v=2026'` (same-origin web-root asset, used across the
+   marketing site). It's the WHITE wordmark (2010×267) → rendered as a plain
+   `<img class="qst-qlogo-img qst-qlogo-word">` (no mask needed), with the slot
+   switched to auto-width via `.qst-qcard-logo--word` so the wide mark sits at a
+   readable 24px height. Verified via Playwright plainview.
 4. **Add a LIMITED sponsored quest** for the user's friend's app — a rare/expiring
    card: `{ by:'<friend/company>', logo:'<their logo>', banner:'<their banner>',
    title, desc, reward (higher, 50-150), endsAt:'<date>' }` in `_questCatalogue`

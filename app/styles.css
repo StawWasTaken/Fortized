@@ -15479,6 +15479,9 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .qst-qcard-logo{position:absolute;left:16px;bottom:9px;z-index:3;width:42px;height:42px;display:flex;align-items:center;justify-content:center;}
 .qst-qlogo-mask{width:100%;height:100%;background:#fff;filter:drop-shadow(0 2px 8px rgba(0,0,0,.75));}
 .qst-qlogo-img{width:100%;height:100%;object-fit:contain;border-radius:10px;filter:drop-shadow(0 3px 8px rgba(0,0,0,.6));}
+/* Default @fortized wordmark: wide, so the slot goes auto-width and the mark sits at a readable height */
+.qst-qcard-logo--word{width:auto;height:auto;left:16px;bottom:12px;justify-content:flex-start;}
+.qst-qlogo-word{width:auto;height:24px;border-radius:0;filter:drop-shadow(0 2px 8px rgba(0,0,0,.7));}
 .qst-qcard-body{padding:12px 18px 16px;display:flex;flex-direction:column;flex:1;}
 .qst-qcard-by{font-size:11px;color:var(--muted,rgba(255,255,255,.45));font-weight:600;margin-bottom:3px;}
 .qst-qcard-by b{color:var(--muted-light,rgba(255,255,255,.72));font-weight:700;}
@@ -15489,7 +15492,7 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .qst-qcard-reward{display:inline-flex;align-items:center;gap:8px;padding:5px 14px 5px 6px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid var(--border,rgba(255,255,255,.1));font-family:var(--font-display);font-weight:700;color:var(--text,#fff);white-space:nowrap;}
 .qst-qcard-reward b{font-size:16px;font-weight:800;}
 .qst-qcard-reward span{font-size:10.5px;color:var(--muted,rgba(255,255,255,.5));font-weight:600;}
-.qst-onyx-img{width:24px;height:24px;object-fit:cover;border-radius:50%;filter:drop-shadow(0 2px 5px rgba(0,0,0,.45));}
+.qst-onyx-img{width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,.45));}
 /* Accept / Claim button uses the app's 3D .btn-a; sized for the card */
 .qst-qbtn.btn-a{padding:9px 22px;font-size:12.5px;border-radius:12px;}
 .qst-qdone{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-weight:700;font-size:12.5px;color:var(--muted-light,rgba(255,255,255,.55));}
@@ -15511,7 +15514,7 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* Bounties — Discord-style "incoming" row */
 .qst-bounty{display:flex;gap:16px;align-items:center;padding:18px 20px;border-radius:14px;background:var(--panel,rgba(255,255,255,.035));border:1px solid var(--border,rgba(255,255,255,.08));}
 .qst-bounty-ic{width:54px;height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;color:#b39ddb;}
-.qst-bounty-ic img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 3px 8px rgba(0,0,0,.4));}
+.qst-bounty-mask{width:46px;height:46px;background-color:currentColor;filter:drop-shadow(0 3px 8px rgba(0,0,0,.35));}
 .qst-bounty-main{flex:1;min-width:0;}
 .qst-bounty-title{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text,#fff);}
 .qst-bounty-desc{font-size:13px;color:var(--muted-light,rgba(255,255,255,.55));line-height:1.5;margin-top:2px;}

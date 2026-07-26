@@ -1,5 +1,93 @@
 # Fortized — working notes for Claude
 
+## 🔴 SESSION HANDOFF — Quests + Active-Quest widget (cache-bust `2026fix419`)
+Branch **`claude/quests-radiance-redesign-cj1o7z`**, mirrored to `main`.
+**Standing rules (every push):** mirror to `main` AND push the session branch;
+bump `2026fixNNN` in `app/index.html` (9 refs) + `SW_VERSION` in `sw.js`;
+pre-commit `node --check app/app.js && node --check FortizedSocial-supabase.js &&
+node tests/test-relationship.js` (42 pass). **Egress-aware.** Sandbox can't reach
+Supabase / the GitHub CDN / FontAwesome → verify UI via Playwright plainviews with
+local assets; onyx glyphs, banner art, FA icons + the whole logged-in app need a
+LIVE eyeball on deploy.
+
+### ✅ Shipped this session (`414`→`419`)
+- **Asset swaps:** Bounties icon → `BountiesSVG.png` currentColor mask
+  (`.qst-bounty-mask`); Onyx glyph → `OnyxSVG.png` currentColor mask everywhere in
+  quests (no circle crop); @fortized quest logo → the white 2026 wordmark
+  (`/Fortized logo2026.png?v=2026`, auto-width slot `.qst-qcard-logo--word`).
+- **Onyx = text colour:** all quest onyx glyphs are `currentColor` masks pinned to
+  their number's colour. Card fix: `.qst-qcard-reward span{color:--muted}` was
+  greying the onyx `<span>` → `.qst-qcard-reward .rad-onyx-ic` now `color:--text`.
+- **Radiance:** topbar active highlight back to YELLOW; pink moved to the
+  text-selection highlight at the SAME alpha as yellow (`.rad-page ::selection
+  rgba(239,95,176,.2)`).
+- **QUEST CLAIM SYSTEM (claim-to-collect):** nothing auto-pays — a quest becomes
+  `claimable` when MET, collected in the Quests tab or the widget. `_questCatalogue`
+  yields met/done(=claimed)/claimable/accepted. `acceptQuest`/`cancelQuest`/
+  `claimQuest`; `_trackSendMsgQuest` marks met only; `_checkAndAwardPendingQuests`
+  refresh-only. Quests-launcher badge `#dm-quest-badge` (1..9+, `updateQuestBadge`).
+- **Active-quest widget** (`renderQuestWidget`, host `#quest-widget-host` INSIDE the
+  fixed `.userbar`): Discord-style, INTEGRATED flush on the userbar (`#userbar.has-qw`
+  squares the meeting edges, no gap). Compact face → hover expands UPWARD
+  (`.qw-reveal-top/-bot`) to reveal the quest banner + logo, availability pill, full
+  desc, thick progress bar + primary Claim/Go. Header mark = the Quests SVG icon
+  (currentColor/white; a reusable slot Bounties will later swap for its image mask).
+  Collapse chevron (localStorage `ftz_quest_widget_collapsed`). `_syncQuestWidgetPadding`
+  grows sidebar bottom clearance (mobile-safe).
+- **Claim popup** (`_showQuestClaimPopup`): Discord Orbs-balance CONTENT ("Your Onyx
+  balance is now <bal>", Explore-the-Fortshop + Keep-questing) in Fortized's popup
+  look (accent top-line, gentle `.97→1` entrance, NO auto-dismiss).
+- **Realm Rank = a grind:** `REALM_RANKS` Squire/Knight/Warden/Vanguard/Champion/
+  Paragon at 0/10/30/70/140/250, driven by cumulative `questsClaimedCount`
+  (`_questsClaimedTotal`, bumped on every claim; falls back to completedQuests.length).
+- **"Hearken, Hearken!" daily popup REMOVED** (claim via tab/widget now).
+- **Maintenance screen** rebuilt to the ban/suspend/warning card family
+  (`_showMaintenanceScreen`, brand-yellow wrench, `#13161d` detail card); text =
+  "We're making things better and will be back shortly."; auto show/hide via the
+  consolidated poller (`_maintenanceTick`, ~5s): ON → screen appears, OFF → reload.
+- **Activity UI retired** (reworking with the new PC app): removed `#ub-activity-row`
+  + the `#game-activity-bar` injector IIFE (updaters null-guard).
+- **New raw-JSONB state (protected in refreshCU):** `questsAccepted`,
+  `questsClaimedCount` (+ existing `questsWeekly`/`questOnyxEarned`/`completedQuests`/
+  `questsRewarded`/`questsDailyLog`).
+
+### 🔧 OPEN TODO (next session)
+1. **LIMITED sponsored quest** (friend's app) — DEFERRED long-term. New `limited`
+   tier in `_questCatalogue` w/ `{by,logo,banner,title,desc,reward 50-150,endsAt}` +
+   absolute-`endsAt` end-date pill (extend `_qstStartTimers`). Needs the friend's
+   assets/info first.
+2. **DM user panel loads the WRONG person** (`#dm-user-panel`) — must always show the
+   open DM partner. Investigate `_enrichDMHeader`/DM profile render.
+3. **"Sending" message state** — optimistic-send UI, Discord-like but original.
+4. **Gift Radiance rework** — card when sending the link, a real auto-message to the
+   recipient, `gift.fortized.com/<one-time-code>` link
+   (`createRadianceGiftLink`/`sendRadianceGiftToUser`/`claimGift`).
+5. **Bastion invite links** `invite.fortized.com/<invite-id>` (later).
+6. **Bounties feature** (later) — reuse the widget header-mark slot: swap the Quests
+   SVG for the Bounties image as a colour-overlay mask (`.qw-brand-mask` is ready).
+
+### ⚠️ LIVE-VERIFY on deploy (sandbox blind)
+Active-quest widget flush/connected on the wide userbar + hover-expand + sidebar
+clearance; onyx glyphs render + match their number's colour; launcher badge count;
+accept→track→claim end-to-end + claim popup + send-msg live "met"; the new Realm
+Rank thresholds ("Quests done" = cumulative claims); Radiance-pink selection; the
+maintenance screen auto on/off (toggle from the staff console) + card art.
+
+### 🧭 Key anchors
+Widget/claim: `renderQuestWidget`/`_syncQuestWidgetPadding`/`_toggleQuestWidget`,
+`acceptQuest`/`cancelQuest`/`claimQuest`/`_unacceptQuest`/`_claimableQuestCount`/
+`updateQuestBadge`/`_showQuestClaimPopup` (`app/app.js` ~46480-46650). Catalogue +
+rank: `_questCatalogue`, `REALM_RANKS`/`_realmRank`/`_questsClaimedTotal`/
+`_bumpQuestClaimCount` (~46357). Card: `qCard` in `renderAtelierTab` `tab==='quests'`
+(~46900). Daily/weekly: `claimDailyQuest`/`_trackSendMsgQuest`/`claimWeeklyQuest`/
+`_checkAndAwardPendingQuests`. Maintenance: `_showMaintenanceScreen`/`_maintenanceTick`/
+`_listenGlobalSettingsConsolidated` (~31300-31460). CSS: the `QUEST CLAIM SYSTEM`
+block at the END of `app/styles.css` (`.qw-*`, `.qclaim-*`, `.dm-nav-qbadge`,
+`.qst-qbtn--*`) + the `QUESTS (Fortized 3.3)` block (`.qst-qcard*`, `.qst-bounty*`).
+Widget host: inside `.userbar` in `app/index.html`.
+
+---
+
 ## 🟡 OPEN TODO (Quests-redesign session, branch `claude/radiance-page-redesign-8hg665`)
 Done so far: Radiance milestone (Plum theme, state-based), Vault carousel, Radiance
 rebrand + Bounties newsroom articles, Quests page fully redesigned to Discord-style

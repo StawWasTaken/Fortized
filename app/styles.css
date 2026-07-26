@@ -14996,8 +14996,8 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .rad-subnav .disc-subnav-normal{gap:0;align-items:center;}
 /* Radiance topbar keeps the app's yellow active highlight (like every other
    page). The Radiance-pink accent lives in the text-selection highlight below. */
-.rad-page ::selection{background:#ef5fb0;color:#fff;}
-.rad-page ::-moz-selection{background:#ef5fb0;color:#fff;}
+.rad-page ::selection{background:rgba(239,95,176,.2);}
+.rad-page ::-moz-selection{background:rgba(239,95,176,.2);}
 .rad-page{caret-color:#ef5fb0;}
 /* Logo tinted to the text colour (currentColor mask), not its gradient.
    22px to match the Friends brand icon; wordmark kept smaller so the icon
@@ -15549,74 +15549,108 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   color:#13161d;background:var(--accent,#fff93e);
   box-shadow:0 0 0 2px var(--sidebar,#1a1d25);}
 
-/* ── Active-quest widget (above the userbar) ── */
-.qw-host{margin:0 8px 8px;border-radius:14px;overflow:hidden;
-  background:var(--panel,#20232c);border:1px solid var(--border,rgba(255,255,255,.08));
-  box-shadow:0 6px 18px rgba(0,0,0,.28);}
-.qw-head{display:flex;align-items:center;justify-content:space-between;
-  padding:9px 12px;background:rgba(255,255,255,.03);}
-.qw-title{display:inline-flex;align-items:center;gap:7px;
-  font-family:var(--font-display);font-weight:700;font-size:12px;
-  letter-spacing:.02em;color:var(--text,#fff);}
-.qw-title i{font-size:11px;color:var(--muted-light,rgba(255,255,255,.6));}
-.qw-count{min-width:16px;height:16px;padding:0 5px;border-radius:100px;
+/* ═══ Active-quest widget — integrated ON TOP of the userbar (Discord-style) ═══
+   Compact face by default; each unit expands UPWARD on hover to reveal its
+   banner (+ logo), full description, thick progress bar and primary action.
+   Shared onyx glyph = currentColor mask, so it always matches its neighbouring
+   text colour. */
+.qw-onyx,.qw-gem-ic,.qw-face-rew-ic,.qw-primary-ic,.qclaim-orb-ic,.qclaim-bal-ic{
+  display:inline-block;background-color:currentColor;
+  -webkit-mask:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png') center/contain no-repeat;
+  mask:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png') center/contain no-repeat;}
+.qw-host{margin:0 0 8px;}
+.qw-inner{border-radius:14px;overflow:hidden;background:var(--panel,#20232c);
+  border:1.5px solid var(--border,rgba(255,255,255,.1));box-shadow:0 8px 22px rgba(0,0,0,.35);}
+/* Header — Fortized brand mark + title + count + collapse chevron */
+.qw-head{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;
+  background:rgba(255,255,255,.03);border:none;cursor:pointer;text-align:left;
+  border-bottom:1.5px solid var(--border,rgba(255,255,255,.07));}
+.qw-brand{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.qw-brand-mark{width:100%;height:100%;background:var(--accent,#fff93e);display:block;}
+.qw-htitle{font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.02em;color:var(--text,#fff);flex:1;}
+.qw-count{min-width:17px;height:17px;padding:0 5px;border-radius:100px;
   display:inline-flex;align-items:center;justify-content:center;
   font-size:10px;font-weight:800;color:#13161d;background:var(--accent,#fff93e);}
-.qw-collapse{width:22px;height:22px;border-radius:7px;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  background:transparent;color:var(--muted,rgba(255,255,255,.5));transition:background .15s,color .15s;}
-.qw-collapse:hover{background:rgba(255,255,255,.07);color:var(--text,#fff);}
-.qw-body{display:flex;flex-direction:column;}
-.qw-row{display:flex;align-items:center;gap:10px;padding:9px 12px;
-  border-top:1px solid rgba(255,255,255,.05);}
-.qw-row.is-ready{background:linear-gradient(90deg,rgba(255,249,62,.08),transparent);}
-.qw-ic{width:30px;height:30px;flex-shrink:0;border-radius:9px;
-  display:flex;align-items:center;justify-content:center;font-size:13px;
-  color:var(--text,#fff);background:rgba(255,255,255,.06);}
-.qw-row.is-ready .qw-ic{color:var(--accent,#fff93e);background:rgba(255,249,62,.12);}
-.qw-main{flex:1;min-width:0;}
-.qw-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.qw-name{font-family:var(--font-display);font-weight:700;font-size:12px;color:var(--text,#fff);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.qw-rew{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;
-  font-family:var(--font-display);font-weight:800;font-size:11px;color:var(--muted-light,rgba(255,255,255,.7));}
-.qw-rew .rad-onyx-ic{width:12px;height:12px;}
-.qw-bar{height:5px;border-radius:100px;background:rgba(255,255,255,.08);overflow:hidden;margin:5px 0 3px;}
-.qw-bar>span{display:block;height:100%;border-radius:100px;background:var(--accent,#fff93e);transition:width .4s var(--ease-out,ease);}
-.qw-meta{font-size:10px;font-weight:600;color:var(--muted,rgba(255,255,255,.45));}
-.qw-act{display:flex;align-items:center;gap:5px;flex-shrink:0;}
-.qw-claim{border:none;cursor:pointer;padding:6px 11px;border-radius:9px;
-  font-family:var(--font-display);font-weight:800;font-size:11px;color:#13161d;
-  background:var(--accent,#fff93e);display:inline-flex;align-items:center;gap:5px;
-  box-shadow:0 2px 0 rgba(0,0,0,.25);transition:transform .12s,filter .15s;}
-.qw-claim:hover{filter:brightness(1.06);}
-.qw-claim:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.25);}
-.qw-go{border:1px solid var(--border,rgba(255,255,255,.14));cursor:pointer;
-  padding:6px 11px;border-radius:9px;background:rgba(255,255,255,.05);
-  font-family:var(--font-display);font-weight:700;font-size:11px;color:var(--text,#fff);transition:background .15s;}
-.qw-go:hover{background:rgba(255,255,255,.1);}
-.qw-x{width:24px;height:24px;border-radius:8px;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:11px;
-  background:transparent;color:var(--muted,rgba(255,255,255,.4));transition:background .15s,color .15s;}
-.qw-x:hover{background:rgba(255,80,80,.14);color:#ff6b6b;}
+.qw-chev{width:18px;height:18px;display:flex;align-items:center;justify-content:center;color:var(--muted,rgba(255,255,255,.5));transition:transform .2s var(--ease-out,ease);}
+.qw-inner.is-collapsed .qw-chev{transform:rotate(-90deg);}
+.qw-inner.is-collapsed .qw-units{display:none;}
+.qw-units{display:flex;flex-direction:column;}
+/* One accepted quest */
+.qw-unit{position:relative;border-top:1px solid rgba(255,255,255,.05);transition:background .18s var(--ease-out,ease);}
+.qw-unit:first-child{border-top:none;}
+.qw-unit:hover{background:rgba(255,255,255,.03);}
+.qw-unit.is-ready{background:linear-gradient(90deg,rgba(255,249,62,.07),transparent 70%);}
+/* Reveal wrappers — collapsed to 0, slide open on hover */
+.qw-reveal{max-height:0;opacity:0;overflow:hidden;transition:max-height .28s var(--ease-out,cubic-bezier(.22,1,.36,1)),opacity .2s ease;}
+.qw-unit:hover .qw-reveal-top{max-height:92px;opacity:1;}
+.qw-unit:hover .qw-reveal-bot{max-height:180px;opacity:1;}
+/* Banner reveal (top) — quest art + logo + availability */
+.qw-banner{position:relative;height:74px;background-size:cover;background-position:center;display:flex;align-items:flex-end;}
+.qw-banner-scrim{position:absolute;inset:0;background:linear-gradient(0deg,var(--panel,#20232c) 2%,rgba(0,0,0,.35) 55%,rgba(0,0,0,.15));}
+.qw-banner-logo{position:absolute;left:12px;bottom:9px;height:22px;z-index:2;display:flex;align-items:center;}
+.qw-blogo{height:100%;width:auto;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7));}
+.qw-blogo--img{border-radius:7px;}
+.qw-avail{position:absolute;right:11px;top:9px;z-index:2;font-family:var(--font-display);font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.9);background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.14);border-radius:100px;padding:3px 9px;}
+/* Compact face (always visible) */
+.qw-face{display:flex;align-items:center;gap:11px;padding:10px 12px;position:relative;z-index:1;}
+.qw-gem{width:38px;height:38px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.05);border:2px solid var(--border,rgba(255,255,255,.14));color:var(--text,#fff);}
+.qw-unit.is-ready .qw-gem{border-color:var(--accent,#fff93e);background:rgba(255,249,62,.1);box-shadow:0 0 0 4px rgba(255,249,62,.08);}
+.qw-gem-ic{width:18px;height:18px;}
+.qw-face-main{flex:1;min-width:0;}
+.qw-face-title{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qw-face-sub{font-size:11px;font-weight:600;color:var(--muted,rgba(255,255,255,.5));margin-top:1px;}
+.qw-unit.is-ready .qw-face-sub{color:var(--accent,#fff93e);}
+.qw-face-rew{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-family:var(--font-display);font-weight:800;font-size:13px;color:var(--muted-light,rgba(255,255,255,.72));}
+.qw-face-rew-ic{width:14px;height:14px;}
+.qw-cancel{width:22px;height:22px;flex-shrink:0;border-radius:7px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--muted,rgba(255,255,255,.4));opacity:0;transition:opacity .15s,background .15s,color .15s;}
+.qw-unit:hover .qw-cancel{opacity:1;}
+.qw-cancel:hover{background:rgba(255,80,80,.15);color:#ff6b6b;}
+/* Detail reveal (bottom) — description + thick progress + primary button */
+.qw-detail{padding:0 12px 12px;display:flex;flex-direction:column;gap:9px;}
+.qw-desc{font-size:11.5px;line-height:1.5;color:var(--muted-light,rgba(255,255,255,.6));}
+.qw-bar{height:7px;border-radius:100px;background:rgba(255,255,255,.09);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.3);}
+.qw-bar>span{display:block;height:100%;border-radius:100px;background:linear-gradient(90deg,var(--accent,#fff93e),#ffd23e);transition:width .4s var(--ease-out,ease);}
+.qw-primary{width:100%;border:none;cursor:pointer;padding:10px;border-radius:11px;
+  font-family:var(--font-display);font-weight:800;font-size:12.5px;color:var(--text,#fff);
+  background:rgba(255,255,255,.06);border:1.5px solid var(--border,rgba(255,255,255,.14));
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,transform .12s,border-color .15s;}
+.qw-primary:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);}
+.qw-primary:active{transform:translateY(1px);}
+.qw-primary.is-claim{color:#13161d;background:var(--accent,#fff93e);border-color:transparent;
+  box-shadow:0 3px 0 rgba(0,0,0,.28),0 0 20px rgba(255,249,62,.3);}
+.qw-primary.is-claim:hover{filter:brightness(1.05);background:var(--accent,#fff93e);}
+.qw-primary-ic{width:15px;height:15px;}
 
-/* ── Claim popup: "You've earned N Onyx from the <quest> quest." ── */
-.qclaim-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
-  background:rgba(8,6,12,.55);backdrop-filter:blur(3px);opacity:0;transition:opacity .3s var(--ease-out,ease);}
-.qclaim-overlay.visible{opacity:1;}
-.qclaim-card{width:min(340px,90vw);padding:30px 28px 24px;border-radius:22px;text-align:center;
-  background:var(--panel,#20232c);border:1px solid var(--border,rgba(255,255,255,.1));
-  box-shadow:0 24px 70px rgba(0,0,0,.5);transform:scale(.9) translateY(10px);transition:transform .35s var(--ease-out,cubic-bezier(.2,.9,.3,1.2));}
+/* ═══ Reward popup — Discord's Orbs-balance content in Fortized's own look ═══ */
+.qclaim-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:rgba(0,0,0,.72);opacity:0;transition:opacity .22s cubic-bezier(.22,1,.36,1);pointer-events:none;}
+.qclaim-overlay.visible{opacity:1;pointer-events:all;}
+.qclaim-card{position:relative;width:380px;max-width:92vw;overflow:hidden;border-radius:20px;text-align:center;
+  background:radial-gradient(600px 130px at 50% 0%,rgba(255,249,62,.06),transparent 70%),linear-gradient(0deg,rgba(0,0,0,.18),rgba(0,0,0,.18)),var(--panel,#20232c);
+  border:1px solid var(--border,rgba(255,255,255,.1));
+  box-shadow:0 18px 48px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.04);
+  transform:scale(.97) translateY(8px);transition:transform .24s cubic-bezier(.22,1,.36,1);}
+.qclaim-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;z-index:3;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,249,62,.25) 12%,var(--accent,#fff93e) 50%,rgba(255,249,62,.25) 88%,transparent);
+  box-shadow:0 0 14px rgba(255,249,62,.35);}
 .qclaim-overlay.visible .qclaim-card{transform:scale(1) translateY(0);}
-.qclaim-burst{width:66px;height:66px;margin:0 auto 16px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-size:26px;color:#13161d;
-  background:var(--accent,#fff93e);box-shadow:0 0 0 8px rgba(255,249,62,.14),0 8px 22px rgba(255,249,62,.3);}
-.qclaim-amt{display:inline-flex;align-items:center;gap:7px;justify-content:center;
-  font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--text,#fff);margin-bottom:6px;}
-.qclaim-amt .rad-onyx-ic{width:22px;height:22px;color:var(--accent,#fff93e);}
-.qclaim-sub{font-size:13px;line-height:1.55;color:var(--muted-light,rgba(255,255,255,.6));margin-bottom:20px;}
+.qclaim-glow{position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:220px;height:180px;
+  background:radial-gradient(circle,rgba(255,249,62,.16),transparent 65%);pointer-events:none;}
+.qclaim-inner{position:relative;padding:32px 30px 24px;z-index:1;}
+.qclaim-orb{width:74px;height:74px;margin:0 auto 18px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:#fff;background:rgba(255,249,62,.07);border:2px solid rgba(255,249,62,.42);
+  box-shadow:0 0 0 6px rgba(255,249,62,.06),0 8px 26px rgba(255,249,62,.22);}
+.qclaim-orb-ic{width:36px;height:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4));}
+.qclaim-head{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,rgba(255,255,255,.5));margin-bottom:8px;}
+.qclaim-bal{display:inline-flex;align-items:center;gap:9px;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:34px;letter-spacing:-.01em;color:var(--text,#fff);margin-bottom:12px;}
+.qclaim-bal-ic{width:28px;height:28px;}
+.qclaim-sub{font-size:13px;line-height:1.6;color:var(--muted-light,rgba(255,255,255,.6));margin-bottom:22px;}
 .qclaim-sub b{color:var(--text,#fff);font-weight:700;}
-.qclaim-ok.btn-a{width:100%;padding:11px;font-size:13.5px;border-radius:12px;}
+.qclaim-shop.btn-a{width:100%;padding:12px;font-size:13.5px;border-radius:12px;margin-bottom:6px;}
+.qclaim-later{width:100%;border:none;background:transparent;cursor:pointer;padding:9px;
+  font-family:var(--font-display);font-weight:700;font-size:12.5px;color:var(--muted,rgba(255,255,255,.5));transition:color .15s;}
+.qclaim-later:hover{color:var(--text,#fff);}
 
 /* ── Quest-card buttons: claimable state + accept + cancel ── */
 .qst-qbtn--claim.btn-a{box-shadow:0 3px 0 rgba(0,0,0,.28),0 0 18px rgba(255,249,62,.28);}

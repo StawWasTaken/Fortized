@@ -31344,7 +31344,7 @@ function _showMaintenanceScreen() {
       <svg width="30" height="30" viewBox="0 0 512 512" fill="${AC}"><path d="${wrench}"/></svg>
     </div>
     <div style="font-size:25px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.4px;">Under Maintenance</div>
-    <div style="font-size:14px;color:#8b95a8;margin-bottom:24px;line-height:1.65;">Fortized is briefly offline for maintenance. Nothing is wrong with your account — we're making things better and will be back shortly.</div>
+    <div style="font-size:14px;color:#8b95a8;margin-bottom:24px;line-height:1.65;">We're making things better and will be back shortly.</div>
     <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:16px 22px;text-align:left;margin-bottom:20px;">
       ${row('Status', 'Temporarily offline')}
       ${msgBlock}
@@ -31359,15 +31359,21 @@ function _showMaintenanceScreen() {
     </div>
   </div>`;
   document.body.appendChild(overlay);
-  // Auto-retry: quietly re-check global settings; the instant maintenance is
-  // lifted, reload so the user is back in without touching anything.
-  if (window._maintRetryTimer) { clearInterval(window._maintRetryTimer); }
-  window._maintRetryTimer = setInterval(() => {
-    if (!document.getElementById('maintenance-overlay')) { clearInterval(window._maintRetryTimer); window._maintRetryTimer = null; return; }
-    FortizedSocial.adminGetGlobalSettings().then(g => {
-      if (g && !g.maintenanceMode) location.reload();
-    }).catch(() => {});
-  }, 25000);
+  // Show/hide is driven centrally by the consolidated global-settings poller
+  // (_maintenanceTick): it opens this screen the moment maintenance is turned
+  // ON and reloads the page the moment it's turned OFF.
+}
+
+// Called by the consolidated poller every few seconds (and on socket pushes).
+// Opens the maintenance screen when maintenance is ON for a non-staff user, and
+// reloads the page when it's turned back OFF while the screen is up.
+function _maintenanceTick(gs) {
+  try {
+    const on = !!(gs && gs.maintenanceMode) && !hasStaffAccess();
+    const overlay = document.getElementById('maintenance-overlay');
+    if (on && !overlay) { _showMaintenanceScreen(); }
+    else if (!on && overlay) { location.reload(); }
+  } catch (_) {}
 }
 
 // ── Consolidated global settings poller (maintenance + announcement) ──
@@ -31383,15 +31389,16 @@ function _listenGlobalSettingsConsolidated() {
       let gs = null;
       try { gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}'); } catch {}
       let iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"></svg>';
+      // Fetch the freshest settings ONCE — this drives BOTH the announcement bar
+      // AND the maintenance screen (turn ON → screen appears; turn OFF → reload).
+      try {
+        const gsServer = await FortizedSocial.adminGetGlobalSettings();
+        if (gsServer) { gs = gsServer; try { localStorage.setItem('ftz_global_settings', JSON.stringify(gsServer)); } catch {} _globalSettings = gsServer; }
+      } catch {}
+      _maintenanceTick(gs);
       let text = gs?.announcement || null;
-      
-      // Also try to fetch from server
-      if (!text) {
-        try { const gsServer = await FortizedSocial.adminGetGlobalSettings();
-        text = gsServer?.announcement || null;
-        if (gsServer?.announcementIcon) iconSvg = gsServer.announcementIcon; } catch {}
-      }
-      
+      if (gs?.announcementIcon) iconSvg = gs.announcementIcon;
+
       if (text !== _lastAnnText) {
         _lastAnnText = text;
         const existing = document.getElementById('sys-announce-bar');
@@ -46553,65 +46560,120 @@ function updateQuestBadge() {
 }
 
 // ── The claim popup: "You've earned N Onyx from the <quest> quest." ──
+// A Fortized reward popup, modelled on Discord's Orbs-balance card in CONTENT
+// (announces the new balance, offers the shop) but in Fortized's own colours +
+// popup language (theme-aware surface, accent top-line, gentle scale entrance,
+// NO auto-dismiss / no brutal fade — the user closes it).
 function _showQuestClaimPopup(reward, questTitle) {
   const old = document.getElementById('quest-claim-popup');
   if (old) old.remove();
+  const balance = (+CU?.onyx || 0);
   const overlay = document.createElement('div');
   overlay.id = 'quest-claim-popup';
   overlay.className = 'qclaim-overlay';
   overlay.onclick = (e) => { if (e.target === overlay) _dismissQuestClaimPopup(); };
   overlay.innerHTML = `
     <div class="qclaim-card">
-      <div class="qclaim-burst"><i class="fa-solid fa-gift"></i></div>
-      <div class="qclaim-amt"><span class="rad-onyx-ic"></span> +${reward} Onyx</div>
-      <div class="qclaim-sub">You’ve earned it from the<br><b>${escapeHTML(questTitle || 'quest')}</b> quest.</div>
-      <button class="qp-btn btn-a qclaim-ok" onclick="_dismissQuestClaimPopup()">Nice!</button>
+      <div class="qclaim-glow"></div>
+      <div class="qclaim-inner">
+        <div class="qclaim-orb"><span class="qclaim-orb-ic"></span></div>
+        <div class="qclaim-head">Your Onyx balance is now</div>
+        <div class="qclaim-bal"><span class="qclaim-bal-ic"></span>${balance.toLocaleString()}</div>
+        <div class="qclaim-sub">You earned <b>+${reward}</b> from the <b>${escapeHTML(questTitle || 'quest')}</b> quest. Great work — let's go spending.</div>
+        <button class="btn-a qclaim-shop" onclick="_dismissQuestClaimPopup();showView('fortshop')">Explore the Fortshop</button>
+        <button class="qclaim-later" onclick="_dismissQuestClaimPopup()">Keep questing</button>
+      </div>
     </div>`;
   document.body.appendChild(overlay);
   requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('visible')));
-  setTimeout(() => _dismissQuestClaimPopup(), 6000);
 }
 function _dismissQuestClaimPopup() {
   const o = document.getElementById('quest-claim-popup');
   if (!o) return;
   o.classList.remove('visible');
-  setTimeout(() => o.remove(), 350);
+  setTimeout(() => o.remove(), 300);
 }
 
-// ── The active-quest widget (above the userbar) ──
+// ── The active-quest widget — integrated ON the userbar (Discord-style) ──
+// Compact by default; each accepted quest expands on hover to reveal its banner
+// (+ logo), full description, thick progress bar and primary action. Uses the
+// Fortized logo in the header + each quest's banner art in the reveal.
+const _QW_CDN = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
 function renderQuestWidget() {
   const host = document.getElementById('quest-widget-host');
-  if (!host || !CU) return;
+  if (!host || !CU) { return; }
   const cat = _questCatalogue();
-  // The widget tracks the quests the user ACCEPTED (pinned). A claimable one
-  // among them shows a Claim button right here; the rest show live progress.
-  // Passive completions the user never pinned surface via the tab badge instead.
   const items = cat.filter(q => q.accepted && !q.done);
-  if (!items.length) { host.style.display = 'none'; host.innerHTML = ''; return; }
+  if (!items.length) {
+    host.style.display = 'none'; host.innerHTML = '';
+    _syncQuestWidgetPadding(false);
+    return;
+  }
+  const DEF_BANNER = _QW_CDN + 'Usualbackground.png';
+  const DEF_LOGO = '/Fortized logo2026.png?v=2026';
   const collapsed = localStorage.getItem('ftz_quest_widget_collapsed') === '1';
-  const rows = items.map(q => {
-    const pct = q.goal ? Math.round(q.goal.cur / q.goal.target * 100) : (q.claimable ? 100 : 0);
-    const progTxt = q.goal ? `${q.goal.cur}/${q.goal.target}` : (q.claimable ? 'Ready' : 'In progress');
-    const cta = q.claimable
-      ? `<button class="qw-claim" onclick="claimQuest('${q.id}')"><i class="fa-solid fa-gift"></i> Claim ${q.reward}</button>`
-      : `<button class="qw-go" onclick="${q.action}">Go</button>`;
-    return `<div class="qw-row${q.claimable ? ' is-ready' : ''}">
-      <div class="qw-ic"><i class="fa-solid ${q.ic || 'fa-scroll'}"></i></div>
-      <div class="qw-main">
-        <div class="qw-top"><span class="qw-name">${escapeHTML(q.title)}</span><span class="qw-rew"><span class="rad-onyx-ic"></span>${q.reward}</span></div>
-        <div class="qw-bar"><span style="width:${pct}%;"></span></div>
-        <div class="qw-meta">${progTxt}</div>
+  const units = items.map(q => {
+    const pct = q.goal ? Math.round(q.goal.cur / q.goal.target * 100) : (q.claimable ? 100 : 8);
+    const face = q.claimable ? 'Ready when you are' : (q.goal ? `${q.goal.cur} / ${q.goal.target} complete` : 'In progress');
+    const avail = q.tier === 'daily' ? 'Resets at midnight' : q.tier === 'weekly' ? 'Resets Monday' : 'One-time quest';
+    const banner = q.banner || DEF_BANNER;
+    const logoEl = q.logo
+      ? `<img class="qw-blogo qw-blogo--img" src="${q.logo}" alt="" onerror="this.style.display='none'">`
+      : `<img class="qw-blogo qw-blogo--word" src="${DEF_LOGO}" alt="Fortized">`;
+    const primary = q.claimable
+      ? `<button class="qw-primary is-claim" onclick="event.stopPropagation();claimQuest('${q.id}')"><span class="qw-primary-ic"></span> Claim ${q.reward} Onyx</button>`
+      : `<button class="qw-primary" onclick="event.stopPropagation();${q.action}">${escapeHTML(q.cta || 'Go do it')}</button>`;
+    return `<div class="qw-unit${q.claimable ? ' is-ready' : ''}">
+      <div class="qw-reveal qw-reveal-top">
+        <div class="qw-banner" style="background-image:url('${banner}');">
+          <span class="qw-banner-scrim"></span>
+          <span class="qw-banner-logo">${logoEl}</span>
+          <span class="qw-avail">${avail}</span>
+        </div>
       </div>
-      <div class="qw-act">${cta}<button class="qw-x" onclick="cancelQuest('${q.id}')" title="Remove"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="qw-face">
+        <div class="qw-gem"><span class="qw-gem-ic"></span></div>
+        <div class="qw-face-main">
+          <div class="qw-face-title">${escapeHTML(q.title)}</div>
+          <div class="qw-face-sub">${face}</div>
+        </div>
+        <div class="qw-face-rew"><span class="qw-face-rew-ic"></span>${q.reward}</div>
+        <button class="qw-cancel" onclick="event.stopPropagation();cancelQuest('${q.id}')" title="Remove quest"><svg viewBox="0 0 384 512" width="11" height="11" fill="currentColor"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
+      </div>
+      <div class="qw-reveal qw-reveal-bot">
+        <div class="qw-detail">
+          <div class="qw-desc">${escapeHTML(q.desc)}</div>
+          <div class="qw-bar"><span style="width:${pct}%;"></span></div>
+          ${primary}
+        </div>
+      </div>
     </div>`;
   }).join('');
-  host.innerHTML = `
-    <div class="qw-head">
-      <span class="qw-title"><i class="fa-solid fa-scroll"></i> Active Quests <span class="qw-count">${items.length}</span></span>
-      <button class="qw-collapse" onclick="_toggleQuestWidget()" title="${collapsed ? 'Expand' : 'Hide'}"><i class="fa-solid ${collapsed ? 'fa-chevron-up' : 'fa-chevron-down'}"></i></button>
-    </div>
-    <div class="qw-body"${collapsed ? ' style="display:none;"' : ''}>${rows}</div>`;
+  host.innerHTML = `<div class="qw-inner${collapsed ? ' is-collapsed' : ''}">
+    <button class="qw-head" onclick="_toggleQuestWidget()">
+      <span class="qw-brand"><span class="qw-brand-mark" style="-webkit-mask:url('/fortized-logo.png') center/contain no-repeat;mask:url('/fortized-logo.png') center/contain no-repeat;"></span></span>
+      <span class="qw-htitle">Active Quests</span>
+      <span class="qw-count">${items.length}</span>
+      <span class="qw-chev"><svg viewBox="0 0 512 512" width="11" height="11" fill="currentColor"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
+    </button>
+    <div class="qw-units">${units}</div>
+  </div>`;
   host.style.display = '';
+  _syncQuestWidgetPadding(true);
+}
+// The widget lives inside the fixed userbar; grow the sidebars' bottom clearance
+// so their content never scrolls under the (now taller) bar. Hover-expansion
+// overlays upward and is intentionally NOT padded for.
+function _syncQuestWidgetPadding(on) {
+  if (window.innerWidth <= 900) {
+    document.querySelectorAll('.sidebar,.sidebar-ctx').forEach(s => s.style.paddingBottom = '');
+    return;
+  }
+  requestAnimationFrame(() => {
+    const ub = document.getElementById('userbar');
+    const pad = on && ub ? (ub.offsetHeight + 12) : 0;
+    document.querySelectorAll('.sidebar,.sidebar-ctx').forEach(s => s.style.paddingBottom = pad ? pad + 'px' : '');
+  });
 }
 function _toggleQuestWidget() {
   const collapsed = localStorage.getItem('ftz_quest_widget_collapsed') === '1';
@@ -50761,8 +50823,8 @@ function _postInitSetup() {
     const statO = document.getElementById('stat-onyx');
     if (statO) statO.textContent = CU?.onyx||0;
   }, 30000);
-  // Show the daily quest popup after a short delay (let the UI settle)
-  setTimeout(() => { try { _showDailyQuestPopup(); } catch(e) { _wrn('[quest-popup]', e); } }, 2000);
+  // (The "Hearken, Hearken!" daily-quest popup was retired — the daily reward is
+  // now claimed from the Quests tab / active-quest widget like every other quest.)
   // Check for pending quest rewards that haven't been granted yet
   setTimeout(() => { try { _checkAndAwardPendingQuests(); } catch(e) { _wrn('[quest-check]', e); } }, 3000);
 }

@@ -40,6 +40,28 @@ highlight = pink.
    in refreshCU). Card buttons: Claim reward / Accept Quest / In progress + cancel.
    ⚠️ LIVE-VERIFY on deploy (sandbox blind): widget renders above the wide userbar,
    badge count, accept→track→claim end-to-end, popup, send-msg met live-update.
+✅ ITERATION 2 (`2026fix417`):
+   • Active-quest widget REBUILT Discord-style + INTEGRATED into the userbar:
+     `#quest-widget-host` moved INSIDE `.userbar` (the fixed bottom bar) so it sits
+     flush on top of it. Compact face by default; each accepted quest expands
+     UPWARD on hover (`.qw-reveal-top/-bot` max-height) to reveal its banner +
+     logo, availability pill, full desc, thick progress bar + primary button. FA
+     `<i>` emojis removed; header uses the Fortized logo mask; thick 1.5–2px
+     strokes; `.qw-onyx`/gem/reward glyphs = `currentColor` mask. Collapse chevron
+     kept (localStorage `ftz_quest_widget_collapsed`). `_syncQuestWidgetPadding`
+     grows `.sidebar/.sidebar-ctx` bottom clearance for the taller bar (mobile-safe).
+   • Claim popup REDESIGNED (`_showQuestClaimPopup`): Discord Orbs-balance CONTENT
+     ("Your Onyx balance is now <bal>", Explore-the-Fortshop + Keep-questing) in
+     Fortized's popup look (accent top-line, gentle `.97→1` entrance, NO auto-
+     dismiss). Shows the new balance (`CU.onyx`).
+   • Onyx = currentColor everywhere in quests (task 1).
+   • Radiance `::selection` now `rgba(239,95,176,.2)` — same alpha as the yellow
+     `::selection` (`rgba(255,249,62,.2)`).
+   • "Hearken, Hearken!" daily popup REMOVED (`_showDailyQuestPopup` no longer
+     called at init) — daily reward is claimed via the tab/widget now.
+   • Maintenance: text → "We're making things better and will be back shortly.";
+     auto show/hide driven by the consolidated poller (`_maintenanceTick`, ~5s):
+     turns ON → screen appears; turns OFF → page reloads.
 ✅ MAINTENANCE SCREEN REDESIGN (`2026fix416`) — `_showMaintenanceScreen` rebuilt to
    the ban/suspend/warning card family (`_renderViolationNotice`): `--rail`
    takeover, one 560px card, 66px icon tile (brand yellow wrench), lead line,

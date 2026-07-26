@@ -23,11 +23,34 @@ highlight = pink.
    `<img class="qst-qlogo-img qst-qlogo-word">` (no mask needed), with the slot
    switched to auto-width via `.qst-qcard-logo--word` so the wide mark sits at a
    readable 24px height. Verified via Playwright plainview.
-4. **Add a LIMITED sponsored quest** for the user's friend's app — a rare/expiring
-   card: `{ by:'<friend/company>', logo:'<their logo>', banner:'<their banner>',
-   title, desc, reward (higher, 50-150), endsAt:'<date>' }` in `_questCatalogue`
-   under a new tier (e.g. `limited`), rendered in Available with a real end-date
-   pill (extend `_qstStartTimers`/the time pill to support an absolute endsAt).
+✅ ALSO SHIPPED (`2026fix415`) — onyx glyph now a `currentColor` mask overlay
+   (`.rad-onyx-ic`) in quest cards + daily popup, sized to the text (`.qst-onyx-img`
+   removed). Radiance topbar active-tab highlight reverted to YELLOW; Radiance pink
+   moved to the text-selection/caret (`.rad-page ::selection` + `caret-color`).
+✅ QUEST CLAIM SYSTEM REWORK (`2026fix415`) — claim-to-collect model. Nothing
+   auto-pays; a quest becomes `claimable` when MET, collected in the Quests tab or
+   the active-quest widget. `_questCatalogue` now yields met/done(=claimed)/
+   claimable/accepted per quest. `_trackSendMsgQuest` marks met only (no +3);
+   `_checkAndAwardPendingQuests` no longer grants (refresh-only). New:
+   `acceptQuest`/`cancelQuest`/`claimQuest`, `updateQuestBadge` (launcher badge
+   1..9+, `#dm-quest-badge`), `renderQuestWidget` (active-quest widget above
+   `#userbar`, host `#quest-widget-host` in index.html; progress + hide/collapse +
+   cancel + claim-here, hides when empty), `_showQuestClaimPopup` ("You've earned N
+   Onyx from the <quest> quest"). State field `questsAccepted` (raw JSONB, protected
+   in refreshCU). Card buttons: Claim reward / Accept Quest / In progress + cancel.
+   ⚠️ LIVE-VERIFY on deploy (sandbox blind): widget renders above the wide userbar,
+   badge count, accept→track→claim end-to-end, popup, send-msg met live-update.
+✅ MAINTENANCE SCREEN REDESIGN (`2026fix416`) — `_showMaintenanceScreen` rebuilt to
+   the ban/suspend/warning card family (`_renderViolationNotice`): `--rail`
+   takeover, one 560px card, 66px icon tile (brand yellow wrench), lead line,
+   `#13161d` detail card (Status / Message-from-the-team block / Automatic retry),
+   status-page link + Status/Retry buttons. Auto-retries every 25s and reloads the
+   instant maintenance is lifted.
+4. **Add a LIMITED sponsored quest** — DEFERRED (long-term, per user). For the
+   user's friend's app — a rare/expiring card: `{ by, logo, banner, title, desc,
+   reward (50-150), endsAt }` in `_questCatalogue` under a new `limited` tier,
+   rendered in Available with a real end-date pill (extend `_qstStartTimers`/the
+   time pill for an absolute `endsAt`). Needs the friend's assets/info first.
 5. **DM user panel loads the WRONG person** (`#dm-user-panel`) sometimes — must
    always show the open DM partner. Investigate `_enrichDMHeader`/DM profile render.
 6. **"Sending" message state redesign** — optimistic-send UI, Discord-like but original.

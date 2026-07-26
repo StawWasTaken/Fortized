@@ -31317,22 +31317,57 @@ function checkMaintenanceMode() {
   });
 }
 
+// Maintenance takeover — built to the SAME visual family as the ban / suspend /
+// warning cards (`_renderViolationNotice`): a full-screen `--rail` backdrop, one
+// centred card, an icon tile, a lead line, a `#13161d` detail card with rows,
+// footer links + actions. Themed for maintenance (brand yellow, wrench glyph) —
+// it's a notice, not a violation. Auto-retries while it's up so users are let
+// back in the moment the platform is live again.
 function _showMaintenanceScreen() {
   document.getElementById('maintenance-overlay')?.remove();
+  const gs = _globalSettings || {};
+  const AC = '#fff93e'; // brand accent — maintenance reads as a notice, not a strike
+  const row = (label, val) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+    <span style="color:#5a6478;font-size:13px;flex-shrink:0;">${label}</span>
+    <span style="color:#c8d0dc;font-size:13px;font-weight:600;text-align:right;word-break:break-word;">${val}</span></div>`;
+  const msg = (gs.announcement || '').trim();
+  const msgBlock = msg ? `<div style="display:flex;flex-direction:column;gap:6px;padding:10px 0;">
+      <span style="color:#5a6478;font-size:13px;">Message from the team</span>
+      <div style="background:rgba(255,249,62,.05);border:1px solid rgba(255,249,62,.14);border-left:3px solid ${AC};border-radius:8px;padding:10px 14px;font-size:13px;color:#c8d0dc;line-height:1.6;word-break:break-word;">${escapeHTML(msg.slice(0,300))}${msg.length>300?'…':''}</div>
+    </div>` : '';
+  const wrench = 'M352 320c88.4 0 160-71.6 160-160c0-15.3-2.2-30.1-6.2-44.2c-3.1-10.8-16.4-13.2-24.3-5.3l-76.8 76.8c-3 3-7.1 4.7-11.3 4.7L336 192c-8.8 0-16-7.2-16-16l0-57.4c0-4.2 1.7-8.3 4.7-11.3l76.8-76.8c7.9-7.9 5.4-21.2-5.3-24.3C382.1 2.2 367.3 0 352 0C263.6 0 192 71.6 192 160c0 19.1 3.4 37.5 9.5 54.5L19.9 396.1C7.2 408.8 0 426.1 0 444.1C0 481.6 30.4 512 67.9 512c18 0 35.3-7.2 48-19.9L297.5 310.5c17 6.2 35.4 9.5 54.5 9.5z';
   const overlay = document.createElement('div');
   overlay.id = 'maintenance-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:var(--bg,#0f1119);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:40px;';
-  const gs = _globalSettings || {};
-  overlay.innerHTML = `
-    <div style="width:80px;height:80px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;">🔧</div>
-    <div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:#fff;text-align:center;">Under Maintenance</div>
-    <div style="font-size:14px;color:rgba(255,255,255,.5);text-align:center;max-width:400px;line-height:1.7;">
-      Fortized is currently undergoing maintenance. We'll be back shortly!
-      ${gs.announcement?`<br><br><strong style="color:var(--accent);">${escapeHTML(gs.announcement)}</strong>`:''}
+  overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:var(--rail,#070a0e);display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Syne',system-ui,-apple-system,sans-serif;";
+  overlay.innerHTML = `<div style="background:rgba(19,22,29,.97);border:1px solid #252b3a;width:100%;max-width:560px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);max-height:92vh;overflow:auto;">
+    <div style="width:66px;height:66px;border-radius:18px;background:${AC}14;border:1px solid ${AC}2e;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+      <svg width="30" height="30" viewBox="0 0 512 512" fill="${AC}"><path d="${wrench}"/></svg>
     </div>
-    <button onclick="location.reload()" style="padding:10px 24px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:10px;color:var(--accent);cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:14px;">Retry</button>
-  `;
+    <div style="font-size:25px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.4px;">Under Maintenance</div>
+    <div style="font-size:14px;color:#8b95a8;margin-bottom:24px;line-height:1.65;">Fortized is briefly offline for maintenance. Nothing is wrong with your account — we're making things better and will be back shortly.</div>
+    <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:16px 22px;text-align:left;margin-bottom:20px;">
+      ${row('Status', 'Temporarily offline')}
+      ${msgBlock}
+      ${row('Automatic retry', 'This page reconnects on its own')}
+    </div>
+    <div style="font-size:12px;color:#5a6478;margin-bottom:22px;line-height:1.6;">
+      Follow live updates on the <a href="/support/status" target="_blank" rel="noopener noreferrer" style="color:${AC};text-decoration:none;font-weight:600;white-space:nowrap;">status page</a>.
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="window.open('/support/status','_blank','noopener')" style="padding:11px 22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#e6ebf2;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Status page</button>
+      <button onclick="location.reload()" style="padding:11px 22px;background:${AC};border:1px solid transparent;border-radius:10px;color:#13161d;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Retry now</button>
+    </div>
+  </div>`;
   document.body.appendChild(overlay);
+  // Auto-retry: quietly re-check global settings; the instant maintenance is
+  // lifted, reload so the user is back in without touching anything.
+  if (window._maintRetryTimer) { clearInterval(window._maintRetryTimer); }
+  window._maintRetryTimer = setInterval(() => {
+    if (!document.getElementById('maintenance-overlay')) { clearInterval(window._maintRetryTimer); window._maintRetryTimer = null; return; }
+    FortizedSocial.adminGetGlobalSettings().then(g => {
+      if (g && !g.maintenanceMode) location.reload();
+    }).catch(() => {});
+  }, 25000);
 }
 
 // ── Consolidated global settings poller (maintenance + announcement) ──

@@ -15494,7 +15494,9 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .qst-qcard-reward{display:inline-flex;align-items:center;gap:8px;padding:5px 14px 5px 6px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid var(--border,rgba(255,255,255,.1));font-family:var(--font-display);font-weight:700;color:var(--text,#fff);white-space:nowrap;}
 .qst-qcard-reward b{font-size:16px;font-weight:800;}
 .qst-qcard-reward span{font-size:10.5px;color:var(--muted,rgba(255,255,255,.5));font-weight:600;}
-.qst-qcard-reward .rad-onyx-ic{width:18px;height:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));}
+.qst-qcard-reward{color:var(--text,#fff);}
+.qst-qcard-reward b{color:var(--text,#fff);}
+.qst-qcard-reward .rad-onyx-ic{width:18px;height:18px;}
 /* Accept / Claim button uses the app's 3D .btn-a; sized for the card */
 .qst-qbtn.btn-a{padding:9px 22px;font-size:12.5px;border-radius:12px;}
 .qst-qdone{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-weight:700;font-size:12.5px;color:var(--muted-light,rgba(255,255,255,.55));}
@@ -15558,15 +15560,19 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   display:inline-block;background-color:currentColor;
   -webkit-mask:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png') center/contain no-repeat;
   mask:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png') center/contain no-repeat;}
-.qw-host{margin:0 0 8px;}
-.qw-inner{border-radius:14px;overflow:hidden;background:var(--panel,#20232c);
-  border:1.5px solid var(--border,rgba(255,255,255,.1));box-shadow:0 8px 22px rgba(0,0,0,.35);}
+/* Flush against the userbar: no gap, and the meeting edges are squared so the
+   widget + userbar read as ONE connected block (Discord-style). */
+.qw-host{margin:0;}
+.qw-inner{border-radius:14px 14px 0 0;overflow:hidden;background:var(--panel,#20232c);
+  border:1.5px solid var(--border,rgba(255,255,255,.1));border-bottom:none;box-shadow:0 8px 22px rgba(0,0,0,.35);}
+/* When the widget is present, square the userbar's top so they touch cleanly. */
+.userbar.has-qw .ub-user-container{border-top-left-radius:0;border-top-right-radius:0;}
 /* Header — Fortized brand mark + title + count + collapse chevron */
 .qw-head{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;
   background:rgba(255,255,255,.03);border:none;cursor:pointer;text-align:left;
   border-bottom:1.5px solid var(--border,rgba(255,255,255,.07));}
 .qw-brand{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.qw-brand-mark{width:100%;height:100%;background:var(--accent,#fff93e);display:block;}
+.qw-brand-mark{width:100%;height:100%;background:var(--text,#fff);display:block;}
 .qw-htitle{font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.02em;color:var(--text,#fff);flex:1;}
 .qw-count{min-width:17px;height:17px;padding:0 5px;border-radius:100px;
   display:inline-flex;align-items:center;justify-content:center;
@@ -15601,7 +15607,7 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .qw-face-title{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .qw-face-sub{font-size:11px;font-weight:600;color:var(--muted,rgba(255,255,255,.5));margin-top:1px;}
 .qw-unit.is-ready .qw-face-sub{color:var(--accent,#fff93e);}
-.qw-face-rew{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-family:var(--font-display);font-weight:800;font-size:13px;color:var(--muted-light,rgba(255,255,255,.72));}
+.qw-face-rew{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-family:var(--font-display);font-weight:800;font-size:13px;color:var(--text,#fff);}
 .qw-face-rew-ic{width:14px;height:14px;}
 .qw-cancel{width:22px;height:22px;flex-shrink:0;border-radius:7px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--muted,rgba(255,255,255,.4));opacity:0;transition:opacity .15s,background .15s,color .15s;}
 .qw-unit:hover .qw-cancel{opacity:1;}

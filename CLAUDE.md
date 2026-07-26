@@ -40,6 +40,21 @@ highlight = pink.
    in refreshCU). Card buttons: Claim reward / Accept Quest / In progress + cancel.
    ⚠️ LIVE-VERIFY on deploy (sandbox blind): widget renders above the wide userbar,
    badge count, accept→track→claim end-to-end, popup, send-msg met live-update.
+✅ ITERATION 3 (`2026fix418`):
+   • Widget now truly INTEGRATED: `.qw-host` margin→0, `.qw-inner` bottom corners
+     squared + `border-bottom:none`; `#userbar` gets `.has-qw` (toggled in
+     renderQuestWidget) → `.ub-user-container` top corners squared. Widget+userbar
+     read as ONE connected block, no gap, flush meeting edge.
+   • Header brand mark → WHITE (`.qw-brand-mark background:var(--text)`), was accent
+     yellow. (It's the Fortized quest-system mark, not a per-quest sponsor logo.)
+   • Onyx = the SAME colour as its number: `.qw-face-rew`→`var(--text)`,
+     `.qst-qcard-reward` + `b` pinned to `var(--text)`, dropped the onyx drop-shadow.
+   • Realm Rank is now a GRIND: `REALM_RANKS` = Squire/Knight/Warden/Vanguard/
+     Champion/Paragon at 0/10/30/70/140/250; rank driven by `_questsClaimedTotal`
+     (cumulative `questsClaimedCount`, bumped on every claim; raw JSONB, protected;
+     falls back to completedQuests.length). Header "Quests done" uses it too.
+   • Activity system retired (reworking with the new PC app): removed `#ub-activity-row`
+     (index.html) + the `#game-activity-bar` injector IIFE. Updaters null-guard.
 ✅ ITERATION 2 (`2026fix417`):
    • Active-quest widget REBUILT Discord-style + INTEGRATED into the userbar:
      `#quest-widget-host` moved INSIDE `.userbar` (the fixed bottom bar) so it sits

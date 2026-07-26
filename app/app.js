@@ -16532,7 +16532,7 @@ function initFortizedUXResilience() {
               'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
               'createdAt','customStatus','verified','appearance','badges',
               'completedQuests','questsRewarded','questsDailyLog','dailyStreak','streakDate',
-              'questsWeekly','questOnyxEarned','questsAccepted',
+              'questsWeekly','questOnyxEarned','questsAccepted','questsClaimedCount',
               'lastDailyReward','lastDaily',
               // Cross-device cosmetics — see protectFields explainer above.
               'cursor','density','scale'
@@ -45840,18 +45840,10 @@ function renderGameActivityOnProfile(u, containerEl) {
   if (containerEl) containerEl.prepend(div);
 }
 
-// ════════════════════════════════════════════
-// GAME ACTIVITY BAR CSS (injected at init)
-// ════════════════════════════════════════════
-(function injectGameActivityBar() {
-  const ua = document.getElementById('userbar-area') || document.querySelector('.userbar');
-  if (!ua) return;
-  const bar = document.createElement('div');
-  bar.id = 'game-activity-bar';
-  bar.style.cssText = 'display:none;align-items:center;gap:5px;padding:4px 8px;background:rgba(62,207,110,.07);border:1px solid rgba(62,207,110,.18);border-radius:9px;margin:2px 0;font-size:11px;cursor:pointer;';
-  bar.title = 'Game Activity';
-  ua.after?.(bar) || ua.parentNode?.insertBefore(bar, ua.nextSibling);
-})();
+// Game-activity bar removed (Fortized 3.3) — the activity system + its design
+// are being reworked with the new PC app; the in-userbar bar is retired.
+// (refreshGameActivityBar / renderGameActivityDock null-guard on the missing
+//  element, so nothing else needs to change here.)
 
 
 // ════════════════════════════════════════════
@@ -46355,15 +46347,28 @@ function _radCarouselInit() {
 // the raw JSONB column — no schema change.
 // ══════════════════════════════════════════════════════════
 const REALM_RANKS = [
-  { name:'Squire',   min:0,  ic:'fa-chess-pawn' },
-  { name:'Knight',   min:3,  ic:'fa-chess-knight' },
-  { name:'Warden',   min:7,  ic:'fa-shield-halved' },
-  { name:'Champion', min:12, ic:'fa-crown' },
+  { name:'Squire',   min:0,   ic:'fa-chess-pawn' },
+  { name:'Knight',   min:10,  ic:'fa-chess-knight' },
+  { name:'Warden',   min:30,  ic:'fa-shield-halved' },
+  { name:'Vanguard', min:70,  ic:'fa-chess-rook' },
+  { name:'Champion', min:140, ic:'fa-crown' },
+  { name:'Paragon',  min:250, ic:'fa-dragon' },
 ];
-// Rank derived from how many one-time quests the user has completed.
+// Total quests the user has ever CLAIMED — this is the grind that drives Realm
+// Rank. It counts every claim (daily, weekly, milestone), so ranks are a long-
+// term climb, not something the handful of one-time milestones alone can top out.
+// Falls back to the milestone count so pre-counter accounts don't regress.
+function _questsClaimedTotal(cu) {
+  cu = cu || (typeof CU !== 'undefined' ? CU : null) || {};
+  return Math.max(+(cu.questsClaimedCount) || 0, (cu.completedQuests || []).length);
+}
+function _bumpQuestClaimCount() {
+  if (typeof CU !== 'undefined' && CU) CU.questsClaimedCount = (+CU.questsClaimedCount || 0) + 1;
+}
+// Rank derived from how many quests the user has claimed over time.
 function _realmRank(cu) {
   cu = cu || (typeof CU !== 'undefined' ? CU : null) || {};
-  const done = (cu.completedQuests || []).length;
+  const done = _questsClaimedTotal(cu);
   let idx = 0;
   for (let i = 0; i < REALM_RANKS.length; i++) if (done >= REALM_RANKS[i].min) idx = i;
   const cur = REALM_RANKS[idx], next = REALM_RANKS[idx + 1] || null;
@@ -46469,6 +46474,7 @@ async function claimWeeklyQuest(id, reward) {
   b.claimed.push(id);
   CU.onyx = (CU.onyx || 0) + reward;
   _addQuestOnyx(reward);
+  _bumpQuestClaimCount();
   _unacceptQuest(id);
   updateOnyxDisplay();
   await saveUser(true);
@@ -46534,6 +46540,7 @@ async function claimQuest(id) {
   }
   CU.onyx = (CU.onyx || 0) + q.reward;
   _addQuestOnyx(q.reward);
+  _bumpQuestClaimCount();
   _unacceptQuest(id);
   updateOnyxDisplay();
   try { await saveUser(true); } catch {}
@@ -46606,6 +46613,7 @@ function renderQuestWidget() {
   const items = cat.filter(q => q.accepted && !q.done);
   if (!items.length) {
     host.style.display = 'none'; host.innerHTML = '';
+    document.getElementById('userbar')?.classList.remove('has-qw');
     _syncQuestWidgetPadding(false);
     return;
   }
@@ -46659,6 +46667,7 @@ function renderQuestWidget() {
     <div class="qw-units">${units}</div>
   </div>`;
   host.style.display = '';
+  document.getElementById('userbar')?.classList.add('has-qw');
   _syncQuestWidgetPadding(true);
 }
 // The widget lives inside the fixed userbar; grow the sidebars' bottom clearance
@@ -46956,7 +46965,7 @@ function renderAtelierTab(tab) {
     const DEF_BANNER = _QCDN + 'Usualbackground.png';      // default banner for official quests
     const cat = _questCatalogue();
     const rank = _realmRank(CU);
-    const completedCount = (CU?.completedQuests || []).length;
+    const completedCount = _questsClaimedTotal(CU);
     const estOnyx = cat.filter(q => q.tier === 'journey' && q.done).reduce((s,q) => s + q.reward, 0);
     const onyxEarned = Math.max(+CU?.questOnyxEarned || 0, estOnyx);
 
@@ -52700,6 +52709,7 @@ async function claimDailyQuest() {
   CU.questsDailyLog.daily_claim = today;
   try { _questWeekTick('claim'); } catch {}
   try { _addQuestOnyx(totalReward); } catch {}
+  try { _bumpQuestClaimCount(); } catch {}
   _unacceptQuest('daily_claim');
   updateOnyxDisplay();
   await saveUser(true);

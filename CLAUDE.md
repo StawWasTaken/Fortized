@@ -9,20 +9,32 @@ rebalance: daily 5/msg 3/invite 10, weekly 25/20, Radiance 200/600/1500 = 2/6/15
 badge → "Quest Progression" w/ rank, Onyx badge removed, page-switch infinite-loop fix
 (nav-seq token in showView), subnav uniformized (height:100%), Radiance page active
 highlight = pink.
-**Still to do (asked, not yet done):**
-1. **Bounties icon** — user made a custom icon; need the file/URL. Currently
-   `_BOUNTY_ICON = _QCDN+'BountiesIcon.png'` (404 → fa-scroll fallback) in the quests
-   render (bounties tab). Swap once provided.
-2. **Fortized quest content** — real per-quest banners + confirm @fortized logo;
-   plus the rare/expiring high-reward quests (title/desc/banner/logo/by/reward/endDate)
-   → wire as data in `_questCatalogue`.
-3. **DM user panel loads the WRONG person** (`#dm-user-panel`) sometimes — must always
-   show the open DM partner's profile. Investigate `_enrichDMHeader`/DM profile render.
-4. **"Sending" message state redesign** — optimistic-send UI, Discord-like but original.
-5. **Gift Radiance rework** — currently broken. Want: a card when sending the gift link,
-   a real auto-message to the recipient via the button, and a `gift.fortized.com/<one-time-code>`
-   link. (`createRadianceGiftLink`/`sendRadianceGiftToUser`/`claimGift`.)
-6. **Bastion redesign (later):** invite links as `invite.fortized.com/<invite-id>`.
+**Still to do — NEXT SESSION (user-provided assets/decisions):**
+1. **Bounties icon** → use `https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/BountiesSVG.png`
+   as a **colour overlay (CSS mask)**, NOT a plain img. Replace `_BOUNTY_ICON`
+   (currently `_QCDN+'BountiesIcon.png'`, 404 → fa-scroll) in the bounties-tab
+   render + `.qst-bounty-ic` CSS (mask-image + background-color = a colour).
+2. **Onyx glyph in quests → use the Onyx SVG, NOT the "Onyx image.png"** (user
+   dislikes the image). Swap `ONYX_IMG = '/Onyx image.png'` back to the OnyxSVG
+   (`_QCDN+'OnyxSVG.png'` or `/OnyxSVG.png`) in `_questCatalogue` render (`qCard`)
+   + the daily-popup. Keep the rounded chip; drop `border-radius:50%` on the glyph
+   if it's the flat SVG. (NOTE: this reverses the earlier "restore the image" ask.)
+3. **Fortized @fortized quest logo** → `https://www.fortized.com/Fortized%20logo2026.png?v=2026`
+   (set `DEF_LOGO` to this). Confirm whether it's colour (use `.qst-qlogo-img`) or
+   a dark mark needing the white-mask path.
+4. **Add a LIMITED sponsored quest** for the user's friend's app — a rare/expiring
+   card: `{ by:'<friend/company>', logo:'<their logo>', banner:'<their banner>',
+   title, desc, reward (higher, 50-150), endsAt:'<date>' }` in `_questCatalogue`
+   under a new tier (e.g. `limited`), rendered in Available with a real end-date
+   pill (extend `_qstStartTimers`/the time pill to support an absolute endsAt).
+5. **DM user panel loads the WRONG person** (`#dm-user-panel`) sometimes — must
+   always show the open DM partner. Investigate `_enrichDMHeader`/DM profile render.
+6. **"Sending" message state redesign** — optimistic-send UI, Discord-like but original.
+7. **Gift Radiance rework** — currently broken. Want: a card when sending the gift
+   link, a real auto-message to the recipient via the button, and a
+   `gift.fortized.com/<one-time-code>` link.
+   (`createRadianceGiftLink`/`sendRadianceGiftToUser`/`claimGift`.)
+8. **Bastion redesign (later):** invite links as `invite.fortized.com/<invite-id>`.
 
 ## 🔴 SESSION HANDOFF (as of cache-bust `2026fix402`)
 

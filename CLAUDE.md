@@ -1,5 +1,29 @@
 # Fortized — working notes for Claude
 
+## 🟡 OPEN TODO (Quests-redesign session, branch `claude/radiance-page-redesign-8hg665`)
+Done so far: Radiance milestone (Plum theme, state-based), Vault carousel, Radiance
+rebrand + Bounties newsroom articles, Quests page fully redesigned to Discord-style
+(topbar tabs Available/Claimed/Bounties, image rank-banner header, Discord quest
+cards w/ banner+logo-over-banner+rounded-Onyx-image+3D btn-a Accept button, economy
+rebalance: daily 5/msg 3/invite 10, weekly 25/20, Radiance 200/600/1500 = 2/6/15€),
+badge → "Quest Progression" w/ rank, Onyx badge removed, page-switch infinite-loop fix
+(nav-seq token in showView), subnav uniformized (height:100%), Radiance page active
+highlight = pink.
+**Still to do (asked, not yet done):**
+1. **Bounties icon** — user made a custom icon; need the file/URL. Currently
+   `_BOUNTY_ICON = _QCDN+'BountiesIcon.png'` (404 → fa-scroll fallback) in the quests
+   render (bounties tab). Swap once provided.
+2. **Fortized quest content** — real per-quest banners + confirm @fortized logo;
+   plus the rare/expiring high-reward quests (title/desc/banner/logo/by/reward/endDate)
+   → wire as data in `_questCatalogue`.
+3. **DM user panel loads the WRONG person** (`#dm-user-panel`) sometimes — must always
+   show the open DM partner's profile. Investigate `_enrichDMHeader`/DM profile render.
+4. **"Sending" message state redesign** — optimistic-send UI, Discord-like but original.
+5. **Gift Radiance rework** — currently broken. Want: a card when sending the gift link,
+   a real auto-message to the recipient via the button, and a `gift.fortized.com/<one-time-code>`
+   link. (`createRadianceGiftLink`/`sendRadianceGiftToUser`/`claimGift`.)
+6. **Bastion redesign (later):** invite links as `invite.fortized.com/<invite-id>`.
+
 ## 🔴 SESSION HANDOFF (as of cache-bust `2026fix402`)
 
 Branch **`claude/safety-system-perf-gjrtso`**, mirrored to `main` (standing rule:

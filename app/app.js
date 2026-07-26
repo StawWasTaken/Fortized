@@ -4556,6 +4556,13 @@ function showView(v, _skipPush) {
   const homeBtn = document.getElementById('rb-home');
   if (homeBtn) homeBtn.classList.toggle('active', _homeCluster.includes(v));
 
+  // Nav-sequence token: rapid page switches used to ping-pong forever because
+  // a stale scheduled post-show callback would run switchAtelierTab() against a
+  // now-different _currentView, which re-entered showView(), which scheduled
+  // another callback… Only the LATEST navigation's callback may run now.
+  window._showViewSeq = (window._showViewSeq || 0) + 1;
+  const _navSeq = window._showViewSeq;
+
   // Post-show callbacks
   if (_atelierRoute) {
     const target = window._atelierPendingTab || _atelierRoute || 'radiance';
@@ -4563,7 +4570,11 @@ function showView(v, _skipPush) {
     _atelierTab = target;
     renderAtelierTab(target);
     setTimeout(() => {
-      const _go = () => { switchAtelierTab(target); refreshDailyBtn(); };
+      if (_navSeq !== window._showViewSeq) return; // superseded by a newer navigation
+      const _go = () => {
+        if (_navSeq !== window._showViewSeq) return;
+        switchAtelierTab(target); refreshDailyBtn();
+      };
       refreshCU().then(_go).catch(_go);
     }, 0);
   }
@@ -46697,22 +46708,22 @@ function renderAtelierTab(tab) {
       const isClaim = q.id === 'daily_claim' || q.tier === 'weekly';
       const by = (q.by || 'Fortized').replace(/^@/, '');
       const banner = q.banner || DEF_BANNER;
-      // Sponsor/official quests can pass a full-colour logo image (fills the
-      // chip). The default @fortized mark is our dark shield, so it sits padded
-      // on the light chip (class qlogo-brand) so it reads clearly.
+      // Logo sits directly over the banner (Discord-style, no chip). Sponsors
+      // pass a full-colour image; the default @fortized shield is dark, so we
+      // render it as a white currentColor mask so it reads on the art.
       const logoInner = q.logo
-        ? `<img src="${q.logo}" alt="" onerror="this.style.display='none'">`
-        : `<img class="qlogo-brand" src="${DEF_LOGO}" alt="" onerror="this.style.display='none'">`;
+        ? `<img class="qst-qlogo-img" src="${q.logo}" alt="" onerror="this.style.display='none'">`
+        : `<span class="qst-qlogo-mask" style="-webkit-mask:url('${DEF_LOGO}') center/contain no-repeat;mask:url('${DEF_LOGO}') center/contain no-repeat;"></span>`;
       const resetKind = q.tier === 'daily' ? 'midnight' : q.tier === 'weekly' ? 'monday' : '';
       const timePill = resetKind
         ? `<span class="qst-qtime"><i class="fa-solid fa-clock"></i> <span class="qst-reset" data-reset="${resetKind}"></span></span>`
         : `<span class="qst-qtime qst-qtime--perm"><i class="fa-solid fa-infinity"></i> No time limit</span>`;
       const perFriend = q.unit && q.unit.indexOf('/') !== -1;
       const btn = q.done
-        ? '<button class="qst-qbtn is-done" disabled><i class="fa-solid fa-circle-check"></i> Completed</button>'
+        ? '<span class="qst-qdone"><i class="fa-solid fa-circle-check"></i> Completed</span>'
         : met
-          ? `<button class="qst-qbtn${isClaim ? ' is-claim' : ''}" onclick="${q.action}">${isClaim ? 'Claim reward' : 'Accept Quest'}</button>`
-          : '<button class="qst-qbtn is-wait" disabled>In progress</button>';
+          ? `<button class="btn-a qst-qbtn" onclick="${q.action}">${isClaim ? 'Claim reward' : 'Accept Quest'}</button>`
+          : '<span class="qst-qwait">In progress</span>';
       return `<div class="qst-qcard${q.done ? ' is-done' : ''}">
         <div class="qst-qcard-banner" style="background-image:url('${banner}');">
           ${timePill}
@@ -46770,12 +46781,14 @@ function renderAtelierTab(tab) {
         ? `<div class="qst-qgrid">${done.map(qCard).join('')}</div>`
         : `<div class="qst-empty"><i class="fa-solid fa-scroll"></i><div class="qst-empty-t">Nothing claimed yet</div><div class="qst-empty-s">Complete quests in the Available tab and they’ll appear here.</div></div>`;
     } else if (qtab === 'bounties') {
+      // Discord-style "Bounties incoming" row: icon + title + inline Learn More.
+      // TODO(user): swap _BOUNTY_ICON for the custom Bounties icon once provided.
+      const _BOUNTY_ICON = _QCDN + 'BountiesIcon.png';
       body = `<div class="qst-bounty">
-        <div class="qst-bounty-ic"><i class="fa-solid fa-sack-dollar"></i></div>
+        <div class="qst-bounty-ic"><img src="${_BOUNTY_ICON}" alt="" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-scroll\\'></i>'"></div>
         <div class="qst-bounty-main">
-          <div class="qst-bounty-title">Bounties <span class="qst-soon-tag">Coming soon</span></div>
-          <div class="qst-bounty-desc">High-stakes, rotating challenges with standout rewards — built the Fortized way, not borrowed from anyone. We'll share exactly how they work soon.</div>
-          <a class="qst-bounty-btn" href="https://www.fortized.com/newsroom/?article=bounties" target="_blank" rel="noopener">Learn more</a>
+          <div class="qst-bounty-title">Bounties incoming</div>
+          <div class="qst-bounty-desc">Check back later for new Bounties! <a href="https://www.fortized.com/newsroom/?article=bounties" target="_blank" rel="noopener">Learn More.</a></div>
         </div>
       </div>`;
     } else { // available
@@ -46793,7 +46806,7 @@ function renderAtelierTab(tab) {
     }
 
     el.innerHTML = `<div class="atelier-content-inner qst-page">
-      ${bannerHTML}
+      ${qtab === 'available' ? bannerHTML : ''}
       <div class="qst-body">${body}</div>
     </div>`;
 

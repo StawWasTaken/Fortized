@@ -15496,7 +15496,9 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .qst-qcard-reward span{font-size:10.5px;color:var(--muted,rgba(255,255,255,.5));font-weight:600;}
 .qst-qcard-reward{color:var(--text,#fff);}
 .qst-qcard-reward b{color:var(--text,#fff);}
-.qst-qcard-reward .rad-onyx-ic{width:18px;height:18px;}
+/* The onyx is a <span>, so the `.qst-qcard-reward span{color:--muted}` rule
+   above was tinting it grey while the number stayed white — pin it to --text. */
+.qst-qcard-reward .rad-onyx-ic{width:18px;height:18px;color:var(--text,#fff);}
 /* Accept / Claim button uses the app's 3D .btn-a; sized for the card */
 .qst-qbtn.btn-a{padding:9px 22px;font-size:12.5px;border-radius:12px;}
 .qst-qdone{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-weight:700;font-size:12.5px;color:var(--muted-light,rgba(255,255,255,.55));}
@@ -15571,8 +15573,10 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .qw-head{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;
   background:rgba(255,255,255,.03);border:none;cursor:pointer;text-align:left;
   border-bottom:1.5px solid var(--border,rgba(255,255,255,.07));}
-.qw-brand{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.qw-brand-mark{width:100%;height:100%;background:var(--text,#fff);display:block;}
+.qw-brand{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text,#fff);}
+.qw-brand-ic{width:16px;height:16px;display:block;}
+/* (Bounties will later reuse .qw-brand as a colour-overlay mask of its image.) */
+.qw-brand-mask{width:100%;height:100%;background:currentColor;display:block;}
 .qw-htitle{font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.02em;color:var(--text,#fff);flex:1;}
 .qw-count{min-width:17px;height:17px;padding:0 5px;border-radius:100px;
   display:inline-flex;align-items:center;justify-content:center;

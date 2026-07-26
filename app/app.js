@@ -46321,39 +46321,15 @@ function _realmRank(cu) {
   };
 }
 
-// ── Scroll-spy tabs (mirrors the Radiance topbar behaviour) ──
-const _QST_SECTIONS = ['journey', 'daily', 'weekly', 'bounties'];
-function _qstSetActiveTab(id) {
-  _QST_SECTIONS.forEach(s => { const b = document.getElementById('qtab-' + s); if (b) b.classList.toggle('active', s === id); });
-}
-function _qstGoSection(id) {
-  const scroller = document.getElementById('atelier-scroll-outer');
-  const target = document.getElementById('qst-sec-' + id);
-  if (scroller && target) {
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const top = scroller.scrollTop + target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 8;
-    scroller.scrollTo({ top: Math.max(0, top), behavior: reduce ? 'auto' : 'smooth' });
-  }
-  _qstSetActiveTab(id);
-}
-function _qstBindScrollSpy() {
-  const scroller = document.getElementById('atelier-scroll-outer');
-  if (!scroller) return;
-  if (scroller._qstSpy) scroller.removeEventListener('scroll', scroller._qstSpy);
-  let raf = 0;
-  const spy = () => {
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = 0;
-      if (_currentView !== 'quests') return;
-      const mark = scroller.getBoundingClientRect().top + scroller.clientHeight * 0.32;
-      let cur = _QST_SECTIONS[0];
-      _QST_SECTIONS.forEach(s => { const e = document.getElementById('qst-sec-' + s); if (e && e.getBoundingClientRect().top <= mark) cur = s; });
-      _qstSetActiveTab(cur);
-    });
-  };
-  scroller._qstSpy = spy;
-  scroller.addEventListener('scroll', spy, { passive: true });
+// ── Tabs: Available · Claimed · Bounties ──
+const _QST_TABS = ['available', 'claimed', 'bounties'];
+function _qstSetTab(tab) {
+  if (!_QST_TABS.includes(tab)) tab = 'available';
+  window._qstTab = tab;
+  _QST_TABS.forEach(t => { const b = document.getElementById('qtab-' + t); if (b) b.classList.toggle('active', t === tab); });
+  try { renderAtelierTab('quests'); } catch {}
+  const sc = document.getElementById('atelier-scroll-outer');
+  if (sc) sc.scrollTo({ top: 0, behavior: 'auto' });
 }
 
 // ── Weekly bucket (resets Monday) ──
@@ -46451,21 +46427,6 @@ function _qstStartTimers() {
   };
   tick();
   window._qstTimer = setInterval(tick, 1000);
-}
-
-// Fills the topbar right-side actions (streak flame + Onyx balance).
-function _qstFillSubnavActions() {
-  const host = document.getElementById('qst-subnav-actions');
-  if (!host) return;
-  const streak = (typeof CU !== 'undefined' && CU) ? (+CU.dailyStreak || 0) : 0;
-  const bal = (typeof CU !== 'undefined' && CU) ? (+CU.onyx || 0) : 0;
-  host.innerHTML = `
-    <div class="qst-nav-streak${streak > 0 ? ' on' : ''}" title="${streak} day streak">
-      ${_streakFlameSvg(16)}<span>${streak}</span>
-    </div>
-    <div class="qst-nav-onyx" title="Onyx balance">
-      <span class="rad-onyx-ic"></span><span>${bal.toLocaleString()}</span>
-    </div>`;
 }
 
 function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
@@ -46710,138 +46671,106 @@ function renderAtelierTab(tab) {
     // Award any pending one-time quest rewards first
     _checkAndAwardPendingQuests().catch(()=>{});
 
+    const qtab = window._qstTab || 'available';
     const ONYX = '<img class="qst-onyx" src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="Onyx">';
-    const ACC = {
-      daily:   { c:'#60a5fa', rgb:'96,165,250' },
-      weekly:  { c:'#fb923c', rgb:'251,146,60' },
-      journey: { c:'#a78bfa', rgb:'167,139,250' },
-    };
-    const cat     = _questCatalogue();
-    const daily   = cat.filter(q => q.tier === 'daily');
-    const weekly  = cat.filter(q => q.tier === 'weekly');
-    const journey = cat.filter(q => q.tier === 'journey');
-    const rank    = _realmRank(CU);
-    const streak  = +CU?.dailyStreak || 0;
-    const protectedStreak = (typeof _isStreakProtected === 'function') && _isStreakProtected();
+    const cat = _questCatalogue();
+    const rank = _realmRank(CU);
     const completedCount = (CU?.completedQuests || []).length;
-    const estOnyx = journey.filter(q => q.done).reduce((s,q) => s + q.reward, 0);
+    const estOnyx = cat.filter(q => q.tier === 'journey' && q.done).reduce((s,q) => s + q.reward, 0);
     const onyxEarned = Math.max(+CU?.questOnyxEarned || 0, estOnyx);
-    const currentJourneyId = (journey.find(q => !q.done) || {}).id;
-    const journeyDone = journey.filter(q => q.done).length;
 
-    // Reusable daily/weekly quest card.
+    // One restrained quest card — neutral surface, yellow only as a spice.
     const qCard = (q) => {
-      const a = ACC[q.tier] || ACC.daily;
       const met = !q.goal || q.goal.cur >= q.goal.target;
       const pct = q.goal ? Math.round(q.goal.cur / q.goal.target * 100) : 0;
-      return `<div class="qst-card${q.done ? ' is-done' : ''}" style="--qc:${a.c};--qc-rgb:${a.rgb};">
+      const isClaim = q.id === 'daily_claim' || q.tier === 'weekly';
+      const btn = q.done
+        ? '<span class="qst-done-lbl"><i class="fa-solid fa-circle-check"></i> Claimed</span>'
+        : met
+          ? `<button class="qst-cta${isClaim ? ' qst-cta--claim' : ''}" onclick="${q.action}">${escapeHTML(q.cta)}</button>`
+          : '<span class="qst-wait-lbl">In progress</span>';
+      return `<div class="qst-card${q.done ? ' is-done' : ''}">
         <div class="qst-card-ic"><i class="fa-solid ${q.done ? 'fa-circle-check' : q.ic}"></i></div>
         <div class="qst-card-main">
           <div class="qst-card-title">${escapeHTML(q.title)}</div>
           <div class="qst-card-desc">${escapeHTML(q.desc)}</div>
-          ${q.goal ? `<div class="qst-prog"><div class="qst-prog-bar"><span style="width:${pct}%;"></span></div><span class="qst-prog-txt">${q.goal.cur}/${q.goal.target}</span></div>` : ''}
+          ${q.goal && !q.done ? `<div class="qst-prog"><div class="qst-prog-bar"><span style="width:${pct}%;"></span></div><span class="qst-prog-txt">${q.goal.cur}/${q.goal.target}</span></div>` : ''}
         </div>
         <div class="qst-card-side">
-          <div class="qst-reward">${ONYX}<b>+${q.reward}</b><span>${escapeHTML(q.unit || 'Onyx')}</span></div>
-          ${q.done
-            ? '<span class="qst-done-lbl"><i class="fa-solid fa-circle-check"></i> Done</span>'
-            : `<button class="qst-cta${met ? '' : ' is-wait'}" ${met ? `onclick="${q.action}"` : 'disabled'}>${met ? escapeHTML(q.cta) : 'In progress'}</button>`}
+          <div class="qst-reward">${ONYX}<b>+${q.reward}</b></div>
+          ${btn}
         </div>
       </div>`;
     };
 
-    // Journey milestone node (vertical campaign path).
-    const jNode = (q) => {
-      const isCurrent = q.id === currentJourneyId;
-      const met = !q.goal || q.goal.cur >= q.goal.target;
-      const pct = q.goal ? Math.round(q.goal.cur / q.goal.target * 100) : 0;
-      const state = q.done ? 'is-done' : isCurrent ? 'is-current' : 'is-upcoming';
-      return `<div class="qst-node ${state}">
-        <div class="qst-node-rail"><span class="qst-node-dot"><i class="fa-solid ${q.done ? 'fa-check' : q.ic}"></i></span></div>
-        <div class="qst-node-card">
-          <div class="qst-node-top">
-            <span class="qst-node-title">${escapeHTML(q.title)}</span>
-            ${q.done ? '<span class="qst-node-tag is-done">Completed</span>' : isCurrent ? '<span class="qst-node-tag">Next up</span>' : ''}
-          </div>
-          <div class="qst-node-desc">${escapeHTML(q.desc)}</div>
-          ${(q.goal && !q.done) ? `<div class="qst-prog"><div class="qst-prog-bar"><span style="width:${pct}%;"></span></div><span class="qst-prog-txt">${q.goal.cur}/${q.goal.target}</span></div>` : ''}
-          <div class="qst-node-foot">
-            <div class="qst-reward">${ONYX}<b>+${q.reward}</b><span>Onyx</span></div>
-            ${q.done
-              ? '<span class="qst-done-lbl"><i class="fa-solid fa-circle-check"></i> Claimed</span>'
-              : `<button class="qst-cta"${met ? ` onclick="${q.action}"` : ' disabled'}>${met ? escapeHTML(q.cta) : 'In progress'}</button>`}
-          </div>
-        </div>
-      </div>`;
-    };
+    // Subtle group label (no colour) with an optional live reset timer.
+    const groupLabel = (title, timerId) => `<div class="qst-group"><span class="qst-group-t">${title}</span>${timerId ? `<span class="qst-group-note" id="${timerId}"></span>` : ''}</div>`;
 
-    const secHead = (accent, title, sub, timerId) => `
-      <div class="qst-sec-head" style="--qc:${accent};">
-        <div class="qst-sec-headtext">
-          <div class="qst-sec-title">${title}</div>
-          <div class="qst-sec-sub">${sub}</div>
+    // ── Header banner = the redesigned, premium Realm Rank ──
+    const rankLadder = REALM_RANKS.map((r, i) => {
+      const st = i < rank.index ? 'is-passed' : i === rank.index ? 'is-current' : 'is-future';
+      return `<div class="qst-step ${st}"><span class="qst-step-dot"><i class="fa-solid ${r.ic}"></i></span><span class="qst-step-name">${r.name}</span></div>`;
+    }).join('');
+    const ladderFill = REALM_RANKS.length > 1 ? Math.round((rank.index + rank.progress) / (REALM_RANKS.length - 1) * 100) : 100;
+    const bannerHTML = `
+      <header class="qst-banner">
+        <div class="qst-banner-top">
+          <div class="qst-banner-id">
+            <div class="qst-crest"><i class="fa-solid ${rank.ic}"></i></div>
+            <div class="qst-banner-idtext">
+              <div class="qst-banner-eyebrow">Realm Rank</div>
+              <div class="qst-banner-rank">${escapeHTML(rank.name)}</div>
+              <div class="qst-banner-note">${rank.next ? `${rank.toNext} quest${rank.toNext === 1 ? '' : 's'} until <b>${escapeHTML(rank.next)}</b>` : 'The realm’s highest honour — a true Champion.'}</div>
+            </div>
+          </div>
+          <div class="qst-banner-stats">
+            <div class="qst-bstat"><span class="qst-bstat-v">${completedCount}</span><span class="qst-bstat-k">Quests done</span></div>
+            <div class="qst-bstat"><span class="qst-bstat-v"><span class="rad-onyx-ic"></span>${onyxEarned.toLocaleString()}</span><span class="qst-bstat-k">Onyx earned</span></div>
+          </div>
         </div>
-        ${timerId ? `<div class="qst-sec-timer" id="${timerId}"></div>` : ''}
+        <div class="qst-ladder">
+          <div class="qst-ladder-track"><span class="qst-ladder-fill" style="width:${ladderFill}%;"></span></div>
+          <div class="qst-ladder-steps">${rankLadder}</div>
+        </div>
+      </header>`;
+
+    // ── Tab bodies ──
+    let body = '';
+    if (qtab === 'claimed') {
+      const done = cat.filter(q => q.done);
+      body = done.length
+        ? `<div class="qst-grid">${done.map(qCard).join('')}</div>`
+        : `<div class="qst-empty"><i class="fa-solid fa-scroll"></i><div class="qst-empty-t">Nothing claimed yet</div><div class="qst-empty-s">Complete quests in the Available tab and they’ll appear here.</div></div>`;
+    } else if (qtab === 'bounties') {
+      body = `<div class="qst-bounty">
+        <div class="qst-bounty-ic"><i class="fa-solid fa-sack-dollar"></i></div>
+        <div class="qst-bounty-main">
+          <div class="qst-bounty-title">Bounties <span class="qst-soon-tag">Coming soon</span></div>
+          <div class="qst-bounty-desc">High-stakes, rotating challenges with standout rewards — built the Fortized way, not borrowed from anyone. We'll share exactly how they work soon.</div>
+          <a class="qst-bounty-btn" href="https://www.fortized.com/newsroom/?article=bounties" target="_blank" rel="noopener">Learn more</a>
+        </div>
       </div>`;
+    } else { // available
+      const aDaily   = cat.filter(q => q.tier === 'daily'   && !q.done);
+      const aWeekly  = cat.filter(q => q.tier === 'weekly'  && !q.done);
+      const aJourney = cat.filter(q => q.tier === 'journey' && !q.done);
+      if (!(aDaily.length + aWeekly.length + aJourney.length)) {
+        body = `<div class="qst-empty"><i class="fa-solid fa-feather-pointed"></i><div class="qst-empty-t">All caught up</div><div class="qst-empty-s">You’ve claimed every quest available. New ones arrive with each reset.</div></div>`;
+      } else {
+        body =
+          (aDaily.length   ? `${groupLabel('Daily', 'qst-daily-timer')}<div class="qst-grid">${aDaily.map(qCard).join('')}</div>` : '') +
+          (aWeekly.length  ? `${groupLabel('Weekly', 'qst-weekly-timer')}<div class="qst-grid">${aWeekly.map(qCard).join('')}</div>` : '') +
+          (aJourney.length ? `${groupLabel('Milestones', '')}<div class="qst-grid">${aJourney.map(qCard).join('')}</div>` : '');
+      }
+    }
 
     el.innerHTML = `<div class="atelier-content-inner qst-page">
-
-      <!-- HERO -->
-      <section class="qst-hero" id="qst-sec-top">
-        <div class="qst-hero-rank">
-          <div class="qst-rank-medal"><i class="fa-solid ${rank.ic}"></i></div>
-          <div class="qst-rank-info">
-            <div class="qst-rank-eyebrow">Realm Rank</div>
-            <div class="qst-rank-title">${rank.name}</div>
-            <div class="qst-rank-bar"><span style="width:${Math.round(rank.progress * 100)}%;"></span></div>
-            <div class="qst-rank-next">${rank.next ? `${rank.toNext} quest${rank.toNext === 1 ? '' : 's'} to <b>${rank.next}</b>` : 'Highest rank reached — a true Champion.'}</div>
-          </div>
-        </div>
-        <div class="qst-hero-stats">
-          <div class="qst-stat"><span class="qst-stat-v">${completedCount}</span><span class="qst-stat-k">Quests completed</span></div>
-          <div class="qst-stat"><span class="qst-stat-v"><span class="rad-onyx-ic"></span> ${onyxEarned.toLocaleString()}</span><span class="qst-stat-k">Onyx from quests</span></div>
-          <div class="qst-stat qst-stat--streak${streak > 0 ? ' on' : ''}" oncontextmenu="onStreakCtxMenu(event);return false;" title="Right-click for streak options">
-            <span class="qst-stat-v">${_streakFlameSvg(16)} ${streak}${protectedStreak ? ' <i class="fa-solid fa-shield-halved qst-streak-shield"></i>' : ''}</span>
-            <span class="qst-stat-k">Day streak</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- THE JOURNEY -->
-      <section class="qst-sec" id="qst-sec-journey">
-        ${secHead(ACC.journey.c, 'The Journey', `Your path through the realm — ${journeyDone}/${journey.length} milestones claimed.`, '')}
-        <div class="qst-journey">${journey.map(jNode).join('')}</div>
-      </section>
-
-      <!-- DAILY -->
-      <section class="qst-sec" id="qst-sec-daily">
-        ${secHead(ACC.daily.c, 'Daily Quests', 'Small wins, every day. Reset at midnight.', 'qst-daily-timer')}
-        <div class="qst-grid">${daily.map(qCard).join('')}</div>
-      </section>
-
-      <!-- WEEKLY -->
-      <section class="qst-sec" id="qst-sec-weekly">
-        ${secHead(ACC.weekly.c, 'Weekly Quests', 'Bigger goals, bigger rewards. Reset every Monday.', 'qst-weekly-timer')}
-        <div class="qst-grid">${weekly.map(qCard).join('')}</div>
-      </section>
-
-      <!-- BOUNTIES -->
-      <section class="qst-sec" id="qst-sec-bounties">
-        ${secHead('#f6c453', 'Bounties', 'A new way to earn — arriving in a future update.', '')}
-        <div class="qst-bounty">
-          <div class="qst-bounty-ic"><i class="fa-solid fa-sack-dollar"></i></div>
-          <div class="qst-bounty-main">
-            <div class="qst-bounty-title">Bounties <span class="qst-soon-tag">Coming soon</span></div>
-            <div class="qst-bounty-desc">High-stakes, rotating challenges with standout rewards — built the Fortized way, not borrowed from anyone. We'll share exactly how they work soon.</div>
-            <a class="qst-bounty-btn" href="/newsroom/#bounties" target="_blank" rel="noopener">Learn more</a>
-          </div>
-        </div>
-      </section>
+      ${bannerHTML}
+      <div class="qst-body">${body}</div>
     </div>`;
 
-    try { _qstFillSubnavActions(); } catch {}
-    try { _qstSetActiveTab('journey'); } catch {}
-    requestAnimationFrame(() => { try { _qstBindScrollSpy(); } catch {} try { _qstStartTimers(); } catch {} });
+    _QST_TABS.forEach(t => { const b = document.getElementById('qtab-' + t); if (b) b.classList.toggle('active', t === qtab); });
+    requestAnimationFrame(() => { try { _qstStartTimers(); } catch {} });
   }
 
   // ── SHOP ─────────────────────────────────────────────────

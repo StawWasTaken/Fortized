@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix409';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix410';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix409';
+    s4.src = '/firebase-compat-shim.js?v=2026fix410';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix409">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix410">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix409', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix410', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix409"></script>
+<script src="/app/utils.js?v=2026fix410"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -586,14 +586,12 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
     <div class="view" id="view-quests" style="flex-direction:column;">
       <div class="disc-subnav qst-subnav" id="quests-subnav">
         <div class="qst-subnav-tabs">
-          <span class="qst-subnav-brand"><svg viewBox="0 0 576 512" fill="currentColor"><path d="M384 476.1L192 421.2l0-385.3L384 90.8l0 385.3zm32-1.2l0-386.5L543.1 37.5c15.8-6.3 32.9 5.3 32.9 22.3l0 334.8c0 9.8-6 18.6-15.1 22.3L416 474.8zM15.1 95.1L160 37.2l0 386.5L32.9 474.5C17.1 480.8 0 469.2 0 452.2L0 117.4c0-9.8 6-18.6 15.1-22.3z"/></svg><span>Quests</span></span>
+          <span class="qst-subnav-brand"><svg viewBox="0 0 576 512" fill="currentColor"><path d="M0 112C0 70.5 31.6 36.4 72 32.4l0-.4 280 0c53 0 96 43 96 96l0 176-176 0c-39.8 0-72 32.2-72 72l0 60c0 24.3-19.7 44-44 44s-44-19.7-44-44l0-228-64 0c-26.5 0-48-21.5-48-48l0-48zM236.8 480c7.1-13.1 11.2-28.1 11.2-44l0-60c0-13.3 10.7-24 24-24l248 0c13.3 0 24 10.7 24 24l0 24c0 44.2-35.8 80-80 80l-227.2 0zM80 80c-17.7 0-32 14.3-32 32l0 48 64 0 0-48c0-17.7-14.3-32-32-32z"/></svg><span>Quests</span></span>
           <span class="disc-subnav-sep"></span>
-          <button class="disc-subnav-btn active" id="qtab-journey" onclick="_qstGoSection('journey')">Journey</button>
-          <button class="disc-subnav-btn" id="qtab-daily" onclick="_qstGoSection('daily')">Daily</button>
-          <button class="disc-subnav-btn" id="qtab-weekly" onclick="_qstGoSection('weekly')">Weekly</button>
-          <button class="disc-subnav-btn" id="qtab-bounties" onclick="_qstGoSection('bounties')">Bounties</button>
+          <button class="disc-subnav-btn active" id="qtab-available" onclick="_qstSetTab('available')">Available</button>
+          <button class="disc-subnav-btn" id="qtab-claimed" onclick="_qstSetTab('claimed')">Claimed</button>
+          <button class="disc-subnav-btn" id="qtab-bounties" onclick="_qstSetTab('bounties')">Bounties</button>
         </div>
-        <div class="qst-subnav-actions" id="qst-subnav-actions"></div>
       </div>
     </div>
     <div class="view" id="view-creator"></div>
@@ -1142,10 +1140,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix409"></script>
-<script src="/app/app.js?v=2026fix409"></script>
-<script src="/app/joy-system.js?v=2026fix409"></script>
-<script src="/app/chronicle-games.js?v=2026fix409"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix410"></script>
+<script src="/app/app.js?v=2026fix410"></script>
+<script src="/app/joy-system.js?v=2026fix410"></script>
+<script src="/app/chronicle-games.js?v=2026fix410"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

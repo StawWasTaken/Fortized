@@ -2974,33 +2974,47 @@ function _openScrollBottom(id, force = true) {
   if (typeof el._openPinStop === 'function') el._openPinStop();
   const st = _chatAutoScroll[id];
   if (st) { st.atBottom = true; st.newCount = 0; }
-  let lastSH = -1;
+  let lastSH = -1, cancelled = false;
+  // The content settles ASYNCHRONOUSLY long after this first pin: the
+  // trickle-renderer appends message chunks over many frames, the initial
+  // "pre-reveal" pass unhides them all at once, content-visibility resolves
+  // real row heights as they scroll into view, and inline avatars / images /
+  // embeds finish loading. Each of those changes the scroll height AFTER we
+  // pinned, which is exactly what left the view stranded mid-conversation.
+  // So we keep chasing the bottom, extending the window every time the height
+  // moves (or a media element loads), until it holds steady for a beat — then
+  // stop. Any real scroll gesture cancels immediately so we never fight the user.
+  const HARD_CAP = Date.now() + 8000;
+  let windowEnd = Date.now() + 2500;
   const pin = () => { el.scrollTop = el.scrollHeight; lastSH = el.scrollHeight; };
   const stop = () => {
+    if (cancelled) return; cancelled = true;
     clearInterval(el._openPinIv); el._openPinIv = null;
     el.removeEventListener('wheel', onUser);
     el.removeEventListener('touchmove', onUser);
     el.removeEventListener('keydown', onUser);
+    el.removeEventListener('load', onMedia, true);
     el._openPinStop = null;
   };
-  // A real scroll gesture = intent to leave the bottom; bail immediately so we
-  // never fight the user, even mid-load.
   const onUser = () => stop();
+  // Capture-phase: <img>/<video> `load` doesn't bubble, so listen on the way down.
+  const onMedia = (e) => {
+    const t = e.target && e.target.tagName;
+    if (t === 'IMG' || t === 'IFRAME' || t === 'VIDEO') { pin(); windowEnd = Math.min(HARD_CAP, Date.now() + 800); }
+  };
   el.addEventListener('wheel', onUser, { passive: true });
   el.addEventListener('touchmove', onUser, { passive: true });
   el.addEventListener('keydown', onUser);
+  el.addEventListener('load', onMedia, true);
   el._openPinStop = stop;
   pin();
   requestAnimationFrame(pin);
   clearInterval(el._openPinIv);
-  const start = Date.now();
   el._openPinIv = setInterval(() => {
-    // Re-pin ONLY when the content height changed — i.e. late avatars/images/
-    // embeds/fonts finished loading and pushed the bottom down. A stable height
-    // means nothing to chase, so a user who quietly scrolled up is left alone.
-    if (el.scrollHeight !== lastSH) pin();
-    if (Date.now() - start > 1200) stop();
-  }, 80);
+    if (cancelled) return;
+    if (el.scrollHeight !== lastSH) { pin(); windowEnd = Math.min(HARD_CAP, Date.now() + 500); }
+    if (Date.now() > windowEnd) stop();
+  }, 60);
   // Clear any "New Messages" pill/bar left over from a previous visit.
   try { _removeNewMsgBar(id); } catch (_) {}
   const btn = el.parentElement?.querySelector('.chat-new-msg-btn');
@@ -8963,7 +8977,9 @@ async function loadDMMessages(username) {
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'dm');
       _ensureLoadMoreBar(msgsEl, 'dm', cacheKey);
-      _openScrollBottom('dm-msgs', false);
+      // Snap to bottom unless the reader intentionally scrolled up during the
+      // async fetch (tracked atBottom is truer than a transient position read).
+      _openScrollBottom('dm-msgs', (_chatAutoScroll['dm-msgs']?.atBottom) !== false);
     } else {
       renderMessages(msgsEl, msgs||[], 'dm');
       _openScrollBottom('dm-msgs');
@@ -9972,7 +9988,7 @@ async function loadGCMessages(gcId) {
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs, msgsEl, 'gc');
       _ensureLoadMoreBar(msgsEl, 'gc', cacheKey);
-      _openScrollBottom('gc-msgs', false);
+      _openScrollBottom('gc-msgs', (_chatAutoScroll['gc-msgs']?.atBottom) !== false);
     } else {
       renderMessages(msgsEl, msgs, 'gc');
       _openScrollBottom('gc-msgs');
@@ -10956,7 +10972,7 @@ async function loadChannelMessages(idx) {
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'ch');
       _ensureLoadMoreBar(msgsEl, 'ch', cacheKey);
-      _openScrollBottom('ch-msgs-'+idx, false);
+      _openScrollBottom('ch-msgs-'+idx, (_chatAutoScroll['ch-msgs-'+idx]?.atBottom) !== false);
     } else {
       renderMessages(msgsEl,msgs||[],'ch');
       _openScrollBottom('ch-msgs-'+idx);
@@ -12221,7 +12237,12 @@ function _revealAfterMediaSettle(container) {
       container.classList.remove('chat-msgs-initial-loading');
       container.querySelectorAll('.msg-pre-reveal').forEach(el => el.classList.remove('msg-pre-reveal'));
       container.querySelector('.msg-skel-stack')?.remove();
-      requestAnimationFrame(() => { try { container.scrollTop = container.scrollHeight; } catch{} });
+      // The reveal unhides every row at once — a huge height jump AFTER the
+      // loader's initial pin. Route through the robust chaser so we actually
+      // land on (and stay on) the newest message as the now-visible content,
+      // late media included, settles.
+      if (container.id) _openScrollBottom(container.id);
+      else requestAnimationFrame(() => { try { container.scrollTop = container.scrollHeight; } catch{} });
     } catch (e) {
       console.warn('[Chat] reveal threw, dropping skeleton+class anyway:', e?.message);
       // Belt-and-braces: if SOMETHING above threw, force-clear so messages

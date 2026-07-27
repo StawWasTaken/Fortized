@@ -8935,9 +8935,12 @@ async function loadDMMessages(username) {
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         _appendLiveMessage(el,msg,'dm');
-        // Always scroll to bottom when new message arrives while viewing this DM
-        scrollBottom('dm-msgs', true);
-        _notifyNewMsg('dm-msgs');
+        // Discord-style auto-scroll: your own messages always jump to present;
+        // an incoming message only pulls the view down if the reader is already
+        // at the bottom. Otherwise _notifyNewMsg surfaces the "New Messages"
+        // pill and leaves a scrolled-up reader exactly where they are.
+        if (msg.from === CU.username) scrollBottom('dm-msgs', true);
+        else _notifyNewMsg('dm-msgs');
         if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', username) && (!el._loadedAt || Date.now() - el._loadedAt > 1000)) playNotifSound('message');
         // Update sidebar in real-time
         _updateDMSidebarForNewMessage(username, msg);
@@ -9931,9 +9934,11 @@ async function loadGCMessages(gcId) {
       if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
       const echoKey = 'gc|'+msg.from+'|'+(msg.text||'');
       _appendLiveMessage(el, msg, 'gc');
-      // Always scroll to bottom when viewing this GC
-      scrollBottom('gc-msgs', true);
-      _notifyNewMsg('gc-msgs');
+      // Discord-style auto-scroll: your own messages always jump to present; an
+      // incoming message only pulls the view down if the reader is already at
+      // the bottom, else _notifyNewMsg shows the "New Messages" pill.
+      if (msg.from === CU.username) scrollBottom('gc-msgs', true);
+      else _notifyNewMsg('gc-msgs');
       if (msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('gc', gcId) && (!el._loadedAt || Date.now() - el._loadedAt > 1000)) playNotifSound('message');
       // Update sidebar in real-time
       _updateGCSidebarForNewMessage(gcId, msg);
@@ -10909,9 +10914,11 @@ async function loadChannelMessages(idx) {
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         _appendLiveMessage(el,msg,'ch');
-        // Always scroll to bottom when viewing this channel
-        scrollBottom('ch-msgs-'+idx, true);
-        _notifyNewMsg('ch-msgs-'+idx);
+        // Discord-style auto-scroll: your own messages always jump to present; an
+        // incoming message only pulls the view down if the reader is already at
+        // the bottom, else _notifyNewMsg shows the "New Messages" pill.
+        if (msg.from === CU.username) scrollBottom('ch-msgs-'+idx, true);
+        else _notifyNewMsg('ch-msgs-'+idx);
         if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('bastion',b.globalId||b.name) && (!el._loadedAt || Date.now() - el._loadedAt > 1000)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
       }
     });
@@ -17039,7 +17046,8 @@ function initFortizedUXResilience() {
                 const lastRows = msgsEl.querySelectorAll('.msg-row');
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'dm', lastAuthor);
-                scrollBottom('dm-msgs');
+                if (msg.from === CU.username) scrollBottom('dm-msgs', true);
+                else _notifyNewMsg('dm-msgs');
                 if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('dm', msg.from)) { playNotifSound('message'); _showBrowserNotif(msg.from, (msg.text||'').slice(0,100), 'dm-'+msg.from); }
                 if (msg.from !== CU.username) _checkIncomingThreatFlag(msg);
               }
@@ -17058,7 +17066,8 @@ function initFortizedUXResilience() {
                 const lastRows = msgsEl.querySelectorAll('.msg-row');
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'gc', lastAuthor);
-                scrollBottom('gc-msgs');
+                if (msg.from === CU.username) scrollBottom('gc-msgs', true);
+                else _notifyNewMsg('gc-msgs');
                 if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('gc', curGC)) { playNotifSound('message'); _showBrowserNotif(msg.from, (msg.text||'').slice(0,100), 'gc-'+msg.from); }
               }
             }
@@ -17080,7 +17089,8 @@ function initFortizedUXResilience() {
                   const lastRows = msgsEl.querySelectorAll('.msg-row');
                   const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                   appendMessage(msgsEl, msg, 'ch', lastAuthor);
-                  scrollBottom('ch-msgs-' + curChannel);
+                  if (msg.from === CU.username) scrollBottom('ch-msgs-' + curChannel, true);
+                  else _notifyNewMsg('ch-msgs-' + curChannel);
                   if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from)) { const isMention = (msg.text||'').includes('@'+CU.username); playNotifSound(isMention ? 'mention' : 'message'); }
                 }
               }

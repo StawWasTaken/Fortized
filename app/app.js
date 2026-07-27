@@ -2951,6 +2951,62 @@ function scrollBottom(id, instant) {
   }
 }
 
+// Discord-parity: opening a chat (or reviving a pooled surface) must ALWAYS
+// land on the newest message at the ABSOLUTE bottom — never a restored
+// mid-scroll position. Late-loading avatars / images / embeds change the
+// content height after the first pin, so we keep re-pinning through a short
+// settle window; the per-image `load` listener in _initChatScroll keeps
+// pinning beyond it (atBottom stays true). The window bails the instant the
+// user scrolls up on their own, so it never fights an intentional scroll.
+//
+//   force=true  → this is the open action itself: always snap to bottom.
+//   force=false → a post-fetch reconcile (diff-append onto an already-opened
+//                 surface): only re-pin if the reader is still at the bottom,
+//                 so someone who scrolled up during the async fetch is left be.
+function _openScrollBottom(id, force = true) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const nearBottom = () => (el.scrollHeight - el.scrollTop - el.clientHeight) <= 60;
+  // Post-fetch reconcile must never yank a reader who scrolled up during the
+  // async fetch — only the open action itself (force) is unconditional.
+  if (!force && !nearBottom()) return;
+  // Tear down any settle session already running on this surface.
+  if (typeof el._openPinStop === 'function') el._openPinStop();
+  const st = _chatAutoScroll[id];
+  if (st) { st.atBottom = true; st.newCount = 0; }
+  let lastSH = -1;
+  const pin = () => { el.scrollTop = el.scrollHeight; lastSH = el.scrollHeight; };
+  const stop = () => {
+    clearInterval(el._openPinIv); el._openPinIv = null;
+    el.removeEventListener('wheel', onUser);
+    el.removeEventListener('touchmove', onUser);
+    el.removeEventListener('keydown', onUser);
+    el._openPinStop = null;
+  };
+  // A real scroll gesture = intent to leave the bottom; bail immediately so we
+  // never fight the user, even mid-load.
+  const onUser = () => stop();
+  el.addEventListener('wheel', onUser, { passive: true });
+  el.addEventListener('touchmove', onUser, { passive: true });
+  el.addEventListener('keydown', onUser);
+  el._openPinStop = stop;
+  pin();
+  requestAnimationFrame(pin);
+  clearInterval(el._openPinIv);
+  const start = Date.now();
+  el._openPinIv = setInterval(() => {
+    // Re-pin ONLY when the content height changed — i.e. late avatars/images/
+    // embeds/fonts finished loading and pushed the bottom down. A stable height
+    // means nothing to chase, so a user who quietly scrolled up is left alone.
+    if (el.scrollHeight !== lastSH) pin();
+    if (Date.now() - start > 1200) stop();
+  }, 80);
+  // Clear any "New Messages" pill/bar left over from a previous visit.
+  try { _removeNewMsgBar(id); } catch (_) {}
+  const btn = el.parentElement?.querySelector('.chat-new-msg-btn');
+  if (btn) btn.classList.remove('show');
+}
+
 function markDMRead() {
   document.getElementById('dm-new-msgs-bar')?.classList.remove('show');
   if (curDM && CU?.username) {
@@ -8893,10 +8949,12 @@ async function loadDMMessages(username) {
   // scroll/video/embed state stays intact — we'll only diff-append below.
   const surfaceRevived = !!msgsEl.querySelector('.msg-row');
   if (surfaceRevived) {
-    // Nothing to paint — the DOM already carries the messages. Skip skeleton.
+    // DOM already carries the messages via the revived pooled surface — skip
+    // the repaint, but still snap to the newest message (open = bottom).
+    _openScrollBottom('dm-msgs');
   } else if (hasCache) {
     renderMessages(msgsEl, cached.msgs.slice(), 'dm');
-    if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
+    _openScrollBottom('dm-msgs');
   } else {
     _paintInitialChatSkeleton(msgsEl);
   }
@@ -8905,9 +8963,10 @@ async function loadDMMessages(username) {
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'dm');
       _ensureLoadMoreBar(msgsEl, 'dm', cacheKey);
+      _openScrollBottom('dm-msgs', false);
     } else {
       renderMessages(msgsEl, msgs||[], 'dm');
-      if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
+      _openScrollBottom('dm-msgs');
       _chatCachePut(cacheKey, msgs || []);
     }
     _attachLazyLoadOlder(msgsEl, 'dm');
@@ -9898,10 +9957,12 @@ async function loadGCMessages(gcId) {
   const hasCache = _chatCacheHas(cacheKey);
   const surfaceRevived = !!msgsEl.querySelector('.msg-row');
   if (surfaceRevived) {
-    // DOM already carries messages via revived pooled surface — skip repaint.
+    // DOM already carries messages via the revived pooled surface — skip the
+    // repaint, but still snap to the newest message (open = bottom).
+    _openScrollBottom('gc-msgs');
   } else if (hasCache) {
     renderMessages(msgsEl, cached.msgs.slice(), 'gc');
-    if (!_restoreChatScroll('gc:'+gcId, msgsEl)) scrollBottom('gc-msgs', true);
+    _openScrollBottom('gc-msgs');
   } else {
     _paintInitialChatSkeleton(msgsEl);
   }
@@ -9911,9 +9972,10 @@ async function loadGCMessages(gcId) {
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs, msgsEl, 'gc');
       _ensureLoadMoreBar(msgsEl, 'gc', cacheKey);
+      _openScrollBottom('gc-msgs', false);
     } else {
       renderMessages(msgsEl, msgs, 'gc');
-      if (!_restoreChatScroll('gc:'+gcId, msgsEl)) scrollBottom('gc-msgs', true);
+      _openScrollBottom('gc-msgs');
       _chatCachePut(cacheKey, msgs);
     }
     _attachLazyLoadOlder(msgsEl, 'gc');
@@ -10880,10 +10942,12 @@ async function loadChannelMessages(idx) {
   const hasCache = _chatCacheHas(cacheKey);
   const surfaceRevived = !!msgsEl.querySelector('.msg-row');
   if (surfaceRevived) {
-    // DOM already carries messages via revived pooled surface — skip repaint.
+    // DOM already carries messages via the revived pooled surface — skip the
+    // repaint, but still snap to the newest message (open = bottom).
+    _openScrollBottom('ch-msgs-'+idx);
   } else if (hasCache) {
     renderMessages(msgsEl, cached.msgs.slice(), 'ch');
-    if (!_restoreChatScroll('ch:'+curBastion+':'+idx, msgsEl)) scrollBottom('ch-msgs-'+idx, true);
+    _openScrollBottom('ch-msgs-'+idx);
   } else {
     _paintInitialChatSkeleton(msgsEl);
   }
@@ -10892,9 +10956,10 @@ async function loadChannelMessages(idx) {
     if (surfaceRevived || hasCache) {
       _chatCacheDiffAppendToDOM(cacheKey, msgs || [], msgsEl, 'ch');
       _ensureLoadMoreBar(msgsEl, 'ch', cacheKey);
+      _openScrollBottom('ch-msgs-'+idx, false);
     } else {
       renderMessages(msgsEl,msgs||[],'ch');
-      if (!_restoreChatScroll('ch:'+curBastion+':'+idx, msgsEl)) scrollBottom('ch-msgs-'+idx, true);
+      _openScrollBottom('ch-msgs-'+idx);
       _chatCachePut(cacheKey, msgs || []);
     }
     _attachLazyLoadOlder(msgsEl, 'ch');

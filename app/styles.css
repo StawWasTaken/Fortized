@@ -10091,7 +10091,7 @@ button[style*="background: var(--accent)"]:active {
 .ftz-del-quote__content img,.ftz-del-quote__content video,.ftz-del-quote__content .ftz-att-wrap,.ftz-del-quote__content .ftz-embed-gif{max-width:170px!important;max-height:140px!important;border-radius:8px;}
 .ftz-del-quote__empty{color:var(--muted);font-style:italic;}
 .ftz-del-protip{font-size:12.5px;color:var(--muted);margin:13px 0 2px;line-height:1.55;}
-.ftz-del-protip b{color:#3ecf6e;font-weight:700;letter-spacing:.02em;}
+.ftz-del-protip b{color:var(--accent);font-weight:700;letter-spacing:.04em;}
 .ftz-del-protip kbd{display:inline-block;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:0 5px;font-family:var(--font-display,inherit);font-size:11px;line-height:16px;color:var(--text);}
 .ftz-confirm-card {
   background: var(--panel);

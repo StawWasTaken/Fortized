@@ -13769,26 +13769,10 @@ function _buildDeleteQuote(row) {
   const isSystem = rawAuthor === '__system__';
   const nameEl = document.querySelector('.msg-author[data-author="' + CSS.escape(rawAuthor) + '"]');
   const displayName = isSystem ? 'fortized' : (nameEl ? nameEl.textContent.trim() : rawAuthor);
-  // Carry the author's display-name style (font + colour/effect) onto the
-  // quote name, so the card shows the name exactly as styled. In DM/GC the
-  // effect is hover-only in chat, but here we render it at rest for a
-  // faithful preview. Bastion role colours ride through the same path.
-  let nameStyle = '', nameFxClass = '';
-  if (nameEl) {
-    const cs = nameEl.style;
-    if (cs.fontFamily) nameStyle += 'font-family:' + cs.fontFamily + ';';
-    if (cs.fontWeight) nameStyle += 'font-weight:' + cs.fontWeight + ';';
-    if (nameEl.classList.contains('msg-author--styled') && typeof _getDisplayEffectCSS === 'function') {
-      const eff = nameEl.dataset.dnEffect || 'solid';
-      const col = nameEl.dataset.dnColor || '#fff';
-      const col2 = nameEl.dataset.dnColor2 || col;
-      nameStyle += _getDisplayEffectCSS(eff, col, col2);
-      const animCls = (typeof _getDisplayEffectClass === 'function') ? _getDisplayEffectClass(eff) : '';
-      if (animCls) nameFxClass = ' ' + animCls;
-    } else if (cs.color) {
-      nameStyle += 'color:' + cs.color + ';';
-    }
-  }
+  // The display-name style (font + colour + effect) is applied authoritatively
+  // by the async profile enrich in deleteMsg (via _dmNameStyleAttr), so the
+  // span just needs its id + author here — no fragile, quote-unsafe inline
+  // style reconstruction.
   const pfp = isSystem ? '/Fortized icon.png'
     : (rawAuthor === CU.username ? CU.pfp : (_pfpCache[rawAuthor] || null));
   const tEl = row.querySelector('.msg-timestamp, .msg-time-small');
@@ -13812,7 +13796,7 @@ function _buildDeleteQuote(row) {
     <div class="ftz-del-quote__av">${buildAvatarHTML(pfp, displayName, 40)}</div>
     <div class="ftz-del-quote__main">
       <div class="ftz-del-quote__head">
-        <span class="ftz-del-quote__name${nameFxClass}" style="${nameStyle}">${escapeHTML(displayName)}</span>
+        <span class="ftz-del-quote__name" id="ftz-del-qname" data-author="${escapeHTML(rawAuthor)}">${escapeHTML(displayName)}</span>
         ${time ? `<span class="ftz-del-quote__time">${escapeHTML(time)}</span>` : ''}
       </div>
       <div class="ftz-del-quote__content">${contentHTML}</div>
@@ -13853,6 +13837,25 @@ function deleteMsg(msgId, context) {
     </div>
   </div>`;
   document.body.appendChild(overlay);
+  // Authoritatively style the quote's display name from the author's profile
+  // (font + colour + effect), the same way _enrichDMHeader styles the DM
+  // header. The synchronous DOM-read above is only an instant fallback; this
+  // guarantees the real style shows (in DM/GC chat the effect is hover-gated,
+  // so reading it off the row isn't reliable). Cached profile → no egress.
+  if (row) {
+    const _qAuthor = row.dataset.from;
+    if (_qAuthor && _qAuthor !== '__system__') {
+      Promise.resolve(FortizedSocial.getUserByName(String(_qAuthor).toLowerCase())).then(u => {
+        if (!u) return;
+        const el = overlay.querySelector('#ftz-del-qname');
+        if (!el) return;
+        el.setAttribute('style', _dmNameStyleAttr(u));
+        const animCls = _getDisplayEffectClass(u.displayEffect || 'solid');
+        if (animCls) el.classList.add(animCls);
+        if (u.displayName) el.textContent = u.displayName;
+      }).catch(() => {});
+    }
+  }
   document.getElementById('cc-ok').onclick = () => { overlay.remove(); _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _curChannel); };
   document.getElementById('cc-cancel').onclick = () => overlay.remove();
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };

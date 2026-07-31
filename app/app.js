@@ -13769,6 +13769,26 @@ function _buildDeleteQuote(row) {
   const isSystem = rawAuthor === '__system__';
   const nameEl = document.querySelector('.msg-author[data-author="' + CSS.escape(rawAuthor) + '"]');
   const displayName = isSystem ? 'fortized' : (nameEl ? nameEl.textContent.trim() : rawAuthor);
+  // Carry the author's display-name style (font + colour/effect) onto the
+  // quote name, so the card shows the name exactly as styled. In DM/GC the
+  // effect is hover-only in chat, but here we render it at rest for a
+  // faithful preview. Bastion role colours ride through the same path.
+  let nameStyle = '', nameFxClass = '';
+  if (nameEl) {
+    const cs = nameEl.style;
+    if (cs.fontFamily) nameStyle += 'font-family:' + cs.fontFamily + ';';
+    if (cs.fontWeight) nameStyle += 'font-weight:' + cs.fontWeight + ';';
+    if (nameEl.classList.contains('msg-author--styled') && typeof _getDisplayEffectCSS === 'function') {
+      const eff = nameEl.dataset.dnEffect || 'solid';
+      const col = nameEl.dataset.dnColor || '#fff';
+      const col2 = nameEl.dataset.dnColor2 || col;
+      nameStyle += _getDisplayEffectCSS(eff, col, col2);
+      const animCls = (typeof _getDisplayEffectClass === 'function') ? _getDisplayEffectClass(eff) : '';
+      if (animCls) nameFxClass = ' ' + animCls;
+    } else if (cs.color) {
+      nameStyle += 'color:' + cs.color + ';';
+    }
+  }
   const pfp = isSystem ? '/Fortized icon.png'
     : (rawAuthor === CU.username ? CU.pfp : (_pfpCache[rawAuthor] || null));
   const tEl = row.querySelector('.msg-timestamp, .msg-time-small');
@@ -13792,7 +13812,7 @@ function _buildDeleteQuote(row) {
     <div class="ftz-del-quote__av">${buildAvatarHTML(pfp, displayName, 40)}</div>
     <div class="ftz-del-quote__main">
       <div class="ftz-del-quote__head">
-        <span class="ftz-del-quote__name">${escapeHTML(displayName)}</span>
+        <span class="ftz-del-quote__name${nameFxClass}" style="${nameStyle}">${escapeHTML(displayName)}</span>
         ${time ? `<span class="ftz-del-quote__time">${escapeHTML(time)}</span>` : ''}
       </div>
       <div class="ftz-del-quote__content">${contentHTML}</div>

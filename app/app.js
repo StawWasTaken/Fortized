@@ -271,8 +271,8 @@ const _STANDING_META = [
   { id:0, label:'All good',     color:'#3ecf6e', tint:'rgba(62,207,110,.08)',  border:'rgba(62,207,110,.22)', msg:"Thanks for keeping it clean. If you break the rules, it'll show up here." },
   { id:1, label:'Limited',      color:'#f59e0b', tint:'rgba(245,158,11,.08)',  border:'rgba(245,158,11,.28)', msg:"You've received a warning. Stay clear of further violations to recover." },
   { id:2, label:'Very limited', color:'#f97316', tint:'rgba(249,115,22,.10)',  border:'rgba(249,115,22,.32)', msg:"Multiple warnings on record. Continued violations risk suspension." },
-  { id:3, label:'At risk',      color:'#ef4444', tint:'rgba(239,68,68,.12)',   border:'rgba(239,68,68,.38)',  msg:"Your account is at risk. Any further infraction may suspend you." },
-  { id:4, label:'Suspended',    color:'#b91c1c', tint:'rgba(239,68,68,.14)',   border:'rgba(127,29,29,.55)',  msg:"Your account is suspended. Access is limited until the suspension ends." },
+  { id:3, label:'At risk',      color:'#ff0033', tint:'rgba(255, 0, 51,.12)',   border:'rgba(255, 0, 51,.38)',  msg:"Your account is at risk. Any further infraction may suspend you." },
+  { id:4, label:'Suspended',    color:'#ff0033', tint:'rgba(255, 0, 51,.14)',   border:'rgba(127,29,29,.55)',  msg:"Your account is suspended. Access is limited until the suspension ends." },
 ];
 // New-model violations (u.violations) mapped into the legacy standing shape so
 // the Account Standing track counts staff + automod actions in one place.
@@ -1198,7 +1198,7 @@ const FtzStatus = (() => {
   const MODES = Object.freeze({
     online:    { color: '#3ecf6e', label: 'Online',          order: 0 },
     away:      { color: '#fff93e', label: 'Idle',            order: 1 },
-    dnd:       { color: '#eb4545', label: 'Do Not Disturb',  order: 2 },
+    dnd:       { color: '#ff0033', label: 'Do Not Disturb',  order: 2 },
     invisible: { color: '#6b7280', label: 'Invisible',       order: 3 },
     offline:   { color: '#6b7280', label: 'Offline',         order: 4 },
   });
@@ -4996,7 +4996,7 @@ function _updateUserbarActivity() {
 
     if (actionBtn) {
       actionBtn.title = 'Stop Activity';
-      actionBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      actionBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff0033" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     }
 
     // Elapsed time
@@ -5227,7 +5227,7 @@ function _openMobileSettings() {
   }
   if (statusEl) {
     const st = FtzStatus?.current?.() || 'online';
-    const dot = '<span style="width:8px;height:8px;border-radius:50%;background:' + (st==='online'?'#3ecf6e':st==='idle'?'#fbbf24':st==='dnd'?'#ef4444':'#6b7280') + ';display:inline-block;"></span>';
+    const dot = '<span style="width:8px;height:8px;border-radius:50%;background:' + (st==='online'?'#3ecf6e':st==='idle'?'#fbbf24':st==='dnd'?'#ff0033':'#6b7280') + ';display:inline-block;"></span>';
     statusEl.innerHTML = dot + ' ' + (st==='dnd'?'Do Not Disturb':st.charAt(0).toUpperCase()+st.slice(1));
   }
   drawer.classList.add('open');
@@ -5574,11 +5574,11 @@ function renderAtelierSidebar(scroll) {
 }
 // Curated palette of good-looking colors for default avatars
 const _AVATAR_COLORS = [
-  '#FF6B6B', '#FF8C42', '#FFA500', '#FFD700', '#52A7E3',
-  '#6BCB77', '#4D96FF', '#9B59B6', '#E74C3C', '#3498DB',
+  '#ff0033', '#FF8C42', '#FFA500', '#FFD700', '#52A7E3',
+  '#6BCB77', '#4D96FF', '#9B59B6', '#ff0033', '#3498DB',
   '#1ABC9C', '#F39C12', '#E67E22', '#95A5A6', '#34495E',
-  '#2ECC71', '#C0392B', '#8E44AD', '#16A085', '#F1C40F',
-  '#27AE60', '#2980B9', '#D35400', '#C0392B', '#BDC3C7'
+  '#2ECC71', '#ff0033', '#8E44AD', '#16A085', '#F1C40F',
+  '#27AE60', '#2980B9', '#D35400', '#ff0033', '#BDC3C7'
 ];
 
 function _getUserAvatarColor(username) {
@@ -6742,7 +6742,7 @@ async function _renderHomeFriendsToday() {
       const pfp = realPfp || _defaultPfpUrl(u);
       const dn = ud.displayName || u;
       const status = presence?.[u]?.status || 'offline';
-      const statusColor = (typeof FtzStatus !== 'undefined') ? FtzStatus.color(status) : (status==='online'?'#3ecf6e':status==='away'?'#f59e0b':status==='dnd'?'#f87171':'rgba(255,255,255,.15)');
+      const statusColor = (typeof FtzStatus !== 'undefined') ? FtzStatus.color(status) : (status==='online'?'#3ecf6e':status==='away'?'#f59e0b':status==='dnd'?'#ff0033':'rgba(255,255,255,.15)');
       const _hocStyle = realPfp ? '' : `background:${_getUserAvatarColor(u)};object-fit:contain;`;
       return `<div class="home-online-chip" onclick="openDMView('${escapeHTML(u)}')" title="${escapeHTML(dn)}">
         <span class="hoc-av-wrap">
@@ -7085,7 +7085,7 @@ function _showAdMenu(e, adId, productName, paidBy) {
   menu.innerHTML = `
     <div onclick="this.closest('#ad-menu-popup').remove();_rotateHomeAd();" style="padding:10px 16px;font-size:14px;color:#fff;cursor:pointer;">Not interested</div>
     <div onclick="this.closest('#ad-menu-popup').remove();_showWhyAd('${escapeHTML(productName)}', '${escapeHTML(paidBy)}')" style="padding:10px 16px;font-size:14px;color:#fff;cursor:pointer;">Why this ad</div>
-    <div onclick="this.closest('#ad-menu-popup').remove();_reportAd('${escapeHTML(adId)}', '', '')" style="padding:10px 16px;font-size:14px;color:#f87171;cursor:pointer;">Report ad</div>
+    <div onclick="this.closest('#ad-menu-popup').remove();_reportAd('${escapeHTML(adId)}', '', '')" style="padding:10px 16px;font-size:14px;color:#ff0033;cursor:pointer;">Report ad</div>
   `;
   
   document.body.appendChild(menu);
@@ -10679,7 +10679,7 @@ function renderBastionSidebar(scroll) {
     if (ch.type==='voice'||ch.type==='forum'||ch.type==='announcement'||ch.type==='poll') return;
     const tier=getAgeTier(CU?.dateOfBirth);
     const blocked=ch.nsfw&&tier==='child';
-    const nsfwTag=ch.nsfw?`<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:rgba(248,113,113,.6);flex-shrink:0;">18+</span>`:'';
+    const nsfwTag=ch.nsfw?`<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255, 0, 51,.1);color:rgba(255, 0, 51,.6);flex-shrink:0;">18+</span>`:'';
     const focusBadge=ch.focusMode?'<span class="focus-mode-badge">FOCUS</span>':'';
     const unread = getChannelUnread(curBastion, i);
     const isUnread = unread.count > 0 && curChannel !== i;
@@ -10961,7 +10961,7 @@ function selectChannel(idx) {
   if (!wrap) return;
   const access=checkNSFWAccess(ch);
   if (access===false) {
-    wrap.innerHTML=`<div class="empty-state" style="margin:20px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.2);border-radius:18px;padding:40px;"><div class="ei" style="font-size:48px;color:rgba(255,255,255,.15);">${ftzIcon('lock','48')}</div><h3 style="color:var(--red);">Age-Restricted Channel</h3><p>This channel is restricted for your age group.</p></div>`;
+    wrap.innerHTML=`<div class="empty-state" style="margin:20px;background:rgba(255, 0, 51,.04);border:1px solid rgba(255, 0, 51,.2);border-radius:18px;padding:40px;"><div class="ei" style="font-size:48px;color:rgba(255,255,255,.15);">${ftzIcon('lock','48')}</div><h3 style="color:var(--red);">Age-Restricted Channel</h3><p>This channel is restricted for your age group.</p></div>`;
     return;
   }
   if (access===null) {
@@ -10971,7 +10971,7 @@ function selectChannel(idx) {
       <p style="font-size:13.5px;color:var(--muted-light);max-width:340px;line-height:1.65;margin-bottom:20px;">
         <strong>#${escapeHTML(ch.name)}</strong> is marked as containing sensitive content. By proceeding, you confirm you understand this.
       </p>
-      <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:14px;padding:14px 18px;max-width:340px;font-size:12.5px;color:var(--red);margin-bottom:20px;">
+      <div style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.2);border-radius:14px;padding:14px 18px;max-width:340px;font-size:12.5px;color:var(--red);margin-bottom:20px;">
         ⚠️ This action is logged for platform safety and compliance.
       </div>
       <button class="btn-d" onclick="proceedToNSFWChannel(${idx})" style="padding:12px 28px;font-size:14px;">View Sensitive Content</button>
@@ -11002,7 +11002,7 @@ function loadChatChannel(idx) {
     _loadAnnouncementRoom(wrap, b, ch, idx);
     return;
   }
-  const nsfwBadge=ch.nsfw?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);background:rgba(248,113,113,.15);color:var(--red);margin-left:6px;">NSFW</span>`:'';
+  const nsfwBadge=ch.nsfw?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);background:rgba(255, 0, 51,.15);color:var(--red);margin-left:6px;">NSFW</span>`:'';
   // Channel name is displayed in the room-topbar above the chat, not in the main Fortized topbar
   const sep=document.getElementById('tb-sep');
   const desc=document.getElementById('tb-desc');
@@ -11252,7 +11252,7 @@ function _buildAnnCard(msg, idx, canPost) {
         <div class="ann-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;">${safeFrom}</div>
         <div class="ann-time">${time}</div>
       </div>
-      ${canDelete ? `<button onclick="deleteMsg('${safeMid}','ch')" title="Delete" style="background:none;border:none;color:rgba(248,113,113,.4);cursor:pointer;padding:4px;transition:color .12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>` : ''}
+      ${canDelete ? `<button onclick="deleteMsg('${safeMid}','ch')" title="Delete" style="background:none;border:none;color:rgba(255, 0, 51,.4);cursor:pointer;padding:4px;transition:color .12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>` : ''}
     </div>
     <div class="ann-body">${text}</div>
   </div>`;
@@ -12124,14 +12124,14 @@ function _fmtMsgFullTime(ts) {
 // Authors of new system events can also pass `msg.systemEvent` directly
 // (e.g. systemEvent:'join') to skip the heuristic.
 // Colours pulled from the Fortized brand schema:
-//   yellized #fff93e · green #3ecf6e · pink #ff77e4 · red #eb4545
+//   yellized #fff93e · green #3ecf6e · pink #ff77e4 · red #ff0033
 //   orange  #fe9c3b · white  #ffffff · black #13161f
 // Bot is the only exception — explicitly blue (matches the chatbar
 // bot-command button affordance).
 const _SYSTEM_EVENT_PATTERNS = [
   { key: 'join',       icon: 'sys_join',     color: '#3ecf6e', test: /\b(joined|welcome to|has entered|just joined|has joined)\b/i },
-  { key: 'leave',      icon: 'sys_leave',    color: '#eb4545', test: /\b(left|has left|kicked|removed from)\b/i },
-  { key: 'ban',        icon: 'sys_ban',      color: '#eb4545', test: /\b(banned|banished)\b/i },
+  { key: 'leave',      icon: 'sys_leave',    color: '#ff0033', test: /\b(left|has left|kicked|removed from)\b/i },
+  { key: 'ban',        icon: 'sys_ban',      color: '#ff0033', test: /\b(banned|banished)\b/i },
   { key: 'bot',        iconHTML: '<svg viewBox="0 0 24 24" fill="#212121" style="width:14px;height:14px;display:inline-block;vertical-align:middle;filter:invert(57%) sepia(91%) saturate(2167%) hue-rotate(193deg) brightness(101%) contrast(94%);"><path d="M17.75,14C19,14 20,15.01 20,16.25V17.16C20,18.25 19.53,19.29 18.7,20C17.13,21.34 14.89,22 12,22C9.11,22 6.87,21.34 5.31,20C4.48,19.29 4,18.25 4,17.16V16.25C4,15.01 5.01,14 6.25,14H17.75ZM11.9,2C12.28,2 12.6,2.28 12.64,2.65L12.65,2.75L12.65,3.5L16.25,3.5C17.49,3.5 18.5,4.51 18.5,5.75V10.25C18.5,11.5 17.49,12.5 16.25,12.5H7.75C6.51,12.5 5.5,11.5 5.5,10.25V5.75C5.5,4.51 6.51,3.5 7.75,3.5L11.25,3.5L11.25,2.75C11.25,2.37 11.53,2.06 11.9,2.01L12,2L11.9,2ZM9.75,6.5C9.06,6.5 8.5,7.06 8.5,7.75C8.5,8.44 9.06,9 9.75,9C10.44,9 11,8.44 11,7.75C11,7.06 10.44,6.5 9.75,6.5ZM14.24,6.5C13.55,6.5 12.99,7.06 12.99,7.75C12.99,8.44 13.55,9 14.24,9C14.93,9 15.49,8.44 15.49,7.75C15.49,7.06 14.93,6.5 14.24,6.5Z"/></svg>', color: '#60a5fa', test: /\b(integrated|deployed|bot added|installed bot)\b/i },
   { key: 'channel',    icon: 'sys_channel',  color: '#3ecf6e', test: /\b(channel created|created the channel|new channel)\b/i },
   { key: 'rename',     icon: 'sys_rename',   color: '#fe9c3b', test: /\b(renamed|name changed)\b/i },
@@ -13552,7 +13552,7 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
   if (failedRow && failedRow.classList.contains('msg-row--failed')) {
     return ''
       + `<button onclick="event.stopPropagation();_retryFailedMessageById('${safeId}')" title="Retry">${_faMsg('retry')}</button>`
-      + `<button onclick="event.stopPropagation();_deleteFailedMessageById('${safeId}')" title="Delete" style="color:rgba(235,69,69,.85);">${_faMsg('trash')}</button>`;
+      + `<button onclick="event.stopPropagation();_deleteFailedMessageById('${safeId}')" title="Delete" style="color:rgba(255, 0, 51,.85);">${_faMsg('trash')}</button>`;
   }
 
   if (_shiftHeld) {
@@ -13564,7 +13564,7 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
       + `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction">${_ADD_REACTION_ICON_HTML}</button>`
       + (isOwn ? `<button onclick="editMsg('${safeId}')" title="Edit">${_faMsg('edit')}</button>` : '')
       + `<button onclick="forwardFromMsgEl(this,'${safeText}')" title="Forward">${_faMsg('forward')}</button>`
-      + (canDel ? `<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(248,113,113,.6);">${_faMsg('trash')}</button>` : '');
+      + (canDel ? `<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(255, 0, 51,.6);">${_faMsg('trash')}</button>` : '');
   }
 
   // Default mode: Quick reactions (3), Add Reaction, Reply/Edit, Forward, More
@@ -14943,19 +14943,19 @@ function _renderVoicePanel(ch, idx) {
       </div>
       <!-- Controls -->
       <div class="voice-controls" style="display:flex;gap:14px;align-items:center;padding:18px 28px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px;backdrop-filter:none;">
-        <button class="vc-btn ${isMuted?'active':''}" onclick="toggleVoiceMute()" title="${isMuted?'Unmute':'Mute'}" style="width:52px;height:52px;border-radius:50%;background:${isMuted?'rgba(248,113,113,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isMuted?'rgba(248,113,113,.35)':'rgba(255,255,255,.1)'};color:${isMuted?'#f87171':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isMuted?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'}</button>
+        <button class="vc-btn ${isMuted?'active':''}" onclick="toggleVoiceMute()" title="${isMuted?'Unmute':'Mute'}" style="width:52px;height:52px;border-radius:50%;background:${isMuted?'rgba(255, 0, 51,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isMuted?'rgba(255, 0, 51,.35)':'rgba(255,255,255,.1)'};color:${isMuted?'#ff0033':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isMuted?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'}</button>
         <button class="vc-btn ${isDeafened?'active':''}" onclick="toggleVoiceDeafen()" title="${isDeafened?'Undeafen':'Deafen'}" style="width:52px;height:52px;border-radius:50%;background:${isDeafened?'rgba(245,158,11,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isDeafened?'rgba(245,158,11,.35)':'rgba(255,255,255,.1)'};color:${isDeafened?'#f59e0b':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isDeafened?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3z"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>'}</button>
         <div style="width:1px;height:32px;background:rgba(255,255,255,.08);margin:0 4px;"></div>
         <button onclick="startScreenShare()" style="width:52px;height:52px;border-radius:50%;background:rgba(96,165,250,.08);border:1.5px solid rgba(96,165,250,.2);color:var(--blue);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)';this.style.background='rgba(96,165,250,.15)'" onmouseleave="this.style.transform='scale(1)';this.style.background='rgba(96,165,250,.08)'" title="Share Screen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>
         <button onclick="startWatchTogether()" style="width:52px;height:52px;border-radius:50%;background:rgba(167,139,250,.08);border:1.5px solid rgba(167,139,250,.2);color:var(--purple);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)';this.style.background='rgba(167,139,250,.15)'" onmouseleave="this.style.transform='scale(1)';this.style.background='rgba(167,139,250,.08)'" title="Watch Together"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg></button>
         <div style="width:1px;height:32px;background:rgba(255,255,255,.08);margin:0 4px;"></div>
-        <button class="vc-btn" onclick="disconnectVoice()" title="Leave Call" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(239,68,68,.25),rgba(220,38,38,.2));border:2px solid rgba(239,68,68,.4);color:#ef4444;cursor:pointer;font-size:22px;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.1)';this.style.background='rgba(239,68,68,.35)'" onmouseleave="this.style.transform='scale(1)';this.style.background='linear-gradient(135deg,rgba(239,68,68,.25),rgba(220,38,38,.2))'"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1-.22 1.12.43 2.33.66 3.6.66.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.5c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.1.32.01.7-.22.98L6.6 10.8z" transform="rotate(135 12 12)"/></svg></button>
+        <button class="vc-btn" onclick="disconnectVoice()" title="Leave Call" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(255, 0, 51,.25),rgba(255, 0, 51,.2));border:2px solid rgba(255, 0, 51,.4);color:#ff0033;cursor:pointer;font-size:22px;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.1)';this.style.background='rgba(255, 0, 51,.35)'" onmouseleave="this.style.transform='scale(1)';this.style.background='linear-gradient(135deg,rgba(255, 0, 51,.25),rgba(255, 0, 51,.2))'"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1-.22 1.12.43 2.33.66 3.6.66.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.5c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.1.32.01.7-.22.98L6.6 10.8z" transform="rotate(135 12 12)"/></svg></button>
       </div>
     </div>`;
 }
 function _renderVoiceAvatar(p) {
   const speakRing = p.speaking ? 'box-shadow:0 0 0 4px rgba(62,207,110,.5),0 0 20px rgba(62,207,110,.25);border-color:rgba(62,207,110,.6);' : '';
-  const mutedIcon = p.muted ? '<div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:rgba(248,113,113,.9);display:flex;align-items:center;justify-content:center;border:3px solid var(--bg);z-index:2;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/></svg></div>' : '';
+  const mutedIcon = p.muted ? '<div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:rgba(255, 0, 51,.9);display:flex;align-items:center;justify-content:center;border:3px solid var(--bg);z-index:2;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/></svg></div>' : '';
   return `<div class="voice-avatar-card" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px;border-radius:16px;transition:all .2s;cursor:default;">
     <div class="voice-avatar-ring" style="position:relative;width:82px;height:82px;border-radius:50%;border:3px solid rgba(255,255,255,.1);overflow:visible;display:flex;align-items:center;justify-content:center;${speakRing}transition:all .25s;">
       <div style="width:76px;height:76px;border-radius:50%;overflow:hidden;">${buildAvatarHTML(p.pfp,p.name,76)}</div>
@@ -14963,7 +14963,7 @@ function _renderVoiceAvatar(p) {
     </div>
     <div style="text-align:center;">
       <div class="voice-avatar-name" style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(p.name)}</div>
-      <div style="font-size:10px;color:${p.muted?'#f87171':'rgba(62,207,110,.6)'};font-weight:600;margin-top:2px;">${p.muted?'Muted':p.speaking?'Speaking':'Connected'}</div>
+      <div style="font-size:10px;color:${p.muted?'#ff0033':'rgba(62,207,110,.6)'};font-weight:600;margin-top:2px;">${p.muted?'Muted':p.speaking?'Speaking':'Connected'}</div>
     </div>
   </div>`;
 }
@@ -15033,9 +15033,9 @@ function toggleVoiceDeafen(){
   }
 }
 const _UB_MIC_ON    = '<svg width="14" height="14" viewBox="0 0 384 512" fill="currentColor"><path d="M192 0C139 0 96 43 96 96l0 128c0 53 43 96 96 96s96-43 96-96l0-128c0-53-43-96-96-96zM48 184c0-13.3-10.7-24-24-24S0 170.7 0 184l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c94.7-11.8 168-92.6 168-190.5l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 79.5-64.5 144-144 144S48 303.5 48 224l0-40z"/></svg>';
-const _UB_MIC_OFF   = '<svg width="14" height="14" viewBox="0 0 576 512" fill="#f87171"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L424.7 358.8C458.9 324.2 480 276.6 480 224l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 39.3-15.7 74.9-41.3 100.9L356.8 291C373.6 273.7 384 250 384 224l0-128c0-53-43-96-96-96s-96 43-96 96l0 30.2-151-151zm298.3 434l-41.4-41.4c-3.3 .2-6.5 .3-9.8 .3-79.5 0-144-64.5-144-144l0-10.2-43.6-43.6c-2.8 3.9-4.4 8.7-4.4 13.8l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c9.3-1.2 18.4-3 27.3-5.4z"/></svg>';
+const _UB_MIC_OFF   = '<svg width="14" height="14" viewBox="0 0 576 512" fill="#ff0033"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L424.7 358.8C458.9 324.2 480 276.6 480 224l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 39.3-15.7 74.9-41.3 100.9L356.8 291C373.6 273.7 384 250 384 224l0-128c0-53-43-96-96-96s-96 43-96 96l0 30.2-151-151zm298.3 434l-41.4-41.4c-3.3 .2-6.5 .3-9.8 .3-79.5 0-144-64.5-144-144l0-10.2-43.6-43.6c-2.8 3.9-4.4 8.7-4.4 13.8l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c9.3-1.2 18.4-3 27.3-5.4z"/></svg>';
 const _UB_HEAD_ON   = '<svg width="14" height="14" viewBox="0 0 640 640" fill="currentColor"><path d="M320 96C214 96 128 182 128 288l0 32 32 0c35.3 0 64 28.7 64 64l0 64c0 35.3-28.7 64-64 64l-32 0c-35.3 0-64-28.7-64-64l0-160C64 146.6 178.6 32 320 32S576 146.6 576 288l0 160c0 35.3-28.7 64-64 64l-32 0c-35.3 0-64-28.7-64-64l0-64c0-35.3 28.7-64 64-64l32 0 0-32c0-106-86-192-192-192z"/></svg>';
-const _UB_HEAD_OFF  = '<svg width="14" height="14" viewBox="0 0 640 640" fill="#f87171"><path d="M16 41C6.6 31.6 6.6 16.4 16 7s24.6-9.4 33.9 0l574 574c9.4 9.4 9.4 24.6 0 34s-24.6 9.4-33.9 0l-66.7-66.7C513.7 525.7 480 491.5 480 449l0-65c0-35.3 28.7-64 64-64l32 0 0-32c0-83.4-53.2-154.4-127.4-180.7L380 65.4C357.5 53.6 339.2 32 320 32 178.6 32 64 146.6 64 288l0 160c0 18.8 8.1 35.7 21 47.4l-69-69V41zM160 320l-32 0 0 128 32 0c35.3 0 64-28.7 64-64l0-64c0-35.3-28.7-64-64-64z"/></svg>';
+const _UB_HEAD_OFF  = '<svg width="14" height="14" viewBox="0 0 640 640" fill="#ff0033"><path d="M16 41C6.6 31.6 6.6 16.4 16 7s24.6-9.4 33.9 0l574 574c9.4 9.4 9.4 24.6 0 34s-24.6 9.4-33.9 0l-66.7-66.7C513.7 525.7 480 491.5 480 449l0-65c0-35.3 28.7-64 64-64l32 0 0-32c0-83.4-53.2-154.4-127.4-180.7L380 65.4C357.5 53.6 339.2 32 320 32 178.6 32 64 146.6 64 288l0 160c0 18.8 8.1 35.7 21 47.4l-69-69V41zM160 320l-32 0 0 128 32 0c35.3 0 64-28.7 64-64l0-64c0-35.3-28.7-64-64-64z"/></svg>';
 function _ubInitButtons() {
   const m = document.getElementById('mic-btn');
   if (m) { m.innerHTML = isMuted ? _UB_MIC_OFF : _UB_MIC_ON; m.classList.toggle('active', !!isMuted); }
@@ -15799,7 +15799,7 @@ function openActivityOverview(id) {
       </div>` : ''}
 
       <div style="padding:8px 32px 0;">
-        <button onclick="_reportActivity('${act.id}')" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11.5px;font-family:var(--font-ui);cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:5px;transition:color .15s;" onmouseover="this.style.color='rgba(255,90,90,.6)'" onmouseout="this.style.color='rgba(255,255,255,.2)'">
+        <button onclick="_reportActivity('${act.id}')" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11.5px;font-family:var(--font-ui);cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:5px;transition:color .15s;" onmouseover="this.style.color='rgba(255, 0, 51,.6)'" onmouseout="this.style.color='rgba(255,255,255,.2)'">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
           Report
         </button>
@@ -16149,7 +16149,7 @@ function _renderOffendingContent(data) {
     const cleanText = text.replace(/\[FTZ(?:IMG|VID|AUD|GIF|STICKER):[^\]]*\]/gi, '').trim();
     if (cleanText) html += `<div style="display:flex;justify-content:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);flex-direction:column;gap:6px;">
       <span style="color:#5a6478;font-size:13px;">Offending Content</span>
-      <div style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.12);border-left:3px solid #f87171;border-radius:8px;padding:10px 14px;font-size:13px;color:#c8d0dc;line-height:1.6;word-break:break-word;">${escapeHTML(cleanText.slice(0,300))}${cleanText.length>300?'...':''}</div>
+      <div style="background:rgba(255, 0, 51,.04);border:1px solid rgba(255, 0, 51,.12);border-left:3px solid #ff0033;border-radius:8px;padding:10px 14px;font-size:13px;color:#c8d0dc;line-height:1.6;word-break:break-word;">${escapeHTML(cleanText.slice(0,300))}${cleanText.length>300?'...':''}</div>
     </div>`;
   }
   if (media.length) html += `<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:6px;">
@@ -16181,7 +16181,7 @@ const FTZ_MAX_APPEALS = 3;
 const _VIO_ICONS = {
   warning:    { color:'#f59e0b', vb:'0 0 512 512', path:'M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.4 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.6-34.7-20.1s-7-27.7 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z' },
   suspension: { color:'#f59e0b', vb:'0 0 512 512', path:'M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z' },
-  ban:        { color:'#f87171', vb:'0 0 512 512', path:'M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z' },
+  ban:        { color:'#ff0033', vb:'0 0 512 512', path:'M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z' },
 };
 const _VIO_TITLES = { warning:'Warning', suspension:'Account Suspended', ban:'Account Banned' };
 
@@ -16431,11 +16431,11 @@ function _showThreatRecipientCard(senderUsername, text) {
   overlay.id = 'ftz-threat-recipient-card';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,10,15,.92);backdrop-filter:none;display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .25s ease;';
   overlay.innerHTML = `<div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;width:100%;max-width:520px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);">
-    <div style="width:60px;height:60px;border-radius:16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+    <div style="width:60px;height:60px;border-radius:16px;background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-        <path d="M12 2L1 21h22L12 2z" stroke="#f87171" stroke-width="2" fill="none" stroke-linejoin="round"/>
-        <rect x="11" y="9" width="2" height="5" rx="1" fill="#f87171"/>
-        <circle cx="12" cy="17" r="1.2" fill="#f87171"/>
+        <path d="M12 2L1 21h22L12 2z" stroke="#ff0033" stroke-width="2" fill="none" stroke-linejoin="round"/>
+        <rect x="11" y="9" width="2" height="5" rx="1" fill="#ff0033"/>
+        <circle cx="12" cy="17" r="1.2" fill="#ff0033"/>
       </svg>
     </div>
     <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.3px;">Possible threat detected</div>
@@ -16445,7 +16445,7 @@ function _showThreatRecipientCard(senderUsername, text) {
       <div style="color:#c8d0dc;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word;">${escapeHTML(String(text||'').slice(0,400))}</div>
     </div>
     <div style="display:flex;gap:8px;justify-content:center;">
-      <button onclick="document.getElementById('ftz-threat-recipient-card').remove();reportUser('${escapeHTML(senderUsername)}')" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#fca5a5;border-radius:10px;padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Report user</button>
+      <button onclick="document.getElementById('ftz-threat-recipient-card').remove();reportUser('${escapeHTML(senderUsername)}')" style="background:rgba(255, 0, 51,.12);border:1px solid rgba(255, 0, 51,.3);color:#ff0033;border-radius:10px;padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Report user</button>
       <button onclick="document.getElementById('ftz-threat-recipient-card').remove()" class="warning-ack-btn">Acknowledge</button>
     </div>
   </div>`;
@@ -16479,7 +16479,7 @@ function _showWarningOverlay(reason, issuedBy, contentData) {
 // ═══════════════════════════════════════════════════════════════════════════
 function _ftzVioStatusChip(v) {
   let label, color;
-  if (v.type === 'ban') { label = v.active === false ? 'Lifted' : 'Active'; color = v.active === false ? '#3ecf6e' : '#f87171'; }
+  if (v.type === 'ban') { label = v.active === false ? 'Lifted' : 'Active'; color = v.active === false ? '#3ecf6e' : '#ff0033'; }
   else if (v.type === 'suspension') { const ended = (v.until && new Date(v.until) <= new Date()) || v.active === false; label = ended ? 'Ended' : 'Active'; color = ended ? '#8b95a8' : '#f59e0b'; }
   else { label = 'On record'; color = '#8b95a8'; }
   return `<span style="font-size:11px;font-weight:700;color:${color};background:${color}1a;border:1px solid ${color}33;border-radius:100px;padding:3px 10px;">${label}</span>`;
@@ -16487,7 +16487,7 @@ function _ftzVioStatusChip(v) {
 function _ftzAppealsRemaining(v) { return Math.max(0, FTZ_MAX_APPEALS - ((v.appeals || []).length)); }
 function _ftzAppealStatusMeta(s) {
   return s === 'accepted' ? { label:'Accepted', color:'#3ecf6e' }
-       : s === 'declined' ? { label:'Declined', color:'#f87171' }
+       : s === 'declined' ? { label:'Declined', color:'#ff0033' }
        : { label:'Under review', color:'#f59e0b' };
 }
 
@@ -16560,7 +16560,7 @@ function _ftzVioHistoryCard(v, focused) {
       </div>
     </div>`;
   } else {
-    appealBox = `<div style="margin-top:12px;font-size:12.5px;color:#8b95a8;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.16);border-radius:10px;padding:11px 13px;line-height:1.55;">You've used all ${FTZ_MAX_APPEALS} appeals for this violation and each was declined. If you truly can't move forward, you may <a href="${FTZ_SUPPORT_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">contact Support</a> — though tickets about closed appeals are only accepted in rare cases. Otherwise, the decision stands.</div>`;
+    appealBox = `<div style="margin-top:12px;font-size:12.5px;color:#8b95a8;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.16);border-radius:10px;padding:11px 13px;line-height:1.55;">You've used all ${FTZ_MAX_APPEALS} appeals for this violation and each was declined. If you truly can't move forward, you may <a href="${FTZ_SUPPORT_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">contact Support</a> — though tickets about closed appeals are only accepted in rare cases. Otherwise, the decision stands.</div>`;
   }
 
   const ev = _renderViolationEvidence(v.evidence);
@@ -17217,7 +17217,7 @@ function initFortizedUXResilience() {
         // Cache the live status for use in renderMemberList fallback
         _liveStatusCache[data.username] = data.status;
         if (data.gameActivity !== undefined) _liveGameActivityCache[data.username] = data.gameActivity || null;
-        const color = typeof FtzStatus !== 'undefined' ? FtzStatus.color(data.status) : (data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#f87171':'rgba(255,255,255,.15)');
+        const color = typeof FtzStatus !== 'undefined' ? FtzStatus.color(data.status) : (data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#ff0033':'rgba(255,255,255,.15)');
         const isOnline = data.status==='online'||data.status==='away'||data.status==='dnd';
 
         // ── SELF STATUS SYNC (cross-tab/device) ──
@@ -18340,7 +18340,7 @@ function renderBastionTemplateGrid() {
   const templates = [
     {id:'gaming',emoji:'🎮',name:'Game Hall',desc:'Play together',icon:'fa-gamepad',color:'#60a5fa'},
     {id:'fellowship',emoji:'🤝',name:'Fellowship',desc:'Friends & community',icon:'fa-user-group',color:'#3ecf6e'},
-    {id:'guild',emoji:'⚔️',name:'Guild',desc:'Team & coordination',icon:'fa-shield-halved',color:'#f87171'},
+    {id:'guild',emoji:'⚔️',name:'Guild',desc:'Team & coordination',icon:'fa-shield-halved',color:'#ff0033'},
     {id:'study',emoji:'📚',name:'Study Circle',desc:'Learn together',icon:'fa-book-open',color:'#a78bfa'},
     {id:'artisan',emoji:'🎨',name:'Artisans',desc:'Create & showcase',icon:'fa-palette',color:'#e879f9'},
     {id:'academy',emoji:'🎓',name:'Academy',desc:'Teaching & courses',icon:'fa-graduation-cap',color:'#fbbf24'},
@@ -18475,7 +18475,7 @@ const BASTION_TEMPLATES = {
     ],
     roles:[
       {id:'admin',name:'Guild Master',color:'#fbbf24'},
-      {id:'officer',name:'Officer',color:'#f87171'},
+      {id:'officer',name:'Officer',color:'#ff0033'},
       {id:'veteran',name:'Veteran',color:'#fb923c'},
       {id:'member',name:'Member',color:'#60a5fa'},
       {id:'recruit',name:'Recruit',color:'#9ca3af'},
@@ -18560,7 +18560,7 @@ const ROLE_TEMPLATES = {
     roles:[
       {id:'leader',name:'Clan Leader',color:'#fbbf24',permissions:['administrator'],priority:100,displayAsTag:true},
       {id:'colead',name:'Co-Leader',color:'#fb923c',permissions:['manage_messages','kick_members','ban_members','manage_channels','manage_roles','view_audit_log'],priority:90,displayAsTag:true},
-      {id:'elder',name:'Elder',color:'#f87171',permissions:['manage_messages','kick_members','timeout_members','manage_channels'],priority:60,displayAsTag:true},
+      {id:'elder',name:'Elder',color:'#ff0033',permissions:['manage_messages','kick_members','timeout_members','manage_channels'],priority:60,displayAsTag:true},
       {id:'officer',name:'Officer',color:'#a78bfa',permissions:['send_messages','read_history','add_reactions','attach_files','embed_links','mention_everyone'],priority:40,displayAsTag:true},
       {id:'warrior',name:'Warrior',color:'#60a5fa',permissions:['send_messages','read_history','add_reactions','attach_files'],priority:15,displayAsTag:false},
       {id:'recruit',name:'Initiate',color:'#9ca3af',permissions:['send_messages','read_history','add_reactions'],priority:1,displayAsTag:false},
@@ -18587,7 +18587,7 @@ const ROLE_TEMPLATES = {
     roles:[
       {id:'owner',name:'Team Owner',color:'#fbbf24',permissions:['administrator'],priority:100,displayAsTag:true},
       {id:'coach',name:'Coach',color:'#fb923c',permissions:['manage_messages','manage_channels','manage_events','mention_everyone','view_audit_log'],priority:80,displayAsTag:true},
-      {id:'captain',name:'Captain',color:'#f87171',permissions:['manage_messages','mention_everyone','manage_events'],priority:60,displayAsTag:true},
+      {id:'captain',name:'Captain',color:'#ff0033',permissions:['manage_messages','mention_everyone','manage_events'],priority:60,displayAsTag:true},
       {id:'player',name:'Player',color:'#60a5fa',permissions:['send_messages','read_history','add_reactions','attach_files','embed_links'],priority:30,displayAsTag:true},
       {id:'sub',name:'Substitute',color:'#22d3ee',permissions:['send_messages','read_history','add_reactions','attach_files'],priority:15,displayAsTag:false},
       {id:'fan',name:'Fan',color:'#9ca3af',permissions:['send_messages','read_history','add_reactions'],priority:1,displayAsTag:false},
@@ -19310,7 +19310,7 @@ function renderBastionHub() {
       </div>
     </div>
 
-    <div class="bhub-card" style="border-color:rgba(248,113,113,.15);">
+    <div class="bhub-card" style="border-color:rgba(255, 0, 51,.15);">
       <div class="bhub-title" style="color:var(--red);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Leave</div>
       <div class="bhub-desc">Leave this bastion. You'll need an invite to rejoin.</div>
       <button class="btn-d" style="font-size:12.5px;padding:8px 16px;" onclick="openModal('modal-leave-bastion')">Leave Bastion</button>
@@ -19568,7 +19568,7 @@ function openOverviewEditor() {
     {val:'#60a5fa',label:'Blue',hex:'#60a5fa'},
     {val:'#3ecf6e',label:'Green',hex:'#3ecf6e'},
     {val:'#a78bfa',label:'Purple',hex:'#a78bfa'},
-    {val:'#f87171',label:'Red',hex:'#f87171'},
+    {val:'#ff0033',label:'Red',hex:'#ff0033'},
     {val:'#fb923c',label:'Orange',hex:'#fb923c'},
     {val:'#e879f9',label:'Pink',hex:'#e879f9'},
     {val:'#22d3ee',label:'Cyan',hex:'#22d3ee'},
@@ -19953,7 +19953,7 @@ function renderBSettingsMain(tab) {
           <button class="btn-g" onclick="addAppQuestion()" style="font-size:12px;padding:6px 14px;">+ Question</button>
           <button class="btn-a" onclick="saveAppQuestions()" style="font-size:12px;padding:6px 14px;">Save Form</button>
         </div>
-      </div>` : '<div style="margin-top:14px;padding:12px;background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);border-radius:10px;font-size:12.5px;color:var(--muted-light);">🔒 Private bastion — invite-only. Share invite links from the Invites tab.</div>'}
+      </div>` : '<div style="margin-top:14px;padding:12px;background:rgba(255, 0, 51,.07);border:1px solid rgba(255, 0, 51,.2);border-radius:10px;font-size:12.5px;color:var(--muted-light);">🔒 Private bastion — invite-only. Share invite links from the Invites tab.</div>'}
       `;
   }
   else if (tab==='channels') {
@@ -19974,7 +19974,7 @@ function renderBSettingsMain(tab) {
             <span style="color:var(--muted);">${ch.type==='voice'?ftzIcon('mic','12'):ch.type==='forum'?ftzIcon('chat','12'):ch.type==='announcement'?ftzIcon('megaphone','12'):ch.type==='poll'?ftzIcon('ballot','12'):'#'}</span>
             <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
             ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
-            ${ch.nsfw?'<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
+            ${ch.nsfw?'<span style="font-size:9px;background:rgba(255, 0, 51,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
             ${ch.type!=='voice'?`<button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleChannelFocusMode(${realIdx})">${ch.focusMode?'Unfocus':'🧭 Focus'}</button>`:''}
             <button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleNSFW(${realIdx})">${ch.nsfw?'SFW':'NSFW'}</button>
             <button class="btn-d" style="padding:4px 9px;font-size:11px;" onclick="deleteChannel(${realIdx})">✕</button>
@@ -19986,7 +19986,7 @@ function renderBSettingsMain(tab) {
         <span style="color:var(--muted);">${ch.type==='voice'?ftzIcon('mic','12'):ch.type==='forum'?ftzIcon('chat','12'):ch.type==='announcement'?ftzIcon('megaphone','12'):ch.type==='poll'?ftzIcon('ballot','12'):'#'}</span>
         <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
         ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
-        ${ch.nsfw?'<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
+        ${ch.nsfw?'<span style="font-size:9px;background:rgba(255, 0, 51,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
         ${ch.type!=='voice'?`<button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleChannelFocusMode(${realIdx})">${ch.focusMode?'Unfocus':'🧭 Focus'}</button>`:''}
         <button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleNSFW(${realIdx})">${ch.nsfw?'SFW':'NSFW'}</button>
         <button class="btn-d" style="padding:4px 9px;font-size:11px;" onclick="deleteChannel(${realIdx})">✕</button>
@@ -20172,7 +20172,7 @@ function renderBSettingsMain(tab) {
       ${invites.length ? invites.map((inv,i)=>{
         const expired=inv.expires&&new Date(inv.expires)<new Date();
         const maxedOut=inv.maxUses&&inv.uses>=inv.maxUses;
-        return `<div style="padding:12px 16px;background:var(--panel);border:1px solid ${expired||maxedOut?'rgba(248,113,113,.2)':'var(--border)'};border-radius:14px;margin-bottom:8px;${expired||maxedOut?'opacity:.6;':''}">
+        return `<div style="padding:12px 16px;background:var(--panel);border:1px solid ${expired||maxedOut?'rgba(255, 0, 51,.2)':'var(--border)'};border-radius:14px;margin-bottom:8px;${expired||maxedOut?'opacity:.6;':''}">
           <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;">
             <span style="flex:1;font-size:12px;font-family:monospace;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${'https://fortized.com/app?invite='+inv.code}</span>
             <button class="btn-g" style="padding:4px 10px;font-size:12px;flex-shrink:0;" onclick="copyInvite('${inv.code}')">Copy</button>
@@ -20208,7 +20208,7 @@ function renderBSettingsMain(tab) {
         <button class="btn-d" style="font-size:13px;padding:8px 14px;flex-shrink:0;" onclick="banMemberByName()">Ban</button>
       </div>`:''}
       ${bans.length ? bans.map((ban,i)=>`
-        <div style="padding:12px 16px;background:var(--panel);border:1px solid rgba(248,113,113,.2);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+        <div style="padding:12px 16px;background:var(--panel);border:1px solid rgba(255, 0, 51,.2);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
           <span style="font-size:18px;">🚫</span>
           <div style="flex:1;"><div style="font-weight:600;">${escapeHTML(ban.username)}</div><div style="font-size:12px;color:var(--muted);">Reason: ${escapeHTML(ban.reason||'N/A')}</div><div style="font-size:11px;color:var(--muted);">${ban.date?new Date(ban.date).toLocaleDateString():''}</div></div>
           <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="unbanMember(${i})">Unban</button>
@@ -20338,7 +20338,7 @@ function renderBSettingsMain(tab) {
         </div>
       </div>
       ${b.owner===CU.username?`
-      <div style="padding:16px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.15);border-radius:16px;">
+      <div style="padding:16px;background:rgba(255, 0, 51,.04);border:1px solid rgba(255, 0, 51,.15);border-radius:16px;">
         <div style="font-weight:700;margin-bottom:8px;">Season Reset</div>
         <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:12px;">Reset all reputation scores for a fresh season. This cannot be undone.</div>
         <button class="btn-d" onclick="showCustomConfirm('Reset all reputation for this Bastion?',()=>resetBastionReputation('${escapeHTML(bastionId)}'))">Reset Reputation</button>
@@ -20458,7 +20458,7 @@ function renderBSettingsMain(tab) {
             {ok:(b.rules||[]).length>0,text:'Has server rules set',fix:'Add rules in the Server Rules tab'},
             {ok:!!b.banner,text:'Has a banner image',fix:'Upload a banner in Overview'},
             {ok:!!b.icon,text:'Has a custom icon',fix:'Upload an icon in Overview'},
-          ].map(h=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${h.ok?'rgba(62,207,110,.04)':'rgba(248,113,113,.04)'};border:1px solid ${h.ok?'rgba(62,207,110,.08)':'rgba(248,113,113,.08)'};border-radius:10px;">
+          ].map(h=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${h.ok?'rgba(62,207,110,.04)':'rgba(255, 0, 51,.04)'};border:1px solid ${h.ok?'rgba(62,207,110,.08)':'rgba(255, 0, 51,.08)'};border-radius:10px;">
             <span style="font-size:14px;">${h.ok?'✅':'⚠️'}</span>
             <span style="font-size:12.5px;color:rgba(255,255,255,.6);flex:1;">${h.text}</span>
             ${!h.ok?`<span style="font-size:10.5px;color:var(--muted);">${h.fix}</span>`:''}
@@ -20530,12 +20530,12 @@ function renderBSettingsMain(tab) {
         <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">Transfer this bastion to another member. You will lose owner privileges.</div>
         <div style="display:flex;gap:8px;"><input class="field-input" id="transfer-owner-input" placeholder="Username" style="flex:1;"><button class="btn-g" onclick="transferBastionOwnership()">Transfer</button></div>
       </div>`:''}
-      <div style="padding:16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:16px;margin-bottom:14px;">
+      <div style="padding:16px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.2);border-radius:16px;margin-bottom:14px;">
         <div style="font-weight:700;margin-bottom:6px;">Leave Bastion</div>
         <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">You'll need an invite to rejoin.</div>
         <button class="btn-d" onclick="confirmLeaveBastion()">Leave Bastion</button>
       </div>
-      ${b.owner===CU.username?`<div style="padding:16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:16px;">
+      ${b.owner===CU.username?`<div style="padding:16px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.2);border-radius:16px;">
         <div style="font-weight:700;margin-bottom:6px;">Delete Bastion</div>
         <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">Permanently deletes all channels, messages, and settings. Cannot be undone.</div>
         <button class="btn-d" onclick="deleteBastion()">Delete Bastion</button>
@@ -20981,7 +20981,7 @@ function renderBSettingsMain(tab) {
             const daysLeft = neverExpires ? Infinity : (isActive ? Math.max(0, Math.ceil((new Date(ad.expiresAt) - new Date()) / 86400000)) : 0);
             const targetBst = (CU.bastions||[])[ad.bastionIdx];
             return `
-            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--panel);border:1px solid ${isActive?'rgba(62,207,110,.2)':expired?'rgba(248,113,113,.15)':'var(--border)'};border-radius:12px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--panel);border:1px solid ${isActive?'rgba(62,207,110,.2)':expired?'rgba(255, 0, 51,.15)':'var(--border)'};border-radius:12px;margin-bottom:8px;">
               <div style="width:80px;height:50px;border-radius:8px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.03);">
                 ${ad.image?`<img src="${escapeHTML(ad.image)}" style="width:100%;height:100%;object-fit:cover;">`:'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);">No img</div>'}
               </div>
@@ -20994,7 +20994,7 @@ function renderBSettingsMain(tab) {
                 </div>
               </div>
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;${isActive?'color:var(--green);background:rgba(62,207,110,.1);':'color:var(--red);background:rgba(248,113,113,.1);'}">${neverExpires?'Never expires':isActive?daysLeft+'d left':'Expired'}</span>
+                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;${isActive?'color:var(--green);background:rgba(62,207,110,.1);':'color:var(--red);background:rgba(255, 0, 51,.1);'}">${neverExpires?'Never expires':isActive?daysLeft+'d left':'Expired'}</span>
                 ${isActive?`<div style="display:flex;gap:4px;"><button class="btn-g" style="font-size:10px;padding:3px 8px;" onclick="_cmEditAd(${i})">Edit (5 Onyx)</button><button class="btn-g" style="font-size:10px;padding:3px 8px;color:var(--red);" onclick="_cmCancelAd(${i})">Cancel (5 Onyx)</button></div>`:`<button class="btn-g" style="font-size:10px;padding:3px 8px;" onclick="_cmRenewAd(${i})">Renew (15 Onyx)</button>`}
               </div>
             </div>`;
@@ -22821,8 +22821,8 @@ const BLOCK_ACTIONS = [
   {id:'assign_role', label:'Assign Role', icon:ftzIcon('shield','14'), color:'#60a5fa'},
   {id:'remove_role', label:'Remove Role', icon:ftzIcon('lock','14'), color:'#f59e0b'},
   {id:'add_onyx', label:'Add Onyx', icon:ftzIcon('gem','14'), color:'#fbbf24'},
-  {id:'delete_message', label:'Delete Message', icon:ftzIcon('trash','14'), color:'#f87171'},
-  {id:'timeout_user', label:'Timeout User', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', color:'#f87171'},
+  {id:'delete_message', label:'Delete Message', icon:ftzIcon('trash','14'), color:'#ff0033'},
+  {id:'timeout_user', label:'Timeout User', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', color:'#ff0033'},
   {id:'trigger_quest', label:'Trigger Quest', icon:ftzIcon('sword','14'), color:'#a78bfa'},
 ];
 
@@ -24815,7 +24815,7 @@ function buildProfileNav(scroll, opts) {
       <div class="profile-nav-sep"></div>
     `).join('')}
     <div style="flex:1;"></div>
-    <div class="profile-nav-item" onclick="doLogout()" style="color:rgba(248,113,113,.6);">
+    <div class="profile-nav-item" onclick="doLogout()" style="color:rgba(255, 0, 51,.6);">
       <span class="pni-icon">${ICN['logout']}</span>
       <span>Log Out</span>
     </div>`;
@@ -25557,7 +25557,7 @@ function _buildProfileView(tab) {
       <div style="padding:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;">
         <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px;">Local Storage</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:16px;">Clear locally cached data. This will not affect your account data stored on our servers.</div>
-        <button style="padding:8px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;" onclick="showCustomConfirm('Clear all local cache? You will need to re-login.',()=>{localStorage.clear();location.reload();})">Clear Local Cache</button>
+        <button style="padding:8px 16px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.15);border-radius:10px;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;" onclick="showCustomConfirm('Clear all local cache? You will need to re-login.',()=>{localStorage.clear();location.reload();})">Clear Local Cache</button>
       </div>
     </div>`;
   }
@@ -26500,7 +26500,7 @@ function _showAvatarPickerModal() {
       ${recentAvatars.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;">
         ${recentAvatars.map(url => `<div class="ftz-recent-av" style="position:relative;width:48px;height:48px;" data-av-url="${escapeHTML(url)}">
           <div onclick="_pickRecentAvatar('${escapeHTML(url)}')" style="width:48px;height:48px;border-radius:50%;overflow:hidden;cursor:pointer;border:2px solid rgba(255,255,255,.08);transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'"><img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:cover;" draggable="false"></div>
-          <button class="ftz-recent-av-rm" onclick="event.stopPropagation();_removeRecentAvatar('${escapeHTML(url)}')" data-tip="Remove" title="Remove" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#f87171;border:2px solid var(--panel,#12141b);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.35);">
+          <button class="ftz-recent-av-rm" onclick="event.stopPropagation();_removeRecentAvatar('${escapeHTML(url)}')" data-tip="Remove" title="Remove" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#ff0033;border:2px solid var(--panel,#12141b);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.35);">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
           </button>
         </div>`).join('')}
@@ -26561,12 +26561,12 @@ function _openAvatarGifPicker() {
     // query that returned generic medieval results.
     {id:'fortized',label:'Fortized',emoji:'🏰',color:'#fff93e'},
     {id:'excited',label:'Excited',emoji:'🎉',color:'#c084fc'},
-    {id:'angry',label:'Angry',emoji:'😡',color:'#f87171'},
+    {id:'angry',label:'Angry',emoji:'😡',color:'#ff0033'},
     {id:'dance',label:'Dance',emoji:'💃',color:'#f472b6'},
     {id:'thumbs up',label:'Approve',emoji:'👍',color:'#34d399'},
     {id:'hello',label:'Hello',emoji:'👋',color:'#a3e635'},
     {id:'yes',label:'Yes',emoji:'✅',color:'#22c55e'},
-    {id:'no',label:'No',emoji:'❌',color:'#ef4444'},
+    {id:'no',label:'No',emoji:'❌',color:'#ff0033'},
     {id:'please',label:'Please',emoji:'🥺',color:'#c4b5fd'},
     {id:'hug',label:'Hugs',emoji:'🤗',color:'#fda4af'},
     {id:'thank you',label:'Thanks',emoji:'🙏',color:'#fde68a'},
@@ -26970,7 +26970,7 @@ function _showBannerPickerMenu(event) {
       <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:8px;">Current</div>
       <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.06);aspect-ratio:16/5;background:#0e1117;">
         <img src="${escapeHTML(CU.banner)}" style="width:100%;height:100%;object-fit:cover;display:block;">
-        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';saveUser(true,['banner']);markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.35);color:#fca5a5;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
+        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';saveUser(true,['banner']);markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(255, 0, 51,.18);border:1px solid rgba(255, 0, 51,.35);color:#ff0033;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
       </div>
     </div>` : ''}
     <div style="padding:12px 24px 16px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:rgba(255,255,255,.28);">Banners are cropped to 16:5. Upload up to 8 MB or pick an animated GIF.</div>
@@ -27199,7 +27199,7 @@ async function buildNotifList() {
   const colors = {
     friend_request:'#60a5fa', friend_accept:'#3ecf6e', dm:'#a78bfa',
     mention:'#ffd93e', bastion:'var(--accent)', call:'#3ecf6e', support_ticket:'#38bdf8',
-    trade_offer:'#f472b6', trade_accepted:'#3ecf6e', trade_declined:'#f87171',
+    trade_offer:'#f472b6', trade_accepted:'#3ecf6e', trade_declined:'#ff0033',
   };
   // Pre-fetch user pfps for notifications that have a 'from' user
   const _notifUsers = {};
@@ -27295,7 +27295,7 @@ async function buildNotifList() {
   } catch(err) {
     console.error('[inbox] buildNotifList error:', err);
     list.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;">'
-      +'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(248,113,113,.3)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+      +'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 0, 51,.3)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
       +'<div style="font-size:13px;color:var(--muted);text-align:center;">Something went wrong<br><span style="font-size:11.5px;opacity:.6;">Try closing and reopening your inbox</span></div></div>';
   }
 }
@@ -27552,7 +27552,7 @@ async function _viewUserProfile(username) {
   // Inject the modal scaffold
   modalEl.innerHTML = `
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
-      <div class="pbo-icon" style="font-size:32px;color:rgba(248,113,113,.5);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+      <div class="pbo-icon" style="font-size:32px;color:rgba(255, 0, 51,.5);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
       <div class="pbo-text">You blocked ${escapeHTML(username)}</div>
       <div class="pbo-sub">Their profile is hidden</div>
       <button class="pbo-reveal" onclick="document.getElementById('profile-blocked-overlay').style.display='none'">Show Profile</button>
@@ -27628,7 +27628,7 @@ async function _viewUserProfile(username) {
                     <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);">${escapeHTML(it.name || id)}</div>
                     <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:10px;height:10px;">${it.price || '-'}</div>
                     ${isOwn
-                      ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}','wishlist'),60);" style="background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.22);border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
+                      ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}','wishlist'),60);" style="background:rgba(255, 0, 51,.08);color:var(--red);border:1px solid rgba(255, 0, 51,.22);border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
                       : `<button onclick="openGiftModal('${escapeHTML(id)}','${escapeHTML(u.username)}')" style="background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.22);border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;justify-content:center;">${_svgIcon('gift', 10)} Gift</button>`}
                   </div>`).join('')}
                 </div>`;
@@ -28512,7 +28512,7 @@ function renderNSFWGate(contentEl, channelName) {
   const tier = getAgeTier(CU?.dateOfBirth);
   if (tier === AGE_TIERS.CHILD) {
     contentEl.innerHTML = `
-      <div class="empty-state" style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.15);border-radius:18px;padding:40px;margin:20px;">
+      <div class="empty-state" style="background:rgba(255, 0, 51,.04);border:1px solid rgba(255, 0, 51,.15);border-radius:18px;padding:40px;margin:20px;">
         <div class="ei" style="font-size:40px;">🔒</div>
         <h3 style="color:var(--red);">Age-Restricted Content</h3>
         <p>This channel contains content not suitable for your age group. Access is restricted for your protection.</p>
@@ -28527,7 +28527,7 @@ function renderNSFWGate(contentEl, channelName) {
         <p style="font-size:13.5px;color:var(--muted-light);max-width:320px;line-height:1.6;margin-bottom:20px;">
           This channel has been marked as containing sensitive content. By proceeding, you confirm that you understand the nature of this content.
         </p>
-        <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:14px;padding:16px;max-width:320px;font-size:12.5px;color:var(--red);margin-bottom:20px;">
+        <div style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.2);border-radius:14px;padding:16px;max-width:320px;font-size:12.5px;color:var(--red);margin-bottom:20px;">
           ⚠️ This action is logged for platform safety compliance.
         </div>
         <button class="btn-d" onclick="confirmNSFWView()" style="padding:12px 24px;">View Sensitive Content</button>
@@ -29106,7 +29106,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
     const openTickets = Object.values(tickets).filter(t=>t.status==='open').length;
     const threatScore = pending * 3 + nsfwQueue.length * 2 + bans.length + openTickets;
-    const threat = threatScore > 20 ? {level:'CRITICAL',cls:'sc-threat--critical',icon:'<i class="fas fa-circle-exclamation" style="color:#f87171;font-size:10px;"></i>'} : threatScore > 10 ? {level:'HIGH',cls:'sc-threat--high',icon:'<i class="fas fa-circle-exclamation" style="color:#fb923c;font-size:10px;"></i>'} : threatScore > 3 ? {level:'MODERATE',cls:'sc-threat--medium',icon:'<i class="fas fa-circle" style="color:#fbbf24;font-size:10px;"></i>'} : {level:'LOW',cls:'sc-threat--low',icon:'<i class="fas fa-circle-check" style="color:#3ecf6e;font-size:10px;"></i>'};
+    const threat = threatScore > 20 ? {level:'CRITICAL',cls:'sc-threat--critical',icon:'<i class="fas fa-circle-exclamation" style="color:#ff0033;font-size:10px;"></i>'} : threatScore > 10 ? {level:'HIGH',cls:'sc-threat--high',icon:'<i class="fas fa-circle-exclamation" style="color:#fb923c;font-size:10px;"></i>'} : threatScore > 3 ? {level:'MODERATE',cls:'sc-threat--medium',icon:'<i class="fas fa-circle" style="color:#fbbf24;font-size:10px;"></i>'} : {level:'LOW',cls:'sc-threat--low',icon:'<i class="fas fa-circle-check" style="color:#3ecf6e;font-size:10px;"></i>'};
     const activeNow = onlineCount + awayCount + dndCount;
     // Oldest still-pending report → the "aging" signal on the queue card.
     const _pendingReps = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned');
@@ -29196,7 +29196,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           <div class="sc-feed">
             ${auditLog.slice(0,12).map(e=>{
               const a=(e.action||'');
-              const cfg = a.includes('ban')?{c:'#f2555a',bg:'rgba(242,85,90,.12)',i:'fa-gavel'}
+              const cfg = a.includes('ban')?{c:'#ff0033',bg:'rgba(255, 0, 51,.12)',i:'fa-gavel'}
                 : a.includes('warn')?{c:'#f5a524',bg:'rgba(245,165,36,.12)',i:'fa-triangle-exclamation'}
                 : (a.includes('give')||a.includes('grant'))?{c:'#ffd93e',bg:'rgba(255,217,62,.12)',i:'fa-gift'}
                 : a.includes('report')?{c:'#a78bfa',bg:'rgba(167,139,250,.12)',i:'fa-flag'}
@@ -29448,10 +29448,10 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-flag" style="color:#f87171;"></i> Reports</div>
+          <div class="sc-head-title"><i class="fas fa-flag" style="color:#ff0033;"></i> Reports</div>
           <div class="sc-head-meta">
             <span class="sc-badge-sm" style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);">${reps.length} total</span>
-            <span class="sc-badge-sm" style="background:${pendingReps.length>0?'rgba(248,113,113,.1)':'rgba(62,207,110,.1)'};color:${pendingReps.length>0?'#f87171':'#3ecf6e'};font-weight:600;">${pendingReps.length} pending</span>
+            <span class="sc-badge-sm" style="background:${pendingReps.length>0?'rgba(255, 0, 51,.1)':'rgba(62,207,110,.1)'};color:${pendingReps.length>0?'#ff0033':'#3ecf6e'};font-weight:600;">${pendingReps.length} pending</span>
             <span class="sc-badge-sm" style="background:rgba(62,207,110,.06);color:rgba(62,207,110,.6);">${resolvedReps.length} resolved</span>
           </div>
         </div>
@@ -29460,8 +29460,8 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         </div>
       </div>
       ${reps.length===0?'<div class="sc-empty"><i class="fas fa-circle-check" style="font-size:32px;color:rgba(62,207,110,.4);margin-bottom:8px;display:block;"></i>No reports — all clear!</div>':
-      `${pendingReps.length>0?`<div class="sc-row" style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.08);border-radius:10px;margin-bottom:14px;cursor:default;">
-        <i class="fas fa-triangle-exclamation" style="color:#f87171;font-size:16px;"></i>
+      `${pendingReps.length>0?`<div class="sc-row" style="background:rgba(255, 0, 51,.04);border:1px solid rgba(255, 0, 51,.08);border-radius:10px;margin-bottom:14px;cursor:default;">
+        <i class="fas fa-triangle-exclamation" style="color:#ff0033;font-size:16px;"></i>
         <span style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--red);">${pendingReps.length} report${pendingReps.length>1?'s':''} pending review</span>
       </div>`:''}
       <div class="sc-card">
@@ -29478,7 +29478,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-gavel" style="color:#f87171;"></i> Bans</div>
+          <div class="sc-head-title"><i class="fas fa-gavel" style="color:#ff0033;"></i> Bans</div>
           <div class="sc-head-meta">Bans, suspensions, and warnings — unified view</div>
         </div>
         <div class="sc-head-actions">
@@ -29487,13 +29487,13 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;" id="ban-filter-bar">
         <button class="sc-btn sc-btn-primary" data-banf="all" onclick="_setBanFilter('all')">All</button>
-        <button class="sc-btn sc-btn-ghost" data-banf="ban" onclick="_setBanFilter('ban')" style="color:#f87171;">Bans</button>
+        <button class="sc-btn sc-btn-ghost" data-banf="ban" onclick="_setBanFilter('ban')" style="color:#ff0033;">Bans</button>
         <button class="sc-btn sc-btn-ghost" data-banf="suspend" onclick="_setBanFilter('suspend')" style="color:#a855f7;">Suspensions</button>
         <button class="sc-btn sc-btn-ghost" data-banf="warn" onclick="_setBanFilter('warn')" style="color:#f59e0b;">Warnings</button>
       </div>
       <div id="ban-unified-list"><div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto 12px;"></div>Loading...</div></div>
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-        <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#f87171;" id="ban-count-bans">0</div><div class="sc-stat-lbl">Active Bans</div></div>
+        <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#ff0033;" id="ban-count-bans">0</div><div class="sc-stat-lbl">Active Bans</div></div>
         <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#a855f7;" id="ban-count-susp">0</div><div class="sc-stat-lbl">Active Suspensions</div></div>
         <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#f59e0b;" id="ban-count-warn">0</div><div class="sc-stat-lbl">Active Warnings</div></div>
       </div>
@@ -29705,7 +29705,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       `<div style="display:flex;flex-direction:column;gap:10px;">
         ${queue.map((item,i)=>{
           const typeIcon = item.type==='video'?'🎬':item.type==='gif'?'🎞️':'🖼️';
-          const labelColor = item.aiLabel==='EXPLICIT'||item.aiLabel==='BANNED_CONTENT'?'#f87171':item.aiLabel==='SUGGESTIVE'?'#f59e0b':'#60a5fa';
+          const labelColor = item.aiLabel==='EXPLICIT'||item.aiLabel==='BANNED_CONTENT'?'#ff0033':item.aiLabel==='SUGGESTIVE'?'#f59e0b':'#60a5fa';
           const target = item.uploader || null;
           const mediaSrc = item.thumbnail||item.url||item.dataUrl||'';
           return `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(245,158,11,.15);border-radius:14px;overflow:hidden;">
@@ -29721,7 +29721,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
               <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
                 <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Uploader</div>
-                <div style="font-size:13px;font-weight:600;color:${target?'#f87171':'rgba(255,255,255,.3)'};">${target?escapeHTML(target):'Unknown'}</div>
+                <div style="font-size:13px;font-weight:600;color:${target?'#ff0033':'rgba(255,255,255,.3)'};">${target?escapeHTML(target):'Unknown'}</div>
               </div>
               <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
                 <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Details</div>
@@ -29740,25 +29740,25 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.04);">
               <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.25);align-self:center;margin-right:4px;">AI Verdict:</span>
               <button onclick="nsfwAIFeedback(${i},true)" class="ai-fb-correct"><i class="fas fa-check" style="font-size:12px;"></i> AI was Right (NSFW)</button>
-              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;"><i class="fas fa-xmark" style="font-size:12px;"></i> AI was Wrong (NOT NSFW)</button>
+              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;"><i class="fas fa-xmark" style="font-size:12px;"></i> AI was Wrong (NOT NSFW)</button>
             </div>
             <!-- Actions (same style as reports) -->
             ${(()=>{
               const uRole = target ? getStaffRole(target) : null;
               const canAct = uRole === 'superadmin' ? false : uRole === 'admin' ? isSuperAdmin() : uRole === 'moderator' ? isAdmin() : true;
               const protectedMsg = uRole === 'superadmin' ? '<div style="padding:10px 14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:rgba(255,249,62,.7);font-size:12px;font-weight:600;">🛡️ This user is a Superadmin and cannot be actioned by anyone.</div>'
-                : (uRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:rgba(248,113,113,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
+                : (uRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.12);border-radius:8px;color:rgba(255, 0, 51,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
                 : (uRole === 'moderator' && !isAdmin()) ? '<div style="padding:10px 14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.12);border-radius:8px;color:rgba(96,165,250,.7);font-size:12px;font-weight:600;">🔒 This user is a Moderator — only Admins and Superadmins can take action.</div>'
                 : '';
-              if (!canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
+              if (!canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
               return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
               <button onclick="reviewNSFW(${i},'approve')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">Dismiss</button>
               <button onclick="reviewNSFW(${i},'warn')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
               ${target?`<button onclick="reviewNSFW(${i},'suspend')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">⏳ Suspend</button>`:''}
-              ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
+              ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
               <div style="flex:1;"></div>
               ${target?`<button onclick="adminInspectUser('${escapeHTML(target)}');" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:var(--blue);font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
-              ${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
+              ${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
             </div>`;
             })()}
           </div>
@@ -29818,12 +29818,12 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         </div>
         <!-- Column 3: Deployment -->
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 14px;">
-            <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:var(--red);display:flex;align-items:center;gap:6px;"><i class="fas fa-cloud-upload-alt" style="font-size:14px;color:#f87171;"></i> Deployment</div>
+          <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255, 0, 51,.12);border-radius:10px;padding:12px 14px;">
+            <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:var(--red);display:flex;align-items:center;gap:6px;"><i class="fas fa-cloud-upload-alt" style="font-size:14px;color:#ff0033;"></i> Deployment</div>
             <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Push updates and manage active sessions.</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-arrow-right-arrow-left" style="font-size:14px;"></i> Migrate to Next Update</button>
-              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-right-from-bracket" style="font-size:14px;"></i> Reset All Sessions</button>
+              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-arrow-right-arrow-left" style="font-size:14px;"></i> Migrate to Next Update</button>
+              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-right-from-bracket" style="font-size:14px;"></i> Reset All Sessions</button>
             </div>
           </div>
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
@@ -29869,20 +29869,20 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           </div>`).join('')}
         </div>
         <!-- Admins -->
-        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.15);border-radius:12px;padding:18px;">
+        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255, 0, 51,.15);border-radius:12px;padding:18px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-            <i class="fas fa-shield" style="color:#f87171;font-size:16px;"></i>
+            <i class="fas fa-shield" style="color:#ff0033;font-size:16px;"></i>
             <span style="font-weight:700;color:var(--red);">Admins</span>
             <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${admins.length}</span>
           </div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Limited data access. Can moderate, manage economy, view age tiers (not precise ages).</div>
           ${admins.map((a,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
-            <i class="fas fa-shield" style="color:#f87171;font-size:14px;"></i><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
-            <button onclick="removeStaff('admin',${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
+            <i class="fas fa-shield" style="color:#ff0033;font-size:14px;"></i><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
+            <button onclick="removeStaff('admin',${i})" style="padding:3px 10px;background:rgba(255, 0, 51,.1);border:1px solid rgba(255, 0, 51,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
           </div>`).join('')||'<div style="color:rgba(255,255,255,.25);font-size:12px;padding:8px 0;">No admins yet</div>'}
           <div style="display:flex;gap:7px;margin-top:10px;">
             <input class="settings-input" id="new-admin-input" placeholder="Username" style="flex:1;">
-            <button onclick="addStaff('admin')" style="padding:7px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
+            <button onclick="addStaff('admin')" style="padding:7px 14px;background:rgba(255, 0, 51,.1);border:1px solid rgba(255, 0, 51,.2);color:var(--red);border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
           </div>
         </div>
         <!-- Moderators -->
@@ -29895,7 +29895,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Very limited power. Only moderation tools: NSFW detection, reports, restrained user lookup.</div>
           ${moderators.map((m,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
             <i class="fas fa-wrench" style="color:#60a5fa;font-size:14px;"></i><span style="flex:1;font-weight:600;">${escapeHTML(m)}</span>
-            <button onclick="removeStaff('moderator',${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
+            <button onclick="removeStaff('moderator',${i})" style="padding:3px 10px;background:rgba(255, 0, 51,.1);border:1px solid rgba(255, 0, 51,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
           </div>`).join('')||'<div style="color:rgba(255,255,255,.25);font-size:12px;padding:8px 0;">No moderators yet</div>'}
           <div style="display:flex;gap:7px;margin-top:10px;">
             <input class="settings-input" id="new-mod-input" placeholder="Username" style="flex:1;">
@@ -29916,7 +29916,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;">
           ${_automationAccounts.map(a=>{
             const meta = a === FORTIZED_ACCOUNT ? { label:'System / news', tone:'rgba(255,217,62,.2)' }
-                       : a === FORTIZED_SAFETY_ACCOUNT ? { label:'Automod & safety notices', tone:'rgba(248,113,113,.2)' }
+                       : a === FORTIZED_SAFETY_ACCOUNT ? { label:'Automod & safety notices', tone:'rgba(255, 0, 51,.2)' }
                        : a === JOYSTER_ACCOUNT ? { label:'Joyster — fun & quests', tone:'rgba(96,165,250,.2)' }
                        : { label:'Bot', tone:'rgba(255,255,255,.1)' };
             return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:linear-gradient(${meta.tone},${meta.tone}),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;">
@@ -29976,7 +29976,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <div class="sc-stat" style="--stat-accent:#60a5fa;"><div class="sc-stat-val" style="color:var(--blue);font-size:20px;">${feedbackData.length}</div><div class="sc-stat-lbl">Total</div></div>
         <div class="sc-stat" style="--stat-accent:#3ecf6e;"><div class="sc-stat-val" style="color:var(--green);font-size:20px;">${posCount}</div><div class="sc-stat-lbl">Positive</div></div>
         <div class="sc-stat" style="--stat-accent:#f59e0b;"><div class="sc-stat-val" style="color:#f59e0b;font-size:20px;">${neuCount}</div><div class="sc-stat-lbl">Neutral</div></div>
-        <div class="sc-stat" style="--stat-accent:#f87171;"><div class="sc-stat-val" style="color:var(--red);font-size:20px;">${negCount}</div><div class="sc-stat-lbl">Negative</div></div>
+        <div class="sc-stat" style="--stat-accent:#ff0033;"><div class="sc-stat-val" style="color:var(--red);font-size:20px;">${negCount}</div><div class="sc-stat-lbl">Negative</div></div>
         <div class="sc-stat" style="--stat-accent:#a78bfa;"><div class="sc-stat-val" style="color:#a78bfa;font-size:20px;">${withComments}</div><div class="sc-stat-lbl">With Comments</div></div>
       </div>
       <!-- Satisfaction Bar -->
@@ -29998,7 +29998,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Recent Feedback</div>
         <div id="_fb-list" style="background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-height:320px;overflow-y:auto;">
           ${feedbackData.slice(0,50).map(f => {
-            const rColor = f.rating==='positive'?'#3ecf6e':f.rating==='negative'?'#f87171':'#f59e0b';
+            const rColor = f.rating==='positive'?'#3ecf6e':f.rating==='negative'?'#ff0033':'#f59e0b';
             const rIcon = f.rating==='positive'?'👍':f.rating==='negative'?'👎':'😐';
             const typeBadge = f.type === 'quick' ? '<span style="font-size:9px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:var(--accent);padding:1px 5px;border-radius:4px;margin-left:4px;">Quick</span>' : '';
             return `<div class="fb-list-row" data-rating="${f.rating||''}" data-has-comment="${f.comment?'1':'0'}" style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
@@ -30199,7 +30199,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
             <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);" onclick="_syncAdminData().then(()=>{toast('Full sync complete','success')})"><i class="fas fa-rotate" style="font-size:13px;"></i> Sync Data</button>
             <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);color:var(--yellow);border-color:rgba(245,158,11,.2);" onclick="showCustomConfirm('Force refresh all connected users?',()=>_forceRefreshAllUsers())">Force Refresh All Users</button>
-            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(248,113,113,.2);" onclick="showCustomConfirm('Reset ALL user sessions? Users will be logged out.',()=>_resetAllSessions())">Reset All Sessions</button>
+            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(255, 0, 51,.2);" onclick="showCustomConfirm('Reset ALL user sessions? Users will be logged out.',()=>_resetAllSessions())">Reset All Sessions</button>
             <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);" onclick="showCustomConfirm('Purge soft-deleted messages from database?',()=>_purgeDeletedMessages())">Purge Deleted Messages</button>
           </div>
         </div>
@@ -30230,7 +30230,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
               <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">Scheduled for: ${s.executeAt ? new Date(s.executeAt).toLocaleString() : 'Unknown'} · By: ${escapeHTML(s.createdBy||'?')}</div>
             </div>
             <div style="font-size:11px;font-weight:600;color:${new Date(s.executeAt)>new Date()?'var(--yellow)':'var(--green)'};">${new Date(s.executeAt)>new Date()?'Pending':'Executed'}</div>
-            <button class="sc-btn sc-btn-ghost" style="font-size:10px;padding:5px 10px;color:var(--red);border-color:rgba(248,113,113,.2);" onclick="_cancelScheduledAction('${s._key}')">Cancel</button>
+            <button class="sc-btn sc-btn-ghost" style="font-size:10px;padding:5px 10px;color:var(--red);border-color:rgba(255, 0, 51,.2);" onclick="_cancelScheduledAction('${s._key}')">Cancel</button>
           </div>`).join('') : '<div style="padding:var(--space-xl);text-align:center;color:rgba(255,255,255,.3);">No scheduled actions. Create one to automate timed moderation tasks.</div>'}
         </div>
       </div>
@@ -30944,9 +30944,9 @@ async function _loadAdminControlRoom(main) {
   if (!isSuperAdmin()) { main.innerHTML = '<div class="sc-page" style="padding:40px;color:var(--muted);text-align:center;">Control Room is available to superadmins only.</div>'; return; }
   const gs = (await FortizedSocial.adminGetGlobalSettings().catch(()=>({}))) || {};
   const aiMode = gs.aiModerationMode || 'off';
-  const sw = (key, on, label, desc, danger) => `<label class="sc-card" style="display:flex;align-items:center;gap:14px;padding:16px 18px;margin-bottom:12px;cursor:pointer;${danger&&on?'border-color:rgba(242,85,90,.4);':''}">
+  const sw = (key, on, label, desc, danger) => `<label class="sc-card" style="display:flex;align-items:center;gap:14px;padding:16px 18px;margin-bottom:12px;cursor:pointer;${danger&&on?'border-color:rgba(255, 0, 51,.4);':''}">
     <div style="flex:1;min-width:0;">
-      <div style="font-size:14px;font-weight:700;color:#fff;${danger&&on?'color:#f2555a;':''}">${label}</div>
+      <div style="font-size:14px;font-weight:700;color:#fff;${danger&&on?'color:#ff0033;':''}">${label}</div>
       <div style="font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.5;">${desc}</div>
     </div>
     <span class="ftz-switch" style="flex-shrink:0;"><input type="checkbox" ${on?'checked':''} onchange="_updateGlobalSetting('${key}',this.checked)"><span class="ftz-switch__slider"></span></span>
@@ -30986,19 +30986,19 @@ async function _loadAdminAppeals() {
   const q = (await FortizedSocial.adminGetAppealsQueue?.().catch(()=>[])) || [];
   const pending = q.filter(a => a.status !== 'accepted' && a.status !== 'declined').sort((a,b) => new Date(b.at) - new Date(a.at));
   const decided = q.filter(a => a.status === 'accepted' || a.status === 'declined').sort((a,b) => new Date(b.at) - new Date(a.at)).slice(0, 30);
-  const typeColor = t => t === 'ban' ? '#f2555a' : t === 'suspension' ? '#a855f7' : '#f5a524';
+  const typeColor = t => t === 'ban' ? '#ff0033' : t === 'suspension' ? '#a855f7' : '#f5a524';
   const card = (a, isPending) => `<div class="sc-card" style="padding:16px 18px;margin-bottom:12px;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
       <span style="font-weight:700;color:#fff;">@${escapeHTML(a.username)}</span>
       <span style="font-size:11px;font-weight:700;color:${typeColor(a.type)};background:${typeColor(a.type)}1a;border:1px solid ${typeColor(a.type)}33;border-radius:100px;padding:2px 9px;text-transform:capitalize;">${escapeHTML(a.type || 'violation')}</span>
       <span style="font-size:12px;color:var(--muted);">Appeal ${a.attempt || 1} of 3 · ${_fmtDateEU(a.at)}</span>
-      ${!isPending ? `<span style="margin-left:auto;font-size:12px;font-weight:700;color:${a.status === 'accepted' ? '#3ecf6e' : '#f87171'};">${a.status === 'accepted' ? 'Accepted' : 'Declined'}</span>` : ''}
+      ${!isPending ? `<span style="margin-left:auto;font-size:12px;font-weight:700;color:${a.status === 'accepted' ? '#3ecf6e' : '#ff0033'};">${a.status === 'accepted' ? 'Accepted' : 'Declined'}</span>` : ''}
     </div>
     <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">Original reason: ${escapeHTML(a.reason || '—')}</div>
     <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:11px 13px;font-size:13px;color:#c8d0dc;line-height:1.55;white-space:pre-wrap;word-break:break-word;">${escapeHTML(a.text || '(no text)')}</div>
     ${isPending ? `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
       <button class="sc-btn" style="background:rgba(62,207,110,.12);border:1px solid rgba(62,207,110,.25);color:#3ecf6e;" onclick="_scDecideAppeal('${escapeHTML(a.username)}','${escapeHTML(a.vioId)}','${escapeHTML(a.appealId)}','accept')"><i class="fas fa-check"></i> Accept &amp; lift</button>
-      <button class="sc-btn" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;" onclick="_scDecideAppeal('${escapeHTML(a.username)}','${escapeHTML(a.vioId)}','${escapeHTML(a.appealId)}','decline')"><i class="fas fa-xmark"></i> Decline</button>
+      <button class="sc-btn" style="background:rgba(255, 0, 51,.12);border:1px solid rgba(255, 0, 51,.25);color:#ff0033;" onclick="_scDecideAppeal('${escapeHTML(a.username)}','${escapeHTML(a.vioId)}','${escapeHTML(a.appealId)}','decline')"><i class="fas fa-xmark"></i> Decline</button>
     </div>` : ''}
   </div>`;
   el.style.cssText = '';
@@ -31098,7 +31098,7 @@ function _renderUnifiedList(filter) {
     el.innerHTML = '<div class="sc-empty"><i class="fas fa-circle-check" style="font-size:32px;color:rgba(62,207,110,.4);margin-bottom:8px;display:block;"></i>No records</div>';
     return;
   }
-  const typeMeta = { ban:{icon:'fa-gavel',color:'#f87171',label:'Ban'}, suspend:{icon:'fa-clock',color:'#a855f7',label:'Suspension'}, warn:{icon:'fa-triangle-exclamation',color:'#f59e0b',label:'Warning'} };
+  const typeMeta = { ban:{icon:'fa-gavel',color:'#ff0033',label:'Ban'}, suspend:{icon:'fa-clock',color:'#a855f7',label:'Suspension'}, warn:{icon:'fa-triangle-exclamation',color:'#f59e0b',label:'Warning'} };
   el.innerHTML = `<div class="sc-card"><div class="sc-card-body">${filtered.map(i => {
     const m = typeMeta[i.type] || typeMeta.ban;
     const avatarHtml = i.avatar ? `<img src="${escapeHTML(i.avatar)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div style="width:28px;height:28px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:rgba(255,255,255,.4);flex-shrink:0;">${(i.username||'?')[0].toUpperCase()}</div>`;
@@ -31160,7 +31160,7 @@ function _openUnifiedActionPopup(prefillUser) {
       <div style="display:flex;gap:6px;" id="_ua-action-type">
         <button class="sc-btn sc-btn-ghost" data-uav="warn" onclick="_setUAAction('warn')" style="flex:1;justify-content:center;color:#f59e0b;border-color:rgba(245,158,11,.2);${!isMod?'':'opacity:.5;'}">⚠️ Warn</button>
         <button class="sc-btn sc-btn-primary" data-uav="suspend" onclick="_setUAAction('suspend')" style="flex:1;justify-content:center;color:#a855f7;">⏳ Suspend</button>
-        ${isMod?'':`<button class="sc-btn sc-btn-ghost" data-uav="ban" onclick="_setUAAction('ban')" style="flex:1;justify-content:center;color:#f87171;border-color:rgba(248,113,113,.2);">🔨 Ban</button>`}
+        ${isMod?'':`<button class="sc-btn sc-btn-ghost" data-uav="ban" onclick="_setUAAction('ban')" style="flex:1;justify-content:center;color:#ff0033;border-color:rgba(255, 0, 51,.2);">🔨 Ban</button>`}
       </div>
     </div>
     <div id="_ua-duration-wrap" style="margin-bottom:14px;">
@@ -31188,7 +31188,7 @@ function _openUnifiedActionPopup(prefillUser) {
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;">
       <button id="_ua-cancel" style="padding:9px 20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;">Cancel</button>
-      <button id="_ua-confirm" style="padding:9px 20px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);border-radius:9px;color:#f87171;cursor:pointer;font-weight:700;font-family:inherit;">Apply</button>
+      <button id="_ua-confirm" style="padding:9px 20px;background:rgba(255, 0, 51,.15);border:1px solid rgba(255, 0, 51,.3);border-radius:9px;color:#ff0033;cursor:pointer;font-weight:700;font-family:inherit;">Apply</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -31256,7 +31256,7 @@ async function _updateUserPreview(username) {
       const badges = [];
       if (u.verified) badges.push('<span style="color:#3b82f6;">✓ Verified</span>');
       if (u.radiance) badges.push('<span style="color:#ffd93e;">✦ Radiance</span>');
-      if (u.banned) badges.push('<span style="color:#f87171;">🔨 Banned</span>');
+      if (u.banned) badges.push('<span style="color:#ff0033;">🔨 Banned</span>');
       if (u.suspension) { const su = new Date(u.suspension.until); if (su > new Date()) badges.push('<span style="color:#a855f7;">⏳ Suspended</span>'); }
       status.innerHTML = badges.length ? badges.join(' · ') : 'No special status';
       const joined = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'unknown';
@@ -31339,7 +31339,7 @@ async function _loadPlatformStats() {
         <div class="sc-stat"><div class="sc-stat-val" style="color:#38bdf8;font-size:28px;">${totalChannels.toLocaleString()}</div><div class="sc-stat-lbl">Total Channels</div></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
-        <div class="sc-stat"><div class="sc-stat-val" style="color:#f87171;font-size:28px;">${bans.length.toLocaleString()}</div><div class="sc-stat-lbl">Active Bans</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#ff0033;font-size:28px;">${bans.length.toLocaleString()}</div><div class="sc-stat-lbl">Active Bans</div></div>
         <div class="sc-stat"><div class="sc-stat-val" style="color:#a855f7;font-size:28px;">${suspendedUsers.toLocaleString()}</div><div class="sc-stat-lbl">Active Suspensions</div></div>
         <div class="sc-stat"><div class="sc-stat-val" style="color:#38bdf8;font-size:28px;">${adsCount.toLocaleString()}</div><div class="sc-stat-lbl">User Ads</div></div>
         <div class="sc-stat"><div class="sc-stat-val" style="color:#ffd93e;font-size:28px;">${totalOnyx.toLocaleString()}</div><div class="sc-stat-lbl">Total Onyx Supply</div></div>
@@ -31415,12 +31415,12 @@ function _renderTickets() {
   if (filter === 'open') tickets = tickets.filter(t => t.status !== 'closed');
   if (filter === 'closed') tickets = tickets.filter(t => t.status === 'closed');
   if (!tickets.length) { el.innerHTML = '<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">No tickets found</div></div>'; return; }
-  const catColors = {'ban-appeal':'#f87171','suspend-appeal':'#a855f7','report':'#fb923c','general':'#60a5fa','bug':'#3ecf6e','feedback':'#fbbf24','account-recovery':'#38bdf8'};
+  const catColors = {'ban-appeal':'#ff0033','suspend-appeal':'#a855f7','report':'#fb923c','general':'#60a5fa','bug':'#3ecf6e','feedback':'#fbbf24','account-recovery':'#38bdf8'};
   el.innerHTML = tickets.map(t => {
     const catCol = catColors[t.category] || '#60a5fa';
     const isClosed = t.status === 'closed';
     const isSensitive = _sensitiveCategories.includes(t.category);
-    return `<div style="background:var(--panel,#1b1e25);border:1px solid ${isSensitive?'rgba(248,113,113,.12)':'rgba(255,255,255,.06)'};border-radius:10px;padding:14px 18px;margin-bottom:8px;">
+    return `<div style="background:var(--panel,#1b1e25);border:1px solid ${isSensitive?'rgba(255, 0, 51,.12)':'rgba(255,255,255,.06)'};border-radius:10px;padding:14px 18px;margin-bottom:8px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <div style="width:8px;height:8px;border-radius:50%;background:${isClosed?'rgba(255,255,255,.15)':'#3ecf6e'};${isClosed?'':'box-shadow:0 0 6px rgba(62,207,110,.5);'}flex-shrink:0;"></div>
         <div style="flex:1;font-weight:700;font-size:14px;">${escapeHTML(t.subject||'No Subject')}</div>
@@ -31434,7 +31434,7 @@ function _renderTickets() {
         <span>${_fmtDateEU(t.submittedAt)}</span>
         <div style="margin-left:auto;display:flex;gap:6px;">
           ${!isClosed?`<button onclick="_closeTicket('${t.id}')" style="padding:4px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;">Close</button>`:`<button onclick="_reopenTicket('${t.id}')" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:11px;cursor:pointer;">Reopen</button>`}
-          ${isSuperAdmin()?`<button onclick="_deleteTicket('${t.id}')" style="padding:4px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;">Delete</button>`:''}
+          ${isSuperAdmin()?`<button onclick="_deleteTicket('${t.id}')" style="padding:4px 12px;background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.18);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;">Delete</button>`:''}
         </div>
       </div>
     </div>`;
@@ -32179,7 +32179,7 @@ async function adminSearchUser(usernameArg, targetEl) {
   if (!raw) return;
   const result = targetEl || document.getElementById('admin-user-result');
   if (!result) return;
-  result.innerHTML = '<div style="color:rgba(248,113,113,.4);font-size:13px;display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;border:2px solid rgba(248,113,113,.3);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite;"></div>Scanning database…</div>';
+  result.innerHTML = '<div style="color:rgba(255, 0, 51,.4);font-size:13px;display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;border:2px solid rgba(255, 0, 51,.3);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite;"></div>Scanning database…</div>';
   let u = null;
   try { u = await FortizedSocial.getUserByName(raw); } catch(e){ console.error(e); }
   if (!u) { result.innerHTML = '<div style="color:var(--red);font-size:13px;">Target not found in database.</div>'; return; }
@@ -32200,21 +32200,21 @@ async function adminSearchUser(usernameArg, targetEl) {
     if (pr && pr[username]) { userStatus = pr[username].status || 'offline'; }
     else { try { userStatus = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[Profile] status fallback failed', e); } }
   } catch (e) { try { userStatus = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[Profile] status fallback failed', e); } }
-  const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
+  const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#ff0033',invisible:'#6b7280',offline:'#6b7280'};
 
   // Risk analysis
   const reportsAgainst = reps.filter(r => (r.username||r.msgFrom||'').toLowerCase() === username.toLowerCase());
   const reportsBy = reps.filter(r => (r.reporter||'').toLowerCase() === username.toLowerCase());
   const userAudit = auditLog.filter(e => (e.target||'').toLowerCase() === username.toLowerCase());
   const risk = _calcUserRisk(u);
-  const riskColor = risk >= 50 ? '#f87171' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
+  const riskColor = risk >= 50 ? '#ff0033' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
   const riskLabel = risk >= 50 ? 'CRITICAL' : risk >= 20 ? 'HIGH' : risk >= 5 ? 'MODERATE' : 'LOW';
   const accountAge = u.createdAt || u.joinedAt ? Math.floor((Date.now() - new Date(u.createdAt||u.joinedAt)) / 86400000) : null;
 
   const myRole = getStaffRole(CU.username);
   const targetStaffRole = getStaffRole(username);
   const targetStaffBadge = targetStaffRole === 'superadmin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(255,215,62,.15),rgba(255,215,62,.08));color:#ffd93e;padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(255,215,62,.2);">SUPER ADMIN</span>'
-    : targetStaffRole === 'admin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(248,113,113,.15),rgba(248,113,113,.08));color:var(--red);padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(248,113,113,.2);">ADMIN</span>'
+    : targetStaffRole === 'admin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(255, 0, 51,.15),rgba(255, 0, 51,.08));color:var(--red);padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(255, 0, 51,.2);">ADMIN</span>'
     : targetStaffRole === 'moderator' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(96,165,250,.08));color:var(--blue);padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(96,165,250,.2);">MODERATOR</span>' : '';
   const canSeeEmail = isSuperAdmin() || isAdmin();
   const canSeePreciseAge = isSuperAdmin();
@@ -32239,7 +32239,7 @@ async function adminSearchUser(usernameArg, targetEl) {
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
               <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;">${escapeHTML(u.displayName||u.username)}</div>
               ${fortizedOfficialCapsuleIfOfficial(u.username)}
-              ${isBanned?'<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;padding:3px 10px;border-radius:var(--radius-pill);animation:adm-badge-pulse 2s infinite;">BANNED</span>':''}
+              ${isBanned?'<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#ff0033,#ff0033);color:#fff;padding:3px 10px;border-radius:var(--radius-pill);animation:adm-badge-pulse 2s infinite;">BANNED</span>':''}
               ${_tgtStanding.id>0?`<span class="adm-standing-badge" style="background:${_tgtStanding.tint};color:${_tgtStanding.color};border:1px solid ${_tgtStanding.border};">${escapeHTML(_tgtStanding.label.toUpperCase())}</span>`:''}
               ${targetStaffBadge}
             </div>
@@ -32285,7 +32285,7 @@ async function adminSearchUser(usernameArg, targetEl) {
               ['fa-calendar-day','Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown', '#5b9dff'],
               ['__radiance','Radiance', (hasRadiancePlus||hasRadiance) ? 'Active' : 'None', (hasRadiancePlus||hasRadiance) ? '#ffd93e' : '#6b7280'],
               ['fa-circle-check','Verified', u.verified ? 'Yes' : 'No', u.verified ? '#fff93e' : '#6b7280'],
-              ['fa-flag','Reports against', reportsAgainst.length, reportsAgainst.length > 0 ? '#f2555a' : '#3ecf6e'],
+              ['fa-flag','Reports against', reportsAgainst.length, reportsAgainst.length > 0 ? '#ff0033' : '#3ecf6e'],
               ...(canSeeEmail ? [['fa-envelope','Email', u.email || 'N/A', '#38bdf8']] : []),
               ...(canSeeFullData ? [
                 ['fa-comment-dots','Custom status', (u.customStatus?.text) || 'None', '#a78bfa'],
@@ -32315,7 +32315,7 @@ async function adminSearchUser(usernameArg, targetEl) {
             <div class="sc-feed" style="max-height:230px;padding:4px 6px;">
               ${userAudit.length ? userAudit.slice(0,12).map(e=>{
                 const a=(e.action||'');
-                const cfg = a.includes('ban')?{c:'#f2555a',i:'fa-gavel'}:a.includes('warn')?{c:'#f5a524',i:'fa-triangle-exclamation'}:a.includes('suspend')?{c:'#a78bfa',i:'fa-clock'}:{c:'#5b9dff',i:'fa-bolt'};
+                const cfg = a.includes('ban')?{c:'#ff0033',i:'fa-gavel'}:a.includes('warn')?{c:'#f5a524',i:'fa-triangle-exclamation'}:a.includes('suspend')?{c:'#a78bfa',i:'fa-clock'}:{c:'#5b9dff',i:'fa-bolt'};
                 return `<div class="sc-fe" style="padding:8px 10px;">
                   <div class="sc-fi" style="width:26px;height:26px;background:${cfg.c}1f;color:${cfg.c};"><i class="fas ${cfg.i}"></i></div>
                   <div class="sc-fx"><div class="sc-ft"><b style="color:${cfg.c};">${escapeHTML(e.action||'?')}</b>${e.note?' — '+escapeHTML(e.note):''}</div><div class="sc-fm">by ${escapeHTML(e.by||'?')} · ${e.at?formatTimeAgo(e.at):''}</div></div>
@@ -32446,7 +32446,7 @@ function adminActionUser(username, action) {
   }
   if (action === 'ban') {
     _scActionCard({
-      icon:'fa-ban', accent:'#f2555a', danger:true,
+      icon:'fa-ban', accent:'#ff0033', danger:true,
       title:'Ban '+username, subtitle:'Blocks this account from signing in.',
       fields:[{type:'textarea',id:'reason',label:'Reason',placeholder:'Why is this account being banned? (recorded in the audit log)',presets:_MOD_REASON_PRESETS}],
       confirmLabel:'Ban account',
@@ -34080,7 +34080,7 @@ function _connIcon(key, size) {
 }
 // All connection platform definitions in one place
 const _CONN_PLATFORMS = [
-  {key:'youtube', label:'YouTube', pattern:'youtube.com', color:'#FF4444', placeholder:'https://youtube.com/@channel'},
+  {key:'youtube', label:'YouTube', pattern:'youtube.com', color:'#ff0033', placeholder:'https://youtube.com/@channel'},
   {key:'roblox',  label:'Roblox',  pattern:'roblox.com',  color:'#00B2FF', placeholder:'https://roblox.com/users/...'},
   {key:'twitter', label:'X / Twitter', pattern:'x.com', color:'#ffffff', placeholder:'https://x.com/username'},
   {key:'tiktok',  label:'TikTok',  pattern:'tiktok.com',  color:'#ff0050', placeholder:'https://tiktok.com/@username'},
@@ -34376,23 +34376,23 @@ function renderAllUsersList(users) {
     const staffRole = getStaffRole(u.username);
     const isBanned = bannedNames.includes((u.username||'').toLowerCase());
     const risk = _calcUserRisk(u);
-    const riskColor = risk >= 50 ? '#f87171' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
+    const riskColor = risk >= 50 ? '#ff0033' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
     const statusVal = _hqUserStatuses[u.username] || 'offline';
-    const statusColor = statusVal === 'online' ? '#3ecf6e' : statusVal === 'away' ? '#f59e0b' : statusVal === 'dnd' ? '#f87171' : '#4a4a5a';
+    const statusColor = statusVal === 'online' ? '#3ecf6e' : statusVal === 'away' ? '#f59e0b' : statusVal === 'dnd' ? '#ff0033' : '#4a4a5a';
     const roleBadge = staffRole === 'superadmin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,215,62,.1);color:#ffd93e;">SA</span>'
-      : staffRole === 'admin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:var(--red);">ADM</span>'
+      : staffRole === 'admin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255, 0, 51,.1);color:var(--red);">ADM</span>'
       : staffRole === 'moderator' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(96,165,250,.1);color:var(--blue);">MOD</span>' : '<span style="font-size:8px;color:rgba(255,255,255,.15);">—</span>';
     const ageDays = u.dateOfBirth ? Math.floor((Date.now() - new Date(u.dateOfBirth)) / 86400000 / 365.25) : null;
     const joinDate = u.createdAt || u.joinedAt;
 
-    return `<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')" ${isBanned?'style="background:rgba(248,113,113,.03);"':''}>
+    return `<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')" ${isBanned?'style="background:rgba(255, 0, 51,.03);"':''}>
       <div style="width:30px;text-align:center;font-size:10px;color:rgba(255,255,255,.2);font-weight:700;">${i+1}</div>
       <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;position:relative;">${buildAvatarHTML(u.pfp,u.displayName||u.username,32)}
         <div style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2px solid #0a0e18;"></div>
       </div>
       <div style="flex:1;min-width:100px;overflow:hidden;">
         <div style="display:flex;align-items:center;gap:4px;">
-          <span style="font-size:12px;font-weight:700;color:${isBanned?'#f87171':'rgba(255,255,255,.8)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(u.displayName||u.username)}</span>
+          <span style="font-size:12px;font-weight:700;color:${isBanned?'#ff0033':'rgba(255,255,255,.8)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(u.displayName||u.username)}</span>
           ${isBanned?'<span style="font-size:7px;font-weight:800;padding:1px 4px;border-radius:3px;background:var(--red);color:#fff;">BAN</span>':''}
         </div>
         <div style="font-size:9.5px;color:rgba(255,255,255,.2);">@${escapeHTML(u.username)}</div>
@@ -34677,14 +34677,14 @@ function renderAdminBastionsList(bastions) {
       <div style="width:100px;font-size:12px;color:rgba(255,255,255,.55);">${escapeHTML(b.owner||'?')}</div>
       <div style="width:70px;text-align:center;font-size:12px;">${memberCount}</div>
       <div style="width:70px;text-align:center;font-size:12px;">${channelCount}</div>
-      <div style="width:55px;text-align:center;font-size:12px;">${nsfwChannels?`<span style="color:#f87171;">${nsfwChannels}</span>`:'0'}</div>
+      <div style="width:55px;text-align:center;font-size:12px;">${nsfwChannels?`<span style="color:#ff0033;">${nsfwChannels}</span>`:'0'}</div>
       <div style="width:60px;text-align:center;font-size:12px;">${boostLv?`<span style="color:#ffd93e;font-weight:700;">Lv${boostLv}</span>`:'–'}</div>
       <div style="width:70px;text-align:center;font-size:12px;">${b.verified?`<span style="color:var(--accent);">Yes</span>`:'<span style="color:rgba(255,255,255,.3);">No</span>'}</div>
       <div style="width:50px;text-align:center;font-size:11px;">${b.public===false?'<span style="color:rgba(255,255,255,.4);">Private</span>':'Public'}</div>
       <div style="width:80px;text-align:center;display:flex;gap:4px;justify-content:center;">
         <button onclick="adminInspectUser('${escapeHTML(b.owner||'')}')" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#60a5fa;" title="Inspect owner"><i class="fas fa-search"></i></button>
         <button onclick="_toggleVerifyBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}',${!!b.verified})" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:${b.verified?'var(--green)':'var(--accent)'};" title="${b.verified?'Unverify':'Verify'}">${b.verified?'<i class="fas fa-check-circle"></i>':'<i class="fas fa-check"></i>'}</button>
-        ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#f87171;" title="Delete"><i class="fas fa-trash"></i></button>`:''}
+        ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#ff0033;" title="Delete"><i class="fas fa-trash"></i></button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -37337,7 +37337,7 @@ function _scrollToUserMsg(username) {
 // STATUS INDICATOR AS DOT
 // ════════════════════════════════════════════
 function getStatusDot(status, size=10) {
-  const colors = { online:'#3ecf6e', away:'#f59e0b', dnd:'#f87171', invisible:'#6b7280', offline:'#6b7280' };
+  const colors = { online:'#3ecf6e', away:'#f59e0b', dnd:'#ff0033', invisible:'#6b7280', offline:'#6b7280' };
   const col = colors[status] || colors.offline;
   return `<span style="display:inline-block;width:${size}px;height:${size}px;border-radius:50%;background:${col};border:2px solid var(--bg);flex-shrink:0;" title="${status||'offline'}"></span>`;
 }
@@ -40714,7 +40714,7 @@ async function renderActivityDetectionTab(main) {
       + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(62,207,110,.6);margin-bottom:2px;">Currently showing</div>'
       + '<div style="font-size:14px;font-weight:700;color:#fff;">' + escapeHTML(currentGame.name||'') + '</div>'
       + '</div>'
-      + '<button onclick="setGameActivity(null);renderActivityDetectionTab(this.closest(\'.settings-main\'))" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:var(--red);font-size:11px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;">Clear</button>'
+      + '<button onclick="setGameActivity(null);renderActivityDetectionTab(this.closest(\'.settings-main\'))" style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.15);color:var(--red);font-size:11px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;">Clear</button>'
       + '</div>';
   } else {
     currentHtml = '<div style="text-align:center;padding:20px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
@@ -40733,7 +40733,7 @@ async function renderActivityDetectionTab(main) {
       + '<div style="font-size:11px;color:var(--muted);margin-left:auto;">Scanning your apps automatically</div>'
       + '</div>';
   } else {
-    statusHtml = '<div style="padding:20px;background:linear-gradient(135deg,rgba(99,102,241,.04),rgba(248,113,113,.04));border:1px solid rgba(99,102,241,.12);border-radius:14px;margin-bottom:16px;text-align:center;">'
+    statusHtml = '<div style="padding:20px;background:linear-gradient(135deg,rgba(99,102,241,.04),rgba(255, 0, 51,.04));border:1px solid rgba(99,102,241,.12);border-radius:14px;margin-bottom:16px;text-align:center;">'
       + '<div style="font-size:32px;margin-bottom:10px;">🖥️</div>'
       + '<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Desktop App Required</div>'
       + '<div style="font-size:12px;color:var(--muted);line-height:1.5;">Activity detection needs the Fortized desktop app to scan running processes on your device.<br>Download it to automatically show what you\'re playing.</div>'
@@ -41312,7 +41312,7 @@ function openGiphyPicker(inputId) {
     // "Fortized" — search by the brand tag (Klipy uploads tagged fortized).
     {id:'fortized',label:'Fortized',icon:'fa-chess-rook',color:'#fff93e'},
     {id:'excited',label:'Excited',icon:'fa-face-grin-stars',color:'#c084fc'},
-    {id:'angry',label:'Angry',icon:'fa-face-angry',color:'#f87171'},
+    {id:'angry',label:'Angry',icon:'fa-face-angry',color:'#ff0033'},
     {id:'dance',label:'Dance',icon:'fa-music',color:'#f472b6'},
     {id:'thumbs up',label:'Approve',icon:'fa-thumbs-up',color:'#34d399'},
     {id:'thinking',label:'Thinking',icon:'fa-brain',color:'#a78bfa'},
@@ -41325,7 +41325,7 @@ function openGiphyPicker(inputId) {
     {id:'celebrities',label:'Celebs',icon:'fa-star',color:'#fbbf24'},
     {id:'hello',label:'Hello',icon:'fa-hand',color:'#a3e635'},
     {id:'yes',label:'Yes',icon:'fa-check',color:'#22c55e'},
-    {id:'no',label:'No',icon:'fa-xmark',color:'#ef4444'},
+    {id:'no',label:'No',icon:'fa-xmark',color:'#ff0033'},
     {id:'please',label:'Please',icon:'fa-hands-praying',color:'#c4b5fd'},
     {id:'hug',label:'Hugs',icon:'fa-hands-holding-circle',color:'#fda4af'},
     {id:'facepalm',label:'Facepalm',icon:'fa-face-rolling-eyes',color:'#cbd5e1'},
@@ -42430,7 +42430,7 @@ const STATUS_PRESETS = [
   {emoji:'😴',text:'AFK',color:'#6b7280'},
   {emoji:'🍕',text:'Eating',color:'#f59e0b'},
   {emoji:'✈️',text:'Travelling',color:'#38bdf8'},
-  {emoji:'🏋️',text:'Working out',color:'#f87171'},
+  {emoji:'🏋️',text:'Working out',color:'#ff0033'},
   {emoji:'🎨',text:'Creating',color:'#f472b6'},
   {emoji:'🔥',text:'On a roll',color:'#fb923c'},
   {emoji:'🤔',text:'Thinking...',color:'#c084fc'},
@@ -42920,7 +42920,7 @@ function openForumPost(chIdx, postIdx) {
   const manageHTML = canManage ? `
     <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0;">
       ${isAuthor ? `<button onclick="editForumPost(${chIdx},${postIdx})" style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:var(--accent);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">✏ Edit</button>` : ''}
-      <button onclick="showCustomConfirm('Delete this post permanently?',function(){deleteForumPost(${chIdx},${postIdx})})" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:var(--red);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">🗑 Delete</button>
+      <button onclick="showCustomConfirm('Delete this post permanently?',function(){deleteForumPost(${chIdx},${postIdx})})" style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.15);color:var(--red);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">🗑 Delete</button>
     </div>` : '';
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
     +'<div class="forum-detail-header">'
@@ -43496,7 +43496,7 @@ async function showCallingScreen(partner) {
   const endWrap = document.createElement('div');
   endWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;';
   const endBtn = document.createElement('button');
-  endBtn.style.cssText = 'width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(239,68,68,.4);transition:transform .1s;';
+  endBtn.style.cssText = 'width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#ff0033,#ff0033);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(255, 0, 51,.4);transition:transform .1s;';
   endBtn.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" transform="rotate(135 12 12)"/></svg>';
   endBtn.onmouseenter = ()=>endBtn.style.transform='scale(1.1)';
   endBtn.onmouseleave = ()=>endBtn.style.transform='scale(1)';
@@ -43851,7 +43851,7 @@ async function renderVoiceCallUI(partner, isCaller) {
     const mutedDot = document.createElement('div');
     mutedDot.id = isMe ? 'vc-my-muted' : 'vc-partner-muted';
     mutedDot.style.cssText = 'position:absolute;bottom:4px;right:4px;width:28px;height:28px;border-radius:50%;background:rgba(11,14,22,.95);border:2px solid rgba(255,255,255,.08);display:none;align-items:center;justify-content:center;';
-    mutedDot.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+    mutedDot.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff0033" stroke-width="2.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
     avOuter.appendChild(ring); avOuter.appendChild(mutedDot);
     // Label
     const label = document.createElement('div');
@@ -43902,7 +43902,7 @@ async function renderVoiceCallUI(partner, isCaller) {
   const endWrap = document.createElement('div');
   endWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;';
   const endBtn = document.createElement('button');
-  endBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
+  endBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;border:none;background:linear-gradient(135deg,#ff0033,#ff0033);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
   endBtn.innerHTML = svgEnd; endBtn.onclick = endVoiceCall;
   endBtn.onmouseenter = ()=>endBtn.style.transform='scale(1.08)';
   endBtn.onmouseleave = ()=>endBtn.style.transform='scale(1)';
@@ -43991,7 +43991,7 @@ function updateVCBar() {
   const mBtn = document.getElementById('vc-mute-btn');
   const dBtn = document.getElementById('vc-deaf-btn');
   const myMuted = document.getElementById('vc-my-muted');
-  if(mBtn) mBtn.style.background = _vc.muted?'rgba(248,113,113,.4)':'rgba(255,255,255,.08)';
+  if(mBtn) mBtn.style.background = _vc.muted?'rgba(255, 0, 51,.4)':'rgba(255,255,255,.08)';
   if(dBtn) dBtn.style.background = _vc.deafened?'rgba(245,158,11,.4)':'rgba(255,255,255,.08)';
   if(myMuted) myMuted.style.display = _vc.muted?'flex':'none';
 }
@@ -44018,7 +44018,7 @@ function _startVCQualityMonitor() {
         else if (rtt > 80) level = 3;
         else level = 4;
       }
-      const colors = { 4:'#3ecf6e', 3:'#3ecf6e', 2:'#f59e0b', 1:'#f87171' };
+      const colors = { 4:'#3ecf6e', 3:'#3ecf6e', 2:'#f59e0b', 1:'#ff0033' };
       bars.forEach((bar, i) => {
         bar.style.background = i < level ? (colors[level]||'#3ecf6e') : 'rgba(255,255,255,.12)';
       });
@@ -44117,7 +44117,7 @@ async function showIncomingCall(caller, offerSdp) {
   const declineWrap = document.createElement('div');
   declineWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;';
   const declineBtn = document.createElement('button');
-  declineBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
+  declineBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#ff0033,#ff0033);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
   declineBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" transform="rotate(135 12 12)"/></svg>';
   declineBtn.onmouseenter = ()=>declineBtn.style.transform='scale(1.08)';
   declineBtn.onmouseleave = ()=>declineBtn.style.transform='scale(1)';
@@ -44312,7 +44312,7 @@ function showPinnedMessages() {
             </div>
             <div class="asr-text">${escapeHTML(p.text)}</div>
           </div>
-          <button data-unpin-idx="${i}" data-unpin-id="${escapeHTML(p.id)}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.3);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;" title="Unpin" onmouseover="this.style.color='var(--red)';this.style.background='rgba(248,113,113,.1)'" onmouseout="this.style.color='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.04)'">✕</button>
+          <button data-unpin-idx="${i}" data-unpin-id="${escapeHTML(p.id)}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.3);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;" title="Unpin" onmouseover="this.style.color='var(--red)';this.style.background='rgba(255, 0, 51,.1)'" onmouseout="this.style.color='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.04)'">✕</button>
         </div>`;
         }).join('')
       : `<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,.2);"><div style="opacity:.3;margin-bottom:12px;display:flex;justify-content:center;">${_faMsg('pin', 32)}</div><div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:4px;">No pinned messages</div><div style="font-size:12px;opacity:.6;">Right-click a message to pin it.</div></div>`
@@ -46107,7 +46107,7 @@ async function openGameActivityPicker() {
   const iconChoices = ['🎮','🕹️','🎯','🎲','🏆','⚔️','🛡️','🔫','🏎️','⚽','🏀','🎧','🎨','📺','📚','💻','🖥️','🧩','🪄','🎬','🎤','🪐'];
 
   const currentBanner = (activityState.primary?.type === 'playing')
-    ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:12px;margin-bottom:14px;flex-shrink:0;"><span>'+activityState.primary.icon+'</span><span style="font-size:13px;font-weight:700;">'+escapeHTML(activityState.primary.name)+'</span><button id="ga-stop-btn" style="margin-left:auto;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:var(--red);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;">Stop</button></div>'
+    ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:12px;margin-bottom:14px;flex-shrink:0;"><span>'+activityState.primary.icon+'</span><span style="font-size:13px;font-weight:700;">'+escapeHTML(activityState.primary.name)+'</span><button id="ga-stop-btn" style="margin-left:auto;background:rgba(255, 0, 51,.12);border:1px solid rgba(255, 0, 51,.25);color:var(--red);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;">Stop</button></div>'
     : '';
 
   const manualSection =
@@ -46350,7 +46350,7 @@ function _showWatchInRoom(vid) {
     +'<div style="display:flex;gap:8px;align-items:center;">'
     +'<button id="wt-sync-pause" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">⏸ Pause</button>'
     +'<button id="wt-sync-play" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">▶ Play</button>'
-    +'<button id="wt-close-btn" style="background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:var(--red);padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">✕ Close</button>'
+    +'<button id="wt-close-btn" style="background:rgba(255, 0, 51,.15);border:1px solid rgba(255, 0, 51,.3);color:var(--red);padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">✕ Close</button>'
     +'</div>';
   // Video area
   const videoArea = document.createElement('div');
@@ -47969,7 +47969,7 @@ async function _hydrateMyAdsAndRender() {
     const isActive = _isAdLive(ad);
     const expired = !neverExpires && (ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date()));
     const statusLabel = ad.status==='cancelled'?'Cancelled':ad.status==='taken_down'?'Taken down':neverExpires?'Permanent':expired?'Expired':isActive?'Active':'Inactive';
-    const statusColor = isActive?'#3ecf6e':(ad.status==='cancelled'||ad.status==='taken_down')?'#f87171':'#6b7280';
+    const statusColor = isActive?'#3ecf6e':(ad.status==='cancelled'||ad.status==='taken_down')?'#ff0033':'#6b7280';
     const boostTier = Math.max(0, Math.min(3, Number(ad.userBoostTier) || 0));
     const boostChip = boostTier > 0
       ? `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;background:linear-gradient(135deg,rgba(255,249,62,.18),rgba(255,249,62,.06));border:1px solid rgba(255,249,62,.25);color:var(--accent);font-weight:800;font-size:10px;letter-spacing:.02em;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1 2-5z"/></svg>Boost T${boostTier}</span>`
@@ -47988,7 +47988,7 @@ async function _hydrateMyAdsAndRender() {
         <button onclick="_cmBoostAd(${i})" style="padding:5px 12px;font-size:11px;background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(255,249,62,.04));border:1px solid rgba(255,249,62,.2);border-radius:8px;color:var(--accent);cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1 2-5z"/></svg>${boostTier>0?'Upgrade':'Boost'}</button>
         <button onclick="_cmEditAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--muted-light);cursor:pointer;">Edit (5 Onyx)</button>
         <button onclick="_cmRenewAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;">Renew</button>
-        <button onclick="_cmCancelAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:#f87171;cursor:pointer;">Cancel</button>
+        <button onclick="_cmCancelAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.12);border-radius:8px;color:#ff0033;cursor:pointer;">Cancel</button>
       `:''}
     </div>`;
   }).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">No ads created yet.</div>';
@@ -48488,11 +48488,11 @@ const _forumSvg = {
 };
 const FORUM_CATEGORIES = [
   // ── Announcements: official staff-only posts ──
-  { id: 'announcements', name: 'Announcements', icon: _forumSvg.megaphone, color: '#ff6b6b', desc: 'Official announcements from Fortized', group: 'announcements' },
+  { id: 'announcements', name: 'Announcements', icon: _forumSvg.megaphone, color: '#ff0033', desc: 'Official announcements from Fortized', group: 'announcements' },
   { id: 'event-records', name: 'Event Records', icon: _forumSvg.trophy, color: '#fbbf24', desc: 'Records of past Fortized events. Only admins & superadmins can post here.', group: 'announcements' },
   // ── Fortized: platform-related community discussion ──
   { id: 'general', name: 'Fortized General', icon: _forumSvg.chat, color: '#4ecdc4', desc: 'Talk about anything related to Fortized.', group: 'fortized' },
-  { id: 'bugs', name: 'Bugs & Troubleshooting', icon: _forumSvg.bug, color: '#f87171', desc: 'Found a bug? Need help? Ask here — you may not be alone.', group: 'fortized' },
+  { id: 'bugs', name: 'Bugs & Troubleshooting', icon: _forumSvg.bug, color: '#ff0033', desc: 'Found a bug? Need help? Ask here — you may not be alone.', group: 'fortized' },
   { id: 'suggestions', name: 'Suggestions', icon: _forumSvg.lightbulb, color: '#ffd93e', desc: 'Have a suggestion for Fortized? Post it here!', group: 'fortized' },
   // ── Community: user-created content & casual talk ──
   { id: 'showcase', name: 'Showcase', icon: _forumSvg.media, color: '#a78bfa', desc: 'Made something cool? Show it off to the community!', group: 'community' },
@@ -52519,7 +52519,7 @@ function initCrossDeviceSync() {
     // Update UI for online status indicators
     const statusDot = document.querySelector(`.profile-status-dot[data-for="${data.username}"]`);
     if (statusDot) {
-      const color = data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#f87171':'rgba(255,255,255,.15)';
+      const color = data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#ff0033':'rgba(255,255,255,.15)';
       statusDot.style.background = color;
       statusDot.setAttribute('data-dot-status', data.status);
     }
@@ -52865,7 +52865,7 @@ function buildGiftRadianceUI() {
       <div style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(f)}</div>
       ${hasGifted
         ? `<span style="font-size:11.5px;color:rgba(255,255,255,.4);">${daysLeft}d left</span>
-           <button onclick="cancelGiftRadiance('${escapeHTML(f)}')" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.18);color:var(--red);font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Cancel</button>`
+           <button onclick="cancelGiftRadiance('${escapeHTML(f)}')" style="background:rgba(255, 0, 51,.1);border:1px solid rgba(255, 0, 51,.18);color:var(--red);font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Cancel</button>`
         : `<button onclick="sendRadianceGiftToUser('${escapeHTML(f)}')" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer;">Send (600 Onyx)</button>`}
     </div>`;
   }).join('');
@@ -57021,7 +57021,7 @@ async function _eyedropTo(targetId) {
 // ════════════════════════════════════════════
 const BASTION_MOODS = {
   strategic: {emoji:'🟢',label:'Strategic',tint:'rgba(62,207,110,.08)',particle:'#3ecf6e'},
-  chaotic:   {emoji:'🔥',label:'Chaotic',tint:'rgba(248,113,113,.08)',particle:'#f87171'},
+  chaotic:   {emoji:'🔥',label:'Chaotic',tint:'rgba(255, 0, 51,.08)',particle:'#ff0033'},
   celebrating:{emoji:'🎉',label:'Celebrating',tint:'rgba(255,249,62,.08)',particle:'#fff93e'},
   focused:   {emoji:'📚',label:'Focused',tint:'rgba(96,165,250,.08)',particle:'#60a5fa'},
   chill:     {emoji:'😌',label:'Chill',tint:'rgba(167,139,250,.08)',particle:'#a78bfa'},
@@ -62480,7 +62480,7 @@ function _stawShowToolbar() {
     </span>
     <button id="staw-tb-pause" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#dde3ed;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Pause</button>
     <button id="staw-tb-freeze" style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.35);color:#93c5fd;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Freeze</button>
-    <button id="staw-tb-exit" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);color:#f87171;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>`;
+    <button id="staw-tb-exit" style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.3);color:#ff0033;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>`;
   document.body.appendChild(tb);
   tb.querySelector('#staw-tb-pause').onclick = (e) => { e.stopPropagation(); _stawToggleInspectorPause(); };
   tb.querySelector('#staw-tb-freeze').onclick = (e) => { e.stopPropagation(); _stawToggleInspectorFreeze(); };
@@ -62615,7 +62615,7 @@ function _stawOnPick(e) {
       <button id="staw-copy-sel" style="background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);color:#3ecf6e;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Copy selector</button>
       <button id="staw-copy-path" style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:#60a5fa;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Copy path</button>
       <button id="staw-close" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#dde3ed;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Close</button>
-      <button id="staw-exit" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);color:#f87171;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>
+      <button id="staw-exit" style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.25);color:#ff0033;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>
     </div>`;
   document.body.appendChild(p);
   p.querySelector('#staw-copy-sel').onclick = () => { try { navigator.clipboard.writeText(fullSelector); toast?.('Selector copied', 'success'); } catch(_) {} };
@@ -63182,7 +63182,7 @@ function _kvHTML(rows) {
   return `<div class="staff-kv">${rows.map(([k, v]) => `<div class="staff-kv__row"><span>${escapeHTML(k)}</span><span class="staff-kv__v">${v == null ? '—' : (typeof v === 'string' ? escapeHTML(v) : v)}</span></div>`).join('')}</div>`;
 }
 function _scoreChipHTML(label, val) {
-  const c = val > 70 ? '#f87171' : val > 40 ? '#f59e0b' : val > 20 ? '#fbbf24' : '#3ecf6e';
+  const c = val > 70 ? '#ff0033' : val > 40 ? '#f59e0b' : val > 20 ? '#fbbf24' : '#3ecf6e';
   return `<div class="staff-score" style="--c:${c};"><div class="staff-score__l">${escapeHTML(label)}</div><div class="staff-score__v">${val}</div></div>`;
 }
 
@@ -63319,7 +63319,7 @@ registerInspectorRenderer('report', (body, reportId) => {
   const target = r.username || r.msgFrom || null;
   body.innerHTML = `
     <div class="staff-dossier__head">
-      <div class="staff-dossier__av" style="background:rgba(248,113,113,.12);color:#f87171;">⚠</div>
+      <div class="staff-dossier__av" style="background:rgba(255, 0, 51,.12);color:#ff0033;">⚠</div>
       <div class="staff-dossier__id">
         <div class="staff-dossier__name">${escapeHTML(r.reason || 'Report')}</div>
         <div class="staff-dossier__handle">${escapeHTML(r.id)} · ${escapeHTML(r.type || 'unknown')}</div>
@@ -63682,9 +63682,9 @@ async function _staffOpsRefresh() {
   const counters = [
     { l:'Online now',     v: onlineCount,        c:'#3ecf6e' },
     { l:'Users total',    v: list.length,        c:'#60a5fa' },
-    { l:'Pending reports',v: pendingReports,     c: pendingReports ? '#f87171':'#3ecf6e' },
+    { l:'Pending reports',v: pendingReports,     c: pendingReports ? '#ff0033':'#3ecf6e' },
     { l:'Automod (1h)',   v: automodLastHour,    c: automodLastHour ? '#f59e0b':'#3ecf6e' },
-    { l:'Open incidents', v: openInc,            c: openInc ? '#f87171':'#3ecf6e' },
+    { l:'Open incidents', v: openInc,            c: openInc ? '#ff0033':'#3ecf6e' },
     { l:'Watching',       v: watches.length,     c: watches.length ? '#a78bfa':'rgba(255,255,255,.3)' },
     { l:'Audit (24h)',    v: audit.filter(e => new Date(e.at).getTime() > Date.now()-86400000).length, c:'#60a5fa' },
     { l:'Countries',      v: new Set(list.map(u => u.countryCode).filter(Boolean)).size, c:'#fff93e' },

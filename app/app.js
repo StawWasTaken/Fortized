@@ -37428,25 +37428,27 @@ function _getDisplayEffectCSS(effect, color, color2) {
   // Darker shade of the user's colour — used for the crisp outlines. Flat,
   // high-contrast, Discord-style: no soft ambient shadows behind the text.
   const dk = (p) => `color-mix(in srgb, ${color}, #000 ${p}%)`;
-  // Flow: gradient fill wrapped in a darker-tint outline. Flat (the only
-  // motion is the slow background-position pan from .ftz-fx-flow).
+  // Flow: a clean multi-stop gradient — no stroke, so it reads smooth and
+  // premium (the muddy outline is gone). Slow background-position pan
+  // (.ftz-fx-flow) gives the idle shimmer.
   if (effect === 'gradient') {
     const mid = `color-mix(in srgb, ${color}, ${color2} 50%)`;
-    return `background:linear-gradient(115deg,${color},${mid},${color2});background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;-webkit-text-stroke:1.4px ${dk(52)};paint-order:stroke fill;`;
+    return `background:linear-gradient(100deg,${color},${mid},${color2});background-size:210% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;`;
   }
-  // Halo: the one deliberate glow style — white core + a tight coloured glow.
+  // Halo: a contained, tasteful glow — white core + a tight coloured halo
+  // (.ftz-fx-halo pulses it). Not a sprawling blur.
   if (effect === 'neon') {
-    return `color:#fff;-webkit-text-stroke:.7px ${color};text-shadow:0 0 4px ${color},0 0 10px ${color}cc,0 0 20px ${color}66;`;
+    return `color:#fff;-webkit-text-stroke:.5px ${color};text-shadow:0 0 2px ${color},0 0 7px ${color},0 0 15px ${color}cc,0 0 26px ${color}55;`;
   }
-  // Inked: flat colour fill wrapped in a bold darker-tint outline — the crisp
-  // high-contrast sticker look from the reference.
+  // Inked: flat colour fill + a crisp darker-tint outline — the clean sticker
+  // look. High contrast, no shadow.
   if (effect === 'toon') {
-    return `color:${color};-webkit-text-stroke:2px ${dk(55)};paint-order:stroke fill;`;
+    return `color:${color};-webkit-text-stroke:1.7px ${dk(52)};paint-order:stroke fill;`;
   }
-  // Lifted: flat colour fill + a darker-tint outline + a crisp HARD block drop
-  // (0-blur) in an even darker shade — flat relief, no soft shadow.
+  // Lifted: flat colour fill + a thin darker outline + a crisp two-step HARD
+  // colour drop (0-blur, progressively darker) — a clean 3D pop, no soft blur.
   if (effect === 'pop') {
-    return `color:${color};-webkit-text-stroke:1.6px ${dk(62)};paint-order:stroke fill;text-shadow:2px 2px 0 ${dk(62)};`;
+    return `color:${color};-webkit-text-stroke:.6px ${dk(55)};paint-order:stroke fill;text-shadow:1.5px 1.5px 0 ${dk(55)},3px 3px 0 ${dk(72)};`;
   }
   return `color:${color};`;
 }

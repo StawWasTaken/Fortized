@@ -1123,6 +1123,11 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
    always-on size + tracking bump (on the persistent .msg-author--styled class,
    NOT the hover-toggled effect CSS, so hovering never reflows the row). */
 .msg-author--styled{font-size:1.06em;letter-spacing:.012em;}
+/* Member-list nameplates that carry a display effect: hover-gated like chat
+   authors (font at rest, effect+colour reveal on row hover — see the
+   .ml-name--styled JS handler). No size bump here: member rows are height-
+   constrained and ellipsis-clipped, so only a hair of tracking for presence. */
+.ml-name--styled{letter-spacing:.01em;}
 .msg-timestamp{font-size:11px;color:rgba(255,255,255,.4);margin-left:6px;font-weight:500;}
 .msg-text{font-size:15.5px;color:rgba(228,232,240,.94);line-height:1.55;word-break:break-word;letter-spacing:.005em;}
 .msg-text code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:5px;font-size:12px;font-family:monospace;}

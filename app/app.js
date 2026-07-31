@@ -6235,8 +6235,80 @@ document.addEventListener('mouseout', function(e) {
   if (el.contains(e.relatedTarget)) return;
   el._dnHover = false;
   el.style.cssText = el.dataset.dnRest || '';
-  el.classList.remove('ftz-fx-flow','ftz-fx-halo');
+  // Strip every idle-animation class the effects can add. (The old list only
+  // removed flow+halo, so Inked/Lifted kept animating — and .ftz-fx-lifted
+  // forces display:inline-block + a float transform, a visible artifact at
+  // rest. Remove the real trio: flow / inked / lifted.)
+  el.classList.remove('ftz-fx-flow','ftz-fx-inked','ftz-fx-lifted','ftz-fx-halo');
 });
+// ── Shared: stash a display-name effect on an element so it reveals on HOVER
+// (the font, applied by the caller, stays at rest). `cls` is the hover-gate
+// class the delegated handlers key off — '.msg-author--styled' for chat,
+// '.ml-name--styled' for member lists. Returns true if an effect was stashed.
+// Clears a prior stash when the style resets to plain, and is safe to call
+// while the element is mid-hover (it first returns the element to its
+// font-at-rest baseline). This is the ONLY place effects should be attached
+// off the render path — never paint them inline at rest.
+function _stashNameHoverEffect(el, src, cls) {
+  if (!el || !src) return false;
+  // Return to the font-at-rest baseline before (re)stashing.
+  if (el.dataset.dnRest !== undefined) {
+    el.style.cssText = el.dataset.dnRest;
+    el.classList.remove('ftz-fx-flow','ftz-fx-inked','ftz-fx-lifted','ftz-fx-halo');
+    el._dnHover = false;
+    delete el.dataset.dnRest;
+  }
+  const eff  = src.displayEffect || 'solid';
+  const col  = src.displayColor  || '#fff';
+  const col2 = src.displayColor2 || col;
+  const hasStyle = (eff && eff !== 'solid') || (col && col !== '#fff');
+  if (!hasStyle) {
+    delete el.dataset.dnEffect; delete el.dataset.dnColor; delete el.dataset.dnColor2;
+    el.classList.remove(cls);
+    return false;
+  }
+  el.dataset.dnEffect = eff;
+  el.dataset.dnColor  = col;
+  el.dataset.dnColor2 = col2;
+  el.classList.add(cls);
+  return true;
+}
+// Member-list convenience wrapper (font is applied by the caller first).
+function _mlStashNameEffect(el, ud) { return _stashNameHoverEffect(el, ud, 'ml-name--styled'); }
+// ── Member-list nameplate hover: reveal display effect+colour on ROW hover,
+// snap back on leave. Font always shows at rest; effect/colour are gated here
+// exactly like the chat author names, so member lists read calmly. Delegated,
+// bound once.
+if (typeof document !== 'undefined' && !window._mlNameHoverBound) {
+  window._mlNameHoverBound = true;
+  const _mlReveal = (nm) => {
+    if (!nm || nm._dnHover || typeof _getDisplayEffectCSS !== 'function') return;
+    nm._dnHover = true;
+    if (nm.dataset.dnRest === undefined) nm.dataset.dnRest = nm.style.cssText;
+    const eff  = nm.dataset.dnEffect || 'solid';
+    const col  = nm.dataset.dnColor  || '#fff';
+    const col2 = nm.dataset.dnColor2 || col;
+    nm.style.cssText = (nm.dataset.dnRest || '') + ';' + _getDisplayEffectCSS(eff, col, col2);
+    const animCls = _getDisplayEffectClass(eff);
+    if (animCls) nm.classList.add(animCls);
+  };
+  const _mlHide = (nm) => {
+    if (!nm || !nm._dnHover) return;
+    nm._dnHover = false;
+    nm.style.cssText = nm.dataset.dnRest || '';
+    nm.classList.remove('ftz-fx-flow','ftz-fx-inked','ftz-fx-lifted','ftz-fx-halo');
+  };
+  document.addEventListener('mouseover', e => {
+    const row = e.target.closest && e.target.closest('.ml-entry');
+    if (!row) return;
+    _mlReveal(row.querySelector('.ml-name.ml-name--styled'));
+  });
+  document.addEventListener('mouseout', e => {
+    const row = e.target.closest && e.target.closest('.ml-entry');
+    if (!row || (e.relatedTarget && row.contains(e.relatedTarget))) return;
+    _mlHide(row.querySelector('.ml-name.ml-name--styled'));
+  });
+}
 document.addEventListener('mouseover', function(e) {
   const pill = e.target.closest?.('.r-pill[data-r-emoji]');
   if (!pill) return;
@@ -9942,7 +10014,8 @@ async function showGCMemberPanel(meta) {
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
         if (nameEl) {
           if (ud.displayFont && ud.displayFont !== 'default') { nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont); nameEl.style.fontWeight = _getDisplayFontWeight(ud.displayFont); }
-          if (ud.displayColor && ud.displayColor !== '#fff') nameEl.style.cssText += _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor, ud.displayColor2 || ud.displayColor);
+          // Effect + colour reveal on ROW hover (font stays at rest), not inline.
+          _mlStashNameEffect(nameEl, ud);
         }
         if (ud.pfp) {
           const avWrap = entry.querySelector('.gc-ml-av');
@@ -14698,13 +14771,12 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         if (nameEl && ud.displayName) {
           nameEl.textContent = ud.displayName;
         }
-        // Apply display name styles (font, effect, color) for other users
+        // Apply display name styles for other users. FONT applies at rest;
+        // effect + colour reveal on ROW hover (see _mlStashNameEffect) instead
+        // of painting inline — otherwise styled names glow at rest here.
         if (nameEl) {
           if (ud.displayFont && ud.displayFont !== 'default') { nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont); nameEl.style.fontWeight = _getDisplayFontWeight(ud.displayFont); }
-          if (ud.displayColor && ud.displayColor !== '#fff') {
-            const _eCss = _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor, ud.displayColor2 || ud.displayColor);
-            nameEl.style.cssText += _eCss;
-          }
+          _mlStashNameEffect(nameEl, ud);
         }
         const avWrap = entry.querySelector('.ml-av-wrap');
         if (ud.pfp && avWrap) {
@@ -17653,23 +17725,48 @@ function initFortizedUXResilience() {
           if (dmHomeDn) dmHomeDn.textContent = data.displayName;
         }
         // ── APPLY DISPLAY NAME STYLES (font/effect/color) EVERYWHERE ──
+        // RULE (Discord-style, see "Locked behaviours"): the FONT applies at
+        // rest everywhere, but the EFFECT + COLOUR are held back in chat,
+        // member lists and the DM sidebar — they reveal on HOVER (or when
+        // you're in that DM). This handler used to paint the effect INLINE at
+        // rest (el.style.cssText += …), which is exactly what leaked effects
+        // "at rest". Now we stash the effect + tag each element so the shared
+        // hover handlers toggle it; bastion channels suppress effects entirely.
         if (data.displayFont || data.displayEffect || data.displayColor) {
-          const _styleEls = [
-            ...document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-name'),
-            ...document.querySelectorAll('.msg-author[data-author="'+data.username+'"]')
-          ];
-          const _dmDnStyle = document.getElementById('dm-dn-'+data.username);
-          if (_dmDnStyle) _styleEls.push(_dmDnStyle);
-          _styleEls.forEach(el => {
+          const _applyFont = (el) => {
             if (data.displayFont && data.displayFont !== 'default') {
               el.style.fontFamily = _getDisplayFontCSS(data.displayFont);
               el.style.fontWeight = _getDisplayFontWeight(data.displayFont);
             }
-            if (data.displayColor && data.displayColor !== '#fff') {
-              const _eCss = _getDisplayEffectCSS(data.displayEffect || 'solid', data.displayColor, data.displayColor2 || data.displayColor);
-              el.style.cssText += _eCss;
-            }
+          };
+          // CHAT authors: hover-gated (.msg-author--styled), suppressed in
+          // bastion channels — the only visible authors are the open chat's.
+          const _inBastion = (typeof curBastion !== 'undefined' && curBastion !== null);
+          document.querySelectorAll('.msg-author[data-author="'+data.username+'"]').forEach(el => {
+            _applyFont(el);
+            if (_inBastion) { el.classList.remove('msg-author--styled'); return; }
+            _stashNameHoverEffect(el, data, 'msg-author--styled');
           });
+          // MEMBER-LIST names: hover-gated (.ml-name--styled), font at rest.
+          document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-name').forEach(el => {
+            _applyFont(el);
+            _mlStashNameEffect(el, data);
+          });
+          // DM SIDEBAR nameplate: font at rest; effect toggled by _dmNameEffect
+          // (mirrors the sidebar render at ~8378), on when it's the active DM.
+          const _dmDnStyle = document.getElementById('dm-dn-'+data.username);
+          if (_dmDnStyle) {
+            let _fontCss = '';
+            if (data.displayFont && data.displayFont !== 'default') {
+              _fontCss = 'font-family:' + _getDisplayFontCSS(data.displayFont) + ';font-weight:' + _getDisplayFontWeight(data.displayFont) + ';';
+            }
+            _dmDnStyle.dataset.fontCss = _fontCss;
+            if (data.displayColor && data.displayColor !== '#fff') {
+              _dmDnStyle.dataset.effectCss = _getDisplayEffectCSS(data.displayEffect || 'solid', data.displayColor, data.displayColor2 || data.displayColor);
+            } else { delete _dmDnStyle.dataset.effectCss; }
+            const _activeDM = (typeof curDM === 'string') && curDM.toLowerCase() === String(data.username).toLowerCase();
+            _dmNameEffect(_dmDnStyle, _activeDM);
+          }
         }
 
         // ── REAL-TIME COSMETIC SYNC for OPEN .fpp surfaces ──

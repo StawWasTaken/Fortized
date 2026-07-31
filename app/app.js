@@ -2017,6 +2017,53 @@ const REPORT_REASONS = ['Harassment','Hate Speech','NSFW / Explicit Content','Sp
 const BASTION_REPORT_REASONS = ['Harassment by owner / staff','Hate-speech community','NSFW content / unmarked','Scam or impersonation','Illegal content','Spam / raid','Underage members','Other'];
 const GAME_ISSUE_REASONS = ['Game listed incorrectly','Broken cover / images','Wrong metadata','Inappropriate content','Spam / fake entry','Copyright violation','Other'];
 const GAME_REVIEW_REASONS = ['Harassment','Hate speech','Spam or fake review','Unrelated content','Doxxing / personal info','Inappropriate content','Other'];
+// ── Grouped report taxonomies (unified report card) ──────────────────
+// The report card presents up to 3 BIG main groups; picking one slides to
+// its checkable issue list (multi-select, red checkmarks). A group flagged
+// `single:true` (or a taxonomy with one group) skips the group step and
+// shows its issues directly — used for factual/quality reports. Shape:
+//   { id, label, icon (FA class), desc, single?, issues:[string,…] }
+const REPORT_GROUPS_PERSON = [
+  { id:'harm', icon:'fa-triangle-exclamation', label:'Harmful or Dangerous',
+    desc:'Threats, harassment, hate, or danger to someone',
+    issues:['Harassment or bullying','Threats or violence','Hate speech or discrimination','Encouraging self-harm or suicide','Sharing private information (doxxing)'] },
+  { id:'content', icon:'fa-eye-slash', label:'Sensitive or Illegal Content',
+    desc:'Explicit, graphic, underage, or illegal content',
+    issues:['NSFW or explicit content','Graphic violence or gore','This person is too young to use Fortized','Illegal content or activity','Impersonation'] },
+  { id:'spam', icon:'fa-ban', label:'Spam or Unwanted',
+    desc:'Spam, scams, ads, or things you just don’t want',
+    issues:['Spam or scam','Unwanted advertising','Misinformation','I just don’t like it','Something else'] },
+];
+const REPORT_GROUPS_BASTION = [
+  { id:'harm', icon:'fa-triangle-exclamation', label:'Harmful Community',
+    desc:'Harassment, hate, threats, or illegal activity',
+    issues:['Harassment by owner or staff','Hate-speech community','Threats or violence','Illegal content or activity'] },
+  { id:'content', icon:'fa-eye-slash', label:'Sensitive Content',
+    desc:'Unmarked explicit content or underage members',
+    issues:['NSFW content / unmarked','Underage members','Scam or impersonation'] },
+  { id:'spam', icon:'fa-ban', label:'Spam or Unwanted',
+    desc:'Raids, spam, or things you just don’t want',
+    issues:['Spam or raid','I just don’t like it','Something else'] },
+];
+const REPORT_GROUPS_AD = [
+  { id:'harm', icon:'fa-triangle-exclamation', label:'Inappropriate',
+    desc:'Offensive or inappropriate advertising',
+    issues:['Inappropriate content','Offensive imagery'] },
+  { id:'content', icon:'fa-user-secret', label:'Deceptive',
+    desc:'Misleading, scammy, or impersonating ads',
+    issues:['Misleading or scam','Impersonation'] },
+  { id:'spam', icon:'fa-ban', label:'Spam or Unwanted',
+    desc:'Repetitive, spammy, or unwanted ads',
+    issues:['Spam','I just don’t like it','Something else'] },
+];
+const REPORT_GROUPS_GAME_ISSUE = [
+  { id:'issue', icon:'fa-gamepad', label:'What’s wrong with this game?', single:true, desc:'',
+    issues:['Game listed incorrectly','Broken cover / images','Wrong metadata','Inappropriate content','Spam / fake entry','Copyright violation','Other'] },
+];
+const REPORT_GROUPS_GAME_REVIEW = [
+  { id:'review', icon:'fa-star-half-stroke', label:'Why does this review break the rules?', single:true, desc:'',
+    issues:['Harassment','Hate speech','Spam or fake review','Unrelated content','Doxxing / personal info','Inappropriate content','Other'] },
+];
 const AGE_TIERS = {CHILD:'child',TEEN:'teen',ADULT:'adult'};
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -6235,6 +6282,10 @@ document.addEventListener('mouseout', function(e) {
   if (el.contains(e.relatedTarget)) return;
   el._dnHover = false;
   el.style.cssText = el.dataset.dnRest || '';
+  // Re-assert the durable font — a dnRest captured before the async font
+  // resolved would otherwise strip it here, snapping the name to the default
+  // font on mouse-out.
+  if (el.dataset.dnFont) el.style.cssText = (el.style.cssText ? el.style.cssText.replace(/;?\s*$/, ';') : '') + el.dataset.dnFont;
   // Strip every idle-animation class the effects can add. (The old list only
   // removed flow+halo, so Inked/Lifted kept animating — and .ftz-fx-lifted
   // forces display:inline-block + a float transform, a visible artifact at
@@ -13335,6 +13386,12 @@ function appendMessage(container, msg, context, prevAuthor, skipSep) {
         if (u.displayFont && u.displayFont !== 'default') {
           authorEl.style.fontFamily = _getDisplayFontCSS(u.displayFont);
           authorEl.style.fontWeight = _getDisplayFontWeight(u.displayFont);
+          // Durable record of the font so the hover-out restore (and any
+          // re-style) can re-assert it — this is what stops the display-name
+          // font from occasionally snapping back to the default in chat when
+          // a stale dnRest baseline (captured before the font resolved) gets
+          // restored on mouse-out.
+          authorEl.dataset.dnFont = 'font-family:' + _getDisplayFontCSS(u.displayFont) + ';font-weight:' + _getDisplayFontWeight(u.displayFont) + ';';
         }
         const isBastion = (context === 'ch' || context === 'channel');
         if (isBastion) {
@@ -17737,20 +17794,23 @@ function initFortizedUXResilience() {
             if (data.displayFont && data.displayFont !== 'default') {
               el.style.fontFamily = _getDisplayFontCSS(data.displayFont);
               el.style.fontWeight = _getDisplayFontWeight(data.displayFont);
+              el.dataset.dnFont = 'font-family:' + _getDisplayFontCSS(data.displayFont) + ';font-weight:' + _getDisplayFontWeight(data.displayFont) + ';';
             }
           };
           // CHAT authors: hover-gated (.msg-author--styled), suppressed in
           // bastion channels — the only visible authors are the open chat's.
+          // Stash the effect FIRST (its baseline-restore rewrites cssText), then
+          // apply the font — otherwise a re-style would wipe the font we just set.
           const _inBastion = (typeof curBastion !== 'undefined' && curBastion !== null);
           document.querySelectorAll('.msg-author[data-author="'+data.username+'"]').forEach(el => {
-            _applyFont(el);
-            if (_inBastion) { el.classList.remove('msg-author--styled'); return; }
+            if (_inBastion) { el.classList.remove('msg-author--styled'); _applyFont(el); return; }
             _stashNameHoverEffect(el, data, 'msg-author--styled');
+            _applyFont(el);
           });
           // MEMBER-LIST names: hover-gated (.ml-name--styled), font at rest.
           document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-name').forEach(el => {
-            _applyFont(el);
             _mlStashNameEffect(el, data);
+            _applyFont(el);
           });
           // DM SIDEBAR nameplate: font at rest; effect toggled by _dmNameEffect
           // (mirrors the sidebar render at ~8378), on when it's the active DM.
@@ -21690,19 +21750,21 @@ function _reportAd(adId, adTitle, adBastion) {
     subjectLabel: 'Reported Ad',
     subjectText: `"${escapeHTML(String(adTitle || 'Untitled').slice(0, 120))}"`,
     subjectMeta: adBastion ? `from ${adBastion}` : '',
-    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/><path d="M9 13h6"/><path d="M9 16h3"/></svg>',
-    reasons: AD_REPORT_REASONS,
+    groups: REPORT_GROUPS_AD,
     placeholder: "Describe what's wrong with this ad…",
-    onSubmit: ({ reason, context }) => _submitAdReport(adId, { reason, context }),
+    onSubmit: (d) => _submitAdReport(adId, d),
   });
 }
 // Now called by showReport() with {reason, context}; falls back to DOM
 // lookups for any legacy caller. Same payload, same backend write.
 async function _submitAdReport(adId, payload) {
-  let reason, context;
+  let reason, context, reasons = null, group = null, screenshots = null;
   if (payload && typeof payload === 'object') {
     reason = payload.reason;
     context = payload.context || '';
+    reasons = Array.isArray(payload.reasons) ? payload.reasons : null;
+    group = payload.group || null;
+    screenshots = Array.isArray(payload.screenshots) && payload.screenshots.length ? payload.screenshots : null;
   } else {
     reason = document.querySelector('input[name="ad-report-reason"]:checked')?.value;
     context = (document.getElementById('ad-report-context')?.value || '').trim();
@@ -21725,7 +21787,10 @@ async function _submitAdReport(adId, payload) {
     adOwner: adSnap?.owner || adSnap?.createdBy || adSnap?.author || '',
     username: adSnap?.owner || adSnap?.createdBy || adSnap?.author || '',
     reason,
+    ...(reasons ? { reasons } : {}),
+    ...(group ? { group } : {}),
     context,
+    ...(screenshots ? { screenshots } : {}),
     reporter: CU?.username,
     reportedAt: now,
     createdAt: now,
@@ -21734,8 +21799,9 @@ async function _submitAdReport(adId, payload) {
   try { await FortizedSocial.adminSaveReport(report); }
   catch (e) { console.warn('[Report] Ad report save failed:', e); }
   try {
+    const { screenshots: _adShots, ...leanReport } = report;
     const existing = JSON.parse(localStorage.getItem('ftz_reports') || '[]');
-    if (!existing.find(r => r.id === report.id)) existing.push(report);
+    if (!existing.find(r => r.id === leanReport.id)) existing.push(leanReport);
     localStorage.setItem('ftz_reports', JSON.stringify(existing));
   } catch (_) {}
   toast('Ad reported. Our Safety team will review it.', 'success');
@@ -28590,74 +28656,243 @@ const _RPT_TYPE_FA = {
   game:    'fa-gamepad',
   issue:   'fa-flag',
 };
+// Downscale + recompress a screenshot to keep report payloads egress-lean.
+// PNG/JPEG in → JPEG data URL out (≤1280px longest edge, quality .82). Falls
+// back to the original data URL if the canvas path fails.
+function _rcCompressImage(file, maxDim = 1280, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    if (!file || !/^image\/(png|jpe?g)$/i.test(file.type)) { reject(new Error('Only PNG or JPEG images are allowed.')); return; }
+    const fr = new FileReader();
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          let { width: w, height: h } = img;
+          const scale = Math.min(1, maxDim / Math.max(w, h));
+          w = Math.round(w * scale); h = Math.round(h * scale);
+          const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          const cx = cv.getContext('2d');
+          cx.fillStyle = '#13161d'; cx.fillRect(0, 0, w, h); // flatten PNG alpha
+          cx.drawImage(img, 0, 0, w, h);
+          resolve(cv.toDataURL('image/jpeg', quality));
+        } catch (_) { resolve(fr.result); }
+      };
+      img.onerror = () => reject(new Error('Could not read that image.'));
+      img.src = fr.result;
+    };
+    fr.onerror = () => reject(new Error('Could not read that image.'));
+    fr.readAsDataURL(file);
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// UNIFIED REPORT CARD (delete-message-card family).
+// Presents up to 3 big "main groups"; picking one slides to a
+// multi-select issue list with red filling checkmarks (the gift-
+// radiance checkmark, in red). Message reports quote the real
+// message (avatar + styled name + content + media) via the same
+// _buildDeleteQuote used by delete. Supports optional screenshots
+// (PNG/JPEG). Cancel LEFT, Submit RIGHT. See .ftz-rc-* CSS.
+// opts: { type, title, subtitle, groups[], quoteRow?, subject*,
+//         placeholder, onSubmit({reason,reasons,group,context,screenshots}) }
+// ════════════════════════════════════════════════════════════
 function showReport(opts) {
   if (!opts || typeof opts !== 'object') return;
   document.getElementById('modal-report-unified')?.remove();
   const faIcon = `<i class="fa-solid ${_RPT_TYPE_FA[opts.type] || 'fa-flag'}" aria-hidden="true"></i>`;
-  const subjectHTML = (opts.subjectLabel || opts.subjectText)
-    ? `<div class="rpt-modal__subject">
-        <div class="rpt-modal__subject-icon">${faIcon}</div>
-        <div class="rpt-modal__subject-body">
-          ${opts.subjectLabel ? `<div class="rpt-modal__subject-label">${escapeHTML(opts.subjectLabel)}</div>` : ''}
-          ${opts.subjectText ? `<div class="rpt-modal__subject-text">${opts.subjectText}</div>` : ''}
-          ${opts.subjectMeta ? `<div class="rpt-modal__subject-meta">${escapeHTML(opts.subjectMeta)}</div>` : ''}
+  // Groups (new) or a flat reasons[] wrapped into one implicit group (legacy).
+  let groups = Array.isArray(opts.groups) && opts.groups.length ? opts.groups
+    : (Array.isArray(opts.reasons) && opts.reasons.length
+        ? [{ id: 'all', icon: _RPT_TYPE_FA[opts.type] || 'fa-flag', label: "What's the issue?", single: true, issues: opts.reasons }]
+        : []);
+  const singleStep = groups.length <= 1 || groups.every(g => g.single);
+  const firstGroup = groups[0] || { issues: [] };
+
+  // Subject: message reports quote the real message; everything else shows the
+  // typed subject card.
+  let subjectHTML = '';
+  if (opts.quoteRow) {
+    subjectHTML = `<div class="ftz-rc-quote-wrap">${_buildDeleteQuote(opts.quoteRow)}</div>`;
+  } else if (opts.subjectLabel || opts.subjectText) {
+    subjectHTML = `<div class="ftz-rc-subject">
+        <div class="ftz-rc-subject-icon">${faIcon}</div>
+        <div class="ftz-rc-subject-body">
+          ${opts.subjectLabel ? `<div class="ftz-rc-subject-label">${escapeHTML(opts.subjectLabel)}</div>` : ''}
+          ${opts.subjectText ? `<div class="ftz-rc-subject-text">${opts.subjectText}</div>` : ''}
+          ${opts.subjectMeta ? `<div class="ftz-rc-subject-meta">${escapeHTML(opts.subjectMeta)}</div>` : ''}
         </div>
-      </div>`
-    : '';
-  const reasons = Array.isArray(opts.reasons) ? opts.reasons : [];
-  const reasonsHTML = reasons.map((r, i) => `
-    <label class="rpt-modal__reason">
-      <input type="radio" name="rpt-reason" value="${escapeHTML(r)}" data-i="${i}">
-      <span>${escapeHTML(r)}</span>
-    </label>`).join('');
+      </div>`;
+  }
+
+  const groupCardsHTML = groups.map((g, i) => `
+    <button type="button" class="ftz-rc-group" data-gi="${i}">
+      <span class="ftz-rc-group__icon"><i class="fa-solid ${g.icon || 'fa-flag'}" aria-hidden="true"></i></span>
+      <span class="ftz-rc-group__body">
+        <span class="ftz-rc-group__label">${escapeHTML(g.label || '')}</span>
+        ${g.desc ? `<span class="ftz-rc-group__desc">${escapeHTML(g.desc)}</span>` : ''}
+      </span>
+      <span class="ftz-rc-group__chev"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+    </button>`).join('');
+
   const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay open';
+  overlay.className = 'ftz-confirm-overlay';
   overlay.id = 'modal-report-unified';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
-    <div class="rpt-modal" role="dialog" aria-label="${escapeHTML(opts.title || 'Report')}">
-      <div class="rpt-modal__header">
-        <div class="rpt-modal__icon">${faIcon}</div>
-        <div class="rpt-modal__title-block">
-          <div class="rpt-modal__title">${escapeHTML(opts.title || 'Report')}</div>
-          <div class="rpt-modal__subtitle">${escapeHTML(opts.subtitle || 'Help us keep Fortized safe')}</div>
+    <div class="ftz-confirm-card ftz-rc-card" role="dialog" aria-label="${escapeHTML(opts.title || 'Report')}">
+      <div class="ftz-rc-head">
+        <div class="ftz-rc-icon">${faIcon}</div>
+        <div class="ftz-rc-titles">
+          <div class="ftz-rc-title">${escapeHTML(opts.title || 'Report')}</div>
+          <div class="ftz-rc-sub">${escapeHTML(opts.subtitle || 'Help us keep Fortized safe')}</div>
         </div>
-        <button class="rpt-modal__close" aria-label="Close" onclick="this.closest('.modal-overlay').remove()">
-          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-        </button>
+        <button class="ftz-close-btn" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()">&times;</button>
       </div>
-      <div class="rpt-modal__body">
+      <div class="ftz-rc-body">
         ${subjectHTML}
-        <div class="rpt-modal__section-label rpt-modal__section-label--accent">What's the issue?</div>
-        <div class="rpt-modal__reasons">${reasonsHTML}</div>
-        <div class="rpt-modal__section-label">Additional Context<span class="rpt-modal__hint">(optional)</span></div>
-        <textarea class="rpt-modal__textarea" placeholder="${escapeHTML(opts.placeholder || 'Describe what happened in more detail…')}" rows="3"></textarea>
-        <div class="rpt-modal__error" role="alert"></div>
-        <div class="rpt-modal__actions">
-          <button class="rpt-modal__submit" disabled><i class="fa-solid fa-flag" aria-hidden="true"></i> Submit Report</button>
-          <button class="rpt-modal__cancel" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+        <div class="ftz-rc-step ftz-rc-step--groups"${singleStep ? ' hidden' : ''}>
+          <div class="ftz-rc-seclabel ftz-rc-seclabel--accent">What's the issue?</div>
+          <div class="ftz-rc-groups">${groupCardsHTML}</div>
         </div>
-        <div class="rpt-modal__footer">
-          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-          <span>Your report is anonymous and reviewed by our Safety team.</span>
+        <div class="ftz-rc-step ftz-rc-step--issues"${singleStep ? '' : ' hidden'}>
+          ${singleStep ? '' : '<button type="button" class="ftz-rc-back"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Back</button>'}
+          <div class="ftz-rc-seclabel ftz-rc-seclabel--accent" id="ftz-rc-issues-label">${escapeHTML(singleStep ? (firstGroup.label || "What's the issue?") : '')}</div>
+          <div class="ftz-rc-issues" id="ftz-rc-issues"></div>
+          <div class="ftz-rc-seclabel">Additional Context <span class="ftz-rc-hint">(optional)</span></div>
+          <textarea class="ftz-rc-textarea" id="ftz-rc-context" placeholder="${escapeHTML(opts.placeholder || 'Describe what happened in more detail…')}" rows="3"></textarea>
+          <div class="ftz-rc-shots" id="ftz-rc-shots"></div>
+          <button type="button" class="ftz-rc-addshot" id="ftz-rc-addshot">
+            <i class="fa-solid fa-image" aria-hidden="true"></i> Add screenshots <span>PNG or JPEG · up to 3</span>
+          </button>
+          <input type="file" id="ftz-rc-shot-input" accept="image/png,image/jpeg" multiple hidden>
+        </div>
+        <div class="ftz-rc-error" role="alert"></div>
+        <div class="ftz-rc-trust"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Your report is anonymous and reviewed by our Safety team.</span></div>
+      </div>
+      <div class="ftz-modal-foot">
+        <div class="ftz-modal-foot__actions" style="width:100%;">
+          <button class="btn-g" id="ftz-rc-cancel" style="flex:1;justify-content:center;">Cancel</button>
+          <button class="btn-red" id="ftz-rc-submit" style="flex:1;justify-content:center;" disabled><i class="fa-solid fa-flag" aria-hidden="true"></i> Submit Report</button>
         </div>
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  const submitBtn = overlay.querySelector('.rpt-modal__submit');
-  const errEl = overlay.querySelector('.rpt-modal__error');
-  const textarea = overlay.querySelector('.rpt-modal__textarea');
+
+  const card = overlay.querySelector('.ftz-rc-card');
+  const stepGroups = overlay.querySelector('.ftz-rc-step--groups');
+  const stepIssues = overlay.querySelector('.ftz-rc-step--issues');
+  const issuesWrap = overlay.querySelector('#ftz-rc-issues');
+  const issuesLabel = overlay.querySelector('#ftz-rc-issues-label');
+  const backBtn = overlay.querySelector('.ftz-rc-back');
+  const submitBtn = overlay.querySelector('#ftz-rc-submit');
+  const cancelBtn = overlay.querySelector('#ftz-rc-cancel');
+  const errEl = overlay.querySelector('.ftz-rc-error');
+  const textarea = overlay.querySelector('#ftz-rc-context');
   const submitIdleHTML = submitBtn.innerHTML;
-  overlay.querySelectorAll('input[name="rpt-reason"]').forEach(input => {
-    input.addEventListener('change', () => { submitBtn.disabled = false; if (errEl) errEl.textContent = ''; });
-  });
-  submitBtn.addEventListener('click', async () => {
-    const sel = overlay.querySelector('input[name="rpt-reason"]:checked');
-    if (!sel) { errEl.textContent = 'Please select a reason.'; return; }
+  let activeGroup = singleStep ? firstGroup : null;
+  const shots = [];
+
+  // Style the quoted message's display name (font + effect) like deleteMsg.
+  if (opts.quoteRow && opts.quoteRow.dataset) {
+    const _qAuthor = opts.quoteRow.dataset.from;
+    const _qEl = overlay.querySelector('#ftz-del-qname');
+    if (_qEl && _qAuthor && _qAuthor !== '__system__') {
+      const liveAuthor = document.querySelector('.msg-author[data-author="' + CSS.escape(_qAuthor) + '"]');
+      if (liveAuthor) {
+        if (liveAuthor.style.fontFamily) _qEl.style.fontFamily = liveAuthor.style.fontFamily;
+        if (liveAuthor.style.fontWeight) _qEl.style.fontWeight = liveAuthor.style.fontWeight;
+        if (liveAuthor.classList.contains('msg-author--styled') && typeof _getDisplayEffectCSS === 'function') {
+          const eff = liveAuthor.dataset.dnEffect || 'solid';
+          const col = liveAuthor.dataset.dnColor || '#fff';
+          const col2 = liveAuthor.dataset.dnColor2 || col;
+          _qEl.style.cssText += ';' + _getDisplayEffectCSS(eff, col, col2);
+          const ac = _getDisplayEffectClass(eff); if (ac) _qEl.classList.add(ac);
+        } else if (liveAuthor.style.color) { _qEl.style.color = liveAuthor.style.color; }
+      }
+      Promise.resolve(FortizedSocial.getUserByName(String(_qAuthor).toLowerCase())).then(u => {
+        if (!u) return; const el = overlay.querySelector('#ftz-del-qname'); if (!el) return;
+        el.setAttribute('style', _dmNameStyleAttr(u));
+        const ac = _getDisplayEffectClass(u.displayEffect || 'solid'); if (ac) el.classList.add(ac);
+        if (u.displayName) el.textContent = u.displayName;
+      }).catch(() => {});
+    }
+  }
+
+  const refreshSubmit = () => {
+    submitBtn.disabled = !issuesWrap.querySelector('.ftz-rc-issue input:checked');
+  };
+  const renderIssues = (group) => {
+    activeGroup = group;
+    issuesWrap.innerHTML = (group.issues || []).map((iss, k) => `
+      <label class="ftz-rc-issue">
+        <input type="checkbox" value="${escapeHTML(iss)}" data-k="${k}">
+        <span class="ftz-rc-check" aria-hidden="true">${_GIFT_CHECK_SVG}</span>
+        <span class="ftz-rc-issue__label">${escapeHTML(iss)}</span>
+      </label>`).join('');
+    issuesWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => { cb.closest('.ftz-rc-issue').classList.toggle('on', cb.checked); if (errEl) errEl.textContent = ''; refreshSubmit(); });
+    });
+    refreshSubmit();
+  };
+  const openGroup = (idx) => {
+    const g = groups[idx]; if (!g) return;
+    issuesLabel.textContent = g.label || "What's the issue?";
+    renderIssues(g);
+    stepGroups.hidden = true;
+    stepIssues.hidden = false;
+    stepIssues.classList.remove('ftz-rc-slide-in'); void stepIssues.offsetWidth;
+    stepIssues.classList.add('ftz-rc-slide-in');
+  };
+  const goBack = () => {
+    stepIssues.hidden = true;
+    stepGroups.hidden = false;
+    stepGroups.classList.remove('ftz-rc-slide-back'); void stepGroups.offsetWidth;
+    stepGroups.classList.add('ftz-rc-slide-back');
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting…';
+  };
+
+  if (singleStep) renderIssues(firstGroup);
+  overlay.querySelectorAll('.ftz-rc-group').forEach(btn => btn.addEventListener('click', () => openGroup(+btn.dataset.gi)));
+  if (backBtn) backBtn.addEventListener('click', goBack);
+
+  // Screenshots.
+  const shotInput = overlay.querySelector('#ftz-rc-shot-input');
+  const shotsWrap = overlay.querySelector('#ftz-rc-shots');
+  const addShotBtn = overlay.querySelector('#ftz-rc-addshot');
+  const renderShots = () => {
+    shotsWrap.innerHTML = shots.map((src, i) => `
+      <div class="ftz-rc-shot"><img src="${src}" alt="screenshot ${i + 1}">
+        <button type="button" class="ftz-rc-shot__rm" data-i="${i}" aria-label="Remove screenshot"><i class="fa-solid fa-xmark"></i></button>
+      </div>`).join('');
+    shotsWrap.querySelectorAll('.ftz-rc-shot__rm').forEach(b => b.addEventListener('click', () => { shots.splice(+b.dataset.i, 1); renderShots(); }));
+    addShotBtn.style.display = shots.length >= 3 ? 'none' : '';
+  };
+  addShotBtn.addEventListener('click', () => shotInput.click());
+  shotInput.addEventListener('change', async () => {
+    const files = Array.from(shotInput.files || []);
+    shotInput.value = '';
+    for (const f of files) {
+      if (shots.length >= 3) { errEl.textContent = 'You can attach up to 3 screenshots.'; break; }
+      try { shots.push(await _rcCompressImage(f)); errEl.textContent = ''; }
+      catch (e) { errEl.textContent = e?.message || 'That file could not be added.'; }
+    }
+    renderShots();
+  });
+
+  cancelBtn.addEventListener('click', () => overlay.remove());
+  submitBtn.addEventListener('click', async () => {
+    const checked = Array.from(issuesWrap.querySelectorAll('input:checked')).map(c => c.value);
+    if (!checked.length) { errEl.textContent = 'Please select at least one issue.'; return; }
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Submitting…';
     try {
-      await Promise.resolve(opts.onSubmit?.({ reason: sel.value, context: (textarea?.value || '').trim() }));
+      await Promise.resolve(opts.onSubmit?.({
+        reason: checked.join(', '),
+        reasons: checked,
+        group: activeGroup?.label || null,
+        context: (textarea?.value || '').trim(),
+        screenshots: shots.slice(),
+      }));
       overlay.remove();
     } catch (e) {
       console.error('[Report] submit failed:', e);
@@ -28666,22 +28901,29 @@ function showReport(opts) {
       submitBtn.innerHTML = submitIdleHTML;
     }
   });
+
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+  setTimeout(() => overlay.focus(), 0);
 }
 
 function reportMessage(msgId, msgText, msgFrom) {
   if (_officialInteractionBlocked(msgFrom)) { toast('You can’t report messages from official Fortized accounts.', 'info'); return; }
   activeReportData = { type: 'message', msgId, msgText, msgFrom: msgFrom || null, reportedAt: new Date().toISOString() };
+  const row = document.querySelector(`[data-msgid="${CSS.escape(String(msgId))}"]`);
   showReport({
     type: 'message',
     title: 'Report Message',
-    headerIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-    subjectLabel: 'Reported Message',
-    subjectText: `"${escapeHTML(String(msgText || '').slice(0, 200))}${(msgText || '').length > 200 ? '…' : ''}"`,
-    subjectMeta: msgFrom ? `from @${msgFrom}` : '',
-    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-    reasons: REPORT_REASONS,
+    // Show the real message — avatar + styled name + content + media —
+    // exactly like the delete-message card. Falls back to a text subject
+    // if the row isn't on screen (e.g. reported from a notification).
+    quoteRow: row || null,
+    subjectLabel: row ? '' : 'Reported Message',
+    subjectText: row ? '' : `"${escapeHTML(String(msgText || '').slice(0, 200))}${(msgText || '').length > 200 ? '…' : ''}"`,
+    subjectMeta: row ? '' : (msgFrom ? `from @${msgFrom}` : ''),
+    groups: REPORT_GROUPS_PERSON,
     placeholder: 'Describe what happened in more detail…',
-    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+    onSubmit: (d) => submitReport(d),
   });
 }
 
@@ -28693,10 +28935,9 @@ function reportUser(username) {
     title: 'Report User',
     subjectLabel: 'Reported User',
     subjectText: `@${escapeHTML(username || '')}`,
-    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-    reasons: REPORT_REASONS,
+    groups: REPORT_GROUPS_PERSON,
     placeholder: 'Tell us what this user did…',
-    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+    onSubmit: (d) => submitReport(d),
   });
 }
 
@@ -28711,10 +28952,9 @@ function reportBastion(bastionId, bastionName) {
     title: 'Report Bastion',
     subjectLabel: 'Reported Bastion',
     subjectText: escapeHTML(bastionName || bastionId || 'Unnamed bastion'),
-    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-    reasons: BASTION_REPORT_REASONS,
+    groups: REPORT_GROUPS_BASTION,
     placeholder: "Describe what's wrong with this bastion…",
-    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+    onSubmit: (d) => submitReport(d),
   });
 }
 
@@ -28727,10 +28967,9 @@ function reportGameIssue(gameId, gameName) {
     subtitle: 'Tell us what\'s wrong with this game',
     subjectLabel: 'Game',
     subjectText: escapeHTML(gameName || gameId || 'Unknown game'),
-    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><line x1="8" y1="11" x2="8" y2="15"/><line x1="6" y1="13" x2="10" y2="13"/><circle cx="15.5" cy="12" r="1"/><circle cx="17.5" cy="14.5" r="1"/></svg>',
-    reasons: GAME_ISSUE_REASONS,
+    groups: REPORT_GROUPS_GAME_ISSUE,
     placeholder: 'Describe the issue (wrong cover, broken link, etc.)…',
-    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+    onSubmit: (d) => submitReport(d),
   });
 }
 
@@ -28745,10 +28984,9 @@ function reportGameReview(reviewId, opts) {
     subjectLabel: 'Reported Review',
     subjectText: preview ? `"${escapeHTML(preview)}${(opts.text || '').length > 160 ? '…' : ''}"` : `Review #${escapeHTML(String(reviewId || ''))}`,
     subjectMeta: opts.author ? `by @${opts.author}${opts.gameName ? ' · ' + opts.gameName : ''}` : (opts.gameName || ''),
-    subjectIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-    reasons: GAME_REVIEW_REASONS,
+    groups: REPORT_GROUPS_GAME_REVIEW,
     placeholder: 'Tell us why this review breaks the rules…',
-    onSubmit: ({ reason, context }) => submitReport({ reason, context }),
+    onSubmit: (d) => submitReport(d),
   });
 }
 
@@ -28761,10 +28999,13 @@ function reportGameReview(reviewId, opts) {
 // it no longer pokes the DOM for values. Falls back to the old DOM
 // lookups if called with no args (legacy callers).
 async function submitReport(payload) {
-  let reason, context;
+  let reason, context, reasons = null, group = null, screenshots = null;
   if (payload && typeof payload === 'object') {
     reason = payload.reason;
     context = payload.context || '';
+    reasons = Array.isArray(payload.reasons) ? payload.reasons : null;
+    group = payload.group || null;
+    screenshots = Array.isArray(payload.screenshots) && payload.screenshots.length ? payload.screenshots : null;
   } else {
     const selected = document.querySelector('input[name="report-reason"]:checked');
     if (!selected) {
@@ -28779,7 +29020,10 @@ async function submitReport(payload) {
     id: 'rpt_' + Date.now(),
     reporter: CU.username,
     reason,
+    ...(reasons ? { reasons } : {}),
+    ...(group ? { group } : {}),
     context,
+    ...(screenshots ? { screenshots } : {}),
     ...activeReportData,
     status: 'pending',
     createdAt: new Date().toISOString(),
@@ -28788,9 +29032,11 @@ async function submitReport(payload) {
   try {
     await FortizedSocial.adminSaveReport(report);
   } catch (e) { console.warn('Report save failed:', e); }
-  // Always store locally too as cache
+  // Always store locally too as cache — but WITHOUT the screenshot data URLs,
+  // which would bloat localStorage. They live in the DB write only.
+  const { screenshots: _rptShots, ...leanReport } = report;
   const existing = JSON.parse(localStorage.getItem('ftz_reports') || '[]');
-  if (!existing.find(r => r.id === report.id)) existing.push(report);
+  if (!existing.find(r => r.id === leanReport.id)) existing.push(leanReport);
   localStorage.setItem('ftz_reports', JSON.stringify(existing));
   activeReportData = null;
   toast('Report submitted. Thank you for keeping Fortized safe.', 'success');
@@ -38368,39 +38614,174 @@ function toggleBlockUser(username) {
 }
 
 function _blockUserConfirm(username) {
+  _openSafetyActionCard('block', username);
+}
+
+// Apply a block (persist + unfriend + cancel requests + blur). Split out of the
+// confirm card so the card's onConfirm just calls this.
+async function _doBlockUser(username, isFriend) {
+  const blocked = _getBlockedList();
+  if (!blocked.includes(username)) blocked.push(username);
+  _saveBlockedList(blocked);
+  if (isFriend) {
+    try {
+      await FortizedSocial.removeFriend(CU.username, username);
+      await refreshCU();
+      renderFriendsList();
+      renderDMSidebar(document.getElementById('sidebar-scroll'));
+    } catch (e) { console.error('Unfriend on block:', e); }
+  }
+  const sentPending = (CU.friendRequestsSent || []).includes(username);
+  const recvPending = (CU.friendRequestsReceived || []).includes(username);
+  if (sentPending || recvPending) {
+    try { await FortizedSocial.declineFriendRequest(CU.username, username); await refreshCU(); }
+    catch (e) { _dbg('[Block] cancel friend request failed', e); }
+  }
+  try { await firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked); } catch(e) { console.warn('[Block] Save failed:', e?.message); }
+  toast(`Blocked ${username}`, 'info');
+  closeModal('modal-user');
+  _applyBlockBlurToExistingMessages(username, true);
+}
+
+// ════════════════════════════════════════════════════════════
+// SAFETY ACTION CARD — shared Block / Ignore confirmation, in the
+// delete-message-card family (avatar + styled name + consequence
+// rows + a "switch to the other action" hint). Discord-inspired,
+// not a copy. Cancel LEFT, primary RIGHT. Ignore keeps Fortized's
+// timed durations. `View details` swaps the card to the sibling
+// action in place.
+// ════════════════════════════════════════════════════════════
+const _AC_CHECK_SVG = '<svg viewBox="0 0 448 512" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+const _AC_WARN_SVG  = '<svg viewBox="0 0 512 512" fill="currentColor"><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg>';
+const _AC_INFO_SVG  = '<svg viewBox="0 0 512 512" fill="currentColor"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg>';
+const _AC_ROW_ICONS = { check: _AC_CHECK_SVG, warn: _AC_WARN_SVG, info: _AC_INFO_SVG };
+
+function _acGlyphHTML(kind) {
+  // Small corner glyph over the avatar — block = no-entry, ignore = eye-slash.
+  const svg = kind === 'block'
+    ? '<svg viewBox="0 0 512 512" fill="currentColor"><path d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z"/></svg>'
+    : '<svg viewBox="0 0 640 512" fill="currentColor"><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1z"/></svg>';
+  return `<span class="ftz-ac-glyph ftz-ac-glyph--${kind}">${svg}</span>`;
+}
+
+function _openSafetyActionCard(kind, username) {
+  if (isFortizedOfficialAccount(username)) {
+    toast(`This is an official Fortized account and can't be ${kind === 'block' ? 'blocked' : 'ignored'}.`, 'info');
+    return;
+  }
+  const isBlock = kind === 'block';
   const isFriend = (CU.friends || []).includes(username);
-  showCustomConfirm(
-    `Block ${username}?${isFriend ? ' This will also remove them from your friends.' : ''} Neither of you will be able to message or send friend requests to the other, and their messages will be hidden.`,
-    async () => {
-      const blocked = _getBlockedList();
-      if (!blocked.includes(username)) blocked.push(username);
-      _saveBlockedList(blocked);
-      // Auto-unfriend
-      if (isFriend) {
-        try {
-          await FortizedSocial.removeFriend(CU.username, username);
-          await refreshCU();
-          renderFriendsList();
-          renderDMSidebar(document.getElementById('sidebar-scroll'));
-        } catch (e) { console.error('Unfriend on block:', e); }
-      }
-      // Cancel any pending friend requests
-      const sentPending = (CU.friendRequestsSent || []).includes(username);
-      const recvPending = (CU.friendRequestsReceived || []).includes(username);
-      if (sentPending || recvPending) {
-        try {
-          await FortizedSocial.declineFriendRequest(CU.username, username);
-          await refreshCU();
-        } catch (e) { _dbg('[Block] cancel friend request failed', e); }
-      }
-      // Persist to Firebase
-      try { await firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked); } catch(e) { console.warn('[Block] Save failed:', e?.message); }
-      toast(`Blocked ${username}`, 'info');
-      closeModal('modal-user');
-      // Re-render messages to blur them
-      _applyBlockBlurToExistingMessages(username, true);
+  document.getElementById('modal-safety-action')?.remove();
+  try { closeModal('modal-user'); } catch (_) {}
+  document.getElementById('modal-ignore-picker')?.remove();
+
+  const cached = (typeof cachedProfile === 'function' ? cachedProfile(username) : null) || null;
+  const pfp = cached?.pfp || _pfpCache[username] || null;
+  const dn = cached?.displayName || username;
+
+  // Consequence rows per action.
+  const rows = isBlock ? [
+    { type: 'check', title: 'Stop all direct contact', desc: 'Neither of you can message or send friend requests.' },
+    { type: 'check', title: 'Hide their messages from you', desc: 'Their messages are blurred everywhere — reveal any time.' },
+    isFriend
+      ? { type: 'warn', title: 'Removes them from your friends', desc: 'You’d both have to add each other again.' }
+      : { type: 'info', title: 'They won’t be notified', desc: 'Blocking is completely silent.' },
+  ] : [
+    { type: 'check', title: 'Hide their profile and messages', desc: 'Blurred everywhere — you can reveal them any time.' },
+    { type: 'check', title: 'Mute their notifications', desc: 'You won’t hear a ping from them while ignored.' },
+    { type: 'info', title: 'They can still message you', desc: 'They won’t know you’ve ignored them.' },
+  ];
+  const rowsHTML = rows.map(r => `
+    <div class="ftz-ac-row">
+      <span class="ftz-ac-row__ico ftz-ac-row__ico--${r.type}">${_AC_ROW_ICONS[r.type]}</span>
+      <span class="ftz-ac-row__body">
+        <span class="ftz-ac-row__title">${escapeHTML(r.title)}</span>
+        <span class="ftz-ac-row__desc">${escapeHTML(r.desc)}</span>
+      </span>
+    </div>`).join('');
+
+  const durationHTML = isBlock ? '' : `
+    <div class="ftz-ac-durs">
+      <div class="ftz-ac-durs__label">Ignore for</div>
+      <div class="ftz-ac-durs__pills">
+        ${IGNORE_DURATIONS.map((d, i) => `<button type="button" class="ftz-ac-dur${d.label === '1 day' ? ' on' : ''}" data-ms="${d.ms}">${escapeHTML(d.label)}</button>`).join('')}
+      </div>
+    </div>`;
+
+  const swap = isBlock
+    ? { q: 'Too much?', label: 'Ignore instead', desc: 'Get space without letting them know.', to: 'ignore' }
+    : { q: 'Not enough?', label: 'Block instead', desc: 'Stop direct contact and limit what they view.', to: 'block' };
+
+  const primaryClass = isBlock ? 'btn-red' : 'btn-a';
+  const primaryLabel = isBlock ? 'Block' : 'Ignore';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'modal-safety-action';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card ftz-ac-card--${kind}" role="dialog" aria-label="${escapeHTML(primaryLabel + ' ' + username)}">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()">&times;</button>
+      <div class="ftz-ac-hero">
+        <div class="ftz-ac-av">${buildAvatarHTML(pfp, dn, 72)}${_acGlyphHTML(kind)}</div>
+        <div class="ftz-ac-title"><span class="ftz-ac-verb">${primaryLabel}</span> <span class="ftz-ac-name">${escapeHTML(dn)}</span></div>
+        <div class="ftz-ac-sub">${isBlock ? 'Stop direct contact and limit what they can view.' : 'Get space without letting them know.'}</div>
+      </div>
+      <div class="ftz-ac-body">
+        <div class="ftz-ac-rows">${rowsHTML}</div>
+        ${durationHTML}
+        <div class="ftz-ac-swap">
+          <div class="ftz-ac-swap__q">${escapeHTML(swap.q)}</div>
+          <div class="ftz-ac-swap__card">
+            <div class="ftz-ac-swap__text">
+              <div class="ftz-ac-swap__label">${escapeHTML(swap.label)}</div>
+              <div class="ftz-ac-swap__desc">${escapeHTML(swap.desc)}</div>
+            </div>
+            <button type="button" class="ftz-ac-swap__btn" data-to="${swap.to}">View details</button>
+          </div>
+        </div>
+      </div>
+      <div class="ftz-modal-foot">
+        <div class="ftz-modal-foot__actions" style="width:100%;">
+          <button class="btn-g ftz-ac-cancel" style="flex:1;justify-content:center;">Cancel</button>
+          <button class="${primaryClass} ftz-ac-go" style="flex:1;justify-content:center;">${primaryLabel}</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // Enrich avatar + styled name from the real profile.
+  Promise.resolve(FortizedSocial.getUserByName(String(username).toLowerCase())).then(u => {
+    if (!u) return;
+    const nameEl = overlay.querySelector('.ftz-ac-name');
+    if (nameEl) {
+      if (u.displayName) nameEl.textContent = u.displayName;
+      nameEl.setAttribute('style', _dmNameStyleAttr(u));
+      const ac = _getDisplayEffectClass(u.displayEffect || 'solid'); if (ac) nameEl.classList.add(ac);
     }
-  );
+    const avEl = overlay.querySelector('.ftz-ac-av');
+    if (avEl && u.pfp) avEl.innerHTML = buildAvatarHTML(u.pfp, u.displayName || username, 72, u.pfpCrop) + _acGlyphHTML(kind);
+  }).catch(() => {});
+
+  // Wire.
+  let selectedMs = isBlock ? 0 : (IGNORE_DURATIONS.find(d => d.label === '1 day')?.ms || IGNORE_DURATIONS[0].ms);
+  overlay.querySelectorAll('.ftz-ac-dur').forEach(b => b.addEventListener('click', () => {
+    overlay.querySelectorAll('.ftz-ac-dur').forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); selectedMs = +b.dataset.ms;
+  }));
+  overlay.querySelector('.ftz-ac-swap__btn')?.addEventListener('click', e => _openSafetyActionCard(e.currentTarget.dataset.to, username));
+  overlay.querySelector('.ftz-ac-cancel')?.addEventListener('click', () => overlay.remove());
+  overlay.querySelector('.ftz-ac-go')?.addEventListener('click', async () => {
+    overlay.remove();
+    if (isBlock) await _doBlockUser(username, isFriend);
+    else _applyIgnore(username, selectedMs);
+  });
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => {
+    if (e.key === 'Escape') overlay.remove();
+    else if (e.key === 'Enter') { e.preventDefault(); overlay.querySelector('.ftz-ac-go')?.click(); }
+  });
+  setTimeout(() => overlay.focus(), 0);
 }
 
 function _unblockUser(username) {
@@ -38575,40 +38956,9 @@ function unignoreUser(username) {
 }
 
 function showIgnorePicker(username) {
-  // Official Fortized accounts can't be ignored — same reason as block.
-  if (isFortizedOfficialAccount(username)) {
-    toast("This is an official Fortized account and can't be ignored.", 'info');
-    return;
-  }
-  try { closeModal('modal-user'); } catch (e) { _dbg('[Modal] close failed', e); }
-  document.getElementById('modal-ignore-picker')?.remove();
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.id = 'modal-ignore-picker';
-  overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
-  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-  overlay.innerHTML = `
-    <div class="modal" style="max-width:400px;border-radius:20px;background:linear-gradient(165deg,var(--panel),rgba(8,10,18,.98));border:1.5px solid rgba(245,158,11,.12);box-shadow:0 24px 72px rgba(0,0,0,.7);">
-      <div class="modal-body" style="padding:24px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-          <div style="width:36px;height:36px;border-radius:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;font-size:18px;">🔇</div>
-          <div>
-            <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;">Ignore ${escapeHTML(username)}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">Messages will be blurred. They stay on your friends list.</div>
-          </div>
-        </div>
-        <div class="ignore-picker" style="display:flex;flex-direction:column;gap:6px;">
-          ${IGNORE_DURATIONS.map((d, i) => `
-            <div class="ig-opt-item" onclick="_applyIgnore('${escapeHTML(username)}', ${d.ms})">
-              <span style="font-size:16px;">🔇</span>
-              <span style="flex:1;font-weight:600;">${d.label}</span>
-              <span style="font-size:11px;color:rgba(255,255,255,.25);font-weight:600;">Select</span>
-            </div>`).join('')}
-        </div>
-        <button onclick="document.getElementById('modal-ignore-picker')?.remove()" style="width:100%;margin-top:14px;padding:10px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.45);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">Cancel</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
+  // Redesigned into the shared safety action card (Discord-inspired), which
+  // keeps Fortized's timed durations as a pill selector.
+  _openSafetyActionCard('ignore', username);
 }
 
 function _applyIgnore(username, durationMs) {

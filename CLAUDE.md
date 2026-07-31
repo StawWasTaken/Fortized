@@ -78,6 +78,30 @@ harnesses + plainviews (real functions/CSS reproduced), NOT the live app.
   `.dnsv4-swatch`, styles.css ~13734).
 
 ### 🔧 OPEN TODO (next session — user's queue for Display Name Styles)
+0. **🐞 REGRESSION (TOP PRIORITY) — display-name effect+colour show AT REST in
+   chat/nameplates/member lists.** The RULE (see "Locked behaviours"): in chat +
+   DM sidebar + member lists, only the **font** shows at rest; **effect + colour
+   reveal on HOVER** (or when you're in that DM), Discord-style. Right now they
+   show at rest everywhere. NOT caused by this session's CSS — it's pre-existing
+   paths that paint the effect INLINE (bypassing the `msg-author--styled` +
+   hover-handler system that `appendMessage` correctly sets up). Root cause +
+   fix anchors:
+   • **Realtime `profile:update` handler** (`app.js ~17655-17672`): does
+     `el.style.cssText += _eCss` on `.msg-author[data-author]` (CHAT) and
+     `.ml-name` on every profile update → effect at rest. FIX: for `.msg-author`
+     stash `data-dnEffect/dnColor/dnColor2` + add `.msg-author--styled` (mirror
+     `appendMessage` ~13181-13204, and respect bastion context = no effect), do
+     NOT apply inline; let the hover handler (`~6216-6239`) reveal it.
+   • **Member-list render** (`~9945` GC, `~14705` bastion): `nameEl.style.cssText
+     += _getDisplayEffectCSS(...)` at rest on `.ml-name`. Decide if member lists
+     should be hover-gated too (user said "chat, nameplates, etc.") and gate the
+     same way, OR leave (confirm with user).
+   • The realtime fpp-patch at `~17851` applies effect to `.fpp__name` — that's
+     CORRECT (profile cards show effect at rest); leave it.
+   • Hover system to reuse: chat `.msg-author--styled` + `mouseover`/`mouseout`
+     handlers (`~6216`); DM sidebar `_dmNameEffect`/`.dmn-name` (`~7891`) is the
+     hover-gated pattern to copy. **Needs LIVE verification** (hover reveal can't
+     be tested in-sandbox).
 1. **Fonts (D)** — user says the 8 fonts aren't bold/imposing enough. Some
    (`chicle`/`caprasimo`/`croissant`) are single-weight thin display faces.
    Curate a bolder set / swap the thin ones — **needs the user's font picks**.

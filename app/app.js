@@ -13837,14 +13837,33 @@ function deleteMsg(msgId, context) {
     </div>
   </div>`;
   document.body.appendChild(overlay);
-  // Authoritatively style the quote's display name from the author's profile
-  // (font + colour + effect), the same way _enrichDMHeader styles the DM
-  // header. The synchronous DOM-read above is only an instant fallback; this
-  // guarantees the real style shows (in DM/GC chat the effect is hover-gated,
-  // so reading it off the row isn't reliable). Cached profile → no egress.
+  // Style the quote's display name (font + colour + effect). Two layers,
+  // both via safe DOM APIs (never an HTML style="" string — a font like
+  // "Comic Sans MS" carries quotes that would break the attribute):
+  //   1) INSTANT — mirror what the app already computed on the live chat
+  //      row. The font is applied inline there; styled names carry the
+  //      effect in data-dn* + the msg-author--styled class (hover-gated in
+  //      chat), which we reveal here the same way the hover handler does.
+  //   2) AUTHORITATIVE — a cached profile read (like _enrichDMHeader) via
+  //      _dmNameStyleAttr, covering rows the app hasn't styled yet.
   if (row) {
     const _qAuthor = row.dataset.from;
-    if (_qAuthor && _qAuthor !== '__system__') {
+    const _qEl = overlay.querySelector('#ftz-del-qname');
+    if (_qEl && _qAuthor && _qAuthor !== '__system__') {
+      const liveAuthor = document.querySelector('.msg-author[data-author="' + CSS.escape(_qAuthor) + '"]');
+      if (liveAuthor) {
+        if (liveAuthor.style.fontFamily) _qEl.style.fontFamily = liveAuthor.style.fontFamily;
+        if (liveAuthor.style.fontWeight) _qEl.style.fontWeight = liveAuthor.style.fontWeight;
+        if (liveAuthor.classList.contains('msg-author--styled') && typeof _getDisplayEffectCSS === 'function') {
+          const eff = liveAuthor.dataset.dnEffect || 'solid';
+          const col = liveAuthor.dataset.dnColor || '#fff';
+          const col2 = liveAuthor.dataset.dnColor2 || col;
+          _qEl.style.cssText += ';' + _getDisplayEffectCSS(eff, col, col2);
+          const ac = _getDisplayEffectClass(eff); if (ac) _qEl.classList.add(ac);
+        } else if (liveAuthor.style.color) {
+          _qEl.style.color = liveAuthor.style.color;
+        }
+      }
       Promise.resolve(FortizedSocial.getUserByName(String(_qAuthor).toLowerCase())).then(u => {
         if (!u) return;
         const el = overlay.querySelector('#ftz-del-qname');

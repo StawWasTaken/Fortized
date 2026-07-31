@@ -37393,10 +37393,10 @@ const DISPLAY_NAME_FONTS = [
 // `animated:true` flags the ones with a subtle idle animation.
 const DISPLAY_NAME_EFFECTS = [
   {id:'solid',    name:'Solid'},
-  {id:'gradient', name:'Gradient', animated:true},
-  {id:'neon',     name:'Halo',     animated:true},
-  {id:'toon',     name:'Inked'},
-  {id:'pop',      name:'Lifted'},
+  {id:'gradient', name:'Flow',   animated:true},
+  {id:'neon',     name:'Neon'},
+  {id:'toon',     name:'Inked',  animated:true},
+  {id:'pop',      name:'Lifted', animated:true},
 ];
 
 const DISPLAY_NAME_COLORS = [
@@ -37435,15 +37435,16 @@ function _getDisplayEffectCSS(effect, color, color2) {
     const mid = `color-mix(in srgb, ${color}, ${color2} 50%)`;
     return `background:linear-gradient(100deg,${color},${mid},${color2});background-size:210% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;`;
   }
-  // Halo: a contained, tasteful glow — white core + a tight coloured halo
-  // (.ftz-fx-halo pulses it). Not a sprawling blur.
+  // Neon: a refined neon-tube glow — coloured text with a tight, contained
+  // halo (not the old overpowering bloom). Steady (no idle pulse).
   if (effect === 'neon') {
-    return `color:#fff;-webkit-text-stroke:.5px ${color};text-shadow:0 0 2px ${color},0 0 7px ${color},0 0 15px ${color}cc,0 0 26px ${color}55;`;
+    return `color:#fff;-webkit-text-stroke:.5px ${color};text-shadow:0 0 1px ${color},0 0 4px ${color},0 0 8px ${color}bb,0 0 13px ${color}55;`;
   }
-  // Inked: flat colour fill + a crisp darker-tint outline — the clean sticker
-  // look. High contrast, no shadow.
+  // Inked: a bold cartoon sticker — colour fill wrapped in a THICK, clearly
+  // darker outline (visible on any background) plus a soft ambient drop so it
+  // reads as lifted ink. The outline is the effect, so it's chunky.
   if (effect === 'toon') {
-    return `color:${color};-webkit-text-stroke:1.7px ${dk(52)};paint-order:stroke fill;`;
+    return `color:${color};-webkit-text-stroke:3px ${dk(48)};paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.35);`;
   }
   // Lifted: flat colour fill + a thin darker outline + a crisp two-step HARD
   // colour drop (0-blur, progressively darker) — a clean 3D pop, no soft blur.
@@ -37456,8 +37457,10 @@ function _getDisplayEffectCSS(effect, color, color2) {
 // animation. Use alongside the inline style helpers so render sites
 // can both style AND animate the displayname without duplicating logic.
 function _getDisplayEffectClass(effect) {
+  // Idle animations on every effect EXCEPT solid + neon (steady by design).
   if (effect === 'gradient') return 'ftz-fx-flow';
-  if (effect === 'neon')     return 'ftz-fx-halo';
+  if (effect === 'toon')     return 'ftz-fx-inked';
+  if (effect === 'pop')      return 'ftz-fx-lifted';
   return '';
 }
 
@@ -37580,7 +37583,14 @@ function _openDisplayNameStyleModal() {
         <div class="dnsv4__right">
           <div class="dnsv4__preview-label">Preview</div>
           <div class="dnsv4-stage">
-            <div class="dnsv4-stage__profile fpp fpp--settings fpp--dns-preview dnsv4-no-banner-hover" id="dns-profile-card" data-fpp-settings-card></div>
+            <div class="dnsv4-stage__profile fpp fpp--settings fpp--dns-preview dnsv4-no-banner-hover" id="dns-profile-card" data-fpp-settings-card>
+              <div class="fpp__banner">${_fppBannerHTML(CU, hasRadiance)}</div>
+              <div class="fpp__av-row">
+                <div class="fpp__av-wrap">${_fppAvatarHTML(CU, 72)}</div>
+                ${_fppCSBubbleHTML(CU, true)}
+              </div>
+              ${_fppIdentityHTML(CU)}
+            </div>
 
             <div class="dnsv4-stage__msg fpp-msg-preview">
               <div class="fpp-msg-preview__row">
@@ -37610,19 +37620,19 @@ function _openDisplayNameStyleModal() {
   </div>`;
 
   document.body.appendChild(overlay);
-  // Render the user's REAL profile card into the preview (banner, decorated
-  // avatar + status dot + custom-status bubble, styled name, handle · pronouns,
-  // badges, About Me, Member/Friends since, Games, actions) — the same
-  // _fppRenderFullPanel the profile popover uses, so the preview IS the card.
-  // Then tag its name element so _dnUpdatePreview can restyle it live.
+  // The preview is a REDUCED profile card (banner + decorated avatar + status
+  // + custom-status bubble + styled name + handle · pronouns) — no About Me /
+  // Member Since / badges / Games / actions, since it's a non-interactive
+  // "before you Apply" preview. Tag its name so _dnUpdatePreview restyles it
+  // live, and apply the profile theme so the banner/colours match the card.
   try {
     const _pcard = document.getElementById('dns-profile-card');
-    if (_pcard && typeof _fppRenderFullPanel === 'function') {
-      _fppRenderFullPanel(_pcard, CU, CU.username, true);
+    if (_pcard) {
       const _nm = _pcard.querySelector('.fpp__name');
       if (_nm) _nm.id = 'dns-preview-name';
+      if (typeof _fppApplyTheme === 'function') _fppApplyTheme(_pcard, CU);
     }
-  } catch (e) { console.warn('[DNS] profile preview render failed:', e?.message); }
+  } catch (e) { console.warn('[DNS] profile preview setup failed:', e?.message); }
   _dnUpdatePreview();
 }
 

@@ -3811,11 +3811,27 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
   100% { background-position: 0% 50%; }
 }
 .ftz-fx-flow { animation: ftz-fx-flow-shift 7s ease-in-out infinite; }
+/* Neon is steady (no idle pulse) by design; .ftz-fx-halo kept for any legacy
+   markup but no longer applied to the neon effect. */
 @keyframes ftz-fx-halo-breath {
   0%,100% { filter: brightness(1) saturate(1); }
   50%     { filter: brightness(1.15) saturate(1.15); }
 }
 .ftz-fx-halo { animation: ftz-fx-halo-breath 3.2s ease-in-out infinite; }
+/* Inked — a slow, subtle "alive" pulse of the fill (filter-based, so no
+   layout shift). */
+@keyframes ftz-fx-inked-pulse {
+  0%,100% { filter: brightness(1) saturate(1); }
+  50%     { filter: brightness(1.1) saturate(1.18); }
+}
+.ftz-fx-inked { animation: ftz-fx-inked-pulse 2.8s ease-in-out infinite; }
+/* Lifted — the text gently floats above its fixed 3D drop (transform only,
+   so it composites without reflowing siblings). */
+@keyframes ftz-fx-lifted-float {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-2px); }
+}
+.ftz-fx-lifted { display:inline-block; animation: ftz-fx-lifted-float 3.4s ease-in-out infinite; }
 
 /* External-link nav entries (Support, Legal) — open in a new tab and
    show a tiny ↗ instead of routing through buildProfileView. */
@@ -12420,10 +12436,10 @@ body.ftz-picking-msg .msg-row[data-msgid]:hover{ background:var(--accent-dim); b
 .fpp__identity{ padding:12px 18px 0; }
 .fpp__name{
   font-family:var(--font-display);
-  font-size:18px; font-weight:800;
-  color:var(--text); line-height:1.2;
+  font-size:23px; font-weight:800;
+  color:var(--text); line-height:1.15;
   cursor:pointer;
-  letter-spacing:-.005em;
+  letter-spacing:-.01em;
   word-break:break-word;
 }
 .fpp__name:hover{ opacity:.85; }
@@ -13715,17 +13731,23 @@ select:focus,select:focus-visible,
 .dns-modal__section-label{font-size:10.5px;font-weight:800;color:var(--muted-light);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.08em;}
 .dns-modal__section-label:first-of-type{margin-top:0;}
 
-.dns-font-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-.dns-font-tile{aspect-ratio:1;padding:0;border-radius:12px;border:1.5px solid var(--surface-border);background:var(--surface-1);cursor:pointer;text-align:center;transition:border-color .14s,background .14s,transform .14s;font-family:var(--font-ui);display:flex;align-items:center;justify-content:center;}
-.dns-font-tile:hover{background:var(--surface-2);border-color:var(--surface-border-hover);}
-.dns-font-tile.sel{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+/* 3D select tiles — raised on an ink edge, press DOWN on click, lift on
+   hover (same tactile recipe as the app's buttons). */
+.dns-font-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding-bottom:4px;}
+.dns-font-tile{aspect-ratio:1;padding:0;border-radius:13px;border:2px solid var(--ink);background:var(--surface-1);box-shadow:0 4px 0 0 var(--ink);cursor:pointer;text-align:center;transition:transform .12s ease,box-shadow .12s ease,background .14s;font-family:var(--font-ui);display:flex;align-items:center;justify-content:center;}
+.dns-font-tile:hover{background:var(--surface-2);transform:translateY(-1px);box-shadow:0 5px 0 0 var(--ink);}
+.dns-font-tile:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--ink);}
+.dns-font-tile.sel{background:var(--accent-dim);box-shadow:0 4px 0 0 var(--ink),0 0 0 2px var(--accent);}
+.dns-font-tile.sel:hover{transform:translateY(-1px);box-shadow:0 5px 0 0 var(--ink),0 0 0 2px var(--accent);}
 .dns-font-tile__sample{font-size:26px;color:#fff;line-height:1;}
 .dns-font-tile.sel .dns-font-tile__sample{color:var(--accent);}
 
-.dns-effect-grid{display:flex;flex-wrap:wrap;gap:8px;}
-.dns-effect-tile{position:relative;padding:8px 18px;border-radius:10px;border:1.5px solid var(--surface-border);background:var(--surface-1);cursor:pointer;font-family:var(--font-display);font-size:12.5px;font-weight:700;transition:border-color .14s,background .14s;color:inherit;overflow:visible;}
-.dns-effect-tile:hover{border-color:var(--surface-border-hover);}
-.dns-effect-tile.sel{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+.dns-effect-grid{display:flex;flex-wrap:wrap;gap:10px;padding-bottom:4px;}
+.dns-effect-tile{position:relative;padding:9px 18px;border-radius:11px;border:2px solid var(--ink);background:var(--surface-1);box-shadow:0 4px 0 0 var(--ink);cursor:pointer;font-family:var(--font-display);font-size:12.5px;font-weight:700;transition:transform .12s ease,box-shadow .12s ease,background .14s;color:inherit;overflow:visible;}
+.dns-effect-tile:hover{background:var(--surface-2);transform:translateY(-1px);box-shadow:0 5px 0 0 var(--ink);}
+.dns-effect-tile:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--ink);}
+.dns-effect-tile.sel{background:var(--accent-dim);box-shadow:0 4px 0 0 var(--ink),0 0 0 2px var(--accent);}
+.dns-effect-tile.sel:hover{transform:translateY(-1px);box-shadow:0 5px 0 0 var(--ink),0 0 0 2px var(--accent);}
 .dns-effect-tile__anim{position:absolute;top:5px;right:6px;font-size:8px;color:var(--accent);line-height:1;text-shadow:0 0 4px rgba(254,248,61,.8);}
 
 /* ── Display Name Style modal v4 ─────────────────────────────
@@ -13757,8 +13779,9 @@ select:focus,select:focus-visible,
 
 .dnsv4-color-stack{display:flex;flex-direction:column;gap:8px;}
 .dnsv4-color-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:10px;}
-.dnsv4-swatch{width:36px;height:36px;border-radius:9px;border:1.5px solid rgba(255,255,255,.18);box-shadow:0 0 0 1px rgba(0,0,0,.5) inset;cursor:pointer;padding:0;flex-shrink:0;transition:transform .12s,border-color .12s;}
-.dnsv4-swatch:hover{transform:scale(1.04);border-color:rgba(254,248,61,.5);}
+.dnsv4-swatch{width:38px;height:38px;border-radius:10px;border:2px solid var(--ink);box-shadow:0 4px 0 0 var(--ink);cursor:pointer;padding:0;flex-shrink:0;transition:transform .12s ease,box-shadow .12s ease;}
+.dnsv4-swatch:hover{transform:translateY(-1px);box-shadow:0 5px 0 0 var(--ink);}
+.dnsv4-swatch:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--ink);}
 .dnsv4-color-meta{flex:1;min-width:0;}
 .dnsv4-color-meta__label{font-size:11.5px;font-weight:700;color:#fff;}
 .dnsv4-color-meta__hex{font-size:10.5px;color:rgba(255,255,255,.45);font-family:var(--font-mono,monospace);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
@@ -13770,7 +13793,10 @@ select:focus,select:focus-visible,
 .dnsv4-stage__profile{margin:0;flex:0 0 auto;}
 /* The preview profile card is the real .fpp — keep it self-contained inside
    the modal (no floating shadow / hover lift, corners rounded). */
-.fpp--dns-preview{position:relative;inset:auto;width:100%;max-width:none;border-radius:14px;overflow:hidden;box-shadow:none;pointer-events:none;}
+.fpp--dns-preview{position:relative;inset:auto;width:100%;max-width:none;border-radius:14px;overflow:hidden;box-shadow:none;pointer-events:none;padding-bottom:18px;}
+/* breathing room between the banner/avatar block and the name/handle so the
+   reduced card (no About/badges/games below) doesn't end abruptly. */
+.fpp--dns-preview .fpp__identity{padding-bottom:2px;}
 .dnsv4-stage__msg{flex:0 0 auto;width:100%;border:1px solid var(--border);border-radius:14px;background:rgba(0,0,0,.22);padding:12px 14px;}
 
 /* Suppress the banner picker affordance when the profile card is

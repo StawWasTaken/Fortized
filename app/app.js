@@ -3099,15 +3099,60 @@ function _flashJumpTarget(row) {
 let _chatAutoScroll={};
 let _chatScrollDebounce={};
 let _chatObservers={};
+// Discord-parity "stick to bottom": a single ResizeObserver per chat surface
+// that re-pins to the newest message whenever ANY observed row (or the
+// container) changes height while the reader is at the bottom. This is the
+// durable safety net the other mechanisms miss — a childList MutationObserver
+// only sees rows added/removed and the `load` listener only sees <img>/<video>
+// finishing, but the thing that actually stranded the view mid-conversation is
+// a row RESIZING with no such event: `content-visibility:auto` estimates
+// resolving to real heights, the mass `.msg-pre-reveal` un-hide, an embed
+// reflowing, text re-wrapping. ResizeObserver catches every one of those.
+// It only ever pins when `atBottom` is true, so a scrolled-up reader is never
+// yanked (requirement 3), and it stays quiet during the trickle render.
+function _ensureStickRO(msgsEl){
+  if(!msgsEl || msgsEl._stickRO) return msgsEl && msgsEl._stickRO;
+  const id=msgsEl.id;
+  const ro=new ResizeObserver(()=>{
+    // Gate on `atBottom` ALONE: a reader who scrolled up (to read history or
+    // during a trickle render — which flips this false via the scroll
+    // listener) is never yanked. We deliberately do NOT gate on the trickle
+    // controller: it stays non-aborted after a normal render completes, and
+    // the post-render settle (content-visibility resolving, media loading) is
+    // exactly when we must keep pinning. When atBottom is true, pinning also
+    // matches what the trickle renderer itself wants, so there's no conflict.
+    if(!_chatAutoScroll[id]?.atBottom) return;
+    if(msgsEl.scrollTop!==msgsEl.scrollHeight) msgsEl.scrollTop=msgsEl.scrollHeight;
+  });
+  try{ ro.observe(msgsEl); }catch(_){}            // window / layout resizes
+  msgsEl._stickRO=ro;
+  msgsEl._stickObserve=(node)=>{
+    if(node && node.nodeType===1){ try{ ro.observe(node); }catch(_){} }
+  };
+  return ro;
+}
+function _stickObserveRows(msgsEl){
+  if(!msgsEl || !msgsEl._stickObserve) return;
+  // Observe every current row/divider/skeleton so a late height change on any
+  // of them re-pins the bottom. Observing a resolved row twice is a no-op.
+  msgsEl.querySelectorAll('.msg-row,.date-div,.load-more-bar,.new-msg-bar').forEach(msgsEl._stickObserve);
+}
 function _initChatScroll(msgsEl){
   if(!msgsEl)return;
   const id=msgsEl.id;
   _chatAutoScroll[id]={atBottom:true,newCount:0,newBarInserted:false};
+  _ensureStickRO(msgsEl);
+  _stickObserveRows(msgsEl);
   // Guard against re-attaching duplicate listeners when the same element is
   // re-initialised (e.g. switching between DMs keeps #dm-msgs mounted).
   if(msgsEl.dataset.chatScrollInit==='1'){
     if(_chatObservers[id]){try{_chatObservers[id].disconnect();}catch{}}
     const obs=new MutationObserver((mutations)=>{
+      for (const m of mutations) {
+        if (m.type === 'childList' && m.target === msgsEl && m.addedNodes.length) {
+          m.addedNodes.forEach(n=>msgsEl._stickObserve&&msgsEl._stickObserve(n));
+        }
+      }
       if (msgsEl._trickleCtrl && !msgsEl._trickleCtrl.aborted) return;
       if(!_chatAutoScroll[id]?.atBottom) return;
       for (const m of mutations) {
@@ -3130,6 +3175,12 @@ function _initChatScroll(msgsEl){
     if (!msgsEl.classList.contains('is-scrolling')) msgsEl.classList.add('is-scrolling');
     clearTimeout(msgsEl._scrollIdleT);
     msgsEl._scrollIdleT = setTimeout(() => msgsEl.classList.remove('is-scrolling'), 120);
+    // Update atBottom SYNCHRONOUSLY (not just in the debounced rAF below) so the
+    // stick-to-bottom ResizeObserver always reads the current state. Without
+    // this, scrolling up through a long chat resolves content-visibility rows
+    // (which fires the RO) a frame before the rAF flips atBottom false — the RO
+    // would briefly see the stale "true" and yank the reader back to the bottom.
+    if(_chatAutoScroll[id]) _chatAutoScroll[id].atBottom = (msgsEl.scrollHeight-msgsEl.scrollTop-msgsEl.clientHeight)<150;
     if(_chatScrollDebounce[id]) return;
     _chatScrollDebounce[id]=true;
     requestAnimationFrame(()=>{
@@ -3155,6 +3206,13 @@ function _initChatScroll(msgsEl){
   // Observe DOM changes — when new messages are appended, auto-scroll if at bottom
   if(_chatObservers[id]){try{_chatObservers[id].disconnect();}catch{}}
   const obs=new MutationObserver((mutations)=>{
+    // Feed every newly appended direct child to the stick-to-bottom
+    // ResizeObserver so a late height change on it re-pins the bottom.
+    for (const m of mutations) {
+      if (m.type === 'childList' && m.target === msgsEl && m.addedNodes.length) {
+        m.addedNodes.forEach(n=>msgsEl._stickObserve&&msgsEl._stickObserve(n));
+      }
+    }
     if (msgsEl._trickleCtrl && !msgsEl._trickleCtrl.aborted) return;
     if(!_chatAutoScroll[id]?.atBottom) return;
     // Only re-pin when a direct-child element was ADDED — reaction picker
@@ -3178,7 +3236,11 @@ function _initChatScroll(msgsEl){
 }
 function _notifyNewMsg(msgsElId){
   const state=_chatAutoScroll[msgsElId];
-  if(!state||state.atBottom){scrollBottom(msgsElId);requestAnimationFrame(()=>scrollBottom(msgsElId,true));return;}
+  // At the bottom → snap instantly to the new message (Discord-style). A
+  // smooth animation per incoming message lags and gets interrupted by the
+  // next one; the ResizeObserver then keeps us pinned as the row's media
+  // settles. Scrolled up → count it and show the pill instead (below).
+  if(!state||state.atBottom){scrollBottom(msgsElId,true);requestAnimationFrame(()=>scrollBottom(msgsElId,true));return;}
   state.newCount++;
   const msgsEl=document.getElementById(msgsElId);
   if(!msgsEl)return;

@@ -1,5 +1,129 @@
 # Fortized — working notes for Claude
 
+## 🔴 SESSION HANDOFF — Chat fixes + Delete card + Display Name Styles (cache-bust `2026fix436`)
+Branch **`claude/sharp-curie-u651iw`**, mirrored to `main`.
+**Standing rules (every push):** mirror to `main` AND push the session branch;
+bump `2026fixNNN` in `app/index.html` (9 refs) + `SW_VERSION` in `sw.js`;
+pre-commit `node --check app/app.js && node --check FortizedSocial-supabase.js &&
+node tests/test-relationship.js` (42 pass). **Egress-aware.** Sandbox CANNOT boot
+the logged-in app (no Supabase/socket/CDN) → verified via Playwright LOGIC
+harnesses + plainviews (real functions/CSS reproduced), NOT the live app.
+**Everything below needs a LIVE eyeball on deploy.**
+
+### ✅ Shipped this session (`426`→`436`)
+- **`426` — Auto-scroll, the real fix.** Prior chase-loop still stranded the view.
+  Root cause: nothing re-pinned when a row changed HEIGHT without a childList
+  mutation or `<img>` load (`content-visibility:auto` estimates resolving, the
+  mass `.msg-pre-reveal` un-hide, embed reflow). Added a per-surface
+  **`ResizeObserver`** (`_ensureStickRO`/`_stickObserveRows`, ~app.js 3102) that
+  re-pins to bottom whenever any observed row/container resizes **while
+  `atBottom`** — the durable net the childList observer + load listener missed.
+  Also: `atBottom` now updates **synchronously** in the scroll listener (closes a
+  1-frame race that could yank a scrolled-up reader through cv-resolving rows);
+  incoming-at-bottom now snaps **instant** (was smooth, laggy). Verified 6/6 in a
+  Playwright harness.
+- **`427` — Delete card redesign + shift-bypass, skeleton-send fix, delete-for-
+  everyone, sending polish.**
+  • **Delete card**: replaced the `cloneNode`-of-the-live-row preview (dragged
+  row layout/hover/media-grid in — "like a copy") with a clean Discord-style
+  **quote** (`_buildDeleteQuote`, ~13749): avatar + styled name + time + the
+  message's own rendered content. Added a **PROTIP** line + **hold-Shift-to-
+  bypass** (capture-phase mousedown tracks `window._ftzShiftHeld`); Enter/Esc.
+  • **Sending state**: polished the right-side status (crisp ring + "Sending"
+  pill, reserves right padding so text wraps before it; soft-green sent ring).
+  User picked this "polished right-side" direction.
+  • **Send-while-loading stuck "Sending" FIXED**: `renderMessages` detaches
+  preserved optimistic rows to re-append; a confirm arriving in that window was
+  lost → stuck. Added a **confirmed-send ledger** (`_markSendConfirmed`/
+  `_applyConfirmedSendState`, ~12655) + broadened the preserve filter (any
+  in-flight/just-sent own msg not in the fetch) + `_reattachPreservedSending`
+  (de-dupes vs canonical, drops deleted). 4/4 harness.
+  • **Delete-for-everyone**: `appendMessage` now refuses `_isMsgDeleted(id)` (no
+  resurrection by late socket/poll/realtime); `_liveRemoveMessage` records the
+  delete + marks replies (matches the socket path). Everyone converges.
+- **`428`** — delete PROTIP accent → brand yellow (matches quick-switcher tip).
+- **`429`→`431` — Delete card styled display name.** v1 read the row's hover-
+  gated effect + injected a quote-unsafe font into `style="…"` (broke it). Final
+  (`431`): style the quote name authoritatively via an **async profile enrich**
+  (`_dmNameStyleAttr(u)` + `setAttribute`, same as `_enrichDMHeader`) + an instant
+  DOM-mirror fallback. Also **removed coloured hover glows** from the shared 3D
+  button recipes (`.btn-red/-d/-green/-yellow`) — user hates glows.
+- **`432`→`434` — Display-name EFFECTS, iterated to a flat/premium look.**
+  User bounced twice: no soft shadows, want **flat fills + a stroke that's a
+  darker shade of the chosen colour** (Discord ref). Landed clean (`434`):
+  Flow = clean gradient (no muddy stroke), Neon = contained glow, Inked = crisp
+  outline, Lifted = colour 3D drop. `_getDisplayEffectCSS` (~app.js 37425).
+- **`435` — Display Name Style MODAL redesign.** Preview now renders the user's
+  card (later reduced), buttons switched to the app's **3D** `.btn-g`/`.btn-a`,
+  dropped the rotated/floating message+nameplate previews. (`_openDisplayNameStyleModal`
+  ~37491; CSS `.dnsv4*` ~styles.css 13734+.)
+- **`436` — Names bigger + effects rework + 3D tiles + reduced preview** (latest):
+  • **`.fpp__name` 18px→23px** (bigger everywhere it's used: profile-card modal,
+  mini/own popovers, settings preview, DM user panel — all `.fpp__name`).
+  • **Effects**: **Halo→Neon** (renamed, glow toned to a contained neon tube,
+  steady); **Inked reworked** to a THICK clearly-darker outline (was invisible on
+  dark) + soft drop; **idle animations** on Flow (gradient pan `.ftz-fx-flow`),
+  Inked (subtle fill pulse `.ftz-fx-inked`), Lifted (float above its 3D drop
+  `.ftz-fx-lifted`) — transform/filter based, no reflow. Solid + Neon steady.
+  `_getDisplayEffectClass` maps them; keyframes at styles.css ~3808. Effect ids
+  UNCHANGED (`solid/gradient/neon/toon/pop`) so saved styles keep; catalogue
+  names now Solid/Flow/Neon/Inked/Lifted (`DISPLAY_NAME_EFFECTS` ~37394).
+  • **Modal preview REDUCED + non-interactive**: banner + decorated avatar +
+  status + custom-status bubble + styled name + handle·pronouns only (no About/
+  Member Since/badges/Games/Edit btn), bottom breathing room
+  (`.fpp--dns-preview`, pointer-events:none). Name tagged `#dns-preview-name` for
+  live `_dnUpdatePreview`.
+  • **3D select tiles**: font/effect tiles + colour swatches now sit on an ink
+  edge, press down, lift on hover (`.dns-font-tile`/`.dns-effect-tile`/
+  `.dnsv4-swatch`, styles.css ~13734).
+
+### 🔧 OPEN TODO (next session — user's queue for Display Name Styles)
+1. **Fonts (D)** — user says the 8 fonts aren't bold/imposing enough. Some
+   (`chicle`/`caprasimo`/`croissant`) are single-weight thin display faces.
+   Curate a bolder set / swap the thin ones — **needs the user's font picks**.
+   (`DISPLAY_NAME_FONTS` ~app.js 37377.)
+2. **Discord card-design ref** — user was going to send Discord's display-name
+   card for inspiration (keep it simple, don't blindly copy; account has
+   customised stuff). Polish `_openDisplayNameStyleModal` from it.
+3. **(B) Settings-page profile preview** (`.fpp--settings`, My Profile page,
+   ~app.js 25098) is missing the **Fortized logo next to "Member Since"** that the
+   mini popovers have. Add it (see `_fppMemberSinceCardHTML` / the member+friends
+   row with icons used by the popover).
+4. **Verify the idle animations LIVE** (can't screenshot motion): Flow pan / Inked
+   pulse / Lifted float; confirm no jank in chat rows.
+
+### ⚠️ LIVE-VERIFY on deploy (sandbox blind — TOP PRIORITY)
+- **Auto-scroll `426`** (user hit it failing repeatedly): busy chat + images,
+  fresh open / cached re-open / after images pop in → snap to & STAY at newest;
+  scrolled-up reader NOT yanked; at-bottom new msg pushes down. If still off, get
+  the exact case + msg/image counts.
+- **Delete**: card shows all content types + the styled name; shift-bypass;
+  delete vanishes for EVERYONE immediately (DM/GC/room) with no resurrection.
+- **Real-time both ways**; **send-while-chat-loading** lands as a normal last msg
+  (not stuck "Sending"); sending status + green check on a throttled send.
+- **Display name**: bigger names everywhere; the Style modal (reduced preview,
+  3D tiles + buttons, effects incl. idle animation, live preview updates).
+
+### 🧭 Key anchors (this session)
+Auto-scroll: `_ensureStickRO`/`_stickObserveRows`/`_initChatScroll`/`scrollBottom`/
+`_notifyNewMsg` (~app.js 3099-3230). Sending/skeleton: `_markSendConfirmed`/
+`_applyConfirmedSendState`/`_reattachPreservedSending` (~12655), `renderMessages`
+preserve filter (~12177), `_reconcilePendingSend`/`_confirmOptimisticSend`
+(~12820). Delete: `deleteMsg`/`_buildDeleteQuote`/`_executeDeleteMsg` (~13749),
+`_liveRemoveMessage` (~46170), `appendMessage` deleted-guard (~12970). Effects:
+`_getDisplayEffectCSS`/`_getDisplayEffectClass`/`DISPLAY_NAME_EFFECTS`/
+`DISPLAY_NAME_FONTS` (~37377-37460), keyframes styles.css ~3808, `.fpp__name`
+~12421. Modal: `_openDisplayNameStyleModal`/`_dnUpdatePreview`/`_dnApplyStyle`
+(~37491-37870), CSS `.dnsv4*`/`.dns-*-tile`/`.fpp--dns-preview` (~styles.css 13734).
+
+### ▶️ Carry-over OPEN TODO (older, untouched this session)
+DM user panel loads the WRONG person (`#dm-user-panel`, investigate
+`_enrichDMHeader`/DM profile render); Gift Radiance rework
+(`gift.fortized.com/<code>`); LIMITED sponsored quest (deferred, needs friend's
+assets); Bastion invite links (`invite.fortized.com/<id>`); Bounties feature.
+
+---
+
 ## 🔴 SESSION HANDOFF — Chat: Sending state + Discord auto-scroll (cache-bust `2026fix424`)
 Branch **`claude/ecstatic-shannon-n36ipr`**, mirrored to `main`.
 **Standing rules (every push):** mirror to `main` AND push the session branch;

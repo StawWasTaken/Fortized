@@ -12175,7 +12175,24 @@ function renderMessages(container, msgs, context) {
   // run the wipe + fresh render, then re-attach at the end so they stay
   // pinned at the bottom of the chat as the latest content.
   const hadSkeleton = !!container.querySelector('.msg-skel-stack');
-  const _preservedSending = Array.from(container.querySelectorAll('.msg-row--sending, .msg-row--sending-slow'));
+  // Preserve any optimistic row this fetch hasn't caught up to yet — still
+  // sending, just-confirmed (sent), or a very recent own send whose id isn't
+  // in this payload — so a message sent DURING the load is never wiped and
+  // never duplicated (it re-attaches at the bottom and settles like a normal
+  // message). Rows the fetch DOES include are dropped; the canonical version
+  // renders in their place.
+  const _fetchedIds = new Set(msgs.map(m => String(m && m.id != null ? m.id : ((m&&m.from||'')+(m&&m.timestamp||'')))));
+  const _pendingIds = new Set((window._pendingSends || []).map(e => String(e && e.id)));
+  const _confirmedIds = window._confirmedSendIds || new Set();
+  const _preservedSending = Array.from(container.querySelectorAll('.msg-row')).filter(el => {
+    const mid = el.dataset && el.dataset.msgid;
+    if (!mid || _fetchedIds.has(String(mid))) return false;
+    return el.classList.contains('msg-row--sending')
+      || el.classList.contains('msg-row--sending-slow')
+      || el.classList.contains('msg-row--sent')
+      || _pendingIds.has(String(mid))
+      || _confirmedIds.has(String(mid));
+  });
   _preservedSending.forEach(el => { try { el.remove(); } catch(_) {} });
   container.querySelectorAll('.msg-row,.date-div,.load-more-bar').forEach(el => el.remove());
   if (container._seenIds) container._seenIds.clear();
@@ -12231,7 +12248,7 @@ function renderMessages(container, msgs, context) {
   if (msgs.length <= 40) {
     _renderMsgBatch(container, msgs, context);
     if (tagInitialRender) tagInitialRender(container);
-    _preservedSending.forEach(el => container.appendChild(el));
+    _reattachPreservedSending(container, _preservedSending);
     if (hadSkeleton) _revealAfterMediaSettle(container);
     return;
   }
@@ -12271,13 +12288,13 @@ function renderMessages(container, msgs, context) {
     if (ctrl.aborted) return;
     const wasAtBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 80;
     const chunk = rest.slice(ctrl.idx, ctrl.idx + CHUNK);
-    if (!chunk.length) { cleanup(); _preservedSending.forEach(el => container.appendChild(el)); if (hadSkeleton) _revealAfterMediaSettle(container); return; }
+    if (!chunk.length) { cleanup(); _reattachPreservedSending(container, _preservedSending); if (hadSkeleton) _revealAfterMediaSettle(container); return; }
     _renderMsgBatch(container, chunk, context, state);
     if (tagInitialRender) tagInitialRender(container);
     ctrl.idx += CHUNK;
     if (wasAtBottom) container.scrollTop = container.scrollHeight;
     if (ctrl.idx < rest.length) requestAnimationFrame(step);
-    else { cleanup(); _preservedSending.forEach(el => container.appendChild(el)); if (hadSkeleton) _revealAfterMediaSettle(container); }
+    else { cleanup(); _reattachPreservedSending(container, _preservedSending); if (hadSkeleton) _revealAfterMediaSettle(container); }
   };
   requestAnimationFrame(step);
 }
@@ -12653,6 +12670,50 @@ function _getLastAuthor(container) {
 // The server-emitted echo may arrive before we've swapped the id → dedupe by
 // content instead: (domain, from, text) within a 30s window.
 window._pendingSends = window._pendingSends || [];
+// ── Confirmed-send ledger ──────────────────────────────────────────
+// When a send is acknowledged WHILE renderMessages is mid-flight, the
+// optimistic row is temporarily detached (renderMessages pulls preserved
+// rows out to re-append them). A confirmation arriving in that window can't
+// find the row, so the "Sending" state used to get stuck on it once it
+// landed back in the DOM (the "sends while the chat is loading" bug). We
+// record confirmed ids here and re-apply the resolved state whenever rows
+// are (re)attached, so the state settles no matter the timing.
+window._confirmedSendIds = window._confirmedSendIds || new Set();
+function _markSendConfirmed(id){
+  if (id == null) return;
+  window._confirmedSendIds.add(String(id));
+  if (window._confirmedSendIds.size > 300) {
+    window._confirmedSendIds = new Set(Array.from(window._confirmedSendIds).slice(-150));
+  }
+}
+function _applyConfirmedSendState(root){
+  if (!root || !window._confirmedSendIds || !window._confirmedSendIds.size) return;
+  window._confirmedSendIds.forEach(id => {
+    root.querySelectorAll('[data-msgid="'+CSS.escape(id)+'"]').forEach(row => {
+      if (row.classList.contains('msg-row--sending') || row.classList.contains('msg-row--sending-slow')) {
+        _flashSent(row);
+      }
+      window._confirmedSendIds.delete(id);
+    });
+  });
+}
+// Re-attach optimistic rows renderMessages preserved across a fresh render,
+// de-duping against the just-rendered canonical rows (the fetched version
+// wins) and dropping anything that's since been deleted, then settle any
+// pending "Sending" state.
+function _reattachPreservedSending(container, rows){
+  if (!container || !rows || !rows.length) return;
+  rows.forEach(el => {
+    const mid = el.dataset && el.dataset.msgid;
+    if (mid) {
+      const existing = container.querySelector('[data-msgid="'+CSS.escape(mid)+'"]');
+      if ((existing && existing !== el) || _isMsgDeleted(mid)) { try { el.remove(); } catch(_) {} return; }
+      if (container._seenIds) container._seenIds.add(mid);
+    }
+    container.appendChild(el);
+  });
+  _applyConfirmedSendState(container);
+}
 // ── Offline send queue ─────────────────────────────────────────────
 // Discord-style: if the network is down when the user hits Enter, the
 // message is optimistically rendered AND stashed in a persistent queue.
@@ -12826,6 +12887,10 @@ function _confirmOptimisticSend(domain, msg) {
   try {
     const id = msg?.id != null ? String(msg.id) : '';
     if (!id) return;
+    // Record the confirmation too — if the row is detached mid-render right
+    // now, _applyConfirmedSendState will clear its "Sending" state when it
+    // re-attaches (the "send while the chat is still loading" case).
+    _markSendConfirmed(id);
     document.querySelectorAll('[data-msgid="'+CSS.escape(id)+'"]').forEach(row => _flashSent(row));
   } catch (_) {}
 }
@@ -12845,7 +12910,16 @@ function _reconcilePendingSend(domain, incoming) {
     const idMatch = incomingId && e.id && String(e.id) === incomingId;
     const textMatch = !idMatch && (e.text || '') === (incoming.text || '');
     if (!idMatch && !textMatch) continue;
-    if (!e.row || !e.row.isConnected) { window._pendingSends.splice(i, 1); return false; }
+    if (!e.row || !e.row.isConnected) {
+      // Row is (temporarily) detached — renderMessages is mid-flight and has
+      // pulled the preserved optimistic row out to re-append it. Record the
+      // confirmation so _applyConfirmedSendState clears it once the row lands
+      // back in the DOM, instead of leaving it stuck in "Sending" forever.
+      _markSendConfirmed(e.id); _markSendConfirmed(incomingId);
+      try { clearTimeout(e.slowTimer); } catch(_) {}
+      window._pendingSends.splice(i, 1);
+      return true;
+    }
     if (incomingId) e.row.dataset.msgid = incomingId;
     // Reconciled — flip out of the sending state so the visual matches
     // (and briefly confirm with the "sent" check if it had gone slow).
@@ -12968,6 +13042,12 @@ function appendMessage(container, msg, context, prevAuthor, skipSep) {
   const _msgBlocked = msg.from && msg.from !== '__system__' && typeof isUserBlocked === 'function' && isUserBlocked(msg.from);
   const _msgIgnored = msg.from && msg.from !== '__system__' && typeof isUserIgnored === 'function' && isUserIgnored(msg.from);
   const id=msg.id||(msg.from+msg.timestamp);
+  // Delete-for-everyone: never re-render a message that's been deleted. A
+  // late socket echo, a poll tail, or a realtime replay could otherwise
+  // resurrect it on a client that already saw the delete. _deletedMsgIds is
+  // populated by every delete path (local + socket + realtime) and cleared
+  // on undo, so this is the single choke-point that keeps everyone in sync.
+  if (msg.from !== '__system__' && _isMsgDeleted(id)) return;
   // Dedup: keep an in-memory Set per container instead of relying on a
   // DOM query. Poll + Socket.io often fire in the same frame; the DOM
   // node from the first one isn't queryable until the next layout, so
@@ -13666,46 +13746,85 @@ async function saveEdit(msgId) {
 }
 let _undoDeleteTimer = null;
 let _undoDeleteQueue = [];
+// Track whether Shift is held at the moment a control is clicked, so the
+// delete flow can offer Discord's "hold Shift to skip the confirm" shortcut.
+// The capture-phase mousedown reads the shift state of the very click that
+// triggers deleteMsg (works for inline onclick buttons + context-menu items).
+if (typeof window !== 'undefined' && !window._ftzShiftTrackerInstalled) {
+  window._ftzShiftTrackerInstalled = true;
+  window._ftzShiftHeld = false;
+  document.addEventListener('mousedown', e => { window._ftzShiftHeld = !!e.shiftKey; }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Shift') window._ftzShiftHeld = true; }, true);
+  document.addEventListener('keyup', e => { if (e.key === 'Shift') window._ftzShiftHeld = false; }, true);
+  window.addEventListener('blur', () => { window._ftzShiftHeld = false; });
+}
+// Build the clean, static message quote shown in the delete confirmation —
+// a Discord-style quote (avatar + name + time + the message's own content),
+// NOT a clone of the live chat row. Cloning dragged the row's layout, hover
+// chrome, media grid and action bars into the modal ("like a copy"); this
+// re-composes just the content into a purpose-built quote.
+function _buildDeleteQuote(row) {
+  if (!row) return '';
+  const rawAuthor = row.dataset.from || 'Unknown';
+  const isSystem = rawAuthor === '__system__';
+  const nameEl = document.querySelector('.msg-author[data-author="' + CSS.escape(rawAuthor) + '"]');
+  const displayName = isSystem ? 'fortized' : (nameEl ? nameEl.textContent.trim() : rawAuthor);
+  const pfp = isSystem ? '/Fortized icon.png'
+    : (rawAuthor === CU.username ? CU.pfp : (_pfpCache[rawAuthor] || null));
+  const tEl = row.querySelector('.msg-timestamp, .msg-time-small');
+  const time = tEl ? tEl.textContent.replace(/^[·•\s]+/, '').trim() : '';
+  // Pull the message's actual rendered content (text, emoji, mentions, media,
+  // embeds, files) out of the content column and strip interactive chrome.
+  let contentHTML = '';
+  const col = row.querySelector('.msg-content-col');
+  if (col) {
+    const c = col.cloneNode(true);
+    c.querySelectorAll('.msg-header,.msg-reactions,.msg-thread-slot,.msg-acts,.msg-hover-acts,.msg-reply-ref,.msg-blur-reveal').forEach(el => el.remove());
+    c.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    c.querySelectorAll('[contenteditable]').forEach(el => el.setAttribute('contenteditable', 'false'));
+    c.querySelectorAll('[onclick]').forEach(el => el.removeAttribute('onclick'));
+    contentHTML = c.innerHTML.trim();
+  } else if (row.querySelector('.msg-system-text')) {
+    contentHTML = row.querySelector('.msg-system-text').innerHTML;
+  }
+  if (!contentHTML) contentHTML = '<span class="ftz-del-quote__empty">This message has no text.</span>';
+  return `<div class="ftz-del-quote">
+    <div class="ftz-del-quote__av">${buildAvatarHTML(pfp, displayName, 40)}</div>
+    <div class="ftz-del-quote__main">
+      <div class="ftz-del-quote__head">
+        <span class="ftz-del-quote__name">${escapeHTML(displayName)}</span>
+        ${time ? `<span class="ftz-del-quote__time">${escapeHTML(time)}</span>` : ''}
+      </div>
+      <div class="ftz-del-quote__content">${contentHTML}</div>
+    </div>
+  </div>`;
+}
 function deleteMsg(msgId, context) {
   const _curDM = curDM;
   const _curGC = typeof curGC !== 'undefined' ? curGC : null;
   const _curBastion = curBastion;
   const _curChannel = curChannel;
 
-  // Build a preview of the message for the confirmation dialog
-  const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-  let previewHTML = '';
-  if (row) {
-    const rawAuthor = row.dataset.from || 'Unknown';
-    // System messages are stored as '__system__' under the hood, but
-    // surfaced to humans as the @fortized account with the Fortized
-    // brand icon as the avatar.
-    const isSystem = rawAuthor === '__system__';
-    const author = isSystem ? 'fortized' : rawAuthor;
-    const pfp = isSystem ? '/Fortized icon.png'
-      : (rawAuthor === CU.username ? CU.pfp : (_pfpCache[rawAuthor] || null));
-    // Real preview: clone the actual rendered message so the confirmation
-    // shows EXACTLY what's being deleted — text, embeds, images, files,
-    // GIFs, video/audio players, forwards, replies — not a stripped
-    // reconstruction. Strip only the hover action bar + stray ids so the
-    // snapshot is clean and static.
-    const clone = row.cloneNode(true);
-    clone.querySelectorAll('.msg-acts, .msg-hover-acts, .new-messages-bar').forEach(el => el.remove());
-    clone.removeAttribute('id');
-    clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-    clone.querySelectorAll('[contenteditable]').forEach(el => el.setAttribute('contenteditable', 'false'));
-    previewHTML = `<div class="ftz-del-preview">${clone.outerHTML}</div>`;
+  // Discord-style shortcut: hold Shift while clicking delete to skip the
+  // confirmation entirely.
+  if (window._ftzShiftHeld) {
+    _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _curChannel);
+    return;
   }
+
+  const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  const previewHTML = _buildDeleteQuote(row);
 
   const overlay = document.createElement('div');
   overlay.className = 'ftz-confirm-overlay';
-  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+  overlay.innerHTML = `<div class="ftz-confirm-card ftz-del-card" style="max-width:472px;">
+    <div class="ftz-del-head">
       <div class="ftz-confirm-title" style="margin-bottom:0;">Delete Message</div>
       <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
     </div>
-    <div style="font-size:13px;color:rgba(255,255,255,.55);margin-bottom:14px;">Are you sure you want to delete this message?</div>
+    <div class="ftz-del-sub">Are you sure you want to delete this message?</div>
     ${previewHTML}
+    <div class="ftz-del-protip"><b>PROTIP:</b> Hold <kbd>Shift</kbd> when clicking <b>delete</b> to bypass this confirmation entirely.</div>
     <div class="ftz-modal-foot">
       <div class="ftz-modal-foot__actions" style="width:100%;">
         <button class="btn-g" id="cc-cancel" style="flex:1;justify-content:center;">Cancel</button>
@@ -13717,6 +13836,13 @@ function deleteMsg(msgId, context) {
   document.getElementById('cc-ok').onclick = () => { overlay.remove(); _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _curChannel); };
   document.getElementById('cc-cancel').onclick = () => overlay.remove();
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  // Enter confirms, Esc cancels — Discord-parity keyboard handling.
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); overlay.remove(); _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _curChannel); }
+    else if (e.key === 'Escape') { overlay.remove(); }
+  });
+  setTimeout(() => overlay.focus(), 0);
 }
 async function _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _curChannel) {
     if (msgId.startsWith('local-')) {
@@ -46155,6 +46281,11 @@ function _liveUpdateMessage(snap, context) {
 }
 
 function _liveRemoveMessage(snap) {
+  // Record + propagate the delete so this client stays consistent with
+  // everyone else: mark it deleted (so a later poll/echo can't resurrect it
+  // via appendMessage) and flip any replies to "Original message was
+  // deleted". _markRepliesDeleted records the id for us.
+  try { _markRepliesDeleted(snap.key); } catch (_) {}
   const row = document.querySelector(`[data-msgid="${CSS.escape(snap.key)}"]`);
   if (row) {
     row.style.transition = 'opacity .2s ease, transform .2s ease, max-height .25s ease';

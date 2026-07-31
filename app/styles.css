@@ -10072,6 +10072,27 @@ button[style*="background: var(--accent)"]:active {
 .ftz-del-preview{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:8px 10px;margin:12px 0 16px;max-height:340px;overflow-y:auto;}
 .ftz-del-preview .msg-acts,.ftz-del-preview .msg-hover-acts{display:none!important;}
 .ftz-del-preview [data-msgid]{background:transparent!important;padding-top:2px;padding-bottom:2px;}
+/* ── Delete-Message confirmation (Discord-style) ──────────────────
+   A clean quote of the message being deleted — avatar + name + time +
+   the message's own content — rendered fresh (not a clone of the live
+   chat row), so it reads as a quoted reference, not a duplicate. */
+.ftz-del-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.ftz-del-sub{font-size:13.5px;color:var(--muted);margin-bottom:12px;line-height:1.5;}
+.ftz-del-quote{display:flex;gap:12px;align-items:flex-start;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;margin:0 0 4px;max-height:300px;overflow-y:auto;}
+.ftz-del-quote__av{flex:0 0 auto;width:40px;height:40px;}
+.ftz-del-quote__av img,.ftz-del-quote__av>*{width:40px!important;height:40px!important;border-radius:50%;object-fit:cover;}
+.ftz-del-quote__main{min-width:0;flex:1 1 auto;}
+.ftz-del-quote__head{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;flex-wrap:wrap;}
+.ftz-del-quote__name{font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--text);}
+.ftz-del-quote__time{font-size:11px;color:var(--muted);}
+.ftz-del-quote__content{font-size:14px;line-height:1.42;color:rgba(255,255,255,.86);word-break:break-word;}
+.ftz-del-quote__content .msg-text{color:inherit;}
+.ftz-del-quote__content .msg-media-grid{margin-top:6px;gap:6px;}
+.ftz-del-quote__content img,.ftz-del-quote__content video,.ftz-del-quote__content .ftz-att-wrap,.ftz-del-quote__content .ftz-embed-gif{max-width:170px!important;max-height:140px!important;border-radius:8px;}
+.ftz-del-quote__empty{color:var(--muted);font-style:italic;}
+.ftz-del-protip{font-size:12.5px;color:var(--muted);margin:13px 0 2px;line-height:1.55;}
+.ftz-del-protip b{color:#3ecf6e;font-weight:700;letter-spacing:.02em;}
+.ftz-del-protip kbd{display:inline-block;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:0 5px;font-family:var(--font-display,inherit);font-size:11px;line-height:16px;color:var(--text);}
 .ftz-confirm-card {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -11608,44 +11629,55 @@ select:focus-visible {
    which continuation rows don't have — so bursts showed no indicator). */
 .msg-row--sending .msg-text,
 .msg-row--sending .msg-text *{
-  opacity:.6;
+  opacity:.55;
   transition:opacity .18s ease;
 }
-/* Right-anchored spinner (slow sends only). */
+/* Reserve room on the right for the status column so message text wraps
+   BEFORE it instead of running underneath the "Sending" pill + spinner. */
+.msg-row--sending-slow .msg-content-col{ padding-right:120px; }
+/* Right-anchored status column (slow sends only). A crisp spinning ring
+   plus a rounded "Sending" pill, pinned to the row's right edge so it reads
+   as a status lane that works identically for first AND continuation rows.
+   The pill sits to the LEFT of the ring and the two align as one unit. */
 .msg-row--sending-slow::before{
   content:'';
   position:absolute;
-  right:20px; top:calc(50% - 7px);
-  width:14px;height:14px;box-sizing:border-box;
+  right:18px; top:calc(50% - 7.5px);
+  width:15px;height:15px;box-sizing:border-box;
   border-radius:50%;
-  border:1.7px solid rgba(255,255,255,.16);
-  border-top-color:rgba(255,255,255,.62);
-  animation:msgSendSpin .7s linear infinite;
-  pointer-events:none;z-index:2;
+  border:2px solid rgba(255,255,255,.15);
+  border-top-color:rgba(255,255,255,.7);
+  animation:msgSendSpin .62s linear infinite;
+  pointer-events:none;z-index:3;
 }
-/* "Sending" label, right-anchored just left of the spinner (grows leftward). */
+/* "Sending" pill, right-anchored just left of the ring (grows leftward). */
 .msg-row--sending-slow::after{
   content:'Sending';
   position:absolute;
-  right:42px; top:calc(50% - 6px);
+  right:40px; top:calc(50% - 10px);
+  display:flex;align-items:center;height:20px;padding:0 9px;
   font-family:var(--font-display,inherit);
-  font-weight:600;font-size:10.5px;line-height:12px;letter-spacing:.03em;
-  color:rgba(255,255,255,.4);
-  pointer-events:none;z-index:2;
-  animation:mssStatusIn .2s var(--ease-out,ease) both;
+  font-weight:600;font-size:10.5px;line-height:1;letter-spacing:.04em;
+  color:rgba(255,255,255,.5);
+  background:rgba(255,255,255,.055);
+  border-radius:100px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+  pointer-events:none;z-index:3;
+  animation:mssStatusIn .22s var(--ease-out,ease) both;
 }
 @keyframes msgSendSpin{ to { transform:rotate(360deg); } }
-@keyframes mssStatusIn{ from{ opacity:0; transform:translateX(4px); } to{ opacity:1; transform:none; } }
-/* "Sent" confirmation — a green check pops in the spinner's place then
-   fades. Added by _flashSent() ONLY when the row had actually shown the
-   Sending state, so quick sends never flash it. */
+@keyframes mssStatusIn{ from{ opacity:0; transform:translateX(6px); } to{ opacity:1; transform:none; } }
+/* "Sent" confirmation — a green check in a soft ring pops in the spinner's
+   place then fades. Added by _flashSent() ONLY when the row had actually
+   surfaced the Sending state, so quick sends never flash it. */
 .msg-row--sent::after{
   content:'';
   position:absolute;
-  right:19px; top:calc(50% - 8px);
-  width:16px;height:16px;
-  background:no-repeat center/13px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%233ecf6e' d='M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z'/%3E%3C/svg%3E");
-  pointer-events:none;z-index:2;
+  right:16px; top:calc(50% - 9px);
+  width:18px;height:18px;border-radius:50%;
+  background:rgba(62,207,110,.12) no-repeat center/12px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%233ecf6e' d='M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z'/%3E%3C/svg%3E");
+  box-shadow:inset 0 0 0 1px rgba(62,207,110,.28);
+  pointer-events:none;z-index:3;
   animation:mssSentPop 1.35s var(--ease-out,ease) forwards;
 }
 @keyframes mssSentPop{

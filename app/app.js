@@ -37425,30 +37425,33 @@ function _getDisplayFontStyle(fontId) {
 function _getDisplayEffectCSS(effect, color, color2) {
   color = color || '#fff';
   color2 = color2 || color;
-  // Gradient: left-to-right between the two picked colours. The slow
-  // background-position pan is what gives the "Flow" idle animation.
+  // Flow: a rich diagonal gradient (colour → blend → colour2) with a soft
+  // coloured glow so it lifts off dark surfaces. The slow background-position
+  // pan (.ftz-fx-flow) animates it. Weightier + more saturated than the old
+  // flat 2-stop for more presence.
   if (effect === 'gradient') {
-    return `background:linear-gradient(90deg,${color} 0%,${color2} 100%);background-size:200% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:transparent;`;
+    const mid = `color-mix(in srgb, ${color}, ${color2} 50%)`;
+    return `background:linear-gradient(115deg,${color} 0%,${mid} 48%,${color2} 100%);background-size:220% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:transparent;filter:drop-shadow(0 1px 5px ${color}40);`;
   }
-  // Halo: default text colour + coloured stroke + coloured glow.
-  // Uses -webkit-text-stroke for crisp edges; the glow is a layered
-  // text-shadow that gets gently pulsed by the .ftz-fx-halo class.
+  // Halo: white core + a tight bright ring + wide soft glow. Brighter and
+  // deeper than before so it genuinely radiates (.ftz-fx-halo pulses it).
   if (effect === 'neon') {
-    return `color:#fff;-webkit-text-stroke:1px ${color};text-shadow:0 0 6px ${color}cc,0 0 14px ${color}77,0 0 24px ${color}33;`;
+    return `color:#fff;-webkit-text-stroke:.6px ${color};text-shadow:0 0 3px ${color},0 0 8px ${color},0 0 16px ${color}bb,0 0 30px ${color}77,0 0 46px ${color}3a;`;
   }
-  // Inked: chosen colour text, darker stroke around the glyphs, and a
-  // soft white "shadow" inside via stacked white text-shadows on -1px
-  // offsets — gives the cartoon-ink highlight feel.
+  // Inked: chosen colour body wrapped in a bold darker outline + a crisp
+  // white top highlight and a soft ambient drop — reads like a sticker, so
+  // it stays legible and imposing on any background.
   if (effect === 'toon') {
-    const darker = `color-mix(in srgb, ${color}, #000 35%)`;
-    return `color:${color};-webkit-text-stroke:1.2px ${darker};text-shadow:0 1px 0 rgba(255,255,255,.55),0 -1px 0 rgba(255,255,255,.25);paint-order:stroke fill;`;
+    const darker = `color-mix(in srgb, ${color}, #000 45%)`;
+    return `color:${color};-webkit-text-stroke:2.2px ${darker};paint-order:stroke fill;text-shadow:0 1px 0 rgba(255,255,255,.55),0 2px 6px rgba(0,0,0,.4);`;
   }
-  // Lifted: white text with a darker stroke + chosen colour 3D drop
-  // built by stacking 4 px of progressively offset shadows. Gives the
-  // chunky relief look from your reference screenshot.
+  // Lifted: white face with a dark outline and a chunky coloured 3D drop
+  // built from stacked hard shadows, capped with an ambient soft shadow —
+  // a beefier relief than the old 3-step stack.
   if (effect === 'pop') {
-    const darker = `color-mix(in srgb, ${color}, #000 50%)`;
-    return `color:#fff;-webkit-text-stroke:1px ${darker};text-shadow:1px 1px 0 ${color},2px 2px 0 ${color},3px 3px 0 ${color},4px 4px 6px rgba(0,0,0,.3);paint-order:stroke fill;`;
+    const d  = `color-mix(in srgb, ${color}, #000 40%)`;
+    const d2 = `color-mix(in srgb, ${color}, #000 60%)`;
+    return `color:#fff;-webkit-text-stroke:1.3px ${d2};paint-order:stroke fill;text-shadow:1px 1px 0 ${d},2px 2px 0 ${d},3px 3px 0 ${d},4px 4px 0 ${d2},5px 5px 0 ${d2},6px 8px 10px rgba(0,0,0,.45);`;
   }
   return `color:${color};`;
 }

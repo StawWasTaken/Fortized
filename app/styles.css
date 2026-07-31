@@ -13763,16 +13763,15 @@ select:focus,select:focus-visible,
 .dnsv4-color-meta__label{font-size:11.5px;font-weight:700;color:#fff;}
 .dnsv4-color-meta__hex{font-size:10.5px;color:rgba(255,255,255,.45);font-family:var(--font-mono,monospace);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
 
-/* Layered stage — three rows. Profile + nameplate sit at top + bottom
-   in their natural flow. The message preview is absolutely-positioned
-   between them, lightly offset to the right with a tiny rotation, so
-   the layout reads as "messier than a strict stack" without anything
-   covering the username, pronouns, or nameplate text. */
-.dnsv4-stage{position:relative;display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;overflow:hidden;}
-.dnsv4-stage__profile{margin:0;}
-.dnsv4-stage__nameplate{margin-top:auto;}
-.dnsv4-stage__msg{align-self:flex-start;width:calc(100% - 20px);margin-left:20px;transform:rotate(-1.2deg);transform-origin:left center;box-shadow:0 16px 32px -10px rgba(0,0,0,.55),0 0 0 1px rgba(254,248,61,.06);position:relative;z-index:5;}
-.dnsv4-stage__msg:hover{transform:rotate(-1.2deg) translateY(-1px);}
+/* Clean preview stage — the real profile card on top, a straight chat-row
+   preview below. Scrolls when the profile card (About Me, Games, etc.) is
+   tall. No rotation / offset — professional, aligned. */
+.dnsv4-stage{position:relative;display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:2px;}
+.dnsv4-stage__profile{margin:0;flex:0 0 auto;}
+/* The preview profile card is the real .fpp — keep it self-contained inside
+   the modal (no floating shadow / hover lift, corners rounded). */
+.fpp--dns-preview{position:relative;inset:auto;width:100%;max-width:none;border-radius:14px;overflow:hidden;box-shadow:none;pointer-events:none;}
+.dnsv4-stage__msg{flex:0 0 auto;width:100%;border:1px solid var(--border);border-radius:14px;background:rgba(0,0,0,.22);padding:12px 14px;}
 
 /* Suppress the banner picker affordance when the profile card is
    rendered inside the modal — no hover overlay, no pointer, no tip. */
@@ -13781,14 +13780,12 @@ select:focus,select:focus-visible,
 .dnsv4-no-banner-hover .fpp__banner::after{display:none !important;}
 .dnsv4-no-banner-hover .fpp__banner-hover-hint{display:none !important;}
 
-.dnsv4-actions{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
-.dnsv4-btn{flex:1;min-height:42px;padding:0 18px;border-radius:11px;font-family:var(--font-display);font-size:13px;font-weight:800;letter-spacing:.01em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid transparent;transition:background .14s,color .14s,border-color .14s,transform .14s,box-shadow .14s;white-space:nowrap;}
-.dnsv4-btn svg{width:14px;height:14px;flex-shrink:0;}
-.dnsv4-btn--ghost{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.8);}
-.dnsv4-btn--ghost:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);color:#fff;}
-.dnsv4-btn--primary{background:var(--accent);color:#13161d;border-color:var(--accent);}
-.dnsv4-btn--primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px -8px rgba(254,248,61,.5);}
-.dnsv4-btn--primary:active{transform:translateY(0);}
+/* Actions — the app's 3D buttons (.btn-g ghost + .btn-a primary), same
+   recipe as Radiance / delete, sized to fill the row. */
+.dnsv4-actions{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);flex:0 0 auto;}
+.dnsv4-actions .btn-a,.dnsv4-actions .btn-g{flex:1;justify-content:center;min-height:44px;font-size:13.5px;}
+.dnsv4-actions .dns-modal__dice{display:inline-flex;width:15px;height:15px;}
+.dnsv4-actions .dns-modal__dice svg{width:15px;height:15px;}
 
 @media (max-width:780px){
   .dnsv4{grid-template-columns:1fr;}

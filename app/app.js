@@ -37574,36 +37574,13 @@ function _openDisplayNameStyleModal() {
           </div>
         </div>
 
-        <!-- RIGHT — layered previews + actions. Each layer is its own row;
-             the message preview floats in the middle, slightly offset and
-             rotated so the composition reads as 3 surfaces stacked at
-             different depths without anyone hiding anything important. -->
+        <!-- RIGHT — the user's REAL profile card (rendered by _fppRenderFullPanel
+             after mount, so the preview is exactly what people see) + a clean,
+             straight chat-row preview + 3D actions. -->
         <div class="dnsv4__right">
           <div class="dnsv4__preview-label">Preview</div>
           <div class="dnsv4-stage">
-
-            <div class="dnsv4-stage__profile fpp fpp--settings dnsv4-no-banner-hover" data-fpp-settings-card>
-              <div class="fpp__banner dnsv4-no-banner-hover">
-                ${_fppBannerHTML(CU, hasRadiance)}
-              </div>
-              <div class="fpp__av-row">
-                <div class="fpp__av-wrap">
-                  <div class="fpp__av">${buildAvatarHTML(CU.pfp, dn, 64, CU.pfpCrop)}</div>
-                  ${CU.activeDecoration ? (()=>{ const d = PROFILE_DECORATIONS.find(dec => dec.id === CU.activeDecoration); return d ? '<img src="'+escapeHTML(d.src)+'" class="fpp__decoration" onerror="this.style.display=\'none\'">' : ''; })() : ''}
-                  <span class="fpp__status-dot" data-dot-size="22">${(typeof FtzStatus!=='undefined' && FtzStatus.dotSvg) ? FtzStatus.dotSvg(FtzStatus.sanitize(CU.status||'online'), 22) : ''}</span>
-                </div>
-                ${cs && cs.text
-                  ? '<div class="fpp__cs-bubble">'+(cs.emoji?'<span class="fpp__cs-emoji"><img src="'+emojiToTwemojiUrl(cs.emoji)+'" alt=""></span>':'')+'<span class="fpp__cs-text">'+escapeHTML(cs.text).slice(0,40)+'</span></div>'
-                  : '<div class="fpp__cs-bubble fpp__cs-bubble--empty"><span class="fpp__cs-plus">'+_FTZ_CS_PLUS_SVG+'</span><span class="fpp__cs-text">'+escapeHTML(_fppRandomCSPrompt())+'</span></div>'}
-              </div>
-              <div class="fpp__identity">
-                <div class="fpp__name" id="dns-preview-name" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
-                <div class="fpp__handle-row">
-                  <span class="fpp__handle">@${escapeHTML(CU.username)}</span>
-                  ${CU.pronouns ? '<span class="fpp__handle-sep">·</span><span class="fpp__pronouns">'+escapeHTML(CU.pronouns)+'</span>' : ''}
-                </div>
-              </div>
-            </div>
+            <div class="dnsv4-stage__profile fpp fpp--settings fpp--dns-preview dnsv4-no-banner-hover" id="dns-profile-card" data-fpp-settings-card></div>
 
             <div class="dnsv4-stage__msg fpp-msg-preview">
               <div class="fpp-msg-preview__row">
@@ -37614,29 +37591,17 @@ function _openDisplayNameStyleModal() {
                     <span class="fpp-msg-preview__time">·  Today at ${_localNow}</span>
                   </div>
                   <div class="fpp-msg-preview__text">${escapeHTML(_pm.text)}</div>
-                  <div class="msg-reactions" style="margin-top:8px;">${_reactionsHTML}</div>
                 </div>
               </div>
             </div>
-
-            <div class="dnsv4-stage__nameplate fpp-nameplate-preview">
-              <div class="fpp-nameplate-preview__row">
-                <div class="fpp-nameplate-preview__av-wrap">
-                  <div class="fpp-nameplate-preview__av">${buildAvatarHTML(CU.pfp, dn, 32, CU.pfpCrop)}</div>
-                  <span class="fpp-nameplate-preview__dot" style="background:${sc};"></span>
-                </div>
-                <div class="fpp-nameplate-preview__name" id="dns-preview-nameplate" style="${_getDisplayFontStyle(curFont)}${_getDisplayEffectCSS(curEffect,curColor,curColor2)}">${escapeHTML(dn)}</div>
-              </div>
-            </div>
-
           </div>
 
           <div class="dnsv4-actions">
-            <button class="dnsv4-btn dnsv4-btn--ghost" id="dns-surprise-btn" onclick="_dnSurpriseMe()">
+            <button class="btn-g" id="dns-surprise-btn" onclick="_dnSurpriseMe()">
               <span class="dns-modal__dice" id="dns-dice">${_dnDiceSvg(_DN_DICE_FACES[0])}</span>
               Surprise Me
             </button>
-            <button class="dnsv4-btn dnsv4-btn--primary" onclick="_dnApplyStyle()">Apply Style</button>
+            <button class="btn-a" onclick="_dnApplyStyle()">Apply Style</button>
           </div>
         </div>
 
@@ -37645,6 +37610,19 @@ function _openDisplayNameStyleModal() {
   </div>`;
 
   document.body.appendChild(overlay);
+  // Render the user's REAL profile card into the preview (banner, decorated
+  // avatar + status dot + custom-status bubble, styled name, handle · pronouns,
+  // badges, About Me, Member/Friends since, Games, actions) — the same
+  // _fppRenderFullPanel the profile popover uses, so the preview IS the card.
+  // Then tag its name element so _dnUpdatePreview can restyle it live.
+  try {
+    const _pcard = document.getElementById('dns-profile-card');
+    if (_pcard && typeof _fppRenderFullPanel === 'function') {
+      _fppRenderFullPanel(_pcard, CU, CU.username, true);
+      const _nm = _pcard.querySelector('.fpp__name');
+      if (_nm) _nm.id = 'dns-preview-name';
+    }
+  } catch (e) { console.warn('[DNS] profile preview render failed:', e?.message); }
   _dnUpdatePreview();
 }
 
@@ -37814,10 +37792,12 @@ function _dnUpdatePreview() {
   const animClass = _getDisplayEffectClass(effect);
   const apply = (el, baseSize) => {
     if (!el) return;
-    el.style.cssText = `font-size:${baseSize}px;${fontStyle}${effectCSS}`;
+    // baseSize null → keep the element's native CSS size (used for the real
+    // profile-card name so it stays at the card's proper headline size).
+    el.style.cssText = `${baseSize != null ? 'font-size:' + baseSize + 'px;' : ''}${fontStyle}${effectCSS}`;
     el.className = el.className.replace(/\bftz-fx-[a-z]+\b/g, '').trim() + (animClass ? ' ' + animClass : '');
   };
-  apply(document.getElementById('dns-preview-name'),      17);
+  apply(document.getElementById('dns-preview-name'),      null);
   apply(document.getElementById('dns-preview-chat-name'), 14);
   apply(document.getElementById('dns-preview-nameplate'), 13.5);
 }

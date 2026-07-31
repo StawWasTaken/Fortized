@@ -1,5 +1,117 @@
 # Fortized — working notes for Claude
 
+## 🔴 SESSION HANDOFF — Chat: Sending state + Discord auto-scroll (cache-bust `2026fix424`)
+Branch **`claude/ecstatic-shannon-n36ipr`**, mirrored to `main`.
+**Standing rules (every push):** mirror to `main` AND push the session branch;
+bump `2026fixNNN` in `app/index.html` (9 refs) + `SW_VERSION` in `sw.js`;
+pre-commit `node --check app/app.js && node --check FortizedSocial-supabase.js &&
+node tests/test-relationship.js` (42 pass). **Egress-aware.** Sandbox CANNOT boot
+the logged-in app (no Supabase) → chat behaviour was verified with Playwright
+LOGIC harnesses (reproduced the real functions + CSS), NOT the live app.
+**Everything below needs a LIVE eyeball on deploy.**
+
+### 🎯 The task (user's requirements — chat must feel like Discord, all 3 surfaces: rooms/DMs/GCs)
+1. **Real-time for everyone** — messages appear instantly for all parties.
+2. **Delete for everyone** — deleting removes the message for everyone immediately.
+3. **Auto-scroll:**
+   - Opening ANY chat → start at the ABSOLUTE bottom (newest message).
+   - You send → always jump to bottom.
+   - Someone else sends → auto-scroll ONLY if already at bottom; if scrolled up,
+     do NOT move, just show the "New Messages" pill.
+   - Short chats stick to the bottom (empty space ABOVE, not below).
+4. **"Sending" message state** — optimistic-send UI, Discord-like but original.
+
+### ✅ Shipped this session (`420`→`424`)
+- **`421` — "Sending" message-state redesign.** The optimistic send LIFECYCLE
+  already existed (`_registerPendingSend`/`_confirmOptimisticSend`/
+  `_reconcilePendingSend`/`_markMessageFailed`/offline queue). Redesigned the
+  VISUAL: right-anchored spinner ring + "Sending" label via **row-level**
+  pseudo-elements (`.msg-row--sending-slow::before/::after`) so it shows on BOTH
+  `.msg-first` AND `.msg-cont` rows (old build decorated `.msg-timestamp` =
+  first-rows only, so bursts showed nothing). Text softens to .6 opacity while
+  in flight; status only appears after ~900ms (fast sends stay silent/instant).
+  NEW green "sent" check that pops on commit — but ONLY if the send had gone
+  slow (`_flashSent()`; fast sends never flash). CSS at END of `app/styles.css`
+  (`.msg-row--sending/-slow/-sent`, `@keyframes msgSendSpin/mssStatusIn/mssSentPop`).
+- **`422` — incoming auto-scroll respects a scrolled-up reader.** Root cause: the
+  3 primary realtime listeners (DM/GC/CH `listenDM`/`child_added`/
+  `listenBastionChannel`) AND the 3 Socket.IO `onMessage` branches (which also
+  serve the polling fallback) did an UNCONDITIONAL `scrollBottom(...,true)` on
+  every incoming message, yanking scrolled-up readers down (and neutering the
+  `_notifyNewMsg` call after it). Fixed all 6: **own msg → `scrollBottom(true)`;
+  else → `_notifyNewMsg(id)`** (which scrolls iff atBottom @150px, else shows the
+  "New Messages" pill). Own-send functions (sendDM/GC/Channel) already force
+  bottom.
+- **`423` — always OPEN at the absolute bottom + retire scroll-restore.** New
+  `_openScrollBottom(id, force)`. Replaced `if(!_restoreChatScroll(...))
+  scrollBottom(true)` in ALL open branches (fresh / warm-cache / revived pooled
+  surface) across DM/GC/CH loaders; the revived+cache branches previously never
+  scrolled to bottom after diff-append. `_restoreChatScroll` is now dead (kept
+  defined, no callers). Short-chat stick-to-bottom already works via
+  `.chat-msgs > *:first-child{margin-top:auto}` (styles.css ~966) — verified.
+- **`424` — make open-at-bottom SURVIVE the async render pipeline** (this is the
+  one the user hit as "still lands in the middle"). The chat settles LONG after
+  any single pin: `renderMessages` **trickle-renders** in rAF chunks; a fresh
+  load holds rows HIDDEN (`.msg-pre-reveal`) and `_revealAfterMediaSettle`
+  unhides them all at once up to 1.5s later (was a single rAF `scrollTop` pin);
+  `content-visibility:auto` resolves real row heights as they scroll in; inline
+  avatars/images/embeds load later. `_openScrollBottom` now **chases** the
+  bottom: re-pins on every scroll-height change AND every img/iframe/video
+  `load`, extending its window each time, until height holds steady ~500ms
+  (hard-cap 8s), and CANCELS on any real wheel/touch/key gesture (never fights
+  the user). `_revealAfterMediaSettle` reveal pin now routes through it (KEY
+  fresh-load fix). Post-fetch reconcile keys off tracked `atBottom` (not a
+  transient position read). Standing img-load re-pin in `_initChatScroll` (fires
+  while atBottom stays true) covers anything past the cap.
+
+### 🔍 Requirements 1 & 2 — audited, believed SOUND (not changed, need live confirm)
+- **Real-time:** Socket.IO (instant) + Supabase realtime listeners + polling
+  fallback, all converging on `appendMessage` with id-dedup. Untouched.
+- **Delete:** `deleteMsg`/`_executeDeleteMsg` deletes from Supabase DIRECTLY (so
+  polling can't resurrect), then propagates via socket (`message:delete` →
+  `onMessageDeleted`) AND the realtime listener (`_event:'delete'` →
+  `_liveRemoveMessage`); row fades out for everyone. Untouched.
+
+### ⚠️ LIVE-VERIFY on deploy (sandbox is Supabase/socket/CDN blind — TOP PRIORITY)
+- **Auto-scroll is the open risk** — user reported it still failing through
+  `423`; `424` is the deep pipeline-aware fix but is UNCONFIRMED on the live app.
+  Test with lots of images + a short chat: fresh open of a never-opened chat,
+  re-open of a cached one, and after images pop in — all should snap to and STAY
+  at the newest message; short chats hug the bottom. **If still broken, get the
+  exact case (fresh / cached / post-image) + rough msg/image counts** — that
+  distinguishes the remaining code paths.
+- **Sending state:** send under a throttled connection → spinner + "Sending"
+  after the beat, green check on commit; a rapid burst → continuation rows show
+  the indicator too; failed→retry→success still flashes sent.
+- **Real-time both ways** in DM/GC/room; **delete vanishes immediately** for the
+  other person; scrolled-up reader sees the "New Messages" pill, not a yank.
+
+### 🔧 Deliberately left in scope (offered, not done)
+- In-channel **bot-command replies** still `scrollBottom(...)` unconditionally
+  (`_processBotCommands` ~11216/11228) — fire ~400ms after your own command so
+  you're at the bottom anyway. Offered to make them respect scrolled-up.
+- **Failed** message state still uses the `.msg-timestamp` "Failed to send ·"
+  prefix (first-rows only). Offered a row-level treatment like the new sending
+  chip for continuation-row consistency.
+
+### 🧭 Key anchors (this session)
+Sending: `_flashSent` (~12648), `_registerPendingSend`/`_confirmOptimisticSend`/
+`_reconcilePendingSend` (~12624+), `handleChatSend`/`sendDM` (~41910/9215),
+`appendMessage` msg-row markup (~12795). Auto-scroll: `_openScrollBottom` +
+`scrollBottom`/`_notifyNewMsg`/`_initChatScroll` (~2936-3150); open paths in
+`loadDMMessages`/`loadGCMessages`/`loadBastionChannel` (~8890/9900/10880);
+realtime listeners (~8938/9934/10912) + Socket.IO `onMessage` (~17030-17090);
+trickle render `renderMessages`/`_renderMsgBatch`/`_revealAfterMediaSettle`
+(~12086/12030/12211). CSS: sending block at END of `app/styles.css`; chat layout
+`.chat-msgs` (~961, `>:first-child{margin-top:auto}` ~966).
+
+### ▶️ Carry-over OPEN TODO (from the Quests handoff below — untouched this session)
+DM user panel loads the WRONG person; Gift Radiance rework; LIMITED sponsored
+quest (deferred); Bastion invite links; Bounties feature. See the Quests handoff
+directly below for full detail.
+
+---
+
 ## 🔴 SESSION HANDOFF — Quests + Active-Quest widget (cache-bust `2026fix419`)
 Branch **`claude/quests-radiance-redesign-cj1o7z`**, mirrored to `main`.
 **Standing rules (every push):** mirror to `main` AND push the session branch;

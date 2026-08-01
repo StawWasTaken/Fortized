@@ -61,6 +61,18 @@
     window.addEventListener('scroll', onScroll, { passive: true });
   }
 
+  // Nav dropdowns (Legal, etc.)
+  document.querySelectorAll('.nav-dropdown').forEach(dropdown => {
+    dropdown.addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.nav-dropdown.open').forEach(d => { if (d !== dropdown) d.classList.remove('open'); });
+      dropdown.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+  });
+
   // Mobile menu
   const burger = document.querySelector('.nav-hamburger');
   const menu = document.querySelector('.mobile-menu');

@@ -129,6 +129,36 @@ body::before {
   box-shadow: 0 4px 14px rgba(255,249,62,.25);
 }
 .nav-spacer { width: 18px; }
+
+/* nav dropdown (Legal, etc.) */
+.nav-dropdown { position: relative; display: inline-block; }
+.nav-dropbtn { cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.nav-dropbtn .chevron { transition: transform .2s ease; }
+.nav-dropdown.open .nav-dropbtn .chevron { transform: rotate(180deg); }
+.nav-dropdown-content {
+  display: none;
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  margin-top: 8px; min-width: 172px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 12px 34px rgba(0,0,0,.45);
+  z-index: 100;
+}
+.nav-dropdown.open .nav-dropdown-content { display: block; }
+.nav-dropdown-content a {
+  display: block; padding: 8px 14px; margin: 2px 0;
+  color: var(--muted-light); font-size: 13px; font-weight: 500;
+  border-radius: 8px; white-space: nowrap;
+  transition: color .15s, background .15s;
+}
+.nav-dropdown-content a:hover { color: #fff; background: rgba(255,255,255,.07); }
+.nav-dropdown-content a.active {
+  color: var(--ink);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  font-family: var(--font-display); font-weight: 700;
+}
 .nav-right { display: flex; align-items: center; gap: 6px; }
 .nav-btn-ghost {
   font-family: var(--font-body); font-size: 13px; font-weight: 600;

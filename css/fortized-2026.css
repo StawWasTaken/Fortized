@@ -613,6 +613,9 @@ footer.site-footer {
   content: ""; width: 22px; height: 3px; border-radius: 3px;
   background: currentColor; flex-shrink: 0;
 }
+/* centre the legal column on the page and let it run wider on both sides */
+.legal-head .container { max-width: 900px; }
+.legal-head .legal-prose { max-width: none; }
 
 /* ════════ AUTH (login + signup) ════════ */
 .auth-page {

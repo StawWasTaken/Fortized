@@ -15,19 +15,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/fortized-2026.css">
 <style>
-.page-top { position: relative; overflow: hidden; }
-.page-top::before {
-  content: ""; position: absolute; inset: 0;
-  background:
-    linear-gradient(160deg, rgba(8,10,15,.96) 0%, rgba(8,10,15,.82) 50%, rgba(8,10,15,.98) 100%),
-    url('https://raw.githubusercontent.com/StawWasTaken/Fortized/refs/heads/main/Fortized%20banner.png') center/cover;
-  z-index: -1;
-}
-.page-top::after {
-  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 220px;
-  background: linear-gradient(180deg, transparent, var(--bg));
-  z-index: -1; pointer-events: none;
-}
+/* clean legal header - no banner backdrop, so it reads like the Swiftaw legal layout */
+.page-top { position: relative; }
 </style>
 </head>
 <body>
@@ -71,7 +60,7 @@
   <a href="/signup">Join the Fortress</a>
 </div>
 
-<section class="page-top">
+<section class="page-top legal-head">
   <div class="container">
     <a href="/" class="back-link"><svg><use href="#i-arrow-left"/></svg> Fortized home</a>
     <div class="eyebrow yellow">Terms</div>

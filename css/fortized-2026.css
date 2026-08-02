@@ -601,6 +601,19 @@ footer.site-footer {
 .back-link:hover { color: #fff; border-color: rgba(255,249,62,.30); background: rgba(255,249,62,.06); }
 @media (max-width: 720px) { .legal-prose { padding: 32px 24px; } }
 
+/* legal header: flat dash-line eyebrow (matches the Swiftaw legal layout),
+   keeping Fortized's own accent colour. Scoped to .legal-head so the tilted
+   pill eyebrow stays intact everywhere else on the site. */
+.legal-head .eyebrow {
+  background: none; border: none; padding: 0; border-radius: 0;
+  transform: none; text-transform: uppercase; letter-spacing: .08em;
+  font-size: 12px; font-weight: 700;
+}
+.legal-head .eyebrow::before {
+  content: ""; width: 22px; height: 3px; border-radius: 3px;
+  background: currentColor; flex-shrink: 0;
+}
+
 /* ════════ AUTH (login + signup) ════════ */
 .auth-page {
   min-height: 100vh;

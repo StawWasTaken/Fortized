@@ -24328,13 +24328,17 @@ document.addEventListener('click', function(e) {
 function _bastionFromSectionHTML(b, isMember, bid, label) {
   if (!b) return '';
   const bn = b.name || 'Bastion';
-  const emb = b.emblem || b.icon || '';
+  // Always prefer the real bastion emblem IMAGE (b.icon = the uploaded image),
+  // then an image-URL emblem; only fall back to an emoji/initial when the
+  // bastion genuinely has no image.
+  const imgSrc = (b.icon && /^(https?:|data:|\/)/.test(b.icon)) ? b.icon
+    : ((b.emblem && /^(https?:|data:)/.test(b.emblem)) ? b.emblem : '');
   const init = escapeHTML((bn[0] || 'B').toUpperCase());
   let embHTML;
-  if (emb && /^(https?:|data:)/.test(emb)) {
-    embHTML = `<img src="${escapeHTML(emb)}" onerror="this.outerHTML='<div class=&quot;et-from-fallback&quot;>${init}</div>'">`;
-  } else if (emb) {
-    embHTML = `<div class="et-from-fallback" style="font-size:18px;">${escapeHTML(emb)}</div>`;
+  if (imgSrc) {
+    embHTML = `<img src="${escapeHTML(imgSrc)}" onerror="this.outerHTML='<div class=&quot;et-from-fallback&quot;>${init}</div>'">`;
+  } else if (b.emblem) {
+    embHTML = `<div class="et-from-fallback" style="font-size:18px;">${escapeHTML(b.emblem)}</div>`;
   } else {
     embHTML = `<div class="et-from-fallback">${init}</div>`;
   }
@@ -27154,7 +27158,7 @@ async function buyRadiance(days, cost) {
   const msg = stacking
     ? `Extend Radiance by ${days} days for ${cost} Onyx?`
     : `Buy ${days}-day Radiance for ${cost} Onyx?`;
-  showCustomConfirm(msg, async ()=>{
+  _radianceConfirm(msg, async ()=>{
     CU.onyx=(CU.onyx||0)-cost;
     CU.radianceUntil = _stackFromExpiry(_radianceExpiry(CU) || null, days);
     _checkRadianceMilestone();
@@ -27170,7 +27174,7 @@ async function buyRadiancePlus(days, cost) {
   const msg = stacking
     ? `Extend Radiance+ by ${days} days for ${cost} Onyx?`
     : `Buy ${days}-day Radiance for ${cost} Onyx?`;
-  showCustomConfirm(msg, async () => {
+  _radianceConfirm(msg, async () => {
     if ((CU.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
     CU.onyx -= cost;
     const base = _stackFromExpiry(_radianceExpiry(CU) || null, days);
@@ -28533,6 +28537,30 @@ function showCustomConfirm(message,callback){
   overlay.focus();
 }
 
+// Radiance-flavoured confirm — a PINK confirm button + the Radiance background
+// overlay. Used for the buy/extend-Radiance confirmations.
+function _radianceConfirm(message, callback) {
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.innerHTML = `<div class="ftz-confirm-card ftz-ov-rad">
+    <div class="ftz-confirm-title">Confirm purchase</div>
+    <div class="ftz-confirm-text">${escapeHTML(message)}</div>
+    <div class="ftz-modal-foot">
+      <div class="ftz-modal-foot__actions" style="width:100%;gap:8px;">
+        <button class="btn-g" id="rc-cancel" style="flex:1;justify-content:center;">Cancel</button>
+        <button class="btn-pink" id="rc-ok" style="flex:1;justify-content:center;">Confirm</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#rc-ok').onclick = () => { overlay.remove(); callback(); };
+  overlay.querySelector('#rc-cancel').onclick = () => overlay.remove();
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); else if (e.key === 'Enter') { e.preventDefault(); overlay.remove(); callback(); } });
+  setTimeout(() => overlay.focus(), 0);
+}
+
 // ════════════════════════════════════════════════════════════
 // SWIFTAW LIFECHECK — human-verification gate for semi-important
 // actions (claiming Onyx from quests, changing password / email,
@@ -28571,16 +28599,14 @@ function swiftawLifecheck(opts = {}) {
     const done = (ok) => { if (settled) return; settled = true; overlay._lcCleanup?.(); overlay.remove(); if (ok) _lifecheckPassedUntil = Date.now() + 90000; resolve(ok); };
     overlay.onclick = e => { if (e.target === overlay) done(false); };
     overlay.innerHTML = `
-      <div class="ftz-confirm-card lc-card" role="dialog" aria-label="Verify you are human">
+      <div class="ftz-confirm-card lc-card ftz-ov-swft" role="dialog" aria-label="Verify you are human">
         <button class="ftz-close-btn lc-x" aria-label="Close">&times;</button>
         <div class="lc-head">
-          <div class="lc-brand"><span class="lc-brand__mark">${_LC_MARK_SVG}</span><span class="lc-brand__name">Swiftaw <b>Lifecheck</b></span></div>
           <div class="lc-title">${escapeHTML(opts.title || 'Quick human check')}</div>
-          <div class="lc-sub">${escapeHTML(opts.reason || 'Slide the piece into place to continue.')}</div>
+          <div class="lc-sub">${escapeHTML(opts.reason || 'Confirm you’re human to continue.')}</div>
         </div>
         <div class="lc-slot" id="lc-slot"></div>
-        <div class="lc-status" id="lc-status">Slide the piece into the gap</div>
-        <div class="lc-secure"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Protected by Swiftaw Lifecheck</div>
+        <div class="lc-status" id="lc-status">Complete the check to continue</div>
       </div>`;
     document.body.appendChild(overlay);
     overlay.querySelector('.lc-x').onclick = () => done(false);
@@ -33725,11 +33751,7 @@ function _copyInviteLink(btn) {
 
 // ── Radiance Gift Modal ──────────────
 async function openRadianceGiftModal() {
-  if (!_hasRadiance(CU)) {
-    toast('You need Radiance to gift subscriptions', 'error');
-    return;
-  }
-
+  // Anyone can gift Radiance — you don't need an active subscription yourself.
   const friendsList = CU?.friends || [];
   const selected = new Set();
 
@@ -33745,7 +33767,7 @@ async function openRadianceGiftModal() {
 
   const overlay = document.createElement('div');
   overlay.className = 'ftz-confirm-overlay';
-  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:520px;">
+  overlay.innerHTML = `<div class="ftz-confirm-card ftz-ov-rad" style="max-width:520px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div>
         <div class="ftz-confirm-title" style="margin:0;display:flex;align-items:center;gap:10px;">
@@ -53448,7 +53470,7 @@ async function purchaseRadiance(isPlus, days, cost) {
   const confirmMsg = stacking
     ? `Extend Radiance by ${days} days for ${cost} Onyx?`
     : `Purchase Radiance for ${days} days (${cost} Onyx)?`;
-  showCustomConfirm(
+  _radianceConfirm(
     confirmMsg,
     async () => {
       CU.onyx = (CU.onyx || 0) - cost;
@@ -53496,7 +53518,7 @@ function cancelRadiance() {
   overlay.id = 'modal-rad-cancel';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
-    <div class="ftz-confirm-card ftz-ac-card ftz-ac-card--rad" role="dialog" aria-label="Cancel Radiance">
+    <div class="ftz-confirm-card ftz-ac-card ftz-ac-card--rad ftz-ov-rad" role="dialog" aria-label="Cancel Radiance">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()">&times;</button>
       <div class="ftz-ac-hero">
         <img class="ftz-ac-logo" src="/radiance-logo.png" alt="Radiance" onerror="this.remove()">
@@ -53593,7 +53615,7 @@ function generateGiftCode() {
 async function createRadianceGiftLink() {
   const cost = 600;
   if ((CU?.onyx || 0) < cost) { toast('Not enough Onyx! (600 required)', 'error'); return; }
-  showCustomConfirm(`Create a Radiance gift link for 600 Onyx? Anyone who claims it gets 30 days of Radiance.`, async () => {
+  _radianceConfirm(`Create a Radiance gift link for 600 Onyx? Anyone who claims it gets 30 days of Radiance.`, async () => {
     const code = generateGiftCode();
     CU.onyx = (CU.onyx || 0) - cost;
     if (!CU.pendingGifts) CU.pendingGifts = {};
@@ -53613,7 +53635,7 @@ async function createRadianceGiftLink() {
 async function sendRadianceGiftToUser(friendUsername) {
   const cost = 600;
   if ((CU?.onyx || 0) < cost) { toast('Not enough Onyx!', 'error'); return; }
-  showCustomConfirm(`Gift 30 days of Radiance to ${friendUsername} for ${cost} Onyx?`, async () => {
+  _radianceConfirm(`Gift 30 days of Radiance to ${friendUsername} for ${cost} Onyx?`, async () => {
     const code = generateGiftCode();
     CU.onyx = (CU.onyx || 0) - cost;
     if (!CU.pendingGifts) CU.pendingGifts = {};

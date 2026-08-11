@@ -1,5 +1,28 @@
 # Fortized — working notes for Claude
 
+## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **🐞 FIX SWIFTAW LIFECHECK — it doesn't work yet (user-reported).** The real
+  widget renders (loader `https://swiftaw.com/lifecheck/lifecheck.js` +
+  `Lifecheck.render(el,{sitekey:'lc_fortized_public',callback,'expired-callback'})`,
+  `swiftawLifecheck` in app.js) but verification fails — the widget shows
+  "Can't verify here. Lifecheck isn't set up for this site." Server verify is
+  `POST /api/lifecheck/verify` (server.js) → Swiftaw RPC `…/rpc/lifecheck_verify_token`
+  with `apikey: lc_fortized_public` + `{p_secret,p_token}`; gate on `success`.
+  Domains ARE added on the Lifecheck dashboard + user is setting
+  `SWIFTAW_LIFECHECK_SECRET` on Render. Investigate: is the widget error a
+  swiftaw-side domain/site-key check (pre-verify), or our `/api/lifecheck/verify`
+  path (check `GET /api/lifecheck/health` → `configured:true`)? Built-in slide
+  challenge is the current fallback. Gate points: quest-onyx claim (sometimes),
+  password/email change, security-key removal.
+- **Emoji cross-bastion visibility** (picker Phase 3 remainder): bastion emojis
+  send as `:name:` → render as text for non-members. Needs an egress-safe light
+  token (`[FTZEMOJI:name|bastionId]`, no base64) + async per-viewer URL resolution
+  via getGlobalBastion, threaded through reactions/status/edit. `_bastionFromSectionHTML`
+  + the Join button are already built (stickers done in `2026fix451`).
+- **Fortshop redesign** (not started).
+- Popup background overlays (`.ftz-ov-swft`/`.ftz-ov-rad`, styles.css) load the
+  SwiftawCDN art at opacity .4, stretched (`100% 100%`); live-verify brightness.
+
 ## 🔴 SESSION HANDOFF — Chat fixes + Delete card + Display Name Styles (cache-bust `2026fix436`)
 Branch **`claude/sharp-curie-u651iw`**, mirrored to `main`.
 **Standing rules (every push):** mirror to `main` AND push the session branch;

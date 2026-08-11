@@ -19,7 +19,24 @@
   token (`[FTZEMOJI:name|bastionId]`, no base64) + async per-viewer URL resolution
   via getGlobalBastion, threaded through reactions/status/edit. `_bastionFromSectionHTML`
   + the Join button are already built (stickers done in `2026fix451`).
-- **Fortshop redesign** (not started).
+- **Fortshop redesign — PHASE 1 SHIPPED (`2026fix456`).** New storefront engine
+  (`_fs*` in app.js, right before `_renderShopItemCard`; CSS `.fs2-*` at END of
+  styles.css). Tabs **Featured · Browse · Onyx Exclusives · Bundles** (`_fsTopbar`/
+  `_fsSwitchTab`/`_fsSearch`), theme-mock preview cards (`_fsThemeMock`/`_fsAppCard`
+  — a mini Fortized painted in each appearance's tokens), promo tiles, hero
+  (`.fs2-hero.ftz-ov-swft`), Browse filters rail (Decorations/Nameplates/Profile
+  Effects = "soon"), split item-detail popup (`_fsOpenItem`: left theme-mock +
+  desc + Buy/Gift/wishlist, right collection-gradient showcase, `ONYX EXCLUSIVE`
+  badge). Reuses `buyAppearance`/`_fsCompletePurchase`/`toggleWishlist`/
+  `openGiftModal`/`applyAppearance`/`_calculateFinalPrice`. `tab==='shop'` now
+  calls `_fsRenderShop(el)` (old `_renderFortshop*` helpers kept but unused).
+  **⚠️ LIVE-VERIFY:** onyx glyph + overlay art (`.ftz-ov-swft`) are CDN-blind in
+  sandbox; buy/equip/gift/wishlist end-to-end; the detail popup on the live app.
+  **NEXT (Fortshop Phase 2):** Bundles content (curated multi-item packs at a
+  discount), more Onyx-exclusive items to sell (propose + build), decorations
+  back into Browse, and the full-mini-profile-preview card variant the user
+  asked for (currently the theme-mock; decorations/nameplates want a real
+  profile-card preview).
 - Popup background overlays (`.ftz-ov-swft`/`.ftz-ov-rad`, styles.css) load the
   SwiftawCDN art at opacity .4, stretched (`100% 100%`); live-verify brightness.
 

@@ -15928,8 +15928,8 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* Plain hero LOGO (no square, no glow) — Radiance cancel card. */
 .ftz-ac-logo{width:60px;height:60px;object-fit:contain;margin-bottom:14px;display:block;}
 .ftz-ac-word{height:19px;width:auto;object-fit:contain;vertical-align:-2px;}
-/* Quest reward card — plain Onyx glyph hero (no square, no glow). */
-.ftz-ac-onyx-hero{width:52px;height:52px;color:var(--accent);margin-bottom:12px;display:block;}
+/* Quest reward card — no hero icon; title-led. */
+.ftz-ac-hero--noicon{padding-top:30px;}
 .ftz-ac-card--reward .ftz-ac-title{font-size:19px;}
 .qcl-plus{color:var(--accent);display:inline-flex;align-items:center;gap:5px;}
 .qcl-plus .rad-onyx-ic{width:18px;height:18px;}

@@ -47576,8 +47576,7 @@ function _showQuestClaimPopup(reward, questTitle) {
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card ftz-ac-card--reward" role="dialog" aria-label="Quest reward">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="_dismissQuestClaimPopup()">&times;</button>
-      <div class="ftz-ac-hero">
-        <span class="rad-onyx-ic ftz-ac-onyx-hero" aria-hidden="true"></span>
+      <div class="ftz-ac-hero ftz-ac-hero--noicon">
         <div class="ftz-ac-title">You earned <span class="qcl-plus">+${reward} ${onyx}</span></div>
         <div class="ftz-ac-sub">Nice work on the <b>${escapeHTML(questTitle || 'quest')}</b> quest — it’s all yours.</div>
       </div>

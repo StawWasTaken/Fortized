@@ -19,24 +19,37 @@
   token (`[FTZEMOJI:name|bastionId]`, no base64) + async per-viewer URL resolution
   via getGlobalBastion, threaded through reactions/status/edit. `_bastionFromSectionHTML`
   + the Join button are already built (stickers done in `2026fix451`).
-- **Fortshop redesign — PHASE 1 SHIPPED (`2026fix456`).** New storefront engine
-  (`_fs*` in app.js, right before `_renderShopItemCard`; CSS `.fs2-*` at END of
-  styles.css). Tabs **Featured · Browse · Onyx Exclusives · Bundles** (`_fsTopbar`/
-  `_fsSwitchTab`/`_fsSearch`), theme-mock preview cards (`_fsThemeMock`/`_fsAppCard`
-  — a mini Fortized painted in each appearance's tokens), promo tiles, hero
-  (`.fs2-hero.ftz-ov-swft`), Browse filters rail (Decorations/Nameplates/Profile
-  Effects = "soon"), split item-detail popup (`_fsOpenItem`: left theme-mock +
-  desc + Buy/Gift/wishlist, right collection-gradient showcase, `ONYX EXCLUSIVE`
-  badge). Reuses `buyAppearance`/`_fsCompletePurchase`/`toggleWishlist`/
-  `openGiftModal`/`applyAppearance`/`_calculateFinalPrice`. `tab==='shop'` now
-  calls `_fsRenderShop(el)` (old `_renderFortshop*` helpers kept but unused).
-  **⚠️ LIVE-VERIFY:** onyx glyph + overlay art (`.ftz-ov-swft`) are CDN-blind in
-  sandbox; buy/equip/gift/wishlist end-to-end; the detail popup on the live app.
-  **NEXT (Fortshop Phase 2):** Bundles content (curated multi-item packs at a
-  discount), more Onyx-exclusive items to sell (propose + build), decorations
-  back into Browse, and the full-mini-profile-preview card variant the user
-  asked for (currently the theme-mock; decorations/nameplates want a real
-  profile-card preview).
+- **Fortshop redesign — REBUILT to match the app (`2026fix457`).** First pass
+  (`fix456`, `.fs2-*`) was a bespoke design → user rejected it ("nothing matching
+  the other pages… half of the stuff bugs… make it a REAL page"). REBUILT from
+  the **actual Quests/Radiance components** so it reads as the same app:
+  • **Real page** — `#view-fortshop` now has its OWN `.disc-subnav fs-subnav`
+    topbar (index.html, mirrors the Quests subnav): cart brand + tabs Featured ·
+    Browse · Onyx Exclusives · Bundles. Tabs call `_fsSetTab(t)` → sets
+    `window._fsTab` → `renderAtelierTab('shop')` → scroll top (exact `_qstSetTab`
+    pattern). `tab==='shop'` calls `_fsRenderShop(el)`.
+  • **Reuses quest classes**: `.qst-banner`/`.qst-crest` header (crest + eyebrow +
+    "Deck out your Fortized" + Onyx-balance/Items-owned stat pills), `.qst-qcard`
+    shell for cards (`.fs-card` adds a theme-mock preview `.fs-mock`/`.fs-mk-*` +
+    `.fs-fav` wishlist + `.fs-tag` Onyx badge; body/title/foot/reward pill + 3D
+    `.btn-a` "View"/"Equip"), `.qst-group`/`.qst-empty`.
+  • **Big-stroke coverflow carousel** (Featured tab) — same mechanics as the
+    Radiance perks (`_fsCarLayout`/`_fsCarouselInit`/`Prev`/`Next`/`_fsCarClick`,
+    autoplay 6.5s, hover arrows `.fs-carr`) but YELLOW strokes to match the shop
+    (`.fs-cslide.is-center` = thick bright-yellow border, thickens more on hover),
+    slides = theme-mock + name/desc caption, click centre → open item.
+  • **Item-detail popup** `_fsOpenItem` (`#fs-item-modal`, `.fs-di`): 2px-stroke
+    split card — left theme-mock + name/type/desc + discounted price + 3D Buy
+    (`buyAppearance`) / Gift / wishlist; right collection-gradient showcase +
+    `Onyx Exclusive` badge + close. `.ftz-confirm-overlay` backdrop.
+  • Onyx tab = rare appearances (`_fsIsOnyx` = rarity rare); Bundles = coming-soon
+    `.qst-empty`. All `.fs-*` CSS at END of styles.css. Old `.fs2-*` CSS + the
+    `_renderFortshop*`/`_fs2*` helpers are GONE/unused.
+  **⚠️ LIVE-VERIFY:** onyx glyph (`.rad-onyx-ic`) + FA crest are CDN/FA-blind in
+  sandbox (verified layout via Playwright); the carousel autoplay/hover/arrows;
+  buy→equip→gift→wishlist end-to-end; tab nav.
+  **NEXT (Phase 2):** Bundles content, more Onyx-exclusive items (propose+build),
+  decorations into Browse, the fuller mini-profile-preview card variant.
 - Popup background overlays (`.ftz-ov-swft`/`.ftz-ov-rad`, styles.css) load the
   SwiftawCDN art at opacity .4, stretched (`100% 100%`); live-verify brightness.
 

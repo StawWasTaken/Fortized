@@ -47804,219 +47804,228 @@ function _qstStartTimers() {
 }
 
 // ════════════════════════════════════════════════════════════
-// FORTSHOP 2.0 — redesigned storefront (Featured · Browse · Onyx
-// Exclusives · Bundles). Inspired by Discord's shop LAYOUT but
-// adapted to Fortized: our appearance/theme catalogue, Onyx
-// currency, the appearance THEME tokens, and the new popup family.
-// Reuses buyAppearance / _fsCompletePurchase / wishlist / gift.
+// FORTSHOP — built from the SAME components as Friends / Radiance /
+// Quests: the .disc-subnav topbar, the .qst-qcard cards (big 2px
+// strokes, hover lift), the .qst-banner header, and the same
+// big-stroke coverflow carousel as the Radiance perks (in the shop's
+// yellow identity). It is a real page (#view-fortshop) with its own
+// subnav; tabs re-render through renderAtelierTab('shop').
+// Reuses buyAppearance / applyAppearance / wishlist / gift.
 // ════════════════════════════════════════════════════════════
-const _FS2_CDN = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
-const _FS_ONYX = _FS2_CDN + 'OnyxSVG.png';
-let _fsTab = 'featured';
-function _fsOnyxIc(size) { return `<img class="fs2-onyx" src="${_FS_ONYX}" style="width:${size||14}px;height:${size||14}px" alt="Onyx">`; }
+const _FS_CDN  = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
+const _FS_TABS = ['featured', 'browse', 'onyx', 'bundles'];
 
-// The catalogue, tagged for the tabs. Onyx Exclusives = the dark/onyx
-// appearances (adapt: our darkest themes read as the "Onyx" collection).
 function _fsCatalogue() {
-  const apps = (typeof SHOP_APPEARANCES_ALL !== 'undefined' ? SHOP_APPEARANCES_ALL : []).map(a => ({ ...a, kind: 'appearance' }));
-  return apps;
+  return (typeof SHOP_APPEARANCES_ALL !== 'undefined' ? SHOP_APPEARANCES_ALL : []).map(a => ({ ...a, kind: 'appearance' }));
 }
 function _fsOwnedApps() { return CU?.unlockedAppearances || []; }
-function _fsIsOnyx(item) { return /onyx|midnight|obsidian|void|eclipse/i.test(item.id + ' ' + (item.name||'')) || (item.rarity === 'rare' && /^#0/.test((item.sidebarBg||'').trim())); }
+// Onyx Exclusives = the rare/premium appearances (onyx_pure, midnight_citadel…).
+function _fsIsOnyx(item) { return item.rarity === 'rare' || /onyx|obsidian|void|eclipse/i.test(item.id + ' ' + (item.name || '')); }
 
-// Price block (honours the Radiance discount).
-function _fsPriceHTML(item, owned) {
-  if (owned) return '<span class="fs2-owned">Owned</span>';
-  const d = (typeof _calculateFinalPrice === 'function') ? _calculateFinalPrice(item.price, false) : { finalPrice: item.price, totalDiscount: 0 };
-  if (d.totalDiscount > 0) return `<span class="fs2-price">${_fsOnyxIc()}<s>${item.price}</s>${d.finalPrice}</span>`;
-  return `<span class="fs2-price">${_fsOnyxIc()}${item.price}</span>`;
+// Tab switch — mirrors _qstSetTab: set state, re-render, scroll to top.
+function _fsSetTab(tab) {
+  if (!_FS_TABS.includes(tab)) tab = 'featured';
+  window._fsTab = tab;
+  _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === tab); });
+  try { renderAtelierTab('shop'); } catch {}
+  const sc = document.getElementById('atelier-scroll-outer'); if (sc) sc.scrollTo({ top: 0, behavior: 'auto' });
 }
 
-// A mini Fortized-app mock painted in the theme — the "preview" that makes a
-// theme feel real (our answer to Discord's avatar-decoration preview).
-function _fsThemeMock(item, cls) {
+// A mini Fortized app painted in the appearance's own tokens — the card's
+// "banner". Fills its (relatively-positioned) container.
+function _fsMock(item) {
   const acc = item.labelColor || 'var(--accent)';
-  const ln = (w, o) => `<span class="fs2-mk-ln" style="width:${w}%;opacity:${o||.5}"></span>`;
-  return `<div class="fs2-mock ${cls||''}" style="background:${item.previewBg || item.gradient}">
-    <div class="fs2-mk-rail" style="background:${item.sidebarBg}"></div>
-    <div class="fs2-mk-side" style="background:${item.sidebarBg}">${ln(58,.7)}${ln(44,.4)}${ln(50,.5)}${ln(38,.3)}</div>
-    <div class="fs2-mk-main">
-      <div class="fs2-mk-msg"><span class="fs2-mk-av" style="background:${acc}"></span><span class="fs2-mk-b">${ln(70,.5)}${ln(46,.3)}</span></div>
-      <div class="fs2-mk-msg"><span class="fs2-mk-av" style="background:${acc};opacity:.6"></span><span class="fs2-mk-b">${ln(54,.4)}</span></div>
-      <div class="fs2-mk-accent" style="background:${acc}"></div>
+  const ln = (w, o) => `<span class="fs-mk-ln" style="width:${w}%;opacity:${o || .5}"></span>`;
+  return `<div class="fs-mock" style="background:${item.previewBg || item.gradient}">
+    <div class="fs-mk-rail" style="background:${item.sidebarBg}"></div>
+    <div class="fs-mk-side" style="background:${item.sidebarBg}">${ln(58, .7)}${ln(44, .4)}${ln(50, .5)}${ln(38, .3)}</div>
+    <div class="fs-mk-main">
+      <div class="fs-mk-msg"><span class="fs-mk-av" style="background:${acc}"></span><span class="fs-mk-b">${ln(70, .5)}${ln(46, .3)}</span></div>
+      <div class="fs-mk-msg"><span class="fs-mk-av" style="background:${acc};opacity:.6"></span><span class="fs-mk-b">${ln(54, .4)}</span></div>
+      <div class="fs-mk-accent" style="background:${acc}"></div>
     </div>
   </div>`;
 }
 
-// Premium storefront card for an appearance/theme.
-function _fsAppCard(item) {
-  const owned = _fsOwnedApps().includes(item.id);
-  const onWL = (typeof isOnWishlist === 'function') && isOnWishlist(item.id);
-  return `<button type="button" class="fs2-card" onclick="_fsOpenItem('${escapeHTML(item.id)}')">
-    <span class="fs2-card-fav ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="event.stopPropagation();toggleWishlist('${escapeHTML(item.id)}');_fsRefresh()">${_svgIcon('heart', 13)}</span>
-    <span class="fs2-card-preview">${_fsThemeMock(item)}</span>
-    <span class="fs2-card-body">
-      <span class="fs2-card-name">${escapeHTML(item.name)}</span>
-      <span class="fs2-card-type">Appearance${_fsIsOnyx(item) ? ' · Onyx' : ''}</span>
-      <span class="fs2-card-price">${_fsPriceHTML(item, owned)}</span>
-    </span>
-  </button>`;
-}
-
-// A wide collection/category promo tile.
-function _fsPromoTile(o) {
-  return `<button type="button" class="fs2-promo" style="${o.bg ? 'background:' + o.bg : ''}" onclick="${o.onclick || ''}">
-    <span class="fs2-promo-txt"><span class="fs2-promo-title">${escapeHTML(o.title)}</span><span class="fs2-promo-sub">${escapeHTML(o.sub || '')}</span></span>
-    <span class="fs2-promo-cta">${escapeHTML(o.cta || 'Explore')} ${_svgIcon('arrow-right', 13)}</span>
-  </button>`;
-}
-
-function _fsTopbar() {
-  const bal = (CU?.onyx || 0).toLocaleString();
-  const tab = (id, label) => `<button class="fs2-tab ${_fsTab === id ? 'active' : ''}" onclick="_fsSwitchTab('${id}')">${label}</button>`;
-  return `<div class="fs2-topbar">
-    <div class="fs2-tabs">${tab('featured', 'Featured')}${tab('browse', 'Browse')}${tab('onyx', 'Onyx Exclusives')}${tab('bundles', 'Bundles')}</div>
-    <div class="fs2-topbar-right">
-      <div class="fs2-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="fs2-search-inp" placeholder="Search the shop" oninput="_fsSearch(this.value)"></div>
-      <div class="fs2-bal" title="Your Onyx balance">${_fsOnyxIc(15)} ${bal}</div>
-      <button class="fs2-wl" title="Wishlist" onclick="_fsSwitchTab('browse');setTimeout(()=>_fsSearch(''),0)">${_svgIcon('heart', 15)}</button>
+// Shop item card — reuses the quest-card shell (.qst-qcard body/title/foot)
+// so it's visually identical to the Quests page, with the theme-mock preview.
+function _fsCard(item, owned) {
+  const isOwned  = owned.includes(item.id);
+  const equipped = CU?.appearance === item.id;
+  const onWL     = (typeof isOnWishlist === 'function') && isOnWishlist(item.id);
+  const d = (typeof _calculateFinalPrice === 'function') ? _calculateFinalPrice(item.price, false) : { finalPrice: item.price, totalDiscount: 0 };
+  const foot = equipped
+    ? '<span class="fs-state fs-state--eq"><i class="fa-solid fa-circle-check"></i> Equipped</span>'
+    : isOwned
+      ? `<span class="fs-state fs-state--owned"><i class="fa-solid fa-check"></i> Owned</span><button class="btn-a qst-qbtn" onclick="event.stopPropagation();applyAppearance('${item.id}');renderAtelierTab('shop')">Equip</button>`
+      : `<div class="qst-qcard-reward"><span class="rad-onyx-ic"></span>${d.totalDiscount > 0 ? `<s>${item.price}</s>` : ''}<b>${d.finalPrice}</b></div><button class="btn-a qst-qbtn" onclick="event.stopPropagation();_fsOpenItem('${item.id}')">View</button>`;
+  return `<div class="qst-qcard fs-card${_fsIsOnyx(item) ? ' is-onyx' : ''}" onclick="_fsOpenItem('${item.id}')">
+    <div class="fs-card-preview">
+      ${_fsMock(item)}
+      <button class="fs-fav ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="event.stopPropagation();toggleWishlist('${item.id}');renderAtelierTab('shop')">${_svgIcon('heart', 13)}</button>
+      ${_fsIsOnyx(item) ? '<span class="fs-tag">Onyx Exclusive</span>' : ''}
+    </div>
+    <div class="qst-qcard-body">
+      <div class="qst-qcard-title">${escapeHTML(item.name)}</div>
+      <div class="qst-qcard-by">Appearance${_fsIsOnyx(item) ? ' · <b>Onyx Exclusive</b>' : ''}</div>
+      <div class="qst-qcard-desc">${escapeHTML(item.desc || '')}</div>
+      <div class="qst-qcard-foot">${foot}</div>
     </div>
   </div>`;
 }
 
+function _fsGroup(title, note) {
+  return `<div class="qst-group"><span class="qst-group-t">${title}</span>${note ? `<span class="qst-group-note">${note}</span>` : ''}</div>`;
+}
+function _fsEmpty(icon, title, sub) {
+  return `<div class="qst-empty"><i class="fa-solid fa-${icon}"></i><div class="qst-empty-t">${title}</div><div class="qst-empty-s">${sub}</div></div>`;
+}
+
+// ── Featured coverflow carousel (same mechanics + big strokes as Radiance) ──
+let _fsCarTimer = null, _fsCarIdx = 0;
+function _fsCarLayout() {
+  const track = document.getElementById('fs-ctrack');
+  if (!track) { if (_fsCarTimer) { clearInterval(_fsCarTimer); _fsCarTimer = null; } return; }
+  const slides = [...track.children]; const n = slides.length; if (!n) return;
+  _fsCarIdx = ((_fsCarIdx % n) + n) % n;
+  slides.forEach((s, i) => {
+    let d = i - _fsCarIdx;
+    if (d >  n / 2) d -= n;
+    if (d < -n / 2) d += n;
+    s.classList.remove('is-center', 'is-left', 'is-right', 'is-far');
+    s.classList.add(d === 0 ? 'is-center' : d === -1 ? 'is-left' : d === 1 ? 'is-right' : 'is-far');
+  });
+}
+function _fsCarouselGo(i) { _fsCarIdx = i; _fsCarLayout(); }
+function _fsCarouselPrev() { const n = document.querySelectorAll('#fs-ctrack .fs-cslide').length || 1; _fsCarIdx = (_fsCarIdx - 1 + n) % n; _fsCarLayout(); }
+function _fsCarouselNext() { const n = document.querySelectorAll('#fs-ctrack .fs-cslide').length || 1; _fsCarIdx = (_fsCarIdx + 1) % n; _fsCarLayout(); }
+function _fsCarClick(i, id) { if (i === _fsCarIdx) { _fsOpenItem(id); } else { _fsCarouselGo(i); } }
+function _fsCarouselInit() {
+  const car = document.getElementById('fs-carousel'); if (!car) return;
+  _fsCarIdx = 0; requestAnimationFrame(_fsCarLayout);
+  if (_fsCarTimer) clearInterval(_fsCarTimer);
+  _fsCarTimer = setInterval(() => {
+    const c = document.getElementById('fs-carousel');
+    if (!c) { clearInterval(_fsCarTimer); _fsCarTimer = null; return; }
+    if (c._paused) return;
+    const n = c.querySelectorAll('.fs-cslide').length || 1;
+    _fsCarIdx = (_fsCarIdx + 1) % n; _fsCarLayout();
+  }, 6500);
+  car.onmouseenter = () => { car._paused = true; };
+  car.onmouseleave = () => { car._paused = false; };
+  if (!window._fsCarResize) { window._fsCarResize = () => _fsCarLayout(); window.addEventListener('resize', window._fsCarResize); }
+}
+
+// ── Tab bodies ──
 function _fsFeatured(apps, owned) {
-  const featured = apps.slice(0, 4);
-  const recent = apps.slice().reverse();
-  return `
-    <div class="fs2-hero ftz-ov-swft">
-      <div class="fs2-hero-txt">
-        <div class="fs2-hero-eyebrow">Featured Collection</div>
-        <div class="fs2-hero-title">Deck out your Fortized</div>
-        <div class="fs2-hero-sub">Appearances, decorations and more — spend your Onyx on a look that's yours.</div>
-        <button class="btn-a fs2-hero-cta" onclick="_fsSwitchTab('browse')">Shop everything</button>
+  const slides = apps.map((a, i) => `
+    <div class="fs-cslide" data-idx="${i}" onclick="_fsCarClick(${i},'${a.id}')">
+      <div class="fs-cslide-mock">${_fsMock(a)}</div>
+      <div class="fs-cslide-cap">
+        <div class="fs-cslide-name">${escapeHTML(a.name)}${_fsIsOnyx(a) ? '<span class="fs-cslide-badge">Onyx</span>' : ''}</div>
+        <div class="fs-cslide-desc">${escapeHTML(a.desc || '')}</div>
       </div>
+    </div>`).join('');
+  const chev = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="${d === 'left' ? '15 18 9 12 15 6' : '9 18 15 12 9 6'}"/></svg>`;
+  return `
+    ${_fsGroup('Featured', 'Fresh picks for your Fortized')}
+    <div class="rad-carousel fs-carousel" id="fs-carousel">
+      <div class="rad-ctrack" id="fs-ctrack">${slides}</div>
+      <button class="rad-carr rad-carr--prev fs-carr" onclick="event.stopPropagation();_fsCarouselPrev()" aria-label="Previous">${chev('left')}</button>
+      <button class="rad-carr rad-carr--next fs-carr" onclick="event.stopPropagation();_fsCarouselNext()" aria-label="Next">${chev('right')}</button>
     </div>
-    <div class="fs2-sec-head"><span class="fs2-sec-eyebrow">Featured</span><span class="fs2-sec-title">Fresh picks</span></div>
-    <div class="fs2-grid">${featured.map(_fsAppCard).join('')}</div>
-    <div class="fs2-promos">
-      ${_fsPromoTile({ title: 'Onyx Exclusives', sub: 'The darkest, rarest looks', cta: 'View', bg: 'linear-gradient(120deg,#0a0713,#170f2e)', onclick: "_fsSwitchTab('onyx')" })}
-      ${_fsPromoTile({ title: 'Appearances', sub: 'Repaint the whole app', cta: 'Browse', bg: 'linear-gradient(120deg,#0b1a2e,#123a52)', onclick: "_fsSwitchTab('browse')" })}
-    </div>
-    <div class="fs2-sec-head"><span class="fs2-sec-eyebrow">New</span><span class="fs2-sec-title">Recently added</span></div>
-    <div class="fs2-grid">${recent.map(_fsAppCard).join('')}</div>`;
+    ${_fsGroup('All appearances', apps.length + ' item' + (apps.length === 1 ? '' : 's'))}
+    <div class="qst-qgrid">${apps.map(a => _fsCard(a, owned)).join('')}</div>`;
 }
-
 function _fsBrowse(apps, owned) {
-  const q = (_fsQuery || '').toLowerCase();
-  const list = q ? apps.filter(a => (a.name + ' ' + a.desc).toLowerCase().includes(q)) : apps;
-  return `
-    <div class="fs2-browse">
-      <div class="fs2-browse-main">
-        <div class="fs2-sec-head"><span class="fs2-sec-title">${q ? `Results for “${escapeHTML(q)}”` : 'All items'}</span><span class="fs2-count">${list.length} item${list.length === 1 ? '' : 's'}</span></div>
-        <div class="fs2-grid">${list.length ? list.map(_fsAppCard).join('') : '<div class="fs2-empty">Nothing matches that search.</div>'}</div>
-      </div>
-      <aside class="fs2-filters">
-        <div class="fs2-filter-h">Show only</div>
-        <label class="fs2-chk"><input type="checkbox" checked disabled> Appearances</label>
-        <label class="fs2-chk"><input type="checkbox" disabled> Decorations <span class="fs2-soon">soon</span></label>
-        <label class="fs2-chk"><input type="checkbox" disabled> Nameplates <span class="fs2-soon">soon</span></label>
-        <label class="fs2-chk"><input type="checkbox" disabled> Profile Effects <span class="fs2-soon">soon</span></label>
-        <div class="fs2-filter-h" style="margin-top:16px;">Rarity</div>
-        <label class="fs2-chk"><input type="checkbox" disabled> Rare</label>
-        <label class="fs2-chk"><input type="checkbox" disabled> Common</label>
-      </aside>
-    </div>`;
+  return `${_fsGroup('Browse everything', apps.length + ' item' + (apps.length === 1 ? '' : 's'))}
+    <div class="qst-qgrid">${apps.map(a => _fsCard(a, owned)).join('')}</div>`;
+}
+function _fsOnyxTab(apps, owned) {
+  const list = apps.filter(_fsIsOnyx);
+  if (!list.length) return _fsEmpty('gem', 'More Onyx exclusives soon', 'Rare, Onyx-only appearances arrive regularly. Check back shortly.');
+  return `${_fsGroup('Onyx Exclusives', 'The darkest, rarest looks')}
+    <div class="qst-qgrid">${list.map(a => _fsCard(a, owned)).join('')}</div>`;
+}
+function _fsBundlesTab() {
+  return _fsEmpty('box-open', 'Bundles are coming soon', 'Curated multi-item packs at a discount. We’re putting the first ones together now.');
 }
 
-function _fsOnyx(apps, owned) {
-  const onyx = apps.filter(_fsIsOnyx);
-  return `
-    <div class="fs2-hero fs2-hero--onyx ftz-ov-swft">
-      <div class="fs2-hero-txt">
-        <div class="fs2-hero-eyebrow">Onyx Exclusives</div>
-        <div class="fs2-hero-title">The darkest looks</div>
-        <div class="fs2-hero-sub">Rare, Onyx-only appearances for those who like it pitch-black.</div>
-      </div>
-    </div>
-    <div class="fs2-grid">${onyx.length ? onyx.map(_fsAppCard).join('') : '<div class="fs2-empty">More Onyx exclusives are on the way.</div>'}</div>`;
-}
-
-function _fsBundles() {
-  return `<div class="fs2-empty fs2-empty--big">
-    <div class="fs2-empty-ic">${_svgIcon('gift', 30)}</div>
-    <div class="fs2-empty-t">Bundles are coming soon</div>
-    <div class="fs2-empty-s">Curated multi-item packs at a discount. Check back shortly.</div>
-  </div>`;
-}
-
-let _fsQuery = '';
-function _fsBody() {
+// ── Page render (banner + tab body) ──
+function _fsRenderShop(el) {
+  const ftab = _FS_TABS.includes(window._fsTab) ? window._fsTab : 'featured';
   const apps = _fsCatalogue();
   const owned = _fsOwnedApps();
-  if (_fsTab === 'browse') return _fsBrowse(apps, owned);
-  if (_fsTab === 'onyx') return _fsOnyx(apps, owned);
-  if (_fsTab === 'bundles') return _fsBundles();
-  return _fsFeatured(apps, owned);
-}
-function _fsRenderShop(el) {
-  el.innerHTML = `<div class="atelier-content-inner fs2-page">${_fsTopbar()}<div class="fs2-content" id="fs2-content">${_fsBody()}</div></div>`;
-}
-function _fsRefresh() {
-  const c = document.getElementById('fs2-content'); if (c) c.innerHTML = _fsBody();
-  const el = document.getElementById('atelier-content'); // keep balance/topbar fresh
-  const tb = el && el.querySelector('.fs2-bal'); if (tb) tb.innerHTML = _fsOnyxIc(15) + ' ' + (CU?.onyx || 0).toLocaleString();
-}
-function _fsSwitchTab(t) {
-  _fsTab = t; _fsQuery = '';
-  document.querySelectorAll('.fs2-tab').forEach(b => b.classList.remove('active'));
-  const c = document.getElementById('fs2-content'); if (c) { c.innerHTML = _fsBody(); c.classList.remove('fs2-in'); void c.offsetWidth; c.classList.add('fs2-in'); }
-  const el = document.getElementById('atelier-content');
-  const btn = el && [...el.querySelectorAll('.fs2-tab')].find(b => b.getAttribute('onclick')?.includes(`'${t}'`)); if (btn) btn.classList.add('active');
-}
-function _fsSearch(v) {
-  _fsQuery = v || '';
-  if (_fsTab !== 'browse') { _fsTab = 'browse'; document.querySelectorAll('.fs2-tab').forEach(b => b.classList.toggle('active', b.getAttribute('onclick')?.includes("'browse'"))); }
-  const c = document.getElementById('fs2-content'); if (c) c.innerHTML = _fsBody();
-  const inp = document.getElementById('fs2-search-inp'); if (inp && document.activeElement !== inp) { inp.value = _fsQuery; }
+  const bal = CU?.onyx || 0;
+  const ownedCount = apps.filter(a => owned.includes(a.id)).length;
+
+  const banner = `<header class="qst-banner fs-banner">
+    <div class="qst-banner-top">
+      <div class="qst-banner-id">
+        <div class="qst-crest"><i class="fa-solid fa-bag-shopping"></i></div>
+        <div class="qst-banner-idtext">
+          <div class="qst-banner-eyebrow">Fortshop</div>
+          <div class="qst-banner-rank">Deck out your Fortized</div>
+          <div class="qst-banner-note">Spend your Onyx on appearances, decorations and more — a look that’s yours.</div>
+        </div>
+      </div>
+      <div class="qst-banner-stats">
+        <div class="qst-bstat"><span class="qst-bstat-v"><span class="rad-onyx-ic"></span>${bal.toLocaleString()}</span><span class="qst-bstat-k">Onyx balance</span></div>
+        <div class="qst-bstat"><span class="qst-bstat-v">${ownedCount}</span><span class="qst-bstat-k">Items owned</span></div>
+      </div>
+    </div>
+  </header>`;
+
+  let body = '';
+  if (ftab === 'browse') body = _fsBrowse(apps, owned);
+  else if (ftab === 'onyx') body = _fsOnyxTab(apps, owned);
+  else if (ftab === 'bundles') body = _fsBundlesTab();
+  else body = _fsFeatured(apps, owned);
+
+  el.innerHTML = `<div class="atelier-content-inner fs-page">${banner}<div class="qst-body">${body}</div></div>`;
+  _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === ftab); });
+  if (ftab === 'featured') requestAnimationFrame(() => { try { _fsCarouselInit(); } catch {} });
 }
 
-// Split item-detail popup: preview left, a live themed app-mock + collection
-// backdrop right, Buy / Gift / Equip. New popup family + Swiftaw overlay.
+// ── Item-detail popup (new card family + big strokes) ──
+// Split: theme-mock + info on the left, a big showcase mock on the collection
+// gradient on the right; Buy / Gift / wishlist / Equip.
 function _fsOpenItem(id) {
   const item = _fsCatalogue().find(a => a.id === id); if (!item) return;
-  document.getElementById('fs2-item-modal')?.remove();
+  document.getElementById('fs-item-modal')?.remove();
   const owned = _fsOwnedApps().includes(item.id);
   const equipped = (CU?.appearance === item.id);
   const d = (typeof _calculateFinalPrice === 'function') ? _calculateFinalPrice(item.price, false) : { finalPrice: item.price, totalDiscount: 0 };
   const onWL = (typeof isOnWishlist === 'function') && isOnWishlist(item.id);
   const priceLine = d.totalDiscount > 0
-    ? `<span class="fs2-di-price">${_fsOnyxIc(16)} <s>${item.price}</s> <b>${d.finalPrice}</b></span>`
-    : `<span class="fs2-di-price">${_fsOnyxIc(16)} <b>${item.price}</b></span>`;
+    ? `<span class="fs-di-price"><span class="rad-onyx-ic"></span> <s>${item.price}</s> <b>${d.finalPrice}</b></span>`
+    : `<span class="fs-di-price"><span class="rad-onyx-ic"></span> <b>${item.price}</b></span>`;
   let action;
-  if (equipped) action = `<button class="btn-g fs2-di-buy" disabled>Equipped</button>`;
-  else if (owned) action = `<button class="btn-a fs2-di-buy" onclick="applyAppearance('${escapeHTML(item.id)}');document.getElementById('fs2-item-modal')?.remove();">Equip</button>`;
-  else action = `<button class="btn-a fs2-di-buy" onclick="_fsCompletePurchase('${escapeHTML(item.id)}','appearance',${d.finalPrice});document.getElementById('fs2-item-modal')?.remove();">Buy for ${d.finalPrice} Onyx</button>`;
+  if (equipped) action = `<button class="btn-g fs-di-buy" disabled><i class="fa-solid fa-circle-check"></i> Equipped</button>`;
+  else if (owned) action = `<button class="btn-a fs-di-buy" onclick="applyAppearance('${item.id}');document.getElementById('fs-item-modal')?.remove();">Equip appearance</button>`;
+  else action = `<button class="btn-a fs-di-buy" onclick="buyAppearance('${item.id}',${d.finalPrice});document.getElementById('fs-item-modal')?.remove();">Buy for ${d.finalPrice} Onyx</button>`;
   const overlay = document.createElement('div');
   overlay.className = 'ftz-confirm-overlay';
-  overlay.id = 'fs2-item-modal';
+  overlay.id = 'fs-item-modal';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
-    <div class="fs2-di" role="dialog" aria-label="${escapeHTML(item.name)}">
-      <div class="fs2-di-left ftz-ov-swft">
-        <div class="fs2-di-hero">${_fsThemeMock(item, 'fs2-mock--lg')}</div>
-        <div class="fs2-di-name">${escapeHTML(item.name)}</div>
-        <div class="fs2-di-desc">${escapeHTML(item.desc || '')}</div>
+    <div class="fs-di" role="dialog" aria-label="${escapeHTML(item.name)}">
+      <div class="fs-di-left">
+        <div class="fs-di-preview">${_fsMock(item)}</div>
+        <div class="fs-di-name">${escapeHTML(item.name)}</div>
+        <div class="fs-di-type">Appearance${_fsIsOnyx(item) ? ' · Onyx Exclusive' : ''}</div>
+        <div class="fs-di-desc">${escapeHTML(item.desc || '')}</div>
         ${priceLine}
-        <div class="fs2-di-actions">
+        <div class="fs-di-actions">
           ${action}
-          <button class="fs2-di-gift" title="Send as a gift" onclick="openGiftModal('${escapeHTML(item.id)}')">${_svgIcon('gift', 15)}</button>
+          <button class="fs-di-gift" title="Send as a gift" onclick="openGiftModal('${item.id}')">${_svgIcon('gift', 15)}</button>
         </div>
-        ${owned || equipped ? '' : `<button class="fs2-di-wl ${onWL ? 'on' : ''}" onclick="toggleWishlist('${escapeHTML(item.id)}');this.classList.toggle('on')">${_svgIcon('heart', 13)} ${onWL ? 'In wishlist' : 'Add to wishlist'}</button>`}
+        ${owned || equipped ? '' : `<button class="fs-di-wl ${onWL ? 'on' : ''}" onclick="toggleWishlist('${item.id}');this.classList.toggle('on');this.querySelector('span').textContent=this.classList.contains('on')?'In wishlist':'Add to wishlist'">${_svgIcon('heart', 13)} <span>${onWL ? 'In wishlist' : 'Add to wishlist'}</span></button>`}
       </div>
-      <div class="fs2-di-right" style="background:${item.gradient}">
-        <div class="fs2-di-badge">${_fsIsOnyx(item) ? 'Onyx Exclusive' : 'Appearance'}</div>
-        <button class="fs2-di-x" aria-label="Close" onclick="document.getElementById('fs2-item-modal')?.remove()">&times;</button>
-        <div class="fs2-di-showcase">${_fsThemeMock(item, 'fs2-mock--show')}</div>
+      <div class="fs-di-right" style="background:${item.gradient}">
+        <div class="fs-di-badge">${_fsIsOnyx(item) ? 'Onyx Exclusive' : 'Appearance'}</div>
+        <button class="fs-di-x" aria-label="Close" onclick="document.getElementById('fs-item-modal')?.remove()">&times;</button>
+        <div class="fs-di-showcase">${_fsMock(item)}</div>
       </div>
     </div>`;
   document.body.appendChild(overlay);

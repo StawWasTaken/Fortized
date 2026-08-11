@@ -1776,7 +1776,7 @@ body.staw-frozen::before{
 .picker-top-tab .svgrepo-icon{width:16px;height:16px;}
 .picker-top-tab:hover{color:var(--text);background:rgba(255,255,255,.03);}
 .picker-top-tab.active{color:var(--accent);background:transparent;}
-.picker-top-tab.active::after{content:'';position:absolute;left:12px;right:12px;bottom:0;height:2.5px;border-radius:3px;background:var(--accent);box-shadow:0 0 12px rgba(255,249,62,.5);}
+.picker-top-tab.active::after{content:'';position:absolute;left:12px;right:12px;bottom:0;height:2.5px;border-radius:3px;background:var(--accent);}
 /* GIF category chips row */
 .gif-cat-row{display:flex;gap:5px;padding:8px 14px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(0,0,0,.08);}
 .gif-cat-row::-webkit-scrollbar{display:none;}
@@ -10242,8 +10242,8 @@ button[style*="background: var(--accent)"]:active {
   overflow: hidden;
   transition: background .12s ease;
 }
-.emoji-cell:hover { background: rgba(255,255,255,.08); }
-.emoji-cell:active { background: rgba(255,255,255,.1); }
+.emoji-cell:hover { background: var(--accent-dim); }
+.emoji-cell:active { background: var(--accent-mid); }
 .emoji-cell img {
   width: 26px;
   height: 26px;
@@ -10308,6 +10308,31 @@ button[style*="background: var(--accent)"]:active {
   align-items: center;
   gap: 6px;
 }
+/* Supergroup dividers — the three big groups (Fortized Guide · Bastions ·
+   Default). Non-sticky (a divider, not a running header) so it never
+   double-stacks with the sticky sub-headers beneath it. Themed accent icon,
+   no glow. */
+.epp-supergroup {
+  position: relative;
+  top: auto;
+  z-index: 1;
+  text-transform: none;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: .01em;
+  color: var(--text);
+  padding: 15px 6px 8px;
+  gap: 9px;
+  border-top: 1px solid var(--glass-border);
+  margin-top: 5px;
+}
+.epp-scroll > .epp-supergroup:first-child { border-top: none; margin-top: 0; }
+.epp-supergroup__ico {
+  width: 24px; height: 24px; border-radius: 7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent-dim); color: var(--accent); flex-shrink: 0;
+}
+.epp-supergroup__ico svg { width: 15px; height: 15px; fill: currentColor; }
 .epp-section-grid {
   display: grid;
   gap: 2px;
@@ -10337,9 +10362,9 @@ button[style*="background: var(--accent)"]:active {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: .06em;
-  color: rgba(255,249,62,.9);
-  background: rgba(255,249,62,.08);
-  border: 1px solid rgba(255,249,62,.18);
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-mid);
   border-radius: 4px;
 }
 .emoji-cell-custom {
@@ -10353,8 +10378,8 @@ button[style*="background: var(--accent)"]:active {
   overflow: hidden;
   transition: background .12s ease;
 }
-.emoji-cell-custom:hover { background: rgba(255,255,255,.06); }
-.emoji-cell-custom:active { background: rgba(255,255,255,.1); }
+.emoji-cell-custom:hover { background: var(--accent-dim); }
+.emoji-cell-custom:active { background: var(--accent-mid); }
 #emoji-picker.epp-searching .epp-sidebar { display: none !important; }
 
 /* ── Emoji upload add button ── */

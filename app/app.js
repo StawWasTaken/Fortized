@@ -24029,14 +24029,14 @@ function renderEmojiGrid() {
   if (freqList.length || _recentEmojis.length) {
     const rows = (freqList.length ? freqList : _recentEmojis.slice(0,24));
     sections.push({
-      id: 'frequent', title: 'Frequently used', extra: '', cols: 8, rowCount: Math.ceil(rows.length/8), tight: false,
+      id: 'frequent', title: 'Frequently used', extra: '', group: 'recent', cols: 8, rowCount: Math.ceil(rows.length/8), tight: false,
       build: () => rows.map(e => FORTIZED_EMOJI_MAP[e] ? ftzCell(e, FORTIZED_EMOJI_MAP[e]) : renderEmojiCell(e)).join(''),
     });
   }
 
   // 2) Favorites
   sections.push({
-    id: 'favorites', title: 'Favorites', extra: '', cols: 8,
+    id: 'favorites', title: 'Favorites', extra: '', group: 'recent', cols: 8,
     rowCount: Math.max(1, Math.ceil(_favEmojis.length/8)), tight: false,
     build: () => _favEmojis.length
       ? _favEmojis.map(e => renderEmojiCell(e)).join('')
@@ -24046,7 +24046,7 @@ function renderEmojiGrid() {
   // 3) Fortized Guide (tight grid)
   const ftzCount = FORTIZED_CHARACTERS.length + FORTIZED_TEXTMOJIS.length;
   sections.push({
-    id: 'ftz', title: 'Fortized Guide', extra: '', cols: 8,
+    id: 'ftz', title: 'Fortized Guide', extra: '', group: 'ftz', cols: 8,
     rowCount: Math.ceil(ftzCount/8), tight: true,
     build: () =>
       FORTIZED_CHARACTERS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('') +
@@ -24064,6 +24064,7 @@ function renderEmojiGrid() {
       id: 'bastion-' + bi,
       title: b.name || ('Bastion ' + (bi+1)),
       extra: locked ? ' <span class="epp-lock">RADIANCE</span>' : '',
+      group: 'bastion',
       cols: 8, rowCount: Math.ceil(validEmojis.length/8), tight: false,
       build: () => validEmojis.map(ce => {
         const safeName = escapeHTML(ce.name);
@@ -24095,7 +24096,7 @@ function renderEmojiGrid() {
     sections.push({
       id: tab.id,
       title: tab.label || (tab.id.charAt(0).toUpperCase() + tab.id.slice(1)),
-      extra: '', cols: 8, rowCount: Math.ceil((tab.emojis.length + custom.length)/8), tight: false,
+      extra: '', group: 'default', cols: 8, rowCount: Math.ceil((tab.emojis.length + custom.length)/8), tight: false,
       build: () => custom.map(n => ftzCell(n, FORTIZED_EMOJI_MAP[n])).join('') + tab.emojis.map(e => renderEmojiCell(e)).join(''),
     });
   });
@@ -24105,12 +24106,29 @@ function renderEmojiGrid() {
   // hydrating a mid-scroll section would shift content beneath the user.
   //
   // Row height ≈ 38px for the tight (Fortized) grid, 36px for normal grids.
+  // Three big supergroups (user spec): Fortized Guide · Bastions · Default.
+  // Recents/Favorites stay pinned on top with no supergroup. The supergroup
+  // divider is itself an .epp-section anchor (so scroll-spy + rail-jump keep
+  // working); for the single-section Fortized Guide it REPLACES the plain
+  // sub-header (no redundant duplicate title).
+  const SUPERGROUPS = {
+    ftz:     { label: 'Fortized Guide', icon: _EMOJI_CATEGORY_SVGS.ftz,      anchor: 'ftz' },
+    bastion: { label: 'Bastions',       icon: _EMOJI_CATEGORY_SVGS.bastions, anchor: 'bastions' },
+    default: { label: 'Default Emojis', icon: _EMOJI_CATEGORY_SVGS.smileys,  anchor: 'default' },
+  };
+  const superHdr = (g) => {
+    const sup = SUPERGROUPS[g]; if (!sup) return '';
+    return `<div class="epp-section epp-supergroup" data-section="${sup.anchor}"><span class="epp-supergroup__ico">${sup.icon || ''}</span><span class="epp-supergroup__label">${escapeHTML(sup.label)}</span></div>`;
+  };
   let html = '';
+  let lastGroup = null;
   for (const s of sections) {
+    if (s.group !== lastGroup) { html += superHdr(s.group); lastGroup = s.group; }
     const rowH = s.tight ? 40 : 38;
     const intrinsicH = Math.max(48, s.rowCount * rowH + 14);
     const cls = 'epp-section-grid' + (s.tight ? ' epp-section-grid-tight' : '') + ' epp-lazy';
-    html += sectionHdr(s.id, s.title, s.extra);
+    // Fortized Guide's supergroup already names it — skip the duplicate header.
+    if (s.group !== 'ftz') html += sectionHdr(s.id, s.title, s.extra);
     html += `<div class="${cls}" data-section-id="${s.id}" style="grid-template-columns:repeat(${s.cols},1fr);contain-intrinsic-size: 1px ${intrinsicH}px;"></div>`;
   }
   grid.innerHTML = html;

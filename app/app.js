@@ -28558,7 +28558,7 @@ function swiftawLifecheck(opts = {}) {
 // "Add the widget" docs; while empty, swiftawLifecheck uses the built-in
 // slide challenge. The widget itself is served from swiftaw.com inside a
 // sandboxed iframe (anti-theft model) — we only embed the loader URL.
-const _SWIFTAW_LC_LOADER = ''; // e.g. 'https://swiftaw.com/lifecheck/v1.js'
+const _SWIFTAW_LC_LOADER = 'https://swiftaw.com/lifecheck/lifecheck.js';
 let _lcLoaderPromise = null;
 function _lcEnsureLoader() {
   if (window.Lifecheck && typeof window.Lifecheck.render === 'function') return Promise.resolve(true);
@@ -28603,6 +28603,11 @@ async function _lcVerifyToken(token) {
 
 function _lcMountRealOrFallback(overlay, done) {
   const slot = overlay.querySelector('#lc-slot');
+  const status0 = overlay.querySelector('#lc-status');
+  // Loading state while the swiftaw.com loader fetches (falls back to the
+  // built-in slide challenge on timeout / block).
+  slot.innerHTML = '<div class="lc-loading"><span class="lc-spinner"></span></div>';
+  if (status0) status0.textContent = 'Loading Lifecheck…';
   _lcEnsureLoader().then(() => {
     slot.innerHTML = '<div class="lc-widget" id="lc-widget"></div>';
     const status = overlay.querySelector('#lc-status');

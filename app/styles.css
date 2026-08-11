@@ -15897,3 +15897,42 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .ftz-ac-swap__btn:hover{background:var(--panel2);}
 .ftz-ac-swap__btn:active{transform:scale(.97);}
 .ftz-ac-card .ftz-modal-foot{margin:0;border-top:1px solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg);}
+/* Non-avatar hero badge (Radiance cancel card, etc.). */
+.ftz-ac-badge{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--ink);display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 6px 18px rgba(255,249,62,.22);}
+.ftz-ac-badge svg{width:30px;height:30px;}
+
+/* ════════════════════════════════════════════════════════════
+   SWIFTAW LIFECHECK — human-verification gate (slide-to-fit).
+   ════════════════════════════════════════════════════════════ */
+.lc-card{max-width:376px;width:92%;padding:0;overflow:hidden;position:relative;}
+.lc-x{position:absolute;top:12px;right:14px;font-size:24px;z-index:3;line-height:1;}
+.lc-head{padding:22px 24px 6px;text-align:center;}
+.lc-brand{display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;color:#ff0033;}
+.lc-brand__mark{width:26px;height:26px;display:inline-flex;}
+.lc-brand__mark svg{width:26px;height:26px;}
+.lc-brand__name{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--muted-light);}
+.lc-brand__name b{color:#fff;font-weight:800;}
+.lc-title{font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1.2;}
+.lc-sub{font-size:12.5px;color:var(--muted-light);margin-top:5px;line-height:1.4;}
+.lc-slot{padding:16px 24px 4px;display:flex;flex-direction:column;align-items:center;gap:13px;}
+.lc-scene{position:relative;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#1c2030,#12141c 60%,#241426);border:1px solid var(--border);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+.lc-scene::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,0,51,.14),transparent 45%),radial-gradient(circle at 78% 70%,rgba(96,165,250,.12),transparent 42%);pointer-events:none;}
+.lc-gap{position:absolute;border-radius:10px;background:rgba(0,0,0,.42);border:2px dashed rgba(255,255,255,.22);box-shadow:inset 0 2px 6px rgba(0,0,0,.5);top:50%;transform:translateY(-50%);}
+.lc-piece{position:absolute;border-radius:10px;background:linear-gradient(135deg,#2b3040,#191c26);border:1px solid rgba(255,255,255,.14);box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);cursor:grab;display:flex;align-items:center;justify-content:center;}
+.lc-piece::after{content:"";width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.5);}
+.lc-dragging .lc-piece{cursor:grabbing;}
+.lc-scene.lc-pass .lc-piece{border-color:var(--green);box-shadow:0 0 0 2px var(--green),0 6px 16px rgba(62,207,110,.4);}
+.lc-scene.lc-pass .lc-gap{border-color:rgba(62,207,110,.5);}
+.lc-scene.lc-fail{animation:lcShake .42s;}
+@keyframes lcShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.lc-track{position:relative;width:300px;height:44px;border-radius:100px;background:rgba(0,0,0,.3);border:1px solid var(--border);}
+.lc-fill{position:absolute;left:0;top:0;bottom:0;width:22px;border-radius:100px;background:linear-gradient(90deg,rgba(255,0,51,.28),rgba(255,0,51,.14));transition:background .2s;}
+.lc-scene.lc-pass ~ .lc-track .lc-fill{background:linear-gradient(90deg,rgba(62,207,110,.35),rgba(62,207,110,.18));}
+.lc-handle{position:absolute;top:50%;transform:translateY(-50%);left:0;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#fff,#dfe4ee);color:#13161d;display:flex;align-items:center;justify-content:center;cursor:grab;box-shadow:0 4px 12px rgba(0,0,0,.4);touch-action:none;border:1px solid rgba(0,0,0,.2);}
+.lc-handle svg{width:20px;height:20px;}
+.lc-dragging .lc-handle{cursor:grabbing;}
+.lc-status{font-size:12px;font-weight:600;color:var(--muted-light);text-align:center;padding:2px 24px 4px;}
+.lc-status.ok{color:var(--green);}
+.lc-status.bad{color:#ff0033;}
+.lc-secure{display:flex;align-items:center;justify-content:center;gap:7px;font-size:11px;color:var(--muted);padding:8px 24px 18px;}
+.lc-secure .fa-solid{font-size:11px;}

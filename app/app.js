@@ -26155,8 +26155,8 @@ function _buildProfileView(tab) {
   }
 }
 async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}const btn=document.querySelector('[onclick*="saveDisplayName"]');if(btn){btn.classList.add('btn-loading');btn.disabled=true;}CU.displayName=dn;await saveUser();if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');try{const s=FortizedSocial.getSocket();if(s)s.emit('profile:update',{displayName:dn,field:'displayName'});}catch(e){}toast('Display name updated!','success');showFeedbackToast('editing your profile','profile_edit');}
-async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();const btn=document.querySelector('[onclick*="saveEmail"]');if(btn){btn.classList.add('btn-loading');btn.disabled=true;}CU.email=e;await saveUser();if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}toast('Email updated!','success');}
-async function changePassword(){const old=document.getElementById('pw-old')?.value,nw=document.getElementById('pw-new')?.value,msg=document.getElementById('pw-msg');if(!old||!nw){if(msg){msg.style.color='var(--red)';msg.textContent='Fill both fields.';}return;}if(old!==CU.password){if(msg){msg.style.color='var(--red)';msg.textContent='Current password incorrect.';}return;}if(nw.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Too short.';}return;}CU.password=nw;await saveUser();if(msg){msg.style.color='var(--green)';msg.textContent='Password updated!';}document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';}
+async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();if(!(await swiftawLifecheck({title:'Verify it’s you',reason:'Confirm you’re human to change your email.'}))){toast('Verification cancelled.','info');return;}const btn=document.querySelector('[onclick*="saveEmail"]');if(btn){btn.classList.add('btn-loading');btn.disabled=true;}CU.email=e;await saveUser();if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}toast('Email updated!','success');}
+async function changePassword(){const old=document.getElementById('pw-old')?.value,nw=document.getElementById('pw-new')?.value,msg=document.getElementById('pw-msg');if(!old||!nw){if(msg){msg.style.color='var(--red)';msg.textContent='Fill both fields.';}return;}if(old!==CU.password){if(msg){msg.style.color='var(--red)';msg.textContent='Current password incorrect.';}return;}if(nw.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Too short.';}return;}if(!(await swiftawLifecheck({title:'Verify it’s you',reason:'Confirm you’re human to change your password.'}))){if(msg){msg.style.color='var(--red)';msg.textContent='Verification cancelled.';}return;}CU.password=nw;await saveUser();if(msg){msg.style.color='var(--green)';msg.textContent='Password updated!';}document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';}
 
 // ── Security keys (WebAuthn / passkeys) ─────────────────────
 // Client-side scaffold: triggers the platform's WebAuthn dialog so
@@ -26208,6 +26208,7 @@ async function _setupSecurityKey() {
 }
 async function _removeSecurityKey(id) {
   if (!CU.security || !Array.isArray(CU.security.passkeys)) return;
+  if (!(await swiftawLifecheck({ title: 'Verify it’s you', reason: 'Confirm you’re human to remove this security key.' }))) { toast('Verification cancelled.', 'info'); return; }
   CU.security.passkeys = CU.security.passkeys.filter(p => p.id !== id);
   try { await saveUser(); } catch(_) { try { saveLocal(); } catch(__){} }
   buildProfileView('account');
@@ -28472,6 +28473,132 @@ function showCustomConfirm(message,callback){
   overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
   overlay.addEventListener('keydown',e=>{if(e.key==='Escape')overlay.remove();});
   overlay.focus();
+}
+
+// ════════════════════════════════════════════════════════════
+// SWIFTAW LIFECHECK — human-verification gate for semi-important
+// actions (claiming Onyx from quests, changing password / email,
+// removing a security key, …). swiftawLifecheck(opts) → Promise
+// that resolves true when the human check passes, false if the
+// user backs out.
+//
+// SECURITY: the PUBLIC site key below is safe to ship in the app.
+// The SECRET key (lc_fortized_SWFT…) must NEVER appear in client
+// code — it belongs only in the server's environment, used for the
+// server-side /siteverify call. If/when the official Swiftaw widget
+// script is loaded on the page (window.SwiftawLifecheck.render), we
+// mount it; otherwise we fall back to a self-contained slide-to-fit
+// challenge so the gate always works even if the CDN is unreachable.
+// ════════════════════════════════════════════════════════════
+const SWIFTAW_LIFECHECK_SITEKEY = 'lc_fortized_public';
+const _LC_MARK_SVG = '<svg viewBox="0 0 512 512" fill="none"><path d="M256 24l186 66c14 5 24 18 24 33 0 121-52 245-201 300a30 30 0 0 1-18 0C98 368 46 244 46 123c0-15 10-28 24-33L256 24z" fill="currentColor" opacity=".16"/><path d="M256 24l186 66c14 5 24 18 24 33 0 121-52 245-201 300a30 30 0 0 1-18 0C98 368 46 244 46 123c0-15 10-28 24-33L256 24z" stroke="currentColor" stroke-width="26"/><path d="M150 262h54l30-70 44 130 26-60h58" stroke="currentColor" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+let _lifecheckPassedUntil = 0; // short grace window after a successful check
+
+// "Sometimes" gate for low-stakes actions (quest claims): challenge ~1 in 3,
+// never while a fresh pass is still in its grace window.
+function _lifecheckShouldChallenge(kind) {
+  if (Date.now() < _lifecheckPassedUntil) return false;
+  if (kind === 'quest') return Math.random() < 0.34;
+  return true;
+}
+
+function swiftawLifecheck(opts = {}) {
+  return new Promise((resolve) => {
+    if (!opts.force && Date.now() < _lifecheckPassedUntil) { resolve(true); return; }
+    document.getElementById('modal-swiftaw-lifecheck')?.remove();
+    const overlay = document.createElement('div');
+    overlay.className = 'ftz-confirm-overlay';
+    overlay.id = 'modal-swiftaw-lifecheck';
+    let settled = false;
+    const done = (ok) => { if (settled) return; settled = true; overlay._lcCleanup?.(); overlay.remove(); if (ok) _lifecheckPassedUntil = Date.now() + 90000; resolve(ok); };
+    overlay.onclick = e => { if (e.target === overlay) done(false); };
+    overlay.innerHTML = `
+      <div class="ftz-confirm-card lc-card" role="dialog" aria-label="Verify you are human">
+        <button class="ftz-close-btn lc-x" aria-label="Close">&times;</button>
+        <div class="lc-head">
+          <div class="lc-brand"><span class="lc-brand__mark">${_LC_MARK_SVG}</span><span class="lc-brand__name">Swiftaw <b>Lifecheck</b></span></div>
+          <div class="lc-title">${escapeHTML(opts.title || 'Quick human check')}</div>
+          <div class="lc-sub">${escapeHTML(opts.reason || 'Slide the piece into place to continue.')}</div>
+        </div>
+        <div class="lc-slot" id="lc-slot"></div>
+        <div class="lc-status" id="lc-status">Slide the piece into the gap</div>
+        <div class="lc-secure"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Protected by Swiftaw Lifecheck</div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('.lc-x').onclick = () => done(false);
+    overlay.tabIndex = -1;
+    overlay.addEventListener('keydown', e => { if (e.key === 'Escape') done(false); });
+    setTimeout(() => overlay.focus(), 0);
+    // Official Swiftaw widget, if present. Falls back to the built-in challenge.
+    if (window.SwiftawLifecheck && typeof window.SwiftawLifecheck.render === 'function') {
+      try {
+        window.SwiftawLifecheck.render(overlay.querySelector('#lc-slot'), {
+          sitekey: SWIFTAW_LIFECHECK_SITEKEY,
+          callback: (token) => { overlay.dataset.lcToken = token || ''; done(true); },
+          'error-callback': () => _lcBuiltInChallenge(overlay, done),
+        });
+        return;
+      } catch (_) { /* fall through */ }
+    }
+    _lcBuiltInChallenge(overlay, done);
+  });
+}
+
+// Self-contained slide-to-fit challenge: drag the piece so it lands in the gap
+// (a randomised target). Pointer-based, works with mouse + touch.
+function _lcBuiltInChallenge(overlay, done) {
+  const slot = overlay.querySelector('#lc-slot');
+  const status = overlay.querySelector('#lc-status');
+  const W = 300, H = 150, PIECE = 44, PAD = 6, TOL = 9;
+  const maxTravel = W - PIECE - PAD * 2;
+  const gapX = Math.round(PAD + maxTravel * (0.42 + Math.random() * 0.52));
+  slot.innerHTML = `
+    <div class="lc-scene" style="width:${W}px;height:${H}px">
+      <div class="lc-gap" style="left:${gapX}px;width:${PIECE}px;height:${PIECE}px"></div>
+      <div class="lc-piece" id="lc-piece" style="left:${PAD}px;top:${(H - PIECE) / 2}px;width:${PIECE}px;height:${PIECE}px"></div>
+    </div>
+    <div class="lc-track" id="lc-track">
+      <div class="lc-fill" id="lc-fill"></div>
+      <div class="lc-handle" id="lc-handle" style="left:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    </div>`;
+  const piece = slot.querySelector('#lc-piece');
+  const handle = slot.querySelector('#lc-handle');
+  const fill = slot.querySelector('#lc-fill');
+  const pieceTopY = (H - PIECE) / 2;
+  let dragging = false, offX = 0, cur = 0;
+  const setPos = (x) => {
+    x = Math.max(0, Math.min(maxTravel, x)); cur = x;
+    handle.style.left = x + 'px';
+    fill.style.width = (x + 22) + 'px';
+    piece.style.left = (PAD + x) + 'px';
+  };
+  const px = (e) => (e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0));
+  const down = (e) => { if (slot.classList.contains('lc-pass')) return; dragging = true; offX = px(e) - cur; overlay.classList.add('lc-dragging'); e.preventDefault(); };
+  const move = (e) => { if (!dragging) return; setPos(px(e) - offX); };
+  const up = () => {
+    if (!dragging) return; dragging = false; overlay.classList.remove('lc-dragging');
+    const pieceX = PAD + cur;
+    if (Math.abs(pieceX - gapX) <= TOL) {
+      setPos(gapX - PAD);
+      slot.classList.add('lc-pass');
+      status.textContent = 'Verified — you’re human'; status.className = 'lc-status ok';
+      setTimeout(() => done(true), 560);
+    } else {
+      slot.classList.add('lc-fail');
+      status.textContent = 'Not quite — try again'; status.className = 'lc-status bad';
+      setTimeout(() => { slot.classList.remove('lc-fail'); status.textContent = 'Slide the piece into the gap'; status.className = 'lc-status'; setPos(0); }, 620);
+    }
+  };
+  handle.addEventListener('pointerdown', down);
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+  handle.addEventListener('touchstart', down, { passive: false });
+  window.addEventListener('touchmove', move, { passive: false });
+  window.addEventListener('touchend', up);
+  overlay._lcCleanup = () => {
+    window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+    window.removeEventListener('touchmove', move); window.removeEventListener('touchend', up);
+  };
 }
 
 // ════════════════════════════════════════════
@@ -47306,6 +47433,11 @@ async function claimQuest(id) {
   const q = _questCatalogue().find(x => x.id === id);
   if (!q) return;
   if (!q.claimable) { toast(q.done ? 'Already claimed.' : 'Finish the quest first!', 'info'); return; }
+  // Sometimes prove you're human before receiving Onyx (Swiftaw Lifecheck).
+  if (_lifecheckShouldChallenge('quest')) {
+    const ok = await swiftawLifecheck({ title: 'Quick human check', reason: `Verify you’re human to claim ${q.reward} Onyx from “${q.title}”.` });
+    if (!ok) { toast('Verification cancelled — reward not claimed.', 'info'); return; }
+  }
   if (id === 'daily_claim') { return claimDailyQuest(); }       // has streak logic + popup
   if (q.tier === 'weekly')  { return claimWeeklyQuest(id, q.reward); }
   // send_msg (daily) + one-time journey milestones.
@@ -53184,17 +53316,60 @@ async function purchaseRadiance(isPlus, days, cost) {
   );
 }
 
-async function cancelRadiance() {
-  showCustomConfirm(
-    'Cancel your Radiance subscription? Perks will stop when the current period ends.',
-    async () => {
-      delete CU.radianceUntil;
-      delete CU.radiancePlus;
-      await saveUser();
-      toast('Radiance subscription cancelled.', 'info');
-      renderAtelierTab('radiance');
-    }
-  );
+async function _doCancelRadiance() {
+  delete CU.radianceUntil;
+  delete CU.radiancePlus;
+  await saveUser();
+  toast('Radiance subscription cancelled.', 'info');
+  renderAtelierTab('radiance');
+}
+
+function cancelRadiance() {
+  document.getElementById('modal-rad-cancel')?.remove();
+  const end = CU?.radianceUntil ? new Date(CU.radianceUntil) : null;
+  const endStr = end && !isNaN(end) ? end.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }) : 'the end of your current period';
+  const rows = [
+    { type: 'warn', title: 'You lose every Radiance perk', desc: '500 MB uploads, custom emojis, animated banners, early access, the Radiance badge & more.' },
+    { type: 'warn', title: 'Your Flow switches off', desc: 'Your animated display-name flair and Radiance glow go dark.' },
+    { type: 'warn', title: 'Instantly less cool', desc: 'Your coolness rating drops right back to mortal levels.' },
+    { type: 'info', title: 'You keep it until the period ends', desc: `Everything stays active until ${endStr}, then it stops.` },
+  ];
+  const rowsHTML = rows.map(r => `
+    <div class="ftz-ac-row">
+      <span class="ftz-ac-row__ico ftz-ac-row__ico--${r.type}">${_AC_ROW_ICONS[r.type]}</span>
+      <span class="ftz-ac-row__body">
+        <span class="ftz-ac-row__title">${escapeHTML(r.title)}</span>
+        <span class="ftz-ac-row__desc">${escapeHTML(r.desc)}</span>
+      </span>
+    </div>`).join('');
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'modal-rad-cancel';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card ftz-ac-card--rad" role="dialog" aria-label="Cancel Radiance">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()">&times;</button>
+      <div class="ftz-ac-hero">
+        <div class="ftz-ac-badge"><svg viewBox="0 0 384 512" fill="currentColor"><path d="M240 48L48 288l112 0 0 176L336 224 224 224l16-176z"/></svg></div>
+        <div class="ftz-ac-title">Cancel <span class="ftz-ac-name" style="color:var(--accent)">Radiance</span>?</div>
+        <div class="ftz-ac-sub">Here’s what you’ll give up if you cancel your subscription.</div>
+      </div>
+      <div class="ftz-ac-body">
+        <div class="ftz-ac-rows">${rowsHTML}</div>
+      </div>
+      <div class="ftz-modal-foot">
+        <div class="ftz-modal-foot__actions" style="width:100%;">
+          <button class="btn-g" id="rad-cancel-keep" style="flex:1;justify-content:center;">Keep Radiance</button>
+          <button class="btn-red" id="rad-cancel-go" style="flex:1;justify-content:center;">Cancel Subscription</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#rad-cancel-keep').onclick = () => overlay.remove();
+  overlay.querySelector('#rad-cancel-go').onclick = () => { overlay.remove(); _doCancelRadiance(); };
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+  setTimeout(() => overlay.focus(), 0);
 }
 
 function buildGiftRadianceUI() {

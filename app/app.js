@@ -47485,33 +47485,41 @@ function updateQuestBadge() {
 // popup language (theme-aware surface, accent top-line, gentle scale entrance,
 // NO auto-dismiss / no brutal fade — the user closes it).
 function _showQuestClaimPopup(reward, questTitle) {
-  const old = document.getElementById('quest-claim-popup');
-  if (old) old.remove();
+  document.getElementById('quest-claim-popup')?.remove();
   const balance = (+CU?.onyx || 0);
+  const onyx = '<span class="rad-onyx-ic"></span>';
   const overlay = document.createElement('div');
   overlay.id = 'quest-claim-popup';
-  overlay.className = 'qclaim-overlay';
+  overlay.className = 'ftz-confirm-overlay';
   overlay.onclick = (e) => { if (e.target === overlay) _dismissQuestClaimPopup(); };
   overlay.innerHTML = `
-    <div class="qclaim-card">
-      <div class="qclaim-glow"></div>
-      <div class="qclaim-inner">
-        <div class="qclaim-orb"><span class="qclaim-orb-ic"></span></div>
-        <div class="qclaim-head">Your Onyx balance is now</div>
-        <div class="qclaim-bal"><span class="qclaim-bal-ic"></span>${balance.toLocaleString()}</div>
-        <div class="qclaim-sub">You earned <b>+${reward}</b> from the <b>${escapeHTML(questTitle || 'quest')}</b> quest. Great work — let's go spending.</div>
-        <button class="btn-a qclaim-shop" onclick="_dismissQuestClaimPopup();showView('fortshop')">Explore the Fortshop</button>
-        <button class="qclaim-later" onclick="_dismissQuestClaimPopup()">Keep questing</button>
+    <div class="ftz-confirm-card ftz-ac-card ftz-ac-card--reward" role="dialog" aria-label="Quest reward">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="_dismissQuestClaimPopup()">&times;</button>
+      <div class="ftz-ac-hero">
+        <div class="ftz-ac-badge ftz-ac-badge--onyx">${onyx}</div>
+        <div class="ftz-ac-title">You earned <span class="qcl-plus">+${reward} ${onyx}</span></div>
+        <div class="ftz-ac-sub">Nice work on the <b>${escapeHTML(questTitle || 'quest')}</b> quest — it’s all yours.</div>
+      </div>
+      <div class="ftz-ac-body">
+        <div class="qcl-balance">
+          <span class="qcl-balance__label">Your Onyx balance</span>
+          <span class="qcl-balance__val">${onyx} ${balance.toLocaleString()}</span>
+        </div>
+      </div>
+      <div class="ftz-modal-foot">
+        <div class="ftz-modal-foot__actions" style="width:100%;">
+          <button class="btn-g" onclick="_dismissQuestClaimPopup()" style="flex:1;justify-content:center;">Keep questing</button>
+          <button class="btn-a" onclick="_dismissQuestClaimPopup();showView('fortshop')" style="flex:1;justify-content:center;">Explore the Fortshop</button>
+        </div>
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('visible')));
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') _dismissQuestClaimPopup(); });
+  setTimeout(() => overlay.focus(), 0);
 }
 function _dismissQuestClaimPopup() {
-  const o = document.getElementById('quest-claim-popup');
-  if (!o) return;
-  o.classList.remove('visible');
-  setTimeout(() => o.remove(), 300);
+  document.getElementById('quest-claim-popup')?.remove();
 }
 
 // ── The active-quest widget — integrated ON the userbar (Discord-style) ──

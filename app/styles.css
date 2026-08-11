@@ -15897,9 +15897,18 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .ftz-ac-swap__btn:hover{background:var(--panel2);}
 .ftz-ac-swap__btn:active{transform:scale(.97);}
 .ftz-ac-card .ftz-modal-foot{margin:0;border-top:1px solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg);}
-/* Non-avatar hero badge (Radiance cancel card, etc.). */
+/* Non-avatar hero badge (Radiance cancel card, quest reward, etc.). */
 .ftz-ac-badge{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--ink);display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 6px 18px rgba(255,249,62,.22);}
 .ftz-ac-badge svg{width:30px;height:30px;}
+/* Quest reward card. */
+.ftz-ac-badge--onyx .rad-onyx-ic{width:32px;height:32px;}
+.ftz-ac-card--reward .ftz-ac-title{font-size:19px;}
+.qcl-plus{color:var(--accent);display:inline-flex;align-items:center;gap:5px;}
+.qcl-plus .rad-onyx-ic{width:18px;height:18px;}
+.qcl-balance{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;}
+.qcl-balance__label{font-size:12.5px;color:var(--muted-light);font-weight:600;}
+.qcl-balance__val{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-display);font-weight:800;font-size:18px;color:#fff;}
+.qcl-balance__val .rad-onyx-ic{width:18px;height:18px;color:var(--accent);}
 
 /* ════════════════════════════════════════════════════════════
    SWIFTAW LIFECHECK — human-verification gate (slide-to-fit).

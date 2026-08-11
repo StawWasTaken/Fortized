@@ -28529,19 +28529,79 @@ function swiftawLifecheck(opts = {}) {
     overlay.tabIndex = -1;
     overlay.addEventListener('keydown', e => { if (e.key === 'Escape') done(false); });
     setTimeout(() => overlay.focus(), 0);
-    // Official Swiftaw widget, if present. Falls back to the built-in challenge.
-    if (window.SwiftawLifecheck && typeof window.SwiftawLifecheck.render === 'function') {
-      try {
-        window.SwiftawLifecheck.render(overlay.querySelector('#lc-slot'), {
-          sitekey: SWIFTAW_LIFECHECK_SITEKEY,
-          callback: (token) => { overlay.dataset.lcToken = token || ''; done(true); },
-          'error-callback': () => _lcBuiltInChallenge(overlay, done),
-        });
-        return;
-      } catch (_) { /* fall through */ }
-    }
-    _lcBuiltInChallenge(overlay, done);
+    // Real Swiftaw widget → server-verify the token → resolve. Falls back to
+    // the built-in slide challenge whenever the loader or server verification
+    // isn't available (offline, CDN blocked, or the secret isn't configured).
+    _lcMountRealOrFallback(overlay, done);
   });
+}
+
+// The Swiftaw Lifecheck loader <script src>. Fill this from the Quickstart /
+// "Add the widget" docs; while empty, swiftawLifecheck uses the built-in
+// slide challenge. The widget itself is served from swiftaw.com inside a
+// sandboxed iframe (anti-theft model) — we only embed the loader URL.
+const _SWIFTAW_LC_LOADER = ''; // e.g. 'https://swiftaw.com/lifecheck/v1.js'
+let _lcLoaderPromise = null;
+function _lcEnsureLoader() {
+  if (window.Lifecheck && typeof window.Lifecheck.render === 'function') return Promise.resolve(true);
+  if (!_SWIFTAW_LC_LOADER) return Promise.reject(new Error('no-loader'));
+  if (_lcLoaderPromise) return _lcLoaderPromise;
+  _lcLoaderPromise = new Promise((resolve, reject) => {
+    let s = document.querySelector('script[data-swiftaw-lifecheck]');
+    if (!s) {
+      s = document.createElement('script');
+      s.src = _SWIFTAW_LC_LOADER; s.async = true; s.defer = true;
+      s.setAttribute('data-swiftaw-lifecheck', '1');
+      s.onerror = () => reject(new Error('loader-failed'));
+      document.head.appendChild(s);
+    }
+    const t0 = Date.now();
+    (function poll() {
+      if (window.Lifecheck && typeof window.Lifecheck.render === 'function') return resolve(true);
+      if (Date.now() - t0 > 6000) return reject(new Error('loader-timeout'));
+      setTimeout(poll, 120);
+    })();
+  });
+  return _lcLoaderPromise;
+}
+
+// Verify a widget token with the Fortized server (which holds the SECRET key).
+// PASS on { success:true }. If the server reports the secret isn't configured,
+// accept the widget's own pass (a real Swiftaw challenge was solved) so the
+// gate keeps working before the env var is set. Returns true | false | 'error'.
+async function _lcVerifyToken(token) {
+  if (!token) return false;
+  try {
+    const r = await fetch('/api/lifecheck/verify', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const j = await r.json();
+    if (j && j.success === true) return true;
+    if (j && j.configured === false) { console.warn('[Lifecheck] server secret not configured — accepting widget pass'); return true; }
+    return false;
+  } catch (e) { console.warn('[Lifecheck] verify request failed', e && e.message); return 'error'; }
+}
+
+function _lcMountRealOrFallback(overlay, done) {
+  const slot = overlay.querySelector('#lc-slot');
+  _lcEnsureLoader().then(() => {
+    slot.innerHTML = '<div class="lc-widget" id="lc-widget"></div>';
+    const status = overlay.querySelector('#lc-status');
+    status.textContent = 'Complete the check to continue';
+    let verifying = false;
+    window.Lifecheck.render(slot.querySelector('#lc-widget'), {
+      sitekey: SWIFTAW_LIFECHECK_SITEKEY,
+      callback: async (token) => {
+        if (verifying) return; verifying = true;
+        status.textContent = 'Verifying…'; status.className = 'lc-status';
+        const ok = await _lcVerifyToken(token);
+        if (ok === true) { status.textContent = 'Verified — you’re human'; status.className = 'lc-status ok'; setTimeout(() => done(true), 400); }
+        else { status.textContent = ok === 'error' ? 'Couldn’t verify — try again' : 'Verification failed — try again'; status.className = 'lc-status bad'; verifying = false; try { window.Lifecheck.reset(); } catch (_) {} }
+      },
+      'expired-callback': () => { try { window.Lifecheck.reset(); } catch (_) {} },
+    });
+  }).catch(() => { _lcBuiltInChallenge(overlay, done); });
 }
 
 // Self-contained slide-to-fit challenge: drag the piece so it lands in the gap

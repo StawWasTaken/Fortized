@@ -398,6 +398,54 @@ app.get('/api/moderate/health', async (req, res) => {
   }
 });
 
+// ── Swiftaw Lifecheck: server-side token verification ─────────────
+// The browser widget mints a single-use token; the client posts it here and we
+// confirm it with Swiftaw using the SECRET key, which never leaves the server.
+// Gate the client action on { success: true }. If the secret isn't configured
+// the client falls back to its built-in challenge (configured:false tells it so).
+const LIFECHECK_VERIFY_URL = process.env.SWIFTAW_LIFECHECK_URL
+  || 'https://mwszvynzzugbowdngzab.supabase.co/rest/v1/rpc/lifecheck_verify_token';
+const LIFECHECK_PUBLIC = (process.env.SWIFTAW_LIFECHECK_PUBLIC || 'lc_fortized_public').trim();
+app.post('/api/lifecheck/verify', async (req, res) => {
+  const secret = (process.env.SWIFTAW_LIFECHECK_SECRET || '').trim();
+  const token = (req.body && typeof req.body.token === 'string') ? req.body.token.trim() : '';
+  if (!secret) return res.json({ success: false, configured: false, error: 'secret-not-configured' });
+  if (!token)  return res.json({ success: false, configured: true, error: 'missing-input-token' });
+  try {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(LIFECHECK_VERIFY_URL, {
+      method: 'POST',
+      headers: { 'apikey': LIFECHECK_PUBLIC, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_secret: secret, p_token: token }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(to);
+    if (!r.ok) {
+      let body = ''; try { body = (await r.text()).slice(0, 300); } catch (_) {}
+      console.warn('[lifecheck] upstream ' + r.status + ': ' + body);
+      return res.json({ success: false, configured: true, error: 'upstream ' + r.status });
+    }
+    const j = await r.json();
+    // The RPC can return a single object or a one-row array — normalise both.
+    const v = Array.isArray(j) ? (j[0] || {}) : (j || {});
+    return res.json({
+      success: !!v.success,
+      configured: true,
+      score: (typeof v.score === 'number') ? v.score : null,
+      passed: String(v.passed || ''),
+      hostname: String(v.hostname || ''),
+      errorCodes: Array.isArray(v['error-codes']) ? v['error-codes'] : (Array.isArray(v.error_codes) ? v.error_codes : []),
+    });
+  } catch (e) {
+    return res.json({ success: false, configured: true, error: String((e && e.message) || e) });
+  }
+});
+// Diagnostic — never leaks the secret; just says whether it's set.
+app.get('/api/lifecheck/health', (req, res) => {
+  res.json({ configured: !!(process.env.SWIFTAW_LIFECHECK_SECRET || '').trim(), public: LIFECHECK_PUBLIC });
+});
+
 // ── Spotify OAuth (server-side exchange) ──────────
 // The server holds the PKCE verifier and does the full token exchange
 // so the app and callback don't need to share localStorage.

@@ -42392,7 +42392,10 @@ function _buildStickerContent() {
     return;
   }
   if (rail) rail.innerHTML = groups.map(_stickerRailBtn).join('');
-  if (grid) grid.innerHTML = groups.map(_stickerSection).join('');
+  // A "Bastions" supergroup header (matches the emoji picker's grouping) above
+  // the per-bastion collapsible sticker sections.
+  const superHdr = `<div class="epp-section epp-supergroup"><span class="epp-supergroup__ico">${_EMOJI_CATEGORY_SVGS.bastions || ''}</span><span class="epp-supergroup__label">Bastions</span></div>`;
+  if (grid) grid.innerHTML = superHdr + groups.map(_stickerSection).join('');
 }
 // Flat filtered grid for search (no sections, rail hidden via .spp-searching).
 function _searchStickers(q) {

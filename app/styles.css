@@ -15897,9 +15897,12 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .ftz-ac-swap__btn:hover{background:var(--panel2);}
 .ftz-ac-swap__btn:active{transform:scale(.97);}
 .ftz-ac-card .ftz-modal-foot{margin:0;border-top:1px solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg);}
-/* Non-avatar hero badge (Radiance cancel card, quest reward, etc.). */
-.ftz-ac-badge{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--ink);display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 6px 18px rgba(255,249,62,.22);}
+/* Non-avatar hero badge (quest reward, etc.). No coloured glow — flat. */
+.ftz-ac-badge{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--ink);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
 .ftz-ac-badge svg{width:30px;height:30px;}
+/* Plain hero LOGO (no square, no glow) — Radiance cancel card. */
+.ftz-ac-logo{width:60px;height:60px;object-fit:contain;margin-bottom:14px;display:block;}
+.ftz-ac-word{height:19px;width:auto;object-fit:contain;vertical-align:-2px;}
 /* Quest reward card. */
 .ftz-ac-badge--onyx .rad-onyx-ic{width:32px;height:32px;}
 .ftz-ac-card--reward .ftz-ac-title{font-size:19px;}
@@ -15930,7 +15933,7 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .lc-piece{position:absolute;border-radius:10px;background:linear-gradient(135deg,#2b3040,#191c26);border:1px solid rgba(255,255,255,.14);box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);cursor:grab;display:flex;align-items:center;justify-content:center;}
 .lc-piece::after{content:"";width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.5);}
 .lc-dragging .lc-piece{cursor:grabbing;}
-.lc-scene.lc-pass .lc-piece{border-color:var(--green);box-shadow:0 0 0 2px var(--green),0 6px 16px rgba(62,207,110,.4);}
+.lc-scene.lc-pass .lc-piece{border-color:var(--green);box-shadow:0 0 0 2px var(--green);}
 .lc-scene.lc-pass .lc-gap{border-color:rgba(62,207,110,.5);}
 .lc-scene.lc-fail{animation:lcShake .42s;}
 @keyframes lcShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}

@@ -1367,6 +1367,14 @@ Rules:
   interactive. Buttons press DOWN on `:active` (translateY) and lift slightly on
   hover; important/primary buttons carry subtle 3D depth (raised edge + soft
   shadow). Motion is smooth but never over-the-top; reuse `--ease-out`.
+- **🚫 NO GLOWS — the user HATES them** (standing, non-negotiable). Coloured
+  glows (a `box-shadow`/`filter` blur halo in an accent/status colour, e.g.
+  `box-shadow:0 0 12px rgba(255,249,62,.5)`, `drop-shadow`ed neon, blurred
+  aura behind icons/badges/tabs) make the app look "less professional and more
+  AI-ish". Do NOT add them to new UI, and strip them when you touch a component.
+  A NEUTRAL drop shadow for depth (`rgba(0,0,0,…)`) is fine; a coloured blur
+  halo is not. (See also the removed `.btn-*` hover glows + the Radiance-page
+  "NO outer glow" note.)
 - **Scrollbars**: big + visible + yellow accent (`--accent`), not thin/grey.
   (Base is set in styles.css "TACTILE PASS 1".)
 - **Non-selectable** usernames/display names (they're labels, not copy targets).

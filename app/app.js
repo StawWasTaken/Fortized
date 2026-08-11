@@ -53418,8 +53418,8 @@ function cancelRadiance() {
     <div class="ftz-confirm-card ftz-ac-card ftz-ac-card--rad" role="dialog" aria-label="Cancel Radiance">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()">&times;</button>
       <div class="ftz-ac-hero">
-        <div class="ftz-ac-badge"><svg viewBox="0 0 384 512" fill="currentColor"><path d="M240 48L48 288l112 0 0 176L336 224 224 224l16-176z"/></svg></div>
-        <div class="ftz-ac-title">Cancel <span class="ftz-ac-name" style="color:var(--accent)">Radiance</span>?</div>
+        <img class="ftz-ac-logo" src="/radiance-logo.png" alt="Radiance" onerror="this.remove()">
+        <div class="ftz-ac-title">Cancel <img class="ftz-ac-word" src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/radianceText.png" alt="Radiance" onerror="this.replaceWith(document.createTextNode('Radiance'))">?</div>
         <div class="ftz-ac-sub">Here’s what you’ll give up if you cancel your subscription.</div>
       </div>
       <div class="ftz-ac-body">

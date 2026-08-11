@@ -15957,9 +15957,10 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
    own (theme) background but BELOW all content — without touching child
    positioning (so absolutely-positioned close buttons keep their place). */
 .ftz-ov-swft,.ftz-ov-rad{position:relative;isolation:isolate;}
-.ftz-ov-swft::before,.ftz-ov-rad::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:.1;border-radius:inherit;}
-.ftz-ov-swft::before{background-image:url('/SWFT%20Background%20Overlay.png');}
-.ftz-ov-rad::before{background-image:url('/RadianceBackground%20Overlay.png');}
+/* Stretched to each card's ratio (the art is designed for it), opacity .1. */
+.ftz-ov-swft::before,.ftz-ov-rad::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background-position:center;background-size:100% 100%;background-repeat:no-repeat;opacity:.1;border-radius:inherit;}
+.ftz-ov-swft::before{background-image:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/SWFT%20Background%20Overlay.png');}
+.ftz-ov-rad::before{background-image:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/RadianceBackground%20Overlay.png');}
 .lc-brand{display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;color:#ff0033;}
 .lc-brand__mark{width:26px;height:26px;display:inline-flex;}
 .lc-brand__mark svg{width:26px;height:26px;}

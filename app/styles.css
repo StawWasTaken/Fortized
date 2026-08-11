@@ -4849,6 +4849,10 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .emoji-tooltip .et-from-fallback{display:flex;align-items:center;justify-content:center;background:var(--accent-dim,rgba(255,249,62,.12));color:var(--accent);font-family:var(--font-display);font-weight:800;font-size:16px;}
 .emoji-tooltip .et-from-name{font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;line-height:1.2;}
 .emoji-tooltip .et-from-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
+.emoji-tooltip .et-join{display:block;width:100%;margin-top:11px;padding:9px;border-radius:10px;background:var(--accent);color:var(--ink);border:2px solid var(--ink);box-shadow:0 3px 0 0 var(--ink);font-family:var(--font-display);font-size:12.5px;font-weight:800;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,filter .12s;}
+.emoji-tooltip .et-join:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 4px 0 0 var(--ink);}
+.emoji-tooltip .et-join:active{transform:translateY(2px);box-shadow:0 1px 0 0 var(--ink);}
+.emoji-tooltip .et-join-locked{margin-top:11px;font-size:11px;color:rgba(255,255,255,.4);text-align:center;line-height:1.4;}
 .msg-text .msg-emoji,.msg-text .msg-emoji-native,.msg-reply-ref .msg-emoji,.up-left-section-body .msg-emoji,.ann-body .msg-emoji,.forum-detail-content .msg-emoji,.frc-body .msg-emoji{cursor:pointer;transition:transform .1s;border-radius:3px;}
 /* Protect internal Fortized images from right-click save/copy */
 .msg-emoji[data-emoji-type],.ftz-embed img,.ftz-embed video,.ftz-embed-gif img,.epp-emoji-grid img,.epp-custom-emoji img,.invite-avatar img,.invite-right-logo img,.rail-avatar img,.bastion-banner-img,.bastion-icon-img{-webkit-user-drag:none;-webkit-touch-callout:none;user-select:none;pointer-events:auto;}

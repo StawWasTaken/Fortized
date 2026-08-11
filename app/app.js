@@ -24321,35 +24321,65 @@ document.addEventListener('click', function(e) {
   if (emoji) { e.stopPropagation(); _showEmojiTooltip(emoji, img); }
 });
 
+// The "…is from <bastion>" section of a sticker/emoji info card, with a Join
+// button when the viewer ISN'T a member and the bastion is public (invite-only
+// bastions get a hint instead — never a Join button, so the feature can't be
+// abused). Used for both member and cross-bastion (async-resolved) cases.
+function _bastionFromSectionHTML(b, isMember, bid, label) {
+  if (!b) return '';
+  const bn = b.name || 'Bastion';
+  const emb = b.emblem || b.icon || '';
+  const init = escapeHTML((bn[0] || 'B').toUpperCase());
+  let embHTML;
+  if (emb && /^(https?:|data:)/.test(emb)) {
+    embHTML = `<img src="${escapeHTML(emb)}" onerror="this.outerHTML='<div class=&quot;et-from-fallback&quot;>${init}</div>'">`;
+  } else if (emb) {
+    embHTML = `<div class="et-from-fallback" style="font-size:18px;">${escapeHTML(emb)}</div>`;
+  } else {
+    embHTML = `<div class="et-from-fallback">${init}</div>`;
+  }
+  const isPublic = b.public !== false;
+  const vis = isMember ? 'Bastion' : (isPublic ? 'Public Bastion' : 'Invite-Only Bastion');
+  let action = '';
+  if (!isMember && bid) {
+    const safeBid = String(bid).replace(/'/g, "\\'");
+    action = isPublic
+      ? `<button class="et-join" onclick="joinBastionById('${safeBid}',false);document.querySelector('.emoji-tooltip')?.remove();">Join bastion</button>`
+      : `<div class="et-join-locked">Invite-only — you'll need an invite to join.</div>`;
+  }
+  return `<div class="et-from"><div class="et-from-lbl">${escapeHTML(label)}</div><div class="et-from-row">${embHTML}<div><div class="et-from-name">${escapeHTML(bn)}</div><div class="et-from-sub">${vis}</div></div></div>${action}</div>`;
+}
+
 // Sticker tooltip — same visual language as emoji tooltip, but for stickers.
+// Resolves the source bastion even when the viewer isn't a member (via the
+// embedded id → getGlobalBastion) and offers a Join button for public ones.
 function _showStickerTooltip(el) {
   document.querySelector('.emoji-tooltip')?.remove();
   const url = el.dataset?.stickerUrl || el.getAttribute('src') || '';
-  // Find metadata by matching URL across bastions
-  let name = 'sticker';
-  let fromBastion = null;
-  try {
-    (CU?.bastions || []).some(b => {
-      const st = (b.stickers || []).find(s => s.url === url || s.data === url);
-      if (st) { name = st.name || 'sticker'; fromBastion = b; return true; }
-      return false;
-    });
-  } catch {}
-  const chipLabel = fromBastion ? 'Bastion Sticker' : 'Sticker';
-  const chipColor = fromBastion ? '#58bfff' : 'var(--accent, #fff93e)';
-  const description = fromBastion
-    ? 'This sticker is from one of your bastions. Send it in any chat you share.'
-    : 'A sticker — send it in any chat.';
-  let fromSection = '';
-  if (fromBastion) {
-    const emb = fromBastion.emblem || fromBastion.icon || '';
-    const bn = fromBastion.name || 'Bastion';
-    const embHTML = emb
-      ? `<img src="${escapeHTML(emb)}" onerror="this.outerHTML='<div class=&quot;et-from-fallback&quot;>${escapeHTML(bn[0].toUpperCase())}</div>'">`
-      : `<div class="et-from-fallback">${escapeHTML(bn[0].toUpperCase())}</div>`;
-    const vis = (fromBastion.visibility === 'private' || fromBastion.isPrivate) ? 'Invite-Only Bastion' : 'Bastion';
-    fromSection = `<div class="et-from"><div class="et-from-lbl">This sticker is from</div><div class="et-from-row">${embHTML}<div><div class="et-from-name">${escapeHTML(bn)}</div><div class="et-from-sub">${vis}</div></div></div></div>`;
+  const bid = el.dataset?.stickerBastion || '';
+  let name = el.dataset?.stickerName || 'sticker';
+  let fromBastion = null, isMember = false;
+  const bastions = CU?.bastions || [];
+  if (bid) {
+    fromBastion = bastions.find(b => (b.globalId || b.name) === bid) || null;
+    if (fromBastion) isMember = true;
   }
+  if (!fromBastion) {
+    try {
+      bastions.some(b => {
+        const st = (b.stickers || b.customStickers || []).find(s => s.url === url || s.data === url);
+        if (st) { name = st.name || name; fromBastion = b; isMember = true; return true; }
+        return false;
+      });
+    } catch {}
+  }
+  const haveBastion = !!(fromBastion || bid);
+  const chipLabel = haveBastion ? 'Bastion Sticker' : 'Sticker';
+  const chipColor = haveBastion ? '#58bfff' : 'var(--accent, #fff93e)';
+  const description = haveBastion
+    ? (isMember ? 'This sticker is from one of your bastions. Send it in any chat you share.'
+                : 'This sticker is from a bastion you’re not in yet.')
+    : 'A sticker — send it in any chat.';
 
   const tip = document.createElement('div');
   tip.className = 'emoji-tooltip';
@@ -24362,18 +24392,29 @@ function _showStickerTooltip(el) {
       </div>
     </div>
     <div class="et-desc">${description}</div>
-    ${fromSection}`;
-
+    <div class="et-from-slot"></div>`;
   document.body.appendChild(tip);
-  const rect = el.getBoundingClientRect();
-  const tipRect = tip.getBoundingClientRect();
-  let top = rect.top - tipRect.height - 8;
-  let left = rect.left + rect.width/2 - tipRect.width/2;
-  if (top < 8) top = rect.bottom + 8;
-  if (left < 8) left = 8;
-  if (left + tipRect.width > window.innerWidth - 8) left = window.innerWidth - tipRect.width - 8;
-  tip.style.top = top + 'px';
-  tip.style.left = left + 'px';
+
+  const place = () => {
+    const rect = el.getBoundingClientRect();
+    const tipRect = tip.getBoundingClientRect();
+    let top = rect.top - tipRect.height - 8;
+    let left = rect.left + rect.width/2 - tipRect.width/2;
+    if (top < 8) top = rect.bottom + 8;
+    if (left < 8) left = 8;
+    if (left + tipRect.width > window.innerWidth - 8) left = window.innerWidth - tipRect.width - 8;
+    tip.style.top = top + 'px';
+    tip.style.left = left + 'px';
+  };
+  if (fromBastion) tip.querySelector('.et-from-slot').innerHTML = _bastionFromSectionHTML(fromBastion, true, bid, 'This sticker is from');
+  else if (bid) {
+    Promise.resolve(FortizedSocial.getGlobalBastion(bid)).then(gb => {
+      if (!document.body.contains(tip) || !gb) return;
+      const slot = tip.querySelector('.et-from-slot');
+      if (slot) { slot.innerHTML = _bastionFromSectionHTML(gb, false, bid, 'This sticker is from'); place(); }
+    }).catch(() => {});
+  }
+  place();
 
   const close = (e) => {
     if (e && e.type === 'click' && tip.contains(e.target)) return;
@@ -24385,7 +24426,6 @@ function _showStickerTooltip(el) {
     document.addEventListener('click', close, true);
     document.addEventListener('scroll', close, true);
   }, 10);
-  setTimeout(() => tip.remove(), 5000);
 }
 
 // Reverse shortcode cache — built lazily so we aren't scanning
@@ -36990,9 +37030,16 @@ function parseMD(s) {
   });
   // 0a. Sticker token from sticker picker — click shows a tooltip (like emoji),
   //     not the media lightbox. Stickers behave as "big emojis".
-  s = s.replace(/\[FTZSTICKER:([^\]]+)\]/g, (_, url) => {
+  s = s.replace(/\[FTZSTICKER:([^\]]+)\]/g, (_, body) => {
+    // body = url | bastionId | name   (legacy: just url)
+    const parts = String(body).split('|');
+    const url = parts[0];
+    const bid = parts[1] || '';
+    const nm = parts.slice(2).join('|') || '';
     const safe = escapeHTML(url);
-    return `<img src="${safe}" class="msg-sticker" data-sticker-url="${safe}" style="max-width:160px;max-height:160px;object-fit:contain;display:block;margin:6px 0;cursor:pointer;" loading="lazy" draggable="false">`;
+    const bidAttr = bid ? ` data-sticker-bastion="${escapeHTML(bid)}"` : '';
+    const nmAttr = nm ? ` data-sticker-name="${escapeHTML(nm)}"` : '';
+    return `<img src="${safe}" class="msg-sticker" data-sticker-url="${safe}"${bidAttr}${nmAttr} style="max-width:160px;max-height:160px;object-fit:contain;display:block;margin:6px 0;cursor:pointer;" loading="lazy" draggable="false">`;
   });
   // 0aa. :emoji_name: shortcodes → actual emoji / Fortized emoji / bastion custom emoji / personal emoji
   // Permission rules:
@@ -42341,7 +42388,7 @@ function _stickerGroups() {
   bastions.forEach((b, idx) => {
     const stickers = (b?.stickers || b?.customStickers || []).filter(s => s && s.url);
     if (!stickers.length) return;
-    groups.push({ idx, name: b.name || 'Bastion', bastion: b, stickers });
+    groups.push({ idx, name: b.name || 'Bastion', bastionId: b.globalId || b.name || '', bastion: b, stickers });
   });
   return groups;
 }
@@ -42349,7 +42396,11 @@ function _stickerCell(s) {
   const url = escapeHTML(s.url || '');
   const name = escapeHTML(s.name || 'sticker');
   const from = escapeHTML(s.bastionName || '');
-  return `<div class="spp-sticker" data-sticker-url="${url}" data-sticker-name="${name}" data-sticker-from="${from}" onclick="_sendSticker('${url}','${name}')">`
+  const bid = escapeHTML(s.bastionId || '');
+  const jsUrl = (s.url || '').replace(/'/g, "\\'");
+  const jsName = (s.name || 'sticker').replace(/'/g, "\\'");
+  const jsBid = (s.bastionId || '').replace(/'/g, "\\'");
+  return `<div class="spp-sticker" data-sticker-url="${url}" data-sticker-name="${name}" data-sticker-from="${from}" data-sticker-bastion="${bid}" onclick="_sendSticker('${jsUrl}','${jsName}','${jsBid}')">`
     + `<img src="${url}" alt="${name}" loading="lazy" draggable="false"></div>`;
 }
 // Rail button — the bastion's emblem/icon; clicking scrolls to its section.
@@ -42368,7 +42419,7 @@ function _stickerRailBtn(g) {
 // Section = collapsible Discord-style header + that pack's sticker grid.
 function _stickerSection(g) {
   return `<div class="epp-section stk-sec-head" id="sticker-sec-${g.idx}" data-sticker-sec="${g.idx}" onclick="_stickerToggleSection(${g.idx})" role="button" aria-expanded="true">${escapeHTML(g.name)}<svg class="stk-sec-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></div>`
-    + `<div class="spp-sec-grid" id="sticker-sec-grid-${g.idx}">${g.stickers.map(s => _stickerCell({ ...s, bastionName: g.name })).join('')}</div>`;
+    + `<div class="spp-sec-grid" id="sticker-sec-grid-${g.idx}">${g.stickers.map(s => _stickerCell({ ...s, bastionName: g.name, bastionId: g.bastionId })).join('')}</div>`;
 }
 function _stickerToggleSection(idx) {
   const hdr = document.getElementById('sticker-sec-' + idx);
@@ -42382,7 +42433,7 @@ function _stickerToggleSection(idx) {
 function _buildStickerContent() {
   const groups = _stickerGroups();
   const flat = [];
-  groups.forEach(g => g.stickers.forEach(s => flat.push({ ...s, bastionName: g.name, bastionIdx: g.idx })));
+  groups.forEach(g => g.stickers.forEach(s => flat.push({ ...s, bastionName: g.name, bastionIdx: g.idx, bastionId: g.bastionId })));
   window._allStickersCache = flat;
   const grid = document.getElementById('sticker-grid');
   const rail = document.getElementById('sticker-rail');
@@ -42443,11 +42494,16 @@ function _wireStickerHover() {
   });
 }
 
-function _sendSticker(url, name) {
+function _sendSticker(url, name, bastionId) {
   document.getElementById('sticker-picker')?.remove();
   const inp = document.getElementById(_stickerInput);
   if (inp) {
-    const token = `[FTZSTICKER:${url}]`;
+    // Carry the source bastion (id + name) so a recipient who isn't in that
+    // bastion can still see the sticker's info card + a Join button. Segments
+    // are pipe-joined; the render/parse tolerates the legacy url-only form.
+    const token = (bastionId || name)
+      ? `[FTZSTICKER:${url}|${bastionId || ''}|${(name || '').replace(/[|\]]/g, '')}]`
+      : `[FTZSTICKER:${url}]`;
     const prev = inp.value.trim();
     inp.value = prev ? prev + ' ' + token : token;
     inp.focus();

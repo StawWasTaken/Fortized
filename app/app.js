@@ -47923,7 +47923,7 @@ function _fsFinalPrice(item) {
 function _fsRadBadge() {
   const d = (typeof _getActiveDiscounts === 'function') ? _getActiveDiscounts() : null;
   if (!d || !d.radiance) return '';
-  return `<img class="fs-rad-badge" src="/badges/radiance.png" alt="Radiance" title="Discounted by your Radiance" onerror="this.remove()">`;
+  return `<span class="fs-rad-badge" role="img" aria-label="Radiance" title="Discounted by your Radiance"></span>`;
 }
 function _fsPriceInline(item) {
   const { finalPrice, pct } = _fsFinalPrice(item);

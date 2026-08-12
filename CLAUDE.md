@@ -1,6 +1,15 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Radiance discount badge + `--rad-grad` GLOBAL fix (`2026fix470`).** The
+  discount badge is now the **radiance-logo.png as a green colour-overlay mask**
+  (`.fs-rad-badge`, same technique as `.dm-nav-mask`), not the badge PNG.
+  **🐞 ROOT CAUSE of the "transparent Radiance buttons":** `--rad-grad` was only
+  defined inside `.rad-page`, so in modals (appended to `document.body`)
+  `background:var(--rad-grad)` was an invalid computed value → transparent.
+  `--rad-grad` is now defined on `:root` (`.rad-page` still overrides per theme)
+  and the purchase-card rule carries an explicit fallback. Verified the extend-
+  Radiance confirm button computes the real gradient.
 - **Collection chip is a link (`2026fix468`).** In the item popup the
   collection chip (`.fs-di-collection.is-link`) now closes the modal and jumps
   to that collection's overview (`_fsShowCollection`), with a chevron affordance.

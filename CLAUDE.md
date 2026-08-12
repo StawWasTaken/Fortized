@@ -1,6 +1,30 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Fortshop — big polish pass done (`2026fix459`→`462`).** Now: no "Deck out"
+  banner; Radiance-style buttons (`.fs-btn`, no shimmer/glow) in shop + quests;
+  **stacked discount price** (`_fsPriceBlock`, pct computed from prices — fixed
+  the `-0.15%` bug); **Terms purchase-confirm card** (`_fsPurchaseConfirm`, gift-
+  style checkbox gating Buy; Radiance's purchase uses it too); Buy reads "Buy for
+  ⬡ N"; block-card close (`.ftz-close-btn ftz-ac-x`); balance chip removed from
+  subnav; subnav icon = the DM-sidebar shop-bag SVG. **Collections** model
+  (Featured hero + carousel of newest collection + 2 randomized `_fsColBanner`s;
+  `_fsShowCollection`→Browse filter). **Browse** = right filter rail
+  (`_fsFilterRail`, Show only + Sort) + items grouped by collection, flat when a
+  filter's on. **Decorations** = code-authored SVG set (`_decoLaurel/Orbit/Crown/
+  Sakura`→`PROFILE_DECORATIONS`, was empty; kind-aware helpers `_fsIsOwned/
+  Equipped/Preview/Equip/BuyItem`). **The Vault** (renamed from Onyx Exclusives)
+  = only `onyx_pure` (`exclusive:true`); Onyx Pure enhanced lighter obsidian-
+  violet. **Type-specific REAL previews** (`_fsRightPanel`): appearance→chat-with-
+  Leafen painted in the theme; decoration→your real profile card (avatar/banner/
+  styled name/status/customStatus/pronouns/handle) + message; nameplate→member-
+  list (fortized-emoji fakes fortressdefender9/Leafen/PopPaladin). **Bundles** =
+  personalized per user+month, randomized name+font, 20-30% off (`_fsPersonalBundles`).
+  **⚠️ LIVE-VERIFY:** onyx glyph/FA/emoji imgs CDN-blind in sandbox; real profile
+  data in the decoration preview; quest buttons live; carousel; buy→terms→grant.
+  **⚠️ NEED ART (collection cover + logo each):** Decorations, Crown Jewels,
+  Midnight, Naturals → drop into `coverImg`/`logoImg` on `_FS_COLLECTIONS`.
+  **NEXT:** real collection art; nameplate PRODUCTS (preview renderer is ready).
 - **🐞 FIX SWIFTAW LIFECHECK — it doesn't work yet (user-reported).** The real
   widget renders (loader `https://swiftaw.com/lifecheck/lifecheck.js` +
   `Lifecheck.render(el,{sitekey:'lc_fortized_public',callback,'expired-callback'})`,

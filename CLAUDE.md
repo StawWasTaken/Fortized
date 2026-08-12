@@ -1,6 +1,11 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Bundle names use real DISPLAY-NAME STYLES (`2026fix471`).** `_fsBundleStyle
+  (rng)` picks a random font (`DISPLAY_NAME_FONTS`), effect (`DISPLAY_NAME_EFFECTS`
+  → `_getDisplayEffectCSS` + `_getDisplayEffectClass`, so animated effects run)
+  and colour(s) (`DISPLAY_NAME_COLORS`) — deterministic per user+month like the
+  rest of the bundle. Replaces the old ad-hoc `_FS_BUNDLE_FONTS` list.
 - **Radiance discount badge + `--rad-grad` GLOBAL fix (`2026fix470`).** The
   discount badge is now the **radiance-logo.png as a green colour-overlay mask**
   (`.fs-rad-badge`, same technique as `.dm-nav-mask`), not the badge PNG.

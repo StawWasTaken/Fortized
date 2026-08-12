@@ -16433,3 +16433,5 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-di-collection.is-link:active{transform:translateY(0);}
 .fs-di-collection-go{font-size:9px;opacity:.62;transition:transform .16s var(--ease-out),opacity .16s;}
 .fs-di-collection.is-link:hover .fs-di-collection-go{transform:translateX(2px);opacity:1;}
+/* Bundle names wear a randomized display-name style (font + effect + colour) */
+.fs-bundle-name{font-size:15.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 0 2px;}

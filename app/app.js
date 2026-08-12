@@ -48190,7 +48190,21 @@ function _fsOnyxTab(all) {
 
 // ── Personalized bundles (per user + month; randomized name + font) ──
 const _FS_BUNDLE_NAMES = ['Collector’s Set', 'Signature Pack', 'Curated Drop', 'Icon Bundle', 'Standout Set', 'Statement Pack', 'Prestige Kit', 'Showcase Bundle', 'Trendsetter Pack', 'Editor’s Pick'];
-const _FS_BUNDLE_FONTS = ['var(--font-display)', "Georgia,'Times New Roman',serif", "'Trebuchet MS',sans-serif", "'Courier New',monospace", 'var(--font-ui)'];
+// A randomized display-name style (font + effect + colour) for a bundle name —
+// the same catalogue users style their own display name with.
+function _fsBundleStyle(rng) {
+  const fonts   = (typeof DISPLAY_NAME_FONTS   !== 'undefined') ? DISPLAY_NAME_FONTS   : [];
+  const effects = (typeof DISPLAY_NAME_EFFECTS !== 'undefined') ? DISPLAY_NAME_EFFECTS : [];
+  const colors  = (typeof DISPLAY_NAME_COLORS  !== 'undefined') ? DISPLAY_NAME_COLORS  : ['#fff93e'];
+  const f  = fonts.length   ? fonts[Math.floor(rng() * fonts.length)]     : null;
+  const ef = effects.length ? effects[Math.floor(rng() * effects.length)] : null;
+  const c1 = colors[Math.floor(rng() * colors.length)];
+  const c2 = colors[Math.floor(rng() * colors.length)];
+  let css = f ? `font-family:${f.css};font-weight:${f.weight};` : '';
+  if (ef && typeof _getDisplayEffectCSS === 'function') css += _getDisplayEffectCSS(ef.id, c1, c2);
+  const cls = (ef && typeof _getDisplayEffectClass === 'function') ? _getDisplayEffectClass(ef.id) : '';
+  return { css, cls };
+}
 function _fsSeed(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return () => { h += 0x6D2B79F5; let t = h >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function _fsPersonalBundles() {
   const cat = _fsCatalogue();
@@ -48208,7 +48222,8 @@ function _fsPersonalBundles() {
     if (items.length < 2) break;
     const orig = items.reduce((s, it) => s + it.price, 0);
     const price = Math.max(5, Math.round(orig * (1 - (0.2 + Math.round(rng() * 10) / 100))));
-    bundles.push({ id: 'fsbundle_' + month + '_' + b, name: _FS_BUNDLE_NAMES[Math.floor(rng() * _FS_BUNDLE_NAMES.length)], font: _FS_BUNDLE_FONTS[Math.floor(rng() * _FS_BUNDLE_FONTS.length)], items, orig, price, pct: Math.round((1 - price / orig) * 100) });
+    const style = _fsBundleStyle(rng);
+    bundles.push({ id: 'fsbundle_' + month + '_' + b, name: _FS_BUNDLE_NAMES[Math.floor(rng() * _FS_BUNDLE_NAMES.length)], style, items, orig, price, pct: Math.round((1 - price / orig) * 100) });
   }
   return bundles;
 }
@@ -48217,7 +48232,7 @@ function _fsBundleCard(bd) {
   return `<div class="fs-card fs-bundle" role="button" tabindex="0" onclick="_fsBuyBundle('${bd.id}')">
     <span class="fs-card-art fs-bundle-art">${thumbs}<span class="fs-tag">${bd.items.length} items</span></span>
     <span class="fs-card-info">
-      <span class="fs-card-name" style="font-family:${bd.font}">${escapeHTML(bd.name)}</span>
+      <span class="fs-card-name fs-bundle-name ${bd.style?.cls || ''}" style="${bd.style?.css || ''}">${escapeHTML(bd.name)}</span>
       <span class="fs-card-sub">${bd.items.map(i => escapeHTML(i.name)).join(' · ')}</span>
       <span class="fs-card-foot">
         <span class="fs-card-price"><span class="fs-p">${_FS_ONYX_IC}<s>${bd.orig}</s><b>${bd.price}</b><em>(-${bd.pct}%)</em></span></span>

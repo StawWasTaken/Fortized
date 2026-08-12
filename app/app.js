@@ -51116,6 +51116,8 @@ const SHOP_APPEARANCES_ALL = [
   { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, rarity:'rare', gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
   { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, rarity:'rare', gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(96,165,250,.18)', hoverBorder:'rgba(96,165,250,.35)', labelColor:'rgba(96,165,250,.85)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
   { id:'green_leaves', name:'Green Leaves', desc:'Calm forest greens. A quieter place to talk.', price:130, gradient:'linear-gradient(135deg,#0a1410,#0e1f16,#132b1e)', borderColor:'rgba(62,207,110,.22)', hoverBorder:'rgba(62,207,110,.45)', labelColor:'rgba(62,207,110,.9)', previewBg:'linear-gradient(170deg,#0a1410 0%,#0e1f16 50%,#132b1e 100%)', sidebarBg:'#091310' },
+  { id:'obsidian_ember', name:'Obsidian Ember', desc:'Pitch-black obsidian with a deep ember-red glow. For those who run hot.', price:175, rarity:'rare', gradient:'linear-gradient(135deg,#0c0406,#1a0a10,#26101a)', borderColor:'rgba(255,80,90,.2)', hoverBorder:'rgba(255,80,90,.42)', labelColor:'rgba(255,110,110,.85)', previewBg:'linear-gradient(170deg,#120608 0%,#1c0a10 50%,#28101a 100%)', sidebarBg:'#150709' },
+  { id:'royal_amethyst', name:'Royal Amethyst', desc:'Deep violet royalty — a rich amethyst backdrop with a quiet purple sheen.', price:165, rarity:'rare', gradient:'linear-gradient(135deg,#0e0616,#1c1030,#281844)', borderColor:'rgba(168,120,255,.2)', hoverBorder:'rgba(168,120,255,.42)', labelColor:'rgba(190,150,255,.9)', previewBg:'linear-gradient(170deg,#14091f 0%,#1c1030 50%,#281844 100%)', sidebarBg:'#170b22' },
 ];
 function getDecorationSrc(decoId) {
   const d = PROFILE_DECORATIONS.find(d=>d.id===decoId);
@@ -56931,6 +56933,36 @@ function applyAppearance(themeId, _opts) {
     document.documentElement.style.setProperty('--border',     '#3a2234');
     document.documentElement.style.setProperty('--muted',      '#6e4a62');
     document.documentElement.style.setProperty('--muted-light','#9a6f8a');
+  } else if (themeId === 'obsidian_ember') {
+    // Obsidian Ember — pitch-black obsidian with a deep ember-red undertone.
+    canvasColor = 'linear-gradient(170deg, #120608 0%, #200b12 100%)';
+    sidebarColor = '#150709';
+    glassHeavy = 'rgba(18,6,8,.94)'; glassMid = 'rgba(18,6,8,.88)'; glassLight = 'rgba(18,6,8,.82)';
+    document.documentElement.style.setProperty('--bg',         '#120608');
+    document.documentElement.style.setProperty('--rail',       '#0b0405');
+    document.documentElement.style.setProperty('--sidebar',    sidebarColor);
+    document.documentElement.style.setProperty('--channel',    '#1c0a0d');
+    document.documentElement.style.setProperty('--panel',      '#200c10');
+    document.documentElement.style.setProperty('--panel2',     '#260e14');
+    document.documentElement.style.setProperty('--panel3',     '#2c1118');
+    document.documentElement.style.setProperty('--border',     '#3c1621');
+    document.documentElement.style.setProperty('--muted',      '#6e343f');
+    document.documentElement.style.setProperty('--muted-light','#a85560');
+  } else if (themeId === 'royal_amethyst') {
+    // Royal Amethyst — deep violet royalty.
+    canvasColor = 'linear-gradient(170deg, #14091f 0%, #211235 100%)';
+    sidebarColor = '#170b22';
+    glassHeavy = 'rgba(20,9,31,.94)'; glassMid = 'rgba(20,9,31,.88)'; glassLight = 'rgba(20,9,31,.82)';
+    document.documentElement.style.setProperty('--bg',         '#14091f');
+    document.documentElement.style.setProperty('--rail',       '#0e0616');
+    document.documentElement.style.setProperty('--sidebar',    sidebarColor);
+    document.documentElement.style.setProperty('--channel',    '#1d0f2b');
+    document.documentElement.style.setProperty('--panel',      '#221231');
+    document.documentElement.style.setProperty('--panel2',     '#28163a');
+    document.documentElement.style.setProperty('--panel3',     '#2f1b44');
+    document.documentElement.style.setProperty('--border',     '#3b2352');
+    document.documentElement.style.setProperty('--muted',      '#5e4080');
+    document.documentElement.style.setProperty('--muted-light','#9c7aca');
   } else {
     // Classic Fortized (default)
     canvasColor = '#16191f';
@@ -56974,7 +57006,7 @@ function applyAppearance(themeId, _opts) {
   const chatInputOuter = document.querySelector('.chat-input-outer');
   if (userbarEl) userbarEl.style.background = '';
   if (chatInputOuter) chatInputOuter.style.background = '';
-  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', green_leaves:'🍃 Green Leaves', radiance_plum:'✨ Radiance Plum', fortized_classic:'⚡ Classic Fortized', fortized_slate:'🪨 Fortized Slate'};
+  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', green_leaves:'🍃 Green Leaves', radiance_plum:'✨ Radiance Plum', obsidian_ember:'🔥 Obsidian Ember', royal_amethyst:'🔮 Royal Amethyst', fortized_classic:'⚡ Classic Fortized', fortized_slate:'🪨 Fortized Slate'};
   toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
 }
 
@@ -56988,6 +57020,8 @@ const _appearanceThemeData = {
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
   green_leaves:     {id:'green_leaves',     name:'Green Leaves',     bg:'#0a1410', sidebar:'#091310', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:''},
   radiance_plum:    {id:'radiance_plum',    name:'Radiance Plum',    bg:'#21131e', sidebar:'#1b0f19', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#241522', panel:'#2a1826', accent:'#fef83d', border:'#3a2234', muted:'#6e4a62', bodyGrad:'linear-gradient(170deg,#21131e 0%,#2a1826 100%)'},
+  obsidian_ember:   {id:'obsidian_ember',   name:'Obsidian Ember',   bg:'#120608', sidebar:'#150709', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#1c0a0d', panel:'#200c10', accent:'#fef83d', border:'#3c1621', muted:'#6e343f', bodyGrad:'linear-gradient(170deg,#120608 0%,#200b12 100%)'},
+  royal_amethyst:   {id:'royal_amethyst',   name:'Royal Amethyst',   bg:'#14091f', sidebar:'#170b22', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#1d0f2b', panel:'#221231', accent:'#fef83d', border:'#3b2352', muted:'#5e4080', bodyGrad:'linear-gradient(170deg,#14091f 0%,#211235 100%)'},
 };
 
 function _buildPreviewMockup(t, label) {

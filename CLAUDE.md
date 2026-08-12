@@ -48,8 +48,25 @@
   **⚠️ LIVE-VERIFY:** onyx glyph (`.rad-onyx-ic`) + FA crest are CDN/FA-blind in
   sandbox (verified layout via Playwright); the carousel autoplay/hover/arrows;
   buy→equip→gift→wishlist end-to-end; tab nav.
-  **NEXT (Phase 2):** Bundles content, more Onyx-exclusive items (propose+build),
-  decorations into Browse, the fuller mini-profile-preview card variant.
+  **Phase 2 started (`2026fix458`):** added **2 new Onyx-exclusive appearances**
+  — **Obsidian Ember** (`obsidian_ember`, black + ember-red, 175) and **Royal
+  Amethyst** (`royal_amethyst`, deep violet, 165), both `rarity:'rare'` so
+  `_fsIsOnyx` lists them under Onyx Exclusives (now 4 items). Each touches the 4
+  appearance sites: `SHOP_APPEARANCES_ALL`, an `applyAppearance` branch (11 CSS
+  vars + canvas/glass), `toastMsgs`, and `_appearanceThemeData` (settings
+  preview). Verified applied + readable via Playwright. Appearances are the SAFE
+  additive path (token-based, egress-free) — new ones just need those 4 sites.
+  **NEXT (Phase 2 remainder):** Bundles content, decorations into Browse (pending
+  the decoration-art decision), the fuller mini-profile-preview card variant.
+- **Avatar decorations — prototype done, awaiting user decision.** SVG data-URI
+  overlays drop into the existing `PROFILE_DECORATIONS`/`getDecorationSrc`/
+  `.profile-decoration-overlay*` system with ZERO code change and zero egress
+  (an SVG `data:` URL renders as the `<img src>` overlay; SMIL animates even in
+  `<img>`). Prototyped 4 (laurel wreath, animated orbit ring, crown, sakura) —
+  crisp at profile + chat size (`scratchpad/deco-gen.mjs`, srcs in
+  `deco-src.json`). Geometric/frame decos are great + fast in code; richly
+  illustrated ones would still need raster art. User is deciding the direction
+  before we build a set + wire it into `PROFILE_DECORATIONS` + the shop.
 - Popup background overlays (`.ftz-ov-swft`/`.ftz-ov-rad`, styles.css) load the
   SwiftawCDN art at opacity .4, stretched (`100% 100%`); live-verify brightness.
 

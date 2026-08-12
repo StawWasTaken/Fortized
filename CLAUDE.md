@@ -1,6 +1,25 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Bundle PREVIEW popup + tooltip & sort fixes (`2026fix474`→`475`).**
+  • Clicking a bundle now opens `_fsOpenBundle(id, idx)` — a detail popup that
+    PREVIEWS every item: left = preview + styled bundle name + "includes N
+    items" + a thumb strip (`.fs-bd-thumb`, selected highlighted) + the selected
+    item's name·kind + bundle price + Buy; right = the full `_fsRightPanel`
+    preview with ‹ › arrows (`.fs-bd-arr`) + ←/→ keys. The card's hover button
+    still buys directly.
+  • **🐞 SORT BY WAS DEAD:** `_ftzSelectPick` substitutes `__VALUE__` with
+    `JSON.stringify(value)` (quotes INCLUDED), so `_fsSetSort('__VALUE__')`
+    became `_fsSetSort('"price-low"')` → `_fsSort` held a double-quoted string
+    that never matched. Now `_fsSetSort(__VALUE__)`. Verified it sorts.
+  • **🐞 ORPHANED TOOLTIPS:** `_ftzTipHide` only ran on `mouseout`, so a tooltip
+    whose element was REMOVED/hidden by a re-render lived forever. Added
+    `_ftzTipAnchor` + a 200ms `_ftzTipCheckAnchor` watchdog (drops the tip when
+    the anchor is disconnected, unlaid-out, or loses `data-tip`), an orphan
+    sweep in `_ftzTipRemove`, plus capture-phase `mousedown` + window `blur`.
+  • Browse collection logos bigger; collection-overview logo left + VERTICALLY
+    centred (`.fs-hero--sub{align-items:stretch}` — the parent's `flex-start`
+    was pinning the inner box to the top).
 - **Onyx Experience layout (`2026fix472`→`473`).** Now uses the Featured depth
   treatment — full-bleed hero, cover fading over the TOP HALF of the cards
   (`.fs-heroblock--onyx .fs-rowwrap{margin-top:-118px}`) — but with the **logo

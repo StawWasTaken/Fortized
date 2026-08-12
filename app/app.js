@@ -6146,7 +6146,7 @@ function _hideRailNavTip() {
 }
 
 // ── Global custom tooltip system (replaces browser title tooltips) ──
-let _ftzTipEl = null, _ftzTipTimer = null;
+let _ftzTipEl = null, _ftzTipTimer = null, _ftzTipAnchor = null, _ftzTipWatch = null;
 function _initGlobalTooltips() {
   // Strip all title attrs → data-tip, so the browser never shows its own tooltip
   document.querySelectorAll('[title]').forEach(el => {
@@ -6181,6 +6181,8 @@ function _initGlobalTooltips() {
   // Global hover listeners via delegation
   document.addEventListener('mouseover', _ftzTipShow);
   document.addEventListener('mouseout', _ftzTipHide);
+  document.addEventListener('mousedown', () => { clearTimeout(_ftzTipTimer); _ftzTipRemove(); }, true);
+  window.addEventListener('blur', () => { clearTimeout(_ftzTipTimer); _ftzTipRemove(); });
 }
 function _ftzTipShow(e) {
   const el = e.target.closest?.('[data-tip]');
@@ -6195,6 +6197,9 @@ function _ftzTipShow(e) {
     tip.textContent = text;
     document.body.appendChild(tip);
     _ftzTipEl = tip;
+    _ftzTipAnchor = el;
+    if (_ftzTipWatch) clearInterval(_ftzTipWatch);
+    _ftzTipWatch = setInterval(_ftzTipCheckAnchor, 200);
     const rect = el.getBoundingClientRect();
     const tipRect = tip.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -6250,6 +6255,19 @@ function _ftzTipHide(e) {
 }
 function _ftzTipRemove() {
   if (_ftzTipEl) { _ftzTipEl.remove(); _ftzTipEl = null; }
+  _ftzTipAnchor = null;
+  if (_ftzTipWatch) { clearInterval(_ftzTipWatch); _ftzTipWatch = null; }
+  // Sweep any orphan left behind by an earlier race.
+  document.querySelectorAll('.ftz-tooltip').forEach(t => { if (t !== _ftzTipEl) t.remove(); });
+}
+// A tooltip must not outlive the thing it describes. mouseout never fires when
+// an element is removed or hidden by a re-render, so poll the anchor: gone from
+// the DOM, no longer laid out, or no longer carrying data-tip → drop the tip.
+function _ftzTipCheckAnchor() {
+  const a = _ftzTipAnchor;
+  if (!a) { _ftzTipRemove(); return; }
+  const gone = !a.isConnected || !document.contains(a) || !a.getAttribute('data-tip') || a.getClientRects().length === 0;
+  if (gone) _ftzTipRemove();
 }
 
 // ── Reaction tooltip (Discord-style: emoji + "reacted by" users) ──
@@ -48148,7 +48166,7 @@ function _fsBrowse(all) {
   const sortSel = (typeof _ftzSelectHTML === 'function')
     ? _ftzSelectHTML('fs-sort', window._fsSort || 'recent',
         [{ value: 'recent', label: 'Recently Added' }, { value: 'price-low', label: 'Price: Low to High' }, { value: 'price-high', label: 'Price: High to Low' }],
-        "_fsSetSort('__VALUE__')")
+        "_fsSetSort(__VALUE__)")
     : '';
   const toolbar = `<div class="fs-toolbar">
     <span class="fs-toolbar-lb">Sort by</span>${sortSel}
@@ -48230,18 +48248,66 @@ function _fsPersonalBundles() {
 }
 function _fsBundleCard(bd) {
   const thumbs = bd.items.map(it => `<span class="fs-bundle-thumb">${_fsPreview(it)}</span>`).join('');
-  return `<div class="fs-card fs-bundle" role="button" tabindex="0" onclick="_fsBuyBundle('${bd.id}')">
+  return `<div class="fs-card fs-bundle" role="button" tabindex="0" onclick="_fsOpenBundle('${bd.id}')">
     <span class="fs-card-art fs-bundle-art">${thumbs}<span class="fs-tag">${bd.items.length} items</span></span>
     <span class="fs-card-info">
       <span class="fs-card-name fs-bundle-name ${bd.style?.cls || ''}" style="${bd.style?.css || ''}">${escapeHTML(bd.name)}</span>
       <span class="fs-card-sub">${bd.items.map(i => escapeHTML(i.name)).join(' · ')}</span>
       <span class="fs-card-foot">
         <span class="fs-card-price"><span class="fs-p">${_FS_ONYX_IC}<s>${bd.orig}</s><b>${bd.price}</b><em>(-${bd.pct}%)</em></span></span>
-        <span class="fs-card-act"><span class="fs-btn fs-btn--primary fs-card-buy">Get bundle</span></span>
+        <span class="fs-card-act"><button class="fs-btn fs-btn--primary fs-card-buy" onclick="event.stopPropagation();_fsBuyBundle('${bd.id}')">Buy for ${_FS_ONYX_IC} ${bd.price}</button></span>
       </span>
     </span>
   </div>`;
 }
+function _fsOpenBundle(id, idx) {
+  const bd = _fsPersonalBundles().find(b => b.id === id); if (!bd) return;
+  const n = bd.items.length; if (!n) return;
+  idx = (((idx || 0) % n) + n) % n;
+  const item = bd.items[idx];
+  document.getElementById('fs-item-modal')?.remove();
+  const col = _fsCollectionOf(item.id);
+  const chev = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="${d === 'l' ? '15 18 9 12 15 6' : '9 18 15 12 9 6'}"/></svg>`;
+  const thumbs = bd.items.map((it, i) => `<button class="fs-bd-thumb${i === idx ? ' is-on' : ''}" title="${escapeHTML(it.name)}" onclick="_fsOpenBundle('${bd.id}',${i})">${_fsPreview(it)}</button>`).join('');
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'fs-item-modal';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="ftz-confirm-card fs-di fs-di--bundle" role="dialog" aria-label="${escapeHTML(bd.name)}">
+      <div class="fs-di-left">
+        <div class="fs-di-preview">${_fsPreview(item)}</div>
+        <div class="fs-di-name fs-bundle-name ${bd.style?.cls || ''}" style="${bd.style?.css || ''}">${escapeHTML(bd.name)}</div>
+        <div class="fs-di-type">Bundle includes ${n} item${n === 1 ? '' : 's'}</div>
+        <div class="fs-bd-thumbs">${thumbs}</div>
+        <div class="fs-bd-sel"><b>${escapeHTML(item.name)}</b> <span>· ${_fsKindLabel(item)}</span></div>
+        <div class="fs-price fs-price--big fs-price--disc">
+          <div class="fs-price-old">${_FS_ONYX_IC}<span>${bd.orig}</span></div>
+          <div class="fs-price-new">${_FS_ONYX_IC}<b>${bd.price}</b><span class="fs-price-pct">${_fsRadBadge()}(-${bd.pct}%)</span></div>
+        </div>
+        <div class="fs-di-actions">
+          <button class="fs-btn fs-btn--primary fs-di-buy" onclick="_fsBuyBundle('${bd.id}')">Buy for ${_FS_ONYX_IC} ${bd.price}</button>
+        </div>
+      </div>
+      <div class="fs-di-right">
+        <div class="fs-di-right-bg" style="${col && col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col ? col.cover : (item.gradient || 'linear-gradient(120deg,#14161d,#1f232b)')}`}"></div>
+        <div class="fs-di-collection"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(item.name)}</div>
+        <button class="ftz-close-btn ftz-ac-x fs-di-x" aria-label="Close" onclick="document.getElementById('fs-item-modal')?.remove()">&times;</button>
+        <div class="fs-di-stage fs-di-stage--${item.kind}">${_fsRightPanel(item)}</div>
+        ${n > 1 ? `<button class="fs-bd-arr fs-bd-arr--l" onclick="_fsOpenBundle('${bd.id}',${idx - 1})" aria-label="Previous item">${chev('l')}</button>
+        <button class="fs-bd-arr fs-bd-arr--r" onclick="_fsOpenBundle('${bd.id}',${idx + 1})" aria-label="Next item">${chev('r')}</button>` : ''}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => {
+    if (e.key === 'Escape') overlay.remove();
+    else if (e.key === 'ArrowLeft')  _fsOpenBundle(bd.id, idx - 1);
+    else if (e.key === 'ArrowRight') _fsOpenBundle(bd.id, idx + 1);
+  });
+  setTimeout(() => overlay.focus(), 0);
+}
+
 function _fsBuyBundle(id) {
   const bd = _fsPersonalBundles().find(b => b.id === id); if (!bd) return;
   _fsPurchaseConfirm({ title: bd.name, subtitle: bd.items.length + ' items · ' + bd.items.map(i => i.name).join(', '), priceOnyx: bd.price, onConfirm: () => _fsGrantBundle(bd) });

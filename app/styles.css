@@ -16444,3 +16444,37 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* Onyx: keep the tagline clear of the cards that ride up over the cover. */
 .fs-hero--center .fs-hero-right{padding-bottom:34px;}
 .fs-heroblock--onyx .fs-rowwrap{margin-top:-118px;}
+
+/* Browse: bigger collection logos; overview logo left + vertically centred. */
+.fs-colcard{height:186px;}
+.fs-cc-lg-img{max-height:78px;max-width:min(260px,62%);}
+.fs-cc-lg-txt{font-size:27px;}
+.fs-colsec .fs-colcard{height:200px;}
+.fs-colsec .fs-cc-lg-img{max-height:88px;}
+/* .fs-hero uses align-items:flex-start, which kept the sub-hero's inner box
+   glued to the top. Stretch it so the inner can actually centre its content. */
+.fs-hero--sub{align-items:stretch;}
+.fs-hero--sub .fs-hero-inner{height:100%;display:flex;align-items:center;padding:0 30px;}
+.fs-hero--sub .fs-hero-logo{display:flex;align-items:center;}
+.fs-hero--sub .fs-hero-lg-img{max-height:118px;}
+
+/* Bundle detail popup — thumbnail strip + preview arrows */
+.fs-di--bundle .fs-di-name{font-size:21px;}
+.fs-bd-thumbs{display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap;}
+.fs-bd-thumb{position:relative;width:54px;height:54px;border-radius:11px;overflow:hidden;padding:0;cursor:pointer;
+  background:var(--panel2);border:2px solid var(--border);transition:border-color .14s,transform .12s var(--ease-out);}
+.fs-bd-thumb:hover{transform:translateY(-2px);border-color:var(--muted);}
+.fs-bd-thumb.is-on{border-color:var(--accent);}
+.fs-bd-thumb .fs-pv-av{width:34px;height:34px;}
+.fs-bd-thumb .fs-art-np{padding:0 4px;}
+.fs-bd-thumb .fs-np-row{padding:3px 4px;gap:3px;}
+.fs-bd-thumb .fs-np-row .fs-pv-name{font-size:7px;}
+.fs-bd-thumb .fs-art-app .fs-mock{inset:4px;border-radius:6px;}
+.fs-bd-sel{font-size:12.5px;color:var(--muted-light);margin-bottom:14px;}
+.fs-bd-sel b{font-family:var(--font-display);font-weight:700;color:var(--text);font-size:13.5px;}
+.fs-bd-arr{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;z-index:4;
+  display:flex;align-items:center;justify-content:center;background:rgba(10,12,18,.62);border:1px solid rgba(255,255,255,.14);
+  color:#fff;cursor:pointer;backdrop-filter:blur(4px);transition:background .14s,transform .12s var(--ease-out);}
+.fs-bd-arr svg{width:17px;height:17px;}
+.fs-bd-arr--l{left:12px;} .fs-bd-arr--r{right:12px;}
+.fs-bd-arr:hover{background:var(--accent);color:#13161d;border-color:var(--accent);}

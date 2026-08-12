@@ -47815,33 +47815,124 @@ function _qstStartTimers() {
 // Reuses buyAppearance / applyAppearance / wishlist / gift.
 // ════════════════════════════════════════════════════════════
 const _FS_CDN  = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
+const _FS_ART  = '/Fortshop%20Collections/2026%20Collections/';
 const _FS_TABS = ['featured', 'browse', 'onyx', 'bundles'];
+const _FS_ONYX_IC = '<span class="rad-onyx-ic"></span>';
+
+// ── Collections. Each holds a MIX: at least one nameplate + one avatar
+// decoration, plus appearances / other item types where they fit.
+// coverImg + logoImg are the real collection art (2026 Collections).
+const _FS_COLLECTIONS = [
+  { id:'midnight', order:3, name:'Midnight', accent:'#6b5cff',
+    tagline:'Deep indigo skies, starlight and the purest dark.',
+    coverImg:_FS_ART + 'Midnight/MidnightCollectionCover.png',
+    logoImg: _FS_ART + 'Midnight/MidnightCollectionLogo.png',
+    cover:'linear-gradient(120deg,#0b0722 0%,#191052 55%,#05030f 100%)',
+    items:['midnight_citadel','deco_starfall','np_midnight'] },
+  { id:'naturals', order:2, name:'Naturals', accent:'#3ecf6e',
+    tagline:'Fresh grass, calm greens — easy on the eyes.',
+    coverImg:_FS_ART + 'Naturals/NaturalsCollectionCover.png',
+    logoImg: _FS_ART + 'Naturals/NaturalsCollectionLogo.png',
+    cover:'linear-gradient(120deg,#0a1410 0%,#12351f 55%,#061009 100%)',
+    items:['green_leaves','deco_wildgrass','np_naturals'] },
+  // ⚠️ Art pending — falls back to a gradient cover + Syne wordmark.
+  { id:'jewels',   order:1, name:'Crown Jewels', logoText:'CROWN JEWELS', accent:'#c07bff',
+    tagline:'Ember, amethyst and gold — our rarest drop.',
+    cover:'linear-gradient(120deg,#1a0a10 0%,#2a1246 52%,#120818 100%)',
+    items:['obsidian_ember','royal_amethyst','deco_regalia','np_jewels'] },
+];
+function _fsCollections() { return _FS_COLLECTIONS.slice().sort((a, b) => b.order - a.order); }
+function _fsColItems(col) { const all = _fsCatalogue(); return (col.items || []).map(id => all.find(a => a.id === id)).filter(Boolean); }
+function _fsCollectionOf(itemId) { return _FS_COLLECTIONS.find(c => c.items.includes(itemId)); }
 
 function _fsCatalogue() {
-  const apps = (typeof SHOP_APPEARANCES_ALL !== 'undefined' ? SHOP_APPEARANCES_ALL : []).map(a => ({ ...a, kind: 'appearance' }));
-  const decos = (typeof PROFILE_DECORATIONS !== 'undefined' ? PROFILE_DECORATIONS : []).map(d => ({ ...d, kind: 'decoration' }));
-  return apps.concat(decos);
+  const apps  = (typeof SHOP_APPEARANCES_ALL !== 'undefined' ? SHOP_APPEARANCES_ALL : []).map(a => ({ ...a, kind: 'appearance' }));
+  const decos = (typeof PROFILE_DECORATIONS  !== 'undefined' ? PROFILE_DECORATIONS  : []).map(d => ({ ...d, kind: 'decoration' }));
+  const nps   = (typeof PROFILE_NAMEPLATES   !== 'undefined' ? PROFILE_NAMEPLATES   : []).map(n => ({ ...n, kind: 'nameplate' }));
+  return apps.concat(decos, nps);
 }
-function _fsOwnedApps() { return CU?.unlockedAppearances || []; }
 // The Vault = flagged-exclusive items (only Onyx Pure for now).
 function _fsIsOnyx(item) { return !!item.exclusive; }
-// ── Kind-aware helpers (appearances vs decorations) ──
-function _fsOwnedList(kind) { return kind === 'decoration' ? (CU?.ownedDecorations || []) : (CU?.unlockedAppearances || []); }
-function _fsIsOwned(item) { return _fsOwnedList(item.kind).includes(item.id); }
-function _fsIsEquipped(item) { return item.kind === 'decoration' ? (CU?.activeDecoration === item.id) : (CU?.appearance === item.id); }
-function _fsKindLabel(item) { return item.kind === 'decoration' ? 'Decoration' : 'Appearance'; }
-function _fsDecoPreview(item) {
-  const dn = CU?.displayName || CU?.username || 'U';
-  const av = (typeof buildAvatarHTML === 'function') ? buildAvatarHTML(CU?.pfp || null, dn, 78, CU?.pfpCrop) : '';
-  return `<div class="fs-deco-prev"><span class="fs-deco-av">${av}<img class="fs-deco-ov" src="${item.src}" alt="" onerror="this.remove()"></span></div>`;
-}
-function _fsPreview(item) { return item.kind === 'decoration' ? _fsDecoPreview(item) : _fsMock(item); }
-function _fsEquip(item) { if (item.kind === 'decoration') { if (typeof equipDecoration === 'function') equipDecoration(item.id); } else if (typeof applyAppearance === 'function') applyAppearance(item.id); }
-function _fsEquipById(id) { const it = _fsCatalogue().find(a => a.id === id); if (it) { _fsEquip(it); try { renderAtelierTab('shop'); } catch {} } }
-function _fsBuyItem(item, price) { if (item.kind === 'decoration') { if (typeof buyDecoration === 'function') buyDecoration(item.id, price); } else if (typeof buyAppearance === 'function') buyAppearance(item.id, price); }
 
-// ── Type-specific "in use" previews (item-popup right panel) ──
-// Your avatar + a decoration overlay (decoSrc). Used across all preview types.
+// ── Kind-aware helpers ──
+function _fsOwnedApps() { return CU?.unlockedAppearances || []; }
+function _fsOwnedList(kind) {
+  if (kind === 'decoration') return CU?.ownedDecorations || [];
+  if (kind === 'nameplate')  return CU?.ownedNameplates  || [];
+  return CU?.unlockedAppearances || [];
+}
+function _fsIsOwned(item) { return _fsOwnedList(item.kind).includes(item.id); }
+function _fsIsEquipped(item) {
+  if (item.kind === 'decoration') return CU?.activeDecoration === item.id;
+  if (item.kind === 'nameplate')  return CU?.activeNameplate  === item.id;
+  return CU?.appearance === item.id;
+}
+function _fsKindLabel(item) { return item.kind === 'decoration' ? 'Decoration' : item.kind === 'nameplate' ? 'Nameplate' : 'Appearance'; }
+function _fsEquip(item) {
+  if (item.kind === 'decoration') { if (typeof equipDecoration === 'function') equipDecoration(item.id); }
+  else if (item.kind === 'nameplate') { CU.activeNameplate = item.id; try { saveUser(true); } catch {} toast(item.name + ' equipped!', 'success'); }
+  else if (typeof applyAppearance === 'function') applyAppearance(item.id);
+}
+function _fsEquipById(id) { const it = _fsCatalogue().find(a => a.id === id); if (it) { _fsEquip(it); try { renderAtelierTab('shop'); } catch {} } }
+function _fsBuyItem(item, price) {
+  if (item.kind === 'decoration') { if (typeof buyDecoration === 'function') buyDecoration(item.id, price); }
+  else if (item.kind === 'nameplate') { _fsBuyNameplate(item, price); }
+  else if (typeof buyAppearance === 'function') buyAppearance(item.id, price);
+}
+async function _fsBuyNameplate(item, price) {
+  const bal = CU?.onyx || 0;
+  if (bal < price) { toast('Not enough Onyx! Need ' + price + ' Onyx', 'error'); return; }
+  CU.onyx = bal - price;
+  CU.ownedNameplates = [...new Set([...(CU.ownedNameplates || []), item.id])];
+  CU.activeNameplate = item.id;
+  if (Array.isArray(CU.wishlist)) CU.wishlist = CU.wishlist.filter(id => id !== item.id);
+  try { await saveUser(true); } catch {}
+  if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
+  if (typeof distributeOnyxRevenue === 'function') distributeOnyxRevenue(price);
+  toast(item.name + ' unlocked and equipped!', 'success');
+  try { renderAtelierTab('shop'); } catch {}
+}
+
+// ── Pricing ──
+function _fsFinalPrice(item) {
+  const d = (typeof _calculateFinalPrice === 'function') ? _calculateFinalPrice(item.price, false) : { finalPrice: item.price };
+  const finalPrice = d.finalPrice;
+  return { finalPrice, pct: Math.max(0, Math.round((1 - finalPrice / item.price) * 100)) };
+}
+// Discord-style inline price: ⬡ 135 (-10%) — struck original before it.
+function _fsPriceInline(item) {
+  const { finalPrice, pct } = _fsFinalPrice(item);
+  if (pct > 0) return `<span class="fs-p">${_FS_ONYX_IC}<s>${item.price}</s><b>${finalPrice}</b><em>(-${pct}%)</em></span>`;
+  return `<span class="fs-p">${_FS_ONYX_IC}<b>${item.price}</b></span>`;
+}
+// Stacked price for the detail popup.
+function _fsPriceBlock(item, big) {
+  const { finalPrice, pct } = _fsFinalPrice(item);
+  const cls = 'fs-price' + (big ? ' fs-price--big' : '');
+  if (pct > 0) {
+    return `<div class="${cls} fs-price--disc">
+      <div class="fs-price-old">${_FS_ONYX_IC}<span>${item.price}</span></div>
+      <div class="fs-price-new">${_FS_ONYX_IC}<b>${finalPrice}</b><span class="fs-price-pct">(-${pct}%)</span></div>
+    </div>`;
+  }
+  return `<div class="${cls}"><div class="fs-price-new">${_FS_ONYX_IC}<b>${item.price}</b></div></div>`;
+}
+
+// ── Previews ──
+// A mini Fortized app painted in an appearance's own tokens.
+function _fsMock(item) {
+  const acc = item.labelColor || 'var(--accent)';
+  const ln = (w, o) => `<span class="fs-mk-ln" style="width:${w}%;opacity:${o || .5}"></span>`;
+  return `<div class="fs-mock" style="background:${item.previewBg || item.gradient}">
+    <div class="fs-mk-rail" style="background:${item.sidebarBg}"></div>
+    <div class="fs-mk-side" style="background:${item.sidebarBg}">${ln(58, .7)}${ln(44, .4)}${ln(50, .5)}${ln(38, .3)}</div>
+    <div class="fs-mk-main">
+      <div class="fs-mk-msg"><span class="fs-mk-av" style="background:${acc}"></span><span class="fs-mk-b">${ln(70, .5)}${ln(46, .3)}</span></div>
+      <div class="fs-mk-msg"><span class="fs-mk-av" style="background:${acc};opacity:.6"></span><span class="fs-mk-b">${ln(54, .4)}</span></div>
+      <div class="fs-mk-accent" style="background:${acc}"></div>
+    </div>
+  </div>`;
+}
 function _fsAvDeco(size, decoSrc) {
   const dn = CU?.displayName || CU?.username || 'You';
   const av = (typeof buildAvatarHTML === 'function') ? buildAvatarHTML(CU?.pfp || null, dn, size, CU?.pfpCrop) : '';
@@ -47854,8 +47945,257 @@ function _fsMeName() {
   return `<span class="fs-pv-name" style="${ns}">${dn}</span>`;
 }
 function _fsActiveDeco() { return (CU?.activeDecoration && typeof getDecorationSrc === 'function') ? getDecorationSrc(CU.activeDecoration) : ''; }
+// Card art per kind.
+function _fsPreview(item) {
+  if (item.kind === 'decoration') return `<div class="fs-art-deco">${_fsAvDeco(104, item.src)}</div>`;
+  if (item.kind === 'nameplate')  return `<div class="fs-art-np"><div class="fs-np-row" style="background:${item.nameplate}">${_fsAvDeco(30, _fsActiveDeco())}${_fsMeName()}</div></div>`;
+  return `<div class="fs-art-app">${_fsMock(item)}</div>`;
+}
+
+// ── Item card — Discord-tight: art, then name + price. Hover reveals the
+// wishlist heart and swaps the price row for Buy / Gift. ──
+function _fsCard(item) {
+  const isOwned  = _fsIsOwned(item);
+  const equipped = _fsIsEquipped(item);
+  const onWL     = (typeof isOnWishlist === 'function') && isOnWishlist(item.id);
+  const { finalPrice } = _fsFinalPrice(item);
+  let foot;
+  if (equipped)      foot = `<div class="fs-card-state"><i class="fa-solid fa-circle-check"></i> Equipped</div>`;
+  else if (isOwned)  foot = `<div class="fs-card-state fs-card-state--owned"><i class="fa-solid fa-check"></i> Acquired</div>
+                             <div class="fs-card-act"><button class="fs-btn fs-btn--primary fs-card-buy" onclick="event.stopPropagation();_fsEquipById('${item.id}')">Use now</button></div>`;
+  else               foot = `<div class="fs-card-price">${_fsPriceInline(item)}</div>
+                             <div class="fs-card-act">
+                               <button class="fs-btn fs-btn--primary fs-card-buy" onclick="event.stopPropagation();_fsBuy('${item.id}')">Buy for ${_FS_ONYX_IC} ${finalPrice}</button>
+                               <button class="fs-btn fs-card-gift" title="Send as a gift" onclick="event.stopPropagation();openGiftModal('${item.id}')">${_svgIcon('gift', 14)}</button>
+                             </div>`;
+  return `<div class="fs-card fs-card--${item.kind}${isOwned ? ' is-owned' : ''}" role="button" tabindex="0" onclick="_fsOpenItem('${item.id}')">
+    <span class="fs-card-art">
+      ${_fsPreview(item)}
+      ${isOwned ? '<span class="fs-owned-badge"><i class="fa-solid fa-check"></i></span>' : ''}
+      ${_fsIsOnyx(item) ? '<span class="fs-tag">Vault</span>' : ''}
+      <span class="fs-fav ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="event.stopPropagation();toggleWishlist('${item.id}')">${_svgIcon('heart', 13)}</span>
+    </span>
+    <span class="fs-card-info">
+      <span class="fs-card-name">${escapeHTML(item.name)}</span>
+      <span class="fs-card-foot">${foot}</span>
+    </span>
+  </div>`;
+}
+
+function _fsGroup(title, right) {
+  return `<div class="qst-group"><span class="qst-group-t">${title}</span>${right || ''}</div>`;
+}
+function _fsEmpty(icon, title, sub) {
+  return `<div class="qst-empty"><i class="fa-solid fa-${icon}"></i><div class="qst-empty-t">${title}</div><div class="qst-empty-s">${sub}</div></div>`;
+}
+
+// Tab switch — mirrors _qstSetTab.
+function _fsSetTab(tab) {
+  if (!_FS_TABS.includes(tab)) tab = 'featured';
+  window._fsTab = tab;
+  _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === tab); });
+  try { renderAtelierTab('shop'); } catch {}
+  const sc = document.getElementById('atelier-scroll-outer'); if (sc) sc.scrollTo({ top: 0, behavior: 'auto' });
+}
+function _fsShowCollection(id) {
+  window._fsCol = id; window._fsFilter = null; window._fsTab = 'browse';
+  _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === 'browse'); });
+  try { renderAtelierTab('shop'); } catch {}
+  const sc = document.getElementById('atelier-scroll-outer'); if (sc) sc.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+// ── Collection art blocks ──
+function _fsColLogo(col, cls) {
+  return col.logoImg
+    ? `<img class="${cls}-img" src="${col.logoImg}" alt="${escapeHTML(col.name)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'${cls}-txt',textContent:'${escapeHTML(col.logoText || col.name)}'}))">`
+    : `<div class="${cls}-txt">${escapeHTML(col.logoText || col.name)}</div>`;
+}
+function _fsColHero(col) {
+  const bg = col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col.cover}`;
+  return `<div class="fs-hero" style="--fs-acc:${col.accent}">
+    <div class="fs-hero-bg" style="${bg}"></div>
+    <div class="fs-hero-inner">
+      <div class="fs-hero-logo">${_fsColLogo(col, 'fs-hero-lg')}</div>
+      <div class="fs-hero-right">
+        <div class="fs-hero-tag">${escapeHTML(col.tagline || '')}</div>
+        <button class="fs-btn fs-btn--light" onclick="_fsShowCollection('${col.id}')">Shop the Collection</button>
+      </div>
+    </div>
+  </div>`;
+}
+function _fsColBanner(col) {
+  const bg = col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col.cover}`;
+  const thumbs = _fsColItems(col).slice(0, 3).map(it => `<span class="fs-cb-thumb">${_fsPreview(it)}</span>`).join('');
+  return `<button class="fs-colbanner" style="--fs-acc:${col.accent}" onclick="_fsShowCollection('${col.id}')">
+    <div class="fs-colbanner-bg" style="${bg}"></div>
+    <div class="fs-cb-left">${_fsColLogo(col, 'fs-cb-lg')}<span class="fs-btn fs-btn--light fs-cb-btn">Take me there</span></div>
+    <div class="fs-cb-thumbs">${thumbs}</div>
+  </button>`;
+}
+
+// ── Featured — hero + a flat row of that collection's items + more collections ──
+function _fsRowScroll(dir) {
+  const row = document.getElementById('fs-row'); if (!row) return;
+  row.scrollBy({ left: dir * Math.max(280, row.clientWidth * 0.8), behavior: 'smooth' });
+}
+function _fsFeatured() {
+  const cols = _fsCollections();
+  const hero = cols[0];
+  const items = _fsColItems(hero);
+  const others = cols.slice(1).sort(() => Math.random() - 0.5).slice(0, 2);
+  const chev = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="${d === 'l' ? '15 18 9 12 15 6' : '9 18 15 12 9 6'}"/></svg>`;
+  return `
+    ${_fsColHero(hero)}
+    <div class="fs-rowwrap">
+      <div class="fs-row" id="fs-row">${items.map(_fsCard).join('')}</div>
+      <button class="fs-rowarr fs-rowarr--l" onclick="_fsRowScroll(-1)" aria-label="Scroll left">${chev('l')}</button>
+      <button class="fs-rowarr fs-rowarr--r" onclick="_fsRowScroll(1)" aria-label="Scroll right">${chev('r')}</button>
+    </div>
+    ${others.length ? `${_fsGroup('More collections')}<div class="fs-colbanners">${others.map(_fsColBanner).join('')}</div>` : ''}`;
+}
+
+// ── Browse — toolbar (sort + filter toggle) + collection groups / flat filter ──
+function _fsSortItems(list) {
+  const s = window._fsSort || 'recent';
+  const a = list.slice();
+  if (s === 'price-low')  a.sort((x, y) => x.price - y.price);
+  if (s === 'price-high') a.sort((x, y) => y.price - x.price);
+  return a;
+}
+function _fsSetSort(v) { window._fsSort = v; try { renderAtelierTab('shop'); } catch {} }
+function _fsSetFilter(id, on) { window._fsFilter = on ? id : null; window._fsCol = null; try { renderAtelierTab('shop'); } catch {} }
+function _fsToggleFilters() { window._fsFiltersOpen = !window._fsFiltersOpen; try { renderAtelierTab('shop'); } catch {} }
+function _fsFilterRail() {
+  const f = window._fsFilter || null;
+  const chk = (id, label, soon) => `<label class="fs-flt${soon ? ' is-soon' : ''}"><input type="checkbox" ${f === id ? 'checked' : ''} ${soon ? 'disabled' : ''} onchange="_fsSetFilter('${id}',this.checked)"><span>${label}</span>${soon ? '<span class="fs-soon">soon</span>' : ''}</label>`;
+  return `<aside class="fs-filters">
+    <div class="fs-filters-h">Show only</div>
+    ${chk('appearance', 'Appearances')}
+    ${chk('decoration', 'Avatar Decorations')}
+    ${chk('nameplate', 'Nameplates')}
+    ${chk('effect', 'Profile Effects', true)}
+  </aside>`;
+}
+function _fsBrowse(all) {
+  const col = window._fsCol ? _FS_COLLECTIONS.find(c => c.id === window._fsCol) : null;
+  const filter = window._fsFilter || null;
+  const open = !!window._fsFiltersOpen;
+  const sortSel = (typeof _ftzSelectHTML === 'function')
+    ? _ftzSelectHTML('fs-sort', window._fsSort || 'recent',
+        [{ value: 'recent', label: 'Recently Added' }, { value: 'price-low', label: 'Price: Low to High' }, { value: 'price-high', label: 'Price: High to Low' }],
+        "_fsSetSort('__VALUE__')")
+    : '';
+  const toolbar = `<div class="fs-toolbar">
+    <span class="fs-toolbar-lb">Sort by</span>${sortSel}
+    <button class="fs-btn fs-fltbtn${open ? ' is-on' : ''}" onclick="_fsToggleFilters()">${open ? 'Hide' : 'Show'} Filters <i class="fa-solid fa-sliders"></i></button>
+  </div>`;
+  let main;
+  if (col) {
+    const list = _fsSortItems(_fsColItems(col));
+    main = _fsColHero(col) + _fsGroup(escapeHTML(col.name), `<button class="fs-clear" onclick="window._fsCol=null;renderAtelierTab('shop')"><i class="fa-solid fa-xmark"></i> Clear</button>`)
+      + `<div class="fs-grid">${list.map(_fsCard).join('')}</div>`;
+  } else if (filter) {
+    const list = _fsSortItems(all.filter(a => a.kind === filter));
+    const label = filter === 'decoration' ? 'Avatar Decorations' : filter === 'nameplate' ? 'Nameplates' : 'Appearances';
+    main = _fsGroup(label, `<span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span>`)
+      + `<div class="fs-grid">${list.length ? list.map(_fsCard).join('') : _fsEmpty('box-open', 'Nothing here yet', 'Check back soon.')}</div>`;
+  } else {
+    main = _fsCollections().map(c => {
+      const items = _fsSortItems(_fsColItems(c));
+      if (!items.length) return '';
+      return _fsGroup(escapeHTML(c.name), `<button class="fs-clear" onclick="_fsShowCollection('${c.id}')">View collection</button>`)
+        + `<div class="fs-grid">${items.map(_fsCard).join('')}</div>`;
+    }).join('');
+  }
+  return `${toolbar}<div class="fs-browse${open ? ' has-rail' : ''}"><div class="fs-browse-main">${main}</div>${open ? _fsFilterRail() : ''}</div>`;
+}
+function _fsOnyxTab(all) {
+  const list = _fsSortItems(all.filter(_fsIsOnyx));
+  if (!list.length) return _fsEmpty('gem', 'The Vault is being restocked', 'Our rarest, most exclusive items land here. Check back shortly.');
+  return `${_fsGroup('The Vault', '<span class="qst-group-note">Our rarest, most exclusive drops</span>')}
+    <div class="fs-grid">${list.map(_fsCard).join('')}</div>`;
+}
+
+// ── Personalized bundles (per user + month; randomized name + font) ──
+const _FS_BUNDLE_NAMES = ['Collector’s Set', 'Signature Pack', 'Curated Drop', 'Icon Bundle', 'Standout Set', 'Statement Pack', 'Prestige Kit', 'Showcase Bundle', 'Trendsetter Pack', 'Editor’s Pick'];
+const _FS_BUNDLE_FONTS = ['var(--font-display)', "Georgia,'Times New Roman',serif", "'Trebuchet MS',sans-serif", "'Courier New',monospace", 'var(--font-ui)'];
+function _fsSeed(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return () => { h += 0x6D2B79F5; let t = h >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function _fsPersonalBundles() {
+  const cat = _fsCatalogue();
+  const month = new Date().toISOString().slice(0, 7);
+  const rng = _fsSeed((CU?.username || 'guest') + '|' + month);
+  const wl = new Set(CU?.wishlist || []);
+  let pool = cat.filter(a => !_fsIsOwned(a) && !_fsIsOnyx(a));
+  if (pool.length < 2) pool = cat.slice();
+  pool = pool.map(a => ({ a, r: rng() - (wl.has(a.id) ? 0.4 : 0) })).sort((x, y) => x.r - y.r).map(x => x.a);
+  const bundles = []; let idx = 0;
+  const maxBundles = Math.min(2, Math.floor(pool.length / 2));
+  for (let b = 0; b < maxBundles; b++) {
+    const size = Math.min(pool.length - idx, 2 + (rng() < 0.5 ? 1 : 0));
+    const items = pool.slice(idx, idx + size); idx += size;
+    if (items.length < 2) break;
+    const orig = items.reduce((s, it) => s + it.price, 0);
+    const price = Math.max(5, Math.round(orig * (1 - (0.2 + Math.round(rng() * 10) / 100))));
+    bundles.push({ id: 'fsbundle_' + month + '_' + b, name: _FS_BUNDLE_NAMES[Math.floor(rng() * _FS_BUNDLE_NAMES.length)], font: _FS_BUNDLE_FONTS[Math.floor(rng() * _FS_BUNDLE_FONTS.length)], items, orig, price, pct: Math.round((1 - price / orig) * 100) });
+  }
+  return bundles;
+}
+function _fsBundleCard(bd) {
+  const thumbs = bd.items.map(it => `<span class="fs-bundle-thumb">${_fsPreview(it)}</span>`).join('');
+  return `<div class="fs-card fs-bundle" role="button" tabindex="0" onclick="_fsBuyBundle('${bd.id}')">
+    <span class="fs-card-art fs-bundle-art">${thumbs}<span class="fs-tag">${bd.items.length} items</span></span>
+    <span class="fs-card-info">
+      <span class="fs-card-name" style="font-family:${bd.font}">${escapeHTML(bd.name)}</span>
+      <span class="fs-card-sub">${bd.items.map(i => escapeHTML(i.name)).join(' · ')}</span>
+      <span class="fs-card-foot">
+        <span class="fs-card-price"><span class="fs-p">${_FS_ONYX_IC}<s>${bd.orig}</s><b>${bd.price}</b><em>(-${bd.pct}%)</em></span></span>
+        <span class="fs-card-act"><span class="fs-btn fs-btn--primary fs-card-buy">Get bundle</span></span>
+      </span>
+    </span>
+  </div>`;
+}
+function _fsBuyBundle(id) {
+  const bd = _fsPersonalBundles().find(b => b.id === id); if (!bd) return;
+  _fsPurchaseConfirm({ title: bd.name, subtitle: bd.items.length + ' items · ' + bd.items.map(i => i.name).join(', '), priceOnyx: bd.price, onConfirm: () => _fsGrantBundle(bd) });
+}
+async function _fsGrantBundle(bd) {
+  const bal = CU?.onyx || 0;
+  if (bal < bd.price) { toast('Not enough Onyx! Need ' + bd.price + ' Onyx', 'error'); return; }
+  CU.onyx = bal - bd.price;
+  bd.items.forEach(it => {
+    if (it.kind === 'decoration') CU.ownedDecorations = [...new Set([...(CU.ownedDecorations || []), it.id])];
+    else if (it.kind === 'nameplate') CU.ownedNameplates = [...new Set([...(CU.ownedNameplates || []), it.id])];
+    else CU.unlockedAppearances = [...new Set([...(CU.unlockedAppearances || []), it.id])];
+  });
+  if (Array.isArray(CU.wishlist)) CU.wishlist = CU.wishlist.filter(x => !bd.items.some(i => i.id === x));
+  try { await saveUser(true); } catch {}
+  if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
+  if (typeof distributeOnyxRevenue === 'function') distributeOnyxRevenue(bd.price);
+  toast('Bundle unlocked — enjoy your new items!', 'success');
+  try { renderAtelierTab('shop'); } catch {}
+}
+function _fsBundlesTab() {
+  const bundles = _fsPersonalBundles();
+  if (!bundles.length) return _fsEmpty('box-open', 'No bundles right now', 'Personalized bundles are put together from your picks and refresh at the start of each month.');
+  return `${_fsGroup('Your bundles', '<span class="qst-group-note">Personalized picks — refreshes monthly</span>')}
+    <div class="fs-grid">${bundles.map(_fsBundleCard).join('')}</div>`;
+}
+
+// ── Page render ──
+function _fsRenderShop(el) {
+  const ftab = _FS_TABS.includes(window._fsTab) ? window._fsTab : 'featured';
+  const all = _fsCatalogue();
+  let body;
+  if (ftab === 'browse')       body = _fsBrowse(all);
+  else if (ftab === 'onyx')    body = _fsOnyxTab(all);
+  else if (ftab === 'bundles') body = _fsBundlesTab();
+  else                         body = _fsFeatured();
+  el.innerHTML = `<div class="atelier-content-inner fs-page fs-page--${ftab}">${body}</div>`;
+  _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === ftab); });
+}
+
+// ── Type-specific "in use" previews (popup right panel) ──
 const _FS_EMO = '/fortized%20emojis/';
-// APPEARANCE → a chat with Leafen, painted in the appearance being tested.
 function _fsPvAppearance(item) {
   const deco = _fsActiveDeco();
   return `<div class="fs-pv-chat" style="background:${item.previewBg || item.gradient}">
@@ -47869,7 +48209,6 @@ function _fsPvAppearance(item) {
     </div>
   </div>`;
 }
-// DECORATION → your profile card (with THIS decoration) + a message preview.
 function _fsPvDecoration(item) {
   const uname = escapeHTML(CU?.username || 'you');
   const pron = CU?.pronouns ? escapeHTML(CU.pronouns) : '';
@@ -47890,374 +48229,25 @@ function _fsPvDecoration(item) {
     <div class="fs-pv-cbody"><div class="fs-pv-chead">${_fsMeName()}<span class="fs-pv-now">· just now</span></div><div class="fs-pv-ctext">Look at my new decoration ✨</div></div>
   </div>`;
 }
-// NAMEPLATE → your nameplate + a member-list (DM-sidebar-inspired) with fakes.
 function _fsPvNameplate(item) {
   const deco = _fsActiveDeco();
-  const npBg = item.nameplate || item.gradient || 'linear-gradient(90deg,rgba(255,249,62,.28),rgba(255,249,62,0) 78%)';
   const img = (f) => `<span class="fs-pv-imgav-wrap"><img src="${_FS_EMO}${f}" class="fs-pv-imgav" alt=""></span>`;
-  const row = (avatarHTML, nameHTML) => `<div class="fs-pv-mrow">${avatarHTML}${nameHTML}</div>`;
+  const row = (av, nm) => `<div class="fs-pv-mrow">${av}${nm}</div>`;
   return `<div class="fs-pv-nplist">
     <div class="fs-pv-mhead">Members — 4</div>
     ${row(img('knight_smile.png'), '<span class="fs-pv-mname" style="color:#7dd3fc">fortressdefender9</span>')}
     ${row(img('leafen_stunned.png'), '<span class="fs-pv-mname" style="color:#5fe08a">Leafen</span>')}
-    <div class="fs-pv-mrow is-me" style="--np:${npBg}">${_fsAvDeco(32, deco)}<span class="fs-pv-mname">${_fsMeName()}</span></div>
+    <div class="fs-pv-mrow is-me" style="--np:${item.nameplate}">${_fsAvDeco(32, deco)}<span class="fs-pv-mname">${_fsMeName()}</span></div>
     ${row(img('knight_bop.gif'), '<span class="fs-pv-mname" style="color:#c084fc">PopPaladin</span>')}
   </div>`;
 }
 function _fsRightPanel(item) {
   if (item.kind === 'decoration') return _fsPvDecoration(item);
-  if (item.kind === 'nameplate') return _fsPvNameplate(item);
+  if (item.kind === 'nameplate')  return _fsPvNameplate(item);
   return _fsPvAppearance(item);
 }
 
-// Tab switch — mirrors _qstSetTab: set state, re-render, scroll to top.
-function _fsSetTab(tab) {
-  if (!_FS_TABS.includes(tab)) tab = 'featured';
-  window._fsTab = tab;
-  _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === tab); });
-  try { renderAtelierTab('shop'); } catch {}
-  const sc = document.getElementById('atelier-scroll-outer'); if (sc) sc.scrollTo({ top: 0, behavior: 'auto' });
-}
-
-// A mini Fortized app painted in the appearance's own tokens — the card's
-// "banner". Fills its (relatively-positioned) container.
-function _fsMock(item) {
-  const acc = item.labelColor || 'var(--accent)';
-  const ln = (w, o) => `<span class="fs-mk-ln" style="width:${w}%;opacity:${o || .5}"></span>`;
-  return `<div class="fs-mock" style="background:${item.previewBg || item.gradient}">
-    <div class="fs-mk-rail" style="background:${item.sidebarBg}"></div>
-    <div class="fs-mk-side" style="background:${item.sidebarBg}">${ln(58, .7)}${ln(44, .4)}${ln(50, .5)}${ln(38, .3)}</div>
-    <div class="fs-mk-main">
-      <div class="fs-mk-msg"><span class="fs-mk-av" style="background:${acc}"></span><span class="fs-mk-b">${ln(70, .5)}${ln(46, .3)}</span></div>
-      <div class="fs-mk-msg"><span class="fs-mk-av" style="background:${acc};opacity:.6"></span><span class="fs-mk-b">${ln(54, .4)}</span></div>
-      <div class="fs-mk-accent" style="background:${acc}"></div>
-    </div>
-  </div>`;
-}
-
-// Shop item card — reuses the quest-card shell (.qst-qcard body/title/foot)
-// so it's visually identical to the Quests page, with the theme-mock preview.
-// ── Collections (curated drops). Art fields coverImg/logoImg are optional;
-//    until real art lands we fall back to a gradient cover + Syne wordmark.
-//    order: higher = more recent (Featured hero shows the newest). ──
-const _FS_COLLECTIONS = [
-  { id:'decor',    order:4, name:'Decorations',  logoText:'DECOR',    accent:'#f5c542', tagline:'Frame your avatar — laurels, crowns, orbits & petals.', cover:'linear-gradient(120deg,#241a08 0%,#1a1206 50%,#0e0a04 100%)', items:['deco_crown','deco_orbit','deco_laurel','deco_sakura','deco_ember','deco_frost'] },
-  { id:'jewels',   order:3, name:'Crown Jewels', logoText:'JEWELS',   accent:'#c07bff', tagline:'Ember & amethyst — our rarest drop yet.', cover:'linear-gradient(120deg,#1a0a10 0%,#12081c 48%,#281844 100%)', items:['obsidian_ember','royal_amethyst'] },
-  { id:'midnight', order:2, name:'Midnight',     logoText:'MIDNIGHT', accent:'#60a5fa', tagline:'Deep blues and the purest black.',       cover:'linear-gradient(120deg,#050812 0%,#0a1120 55%,#02020a 100%)', items:['midnight_citadel','onyx_pure'] },
-  { id:'naturals', order:1, name:'Naturals',     logoText:'NATURALS', accent:'#3ecf6e', tagline:'Calm, grounded, easy on the eyes.',      cover:'linear-gradient(120deg,#0a1410 0%,#0e1f16 55%,#132b1e 100%)', items:['green_leaves'] },
-];
-function _fsCollections() { return _FS_COLLECTIONS.slice().sort((a, b) => b.order - a.order); }
-function _fsColItems(col) { const all = _fsCatalogue(); return (col.items || []).map(id => all.find(a => a.id === id)).filter(Boolean); }
-function _fsCollectionOf(itemId) { return _FS_COLLECTIONS.find(c => c.items.includes(itemId)); }
-function _fsShowCollection(id) {
-  window._fsCol = id; window._fsTab = 'browse';
-  _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === 'browse'); });
-  try { renderAtelierTab('shop'); } catch {}
-  const sc = document.getElementById('atelier-scroll-outer'); if (sc) sc.scrollTo({ top: 0, behavior: 'auto' });
-}
-
-// Stacked price: struck [onyx + original] small on top, [onyx + new] (-N%) below.
-const _FS_ONYX_IC = '<span class="rad-onyx-ic"></span>';
-function _fsFinalPrice(item) {
-  const d = (typeof _calculateFinalPrice === 'function') ? _calculateFinalPrice(item.price, false) : { finalPrice: item.price };
-  const finalPrice = d.finalPrice;
-  const pct = Math.max(0, Math.round((1 - finalPrice / item.price) * 100));
-  return { finalPrice, pct };
-}
-function _fsPriceBlock(item, big) {
-  const { finalPrice, pct } = _fsFinalPrice(item);
-  const oc = _FS_ONYX_IC;
-  const cls = 'fs-price' + (big ? ' fs-price--big' : '');
-  if (pct > 0) {
-    return `<div class="${cls} fs-price--disc">
-      <div class="fs-price-old">${oc}<span>${item.price}</span></div>
-      <div class="fs-price-new">${oc}<b>${finalPrice}</b><span class="fs-price-pct">(-${pct}%)</span></div>
-    </div>`;
-  }
-  return `<div class="${cls}"><div class="fs-price-new">${oc}<b>${item.price}</b></div></div>`;
-}
-
-// Shop item card — quest-card shell (big strokes, hover lift), polished:
-// stacked price, Radiance-style button, "Acquired" state for owned items.
-function _fsCard(item) {
-  const isOwned  = _fsIsOwned(item);
-  const equipped = _fsIsEquipped(item);
-  const onWL     = (typeof isOnWishlist === 'function') && isOnWishlist(item.id);
-  const onyxTag  = _fsIsOnyx(item);
-  let foot;
-  if (equipped) foot = '<span class="fs-state fs-state--eq"><i class="fa-solid fa-circle-check"></i> Equipped</span>';
-  else if (isOwned) foot = `<span class="fs-state fs-state--owned"><i class="fa-solid fa-check"></i> Owned</span><button class="fs-btn fs-btn--primary fs-cbtn" onclick="event.stopPropagation();_fsEquipById('${item.id}')">Equip</button>`;
-  else foot = `${_fsPriceBlock(item)}<button class="fs-btn fs-btn--primary fs-cbtn" onclick="event.stopPropagation();_fsOpenItem('${item.id}')">View</button>`;
-  return `<div class="qst-qcard fs-card fs-card--${item.kind}${onyxTag ? ' is-onyx' : ''}${isOwned ? ' is-owned' : ''}" onclick="_fsOpenItem('${item.id}')">
-    <div class="fs-card-preview">
-      ${_fsPreview(item)}
-      ${isOwned ? '<span class="fs-owned-badge"><i class="fa-solid fa-check"></i></span>' : ''}
-      <button class="fs-fav ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="event.stopPropagation();toggleWishlist('${item.id}')">${_svgIcon('heart', 13)}</button>
-      ${onyxTag ? '<span class="fs-tag">Exclusive</span>' : ''}
-    </div>
-    <div class="qst-qcard-body">
-      <div class="fs-card-head">
-        <div class="qst-qcard-title">${escapeHTML(item.name)}</div>
-        <span class="fs-card-kind">${_fsKindLabel(item)}</span>
-      </div>
-      <div class="qst-qcard-desc fs-card-desc">${escapeHTML(item.desc || '')}</div>
-      <div class="qst-qcard-foot fs-foot">${foot}</div>
-    </div>
-  </div>`;
-}
-
-function _fsGroup(title, note) {
-  return `<div class="qst-group"><span class="qst-group-t">${title}</span>${note ? `<span class="qst-group-note">${note}</span>` : ''}</div>`;
-}
-function _fsEmpty(icon, title, sub) {
-  return `<div class="qst-empty"><i class="fa-solid fa-${icon}"></i><div class="qst-empty-t">${title}</div><div class="qst-empty-s">${sub}</div></div>`;
-}
-
-// ── Featured coverflow carousel (same mechanics + big strokes as Radiance) ──
-let _fsCarTimer = null, _fsCarIdx = 0;
-function _fsCarLayout() {
-  const track = document.getElementById('fs-ctrack');
-  if (!track) { if (_fsCarTimer) { clearInterval(_fsCarTimer); _fsCarTimer = null; } return; }
-  const slides = [...track.children]; const n = slides.length; if (!n) return;
-  _fsCarIdx = ((_fsCarIdx % n) + n) % n;
-  slides.forEach((s, i) => {
-    let d = i - _fsCarIdx;
-    if (d >  n / 2) d -= n;
-    if (d < -n / 2) d += n;
-    s.classList.remove('is-center', 'is-left', 'is-right', 'is-far');
-    s.classList.add(d === 0 ? 'is-center' : d === -1 ? 'is-left' : d === 1 ? 'is-right' : 'is-far');
-  });
-}
-function _fsCarouselGo(i) { _fsCarIdx = i; _fsCarLayout(); }
-function _fsCarouselPrev() { const n = document.querySelectorAll('#fs-ctrack .fs-cslide').length || 1; _fsCarIdx = (_fsCarIdx - 1 + n) % n; _fsCarLayout(); }
-function _fsCarouselNext() { const n = document.querySelectorAll('#fs-ctrack .fs-cslide').length || 1; _fsCarIdx = (_fsCarIdx + 1) % n; _fsCarLayout(); }
-function _fsCarClick(i, id) { if (i === _fsCarIdx) { _fsOpenItem(id); } else { _fsCarouselGo(i); } }
-function _fsCarouselInit() {
-  const car = document.getElementById('fs-carousel'); if (!car) return;
-  _fsCarIdx = 0; requestAnimationFrame(_fsCarLayout);
-  if (_fsCarTimer) clearInterval(_fsCarTimer);
-  _fsCarTimer = setInterval(() => {
-    const c = document.getElementById('fs-carousel');
-    if (!c) { clearInterval(_fsCarTimer); _fsCarTimer = null; return; }
-    if (c._paused) return;
-    const n = c.querySelectorAll('.fs-cslide').length || 1;
-    _fsCarIdx = (_fsCarIdx + 1) % n; _fsCarLayout();
-  }, 6500);
-  car.onmouseenter = () => { car._paused = true; };
-  car.onmouseleave = () => { car._paused = false; };
-  if (!window._fsCarResize) { window._fsCarResize = () => _fsCarLayout(); window.addEventListener('resize', window._fsCarResize); }
-}
-
-// Collection hero — cover art (or gradient) + logo, fading into the page.
-function _fsColHero(col) {
-  const bg = col.coverImg ? `url('${col.coverImg}') center/cover no-repeat` : col.cover;
-  const logo = col.logoImg
-    ? `<img class="fs-hero-logo" src="${col.logoImg}" alt="${escapeHTML(col.name)}">`
-    : `<div class="fs-hero-logotext">${escapeHTML(col.logoText || col.name)}</div>`;
-  return `<div class="fs-hero" style="--fs-acc:${col.accent}">
-    <div class="fs-hero-bg" style="background:${bg}"></div>
-    <div class="fs-hero-inner">
-      ${logo}
-      <div class="fs-hero-tag">${escapeHTML(col.tagline || '')}</div>
-      <button class="fs-btn fs-btn--light fs-hero-btn" onclick="_fsShowCollection('${col.id}')">Shop the Collection</button>
-    </div>
-  </div>`;
-}
-
-// A wide collection banner (logo + cover + a few item previews + Take-me-there).
-function _fsColBanner(col) {
-  const bg = col.coverImg ? `url('${col.coverImg}') center/cover no-repeat` : col.cover;
-  const thumbs = _fsColItems(col).slice(0, 3).map(it => `<span class="fs-cb-thumb">${_fsPreview(it)}</span>`).join('');
-  const logo = col.logoImg
-    ? `<img class="fs-cb-logo" src="${col.logoImg}" alt="${escapeHTML(col.name)}">`
-    : `<div class="fs-cb-logotext">${escapeHTML(col.logoText || col.name)}</div>`;
-  return `<button class="fs-colbanner" style="--fs-acc:${col.accent}" onclick="_fsShowCollection('${col.id}')">
-    <div class="fs-colbanner-bg" style="background:${bg}"></div>
-    <div class="fs-cb-left">${logo}<span class="fs-btn fs-btn--light fs-cb-btn">Take me there</span></div>
-    <div class="fs-cb-thumbs">${thumbs}</div>
-  </button>`;
-}
-
-// ── Tab bodies ──
-function _fsFeatured(apps, owned) {
-  const cols = _fsCollections();
-  const hero = cols[0];
-  const heroItems = _fsColItems(hero);
-  const others = cols.slice(1).sort(() => Math.random() - 0.5).slice(0, 2);
-  const slides = heroItems.map((a, i) => `
-    <div class="fs-cslide" data-idx="${i}" onclick="_fsCarClick(${i},'${a.id}')">
-      <div class="fs-cslide-mock">${_fsPreview(a)}</div>
-      <div class="fs-cslide-cap">
-        <div class="fs-cslide-name">${escapeHTML(a.name)}${_fsIsOnyx(a) ? '<span class="fs-cslide-badge">Vault</span>' : ''}</div>
-        <div class="fs-cslide-desc">${escapeHTML(a.desc || '')}</div>
-      </div>
-    </div>`).join('');
-  const chev = (dir) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="${dir === 'left' ? '15 18 9 12 15 6' : '9 18 15 12 9 6'}"/></svg>`;
-  return `
-    ${_fsColHero(hero)}
-    <div class="rad-carousel fs-carousel fs-carousel--hero" id="fs-carousel">
-      <div class="rad-ctrack" id="fs-ctrack">${slides}</div>
-      <button class="rad-carr rad-carr--prev fs-carr" onclick="event.stopPropagation();_fsCarouselPrev()" aria-label="Previous">${chev('left')}</button>
-      <button class="rad-carr rad-carr--next fs-carr" onclick="event.stopPropagation();_fsCarouselNext()" aria-label="Next">${chev('right')}</button>
-    </div>
-    ${others.length ? `${_fsGroup('More collections', 'Fresh drops to explore')}<div class="fs-colbanners">${others.map(_fsColBanner).join('')}</div>` : ''}`;
-}
-function _fsSortItems(list) {
-  const s = window._fsSort || 'recent';
-  const a = list.slice();
-  if (s === 'price-low') a.sort((x, y) => x.price - y.price);
-  else if (s === 'price-high') a.sort((x, y) => y.price - x.price);
-  return a;
-}
-function _fsSetFilter(id, on) { window._fsFilter = on ? id : null; window._fsCol = null; try { renderAtelierTab('shop'); } catch {} }
-function _fsSetSort(v) { window._fsSort = v; try { renderAtelierTab('shop'); } catch {} }
-function _fsFilterRail() {
-  const f = window._fsFilter || null;
-  const s = window._fsSort || 'recent';
-  const chk = (id, label, soon) => `<label class="fs-flt ${soon ? 'is-soon' : ''}"><input type="checkbox" ${f === id ? 'checked' : ''} ${soon ? 'disabled' : ''} onchange="_fsSetFilter('${id}',this.checked)"><span>${label}</span>${soon ? '<span class="fs-soon">soon</span>' : ''}</label>`;
-  const opt = (v, label) => `<option value="${v}" ${s === v ? 'selected' : ''}>${label}</option>`;
-  return `<aside class="fs-filters">
-    <div class="fs-filters-h">Show only</div>
-    ${chk('appearance', 'Appearances', false)}
-    ${chk('decoration', 'Decorations', false)}
-    ${chk('nameplate', 'Nameplates', true)}
-    ${chk('effect', 'Profile Effects', true)}
-    <div class="fs-filters-h">Sort by</div>
-    <select class="fs-sort" onchange="_fsSetSort(this.value)">${opt('recent', 'Recently Added')}${opt('price-low', 'Price: Low → High')}${opt('price-high', 'Price: High → Low')}</select>
-  </aside>`;
-}
-function _fsBrowse(apps) {
-  const col = window._fsCol ? _FS_COLLECTIONS.find(c => c.id === window._fsCol) : null;
-  const filter = window._fsFilter || null;
-  let main;
-  if (col) {
-    // From "Shop the Collection" — flat, that one collection.
-    const list = _fsSortItems(_fsColItems(col));
-    main = `<div class="qst-group"><span class="qst-group-t">${escapeHTML(col.name)}</span><button class="fs-clear" onclick="window._fsCol=null;renderAtelierTab('shop')"><i class="fa-solid fa-xmark"></i> Clear filter</button></div>
-      <div class="qst-qgrid">${list.length ? list.map(a => _fsCard(a)).join('') : _fsEmpty('box-open', 'Nothing here yet', 'This collection is still being stocked.')}</div>`;
-  } else if (filter) {
-    // A filter is active — everything for the filter, flat (not per-collection).
-    const list = _fsSortItems(apps.filter(a => a.kind === filter));
-    main = `<div class="qst-group"><span class="qst-group-t">${filter === 'decoration' ? 'Decorations' : 'Appearances'}</span><span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span></div>
-      <div class="qst-qgrid">${list.length ? list.map(a => _fsCard(a)).join('') : _fsEmpty('box-open', 'Nothing here yet', 'Check back soon.')}</div>`;
-  } else {
-    // Default — items packed into their collections.
-    main = _fsCollections().map(c => {
-      const items = _fsSortItems(_fsColItems(c));
-      if (!items.length) return '';
-      return `<div class="qst-group"><span class="qst-group-t">${escapeHTML(c.name)}</span><button class="fs-clear" onclick="_fsShowCollection('${c.id}')">View collection</button></div>
-        <div class="qst-qgrid">${items.map(a => _fsCard(a)).join('')}</div>`;
-    }).join('');
-  }
-  return `<div class="fs-browse"><div class="fs-browse-main">${main}</div>${_fsFilterRail()}</div>`;
-}
-function _fsOnyxTab(apps) {
-  const list = _fsSortItems(apps.filter(_fsIsOnyx));
-  if (!list.length) return _fsEmpty('gem', 'More Onyx exclusives soon', 'Rare, Onyx-only items arrive regularly. Check back shortly.');
-  return `${_fsGroup('The Vault', 'Our rarest, most exclusive drops')}
-    <div class="qst-qgrid">${list.map(a => _fsCard(a)).join('')}</div>`;
-}
-
-// ── Personalized bundles — multiple shop items packed together for the user,
-// randomized name + font, deterministic per user + month (resets monthly). ──
-const _FS_BUNDLE_NAMES = ['Collector’s Set', 'Signature Pack', 'Curated Drop', 'Icon Bundle', 'Standout Set', 'Statement Pack', 'Prestige Kit', 'Showcase Bundle', 'Trendsetter Pack', 'Editor’s Pick'];
-const _FS_BUNDLE_FONTS = ['var(--font-display)', "Georgia,'Times New Roman',serif", "'Trebuchet MS',sans-serif", "'Courier New',monospace", "var(--font-ui)"];
-function _fsSeed(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return () => { h += 0x6D2B79F5; let t = h >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-function _fsPersonalBundles() {
-  const cat = _fsCatalogue();
-  const month = new Date().toISOString().slice(0, 7);
-  const rng = _fsSeed((CU?.username || 'guest') + '|' + month);
-  const wl = new Set(CU?.wishlist || []);
-  let pool = cat.filter(a => !_fsIsOwned(a));
-  if (pool.length < 2) pool = cat.slice();
-  // Deterministic shuffle, with wishlisted items nudged toward the front.
-  pool = pool.map(a => ({ a, r: rng() - (wl.has(a.id) ? 0.4 : 0) })).sort((x, y) => x.r - y.r).map(x => x.a);
-  const bundles = [];
-  const maxBundles = Math.min(2, Math.floor(pool.length / 2));
-  let idx = 0;
-  for (let b = 0; b < maxBundles; b++) {
-    const size = Math.min(pool.length - idx, 2 + (rng() < 0.5 ? 1 : 0));
-    const items = pool.slice(idx, idx + size); idx += size;
-    if (items.length < 2) break;
-    const orig = items.reduce((s, it) => s + it.price, 0);
-    const disc = 0.2 + Math.round(rng() * 10) / 100; // 20–30%
-    const price = Math.max(5, Math.round(orig * (1 - disc)));
-    bundles.push({
-      id: 'fsbundle_' + month + '_' + b,
-      name: _FS_BUNDLE_NAMES[Math.floor(rng() * _FS_BUNDLE_NAMES.length)],
-      font: _FS_BUNDLE_FONTS[Math.floor(rng() * _FS_BUNDLE_FONTS.length)],
-      items, orig, price, pct: Math.round((1 - price / orig) * 100),
-    });
-  }
-  return bundles;
-}
-function _fsBundleCard(bd) {
-  const thumbs = bd.items.map(it => `<span class="fs-bundle-thumb">${_fsPreview(it)}</span>`).join('');
-  return `<div class="qst-qcard fs-card fs-bundle" onclick="_fsBuyBundle('${bd.id}')">
-    <div class="fs-card-preview fs-bundle-prev">${thumbs}<span class="fs-tag">${bd.items.length} items</span></div>
-    <div class="qst-qcard-body">
-      <div class="fs-card-head"><div class="qst-qcard-title" style="font-family:${bd.font}">${escapeHTML(bd.name)}</div><span class="fs-card-kind">Bundle</span></div>
-      <div class="qst-qcard-desc fs-card-desc">${bd.items.map(i => escapeHTML(i.name)).join(' · ')}</div>
-      <div class="qst-qcard-foot fs-foot">
-        <div class="fs-price fs-price--disc"><div class="fs-price-old">${_FS_ONYX_IC}<span>${bd.orig}</span></div><div class="fs-price-new">${_FS_ONYX_IC}<b>${bd.price}</b><span class="fs-price-pct">(-${bd.pct}%)</span></div></div>
-        <button class="fs-btn fs-btn--primary fs-cbtn" onclick="event.stopPropagation();_fsBuyBundle('${bd.id}')">Get bundle</button>
-      </div>
-    </div>
-  </div>`;
-}
-function _fsBuyBundle(id) {
-  const bd = _fsPersonalBundles().find(b => b.id === id); if (!bd) return;
-  _fsPurchaseConfirm({
-    title: bd.name,
-    subtitle: bd.items.length + ' items · ' + bd.items.map(i => i.name).join(', '),
-    priceOnyx: bd.price,
-    policyLabel: 'Fortshop Policy',
-    policyHref: 'https://www.fortized.com/legal/fortshop-policy',
-    onConfirm: () => _fsGrantBundle(bd),
-  });
-}
-async function _fsGrantBundle(bd) {
-  const bal = CU?.onyx || 0;
-  if (bal < bd.price) { toast('Not enough Onyx! Need ' + bd.price + ' Onyx', 'error'); return; }
-  CU.onyx = bal - bd.price;
-  bd.items.forEach(it => {
-    if (it.kind === 'decoration') { CU.ownedDecorations = [...new Set([...(CU.ownedDecorations || []), it.id])]; }
-    else { CU.unlockedAppearances = [...new Set([...(CU.unlockedAppearances || []), it.id])]; }
-  });
-  if (Array.isArray(CU.wishlist)) CU.wishlist = CU.wishlist.filter(x => !bd.items.some(i => i.id === x));
-  try { await saveUser(true); } catch {}
-  if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
-  if (typeof distributeOnyxRevenue === 'function') distributeOnyxRevenue(bd.price);
-  toast('Bundle unlocked — enjoy your new items!', 'success');
-  try { renderAtelierTab('shop'); } catch {}
-}
-function _fsBundlesTab() {
-  const bundles = _fsPersonalBundles();
-  if (!bundles.length) return _fsEmpty('box-open', 'No bundles right now', 'Personalized bundles are put together from your picks and refresh at the start of each month.');
-  return `${_fsGroup('Your bundles', 'Personalized picks — refreshes monthly')}
-    <div class="qst-qgrid fs-bundle-grid">${bundles.map(_fsBundleCard).join('')}</div>`;
-}
-
-// ── Page render ──
-function _fsRenderShop(el) {
-  const ftab = _FS_TABS.includes(window._fsTab) ? window._fsTab : 'featured';
-  const apps = _fsCatalogue();
-  const owned = _fsOwnedApps();
-  let body;
-  if (ftab === 'browse') body = _fsBrowse(apps, owned);
-  else if (ftab === 'onyx') body = _fsOnyxTab(apps, owned);
-  else if (ftab === 'bundles') body = _fsBundlesTab();
-  else body = _fsFeatured(apps, owned);
-
-  el.innerHTML = `<div class="atelier-content-inner fs-page fs-page--${ftab}">${body}</div>`;
-  _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === ftab); });
-  if (ftab === 'featured') requestAnimationFrame(() => { try { _fsCarouselInit(); } catch {} });
-}
-
-// ── Item-detail popup — the new popup-card family (block/ignore/radiance) +
-// Discord's shop layout: info on the left, a live in-use preview + message
-// preview on the collection backdrop on the right. Stacked price, Radiance
-// buttons, wishlist. ──
+// ── Item-detail popup ──
 function _fsOpenItem(id) {
   const item = _fsCatalogue().find(a => a.id === id); if (!item) return;
   document.getElementById('fs-item-modal')?.remove();
@@ -48268,11 +48258,9 @@ function _fsOpenItem(id) {
   const col = _fsCollectionOf(item.id);
   const onyxTag = _fsIsOnyx(item);
   let action;
-  if (equipped) action = `<button class="fs-btn fs-di-buy" disabled><i class="fa-solid fa-circle-check"></i> Equipped</button>`;
-  else if (owned) action = `<button class="fs-btn fs-btn--primary fs-di-buy" onclick="_fsEquipById('${item.id}');document.getElementById('fs-item-modal')?.remove()"><i class="fa-solid fa-circle-check"></i> Use Now</button>`;
-  else action = `<button class="fs-btn fs-btn--primary fs-di-buy" onclick="_fsBuy('${item.id}')">Buy for ${_FS_ONYX_IC} ${finalPrice}</button>`;
-  const dn = escapeHTML(CU?.displayName || CU?.username || 'You');
-  const avatar = (typeof buildAvatarHTML === 'function') ? buildAvatarHTML(CU?.pfp || null, dn, 30, CU?.pfpCrop) : '';
+  if (equipped)     action = `<button class="fs-btn fs-di-buy" disabled><i class="fa-solid fa-circle-check"></i> Equipped</button>`;
+  else if (owned)   action = `<button class="fs-btn fs-btn--primary fs-di-buy" onclick="_fsEquipById('${item.id}');document.getElementById('fs-item-modal')?.remove()"><i class="fa-solid fa-circle-check"></i> Use Now</button>`;
+  else              action = `<button class="fs-btn fs-btn--primary fs-di-buy" onclick="_fsBuy('${item.id}')">Buy for ${_FS_ONYX_IC} ${finalPrice}</button>`;
   const overlay = document.createElement('div');
   overlay.className = 'ftz-confirm-overlay';
   overlay.id = 'fs-item-modal';
@@ -48282,7 +48270,7 @@ function _fsOpenItem(id) {
       <div class="fs-di-left">
         <div class="fs-di-preview">${_fsPreview(item)}</div>
         <div class="fs-di-name">${escapeHTML(item.name)}</div>
-        <div class="fs-di-type">${_fsKindLabel(item)}${onyxTag ? ' · Exclusive' : ''}</div>
+        <div class="fs-di-type">${_fsKindLabel(item)}${onyxTag ? ' · Vault' : ''}</div>
         <div class="fs-di-desc">${escapeHTML(item.desc || '')}</div>
         ${_fsPriceBlock(item, true)}
         <div class="fs-di-actions">
@@ -48291,10 +48279,10 @@ function _fsOpenItem(id) {
         </div>
       </div>
       <div class="fs-di-right">
-        <div class="fs-di-right-bg" style="background:${col ? col.cover : item.gradient}"></div>
-        <div class="fs-di-collection"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(col ? col.name : (onyxTag ? 'The Vault' : 'Appearances'))}</div>
+        <div class="fs-di-right-bg" style="${col && col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col ? col.cover : item.gradient}`}"></div>
+        <div class="fs-di-collection"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(col ? col.name : (onyxTag ? 'The Vault' : _fsKindLabel(item) + 's'))}</div>
         <div class="fs-di-tools">
-          ${owned || equipped ? '' : `<button class="fs-di-tool ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="toggleWishlist('${item.id}');this.classList.toggle('on');this.title=this.classList.contains('on')?'In wishlist':'Add to wishlist'">${_svgIcon('heart', 15)}</button>`}
+          ${owned || equipped ? '' : `<button class="fs-di-tool ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="toggleWishlist('${item.id}');this.classList.toggle('on')">${_svgIcon('heart', 15)}</button>`}
         </div>
         <button class="ftz-close-btn ftz-ac-x fs-di-x" aria-label="Close" onclick="document.getElementById('fs-item-modal')?.remove()">&times;</button>
         <div class="fs-di-stage fs-di-stage--${item.kind}">${_fsRightPanel(item)}</div>
@@ -48306,23 +48294,20 @@ function _fsOpenItem(id) {
   setTimeout(() => overlay.focus(), 0);
 }
 
-// Buy → open the Terms purchase-confirm card.
+// Buy → the Terms purchase-confirm card (the ONLY confirmation).
 function _fsBuy(id) {
   const item = _fsCatalogue().find(a => a.id === id); if (!item) return;
   const { finalPrice } = _fsFinalPrice(item);
   document.getElementById('fs-item-modal')?.remove();
   _fsPurchaseConfirm({
     title: item.name,
-    subtitle: _fsKindLabel(item) + (_fsIsOnyx(item) ? ' · Exclusive' : ''),
+    subtitle: _fsKindLabel(item) + (_fsIsOnyx(item) ? ' · Vault' : ''),
     priceOnyx: finalPrice,
-    policyLabel: 'Fortshop Policy',
-    policyHref: 'https://www.fortized.com/legal/fortshop-policy',
     onConfirm: () => _fsBuyItem(item, finalPrice),
   });
 }
 
-// Unified purchase-confirm card (Fortshop + Radiance): order summary + a
-// Terms acceptance checkbox (the gift-selection tick) gating the Buy button.
+// Unified purchase-confirm card (Fortshop + Radiance).
 function _fsPurchaseConfirm(opts) {
   const o = opts || {};
   const price = o.priceOnyx;
@@ -48376,7 +48361,6 @@ function _fsPurchaseConfirm(opts) {
   overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
   setTimeout(() => row.focus(), 0);
 }
-
 function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
   if (type === 'appearance') {
     const owned = ownedApps.includes(item.id);
@@ -51452,44 +51436,80 @@ function _isItemOnSaleInShop(item) {
 //   {id, name, src, price, color, rarity?, rare?}
 // ── Avatar decorations — code-authored SVG overlays (crisp at any size, zero
 // image hosting, zero egress; SMIL animates even inside an <img>). Each renders
-// via the existing getDecorationSrc / .profile-decoration-overlay system. ──
+// via the existing getDecorationSrc / .profile-decoration-overlay system.
+// One decoration per collection, themed to that collection's art. ──
 function _fsDecoURI(svg) { return 'data:image/svg+xml,' + encodeURIComponent(svg.replace(/\n\s*/g, '')); }
-function _decoLaurel(col) {
-  const gold = 'url(#gL)'; const leaves = [];
-  const mk = (side) => {
-    const start = side === 'L' ? 268 : 272, end = side === 'L' ? 168 : 372, steps = 9;
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps, ang = (start + (end - start) * t) * Math.PI / 180, r = 49;
-      const x = 50 + r * Math.cos(ang), y = 50 - r * Math.sin(ang);
-      const deg = Math.atan2(y - 50, x - 50) * 180 / Math.PI + (side === 'L' ? 52 : -52);
-      const sz = 0.72 + Math.sin(t * Math.PI) * 0.5;
-      leaves.push(`<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(7.2 * sz).toFixed(1)}" ry="${(3 * sz).toFixed(1)}" fill="${gold}" stroke="#7a5a12" stroke-width=".5" transform="rotate(${deg.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`);
-    }
-  };
-  mk('L'); mk('R');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="gL" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${col ? col[0] : '#ffe9a3'}"/><stop offset=".5" stop-color="${col ? col[1] : '#f5c542'}"/><stop offset="1" stop-color="${col ? col[2] : '#c9971f'}"/></linearGradient></defs>${leaves.join('')}<circle cx="50" cy="97" r="2.6" fill="${gold}" stroke="#7a5a12" stroke-width=".5"/></svg>`;
+// A 4-point sparkle (the premium "star" shape), centred at 0,0.
+function _fsSparkle(x, y, s, fill, op, dur) {
+  const p = `M0 ${-s} C ${s * .18} ${-s * .18}, ${s * .18} ${-s * .18}, ${s} 0 C ${s * .18} ${s * .18}, ${s * .18} ${s * .18}, 0 ${s} C ${-s * .18} ${s * .18}, ${-s * .18} ${s * .18}, ${-s} 0 C ${-s * .18} ${-s * .18}, ${-s * .18} ${-s * .18}, 0 ${-s} Z`;
+  const anim = dur ? `<animate attributeName="opacity" values="${op};${Math.max(0.15, op - .65)};${op}" dur="${dur}s" repeatCount="indefinite"/>` : '';
+  return `<g transform="translate(${x} ${y})" opacity="${op}"><path d="${p}" fill="${fill}"/>${anim}</g>`;
 }
-function _decoOrbit(c1, c2, edge) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="gO" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><circle cx="50" cy="50" r="47.5" fill="none" stroke="url(#gO)" stroke-width="2.4" stroke-dasharray="3 5" stroke-linecap="round"/><g><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="9s" repeatCount="indefinite"/><circle cx="50" cy="2.5" r="4.2" fill="url(#gO)" stroke="${edge}" stroke-width=".5"/><circle cx="50" cy="2.5" r="1.6" fill="#fffbe0"/></g></svg>`;
+// MIDNIGHT — a smooth celestial ring with drifting sparkles.
+function _decoStarfall() {
+  const stars = [
+    [50, 3, 5.2, .95, 3.1], [83, 17, 3.4, .8, 4.3], [96, 50, 2.6, .7, 3.7],
+    [17, 17, 4.1, .85, 5.1], [4, 50, 2.8, .65, 4.7], [17, 84, 3.2, .75, 3.4],
+    [50, 97, 4.4, .9, 4.1], [84, 84, 2.9, .7, 5.4], [68, 6, 2.2, .6, 3.9], [30, 94, 2.1, .6, 4.9],
+  ].map(s => _fsSparkle(s[0], s[1], s[2], 'url(#gStar)', s[3], s[4])).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs>
+      <linearGradient id="gRing" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#8f7bff"/><stop offset=".5" stop-color="#4b3fd8"/><stop offset="1" stop-color="#221a6b"/>
+      </linearGradient>
+      <radialGradient id="gStar"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#b9aaff"/></radialGradient>
+    </defs>
+    <circle cx="50" cy="50" r="47" fill="none" stroke="url(#gRing)" stroke-width="3"/>
+    <circle cx="50" cy="50" r="43.5" fill="none" stroke="#c3b6ff" stroke-width=".7" opacity=".35"/>
+    ${stars}
+  </svg>`;
 }
-function _decoCrown() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="gC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a3"/><stop offset="1" stop-color="#e0a92a"/></linearGradient></defs><path d="M30 20 L36 6 L44 16 L50 3 L56 16 L64 6 L70 20 Z" fill="url(#gC)" stroke="#7a5a12" stroke-width=".8" stroke-linejoin="round"/><rect x="30" y="19" width="40" height="5" rx="2" fill="url(#gC)" stroke="#7a5a12" stroke-width=".8"/><circle cx="50" cy="10" r="2.4" fill="#ff5db1"/><circle cx="37" cy="12" r="1.7" fill="#5fd0ff"/><circle cx="63" cy="12" r="1.7" fill="#5fd0ff"/></svg>`;
+// NATURALS — grass blades and leaves growing around the lower arc.
+function _decoWildgrass() {
+  const back = [], front = [];
+  const H = [16, 11, 19, 13, 17, 12, 20, 14, 16, 11, 18, 13, 19, 12, 17, 15, 20, 12, 16, 13];
+  for (let i = 0; i < 20; i++) {
+    const a = (200 + (i / 19) * 140) * Math.PI / 180;        // sweep the lower arc
+    const x = 50 + 45.5 * Math.cos(a), y = 50 - 45.5 * Math.sin(a);
+    const h = H[i];                                          // varied blade height
+    const bend = ((i % 4) - 1.5) * 4.6;                       // organic lean
+    const w = 3.1;                                            // thick, tapered base
+    const deg = Math.atan2(y - 50, x - 50) * 180 / Math.PI + 90;
+    const blade = `<path d="M${-w} 0 C ${-w * .8} ${-h * .5}, ${bend * .5 - 1} ${-h * .82}, ${bend} ${-h} C ${bend * .5 + 1} ${-h * .82}, ${w * .8} ${-h * .5}, ${w} 0 Z" fill="url(#gGrass)" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${deg.toFixed(0)})"/>`;
+    (i % 2 ? front : back).push(blade);
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs>
+      <linearGradient id="gGrass" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#14532b"/><stop offset=".55" stop-color="#2f9a53"/><stop offset="1" stop-color="#74e59a"/></linearGradient>
+    </defs>
+    <g opacity=".72">${back.join('')}</g>
+    ${front.join('')}
+  </svg>`;
 }
-function _decoSakura() {
-  const petals = [];
-  const flower = (cx, cy, s, rot) => { let l = ''; for (let k = 0; k < 5; k++) l += `<path d="M0 0 C 3 -3 3 -8 0 -9.5 C -3 -8 -3 -3 0 0 Z" fill="url(#gP)" stroke="#d873a8" stroke-width=".4" transform="rotate(${k * 72})"/>`; return `<g transform="translate(${cx} ${cy}) rotate(${rot}) scale(${s})">${l}<circle r="1.6" fill="#ffd34d"/></g>`; };
-  const petal = (cx, cy, s, rot) => `<g transform="translate(${cx} ${cy}) rotate(${rot}) scale(${s})"><path d="M0 0 C 2.4 -2.4 2.4 -6 0 -7.4 C -2.4 -6 -2.4 -2.4 0 0 Z" fill="url(#gP)" stroke="#d873a8" stroke-width=".4"/></g>`;
-  [[86, 20, 1.15, 10], [74, 10, 0.8, -30], [92, 36, 0.72, 50]].forEach(f => petals.push(flower(f[0], f[1], f[2], f[3])));
-  [150, 172, 210, 250, 285, 315].forEach((a, i) => { const r = a * Math.PI / 180; petals.push(petal((50 + 50 * Math.cos(r)).toFixed(1), (50 - 50 * Math.sin(r)).toFixed(1), (0.9 + (i % 2) * 0.3).toFixed(2), (a + 200).toFixed(0))); });
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="gP"><stop offset="0" stop-color="#ffe3f1"/><stop offset="1" stop-color="#ff9ecb"/></radialGradient></defs>${petals.join('')}</svg>`;
+// CROWN JEWELS — a refined jewelled crown with filigree.
+function _decoRegalia() {
+  const gem = (x, y, r, c) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/><circle cx="${x - r * .3}" cy="${y - r * .3}" r="${r * .3}" fill="#fff" opacity=".55"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs>
+      <linearGradient id="gAu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffeaa6"/><stop offset=".45" stop-color="#f0c04a"/><stop offset="1" stop-color="#b1801c"/></linearGradient>
+    </defs>
+    <path d="M26 24 L26 14 L36 20 L43 7 L50 17 L57 7 L64 20 L74 14 L74 24 Z" fill="url(#gAu)" stroke="#7a5a12" stroke-width=".9" stroke-linejoin="round"/>
+    <rect x="25" y="23" width="50" height="6.5" rx="3.2" fill="url(#gAu)" stroke="#7a5a12" stroke-width=".9"/>
+    ${gem(50, 12.5, 3.2, '#ff5db1')}${gem(36.5, 18.5, 2.3, '#5fd0ff')}${gem(63.5, 18.5, 2.3, '#5fd0ff')}${gem(50, 26.3, 2.3, '#a78bfa')}
+    ${_fsSparkle(21, 30, 3.6, '#ffeaa6', .9, 3.6)}${_fsSparkle(79, 30, 3.6, '#ffeaa6', .9, 4.4)}
+  </svg>`;
 }
 const PROFILE_DECORATIONS = [
-  { id: 'deco_laurel',  kind: 'decoration', name: 'Golden Laurel', desc: 'A victor’s laurel wreath in polished gold.',            price: 90,  src: _fsDecoURI(_decoLaurel()) },
-  { id: 'deco_crown',   kind: 'decoration', name: 'Regal Crown',   desc: 'A jewelled gold crown that sits atop your avatar.',     price: 110, rarity: 'rare', src: _fsDecoURI(_decoCrown()) },
-  { id: 'deco_orbit',   kind: 'decoration', name: 'Orbit',         desc: 'A dashed gold ring with a gem that circles you.',       price: 120, rarity: 'rare', src: _fsDecoURI(_decoOrbit('#fff93e', '#ffb03a', '#8a5a10')) },
-  { id: 'deco_ember',   kind: 'decoration', name: 'Ember Orbit',   desc: 'The Orbit ring, forged in ember red.',                  price: 120, rarity: 'rare', src: _fsDecoURI(_decoOrbit('#ff6a5f', '#ff2d55', '#7a1020')) },
-  { id: 'deco_frost',   kind: 'decoration', name: 'Frost Orbit',   desc: 'The Orbit ring in cool arctic blue.',                   price: 120, rarity: 'rare', src: _fsDecoURI(_decoOrbit('#7fe3ff', '#3a9dff', '#123a6a')) },
-  { id: 'deco_sakura',  kind: 'decoration', name: 'Sakura',        desc: 'Soft cherry-blossom petals drifting past your avatar.', price: 100, src: _fsDecoURI(_decoSakura()) },
+  { id: 'deco_starfall',  kind: 'decoration', name: 'Starfall',   desc: 'A celestial ring wreathed in drifting starlight.',      price: 120, rarity: 'rare', src: _fsDecoURI(_decoStarfall()) },
+  { id: 'deco_wildgrass', kind: 'decoration', name: 'Wildgrass',  desc: 'Fresh grass and leaves growing around your avatar.',    price: 95,                  src: _fsDecoURI(_decoWildgrass()) },
+  { id: 'deco_regalia',   kind: 'decoration', name: 'Regalia',    desc: 'A jewelled crown with gilded filigree.',                price: 135, rarity: 'rare', src: _fsDecoURI(_decoRegalia()) },
+];
+
+// ── Nameplates — the gradient plate behind your name in member lists. ──
+const PROFILE_NAMEPLATES = [
+  { id: 'np_midnight', kind: 'nameplate', name: 'Midnight Veil', desc: 'A deep indigo plate scattered with starlight.',   price: 110, rarity: 'rare', nameplate: 'linear-gradient(90deg,rgba(75,63,216,.72) 0%,rgba(34,26,107,.42) 55%,rgba(34,26,107,0) 100%)', swatch: '#4b3fd8' },
+  { id: 'np_naturals', kind: 'nameplate', name: 'Meadow',        desc: 'A soft green plate — calm and grounded.',         price: 95,                  nameplate: 'linear-gradient(90deg,rgba(31,122,66,.72) 0%,rgba(31,122,66,.34) 58%,rgba(31,122,66,0) 100%)', swatch: '#3ecf6e' },
+  { id: 'np_jewels',   kind: 'nameplate', name: 'Regal Plate',   desc: 'Amethyst and gold — unmistakably yours.',         price: 125, rarity: 'rare', nameplate: 'linear-gradient(90deg,rgba(168,120,255,.7) 0%,rgba(240,192,74,.28) 62%,rgba(240,192,74,0) 100%)', swatch: '#a878ff' },
 ];
 
 // Master appearance catalogue. Lives at module scope (not inside the shop
@@ -51517,16 +51537,15 @@ async function buyDecoration(decoId, price) {
   const d = PROFILE_DECORATIONS.find(d=>d.id===decoId);
   if (!d) return;
   if (bal < price) { toast('Not enough Onyx! Need '+price+' Onyx','error'); return; }
-  showCustomConfirm('Buy '+d.name+' for '+price+' Onyx?', async () => {
-    CU.onyx = bal - price;
-    CU.ownedDecorations = [...(CU.ownedDecorations||[]), decoId];
-    CU.activeDecoration = decoId;
-    if (Array.isArray(CU.wishlist)) CU.wishlist = CU.wishlist.filter(id => id !== decoId);
-    await saveUser(true); updateOnyxDisplay();
-    distributeOnyxRevenue(price);
-    toast(d.name+' unlocked and equipped!','success');
-    renderAtelierTab('shop');
-  });
+  // No extra confirm — the Fortshop purchase card already confirms.
+  CU.onyx = bal - price;
+  CU.ownedDecorations = [...(CU.ownedDecorations||[]), decoId];
+  CU.activeDecoration = decoId;
+  if (Array.isArray(CU.wishlist)) CU.wishlist = CU.wishlist.filter(id => id !== decoId);
+  await saveUser(true); updateOnyxDisplay();
+  distributeOnyxRevenue(price);
+  toast(d.name+' unlocked and equipped!','success');
+  renderAtelierTab('shop');
 }
 async function equipDecoration(decoId) {
   const _prev = CU.activeDecoration;

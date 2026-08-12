@@ -1,6 +1,37 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Fortshop REBUILT for continuity + real art (`2026fix463`).** User: "doesn't
+  feel as GOOD as discord's… I want continuity, uniformized, professional."
+  • **Reuses the app's OWN components** — no new design language: `.disc-subnav`
+    topbar, `.qst-group` heads, **`.ftz-select`** (the settings dropdown) for
+    Sort by, `.ftz-confirm-card`/`.ftz-ac-*` popups, Radiance 3D `.fs-btn`.
+  • **Discord-tight cards** (`.fs-card`): art → name → price. **Hover reveals**
+    the wishlist heart + swaps the price row for Buy/Gift (`.fs-card-act`).
+    Grid `minmax(224px)` so 4 fit. ⚠️ The card is a `<div role=button>` — it
+    contains buttons, and nested `<button>`s break the HTML parser (that bug
+    made the buy button escape the card into its own grid cell).
+  • **Real collection art** — folder renamed `M-Fortshop Collections` →
+    **`Fortshop Collections`**; `_FS_ART` points at `/Fortshop%20Collections/
+    2026 Collections/<Name>/`. Midnight + Naturals have `coverImg`/`logoImg`;
+    hero + banners use them (logo `<img>` with a Syne-wordmark onerror fallback).
+  • **Collections are MIXED** — each holds ≥1 nameplate + ≥1 avatar decoration,
+    plus appearances. Decorations are NOT their own collection any more.
+    Midnight = midnight_citadel + deco_starfall + np_midnight; Naturals =
+    green_leaves + deco_wildgrass + np_naturals; Crown Jewels (⚠️ ART PENDING) =
+    obsidian_ember + royal_amethyst + deco_regalia + np_jewels.
+  • **NAMEPLATES are a real item kind** — `PROFILE_NAMEPLATES` (gradient plate
+    behind your name), `CU.ownedNameplates`/`CU.activeNameplate`,
+    `_fsBuyNameplate`. Card art = a live nameplate row.
+  • **Decorations redesigned** (user: "look awful") — `_decoStarfall` (celestial
+    ring + twinkling 4-point sparkles), `_decoWildgrass` (layered grass tufts),
+    `_decoRegalia` (jewelled crown). `_fsSparkle()` is the shared star helper.
+  • **ONE confirmation** — `buyDecoration`'s `showCustomConfirm` removed; the
+    Terms purchase card (`_fsPurchaseConfirm`) is the only confirm.
+  **⚠️ NEED ART:** Crown Jewels cover+logo (and any new collection) → drop into
+  `coverImg`/`logoImg` on `_FS_COLLECTIONS`.
+  **⚠️ LIVE-VERIFY:** collection art paths on the live server (spaces are
+  %20-encoded), onyx glyph/FA, card hover-buy, nameplate equip, bundles.
 - **Fortshop — big polish pass done (`2026fix459`→`462`).** Now: no "Deck out"
   banner; Radiance-style buttons (`.fs-btn`, no shimmer/glow) in shop + quests;
   **stacked discount price** (`_fsPriceBlock`, pct computed from prices — fixed

@@ -47816,30 +47816,43 @@ function _qstStartTimers() {
 // ════════════════════════════════════════════════════════════
 const _FS_CDN  = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
 const _FS_ART  = '/Fortshop%20Collections/2026%20Collections/';
-const _FS_TABS = ['featured', 'browse', 'onyx', 'bundles'];
+const _FS_TABS = ['featured', 'browse', 'onyx'];
 const _FS_ONYX_IC = '<span class="rad-onyx-ic"></span>';
 
 // ── Collections. Each holds a MIX: at least one nameplate + one avatar
 // decoration, plus appearances / other item types where they fit.
 // coverImg + logoImg are the real collection art (2026 Collections).
 const _FS_COLLECTIONS = [
-  { id:'midnight', order:3, name:'Midnight', accent:'#6b5cff',
+  { id:'pixel',    order:5, name:'Pixel World', accent:'#2fb9ad',
+    tagline:'Bit-crushed teal and green — playfully retro.',
+    coverImg:_FS_ART + 'Pixel%20World/PixelWorldCollectionCover.png',
+    logoImg: _FS_ART + 'Pixel%20World/PixelWorldCollectionLogo.png',
+    cover:'linear-gradient(120deg,#0a2028 0%,#12494b 55%,#071417 100%)',
+    items:['deco_pixel','np_pixel'] },
+  { id:'vintage',  order:4, name:'Vintage Beats', accent:'#8b5cf6',
+    tagline:'Loud 90s shapes, straight off the mixtape.',
+    coverImg:_FS_ART + 'Vintage%20Beats/VintageBeatsCollectionCover.png',
+    logoImg: _FS_ART + 'Vintage%20Beats/VintageBeatsCollectionLogo.png',
+    cover:'linear-gradient(120deg,#2a1a5e 0%,#4c2fb0 55%,#150c33 100%)',
+    items:['deco_memphis','np_vintage'] },
+  { id:'jewels',   order:3, name:'Crown Jewels', accent:'#e5323f',
+    tagline:'Crimson damask, gold and gemstone shine.',
+    coverImg:_FS_ART + 'Crown%20Jewels/CrownJewelsCollectionCover.png',
+    logoImg: _FS_ART + 'Crown%20Jewels/CrownJewelsCollectionLogo.png',
+    cover:'linear-gradient(120deg,#3a0810 0%,#7d1220 55%,#1e050a 100%)',
+    items:['obsidian_ember','royal_amethyst','deco_regalia','np_jewels'] },
+  { id:'midnight', order:2, name:'Midnight', accent:'#6b5cff',
     tagline:'Deep indigo skies, starlight and the purest dark.',
     coverImg:_FS_ART + 'Midnight/MidnightCollectionCover.png',
     logoImg: _FS_ART + 'Midnight/MidnightCollectionLogo.png',
     cover:'linear-gradient(120deg,#0b0722 0%,#191052 55%,#05030f 100%)',
     items:['midnight_citadel','deco_starfall','np_midnight'] },
-  { id:'naturals', order:2, name:'Naturals', accent:'#3ecf6e',
+  { id:'naturals', order:1, name:'Naturals', accent:'#3ecf6e',
     tagline:'Fresh grass, calm greens — easy on the eyes.',
     coverImg:_FS_ART + 'Naturals/NaturalsCollectionCover.png',
     logoImg: _FS_ART + 'Naturals/NaturalsCollectionLogo.png',
     cover:'linear-gradient(120deg,#0a1410 0%,#12351f 55%,#061009 100%)',
     items:['green_leaves','deco_wildgrass','np_naturals'] },
-  // ⚠️ Art pending — falls back to a gradient cover + Syne wordmark.
-  { id:'jewels',   order:1, name:'Crown Jewels', logoText:'CROWN JEWELS', accent:'#c07bff',
-    tagline:'Ember, amethyst and gold — our rarest drop.',
-    cover:'linear-gradient(120deg,#1a0a10 0%,#2a1246 52%,#120818 100%)',
-    items:['obsidian_ember','royal_amethyst','deco_regalia','np_jewels'] },
 ];
 function _fsCollections() { return _FS_COLLECTIONS.slice().sort((a, b) => b.order - a.order); }
 function _fsColItems(col) { const all = _fsCatalogue(); return (col.items || []).map(id => all.find(a => a.id === id)).filter(Boolean); }
@@ -47997,6 +48010,17 @@ function _fsSetTab(tab) {
   try { renderAtelierTab('shop'); } catch {}
   const sc = document.getElementById('atelier-scroll-outer'); if (sc) sc.scrollTo({ top: 0, behavior: 'auto' });
 }
+function _fsSearch(v) {
+  window._fsQuery = (v || '').trim();
+  if (window._fsQuery && window._fsTab !== 'browse') { window._fsTab = 'browse'; _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === 'browse'); }); }
+  window._fsCol = null;
+  clearTimeout(window._fsSearchT);
+  window._fsSearchT = setTimeout(() => { try { renderAtelierTab('shop'); } catch {} }, 120);
+}
+function _fsMatches(item, q) {
+  const s = (item.name + ' ' + (item.desc || '') + ' ' + _fsKindLabel(item)).toLowerCase();
+  return s.includes(q.toLowerCase());
+}
 function _fsShowCollection(id) {
   window._fsCol = id; window._fsFilter = null; window._fsTab = 'browse';
   _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === 'browse'); });
@@ -48010,9 +48034,9 @@ function _fsColLogo(col, cls) {
     ? `<img class="${cls}-img" src="${col.logoImg}" alt="${escapeHTML(col.name)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'${cls}-txt',textContent:'${escapeHTML(col.logoText || col.name)}'}))">`
     : `<div class="${cls}-txt">${escapeHTML(col.logoText || col.name)}</div>`;
 }
-function _fsColHero(col) {
+function _fsColHero(col, sub) {
   const bg = col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col.cover}`;
-  return `<div class="fs-hero" style="--fs-acc:${col.accent}">
+  return `<div class="fs-hero${sub ? ' fs-hero--sub' : ''}" style="--fs-acc:${col.accent}">
     <div class="fs-hero-bg" style="${bg}"></div>
     <div class="fs-hero-inner">
       <div class="fs-hero-logo">${_fsColLogo(col, 'fs-hero-lg')}</div>
@@ -48044,15 +48068,27 @@ function _fsFeatured() {
   const items = _fsColItems(hero);
   const others = cols.slice(1).sort(() => Math.random() - 0.5).slice(0, 2);
   const chev = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="${d === 'l' ? '15 18 9 12 15 6' : '9 18 15 12 9 6'}"/></svg>`;
+  // "Made for You" — a personalized shuffle of what you don't own yet.
+  const month = new Date().toISOString().slice(0, 7);
+  const rng = _fsSeed((CU?.username || 'guest') + '|style|' + month + '|' + (window._fsStyleSalt || 0));
+  const wl = new Set(CU?.wishlist || []);
+  const picks = _fsCatalogue().filter(a => !_fsIsOwned(a))
+    .map(a => ({ a, r: rng() - (wl.has(a.id) ? 0.5 : 0) })).sort((x, y) => x.r - y.r).map(x => x.a).slice(0, 8);
+  const bundles = _fsPersonalBundles();
   return `
-    ${_fsColHero(hero)}
-    <div class="fs-rowwrap">
-      <div class="fs-row" id="fs-row">${items.map(_fsCard).join('')}</div>
-      <button class="fs-rowarr fs-rowarr--l" onclick="_fsRowScroll(-1)" aria-label="Scroll left">${chev('l')}</button>
-      <button class="fs-rowarr fs-rowarr--r" onclick="_fsRowScroll(1)" aria-label="Scroll right">${chev('r')}</button>
+    <div class="fs-heroblock">
+      ${_fsColHero(hero)}
+      <div class="fs-rowwrap">
+        <div class="fs-row" id="fs-row">${items.map(_fsCard).join('')}</div>
+        <button class="fs-rowarr fs-rowarr--l" onclick="_fsRowScroll(-1)" aria-label="Scroll left">${chev('l')}</button>
+        <button class="fs-rowarr fs-rowarr--r" onclick="_fsRowScroll(1)" aria-label="Scroll right">${chev('r')}</button>
+      </div>
     </div>
-    ${others.length ? `${_fsGroup('More collections')}<div class="fs-colbanners">${others.map(_fsColBanner).join('')}</div>` : ''}`;
+    ${others.length ? `${_fsGroup('More collections')}<div class="fs-colbanners">${others.map(_fsColBanner).join('')}</div>` : ''}
+    ${bundles.length ? `${_fsGroup('Packed for you', '<span class="qst-group-note">Bundles built from your taste — refreshes monthly</span>')}<div class="fs-grid">${bundles.map(_fsBundleCard).join('')}</div>` : ''}
+    ${picks.length ? `${_fsGroup('Made for you', `<button class="fs-clear" onclick="_fsShuffleStyle()"><i class="fa-solid fa-shuffle"></i> Shuffle</button>`)}<div class="fs-grid">${picks.map(_fsCard).join('')}</div>` : ''}`;
 }
+function _fsShuffleStyle() { window._fsStyleSalt = (window._fsStyleSalt || 0) + 1; try { renderAtelierTab('shop'); } catch {} }
 
 // ── Browse — toolbar (sort + filter toggle) + collection groups / flat filter ──
 function _fsSortItems(list) {
@@ -48067,17 +48103,34 @@ function _fsSetFilter(id, on) { window._fsFilter = on ? id : null; window._fsCol
 function _fsToggleFilters() { window._fsFiltersOpen = !window._fsFiltersOpen; try { renderAtelierTab('shop'); } catch {} }
 function _fsFilterRail() {
   const f = window._fsFilter || null;
-  const chk = (id, label, soon) => `<label class="fs-flt${soon ? ' is-soon' : ''}"><input type="checkbox" ${f === id ? 'checked' : ''} ${soon ? 'disabled' : ''} onchange="_fsSetFilter('${id}',this.checked)"><span>${label}</span>${soon ? '<span class="fs-soon">soon</span>' : ''}</label>`;
+  const CHK = '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+  const row = (id, label, count, soon) => `<div class="fs-flt nm-row${f === id ? ' sel' : ''}${soon ? ' is-soon' : ''}" role="checkbox" aria-checked="${f === id}" tabindex="${soon ? -1 : 0}" ${soon ? '' : `onclick="_fsSetFilter('${id}',${f !== id})"`}>
+      <span class="nm-check">${f === id ? CHK : ''}</span>
+      <span class="fs-flt-lb">${label}</span>
+      ${soon ? '<span class="fs-soon">soon</span>' : `<span class="fs-flt-n">${count}</span>`}
+    </div>`;
+  const all = _fsCatalogue();
+  const n = k => all.filter(a => a.kind === k).length;
   return `<aside class="fs-filters">
     <div class="fs-filters-h">Show only</div>
-    ${chk('appearance', 'Appearances')}
-    ${chk('decoration', 'Avatar Decorations')}
-    ${chk('nameplate', 'Nameplates')}
-    ${chk('effect', 'Profile Effects', true)}
+    ${row('appearance', 'Appearances', n('appearance'))}
+    ${row('decoration', 'Avatar Decorations', n('decoration'))}
+    ${row('nameplate', 'Nameplates', n('nameplate'))}
+    ${row('effect', 'Profile Effects', 0, true)}
+    ${f ? `<button class="fs-clear fs-flt-clear" onclick="_fsSetFilter('${f}',false)"><i class="fa-solid fa-xmark"></i> Clear filter</button>` : ''}
   </aside>`;
 }
+// A rounded collection card (cover + logo) for the Browse landing.
+function _fsColCard(col) {
+  const bg = col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col.cover}`;
+  return `<button class="fs-colcard" style="--fs-acc:${col.accent}" onclick="_fsShowCollection('${col.id}')">
+    <span class="fs-colcard-bg" style="${bg}"></span>
+    <span class="fs-colcard-in">${_fsColLogo(col, 'fs-cc-lg')}<span class="fs-colcard-n">${_fsColItems(col).length} items</span></span>
+  </button>`;
+}
 function _fsBrowse(all) {
-  const col = window._fsCol ? _FS_COLLECTIONS.find(c => c.id === window._fsCol) : null;
+  const q = (window._fsQuery || '').trim();
+  const col = (!q && window._fsCol) ? _FS_COLLECTIONS.find(c => c.id === window._fsCol) : null;
   const filter = window._fsFilter || null;
   const open = !!window._fsFiltersOpen;
   const sortSel = (typeof _ftzSelectHTML === 'function')
@@ -48090,9 +48143,15 @@ function _fsBrowse(all) {
     <button class="fs-btn fs-fltbtn${open ? ' is-on' : ''}" onclick="_fsToggleFilters()">${open ? 'Hide' : 'Show'} Filters <i class="fa-solid fa-sliders"></i></button>
   </div>`;
   let main;
-  if (col) {
+  if (q) {
+    let list = all.filter(a => _fsMatches(a, q));
+    if (filter) list = list.filter(a => a.kind === filter);
+    main = _fsGroup(`Results for “${escapeHTML(q)}”`, `<span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span>`)
+      + `<div class="fs-grid">${list.length ? _fsSortItems(list).map(_fsCard).join('') : _fsEmpty('magnifying-glass', 'Nothing matches that', 'Try a different word, or clear the search.')}</div>`;
+  } else if (col) {
     const list = _fsSortItems(_fsColItems(col));
-    main = _fsColHero(col) + _fsGroup(escapeHTML(col.name), `<button class="fs-clear" onclick="window._fsCol=null;renderAtelierTab('shop')"><i class="fa-solid fa-xmark"></i> Clear</button>`)
+    main = `<div class="fs-heroblock fs-heroblock--sub">${_fsColHero(col, true)}</div>`
+      + _fsGroup(escapeHTML(col.name), `<button class="fs-clear" onclick="window._fsCol=null;renderAtelierTab('shop')"><i class="fa-solid fa-xmark"></i> All collections</button>`)
       + `<div class="fs-grid">${list.map(_fsCard).join('')}</div>`;
   } else if (filter) {
     const list = _fsSortItems(all.filter(a => a.kind === filter));
@@ -48100,12 +48159,8 @@ function _fsBrowse(all) {
     main = _fsGroup(label, `<span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span>`)
       + `<div class="fs-grid">${list.length ? list.map(_fsCard).join('') : _fsEmpty('box-open', 'Nothing here yet', 'Check back soon.')}</div>`;
   } else {
-    main = _fsCollections().map(c => {
-      const items = _fsSortItems(_fsColItems(c));
-      if (!items.length) return '';
-      return _fsGroup(escapeHTML(c.name), `<button class="fs-clear" onclick="_fsShowCollection('${c.id}')">View collection</button>`)
-        + `<div class="fs-grid">${items.map(_fsCard).join('')}</div>`;
-    }).join('');
+    main = _fsGroup('Collections', '<span class="qst-group-note">Pick a drop to explore</span>')
+      + `<div class="fs-colgrid">${_fsCollections().map(_fsColCard).join('')}</div>`;
   }
   return `${toolbar}<div class="fs-browse${open ? ' has-rail' : ''}"><div class="fs-browse-main">${main}</div>${open ? _fsFilterRail() : ''}</div>`;
 }
@@ -48186,10 +48241,9 @@ function _fsRenderShop(el) {
   const ftab = _FS_TABS.includes(window._fsTab) ? window._fsTab : 'featured';
   const all = _fsCatalogue();
   let body;
-  if (ftab === 'browse')       body = _fsBrowse(all);
-  else if (ftab === 'onyx')    body = _fsOnyxTab(all);
-  else if (ftab === 'bundles') body = _fsBundlesTab();
-  else                         body = _fsFeatured();
+  if (ftab === 'browse')    body = _fsBrowse(all);
+  else if (ftab === 'onyx') body = _fsOnyxTab(all);
+  else                      body = _fsFeatured();
   el.innerHTML = `<div class="atelier-content-inner fs-page fs-page--${ftab}">${body}</div>`;
   _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === ftab); });
 }
@@ -48311,6 +48365,7 @@ function _fsBuy(id) {
 function _fsPurchaseConfirm(opts) {
   const o = opts || {};
   const price = o.priceOnyx;
+  const rad = o.variant === 'radiance';
   const policyLabel = o.policyLabel || 'Fortshop Policy';
   const policyHref = o.policyHref || 'https://www.fortized.com/legal/fortshop-policy';
   const termsUrl = (typeof FTZ_TERMS_URL !== 'undefined') ? FTZ_TERMS_URL : 'https://www.fortized.com/legal/terms-of-use';
@@ -48321,7 +48376,7 @@ function _fsPurchaseConfirm(opts) {
   overlay.id = 'fs-buy-modal';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
-    <div class="ftz-confirm-card ftz-ac-card fs-buy-card" role="dialog" aria-label="Confirm purchase">
+    <div class="ftz-confirm-card ftz-ac-card fs-buy-card${rad ? ' fs-buy-card--rad ftz-ov-rad' : ''}" role="dialog" aria-label="Confirm purchase">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-buy-modal')?.remove()">&times;</button>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
         <div class="ftz-ac-title">Confirm purchase</div>
@@ -48334,7 +48389,7 @@ function _fsPurchaseConfirm(opts) {
         </div>
         <div class="fs-buy-terms nm-row" id="fs-terms-row" role="checkbox" aria-checked="false" tabindex="0">
           <span class="nm-check" aria-hidden="true"></span>
-          <span class="fs-buy-terms-txt">I have read and accept the <a href="${termsUrl}" target="_blank" rel="noopener">Terms of Use</a>, <a href="${tosUrl}" target="_blank" rel="noopener">Terms of Service</a> and the <a href="${policyHref}" target="_blank" rel="noopener">${escapeHTML(policyLabel)}</a>.</span>
+          <span class="fs-buy-terms-txt">I have read and accept the <a href="${termsUrl}" target="_blank" rel="noopener">Terms of Use</a> and the <a href="${tosUrl}" target="_blank" rel="noopener">Terms of Service</a>${rad ? '' : ` and the <a href="${policyHref}" target="_blank" rel="noopener">${escapeHTML(policyLabel)}</a>`}.</span>
         </div>
       </div>
       <div class="ftz-modal-foot">
@@ -51499,17 +51554,47 @@ function _decoRegalia() {
     ${_fsSparkle(21, 30, 3.6, '#ffeaa6', .9, 3.6)}${_fsSparkle(79, 30, 3.6, '#ffeaa6', .9, 4.4)}
   </svg>`;
 }
+// PIXEL WORLD — a chunky pixel-block ring.
+function _decoPixel() {
+  const b = [];
+  const N = 28, R = 46.5, S = 6.2;
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    const x = 50 + R * Math.cos(a), y = 50 - R * Math.sin(a);
+    const c = ['#2fb9ad', '#49e0c4', '#1d7f8c', '#7ef2d4'][i % 4];
+    if (i % 7 === 3) continue; // a few gaps so it reads as pixels, not a ring
+    b.push(`<rect x="${(x - S / 2).toFixed(1)}" y="${(y - S / 2).toFixed(1)}" width="${S}" height="${S}" fill="${c}" shape-rendering="crispEdges"/>`);
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${b.join('')}</svg>`;
+}
+// VINTAGE BEATS — 90s memphis squiggles + confetti shapes.
+function _decoMemphis() {
+  const P = '#8b5cf6', K = '#ec4899', Y = '#fde047', C = '#38bdf8';
+  const sq = (x, y, r, col) => `<path d="M-9 0 q 4.5 -6 9 0 q 4.5 6 9 0" fill="none" stroke="${col}" stroke-width="3.2" stroke-linecap="round" transform="translate(${x} ${y}) rotate(${r})"/>`;
+  const tri = (x, y, r, col) => `<path d="M0 -6 L 6 5 L -6 5 Z" fill="${col}" transform="translate(${x} ${y}) rotate(${r})"/>`;
+  const dot = (x, y, rr, col) => `<circle cx="${x}" cy="${y}" r="${rr}" fill="${col}"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="46.5" fill="none" stroke="${P}" stroke-width="3" stroke-dasharray="14 9" stroke-linecap="round"/>
+    ${sq(50, 4, 0, K)}${sq(50, 96, 180, C)}${sq(6, 50, 90, Y)}${sq(94, 50, -90, K)}
+    ${tri(18, 18, -20, Y)}${tri(82, 82, 160, C)}
+    ${dot(82, 17, 4, K)}${dot(17, 83, 4, P)}
+  </svg>`;
+}
 const PROFILE_DECORATIONS = [
   { id: 'deco_starfall',  kind: 'decoration', name: 'Starfall',   desc: 'A celestial ring wreathed in drifting starlight.',      price: 120, rarity: 'rare', src: _fsDecoURI(_decoStarfall()) },
   { id: 'deco_wildgrass', kind: 'decoration', name: 'Wildgrass',  desc: 'Fresh grass and leaves growing around your avatar.',    price: 95,                  src: _fsDecoURI(_decoWildgrass()) },
   { id: 'deco_regalia',   kind: 'decoration', name: 'Regalia',    desc: 'A jewelled crown with gilded filigree.',                price: 135, rarity: 'rare', src: _fsDecoURI(_decoRegalia()) },
+  { id: 'deco_pixel',     kind: 'decoration', name: 'Pixel Ring', desc: 'Chunky teal pixels orbiting your avatar.',              price: 100,                 src: _fsDecoURI(_decoPixel()) },
+  { id: 'deco_memphis',   kind: 'decoration', name: 'Boombox',    desc: 'Squiggles, triangles and confetti — pure 90s.',         price: 105,                 src: _fsDecoURI(_decoMemphis()) },
 ];
 
 // ── Nameplates — the gradient plate behind your name in member lists. ──
 const PROFILE_NAMEPLATES = [
   { id: 'np_midnight', kind: 'nameplate', name: 'Midnight Veil', desc: 'A deep indigo plate scattered with starlight.',   price: 110, rarity: 'rare', nameplate: 'linear-gradient(90deg,rgba(75,63,216,.72) 0%,rgba(34,26,107,.42) 55%,rgba(34,26,107,0) 100%)', swatch: '#4b3fd8' },
   { id: 'np_naturals', kind: 'nameplate', name: 'Meadow',        desc: 'A soft green plate — calm and grounded.',         price: 95,                  nameplate: 'linear-gradient(90deg,rgba(31,122,66,.72) 0%,rgba(31,122,66,.34) 58%,rgba(31,122,66,0) 100%)', swatch: '#3ecf6e' },
-  { id: 'np_jewels',   kind: 'nameplate', name: 'Regal Plate',   desc: 'Amethyst and gold — unmistakably yours.',         price: 125, rarity: 'rare', nameplate: 'linear-gradient(90deg,rgba(168,120,255,.7) 0%,rgba(240,192,74,.28) 62%,rgba(240,192,74,0) 100%)', swatch: '#a878ff' },
+  { id: 'np_pixel',    kind: 'nameplate', name: 'Pixel Plate',  desc: 'Bit-crushed teal — straight out of the arcade.', price: 100,                 nameplate: 'linear-gradient(90deg,rgba(47,185,173,.72) 0%,rgba(47,185,173,.32) 58%,rgba(47,185,173,0) 100%)', swatch: '#2fb9ad' },
+  { id: 'np_vintage',  kind: 'nameplate', name: 'Mixtape',      desc: 'Loud 90s purple with a retro bounce.',          price: 105,                 nameplate: 'linear-gradient(90deg,rgba(139,92,246,.74) 0%,rgba(236,72,153,.32) 60%,rgba(139,92,246,0) 100%)', swatch: '#8b5cf6' },
+  { id: 'np_jewels',   kind: 'nameplate', name: 'Regal Plate',   desc: 'Crimson damask and gold — unmistakably yours.',  price: 125, rarity: 'rare', nameplate: 'linear-gradient(90deg,rgba(229,50,63,.72) 0%,rgba(240,192,74,.3) 62%,rgba(240,192,74,0) 100%)', swatch: '#e5323f' },
 ];
 
 // Master appearance catalogue. Lives at module scope (not inside the shop
@@ -51517,7 +51602,7 @@ const PROFILE_NAMEPLATES = [
 // wishlist rendering, trade modal, the gift flow, etc.
 const SHOP_APPEARANCES_ALL = [
   { id:'onyx_pure', name:'Onyx Pure', desc:'A deep obsidian-violet appearance with a soft purple sheen. Dark, refined immersion.', price:150, rarity:'rare', exclusive:true, gradient:'linear-gradient(135deg,#0a0813,#120e22,#1a1330)', borderColor:'rgba(150,110,230,.24)', hoverBorder:'rgba(150,110,230,.45)', labelColor:'rgba(190,150,255,.85)', previewBg:'linear-gradient(170deg,#0a0813 0%,#141029 50%,#1e1638 100%)', sidebarBg:'#0b0916' },
-  { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, rarity:'rare', gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(96,165,250,.18)', hoverBorder:'rgba(96,165,250,.35)', labelColor:'rgba(96,165,250,.85)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
+  { id:'midnight_citadel', name:'Midnight Citadel', desc:'A deep indigo fortress under a starlit sky — violet nights with the signature Fortized yellow accent.', price:185, rarity:'rare', gradient:'linear-gradient(135deg,#0a0722,#150f44,#221a6b)', borderColor:'rgba(139,124,255,.22)', hoverBorder:'rgba(139,124,255,.45)', labelColor:'rgba(160,145,255,.9)', previewBg:'linear-gradient(170deg,#0a0722 0%,#171048 50%,#241c72 100%)', sidebarBg:'#0c0926' },
   { id:'green_leaves', name:'Green Leaves', desc:'Calm forest greens. A quieter place to talk.', price:130, gradient:'linear-gradient(135deg,#0a1410,#0e1f16,#132b1e)', borderColor:'rgba(62,207,110,.22)', hoverBorder:'rgba(62,207,110,.45)', labelColor:'rgba(62,207,110,.9)', previewBg:'linear-gradient(170deg,#0a1410 0%,#0e1f16 50%,#132b1e 100%)', sidebarBg:'#091310' },
   { id:'obsidian_ember', name:'Obsidian Ember', desc:'Pitch-black obsidian with a deep ember-red glow. For those who run hot.', price:175, rarity:'rare', gradient:'linear-gradient(135deg,#0c0406,#1a0a10,#26101a)', borderColor:'rgba(255,80,90,.2)', hoverBorder:'rgba(255,80,90,.42)', labelColor:'rgba(255,110,110,.85)', previewBg:'linear-gradient(170deg,#120608 0%,#1c0a10 50%,#28101a 100%)', sidebarBg:'#150709' },
   { id:'royal_amethyst', name:'Royal Amethyst', desc:'Deep violet royalty — a rich amethyst backdrop with a quiet purple sheen.', price:165, rarity:'rare', gradient:'linear-gradient(135deg,#0e0616,#1c1030,#281844)', borderColor:'rgba(168,120,255,.2)', hoverBorder:'rgba(168,120,255,.42)', labelColor:'rgba(190,150,255,.9)', previewBg:'linear-gradient(170deg,#14091f 0%,#1c1030 50%,#281844 100%)', sidebarBg:'#170b22' },
@@ -54089,8 +54174,7 @@ async function purchaseRadiance(isPlus, days, cost) {
     title: `Radiance · ${days} day${days === 1 ? '' : 's'}`,
     subtitle: stacking ? 'Adds to your current Radiance' : 'Fortized premium membership',
     priceOnyx: cost,
-    policyLabel: 'Radiance Terms',
-    policyHref: (typeof FTZ_TOS_URL !== 'undefined') ? FTZ_TOS_URL : 'https://www.fortized.com/legal/terms-of-service',
+    variant: 'radiance',
     onConfirm: async () => {
       CU.onyx = (CU.onyx || 0) - cost;
       const until = _stackFromExpiry(existingExpiry, days);
@@ -57279,19 +57363,20 @@ function applyAppearance(themeId, _opts) {
     document.documentElement.style.setProperty('--muted',      '#5e6a7d');
     document.documentElement.style.setProperty('--muted-light','#8d9aae');
   } else if (themeId === 'midnight_citadel') {
-    canvasColor = '#050812';
-    sidebarColor = '#080e1a';
-    glassHeavy = 'rgba(5,8,18,.94)'; glassMid = 'rgba(5,8,18,.88)'; glassLight = 'rgba(5,8,18,.82)';
-    document.documentElement.style.setProperty('--bg',         '#050812');
-    document.documentElement.style.setProperty('--rail',       '#030610');
+    // Deep indigo / violet — matches the Midnight collection art.
+    canvasColor = 'linear-gradient(170deg, #0a0722 0%, #191052 100%)';
+    sidebarColor = '#0c0926';
+    glassHeavy = 'rgba(10,7,34,.94)'; glassMid = 'rgba(10,7,34,.88)'; glassLight = 'rgba(10,7,34,.82)';
+    document.documentElement.style.setProperty('--bg',         '#0a0722');
+    document.documentElement.style.setProperty('--rail',       '#070518');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
-    document.documentElement.style.setProperty('--channel',    '#0a1120');
-    document.documentElement.style.setProperty('--panel',      '#0d1528');
-    document.documentElement.style.setProperty('--panel2',     '#101a30');
-    document.documentElement.style.setProperty('--panel3',     '#141e38');
-    document.documentElement.style.setProperty('--border',     '#1a2848');
-    document.documentElement.style.setProperty('--muted',      '#3a5080');
-    document.documentElement.style.setProperty('--muted-light','#6088b8');
+    document.documentElement.style.setProperty('--channel',    '#100c30');
+    document.documentElement.style.setProperty('--panel',      '#16113c');
+    document.documentElement.style.setProperty('--panel2',     '#1b1548');
+    document.documentElement.style.setProperty('--panel3',     '#211a56');
+    document.documentElement.style.setProperty('--border',     '#2e2470');
+    document.documentElement.style.setProperty('--muted',      '#5a4da8');
+    document.documentElement.style.setProperty('--muted-light','#9186d8');
   } else if (themeId === 'onyx_pure') {
     // Enhanced: deep obsidian-violet (a touch lighter, with a purple sheen).
     canvasColor = 'linear-gradient(170deg, #0a0813 0%, #16102b 100%)';
@@ -57420,7 +57505,7 @@ const _appearanceThemeData = {
   fortized_classic: {id:'fortized_classic', name:'Classic Fortized', bg:'#16191f', sidebar:'#1a1d24', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#1a1d24', panel:'#20232a', accent:'#fef83d', border:'#2a2f3a', muted:'#4e5a6f', bodyGrad:''},
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#0a0d12', sidebar:'#0f1217', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0f1217', panel:'#141820', accent:'#fef83d', border:'#1a1f29', muted:'#3a4458', bodyGrad:''},
   fortized_slate:   {id:'fortized_slate',   name:'Fortized Slate',   bg:'#1f232c', sidebar:'#232833', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#232833', panel:'#282d3a', accent:'#fef83d', border:'#33384a', muted:'#5e6a7d', bodyGrad:''},
-  midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
+  midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#0a0722', sidebar:'#0c0926', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#100c30', panel:'#16113c', accent:'#fef83d', border:'#2e2470', muted:'#5a4da8', bodyGrad:'linear-gradient(170deg,#0a0722 0%,#191052 100%)'},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#0a0813', sidebar:'#0b0916', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0f0c1c', panel:'#151125', accent:'#fef83d', border:'#2a2145', muted:'#4a3f6a', bodyGrad:'linear-gradient(170deg,#0a0813 0%,#16102b 100%)'},
   green_leaves:     {id:'green_leaves',     name:'Green Leaves',     bg:'#0a1410', sidebar:'#091310', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:''},
   radiance_plum:    {id:'radiance_plum',    name:'Radiance Plum',    bg:'#21131e', sidebar:'#1b0f19', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#241522', panel:'#2a1826', accent:'#fef83d', border:'#3a2234', muted:'#6e4a62', bodyGrad:'linear-gradient(170deg,#21131e 0%,#2a1826 100%)'},

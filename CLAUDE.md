@@ -1,6 +1,29 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Fortshop polish pass 2 (`2026fix464`).**
+  • **5 collections with real art** (`Fortshop Collections/2026 Collections/`):
+    Pixel World, Vintage Beats, Crown Jewels, Midnight, Naturals. Each has ≥1
+    nameplate + ≥1 decoration (+ appearances). Accents match the art.
+  • **Hero**: 400px, deeper fade, logo 150px + higher/inset; the featured card
+    row rides up (`margin-top:-152px`) so cards overlap the cover. `_fsColHero
+    (col, sub)` — the `sub` variant (inside Browse) is a rounded in-flow card.
+  • **Cards smaller** (grid `minmax(196px)`, row `206px` fixed).
+  • **Bundles tab DELETED** — personalized bundles ("Packed for you") + a
+    "Made for you" shuffle grid now live at the bottom of **Featured**.
+  • **Browse**: landing = **collection cover cards** (`_fsColCard`); filters
+    reworked to the gift-picker check (`.nm-check`, `_fsFilterRail`); topbar
+    **search** ("Scout the Fortshop", `_fsSearch`/`_fsMatches`) → results view.
+  • **Radiance**: purchase card gets `.ftz-ov-rad` art + `--rad-grad` button
+    (`variant:'radiance'`), terms = Use + Service only (no Fortshop Policy).
+    All `.rad-page` yellow/pink buttons now use the gradient.
+  • **Midnight Citadel** recoloured blue → **indigo/violet** to match the art.
+  • 2 new decorations so every collection is complete: `_decoPixel`,
+    `_decoMemphis`.
+  **⚠️ OPEN — avatar decorations still feel cheap (user).** Geometric SVG is
+  the ceiling here; illustrated ones need commissioned raster art. Awaiting the
+  user's direction.
+  **⚠️ NEXT (user):** gift system rework + redesign (after the Fortshop).
 - **Fortshop REBUILT for continuity + real art (`2026fix463`).** User: "doesn't
   feel as GOOD as discord's… I want continuity, uniformized, professional."
   • **Reuses the app's OWN components** — no new design language: `.disc-subnav`

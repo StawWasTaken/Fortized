@@ -1,6 +1,15 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Fortshop polish pass 4 (`2026fix467`).** No "Shop the Collection" on a
+  collection OVERVIEW (`_fsColHero(col, sub)` hides it when `sub`) — it stays
+  only on the Featured hero. Collection logos are **left + vertically centred**
+  on the sub-hero and the collection cover cards. **Browse filters are OPEN by
+  default** (`_fsFiltersOpen === undefined` → true). **Radiance badge**
+  (`_fsRadBadge`, `/badges/radiance.png`, green-tinted via hue-rotate) now sits
+  beside every discount so members see the price is lower BECAUSE of Radiance.
+  **Onyx Experience is no longer a Featured clone** — compact `.fs-onyxblock`
+  hero + a plain item grid, no CTA.
 - **Onyx Experience + settings appearance redesign (`2026fix466`).**
   • **"The Vault" → "Onyx Experience"**, and the tab is now art-backed like
     Featured: `_FS_ONYX_COL` (cover+logo from `Fortshop Collections/Onyx

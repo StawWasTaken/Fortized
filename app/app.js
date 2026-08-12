@@ -47918,9 +47918,16 @@ function _fsFinalPrice(item) {
   return { finalPrice, pct: Math.max(0, Math.round((1 - finalPrice / item.price) * 100)) };
 }
 // Discord-style inline price: ⬡ 135 (-10%) — struck original before it.
+// A Radiance badge (green-tinted) shown beside a discount so members can see
+// the lower price comes from their Radiance.
+function _fsRadBadge() {
+  const d = (typeof _getActiveDiscounts === 'function') ? _getActiveDiscounts() : null;
+  if (!d || !d.radiance) return '';
+  return `<img class="fs-rad-badge" src="/badges/radiance.png" alt="Radiance" title="Discounted by your Radiance" onerror="this.remove()">`;
+}
 function _fsPriceInline(item) {
   const { finalPrice, pct } = _fsFinalPrice(item);
-  if (pct > 0) return `<span class="fs-p">${_FS_ONYX_IC}<s>${item.price}</s><b>${finalPrice}</b><em>(-${pct}%)</em></span>`;
+  if (pct > 0) return `<span class="fs-p">${_FS_ONYX_IC}<s>${item.price}</s><b>${finalPrice}</b><em>${_fsRadBadge()}(-${pct}%)</em></span>`;
   return `<span class="fs-p">${_FS_ONYX_IC}<b>${item.price}</b></span>`;
 }
 // Stacked price for the detail popup.
@@ -47930,7 +47937,7 @@ function _fsPriceBlock(item, big) {
   if (pct > 0) {
     return `<div class="${cls} fs-price--disc">
       <div class="fs-price-old">${_FS_ONYX_IC}<span>${item.price}</span></div>
-      <div class="fs-price-new">${_FS_ONYX_IC}<b>${finalPrice}</b><span class="fs-price-pct">(-${pct}%)</span></div>
+      <div class="fs-price-new">${_FS_ONYX_IC}<b>${finalPrice}</b><span class="fs-price-pct">${_fsRadBadge()}(-${pct}%)</span></div>
     </div>`;
   }
   return `<div class="${cls}"><div class="fs-price-new">${_FS_ONYX_IC}<b>${item.price}</b></div></div>`;
@@ -48047,7 +48054,7 @@ function _fsColHero(col, sub) {
       <div class="fs-hero-logo">${_fsColLogo(col, 'fs-hero-lg')}</div>
       <div class="fs-hero-right">
         <div class="fs-hero-tag">${escapeHTML(col.tagline || '')}</div>
-        ${col.noCta ? '' : `<button class="fs-btn fs-btn--light" onclick="_fsShowCollection('${col.id}')">Shop the Collection</button>`}
+        ${(col.noCta || sub) ? '' : `<button class="fs-btn fs-btn--light" onclick="_fsShowCollection('${col.id}')">Shop the Collection</button>`}
       </div>
     </div>
   </div>`;
@@ -48105,7 +48112,7 @@ function _fsSortItems(list) {
 }
 function _fsSetSort(v) { window._fsSort = v; try { renderAtelierTab('shop'); } catch {} }
 function _fsSetFilter(id, on) { window._fsFilter = on ? id : null; window._fsCol = null; try { renderAtelierTab('shop'); } catch {} }
-function _fsToggleFilters() { window._fsFiltersOpen = !window._fsFiltersOpen; try { renderAtelierTab('shop'); } catch {} }
+function _fsToggleFilters() { const cur = (window._fsFiltersOpen === undefined) ? true : !!window._fsFiltersOpen; window._fsFiltersOpen = !cur; try { renderAtelierTab('shop'); } catch {} }
 function _fsFilterRail() {
   const f = window._fsFilter || null;
   const CHK = '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
@@ -48137,7 +48144,7 @@ function _fsBrowse(all) {
   const q = (window._fsQuery || '').trim();
   const col = (!q && window._fsCol) ? _FS_COLLECTIONS.find(c => c.id === window._fsCol) : null;
   const filter = window._fsFilter || null;
-  const open = !!window._fsFiltersOpen;
+  const open = (window._fsFiltersOpen === undefined) ? true : !!window._fsFiltersOpen;
   const sortSel = (typeof _ftzSelectHTML === 'function')
     ? _ftzSelectHTML('fs-sort', window._fsSort || 'recent',
         [{ value: 'recent', label: 'Recently Added' }, { value: 'price-low', label: 'Price: Low to High' }, { value: 'price-high', label: 'Price: High to Low' }],
@@ -48176,9 +48183,9 @@ function _fsOnyxTab(all) {
   const list = _fsSortItems(all.filter(_fsIsOnyx));
   const col = { ..._FS_ONYX_COL, items: list.map(i => i.id) };
   const body = list.length
-    ? `<div class="fs-rowwrap"><div class="fs-row" id="fs-row">${list.map(_fsCard).join('')}</div></div>`
+    ? `${_fsGroup('Onyx-only items', `<span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span>`)}<div class="fs-grid">${list.map(_fsCard).join('')}</div>`
     : _fsEmpty('gem', 'Onyx Experience is being restocked', 'Our rarest, Onyx-only items land here. Check back shortly.');
-  return `<div class="fs-heroblock">${_fsColHero(col)}${body}</div>`;
+  return `<div class="fs-onyxblock">${_fsColHero(col, true)}</div>${body}`;
 }
 
 // ── Personalized bundles (per user + month; randomized name + font) ──

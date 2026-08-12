@@ -1,6 +1,18 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Onyx polish + hero fade + gift-when-owned (`2026fix476`→`478`).**
+  • Onyx-only items now use the **Onyx Experience cover art** as their popup
+    backdrop (`_fsItemBackdrop`: collection art → Onyx art → item gradient).
+  • The **Onyx Experience chip is a link** to the Onyx tab, and its icon is the
+    **onyx glyph** (`.rad-onyx-ic`, currentColor → white like the label), not a
+    FA diamond.
+  • **🐞 HERO FADE:** the ramp went from transparent BLACK to `var(--bg)`, which
+    greys out mid-way and leaves a visible band. Now every stop is
+    `color-mix(in srgb, var(--bg), transparent N%)` so the art dissolves into
+    the page keeping its hue; 9 stops kills banding. Sub-hero keeps a dark floor.
+  • **🐞 GIFT WAS HIDDEN ON OWNED ITEMS** — gifting targets someone ELSE, so
+    ownership is irrelevant. Gift now always shows (popup + card, incl. equipped).
 - **Bundle PREVIEW popup + tooltip & sort fixes (`2026fix474`→`475`).**
   • Clicking a bundle now opens `_fsOpenBundle(id, idx)` — a detail popup that
     PREVIEWS every item: left = preview + styled bundle name + "includes N

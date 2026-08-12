@@ -48003,9 +48003,13 @@ function _fsCard(item) {
   const onWL     = (typeof isOnWishlist === 'function') && isOnWishlist(item.id);
   const { finalPrice } = _fsFinalPrice(item);
   let foot;
-  if (equipped)      foot = `<div class="fs-card-state"><i class="fa-solid fa-circle-check"></i> Equipped</div>`;
+  if (equipped)      foot = `<div class="fs-card-state"><i class="fa-solid fa-circle-check"></i> Equipped</div>
+                             <div class="fs-card-act"><button class="fs-btn fs-card-gift fs-card-gift--wide" title="Send as a gift" onclick="event.stopPropagation();openGiftModal('${item.id}')">${_svgIcon('gift', 14)} Gift</button></div>`;
   else if (isOwned)  foot = `<div class="fs-card-state fs-card-state--owned"><i class="fa-solid fa-check"></i> Acquired</div>
-                             <div class="fs-card-act"><button class="fs-btn fs-btn--primary fs-card-buy" onclick="event.stopPropagation();_fsEquipById('${item.id}')">Use now</button></div>`;
+                             <div class="fs-card-act">
+                               <button class="fs-btn fs-btn--primary fs-card-buy" onclick="event.stopPropagation();_fsEquipById('${item.id}')">Use now</button>
+                               <button class="fs-btn fs-card-gift" title="Send as a gift" onclick="event.stopPropagation();openGiftModal('${item.id}')">${_svgIcon('gift', 14)}</button>
+                             </div>`;
   else               foot = `<div class="fs-card-price">${_fsPriceInline(item)}</div>
                              <div class="fs-card-act">
                                <button class="fs-btn fs-btn--primary fs-card-buy" onclick="event.stopPropagation();_fsBuy('${item.id}')">Buy for ${_FS_ONYX_IC} ${finalPrice}</button>
@@ -48400,6 +48404,15 @@ function _fsRightPanel(item) {
   return _fsPvAppearance(item);
 }
 
+// Popup backdrop: the item's collection art, the Onyx Experience art for
+// Onyx-only items, else the item's own gradient.
+function _fsItemBackdrop(item, col) {
+  if (col && col.coverImg) return `background-image:url('${col.coverImg}')`;
+  if (col) return `background-image:${col.cover}`;
+  if (_fsIsOnyx(item)) return `background-image:url('${_FS_ONYX_COL.coverImg}')`;
+  return `background-image:${item.gradient || 'linear-gradient(120deg,#14161d,#1f232b)'}`;
+}
+
 // ── Item-detail popup ──
 function _fsOpenItem(id) {
   const item = _fsCatalogue().find(a => a.id === id); if (!item) return;
@@ -48428,14 +48441,16 @@ function _fsOpenItem(id) {
         ${_fsPriceBlock(item, true)}
         <div class="fs-di-actions">
           ${action}
-          ${owned || equipped ? '' : `<button class="fs-btn fs-di-gift" title="Send as a gift" onclick="openGiftModal('${item.id}')">${_svgIcon('gift', 15)}</button>`}
+          <button class="fs-btn fs-di-gift" title="Send as a gift" onclick="openGiftModal('${item.id}')">${_svgIcon('gift', 15)}</button>
         </div>
       </div>
       <div class="fs-di-right">
-        <div class="fs-di-right-bg" style="${col && col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col ? col.cover : item.gradient}`}"></div>
+        <div class="fs-di-right-bg" style="${_fsItemBackdrop(item, col)}"></div>
         ${col
           ? `<button class="fs-di-collection is-link" title="View the ${escapeHTML(col.name)} collection" onclick="document.getElementById('fs-item-modal')?.remove();_fsShowCollection('${col.id}')"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(col.name)} <i class="fa-solid fa-chevron-right fs-di-collection-go"></i></button>`
-          : `<div class="fs-di-collection">${onyxTag ? '<i class="fa-solid fa-gem"></i> Onyx Experience' : `<i class="fa-solid fa-layer-group"></i> ${escapeHTML(_fsKindLabel(item))}s`}</div>`}
+          : onyxTag
+            ? `<button class="fs-di-collection is-link" title="View the Onyx Experience" onclick="document.getElementById('fs-item-modal')?.remove();_fsSetTab('onyx')"><span class="rad-onyx-ic"></span> Onyx Experience <i class="fa-solid fa-chevron-right fs-di-collection-go"></i></button>`
+            : `<div class="fs-di-collection"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(_fsKindLabel(item))}s</div>`}
         <div class="fs-di-tools">
           ${owned || equipped ? '' : `<button class="fs-di-tool ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="toggleWishlist('${item.id}');this.classList.toggle('on')">${_svgIcon('heart', 15)}</button>`}
         </div>

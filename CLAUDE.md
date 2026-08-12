@@ -1,6 +1,18 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Onyx Experience + settings appearance redesign (`2026fix466`).**
+  • **"The Vault" → "Onyx Experience"**, and the tab is now art-backed like
+    Featured: `_FS_ONYX_COL` (cover+logo from `Fortshop Collections/Onyx
+    Experience/`, `noCta:true`) → `_fsColHero` + a centred card row.
+  • **Onyx Pure is now NEAR-BLACK** (darker than Dark Realm: bg `#010102`,
+    rail `#000`), no purple — updated in all 4 appearance sites + the settings
+    theme list. Onyx tag on cards renders silver (`.fs-tag--onyx`).
+  • **New exclusive nameplate** `np_onyx` ("Obsidian Plate").
+  • **Settings → Appearance REDESIGNED** to the Fortshop card language:
+    `buildAppearanceCard` now renders `.apr-card` (theme mock via `_fsMock` +
+    name + desc + Applied/price/reward state) in `.apr-card-grid`, replacing the
+    tiny `.apr-theme-sq` swatches. Locked themes open the Fortshop item popup.
 - **Fortshop polish pass 3 (`2026fix465`).** Featured is PINNED to Midnight
   (`_FS_FEATURED_ID`/`_fsFeaturedCol`); featured cards bigger (240px) + row
   centred. **Browse** = collection cover card → that collection's items → next

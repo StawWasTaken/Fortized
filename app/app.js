@@ -25834,8 +25834,8 @@ function _buildProfileView(tab) {
       {id:'fortized_slate',   name:'Fortized Slate',   desc:'Soft slate-grey with a lighter feel', bg:'#1f232c', sidebar:'#232833', channel:'#232833', panel:'#282d3a', accent:'#fef83d', border:'#33384a', muted:'#5e6a7d', bodyGrad:'', free:true},
       {id:'fortized_classic', name:'Classic Fortized', desc:'The classic Fortized dark theme', bg:'#16191f', sidebar:'#1a1d24', channel:'#1a1d24', panel:'#20232a', accent:'#fef83d', border:'#2a2f3a', muted:'#4e5a6f', bodyGrad:'', free:true},
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deepest dark, yellow glow',    bg:'#0a0d12', sidebar:'#0f1217', channel:'#0f1217', panel:'#141820', accent:'#fef83d', border:'#1a1f29', muted:'#3a4458', bodyGrad:'', free:true},
-      {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
-      {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
+      {id:'midnight_citadel', name:'Midnight Citadel', desc:'A deep indigo fortress under a starlit sky', bg:'#0a0722', sidebar:'#0c0926', channel:'#100c30', panel:'#16113c', accent:'#fef83d', border:'#2e2470', muted:'#5a4da8', bodyGrad:'linear-gradient(170deg,#0a0722 0%,#191052 100%)', cost:185, locked:!unlocked.includes('midnight_citadel')},
+      {id:'onyx_pure',        name:'Onyx Pure',        desc:'Pure obsidian — the darkest theme on Fortized', bg:'#010102', sidebar:'#020203', channel:'#040406', panel:'#08080b', accent:'#fef83d', border:'#1a1a20', muted:'#3a3a46', bodyGrad:'linear-gradient(170deg,#010102 0%,#08080b 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
       {id:'green_leaves',     name:'Green Leaves',     desc:'Calm forest greens. A quieter place to talk.', bg:'#0a1410', sidebar:'#091310', channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:'', cost:130, locked:!unlocked.includes('green_leaves')},
       {id:'radiance_plum',    name:'Radiance Plum',    desc:'The deep plum of the Radiance. Earned by keeping 14+ days on your Radiance — yours forever.', bg:'#21131e', sidebar:'#1b0f19', channel:'#241522', panel:'#2a1826', accent:'#fef83d', border:'#3a2234', muted:'#6e4a62', bodyGrad:'linear-gradient(170deg,#21131e 0%,#2a1826 100%)', reward:true, locked:!unlocked.includes('radiance_plum')},
     ];
@@ -25957,21 +25957,27 @@ function _buildProfileView(tab) {
       const isActive = currentTheme === t.id;
       const isLocked = t.locked;
       const clickAction = isLocked
-        ? (t.reward ? "_radianceRewardLockedHint()" : "buyAppearance('" + t.id + "'," + t.cost + ")")
+        ? (t.reward ? "_radianceRewardLockedHint()" : "_fsOpenItem('" + t.id + "')")
         : "selectAppearancePreview('" + t.id + "')";
-      const grad = t.bodyGrad
-        ? t.bodyGrad
-        : `linear-gradient(135deg, ${t.sidebar} 0%, ${t.bg} 55%, ${t.panel} 100%)`;
-      const tip = isLocked
-        ? (t.reward ? (t.name + ' · Radiance milestone reward') : (t.name + ' · ' + t.cost + ' Onyx'))
-        : t.name;
+      // Reuse the Fortshop's theme mock so settings and the shop read as one app.
+      const mock = (typeof _fsMock === 'function')
+        ? _fsMock({ previewBg: t.bodyGrad || `linear-gradient(170deg, ${t.bg} 0%, ${t.panel} 100%)`, sidebarBg: t.sidebar, labelColor: t.accent })
+        : '';
+      const foot = isActive
+        ? '<span class="apr-card-state is-on"><i class="fa-solid fa-circle-check"></i> Applied</span>'
+        : isLocked
+          ? (t.reward
+              ? '<span class="apr-card-state is-reward"><i class="fa-solid fa-sparkles"></i> Radiance reward</span>'
+              : `<span class="apr-card-price"><span class="rad-onyx-ic"></span><b>${t.cost}</b></span>`)
+          : '<span class="apr-card-state">Apply</span>';
       return `
-      <button onclick="${clickAction}" class="apr-theme-sq${isActive?' is-active':''}${isLocked?' is-locked':''}" data-tip="${escapeHTML(tip)}" type="button">
-        <div class="apr-theme-sq__swatch" style="background:${grad};">
-          ${isActive ? '<div class="apr-theme-sq__check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f1119" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' : ''}
-          ${isLocked ? '<div class="apr-theme-sq__lock">'+(t.reward?'✨':'🔒')+'</div>' : ''}
-        </div>
-        <div class="apr-theme-sq__name">${escapeHTML(t.name)}</div>
+      <button onclick="${clickAction}" class="apr-card${isActive ? ' is-active' : ''}${isLocked ? ' is-locked' : ''}" type="button" title="${escapeHTML(t.name)}">
+        <span class="apr-card-art">${mock}${isLocked ? `<span class="apr-card-lock"><i class="fa-solid fa-${t.reward ? 'sparkles' : 'lock'}"></i></span>` : ''}${isActive ? '<span class="apr-card-check"><i class="fa-solid fa-check"></i></span>' : ''}</span>
+        <span class="apr-card-info">
+          <span class="apr-card-name">${escapeHTML(t.name)}</span>
+          <span class="apr-card-desc">${escapeHTML(t.desc || '')}</span>
+          <span class="apr-card-foot">${foot}</span>
+        </span>
       </button>`;
     }
 
@@ -26030,11 +26036,11 @@ function _buildProfileView(tab) {
         </div>
 
         <div class="apr-subtitle">Default themes</div>
-        <div class="apr-theme-grid">${defaultThemes.map(t => buildAppearanceCard(t)).join('')}</div>
+        <div class="apr-card-grid">${defaultThemes.map(t => buildAppearanceCard(t)).join('')}</div>
 
         <div class="apr-subtitle" style="margin-top:18px;">Your collection</div>
         ${hasOwnedThemes ? `
-          <div class="apr-theme-grid">${ownedThemes.map(t => buildAppearanceCard(t)).join('')}</div>
+          <div class="apr-card-grid">${ownedThemes.map(t => buildAppearanceCard(t)).join('')}</div>
         ` : `
           <div class="settings-temp-empty" style="padding:24px 18px;margin-top:6px;">
             <div class="settings-temp-empty__icon" style="width:48px;height:48px;margin-bottom:10px;">${_faIcon('palette', 26)}</div>
@@ -26056,12 +26062,12 @@ function _buildProfileView(tab) {
             if (left > 0) { const need = Math.ceil(RADIANCE_MILESTONE_DAYS - left); return `Keep <strong>14+ days</strong> on your Radiance to earn these. You're ${need} day${need===1?'':'s'} away.`; }
             return 'Hold <strong>14+ days</strong> of Radiance at once to earn these, forever. Not sold in the Fortshop.';
           })()}</div>
-          <div class="apr-theme-grid">${rewardThemes.map(t => buildAppearanceCard(t)).join('')}</div>
+          <div class="apr-card-grid">${rewardThemes.map(t => buildAppearanceCard(t)).join('')}</div>
         ` : ''}
 
         ${lockedThemes.length > 0 ? `
           <div class="apr-subtitle" style="margin-top:18px;">Available in the Fortshop</div>
-          <div class="apr-theme-grid">${lockedThemes.map(t => buildAppearanceCard(t)).join('')}</div>
+          <div class="apr-card-grid">${lockedThemes.map(t => buildAppearanceCard(t)).join('')}</div>
         ` : ''}
       </div>
 
@@ -47808,6 +47814,11 @@ function _qstStartTimers() {
 // ════════════════════════════════════════════════════════════
 const _FS_CDN  = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/';
 const _FS_ART  = '/Fortshop%20Collections/2026%20Collections/';
+const _FS_ONYX_COL = { id:'onyx', name:'Onyx Experience', accent:'#8f8f9c',
+  tagline:'The rarest tier — pitch-black, Onyx-only.',
+  coverImg:'/Fortshop%20Collections/Onyx%20Experience/OnyxExperienceCover.png',
+  logoImg: '/Fortshop%20Collections/Onyx%20Experience/OnyxExperienceLogo.png',
+  cover:'linear-gradient(120deg,#050506 0%,#0d0d11 55%,#020203 100%)', items:[], noCta:true };
 const _FS_TABS = ['featured', 'browse', 'onyx'];
 const _FS_ONYX_IC = '<span class="rad-onyx-ic"></span>';
 
@@ -47979,7 +47990,7 @@ function _fsCard(item) {
     <span class="fs-card-art">
       ${_fsPreview(item)}
       ${isOwned ? '<span class="fs-owned-badge"><i class="fa-solid fa-check"></i></span>' : ''}
-      ${_fsIsOnyx(item) ? '<span class="fs-tag">Vault</span>' : ''}
+      ${_fsIsOnyx(item) ? '<span class="fs-tag fs-tag--onyx">Onyx</span>' : ''}
       <span class="fs-fav ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="event.stopPropagation();toggleWishlist('${item.id}')">${_svgIcon('heart', 13)}</span>
     </span>
     <span class="fs-card-info">
@@ -48036,7 +48047,7 @@ function _fsColHero(col, sub) {
       <div class="fs-hero-logo">${_fsColLogo(col, 'fs-hero-lg')}</div>
       <div class="fs-hero-right">
         <div class="fs-hero-tag">${escapeHTML(col.tagline || '')}</div>
-        <button class="fs-btn fs-btn--light" onclick="_fsShowCollection('${col.id}')">Shop the Collection</button>
+        ${col.noCta ? '' : `<button class="fs-btn fs-btn--light" onclick="_fsShowCollection('${col.id}')">Shop the Collection</button>`}
       </div>
     </div>
   </div>`;
@@ -48163,9 +48174,11 @@ function _fsBrowse(all) {
 }
 function _fsOnyxTab(all) {
   const list = _fsSortItems(all.filter(_fsIsOnyx));
-  if (!list.length) return _fsEmpty('gem', 'The Vault is being restocked', 'Our rarest, most exclusive items land here. Check back shortly.');
-  return `${_fsGroup('The Vault', '<span class="qst-group-note">Our rarest, most exclusive drops</span>')}
-    <div class="fs-grid">${list.map(_fsCard).join('')}</div>`;
+  const col = { ..._FS_ONYX_COL, items: list.map(i => i.id) };
+  const body = list.length
+    ? `<div class="fs-rowwrap"><div class="fs-row" id="fs-row">${list.map(_fsCard).join('')}</div></div>`
+    : _fsEmpty('gem', 'Onyx Experience is being restocked', 'Our rarest, Onyx-only items land here. Check back shortly.');
+  return `<div class="fs-heroblock">${_fsColHero(col)}${body}</div>`;
 }
 
 // ── Personalized bundles (per user + month; randomized name + font) ──
@@ -48321,7 +48334,7 @@ function _fsOpenItem(id) {
       <div class="fs-di-left">
         <div class="fs-di-preview">${_fsPreview(item)}</div>
         <div class="fs-di-name">${escapeHTML(item.name)}</div>
-        <div class="fs-di-type">${_fsKindLabel(item)}${onyxTag ? ' · Vault' : ''}</div>
+        <div class="fs-di-type">${_fsKindLabel(item)}${onyxTag ? ' · Onyx' : ''}</div>
         <div class="fs-di-desc">${escapeHTML(item.desc || '')}</div>
         ${_fsPriceBlock(item, true)}
         <div class="fs-di-actions">
@@ -48331,7 +48344,7 @@ function _fsOpenItem(id) {
       </div>
       <div class="fs-di-right">
         <div class="fs-di-right-bg" style="${col && col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col ? col.cover : item.gradient}`}"></div>
-        <div class="fs-di-collection"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(col ? col.name : (onyxTag ? 'The Vault' : _fsKindLabel(item) + 's'))}</div>
+        <div class="fs-di-collection"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(col ? col.name : (onyxTag ? 'Onyx Experience' : _fsKindLabel(item) + 's'))}</div>
         <div class="fs-di-tools">
           ${owned || equipped ? '' : `<button class="fs-di-tool ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="toggleWishlist('${item.id}');this.classList.toggle('on')">${_svgIcon('heart', 15)}</button>`}
         </div>
@@ -48352,7 +48365,7 @@ function _fsBuy(id) {
   document.getElementById('fs-item-modal')?.remove();
   _fsPurchaseConfirm({
     title: item.name,
-    subtitle: _fsKindLabel(item) + (_fsIsOnyx(item) ? ' · Vault' : ''),
+    subtitle: _fsKindLabel(item) + (_fsIsOnyx(item) ? ' · Onyx' : ''),
     priceOnyx: finalPrice,
     onConfirm: () => _fsBuyItem(item, finalPrice),
   });
@@ -51589,6 +51602,7 @@ const PROFILE_DECORATIONS = [
 const PROFILE_NAMEPLATES = [
   { id: 'np_midnight', kind: 'nameplate', name: 'Midnight Veil', desc: 'A deep indigo plate scattered with starlight.',   price: 110, rarity: 'rare', nameplate: 'linear-gradient(90deg,rgba(75,63,216,.72) 0%,rgba(34,26,107,.42) 55%,rgba(34,26,107,0) 100%)', swatch: '#4b3fd8' },
   { id: 'np_naturals', kind: 'nameplate', name: 'Meadow',        desc: 'A soft green plate — calm and grounded.',         price: 95,                  nameplate: 'linear-gradient(90deg,rgba(31,122,66,.72) 0%,rgba(31,122,66,.34) 58%,rgba(31,122,66,0) 100%)', swatch: '#3ecf6e' },
+  { id: 'np_onyx',     kind: 'nameplate', name: 'Obsidian Plate', desc: 'A near-black plate with a faint silver edge.',  price: 140, rarity: 'rare', exclusive: true, nameplate: 'linear-gradient(90deg,rgba(46,46,56,.92) 0%,rgba(20,20,26,.55) 58%,rgba(20,20,26,0) 100%)', swatch: '#2e2e38' },
   { id: 'np_pixel',    kind: 'nameplate', name: 'Pixel Plate',  desc: 'Bit-crushed teal — straight out of the arcade.', price: 100,                 nameplate: 'linear-gradient(90deg,rgba(47,185,173,.72) 0%,rgba(47,185,173,.32) 58%,rgba(47,185,173,0) 100%)', swatch: '#2fb9ad' },
   { id: 'np_vintage',  kind: 'nameplate', name: 'Mixtape',      desc: 'Loud 90s purple with a retro bounce.',          price: 105,                 nameplate: 'linear-gradient(90deg,rgba(139,92,246,.74) 0%,rgba(236,72,153,.32) 60%,rgba(139,92,246,0) 100%)', swatch: '#8b5cf6' },
   { id: 'np_jewels',   kind: 'nameplate', name: 'Regal Plate',   desc: 'Crimson damask and gold — unmistakably yours.',  price: 125, rarity: 'rare', nameplate: 'linear-gradient(90deg,rgba(229,50,63,.72) 0%,rgba(240,192,74,.3) 62%,rgba(240,192,74,0) 100%)', swatch: '#e5323f' },
@@ -51598,7 +51612,7 @@ const PROFILE_NAMEPLATES = [
 // render) so _getShopItemById can resolve any appearance from anywhere —
 // wishlist rendering, trade modal, the gift flow, etc.
 const SHOP_APPEARANCES_ALL = [
-  { id:'onyx_pure', name:'Onyx Pure', desc:'A deep obsidian-violet appearance with a soft purple sheen. Dark, refined immersion.', price:150, rarity:'rare', exclusive:true, gradient:'linear-gradient(135deg,#0a0813,#120e22,#1a1330)', borderColor:'rgba(150,110,230,.24)', hoverBorder:'rgba(150,110,230,.45)', labelColor:'rgba(190,150,255,.85)', previewBg:'linear-gradient(170deg,#0a0813 0%,#141029 50%,#1e1638 100%)', sidebarBg:'#0b0916' },
+  { id:'onyx_pure', name:'Onyx Pure', desc:'Pure obsidian. The darkest appearance on Fortized — near-black, absolute focus.', price:150, rarity:'rare', exclusive:true, gradient:'linear-gradient(135deg,#020203,#050507,#08080b)', borderColor:'rgba(255,255,255,.10)', hoverBorder:'rgba(255,255,255,.22)', labelColor:'rgba(200,200,214,.85)', previewBg:'linear-gradient(170deg,#010102 0%,#050507 55%,#0a0a0e 100%)', sidebarBg:'#020203' },
   { id:'midnight_citadel', name:'Midnight Citadel', desc:'A deep indigo fortress under a starlit sky — violet nights with the signature Fortized yellow accent.', price:185, rarity:'rare', gradient:'linear-gradient(135deg,#0a0722,#150f44,#221a6b)', borderColor:'rgba(139,124,255,.22)', hoverBorder:'rgba(139,124,255,.45)', labelColor:'rgba(160,145,255,.9)', previewBg:'linear-gradient(170deg,#0a0722 0%,#171048 50%,#241c72 100%)', sidebarBg:'#0c0926' },
   { id:'green_leaves', name:'Green Leaves', desc:'Calm forest greens. A quieter place to talk.', price:130, gradient:'linear-gradient(135deg,#0a1410,#0e1f16,#132b1e)', borderColor:'rgba(62,207,110,.22)', hoverBorder:'rgba(62,207,110,.45)', labelColor:'rgba(62,207,110,.9)', previewBg:'linear-gradient(170deg,#0a1410 0%,#0e1f16 50%,#132b1e 100%)', sidebarBg:'#091310' },
   { id:'obsidian_ember', name:'Obsidian Ember', desc:'Pitch-black obsidian with a deep ember-red glow. For those who run hot.', price:175, rarity:'rare', gradient:'linear-gradient(135deg,#0c0406,#1a0a10,#26101a)', borderColor:'rgba(255,80,90,.2)', hoverBorder:'rgba(255,80,90,.42)', labelColor:'rgba(255,110,110,.85)', previewBg:'linear-gradient(170deg,#120608 0%,#1c0a10 50%,#28101a 100%)', sidebarBg:'#150709' },
@@ -57375,20 +57389,20 @@ function applyAppearance(themeId, _opts) {
     document.documentElement.style.setProperty('--muted',      '#5a4da8');
     document.documentElement.style.setProperty('--muted-light','#9186d8');
   } else if (themeId === 'onyx_pure') {
-    // Enhanced: deep obsidian-violet (a touch lighter, with a purple sheen).
-    canvasColor = 'linear-gradient(170deg, #0a0813 0%, #16102b 100%)';
-    sidebarColor = '#0b0916';
-    glassHeavy = 'rgba(10,8,19,.94)'; glassMid = 'rgba(10,8,19,.88)'; glassLight = 'rgba(10,8,19,.82)';
-    document.documentElement.style.setProperty('--bg',         '#0a0813');
-    document.documentElement.style.setProperty('--rail',       '#07050f');
+    // Pure obsidian — the darkest theme on Fortized (below Dark Realm).
+    canvasColor = 'linear-gradient(170deg, #010102 0%, #08080b 100%)';
+    sidebarColor = '#020203';
+    glassHeavy = 'rgba(1,1,2,.95)'; glassMid = 'rgba(1,1,2,.9)'; glassLight = 'rgba(1,1,2,.84)';
+    document.documentElement.style.setProperty('--bg',         '#010102');
+    document.documentElement.style.setProperty('--rail',       '#000000');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
-    document.documentElement.style.setProperty('--channel',    '#0f0c1c');
-    document.documentElement.style.setProperty('--panel',      '#151125');
-    document.documentElement.style.setProperty('--panel2',     '#191430');
-    document.documentElement.style.setProperty('--panel3',     '#1e1838');
-    document.documentElement.style.setProperty('--border',     '#2a2145');
-    document.documentElement.style.setProperty('--muted',      '#4a3f6a');
-    document.documentElement.style.setProperty('--muted-light','#8579a8');
+    document.documentElement.style.setProperty('--channel',    '#040406');
+    document.documentElement.style.setProperty('--panel',      '#08080b');
+    document.documentElement.style.setProperty('--panel2',     '#0c0c10');
+    document.documentElement.style.setProperty('--panel3',     '#101015');
+    document.documentElement.style.setProperty('--border',     '#1a1a20');
+    document.documentElement.style.setProperty('--muted',      '#3a3a46');
+    document.documentElement.style.setProperty('--muted-light','#70707e');
   } else if (themeId === 'green_leaves') {
     canvasColor = '#0a1410';
     sidebarColor = '#091310';
@@ -57503,7 +57517,7 @@ const _appearanceThemeData = {
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#0a0d12', sidebar:'#0f1217', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0f1217', panel:'#141820', accent:'#fef83d', border:'#1a1f29', muted:'#3a4458', bodyGrad:''},
   fortized_slate:   {id:'fortized_slate',   name:'Fortized Slate',   bg:'#1f232c', sidebar:'#232833', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#232833', panel:'#282d3a', accent:'#fef83d', border:'#33384a', muted:'#5e6a7d', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#0a0722', sidebar:'#0c0926', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#100c30', panel:'#16113c', accent:'#fef83d', border:'#2e2470', muted:'#5a4da8', bodyGrad:'linear-gradient(170deg,#0a0722 0%,#191052 100%)'},
-  onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#0a0813', sidebar:'#0b0916', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0f0c1c', panel:'#151125', accent:'#fef83d', border:'#2a2145', muted:'#4a3f6a', bodyGrad:'linear-gradient(170deg,#0a0813 0%,#16102b 100%)'},
+  onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010102', sidebar:'#020203', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#040406', panel:'#08080b', accent:'#fef83d', border:'#1a1a20', muted:'#3a3a46', bodyGrad:'linear-gradient(170deg,#010102 0%,#08080b 100%)'},
   green_leaves:     {id:'green_leaves',     name:'Green Leaves',     bg:'#0a1410', sidebar:'#091310', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0c1814', panel:'#0f1f18', accent:'#fef83d', border:'#1a3524', muted:'#3a5848', bodyGrad:''},
   radiance_plum:    {id:'radiance_plum',    name:'Radiance Plum',    bg:'#21131e', sidebar:'#1b0f19', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#241522', panel:'#2a1826', accent:'#fef83d', border:'#3a2234', muted:'#6e4a62', bodyGrad:'linear-gradient(170deg,#21131e 0%,#2a1826 100%)'},
   obsidian_ember:   {id:'obsidian_ember',   name:'Obsidian Ember',   bg:'#120608', sidebar:'#150709', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#1c0a0d', panel:'#200c10', accent:'#fef83d', border:'#3c1621', muted:'#6e343f', bodyGrad:'linear-gradient(170deg,#120608 0%,#200b12 100%)'},

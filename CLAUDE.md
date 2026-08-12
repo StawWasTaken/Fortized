@@ -1,6 +1,10 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Collection chip is a link (`2026fix468`).** In the item popup the
+  collection chip (`.fs-di-collection.is-link`) now closes the modal and jumps
+  to that collection's overview (`_fsShowCollection`), with a chevron affordance.
+  Items with no collection keep a plain, non-clickable chip.
 - **Fortshop polish pass 4 (`2026fix467`).** No "Shop the Collection" on a
   collection OVERVIEW (`_fsColHero(col, sub)` hides it when `sub`) — it stays
   only on the Featured hero. Collection logos are **left + vertically centred**

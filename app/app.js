@@ -48351,7 +48351,9 @@ function _fsOpenItem(id) {
       </div>
       <div class="fs-di-right">
         <div class="fs-di-right-bg" style="${col && col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col ? col.cover : item.gradient}`}"></div>
-        <div class="fs-di-collection"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(col ? col.name : (onyxTag ? 'Onyx Experience' : _fsKindLabel(item) + 's'))}</div>
+        ${col
+          ? `<button class="fs-di-collection is-link" title="View the ${escapeHTML(col.name)} collection" onclick="document.getElementById('fs-item-modal')?.remove();_fsShowCollection('${col.id}')"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(col.name)} <i class="fa-solid fa-chevron-right fs-di-collection-go"></i></button>`
+          : `<div class="fs-di-collection">${onyxTag ? '<i class="fa-solid fa-gem"></i> Onyx Experience' : `<i class="fa-solid fa-layer-group"></i> ${escapeHTML(_fsKindLabel(item))}s`}</div>`}
         <div class="fs-di-tools">
           ${owned || equipped ? '' : `<button class="fs-di-tool ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="toggleWishlist('${item.id}');this.classList.toggle('on')">${_svgIcon('heart', 15)}</button>`}
         </div>

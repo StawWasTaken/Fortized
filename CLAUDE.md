@@ -56,8 +56,36 @@
   vars + canvas/glass), `toastMsgs`, and `_appearanceThemeData` (settings
   preview). Verified applied + readable via Playwright. Appearances are the SAFE
   additive path (token-based, egress-free) — new ones just need those 4 sites.
-  **NEXT (Phase 2 remainder):** Bundles content, decorations into Browse (pending
-  the decoration-art decision), the fuller mini-profile-preview card variant.
+  **Phase 3 — collections + polish (`2026fix459`):** Reworked per user feedback.
+  • Removed the "Deck out your Fortized" banner card.
+  • **Collections model** (`_FS_COLLECTIONS`: Crown Jewels / Midnight / Naturals,
+    each {order,name,logoText,accent,tagline,cover-gradient,items[]}; optional
+    `coverImg`/`logoImg` for real art). Featured = collection **hero** (cover
+    fading into page + logo + "Shop the Collection", newest by `order`) + the
+    coverflow carousel of that collection's items + **2 randomized collection
+    banners** (`_fsColBanner`: cover + logo + "Take me there" + tilted item
+    thumbs). `_fsShowCollection(id)` → Browse filtered to that collection (with a
+    Clear-filter chip; `window._fsCol`).
+  • **Radiance-style buttons** everywhere (`.fs-btn`/`--primary`/`--light`): the
+    hard ink-edge 3D recipe, press-down, **NO shimmer, NO glow**. Quest buttons
+    swapped `btn-a`→`fs-btn fs-btn--primary` too (kills the claim-button glow).
+  • **Stacked discount price** (`_fsPriceBlock`): struck [onyx+original] small on
+    top, [onyx+new] + green (-N%) below.
+  • **Owned "Acquired" state**: dimmed preview + centred green check badge;
+    Equipped = accent pill.
+  • **Popup rebuilt** to the popup-card family + Discord: `.ftz-confirm-card fs-di`
+    split — left = mock + name/type/desc + stacked price + rad Buy/Gift; right =
+    collection backdrop with an in-use preview **window** + a **message preview**
+    ("staw · now: Check out my new look"), collection chip, wishlist+close tools.
+  • **Onyx balance chip** moved into the subnav (`#fs-subnav-bal`).
+  • Card polish: kind pill by the title, 2-line desc clamp, hover mock zoom.
+  Wishlist already shares `CU.wishlist` with the profile-card wishlist tab.
+  **⚠️ NEED ART:** each collection wants a **cover image + logo image** (drop into
+  `coverImg`/`logoImg`); until then covers are gradients + Syne wordmarks.
+  **⚠️ LIVE-VERIFY:** onyx glyph/FA (CDN-blind); quest buttons on the live Quests
+  page; carousel; buy/equip/gift/wishlist; collection nav + Clear filter.
+  **NEXT:** Bundles content, decorations into Browse (pending decoration-art
+  decision), real collection art.
 - **Avatar decorations — prototype done, awaiting user decision.** SVG data-URI
   overlays drop into the existing `PROFILE_DECORATIONS`/`getDecorationSrc`/
   `.profile-decoration-overlay*` system with ZERO code change and zero egress

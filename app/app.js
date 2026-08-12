@@ -47818,11 +47818,27 @@ const _FS_CDN  = 'https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/he
 const _FS_TABS = ['featured', 'browse', 'onyx', 'bundles'];
 
 function _fsCatalogue() {
-  return (typeof SHOP_APPEARANCES_ALL !== 'undefined' ? SHOP_APPEARANCES_ALL : []).map(a => ({ ...a, kind: 'appearance' }));
+  const apps = (typeof SHOP_APPEARANCES_ALL !== 'undefined' ? SHOP_APPEARANCES_ALL : []).map(a => ({ ...a, kind: 'appearance' }));
+  const decos = (typeof PROFILE_DECORATIONS !== 'undefined' ? PROFILE_DECORATIONS : []).map(d => ({ ...d, kind: 'decoration' }));
+  return apps.concat(decos);
 }
 function _fsOwnedApps() { return CU?.unlockedAppearances || []; }
-// Onyx Exclusives = the rare/premium appearances (onyx_pure, midnight_citadel…).
+// Onyx Exclusives = the rare/premium items.
 function _fsIsOnyx(item) { return item.rarity === 'rare' || /onyx|obsidian|void|eclipse/i.test(item.id + ' ' + (item.name || '')); }
+// ── Kind-aware helpers (appearances vs decorations) ──
+function _fsOwnedList(kind) { return kind === 'decoration' ? (CU?.ownedDecorations || []) : (CU?.unlockedAppearances || []); }
+function _fsIsOwned(item) { return _fsOwnedList(item.kind).includes(item.id); }
+function _fsIsEquipped(item) { return item.kind === 'decoration' ? (CU?.activeDecoration === item.id) : (CU?.appearance === item.id); }
+function _fsKindLabel(item) { return item.kind === 'decoration' ? 'Decoration' : 'Appearance'; }
+function _fsDecoPreview(item) {
+  const dn = CU?.displayName || CU?.username || 'U';
+  const av = (typeof buildAvatarHTML === 'function') ? buildAvatarHTML(CU?.pfp || null, dn, 78, CU?.pfpCrop) : '';
+  return `<div class="fs-deco-prev"><span class="fs-deco-av">${av}<img class="fs-deco-ov" src="${item.src}" alt="" onerror="this.remove()"></span></div>`;
+}
+function _fsPreview(item) { return item.kind === 'decoration' ? _fsDecoPreview(item) : _fsMock(item); }
+function _fsEquip(item) { if (item.kind === 'decoration') { if (typeof equipDecoration === 'function') equipDecoration(item.id); } else if (typeof applyAppearance === 'function') applyAppearance(item.id); }
+function _fsEquipById(id) { const it = _fsCatalogue().find(a => a.id === id); if (it) { _fsEquip(it); try { renderAtelierTab('shop'); } catch {} } }
+function _fsBuyItem(item, price) { if (item.kind === 'decoration') { if (typeof buyDecoration === 'function') buyDecoration(item.id, price); } else if (typeof buyAppearance === 'function') buyAppearance(item.id, price); }
 
 // Tab switch — mirrors _qstSetTab: set state, re-render, scroll to top.
 function _fsSetTab(tab) {
@@ -47855,6 +47871,7 @@ function _fsMock(item) {
 //    until real art lands we fall back to a gradient cover + Syne wordmark.
 //    order: higher = more recent (Featured hero shows the newest). ──
 const _FS_COLLECTIONS = [
+  { id:'decor',    order:4, name:'Decorations',  logoText:'DECOR',    accent:'#f5c542', tagline:'Frame your avatar — laurels, crowns, orbits & petals.', cover:'linear-gradient(120deg,#241a08 0%,#1a1206 50%,#0e0a04 100%)', items:['deco_crown','deco_orbit','deco_laurel','deco_sakura','deco_ember','deco_frost'] },
   { id:'jewels',   order:3, name:'Crown Jewels', logoText:'JEWELS',   accent:'#c07bff', tagline:'Ember & amethyst — our rarest drop yet.', cover:'linear-gradient(120deg,#1a0a10 0%,#12081c 48%,#281844 100%)', items:['obsidian_ember','royal_amethyst'] },
   { id:'midnight', order:2, name:'Midnight',     logoText:'MIDNIGHT', accent:'#60a5fa', tagline:'Deep blues and the purest black.',       cover:'linear-gradient(120deg,#050812 0%,#0a1120 55%,#02020a 100%)', items:['midnight_citadel','onyx_pure'] },
   { id:'naturals', order:1, name:'Naturals',     logoText:'NATURALS', accent:'#3ecf6e', tagline:'Calm, grounded, easy on the eyes.',      cover:'linear-gradient(120deg,#0a1410 0%,#0e1f16 55%,#132b1e 100%)', items:['green_leaves'] },
@@ -47892,18 +47909,18 @@ function _fsPriceBlock(item, big) {
 
 // Shop item card — quest-card shell (big strokes, hover lift), polished:
 // stacked price, Radiance-style button, "Acquired" state for owned items.
-function _fsCard(item, owned) {
-  const isOwned  = owned.includes(item.id);
-  const equipped = CU?.appearance === item.id;
+function _fsCard(item) {
+  const isOwned  = _fsIsOwned(item);
+  const equipped = _fsIsEquipped(item);
   const onWL     = (typeof isOnWishlist === 'function') && isOnWishlist(item.id);
   const onyxTag  = _fsIsOnyx(item);
   let foot;
   if (equipped) foot = '<span class="fs-state fs-state--eq"><i class="fa-solid fa-circle-check"></i> Equipped</span>';
-  else if (isOwned) foot = `<span class="fs-state fs-state--owned"><i class="fa-solid fa-check"></i> Owned</span><button class="fs-btn fs-btn--primary fs-cbtn" onclick="event.stopPropagation();applyAppearance('${item.id}');renderAtelierTab('shop')">Equip</button>`;
+  else if (isOwned) foot = `<span class="fs-state fs-state--owned"><i class="fa-solid fa-check"></i> Owned</span><button class="fs-btn fs-btn--primary fs-cbtn" onclick="event.stopPropagation();_fsEquipById('${item.id}')">Equip</button>`;
   else foot = `${_fsPriceBlock(item)}<button class="fs-btn fs-btn--primary fs-cbtn" onclick="event.stopPropagation();_fsOpenItem('${item.id}')">View</button>`;
-  return `<div class="qst-qcard fs-card${onyxTag ? ' is-onyx' : ''}${isOwned ? ' is-owned' : ''}" onclick="_fsOpenItem('${item.id}')">
+  return `<div class="qst-qcard fs-card fs-card--${item.kind}${onyxTag ? ' is-onyx' : ''}${isOwned ? ' is-owned' : ''}" onclick="_fsOpenItem('${item.id}')">
     <div class="fs-card-preview">
-      ${_fsMock(item)}
+      ${_fsPreview(item)}
       ${isOwned ? '<span class="fs-owned-badge"><i class="fa-solid fa-check"></i></span>' : ''}
       <button class="fs-fav ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="event.stopPropagation();toggleWishlist('${item.id}')">${_svgIcon('heart', 13)}</button>
       ${onyxTag ? '<span class="fs-tag">Onyx Exclusive</span>' : ''}
@@ -47911,7 +47928,7 @@ function _fsCard(item, owned) {
     <div class="qst-qcard-body">
       <div class="fs-card-head">
         <div class="qst-qcard-title">${escapeHTML(item.name)}</div>
-        <span class="fs-card-kind">Appearance</span>
+        <span class="fs-card-kind">${_fsKindLabel(item)}</span>
       </div>
       <div class="qst-qcard-desc fs-card-desc">${escapeHTML(item.desc || '')}</div>
       <div class="qst-qcard-foot fs-foot">${foot}</div>
@@ -47980,7 +47997,7 @@ function _fsColHero(col) {
 // A wide collection banner (logo + cover + a few item previews + Take-me-there).
 function _fsColBanner(col) {
   const bg = col.coverImg ? `url('${col.coverImg}') center/cover no-repeat` : col.cover;
-  const thumbs = _fsColItems(col).slice(0, 3).map(it => `<span class="fs-cb-thumb">${_fsMock(it)}</span>`).join('');
+  const thumbs = _fsColItems(col).slice(0, 3).map(it => `<span class="fs-cb-thumb">${_fsPreview(it)}</span>`).join('');
   const logo = col.logoImg
     ? `<img class="fs-cb-logo" src="${col.logoImg}" alt="${escapeHTML(col.name)}">`
     : `<div class="fs-cb-logotext">${escapeHTML(col.logoText || col.name)}</div>`;
@@ -47999,7 +48016,7 @@ function _fsFeatured(apps, owned) {
   const others = cols.slice(1).sort(() => Math.random() - 0.5).slice(0, 2);
   const slides = heroItems.map((a, i) => `
     <div class="fs-cslide" data-idx="${i}" onclick="_fsCarClick(${i},'${a.id}')">
-      <div class="fs-cslide-mock">${_fsMock(a)}</div>
+      <div class="fs-cslide-mock">${_fsPreview(a)}</div>
       <div class="fs-cslide-cap">
         <div class="fs-cslide-name">${escapeHTML(a.name)}${_fsIsOnyx(a) ? '<span class="fs-cslide-badge">Onyx</span>' : ''}</div>
         <div class="fs-cslide-desc">${escapeHTML(a.desc || '')}</div>
@@ -48056,15 +48073,15 @@ function _fsRenderShop(el) {
 function _fsOpenItem(id) {
   const item = _fsCatalogue().find(a => a.id === id); if (!item) return;
   document.getElementById('fs-item-modal')?.remove();
-  const owned = _fsOwnedApps().includes(item.id);
-  const equipped = (CU?.appearance === item.id);
+  const owned = _fsIsOwned(item);
+  const equipped = _fsIsEquipped(item);
   const { finalPrice } = _fsFinalPrice(item);
   const onWL = (typeof isOnWishlist === 'function') && isOnWishlist(item.id);
   const col = _fsCollectionOf(item.id);
   const onyxTag = _fsIsOnyx(item);
   let action;
   if (equipped) action = `<button class="fs-btn fs-di-buy" disabled><i class="fa-solid fa-circle-check"></i> Equipped</button>`;
-  else if (owned) action = `<button class="fs-btn fs-btn--primary fs-di-buy" onclick="applyAppearance('${item.id}');document.getElementById('fs-item-modal')?.remove()"><i class="fa-solid fa-circle-check"></i> Use Now</button>`;
+  else if (owned) action = `<button class="fs-btn fs-btn--primary fs-di-buy" onclick="_fsEquipById('${item.id}');document.getElementById('fs-item-modal')?.remove()"><i class="fa-solid fa-circle-check"></i> Use Now</button>`;
   else action = `<button class="fs-btn fs-btn--primary fs-di-buy" onclick="_fsBuy('${item.id}')">Buy for ${_FS_ONYX_IC} ${finalPrice}</button>`;
   const dn = escapeHTML(CU?.displayName || CU?.username || 'You');
   const avatar = (typeof buildAvatarHTML === 'function') ? buildAvatarHTML(CU?.pfp || null, dn, 30, CU?.pfpCrop) : '';
@@ -48075,9 +48092,9 @@ function _fsOpenItem(id) {
   overlay.innerHTML = `
     <div class="ftz-confirm-card fs-di" role="dialog" aria-label="${escapeHTML(item.name)}">
       <div class="fs-di-left">
-        <div class="fs-di-preview">${_fsMock(item)}</div>
+        <div class="fs-di-preview">${_fsPreview(item)}</div>
         <div class="fs-di-name">${escapeHTML(item.name)}</div>
-        <div class="fs-di-type">Appearance${onyxTag ? ' · Onyx Exclusive' : ''}</div>
+        <div class="fs-di-type">${_fsKindLabel(item)}${onyxTag ? ' · Onyx Exclusive' : ''}</div>
         <div class="fs-di-desc">${escapeHTML(item.desc || '')}</div>
         ${_fsPriceBlock(item, true)}
         <div class="fs-di-actions">
@@ -48093,7 +48110,7 @@ function _fsOpenItem(id) {
         </div>
         <button class="ftz-close-btn ftz-ac-x fs-di-x" aria-label="Close" onclick="document.getElementById('fs-item-modal')?.remove()">&times;</button>
         <div class="fs-di-stage">
-          <div class="fs-di-window">${_fsMock(item)}</div>
+          <div class="fs-di-window">${_fsPreview(item)}</div>
           <div class="fs-di-msg">
             <span class="fs-di-msg-av">${avatar}</span>
             <div class="fs-di-msg-body"><div class="fs-di-msg-head">${dn}<span class="fs-di-msg-time">now</span></div><div class="fs-di-msg-txt">Check out my new look ✨</div></div>
@@ -48114,11 +48131,11 @@ function _fsBuy(id) {
   document.getElementById('fs-item-modal')?.remove();
   _fsPurchaseConfirm({
     title: item.name,
-    subtitle: 'Appearance' + (_fsIsOnyx(item) ? ' · Onyx Exclusive' : ''),
+    subtitle: _fsKindLabel(item) + (_fsIsOnyx(item) ? ' · Onyx Exclusive' : ''),
     priceOnyx: finalPrice,
     policyLabel: 'Fortshop Policy',
     policyHref: 'https://www.fortized.com/legal/fortshop-policy',
-    onConfirm: () => { if (typeof buyAppearance === 'function') buyAppearance(item.id, finalPrice); },
+    onConfirm: () => _fsBuyItem(item, finalPrice),
   });
 }
 
@@ -51251,7 +51268,47 @@ function _isItemOnSaleInShop(item) {
 // account and the decoration reappears the moment an entry is restored to
 // this array. To re-enable: push catalog rows back in the original shape
 //   {id, name, src, price, color, rarity?, rare?}
-const PROFILE_DECORATIONS = [];
+// ── Avatar decorations — code-authored SVG overlays (crisp at any size, zero
+// image hosting, zero egress; SMIL animates even inside an <img>). Each renders
+// via the existing getDecorationSrc / .profile-decoration-overlay system. ──
+function _fsDecoURI(svg) { return 'data:image/svg+xml,' + encodeURIComponent(svg.replace(/\n\s*/g, '')); }
+function _decoLaurel(col) {
+  const gold = 'url(#gL)'; const leaves = [];
+  const mk = (side) => {
+    const start = side === 'L' ? 268 : 272, end = side === 'L' ? 168 : 372, steps = 9;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps, ang = (start + (end - start) * t) * Math.PI / 180, r = 49;
+      const x = 50 + r * Math.cos(ang), y = 50 - r * Math.sin(ang);
+      const deg = Math.atan2(y - 50, x - 50) * 180 / Math.PI + (side === 'L' ? 52 : -52);
+      const sz = 0.72 + Math.sin(t * Math.PI) * 0.5;
+      leaves.push(`<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(7.2 * sz).toFixed(1)}" ry="${(3 * sz).toFixed(1)}" fill="${gold}" stroke="#7a5a12" stroke-width=".5" transform="rotate(${deg.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`);
+    }
+  };
+  mk('L'); mk('R');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="gL" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${col ? col[0] : '#ffe9a3'}"/><stop offset=".5" stop-color="${col ? col[1] : '#f5c542'}"/><stop offset="1" stop-color="${col ? col[2] : '#c9971f'}"/></linearGradient></defs>${leaves.join('')}<circle cx="50" cy="97" r="2.6" fill="${gold}" stroke="#7a5a12" stroke-width=".5"/></svg>`;
+}
+function _decoOrbit(c1, c2, edge) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="gO" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><circle cx="50" cy="50" r="47.5" fill="none" stroke="url(#gO)" stroke-width="2.4" stroke-dasharray="3 5" stroke-linecap="round"/><g><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="9s" repeatCount="indefinite"/><circle cx="50" cy="2.5" r="4.2" fill="url(#gO)" stroke="${edge}" stroke-width=".5"/><circle cx="50" cy="2.5" r="1.6" fill="#fffbe0"/></g></svg>`;
+}
+function _decoCrown() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="gC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a3"/><stop offset="1" stop-color="#e0a92a"/></linearGradient></defs><path d="M30 20 L36 6 L44 16 L50 3 L56 16 L64 6 L70 20 Z" fill="url(#gC)" stroke="#7a5a12" stroke-width=".8" stroke-linejoin="round"/><rect x="30" y="19" width="40" height="5" rx="2" fill="url(#gC)" stroke="#7a5a12" stroke-width=".8"/><circle cx="50" cy="10" r="2.4" fill="#ff5db1"/><circle cx="37" cy="12" r="1.7" fill="#5fd0ff"/><circle cx="63" cy="12" r="1.7" fill="#5fd0ff"/></svg>`;
+}
+function _decoSakura() {
+  const petals = [];
+  const flower = (cx, cy, s, rot) => { let l = ''; for (let k = 0; k < 5; k++) l += `<path d="M0 0 C 3 -3 3 -8 0 -9.5 C -3 -8 -3 -3 0 0 Z" fill="url(#gP)" stroke="#d873a8" stroke-width=".4" transform="rotate(${k * 72})"/>`; return `<g transform="translate(${cx} ${cy}) rotate(${rot}) scale(${s})">${l}<circle r="1.6" fill="#ffd34d"/></g>`; };
+  const petal = (cx, cy, s, rot) => `<g transform="translate(${cx} ${cy}) rotate(${rot}) scale(${s})"><path d="M0 0 C 2.4 -2.4 2.4 -6 0 -7.4 C -2.4 -6 -2.4 -2.4 0 0 Z" fill="url(#gP)" stroke="#d873a8" stroke-width=".4"/></g>`;
+  [[86, 20, 1.15, 10], [74, 10, 0.8, -30], [92, 36, 0.72, 50]].forEach(f => petals.push(flower(f[0], f[1], f[2], f[3])));
+  [150, 172, 210, 250, 285, 315].forEach((a, i) => { const r = a * Math.PI / 180; petals.push(petal((50 + 50 * Math.cos(r)).toFixed(1), (50 - 50 * Math.sin(r)).toFixed(1), (0.9 + (i % 2) * 0.3).toFixed(2), (a + 200).toFixed(0))); });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="gP"><stop offset="0" stop-color="#ffe3f1"/><stop offset="1" stop-color="#ff9ecb"/></radialGradient></defs>${petals.join('')}</svg>`;
+}
+const PROFILE_DECORATIONS = [
+  { id: 'deco_laurel',  kind: 'decoration', name: 'Golden Laurel', desc: 'A victor’s laurel wreath in polished gold.',            price: 90,  src: _fsDecoURI(_decoLaurel()) },
+  { id: 'deco_crown',   kind: 'decoration', name: 'Regal Crown',   desc: 'A jewelled gold crown that sits atop your avatar.',     price: 110, rarity: 'rare', src: _fsDecoURI(_decoCrown()) },
+  { id: 'deco_orbit',   kind: 'decoration', name: 'Orbit',         desc: 'A dashed gold ring with a gem that circles you.',       price: 120, rarity: 'rare', src: _fsDecoURI(_decoOrbit('#fff93e', '#ffb03a', '#8a5a10')) },
+  { id: 'deco_ember',   kind: 'decoration', name: 'Ember Orbit',   desc: 'The Orbit ring, forged in ember red.',                  price: 120, rarity: 'rare', src: _fsDecoURI(_decoOrbit('#ff6a5f', '#ff2d55', '#7a1020')) },
+  { id: 'deco_frost',   kind: 'decoration', name: 'Frost Orbit',   desc: 'The Orbit ring in cool arctic blue.',                   price: 120, rarity: 'rare', src: _fsDecoURI(_decoOrbit('#7fe3ff', '#3a9dff', '#123a6a')) },
+  { id: 'deco_sakura',  kind: 'decoration', name: 'Sakura',        desc: 'Soft cherry-blossom petals drifting past your avatar.', price: 100, src: _fsDecoURI(_decoSakura()) },
+];
 
 // Master appearance catalogue. Lives at module scope (not inside the shop
 // render) so _getShopItemById can resolve any appearance from anywhere —

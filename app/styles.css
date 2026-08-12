@@ -16164,3 +16164,25 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-card:hover .fs-mock{transform:scale(1.05);}
 .fs-card-preview{border-bottom:1px solid rgba(255,255,255,.05);}
 .fs-foot{padding-top:13px;}
+
+/* Item popup close (block-card style) + tools offset */
+.ftz-confirm-card.fs-di{position:relative;}
+.fs-di-x{position:absolute;top:12px;right:16px;z-index:5;}
+.fs-di-tools{right:54px;}
+
+/* Purchase-confirm card (Fortshop + Radiance) — Terms acceptance */
+.fs-buy-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;}
+.fs-buy-item{font-family:var(--font-display);font-weight:700;font-size:15px;color:#fff;}
+.fs-buy-kind{font-size:11.5px;color:var(--muted-light);margin-top:2px;}
+.fs-buy-price{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);color:var(--text);flex-shrink:0;}
+.fs-buy-price .rad-onyx-ic{width:18px;height:18px;color:var(--text);}
+.fs-buy-price b{font-size:18px;font-weight:800;}
+.fs-buy-terms{display:flex;align-items:flex-start;gap:11px;padding:14px 4px 2px;cursor:pointer;outline:none;}
+.fs-buy-terms .nm-check{margin-top:1px;}
+.fs-buy-terms.sel .nm-check{background:var(--accent);border-color:var(--accent);}
+.fs-buy-terms-txt{font-size:12.5px;line-height:1.5;color:var(--muted-light);}
+.fs-buy-terms-txt a{color:var(--accent);text-decoration:none;font-weight:600;}
+.fs-buy-terms-txt a:hover{text-decoration:underline;}
+.fs-buy-card .fs-btn .rad-onyx-ic{width:15px;height:15px;}
+.fs-buy-card .fs-btn--primary .rad-onyx-ic{color:#1a1400;}
+.fs-di-buy .rad-onyx-ic{color:#1a1400;}

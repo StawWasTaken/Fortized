@@ -27672,8 +27672,10 @@ async function _viewUserProfile(username) {
     <textarea class="fpp-card-modal__note-input" placeholder="${isOwn ? 'A note to your future self…' : 'Click to add a note…'}" maxlength="500" oninput="_saveInlineUserNote('${escapeHTML(username)}', this.value)">${escapeHTML(_userNote || '')}</textarea>
   </div>`;
 
-  // Tabs visibility
-  const wl = Array.isArray(u.wishlist) ? u.wishlist : [];
+  // Tabs visibility. For your OWN card, read the LIVE in-memory wishlist
+  // (CU.wishlist) so an item you just hearted in the Fortshop shows up
+  // immediately, without waiting on a DB round-trip / cache.
+  const wl = (isOwn && Array.isArray(CU?.wishlist)) ? CU.wishlist.slice() : (Array.isArray(u.wishlist) ? u.wishlist : []);
   const wlPriv = u.wishlistPrivate !== false; // default: private
   const showWishlistTab = isOwn || (!wlPriv && wl.length > 0);
   const showMutualsTab = !isOwn;
@@ -27746,8 +27748,8 @@ async function _viewUserProfile(username) {
                 </label>` : `<span style="font-size:10.5px;color:var(--muted);font-weight:600;">Public</span>`}
               </div>
               ${(() => {
-                const ownedA = Array.isArray(u.unlockedAppearances) ? u.unlockedAppearances : [];
-                const ownedD = Array.isArray(u.ownedDecorations) ? u.ownedDecorations : [];
+                const ownedA = Array.isArray(isOwn ? CU?.unlockedAppearances : u.unlockedAppearances) ? (isOwn ? CU.unlockedAppearances : u.unlockedAppearances) : [];
+                const ownedD = Array.isArray(isOwn ? CU?.ownedDecorations : u.ownedDecorations) ? (isOwn ? CU.ownedDecorations : u.ownedDecorations) : [];
                 const items = wl
                   .map(id => ({ id, it: (typeof _getShopItemById === 'function' ? _getShopItemById(id) : null) }))
                   .filter(x => x.it && !ownedA.includes(x.id) && !ownedD.includes(x.id));
@@ -47868,14 +47870,21 @@ function _fsShowCollection(id) {
 }
 
 // Stacked price: struck [onyx + original] small on top, [onyx + new] (-N%) below.
+const _FS_ONYX_IC = '<span class="rad-onyx-ic"></span>';
+function _fsFinalPrice(item) {
+  const d = (typeof _calculateFinalPrice === 'function') ? _calculateFinalPrice(item.price, false) : { finalPrice: item.price };
+  const finalPrice = d.finalPrice;
+  const pct = Math.max(0, Math.round((1 - finalPrice / item.price) * 100));
+  return { finalPrice, pct };
+}
 function _fsPriceBlock(item, big) {
-  const d = (typeof _calculateFinalPrice === 'function') ? _calculateFinalPrice(item.price, false) : { finalPrice: item.price, totalDiscount: 0 };
-  const oc = '<span class="rad-onyx-ic"></span>';
+  const { finalPrice, pct } = _fsFinalPrice(item);
+  const oc = _FS_ONYX_IC;
   const cls = 'fs-price' + (big ? ' fs-price--big' : '');
-  if (d.totalDiscount > 0) {
+  if (pct > 0) {
     return `<div class="${cls} fs-price--disc">
       <div class="fs-price-old">${oc}<span>${item.price}</span></div>
-      <div class="fs-price-new">${oc}<b>${d.finalPrice}</b><span class="fs-price-pct">(-${d.totalDiscount}%)</span></div>
+      <div class="fs-price-new">${oc}<b>${finalPrice}</b><span class="fs-price-pct">(-${pct}%)</span></div>
     </div>`;
   }
   return `<div class="${cls}"><div class="fs-price-new">${oc}<b>${item.price}</b></div></div>`;
@@ -48037,7 +48046,6 @@ function _fsRenderShop(el) {
 
   el.innerHTML = `<div class="atelier-content-inner fs-page fs-page--${ftab}">${body}</div>`;
   _FS_TABS.forEach(t => { const b = document.getElementById('fstab-' + t); if (b) b.classList.toggle('active', t === ftab); });
-  const bchip = document.getElementById('fs-subnav-bal'); if (bchip) bchip.innerHTML = `<span class="rad-onyx-ic"></span> ${(CU?.onyx || 0).toLocaleString()}`;
   if (ftab === 'featured') requestAnimationFrame(() => { try { _fsCarouselInit(); } catch {} });
 }
 
@@ -48050,14 +48058,14 @@ function _fsOpenItem(id) {
   document.getElementById('fs-item-modal')?.remove();
   const owned = _fsOwnedApps().includes(item.id);
   const equipped = (CU?.appearance === item.id);
-  const d = (typeof _calculateFinalPrice === 'function') ? _calculateFinalPrice(item.price, false) : { finalPrice: item.price, totalDiscount: 0 };
+  const { finalPrice } = _fsFinalPrice(item);
   const onWL = (typeof isOnWishlist === 'function') && isOnWishlist(item.id);
   const col = _fsCollectionOf(item.id);
   const onyxTag = _fsIsOnyx(item);
   let action;
   if (equipped) action = `<button class="fs-btn fs-di-buy" disabled><i class="fa-solid fa-circle-check"></i> Equipped</button>`;
   else if (owned) action = `<button class="fs-btn fs-btn--primary fs-di-buy" onclick="applyAppearance('${item.id}');document.getElementById('fs-item-modal')?.remove()"><i class="fa-solid fa-circle-check"></i> Use Now</button>`;
-  else action = `<button class="fs-btn fs-btn--primary fs-di-buy" onclick="buyAppearance('${item.id}',${d.finalPrice});document.getElementById('fs-item-modal')?.remove()">Buy for ${d.finalPrice} Onyx</button>`;
+  else action = `<button class="fs-btn fs-btn--primary fs-di-buy" onclick="_fsBuy('${item.id}')">Buy for ${_FS_ONYX_IC} ${finalPrice}</button>`;
   const dn = escapeHTML(CU?.displayName || CU?.username || 'You');
   const avatar = (typeof buildAvatarHTML === 'function') ? buildAvatarHTML(CU?.pfp || null, dn, 30, CU?.pfpCrop) : '';
   const overlay = document.createElement('div');
@@ -48082,8 +48090,8 @@ function _fsOpenItem(id) {
         <div class="fs-di-collection"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(col ? col.name : (onyxTag ? 'Onyx Collection' : 'Appearances'))}</div>
         <div class="fs-di-tools">
           ${owned || equipped ? '' : `<button class="fs-di-tool ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="toggleWishlist('${item.id}');this.classList.toggle('on');this.title=this.classList.contains('on')?'In wishlist':'Add to wishlist'">${_svgIcon('heart', 15)}</button>`}
-          <button class="fs-di-tool" title="Close" onclick="document.getElementById('fs-item-modal')?.remove()">&times;</button>
         </div>
+        <button class="ftz-close-btn ftz-ac-x fs-di-x" aria-label="Close" onclick="document.getElementById('fs-item-modal')?.remove()">&times;</button>
         <div class="fs-di-stage">
           <div class="fs-di-window">${_fsMock(item)}</div>
           <div class="fs-di-msg">
@@ -48097,6 +48105,77 @@ function _fsOpenItem(id) {
   overlay.tabIndex = -1;
   overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
   setTimeout(() => overlay.focus(), 0);
+}
+
+// Buy → open the Terms purchase-confirm card.
+function _fsBuy(id) {
+  const item = _fsCatalogue().find(a => a.id === id); if (!item) return;
+  const { finalPrice } = _fsFinalPrice(item);
+  document.getElementById('fs-item-modal')?.remove();
+  _fsPurchaseConfirm({
+    title: item.name,
+    subtitle: 'Appearance' + (_fsIsOnyx(item) ? ' · Onyx Exclusive' : ''),
+    priceOnyx: finalPrice,
+    policyLabel: 'Fortshop Policy',
+    policyHref: 'https://www.fortized.com/legal/fortshop-policy',
+    onConfirm: () => { if (typeof buyAppearance === 'function') buyAppearance(item.id, finalPrice); },
+  });
+}
+
+// Unified purchase-confirm card (Fortshop + Radiance): order summary + a
+// Terms acceptance checkbox (the gift-selection tick) gating the Buy button.
+function _fsPurchaseConfirm(opts) {
+  const o = opts || {};
+  const price = o.priceOnyx;
+  const policyLabel = o.policyLabel || 'Fortshop Policy';
+  const policyHref = o.policyHref || 'https://www.fortized.com/legal/fortshop-policy';
+  const termsUrl = (typeof FTZ_TERMS_URL !== 'undefined') ? FTZ_TERMS_URL : 'https://www.fortized.com/legal/terms-of-use';
+  const tosUrl = (typeof FTZ_TOS_URL !== 'undefined') ? FTZ_TOS_URL : 'https://www.fortized.com/legal/terms-of-service';
+  document.getElementById('fs-buy-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'fs-buy-modal';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card fs-buy-card" role="dialog" aria-label="Confirm purchase">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-buy-modal')?.remove()">&times;</button>
+      <div class="ftz-ac-hero ftz-ac-hero--noicon">
+        <div class="ftz-ac-title">Confirm purchase</div>
+        <div class="ftz-ac-sub">Review your order before you spend your Onyx.</div>
+      </div>
+      <div class="ftz-ac-body">
+        <div class="fs-buy-summary">
+          <div class="fs-buy-summary-txt"><div class="fs-buy-item">${escapeHTML(o.title || '')}</div>${o.subtitle ? `<div class="fs-buy-kind">${escapeHTML(o.subtitle)}</div>` : ''}</div>
+          <div class="fs-buy-price">${_FS_ONYX_IC}<b>${price}</b></div>
+        </div>
+        <div class="fs-buy-terms nm-row" id="fs-terms-row" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="nm-check" aria-hidden="true"></span>
+          <span class="fs-buy-terms-txt">I have read and accept the <a href="${termsUrl}" target="_blank" rel="noopener">Terms of Use</a>, <a href="${tosUrl}" target="_blank" rel="noopener">Terms of Service</a> and the <a href="${policyHref}" target="_blank" rel="noopener">${escapeHTML(policyLabel)}</a>.</span>
+        </div>
+      </div>
+      <div class="ftz-modal-foot">
+        <div class="ftz-modal-foot__actions" style="width:100%;gap:8px;">
+          <button class="fs-btn" style="flex:1" onclick="document.getElementById('fs-buy-modal')?.remove()">Cancel</button>
+          <button class="fs-btn fs-btn--primary" id="fs-buy-ok" style="flex:1" disabled>Buy for ${_FS_ONYX_IC} ${price}</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const row = overlay.querySelector('#fs-terms-row');
+  const ok = overlay.querySelector('#fs-buy-ok');
+  const CHECK_SVG = '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+  const toggle = () => {
+    const on = row.classList.toggle('sel');
+    row.setAttribute('aria-checked', on ? 'true' : 'false');
+    row.querySelector('.nm-check').innerHTML = on ? CHECK_SVG : '';
+    ok.disabled = !on;
+  };
+  row.onclick = e => { if (e.target.tagName !== 'A') toggle(); };
+  row.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); } };
+  ok.onclick = () => { if (ok.disabled) return; overlay.remove(); try { o.onConfirm && o.onConfirm(); } catch (e) { console.warn('[Fortshop] purchase confirm', e); } };
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+  setTimeout(() => row.focus(), 0);
 }
 
 function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
@@ -53748,12 +53827,13 @@ async function purchaseRadiance(isPlus, days, cost) {
   // they "didn't add up" (the display reads the max, not radianceUntil alone).
   const existingExpiry = _radianceExpiry(CU) || null;
   const stacking = existingExpiry && new Date(existingExpiry) > new Date();
-  const confirmMsg = stacking
-    ? `Extend Radiance by ${days} days for ${cost} Onyx?`
-    : `Purchase Radiance for ${days} days (${cost} Onyx)?`;
-  _radianceConfirm(
-    confirmMsg,
-    async () => {
+  _fsPurchaseConfirm({
+    title: `Radiance · ${days} day${days === 1 ? '' : 's'}`,
+    subtitle: stacking ? 'Adds to your current Radiance' : 'Fortized premium membership',
+    priceOnyx: cost,
+    policyLabel: 'Radiance Terms',
+    policyHref: (typeof FTZ_TOS_URL !== 'undefined') ? FTZ_TOS_URL : 'https://www.fortized.com/legal/terms-of-service',
+    onConfirm: async () => {
       CU.onyx = (CU.onyx || 0) - cost;
       const until = _stackFromExpiry(existingExpiry, days);
       CU.radianceUntil = until;
@@ -53764,8 +53844,8 @@ async function purchaseRadiance(isPlus, days, cost) {
       const untilStr = new Date(until).toLocaleDateString();
       toast(`✨ Radiance active until ${untilStr}`, 'success');
       renderAtelierTab('radiance');
-    }
-  );
+    },
+  });
 }
 
 async function _doCancelRadiance() {

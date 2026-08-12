@@ -27154,11 +27154,7 @@ function _stackFromExpiry(existingIso, days) {
 
 async function buyRadiance(days, cost) {
   if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
-  const stacking = _hasRadiance(CU);
-  const msg = stacking
-    ? `Extend Radiance by ${days} days for ${cost} Onyx?`
-    : `Buy ${days}-day Radiance for ${cost} Onyx?`;
-  _radianceConfirm(msg, async ()=>{
+  _fsPurchaseConfirm({ title: 'Radiance · ' + days + ' day' + (days === 1 ? '' : 's'), subtitle: 'Fortized premium membership', priceOnyx: cost, variant: 'radiance', onConfirm: async ()=>{
     CU.onyx=(CU.onyx||0)-cost;
     CU.radianceUntil = _stackFromExpiry(_radianceExpiry(CU) || null, days);
     _checkRadianceMilestone();
@@ -27166,15 +27162,11 @@ async function buyRadiance(days, cost) {
     distributeOnyxRevenue(cost);
     const untilStr = new Date(CU.radianceUntil).toLocaleDateString();
     toast(`✨ Radiance active until ${untilStr}`,'success');
-  });
+  } });
 }
 
 async function buyRadiancePlus(days, cost) {
-  const stacking = _hasRadiance(CU);
-  const msg = stacking
-    ? `Extend Radiance+ by ${days} days for ${cost} Onyx?`
-    : `Buy ${days}-day Radiance for ${cost} Onyx?`;
-  _radianceConfirm(msg, async () => {
+  _fsPurchaseConfirm({ title: 'Radiance+ · ' + days + ' day' + (days === 1 ? '' : 's'), subtitle: 'Fortized premium membership', priceOnyx: cost, variant: 'radiance', onConfirm: async () => {
     if ((CU.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
     CU.onyx -= cost;
     const base = _stackFromExpiry(_radianceExpiry(CU) || null, days);
@@ -27185,7 +27177,7 @@ async function buyRadiancePlus(days, cost) {
     distributeOnyxRevenue(cost);
     const untilStr = new Date(base).toLocaleDateString();
     toast(`🌟 Radiance active until ${untilStr}`, 'success');
-  });
+  } });
 }
 
 
@@ -47840,13 +47832,13 @@ const _FS_COLLECTIONS = [
     coverImg:_FS_ART + 'Crown%20Jewels/CrownJewelsCollectionCover.png',
     logoImg: _FS_ART + 'Crown%20Jewels/CrownJewelsCollectionLogo.png',
     cover:'linear-gradient(120deg,#3a0810 0%,#7d1220 55%,#1e050a 100%)',
-    items:['obsidian_ember','royal_amethyst','deco_regalia','np_jewels'] },
+    items:['obsidian_ember','deco_regalia','np_jewels'] },
   { id:'midnight', order:2, name:'Midnight', accent:'#6b5cff',
     tagline:'Deep indigo skies, starlight and the purest dark.',
     coverImg:_FS_ART + 'Midnight/MidnightCollectionCover.png',
     logoImg: _FS_ART + 'Midnight/MidnightCollectionLogo.png',
     cover:'linear-gradient(120deg,#0b0722 0%,#191052 55%,#05030f 100%)',
-    items:['midnight_citadel','deco_starfall','np_midnight'] },
+    items:['midnight_citadel','royal_amethyst','deco_starfall','np_midnight'] },
   { id:'naturals', order:1, name:'Naturals', accent:'#3ecf6e',
     tagline:'Fresh grass, calm greens — easy on the eyes.',
     coverImg:_FS_ART + 'Naturals/NaturalsCollectionCover.png',
@@ -47854,7 +47846,9 @@ const _FS_COLLECTIONS = [
     cover:'linear-gradient(120deg,#0a1410 0%,#12351f 55%,#061009 100%)',
     items:['green_leaves','deco_wildgrass','np_naturals'] },
 ];
+const _FS_FEATURED_ID = 'midnight';   // which collection headlines the Featured tab
 function _fsCollections() { return _FS_COLLECTIONS.slice().sort((a, b) => b.order - a.order); }
+function _fsFeaturedCol() { return _FS_COLLECTIONS.find(c => c.id === _FS_FEATURED_ID) || _fsCollections()[0]; }
 function _fsColItems(col) { const all = _fsCatalogue(); return (col.items || []).map(id => all.find(a => a.id === id)).filter(Boolean); }
 function _fsCollectionOf(itemId) { return _FS_COLLECTIONS.find(c => c.items.includes(itemId)); }
 
@@ -48064,9 +48058,9 @@ function _fsRowScroll(dir) {
 }
 function _fsFeatured() {
   const cols = _fsCollections();
-  const hero = cols[0];
+  const hero = _fsFeaturedCol();
   const items = _fsColItems(hero);
-  const others = cols.slice(1).sort(() => Math.random() - 0.5).slice(0, 2);
+  const others = cols.filter(c => c.id !== hero.id).sort(() => Math.random() - 0.5).slice(0, 2);
   const chev = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="${d === 'l' ? '15 18 9 12 15 6' : '9 18 15 12 9 6'}"/></svg>`;
   // "Made for You" — a personalized shuffle of what you don't own yet.
   const month = new Date().toISOString().slice(0, 7);
@@ -48159,8 +48153,11 @@ function _fsBrowse(all) {
     main = _fsGroup(label, `<span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span>`)
       + `<div class="fs-grid">${list.length ? list.map(_fsCard).join('') : _fsEmpty('box-open', 'Nothing here yet', 'Check back soon.')}</div>`;
   } else {
-    main = _fsGroup('Collections', '<span class="qst-group-note">Pick a drop to explore</span>')
-      + `<div class="fs-colgrid">${_fsCollections().map(_fsColCard).join('')}</div>`;
+    main = _fsCollections().map(c => {
+      const items = _fsSortItems(_fsColItems(c));
+      if (!items.length) return '';
+      return `<section class="fs-colsec">${_fsColCard(c)}<div class="fs-grid">${items.map(_fsCard).join('')}</div></section>`;
+    }).join('');
   }
   return `${toolbar}<div class="fs-browse${open ? ' has-rail' : ''}"><div class="fs-browse-main">${main}</div>${open ? _fsFilterRail() : ''}</div>`;
 }

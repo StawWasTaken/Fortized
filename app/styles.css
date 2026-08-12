@@ -16323,3 +16323,52 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-flt-lb{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fs-flt-n{flex:0 0 auto;}
 .fs-flt .fs-soon{flex:0 0 auto;}
+
+/* ══════════ FORTSHOP polish pass 3 ══════════ */
+/* Filters — the gift-picker check must stay a circle; labels must not wrap. */
+.fs-browse.has-rail{grid-template-columns:minmax(0,1fr) 250px;}
+.fs-filters{padding:15px 13px;}
+.fs-flt{gap:12px;padding:9px 11px;}
+.fs-flt .nm-check{flex:0 0 20px!important;width:20px!important;height:20px!important;min-width:20px;min-height:20px;border-radius:50%!important;box-sizing:border-box;aspect-ratio:1/1;}
+.fs-flt-lb{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;}
+.fs-flt-n{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--muted);}
+
+/* Search — a real, polished control, vertically centred in the subnav. */
+.fs-subnav{padding-right:14px;}
+.fs-subnav .qst-subnav-tabs{flex:1;}
+.fs-search{margin-left:auto;align-self:center;height:32px;padding:0 14px;gap:9px;border-radius:100px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);min-width:238px;
+  transition:background .16s var(--ease-out),border-color .16s,box-shadow .16s,min-width .18s var(--ease-out);}
+.fs-search:hover{background:rgba(255,255,255,.09);}
+.fs-search:focus-within{min-width:290px;background:var(--panel2);border-color:rgba(255,249,62,.4);box-shadow:0 0 0 3px rgba(255,249,62,.08);}
+.fs-search svg{width:14px;height:14px;color:var(--muted-light);transition:color .16s;}
+.fs-search:focus-within svg{color:var(--accent);}
+.fs-search input{font-size:12.5px;font-weight:500;line-height:1;}
+.fs-search input::placeholder{color:rgba(255,255,255,.42);font-weight:500;}
+
+/* Featured cards a touch bigger + the row centred under the hero. */
+.fs-row{grid-auto-columns:240px;gap:16px;justify-content:center;}
+.fs-heroblock .fs-rowwrap{margin-top:-158px;}
+.fs-rowarr--l{left:2px;} .fs-rowarr--r{right:2px;}
+
+/* Browse: a collection cover card, then that collection's items, then the next. */
+.fs-colsec{margin-bottom:34px;}
+.fs-colsec .fs-colcard{width:100%;height:184px;margin-bottom:16px;}
+.fs-colsec:last-child{margin-bottom:8px;}
+
+/* Radiance: gift / extend / share buttons carry the same pink→yellow gradient. */
+.radiance-gift-overlay .btn-pink,.radiance-gift-overlay .btn-a,
+#gift-submit-btn,.rad-giftbanner-btn,.rad-cta--primary,
+.ftz-confirm-overlay .btn-pink{
+  background:var(--rad-grad,linear-gradient(115deg,#ef5fb0 0%,#f7a3cf 45%,#fff03e 100%))!important;
+  color:#1a0f18!important;border:2px solid var(--ink);box-shadow:0 4px 0 0 var(--ink);}
+.radiance-gift-overlay .btn-pink:hover,#gift-submit-btn:hover,.rad-giftbanner-btn:hover,
+.ftz-confirm-overlay .btn-pink:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 5px 0 0 var(--ink);}
+.radiance-gift-overlay .btn-pink:active,#gift-submit-btn:active,.ftz-confirm-overlay .btn-pink:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--ink);}
+
+/* Global polish */
+.fs-card-art{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(0,0,0,.20));}
+.fs-grid{gap:16px;}
+.qst-group{align-items:center;}
+.fs-colcard-in{padding:18px 20px;}
+.fs-hero-right{gap:14px;}

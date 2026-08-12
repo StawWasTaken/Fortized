@@ -1,6 +1,19 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Fortshop polish pass 3 (`2026fix465`).** Featured is PINNED to Midnight
+  (`_FS_FEATURED_ID`/`_fsFeaturedCol`); featured cards bigger (240px) + row
+  centred. **Browse** = collection cover card → that collection's items → next
+  collection (`.fs-colsec`), no click-through needed. **Filters fixed** (the
+  `.nm-check` was stretching into an oval — now hard-locked to a 20px circle,
+  rail 250px so labels don't truncate). **Search redesigned** (pill, centred in
+  the subnav, expands + accent ring on focus). **Radiance gift/extend/share
+  buttons** now carry `--rad-grad` (they were transparent); `buyRadiance`/
+  `buyRadiancePlus` moved onto `_fsPurchaseConfirm({variant:'radiance'})`.
+  **Collection theming fixed**: Royal Amethyst (violet) moved Crown Jewels →
+  Midnight, so Crown Jewels stays red/gold.
+  **⚠️ USER IS MAKING THEIR OWN avatar-decoration art** → will drop into each
+  collection's folder; keep the current SVG set until then.
 - **Fortshop polish pass 2 (`2026fix464`).**
   • **5 collections with real art** (`Fortshop Collections/2026 Collections/`):
     Pixel World, Vintage Beats, Crown Jewels, Midnight, Naturals. Each has ≥1

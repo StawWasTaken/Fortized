@@ -16435,3 +16435,12 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-di-collection.is-link:hover .fs-di-collection-go{transform:translateX(2px);opacity:1;}
 /* Bundle names wear a randomized display-name style (font + effect + colour) */
 .fs-bundle-name{font-size:15.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 0 2px;}
+/* Onyx Experience — Featured-style depth, but logo + items centred, no CTA. */
+.fs-hero--center .fs-hero-inner{flex-direction:column;align-items:center;text-align:center;padding-top:46px;}
+.fs-hero--center .fs-hero-logo{display:flex;justify-content:center;width:100%;}
+.fs-hero--center .fs-hero-right{align-items:center;text-align:center;max-width:520px;padding-top:12px;}
+.fs-heroblock--onyx .fs-row{justify-content:center;}
+@media(max-width:820px){.fs-hero--center .fs-hero-inner{padding-top:30px;}}
+/* Onyx: keep the tagline clear of the cards that ride up over the cover. */
+.fs-hero--center .fs-hero-right{padding-bottom:34px;}
+.fs-heroblock--onyx .fs-rowwrap{margin-top:-118px;}

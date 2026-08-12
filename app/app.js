@@ -47818,7 +47818,7 @@ const _FS_ONYX_COL = { id:'onyx', name:'Onyx Experience', accent:'#8f8f9c',
   tagline:'The rarest tier — pitch-black, Onyx-only.',
   coverImg:'/Fortshop%20Collections/Onyx%20Experience/OnyxExperienceCover.png',
   logoImg: '/Fortshop%20Collections/Onyx%20Experience/OnyxExperienceLogo.png',
-  cover:'linear-gradient(120deg,#050506 0%,#0d0d11 55%,#020203 100%)', items:[], noCta:true };
+  cover:'linear-gradient(120deg,#050506 0%,#0d0d11 55%,#020203 100%)', items:[], noCta:true, centered:true };
 const _FS_TABS = ['featured', 'browse', 'onyx'];
 const _FS_ONYX_IC = '<span class="rad-onyx-ic"></span>';
 
@@ -48048,7 +48048,7 @@ function _fsColLogo(col, cls) {
 }
 function _fsColHero(col, sub) {
   const bg = col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col.cover}`;
-  return `<div class="fs-hero${sub ? ' fs-hero--sub' : ''}" style="--fs-acc:${col.accent}">
+  return `<div class="fs-hero${sub ? ' fs-hero--sub' : ''}${col.centered ? ' fs-hero--center' : ''}" style="--fs-acc:${col.accent}">
     <div class="fs-hero-bg" style="${bg}"></div>
     <div class="fs-hero-inner">
       <div class="fs-hero-logo">${_fsColLogo(col, 'fs-hero-lg')}</div>
@@ -48182,10 +48182,11 @@ function _fsBrowse(all) {
 function _fsOnyxTab(all) {
   const list = _fsSortItems(all.filter(_fsIsOnyx));
   const col = { ..._FS_ONYX_COL, items: list.map(i => i.id) };
-  const body = list.length
-    ? `${_fsGroup('Onyx-only items', `<span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span>`)}<div class="fs-grid">${list.map(_fsCard).join('')}</div>`
-    : _fsEmpty('gem', 'Onyx Experience is being restocked', 'Our rarest, Onyx-only items land here. Check back shortly.');
-  return `<div class="fs-onyxblock">${_fsColHero(col, true)}</div>${body}`;
+  if (!list.length) return `<div class="fs-heroblock fs-heroblock--onyx">${_fsColHero(col)}</div>${_fsEmpty('gem', 'Onyx Experience is being restocked', 'Our rarest, Onyx-only items land here. Check back shortly.')}`;
+  return `<div class="fs-heroblock fs-heroblock--onyx">
+    ${_fsColHero(col)}
+    <div class="fs-rowwrap"><div class="fs-row">${list.map(_fsCard).join('')}</div></div>
+  </div>`;
 }
 
 // ── Personalized bundles (per user + month; randomized name + font) ──

@@ -1,6 +1,10 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **Onyx Experience layout (`2026fix472`→`473`).** Now uses the Featured depth
+  treatment — full-bleed hero, cover fading over the TOP HALF of the cards
+  (`.fs-heroblock--onyx .fs-rowwrap{margin-top:-118px}`) — but with the **logo
+  and items CENTRED** (`col.centered` → `.fs-hero--center`) and still no CTA.
 - **Bundle names use real DISPLAY-NAME STYLES (`2026fix471`).** `_fsBundleStyle
   (rng)` picks a random font (`DISPLAY_NAME_FONTS`), effect (`DISPLAY_NAME_EFFECTS`
   → `_getDisplayEffectCSS` + `_getDisplayEffectClass`, so animated effects run)

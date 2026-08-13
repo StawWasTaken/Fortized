@@ -24527,7 +24527,7 @@ function searchEmojis(q) {
     });
   });
   if (!matches.length) {
-    grid.innerHTML = '<div class="epp-empty" style="padding:20px;">No results for "'+escapeHTML(q)+'"</div>';
+    grid.innerHTML = _ftzNotFound('No emoji for "' + q + '"', null, { compact: true });
     return;
   }
   let html = `<div class="epp-section-grid" style="grid-template-columns:repeat(8,1fr);">`;
@@ -26868,7 +26868,7 @@ async function _avGifSearchQuery(q) {
 function _renderAvatarGifResults(items) {
   const grid = document.getElementById('avgif-grid');
   if (!grid) return;
-  if (!items.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No GIFs found</div>'; return; }
+  if (!items.length) { grid.innerHTML = '<div style="grid-column:1/-1;">' + _ftzNotFound('No GIFs found', null, { compact: true }) + '</div>'; return; }
   grid.innerHTML = items.map(g => {
     const thumb = _klipyGifUrl(g, 'sm') || _klipyGifUrl(g, 'xs');
     const full  = _klipyGifUrl(g, 'hd') || _klipyGifUrl(g, 'md') || thumb;
@@ -33707,7 +33707,7 @@ function _renderInviteFriendsList(list) {
   const el = document.getElementById('invite-friends-list');
   if (!el) return;
   if (!list.length) {
-    el.innerHTML = '<div style="padding:20px;text-align:center;color:#949ba4;font-size:13px;">No results found</div>';
+    el.innerHTML = _ftzNotFound('No results found', null, { compact: true });
     return;
   }
   el.innerHTML = list.map(r => {
@@ -34067,7 +34067,7 @@ function _renderBastionInviteFriendsList(list) {
   const el = document.getElementById('bastion-invite-friends-list');
   if (!el) return;
   if (!list.length) {
-    el.innerHTML = '<div style="padding:20px;text-align:center;color:#949ba4;font-size:13px;">No results found</div>';
+    el.innerHTML = _ftzNotFound('No results found', null, { compact: true });
     return;
   }
   el.innerHTML = list.map(r => {
@@ -35298,7 +35298,7 @@ function searchGiphy(q, targetInputId) {
       const res = await fetch(KLIPY_BASE + '/gifs/search?q=' + encodeURIComponent(q) + '&per_page=12&content_filter=medium&customer_id=' + encodeURIComponent(cid));
       const data = await res.json();
       const gifs = data.data?.data || data.data || [];
-      if (!gifs.length) { results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No GIFs found</div>'; return; }
+      if (!gifs.length) { results.innerHTML = '<div style="grid-column:1/-1;">' + _ftzNotFound('No GIFs found', null, { compact: true }) + '</div>'; return; }
       results.innerHTML = gifs.map(gif => {
         const thumb = _klipyGifUrl(gif, 'hd') || _klipyGifUrl(gif, 'md') || _klipyGifUrl(gif, 'sm') || _klipyGifUrl(gif, 'xs');
         const fullUrl = _klipyGifUrl(gif, 'hd') || _klipyGifUrl(gif, 'md') || thumb;
@@ -42314,7 +42314,7 @@ function renderGiphyResults(gifs, inputId) {
   const grid = document.getElementById('giphy-grid');
   if (!grid) return;
   if (!gifs || !gifs.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:8px;"><div style="font-size:24px;opacity:.4;">🔍</div><div style="font-size:12px;color:rgba(255,255,255,.25);">No GIFs found</div></div>';
+    grid.innerHTML = '<div style="grid-column:1/-1;">' + _ftzNotFound('No GIFs found', null, { compact: true }) + '</div>';
     return;
   }
   grid.innerHTML = '<div class="gif-masonry">' + gifs.map(g => {
@@ -46877,7 +46877,7 @@ async function openGameActivityPicker() {
       ? appEntries.filter(a => a.displayName.toLowerCase().includes(filter.toLowerCase()) || a.procName.toLowerCase().includes(filter.toLowerCase()))
       : appEntries;
     if (!filtered.length) {
-      listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">No matches.</div>';
+      listEl.innerHTML = _ftzNotFound('No matches', null, { compact: true });
       return;
     }
     listEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:4px;">'
@@ -48071,6 +48071,29 @@ function _fsCard(item) {
 function _fsGroup(title, right) {
   return `<div class="qst-group"><span class="qst-group-t">${title}</span>${right || ''}</div>`;
 }
+// ── Heroic Search — the shared empty state ──
+// Every dead-end search shows the knight peering into an empty crate. Empty
+// states read better when they're expressive rather than a bare "no results".
+const _FTZ_NOT_FOUND_IMG = '/Icons/MediaNotFound.png';
+const _FTZ_NOT_FOUND_LINES = [
+  'The knight searched far and wide — nothing.',
+  'Empty crate. Not even a spider.',
+  'He looked everywhere. Twice.',
+  'Nothing here but echoes.',
+  'The crate is as empty as his snack pouch.',
+  'Searched the whole realm. Came back with dust.',
+];
+function _ftzNotFound(title, sub, opts) {
+  const o = opts || {};
+  const line = o.sub === undefined
+    ? _FTZ_NOT_FOUND_LINES[Math.floor(Math.random() * _FTZ_NOT_FOUND_LINES.length)]
+    : o.sub;
+  return `<div class="ftz-nf${o.compact ? ' ftz-nf--sm' : ''}${o.cls ? ' ' + o.cls : ''}">
+    <img class="ftz-nf-img" src="${_FTZ_NOT_FOUND_IMG}" alt="" draggable="false" onerror="this.style.display='none'">
+    <div class="ftz-nf-t">${escapeHTML(title || 'Nothing found')}</div>
+    ${sub || line ? `<div class="ftz-nf-s">${escapeHTML(sub || line)}</div>` : ''}
+  </div>`;
+}
 function _fsEmpty(icon, title, sub) {
   return `<div class="qst-empty"><i class="fa-solid fa-${icon}"></i><div class="qst-empty-t">${title}</div><div class="qst-empty-s">${sub}</div></div>`;
 }
@@ -48247,7 +48270,7 @@ function _fsBrowse(all) {
   if (q) {
     let list = all.filter(a => _fsMatches(a, q)).filter(_fsPassesFilters);
     main = _fsGroup(`Results for “${escapeHTML(q)}”`, `<span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span>`)
-      + `<div class="fs-grid">${list.length ? _fsSortItems(list).map(_fsCard).join('') : _fsEmpty('magnifying-glass', 'Nothing matches that', 'Try a different word, or clear the search.')}</div>`;
+      + `<div class="fs-grid">${list.length ? _fsSortItems(list).map(_fsCard).join('') : _ftzNotFound('No loot by that name', 'Try a different word, or clear the search.')}</div>`;
   } else if (col) {
     const list = _fsSortItems(_fsColItems(col));
     main = `<div class="fs-heroblock fs-heroblock--sub">${_fsColHero(col, true)}</div>`
@@ -48257,7 +48280,7 @@ function _fsBrowse(all) {
     const list = _fsSortItems(all.filter(_fsPassesFilters));
     const label = filter === 'decoration' ? 'Avatar Decorations' : filter === 'nameplate' ? 'Nameplates' : filter === 'appearance' ? 'Appearances' : 'Filtered items';
     main = _fsGroup(label, `<span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span>`)
-      + `<div class="fs-grid">${list.length ? list.map(_fsCard).join('') : _fsEmpty('filter-circle-xmark', 'Nothing matches those filters', 'Try removing a colour or a theme.')}</div>`;
+      + `<div class="fs-grid">${list.length ? list.map(_fsCard).join('') : _ftzNotFound('Nothing matches those filters', 'Try removing a colour or a theme.')}</div>`;
   } else {
     main = _fsCollections().map(c => {
       const items = _fsSortItems(_fsColItems(c));
@@ -59471,7 +59494,7 @@ function _runAdvSearch(q) {
       });
     }
 
-    if (!filtered.length && !memberHtml) { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">No results found</div>'; return; }
+    if (!filtered.length && !memberHtml) { results.innerHTML = _ftzNotFound('No results found'); return; }
     let msgHtml = '';
     const totalCount = filtered.length;
     if (filtered.length) {

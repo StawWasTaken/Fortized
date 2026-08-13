@@ -16555,3 +16555,24 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-chip:hover{color:#fff;border-color:var(--muted);}
 .fs-chip:active{transform:scale(.97);}
 .fs-chip.is-on{background:var(--accent);border-color:var(--accent);color:#13161d;}
+
+/* ══════════ "Heroic Search" — the shared empty state ══════════
+   A dead end should feel light-hearted, not broken. The knight peers into an
+   empty crate whenever a search comes back with nothing. */
+.ftz-nf{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:38px 22px 42px;gap:4px;width:100%;grid-column:1/-1;animation:ftzNfIn .32s var(--ease-out) both;}
+.ftz-nf-img{width:132px;height:auto;object-fit:contain;margin-bottom:12px;
+  filter:drop-shadow(0 10px 22px rgba(0,0,0,.45));animation:ftzNfBob 3.6s ease-in-out infinite;}
+.ftz-nf-t{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--text);}
+.ftz-nf-s{font-size:12.5px;color:var(--muted-light);max-width:300px;line-height:1.5;}
+.ftz-nf--sm{padding:22px 16px 26px;}
+.ftz-nf--sm .ftz-nf-img{width:88px;margin-bottom:9px;}
+.ftz-nf--sm .ftz-nf-t{font-size:14px;}
+.ftz-nf--sm .ftz-nf-s{font-size:11.5px;}
+@keyframes ftzNfIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+/* A gentle bob — just enough life to feel friendly, never distracting. */
+@keyframes ftzNfBob{0%,100%{transform:translateY(0) rotate(-1deg);}50%{transform:translateY(-7px) rotate(1deg);}}
+@media (prefers-reduced-motion: reduce){
+  .ftz-nf-img{animation:none;}
+  .ftz-nf{animation:none;}
+}

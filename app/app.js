@@ -48502,6 +48502,343 @@ function _fsItemBackdrop(item, col) {
   return `background-image:${item.gradient || 'linear-gradient(120deg,#14161d,#1f232b)'}`;
 }
 
+// ════════════════════════════════════════════════════════════
+// TRADING — send a trade request to a friend or another user, offering
+// Onyx and/or Fortshop items and asking for Onyx and/or items back.
+// Uses the Fortshop card language throughout (nm-row picker, fs-btn,
+// ftz-confirm-card popups) so it reads as the same app.
+// ════════════════════════════════════════════════════════════
+const _FS_TRADE_POLICIES = [
+  { id: 'everyone', label: 'Everyone',        desc: 'Anyone on Fortized can send you a trade request.' },
+  { id: 'friends',  label: 'Friends only',    desc: 'Only people on your friends list.' },
+  { id: 'bastion',  label: 'Bastion members', desc: 'Friends, plus people who share a Bastion with you.' },
+  { id: 'nobody',   label: 'No one',          desc: 'Turn trade requests off completely.' },
+];
+async function _fsSetTradePolicy(id) {
+  CU.tradePolicy = id;
+  try { await saveUser(true); } catch {}
+  toast('Trade requests: ' + (_FS_TRADE_POLICIES.find(o => o.id === id)?.label || id), 'success');
+  try { buildProfileView('safety'); } catch {}
+}
+// Keep the topbar Trade badge in sync with pending incoming trades.
+function _fsSyncTradeBadge() {
+  const b = document.getElementById('fs-trade-badge'); if (!b) return;
+  const n = _fsPendingTradeCount();
+  b.textContent = n > 9 ? '9+' : String(n);
+  b.style.display = n ? '' : 'none';
+}
+function _fsTradePolicy(u) { return (u && u.tradePolicy) || 'friends'; }
+function _fsTrades(dir) { const k = dir === 'out' ? 'tradesOutgoing' : 'tradesIncoming'; return Array.isArray(CU?.[k]) ? CU[k] : []; }
+function _fsPendingTradeCount() { return _fsTrades('in').filter(t => t.status === 'pending').length; }
+
+// Can `me` receive a trade request from `sender`? Mirrors the friend-request
+// policy shape so both read the same way.
+function _fsCanTrade(targetUser, senderName) {
+  const p = _fsTradePolicy(targetUser);
+  if (p === 'nobody') return false;
+  if (p === 'everyone') return true;
+  const friends = Array.isArray(targetUser?.friends) ? targetUser.friends.map(f => (f.username || f || '').toLowerCase()) : [];
+  if (friends.includes(String(senderName || '').toLowerCase())) return true;
+  if (p === 'bastion') {
+    const mine = (targetUser?.bastions || []).map(b => b.id);
+    const theirs = (CU?.bastions || []).map(b => b.id);
+    return mine.some(id => theirs.includes(id));
+  }
+  return false;
+}
+
+// ── Trade draft state ──
+function _fsTradeDraft() {
+  if (!window._fsDraft) window._fsDraft = { to: null, giveOnyx: 0, getOnyx: 0, give: [], get: [] };
+  return window._fsDraft;
+}
+function _fsTradeReset() { window._fsDraft = null; }
+function _fsTradeSetTab(t) { window._fsTradeTab = t; _fsTradeRender(); }
+function _fsTradePick(name) { const d = _fsTradeDraft(); d.to = name; _fsTradeRender(); }
+function _fsTradeToggleItem(side, id) {
+  const d = _fsTradeDraft(); const arr = d[side];
+  const i = arr.indexOf(id);
+  i >= 0 ? arr.splice(i, 1) : arr.push(id);
+  _fsTradeRender();
+}
+function _fsTradeSetOnyx(side, v) {
+  const d = _fsTradeDraft();
+  const n = Math.max(0, Math.min(999999, parseInt(v, 10) || 0));
+  d[side === 'give' ? 'giveOnyx' : 'getOnyx'] = n;
+}
+
+// ── The trade hub ──
+function _fsOpenTrade(tab) {
+  window._fsTradeTab = tab || 'new';
+  document.getElementById('fs-trade-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'fs-trade-modal';
+  overlay.onclick = e => { if (e.target === overlay) { overlay.remove(); _fsTradeReset(); } };
+  overlay.innerHTML = `<div class="ftz-confirm-card ftz-ac-card fs-trade" role="dialog" aria-label="Trades"></div>`;
+  document.body.appendChild(overlay);
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') { overlay.remove(); _fsTradeReset(); } });
+  _fsTradeRender();
+  setTimeout(() => overlay.focus(), 0);
+}
+function _fsTradeRender() {
+  const card = document.querySelector('#fs-trade-modal .fs-trade'); if (!card) return;
+  const tab = window._fsTradeTab || 'new';
+  const inc = _fsTrades('in').filter(t => t.status === 'pending');
+  const out = _fsTrades('out').filter(t => t.status === 'pending');
+  const tb = (id, label, n) => `<button class="fs-trade-tab${tab === id ? ' active' : ''}" onclick="_fsTradeSetTab('${id}')">${label}${n ? `<span class="fs-trade-n">${n}</span>` : ''}</button>`;
+  card.innerHTML = `
+    <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-trade-modal')?.remove();_fsTradeReset()">&times;</button>
+    <div class="ftz-ac-hero ftz-ac-hero--noicon">
+      <div class="ftz-ac-title">Trades</div>
+      <div class="ftz-ac-sub">Swap Onyx and Fortshop items with other players.</div>
+    </div>
+    <div class="fs-trade-tabs">${tb('new', 'New trade')}${tb('in', 'Incoming', inc.length)}${tb('out', 'Sent', out.length)}</div>
+    <div class="ftz-ac-body fs-trade-body">${tab === 'in' ? _fsTradeList(inc, 'in') : tab === 'out' ? _fsTradeList(out, 'out') : _fsTradeBuilder()}</div>`;
+}
+
+function _fsTradeList(list, dir) {
+  if (!list.length) return _ftzNotFound(dir === 'in' ? 'No incoming trades' : 'No trades sent', dir === 'in' ? 'When someone offers you a trade, it lands here.' : 'Offers you send will show up here until they’re answered.');
+  return `<div class="fs-trade-list">${list.map(t => {
+    const who = escapeHTML(t.with || '');
+    const sum = (onyx, ids) => {
+      const parts = [];
+      if (onyx) parts.push(`<span class="fs-trade-onyx">${_FS_ONYX_IC}${onyx}</span>`);
+      (ids || []).forEach(id => { const it = _fsCatalogue().find(a => a.id === id); if (it) parts.push(`<span class="fs-trade-chip">${escapeHTML(it.name)}</span>`); });
+      return parts.length ? parts.join('') : '<span class="fs-trade-none">nothing</span>';
+    };
+    return `<div class="fs-trade-row">
+      <div class="fs-trade-who"><i class="fa-solid fa-right-left"></i> ${dir === 'in' ? `<b>${who}</b> offers` : `You offered <b>${who}</b>`}</div>
+      <div class="fs-trade-sides">
+        <div class="fs-trade-side"><span class="fs-trade-lb">${dir === 'in' ? 'They give' : 'You give'}</span><div class="fs-trade-items">${sum(t.theyGiveOnyx, t.theyGive)}</div></div>
+        <i class="fa-solid fa-arrow-right fs-trade-arrow"></i>
+        <div class="fs-trade-side"><span class="fs-trade-lb">${dir === 'in' ? 'You give' : 'They give'}</span><div class="fs-trade-items">${sum(t.youGiveOnyx, t.youGive)}</div></div>
+      </div>
+      <div class="fs-trade-acts">
+        ${dir === 'in'
+          ? `<button class="fs-btn fs-btn--primary" onclick="_fsTradeRespond('${t.id}',true)">Accept</button>
+             <button class="fs-btn" onclick="_fsTradeRespond('${t.id}',false)">Decline</button>`
+          : `<button class="fs-btn" onclick="_fsTradeCancel('${t.id}')">Cancel</button>`}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function _fsTradeBuilder() {
+  const d = _fsTradeDraft();
+  const friends = (CU?.friends || []).map(f => (f.username || f)).filter(Boolean);
+  const CHK = '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+  if (!d.to) {
+    const rows = friends.length
+      ? friends.map(n => `<div class="nm-row fs-trade-friend" onclick="_fsTradePick('${escapeHTML(n).replace(/'/g, "\\'")}')">
+          <span class="nm-check"></span>
+          <span class="fs-trade-fn">${escapeHTML(n)}</span>
+          <i class="fa-solid fa-chevron-right fs-trade-go"></i>
+        </div>`).join('')
+      : _ftzNotFound('No friends to trade with', 'Add a friend first, or search for someone by username.');
+    return `<div class="fs-trade-step">
+      <div class="fs-trade-h">Who are you trading with?</div>
+      <div class="fs-search fs-trade-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg><input id="fs-trade-find" placeholder="Search by username" oninput="_fsTradeFilter(this.value)"></div>
+      <div class="fs-trade-friends" id="fs-trade-friends">${rows}</div>
+    </div>`;
+  }
+  const owned = _fsCatalogue().filter(_fsIsOwned);
+  const wanted = _fsCatalogue().filter(a => !_fsIsOwned(a));
+  const grid = (list, side) => list.length
+    ? `<div class="fs-trade-grid">${list.map(it => `<button class="fs-trade-item${d[side].includes(it.id) ? ' is-on' : ''}" onclick="_fsTradeToggleItem('${side}','${it.id}')">
+        <span class="fs-trade-item-art">${_fsPreview(it)}</span>
+        <span class="fs-trade-item-n">${escapeHTML(it.name)}</span>
+        ${d[side].includes(it.id) ? `<span class="fs-trade-tick">${CHK}</span>` : ''}
+      </button>`).join('')}</div>`
+    : `<div class="fs-trade-empty">${side === 'give' ? 'You don’t own anything tradeable yet.' : 'Nothing left to ask for — you own it all.'}</div>`;
+  return `<div class="fs-trade-step">
+    <div class="fs-trade-with">
+      <span>Trading with <b>${escapeHTML(d.to)}</b></span>
+      <button class="fs-clear" onclick="window._fsDraft.to=null;_fsTradeRender()"><i class="fa-solid fa-xmark"></i> Change</button>
+    </div>
+    <div class="fs-trade-cols">
+      <div class="fs-trade-col">
+        <div class="fs-trade-h">You give</div>
+        <label class="fs-trade-onyxin">${_FS_ONYX_IC}<input type="number" min="0" value="${d.giveOnyx}" oninput="_fsTradeSetOnyx('give',this.value)" placeholder="0"></label>
+        ${grid(owned, 'give')}
+      </div>
+      <div class="fs-trade-col">
+        <div class="fs-trade-h">You get</div>
+        <label class="fs-trade-onyxin">${_FS_ONYX_IC}<input type="number" min="0" value="${d.getOnyx}" oninput="_fsTradeSetOnyx('get',this.value)" placeholder="0"></label>
+        ${grid(wanted, 'get')}
+      </div>
+    </div>
+    <div class="fs-trade-foot">
+      <button class="fs-btn" onclick="document.getElementById('fs-trade-modal')?.remove();_fsTradeReset()">Cancel</button>
+      <button class="fs-btn fs-btn--primary" onclick="_fsSendTrade()">Send trade request</button>
+    </div>
+  </div>`;
+}
+function _fsTradeFilter(q) {
+  q = (q || '').toLowerCase();
+  document.querySelectorAll('#fs-trade-friends .fs-trade-friend').forEach(r => {
+    const n = r.querySelector('.fs-trade-fn')?.textContent?.toLowerCase() || '';
+    r.style.display = n.includes(q) ? '' : 'none';
+  });
+}
+
+async function _fsSendTrade() {
+  const d = _fsTradeDraft();
+  if (!d.to) { toast('Pick someone to trade with first.', 'error'); return; }
+  const giving = d.giveOnyx > 0 || d.give.length;
+  const getting = d.getOnyx > 0 || d.get.length;
+  if (!giving && !getting) { toast('Add something to the trade first.', 'error'); return; }
+  if (d.giveOnyx > (CU?.onyx || 0)) { toast('You don’t have that much Onyx.', 'error'); return; }
+  let target = null;
+  try { target = await FortizedSocial.getUserByName(d.to, { noCache: true }); } catch {}
+  if (!target) { toast('Couldn’t find that user.', 'error'); return; }
+  if (!_fsCanTrade(target, CU.username)) { toast(`${d.to} isn’t accepting trade requests from you.`, 'error'); return; }
+  const trade = {
+    id: 'tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    from: CU.username, to: d.to, status: 'pending', at: Date.now(),
+    youGiveOnyx: d.giveOnyx, youGive: d.give.slice(),
+    theyGiveOnyx: d.getOnyx, theyGive: d.get.slice(),
+  };
+  CU.tradesOutgoing = [...(CU.tradesOutgoing || []), { ...trade, with: d.to }];
+  try { await saveUser(true); } catch {}
+  // Deliver to the recipient: mirrored so their "You give" is our "They give".
+  try {
+    const mirrored = { ...trade, with: CU.username, youGiveOnyx: trade.theyGiveOnyx, youGive: trade.theyGive, theyGiveOnyx: trade.youGiveOnyx, theyGive: trade.youGive };
+    target.tradesIncoming = [...(target.tradesIncoming || []), mirrored];
+    await FortizedSocial.saveUserObject(target, { fields: ['tradesIncoming'] });
+    FortizedSocial.addNotification?.(d.to, { type: 'trade', from: CU.username, text: `${CU.displayName || CU.username} sent you a trade request`, at: Date.now() });
+  } catch (e) { console.warn('[Trade] deliver failed', e); }
+  toast('Trade request sent!', 'success');
+  _fsTradeReset();
+  window._fsTradeTab = 'out';
+  _fsTradeRender();
+}
+
+async function _fsTradeRespond(id, accept) {
+  const list = _fsTrades('in');
+  const t = list.find(x => x.id === id); if (!t) return;
+  if (accept) {
+    if ((t.youGiveOnyx || 0) > (CU?.onyx || 0)) { toast('You don’t have enough Onyx for this trade.', 'error'); return; }
+    _fsPurchaseConfirm({
+      title: 'Trade with ' + t.with,
+      subtitle: `You give ${t.youGiveOnyx || 0} Onyx${t.youGive?.length ? ' + ' + t.youGive.length + ' item(s)' : ''}`,
+      priceOnyx: t.youGiveOnyx || 0,
+      onConfirm: () => _fsSettleTrade(t, true),
+    });
+    return;
+  }
+  _fsSettleTrade(t, false);
+}
+async function _fsSettleTrade(t, accepted) {
+  t.status = accepted ? 'accepted' : 'declined';
+  if (accepted) {
+    CU.onyx = (CU.onyx || 0) - (t.youGiveOnyx || 0) + (t.theyGiveOnyx || 0);
+    (t.youGive || []).forEach(id => {
+      const it = _fsCatalogue().find(a => a.id === id); if (!it) return;
+      const key = it.kind === 'decoration' ? 'ownedDecorations' : it.kind === 'nameplate' ? 'ownedNameplates' : 'unlockedAppearances';
+      CU[key] = (CU[key] || []).filter(x => x !== id);
+    });
+    (t.theyGive || []).forEach(id => {
+      const it = _fsCatalogue().find(a => a.id === id); if (!it) return;
+      const key = it.kind === 'decoration' ? 'ownedDecorations' : it.kind === 'nameplate' ? 'ownedNameplates' : 'unlockedAppearances';
+      CU[key] = [...new Set([...(CU[key] || []), id])];
+    });
+  }
+  CU.tradesIncoming = _fsTrades('in').filter(x => x.id !== t.id);
+  try { await saveUser(true); } catch {}
+  if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
+  toast(accepted ? 'Trade complete!' : 'Trade declined.', accepted ? 'success' : 'info');
+  _fsTradeRender();
+  try { renderAtelierTab('shop'); } catch {}
+}
+async function _fsTradeCancel(id) {
+  CU.tradesOutgoing = _fsTrades('out').filter(x => x.id !== id);
+  try { await saveUser(true); } catch {}
+  toast('Trade request cancelled.', 'info');
+  _fsTradeRender();
+}
+
+// ════════════════════════════════════════════════════════════
+// RESELLING — collectible items can be listed by their owners. Each listing
+// carries a serial number; the item popup shows a price history and the
+// current sellers. No collectibles ship yet; the system is ready for them.
+// ════════════════════════════════════════════════════════════
+function _fsIsCollectible(item) { return !!item.collectible; }
+function _fsListings(itemId) {
+  const all = (typeof window !== 'undefined' && window._fsMarket) || {};
+  return (all[itemId] || []).slice().sort((a, b) => a.price - b.price);
+}
+// Price history → a compact SVG chart (volume bars + price line). No libraries.
+function _fsPriceChart(points) {
+  if (!points || points.length < 2) return '';
+  const W = 560, H = 150, PAD = { l: 34, r: 30, t: 12, b: 22 };
+  const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
+  const maxP = Math.max(...points.map(p => p.price)) * 1.15 || 1;
+  const maxV = Math.max(...points.map(p => p.volume)) || 1;
+  const x = i => PAD.l + (points.length === 1 ? iw / 2 : (i / (points.length - 1)) * iw);
+  const y = v => PAD.t + ih - (v / maxP) * ih;
+  const bars = points.map((p, i) => {
+    const bh = (p.volume / maxV) * ih;
+    const bw = Math.max(8, iw / points.length * 0.5);
+    return `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${(PAD.t + ih - bh).toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="rgba(255,255,255,.10)"/>`;
+  }).join('');
+  const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.price).toFixed(1)}`).join(' ');
+  const dots = points.map((p, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(p.price).toFixed(1)}" r="3.2" fill="var(--green,#3ecf6e)"/>`).join('');
+  const ticks = [0, .5, 1].map(f => {
+    const v = Math.round(maxP * f), yy = y(v);
+    return `<line x1="${PAD.l}" y1="${yy.toFixed(1)}" x2="${W - PAD.r}" y2="${yy.toFixed(1)}" stroke="rgba(255,255,255,.06)"/><text x="4" y="${(yy + 3.5).toFixed(1)}" class="fs-ch-ax">${v}</text>`;
+  }).join('');
+  const labels = points.map((p, i) => (i === 0 || i === points.length - 1 || points.length <= 5)
+    ? `<text x="${x(i).toFixed(1)}" y="${H - 6}" class="fs-ch-ax" text-anchor="middle">${escapeHTML(p.label || '')}</text>` : '').join('');
+  return `<svg class="fs-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Price history">
+    ${ticks}${bars}
+    <path d="${line}" fill="none" stroke="var(--green,#3ecf6e)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}${labels}
+  </svg>`;
+}
+function _fsResellPanel(item) {
+  if (!_fsIsCollectible(item)) return '';
+  const hist = item.history || [];
+  const listings = _fsListings(item.id);
+  const sales = hist.reduce((s, p) => s + (p.volume || 0), 0);
+  const avg = hist.length ? Math.round(hist.reduce((s, p) => s + p.price, 0) / hist.length) : item.price;
+  const owned = _fsIsOwned(item);
+  return `<div class="fs-resell">
+    <div class="qst-group"><span class="qst-group-t">Price history</span>${owned ? `<button class="fs-clear" onclick="_fsListForResale('${item.id}')"><i class="fa-solid fa-tag"></i> List mine</button>` : ''}</div>
+    ${hist.length >= 2 ? `<div class="fs-chart-wrap">
+      <div class="fs-chart-key"><span><i class="fa-solid fa-square" style="color:var(--green)"></i> Price</span><span><i class="fa-solid fa-square" style="color:rgba(255,255,255,.3)"></i> Volume</span></div>
+      ${_fsPriceChart(hist)}
+      <div class="fs-chart-stats">
+        <div><span class="fs-ch-k">Sales</span><span class="fs-ch-v">${sales.toLocaleString()}</span></div>
+        <div><span class="fs-ch-k">Original price</span><span class="fs-ch-v">${_FS_ONYX_IC}${item.price}</span></div>
+        <div><span class="fs-ch-k">Average price</span><span class="fs-ch-v">${_FS_ONYX_IC}${avg}</span></div>
+      </div>
+    </div>` : `<div class="fs-chart-wrap fs-chart-wrap--empty">No sales yet — this collectible hasn’t been resold.</div>`}
+    <div class="qst-group"><span class="qst-group-t">Resellers</span><span class="qst-group-note">${listings.length} listing${listings.length === 1 ? '' : 's'}</span></div>
+    ${listings.length ? `<div class="fs-sellers">${listings.map(l => `<div class="fs-seller">
+        <span class="fs-seller-art">${_fsPreview(item)}</span>
+        <span class="fs-seller-i"><b>${escapeHTML(l.seller)}</b><span class="fs-seller-p">${_FS_ONYX_IC}${l.price}</span><span class="fs-seller-s">Serial #${l.serial}</span></span>
+        <button class="fs-btn fs-btn--primary fs-seller-buy" onclick="_fsBuyListing('${item.id}','${l.id}')"><i class="fa-solid fa-cart-shopping"></i> Buy</button>
+      </div>`).join('')}</div>`
+      : _ftzNotFound('No one is reselling this', 'When owners list their copy, it shows up here.', { compact: true })}
+  </div>`;
+}
+function _fsListForResale(id) {
+  const item = _fsCatalogue().find(a => a.id === id); if (!item) return;
+  toast('Resale listings open once collectibles launch.', 'info');
+}
+function _fsBuyListing(itemId, listingId) {
+  const item = _fsCatalogue().find(a => a.id === itemId); if (!item) return;
+  const l = _fsListings(itemId).find(x => x.id === listingId); if (!l) return;
+  _fsPurchaseConfirm({
+    title: `${item.name} · Serial #${l.serial}`,
+    subtitle: `Resold by ${l.seller}`,
+    priceOnyx: l.price,
+    onConfirm: () => toast('Resale purchases open once collectibles launch.', 'info'),
+  });
+}
+
 // ── Item-detail popup ──
 function _fsOpenItem(id) {
   const item = _fsCatalogue().find(a => a.id === id); if (!item) return;
@@ -48528,6 +48865,7 @@ function _fsOpenItem(id) {
         <div class="fs-di-type">${_fsKindLabel(item)}${onyxTag ? ' · Onyx' : ''}</div>
         <div class="fs-di-desc">${escapeHTML(item.desc || '')}</div>
         ${_fsPriceBlock(item, true)}
+        ${_fsIsCollectible(item) ? '<div class="fs-di-collectible"><i class="fa-solid fa-certificate"></i> Collectible · resellable</div>' : ''}
         <div class="fs-di-actions">
           ${action}
           <button class="fs-btn fs-di-gift" title="Send as a gift" onclick="openGiftModal('${item.id}')">${_svgIcon('gift', 15)}</button>
@@ -60422,6 +60760,18 @@ function _renderSafetyMerged(main) {
       <div class="voice-section__title">Friend Requests</div>
       <div class="voice-section__desc">Who can send you a friend request. Off for everyone? Only invite-only adds will work.</div>
       ${friendRows}
+    </div>
+
+    <div class="voice-section" data-spy="trades">
+      <div class="voice-section__title">Trade Requests</div>
+      <div class="voice-section__desc">Who can offer you a trade. Trades can include Onyx, Fortshop items, or both.</div>
+      ${_FS_TRADE_POLICIES.map(o => {
+        const on = _fsTradePolicy(CU) === o.id;
+        return `<div class="nm-row fs-trade-pol${on ? ' sel' : ''}" role="radio" aria-checked="${on}" tabindex="0" onclick="_fsSetTradePolicy('${o.id}')">
+          <span class="nm-check">${on ? '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>' : ''}</span>
+          <span class="fs-trade-pol-t"><b>${o.label}</b><span>${o.desc}</span></span>
+        </div>`;
+      }).join('')}
     </div>
 
     <div class="voice-section" data-spy="blocked">

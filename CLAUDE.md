@@ -1,6 +1,32 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **TRADING + RESELLING + Heroic Search (`2026fix480`→`481`).**
+  • **Heroic Search** — shared empty state `_ftzNotFound(title, sub, opts)`
+    (`/Icons/MediaNotFound.png`, rotating whimsical lines, `compact` variant,
+    reduced-motion safe). Wired into Fortshop search+filters, emoji/sticker
+    picker, all 3 GIF surfaces, quick switcher, generic search panels.
+  • **Trading** — `Trade` button in the Fortshop subnav (badge = pending
+    incoming). `_fsOpenTrade()` hub with tabs New trade / Incoming / Sent.
+    Builder = friend picker (`nm-row`) → two columns (You give / You get) with
+    an Onyx input + owned/wanted item pickers. `_fsSendTrade` validates policy
+    via `_fsCanTrade`, writes `tradesOutgoing` on the sender and a MIRRORED
+    `tradesIncoming` on the recipient + a notification. `_fsTradeRespond`/
+    `_fsSettleTrade` move Onyx + items both ways; accept goes through the Terms
+    purchase card. Settings → Safety → **Trade Requests** policy
+    (`_FS_TRADE_POLICIES`: everyone / friends / bastion / nobody, default
+    friends; `CU.tradePolicy`).
+  • **Reselling** — `_fsResellPanel(item)` shows for `collectible:true` items:
+    a dependency-free SVG **price history** chart (`_fsPriceChart`, volume bars
+    + price line + Sales/Original/Average stats) and a **resellers** list
+    (seller, price, serial, Buy). `window._fsMarket` holds listings.
+    ⚠️ No collectibles exist yet — the system is built and ready; listing +
+    buying currently toast "opens once collectibles launch" and need the
+    server-side inventory/serial work.
+  **⚠️ NEXT (user's queue):** polish the **Friends** and **Quests** pages, and
+  slightly the **Radiance** page, using the Fortshop card language
+  (`.fs-card`/`.fs-btn`/`.qst-group`/`_ftzNotFound`). Gift system rework also
+  still pending.
 - **Onyx polish + hero fade + gift-when-owned (`2026fix476`→`478`).**
   • Onyx-only items now use the **Onyx Experience cover art** as their popup
     backdrop (`_fsItemBackdrop`: collection art → Onyx art → item gradient).

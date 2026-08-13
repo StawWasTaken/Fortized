@@ -47876,6 +47876,45 @@ const _FS_COLLECTIONS = [
     items:['green_leaves','deco_wildgrass','np_naturals'] },
 ];
 const _FS_FEATURED_ID = 'midnight';   // which collection headlines the Featured tab
+const _FS_COLOURS = [
+  { id:'purple', hex:'#a855f7' }, { id:'blue', hex:'#3b82f6' }, { id:'green', hex:'#22c55e' },
+  { id:'brown',  hex:'#8b5a2b' }, { id:'yellow', hex:'#eab308' }, { id:'orange', hex:'#f97316' },
+  { id:'red',    hex:'#ef4444' }, { id:'pink', hex:'#ec4899' }, { id:'white', hex:'#e5e7eb' },
+  { id:'black',  hex:'#111114' },
+];
+const _FS_THEMES = [
+  { id:'anime',   name:'Anime',        ic:'fa-wand-magic-sparkles' },
+  { id:'gaming',  name:'Gaming',       ic:'fa-gamepad' },
+  { id:'cute',    name:'Cute & Cosy',  ic:'fa-mug-hot' },
+  { id:'scifi',   name:'Sci-Fi',       ic:'fa-meteor' },
+  { id:'food',    name:'Food & Drinks',ic:'fa-burger' },
+  { id:'fantasy', name:'Fantasy',      ic:'fa-dragon' },
+  { id:'animals', name:'Animals & Pets',ic:'fa-paw' },
+  { id:'nature',  name:'Nature',       ic:'fa-leaf' },
+  { id:'films',   name:'Films & TV',   ic:'fa-clapperboard' },
+  { id:'dark',    name:'Dark & Moody', ic:'fa-moon' },
+];
+// Item → taxonomy. Kept in one place so new items only need tagging here.
+const _FS_TAGS = {
+  midnight_citadel:{ colour:'purple', themes:['dark','fantasy','scifi'] },
+  royal_amethyst:  { colour:'purple', themes:['dark','fantasy'] },
+  obsidian_ember:  { colour:'red',    themes:['dark','fantasy'] },
+  green_leaves:    { colour:'green',  themes:['nature','cute'] },
+  onyx_pure:       { colour:'black',  themes:['dark','scifi'] },
+  deco_starfall:   { colour:'purple', themes:['fantasy','scifi','dark'] },
+  deco_wildgrass:  { colour:'green',  themes:['nature','cute'] },
+  deco_regalia:    { colour:'yellow', themes:['fantasy'] },
+  deco_pixel:      { colour:'green',  themes:['gaming','scifi'] },
+  deco_memphis:    { colour:'purple', themes:['gaming','cute'] },
+  np_midnight:     { colour:'purple', themes:['dark','fantasy'] },
+  np_naturals:     { colour:'green',  themes:['nature'] },
+  np_jewels:       { colour:'red',    themes:['fantasy'] },
+  np_pixel:        { colour:'green',  themes:['gaming'] },
+  np_vintage:      { colour:'purple', themes:['gaming','cute'] },
+  np_onyx:         { colour:'black',  themes:['dark'] },
+};
+function _fsTagsOf(item) { return _FS_TAGS[item.id] || {}; }
+
 function _fsCollections() { return _FS_COLLECTIONS.slice().sort((a, b) => b.order - a.order); }
 function _fsFeaturedCol() { return _FS_COLLECTIONS.find(c => c.id === _FS_FEATURED_ID) || _fsCollections()[0]; }
 function _fsColItems(col) { const all = _fsCatalogue(); return (col.items || []).map(id => all.find(a => a.id === id)).filter(Boolean); }
@@ -48134,24 +48173,52 @@ function _fsSortItems(list) {
 }
 function _fsSetSort(v) { window._fsSort = v; try { renderAtelierTab('shop'); } catch {} }
 function _fsSetFilter(id, on) { window._fsFilter = on ? id : null; window._fsCol = null; try { renderAtelierTab('shop'); } catch {} }
+function _fsSetColour(id) { window._fsColour = (window._fsColour === id) ? null : id; window._fsCol = null; try { renderAtelierTab('shop'); } catch {} }
+function _fsToggleTheme(id) {
+  const set = new Set(window._fsThemes || []);
+  set.has(id) ? set.delete(id) : set.add(id);
+  window._fsThemes = [...set]; window._fsCol = null;
+  try { renderAtelierTab('shop'); } catch {}
+}
+function _fsClearFilters() { window._fsFilter = null; window._fsColour = null; window._fsThemes = []; try { renderAtelierTab('shop'); } catch {} }
+function _fsAnyFilter() { return !!(window._fsFilter || window._fsColour || (window._fsThemes || []).length); }
+// An item passes when it satisfies EVERY active facet (kind AND colour AND
+// every selected theme is at least partially matched — themes are OR within
+// the facet, which is how people expect chip filters to behave).
+function _fsPassesFilters(item) {
+  const t = _fsTagsOf(item);
+  if (window._fsFilter && item.kind !== window._fsFilter) return false;
+  if (window._fsColour && t.colour !== window._fsColour) return false;
+  const th = window._fsThemes || [];
+  if (th.length && !th.some(x => (t.themes || []).includes(x))) return false;
+  return true;
+}
 function _fsToggleFilters() { const cur = (window._fsFiltersOpen === undefined) ? true : !!window._fsFiltersOpen; window._fsFiltersOpen = !cur; try { renderAtelierTab('shop'); } catch {} }
 function _fsFilterRail() {
   const f = window._fsFilter || null;
+  const colour = window._fsColour || null;
+  const themes = window._fsThemes || [];
   const CHK = '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+  const all = _fsCatalogue();
+  const n = k => all.filter(a => a.kind === k).length;
   const row = (id, label, count, soon) => `<div class="fs-flt nm-row${f === id ? ' sel' : ''}${soon ? ' is-soon' : ''}" role="checkbox" aria-checked="${f === id}" tabindex="${soon ? -1 : 0}" ${soon ? '' : `onclick="_fsSetFilter('${id}',${f !== id})"`}>
       <span class="nm-check">${f === id ? CHK : ''}</span>
       <span class="fs-flt-lb">${label}</span>
       ${soon ? '<span class="fs-soon">soon</span>' : `<span class="fs-flt-n">${count}</span>`}
     </div>`;
-  const all = _fsCatalogue();
-  const n = k => all.filter(a => a.kind === k).length;
+  const swatches = _FS_COLOURS.map(c => `<button class="fs-sw${colour === c.id ? ' is-on' : ''}" style="--sw:${c.hex}" title="${c.id[0].toUpperCase() + c.id.slice(1)}" aria-pressed="${colour === c.id}" onclick="_fsSetColour('${c.id}')"></button>`).join('');
+  const chips = _FS_THEMES.map(t => `<button class="fs-chip${themes.includes(t.id) ? ' is-on' : ''}" aria-pressed="${themes.includes(t.id)}" onclick="_fsToggleTheme('${t.id}')"><i class="fa-solid ${t.ic}"></i> ${escapeHTML(t.name)}</button>`).join('');
   return `<aside class="fs-filters">
     <div class="fs-filters-h">Show only</div>
     ${row('appearance', 'Appearances', n('appearance'))}
     ${row('decoration', 'Avatar Decorations', n('decoration'))}
     ${row('nameplate', 'Nameplates', n('nameplate'))}
     ${row('effect', 'Profile Effects', 0, true)}
-    ${f ? `<button class="fs-clear fs-flt-clear" onclick="_fsSetFilter('${f}',false)"><i class="fa-solid fa-xmark"></i> Clear filter</button>` : ''}
+    <div class="fs-filters-h fs-filters-h--sp">Colour</div>
+    <div class="fs-swatches">${swatches}</div>
+    <div class="fs-filters-h fs-filters-h--sp">Themes</div>
+    <div class="fs-chips">${chips}</div>
+    ${_fsAnyFilter() ? `<button class="fs-clear fs-flt-clear" onclick="_fsClearFilters()"><i class="fa-solid fa-xmark"></i> Clear all filters</button>` : ''}
   </aside>`;
 }
 // A rounded collection card (cover + logo) for the Browse landing.
@@ -48178,8 +48245,7 @@ function _fsBrowse(all) {
   </div>`;
   let main;
   if (q) {
-    let list = all.filter(a => _fsMatches(a, q));
-    if (filter) list = list.filter(a => a.kind === filter);
+    let list = all.filter(a => _fsMatches(a, q)).filter(_fsPassesFilters);
     main = _fsGroup(`Results for “${escapeHTML(q)}”`, `<span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span>`)
       + `<div class="fs-grid">${list.length ? _fsSortItems(list).map(_fsCard).join('') : _fsEmpty('magnifying-glass', 'Nothing matches that', 'Try a different word, or clear the search.')}</div>`;
   } else if (col) {
@@ -48187,11 +48253,11 @@ function _fsBrowse(all) {
     main = `<div class="fs-heroblock fs-heroblock--sub">${_fsColHero(col, true)}</div>`
       + _fsGroup(escapeHTML(col.name), `<button class="fs-clear" onclick="window._fsCol=null;renderAtelierTab('shop')"><i class="fa-solid fa-xmark"></i> All collections</button>`)
       + `<div class="fs-grid">${list.map(_fsCard).join('')}</div>`;
-  } else if (filter) {
-    const list = _fsSortItems(all.filter(a => a.kind === filter));
-    const label = filter === 'decoration' ? 'Avatar Decorations' : filter === 'nameplate' ? 'Nameplates' : 'Appearances';
+  } else if (_fsAnyFilter()) {
+    const list = _fsSortItems(all.filter(_fsPassesFilters));
+    const label = filter === 'decoration' ? 'Avatar Decorations' : filter === 'nameplate' ? 'Nameplates' : filter === 'appearance' ? 'Appearances' : 'Filtered items';
     main = _fsGroup(label, `<span class="qst-group-note">${list.length} item${list.length === 1 ? '' : 's'}</span>`)
-      + `<div class="fs-grid">${list.length ? list.map(_fsCard).join('') : _fsEmpty('box-open', 'Nothing here yet', 'Check back soon.')}</div>`;
+      + `<div class="fs-grid">${list.length ? list.map(_fsCard).join('') : _fsEmpty('filter-circle-xmark', 'Nothing matches those filters', 'Try removing a colour or a theme.')}</div>`;
   } else {
     main = _fsCollections().map(c => {
       const items = _fsSortItems(_fsColItems(c));

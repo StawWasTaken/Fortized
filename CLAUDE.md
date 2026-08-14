@@ -295,19 +295,40 @@
   **⚠️ NEED ART (collection cover + logo each):** Decorations, Crown Jewels,
   Midnight, Naturals → drop into `coverImg`/`logoImg` on `_FS_COLLECTIONS`.
   **NEXT:** real collection art; nameplate PRODUCTS (preview renderer is ready).
-- **🐞 FIX SWIFTAW LIFECHECK — it doesn't work yet (user-reported).** The real
-  widget renders (loader `https://swiftaw.com/lifecheck/lifecheck.js` +
-  `Lifecheck.render(el,{sitekey:'lc_fortized_public',callback,'expired-callback'})`,
-  `swiftawLifecheck` in app.js) but verification fails — the widget shows
-  "Can't verify here. Lifecheck isn't set up for this site." Server verify is
-  `POST /api/lifecheck/verify` (server.js) → Swiftaw RPC `…/rpc/lifecheck_verify_token`
-  with `apikey: lc_fortized_public` + `{p_secret,p_token}`; gate on `success`.
-  Domains ARE added on the Lifecheck dashboard + user is setting
-  `SWIFTAW_LIFECHECK_SECRET` on Render. Investigate: is the widget error a
-  swiftaw-side domain/site-key check (pre-verify), or our `/api/lifecheck/verify`
-  path (check `GET /api/lifecheck/health` → `configured:true`)? Built-in slide
-  challenge is the current fallback. Gate points: quest-onyx claim (sometimes),
-  password/email change, security-key removal.
+- **✅ SWIFTAW LIFECHECK FIXED (`2026fix485`)** — full write-up in
+  `docs/lifecheck-setup.md`. TWO independent bugs, one per repo:
+  • **🐞 THE SITE KEY WAS MADE UP.** app.js hardcoded `lc_fortized_public`; real
+    keys are `lc_site_<12>` rows in `lifecheck_keys`. It failed twice over:
+    `lifecheck_issue_token` found no such row (→ NULL, no token), AND
+    `embed.html` gated server-token issuance on `/^lc_site_/.test(SITE_KEY)`, so
+    the widget never even asked — it fell into local-preview mode, which only
+    mints tokens on swiftaw.com. Both dead-end at "Can't verify here. Lifecheck
+    isn't set up for this site." **Adding domains on the dashboard could never
+    fix it** — the allow-list check runs AFTER the key lookup.
+  • **🐞 WRONG `apikey` HEADER.** server.js sent `apikey: lc_fortized_public` to
+    the verify RPC. That header is the API HOST's project key
+    (`sb_publishable_dqsqX2klo1j4xSyEFA7O1w_UjM8lEGf`, same for every Lifecheck
+    customer) → `401 Invalid API key` before the token is read. Our keys belong
+    in the BODY (`p_secret`). The Swiftaw docs said `apikey: LIFECHECK_PUBLIC_KEY`,
+    which reads as "your public key" — server.js followed them; docs now fixed.
+  • **Fortized:** site key is no longer hardcoded — the client reads it from
+    `GET /api/lifecheck/health` (`{configured, sitekey}`) so it can't drift from
+    the dashboard; `SWIFTAW_LIFECHECK_SITEKEY` + `SWIFTAW_LIFECHECK_APIKEY` envs;
+    no sitekey → skip the widget, go straight to the built-in challenge; new
+    `error-callback` → fall back instead of dead-ending; loader URL gets a daily
+    cache-bust; rejection reasons logged to console.
+  • **Swiftaw:** `SERVER_MODE = !!SITE_KEY` (any key means "verify for real");
+    `issueToken` records WHY it failed (`sitekey-rejected` / `issue-request-failed`
+    / `no-sitekey`) and the widget posts an `error` event + a message naming the
+    real cause; `lifecheck.js` exposes `error-callback` / `lifecheck:error` /
+    `data-lifecheck-error` (BUILD bumped); docs fixed + `data-error-callback`
+    documented.
+  **⚠️ USER ACTION (nothing works until this is done):** create a key at
+  swiftaw.com/lifecheck/keys with domain `fortized.com`, then set
+  `SWIFTAW_LIFECHECK_SITEKEY` (`lc_site_…`) and `SWIFTAW_LIFECHECK_SECRET`
+  (`lc_secret_…`) on Render. Verify `GET /api/lifecheck/health` →
+  `{configured:true, sitekey:"lc_site_…"}`. Gate points: quest-onyx claim
+  (sometimes), password/email change, security-key removal, Onyx code redeem.
 - **Emoji cross-bastion visibility** (picker Phase 3 remainder): bastion emojis
   send as `:name:` → render as text for non-members. Needs an egress-safe light
   token (`[FTZEMOJI:name|bastionId]`, no base64) + async per-viewer URL resolution

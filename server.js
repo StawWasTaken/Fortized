@@ -665,7 +665,19 @@ app.get('/api/moderate/health', async (req, res) => {
 // the client falls back to its built-in challenge (configured:false tells it so).
 const LIFECHECK_VERIFY_URL = process.env.SWIFTAW_LIFECHECK_URL
   || 'https://mwszvynzzugbowdngzab.supabase.co/rest/v1/rpc/lifecheck_verify_token';
-const LIFECHECK_PUBLIC = (process.env.SWIFTAW_LIFECHECK_PUBLIC || 'lc_fortized_public').trim();
+// Lifecheck's OWN public API key for its RPC host. This is a fixed value that
+// is identical for every Lifecheck customer and safe to ship — it is NOT one of
+// our keys. We used to send our site key here, which the API rejects with
+// 401 "Invalid API key" before it ever reads the token, so every verification
+// failed no matter how the widget behaved.
+const LIFECHECK_APIKEY = (process.env.SWIFTAW_LIFECHECK_APIKEY
+  || 'sb_publishable_dqsqX2klo1j4xSyEFA7O1w_UjM8lEGf').trim();
+// OUR public site key, issued on the Lifecheck dashboard — always `lc_site_…`.
+// The browser widget needs it and it is safe in client code, but it must be a
+// key that actually exists with fortized.com on its allowed-domains list. When
+// it's unset the client skips the widget entirely and uses the built-in
+// challenge, rather than rendering a widget that cannot mint a token.
+const LIFECHECK_SITEKEY = (process.env.SWIFTAW_LIFECHECK_SITEKEY || '').trim();
 app.post('/api/lifecheck/verify', async (req, res) => {
   const secret = (process.env.SWIFTAW_LIFECHECK_SECRET || '').trim();
   const token = (req.body && typeof req.body.token === 'string') ? req.body.token.trim() : '';
@@ -676,7 +688,7 @@ app.post('/api/lifecheck/verify', async (req, res) => {
     const to = setTimeout(() => ctrl.abort(), 8000);
     const r = await fetch(LIFECHECK_VERIFY_URL, {
       method: 'POST',
-      headers: { 'apikey': LIFECHECK_PUBLIC, 'Content-Type': 'application/json' },
+      headers: { 'apikey': LIFECHECK_APIKEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_secret: secret, p_token: token }),
       signal: ctrl.signal,
     });
@@ -701,9 +713,17 @@ app.post('/api/lifecheck/verify', async (req, res) => {
     return res.json({ success: false, configured: true, error: String((e && e.message) || e) });
   }
 });
-// Diagnostic — never leaks the secret; just says whether it's set.
+// Client config + diagnostic. Never leaks the secret — it only reports whether
+// one is set. `sitekey` is public by design (the widget puts it in a URL), and
+// serving it from here keeps the client from hardcoding a key that doesn't
+// match whatever is registered on the Lifecheck dashboard.
 app.get('/api/lifecheck/health', (req, res) => {
-  res.json({ configured: !!(process.env.SWIFTAW_LIFECHECK_SECRET || '').trim(), public: LIFECHECK_PUBLIC });
+  res.json({
+    configured: !!(process.env.SWIFTAW_LIFECHECK_SECRET || '').trim(),
+    sitekey: LIFECHECK_SITEKEY,
+    // Back-compat with older clients that read `public`.
+    public: LIFECHECK_SITEKEY,
+  });
 });
 
 // ── Spotify OAuth (server-side exchange) ──────────

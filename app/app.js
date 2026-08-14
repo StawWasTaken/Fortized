@@ -28703,15 +28703,27 @@ function _radianceConfirm(message, callback) {
 // that resolves true when the human check passes, false if the
 // user backs out.
 //
-// SECURITY: the PUBLIC site key below is safe to ship in the app.
-// The SECRET key (lc_fortized_SWFT…) must NEVER appear in client
-// code — it belongs only in the server's environment, used for the
-// server-side /siteverify call. If/when the official Swiftaw widget
-// script is loaded on the page (window.SwiftawLifecheck.render), we
-// mount it; otherwise we fall back to a self-contained slide-to-fit
-// challenge so the gate always works even if the CDN is unreachable.
+// SECURITY: the PUBLIC site key is safe to ship in the app, but it
+// is NOT hardcoded here — it comes from the server (/api/lifecheck/
+// health), so it always matches the key registered on the Lifecheck
+// dashboard. The SECRET key must NEVER appear in client code; it
+// belongs only in the server's environment, used for the server-side
+// verify call. When no site key is configured we go straight to the
+// self-contained slide-to-fit challenge, so the gate always works.
 // ════════════════════════════════════════════════════════════
-const SWIFTAW_LIFECHECK_SITEKEY = 'lc_fortized_public';
+// Cached /api/lifecheck/health result: { configured, sitekey }.
+let _lcConfigPromise = null;
+function _lcConfig() {
+  if (_lcConfigPromise) return _lcConfigPromise;
+  _lcConfigPromise = fetch('/api/lifecheck/health')
+    .then(r => r.json())
+    .then(j => ({
+      configured: !!(j && j.configured),
+      sitekey: String((j && (j.sitekey || j.public)) || '').trim(),
+    }))
+    .catch(() => ({ configured: false, sitekey: '' }));
+  return _lcConfigPromise;
+}
 const _LC_MARK_SVG = '<svg viewBox="0 0 512 512" fill="none"><path d="M256 24l186 66c14 5 24 18 24 33 0 121-52 245-201 300a30 30 0 0 1-18 0C98 368 46 244 46 123c0-15 10-28 24-33L256 24z" fill="currentColor" opacity=".16"/><path d="M256 24l186 66c14 5 24 18 24 33 0 121-52 245-201 300a30 30 0 0 1-18 0C98 368 46 244 46 123c0-15 10-28 24-33L256 24z" stroke="currentColor" stroke-width="26"/><path d="M150 262h54l30-70 44 130 26-60h58" stroke="currentColor" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let _lifecheckPassedUntil = 0; // short grace window after a successful check
 
@@ -28759,7 +28771,10 @@ function swiftawLifecheck(opts = {}) {
 // "Add the widget" docs; while empty, swiftawLifecheck uses the built-in
 // slide challenge. The widget itself is served from swiftaw.com inside a
 // sandboxed iframe (anti-theft model) — we only embed the loader URL.
-const _SWIFTAW_LC_LOADER = 'https://swiftaw.com/lifecheck/lifecheck.js';
+// Daily cache-bust: the loader URL is otherwise constant, so a browser that
+// cached an older build keeps using it (and misses the error-callback we rely
+// on to fall back).
+const _SWIFTAW_LC_LOADER = 'https://swiftaw.com/lifecheck/lifecheck.js?v=' + Math.floor(Date.now() / 86400000);
 let _lcLoaderPromise = null;
 function _lcEnsureLoader() {
   if (window.Lifecheck && typeof window.Lifecheck.render === 'function') return Promise.resolve(true);
@@ -28798,6 +28813,9 @@ async function _lcVerifyToken(token) {
     const j = await r.json();
     if (j && j.success === true) return true;
     if (j && j.configured === false) { console.warn('[Lifecheck] server secret not configured — accepting widget pass'); return true; }
+    // Surface WHY, so a bad secret / expired token is diagnosable from the
+    // console instead of looking like a user who just failed the check.
+    console.warn('[Lifecheck] verification rejected', j && (j.error || (j.errorCodes || []).join(',')) || 'unknown');
     return false;
   } catch (e) { console.warn('[Lifecheck] verify request failed', e && e.message); return 'error'; }
 }
@@ -28809,21 +28827,46 @@ function _lcMountRealOrFallback(overlay, done) {
   // built-in slide challenge on timeout / block).
   slot.innerHTML = '<div class="lc-loading"><span class="lc-spinner"></span></div>';
   if (status0) status0.textContent = 'Loading Lifecheck…';
-  _lcEnsureLoader().then(() => {
-    slot.innerHTML = '<div class="lc-widget" id="lc-widget"></div>';
-    const status = overlay.querySelector('#lc-status');
-    status.textContent = 'Complete the check to continue';
-    let verifying = false;
-    window.Lifecheck.render(slot.querySelector('#lc-widget'), {
-      sitekey: SWIFTAW_LIFECHECK_SITEKEY,
-      callback: async (token) => {
-        if (verifying) return; verifying = true;
-        status.textContent = 'Verifying…'; status.className = 'lc-status';
-        const ok = await _lcVerifyToken(token);
-        if (ok === true) { status.textContent = 'Verified — you’re human'; status.className = 'lc-status ok'; setTimeout(() => done(true), 400); }
-        else { status.textContent = ok === 'error' ? 'Couldn’t verify — try again' : 'Verification failed — try again'; status.className = 'lc-status bad'; verifying = false; try { window.Lifecheck.reset(); } catch (_) {} }
-      },
-      'expired-callback': () => { try { window.Lifecheck.reset(); } catch (_) {} },
+  _lcConfig().then((cfg) => {
+    // No site key registered → the widget could only ever render its "Lifecheck
+    // isn't set up for this site" state, so don't render it at all.
+    if (!cfg.sitekey) {
+      console.warn('[Lifecheck] no site key configured (SWIFTAW_LIFECHECK_SITEKEY) — using the built-in challenge');
+      _lcBuiltInChallenge(overlay, done);
+      return;
+    }
+    return _lcEnsureLoader().then(() => {
+      slot.innerHTML = '<div class="lc-widget" id="lc-widget"></div>';
+      const status = overlay.querySelector('#lc-status');
+      status.textContent = 'Complete the check to continue';
+      let verifying = false, fellBack = false;
+      // The widget can't mint a token here (key unknown, or fortized.com isn't
+      // on the key's allowed-domains list, or swiftaw.com is unreachable). It
+      // will never call back, so swap in our own challenge instead of leaving
+      // the user staring at an error they can't act on.
+      const fallback = (why) => {
+        if (fellBack || verifying) return; fellBack = true;
+        console.warn('[Lifecheck] widget cannot verify (' + why + ') — using the built-in challenge');
+        _lcBuiltInChallenge(overlay, done);
+      };
+      window.Lifecheck.render(slot.querySelector('#lc-widget'), {
+        sitekey: cfg.sitekey,
+        callback: async (token) => {
+          if (verifying || fellBack) return; verifying = true;
+          status.textContent = 'Verifying…'; status.className = 'lc-status';
+          const ok = await _lcVerifyToken(token);
+          if (ok === true) { status.textContent = 'Verified — you’re human'; status.className = 'lc-status ok'; setTimeout(() => done(true), 400); }
+          else { status.textContent = ok === 'error' ? 'Couldn’t verify — try again' : 'Verification failed — try again'; status.className = 'lc-status bad'; verifying = false; try { window.Lifecheck.reset(); } catch (_) {} }
+        },
+        'expired-callback': () => { try { window.Lifecheck.reset(); } catch (_) {} },
+        'error-callback': (err) => fallback((err && err.code) || 'error'),
+      });
+      // Older widget builds don't emit `error`; they just sit there. Give the
+      // user a working check rather than a dead card.
+      const widgetEl = slot.querySelector('#lc-widget');
+      setTimeout(() => {
+        if (widgetEl && widgetEl.getAttribute('data-lifecheck-error')) fallback(widgetEl.getAttribute('data-lifecheck-error'));
+      }, 12000);
     });
   }).catch(() => { _lcBuiltInChallenge(overlay, done); });
 }
